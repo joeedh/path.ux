@@ -80,7 +80,8 @@ define([
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       //*
-      row.listenum("EXAMPLE_ENUM", "Enum", {A : 0, Test : 1, Triangle : 2, Bleh :                  3, Yay : 4}, 0, 
+      
+      row.listenum("EXAMPLE_ENUM", "Enum", {A : 0, Test : 1, Triangle : 2, Bleh : 3, Yay : 4}, 0, 
       (name, id) => {
         console.log("enum change", name, id);
       }, {
