@@ -10,6 +10,14 @@ define([
     constructor() {
     }
     
+    get api() {
+      return _appstate.api;
+    }
+    
+    get state() {
+      return _appstate;
+    }
+    
     save() {
       _appstate.save();
     }

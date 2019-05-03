@@ -23,6 +23,7 @@ define([
     constructor() {
       super();
         
+      this.boxpad = ui_base.getDefault("BoxMargin", 4);
       let dpi = UIBase.getDPI();
 
       this.r = ui_base.getDefault("BoxRadius");
@@ -116,6 +117,10 @@ define([
           this.dom._background = ui_base.getDefault("BoxDepressed");
           this._redraw();
           
+          if (this._onpress) {
+            this._onpress(this);
+          }
+          
           e.preventDefault();
           e.stopPropagation();
       }
@@ -142,9 +147,13 @@ define([
       this.addEventListener("touchend", depress);
       this.addEventListener("mouseup", depress);
       
+      let holdbg = this.dom._background;
+      
       this.addEventListener("mouseover", (e) => {
         if (this.getAttribute("disabed")) 
           return;
+        
+        holdbg = this.dom._background;
         
         this.dom._background = ui_base.getDefault("BoxHighlight");
         this._repos_canvas();
@@ -155,7 +164,7 @@ define([
         if (this.getAttribute("disabed")) 
           return;
         
-        this.dom._background = ui_base.getDefault("BoxBG");
+        this.dom._background = holdbg; //ui_base.getDefault("BoxBG");
         this._repos_canvas();
         this._redraw();
       })
@@ -251,7 +260,7 @@ define([
       
       let dpi = UIBase.getDPI();
       
-      ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, this.r);
+      ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, this.r, undefined, undefined, this.boxpad);
       
       if (this._focus) {
         let w = this.dom.width, h = this.dom.height;
@@ -348,6 +357,55 @@ define([
     
     bindEvents() {
       this.addEventListener("mousedown", (e) => {
+        if (e.button == 0 && e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          let tbox = document.createElement("textbox-x");
+          tbox.text = this.value.toFixed(5);
+          tbox.select();
+          
+          this.parentNode.insertBefore(tbox, this);
+          //this.remove();
+          this.hidden = true;
+          //this.dom.hidden = true;
+          
+          let finish = (ok) => {
+            tbox.remove();
+            this.hidden = false;
+            
+            if (ok) {
+              let val = parseFloat(tbox.text);
+              
+              if (isNaN(val)) {
+                console.log("EEK!");
+                this.flash(ui_base.ErrorColors.ERROR);
+              } else {
+                this.setValue(val);
+                
+                if (this.onchange !== undefined) {
+                  this.onchange(this);
+                }
+              }
+            }
+          }
+          
+          tbox.addEventListener("keydown", (e) => {
+            console.log(e.keyCode);
+            switch (e.keyCode) {
+              case 27: //escape
+                finish(false);
+                break;
+              case 13: //enter
+                finish(true);
+                break;
+            }
+          });
+          
+          //this.shadow.appendChild(tbox);
+          return;
+        }
+        
         if (e.button == 0) {
           this.dragStart(e);
           
@@ -660,6 +718,8 @@ define([
     constructor() {
       super();
       
+      this._checked = false;
+      
       let shadow = this.shadow;
       
       //let form = document.createElement("form");
@@ -674,6 +734,20 @@ define([
       check.setAttribute("class", "checkx");
       check.setAttribute("id", check._id);
       check.setAttribute("name", check._id);
+      
+      check.addEventListener("click", (e) => {
+        let val = check.checked;
+        
+        if (this.onclick) {
+          this.onclick(val);
+        }
+        
+        if (this.hasAttribute("datapath")) {
+          UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), !!val);
+        }
+      });
+      
+      this.checkbox = check;
       
       span.appendChild(check);
       let label = this._label = document.createElement("label");
@@ -701,6 +775,31 @@ define([
       shadow.appendChild(span);
     }
     
+    updateDataPath() {
+      let val = !!UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+      if (!!this._checked != !!val) {
+        this._checked = val;
+        this.checkbox.checked = val;
+      }
+    }
+    
+    set checked(v) {
+      if (!!this._checked != !!v) {
+        this._checked = v;
+        this.dom.checked = v;
+      }
+    }
+    
+    get checked() {
+      return this._checked;
+    }
+    
+    update() {
+      if (this.hasAttribute("datapath")) {
+        this.updateDataPath();
+      }
+    }
+    
     get label() {
       return this._label.textContent;
     }
@@ -715,6 +814,92 @@ define([
   }
   UIBase.register(Check);
   
+  let IconCheck  = exports.IconCheck = class IconCheck extends Button {
+    constructor() {
+      super();
+      
+      this.boxpad = 1;
+      this._checked = undefined;
+      this.r = 5;
+      this._icon = 0;
+    }
+    
+    get icon() {
+      return this._icon;
+    }
+    
+    set icon(val) {
+      this._icon = val;
+      this._repos_canvas();
+      this._redraw();
+    }
+    
+    get checked() {
+      return this._checked;
+    }
+    
+    set checked(val) {
+      if (!!val != !!this._checked) {
+        this._checked = val;
+        this._redraw();
+      }
+    }
+    
+    updateDataPath() {
+      let val = !!UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+      
+      if (!!val != !!this._checked) {
+        this._checked = val;
+        this._redraw();
+      }
+    }
+    
+    update() {
+      if (this.description !== undefined && this.title != this.description) {
+        this.title = this.description;
+      }
+      
+      if (this.hasAttribute("datapath")) {
+        this.updateDataPath();
+      }
+      
+      super.update();
+    }
+
+    _repos_canvas() {
+      this.dom.style["height"] = "32px";
+      this.dom.style["width"] = "32px";
+      
+      super._repos_canvas();
+    }
+    
+    _onpress() {
+      this.checked ^= 1;
+      
+      if (this.hasAttribute("datapath")) {
+        UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
+      }
+
+      console.log("click!", this.checked);
+      this._redraw();
+    }
+    
+    _redraw() {
+      this._repos_canvas();
+      
+      this.dom._background = this._checked ? ui_base.getDefault("BoxDepressed") : ui_base.getDefault("BoxBG");
+      //
+      super._redraw(false);
+      ui_base.iconmanager.canvasDraw(this.dom, this.g, this.icon);
+    }
+    
+    static define() {return {
+      tagname : "iconcheck-x"
+    };}
+  }
+  
+  UIBase.register(IconCheck);
+    
   let Check1 = exports.Check1 = class Check1 extends Button {
     constructor() {
       super();
@@ -1367,7 +1552,8 @@ define([
     }
     
     select() {
-      return this.dom.select.apply(this, arguments);
+      this.dom.select();
+      //return this.dom.select.apply(this, arguments);
     }
     
     focus() {

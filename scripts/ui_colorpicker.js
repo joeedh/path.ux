@@ -152,13 +152,21 @@ exports.getFieldImage = function(size, hsva) {
     if (key in fields)
       return fields[key];
     
-    console.log("generation color picker field of size", size);
+    //console.log("generation color picker field of size", size);
     
-    let image = new ImageData(size, size);
-    let idata = image.data;
+    let size2 = 128;
+    let image = {
+      width : size, 
+      height : size, 
+      image : new ImageData(size2, size2)
+    };
+    
+    let scale = size2 / size;
+    
+    let idata = image.image.data;
     let dpi = UIBase.getDPI();
     
-    let band = ui_base.IsMobile() ? 35 : 15;
+    let band = ui_base.IsMobile() ? 35 : 20;
     
     let r2 = Math.ceil(size*0.5), r1 = r2 - band*dpi;
     
@@ -180,15 +188,15 @@ exports.getFieldImage = function(size, hsva) {
       }
     };
     
-    for (let i=0; i<size*size; i++) {
-      let x = i % size, y = ~~(i / size);
+    for (let i=0; i<size2*size2; i++) {
+      let x = i % size2, y = ~~(i / size2);
       let idx = i*4;
       let alpha = 0.0;
       
-      let r = Math.sqrt((x-size*0.5)**2 + (y-size*0.5)**2);
+      let r = Math.sqrt((x-size2*0.5)**2 + (y-size2*0.5)**2);
       
-      if (r < r2 && r > r1) {
-        let th = Math.atan2(y-size*0.5, x-size*0.5) / (2 * Math.PI) + 0.5;
+      if (r < r2*scale && r > r1*scale) {
+        let th = Math.atan2(y-size2*0.5, x-size2*0.5) / (2 * Math.PI) + 0.5;
         let eps = 0.001
         th = th*(1.0 - eps*2) + eps;
         
@@ -239,11 +247,11 @@ exports.getFieldImage = function(size, hsva) {
         alpha = 1.0;
       }
       
-      let px2 = px1 + pw, py2 = py1 + ph;
+      let px2 = (px1 + pw)*scale, py2 = (py1 + ph)*scale;
       
-      if (x > px1 && y > py1 && x < px2 && y < py2) {
-        let u = 1.0 - (x - px1) / (px2 - px1);
-        let v = 1.0 - (y - py1) / (py2 - py1);
+      if (x > px1*scale && y > py1*scale && x < px2 && y < py2) {
+        let u = 1.0 - (x - px1*scale) / (px2 - px1*scale);
+        let v = 1.0 - (y - py1*scale) / (py2 - py1*scale);
         
         //let inv = fields.inv_sample(u, v);
         //u = inv[0], v = inv[1];
@@ -277,7 +285,17 @@ exports.getFieldImage = function(size, hsva) {
       idata[idx+3] = alpha*255;
     }
     
-    console.log("done.");
+    //console.log("done.");
+    
+    //*
+    let image2 = document.createElement("canvas");
+    image2.width = size2;
+    image2.height = size2;
+    let g = image2.getContext("2d");
+    g.putImageData(image.image, 0, 0);
+    //*/
+    image.canvas = image2;
+    image.scale = size / size2;
     
     fields[key] = image;
     return image;
@@ -567,11 +585,13 @@ exports.getFieldImage = function(size, hsva) {
       
       let size = canvas.width;
       let field = this._field = exports.getFieldImage(size, this.hsva);
+      let w = size, h = size * field.height / field.width;
       
-      console.log("Redraw called!"); //, canvas, canvas.width, canvas.height, canvas.style);
+      //console.log("Redraw called!"); //, canvas, canvas.width, canvas.height, canvas.style);
       
-      g.clearRect(0, 0, canvas.width, canvas.height);
-      g.putImageData(field, 0, 0);
+      g.clearRect(0, 0, w, h); //canvas.width, canvas.height);
+      //g.putImageData(field.image, 0, 0);
+      g.drawImage(field.canvas, 0, 0, field.width, field.height);
       
       g.lineWidth = 2.0;
 

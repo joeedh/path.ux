@@ -9,6 +9,12 @@ define([
 
   let EnumProperty = exports.EnumProperty = toolprop.EnumProperty;
   
+  let ErrorColors = exports.ErrorColors = {
+    WARNING : "yellow",
+    ERROR : "red",
+    OK : "green"
+  };
+  
   exports._defaults = {
     "ColorFieldSize" : 256,
     "numslider_width" : 100,
@@ -30,6 +36,7 @@ define([
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(150, 150, 150, 1.0)",
     "BoxBG" : "rgba(220, 220, 220, 1.0)",
+    "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
@@ -43,6 +50,14 @@ define([
     "HotkeyTextColor" : "rgba(130, 130, 130, 1.0)",
     "HotkeyTextFont"  : "courier" 
   };
+  
+  let _last_report = util.time_ms();
+  exports.report = function(msg) {
+    if (util.time_ms() - _last_report > 350) {
+      console.warn(msg);
+      _last_report = util.time_ms();
+    }
+  }
   
   exports.getDefault = function getDefault(key, val_if_fail) {
     if (key in exports._defaults) {
@@ -64,6 +79,15 @@ define([
       this.tilesize = tilesize;
       
       this.image = image;
+    }
+    
+    canvasDraw(canvas, g, icon, x=0, y=0) {
+      let tx = icon % this.tilex;
+      let ty = ~~(icon / this.tilex);
+      let dpi = exports.UIBase.getDPI();
+      let ts = this.tilesize;
+      
+      g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ts*dpi, ts*dpi);
     }
     
     //icon is an integer
@@ -89,6 +113,11 @@ define([
       for (let i=0; i<images.length; i++) {
         this.iconsheets.push(new _IconManager(images[i], sizes[i], horizontal_tiles));
       }
+    }
+    
+    canvasDraw(canvas, g, icon, x=0, y=0, sheet=0) {
+      sheet = this.iconsheets[sheet];
+      sheet.canvasDraw(canvas, g, icon, x, y);
     }
     
     getTileSize(sheet=0) {
@@ -134,7 +163,9 @@ define([
 
   let PackFlags = exports.PackFlags = {
     INHERIT_WIDTH  : 1,
-    INHERIT_HEIGHT : 2
+    INHERIT_HEIGHT : 2,
+    VERTICAL : 4,
+    USE_ICONS : 8
   };
    
   let first = (iter) => {
@@ -159,31 +190,12 @@ define([
   exports.DataPathError = class DataPathError extends Error {};
   
   exports.SimpleContext = class SimpleContext {
-    constructor(stateobj) {
-      this.state = stateobj;
-    }
-    
-    getProp(path) {
-      let cs = path.trim().split(".")
-      let obj = this.state;
-      let last;
-      
-      for (let i=0; i<cs.length; i++) {
-        last = obj;
-        obj = obj[cs[i]];
-        
-        if (obj === undefined) {
-          throw new exports.DataPathError("bad path " + path);
-        }
+    constructor(stateobj, api) {
+      if (api === undefined) {
+        throw new Error("api cannot be undefined, see controller.js");
       }
-      
-      return [obj, last, cs[cs.length - 1]];
-    }
-    
-    setProp(path, val) {
-      let prop = this.getProp(path);
-      
-      prop[1][prop[2]] = val;
+      this.state = stateobj;
+      this.api = api;
     }
   }
   
@@ -221,6 +233,8 @@ define([
       this.shadow = this.attachShadow({mode : 'open'});
       this._ctx = undefined;
       
+      this.description = undefined;
+      
       let style = document.createElement("style");
       style.textContent = `
       .DefaultText {
@@ -234,6 +248,10 @@ define([
       return element;
     }
     
+    flash(color, timems) {
+      
+    }
+    
     destory() {
     }
     
@@ -242,6 +260,23 @@ define([
     
     get ctx() {
       return this._ctx;
+    }
+    
+    static getPathValue(ctx, path) {
+      try {
+        return ctx.api.getValue(ctx, path);
+      } catch (error) {
+        exports.report("data path error in ui for", path);
+        return 0;
+      }
+    }
+    
+    static setPathValue(ctx, path, val) {
+      ctx.api.setValue(ctx, path, val);
+    }
+    
+    static getPathMeta(ctx, path) {
+      return ctx.api.resolvePath(ctx, path).prop;
     }
     
     //not sure I'm happy about this. . .
@@ -355,14 +390,16 @@ define([
   //okay, I need to refactor this function, 
   //it needs to take x, y as well as width, height,
   //and be usable for more use cases.
-  exports.drawRoundBox = function drawRoundBox(canvas, g, width, height, r=undefined, op="fill", color=undefined) {
+  exports.drawRoundBox = function drawRoundBox(canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
       width = width === undefined ? canvas.width : width;
       height = height === undefined ? canvas.height : height;
       
       let dpi = UIBase.getDPI();
       
       r = r === undefined ? exports.getDefault("BoxRadius", 12) : r;
-      let pad = exports.getDefault("BoxMargin", 4) * dpi;
+      if (pad === undefined) {
+        pad = exports.getDefault("BoxMargin", 4) * dpi;
+      }
       
       r *= dpi;
       let r1=r, r2=r;

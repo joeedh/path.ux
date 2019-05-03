@@ -3,10 +3,10 @@ var _app = undefined; //for debugging purposes only.  don't write code with it
 define([
   "util", "mesh", "mesh_tools", "mesh_editor", "const", "simple_toolsys",
   "transform", "events", "config", "ui", "image", "icon_enum", "FrameManager", "ScreenArea",
-  "ui_base"
+  "ui_base", "controller"
 ], function(util, mesh, mesh_tools, mesh_editor, cconst, toolsys,
             transform, events, config, ui, image, unused, FrameManager, ScreenArea,
-            ui_base)
+            ui_base, controller)
 {
   'use strict';
   
@@ -68,7 +68,7 @@ define([
       }
       
       let ui = this.ui = document.createElement("container-x");
-      ui.ctx = new SimpleContext(config);
+      ui.ctx = _appstate.ctx;
       ui.style["width"] = "100%";
       //ui.style["height"] = "245px";
       
@@ -81,16 +81,8 @@ define([
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       //*
       
-      row.listenum("EXAMPLE_ENUM", "Enum", {A : 0, Test : 1, Triangle : 2, Bleh : 3, Yay : 4}, 0, 
-      (name, id) => {
-        console.log("enum change", name, id);
-      }, {
-        A : Icons.DELETE,
-        Test : Icons.UNDO,
-        Triangle : Icons.REDO,
-        Bleh : Icons.FOLDER,
-        Yay : Icons.BACKSPACE
-      });
+      row.checkenum("enumval", "Enum", ui_base.PackFlags.USE_ICONS);
+      row.listenum("enumval", "Enum");
       //*/
       
       row = ui.row();
@@ -179,8 +171,10 @@ define([
     }
 
     draw() {
-      this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      _appstate.editor.draw(_appstate.ctx, this.canvas, this.g);
+      if (this.ctx !== undefined) {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        _appstate.editor.draw(_appstate.ctx, this.canvas, this.g);
+      }
     }
     
     on_resize(size) {
@@ -217,20 +211,36 @@ define([
       this.ctx = new toolsys.Context();
       this.toolstack = new toolsys.ToolStack();
       this.editor = new mesh_editor.MeshEditor();
+      this.editor.ctx = this.ctx;
       
       this._modal_dom_root = undefined;
       
-      this.makeScreen();
+      this.initAPI();
 
       //this.makeGUI();
       this.image = undefined;
+      this.enumval = 0;
+    }
+    
+    initAPI() {
+      this.api = new controller.DataAPI();
+      this.api.prefix = "state.";
+      let stt = this.api.mapStruct(AppState);
+      
+      let def = stt.enum("enumval",  "enumval", {A : 0, Test : 1, Triangle : 2, Bleh : 3, Yay : 4});
+      def.icons({
+        A : Icons.DELETE,
+        Test : Icons.UNDO,
+        Triangle : Icons.REDO,
+        Bleh : Icons.FOLDER,
+        Yay : Icons.BACKSPACE
+      });
+      
     }
     
     makeScreen() {
-      let ctx = new ui.SimpleContext(config);
-      
       this.screen = this.gui = document.createElement("screen-x");
-      this.screen.ctx = ctx;
+      this.screen.ctx = this.ctx;
       this.screen.listen();
       
       this.screen.size = [window.innerWidth, window.innerHeight];
@@ -272,10 +282,8 @@ define([
     }
     
     makeGUI() {
-      let ctx = new ui.SimpleContext(config);
-
       this.gui = document.createElement("container-x")
-      this.gui.ctx = ctx;
+      this.gui.ctx = this.ctx;
       this.gui.style["width"] = "300px";
       this.gui.listen();
       
@@ -463,8 +471,8 @@ define([
           }
           break;
           
-        default:
-          return this.editor.on_keydown(e);
+        //default:
+        //  return this.editor.on_keydown(e);
       }
     }
   }
@@ -476,6 +484,7 @@ define([
     }
     
     window._appstate = new AppState();
+    _appstate.makeScreen();
     
     _appstate.pushModal(_appstate.screen, true);
     

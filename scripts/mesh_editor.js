@@ -167,6 +167,10 @@ define([
     on_mousemove(e) {
       super.on_mousemove(e);
       
+      if (this.ctx === undefined) {
+        return;
+      }
+      
       if (this.mdown)
         return;
       

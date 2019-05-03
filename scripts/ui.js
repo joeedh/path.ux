@@ -14,7 +14,8 @@ define([
     
   let exports = _ui = {};
   let Vector2 = vectormath.Vector2,
-      UIBase = ui_base.UIBase;
+      UIBase = ui_base.UIBase,
+      PackFlags = ui_base.PackFlags;
   
   exports.SimpleContext = ui_base.SimpleContext;
   exports.DataPathError = ui_base.DataPathError;
@@ -410,33 +411,86 @@ define([
       
       return [obj, parentobj];
     }
-    
-    _path_set(path, val) {
-      var obj = this.state;
-      
-      for (var i=0; i<path.length-1; i++) {
-        obj = obj[path[i]];
-      }
-      
-      obj[path[path.length-1]] = val;
-      
-      _appstate.save();
-    }
-    
+        
     check(path, name, packflag=0) {
       packflag |= this.inherit_packflag;
       
       //let prop = this.ctx.getProp(path);
-      let ret = document.createElement("check-x");
+      let ret;
+      if (packflag & PackFlags.USE_ICONS) {
+        ret = document.createElement("iconcheck-x");
+      } else {
+        ret = document.createElement("check-x");
+      }
       
       ret.packflag |= packflag;
       ret.label = name;
       ret.setAttribute("datapath", path);
       
       this._add(ret);
+      
+      ret.update();
+      
       return ret;
     }
   
+    checkenum(path, name, packflag, enummap, defaultval, callback, iconmap) {
+      packflag = packflag === undefined ? 0 : packflag;
+      packflag |= this.inherit_packflag;
+      
+      let ret = document.createElement("dropbox-x")
+      ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+      
+      if (iconmap !== undefined) {
+        ret.prop.addIcons(iconmap)
+      }
+      
+      let has_path = path !== undefined;
+      
+      if (path !== undefined) {
+        let prop = this.ctx.api.resolvePath(this.ctx, path).prop;
+        
+        if (prop === undefined) {
+          console.warn("Bad path in checkenum", path);
+          return;
+        }
+        
+        let frame;
+        
+        if (packflag & PackFlags.VERTICAL) {
+          frame = this.col();
+        } else {
+          frame = this.row();
+        }
+        
+        frame.background = ui_base.getDefault("BoxSubBG");
+        
+        if (packflag & PackFlags.USE_ICONS) {
+          for (let key in prop.values) {
+            let check = frame.check(path + " = " + prop.values[key], "", packflag);
+            
+            check.icon = prop.iconmap[key];
+            
+            check.style["padding"] = "0px";
+            check.style["margin"] = "0px";
+            frame.style["padding"] = "0px";
+            frame.style["margin"] = "0px";
+            check.dom.style["padding"] = "0px";
+            check.dom.style["margin"] = "0px";
+            
+            check.description = prop.ui_value_names[key];
+            
+            console.log("PATH", path);
+          }          
+        } else {
+          for (let key in prop.values) {
+            frame.check(path + " = " + prop.values[key], prop.ui_value_names[key]);
+            console.log("PATH", path);
+          }
+        }
+      }
+    }
+    
     /*
       enummap is an object that maps
       ui names to keys, e.g.:
@@ -456,7 +510,16 @@ define([
       packflag |= this.inherit_packflag;
       
       let ret = document.createElement("dropbox-x")
-      ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+      if (enummap !== undefined) {
+        ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+      
+        if (iconmap !== undefined) {
+          ret.prop.addIcons(iconmap)
+        }
+      } else {
+        let res = this.ctx.api.resolvePath(this.ctx, path);
+        ret.prop = res.prop;
+      }
       
       ret.setAttribute("name", name);
       

@@ -296,6 +296,9 @@ define([
     }
     
     addIcons(iconmap) {
+      if (this.iconmap === undefined) {
+        this.iconmap = {};
+      }
       for (var k in iconmap) {
         this.iconmap[k] = iconmap[k];
       }
