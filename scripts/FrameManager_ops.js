@@ -115,7 +115,7 @@ define([
       
       let axis = this.border.horiz ? 1 : 0;
       
-      console.log(this.border.horiz);
+      //console.log(this.border.horiz);
       
       this.overdraw.clear();
       
@@ -148,9 +148,15 @@ define([
       
       this.screen = screen;
       this.ctx = screen.ctx;
+      this.start = false;
     }
     
     start() {
+      if (this.started) {
+        console.trace("double call to start()");
+        return;
+      }
+      
       this.overdraw = document.createElement("overdraw-x");
       this.overdraw.start(this.screen);
       
@@ -457,7 +463,7 @@ define([
       let wid = 55;
       let color = "rgb(200, 200, 200, 0.7)";
       
-      console.log("mouse move!", e.x, e.y);
+      //console.log("mouse move!", e.x, e.y);
       
       if (this.sarea === undefined) {
         return;

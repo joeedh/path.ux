@@ -1,194 +1,217 @@
-//handle to module.  never access in code; for debug console use only.
-var _controller = undefined;
+let _model_interface = undefined;
 
 define([
-  "util", "dat"
-], function(util, unused_dat) {
+  "./toolprop"
+], function(toolprop) {
   "use strict";
   
-  var exports = _controller = {};
-
-  var Context = exports.Context = class Context {
-    constructor(appstate) {
-      this.appstate = appstate;
+  let exports = _model_interface = {};
+  
+  let PropFlags = toolprop.PropFlags,
+      PropTypes = toolprop.PropTypes;
+  
+  exports.ModelInterface = class ModelInterface {
+    /*returns {
+      parent : [parent object of path]
+      object : [object owning property key]
+      key : [property key]
+      value : [value of property]
+      prop : [optional toolprop.ToolProperty representing the property definition]
+      struct : [optional datastruct representing the type, if value is an object]
     }
-  };
-
-  var DataPathError = exports.DataPathError = class DataPathError extends Error {
-  };
-
-  var PathProp = exports.PathProp = class PathProp {
-    constructor(value, owner, prop) {
-      this.value = value;
-      this.owner = owner;
-      this.prop = prop;
+    */
+    resolvePath(ctx, path) {
+      
     }
-
-    set(val) {
-      this.owner[this.prop] = val;
+    
+    setValue(ctx, path, val) {
+      let res = this.resolvePath(ctx, path);
+      let prop = res.prop;
+      
+      if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_SETTER)) {
+        prop.setValue(val);
+        return;
+      }
+      
+      if (prop !== undefined && (prop.type & (PropTypes.INT|PropTypes.FLOAT)) && prop.range) {
+        console.log(prop.range);
+        val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
+      }
+      
+      res.obj[res.key] = val;
+      
+      if (prop !== undefined) {
+        prop._fire("change", val);
+      }
+    }
+    
+    getValue(ctx, path) {
+      return this.resolvePath(ctx, path).value;
+    }
+  }
+  
+  let DataTypes = exports.DataTypes = {
+    STRUCT : 0,
+    PROP : 1
+  }
+  
+  let DataPath = exports.DataPath = class DataPath {
+    constructor(path, apiname, prop, type=DataTypes.PROP) {
+      this.type = type;
+      this.data = prop;
+      this.apiname = apiname;
+      this.path = path;
+      this.struct = undefined;
+    }
+    
+    on(type, cb) {
+      if (this.type === PropTypes.PROP) {
+        this.data.on(type, cb);
+      }
+    }
+    
+    off(type, cb) {
+      if (this.type === PropTypes.PROP) {
+        this.data.off(type, cb);
+      }
+    }
+    
+    range(min, max) {
+      this.data.setRange(min, max);
+      return this;
+    }
+    
+    step(s) {
+      this.data.setStep(s);
+      return this;
+    }
+    
+    icon(i) {
+      this.data.setIcon(i);
+      return this;
+    }
+    
+    icons(icons) { //for enum/flag properties
+      this.data.addIcons(icons);
+      return this;
+    }
+    
+    description(d) {
+      this.data.description = d;
       return this;
     }
   }
-
-  var parse_path_rets = new util.cachering(function() {
-    return new PathProp();
-  }, 128);
-
-  var parsePath = exports.parsePath = function(ctx, str) {
-    var cs = str.trim().split(".");
-
-    var obj = ctx;
-    var ret = parse_path_rets.next();
-
-    for (var i=0; i<cs.length; i++) {
-      if (!(cs[i] in obj)) {
-        console.trace(cs[i] + " is not in object", obj);
-        throw new DataPathError(cs[i] + " is not in object " + obj);
-      }
-
-      ret.owner = obj;
-      ret.prop = cs[i];
-
-      obj = obj[cs[i]];
-    }
-
-    if (ret.owner !== undefined && ret.owner._toolprops !== undefined && ret.prop in ret.owner._toolprops) {
-      var toolprop = ret.owner._toolprops[ret.prop];
-
-      if (toolprop.description != "") {
-        ret.description = toolprop.description;
-      }
-
-      ret.toolprop = toolprop;
-    }
-    ret.value = obj;
-
-    return ret;
-  };
-
-  var GUI = exports.GUI = class GUI {
-    constructor(name, appstate, datelem) {
-      this.appstate = appstate;
-
-      if (datelem === undefined) { //make root-level gui
-        this.dat = new dat.GUI();
-        this.dat.domElement.style["z-index"] = 10;
-        this.dat.domElement.style["position"] = "absolute";
-      } else {
-        this.dat = datelem; //e.g. panels
-      }
-
+  
+  let DataStruct = exports.DataStruct = class DataStruct {
+    constructor(members=[], name="unnamed") {
+      this.members = [];
       this.name = name;
-      this.ctx = new Context(appstate);
-      this.panels = [];
-    }
-
-    panel(name) {
-      this.panels[name] = new GUI(name, this.appstate, this.dat.addFolder(name));
-      return this.panels[name];
-    }
-
-    destroy() {
-      this.dat.destroy();
-    }
-
-    checkbox(name, path) {
-      var wrap = {};
-      var this2 = this;
-
-      Object.defineProperty(wrap, name, {
-        get : function() {
-          var prop = parsePath(this2.ctx, path);
-          return !!prop.value;
-        },
-
-        set : function(val) {
-          var prop = parsePath(this2.ctx, path);
-          prop.set(!!val);
-        }
-      })
-
-      var prop = parsePath(this.ctx, path);
-      var ret = this.dat.add(wrap, name); //.listen();
-
-      if (prop.description !== undefined) {
-        ret.description(prop.description);
-      }
-
-      return ret;
-    }
-
-    textbox(name, path) {
-      var wrap = {};
-      var this2 = this;
-
-      Object.defineProperty(wrap, name, {
-        get : function() {
-          var prop = parsePath(this2.ctx, path);
-          return prop.value;
-        },
-
-        set : function(val) {
-          var prop = parsePath(this2.ctx, path);
-          prop.set(val);
-        }
-      })
-
-      var prop = parsePath(this.ctx, path);
-      var ret = this.dat.add(wrap, name); //.listen();
-
-      if (prop.description !== undefined) {
-        ret.description(prop.description);
-      }
-
-      return ret;
-    }
-
-    slider(name, path, min, max, step) {
-      step = step === undefined ? 0.1 : step;
-
-      if (arguments.length < 4)
-        throw new Error("not enough arguments to GUI.slider()");
-
-      var wrap = {};
-      var this2 = this;
-
-      Object.defineProperty(wrap, name, {
-        get : function() {
-          var prop = parsePath(this2.ctx, path);
-          return prop.value;
-        },
-
-        set : function(val) {
-          var prop = parsePath(this2.ctx, path);
-          prop.set(val);
-        }
-      })
-
-      var prop = parsePath(this.ctx, path);
-      var ret = this.dat.add(wrap, name, min, max); //.listen();
-
-      if (prop.description !== undefined) {
-        ret.description(prop.description);
-      }
-
-      return ret;
-    }
-
-    button(name, func, thisvar) {
-      var obj = {};
+      this.pathmap = {};
       
-      if (thisvar !== undefined) {
-        obj[name] = function() {
-          func.call(thisvar);
+      for (let m of members) {
+        this.add(m);
+      }
+    }
+    
+    struct(name) {
+      let ret = new DataStruct();
+      return ret;
+    }
+    
+    float(path, apiname, uiname, description) {
+      let prop = new toolprop.FloatProperty(0, apiname, uiname, description);
+      
+      let dpath = new DataPath(path, apiname, prop);
+      this.add(dpath);
+      return dpath;
+    }
+    
+    int(path, apiname, uiname, description) {
+      let prop = new toolprop.IntProperty(0, apiname, uiname, description);
+      
+      let dpath = new DataPath(path, apiname, prop);
+      this.add(dpath);
+      return dpath;
+    }
+    
+    add(m) {
+      this.members.push(m);
+      m.parent = this;
+      
+      this.pathmap[m.path] = m;
+      
+      return this;
+    }
+  }
+  
+  let _map_struct_idgen = 1;
+  let _map_structs = {};
+  
+  let DataAPI = exports.DataAPI = class DataAPI extends exports.ModelInterface {
+    constructor() {
+      super();
+    }
+
+    mapStruct(cls, auto_create=true) {
+      let key = cls.__dp_map_id;
+      
+      if (key === undefined && auto_create) {
+        key = cls.__dp_map_id = _map_struct_idgen++;
+        _map_structs[key] = new DataStruct(undefined, cls.name);
+      }
+      
+      return _map_structs[key];
+    }
+    /*returns {
+      parent : [parent object of path]
+      object : [object owning property key]
+      key : [property key]
+      value : [value of property]
+      prop : [optional toolprop.ToolProperty representing the property definition]
+      struct : [optional datastruct representing the type, if value is an object]
+    }
+    */    
+    resolvePath(ctx, path) {
+      path = path.replace(/\[/g, ".").replace(/\]/g, "").trim().split(".");
+      
+      let parent1, obj = ctx, parent2;
+      let key = undefined;
+      let dstruct = undefined;
+      
+      for (let c of path) {
+        let c2 = parseInt(c);
+        if (!isNaN(c2)) {
+          c = c2;
         }
-      } else {
-        obj[name] = function() {
-          func();
+        
+        parent2 = parent1;
+        parent1 = obj;
+        obj = obj[c];
+        key = c;
+        
+        if (typeof obj == "object") {
+          dstruct = this.mapStruct(obj.constructor, false);
         }
       }
-
-      return this.dat.add(obj, name);
+      
+      let prop;
+      
+      if (dstruct !== undefined && dstruct.pathmap[key]) {
+        let dpath = dstruct.pathmap[key];
+        
+        if (dpath.type == DataTypes.PROP) {
+          prop = dpath.data;
+        }
+      }
+      
+      return {
+        parent : parent2,
+        obj : parent1,
+        value : obj,
+        key : key,
+        dstruct : dstruct,
+        prop : prop
+      };
     }
   }
   

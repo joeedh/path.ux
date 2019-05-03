@@ -148,7 +148,7 @@ define([
 
         var type = DomEventTypes[k];
         
-        getDom(dom, type).removeEventListener(type, this["__"+k]);
+        getDom(dom, type).removeEventListener(type, this["__"+k], true);
       }
       
       this.modal_pushed = false;

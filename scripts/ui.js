@@ -6,16 +6,28 @@
 var _ui = undefined;
 
 define([
-  './util', './vectormath', "./ui_curvewidget", "./ui_base", "./ui_widgets",
-], function(util, vectormath, ui_curvewidget, ui_base, ui_widgets) {
+  './util', './vectormath', "./ui_curvewidget", "./ui_base", "./ui_widgets", './toolprop'
+], function(util, vectormath, ui_curvewidget, ui_base, ui_widgets, toolprop) {
   'use strict';
   
+  let EnumProperty = toolprop.EnumProperty;
+    
   let exports = _ui = {};
   let Vector2 = vectormath.Vector2,
       UIBase = ui_base.UIBase;
   
   exports.SimpleContext = ui_base.SimpleContext;
   exports.DataPathError = ui_base.DataPathError;
+  
+  var list = function list(iter) {
+    let ret = [];
+    
+    for (let item of iter) {
+      ret.push(item);
+    }
+    
+    return ret;
+  }
   
   var save_setting = exports.save_setting = function save_setting(key, val) {
     var settings = localStorage.startup_file_bn6;
@@ -64,6 +76,28 @@ define([
       }
   }
   
+  var Label = exports.Label = class Label extends ui_base.UIBase {
+    constructor() {
+      super();
+      
+      this.dom = document.createElement("div");
+      this.shadow.appendChild(this.dom);
+    }
+    
+    get text() {
+      return this.dom.innerText;
+    }
+    
+    set text(text) {
+      this.dom.innerText = text;
+    }
+    
+    static define() {return {
+      tagname : "label-x"
+    };}    
+  }
+  ui_base.UIBase.register(Label);
+  
   var Container = exports.Container = class Container extends ui_base.UIBase {
     constructor() {
         super();
@@ -79,18 +113,33 @@ define([
         this.dom.appendChild(ul);
         ul.style["list-style-type"] = "none";
         
-        let style = document.createElement("style")
+        let style = this.styletag = document.createElement("style")
         this.dom.setAttribute("class", "containerx");
         
         style.textContent = `div.containerx {
           background-color : ${ui_base.getDefault("DefaultPanelBG")};
-}
+        }
         `
         
         this.shadow.appendChild(style);
         this.shadow.appendChild(this.dom);
         
         this.dom = ul;
+    }
+    
+    get background() {
+      return this.__background;
+    }
+    
+    set background(bg) {
+      this.__background = bg;
+      
+      this.styletag.textContent = `div.containerx {
+          background-color : ${bg};
+        }
+      `;
+      this.style["background-color"] =  bg;
+      this.dom.style["background-color"] = bg;
     }
     
     static define() {return {
@@ -171,6 +220,45 @@ define([
       }, 150);
     }
     
+    get children() {
+      let list = [];
+      
+      function indexOf(nodelist, item) {
+        let i = 0;
+        for (let child of nodelist) {
+          if (child == item) {
+            return i;
+          }
+          i++;
+        }
+        
+        return -1;
+        //return Array.prototype.indexOf.call(nodelist, item);
+      }
+
+      function rec(n) {
+        if (n instanceof ui_base.UIBase) {
+          list.push(n);
+        } else {
+          for (let n2 of n.childNodes) {
+            rec(n2);
+          }
+        }
+      }
+      
+      for (let child of this.shadow.childNodes) {
+        rec(child);
+      }
+      for (let child of this.dom.childNodes) {
+        rec(child);
+      }
+      for (let child of this.childNodes) {
+        rec(child);
+      }
+      
+      return list;
+    }
+    
     update() {
       function indexOf(nodelist, item) {
         let i = 0;
@@ -240,7 +328,23 @@ define([
       return super.appendChild(child);
     }
     
+    clear() {
+      for (let child of this.children) {
+        if (child instanceof ui_base.UIBase) {
+          child.remove();
+          
+          if (child.on_destroy !== undefined) 
+            child.on_destroy();
+        }
+      }
+    }
+    
     _add(child) {
+      if (child instanceof NodeList) {
+        throw new Error("eek!");
+      }
+      
+      child.parentWidget = this;
       child.ctx = this.ctx;
       
       let li = document.createElement("li");
@@ -250,6 +354,28 @@ define([
       this.dom.appendChild(li);
       
       return li;
+    }
+    
+    textbox(text, cb, packflag=0) {
+      packflag |= this.inherit_packflag;
+      
+      let ret = document.createElement("textbox-x")
+    
+      ret.packflag |= packflag;
+      ret.onchange = cb;
+      ret.text = text;
+      
+      this._add(ret);
+      return ret;
+    }
+    
+    label(text) {
+      let ret = document.createElement("label-x");
+      ret.text = text;
+
+      this._add(ret);
+      
+      return ret;
     }
     
     button(label, cb, thisvar, id, packflag=0) {
@@ -329,52 +455,21 @@ define([
     listenum(path, name, enummap, defaultval, callback, iconmap, packflag=0) {
       packflag |= this.inherit_packflag;
       
-      let ret = document.createElement("button-x")
-    
+      let ret = document.createElement("dropbox-x")
+      ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+      
       ret.setAttribute("name", name);
-      ret.onclick = (e) => {
-        let prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
-        
-        let menu = document.createElement("menu-x");
-        menu.setAttribute("title", name);
-        
-        //menu.container.remove();
-        //document.body.appendChild(menu);
-        
-        document.body.appendChild(menu);
-        let x = e.x, y = e.y;
-        menu.float(x, y, 8);
-        
-        //this._add(menu);
-        
-        let valmap = {};
-        
-        for (let k in enummap) {
-          valmap[enummap[k]] = k;
-          //menu.addItem(k, enummap[k], ":");
-          if (iconmap) {
-            menu.addItemExtra(k, enummap[k], undefined, iconmap[k]);
-          } else {
-            menu.addItem(k, enummap[k]);
-          }
+      
+      ret.onselect = (id) => {
+        if (callback !== undefined) {
+          callback(id);
         }
-        
-        menu.onselect = (id) => {
-          console.log("got click!", id);
-          
-          ret.setAttribute("name", valmap[id]);
-          
-          if (callback !== undefined) {
-            callback(valmap[id], id);
-          }
-        };
-        
-        menu.start();
-      };
+      }
       
       ret.packflag |= packflag;
       
       this._add(ret);
+      return ret;
     }
     
     getroot() {
@@ -492,6 +587,16 @@ define([
       return ret;      
     }
     
+    table(packflag=0) {
+      packflag |= this.inherit_packflag;
+      
+      let ret = document.createElement("tableframe-x");
+      ret.packflag |= packflag;
+      
+      this._add(ret);
+      return ret;      
+    }
+    
     col(packflag=0) {
       packflag |= this.inherit_packflag;
       
@@ -573,6 +678,189 @@ define([
     };}
   }
   UIBase.register(ColumnFrame);
+  
+  let TableRow = exports.TableRow = class TableRow extends Container {
+    constructor() {
+      super();
+      
+      this.dom.remove();
+      this.dom = document.createElement("tr");
+      
+      //kind of dumb, but this.dom doesn't live within this element itself, bleh
+      //this.shadow.appendChild(this.dom);
+      this.dom.setAttribute("class", "containerx");
+    }
+    
+    static define() {return {
+      tagname : "tablerow-x"
+    };}
+    
+    _add(child) {
+      child.ctx = this.ctx;
+      
+      let td = document.createElement("td");
+      td.appendChild(child);
+      
+      this.dom.appendChild(td);
+    }
+  };
+  UIBase.register(TableRow);
+  
+  let TableFrame = exports.TableFrame = class TableFrame extends Container {
+    constructor() {
+      super();
+      
+      this.dom.remove();
+      this.dom = document.createElement("table");
+      this.shadow.appendChild(this.dom);
+      this.dom.setAttribute("class", "containerx");
+      
+      //this.dom.style["display"] = "block";
+    }
+    
+    update() {
+      this.style["display"] = "inline-block";      
+      super.update();
+    }
+    
+    _add(child) {
+      child.ctx = this.ctx;
+      this.dom.appendChild(child);
+    }
+    
+    row() {
+      let tr = document.createElement("tr");
+      let cls = "table-tr";
+      
+      tr.setAttribute("class", cls);
+      this.dom.appendChild(tr);
+      
+      function maketd() {
+        let td = document.createElement("td");
+        tr.appendChild(td);
+        
+        let container = document.createElement("rowframe-x");
+          
+        container.setAttribute("class", cls);
+        container.dom.setAttribute("class", cls);
+        td.setAttribute("class", cls);
+        
+        //let div2 = document.createElement("div");
+        //div2.setAttribute("class", cls);
+        //div2.innerHTML = "sdfsdf";
+        
+        //td.appendChild(div2);
+        td.appendChild(container);
+        
+        return container;
+      }
+      
+      //hrm wish I could subclass html elements easier
+      let ret = {
+        _tr : tr,
+        
+        focus(args) {
+          tr.focus(args);
+        },
+        
+        blur(args) {
+          tr.blur(args);
+        },
+        
+        remove : () => {
+          tr.remove();
+        },
+        
+        addEventListener(type, cb, arg) {
+          tr.addEventListener(type, cb, arg);
+        },
+        
+        removeEventListener(type, cb, arg) {
+          tr.removeEventListener(type, cb, arg);
+        },
+        
+        setAttribute(attr, val) {
+          if (attr == "class") {
+            cls = val;
+          }
+          
+          tr.setAttribute(attr, val);
+        }
+      };
+
+      function makefunc(f) {
+        ret[f] = function() {
+          let container = maketd();
+          
+          container.background = tr.style["background-color"]; //"rgba(0,0,0,0)";
+          return container[f].apply(container, arguments);
+        }
+      }
+      
+      let _bg = "";
+      
+      //need to implement proper proxy here!
+      Object.defineProperty(ret, "tabIndex", {
+        set : function(f) {
+          tr.tabIndex = f;
+        },
+        
+        get : function(f) {
+          return tr.tabIndex;
+        }
+      });
+      
+      Object.defineProperty(ret, "background", {
+        set(bg) {
+          _bg = bg;
+          tr.style["background-color"] = bg;
+          
+          for (let node of tr.childNodes) {
+            if (node.childNodes.length > 0) {
+              node.childNodes[0].background = bg;
+              node.style["background-color"] = bg;
+            }
+          }
+        }, get() {
+          return _bg;
+        }
+      });
+      
+      /*
+      Object.defineProperty(ret, "class", {
+        set(bg) {
+          tr.class = bg;
+        }
+      });//*/
+      
+      makefunc("label");
+      makefunc("button");
+      makefunc("textbox");
+      makefunc("col");
+      makefunc("row");
+      makefunc("table");
+      makefunc("listenum");
+      makefunc("check");
+      
+      return ret;
+    }
+    
+    update() {
+      super.update();
+    }
+    
+    clear() {
+      super.clear();
+      for (let child of list(this.dom.childNodes)) {
+        child.remove();
+      }
+    }
+    
+    static define() {return {
+      tagname : "tableframe-x"
+    };}
+  }
+  UIBase.register(TableFrame);
   
   return exports;
 });

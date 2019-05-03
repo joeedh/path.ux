@@ -1,11 +1,13 @@
-"use strict";
+"use sitrict";
 
 let _ui_widgets = undefined;
 
 define([
-  "util", "vectormath", "ui_base", './icon_enum', 'events'
-], function(util, vectormath, ui_base, icon_enum, events) {
+  "util", "vectormath", "ui_base", './icon_enum', 'events', './simple_toolsys'
+], function(util, vectormath, ui_base, icon_enum, events, simple_toolsys) {
   "use strict";
+  
+  let EnumProperty = simple_toolsys.EnumProperty;
   
   let exports = _ui_widgets = {};
   let UIBase = ui_base.UIBase, 
@@ -21,10 +23,12 @@ define([
     constructor() {
       super();
         
+      let dpi = UIBase.getDPI();
+
+      this.r = ui_base.getDefault("BoxRadius");
       this._name = "";
       this._namePad = undefined;
       
-      let dpi = UIBase.getDPI();
       this._last_dpi = dpi;
       
       this._lastw = undefined;
@@ -34,6 +38,34 @@ define([
       this.g = this.dom.getContext("2d");
       
       this.dom.setAttribute("class", "canvas1");
+      this.dom.tabIndex = 0;
+      
+      this.addEventListener("keydown", (e) => {
+        console.log(e.keyCode);
+        
+        switch (e.keyCode) {
+          case 32: //spacebar
+          case 13: //enter
+            this.click();
+            break;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      
+      this.addEventListener("focusin", () => {
+        this._focus = 1;
+        this._redraw();
+        this.focus();
+        console.log("focus2");
+      });
+      
+      this.addEventListener("blur", () => {
+        this._focus = 0;
+        this._redraw();
+        console.log("blur2");
+      });
       
       //set default dimensions
       let width = ui_base.getDefault("numslider_width");
@@ -47,12 +79,22 @@ define([
       
       let style = document.createElement("style")
       style.textContent = ui_base.getWidgetStyle("numslider-x", `.canvas1 {
-        
+        -moz-user-focus: normal;
+        moz-user-focus: normal;
+        user-focus: normal;
       }
       `);
       
       this.shadow.appendChild(style);
-      this.shadow.appendChild(this.dom);
+      let form = document.createElement("div");
+      form.style["tabindex"] = 4;
+      form.setAttribute("type", "hidden");
+      form.type ="hidden";
+      form.style["-moz-user-focus"] = "normal";
+      form.setAttribute("class", "canvas1");
+      form.appendChild(this.dom);
+      
+      this.shadow.appendChild(form);
       
       this.bindEvents();
       this._redraw();
@@ -149,7 +191,7 @@ define([
       }
     }
     
-    updateWidth() {
+    updateWidth(w_add=0) {
       let dpi = UIBase.getDPI();
       
       let pack = this.packflag;
@@ -157,11 +199,11 @@ define([
       if (this.parentNode !== undefined && (this.packflag & PackFlags.INHERIT_WIDTH)) {
         let p = this.parentNode;
         
-        if (this._lastw != p.clientWidth) {
-          console.log(p.clientWidth);
+        if (this._lastw != p.clientWidth + w_add) {
+          console.log(p.clientWidth+w_add);
           
-          this.dom.style["width"] = p.clientWidth + "px";
-          this._lastw = p.clientWidth;
+          this.dom.style["width"] = Math.ceil(p.clientWidth+w_add) + "px";
+          this._lastw = p.clientWidth + w_add;
           
           this._repos_canvas();
         }
@@ -180,6 +222,7 @@ define([
       
       if (this._last_dpi != dpi) {
         console.log("update dpi", dpi);
+        
         this._last_dpi = dpi;
         
         this.g.font = undefined; //reset font
@@ -203,14 +246,34 @@ define([
       return text;
     }
     
-    _redraw() {
+    _redraw(draw_text=true) {
       //console.log("button draw");
       
       let dpi = UIBase.getDPI();
       
-      ui_base.drawRoundBox(this.dom, this.g);
-
-      let r = ui_base.getDefault("BoxRadius") * dpi;
+      ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, this.r);
+      
+      if (this._focus) {
+        let w = this.dom.width, h = this.dom.height;
+        let p = 1/dpi;
+        
+        //XXX remove this.g.translate lines after refactoring drawRoundBox, see comment in ui_base.js
+        this.g.translate(p, p);
+        let lw = this.g.lineWidth;
+        this.g.lineWidth = 2*dpi;
+        ui_base.drawRoundBox(this.dom, this.g, w-p*2, h-p*2, this.r, "stroke", ui_base.getDefault("BoxHighlight"));
+        this.g.lineWidth = lw;
+        this.g.translate(-p, -p);       
+      }
+      
+      if (draw_text) {
+        this._draw_text();
+      }
+    }
+    
+    _draw_text() {
+      let dpi = UIBase.getDPI();
+      
       let pad = ui_base.getDefault("BoxMargin") * dpi;
       let ts = ui_base.getDefault("DefaultTextSize");
       
@@ -220,9 +283,11 @@ define([
       
       let tw = ui_base.measureText(text, this.dom, this.g).width;
       let cx = this.dom.width/2 - tw/2;
-      let cy = this.dom.height/2;
+      let cy = this.dom.height;
       
-      ui_base.drawText(cx, cy + ts/2, text, this.dom, this.g);
+      cx = ~~cx;
+      
+      ui_base.drawText(~~cx + 0.5, ~~(cy - ts*0.6*dpi) + 0.5, text, this.dom, this.g);
     }
     
     static define() {return {
@@ -692,6 +757,8 @@ define([
       constructor() {
         super();
         
+        this.items = [];
+        
         this.itemindex = 0;
         this.closed = false;
         this.activeItem = undefined;
@@ -722,6 +789,7 @@ define([
             float:left;
             
             display: block;
+            -moz-user-focus: normal;
           }
           
           ul.menu {
@@ -732,6 +800,7 @@ define([
             border-style : solid;
             border-width : 1px;
             border-color: grey;
+            -moz-user-focus: normal;
             background-color: ${ui_base.getDefault("MenuBG")};
           }
           
@@ -739,6 +808,7 @@ define([
             display : block;
             
             list-style-type:none;
+            -moz-user-focus: normal;
             
             margin : 0;
             padding : 0px;
@@ -752,6 +822,7 @@ define([
           
           .menuitem:focus {
             background-color: rgba(155, 220, 255, 1.0);
+            -moz-user-focus: normal;
           }
         `;
         
@@ -844,7 +915,73 @@ define([
       tagname : "menu-x"
     };}
     
+    start_fancy(prepend, setActive=true) {
+      console.log("menu fancy start");
+      
+      let dom2 = document.createElement("div");
+      //let dom2 = document.createElement("div");
+      
+      this.dom.setAttribute("class", "menu");
+      dom2.setAttribute("class", "menu");
+      
+      let sbox = document.createElement("textbox-x");
+      
+      dom2.appendChild(sbox);
+      dom2.appendChild(this.dom);
+      
+      dom2.style["height"] = "300px";
+      this.dom.style["height"] = "300px";
+      this.dom.style["overflow"] = "scroll";
+      
+      if (prepend) {
+        this.container.prepend(dom2);
+      } else {
+        this.container.appendChild(dom2);
+      }
+      
+      sbox.focus();
+      sbox.onchange = () => {
+        let t = sbox.text.trim().toLowerCase();
+        
+        console.log("applying search", t);
+        
+        for (let item of this.items) {
+          item.remove();
+        }
+        
+        for (let item of this.items) {
+          let ok = t == "";
+          ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
+          
+          if (ok) {
+            this.dom.appendChild(item);
+          }
+          //item.hidden = !ok;
+        }
+      }
+      
+      sbox.addEventListener("keydown", (e) => {
+        console.log(e.keyCode);
+        switch (e.keyCode) {
+          case 27: //escape key
+            this.close();
+            break;
+          case 13: //enter key
+            this.click(this.activeItem);
+            this.close();
+            break;
+        }
+      });
+      
+      if (!setActive)
+        return;
+    }
+    
     start(prepend, setActive=true) {
+      if (this.items.length > 10) {
+        return this.start_fancy(prepend, setActive);
+      }
+      
       console.log("menu start");
       
       if (prepend) {
@@ -875,7 +1012,7 @@ define([
     addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
         let dom = document.createElement("span");
        
-        hotkey = "ctrl-A"
+        hotkey = ""
         dom.style["display"] = "inline-flex";
         
         let icon_div;
@@ -898,6 +1035,16 @@ define([
         icon_div.style["align"] = "left";
         
         let span = document.createElement("span");
+        
+        //stupid css doesn't get width right. . .
+        span.style["font"] = ui_base._getFont("DefaultText");
+        let dpi = UIBase.getDPI();
+        let tsize = ui_base.getDefault("DefaultTextSize");
+        let twid = Math.ceil(text.length * tsize * 1.1);
+        
+        span.style["width"] = twid + "px";
+        //span.style["padding"] = "50px"
+        //span.style["margin"] = "50px"
         span.innerText = text;
         
         dom.style["width"] = "100%";
@@ -933,10 +1080,10 @@ define([
       id = id === undefined ? item : id;
       
       if (typeof item == "string" || item instanceof String) {
-        //let dom = document.createElement("dom");
-        //dom.textContent = item;
-        //item = dom;
-        return this.addItemExtra(item);
+        let dom = document.createElement("dom");
+        dom.textContent = item;
+        item = dom;
+        //return this.addItemExtra(item, id);
       }
       
       let li = document.createElement("li");
@@ -967,6 +1114,7 @@ define([
       }
       
       li._id = id;
+      this.items.push(li);
       
       if (add) {
         li.addEventListener("click", (e) => {
@@ -1003,8 +1151,6 @@ define([
           }
           
           this.activeItem = li;
-          console.log(this.activeItem);
-          console.log("focus", li.getAttribute("tabindex"));
         })
         
         li.addEventListener("mouseenter", (e) => {
@@ -1037,7 +1183,149 @@ define([
     constructor() {
       super();
       
+      this.r = 5;
       this._menu = undefined;
+      this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
+      
+      this.onclick = this._onclick.bind(this);
+      this.updateWidth();
+    }
+    
+    updateWidth() {
+      //let ret = super.updateWidth(10);
+      let dpi = UIBase.getDPI();
+        
+      let ts = ui_base.getDefault("DefaultTextSize");
+      let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
+      tw = ~~tw;
+      
+      tw += 30;
+      
+      if (tw != this._last_w) {
+        this._last_w = tw;
+        this.dom.style["width"] = tw + "px";
+        this._repos_canvas();
+        this._redraw();
+      }
+      
+      return 0;
+    }
+    
+    _build_menu() {
+      let prop = this.prop;
+      
+      if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+        this._menu.remove();
+      }
+      
+      let menu = this._menu = document.createElement("menu-x");
+      menu.setAttribute("title", name);
+      
+      let valmap = {};
+      let enummap = prop.values;
+      let iconmap = prop.iconmap;
+      let uimap = prop.ui_value_names;
+      
+      console.log("   UIMAP", uimap);
+      
+      for (let k in enummap) {
+        let uk = k;
+        
+        valmap[enummap[k]] = k;
+        
+        if (uimap !== undefined && k in uimap) {
+          uk = uimap[k];
+        }
+        
+        //menu.addItem(k, enummap[k], ":");
+        if (iconmap && iconmap[k]) {
+          menu.addItemExtra(uk, enummap[k], undefined, iconmap[k]);
+        } else {
+          menu.addItem(uk, enummap[k]);
+        }
+      }
+      
+      menu.onselect = (id) => {
+        console.trace("got click!", id, ":::");
+        
+        this._menu = undefined;
+        this.prop.setValue(id);
+        
+        this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
+        
+        if (this.onselect !== undefined) {
+          this.onselect(id);
+        }
+      };
+    }
+    
+    _onclick(e) {
+      console.log("menu dropbox click");
+      
+      if (this._menu !== undefined) {
+        this._menu.close();
+        this._menu = undefined;
+        return;
+      }
+      
+      this._build_menu();
+      
+      if (this._menu === undefined) {
+        return;
+      }
+      
+      let menu = this._menu;
+      
+      document.body.appendChild(menu);
+      let dpi = UIBase.getDPI();
+      
+      let x = e.x, y = e.y;
+      let rects = this.getClientRects();
+      
+      x = rects[0].x;
+      y = rects[0].y + 10;//dpi + 20*dpi;//Math.ceil(150/dpi);
+      
+      menu.float(x, y, 8);
+      
+      menu.start();
+    }
+    
+    _redraw() {
+      super._redraw(false);
+      
+      let g = this.g;
+      let w = this.dom.width, h = this.dom.height;
+      
+      let p = 10*UIBase.getDPI();
+      let p2 = 4*UIBase.getDPI();
+      
+      g.fillStyle = "rgba(250, 250, 250, 0.7)";
+      g.beginPath();
+      g.rect(p2, p2, this.dom.width-p2 - h, this.dom.height-p2*2);
+      g.fill();
+      
+      g.fillStyle = "rgba(50, 50, 50, 0.2)";
+      g.strokeStyle = "rgba(50, 50, 50, 0.8)";
+      g.beginPath();
+      /*
+      g.moveTo(w-p, p);
+      g.lineTo(w-(p+h*0.25), h-p);
+      g.lineTo(w-(p+h*0.5), p);
+      g.closePath();
+      //*/
+      
+      let sz = 0.3;
+      g.moveTo(w-h*0.5-p, p);
+      g.lineTo(w-p, p);
+      g.moveTo(w-h*0.5-p, p+sz*h/3);
+      g.lineTo(w-p, p+sz*h/3);
+      g.moveTo(w-h*0.5-p, p+sz*h*2/3);
+      g.lineTo(w-p, p+sz*h*2/3);
+      
+      g.lineWidth = 1;
+      g.stroke();
+      
+      this._draw_text();
     }
     
     set menu(val) {
@@ -1057,6 +1345,59 @@ define([
   }
   
   UIBase.register(DropBox);
+  
+  let TextBox = exports.TextBox = class TextBox extends UIBase {
+    constructor() {
+      super();
+      
+      let margin = Math.ceil(3 * UIBase.getDPI());
+      
+      this.dom = document.createElement("input");
+      this.dom.style["margin"] = margin + "px";
+      this.dom.setAttribute("type", "textbox");
+      this.dom.onchange = (e) => {
+        this._change(this.dom.value);
+      }
+      
+      this.dom.oninput = (e) => {
+        this._change(this.dom.value);
+      }
+      ;
+      this.shadow.appendChild(this.dom);
+    }
+    
+    select() {
+      return this.dom.select.apply(this, arguments);
+    }
+    
+    focus() {
+      return this.dom.focus();
+    }
+    
+    blur() {
+      return this.dom.blur();
+    }
+    
+    static define() {return {
+      tagname : "textbox-x"
+    };}
+    
+    get text() {
+      return this.dom.value;
+    }
+    
+    set text(value) {
+      this.dom.value = value;
+    }
+    
+    _change(text) {
+      if (this.onchange) {
+        this.onchange(text);
+      }
+    }
+  }
+  
+  UIBase.register(TextBox);
   
   return exports;
 });

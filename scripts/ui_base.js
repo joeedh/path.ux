@@ -1,12 +1,14 @@
 let _ui_base = undefined;
 
 define([
-  './util', './vectormath', './icon_enum'
-], function(util, vectormath, icon_enum) {
+  './util', './vectormath', './icon_enum', './toolprop', './controller'
+], function(util, vectormath, icon_enum, toolprop) {
   'use strict';
   
   let exports = _ui_base = {};
 
+  let EnumProperty = exports.EnumProperty = toolprop.EnumProperty;
+  
   exports._defaults = {
     "ColorFieldSize" : 256,
     "numslider_width" : 100,
@@ -70,7 +72,7 @@ define([
         return '';
       }
       
-      let dpi = window.devicePixelRatio;
+      let dpi = exports.UIBase.getDPI();
       
       let x = (-(icon % this.tilex) * this.tilesize);
       let y = (-(~~(icon / this.tilex)) * this.tilesize);
@@ -136,108 +138,23 @@ define([
   };
    
   let first = (iter) => {
+    if (iter === undefined) {
+      return undefined;
+    }
+    
+    if (!(Symbol.iterator in iter)) {
+      for (let item in iter) {
+        return item;
+      }
+      
+      return undefined;
+    }
+    
     for (let item of iter) {
       return item;
     }
   }
   
-  let EnumProperty = exports.EnumProperty = class EnumProperty {
-    constructor(string, valid_values, apiname, 
-                uiname, description, flag) 
-    {
-      this.values = {}
-      this.keys = {};
-      this.ui_value_names = {}
-      
-      if (valid_values === undefined) return;
-      
-      if (valid_values instanceof Array || valid_values instanceof String) {
-        for (var i=0; i<valid_values.length; i++) {
-          this.values[valid_values[i]] = valid_values[i];
-          this.keys[valid_values[i]] = valid_values[i];
-        }
-      } else {
-        for (var k in valid_values) {
-          this.values[k] = valid_values[k];
-          this.keys[valid_values[k]] = k;
-        }
-      }
-      
-      if (string === undefined) {
-        this.data = first(valid_values);
-      } else {
-        this.set_value(string);
-      }
-      
-      for (var k in this.values) {
-        var uin = k[0].toUpperCase() + k.slice(1, k.length);
-        
-        uin = uin.replace(/\_/g, " ");
-        this.ui_value_names[k] = uin;
-      }
-      
-      this.iconmap = {};
-    }
-    
-    add_icons(iconmap) {
-      for (var k in iconmap) {
-        this.iconmap[k] = iconmap[k];
-      }
-    }
-
-    copyTo(dst) {
-      p.keys = Object.create(this.keys);
-      p.values = Object.create(this.values);
-      p.data = this.data;
-      p.ui_value_names = this.ui_value_names;
-      p.update = this.update;
-      p.api_update = this.api_update;
-      
-      for (var k in this.iconmap) {
-        p.iconmap[k] = this.iconmap[k];
-      }
-      
-      return p;
-    }
-    
-    copy() {
-      var p = new EnumProperty("dummy", {"dummy" : 0}, this.apiname, this.uiname, this.description, this.flag)
-      
-      p.keys = Object.create(this.keys);
-      p.values = Object.create(this.values);
-      p.data = this.data;
-      p.ui_value_names = this.ui_value_names;
-      p.update = this.update;
-      p.api_update = this.api_update;
-      
-      for (var k in this.iconmap) {
-        p.iconmap[k] = this.iconmap[k];
-      }
-      
-      return p;
-    }
-
-    get_value() {
-      if (this.data in this.values)
-        return this.values[this.data];
-      else
-        return this.data;
-    }
-
-    set_value(val) {
-      if (!(val in this.values) && (val in this.keys))
-        val = this.keys[val];
-      
-      if (!(val in this.values)) {
-        console.trace("Invalid value for enum!");
-        console.log("Invalid value for enum!", val, this.values);
-        return;
-      }
-      
-      this.data = new String(val);
-    }
-  }
-
   
   exports.DataPathError = class DataPathError extends Error {};
   
@@ -293,6 +210,12 @@ define([
       //getting css to flow down properly can be a pain, so 
       //some packing settings are set as bitflags here,
       //see PackFlags
+      
+      /*
+      setInterval(() => {
+        this.update();
+      }, 200);
+      //*/
       
       this.packflag = 0;
       this.shadow = this.attachShadow({mode : 'open'});
@@ -383,7 +306,20 @@ define([
     
     //scaling ratio for high-resolution displays
     static getDPI() {
-      return window.devicePixelRatio;
+      let dpi = window.devicePixelRatio;
+      
+      let f = Math.fract(dpi);
+      let steps = 6
+      f = (Math.ceil(f*steps))/steps;
+      
+      //f = Math.ceil(Math.log(dpi) / Math.log(2));
+      //f = Math.pow(2, f);
+      
+      return (Math.floor(dpi) + f)*1.33333333;
+      
+      //try to snap to a reasonable value
+      
+      return dpi;
     }
     
     /*for saving ui state.
@@ -416,15 +352,19 @@ define([
     }
   }
   
-  exports.drawRoundBox = function drawRoundBox(canvas, g, width, height) {
+  //okay, I need to refactor this function, 
+  //it needs to take x, y as well as width, height,
+  //and be usable for more use cases.
+  exports.drawRoundBox = function drawRoundBox(canvas, g, width, height, r=undefined, op="fill", color=undefined) {
       width = width === undefined ? canvas.width : width;
       height = height === undefined ? canvas.height : height;
       
       let dpi = UIBase.getDPI();
       
-      let r = exports.getDefault("BoxRadius", 12) * dpi;
+      r = r === undefined ? exports.getDefault("BoxRadius", 12) : r;
       let pad = exports.getDefault("BoxMargin", 4) * dpi;
       
+      r *= dpi;
       let r1=r, r2=r;
       
       if (r > (height - pad*2)*0.5) {
@@ -435,19 +375,21 @@ define([
         r2 = (width - pad*2)*0.5;
       }
       
-      let bg;
+      let bg = color;
       
-      if (canvas._background !== undefined) {
+      if (bg === undefined && canvas._background !== undefined) {
         bg = canvas._background;
-      } else {
+      } else if (bg === undefined) {
         bg = exports.getDefault("BoxBG", "rgba(220, 220, 220, 1.0)");
       }
       
-      
-      g.clearRect(0, 0, width, height);
+      if (op == "fill") {
+        g.clearRect(0, 0, width, height);
+      }
       
       g.fillStyle = bg;
-      g.strokeStyle = exports.getDefault("BoxBorder", "rgba(255, 255, 255, 1.0)");
+      //hackish!
+      g.strokeStyle = color === undefined ? exports.getDefault("BoxBorder", "rgba(255, 255, 255, 1.0)") : color;
       
       let w = width, h = height;
       
@@ -471,8 +413,12 @@ define([
       g.quadraticCurveTo(pad, pad, pad, pad+r1);
       g.closePath();
       
-      g.fill();
-      g.stroke();
+      if (op == "fill") {
+        g.fill();
+        g.stroke();
+      } else {
+        g.stroke();
+      }
   };
   
   exports._getFont = function _getFont(size, font="DefaultText") {
@@ -491,11 +437,16 @@ define([
     let dpi = UIBase.getDPI();
     
     if (size !== undefined) {
-      g.font = ""+(size * dpi) + "px sans-serif";
+      g.font = ""+Math.ceil(size * dpi) + "px sans-serif";
     } else if (!canvas.font) {
       let size = exports.getDefault("DefaultTextSize", 14) * dpi;
       
-      g.font = ""+size+ "px sans-serif";
+      let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
+      
+      //size += 4;
+      g.font = ""+Math.floor(size) + "." + add + "px sans-serif";
+    } else {
+      g.font = canvas.font;
     }
   }
   
@@ -516,7 +467,7 @@ define([
     exports._ensureFont(canvas, g, size);
     
     g.fillStyle = exports.getDefault("DefaultTextColor", "rgba(35, 35, 35, 1.0)");
-    g.fillText(text, x, y);
+    g.fillText(text, x+0.5, y+0.5);
     
     if (size !== undefined) {
       //clear custom font for next time

@@ -9,6 +9,25 @@ define([
   
   let exports = _ScreenArea = {};
 
+  exports.getAreaIntName = function(name) {
+    let hash = 0;
+    
+    for (let i=0; i<name.length; i++) {
+      let c = name.charCodeAt(i);
+      
+      if (i % 2 == 0) {
+        hash += c<<8;
+        hash *= 13;
+        hash = hash & ((1<<15)-1);
+      } else {
+        hash += c;
+      }
+    }
+    
+    return hash;
+  }
+  window.getAreaIntName = exports.getAreaIntName;
+  
   let AreaTypes = exports.AreaTypes = {
     TEST_CANVAS_EDITOR : 0
   };
@@ -20,8 +39,6 @@ define([
     constructor() {
       super();
       
-      this.areaType = this.constructor.define().areatype;
-      
       this.owning_sarea = undefined;
       this._area_id = exports.area_idgen++;
       
@@ -32,7 +49,7 @@ define([
     saveData() {
       return {
         _area_id : this._area_id,
-        areaType : this.areaType
+        areaName : this.areaName
       };
     }
     
@@ -74,20 +91,58 @@ define([
         throw new Error("Missing areaname key in define()");
       }
       
-      if (def.areatype === undefined) {
-        throw new Error("Missing areatype (an integer) in define()");
-      }
-      
       exports.areaclasses[def.areaname] = cls;
       
       ui_base.UIBase.register(cls);
     }
     
+    toJSON() {
+      return {
+        areaname : this.constructor.define().areaname,
+        _area_id : this._area_id
+      }
+    }
+    
+    loadJSON(obj) {
+      this._area_id = obj._area_id;
+      
+      return this;
+    }
+    
+    makeHeader(container) {
+      let areas = {};
+      let i = 0;
+      
+      for (let k in exports.areaclasses) {
+        let cls = exports.areaclasses[k];
+        let uiname = cls.define().uiname;
+        
+        if (uiname === undefined) {
+          uiname = k.replace("_", " ").toLowerCase();
+        }
+        
+        areas[uiname] = k;
+      }
+      
+      let row = this.container.row();
+      row.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
+        let cls = exports.areaclasses[id];
+        this.owning_sarea.switch_editor(cls);
+      });
+      
+      row.button("------", () => {
+        _appstate.screen.splitTool();
+      }).dom.style["width"] = "50px";
+      
+      row.button("*", () => {
+        _appstate.screen.areaDragTool();
+      }).dom.style["width"] = "50px";
+    }
+    
     static define() {return {
       tagname  : "areadata-x",
-      areaname : undefined,
-      uiname   : undefined,
-      areatype : undefined
+      areaname : undefined, //api name for area type
+      uiname   : undefined
     };}
   }
   
@@ -126,7 +181,6 @@ define([
         _sarea_id : this._sarea_id,
         pos       : this.pos,
         size      : this.size,
-        areatype  : this.area.areaType
       };
     }
     loadData(obj) {
@@ -154,6 +208,61 @@ define([
     
     draw() {
       this.area.draw();
+    }
+    
+    toJSON() {
+      let ret = {
+        editors : this.editors,
+        _sarea_id : this._sarea_id,
+        area : this.area.constructor.define().areaname,
+        type : this.type,
+        pos : this.pos,
+        size : this.size
+      };
+      
+      return ret;
+    }
+    
+    loadJSON(obj) {
+      this.pos.load(obj.pos);
+      this.size.load(obj.size);
+      
+      for (let editor of obj.editors) {
+        let areaname = editor.areaname;
+        
+        console.log(editor);
+        
+        let tagname = exports.areaclasses[areaname].define().tagname;
+        let area = document.createElement(tagname);
+        
+        area.pos = new Vector2(obj.pos);
+        area.size = new Vector2(obj.size);
+        
+        area.loadJSON(editor);
+        
+        this.editormap[areaname] = area;
+        this.editors.push(this.editormap[areaname]);
+        
+        if (areaname === obj.area) {
+          this.area = area;
+        }
+      }
+      
+      if (this.area !== undefined) {
+        this.area.owning_sarea = undefined;
+        this.area.style["width"] = "100%";
+        this.area.style["height"] = "100%";
+        
+        this.shadow.appendChild(this.area);
+      }
+      
+      this.setCSS();
+    }
+    
+    static fromJSON(obj) {
+      let ret = document.createElement("screenarea-x");
+      ret.loadJSON(obj);
+      return ret;
     }
     
     getScreen() {

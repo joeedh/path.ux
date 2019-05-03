@@ -496,7 +496,10 @@ define([
       console.log(cs[i]);
     }
   }
-
+  
+  window.get_callstack = get_callstack;
+  window.print_stack = print_stack;
+  
   var fetch_file = exports.fetch_file = function fetch_file(path) {
       var url = location.origin + "/" + path
       

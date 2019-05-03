@@ -213,7 +213,61 @@ define([
         this.update();
       }, 150);
     }
-
+    
+    clear() {
+      this.sareas = [];
+      this.sareas.active = undefined;
+      
+      for (let child of list(this.childNodes)) {
+        child.remove();
+      }
+      for (let child of list(this.shadow.childNodes)) {
+        child.remove();
+      }
+    }
+    
+    _test_save() {
+      let obj = JSON.parse(JSON.stringify(this));
+      console.log(JSON.stringify(this));
+      
+      this.loadJSON(obj);
+    }
+    
+    loadJSON(obj, schedule_resize=false) {
+      this.clear();
+      
+      for (let sarea of obj.sareas) {
+        sarea = ScreenArea.ScreenArea.fromJSON(sarea);
+        
+        this.appendChild(sarea);
+      }
+      
+      this.regenBorders();
+      this.setCSS();
+      
+      if (schedule_resize) {
+        window.setTimeout(() => {
+          this.on_resize([window.innerWidth, window.innerHeight]);
+        }, 50);
+      }
+    }
+  
+    static fromJSON(obj, schedule_resize=false) {
+      let ret = document.createElement("screen-x");
+      return ret.loadJSON(obj, schedule_resize);
+    }
+    
+    toJSON() {
+      let ret = {
+        sareas : this.sareas
+      };
+      
+      ret.size = this.size;
+      ret.idgen = this.idgen;
+      
+      return ret;
+    }
+    
     static define() {return {
       tagname : "screen-x"
     };}
@@ -589,15 +643,7 @@ define([
         sarea.makeBorders(this);
       }
     }
-    
-    clear() {
-      for (let child of list(this.childNodes)) {
-        child.remove();
-      }
-      
-      return this;
-    }
-    
+        
     on_keydown(e) {
       if (this.sareas.active !== undefined) {
         return this.sareas.active.on_keydown(e);
