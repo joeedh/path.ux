@@ -42,6 +42,8 @@ define([
         val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
       }
       
+      let old = res.obj[res.key];
+      
       if (res.type == "enum") {
         if (val) {
           res.obj[res.key] = res.arg;
@@ -57,7 +59,8 @@ define([
       }
       
       if (prop !== undefined) {
-        prop._fire("change", val);
+        prop.dataref = res.obj;
+        prop._fire("change", res.obj[res.key], old);
       }
     }
     
@@ -81,20 +84,31 @@ define([
       this.struct = undefined;
     }
     
+    //db will be executed with underlying data object
+    //that contains this path in 'this.dataref'
     on(type, cb) {
-      if (this.type === PropTypes.PROP) {
+      if (this.type == DataTypes.PROP) {
         this.data.on(type, cb);
+      } else {
+        throw new Error("invalid call to DataPath.on");
       }
+      
+      return this;
     }
     
     off(type, cb) {
-      if (this.type === PropTypes.PROP) {
+      if (this.type == DataTypes.PROP) {
         this.data.off(type, cb);
       }
     }
     
     range(min, max) {
       this.data.setRange(min, max);
+      return this;
+    }
+    
+    radix(r) {
+      this.data.setRadix(r);
       return this;
     }
     
@@ -143,6 +157,14 @@ define([
       return dpath;
     }
     
+    string(path, apiname, uiname, description) {
+      let prop = new toolprop.StringProperty(undefined, apiname, uiname, description);
+
+      let dpath = new DataPath(path, apiname, prop);
+      this.add(dpath);
+      return dpath;
+    }
+    
     int(path, apiname, uiname, description) {
       let prop = new toolprop.IntProperty(0, apiname, uiname, description);
       
@@ -153,6 +175,18 @@ define([
     
     enum(path, apiname, enumdef, uiname, description) {
       let prop = new toolprop.EnumProperty(undefined, enumdef, apiname, uiname, description);
+      
+      let dpath = new DataPath(path, apiname, prop);
+      this.add(dpath);
+      return dpath;
+    }
+    
+    array(path, apiname, struct) {
+      //do nothing for now
+    }
+    
+    flags(path, apiname, enumdef, uiname, description) {
+      let prop = new toolprop.FlagProperty(undefined, enumdef, apiname, uiname, description);
       
       let dpath = new DataPath(path, apiname, prop);
       this.add(dpath);
@@ -199,7 +233,10 @@ define([
         let s = path[i];
         
         if (splitchars.has(s)) {
-          p.push(s);
+          if (s != "]") {
+            p.push(s);
+          }
+          
           p.push("");
           continue;
         }
@@ -221,6 +258,7 @@ define([
         }
       }
       
+      //console.log(p);
       let i = 0;
       
       let parent1, obj = ctx, parent2;
@@ -233,12 +271,16 @@ define([
         let a = p[i];
         let b = p[i+1];
         
-        if (a == ".") {
+        if (a == "." || a == "[") {
           key = b
           
           parent2 = parent1;
           parent1 = obj;
           obj = obj[b];
+          
+          if (obj === undefined || obj === null) {
+            break;
+          }
           
           if (typeof obj == "object") {
             dstruct = this.mapStruct(obj.constructor, false);

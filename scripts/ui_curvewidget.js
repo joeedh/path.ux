@@ -1494,7 +1494,7 @@ define([
         ret.generators.push(gen.toJSON());
       }
       
-      return ret;
+      return Object.assign(super.toJSON(), ret);
     }
     
     getGenerator(type) {

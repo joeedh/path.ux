@@ -3,11 +3,13 @@
 let _ui_widgets = undefined;
 
 define([
-  "util", "vectormath", "ui_base", './icon_enum', 'events', './simple_toolsys'
-], function(util, vectormath, ui_base, icon_enum, events, simple_toolsys) {
+  "util", "vectormath", "ui_base", './icon_enum', 'events', './simple_toolsys',
+  './toolprop'
+], function(util, vectormath, ui_base, icon_enum, events, simple_toolsys, toolprop) {
   "use strict";
   
-  let EnumProperty = simple_toolsys.EnumProperty;
+  let EnumProperty = toolprop.EnumProperty,
+      PropTypes = toolprop.PropTypes;
   
   let exports = _ui_widgets = {};
   let UIBase = ui_base.UIBase, 
@@ -822,6 +824,8 @@ define([
       this._checked = undefined;
       this.r = 5;
       this._icon = 0;
+      this._icon_pressed = undefined;
+      this.iconsheet = 0;
     }
     
     get icon() {
@@ -866,9 +870,13 @@ define([
       super.update();
     }
 
+    _getsize() {
+      return ui_base.iconmanager.getTileSize(this.iconsheet);
+    }
+    
     _repos_canvas() {
-      this.dom.style["height"] = "32px";
-      this.dom.style["width"] = "32px";
+      this.dom.style["height"] = this._getsize() + "px";
+      this.dom.style["width"] = this._getsize() + "px";
       
       super._repos_canvas();
     }
@@ -890,7 +898,13 @@ define([
       this.dom._background = this._checked ? ui_base.getDefault("BoxDepressed") : ui_base.getDefault("BoxBG");
       //
       super._redraw(false);
-      ui_base.iconmanager.canvasDraw(this.dom, this.g, this.icon);
+      let icon = this._icon;
+      
+      if (this._checked && this._icon_pressed !== undefined) {
+        icon = this._icon_pressed;
+      }
+      
+      ui_base.iconmanager.canvasDraw(this.dom, this.g, icon, undefined, undefined, this.iconsheet);
     }
     
     static define() {return {
@@ -1094,6 +1108,10 @@ define([
       
       this.remove();
       this.dom.remove();
+      
+      if (this.onclose) {
+        this.onclose(this);
+      }
     }
     
     static define() {return {
@@ -1370,7 +1388,7 @@ define([
       
       this.r = 5;
       this._menu = undefined;
-      this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
+      //this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
       
       this.onclick = this._onclick.bind(this);
       this.updateWidth();
@@ -1396,8 +1414,46 @@ define([
       return 0;
     }
     
+    
+    updateDataPath() {
+      if (this.ctx === undefined) {
+        return;
+      }
+      
+      let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      let val = UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+      
+      if (prop === undefined) {
+        return;
+      }
+      
+      if (this.prop !== undefined) {
+        prop = this.prop;
+      }
+      
+      let name = prop.ui_value_names[prop.keys[val]];
+      if (name != this.getAttribute("name")) {
+        this.setAttribute("name", name);
+        this.updateName();
+      }
+      
+      //console.log(name, val);
+    }
+    
+    update() {
+      super.update();
+      
+      if (this.hasAttribute("datapath")) {
+        this.updateDataPath();
+      }
+    }
+    
     _build_menu() {
       let prop = this.prop;
+      
+      if (this.prop === undefined) {
+        return;
+      }
       
       if (this._menu !== undefined && this._menu.parentNode !== undefined) {
         this._menu.remove();
@@ -1430,6 +1486,10 @@ define([
         }
       }
       
+      menu.onclose = () => {
+        this._menu = undefined;
+      }
+      
       menu.onselect = (id) => {
         console.trace("got click!", id, ":::");
         
@@ -1437,9 +1497,12 @@ define([
         this.prop.setValue(id);
         
         this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
-        
         if (this.onselect !== undefined) {
           this.onselect(id);
+        }
+        
+        if (this.hasAttribute("datapath") && this.ctx) {
+          UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), id);
         }
       };
     }
@@ -1516,8 +1579,10 @@ define([
     set menu(val) {
       this._menu = val;
       
-      this._name = val.title;
-      this.updateName();
+      if (val !== undefined) {
+        this._name = val.title;
+        this.updateName();
+      }
     }
     
     get menu() {
@@ -1535,7 +1600,19 @@ define([
     constructor() {
       super();
       
+      this.addEventListener("focusin", () => {
+        this._focus = 1;
+      });
+      
+      this.addEventListener("blur", () => {
+        this._focus = 0;
+      });
+      
       let margin = Math.ceil(3 * UIBase.getDPI());
+      
+      this._had_error = false;
+      
+      this.decimalPlaces = 4;
       
       this.dom = document.createElement("input");
       this.dom.style["margin"] = margin + "px";
@@ -1544,11 +1621,59 @@ define([
         this._change(this.dom.value);
       }
       
+      this.radix = 16;
+      
       this.dom.oninput = (e) => {
         this._change(this.dom.value);
       }
-      ;
+      
       this.shadow.appendChild(this.dom);
+    }
+    
+    updateDataPath() {
+      if (this.ctx === undefined) {
+        return;
+      }
+      if (this._focus || this._flashtimer !== undefined || (this._had_error && this._focus)) {
+        return;
+      }
+      
+      let val = ui_base.UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+      if (val === undefined || val === null)
+        return;
+      
+      let prop = ui_base.UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      
+      let text = this.text;
+      
+      if (prop !== undefined && (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
+        let is_int = prop.type == PropTypes.INT;
+        
+        if (is_int) {
+          this.radix = prop.radix;
+          text = val.toString(this.radix);
+          
+          if (this.radix == 2) {
+            text = "0b" + text;
+          } else if (this.radix == 16) {
+            text += "h";
+          }
+        } else {
+          text = val.toFixed(this.decimalPlaces);
+        }
+      } else if (prop !== undefined && prop.type == PropTypes.STRING) {
+        text = val;
+      }
+      
+      if (this.text != text) {
+        this.text = text;
+      }
+    }
+    
+    update() {
+      if (this.hasAttribute("datapath")) {
+        this.updateDataPath();
+      }
     }
     
     select() {
@@ -1576,7 +1701,41 @@ define([
       this.dom.value = value;
     }
     
+    _prop_update(prop, text) {
+      if ((prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
+        let val = parseFloat(this.text);
+        
+        if (!toolprop.isNumber(this.text.trim())) {
+          this.flash(ui_base.ErrorColors.ERROR, this.dom);
+          this.focus();
+          this.dom.focus();
+          this._had_error = true;
+        } else {
+          if (this._had_error) {
+            this.flash(ui_base.ErrorColors.OK, this.dom);
+          }
+          
+          this._had_error = false;
+          ui_base.UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), val);
+        }
+      } else if (prop.type == PropTypes.STRING) {
+          ui_base.UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
+      }
+    }
+ 
+     
     _change(text) {
+      //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
+      //console.log("onchange", this._focus);
+      
+      if (this.hasAttribute("datapath") && this.ctx !== undefined) {
+        let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
+        //console.log(prop);
+        if (prop) {
+          this._prop_update(prop, text);
+        }
+      }
+      
       if (this.onchange) {
         this.onchange(text);
       }

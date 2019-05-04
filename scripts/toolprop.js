@@ -64,13 +64,13 @@ define([
       this.callbacks = {};
     } 
     
-    _fire(type, data) {
+    _fire(type, arg1, arg2) {
       if (this.callbacks[type] === undefined) {
         return;
       }
       
       for (let cb of this.callbacks[type]) {
-        cb(data);
+        cb.call(this, arg1, arg2);
       }
       return this;
     }
@@ -166,11 +166,74 @@ define([
     }
   }
   
+  let StringProperty = exports.StringProperty = class StringProperty extends ToolProperty  {
+    constructor(value, apiname, uiname, description, flag, icon) {
+      super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
+    }
+    
+    copyTo(b) {
+      super.copyTo(b);
+      b.value = this.value;
+      
+      return this;
+    }
+    
+    copy() {
+      let ret = new StringProperty();
+      this.copyTo(ret);
+      return ret;
+    }
+    
+    setValue(val) {
+      //fire events
+      super.setValue(val);
+      
+      this.data = val;
+    }
+  }  
+    
+  let num_res =[
+    /([0-9]+)/,
+    /((0x)?[0-9a-fA-F]+(h?))/,
+    /([0-9]+\.[0-9]*)/,
+    /([0-9]*\.[0-9]+)/
+  ];
+  //num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
+  
+  let isNumber = exports.isNumber = (f) => {
+    if (f == "NaN" || (typeof f == "number" && isNaN(f))) {
+      return false;
+    }
+    
+    f = (""+f).trim();
+    
+    let ok = false;
+    
+    for (let re of num_res) {
+      let ret = f.match(re)
+      if (!ret) {
+        ok = false;
+        continue;
+      }
+      
+      ok = ret[0].length == f.length;
+      if (ok) {
+        break;
+      }
+    }
+    
+    return ok;
+  }
+  
+  window.isNumber = isNumber;
+  
   let NumProperty = exports.NumProperty = class NumProperty extends ToolProperty {
     constructor(type, value, apiname, 
                 uiname, description, flag, icon) {
       super(type, undefined, apiname, uiname, description, flag, icon);
       
+      this.radix = 10;
+
       this.data = 0;
       this.range = [0, 0];
     }
@@ -219,6 +282,10 @@ define([
       
       super.setRange(Math.floor(min), Math.floor(max));
       return this;
+    }
+    
+    setRadix(radix) {
+      this.radix = radix;
     }
   }
   
@@ -357,6 +424,15 @@ define([
       
       //fire events
       super.setValue(val);
+    }
+  }
+  
+  let FlagProperty = exports.FlagProperty = class FlagProperty extends EnumProperty {
+    copy() {
+      let ret = new FlagProperty();
+      this.copyTo(ret);
+      
+      return ret;
     }
   }
 

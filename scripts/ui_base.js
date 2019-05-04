@@ -6,7 +6,58 @@ define([
   'use strict';
   
   let exports = _ui_base = {};
-
+  
+  let Vector4 = vectormath.Vector4;
+  
+  let color2css = exports.color2css = function color2css(c, alpha_override) {
+    let r = ~~(c[0]*255);
+    let g = ~~(c[1]*255);
+    let b = ~~(c[2]*255);
+    let a = c.length < 4 ? 1.0 : c[3];
+    
+    a = alpha_override !== undefined ? alpha_override : a;
+    
+    if (c.length == 3 && alpha_override === undefined) {
+      return `rgb(${r},${g},${b})`;
+    } else {
+      return `rgba(${r},${g},${b}, ${a})`;
+    }
+  }
+  window.color2css = color2css;
+  
+  let css2color_rets = util.cachering.fromConstructor(Vector4, 64);
+  let cmap = {
+    red : [255, 0, 0, 1],
+    green : [0, 255, 0, 1],
+    blue : [0, 0, 255, 1],
+    yellow : [255, 255, 0, 1],
+    white : [255, 255, 255, 1],
+    black : [0, 0, 0, 1],
+    grey : [127, 127, 127, 1],
+    teal : [0, 255, 255, 1]
+  }
+  
+  let css2color = exports.css2color = function css2color(color) {
+    let ret = css2color_rets.next();
+    
+    if (color in cmap) {
+      return ret.load(cmap[color]);
+    }
+    
+    color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",")
+    
+    for (let i=0; i<color.length; i++) {
+      ret[i] = parseFloat(color[i]);
+      if (i < 3) {
+        ret[i] /= 255;
+      }
+    }
+    
+    return ret;
+  }
+  
+  window.css2color = css2color
+  
   let EnumProperty = exports.EnumProperty = toolprop.EnumProperty;
   
   let ErrorColors = exports.ErrorColors = {
@@ -36,15 +87,20 @@ define([
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(150, 150, 150, 1.0)",
     "BoxBG" : "rgba(220, 220, 220, 1.0)",
-    "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
+    "BoxSubBG" : "rgba(175, 175, 175, 1.0)", //for subpanels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
+    "AreaHeaderBG" : "rgba(245, 245, 245, 0.5)",
     
     //fonts
     "DefaultTextFont" : "sans-serif",
     "DefaultTextSize" : 14,
     "DefaultTextColor" : "rgba(35, 35, 35, 1.0)",
+    
+    "LabelTextFont" : "sans-serif",
+    "LabelTextSize" : 13,
+    "LabelTextColor" : "rgba(75, 75, 75, 1.0)",
     
     "HotkeyTextSize"  : 14,
     "HotkeyTextColor" : "rgba(130, 130, 130, 1.0)",
@@ -198,7 +254,7 @@ define([
       this.api = api;
     }
   }
-  
+    
   exports._styles = {};
   exports.getWidgetStyle = function getWidgetStyle(key, val_if_fail) {
     if (key in exports._styles) {
@@ -242,14 +298,192 @@ define([
       }
       `;
       this.shadow.appendChild(style);
+      this._init_done = false;
+    }
+    
+    //delayed init
+    init() {
+      
+    }
+    
+    _ondestroy() {
+      if (this.ondestroy !== undefined) {
+        this.ondestroy();
+      }
+    }
+    
+    remove() {
+      super.remove();
+      this._ondestroy();
+    }
+    
+    removeChild(child) {
+      super.removeChild(child);
+      
+      child._ondestroy();
+    }
+    
+    //used by container nodes
+    _forEachChildren(cb, thisvar) {
+      let rec = (n) => {
+        if (n instanceof UIBase) {
+          if (thisvar !== undefined) {
+            cb.call(thisvar, n);
+          } else {
+            cb(n);
+          }
+        } else {
+          for (let n2 of n.childNodes) {
+            rec(n2);
+          }
+        }
+      }
+      
+      for (let n of this.childNodes) {
+        rec(n);
+      }
+      for (let n of this.shadow.childNodes) {
+        rec(n);
+      }
+    }
+    
+    _init() {
+      if (this._init_done) {
+        return;
+      }
+      
+      this._init_done = true;
+      this.init();
     }
     
     static setDefault(element) {
       return element;
     }
     
-    flash(color, timems) {
+    //are we exclusively 
+    pickElement(x, y, sx=0, sy=0) {
+      let rects = this.getClientRects();
+      let ret;
       
+      if (rects.length == 0)
+        return;
+      
+      this._forEachChildren((n) => {
+        let ret2 = n.pickElement(x, y, sx, sy); //sx+rects[0].x, sy+rects[0].y);
+        
+        if (ret2 !== undefined) {
+          ret = ret2;
+        }
+      });
+      
+      if (ret === undefined) {
+        for (let rect of rects) {
+          if (x >= rect.x+sx && x <=rect.x+sx+rect.width && 
+              y >= rect.y+sy && y <=rect.y+sy+rect.height)
+          {
+            return this;
+          }
+        }
+      }
+      
+      return ret;
+    }
+    
+    flash(color, rect_element=this, timems=355) {
+      console.trace("flash");
+      if (typeof color != "object") {
+          color = css2color(color);
+      }
+      color = new Vector4(color);
+      let csscolor = color2css(color);
+      
+      if (this._flashtimer !== undefined && this._flashcolor != csscolor) {
+        window.setTimeout(() => {
+          this.flash(color, rect_element, timems);
+        }, 100);
+        
+        return;
+      } else if (this._flashtimer !== undefined) {
+        return;
+      }
+      
+      let rect = rect_element.getClientRects()[0];
+      if (rect === undefined) {
+        return;
+      }
+      
+      //okay, dom apparently calls onchange() on .remove, so we have
+      //to put the timer code first to avoid loops
+      let timer;
+      
+      this._flashtimer = timer = window.setInterval((e) => {
+        if (timer === undefined) {
+          return
+        }
+        
+        let a = 1.0 - tick / max;
+        div2.style["background-color"] = color2css(color, a*a*0.5);
+        
+        if (tick > max) {
+          window.clearInterval(timer);
+          
+          this._flashtimer = undefined;
+          this._flashcolor = undefined;
+          timer = undefined;
+          
+          try {
+            this.remove();
+            div.parentNode.insertBefore(this, div);
+          } catch (error) {
+            console.log("dom removal error");
+            div.appendChild(this);
+            return;
+          }
+          
+          //console.log(div.parentNode);
+          div.remove();
+          
+          this.focus();
+        }
+        
+        tick++;
+      }, 20);
+
+      console.log(this.parentNode);
+      
+      let div = document.createElement("div");
+      
+      this.parentNode.insertBefore(div, this);
+      
+      try {
+        this.remove();
+      } catch (error) {
+        console.log("this.remove() failure in UIBase.flash()");
+      }        
+      
+      div.appendChild(this);
+      
+      let div2 = document.createElement("div");
+      
+      div2.style["pointer-events"] = "transparent";
+      div2.tabIndex = undefined;
+      div2.style["z-index"] = "100";
+      div2.style["display"] = "float";
+      div2.style["position"] = "absolute";
+      div2.style["left"] = rect.x + "px";
+      div2.style["top"] = rect.y + "px";
+
+      div2.style["background-color"] = color2css(color, 0.5);
+      div2.style["width"] = rect.width + "px";
+      div2.style["height"] = rect.height + "px";
+
+      div.appendChild(div2);
+      this.focus();
+      
+      let tick = 0;
+      let max = ~~(timems/20);
+      
+      this._flashcolor = csscolor;
     }
     
     destory() {
@@ -260,6 +494,22 @@ define([
     
     get ctx() {
       return this._ctx;
+    }
+    
+    toJSON() {
+      let ret = {};
+      
+      if (this.hasAttribute("datapath")) {
+        ret.datapath = this.getAttribute("datapath");
+      }
+      
+      return ret;
+    }
+    
+    loadJSON(obj) {
+      if (!this._init_done) {
+        this._init();
+      }
     }
     
     static getPathValue(ctx, path) {
@@ -319,7 +569,9 @@ define([
         }
       }
       
-      this.update();
+      if (this._init_done) {
+        this.update();
+      }
     }
     
     float(x=0, y=0, zindex=undefined) {
@@ -337,6 +589,15 @@ define([
 
     //called regularly
     update() {
+      if (!this._init_done) {
+        this._init();
+      }
+    }
+    
+    onadd() {
+      if (!this._init_done) {
+        this._init();
+      }
     }
     
     //scaling ratio for high-resolution displays
@@ -359,9 +620,15 @@ define([
     
     /*for saving ui state.
       note that these methods should
-      fail gracefully.*/
+      fail gracefully.
+      
+      also, they don't rebuild the object graph,
+      they patch it; for true serialization use
+      the toJSON/loadJSON interface.
+      */
     saveData() {
-      return undefined;
+      return {
+      };
     }
     
     loadData(obj) {
@@ -458,8 +725,13 @@ define([
       }
   };
   
-  exports._getFont = function _getFont(size, font="DefaultText") {
+  //size is optional, defaults to font's default size
+  exports._getFont = function _getFont(size, font="DefaultText", do_dpi=true) {
     let dpi = UIBase.getDPI();
+    
+    if (!do_dpi) {
+      dpi = 1;
+    }
     
     if (size !== undefined) {
       return ""+(size * dpi) + "px " + exports.getDefault(font+"Font");

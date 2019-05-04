@@ -82,6 +82,9 @@ define([
       super();
       
       this.dom = document.createElement("div");
+      this.dom.style["font"] = ui_base._getFont(undefined, "LabelText", false);
+      this.dom.style["color"] = ui_base.getDefault("LabelTextColor");
+      
       this.shadow.appendChild(this.dom);
     }
     
@@ -106,8 +109,8 @@ define([
         this.inherit_packflag = 0;
         
         let ul = document.createElement("ul")
-        ul.style["margin"] = "0";
-        ul.style["padding"] = "0";
+        ul.style["margin"] = "1px";
+        ul.style["padding"] = "1px";
         
         this.dom = document.createElement("div")
         
@@ -178,22 +181,21 @@ define([
     
     toJSON() {
       let ret = {
-        panels : {},
         opened : !this.closed
       };
-      
-      for (let c of this.controls) {
-        if (!(c instanceof UI))
-          continue;
-        
-        ret.panels[c.name] = c.toJSON();
-      }
-      
-      return ret;
+            
+      return Object.assign(super.toJSON(), ret);
     }
     
+    _ondestroy() {
+      for (let child of this.children) {
+        child._ondestroy();
+      }
+      
+      super._ondestroy();
+    }
     loadJSON(obj) {
-      console.error("ui.js:Container.loadJSON: implement me!");
+      //console.error("ui.js:Container.loadJSON: implement me!");
       
       return this;
     }
@@ -207,12 +209,6 @@ define([
       for (let cw of this.curve_widgets) {
         cw.draw();
       }
-      
-      for (let control of this.controls) {
-        if (control instanceof UI) {
-          control.redrawCurves();
-        }
-      }
     }
     
     listen() {
@@ -224,96 +220,17 @@ define([
     get children() {
       let list = [];
       
-      function indexOf(nodelist, item) {
-        let i = 0;
-        for (let child of nodelist) {
-          if (child == item) {
-            return i;
-          }
-          i++;
-        }
-        
-        return -1;
-        //return Array.prototype.indexOf.call(nodelist, item);
-      }
-
-      function rec(n) {
-        if (n instanceof ui_base.UIBase) {
-          list.push(n);
-        } else {
-          for (let n2 of n.childNodes) {
-            rec(n2);
-          }
-        }
-      }
+      this._forEachChildren((n) => {
+        list.push(n);
+      });
       
-      for (let child of this.shadow.childNodes) {
-        rec(child);
-      }
-      for (let child of this.dom.childNodes) {
-        rec(child);
-      }
-      for (let child of this.childNodes) {
-        rec(child);
-      }
-      
-      return list;
+      return list
     }
     
     update() {
-      function indexOf(nodelist, item) {
-        let i = 0;
-        for (let child of nodelist) {
-          if (child == item) {
-            return i;
-          }
-          i++;
-        }
-        
-        return -1;
-        //return Array.prototype.indexOf.call(nodelist, item);
-      }
-      
-      let i = 0;
-      for (let child of this.shadow.childNodes) {
-        if (child !== this.dom && child instanceof ui_base.UIBase) {
-          child.remove();
-          this.dom.appendChild(child);
-        }
-        
-        i++;
-      }
-
-      function rec(n) {
-        if (n instanceof ui_base.UIBase) {
-          n.update();
-        } else {
-          for (let n2 of n.childNodes) {
-            rec(n2);
-          }
-        }
-      }
-      
-      for (let child of this.shadow.childNodes) {
-        rec(child);
-      }
-      for (let child of this.dom.childNodes) {
-        rec(child);
-      }
-      for (let child of this.childNodes) {
-        rec(child);
-      }
-      
-      /*
-      for (let child of this.dom.childNodes) {
-        if (child.tagName == "LI" && child.childNodes.length > 0) {
-          child = child.childNodes[0];
-        }
-        
-        if (child instanceof ui_base.UIBase) {
-          child.update();
-        }
-      }//*/
+      this._forEachChildren((n) => {
+        n.update();
+      });
     }
     
     //on_destroy() {
@@ -326,7 +243,13 @@ define([
         child.ctx = this.ctx;
       }
       
-      return super.appendChild(child);
+      let ret = super.appendChild(child);
+
+      if (child instanceof ui_base.UIBase) {
+        child.onadd();
+      }
+      
+      return ret;
     }
     
     clear() {
@@ -353,18 +276,26 @@ define([
       li.appendChild(child);
       
       this.dom.appendChild(li);
+
+      child.onadd();
       
       return li;
     }
     
-    textbox(text, cb, packflag=0) {
+    //supports number types
+    textbox(path, text, cb, packflag=0) {
       packflag |= this.inherit_packflag;
       
       let ret = document.createElement("textbox-x")
     
+      ret.ctx = this.ctx;
       ret.packflag |= packflag;
       ret.onchange = cb;
       ret.text = text;
+      
+      if (path !== undefined) {
+        ret.setAttribute("datapath", path);
+      }
       
       this._add(ret);
       return ret;
@@ -521,6 +452,10 @@ define([
         ret.prop = res.prop;
       }
       
+      if (path !== undefined) {
+        ret.setAttribute("datapath", path);
+      }
+      
       ret.setAttribute("name", name);
       
       ret.onselect = (id) => {
@@ -543,35 +478,6 @@ define([
       }
       
       return p;
-    }
-    
-    on_tick() {
-      if (this.dat == undefined) {
-        console.log("warning, dead ui panel");
-        return;
-      }
-      
-      if (this.dat.closed != this._last_closed) {
-        this._last_closed = this.dat.closed;
-        
-        this.getroot().saveVisibility();
-      }
-      
-      for (var i=0; i<this.controls.length; i++) {
-        if (!(this.controls[i] instanceof UI)) {
-          continue;
-        }
-        
-        this.controls[i].on_tick();
-      }
-      
-      //update visibility of curve widgets
-      var closed = this.dat.closed;
-      for (var i=0; i<this.curve_widgets.length; i++) {
-        var cvw = this.curve_widgets[i];
-        
-        cvw.closed = closed;
-      }
     }
     
     curve(id, name, default_preset, packflag=0) {
@@ -624,20 +530,20 @@ define([
       return ret;
     }
     
-    _add_control(control) {
-      let remove = control.remove;
-      let this2 = this;
+    panel(name, id, packflag=0) {
+      id = id === undefined ? name : id;
+      packflag |= this.inherit_packflag;
       
-      control.remove = function() {
-        if (this2.controls.indexOf(control) >= 0) {
-          this2.controls.remove(control);
-        }
-        
-        remove.apply(control, arguments);
-      }
+      let ret = document.createElement("panelframe-x");
+      ret.packflag |= packflag;
+      ret.setAttribute("title", name);
+      ret.setAttribute("id", id);
       
-      this.controls.push(control);
-      return control;
+      this._add(ret);
+      
+      ret.ctx = this.ctx;
+      
+      return ret;      
     }
     
     row(packflag=0) {
@@ -647,6 +553,9 @@ define([
       ret.packflag |= packflag;
       
       this._add(ret);
+      
+      ret.ctx = this.ctx;
+      
       return ret;      
     }
     
@@ -765,6 +674,7 @@ define([
       td.appendChild(child);
       
       this.dom.appendChild(td);
+      child.onadd();
     }
   };
   UIBase.register(TableRow);
@@ -789,6 +699,7 @@ define([
     _add(child) {
       child.ctx = this.ctx;
       this.dom.appendChild(child);
+      child.onadd();
     }
     
     row() {
@@ -797,13 +708,15 @@ define([
       
       tr.setAttribute("class", cls);
       this.dom.appendChild(tr);
+      let this2 = this;
       
       function maketd() {
         let td = document.createElement("td");
         tr.appendChild(td);
         
         let container = document.createElement("rowframe-x");
-          
+        
+        container.ctx = this2.ctx;
         container.setAttribute("class", cls);
         container.dom.setAttribute("class", cls);
         td.setAttribute("class", cls);
@@ -848,6 +761,12 @@ define([
           }
           
           tr.setAttribute(attr, val);
+        },
+        
+        clear() {
+          for (let node of list(tr.childNodes)) {
+            tr.removeChild(node);
+          }
         }
       };
 
@@ -924,6 +843,96 @@ define([
     };}
   }
   UIBase.register(TableFrame);
+  
+  ;let PanelFrame = exports.PanelFrame = class PanelFrame extends Container {
+    constructor() {
+      super();
+      
+      this._closed = false;
+    }
+    
+    saveData() {
+      let ret = {
+        _closed : this._closed
+      };
+      
+      return Object.assign(super.saveData(), ret);
+    }
+    
+    loadData(obj) {
+      this.closed = obj._closed;
+    }
+    
+    init() {
+      let con = this.frame = new Container();
+      
+      //con.style["margin-left"] = "5px";
+      
+      let row = con.row();
+      
+      let iconcheck = document.createElement("iconcheck-x");
+      this.iconcheck = iconcheck;
+      
+      iconcheck.ctx = this.ctx;
+      iconcheck._icon_pressed = Icons.UI_EXPAND;
+      iconcheck._icon = Icons.UI_COLLAPSE;
+      iconcheck.iconsheet = ui_base.IconSheets.SHEET16;
+      iconcheck.iconsheet = 1;
+      iconcheck.checked = this._closed;
+      
+      this.iconcheck.onclick = (e) => {
+        this.closed = this.iconcheck.checked;
+        console.log("icon click!", this.checked);
+      };
+      
+      row._add(iconcheck);
+      
+      //stupid css, let's just hackishly put " " to create spacing2
+      row.label("| "+ this.getAttribute("title"))
+      
+      row.background = ui_base.getDefault("BoxSubBG");
+      row.style["padding-right"] = "20px";
+      row.style["padding-left"] = "5px";
+      
+      this.background = ui_base.getDefault("BoxSubBG");
+      this.dom.remove();
+      
+      this.shadowRoot.appendChild(con);
+      con.shadowRoot.appendChild(this.dom);
+    }
+    
+    static define() {return {
+      tagname : "panelframe-x"
+    };}
+    
+    update() {
+      super.update();
+    }
+    
+    _updateClosed() {
+      console.log(this._closed);
+      if (this._closed) {
+        this.dom.remove();
+      } else {
+        this.frame.shadow.appendChild(this.dom);
+      }
+      this.iconcheck.checked = this._closed;
+    }
+    
+    get closed() {
+      return this._closed;
+    }
+    
+    set closed(val) {
+      let update = !!val != !!this.closed;
+      this._closed = val;
+      
+      console.log("closed set", update);
+      if (update)
+        this._updateClosed();
+    }
+  }
+  UIBase.register(PanelFrame);
   
   return exports;
 });

@@ -10,6 +10,10 @@ define([
     constructor() {
     }
     
+    get model() {
+      return _appstate.model;
+    }
+    
     get api() {
       return _appstate.api;
     }

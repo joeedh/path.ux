@@ -56,6 +56,11 @@ define([
       this.shadow.appendChild(this.inner);
       
       this.addEventListener("mousedown", (e) => {
+        console.log(this.sareas.length, this.sareas, "|||||");
+        if (this.sareas.length < 2) {
+          console.log("ignoring border ScreenArea");
+          return;
+        }
         console.log("area resize start!");
         let tool = new FrameManager_ops.AreaResizeTool(this.screen, this, [e.x, e.y]);
         
@@ -208,13 +213,68 @@ define([
     save() {
     }
     
+    unlisten() {
+      if (this.listen_timer !== undefined) {
+        window.clearInterval(this.listen_timer);
+        this.listen_timer = undefined;
+      }
+    }
+    
     listen() {
-      window.setInterval(() => {
+      if (this.listen_timer !== undefined) {
+        return; //already listening
+      }
+      
+      this.listen_timer = window.setInterval(() => {
         this.update();
       }, 150);
     }
     
+    _ondestroy() {
+      //unlike other ondestroy functions, this one physically dismantles the DOM tree
+      let recurse = (n, second_pass, parent) => {
+        if (n.__pass === second_pass) {
+          console.warn(n, "CYCLE IN EFFING DOM TREE!", parent);
+          return;
+        }
+        
+        n.__pass = second_pass;
+        
+        n._forEachChildren(n2 => {
+          if (n === n2)
+            return;
+          recurse(n2, second_pass, n);
+          
+          try {
+            if (!second_pass && !n2.__destroyed) {
+              n2.__destroyed = true;
+              n2._ondestroy();
+            }
+          } catch (error) {
+            print_stack(error);
+            console.log("failed to exectue an ondestroy callback");
+          }
+          
+          n2.__destroyed = true;
+          
+          try {
+            if (second_pass) {
+              n2.remove();
+            }
+          } catch (error) {
+            print_stack(error);
+            console.log("failed to remove element after ondestroy callback");
+          }
+        });
+      };
+      
+      recurse(this, 0);
+      recurse(this, 1);
+    }
+    
     clear() {
+      this._ondestroy();
+      
       this.sareas = [];
       this.sareas.active = undefined;
       
@@ -235,11 +295,17 @@ define([
     
     loadJSON(obj, schedule_resize=false) {
       this.clear();
+      super.loadJSON();
       
       for (let sarea of obj.sareas) {
-        sarea = ScreenArea.ScreenArea.fromJSON(sarea);
+        let sarea2 = document.createElement("screenarea-x");
         
-        this.appendChild(sarea);
+        sarea2.ctx = this.ctx;
+        sarea2.screen = this;
+        
+        this.appendChild(sarea2);
+        
+        sarea2.loadJSON(sarea);
       }
       
       this.regenBorders();
@@ -265,7 +331,7 @@ define([
       ret.size = this.size;
       ret.idgen = this.idgen;
       
-      return ret;
+      return Object.assign(super.toJSON(), ret);
     }
     
     static define() {return {
@@ -281,16 +347,9 @@ define([
     update() {
       super.update();
       
-      for (let child of this.shadow.childNodes) {
-        if (child instanceof UIBase) {
-          child.update();
-        }
-      }
-      
-      /*
-      for (let sarea of this.sareas) {
-        sarea.update();
-      }//*/
+      this._forEachChildren((n) => {
+        n.update();
+      });
     }
     
     loadFromVerts() {
@@ -310,6 +369,9 @@ define([
       
       if (!horiz) {
         s1 = sarea;
+        if (s1.ctx === undefined) {
+          s1.ctx = this.ctx;
+        }
         s2 = s1.copy();
         
         s1.size[0] *= t;
@@ -318,6 +380,9 @@ define([
         s2.pos[0] += w * t;
       } else {
         s1 = sarea;
+        if (s1.ctx === undefined) {
+          s1.ctx = this.ctx;
+        }
         s2 = s1.copy();
         
         s1.size[1] *= t;
@@ -326,6 +391,7 @@ define([
         s2.pos[1] += h * t;
       }
       
+      s2.ctx = this.ctx;
       this.appendChild(s2);
       
       s1.on_resize(s1.size);
@@ -423,8 +489,6 @@ define([
       
       //fit entire screen to, well, the entire screen (size)
       for (let v of this.screenverts) {
-        console.log(v[0], v[1]);
-        
         v[0] *= ratio[0];
         v[1] *= ratio[1];
         
@@ -497,6 +561,7 @@ define([
         v1.borders.push(sa);
         v2.borders.push(sa);
         
+        sa.ctx = this.ctx;
         this.appendChild(sa);
         
         sa.setCSS();
@@ -589,6 +654,9 @@ define([
     
     appendChild(child) {
       if (child instanceof ScreenArea.ScreenArea) {
+        child.screen = this;
+        child.ctx = this.ctx;
+        
         if (!child._has_evts) {
           child._has_evts = true;
             
@@ -624,8 +692,8 @@ define([
       tool.start();
     }
     
-    areaDragTool() {
-      if (this.sareas.active === undefined) {
+    areaDragTool(sarea=this.sareas.active) {
+      if (sarea === undefined) {
         console.warn("no active screen area");
         return;
       }
