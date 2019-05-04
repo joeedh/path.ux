@@ -10,6 +10,10 @@ define([
   let PropFlags = toolprop.PropFlags,
       PropTypes = toolprop.PropTypes;
   
+  const DataFlags = exports.DataFlags = {
+    READ_ONLY : 1
+  };
+  
   exports.ModelInterface = class ModelInterface {
     constructor() {
       this.prefix = "";
@@ -32,7 +36,7 @@ define([
       let res = this.resolvePath(ctx, path);
       let prop = res.prop;
       
-      if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_SETTER)) {
+      if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
         prop.setValue(val);
         return;
       }
@@ -65,6 +69,14 @@ define([
     }
     
     getValue(ctx, path) {
+      let ret = this.resolvePath(ctx, path);
+      
+      if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+        ret.prop.dataref = ret.obj;
+        
+        return ret.prop.getValue();
+      }
+      
       return this.resolvePath(ctx, path).value;
     }
   }
@@ -82,6 +94,30 @@ define([
       this.apiname = apiname;
       this.path = path;
       this.struct = undefined;
+    }
+    
+    read_only() {
+      this.flag |= DataFlags.READ_ONLY;
+      return this;      
+    }
+    
+    //get/set will be called 
+    //like other callbacks,
+    //e.g. the real object owning the property
+    //will be stored in this.dataref
+    customGetSet(get, set) {
+      this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
+      
+      this.data._getValue = this.data.getValue;
+      this.data._setValue = this.data.setValue;
+      
+      if (get)
+        this.data.getValue = get;
+      
+      if (set)
+        this.data.setValue = set;
+      
+      return this;
     }
     
     //db will be executed with underlying data object
@@ -104,6 +140,11 @@ define([
     
     range(min, max) {
       this.data.setRange(min, max);
+      return this;
+    }
+    
+    decimalPlaces(n) {
+      this.data.setDecimalPlaces(n);
       return this;
     }
     

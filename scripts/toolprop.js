@@ -45,7 +45,7 @@ define([
   let PropFlags = exports.PropFlags = {
     SELECT : 1,
     USE_ICONS : 2,
-    USE_CUSTOM_SETTER : 4 //used by controller.js interface
+    USE_CUSTOM_GETSET : 4 //used by controller.js interface
   };
   
   let ToolProperty = exports.ToolProperty = class ToolProperty  {
@@ -232,8 +232,6 @@ define([
                 uiname, description, flag, icon) {
       super(type, undefined, apiname, uiname, description, flag, icon);
       
-      this.radix = 10;
-
       this.data = 0;
       this.range = [0, 0];
     }
@@ -245,6 +243,7 @@ define([
     {
       super(PropTypes.INT, undefined, apiname, uiname, description, flag, icon);
       
+      this.radix = 10;
       this.data = value !== undefined ? Math.floor(value) : 0;
     }
     
@@ -296,6 +295,7 @@ define([
       super(PropTypes.FLOAT, undefined, apiname, uiname, description, flag, icon);
       
       this.data = value !== undefined ? ~~value : 0;
+      this.decimalPlaces = 4;
     }
     
     toJSON() {
@@ -309,6 +309,11 @@ define([
       super.loadJSON(obj);
       
       this.range = obj.range;
+      return this;
+    }
+    
+    setDecimalPlaces(n) {
+      this.decimalPlaces = n;
       return this;
     }
     

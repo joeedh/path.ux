@@ -10,12 +10,20 @@ define([
     constructor() {
     }
     
+    execTool(tool) {
+      return this.state.toolstack.execTool(tool);
+    }
+    
     get model() {
       return _appstate.model;
     }
     
     get api() {
       return _appstate.api;
+    }
+    
+    get screen() {
+      return _appstate.screen;
     }
     
     get state() {
@@ -31,7 +39,7 @@ define([
     }
     
     get editor() {
-      return _appstate.editor;
+      return undefined; //eek, implement me
     }
   }
   
@@ -47,19 +55,38 @@ define([
   var ToolOp = exports.ToolOp = class ToolOp extends events.EventHandler {
     static tooldef() {return {
       uiname   : "!untitled tool",
+      description : undefined,
       is_modal : false,
       undoflag : 0,
-      flag     : 0
+      flag     : 0,
+      inputs   : {}, //tool properties
+      outputs  : {}  //tool properties
     }}
     
     constructor() {
       super();
       var def = this.constructor.tooldef();
+      
       this._accept = this._reject = undefined;
       this._promise = undefined;
       
       for (var k in def) {
         this[k] = def[k];
+      }
+      
+      this.inputs = {};
+      this.outputs = {};
+      
+      if (def.inputs) {
+        for (let k in def.inputs) {
+          this.inputs[k] = def.inputs[k].copy();
+        }
+      }
+      
+      if (def.outputs) {
+        for (let k in def.outputs) {
+          this.outputs[k] = def.outputs[k].copy();
+        }
       }
       
       this.drawlines = [];
@@ -70,14 +97,11 @@ define([
     }
     
     undoPre(ctx) {
-      this._undo = _appstate.genFile();
-      window.redraw_all();
+      this._undo = _appstate.genUndoFile();
     }
     
     undo(ctx) {
-      _appstate.load(this._undo);
-      
-      window.redraw_all();
+      _appstate.loadUndoFile(this._undo);
     }
     
     exec(ctx) {
@@ -119,7 +143,7 @@ define([
       this.modal_ctx = ctx;
       this.modal_running = true
       
-      this.pushModal(_appstate._modal_dom_root);
+      this.pushModal(ctx.screen);
       
       this._promise = new Promise((function(accept, reject) {
         this._accept = accept;
@@ -318,7 +342,7 @@ define([
     }
     
     undo() {
-      if (this.cur > 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
+      if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
         console.log("undo!", this.cur, this.length);
         
         this[this.cur].undo(this.ctx);
@@ -328,7 +352,7 @@ define([
     }
     
     redo() {
-      if (this.cur >= 0 && this.cur+1 < this.length) {
+      if (this.cur >= -1 && this.cur+1 < this.length) {
         console.log("redo!", this.cur, this.length);
         
         this.cur++;

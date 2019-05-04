@@ -15,7 +15,8 @@ define([
   let exports = _ui = {};
   let Vector2 = vectormath.Vector2,
       UIBase = ui_base.UIBase,
-      PackFlags = ui_base.PackFlags;
+      PackFlags = ui_base.PackFlags,
+      PropTypes = toolprop.PropTypes;
   
   exports.SimpleContext = ui_base.SimpleContext;
   exports.DataPathError = ui_base.DataPathError;
@@ -85,15 +86,60 @@ define([
       this.dom.style["font"] = ui_base._getFont(undefined, "LabelText", false);
       this.dom.style["color"] = ui_base.getDefault("LabelTextColor");
       
+      this._label = "";
       this.shadow.appendChild(this.dom);
     }
     
+    init() {
+    }
+    
+    updateDataPath() {
+      if (this.ctx === undefined) {
+        return;
+      }
+      
+      let path = this.getAttribute("datapath");
+      let prop = UIBase.getPathMeta(this.ctx, path);
+      let val = UIBase.getPathValue(this.ctx, path);
+      
+      if (val === undefined) {
+        return;
+      }
+      //console.log(path);
+      if (prop !== undefined && prop.type == PropTypes.INT) {
+        val = val.toString(prop.radix);
+        
+        if (prop.radix == 2) {
+          val = "0b" + val;
+        } else if (prop.radix == 16) {
+          val += "h";
+        }
+      } else if (prop !== undefined && prop.type == PropTypes.FLOAT && val !== Math.floor(val)) {
+        val = val.toFixed(prop.decimalPlaces);
+      }
+      
+      val = ""+val;
+      
+      this.dom.innerText = this._label + val;
+    }
+    
+    update() {
+      if (this.hasAttribute("datapath")) {
+        this.updateDataPath();
+      }
+    }
+    
     get text() {
-      return this.dom.innerText;
+      return this._label;
+      //return this.dom.innerText;
     }
     
     set text(text) {
-      this.dom.innerText = text;
+      this._label = text;
+      
+      if (!this.hasAttribute("datapath")) {
+        this.dom.innerText = text;
+      }
     }
     
     static define() {return {
@@ -301,10 +347,39 @@ define([
       return ret;
     }
     
+    pathlabel(path, label="") {
+      let ret = document.createElement("label-x");
+      
+      ret.text = label;
+      ret.setAttribute("datapath", path);
+      
+      this._add(ret);
+      
+      return ret;
+    }
+    
     label(text) {
       let ret = document.createElement("label-x");
       ret.text = text;
 
+      this._add(ret);
+      
+      return ret;
+    }
+    
+    iconbutton(icon, description, cb, thisvar, packflag=0) {
+      packflag |= this.inherit_packflag;
+      
+      let ret = document.createElement("iconbutton-x")
+    
+      ret.packflag |= packflag;
+      
+      ret.setAttribute("icon", icon);
+      ret.description = description;
+      ret.icon = icon;
+      
+      ret.onclick = cb;
+      
       this._add(ret);
       
       return ret;
@@ -506,7 +581,34 @@ define([
       
       return cw;
     }
-
+    
+    tool(cls, create_cb, packflag=0) {
+      packflag |= this.inherit_packflag;
+      
+      if (create_cb === undefined) {
+        create_cb = () => {
+          return new cls();
+        }
+      }
+      
+      let cb = () => {
+        console.log("tool run");
+        
+        let toolob = create_cb();
+        this.ctx.execTool(toolob);
+      }
+      
+      let def = cls.tooldef();
+      let tooltip = def.description === undefined ? def.uiname : def.description;
+      
+      if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
+        console.log("iconbutton!");
+        this.iconbutton(def.icon, tooltip, cb);
+      } else {
+        this.button(def.uiname, cb);
+      }
+    }
+    
     slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
       packflag |= this.inherit_packflag;
 
@@ -816,6 +918,8 @@ define([
       });//*/
       
       makefunc("label");
+      makefunc("tool");
+      makefunc("pathlabel");
       makefunc("button");
       makefunc("textbox");
       makefunc("col");

@@ -881,6 +881,15 @@ define([
       super._repos_canvas();
     }
     
+    set icon(f) {
+      this._icon = f;
+      this._redraw();
+    }
+    
+    get icon() {
+      return this._icon;
+    }
+    
     _onpress() {
       this.checked ^= 1;
       
@@ -913,7 +922,69 @@ define([
   }
   
   UIBase.register(IconCheck);
+  
+  let IconButton  = exports.IconButton = class IconButton extends Button {
+    constructor() {
+      super();
+      
+      this.boxpad = 1;
+      this.r = 5;
+      this._icon = 0;
+      this._icon_pressed = undefined;
+      this.iconsheet = 0;
+    }
     
+    get icon() {
+      return this._icon;
+    }
+    
+    set icon(val) {
+      this._icon = val;
+      this._repos_canvas();
+      this._redraw();
+    }
+    
+    update() {
+      if (this.description !== undefined && this.title != this.description) {
+        this.title = this.description;
+      }
+      
+      super.update();
+    }
+
+    _getsize() {
+      return ui_base.iconmanager.getTileSize(this.iconsheet);
+    }
+    
+    _repos_canvas() {
+      this.dom.style["height"] = this._getsize() + "px";
+      this.dom.style["width"] = this._getsize() + "px";
+      
+      super._repos_canvas();
+    }
+    
+    _redraw() {
+      this._repos_canvas();
+      
+      //this.dom._background = this._checked ? ui_base.getDefault("BoxDepressed") : ui_base.getDefault("BoxBG");
+      //
+      super._redraw(false);
+      let icon = this._icon;
+      
+      if (this._checked && this._icon_pressed !== undefined) {
+        icon = this._icon_pressed;
+      }
+      
+      ui_base.iconmanager.canvasDraw(this.dom, this.g, icon, undefined, undefined, this.iconsheet);
+    }
+    
+    static define() {return {
+      tagname : "iconbutton-x"
+    };}
+  }
+  
+  UIBase.register(IconButton);
+  
   let Check1 = exports.Check1 = class Check1 extends Button {
     constructor() {
       super();
