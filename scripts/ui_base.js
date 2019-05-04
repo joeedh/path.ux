@@ -390,6 +390,9 @@ define([
     }
     
     flash(color, rect_element=this, timems=355) {
+      console.warn("flash disabled due to bug");
+      return;
+      
       console.trace("flash");
       if (typeof color != "object") {
           color = css2color(color);

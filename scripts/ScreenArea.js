@@ -1,8 +1,8 @@
 let _ScreenArea = undefined;
 
 define([
-  "util", "vectormath", "ui_base", "ui"
-], function(util, vectormath, ui_base, ui) {
+  "util", "vectormath", "ui_base", "ui", "ui_noteframe"
+], function(util, vectormath, ui_base, ui, ui_noteframe) {
   'use strict';
   
   let Vector2 = vectormath.Vector2;
@@ -273,10 +273,24 @@ define([
       row.button("*", () => {
         _appstate.screen.areaDragTool();
       }).dom.style["width"] = "50px";
+      
+      
+      //ui_noteframe
+      let notef = document.createElement("noteframe-x");
+      notef.ctx = this.ctx;
+      row._add(notef);
     }
     
     setCSS() {
       this.style["overflow"] = "hidden";
+      
+      if (this.size !== undefined) {
+        this.style["position"] = "absolute";
+        //this.style["left"] = this.pos[0] + "px";
+        //this.style["top"] = this.pos[1] + "px";
+        this.style["width"] = this.size[0] + "px";
+        this.style["height"] = this.size[1] + "px";
+      }
     }
     
     update() {
@@ -564,7 +578,8 @@ define([
       
       if (this.area !== undefined) {
         this.area.setCSS();
-        this.style["overflow"] = this.area.style["overflow"];
+        //this.style["overflow"] = this.area.style["overflow"];
+        
         //this.area.style["width"] = this.size[0] + "px";
         //this.area.style["height"] = this.size[1] + "px";
       }

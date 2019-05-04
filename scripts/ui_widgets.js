@@ -1321,7 +1321,7 @@ define([
       
       if (add) {
         li.addEventListener("click", (e) => {
-          console.log("menu click!");
+          //console.log("menu click!");
           
           if (this.activeItem !== undefined && this.activeItem._isMenu) {
             console.log("menu ignore");
@@ -1467,7 +1467,7 @@ define([
       let iconmap = prop.iconmap;
       let uimap = prop.ui_value_names;
       
-      console.log("   UIMAP", uimap);
+      //console.log("   UIMAP", uimap);
       
       for (let k in enummap) {
         let uk = k;
@@ -1491,7 +1491,7 @@ define([
       }
       
       menu.onselect = (id) => {
-        console.trace("got click!", id, ":::");
+        //console.trace("got click!", id, ":::");
         
         this._menu = undefined;
         this.prop.setValue(id);
@@ -1508,7 +1508,7 @@ define([
     }
     
     _onclick(e) {
-      console.log("menu dropbox click");
+      //console.log("menu dropbox click");
       
       if (this._menu !== undefined) {
         this._menu.close();

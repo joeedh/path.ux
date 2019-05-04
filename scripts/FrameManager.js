@@ -57,7 +57,9 @@ define([
       
       this.addEventListener("mousedown", (e) => {
         console.log(this.sareas.length, this.sareas, "|||||");
-        if (this.sareas.length < 2) {
+        
+        if (this.valence < 2) {
+          console.log(this, this.sareas);
           console.log("ignoring border ScreenArea");
           return;
         }
@@ -69,6 +71,53 @@ define([
         e.preventDefault();
         e.stopPropagation();
       });
+    }
+    
+    get valence() {
+      let ret = 0; //this.sareas.length;
+      let horiz = this.horiz;
+      
+      let visit = {};
+      
+      for (let i=0; i<2; i++) {
+        let sv = i ? this.v2 : this.v1;
+        //console.log(sv);
+        
+        for (let sa of sv.borders) { 
+          if (sa.horiz != this.horiz)
+            continue;
+          if (sa._id in visit)
+            continue;
+          
+          visit[sa._id] = 1;
+          
+          let a0x = Math.min(this.v1[0], this.v2[0]);
+          let a0y = Math.min(this.v1[1], this.v2[1]);
+          let a1x = Math.max(this.v1[0], this.v2[0]);
+          let a1y = Math.max(this.v1[1], this.v2[1]);
+          
+          let b0x = Math.min(sa.v1[0], sa.v2[0]);
+          let b0y = Math.min(sa.v1[1], sa.v2[1]);
+          let b1x = Math.min(sa.v1[0], sa.v2[0]);
+          let b1y = Math.min(sa.v1[1], sa.v2[1]);
+          
+          let ok;
+          
+          let eps = 0.001;
+          if (horiz) {
+            ok = (a0y <= b1y+eps && a1y >= a0y-eps);
+          } else {
+            ok = (a0x <= b1x+eps && a1x >= a0x-eps);
+          }  
+          
+          if (ok) {
+            //console.log("found");
+            ret += sa.sareas.length;
+          }
+        }
+      }
+      
+      return ret;
     }
     
     otherVert(v) {
@@ -139,7 +188,7 @@ define([
           }
       `;
       
-      if (this.sareas.length >= 2) {
+      if (this.valence >= 2) {
         sbuf += `
           .screenborder_${this._id}:hover {
             cursor : ${cursor};
@@ -481,7 +530,7 @@ define([
     on_resize(size) {
       let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
       
-      console.log("resize!", ratio);
+      //console.log("resize!", ratio);
       
       this.regenBorders();
       
