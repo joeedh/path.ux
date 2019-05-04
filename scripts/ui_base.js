@@ -589,12 +589,29 @@ define([
       
       return this;
     }
-
+    
+    _ensureChildrenCtx() {
+      let ctx = this.ctx;
+      if (ctx === undefined) {
+        return;
+      }
+      
+      this._forEachChildren((n) => {
+        if (n.ctx === undefined) {
+          n.ctx = ctx;
+        }
+        
+        n._ensureChildrenCtx(ctx);
+      });
+    }
+    
     //called regularly
     update() {
       if (!this._init_done) {
         this._init();
       }
+      
+      this._ensureChildrenCtx();
     }
     
     onadd() {

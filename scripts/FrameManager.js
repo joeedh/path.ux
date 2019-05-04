@@ -421,7 +421,7 @@ define([
         if (s1.ctx === undefined) {
           s1.ctx = this.ctx;
         }
-        s2 = s1.copy();
+        s2 = s1.copy(this);
         
         s1.size[0] *= t;
         s2.size[0] *= (1.0 - t);
@@ -432,7 +432,7 @@ define([
         if (s1.ctx === undefined) {
           s1.ctx = this.ctx;
         }
-        s2 = s1.copy();
+        s2 = s1.copy(this);
         
         s1.size[1] *= t;
         s2.size[1] *= (1.0 - t);
@@ -452,6 +452,10 @@ define([
       s2.setCSS();
       
       this.setCSS();
+      
+      //XXX not sure if this is right place to do this or really necassary
+      if (s2.area !== undefined)
+        s2.area.onadd();
       
       return s2;
     }

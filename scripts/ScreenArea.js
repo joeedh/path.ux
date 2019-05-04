@@ -198,7 +198,7 @@ define([
         let dy = e.pageY - mpos[1];
         
         let dis = dx*dx + dy*dy;
-        let limit = 35;
+        let limit = 7;
         
         if (dis > limit*limit) {
           let sarea = this.owning_sarea;
@@ -454,9 +454,10 @@ define([
       return p;
     }
     
-    copy() {
+    copy(screen) {
       let ret = document.createElement("screenarea-x");
       
+      ret.screen = this.screen;
       ret.ctx = this.ctx;
       
       ret.pos[0] = this.pos[0];
@@ -484,15 +485,15 @@ define([
         ret.area.ctx = this.ctx;
         ret.area.pos = ret.pos;
         ret.area.size = ret.size;
+        ret.area.owning_sarea = ret;
         
         ret.shadow.appendChild(ret.area);
-        ret.area.onadd();
+        //ret.area.onadd();
         
         ret.ctx = this.ctx;
         ret.area.ctx = this.ctx;
         
         ret.area.push_ctx_active();
-        ret.area.owning_sarea = ret;
         ret.area.on_area_active();
         ret.area.pop_ctx_active();
       }
@@ -646,22 +647,23 @@ define([
         
         this.area = this.editormap[name];
         
-        //propegate new size
-        this.area.on_resize(this.size);
-        
         this.area.inactive = false;
         
         //. . .and set references to pos/size
         this.area.pos = this.pos;
         this.area.size = this.size;
+        this.area.owning_sarea = this;
         
         this.shadow.appendChild(this.area);
+        
+        //propegate new size
+        this.area.on_resize(this.size);
+
         this.area.style["width"] = "100%";
         this.area.style["height"] = "100%";
         
         this.area.push_ctx_active();
         this.area.on_area_active();
-        this.area.owning_sarea = this;
         this.area.pop_ctx_active();
       //}
     }

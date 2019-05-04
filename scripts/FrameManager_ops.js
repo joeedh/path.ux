@@ -356,7 +356,7 @@ define([
       let idgen = 0;
       
       let box = (x, y, sz, horiz, t, side) => {
-        console.log(x, y, sz);
+        //console.log(x, y, sz);
         
         let b = this.overdraw.rect([x-sz[0]*0.5, y-sz[1]*0.5], sz, color);
         
@@ -434,7 +434,7 @@ define([
             background-color : orange;
           }
         `
-        console.log(style.textContent);
+        //console.log(style.textContent);
         b.appendChild(style);
         
         return b;
