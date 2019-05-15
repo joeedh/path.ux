@@ -3,10 +3,10 @@ var _app = undefined; //for debugging purposes only.  don't write code with it
 define([
   "util", "mesh", "mesh_tools", "mesh_editor", "const", "simple_toolsys",
   "transform", "events", "config", "ui", "image", "icon_enum", "FrameManager", "ScreenArea",
-  "ui_base", "controller"
+  "ui_base", "controller", "ui_widgets"
 ], function(util, mesh, mesh_tools, mesh_editor, cconst, toolsys,
             transform, events, config, ui, image, unused, FrameManager, ScreenArea,
-            ui_base, controller)
+            ui_base, controller, ui_widgets)
 {
   'use strict';
   
@@ -46,17 +46,17 @@ define([
 
       this.canvas.addEventListener("mousedown", (e) => {
         e = mstart(e);
-        let ret = _appstate.editor.on_mousedown(e);
+        //let ret = _appstate.editor.on_mousedown(e);
       });
       
       this.canvas.addEventListener("mousemove", (e) => {
         e = mstart(e);
-        let ret = _appstate.editor.on_mousemove(e);
+        //let ret = _appstate.editor.on_mousemove(e);
       });
       
       this.canvas.addEventListener("mouseup", (e) => {
         e = mstart(e);
-        let ret = _appstate.editor.on_mouseup(e);
+        //let ret = _appstate.editor.on_mouseup(e);
       });      
     }
     
@@ -433,6 +433,51 @@ define([
       //this.editor.on_mouseup(e);
     }
     
+    menuTest() {
+      console.log("menu test!");
+      
+      let menu = document.createElement("menu-x");
+      
+      menu.addItem("one");
+      menu.addItem("two");
+      menu.addItem("three");
+      menu.addItem("test");
+      menu.addItem("Item");
+      menu.addItem("Triangle");
+      menu.addItem("Vertex");
+      
+      this.screen.appendChild(menu);
+      let mpos = this.screen.mpos;
+      let x = mpos[0], y = mpos[1];
+      
+      menu.start();
+      menu.float(x, y, 50);
+      return;
+      
+      let dpi = ui_base.UIBase.getDPI();
+      let rect = menu.dom.getClientRects();
+      let maxy = window.innerHeight - 10;
+      let maxx = window.innerWidth - 10;
+      
+      console.log(rect.length > 0 ? rect[0] : undefined)
+      
+      if (rect.length > 0) {
+        rect = rect[0];
+        console.log(y + rect.height);
+        if (y + rect.height > maxy) {
+          console.log("greater");
+          y = maxy - rect.height - 1;
+        }
+        
+        if (x + rect.width > maxx) {
+          console.log("greater");
+          x = maxx - rect.width - 1;
+        }
+      }
+      
+      menu.float(x, y, 50);
+    }
+    
     on_tick() {
       this.setsize();
       this.editor.on_tick();
@@ -448,7 +493,12 @@ define([
     }
     
     on_keydown(e) {
+      console.log(e.keyCode);
+      
       switch (e.keyCode) {
+        case 87: //wkey
+          this.menuTest();
+          break;
         case 75: //kkey
           this.screen.splitTool();
           break;

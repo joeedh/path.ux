@@ -328,8 +328,8 @@ define([
       if (!this.hasAttribute("datapath")) return;
       if (this.ctx === undefined) return;
       
-      let prop = this.ctx.getProp(this.getAttribute("datapath"));
-      let val = prop[0]
+      let prop = this.ctx.getPathMeta(this.getAttribute("datapath"));
+      let val = this.ctx.getPathValue(this.getAttribute("datapath"));
       
       if (val !== this._value) {
         this._value = val;
@@ -1147,7 +1147,34 @@ define([
         this.shadow.appendChild(style);
         this.shadow.appendChild(this.container);
     }
-  
+    
+    float(x, y, zindex=undefined) {
+      console.log("menu test!");
+
+      let dpi = ui_base.UIBase.getDPI();
+      let rect = this.dom.getClientRects();
+      let maxx = this.getWinWidth()-10;
+      let maxy = this.getWinHeight()-10;
+      
+      console.log(rect.length > 0 ? rect[0] : undefined)
+      
+      if (rect.length > 0) {
+        rect = rect[0];
+        console.log(y + rect.height);
+        if (y + rect.height > maxy) {
+          console.log("greater");
+          y = maxy - rect.height - 1;
+        }
+        
+        if (x + rect.width > maxx) {
+          console.log("greater");
+          x = maxx - rect.width - 1;
+        }
+      }
+      
+      super.float(x, y, 50);
+    }
+    
     click() {
       if (this.activeItem == undefined)
         return;
@@ -1450,6 +1477,10 @@ define([
       
       return ret;
     }
+    
+    calcSize() {
+      
+    }
   }
   UIBase.register(Menu);
   
@@ -1604,9 +1635,8 @@ define([
       x = rects[0].x;
       y = rects[0].y + 10;//dpi + 20*dpi;//Math.ceil(150/dpi);
       
-      menu.float(x, y, 8);
-      
       menu.start();
+      menu.float(x, y, 8);
     }
     
     _redraw() {

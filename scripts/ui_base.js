@@ -360,6 +360,14 @@ define([
       return element;
     }
     
+    getWinWidth() {
+      return window.innerWidth;
+    }
+    
+    getWinHeight() {
+      return window.innerHeight;
+    }
+    
     //are we exclusively 
     pickElement(x, y, sx=0, sy=0) {
       let rects = this.getClientRects();
@@ -611,7 +619,7 @@ define([
         this._init();
       }
       
-      this._ensureChildrenCtx();
+      //this._ensureChildrenCtx();
     }
     
     onadd() {

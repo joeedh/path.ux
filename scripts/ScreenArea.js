@@ -266,6 +266,7 @@ define([
         this.owning_sarea.switch_editor(cls);
       });
       
+      /*
       row.button("------", () => {
         _appstate.screen.splitTool();
       }).dom.style["width"] = "50px";
@@ -273,7 +274,7 @@ define([
       row.button("*", () => {
         _appstate.screen.areaDragTool();
       }).dom.style["width"] = "50px";
-      
+      **/
       
       //ui_noteframe
       let notef = document.createElement("noteframe-x");
@@ -296,9 +297,11 @@ define([
     update() {
       super.update();
       
-      this._forEachChildren((n) => {
-        n.update();
-      });
+      //see FrameManager.js, we use a single update
+      //function for everything now
+      //this._forEachChildren((n) => {
+      //  n.update();
+      //});
     }
     
     static define() {return {
@@ -386,6 +389,11 @@ define([
     }
     
     loadJSON(obj) {
+      if (obj === undefined) {
+        console.warn("undefined in loadJSON");
+        return;
+      }
+
       super.loadJSON(obj);
       
       this.pos.load(obj.pos);

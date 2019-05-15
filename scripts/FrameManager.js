@@ -11,6 +11,8 @@ define([
       UIBase = ui_base.UIBase;
   
   let exports = _FrameManager = {};
+  let update_stack = new Array(8192);
+  update_stack.cur = 0;
   
   let ScreenVert = exports.ScreenVert = class ScreenVert extends Vector2 {
     constructor(pos, id) {
@@ -394,11 +396,82 @@ define([
     }
     
     update() {
+      if (this._update_gen) {
+        let ret;
+        
+        try {
+          ret = this._update_gen.next();
+        } catch (error) {
+          util.print_stack(error);
+          console.log("error in update_intern tasklet");
+          this._update_gen = undefined;
+          return;
+        }
+        
+        if (ret !== undefined && ret.done) {
+          this._update_gen = undefined;
+        }
+      } else {
+        this._update_gen = this.update_intern();
+      }
+    }
+    
+    //XXX race condition warning
+    update_intern() {
       super.update();
+      let this2 = this;
       
-      this._forEachChildren((n) => {
-        n.update();
-      });
+      return (function*() {
+        let stack = update_stack;
+        stack.cur = 0;
+        
+        function push(n) {
+          stack[stack.cur++] = n;
+        }
+        
+        function pop(n) {
+          if (stack.cur < 0) {
+            throw new Error("Screen.update(): stack overflow!");
+          }
+          
+          return stack[--stack.cur];
+        }
+        
+        let ctx = this2.ctx;
+        
+        let t = util.time_ms();
+        push(this2);
+        while (stack.cur > 0) {
+          let n = pop();
+          
+          if (n === undefined) {
+            //console.log("eek!", stack.length);
+            continue;
+          }
+          
+          if (n !== this2 && n instanceof UIBase) {
+            n._ctx = ctx;
+            n.update();
+          }
+          
+          if (util.time_ms() - t > 30) {
+           yield; 
+           t = util.time_ms();
+          }
+          
+          for (let n2 of n.childNodes) {
+            push(n2);
+          }
+          
+          if (n.shadow === undefined) {
+            continue;
+          }
+          
+          for (let n2 of n.shadow.childNodes) {
+            push(n2);
+          }
+        }
+      })();
     }
     
     loadFromVerts() {

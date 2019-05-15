@@ -274,9 +274,10 @@ define([
     }
     
     update() {
-      this._forEachChildren((n) => {
-        n.update();
-      });
+      super.update();
+      //this._forEachChildren((n) => {
+      //  n.update();
+      //});
     }
     
     //on_destroy() {
@@ -816,6 +817,9 @@ define([
         let td = document.createElement("td");
         tr.appendChild(td);
         
+        td.style["margin"] = tr.style["margin"];
+        td.style["padding"] = tr.style["padding"];
+        
         let container = document.createElement("rowframe-x");
         
         container.ctx = this2.ctx;
@@ -836,6 +840,8 @@ define([
       //hrm wish I could subclass html elements easier
       let ret = {
         _tr : tr,
+        
+        style : tr.style,
         
         focus(args) {
           tr.focus(args);
