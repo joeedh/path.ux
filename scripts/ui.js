@@ -618,6 +618,7 @@ define([
             let check = frame.check(path + " = " + prop.values[key], "", packflag);
             
             check.icon = prop.iconmap[key];
+            //test
             
             check.style["padding"] = "0px";
             check.style["margin"] = "0px";
