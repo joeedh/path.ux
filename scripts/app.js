@@ -3,10 +3,10 @@ var _app = undefined; //for debugging purposes only.  don't write code with it
 define([
   "util", "mesh", "mesh_tools", "mesh_editor", "const", "simple_toolsys",
   "transform", "events", "config", "ui", "image", "icon_enum", "FrameManager", "ScreenArea",
-  "ui_base", "controller", "ui_widgets"
+  "ui_base", "controller", "ui_widgets", "struct"
 ], function(util, mesh, mesh_tools, mesh_editor, cconst, toolsys,
             transform, events, config, ui, image, unused, FrameManager, ScreenArea,
-            ui_base, controller, ui_widgets)
+            ui_base, controller, ui_widgets, nstructjs)
 {
   'use strict';
   
@@ -95,7 +95,7 @@ define([
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       //*
       
-      row.checkenum("enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON);
+      row.checkenum("enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON|ui_base.PackFlags.VERTICAL);
       row.listenum("enumval", "Enum");
       //*/
       
@@ -209,8 +209,25 @@ define([
       super.update();
       this.ui.update();
     }
+    
+    static fromSTRUCT(reader) {
+      let ret = document.createElement("canvasarea-x");
+      ret.ctx = _appstate.ctx;
+      
+      reader(ret);
+      ret.remakeUI();
+      ret.afterSTRUCT();
+      
+      return ret;
+    }
+
   }
   
+  CanvasArea.STRUCT = nstructjs.STRUCT.inherit(CanvasArea, ScreenArea.Area) + `
+    }
+  `;
+  
+  nstructjs.manager.add_class(CanvasArea);
   ScreenArea.Area.register(CanvasArea);
   
   let AppState = exports.AppState = class AppState extends events.EventHandler {

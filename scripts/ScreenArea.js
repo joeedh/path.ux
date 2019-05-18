@@ -1,8 +1,8 @@
 let _ScreenArea = undefined;
 
 define([
-  "util", "vectormath", "ui_base", "ui", "ui_noteframe"
-], function(util, vectormath, ui_base, ui, ui_noteframe) {
+  "util", "vectormath", "ui_base", "ui", "ui_noteframe", "struct"
+], function(util, vectormath, ui_base, ui, ui_noteframe, nstructjs) {
   'use strict';
   
   let Vector2 = vectormath.Vector2;
@@ -309,16 +309,41 @@ define([
       areaname : undefined, //api name for area type
       uiname   : undefined
     };}
+    
+    //subclassing fromSTRUCTs should call this
+    afterSTRUCT() {
+      this.doOnce(() => {
+        try {
+          console.log("load ui data");
+          ui_base.loadUIData(this, this.saved_uidata);
+          this.saved_uidata = undefined;
+        } catch (error) {
+          console.log("failed to load ui data");
+        }
+      });
+    }
+    
+    static fromSTRUCT(reader) {
+      let ret = document.createElement("areadata-x");
+      
+      reader(ret);
+      this.afterSTRUCT();
+      
+      return ret;
+    }
+    
+    _getSavedUIData() {
+      return ui_base.saveUIData(this, "area");
+    }
   }
   
   Area.STRUCT = `
-  Area { 
-    pos  : vec2;
-    size : vec2;
-    type : string;
-    saved_uidata : string;
+  pathux.Area { 
+    saved_uidata : string | obj._getSavedUIData();
   }
   `
+  
+  nstructjs.manager.add_class(Area);  
   ui_base.UIBase.register(Area);
   
   exports.sarea_idgen = 0;
@@ -337,7 +362,6 @@ define([
       this.area = undefined;
       this.editors = [];
       this.editormap = {};
-      this.type = "";
     }
     
     /*
@@ -380,7 +404,6 @@ define([
         editors : this.editors,
         _sarea_id : this._sarea_id,
         area : this.area.constructor.define().areaname,
-        type : this.type,
         pos : this.pos,
         size : this.size
       };
@@ -473,8 +496,6 @@ define([
       
       ret.size[0] = this.size[0];
       ret.size[1] = this.size[1];
-      
-      ret.type = this.type;
       
       for (let area of this.editors) {
         let cpy = area.copy();
@@ -684,19 +705,78 @@ define([
       });
     }
     
+    static fromSTRUCT(reader) {
+      let ret = document.createElement("screenarea-x");
+      reader(ret);
+      
+      ret.pos = new Vector2(ret.pos);
+      ret.size = new Vector2(ret.size);
+      
+      //find active editor
+      
+      for (let area of ret.editors) {
+        
+        /*
+        if (area.constructor === undefined || area.constructor.define === undefined) {
+          console.warn("Missing class for area", area, "maybe buggy fromSTRUCT()?");
+          continue;
+        }
+        //*/
+        
+        let areaname = area.constructor.define().areaname;
+        
+        area.inactive = true;
+        area.owning_sarea = undefined;
+        ret.editormap[areaname] = area;
+        
+        if (areaname == ret.area) {
+          ret.area = area;
+        }
+      }
+      
+      if (typeof ret.area != "object") {
+        console.warn("Failed to find active area!", ret.area);
+        ret.area = ret.editors[0];
+      } 
+      
+      console.log("AREA:", ret.area);
+      
+      if (ret.area !== undefined) {
+        ret.area.style["width"] = "100%";
+        ret.area.style["height"] = "100%";
+        ret.area.owning_sarea = ret;
+        
+        ret.area.pos = ret.pos;
+        ret.area.size = ret.size;
+        
+        ret.area.inactive = false;
+        ret.shadow.appendChild(ret.area);
+        
+        ret.doOnce(() => {
+          ret.area.on_area_active();
+          ret.area.onadd(); 
+        });        
+      }
+      
+      return ret;
+    }
+    
     static define() {return {
       tagname : "screenarea-x"
     };}
   }
   
   ScreenArea.STRUCT = `
-  ScreenArea { 
-    pos     : vec2;
-    size    : vec2;
+  pathux.ScreenArea { 
+    pos     : array(float);
+    size    : array(float);
     type    : string;
-    editors : iter(k, abstract(Area)) | obj.editors[k];
-    area    : string | obj.area.constructor.name;
+    editors : array(abstract(pathux.Area));
+    area    : string | obj.area.constructor.define().areaname;
+  }
   `;
+  
+  nstructjs.manager.add_class(ScreenArea);  
   ui_base.UIBase.register(ScreenArea);
   
   return exports;

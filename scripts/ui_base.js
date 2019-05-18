@@ -907,7 +907,7 @@ define([
       if (n !== undefined) {
         n.loadData(data);
         
-        console.log(n, path, data);
+        //console.log(n, path, data);
       }
     }
   }

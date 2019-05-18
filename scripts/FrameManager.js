@@ -2,10 +2,12 @@ let _FrameManager = undefined;
 
 define([
   "util", "vectormath", "ui_base", "ui", "ScreenArea", "events",
-  "FrameManager_ops", "math", "ui_colorpicker", "ui_tabs"
+  "FrameManager_ops", "math", "ui_colorpicker", "ui_tabs", "struct"
 ], function(util, vectormath, ui_base, ui, ScreenArea, events,
-            FrameManager_ops, math, ui_colorpicker, ui_tabs) {
+            FrameManager_ops, math, ui_colorpicker, ui_tabs, nstructjs) {
   'use strict';
+  
+  window._nstructjs = nstructjs;
   
   let Vector2 = vectormath.Vector2,
       UIBase = ui_base.UIBase;
@@ -264,6 +266,11 @@ define([
     save() {
     }
     
+    remove() {
+      this.unlisten();
+      return super.remove();
+    }
+    
     unlisten() {
       if (this.listen_timer !== undefined) {
         window.clearInterval(this.listen_timer);
@@ -420,6 +427,11 @@ define([
     update_intern() {
       super.update();
       let this2 = this;
+      
+      //ensure each area has proper ctx set
+      for (let sarea of this.sareas) {
+        sarea.ctx = this.ctx;
+      }
       
       return (function*() {
         let stack = update_stack;
@@ -919,17 +931,71 @@ define([
         sarea.draw();
       }
     }
+    
+    static fromSTRUCT(reader) {
+      let ret = document.createElement("screen-x");
+
+      reader(ret);
+      
+      let sareas = ret.sareas;
+      ret.sareas = [];
+      
+      for (let sarea of sareas) {
+        sarea.screen = ret;
+        ret.appendChild(sarea);
+      }
+      
+      ret.regenBorders();
+      ret.setCSS();
+      
+      return ret;
+    }
+    
+    test_struct() {
+      let data = [];
+      //let scripts = nstructjs.write_scripts();
+      nstructjs.manager.write_object(data, this);
+      data = new DataView(new Uint8Array(data).buffer);
+      
+      let screen2 = nstructjs.manager.read_object(data, this.constructor);
+      screen2.ctx = this.ctx;
+      
+      for (let sarea of screen2.sareas) {
+        sarea.screen = screen2;
+        sarea.ctx = this.ctx;
+        sarea.area.ctx = this.ctx;
+      }
+      
+      let parent = this.parentElement;
+      this.remove();
+      
+      _appstate.screen = screen2;
+      
+      parent.appendChild(screen2);
+      
+      //for (let 
+      screen2.regenBorders();
+      screen2.update();
+      screen2.listen();
+      
+      screen2.doOnce(() => {
+        screen2.on_resize([window.innerWidth, window.innerHeight]);
+      });
+      
+      console.log(data)
+      return screen2;
+    }
   }
   
   Screen.STRUCT = `
-  Screen { 
-    pos   : vec2;
-    size  : vec2;
-    areas : array(abstract(ScreenArea));
+  pathux.Screen { 
+    size  : array(float);
+    sareas : array(pathux.ScreenArea);
     idgen : int;
   }
   `;
-  
+    
+  nstructjs.manager.add_class(Screen);
   ui_base.UIBase.register(Screen);
   
   return exports;
