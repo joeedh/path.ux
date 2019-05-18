@@ -329,6 +329,139 @@ define([
       return li;
     }
     
+    /*
+    .menu([
+      "some_tool_path.tool",
+      ui_widgets.Menu.SEP,
+      "some_tool_path.another_tool",
+      ["Name", () => {console.log("do something")}]
+    ])
+    */ 
+    menu(title, list, packflag=0) {
+      let dbox = document.createElement("dropbox-x");
+      
+      dbox._name = title;
+      dbox.setAttribute("simple", true);
+      dbox.setAttribute("name", title);
+      
+      dbox._build_menu = () => {
+        if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+          this._menu.remove();
+        }
+        
+        let menu = dbox._menu = document.createElement("menu-x");
+        //menu.setAttribute("name", title);
+        
+        let SEP = menu.constructor.SEP;
+        let id = 0;
+        let cbs = {};
+        
+        for (let item of list) {
+          if (typeof item == "string") {
+            let def;
+            try {
+              def = this.ctx.api.getToolDef(item);
+            } catch (error) {
+              menu.addItem("(tool path error)", id++);
+              continue;
+            }
+            //addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
+            menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
+            
+            cbs[id] = ((toolpath) => {
+              return () => {
+                this.ctx.api.execTool(this.ctx, toolpath);
+              }
+            })(item);
+            
+            id++;
+          } else if (item === SEP) {
+            menu.seperator();
+          } else if (item instanceof Array) {
+            menu.addItemExtra(item[0], id);
+            
+            cbs[id] = ((cbfunc, arg) => {
+              return () => {
+                cbfunc(arg);
+              }
+            })(item[1], item[2]);
+            
+            id++;
+          }
+        }
+        
+        menu.onselect = (id) => {
+          cbs[id]();
+        }
+      };
+      
+      dbox.packflag |= packflag;
+      dbox.inherit_packflag |= packflag;
+      
+      this._add(dbox);
+      return dbox;
+    }
+    
+    tool(path_or_cls, packflag=0, create_cb=undefined) {
+      let cls;
+      
+      if (typeof path_or_cls == "string") {
+        if (this.ctx === undefined) {
+          console.warn("this.ctx was undefined in tool()");
+          return;
+        }
+        
+        cls = this.ctx.api.parseToolPath(path_or_cls);
+        
+        if (cls === undefined) {
+          console.warn("Unknown tool for toolpath \"" + path_or_cls + "\"");
+          return;
+        }
+      } else {
+        cls = path_or_cls;
+      }
+      
+      packflag |= this.inherit_packflag;
+      
+      if (create_cb === undefined) {
+        create_cb = (cls) => {
+          return new cls();
+        }
+      }
+
+      let cb = () => {
+        console.log("tool run");
+        
+        let toolob = create_cb(cls);
+        this.ctx.execTool(toolob);
+      }
+      
+      let def = cls.tooldef();
+      let tooltip = def.description === undefined ? def.uiname : def.description;
+      
+      if (def.hotkey !== undefined) {
+        tooltip += "\n\t" + def.hotkey;
+      }
+      
+      let ret;
+      
+      if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
+        console.log("iconbutton!");
+        ret = this.iconbutton(def.icon, tooltip, cb);
+        
+        if (packflag & PackFlags.SMALL_ICON) {
+          ret.iconsheet = 1;
+        }
+        ret.packflag |= packflag;
+      } else {
+        ret = this.button(def.uiname, cb);
+        ret.description = tooltip;
+        ret.packflag |= packflag;
+      }
+      
+      return ret;
+    }
+    
     //supports number types
     textbox(path, text, cb, packflag=0) {
       packflag |= this.inherit_packflag;
@@ -379,6 +512,10 @@ define([
       ret.description = description;
       ret.icon = icon;
       
+      if (packflag & PackFlags.SMALL_ICON) {
+        ret.iconsheet = 1;
+      }
+      
       ret.onclick = cb;
       
       this._add(ret);
@@ -426,6 +563,10 @@ define([
       let ret;
       if (packflag & PackFlags.USE_ICONS) {
         ret = document.createElement("iconcheck-x");
+        
+        if (packflag & PackFlags.SMALL_ICON) {
+          ret.iconsheet = 1; //XXX magic number!
+        }
       } else {
         ret = document.createElement("check-x");
       }
@@ -445,12 +586,12 @@ define([
       packflag = packflag === undefined ? 0 : packflag;
       packflag |= this.inherit_packflag;
       
-      let ret = document.createElement("dropbox-x")
+      /*let ret = document.createElement("dropbox-x")
       ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
       
       if (iconmap !== undefined) {
         ret.prop.addIcons(iconmap)
-      }
+      }//*/
       
       let has_path = path !== undefined;
       
@@ -583,33 +724,6 @@ define([
       return cw;
     }
     
-    tool(cls, create_cb, packflag=0) {
-      packflag |= this.inherit_packflag;
-      
-      if (create_cb === undefined) {
-        create_cb = () => {
-          return new cls();
-        }
-      }
-      
-      let cb = () => {
-        console.log("tool run");
-        
-        let toolob = create_cb();
-        this.ctx.execTool(toolob);
-      }
-      
-      let def = cls.tooldef();
-      let tooltip = def.description === undefined ? def.uiname : def.description;
-      
-      if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
-        console.log("iconbutton!");
-        this.iconbutton(def.icon, tooltip, cb);
-      } else {
-        this.button(def.uiname, cb);
-      }
-    }
-    
     slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
       packflag |= this.inherit_packflag;
 
@@ -638,7 +752,10 @@ define([
       packflag |= this.inherit_packflag;
       
       let ret = document.createElement("panelframe-x");
+
       ret.packflag |= packflag;
+      ret.inherit_packflag |= packflag;
+
       ret.setAttribute("title", name);
       ret.setAttribute("id", id);
       
@@ -653,7 +770,9 @@ define([
       packflag |= this.inherit_packflag;
       
       let ret = document.createElement("rowframe-x");
+      
       ret.packflag |= packflag;
+      ret.inherit_packflag |= packflag;
       
       this._add(ret);
       
@@ -667,6 +786,7 @@ define([
       
       let ret = document.createElement("tableframe-x");
       ret.packflag |= packflag;
+      ret.inherit_packflag |= packflag;
       
       this._add(ret);
       return ret;      
@@ -677,6 +797,7 @@ define([
       
       let ret = document.createElement("colframe-x");
       ret.packflag |= packflag;
+      ret.inherit_packflag |= packflag;
       
       this._add(ret);
       return ret;      
@@ -689,6 +810,7 @@ define([
       
       ret.constructor.setDefault(ret);
       ret.packflag |= packflag;
+      ret.inherit_packflag |= packflag;
       
       this._add(ret);
       return ret;
@@ -703,6 +825,7 @@ define([
       ret.constructor.setDefault(ret);
       ret.setAttribute("bar_pos", position);
       ret.packflag |= packflag;
+      ret.inherit_packflag |= packflag;
       
       this._add(ret);
       return ret;

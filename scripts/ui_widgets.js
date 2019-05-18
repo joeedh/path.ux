@@ -158,6 +158,7 @@ define([
         holdbg = this.dom._background;
         
         this.dom._background = ui_base.getDefault("BoxHighlight");
+        this._highlight = true;
         this._repos_canvas();
         this._redraw();
       })
@@ -167,12 +168,17 @@ define([
           return;
         
         this.dom._background = holdbg; //ui_base.getDefault("BoxBG");
+        this._highlight = false;
         this._repos_canvas();
         this._redraw();
       })
     }
     
     update() {
+      if (this.description !== undefined && this.title != this.description) {
+        this.title = this.description;
+      }
+      
       this.updateWidth();
       this.updateDPI();
       this.updateName();
@@ -320,7 +326,7 @@ define([
       this._value = val;
       
       if (this.ctx && this.hasAttribute("datapath")) {
-        this.ctx.setProp(this.getAttribute("datapath"), this._value);
+        UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
       }
     }
     
@@ -328,8 +334,8 @@ define([
       if (!this.hasAttribute("datapath")) return;
       if (this.ctx === undefined) return;
       
-      let prop = this.ctx.getPathMeta(this.getAttribute("datapath"));
-      let val = this.ctx.getPathValue(this.getAttribute("datapath"));
+      let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      let val =  UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
       
       if (val !== this._value) {
         this._value = val;
@@ -357,63 +363,91 @@ define([
       this._redraw();
     }
     
+    swapWithTextbox() {
+      let tbox = document.createElement("textbox-x");
+      tbox.text = this.value.toFixed(5);
+      tbox.select();
+      
+      this.parentNode.insertBefore(tbox, this);
+      //this.remove();
+      this.hidden = true;
+      //this.dom.hidden = true;
+      
+      let finish = (ok) => {
+        tbox.remove();
+        this.hidden = false;
+        
+        if (ok) {
+          let val = parseFloat(tbox.text);
+          
+          if (isNaN(val)) {
+            console.log("EEK!");
+            this.flash(ui_base.ErrorColors.ERROR);
+          } else {
+            this.setValue(val);
+            
+            if (this.onchange) {
+              this.onchange(this);
+            }
+          }
+        }
+      }
+      
+      tbox.addEventListener("keydown", (e) => {
+        console.log(e.keyCode);
+        switch (e.keyCode) {
+          case 27: //escape
+            finish(false);
+            break;
+          case 13: //enter
+            finish(true);
+            break;
+        }
+      });
+      
+      tbox.focus();
+      
+      //this.shadow.appendChild(tbox);
+      return;
+    }
+    
     bindEvents() {
-      this.addEventListener("mousedown", (e) => {
+      let onmousedown = (e) => {
+        if (this.hasAttribute("disabled")) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          return;
+        }
+        
         if (e.button == 0 && e.shiftKey) {
           e.preventDefault();
           e.stopPropagation();
           
-          let tbox = document.createElement("textbox-x");
-          tbox.text = this.value.toFixed(5);
-          tbox.select();
-          
-          this.parentNode.insertBefore(tbox, this);
-          //this.remove();
-          this.hidden = true;
-          //this.dom.hidden = true;
-          
-          let finish = (ok) => {
-            tbox.remove();
-            this.hidden = false;
-            
-            if (ok) {
-              let val = parseFloat(tbox.text);
-              
-              if (isNaN(val)) {
-                console.log("EEK!");
-                this.flash(ui_base.ErrorColors.ERROR);
-              } else {
-                this.setValue(val);
-                
-                if (this.onchange !== undefined) {
-                  this.onchange(this);
-                }
-              }
-            }
-          }
-          
-          tbox.addEventListener("keydown", (e) => {
-            console.log(e.keyCode);
-            switch (e.keyCode) {
-              case 27: //escape
-                finish(false);
-                break;
-              case 13: //enter
-                finish(true);
-                break;
-            }
-          });
-          
-          //this.shadow.appendChild(tbox);
-          return;
-        }
-        
-        if (e.button == 0) {
+          this.swapWithTextbox();
+        } else if (e.button == 0) {
           this.dragStart(e);
           
           e.preventDefault();
           e.stopPropagation();
         }
+      }
+      
+      this.addEventListener("dblclick", (e) => {
+        if (this.hasAttribute("disabled")) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        this.swapWithTextbox();
+      });
+      
+      this.addEventListener("mousedown", (e) => {
+        onmousedown(e);
       });
       
       this.addEventListener("touchstart", (e) => {
@@ -465,9 +499,13 @@ define([
       }
     }
     
-    setValue(value) {
+    setValue(value, fire_onchange=true) {
       this.value = value;
       this.doRange();
+      
+      if (fire_onchange && this.onchange !== undefined) {
+        this.onchange(this.value);
+      }
       
       this._redraw();
     }
@@ -687,27 +725,45 @@ define([
     }
     
     _redraw() {
+      let g = this.g;
+      let canvas = this.dom;
+
       //console.log("numslider draw");
       
       let dpi = UIBase.getDPI();
+      let disabled = this.hasAttribute("disabled");
       
-      ui_base.drawRoundBox(this.dom, this.g);
-
+      ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, undefined, undefined, disabled ? ui_base.getDefault("DisabledBG") : undefined);
+      
       let r = ui_base.getDefault("BoxRadius") * dpi;
       let pad = ui_base.getDefault("BoxMargin") * dpi;
       let ts = ui_base.getDefault("DefaultTextSize");
       
-      if (this.value !== undefined) {
-        let text = this._genLabel();
-        
-        let dpi = UIBase.getDPI();
-        
-        let tw = ui_base.measureText(text, this.dom, this.g).width;
-        let cx = this.dom.width/2 - tw/2;
-        let cy = this.dom.height/2;
-        
-        ui_base.drawText(cx, cy + ts/2, text, this.dom, this.g);
-      }
+      //if (this.value !== undefined) {
+      let text = this._genLabel();
+     
+      let tw = ui_base.measureText(text, this.dom, this.g).width;
+      let cx = this.dom.width/2 - tw/2;
+      let cy = this.dom.height/2;
+      
+      ui_base.drawText(cx, cy + ts/2, text, this.dom, this.g);
+      //}
+      
+      g.fillStyle = "rgba(0,0,0,0.1)";
+      
+      let d = 7, w=canvas.width, h=canvas.height;
+      let sz = 15;
+      
+      g.beginPath();
+      g.moveTo(d, h*0.5);
+      g.lineTo(d+sz, h*0.5 + sz*0.5);
+      g.lineTo(d+sz, h*0.5 - sz*0.5);
+      
+      g.moveTo(w-d, h*0.5);
+      g.lineTo(w-sz-d, h*0.5 + sz*0.5);
+      g.lineTo(w-sz-d, h*0.5 - sz*0.5);
+      
+      g.fill();
     }
     
     static define() {return {
@@ -1313,7 +1369,6 @@ define([
     addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
         let dom = document.createElement("span");
        
-        hotkey = ""
         dom.style["display"] = "inline-flex";
         
         let icon_div;
@@ -1465,7 +1520,18 @@ define([
       return li;
     }
     
-    separator() {
+    seperator() {
+      let li = document.createElement("li");
+      let span = document.createElement("hr");
+      
+      //span.textContent = "--"
+      //span.style["textcolor"] = span.style["color"] = "grey";
+      
+      li.setAttribute("class", "menuitem");
+      li.appendChild(span);
+      
+      this.dom.appendChild(li);
+      
       return this;
     }
     
@@ -1482,6 +1548,8 @@ define([
       
     }
   }
+  
+  Menu.SEP = Symbol("menu seperator");
   UIBase.register(Menu);
   
   let DropBox = exports.DropBox = class DropBox extends Button {
@@ -1624,22 +1692,46 @@ define([
         return;
       }
       
+      let onclose = this._menu.onclose;
+      
+      this._menu.onclose = () => {
+        if (onclose) {
+          onclose.call(this._menu);
+        }
+        this._menu = undefined;
+      }
+
       let menu = this._menu;
       
       document.body.appendChild(menu);
       let dpi = UIBase.getDPI();
       
       let x = e.x, y = e.y;
-      let rects = this.getClientRects();
+      let rects = this.dom.getClientRects();
+      
+      console.log(rects[0], Math.ceil(rects[0].height), "::");
       
       x = rects[0].x;
-      y = rects[0].y + 10;//dpi + 20*dpi;//Math.ceil(150/dpi);
+      y = rects[0].y + Math.ceil(rects[0].height);//dpi + 20*dpi;//Math.ceil(150/dpi);
       
       menu.start();
       menu.float(x, y, 8);
     }
     
     _redraw() {
+      if (this.getAttribute("simple")) {
+        if (this._highlight) {
+          ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, 2);
+        }
+        
+        if (this._focus) {
+          ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, 2, "stroke");
+        }
+        
+        this._draw_text();
+        return;
+      }
+      
       super._redraw(false);
       
       let g = this.g;

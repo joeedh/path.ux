@@ -1,11 +1,11 @@
-let _model_interface = undefined;
+let _controller = undefined; //for use in debugging console *only*
 
 define([
   "./toolprop"
 ], function(toolprop) {
   "use strict";
   
-  let exports = _model_interface = {};
+  let exports = _controller = {};
   
   let PropFlags = toolprop.PropFlags,
       PropTypes = toolprop.PropTypes;
@@ -14,9 +14,80 @@ define([
     READ_ONLY : 1
   };
   
+  const DataPathError = exports.DataPathError = class DataPathError extends Error {
+  };
+  
+  exports.ToolPropertyIface = class ToolPropertyIface {
+    constructor() {
+    }
+    
+    static tooldef() {return {
+      uiname      : "!untitled tool",
+      icon        : -1,
+      toolpath    : "logical_module.tool", //logical_module need not match up to real module name
+      description : undefined,
+      hotkey      : undefined,
+      is_modal    : false,
+      inputs      : {}, //tool properties
+      outputs     : {}  //tool properties
+    }}
+  };
+  
+  let tool_classes = exports.tool_classes = {};
+  let tool_idgen = 1;
+  Symbol.ToolID = Symbol("toolid");
+  
+  function toolkey(cls) {
+    if (!(Symbol.ToolID in cls)) {
+      cls[Symbol.ToolID] = tool_idgen++;
+    }
+    
+    return cls[Symbol.ToolID];
+  }
+  
   exports.ModelInterface = class ModelInterface {
     constructor() {
       this.prefix = "";
+    }
+    
+    getToolDef(path) {
+      throw new Error("implement me");
+    }
+    
+    createTool(path, inputs={}, constructor_argument=undefined) {
+      throw new Error("implement me");
+    }
+    
+    //returns tool class, or undefined if one cannot be found for path
+    parseToolPath(path) {
+      throw new Error("implement me");
+    }
+    
+    execTool(ctx, path, inputs={}, constructor_argument=undefined) {
+      return new Promise((accept, reject) => {
+        let tool;
+        
+        try {
+          tool = this.createTool(path ,inputs, constructor_argument);
+        } catch (error) {
+          reject(error);
+          return;
+        }
+        
+        //give client a chance to change tool instance directly
+        accept(tool);
+        
+        //execute
+        ctx.state.toolstack.execTool(tool);
+      });
+    }
+    
+    static toolRegistered(tool) {
+      throw new Error("implement me");
+    }
+    
+    static registerTool(tool) {
+      throw new Error("implement me");
     }
     
     /*returns {
@@ -433,7 +504,72 @@ define([
         prop : prop
       };
     }
+    
+    getToolDef(path) {
+      let cls = this.parseToolPath(path);
+      if (cls === undefined) {
+        throw new DataPathError("unknown path \"" + path + "\"");
+      }
+      
+      return cls.tooldef();
+    }
+    
+    parseToolPath(path) {
+      //path = path.trim().split(" ");
+      
+      for (let key in tool_classes) {
+        let cls = tool_classes[key];
+        
+        let def = cls.tooldef();
+        if (def.toolpath == path) {
+          return cls;
+        }
+      }
+      
+      return undefined;
+    }
+    
+    createTool(path, inputs={}, constructor_argument=undefined) {
+      let cls = this.parseToolPath(path);
+      
+      if (cls === undefined) {
+        throw new DataPathError("unknown path \"" + path + "\"");
+      }
+      
+      let tool = new cls(constructor_argument);
+      if (inputs !== undefined) {
+        for (let k in inputs) {
+          if (!(k in tool.inputs)) {
+            console.warn(cls.tooldef().uiname + ": Unknown tool property \"" + k + "\"");
+            continue;
+          }
+          
+          tool.inputs[k].setValue(inputs[k]);
+        }
+      }
+      
+      return tool;
+    }
+    
+    static toolRegistered(cls) {
+      let key = toolkey(cls);
+      
+      return key in tool_classes;
+    }
+    
+    static registerTool(cls) {
+      let key = toolkey(cls);
+      
+      if (!(key in tool_classes)) {
+        tool_classes[key] = cls;
+      }
+    }
+  }
+  
+  exports.registerTool = function(cls) {
+    return DataAPI.registerTool(cls);
   }
   
   return exports;
 });
+

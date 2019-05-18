@@ -87,6 +87,7 @@ define([
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(150, 150, 150, 1.0)",
     "BoxBG" : "rgba(220, 220, 220, 1.0)",
+    "DisabledBG" : "rgba(170, 170, 170, 1.0)",
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)", //for subpanels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
@@ -221,7 +222,8 @@ define([
     INHERIT_WIDTH  : 1,
     INHERIT_HEIGHT : 2,
     VERTICAL : 4,
-    USE_ICONS : 8
+    USE_ICONS : 8,
+    SMALL_ICON : 16
   };
    
   let first = (iter) => {

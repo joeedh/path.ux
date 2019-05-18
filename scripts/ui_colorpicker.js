@@ -763,17 +763,17 @@ exports.getFieldImage = function(size, hsva) {
       }
       
       let hsva = this.hsva;
-      this.h.setValue(hsva[0]);
-      this.s.setValue(hsva[1]);
-      this.v.setValue(hsva[2]);
-      this.a.setValue(hsva[3]);
+      this.h.setValue(hsva[0], false);
+      this.s.setValue(hsva[1], false);
+      this.v.setValue(hsva[2], false);
+      this.a.setValue(hsva[3], false);
       
       let rgba = this.rgba;
       
-      this.r.setValue(rgba[0]);
-      this.g.setValue(rgba[1]);
-      this.b.setValue(rgba[2]);
-      this.a2.setValue(rgba[3]);
+      this.r.setValue(rgba[0], false);
+      this.g.setValue(rgba[1], false);
+      this.b.setValue(rgba[2], false);
+      this.a2.setValue(rgba[3], false);
     }
     
     get hsva() {

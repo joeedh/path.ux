@@ -12,7 +12,9 @@ define([
   
   var exports = _app = {};
   
+  let PackFlags = ui_base.PackFlags;
   let SimpleContext = ui.SimpleContext;
+  
   window.STARTUP_FILE_NAME = "startup_file_pathux";
   
   let CanvasArea = exports.CanvasArea = class CanvasArea extends ScreenArea.Area {
@@ -76,12 +78,24 @@ define([
       
       let row = ui.row();
       
+      row.tool("screen.area.split", PackFlags.USE_ICONS|PackFlags.SMALL_ICON, (cls) => new cls(_appstate.screen));
+      row.tool("screen.area.split", 0, (cls) => new cls(_appstate.screen));
+      let SEP = ui_widgets.Menu.SEP;
+      
+      row.menu("File", [
+        ["Open", () => console.log("yay open")],
+        "screen.area.split",
+        "screen.area.drag",
+        SEP,
+        ["Close", () => console.log("yay close")],
+      ]);
+      
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       row.check("EXAMPLE_OPTION", "ExampleCheck0");
       //*
       
-      row.checkenum("enumval", "Enum", ui_base.PackFlags.USE_ICONS);
+      row.checkenum("enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON);
       row.listenum("enumval", "Enum");
       //*/
       

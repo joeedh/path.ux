@@ -2,22 +2,31 @@ let _FrameManager_ops = undefined;
 
 define([
   "util", "vectormath", "ScreenArea", "ui", "ui_base", "events",
-  "ScreenOverdraw"
+  "ScreenOverdraw", "simple_toolsys", "controller", "icon_enum"
 ], function(util, vectormath, ScreenArea, ui, ui_base, events,
-            ScreenOverdraw) 
+            ScreenOverdraw, simple_toolsys, controller, unused) 
 {
   "use strict";
   
   let exports = _FrameManager_ops = {};
   
-  let Vector2 = vectormath.Vector2;
+  let Vector2 = vectormath.Vector2,
+      Vector3 = vectormath.Vector3,
+      UndoFlags = simple_toolsys.UndoFlags,
+      ToolFlags = simple_toolsys.ToolFlags;
   
-  let ToolBase = exports.ToolBase = class ToolBase extends events.EventHandler {
+  let ToolBase = exports.ToolBase = class ToolBase extends simple_toolsys.ToolOp {
     constructor(screen) {
+      if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+      
       super();
       
       this._finished = false;
       this.screen = screen;
+    }
+    
+    start() {
+      _appstate.toolstack.execTool(this);
     }
     
     cancel() {
@@ -30,11 +39,11 @@ define([
       this.popModal(this.screen);
     }
     
-    start() {
+    modalStart(ctx) {
       this.overdraw = document.createElement("overdraw-x");
       this.overdraw.start(this.screen);
       
-      this.pushModal(this.screen, true);
+      super.modalStart(ctx);
     }
     
     on_mousemove(e) {
@@ -72,12 +81,27 @@ define([
   
   let AreaResizeTool = exports.AreaResizeTool = class AreaResizeTool extends ToolBase {
     constructor(screen, border, mpos) {
+      if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+      
       super(screen);
       
       this.start_mpos = new Vector2(mpos);
       this.border = border;
       this.screen = screen;
     }
+    
+    static tooldef() {return {
+      uiname   : "Resize Area",
+      toolpath : "screen.area.resize",
+      icon     : Icons.RESIZE,
+      description : "change size of area",
+      is_modal : true,
+      hotkey : undefined,
+      undoflag : UndoFlags.NO_UNDO,
+      flag     : 0,
+      inputs   : {}, //tool properties
+      outputs  : {}  //tool properties
+    }}
     
     getBorders() {
       let horiz = this.border.horiz;
@@ -142,8 +166,12 @@ define([
     }
   }
   
+  controller.registerTool(AreaResizeTool);
+  
   let SplitTool = exports.SplitTool = class SplitTool extends ToolBase {
     constructor(screen) {
+      if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+      
       super(screen);
       
       this.screen = screen;
@@ -151,7 +179,20 @@ define([
       this.start = false;
     }
     
-    start() {
+    static tooldef() {return {
+      uiname   : "Split Area",
+      toolpath : "screen.area.split",
+      icon     : Icons.SMALL_PLUS,
+      description : "split an area in two",
+      is_modal : true,
+      hotkey   : "BLEH-B",
+      undoflag : UndoFlags.NO_UNDO,
+      flag     : 0,
+      inputs   : {}, //tool properties
+      outputs  : {}  //tool properties
+    }}
+    
+    modalStart(ctx) {
       if (this.started) {
         console.trace("double call to start()");
         return;
@@ -160,7 +201,7 @@ define([
       this.overdraw = document.createElement("overdraw-x");
       this.overdraw.start(this.screen);
       
-      this.pushModal(this.screen, true);
+      super.modalStart(ctx);
     }
     
     cancel() {
@@ -205,8 +246,13 @@ define([
     }
   }
   
+  controller.registerTool(SplitTool);
+  
+  
   let AreaDragTool = exports.AreaDragTool = class AreaDragTool extends ToolBase {
     constructor(screen, sarea, mpos) {
+      if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+      
       super(screen);
       
       this.cursorbox = undefined;
@@ -215,6 +261,19 @@ define([
       this.start_mpos = new Vector2(mpos);
       this.screen = screen;
     }
+    
+    static tooldef() {return {
+      uiname   : "Drag Area",
+      toolpath : "screen.area.drag",
+      icon     : Icons.TRANSLATE,
+      description : "move or duplicate area",
+      is_modal : true,
+      hotkey : undefined,
+      undoflag : UndoFlags.NO_UNDO,
+      flag     : 0,
+      inputs   : {}, //tool properties
+      outputs  : {}  //tool properties
+    }}
     
     finish() {
       super.finish();
@@ -487,8 +546,8 @@ define([
       this.finish();
     }
     
-    start() {
-      super.start();
+    modalStart(ctx) {
+      super.modalStart(ctx);
       
       let screen = this.screen;
       
@@ -506,6 +565,8 @@ define([
       }
     }
   }
+  
+  controller.registerTool(AreaDragTool);
   
   return exports;
 });

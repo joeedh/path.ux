@@ -55,8 +55,11 @@ define([
   var ToolOp = exports.ToolOp = class ToolOp extends events.EventHandler {
     static tooldef() {return {
       uiname   : "!untitled tool",
+      toolpath : "logical_module.tool", //logical_module need not match up to real module name
+      icon     : -1,
       description : undefined,
       is_modal : false,
+      hotkey : undefined,
       undoflag : 0,
       flag     : 0,
       inputs   : {}, //tool properties
@@ -333,9 +336,7 @@ define([
         }).bind(this);
         
         //will handle calling .exec itself
-        toolop.modalStart(ctx).then((function() {
-          this.modal_running = false;
-        }).bind(this));
+        toolop.modalStart(ctx);
       } else {
         toolop.exec(ctx);
       }
