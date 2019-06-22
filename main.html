@@ -2,14 +2,11 @@
 <html>
 <head>
 <title>Path.UX</title>
-<script type="application/javascript" src="scripts/require.js" data-main="scripts/app">
-</script>
-<script type="application/javascript">
+<script type="module">
+import * as app from './scripts/app.js';
 window.init = function() {
-    require(["app"], (app) => {
-        console.log("init");
-        app.start();
-    });    
+  console.log("init");
+  app.start();
 }
 </script>
 <style>

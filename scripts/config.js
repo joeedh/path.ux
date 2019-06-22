@@ -1,16 +1,11 @@
-var _config = undefined;
-
-define([
-], function() {
-  'use strict';
+class Config {
+  constructor() {
+    this.EXAMPLE_PARAM = 128;
+    this.EXAMPLE_OPTION = false;
+    this.EXAMPLE_ENUM = 0;
+  }
   
-  var exports = _config = {};
-  
-  exports.EXAMPLE_PARAM = 128;
-  exports.EXAMPLE_OPTION = false;
-  exports.EXAMPLE_ENUM = 0;
-  
-  exports.copy = function() {
+  copy() {
     let ret = JSON.parse(JSON.stringify(this));
     
     ret.copy = this.copy;
@@ -19,8 +14,8 @@ define([
     
     return ret;
   }
-  
-  exports.toJSON = function() {
+
+  toJSON() {
     let ret = {};
     
     for (let k in this) {
@@ -33,8 +28,8 @@ define([
     
     return ret;
   } 
-  
-  exports.loadJSON = function(obj) {
+
+  loadJSON(obj) {
     for (let k in obj) {
       let v = obj[k];
       
@@ -42,7 +37,7 @@ define([
         continue;
       }
       
-      if (!(k in exports)) {
+      if (!(k in this)) {
         console.log("unknown config key", k);
         continue;
       }
@@ -52,6 +47,7 @@ define([
     
     return this;
   }
-  
-  return exports;
-});
+}
+
+var config = new Config();
+export default config;
