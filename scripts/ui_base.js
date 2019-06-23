@@ -2,11 +2,33 @@ let _ui_base = undefined;
 
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
-import * as icon_enum from './icon_enum.js';
 import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
 
 let Vector4 = vectormath.Vector4;
+
+export let Icons = {};
+
+/*
+Icons are defined in spritesheets that live in 
+the iconsheet16/32 dom nodes.  Icons are numbered start from
+the upper left sprite tile.
+
+This function sets the mapping between icon numbers and names.
+
+The following icons should be in the icon sheet and in this map:
+
+RESIZE      :
+SMALL_PLUS  :
+TRANSLATE   : for moving things
+UI_EXPAND   : panel open icon
+UI_COLLAPSE : panel close icon
+*/
+export function setIconMap(icons) {
+  for (let k in icons) {
+    Icons[k] = icons[k];
+  }
+}
 
 export function color2css(c, alpha_override) {
   let r = ~~(c[0]*255);

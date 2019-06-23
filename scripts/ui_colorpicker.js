@@ -3,7 +3,6 @@
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
-import * as icon_enum from './icon_enum.js';
 import * as events from './events.js';
 import * as ui from './ui.js';
 

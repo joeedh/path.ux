@@ -14,6 +14,9 @@ import * as ui_base from './ui_base.js';
 import * as cconst from './const.js';
 import * as config from './config.js';
 
+let Icons = icon_enum.Icons;
+ui_base.setIconMap(Icons);
+
 import './struct.js';
 
 let PackFlags = ui_base.PackFlags;

@@ -1114,8 +1114,8 @@ export class PanelFrame extends Container {
     this.iconcheck = iconcheck;
     
     iconcheck.ctx = this.ctx;
-    iconcheck._icon_pressed = Icons.UI_EXPAND;
-    iconcheck._icon = Icons.UI_COLLAPSE;
+    iconcheck._icon_pressed = ui_base.Icons.UI_EXPAND;
+    iconcheck._icon = ui_base.Icons.UI_COLLAPSE;
     iconcheck.iconsheet = ui_base.IconSheets.SHEET16;
     iconcheck.iconsheet = 1;
     iconcheck.checked = this._closed;

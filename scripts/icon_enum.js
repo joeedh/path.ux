@@ -1,6 +1,6 @@
 "use strict";
 
-window.Icons = {
+export let Icons = {
   HFLIP          : 0,
   TRANSLATE      : 1,
   ROTATE         : 2,

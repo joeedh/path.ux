@@ -8,7 +8,6 @@ import * as ScreenArea from './ScreenArea.js';
 import * as events from './events.js';
 import * as controller from './controller.js';
 import * as ScreenOverdraw from './ScreenOverdraw.js';
-import * as icon_enum from './icon_enum.js';
 import * as simple_toolsys from './simple_toolsys.js';
 
 
@@ -95,7 +94,7 @@ export class AreaResizeTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Resize Area",
     toolpath : "screen.area.resize",
-    icon     : Icons.RESIZE,
+    icon     : ui_base.Icons.RESIZE,
     description : "change size of area",
     is_modal : true,
     hotkey : undefined,
@@ -184,7 +183,7 @@ export class SplitTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Split Area",
     toolpath : "screen.area.split",
-    icon     : Icons.SMALL_PLUS,
+    icon     : ui_base.Icons.SMALL_PLUS,
     description : "split an area in two",
     is_modal : true,
     hotkey   : "BLEH-B",
@@ -267,7 +266,7 @@ export class AreaDragTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Drag Area",
     toolpath : "screen.area.drag",
-    icon     : Icons.TRANSLATE,
+    icon     : ui_base.Icons.TRANSLATE,
     description : "move or duplicate area",
     is_modal : true,
     hotkey : undefined,
