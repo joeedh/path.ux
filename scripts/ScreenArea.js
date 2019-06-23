@@ -582,7 +582,7 @@ export class ScreenArea extends ui_base.UIBase {
       new Vector2([p[0], p[1]]),
       new Vector2([p[0], p[1] + s[1]]),
       new Vector2([p[0] + s[0], p[1] + s[1]]),
-      new Vector2([p[0] + s[0], p[1]]),
+      new Vector2([p[0] + s[0], p[1]])
     ]
     
     for (let i=0; i<vs.length; i++) {

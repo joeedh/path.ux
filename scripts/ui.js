@@ -369,10 +369,11 @@ export class Container extends ui_base.UIBase {
           }
           //addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
           menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
-          
-          cbs[id] = ((toolpath) => {
-            return () => {
-              this.ctx.api.execTool(this.ctx, toolpath);
+          let this2 = this;
+
+          cbs[id] = (function (toolpath) {
+            return function() {
+              this2.ctx.api.execTool(this.ctx, toolpath);
             }
           })(item);
           
@@ -382,8 +383,8 @@ export class Container extends ui_base.UIBase {
         } else if (item instanceof Array) {
           menu.addItemExtra(item[0], id);
           
-          cbs[id] = ((cbfunc, arg) => {
-            return () => {
+          cbs[id] = (function (cbfunc, arg) {
+            return function() {
               cbfunc(arg);
             }
           })(item[1], item[2]);
@@ -972,11 +973,11 @@ export class TableFrame extends Container {
       
       style : tr.style,
       
-      focus(args) {
+      focus : function(args) {
         tr.focus(args);
       },
       
-      blur(args) {
+      blur : function(args) {
         tr.blur(args);
       },
       
@@ -984,15 +985,15 @@ export class TableFrame extends Container {
         tr.remove();
       },
       
-      addEventListener(type, cb, arg) {
+      addEventListener : function(type, cb, arg) {
         tr.addEventListener(type, cb, arg);
       },
       
-      removeEventListener(type, cb, arg) {
+      removeEventListener : function(type, cb, arg) {
         tr.removeEventListener(type, cb, arg);
       },
       
-      setAttribute(attr, val) {
+      setAttribute : function(attr, val) {
         if (attr == "class") {
           cls = val;
         }
@@ -1000,7 +1001,7 @@ export class TableFrame extends Container {
         tr.setAttribute(attr, val);
       },
       
-      clear() {
+      clear : function() {
         for (let node of list(tr.childNodes)) {
           tr.removeChild(node);
         }
@@ -1030,7 +1031,7 @@ export class TableFrame extends Container {
     });
     
     Object.defineProperty(ret, "background", {
-      set(bg) {
+      set : function(bg) {
         _bg = bg;
         tr.style["background-color"] = bg;
         
@@ -1040,7 +1041,7 @@ export class TableFrame extends Container {
             node.style["background-color"] = bg;
           }
         }
-      }, get() {
+      }, get : function() {
         return _bg;
       }
     });

@@ -94,12 +94,12 @@ export class Matrix4 {
     if (typeof m=='object') {
         if ("length" in m&&m.length>=16) {
             this.load(m);
-            return ;
+            return this;
         }
         else 
           if (m instanceof Matrix4) {
             this.load(m);
-            return ;
+            return this;
         }
     }
     this.makeIdentity();

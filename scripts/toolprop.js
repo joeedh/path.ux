@@ -329,7 +329,7 @@ export class EnumProperty extends ToolProperty {
     this.keys = {};
     this.ui_value_names = {}
     
-    if (valid_values === undefined) return;
+    if (valid_values === undefined) return this;
     
     if (valid_values instanceof Array || valid_values instanceof String) {
       for (var i=0; i<valid_values.length; i++) {
