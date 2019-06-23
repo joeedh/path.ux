@@ -1485,7 +1485,7 @@ export class Curve {
       ret.generators.push(gen.toJSON());
     }
     
-    return Object.assign(super.toJSON(), ret);
+    ret;//return Object.assign(super.toJSON(), ret);
   }
   
   getGenerator(type) {
