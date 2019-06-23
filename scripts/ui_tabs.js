@@ -18,7 +18,7 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
-let TabItem = class TabItem {
+export class TabItem {
   constructor(name, id, tooltip="") {
     this.name = name;
     this.id = id;

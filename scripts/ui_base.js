@@ -188,7 +188,7 @@ export class IconManager {
 
 export let iconmanager = new IconManager([
   document.getElementById("iconsheet"),
-  document.getElementById("iconsheet16"),    
+  document.getElementById("iconsheet16")
 ], [32, 16], 16);
 
 export let IconSheets = {

@@ -299,7 +299,7 @@ export function getFieldImage(size, hsva) {
   return image;
 }
 
-let SimpleBox = class SimpleBox {
+export class SimpleBox {
   constructor(pos=[0, 0], size=[1, 1]) {
     this.pos = new Vector2(pos);
     this.size = new Vector2(size);
