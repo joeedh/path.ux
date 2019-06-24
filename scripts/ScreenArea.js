@@ -135,7 +135,8 @@ export class Area extends ui_base.UIBase {
   
   getScreen() {
     //XXX
-    return _appstate.screen;
+    //return _appstate.screen;
+    throw new Error("replace me in Area.prototype");
   }
   
   toJSON() {

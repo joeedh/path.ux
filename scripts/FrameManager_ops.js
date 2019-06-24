@@ -10,24 +10,83 @@ import * as controller from './controller.js';
 import * as ScreenOverdraw from './ScreenOverdraw.js';
 import * as simple_toolsys from './simple_toolsys.js';
 
+/*
+why am I using a toolstack here at all?  time to remove!
+*/
+
+let toolstack_getter = function() {
+  throw new Error("must pass a toolstack getter to registerToolStackGetter, I know it's dumb")
+}
+
+export function registerToolStackGetter(func) {
+  toolstack_getter = func;
+}
 
 let Vector2 = vectormath.Vector2,
     Vector3 = vectormath.Vector3,
     UndoFlags = simple_toolsys.UndoFlags,
     ToolFlags = simple_toolsys.ToolFlags;
 
-export class ToolBase extends simple_toolsys.ToolOp {
+export function pushModalLight(obj) {
+  let keys = new Set([
+    "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
+    "touchcancel", "mousewheel", "mousemove"
+  ]);
+    
+  let ret = {
+    keys : keys,
+    handlers : {}
+  };
+
+  function make_handler(type, key) {
+    return function(e) {
+      let ret = key !== undefined ? obj[key](e) : undefined;
+
+      e.preventDefault();
+      e.stopPropagation();
+      return ret;
+    }
+  }
+
+  for (let k of keys) {
+    let key;
+
+    if (obj["on"+k])
+      key = "on" + k;
+    else if (obj["on_"+k])
+      key = "on_" + k;
+    else
+      key = undefined;
+
+    let handler = make_handler(k, key);
+    ret.handlers[k] = handler;
+    window.addEventListener(k, handler);
+  }
+
+  return ret;
+}
+
+export function popModalLight(state) {
+  for (let k in state.handlers) {
+    window.removeEventListener(k, state.handlers[k]);
+  }
+
+  state.handlers = {};
+}
+
+export class ToolBase { //extends simple_toolsys.ToolOp {
   constructor(screen) {
     if (screen === undefined) screen = _appstate.screen; //XXX hackish!
     
-    super();
+    //super();
     
     this._finished = false;
     this.screen = screen;
   }
   
   start() {
-    _appstate.toolstack.execTool(this);
+    //toolstack_getter().execTool(this);
+    this.modalStart(undefined);
   }
   
   cancel() {
@@ -39,12 +98,22 @@ export class ToolBase extends simple_toolsys.ToolOp {
     this.overdraw.end();
     this.popModal(this.screen);
   }
-  
+
+  popModal() {
+    popModalLight(this.modaldata);
+    this.modaldata = undefined;
+  }
+
   modalStart(ctx) {
+    if (this.modaldata !== undefined) {
+      console.log("Error, modaldata was not undefined");
+      popModalLight(this.modaldata);
+    }
+
     this.overdraw = document.createElement("overdraw-x");
     this.overdraw.start(this.screen);
-    
-    super.modalStart(ctx);
+
+    this.modaldata = pushModalLight(this);
   }
   
   on_mousemove(e) {

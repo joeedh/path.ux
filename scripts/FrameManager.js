@@ -12,6 +12,10 @@ import * as ui_colorpicker from './ui_colorpicker.js';
 import * as ui_tabs from './ui_tabs.js';
 import './struct.js';
 
+export function registerToolStackGetter(func) {
+  FrameManager_ops.registerToolStackGetter(func);
+}
+
 //XXX why!!!
 window._nstructjs = nstructjs;
 
@@ -856,19 +860,19 @@ export class Screen extends ui_base.UIBase {
   }
       
   on_keydown(e) {
-    if (this.sareas.active !== undefined) {
+    if (this.sareas.active !== undefined && this.sareas.active.on_keydown) {
       return this.sareas.active.on_keydown(e);
     }
   }
   
   on_keyup(e) {
-    if (this.sareas.active !== undefined) {
+    if (this.sareas.active !== undefined && this.sareas.active.on_keyup) {
       return this.sareas.active.on_keyup(e);
     }
   }
   
   on_keypress(e) {
-    if (this.sareas.active !== undefined) {
+    if (this.sareas.active !== undefined && this.sareas.active.on_keypress) {
       return this.sareas.active.on_keypress(e);
     }
   }

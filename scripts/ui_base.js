@@ -239,6 +239,10 @@ export function makeIconDiv(icon, sheet=0) {
 let Vector2 = vectormath.Vector2;
 let Matrix4 = vectormath.Matrix4;
 
+export const UIFlags = {
+
+};
+
 export const PackFlags = {
   INHERIT_WIDTH  : 1,
   INHERIT_HEIGHT : 2,

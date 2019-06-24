@@ -311,7 +311,11 @@ export class Container extends ui_base.UIBase {
       }
     }
   }
-  
+
+  add(child) {
+    return this._add(child);
+  }
+
   _add(child) {
     if (child instanceof NodeList) {
       throw new Error("eek!");
@@ -848,7 +852,7 @@ export class RowFrame extends Container {
     
     this.dom.style["display"] = "inline-block";
   }
-  
+
   _add(child) {
     let li = super._add(child);
     li.style["display"] = "inline-block"

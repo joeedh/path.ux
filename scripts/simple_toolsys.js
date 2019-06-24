@@ -44,9 +44,12 @@ export const ToolFlags = {
   PRIVATE : 1
 };
 
+
 export const UndoFlags = {
-  NO_UNDO      : 1,
-  IS_UNDO_ROOT : 2
+  NO_UNDO       : 2,
+  IS_UNDO_ROOT  : 4,
+  UNDO_BARRIER  :  8,
+  HAS_UNDO_DATA : 16
 };
 
 export class ToolOp extends events.EventHandler {
@@ -91,7 +94,12 @@ export class ToolOp extends events.EventHandler {
     
     this.drawlines = [];
   }
-  
+
+  //for compatibility with fairmotion
+  can_call(ctx) {
+    return this.canRun(ctx);
+  }
+
   canRun(ctx) {
     return true;
   }
@@ -103,7 +111,14 @@ export class ToolOp extends events.EventHandler {
   undo(ctx) {
     _appstate.loadUndoFile(this._undo);
   }
-  
+
+  //for compatibility with fairmotion
+  exec_pre(ctx) {
+    this.execPre(ctx);
+  }
+
+  execPre(ctx) {
+  }
   exec(ctx) {
   }
   
