@@ -248,7 +248,8 @@ export const PackFlags = {
   INHERIT_HEIGHT : 2,
   VERTICAL : 4,
   USE_ICONS : 8,
-  SMALL_ICON : 16
+  SMALL_ICON : 16,
+  LARGE_ICON : 32
 };
  
 let first = (iter) => {
@@ -566,7 +567,11 @@ export class UIBase extends HTMLElement {
   static getPathMeta(ctx, path) {
     return ctx.api.resolvePath(ctx, path).prop;
   }
-  
+
+  getScreen() {
+    return this.ctx.screen;
+  }
+
   //not sure I'm happy about this. . .
   //it adds a method call to the event queue,
   //but only if that method (for this instance, as differentiated

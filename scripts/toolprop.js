@@ -16,7 +16,7 @@ let first = (iter) => {
   }
 }
 
-export const PropTypes = {
+export let PropTypes = {
   INT : 1,
   STRING : 2,
   BOOL : 4,
@@ -29,15 +29,21 @@ export const PropTypes = {
   MATRIX4 : 512
 };
 
+//set PropTypes to custom type integers
+export function setPropTypes(types) {
+  for (let k in types) {
+    PropTypes[k] = types[k];
+  }
+}
+
 export const PropSubTypes = {
-  RGB : 0,
-  RGBA : 1
+  COLOR : 1
 };
 
 export const PropFlags = {
   SELECT : 1,
-  USE_ICONS : 2,
-  USE_CUSTOM_GETSET : 4 //used by controller.js interface
+  USE_ICONS : 64,
+  USE_CUSTOM_GETSET : 128 //used by controller.js interface
 };
 
 export class ToolProperty {

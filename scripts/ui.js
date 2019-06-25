@@ -12,6 +12,8 @@ import * as ui_base from './ui_base.js';
 import * as ui_widgets from './ui_widgets.js';
 import * as toolprop from './toolprop.js';
 
+let PropFlags = toolprop.PropFlags;
+let PropSubTypes = toolprop.PropSubTypes;
 
 let EnumProperty = toolprop.EnumProperty;
   
@@ -440,7 +442,7 @@ export class Container extends ui_base.UIBase {
       console.log("tool run");
       
       let toolob = create_cb(cls);
-      this.ctx.execTool(toolob);
+      this.ctx.api.execTool(this.ctx, toolob);
     }
     
     let def = cls.tooldef();
@@ -563,9 +565,28 @@ export class Container extends ui_base.UIBase {
     return [obj, parentobj];
   }
 
-prop(path, packflags) {
-  
-}
+  prop(path, packflag=0) {
+    packflag |= this.inherit_packflag;
+
+    let rdef = this.ctx.api.resolvePath(this.ctx, path);
+
+    if (rdef === undefined || rdef.prop === undefined) {
+      console.warn("Unknown property at path", path);
+      return;
+    }
+    //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
+    let prop = rdef.prop;
+
+    if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
+      return this.slider(path);
+    } else if (prop.type == PropTypes.ENUM) {
+      if (!(packflag & PackFlags.USE_ICONS)) {
+        this.listenum(path, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
+      } else {
+        this.checkenum(path, undefined, packflag);
+      }
+    }
+  }
 
   check(path, name, packflag=0) {
     packflag |= this.inherit_packflag;
@@ -623,10 +644,10 @@ prop(path, packflags) {
       }
       
       frame.background = ui_base.getDefault("BoxSubBG");
-      
+
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {
-          let check = frame.check(path + " = " + prop.values[key], "", packflag);
+          let check = frame.check(path + " == " + prop.values[key], "", packflag);
           
           check.icon = prop.iconmap[key];
           
@@ -634,6 +655,14 @@ prop(path, packflags) {
           check.style["margin"] = "0px";
           frame.style["padding"] = "0px";
           frame.style["margin"] = "0px";
+          if (packflag & PackFlags.VERTICAL) {
+            frame.style["margin-top"] = "4px";
+            frame.style["margin-bottom"] = "4px";
+          } else {
+            frame.style["margin-left"] = "4px";
+            frame.style["margin-right"] = "4px";
+          }
+
           check.dom.style["padding"] = "0px";
           check.dom.style["margin"] = "0px";
           
@@ -678,12 +707,14 @@ prop(path, packflags) {
     } else {
       let res = this.ctx.api.resolvePath(this.ctx, path);
       ret.prop = res.prop;
+
+      name = name === undefined ? res.prop.uiname : name;
     }
     
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
     }
-    
+
     ret.setAttribute("name", name);
     
     ret.onselect = (id) => {
@@ -734,7 +765,7 @@ prop(path, packflags) {
     
     return cw;
   }
-  
+
   slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     packflag |= this.inherit_packflag;
 
@@ -743,12 +774,38 @@ prop(path, packflags) {
     
     if (path) {
       ret.setAttribute("datapath", path);
+
+      let rdef = this.ctx.api.resolvePath(this.ctx, path);
+      if (rdef && rdef.prop) {
+        let prop = rdef.prop;
+
+        let range = prop.ui_range !== undefined ? prop.ui_range : prop.range;
+        range = range === undefined ? [-10000, 10000] : range;
+
+        if (min===undefined)
+          min = range[0];
+        if (max===undefined)
+          max = range[1];
+        if (is_int === undefined)
+          is_int = prop.type === PropTypes.INT;
+        if (name === undefined)
+          name = prop.uiname;
+        if (step === undefined)
+          step = prop.step;
+      } else {
+        console.warn("warning, failed to lookup property info for path", path);
+      }
     }
-    
-    ret.setAttribute("name", name);
-    ret.setAttribute("min", min);
-    ret.setAttribute("max", max);
-    
+
+    if (name)
+      ret.setAttribute("name", name);
+    if (min !== undefined)
+      ret.setAttribute("min", min);
+    if (max !== undefined)
+      ret.setAttribute("max", max);
+    if (is_int !== undefined)
+      ret.setAttribute("is_int", true);
+
     if (callback) {
       ret.onchange = callback;
     }
@@ -837,7 +894,8 @@ prop(path, packflags) {
     ret.setAttribute("bar_pos", position);
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
-    
+    ret.ctx = this.ctx;
+
     this._add(ret);
     return ret;
   }

@@ -357,7 +357,7 @@ export class NumSlider extends ValueButtonBase {
     this._name = "";
     this._step = 0.1;
     this._value = 0.0;
-    
+
     this._redraw();
   }
   
@@ -500,7 +500,10 @@ export class NumSlider extends ValueButtonBase {
   setValue(value, fire_onchange=true) {
     this.value = value;
     this.doRange();
-    
+
+    if (this.hasAttribute("is_int"))
+      this.value = Math.floor(this.value);
+
     if (fire_onchange && this.onchange !== undefined) {
       this.onchange(this.value);
     }
@@ -633,7 +636,7 @@ export class NumSlider extends ValueButtonBase {
       on_mousemove : mousemove
     }
     
-    events.pushModal(_appstate.screen, handlers);
+    events.pushModal(this.getScreen(), handlers);
     
     cancel = (restore_value) => {
       if (restore_value) {

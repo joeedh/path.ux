@@ -114,10 +114,13 @@ export class Area extends ui_base.UIBase {
   
   on_area_inactive() {
   }
-  
+
+  /*client code can implement these (no need to subclass Area, override Area.prototype.push/pop_ctx_actix).
+  *
+  * the purpose is to keep track of which area is the "active" one for its type.  so if a UI
+  * has a slider with path "view2d.zoomfac", the controller knows where to find view2d*/
   push_ctx_active() {
   }
-  
   pop_ctx_active() {
   }
   
@@ -293,6 +296,8 @@ export class Area extends ui_base.UIBase {
     let notef = document.createElement("noteframe-x");
     notef.ctx = this.ctx;
     row._add(notef);
+
+    return row;
   }
   
   setCSS() {
@@ -302,8 +307,8 @@ export class Area extends ui_base.UIBase {
       this.style["position"] = "absolute";
       //this.style["left"] = this.pos[0] + "px";
       //this.style["top"] = this.pos[1] + "px";
-      this.style["width"] = this.size[0] + "px";
-      this.style["height"] = this.size[1] + "px";
+      this.style["width"] = ~~this.size[0] + "px";
+      this.style["height"] = ~~this.size[1] + "px";
     }
   }
   
@@ -612,11 +617,11 @@ export class ScreenArea extends ui_base.UIBase {
     this.style["position"] = "absolute";
     this.style["overflow"] = "hidden";
     
-    this.style["left"] = this.pos[0] + "px";
-    this.style["top"] = this.pos[1] + "px";
+    this.style["left"] = ~~this.pos[0] + "px";
+    this.style["top"] = ~~this.pos[1] + "px";
     
-    this.style["width"] = this.size[0] + "px";
-    this.style["height"] = this.size[1] + "px";
+    this.style["width"] = ~~this.size[0] + "px";
+    this.style["height"] = ~~this.size[1] + "px";
     
     
     if (this.area !== undefined) {
@@ -712,10 +717,23 @@ export class ScreenArea extends ui_base.UIBase {
   
   update() {
     super.update();
-    
+
+    //flag client controller implementation that
+    //this area is active for its type
+    if (this.area !== undefined) {
+      this.area.owning_sarea = this;
+      this.area.size = this.size;
+      this.area.pos = this.pos;
+      this.area.push_ctx_active();
+    }
+
     this._forEachChildren((n) => {
       n.update();
     });
+
+    if (this.area !== undefined) {
+      this.area.pop_ctx_active();
+    }
   }
   
   static fromSTRUCT(reader) {

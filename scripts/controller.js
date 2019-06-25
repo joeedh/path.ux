@@ -61,7 +61,7 @@ export class ModelInterface {
       let tool;
       
       try {
-        tool = this.createTool(path ,inputs, constructor_argument);
+        tool = this.createTool(ctx, path ,inputs, constructor_argument);
       } catch (error) {
         reject(error);
         return;
@@ -84,12 +84,13 @@ export class ModelInterface {
   }
   
   /*returns {
-    parent : [parent object of path]
-    object : [object owning property key]
+    obj : [object owning property key]
+    parent : [parent of obj]
     key : [property key]
     value : [value of property]
     prop : [optional toolprop.ToolProperty representing the property definition]
     struct : [optional datastruct representing the type, if value is an object]
+    mass_set : mass setter string, if controller implementation supports it
   }
   */
   resolvePath(ctx, path) {
@@ -99,19 +100,19 @@ export class ModelInterface {
   setValue(ctx, path, val) {
     let res = this.resolvePath(ctx, path);
     let prop = res.prop;
-    
+
     if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
       prop.setValue(val);
       return;
     }
-    
+
     if (prop !== undefined && (prop.type & (PropTypes.INT|PropTypes.FLOAT)) && prop.range) {
       console.log(prop.range);
       val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
     }
-    
+
     let old = res.obj[res.key];
-    
+
     if (res.type == "enum") {
       if (val) {
         res.obj[res.key] = res.arg;
@@ -125,7 +126,7 @@ export class ModelInterface {
     } else {
       res.obj[res.key] = val;
     }
-    
+
     if (prop !== undefined) {
       prop.dataref = res.obj;
       prop._fire("change", res.obj[res.key], old);
@@ -326,7 +327,7 @@ export class DataAPI extends ModelInterface {
     
     return _map_structs[key];
   }
-  
+
   resolvePath(ctx, path) {
     let splitchars = new Set([".", "[", "]", "=", "&"]);
     
@@ -439,8 +440,8 @@ export class DataAPI extends ModelInterface {
   }
   
   /*returns {
-    parent : [parent object of path]
-    object : [object owning property key]
+    obj : [object owning property key]
+    parent : [parent of obj]
     key : [property key]
     value : [value of property]
     prop : [optional toolprop.ToolProperty representing the property definition]
@@ -522,7 +523,7 @@ export class DataAPI extends ModelInterface {
     return undefined;
   }
   
-  createTool(path, inputs={}, constructor_argument=undefined) {
+  createTool(ctx, path, inputs={}, constructor_argument=undefined) {
     let cls = this.parseToolPath(path);
     
     if (cls === undefined) {

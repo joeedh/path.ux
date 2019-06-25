@@ -243,7 +243,7 @@ export class TabBar extends UIBase {
       if (ht !== undefined && this.tool === undefined) {
         this.setActive(ht);
 
-        let edom = _appstate.screen;
+        let edom = this.getScreen();
         let tool = new ModalTabMove(ht, this, edom);
         this.tool = tool;
         
@@ -268,7 +268,7 @@ export class TabBar extends UIBase {
       if (ht !== undefined && this.tool === undefined) {
         this.setActive(ht);
         
-        let edom = _appstate.screen;
+        let edom = this.getScreen();
         let tool = new ModalTabMove(ht, this, edom);
         this.tool = tool;
         
@@ -762,7 +762,8 @@ export class TabContainer extends UIBase {
     let col = document.createElement("colframe-x");
     
     this.tabs[id] = col;
-    
+    col.ctx = this.ctx;
+
     this.tbar.addTab(name, id, tooltip);
     //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
     

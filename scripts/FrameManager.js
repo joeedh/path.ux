@@ -246,7 +246,7 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
     
-    this.size = [0, 0];
+    this.size = [512, 512];
     this.idgen = 0;
     this.sareas = [];
     this.sareas.active = undefined;
@@ -626,8 +626,13 @@ export class Screen extends ui_base.UIBase {
   }
   
   on_resize(size) {
+    size[0] = ~~size[0];
+    size[1] = ~~size[1];
+
+    console.trace("this.size", this.size, "newsize", size);
+
     let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
-    
+
     //console.log("resize!", ratio);
     
     this.regenBorders();
@@ -651,7 +656,7 @@ export class Screen extends ui_base.UIBase {
     sz.div(vec);
     
     for (let v of this.screenverts) {
-      v.sub(min).mul(sz);
+      v.sub(min).mul(sz).floor();
     }
     
     for (let sarea of this.sareas) {
