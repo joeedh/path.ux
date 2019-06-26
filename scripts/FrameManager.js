@@ -386,7 +386,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   static fromJSON(obj, schedule_resize=false) {
-    let ret = document.createElement("screen-x");
+    let ret = document.createElement(this.define().tagname);
     return ret.loadJSON(obj, schedule_resize);
   }
   
@@ -565,7 +565,12 @@ export class Screen extends ui_base.UIBase {
       b.setCSS();
     }
   }
-  
+
+  regenScreenMesh() {
+    this.regenBorders();
+  }
+
+  //XXX rename to regenScreenMesh
   regenBorders() {
     for (let k in this._edgemap) {
       let b = this._edgemap[k];
@@ -947,7 +952,7 @@ export class Screen extends ui_base.UIBase {
   }
   
   static fromSTRUCT(reader) {
-    let ret = document.createElement("screen-x");
+    let ret = document.createElement(this.define().tagname);
 
     reader(ret);
     
@@ -1011,3 +1016,6 @@ pathux.Screen {
   
 nstructjs.manager.add_class(Screen);
 ui_base.UIBase.register(Screen);
+
+ScreenArea.setScreenClass(Screen);
+

@@ -69,12 +69,13 @@ export class Button extends UIBase {
     });
     
     //set default dimensions
-    let width = ui_base.getDefault("numslider_width");
-    let height = ui_base.getDefault("numslider_height");
+    let width = ~~(ui_base.getDefault("numslider_width"));
+    let height = ~~(ui_base.getDefault("numslider_height"));
     
     this.dom.style["width"] = width + "px";
     this.dom.style["height"] = height + "px";
-    
+    this.dom.style["padding"] = this.dom.style["margin"] = "0px";
+
     this.dom.width = Math.ceil(width*dpi); //getpx(this.dom.style["width"])*dpi;
     this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
     
@@ -83,6 +84,8 @@ export class Button extends UIBase {
       -moz-user-focus: normal;
       moz-user-focus: normal;
       user-focus: normal;
+      padding : 0px;
+      margin : 0px;
     }
     `);
     
@@ -94,7 +97,9 @@ export class Button extends UIBase {
     form.style["-moz-user-focus"] = "normal";
     form.setAttribute("class", "canvas1");
     form.appendChild(this.dom);
-    
+
+    form.style["padding"] = form.style["margin"] = "0px";
+
     this.shadow.appendChild(form);
     
     this.bindEvents();
@@ -713,15 +718,20 @@ export class NumSlider extends ValueButtonBase {
   
   _genLabel() {
     let val = this.value;
-    
-    val = val === undefined ? 0.0 : val;
-    val = val.toFixed(3);
-    
-    let text = val;
-    if (this._name) {
-      text = this._name + ": " + text;
+    let text;
+
+    if (val === undefined) {
+      text = "error";
+    } else {
+      val = val === undefined ? 0.0 : val;
+      val = val.toFixed(3);
+
+      text = val;
+      if (this._name) {
+        text = this._name + ": " + text;
+      }
     }
-    
+
     return text;
   }
   

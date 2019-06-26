@@ -9,6 +9,11 @@ import * as ui_noteframe from './ui_noteframe.js';
 import './struct.js';
 
 let Vector2 = vectormath.Vector2;
+let Screen = undefined;
+
+export function setScreenClass(cls) {
+  Screen = cls;
+}
 
 export function getAreaIntName(name) {
   let hash = 0;
@@ -156,10 +161,10 @@ export class Area extends ui_base.UIBase {
     return this;
   }
   
-  makeHeader(container) {
+  makeHeader(container, add_note_area=true) {
     let areas = {};
     let i = 0;
-    
+
     for (let k in areaclasses) {
       let cls = areaclasses[k];
       let uiname = cls.define().uiname;
@@ -172,9 +177,22 @@ export class Area extends ui_base.UIBase {
     }
     
     let row = container.row();
+
     row.background = ui_base.getDefault("AreaHeaderBG");
+
+    let rh = ~~(16*ui_base.UIBase.getDPI());
+
+    //container.setSize(undefined, rh);
+    //row.setSize(undefined, rh);
+    //row.setSize(undefined, rh);
+
+    container.noMargins();
+    row.noMargins();
+
     row.style["width"] = "100%";
-    
+    row.style["margin"] = "0px";
+    row.style["padding"] = "0px";
+
     let mdown = false;
     let mpos = new Vector2();
     
@@ -293,9 +311,13 @@ export class Area extends ui_base.UIBase {
     **/
     
     //ui_noteframe
-    let notef = document.createElement("noteframe-x");
-    notef.ctx = this.ctx;
-    row._add(notef);
+    if (add_note_area) {
+      let notef = document.createElement("noteframe-x");
+      notef.ctx = this.ctx;
+      row._add(notef);
+    }
+
+    this.header = row;
 
     return row;
   }
@@ -496,7 +518,7 @@ export class ScreenArea extends ui_base.UIBase {
   getScreen() {
     let p = this.parentNode;
     
-    while (p && p.tagName.toLowerCase() !== "screen-x") {
+    while (p && !(p instanceof Screen)) {
       p = this.parentNode;
     }
     

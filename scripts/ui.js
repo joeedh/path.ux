@@ -158,17 +158,17 @@ export class Container extends ui_base.UIBase {
       
       this.inherit_packflag = 0;
       
-      let ul = document.createElement("ul")
+      let ul = this.ul = document.createElement("ul")
       ul.style["margin"] = "1px";
       ul.style["padding"] = "1px";
       
-      this.dom = document.createElement("div")
+      this.div = document.createElement("div")
       
-      this.dom.appendChild(ul);
+      this.div.appendChild(ul);
       ul.style["list-style-type"] = "none";
       
       let style = this.styletag = document.createElement("style")
-      this.dom.setAttribute("class", "containerx");
+      this.div.setAttribute("class", "containerx");
       
       style.textContent = `div.containerx {
         background-color : ${ui_base.getDefault("DefaultPanelBG")};
@@ -176,11 +176,33 @@ export class Container extends ui_base.UIBase {
       `
       
       this.shadow.appendChild(style);
-      this.shadow.appendChild(this.dom);
+      this.shadow.appendChild(this.div);
       
       this.dom = ul;
   }
-  
+
+  noMargins() {
+    this.style["margin"] = this.style["padding"] = "0px";
+    this.div.style["margin"] = this.div.style["padding"] = "0px";
+    this.ul.style["margin"] = this.ul.style["padding"] = "0px";
+  }
+
+  setSize(width, height) {
+    if (width !== undefined) {
+      if (typeof width == "number")
+        this.style["width"] = this.div.style["width"] = ~~width + "px";
+      else
+        this.style["width"] = this.div.style["width"] = width;
+    }
+
+    if (height !== undefined) {
+      if (typeof height == "number")
+        this.style["height"] = this.div.style["height"] = ~~height + "px";
+      else
+        this.style["height"] = this.div.style["height"] = height;
+    }
+  }
+
   get background() {
     return this.__background;
   }
@@ -565,7 +587,7 @@ export class Container extends ui_base.UIBase {
     return [obj, parentobj];
   }
 
-  prop(path, packflag=0) {
+  prop(path, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
     let rdef = this.ctx.api.resolvePath(this.ctx, path);
@@ -577,6 +599,8 @@ export class Container extends ui_base.UIBase {
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     let prop = rdef.prop;
 
+    console.log(prop, PropTypes, PropSubTypes);
+
     if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
       return this.slider(path);
     } else if (prop.type == PropTypes.ENUM) {
@@ -584,6 +608,12 @@ export class Container extends ui_base.UIBase {
         this.listenum(path, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
       } else {
         this.checkenum(path, undefined, packflag);
+      }
+    } else if (prop.type == PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
+      if (prop.subtype == PropSubTypes.COLOR) {
+        this.colorPicker(path, packflag);
+      } else {
+
       }
     }
   }
@@ -803,8 +833,8 @@ export class Container extends ui_base.UIBase {
       ret.setAttribute("min", min);
     if (max !== undefined)
       ret.setAttribute("max", max);
-    if (is_int !== undefined)
-      ret.setAttribute("is_int", true);
+    if (is_int)
+      ret.setAttribute("is_int", is_int);
 
     if (callback) {
       ret.onchange = callback;
@@ -871,7 +901,7 @@ export class Container extends ui_base.UIBase {
     return ret;      
   }
   
-  colorPicker(packflag=0) {
+  colorPicker(path, packflag=0) {
     packflag |= this.inherit_packflag;
     
     let ret = document.createElement("colorpicker-x");
@@ -879,7 +909,11 @@ export class Container extends ui_base.UIBase {
     ret.constructor.setDefault(ret);
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
-    
+
+    if (path !== undefined) {
+      ret.setAttribute("datapath", path);
+    }
+
     this._add(ret);
     return ret;
   }

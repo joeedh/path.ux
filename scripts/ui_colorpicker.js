@@ -5,7 +5,7 @@ import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as events from './events.js';
 import * as ui from './ui.js';
-
+import {PropTypes} from 'toolprops';
 
 let rgb_to_hsv_rets = new util.cachering(() => [0, 0, 0], 64);
 
@@ -298,6 +298,8 @@ export function getFieldImage(size, hsva) {
   return image;
 }
 
+let _update_temp = new Vector4();
+
 export class SimpleBox {
   constructor(pos=[0, 0], size=[1, 1]) {
     this.pos = new Vector2(pos);
@@ -311,7 +313,7 @@ export class ColorField extends UIBase {
     super();
     
     this.hsva = [0.05, 0.6, 0.15, 1.0];
-    this.rgba = [0, 0, 0, 0];
+    this.rgba =new Vector4([0, 0, 0, 0]);
     
     this._recalcRGBA();
     
@@ -687,7 +689,8 @@ export class ColorPicker extends ui.ColumnFrame {
       if (this.onchange) {
         this.onchange(hsva, rgba);
       }
-      
+
+      this._setDataPath();
       this._setSliders();
     }
     
@@ -730,7 +733,7 @@ export class ColorPicker extends ui.ColumnFrame {
     });
 
     
-    tab = tabs.tab("RGB")
+    tab = tabs.tab("RGB");
     
     node.r = tab.slider(undefined, "R", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
       let rgba = node.rgba;
@@ -749,13 +752,13 @@ export class ColorPicker extends ui.ColumnFrame {
       node.setRGBA(rgba[0], rgba[1], rgba[2], e.value);
     });
 
-    
     node._setSliders();
   }
   
   _setSliders() {
     if (this.h === undefined) {
       //setDefault() wasn't called
+      console.warn("colorpicker ERROR");
       return;
     }
     
@@ -764,7 +767,7 @@ export class ColorPicker extends ui.ColumnFrame {
     this.s.setValue(hsva[1], false);
     this.v.setValue(hsva[2], false);
     this.a.setValue(hsva[3], false);
-    
+
     let rgba = this.rgba;
     
     this.r.setValue(rgba[0], false);
@@ -780,13 +783,51 @@ export class ColorPicker extends ui.ColumnFrame {
   get rgba() {
     return this.field.rgba;
   }
-  
+
+  updateDataPath() {
+    let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    let val =  UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (prop === undefined) {
+      console.warn("Bad datapath", this.getAttribute("datapath"));
+      return;
+    }
+
+    _update_temp.load(val);
+
+    if (prop.type == PropTypes.VEC3) {
+      _update_temp[3] = 1.0;
+    }
+
+    if (_update_temp.vectorDistance(this.field.rgba) > 0.01)  {
+        console.log("VAL", val);
+      console.log("color changed!");
+      this.setRGBA(_update_temp[0], _update_temp[1], _update_temp[2], _update_temp[3]);
+    }
+  }
+
+  update() {
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+
+    super.update();
+  }
+
+  _setDataPath() {
+    if (this.hasAttribute("datapath")) {
+      ui_base.UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+    }
+  }
+
   setHSVA(h, s, v, a) {
     this.field.setHSVA(h, s, v, a);
+    this._setDataPath();
   }
   
   setRGBA(r, g, b, a) {
     this.field.setRGBA(r, g, b, a)
+    this._setDataPath();
   }
   
   static define() {return {

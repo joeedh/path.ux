@@ -90,7 +90,9 @@ export const ErrorColors = {
 export let _defaults = {
   "ColorFieldSize" : 256,
   "numslider_width" : 100,
-  "numslider_height" : 27,
+  "numslider_height" : 24,
+  "NoteBG" : "rgba(220, 220, 220, 0.0)",
+  "NoteTextColor" : "rgb(100, 100, 100)",
   "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
   "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
   "TabInactive" : "rgba(150, 150, 150, 1.0)",
@@ -397,7 +399,7 @@ export class UIBase extends HTMLElement {
   }
   
   //are we exclusively 
-  pickElement(x, y, sx=0, sy=0) {
+  pickElement(x, y, sx=0, sy=0, nodeclass=undefined) {
     let rects = this.getClientRects();
     let ret;
     
@@ -405,7 +407,7 @@ export class UIBase extends HTMLElement {
       return;
     
     this._forEachChildren((n) => {
-      let ret2 = n.pickElement(x, y, sx, sy); //sx+rects[0].x, sy+rects[0].y);
+      let ret2 = n.pickElement(x, y, sx, sy, nodeclass); //sx+rects[0].x, sy+rects[0].y);
       
       if (ret2 !== undefined) {
         ret = ret2;
@@ -413,6 +415,9 @@ export class UIBase extends HTMLElement {
     });
     
     if (ret === undefined) {
+      if (nodeclass !== undefined && !(this instanceof nodeclass))
+        return undefined;
+
       for (let rect of rects) {
         if (x >= rect.x+sx && x <=rect.x+sx+rect.width && 
             y >= rect.y+sy && y <=rect.y+sy+rect.height)
