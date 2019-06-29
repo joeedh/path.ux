@@ -23,10 +23,10 @@ export class Button extends UIBase {
   constructor() {
     super();
       
-    this.boxpad = ui_base.getDefault("BoxMargin", 4);
+    this.boxpad = this.getDefault("BoxMargin", 4);
     let dpi = UIBase.getDPI();
 
-    this.r = ui_base.getDefault("BoxRadius");
+    this.r = this.getDefault("BoxRadius");
     this._name = "";
     this._namePad = undefined;
     
@@ -42,6 +42,8 @@ export class Button extends UIBase {
     this.dom.tabIndex = 0;
     
     this.addEventListener("keydown", (e) => {
+      if (this.disabled) return;
+
       console.log(e.keyCode);
       
       switch (e.keyCode) {
@@ -56,6 +58,8 @@ export class Button extends UIBase {
     });
     
     this.addEventListener("focusin", () => {
+      if (this.disabled) return;
+
       this._focus = 1;
       this._redraw();
       this.focus();
@@ -63,14 +67,18 @@ export class Button extends UIBase {
     });
     
     this.addEventListener("blur", () => {
+      if (this.disabled) return;
+
       this._focus = 0;
       this._redraw();
       console.log("blur2");
     });
-    
+
+    this._last_disabled = false;
+
     //set default dimensions
-    let width = ~~(ui_base.getDefault("numslider_width"));
-    let height = ~~(ui_base.getDefault("numslider_height"));
+    let width = ~~(this.getDefault("defaultWidth"));
+    let height = ~~(this.getDefault("defaultHeight"));
     
     this.dom.style["width"] = width + "px";
     this.dom.style["height"] = height + "px";
@@ -79,15 +87,15 @@ export class Button extends UIBase {
     this.dom.width = Math.ceil(width*dpi); //getpx(this.dom.style["width"])*dpi;
     this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
     
-    let style = document.createElement("style")
-    style.textContent = ui_base.getWidgetStyle("numslider-x", `.canvas1 {
+    let style = document.createElement("style");
+    style.textContent = `.canvas1 {
       -moz-user-focus: normal;
       moz-user-focus: normal;
       user-focus: normal;
       padding : 0px;
       margin : 0px;
     }
-    `);
+    `;
     
     this.shadow.appendChild(style);
     let form = document.createElement("div");
@@ -118,8 +126,10 @@ export class Button extends UIBase {
   bindEvents() {
     let background = this.dom._background;
     let press = (e) => {
+        if (this.disabled) return;
+
         background = this.dom._background;
-        this.dom._background = ui_base.getDefault("BoxDepressed");
+        this.dom._background = this.getDefault("BoxDepressed");
         this._redraw();
         
         if (this._onpress) {
@@ -131,6 +141,8 @@ export class Button extends UIBase {
     }
     
     let depress = (e) => {
+        if (this.disabled) return;
+
         this.dom._background = background;
         this._redraw();
         
@@ -155,19 +167,19 @@ export class Button extends UIBase {
     let holdbg = this.dom._background;
     
     this.addEventListener("mouseover", (e) => {
-      if (this.getAttribute("disabed")) 
+      if (this.disabled)
         return;
       
       holdbg = this.dom._background;
       
-      this.dom._background = ui_base.getDefault("BoxHighlight");
+      this.dom._background = this.getDefault("BoxHighlight");
       this._highlight = true;
       this._repos_canvas();
       this._redraw();
     })
     
     this.addEventListener("mouseout", (e) => {
-      if (this.getAttribute("disabed")) 
+      if (this.disabled)
         return;
       
       this.dom._background = holdbg; //ui_base.getDefault("BoxBG");
@@ -176,7 +188,17 @@ export class Button extends UIBase {
       this._redraw();
     })
   }
-  
+
+  updateDisabled() {
+    if (this._last_disabled != this.disabled) {
+      this._last_disabled = this.disabled;
+      //this._repos_canvas();
+      this._redraw();
+
+      console.log("disabled update!", this.disabled, this.style["background-color"]);
+    }
+  }
+
   update() {
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
@@ -185,6 +207,7 @@ export class Button extends UIBase {
     this.updateWidth();
     this.updateDPI();
     this.updateName();
+    this.updateDisabled();
   }
   
   updateName() {
@@ -194,14 +217,14 @@ export class Button extends UIBase {
       this._name = name;
       let dpi = UIBase.getDPI();
       
-      let ts = ui_base.getDefault("DefaultTextSize");
+      let ts = this.getDefault("DefaultTextSize");
       let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
       
       if (this._namePad !== undefined) {
         tw += this._namePad;
       }
       
-      let w = ui_base.getDefault("numslider_width");
+      let w = this.getDefault("numslider_width");
       
       w = Math.max(w, tw);
       this.dom.style["width"] = w+"px";
@@ -271,7 +294,7 @@ export class Button extends UIBase {
     
     let dpi = UIBase.getDPI();
     
-    ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, this.r, undefined, undefined, this.boxpad);
+    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, this.r, undefined, undefined, this.boxpad);
     
     if (this._focus) {
       let w = this.dom.width, h = this.dom.height;
@@ -281,7 +304,7 @@ export class Button extends UIBase {
       this.g.translate(p, p);
       let lw = this.g.lineWidth;
       this.g.lineWidth = 2*dpi;
-      ui_base.drawRoundBox(this.dom, this.g, w-p*2, h-p*2, this.r, "stroke", ui_base.getDefault("BoxHighlight"));
+      ui_base.drawRoundBox(this, this.dom, this.g, w-p*2, h-p*2, this.r, "stroke", this.getDefault("BoxHighlight"));
       this.g.lineWidth = lw;
       this.g.translate(-p, -p);       
     }
@@ -294,8 +317,8 @@ export class Button extends UIBase {
   _draw_text() {
     let dpi = UIBase.getDPI();
     
-    let pad = ui_base.getDefault("BoxMargin") * dpi;
-    let ts = ui_base.getDefault("DefaultTextSize");
+    let pad = this.getDefault("BoxMargin") * dpi;
+    let ts = this.getDefault("DefaultTextSize");
     
     let text = this._genLabel();
     
@@ -311,7 +334,8 @@ export class Button extends UIBase {
   }
   
   static define() {return {
-    tagname : "button-x"
+    tagname : "button-x",
+    style : "button"
   };}
 }
 UIBase.register(Button);
@@ -339,7 +363,14 @@ export class ValueButtonBase extends Button {
     
     let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
     let val =  UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
-    
+
+    if (val === undefined) {
+      this.disabled = true;
+      return;
+    } else {
+      this.disabled = false;
+    }
+
     if (val !== this._value) {
       this._value = val;
       this.updateWidth();
@@ -416,7 +447,7 @@ export class NumSlider extends ValueButtonBase {
   
   bindEvents() {
     let onmousedown = (e) => {
-      if (this.hasAttribute("disabled")) {
+      if (this.disabled) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -437,7 +468,7 @@ export class NumSlider extends ValueButtonBase {
     }
     
     this.addEventListener("dblclick", (e) => {
-      if (this.hasAttribute("disabled")) {
+      if (this.disabled) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -450,10 +481,12 @@ export class NumSlider extends ValueButtonBase {
     });
     
     this.addEventListener("mousedown", (e) => {
+      if (this.disabled) return;
       onmousedown(e);
     });
     
     this.addEventListener("touchstart", (e) => {
+      if (this.disabled) return;
       console.log(e)
       
       e.x = e.touches[0].screenX;
@@ -470,20 +503,18 @@ export class NumSlider extends ValueButtonBase {
     //});
     
     this.addEventListener("mouseover", (e) => {
-      if (this.getAttribute("disabed")) 
-        return;
+      if (this.disabled) return;
       
-      this.dom._background = ui_base.getDefault("BoxHighlight");
+      this.dom._background = this.getDefault("BoxHighlight");
       this._repos_canvas();
       this._redraw();
       //console.log("mouse enter");
     })
     
     this.addEventListener("mouseout", (e) => {
-      if (this.getAttribute("disabed")) 
-        return;
-      
-      this.dom._background = ui_base.getDefault("BoxBG");
+      if (this.disabled) return;
+
+      this.dom._background = this.getDefault("BoxBG");
       this._repos_canvas();
       this._redraw();
       //console.log("mouse leave!");
@@ -517,6 +548,8 @@ export class NumSlider extends ValueButtonBase {
   }
   
   dragStart(e) {
+    if (this.disabled) return;
+
     let last_background = this.dom._background;
     let cancel;
     
@@ -525,124 +558,98 @@ export class NumSlider extends ValueButtonBase {
     
     let startx = e.x, starty = e.y;
     
-    this.dom._background = ui_base.getDefault("BoxDepressed");
-      
-    let keydown = (e) => {
-      switch (e.keyCode) {
-        case 27: //escape key
-          cancel(true);
-        case 13: //enter key
-          cancel(false);
-          break;
-      }
-      
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
+    this.dom._background = this.getDefault("BoxDepressed");
     let fire = () => {
       if (this.onchange) {
         this.onchange(this);
       }
     }
-    
-    let mousemove = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      let dx = e.x - startx;
-      startx = e.x;
-      
-      if (e.shiftKey) {
-        dx *= 0.1;
-      }
-      
-      value += dx*this._step*0.1;
-      
-      let dvalue = value - startvalue;
-      let dsign = Math.sign(dvalue);
-      
-      if (!this.hasAttribute("linear")) {
-        dvalue = Math.pow(Math.abs(dvalue), 1.333)*dsign;
-      }
-      
-      this.value = startvalue + dvalue;
-      this.doRange();
-      
-      /*
-      if (e.shiftKey) {
-        dx *= 0.1;
-        this.value = startvalue2 + dx*0.1*this._step;
-        startvalue3 = this.value;
-      } else {
-        startvalue2 = this.value;
-        this.value = startvalue3 + dx*0.1*this._step;
-      }*/
-      
-      this.updateWidth();
-      this._redraw();
-      fire();
-    }
-    
-    let mouseup = (e) => {
-      cancel(false);
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    let mouseout = (e) => {
-      console.log("leave");
-      last_background = ui_base.getDefault("BoxBG");
-      
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    let touchmove = (e) => {
-      e.x = e.touches[0].screenX;
-      e.y = e.touches[0].screenY;
-      
-      mousemove(e);
-      
-      //e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    let touchend = (e) => {
-      cancel(false);
-      //e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    let touchcancel = (e) => {
-      cancel(true);
-      //e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    let mouseover = (e) => {
-      console.log("over");
-      last_background = ui_base.getDefault("BoxHighlight");
-      
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
+
+
     let handlers = {
-      on_keydown : keydown,
-      on_mouseup : mouseup,
-      on_mousedown : (e) => {
-        if (this.popModal !== undefined) {
-          this.popModal(); //popModal is added to handlers by events.pushModal()
+      on_keydown: (e) => {
+        switch (e.keyCode) {
+          case 27: //escape key
+            cancel(true);
+          case 13: //enter key
+            cancel(false);
+            break;
         }
+
+        e.preventDefault();
+        e.stopPropagation();
       },
-      on_touchend : touchend,
-      on_touchcancel : touchcancel,
-      on_mousemove : mousemove
-    }
+
+      on_mousemove: (e) => {
+        if (this.disabled) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        let dx = e.x - startx;
+        startx = e.x;
+
+        if (e.shiftKey) {
+          dx *= 0.1;
+        }
+
+        value += dx * this._step * 0.1;
+
+        let dvalue = value - startvalue;
+        let dsign = Math.sign(dvalue);
+
+        if (!this.hasAttribute("linear")) {
+          dvalue = Math.pow(Math.abs(dvalue), 1.333) * dsign;
+        }
+
+        this.value = startvalue + dvalue;
+        this.doRange();
+
+        /*
+        if (e.shiftKey) {
+          dx *= 0.1;
+          this.value = startvalue2 + dx*0.1*this._step;
+          startvalue3 = this.value;
+        } else {
+          startvalue2 = this.value;
+          this.value = startvalue3 + dx*0.1*this._step;
+        }*/
+
+        this.updateWidth();
+        this._redraw();
+        fire();
+      },
+
+      on_mouseup: (e) => {
+        cancel(false);
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mouseout: (e) => {
+        console.log("leave");
+        last_background = this.getDefault("BoxBG");
+
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mouseover: (e) => {
+        console.log("over");
+        last_background = this.getDefault("BoxHighlight");
+
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mousedown : (e) => {
+        this.popModal();
+      },
+    };
     
-    events.pushModal(this.getScreen(), handlers);
-    
+    //events.pushModal(this.getScreen(), handlers);
+    this.pushModal(handlers);
+
     cancel = (restore_value) => {
       if (restore_value) {
         this.value = startvalue;
@@ -655,8 +662,7 @@ export class NumSlider extends ValueButtonBase {
       
       console.trace("end");
       
-      //popModal is added to handlers by events.pushModal()
-      handlers.popModal(); 
+      this.popModal();
     }
     
     /*
@@ -703,10 +709,10 @@ export class NumSlider extends ValueButtonBase {
       this._name = name;
       let dpi = UIBase.getDPI();
       
-      let ts = ui_base.getDefault("DefaultTextSize");
+      let ts = this.getDefault("DefaultTextSize");
       let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
       
-      let w = ui_base.getDefault("numslider_width");
+      let w = this.getDefault("numslider_width");
       
       w = Math.max(w, tw);
       this.dom.style["width"] = w+"px";
@@ -742,13 +748,13 @@ export class NumSlider extends ValueButtonBase {
     //console.log("numslider draw");
     
     let dpi = UIBase.getDPI();
-    let disabled = this.hasAttribute("disabled");
+    let disabled = this.disabled; //this.hasAttribute("disabled");
     
-    ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, undefined, undefined, disabled ? ui_base.getDefault("DisabledBG") : undefined);
+    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, undefined, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
     
-    let r = ui_base.getDefault("BoxRadius") * dpi;
-    let pad = ui_base.getDefault("BoxMargin") * dpi;
-    let ts = ui_base.getDefault("DefaultTextSize");
+    let r = this.getDefault("BoxRadius") * dpi;
+    let pad = this.getDefault("BoxMargin") * dpi;
+    let ts = this.getDefault("DefaultTextSize");
     
     //if (this.value !== undefined) {
     let text = this._genLabel();
@@ -763,7 +769,7 @@ export class NumSlider extends ValueButtonBase {
     g.fillStyle = "rgba(0,0,0,0.1)";
     
     let d = 7, w=canvas.width, h=canvas.height;
-    let sz = 15;
+    let sz = 10*dpi;
     
     g.beginPath();
     g.moveTo(d, h*0.5);
@@ -778,7 +784,8 @@ export class NumSlider extends ValueButtonBase {
   }
   
   static define() {return {
-    tagname : "numslider-x"
+    tagname : "numslider-x",
+    style : "numslider"
   };}
 }
 UIBase.register(NumSlider);
@@ -831,7 +838,7 @@ export class Check extends UIBase {
       .checkx {
         height: 25px;
         width: 25px;
-        color : "${ui_base.getDefault("DefaultTextColor")}";
+        color : "${this.getDefault("DefaultTextColor")}";
         border-radius: 50%;
       }
     `
@@ -845,7 +852,21 @@ export class Check extends UIBase {
   }
   
   updateDataPath() {
-    let val = !!UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let val = UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (val === undefined) {
+      this.disabled = true;
+      return;
+    } else {
+      this.disabled = false;
+    }
+
+    val = !!val;
+
     if (!!this._checked != !!val) {
       this._checked = val;
       this.checkbox.checked = val;
@@ -892,7 +913,7 @@ export class IconCheck extends Button {
     this.r = 5;
     this._icon = 0;
     this._icon_pressed = undefined;
-    this.iconsheet = 0;
+    this.iconsheet = ui_base.IconSheets.LARGE;
   }
   
   get icon() {
@@ -917,9 +938,22 @@ export class IconCheck extends Button {
   }
   
   updateDataPath() {
-    let val = !!UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
-    
-    if (!!val != !!this._checked) {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let val = UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (val === undefined) {
+      this.disabled = true;
+      return;
+    } else {
+      this.disabled = false;
+    }
+
+    val = !!val;
+
+    if (val != !!this._checked) {
       this._checked = val;
       this._redraw();
     }
@@ -971,7 +1005,7 @@ export class IconCheck extends Button {
   _redraw() {
     this._repos_canvas();
     
-    this.dom._background = this._checked ? ui_base.getDefault("BoxDepressed") : ui_base.getDefault("BoxBG");
+    this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
     //
     super._redraw(false);
     let icon = this._icon;
@@ -998,7 +1032,7 @@ export class IconButton extends Button {
     this.r = 5;
     this._icon = 0;
     this._icon_pressed = undefined;
-    this.iconsheet = 0;
+    this.iconsheet = ui_base.Icons.LARGE;
   }
   
   get icon() {
@@ -1033,7 +1067,7 @@ export class IconButton extends Button {
   _redraw() {
     this._repos_canvas();
     
-    //this.dom._background = this._checked ? ui_base.getDefault("BoxDepressed") : ui_base.getDefault("BoxBG");
+    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
     //
     super._redraw(false);
     let icon = this._icon;
@@ -1066,11 +1100,11 @@ export class Check1 extends Button {
     let dpi = UIBase.getDPI();
     
     let box = 40;
-    ui_base.drawRoundBox(this.dom, this.g, box);
+    ui_base.drawRoundBox(this, this.dom, this.g, box);
 
-    let r = ui_base.getDefault("BoxRadius") * dpi;
-    let pad = ui_base.getDefault("BoxMargin") * dpi;
-    let ts = ui_base.getDefault("DefaultTextSize");
+    let r = this.getDefault("BoxRadius") * dpi;
+    let pad = this.getDefault("BoxMargin") * dpi;
+    let ts = this.getDefault("DefaultTextSize");
     
     let text = this._genLabel();
     
@@ -1138,7 +1172,7 @@ export class Menu extends UIBase {
           border-width : 1px;
           border-color: grey;
           -moz-user-focus: normal;
-          background-color: ${ui_base.getDefault("MenuBG")};
+          background-color: ${this.getDefault("MenuBG")};
         }
         
         .menuitem {
@@ -1149,12 +1183,12 @@ export class Menu extends UIBase {
           
           margin : 0;
           padding : 0px;
-          padding-right: 24px;
+          padding-right: 2px;
           padding-left: 4px;
-          padding-top : 4px;
-          padding-bottom : 4px;
+          padding-top : 0px;
+          padding-bottom : 0px;
           font : ${ui_base._getFont()};
-          background-color: ${ui_base.getDefault("MenuBG")};
+          background-color: ${this.getDefault("MenuBG")};
         }
         
         .menuitem:focus {
@@ -1346,6 +1380,8 @@ export class Menu extends UIBase {
   }
   
   start(prepend, setActive=true) {
+    this.focus();
+
     if (this.items.length > 10) {
       return this.start_fancy(prepend, setActive);
     }
@@ -1384,10 +1420,10 @@ export class Menu extends UIBase {
       
       let icon_div;
       
-      if (icon_div != -1) {
-        icon_div = ui_base.makeIconDiv(icon, IconSheets.SHEET16);
+      if (1) { //icon >= 0) {
+        icon_div = ui_base.makeIconDiv(icon, IconSheets.SMALL);
       } else {
-        let tilesize = ui_base.iconmanager.getTileSize(IconSheets.SHEET16);
+        let tilesize = ui_base.iconmanager.getTileSize(IconSheets.SMALL);
         
         //tilesize *= window.devicePixelRatio;
         
@@ -1398,22 +1434,48 @@ export class Menu extends UIBase {
       }
       
       icon_div.style["display"] = "inline-flex";
-      icon_div.style["margin-right"] = "15px";
+      icon_div.style["margin-right"] = "1px";
       icon_div.style["align"] = "left";
       
       let span = document.createElement("span");
       
       //stupid css doesn't get width right. . .
-      span.style["font"] = ui_base._getFont("DefaultText");
+      span.style["font"] = ui_base._getFont(undefined, "MenuText");
+
       let dpi = UIBase.getDPI();
-      let tsize = ui_base.getDefault("DefaultTextSize");
-      let twid = Math.ceil(text.length * tsize * 1.1);
-      
-      span.style["width"] = twid + "px";
-      //span.style["padding"] = "50px"
-      //span.style["margin"] = "50px"
+      let tsize = this.getDefault("MenuTextSize");
+      //XXX proportional font fail
+
+      //XXX stupid!
+      let canvas = document.createElement("canvas");
+      let g = canvas.getContext("2d");
+      g.font = span.style["font"];
+      console.log(g.font);
+      let rect = span.getClientRects();
+      console.log(g.measureText(text));
+
+      let twid = Math.ceil(g.measureText(text).width);
+      let hwid;
+      if (hotkey) {
+        g.font = ui_base._getFont(undefined, "HotkeyText");
+        hwid = Math.ceil(g.measureText(hotkey).width);
+        twid += hwid + 8;
+      }
+
+      console.log("TWID", twid);
+      //let twid = Math.ceil(text.trim().length * tsize / dpi);
+
       span.innerText = text;
-      
+
+      span.style["word-wrap"] = "none";
+      span.style["white-space"] = "pre";
+      span.style["overflow"] = "hidden";
+      span.style["text-overflow"] = "clip";
+
+      span.style["width"] = ~~(twid) + "px";
+      span.style["padding"] = "0px";
+      span.style["margin"] = "0px";
+
       dom.style["width"] = "100%";
       
       dom.appendChild(icon_div);
@@ -1422,18 +1484,23 @@ export class Menu extends UIBase {
       if (hotkey) {
         let hotkey_span = document.createElement("span");
         hotkey_span.innerText = hotkey;
-        hotkey_span.style["margin-left"] = "24px";
+        hotkey_span.style["margin-left"] = "0px";
+        hotkey_span.style["margin-right"] = "0px";
+        hotkey_span.style["margin"] = "0px";
+        hotkey_span.style["padding"] = "0px";
         
         let al = "right";
         
-        hotkey_span.style["font"] = ui_base._getFont("HotkeyText");
-        hotkey_span.style["color"] = ui_base.getDefault("HotkeyTextColor");
+        hotkey_span.style["font"] = ui_base._getFont(undefined, "HotkeyText");
+        hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
         
+        //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
         hotkey_span.style["width"] = "100%";
+
         hotkey_span.style["text-align"] = al;
         hotkey_span.style["flex-align"] = al;
         //hotkey_span.style["display"] = "inline";
-        //hotkey_span.style["float"] = "right";
+        hotkey_span.style["float"] = "right";
         hotkey_span["flex-wrap"] = "nowrap";
         
         dom.appendChild(hotkey_span);
@@ -1457,7 +1524,9 @@ export class Menu extends UIBase {
     
     li.setAttribute("tabindex", this.itemindex++);
     li.setAttribute("class", "menuitem");
-    
+
+    li.style["margin-top"] = "10px";
+
     if (item instanceof Menu) {
       console.log("submenu!");
 
@@ -1579,7 +1648,7 @@ export class DropBox extends Button {
     //let ret = super.updateWidth(10);
     let dpi = UIBase.getDPI();
       
-    let ts = ui_base.getDefault("DefaultTextSize");
+    let ts = this.getDefault("DefaultTextSize");
     let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
     tw = ~~tw;
     
@@ -1597,15 +1666,18 @@ export class DropBox extends Button {
   
   
   updateDataPath() {
-    if (this.ctx === undefined) {
+    if (!this.ctx || !this.hasAttribute("datapath")) {
       return;
     }
-    
+
     let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
     let val = UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
     
-    if (prop === undefined) {
+    if (val === undefined) {
+      this.disabled = true;
       return;
+    } else {
+      this.disabled = false;
     }
     
     if (this.prop !== undefined) {
@@ -1706,10 +1778,12 @@ export class DropBox extends Button {
     let onclose = this._menu.onclose;
     
     this._menu.onclose = () => {
-      if (onclose) {
-        onclose.call(this._menu);
-      }
+      let menu = this._menu;
       this._menu = undefined;
+
+      if (onclose) {
+        onclose.call(menu);
+      }
     }
 
     let menu = this._menu;
@@ -1732,11 +1806,11 @@ export class DropBox extends Button {
   _redraw() {
     if (this.getAttribute("simple")) {
       if (this._highlight) {
-        ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, 2);
+        ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, 2);
       }
       
       if (this._focus) {
-        ui_base.drawRoundBox(this.dom, this.g, undefined, undefined, 2, "stroke");
+        ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
       }
       
       this._draw_text();
@@ -1835,7 +1909,7 @@ export class TextBox extends UIBase {
   }
   
   updateDataPath() {
-    if (this.ctx === undefined) {
+    if (!this.ctx || !this.hasAttribute("datapath")) {
       return;
     }
     if (this._focus || this._flashtimer !== undefined || (this._had_error && this._focus)) {
@@ -1843,9 +1917,14 @@ export class TextBox extends UIBase {
     }
     
     let val = ui_base.UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (val === undefined || val === null)
+    if (val === undefined || val === null) {
+      this.disabled = true;
       return;
-    
+    } else {
+      this.disabled = false;
+    }
+
+
     let prop = ui_base.UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
     
     let text = this.text;

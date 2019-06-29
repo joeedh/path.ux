@@ -298,6 +298,8 @@ export class Screen extends ui_base.UIBase {
   }
   
   _ondestroy() {
+    this.unlisten();
+
     //unlike other ondestroy functions, this one physically dismantles the DOM tree
     let recurse = (n, second_pass, parent) => {
       if (n.__pass === second_pass) {
@@ -338,7 +340,11 @@ export class Screen extends ui_base.UIBase {
     recurse(this, 0);
     recurse(this, 1);
   }
-  
+
+  destroy() {
+    this._ondestroy();
+  }
+
   clear() {
     this._ondestroy();
     
@@ -445,6 +451,8 @@ export class Screen extends ui_base.UIBase {
     return (function*() {
       let stack = update_stack;
       stack.cur = 0;
+
+      let lastn = this2;
       
       function push(n) {
         stack[stack.cur++] = n;
@@ -459,7 +467,11 @@ export class Screen extends ui_base.UIBase {
       }
       
       let ctx = this2.ctx;
-      
+
+      let SCOPE_POP = Symbol("pop");
+
+      let scopestack = [];
+
       let t = util.time_ms();
       push(this2);
       while (stack.cur > 0) {
@@ -468,9 +480,16 @@ export class Screen extends ui_base.UIBase {
         if (n === undefined) {
           //console.log("eek!", stack.length);
           continue;
+        } else if (n == SCOPE_POP) {
+          scopestack.pop();
+          continue;
         }
         
         if (n !== this2 && n instanceof UIBase) {
+          if (scopestack.length > 0 && scopestack[scopestack.length-1]) {
+            n.parentWidget = scopestack[scopestack.length-1];
+          }
+
           n._ctx = ctx;
           n.update();
         }
@@ -479,7 +498,7 @@ export class Screen extends ui_base.UIBase {
          yield; 
          t = util.time_ms();
         }
-        
+
         for (let n2 of n.childNodes) {
           push(n2);
         }
@@ -490,6 +509,11 @@ export class Screen extends ui_base.UIBase {
         
         for (let n2 of n.shadow.childNodes) {
           push(n2);
+        }
+
+        if (n instanceof UIBase) {
+          scopestack.push(n);
+          push(SCOPE_POP);
         }
       }
     })();

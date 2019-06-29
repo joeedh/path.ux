@@ -4,6 +4,7 @@ import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
+import {pushModalLight, popModalLight, copyEvent} from './simple_events';
 
 let Vector4 = vectormath.Vector4;
 
@@ -87,49 +88,94 @@ export const ErrorColors = {
   OK : "green"
 };
 
-export let _defaults = {
-  "ColorFieldSize" : 256,
-  "numslider_width" : 100,
-  "numslider_height" : 24,
-  "NoteBG" : "rgba(220, 220, 220, 0.0)",
-  "NoteTextColor" : "rgb(100, 100, 100)",
-  "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-  "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
-  "TabInactive" : "rgba(150, 150, 150, 1.0)",
-  "TabHighlight" : "rgba(50, 50, 50, 0.2)",
-  
-  "TabTextFont" : "sans-serif",
-  "TabTextSize" : 18,
-  "TabTextColor" : "rgba(35, 35, 35, 1.0)",
-  
-  "DefaultPanelBG" : "rgba(195, 195, 195, 1.0)",
-  "InnerPanelBG" : "rgba(175, 175, 175, 1.0)",
-  
-  "BoxRadius" : 12,
-  "BoxMargin" : 4,
-  "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
-  "BoxDepressed" : "rgba(150, 150, 150, 1.0)",
-  "BoxBG" : "rgba(220, 220, 220, 1.0)",
-  "DisabledBG" : "rgba(170, 170, 170, 1.0)",
-  "BoxSubBG" : "rgba(175, 175, 175, 1.0)", //for subpanels
-  "BoxBorder" : "rgba(255, 255, 255, 1.0)",
-  "MenuBG" : "rgba(250, 250, 250, 1.0)",
-  "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-  "AreaHeaderBG" : "rgba(245, 245, 245, 0.5)",
-  
-  //fonts
-  "DefaultTextFont" : "sans-serif",
-  "DefaultTextSize" : 14,
-  "DefaultTextColor" : "rgba(35, 35, 35, 1.0)",
-  
-  "LabelTextFont" : "sans-serif",
-  "LabelTextSize" : 13,
-  "LabelTextColor" : "rgba(75, 75, 75, 1.0)",
-  
-  "HotkeyTextSize"  : 14,
-  "HotkeyTextColor" : "rgba(130, 130, 130, 1.0)",
-  "HotkeyTextFont"  : "courier" 
+export const theme = {
+  base : {
+    "numslider_width" : 24,
+    "numslider_height" : 24,
+
+    "defaultWidth" : 32,
+    "defaultHeight" : 32,
+
+    "NoteBG" : "rgba(220, 220, 220, 0.0)",
+    "NoteTextColor" : "rgb(100, 100, 100)",
+    "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
+    "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
+    "TabInactive" : "rgba(150, 150, 150, 1.0)",
+    "TabHighlight" : "rgba(50, 50, 50, 0.2)",
+
+    "TabTextFont" : "sans-serif",
+    "TabTextSize" : 18,
+    "TabTextColor" : "rgba(35, 35, 35, 1.0)",
+
+    "DefaultPanelBG" : "rgba(195, 195, 195, 1.0)",
+    "InnerPanelBG" : "rgba(175, 175, 175, 1.0)",
+
+    "BoxRadius" : 12,
+    "BoxMargin" : 4,
+    "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
+    "BoxDepressed" : "rgba(150, 150, 150, 1.0)",
+    "BoxBG" : "rgba(220, 220, 220, 1.0)",
+    "DisabledBG" : "rgba(110, 110, 110, 1.0)",
+    "BoxSubBG" : "rgba(175, 175, 175, 1.0)", //for subpanels
+    "BoxBorder" : "rgba(255, 255, 255, 1.0)",
+    "MenuBG" : "rgba(250, 250, 250, 1.0)",
+    "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
+    "AreaHeaderBG" : "rgba(245, 245, 245, 0.5)",
+
+    //fonts
+    "DefaultTextFont" : "sans-serif",
+    "DefaultTextSize" : 14,
+    "DefaultTextColor" : "rgba(35, 35, 35, 1.0)",
+
+    "LabelTextFont" : "sans-serif",
+    "LabelTextSize" : 13,
+    "LabelTextColor" : "rgba(75, 75, 75, 1.0)",
+
+    "HotkeyTextSize"  : 12,
+    "HotkeyTextColor" : "rgba(130, 130, 130, 1.0)",
+    "HotkeyTextFont"  : "courier",
+
+    "MenuTextSize"  : 12,
+    "MenuTextColor" : "rgba(25, 25, 25, 1.0)",
+    "MenuTextFont"  : "sans-serif"
+  },
+
+  button : {
+    "defaultWidth" : 100,
+    "defaultHeight" : 24
+  },
+
+  numslider : {
+    "defaultWidth" : 100,
+    "defaultHeight" : 29
+  },
+
+  colorfield : {
+    fieldsize : 32,
+    defaultWidth : 200,
+    defaultHeight : 200,
+    hueheight : 24,
+    colorBoxHeight : 24,
+    circleSize : 4,
+    DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
+  }
 };
+
+
+export function setTheme(theme2) {
+  //merge theme
+  for (let k in theme2) {
+    let v = theme2[k];
+
+    if (!(k in theme)) {
+      theme[k] = {};
+    }
+
+    for (let k2 in v) {
+      theme[k][k2] = v[k2];
+    }
+  }
+}
 
 let _last_report = util.time_ms();
 export function report(msg) {
@@ -139,12 +185,12 @@ export function report(msg) {
   }
 }
 
-export function getDefault(key, val_if_fail) {
-  if (key in _defaults) {
-    return _defaults[key]
+//this function is deprecated
+export function getDefault(key, elem) {
+  if (key in theme.base) {
+    return theme.base[key];
   } else {
-    _defaults[key] = val_if_fail;
-    return val_if_fail;
+    throw new Error("Unknown default", key);
   }
 }
 
@@ -154,59 +200,90 @@ export function IsMobile() {
 };
 
 class _IconManager {
-  constructor(image, tilesize, number_of_horizontal_tiles) {
+  constructor(image, tilesize, number_of_horizontal_tiles, drawsize) {
     this.tilex = number_of_horizontal_tiles;
     this.tilesize = tilesize;
-    
+    this.drawsize = drawsize;
+
     this.image = image;
   }
   
   canvasDraw(canvas, g, icon, x=0, y=0) {
     let tx = icon % this.tilex;
     let ty = ~~(icon / this.tilex);
+
     let dpi = UIBase.getDPI();
     let ts = this.tilesize;
-    
-    g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ts*dpi, ts*dpi);
+    let ds = this.drawsize;
+
+    g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
   }
-  
+
+  setCSS(icon, dom) {
+    dom.style["background"] = this.getCSS(icon);
+    dom.style["background-size"] = (this.drawsize*this.tilex) + "px";
+  }
+
   //icon is an integer
   getCSS(icon) {
     if (icon == -1) { //-1 means no icon
       return '';
     }
     
-    let dpi = UIBase.getDPI();
-    
-    let x = (-(icon % this.tilex) * this.tilesize);
-    let y = (-(~~(icon / this.tilex)) * this.tilesize);
-    
+    let ratio = this.drawsize / this.tilesize;
+
+    let x = (-(icon % this.tilex) * this.tilesize) * ratio;
+    let y = (-(~~(icon / this.tilex)) * this.tilesize) * ratio;
+
+    //x = ~~x;
+    //y = ~~y;
+
+    console.log(this.tilesize, this.drawsize, x, y);
+
     return `url("${this.image.src}") ${x}px ${y}px`;
   }
 }
 
 export class IconManager {
-  constructor(images, sizes, horizontal_tiles) {
+  constructor(images, sizes, horizontal_tile_count) {
     this.iconsheets = [];
-    this.tilex = horizontal_tiles;
+    this.tilex = horizontal_tile_count;
     
     for (let i=0; i<images.length; i++) {
-      this.iconsheets.push(new _IconManager(images[i], sizes[i], horizontal_tiles));
+      this.iconsheets.push(new _IconManager(images[i], sizes[i], horizontal_tile_count));
     }
   }
-  
+
+  reset(horizontal_tile_count) {
+    this.iconsheets.length = 0;
+    this.tilex = horizontal_tile_count;
+  }
+
+  add(image, size, drawsize=size) {
+    this.iconsheets.push(new _IconManager(image, size, this.tilex, drawsize));
+    return this;
+  }
+
   canvasDraw(canvas, g, icon, x=0, y=0, sheet=0) {
     sheet = this.iconsheets[sheet];
     sheet.canvasDraw(canvas, g, icon, x, y);
   }
   
   getTileSize(sheet=0) {
+    return this.iconsheets[sheet].drawsize;
+  }
+
+  getRealSize(sheet=0) {
     return this.iconsheets[sheet].tilesize;
   }
   
   //icon is an integer
   getCSS(icon, sheet=0) {
     return this.iconsheets[sheet].getCSS(icon);
+  }
+
+  setCSS(icon, dom, sheet=0) {
+    return this.iconsheets[sheet].setCSS(icon, dom);
   }
 }
 
@@ -215,26 +292,29 @@ export let iconmanager = new IconManager([
   document.getElementById("iconsheet16")
 ], [32, 16], 16);
 
+//if client code overrides iconsheets, they must follow logical convention
+//that the first one is "small" and the second is "large"
 export let IconSheets = {
-  SHEET32 : 0,
-  SHEET16 : 1
+  SMALL : 0,
+  LARGE : 1
 };
 
 export function makeIconDiv(icon, sheet=0) {
-    let size = iconmanager.getTileSize(sheet);
-    
+    let size = iconmanager.getRealSize(sheet);
+    let drawsize = iconmanager.getTileSize(sheet);
+
     let icontest = document.createElement("div");
     
-    icontest.style["width"] = icontest.style["min-width"] = size + "px";
-    icontest.style["height"] = icontest.style["min-height"] = size + "px";
+    icontest.style["width"] = icontest.style["min-width"] = drawsize + "px";
+    icontest.style["height"] = icontest.style["min-height"] = drawsize + "px";
     
     icontest.style["background-color"] = "orange";
     
     icontest.style["margin"] = "0px";
     icontest.style["padding"] = "0px";
-    
-    icontest.style["background"] = iconmanager.getCSS(icon, sheet);
-    
+
+    iconmanager.setCSS(icon, icontest, sheet);
+
     return icontest;
 }
 
@@ -285,15 +365,6 @@ export class SimpleContext {
   }
 }
   
-export let _styles = {};
-export function getWidgetStyle(key, val_if_fail) {
-  if (key in _styles) {
-    return _styles[key]
-  } else {
-    _styles[key] = val_if_fail;
-    return val_if_fail;
-  }
-}
 
 let _idgen = 0;
 
@@ -304,8 +375,10 @@ export class UIBase extends HTMLElement {
     let tagname = this.constructor.define().tagname;
     
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
-    
-    //getting css to flow down properly can be a pain, so 
+
+    this.default_overrides = {};
+
+    //getting css to flow down properly can be a pain, so
     //some packing settings are set as bitflags here,
     //see PackFlags
     
@@ -314,8 +387,11 @@ export class UIBase extends HTMLElement {
       this.update();
     }, 200);
     //*/
-    
+
+    this._modaldata = undefined;
     this.packflag = 0;
+    this._disabled = false;
+    this._disdata = undefined;
     this.shadow = this.attachShadow({mode : 'open'});
     this._ctx = undefined;
     
@@ -329,9 +405,61 @@ export class UIBase extends HTMLElement {
     `;
     this.shadow.appendChild(style);
     this._init_done = false;
+
+    //make default touch handlers that send mouse events
+    let do_touch = (e, type, button) => {
+      button = button === undefined ? 0 : button;
+      let e2 = copyEvent(e);
+
+      if (e.touches.length == 0) {
+        //hrm, what to do, what to do. . .
+      } else {
+        let t = e.touches[0];
+
+        e2.pageX = t.pageX;
+        e2.pageY = t.pageY;
+        e2.screenX = t.screenX;
+        e2.screenY = t.screenY;
+        e2.clientX = t.clientX;
+        e2.clientY = t.clientY;
+        e2.x = t.x;
+        e2.y = t.y;
+      }
+
+      e2.button = button;
+
+      e2 = new MouseEvent(type, e2);
+
+      e2.stopPropagation = e.stopPropagation.bind(e);
+      e2.preventDefault = e.preventDefault.bind(e);
+
+      this.dispatchEvent(e2);
+    };
+
+    this.addEventListener("touchstart", (e) => {
+      do_touch(e, "mousedown", 0);
+    });
+    this.addEventListener("touchmove", (e) => {
+      do_touch(e, "mousemove");
+    });
+    this.addEventListener("touchcancel", (e) => {
+      do_touch(e, "mouseup", 2);
+    });
+    this.addEventListener("touchend", (e) => {
+      do_touch(e, "mouseup", 0);
+    });
   }
-  
-  //delayed init
+
+  appendChild(child) {
+    if (child instanceof UIBase) {
+      child.ctx = this.ctx;
+      child.parentWidget = this;
+    }
+
+    return super.appendChild(child);
+  }
+
+    //delayed init
   init() {
     
   }
@@ -352,7 +480,8 @@ export class UIBase extends HTMLElement {
     
     child._ondestroy();
   }
-  
+
+
   //used by container nodes
   _forEachChildren(cb, thisvar) {
     let rec = (n) => {
@@ -429,7 +558,74 @@ export class UIBase extends HTMLElement {
     
     return ret;
   }
-  
+
+  set disabled(val) {
+    if (this._disabled == val)
+      return;
+
+    if (!this._disabled && val) {
+      this._disdata = {
+        background : this.background,
+        bgcolor : this.style["background-color"],
+        _background : this._background
+      };
+
+      this.background = this.getDefault("DisabledBG");
+      this.style["background-color"] = this.background;
+      this._background = this.background;
+    } else if (this._disabled && !val) {
+      this.background = this._disdata.background;
+      this.style["background-color"] = this._disdata.bgcolor;
+      this._background = this._disdata._background;
+    }
+
+    this._disabled = val;
+
+    let rec = (n) => {
+      if (n instanceof UIBase) {
+        n.disabled = val;
+      }
+
+      for (let c of n.childNodes) {
+        rec(c);
+      }
+
+      if (!n.shadow) return;
+
+      for (let c of n.shadow.childNodes) {
+        rec(c);
+      }
+    };
+
+    rec(this);
+  }
+
+  pushModal(handlers=this) {
+    if (this._modaldata !== undefined){
+      console.warn("UIBase.prototype.pushModal called when already in modal mode");
+      //pop modal stack just to be safe
+      popModalLight(this._modaldata);
+      this._modaldata = undefined;
+    }
+
+    this._modaldata = pushModalLight(handlers);
+    return this._modaldata;
+  }
+
+  popModal() {
+    if (this._modaldata === undefined) {
+      console.warn("Invalid call to UIBase.prototype.popModal");
+      return;
+    }
+
+    popModalLight(this._modaldata);
+    this._modaldata = undefined;
+  }
+
+  get disabled() {
+    return this._disabled;
+  }
+
   flash(color, rect_element=this, timems=355) {
     console.warn("flash disabled due to bug");
     return;
@@ -560,8 +756,8 @@ export class UIBase extends HTMLElement {
     try {
       return ctx.api.getValue(ctx, path);
     } catch (error) {
-      report("data path error in ui for", path);
-      return 0;
+      report("data path error in ui for" + path);
+      return undefined;
     }
   }
   
@@ -708,10 +904,66 @@ export class UIBase extends HTMLElement {
       customElements.define(cls.define().tagname, cls);
     //}
   }
-  
+
+  overrideDefault(key, val) {
+    this.default_overrides[key] = val;
+  }
+
+  getDefault(key) {
+    let p = this;
+
+    while (p) {
+      if (key in p.default_overrides) {
+        return p.default_overrides[key];
+      }
+
+      p = p.parentWidget;
+    }
+
+    return this.getClassDefault(key);
+  }
+
+  getClassDefault(key) {
+    let p = this.constructor, lastp = undefined;
+
+    while (p && p !== lastp && p !== UIBase && p !== Object) {
+      let def = p.define();
+
+      if (def.style && def.style in theme && key in theme[def.style]) {
+        return theme[def.style][key];
+      }
+
+      if (!p.prototype || !p.prototype.__proto__)
+        break;
+
+      p = p.prototype.__proto__.constructor;
+    }
+
+    return theme.base[key];
+  }
+
+  getStyle() {
+    let p = this.constructor, lastp = undefined;
+
+    while (p && p !== lastp && p !== Object) {
+      let def = p.define();
+
+      if (def.style)
+        return def.style;
+
+      if (!p.prototype || !p.prototype.__proto__)
+        break;
+
+      p = p.prototype.__proto__.constructor;
+    }
+
+    return "default";
+  }
+
   /* example:
   static define() {return {
-    tagname : "my-tag-name-with-at-least-one-dash"
+    tagname : "my-tag-name-with-at-least-one-dash",
+    style : "some_style_class_in_defaults"
   };}
   */
   static define() {
@@ -722,15 +974,15 @@ export class UIBase extends HTMLElement {
 //okay, I need to refactor this function, 
 //it needs to take x, y as well as width, height,
 //and be usable for more use cases.
-export function drawRoundBox(canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
+export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
     width = width === undefined ? canvas.width : width;
     height = height === undefined ? canvas.height : height;
     
     let dpi = UIBase.getDPI();
     
-    r = r === undefined ? getDefault("BoxRadius", 12) : r;
+    r = r === undefined ? elem.getDefault("BoxRadius") : r;
     if (pad === undefined) {
-      pad = getDefault("BoxMargin", 4) * dpi;
+      pad = elem.getDefault("BoxMargin") * dpi;
     }
     
     r *= dpi;
@@ -749,7 +1001,7 @@ export function drawRoundBox(canvas, g, width, height, r=undefined, op="fill", c
     if (bg === undefined && canvas._background !== undefined) {
       bg = canvas._background;
     } else if (bg === undefined) {
-      bg = getDefault("BoxBG", "rgba(220, 220, 220, 1.0)");
+      bg = elem.getDefault("BoxBG");
     }
     
     if (op == "fill") {
@@ -758,7 +1010,7 @@ export function drawRoundBox(canvas, g, width, height, r=undefined, op="fill", c
     
     g.fillStyle = bg;
     //hackish!
-    g.strokeStyle = color === undefined ? getDefault("BoxBorder", "rgba(255, 255, 255, 1.0)") : color;
+    g.strokeStyle = color === undefined ? elem.getDefault("BoxBorder") : color;
     
     let w = width, h = height;
     
@@ -801,8 +1053,13 @@ export function _getFont(size, font="DefaultText", do_dpi=true) {
   if (size !== undefined) {
     return ""+(size * dpi) + "px " + getDefault(font+"Font");
   } else {
-    let size = getDefault(font+"Size", 14);
-    
+    let size = getDefault(font+"Size");
+
+    if (size === undefined) {
+      console.warn("Unknown fontsize for font", font);
+      size = 14;
+    }
+
     return ""+size+ "px " + getDefault(font+"Font");
   }
 }
@@ -813,8 +1070,8 @@ export function _ensureFont(canvas, g, size) {
   if (size !== undefined) {
     g.font = ""+Math.ceil(size * dpi) + "px sans-serif";
   } else if (!canvas.font) {
-    let size = getDefault("DefaultTextSize", 14) * dpi;
-    
+    let size = getDefault("DefaultTextSize") * dpi;
+
     let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
     
     //size += 4;
@@ -840,7 +1097,7 @@ export function measureText(text, canvas, g, size=undefined) {
 export function drawText(x, y, text, canvas, g, color=undefined, size=undefined) {
   _ensureFont(canvas, g, size);
   
-  g.fillStyle = getDefault("DefaultTextColor", "rgba(35, 35, 35, 1.0)");
+  g.fillStyle = getDefault("DefaultTextColor");
   g.fillText(text, x+0.5, y+0.5);
   
   if (size !== undefined) {

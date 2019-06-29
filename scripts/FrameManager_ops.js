@@ -27,52 +27,7 @@ let Vector2 = vectormath.Vector2,
     UndoFlags = simple_toolsys.UndoFlags,
     ToolFlags = simple_toolsys.ToolFlags;
 
-export function pushModalLight(obj) {
-  let keys = new Set([
-    "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
-    "touchcancel", "mousewheel", "mousemove"
-  ]);
-    
-  let ret = {
-    keys : keys,
-    handlers : {}
-  };
-
-  function make_handler(type, key) {
-    return function(e) {
-      let ret = key !== undefined ? obj[key](e) : undefined;
-
-      e.preventDefault();
-      e.stopPropagation();
-      return ret;
-    }
-  }
-
-  for (let k of keys) {
-    let key;
-
-    if (obj["on"+k])
-      key = "on" + k;
-    else if (obj["on_"+k])
-      key = "on_" + k;
-    else
-      key = undefined;
-
-    let handler = make_handler(k, key);
-    ret.handlers[k] = handler;
-    window.addEventListener(k, handler);
-  }
-
-  return ret;
-}
-
-export function popModalLight(state) {
-  for (let k in state.handlers) {
-    window.removeEventListener(k, state.handlers[k]);
-  }
-
-  state.handlers = {};
-}
+import {pushModalLight, popModalLight, keymap} from "./simple_events";
 
 export class ToolBase { //extends simple_toolsys.ToolOp {
   constructor(screen) {
@@ -119,17 +74,6 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
   on_mousemove(e) {
   }
   
-  on_touchend(e) {
-    this.on_mouseup();
-  }
-  
-  on_touchmove(e) {
-    e.x = e.touches[0].pageX;
-    e.y = e.touches[1].pageY;
-    
-    this.on_mousemove(e);
-  }
-  
   on_mouseup(e) {
     this.finish();
   }
@@ -138,11 +82,11 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case 27: //esc
+      case keymap.Escape: //esc
         this.cancel();
         break;
-      case 32: //space
-      case 13: //return
+      case keymap.Space: //space
+      case keymap.Enter: //return
         this.finish();
         break;
     }
@@ -305,11 +249,11 @@ export class SplitTool extends ToolBase {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case 27: //esc
+      case keymap.Escape: //esc
         this.cancel();
         break;
-      case 32: //space
-      case 13: //return
+      case keymap.Space: //space
+      case keymap.Enter: //return
         this.finish();
         break;
     }
@@ -500,8 +444,7 @@ export class AreaDragTool extends ToolBase {
       b.setAttribute("class", cls);
       
       b.addEventListener("mousemove", this.on_mousemove.bind(this));
-      b.addEventListener("touchmove", this.on_mousemove.bind(this));
-      
+
       let onclick = (e) => {
         let type = e.type.toLowerCase();
         
@@ -521,8 +464,8 @@ export class AreaDragTool extends ToolBase {
       b.addEventListener("click", onclick);
       b.addEventListener("mousedown", onclick);
       b.addEventListener("mouseup", onclick);
-      b.addEventListener("touchfinish", onclick);
-      
+      b.addEventListener("touchend", onclick);
+
       b.addEventListener("mouseenter", (e) => {
         console.log("mouse enter box");
         

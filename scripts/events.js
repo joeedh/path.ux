@@ -134,6 +134,7 @@ export class EventHandler {
 }
 
 export function pushModal(dom, handlers) {
+  console.warn("Deprecated call to pathux.events.pushModal; use api in simple_events.js instead");
   let h = new EventHandler();
   
   for (let k in handlers) {

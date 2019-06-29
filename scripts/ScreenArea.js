@@ -163,19 +163,28 @@ export class Area extends ui_base.UIBase {
   
   makeHeader(container, add_note_area=true) {
     let areas = {};
+    let icons = {};
     let i = 0;
 
     for (let k in areaclasses) {
       let cls = areaclasses[k];
-      let uiname = cls.define().uiname;
-      
+      let def = cls.define();
+
+      if (def.hidden)
+        continue;
+
+      let uiname = def.uiname;
+
       if (uiname === undefined) {
         uiname = k.replace("_", " ").toLowerCase();
+        uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
       }
       
       areas[uiname] = k;
+      icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
-    
+
+    console.log(icons, "ICONS<-------------------------------------------------");
     let row = container.row();
 
     row.background = ui_base.getDefault("AreaHeaderBG");
@@ -196,8 +205,11 @@ export class Area extends ui_base.UIBase {
     let mdown = false;
     let mpos = new Vector2();
     
-    let mpre = (e) => {
-      let node = this.getScreen().pickElement(e.pageX, e.pageY);
+    let mpre = (e, pageX, pageY) => {
+      pageX = pageX === undefined ? e.pageX : pageX;
+      pageY = pageY === undefined ? e.pageY : pageY;
+
+      let node = this.getScreen().pickElement(pageX, pageY);
      // console.log(node.tagName, node === row)
       
       if (node !== row) {
@@ -223,61 +235,64 @@ export class Area extends ui_base.UIBase {
       mpos[1] = e.pageY;
       mdown = true;
     }, false);
-    
-    row.addEventListener("mousemove", (e) => {
-      if (!mdown || !mpre(e)) return;
-      
+
+    let do_mousemove = (e, pageX, pageY) => {
+      if (!mdown || !mpre(e, pageX, pageY)) return;
+
       //console.log(mdown);
-      let dx = e.pageX - mpos[0];
-      let dy = e.pageY - mpos[1];
-      
+      let dx = pageX - mpos[0];
+      let dy = pageY - mpos[1];
+
       let dis = dx*dx + dy*dy;
       let limit = 7;
-      
+
       if (dis > limit*limit) {
         let sarea = this.owning_sarea;
         if (sarea === undefined) {
           console.warn("Error: missing sarea ref");
           return;
         }
-        
+
         let screen = sarea.screen;
         if (screen === undefined) {
           console.log("Error: missing screen ref");
           return;
         }
-        
+
         mdown = false;
         console.log("area drag tool!");
         screen.areaDragTool(this.owning_sarea);
       }
+    };
+
+    row.addEventListener("mousemove", (e) => {
+      return do_mousemove(e, e.pageX, e.pageY);
     }, false);
 
     row.addEventListener("mouseup", (e) => {
       if (!mpre(e)) return;
-      
+
       mdown = false;
     }, false);
 
     row.addEventListener("touchstart", (e) => {
-      if (!mpre(e)) return;
+      console.log("touchstart", e);
+
+      if (!mpre(e, e.touches[0].pageX, e.touches[0].pageY)) return;
       
       if (e.touches.length == 0)
         return;
       
-      mpos[0] = e.pageX;
-      mpos[1] = e.pageY;
+      mpos[0] = e.touches[0].pageX;
+      mpos[1] = e.touches[0].pageY;
       mdown = true;
     }, false);
     
     row.addEventListener("touchmove", (e) => {
-      let node = this.getScreen().pickElement(e.pageX, e.pageY);
-      if (node !== row) {
-        return;
-      }
+      return do_mousemove(e, e.touches[0].pageX, e.touches[0].pageY);
     }, false);
 
-    function touchend(e) {
+    let touchend = (e) => {
       let node = this.getScreen().pickElement(e.pageX, e.pageY);
       if (node !== row) {
         return;
@@ -286,7 +301,7 @@ export class Area extends ui_base.UIBase {
         return;
       
       mdown = false;
-    }
+    };
     
     row.addEventListener("touchcancel", (e) => {
       touchend(e);        
@@ -298,7 +313,7 @@ export class Area extends ui_base.UIBase {
     row.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
       let cls = areaclasses[id];
       this.owning_sarea.switch_editor(cls);
-    });
+    }, icons);
     
     /*
     row.button("------", () => {
@@ -335,6 +350,11 @@ export class Area extends ui_base.UIBase {
   }
   
   update() {
+    //don't update non-active editors
+    if (this.owning_sarea === undefined || this !== this.owning_sarea.area) {
+      return;
+    }
+
     super.update();
     
     //see FrameManager.js, we use a single update
@@ -345,9 +365,10 @@ export class Area extends ui_base.UIBase {
   }
   
   static define() {return {
-    tagname  : "areadata-x",
+    tagname  : undefined, // e.g. "areadata-x",
     areaname : undefined, //api name for area type
-    uiname   : undefined
+    uiname   : undefined,
+    icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
   };}
   
   //subclassing fromSTRUCTs should call this
@@ -384,7 +405,7 @@ pathux.Area {
 `
 
 nstructjs.manager.add_class(Area);  
-ui_base.UIBase.register(Area);
+//ui_base.UIBase.register(Area);
 
 let sarea_idgen = 0;
 
@@ -777,7 +798,9 @@ export class ScreenArea extends ui_base.UIBase {
       //*/
       
       let areaname = area.constructor.define().areaname;
-      
+
+      console.log(ret.area, areaname, "<-----------------");
+
       area.inactive = true;
       area.owning_sarea = undefined;
       ret.editormap[areaname] = area;

@@ -88,7 +88,7 @@ export class Label extends ui_base.UIBase {
     
     this.dom = document.createElement("div");
     this.dom.style["font"] = ui_base._getFont(undefined, "LabelText", false);
-    this.dom.style["color"] = ui_base.getDefault("LabelTextColor");
+    this.dom.style["color"] = this.getDefault("LabelTextColor");
     
     this._label = "";
     this.shadow.appendChild(this.dom);
@@ -166,25 +166,62 @@ export class Container extends ui_base.UIBase {
       
       this.div.appendChild(ul);
       ul.style["list-style-type"] = "none";
-      
+
       let style = this.styletag = document.createElement("style")
       this.div.setAttribute("class", "containerx");
-      
-      style.textContent = `div.containerx {
-        background-color : ${ui_base.getDefault("DefaultPanelBG")};
-      }
+
+      style.textContent = `
+        ul.containerx {
+          margin : 0px;
+          padding : 0px;
+        }
+        
+        li.containerx {
+          margin : 0px;
+          padding : 0px;
+        }
       `
-      
+
+      this.setCSS();
+
       this.shadow.appendChild(style);
       this.shadow.appendChild(this.div);
       
       this.dom = ul;
   }
 
+  init() {
+    super.init();
+  }
+
+  setCSS() {
+    this.styletag.textContent = `div.containerx {
+        background-color : ${this.getDefault("DefaultPanelBG")};
+      }
+      `;
+  }
+
+  overrideDefault(key, val) {
+    super.overrideDefault(key, val);
+    this.setCSS();
+  }
+
   noMargins() {
     this.style["margin"] = this.style["padding"] = "0px";
     this.div.style["margin"] = this.div.style["padding"] = "0px";
     this.ul.style["margin"] = this.ul.style["padding"] = "0px";
+  }
+
+  setMargin(m) {
+    this.style["margin"] = m + "px";
+    this.div.style["margin"] = m + "px";
+    this.ul.style["margin"] = m + "px";
+  }
+
+  setPadding(m) {
+    this.style["padding"] = m + "px";
+    this.div.style["padding"] = m + "px";
+    this.ul.style["padding"] = m + "px";
   }
 
   setSize(width, height) {
@@ -314,6 +351,7 @@ export class Container extends ui_base.UIBase {
   appendChild(child) {
     if (child instanceof ui_base.UIBase) {
       child.ctx = this.ctx;
+      child.parentWidget = this;
     }
     
     let ret = super.appendChild(child);
@@ -349,6 +387,8 @@ export class Container extends ui_base.UIBase {
     child.ctx = this.ctx;
     
     let li = document.createElement("li");
+    li.setAttribute("class", "containerx");
+
     li.style["list-style-type"] = "none";
     li.appendChild(child);
     
@@ -409,8 +449,11 @@ export class Container extends ui_base.UIBase {
         } else if (item === SEP) {
           menu.seperator();
         } else if (item instanceof Array) {
-          menu.addItemExtra(item[0], id);
-          
+          let hotkey = item.length > 2 ? item[2] : undefined;
+          let icon = item.length > 3 ? item[3] : undefined;
+
+          menu.addItemExtra(item[0], id, hotkey, icon);
+
           cbs[id] = (function (cbfunc, arg) {
             return function() {
               cbfunc(arg);
@@ -481,8 +524,11 @@ export class Container extends ui_base.UIBase {
       ret = this.iconbutton(def.icon, tooltip, cb);
       
       if (packflag & PackFlags.SMALL_ICON) {
-        ret.iconsheet = 1;
+        ret.iconsheet = ui_base.IconSheets.SMALL;
+      } else {
+        ret.iconsheet = ui_base.IconSheets.LARGE;
       }
+
       ret.packflag |= packflag;
     } else {
       ret = this.button(def.uiname, cb);
@@ -542,9 +588,11 @@ export class Container extends ui_base.UIBase {
     ret.setAttribute("icon", icon);
     ret.description = description;
     ret.icon = icon;
-    
+
     if (packflag & PackFlags.SMALL_ICON) {
-      ret.iconsheet = 1;
+      ret.iconsheet = ui_base.IconSheets.SMALL;
+    } else {
+      ret.iconsheet = ui_base.IconSheets.LARGE;
     }
     
     ret.onclick = cb;
@@ -593,7 +641,7 @@ export class Container extends ui_base.UIBase {
     let rdef = this.ctx.api.resolvePath(this.ctx, path);
 
     if (rdef === undefined || rdef.prop === undefined) {
-      console.warn("Unknown property at path", path);
+      console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path));
       return;
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
@@ -602,7 +650,13 @@ export class Container extends ui_base.UIBase {
     console.log(prop, PropTypes, PropSubTypes);
 
     if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
-      return this.slider(path);
+      let ret = this.slider(path);
+
+      if (mass_set_path) {
+        ret.setAttribute("mass_set_path", mass_set_path);
+      }
+
+      return ret;
     } else if (prop.type == PropTypes.ENUM) {
       if (!(packflag & PackFlags.USE_ICONS)) {
         this.listenum(path, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
@@ -611,7 +665,7 @@ export class Container extends ui_base.UIBase {
       }
     } else if (prop.type == PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
       if (prop.subtype == PropSubTypes.COLOR) {
-        this.colorPicker(path, packflag);
+        this.colorPicker(path, packflag, mass_set_path);
       } else {
 
       }
@@ -627,7 +681,7 @@ export class Container extends ui_base.UIBase {
       ret = document.createElement("iconcheck-x");
       
       if (packflag & PackFlags.SMALL_ICON) {
-        ret.iconsheet = 1; //XXX magic number!
+        ret.iconsheet = ui_base.IconSheets.SMALL;
       }
     } else {
       ret = document.createElement("check-x");
@@ -644,7 +698,7 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  checkenum(path, name, packflag, enummap, defaultval, callback, iconmap) {
+  checkenum(path, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag;
     
@@ -673,7 +727,7 @@ export class Container extends ui_base.UIBase {
         frame = this.row();
       }
       
-      frame.background = ui_base.getDefault("BoxSubBG");
+      frame.background = this.getDefault("BoxSubBG");
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {
@@ -901,7 +955,7 @@ export class Container extends ui_base.UIBase {
     return ret;      
   }
   
-  colorPicker(path, packflag=0) {
+  colorPicker(path, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
     
     let ret = document.createElement("colorpicker-x");
@@ -913,6 +967,13 @@ export class Container extends ui_base.UIBase {
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
     }
+
+    if (mass_set_path) {
+      ret.setAttribute("mass_set_path", mass_set_path);
+    }
+
+    //XXX
+    window.colorpicker = ret;
 
     this._add(ret);
     return ret;
@@ -998,7 +1059,8 @@ export class TableRow extends Container {
   
   _add(child) {
     child.ctx = this.ctx;
-    
+    child.parentWidget = this;
+
     let td = document.createElement("td");
     td.appendChild(child);
     
@@ -1024,9 +1086,10 @@ export class TableFrame extends Container {
     this.style["display"] = "inline-block";      
     super.update();
   }
-  
+
   _add(child) {
     child.ctx = this.ctx;
+    child.parentWidget = this;
     this.dom.appendChild(child);
     child.onadd();
   }
@@ -1203,17 +1266,24 @@ export class PanelFrame extends Container {
     let con = this.frame = new Container();
     
     //con.style["margin-left"] = "5px";
-    
+    this.setCSS();
+
     let row = con.row();
     
     let iconcheck = document.createElement("iconcheck-x");
     this.iconcheck = iconcheck;
-    
+
+    this.style["width"] = "100%";
+
+    iconcheck.overrideDefault("BoxBG", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("BoxSubBG", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
+
     iconcheck.ctx = this.ctx;
     iconcheck._icon_pressed = ui_base.Icons.UI_EXPAND;
     iconcheck._icon = ui_base.Icons.UI_COLLAPSE;
-    iconcheck.iconsheet = ui_base.IconSheets.SHEET16;
-    iconcheck.iconsheet = 1;
+    iconcheck.iconsheet = ui_base.IconSheets.SMALL;
     iconcheck.checked = this._closed;
     
     this.iconcheck.onclick = (e) => {
@@ -1224,15 +1294,16 @@ export class PanelFrame extends Container {
     row._add(iconcheck);
     
     //stupid css, let's just hackishly put " " to create spacing2
-    row.label("| "+ this.getAttribute("title"))
+    row.label(this.getAttribute("title"));
     
-    row.background = ui_base.getDefault("BoxSubBG");
+    row.background = con.background = this.getDefault("BoxSubBG");
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
     
-    this.background = ui_base.getDefault("BoxSubBG");
     this.dom.remove();
-    
+
+    this.dom.style["padding-left"] = "10px";
+
     this.shadowRoot.appendChild(con);
     con.shadowRoot.appendChild(this.dom);
   }

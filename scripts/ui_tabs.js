@@ -151,7 +151,9 @@ export class TabBar extends UIBase {
     this.tabs = [];
     this.tabs.active = undefined;
     this.tabs.highlight = undefined;
-     
+
+    this._last_bgcolor = undefined;
+
     canvas.style["width"] = "145px";
     canvas.style["height"] = "45px";
     
@@ -433,7 +435,7 @@ export class TabBar extends UIBase {
     if (debug) console.log("tab layout");
     
     let dpi = UIBase.getDPI();
-    let tsize = ui_base.getDefault("TabTextSize")*1;
+    let tsize = this.getDefault("TabTextSize")*1;
     
     g.font = ui_base._getFont(tsize, "TabText");
     
@@ -488,7 +490,7 @@ export class TabBar extends UIBase {
   
   _redraw() {
     let g = this.g;
-    let bgcolor = ui_base.getDefault("DefaultPanelBG");
+    let bgcolor = this.getDefault("DefaultPanelBG");
     
     if (debug) console.log("tab draw");
     
@@ -500,13 +502,13 @@ export class TabBar extends UIBase {
     g.fill();
     
     let dpi = UIBase.getDPI();
-    let tsize = ui_base.getDefault("TabTextSize");
+    let tsize = this.getDefault("TabTextSize");
     
     g.font = ui_base._getFont(tsize, "TabText");
     tsize *= dpi;
     
     g.lineWidth = 2;
-    g.strokeStyle = ui_base.getDefault("TabStrokeStyle1");
+    g.strokeStyle = this.getDefault("TabStrokeStyle1");
       
     let r = this.r;
     this._layout();
@@ -524,7 +526,7 @@ export class TabBar extends UIBase {
       
       g.beginPath();
       g.rect(x, y, w, h);
-      g.fillStyle = ui_base.getDefault("TabInactive");
+      g.fillStyle = this.getDefault("TabInactive");
       g.fill();
         
       if (tab === this.tabs.highlight) {
@@ -532,11 +534,11 @@ export class TabBar extends UIBase {
         
         g.beginPath();
         g.rect(x+p, y+p, w-p*2, h-p*2);
-        g.fillStyle = ui_base.getDefault("TabHighlight");
+        g.fillStyle = this.getDefault("TabHighlight");
         g.fill();
       }
         
-      g.fillStyle = ui_base.getDefault("TabTextColor");
+      g.fillStyle = this.getDefault("TabTextColor");
       
       if (!this.horiz) {
         let x3 = 0, y3 = y2;
@@ -557,7 +559,7 @@ export class TabBar extends UIBase {
         g.beginPath();
         g.moveTo(x+w, h-5);
         g.lineTo(x+w, 5);
-        g.strokeStyle = ui_base.getDefault("TabStrokeStyle2");
+        g.strokeStyle = this.getDefault("TabStrokeStyle2");
         g.stroke();
       }
     }
@@ -590,7 +592,7 @@ export class TabBar extends UIBase {
         g.translate(-x3-tsize, -y3-tsize*0.5);
       }
       
-      g.fillStyle = ui_base.getDefault("TabTextColor");
+      g.fillStyle = this.getDefault("TabTextColor");
       g.fillText(tab.name, x2, y2);
 
       if (!this.horiz) {
@@ -648,10 +650,19 @@ export class TabBar extends UIBase {
       }
     }
   }
-  
+
+  updateStyle() {
+    if (this._last_bgcolor != this.getDefault("DefaultPanelBG")) {
+      this._last_bgcolor = this.getDefault("DefaultPanelBG");
+
+      this._redraw();
+    }
+  }
+
   update(force_update=false) {
     super.update();
-    
+
+    this.updateStyle();
     this.updatePos(force_update);
     this.updateDPI(force_update);
     this.updateCanvas(force_update);
@@ -701,7 +712,7 @@ export class TabContainer extends UIBase {
       //this._tab.innerText = "SDfdsfsdyay";
       
       let li = document.createElement("li");
-      li.style["background-color"] = ui_base.getDefault("DefaultPanelBG");
+      li.style["background-color"] = this.getDefault("DefaultPanelBG");
       li.setAttribute("class", `_tab_li_${this._id}`);
       li.appendChild(this._tab);
       
@@ -760,13 +771,16 @@ export class TabContainer extends UIBase {
     }
     
     let col = document.createElement("colframe-x");
-    
+
     this.tabs[id] = col;
     col.ctx = this.ctx;
 
     this.tbar.addTab(name, id, tooltip);
     //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
-    
+
+    col.parentWidget = this;
+    col.setCSS();
+
     return col;
   }
   

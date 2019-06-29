@@ -559,7 +559,7 @@ export class ColorField extends UIBase {
     let update = force_update;
     
     if (update) {
-      let size = ui_base.getDefault("ColorFieldSize");
+      let size = this.getDefault("fieldsize");
       let dpi = UIBase.getDPI();
       
       canvas.style["width"] = size + "px";
@@ -672,7 +672,8 @@ export class ColorField extends UIBase {
   }
   
   static define() {return {
-    tagname : "colorfield-x"
+    tagname : "colorfield0-x",
+    style : "colorfield"
   };}
 }
 
@@ -785,13 +786,20 @@ export class ColorPicker extends ui.ColumnFrame {
   }
 
   updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
     let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
     let val =  UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
 
-    if (prop === undefined) {
-      console.warn("Bad datapath", this.getAttribute("datapath"));
+    if (val === undefined) {
+      //console.warn("Bad datapath", this.getAttribute("datapath"));
+      this.disabled = true;
       return;
     }
+
+    this.disabled = false;
 
     _update_temp.load(val);
 
@@ -831,7 +839,7 @@ export class ColorPicker extends ui.ColumnFrame {
   }
   
   static define() {return {
-    tagname : "colorpicker-x"
+    tagname : "colorpicker0-x"
   };}
 }
 
