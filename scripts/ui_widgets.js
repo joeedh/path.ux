@@ -40,7 +40,9 @@ export class Button extends UIBase {
     
     this.dom.setAttribute("class", "canvas1");
     this.dom.tabIndex = 0;
-    
+
+    this._last_bg = undefined;
+
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
@@ -192,22 +194,34 @@ export class Button extends UIBase {
   updateDisabled() {
     if (this._last_disabled != this.disabled) {
       this._last_disabled = this.disabled;
-      //this._repos_canvas();
-      this._redraw();
 
-      console.log("disabled update!", this.disabled, this.style["background-color"]);
+      //setTimeout(() => {
+        this.dom._background = this.getDefault("BoxBG");
+
+        this._repos_canvas();
+        this._redraw();
+        console.log("disabled update!", this.disabled, this.style["background-color"]);
+      //}, 100);
     }
   }
 
   update() {
+    super.update();
+
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
     }
-    
+
     this.updateWidth();
     this.updateDPI();
     this.updateName();
     this.updateDisabled();
+
+    if (this.background !== this._last_bg) {
+      this._last_bg = this.background;
+      this._repos_canvas();
+      this._redraw();
+    }
   }
   
   updateName() {
@@ -368,10 +382,14 @@ export class ValueButtonBase extends Button {
       this.disabled = true;
       return;
     } else {
+      if (this.disabled) {
+        this._redraw();
+      }
+
       this.disabled = false;
     }
 
-    if (val !== this._value) {
+    if (val != this._value) {
       this._value = val;
       this.updateWidth();
       this._redraw();
@@ -885,6 +903,8 @@ export class Check extends UIBase {
   }
   
   update() {
+    super.update();
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
@@ -1957,6 +1977,8 @@ export class TextBox extends UIBase {
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
+
+    super.update();
   }
   
   select() {

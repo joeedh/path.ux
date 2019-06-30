@@ -647,7 +647,7 @@ export class Container extends ui_base.UIBase {
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     let prop = rdef.prop;
 
-    console.log(prop, PropTypes, PropSubTypes);
+    //console.log(prop, PropTypes, PropSubTypes);
 
     if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
       let ret = this.slider(path);
