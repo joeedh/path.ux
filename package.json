@@ -1,0 +1,27 @@
+{
+  "name": "path.ux",
+  "version": "0.0.1",
+  "description": "html5 based UI library with blender-rna-style data binding",
+  "main": "serv.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "esdoc": "^1.1.0",
+    "esdoc-standard-plugin": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeedh/path.ux.git"
+  },
+  "author": "Joseph Eagar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joeedh/path.ux/issues"
+  },
+  "homepage": "https://github.com/joeedh/path.ux#readme"
+}
