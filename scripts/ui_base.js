@@ -560,23 +560,45 @@ export class UIBase extends HTMLElement {
   }
 
   set disabled(val) {
-    if (this._disabled == val)
+    if (!!this._disabled == !!val)
       return;
 
-    if (!this._disabled && val) {
+    if (val && !this._disdata) {
       this._disdata = {
         background : this.background,
         bgcolor : this.style["background-color"],
-        _background : this._background
+        DefaultPanelBG : this.default_overrides.DefaultPanelBG,
+        BoxBG : this.default_overrides.BoxBG
       };
 
-      this.background = this.getDefault("DisabledBG");
-      this.style["background-color"] = this.background;
-      this._background = this.background;
-    } else if (this._disabled && !val) {
+      let bg = this.getDefault("DisabledBG");
+
+      this.background = bg;
+      this.default_overrides.DefaultPanelBG = bg;
+      this.default_overrides.BoxBG = bg;
+      this.style["background-color"] = bg;
+
+      this._disabled = val;
+      this.on_disabled();
+    } else if (!val && this._disdata) {
+      if (this._disdata.DefaultPanelBG) {
+        this.default_overrides.DefaultPanelBG = this._disdata.DefaultPanelBG;
+      } else {
+        delete this.default_overrides.DefaultPanelBG;
+      }
+
+      if (this.boxBG) {
+        this.default_overrides.BoxBG = this._disdata.BoxBG;
+      } else {
+        delete this.default_overrides.BoxBG;
+      }
+
       this.background = this._disdata.background;
       this.style["background-color"] = this._disdata.bgcolor;
-      this._background = this._disdata._background;
+      this._disdata = undefined;
+
+      this._disabled = val;
+      this.on_enabled();
     }
 
     this._disabled = val;
@@ -598,6 +620,14 @@ export class UIBase extends HTMLElement {
     };
 
     rec(this);
+  }
+
+  on_disabled() {
+
+  }
+
+  on_enabled() {
+
   }
 
   pushModal(handlers=this) {

@@ -352,6 +352,21 @@ export class HueField extends UIBase {
     g.strokeStyle = "grey";
     g.lineWidth = 1*dpi;
     g.stroke();
+
+    if (this.disabled) {
+      g.beginPath();
+      g.fillStyle = "rgba(25,25,25,0.75)"
+      g.rect(0, 0, this.canvas.width, this.canvas.height);
+      g.fill();
+    }
+  }
+
+  on_disabled() {
+    this._redraw();
+  }
+
+  on_enabled() {
+    this._redraw();
   }
 
   static define() {return {
@@ -504,6 +519,21 @@ export class SatValField extends UIBase {
     g.strokeStyle = "grey";
     g.lineWidth = 1*dpi;
     g.stroke();
+
+    if (this.disabled) {
+      g.beginPath();
+      g.fillStyle = "rgba(25,25,25,0.75)"
+      g.rect(0, 0, this.canvas.width, this.canvas.height);
+      g.fill();
+    }
+  }
+
+  on_disabled() {
+    this._redraw();
+  }
+
+  on_enabled() {
+    this._redraw();
   }
 
   static define() {return {
