@@ -1,7 +1,7 @@
 "use strict";
 "not_a_module";
 
-var aabb_tri_isect_code_attrib = """
+var aabb_tri_isect_code_attrib = `
 ********************************************************
 * AABB-triangle overlap test code                      *
 * by Tomas Akenine-Möller                              *
@@ -15,7 +15,7 @@ var aabb_tri_isect_code_attrib = """
 * suggestions and discussions on how to optimize code. *
 * Thanks to David Hunt for finding a ">="-bug!         *
 ********************************************************
-""";
+`;
 
 
 #define CROSS(dest,v1,v2) \
@@ -242,13 +242,13 @@ function tri_aabb_isect(v1, v2, v3, min, max)
     return triBoxOverlap(cent, size, triverts);
 }
 
-var ray_tri_attrib = """
+var ray_tri_attrib = `
 * Ray-Triangle Intersection Test Routines          *
 * Different optimizations of my and Ben Trumbore's *
 * code from journals of graphics tools (JGT)       *
 * http://www.acm.org/jgt/                          *
 * by Tomas Moller, May 2000                        *
-""";
+`;
 
 #define EPSILON 0.000001
 

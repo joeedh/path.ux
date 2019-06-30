@@ -990,12 +990,16 @@ export class UIBase extends HTMLElement {
     return "default";
   }
 
-  /* example:
-  static define() {return {
-    tagname : "my-tag-name-with-at-least-one-dash",
-    style : "some_style_class_in_defaults"
-  };}
-  */
+  /**
+   * Defines core attributes of the class
+   *
+   * @example
+   *
+   * static define() {return {
+   *   tagname : "custom-element-x",
+   *   style : "[style class in theme]"
+   * }}
+   */
   static define() {
     throw new Error("Missing define() for ux element");
   }
