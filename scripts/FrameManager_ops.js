@@ -28,6 +28,7 @@ let Vector2 = vectormath.Vector2,
     ToolFlags = simple_toolsys.ToolFlags;
 
 import {pushModalLight, popModalLight, keymap} from "./simple_events";
+import {keymap} from './events';
 
 export class ToolBase { //extends simple_toolsys.ToolOp {
   constructor(screen) {
@@ -55,6 +56,8 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
   }
 
   popModal() {
+    console.log("popModal called");
+
     popModalLight(this.modaldata);
     this.modaldata = undefined;
   }
@@ -68,10 +71,38 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
     this.overdraw = document.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
-    this.modaldata = pushModalLight(this);
+    let handlers = {};
+    let keys = Object.getOwnPropertyNames(this);
+    for (let k in this.__proto__) {
+      keys.push(k);
+    }
+    for (let k of Object.getOwnPropertyNames(this.__proto__)) {
+      keys.push(k);
+    }
+
+    for (let k in this) {
+      keys.push(k);
+    }
+
+    for (let k of keys) {
+      if (k.startsWith("on")) {
+        handlers[k] = this[k].bind(this);
+      }
+    }
+
+    //window.setTimeout(() => {
+      console.log("KEYS", keys);
+      this.modaldata = pushModalLight(handlers);
+      console.log("HANDLERS", this.modaldata.handlers);
+    //}, 100);
+
+    //window.addEventListener("touchmove", (e) => {
+    //  console.log("touchmove");
+    //}, {passive : false});
   }
   
   on_mousemove(e) {
+
   }
   
   on_mouseup(e) {
@@ -146,6 +177,19 @@ export class AreaResizeTool extends ToolBase {
     return ret;
   }
 
+  on_mouseup(e) {
+    this.finish();
+  }
+
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap["Escape"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
+        this.finish();
+        break;
+    }
+  }
   on_mousemove(e) {
     let mpos = new Vector2([e.x, e.y]);
     
@@ -208,7 +252,7 @@ export class SplitTool extends ToolBase {
   
   modalStart(ctx) {
     if (this.started) {
-      console.trace("double call to start()");
+      console.trace("double call to modalStart()");
       return;
     }
     
@@ -224,6 +268,7 @@ export class SplitTool extends ToolBase {
   
   finish() {
     this.overdraw.end();
+
     this.popModal(this.screen);
   }
   
@@ -270,7 +315,9 @@ export class AreaDragTool extends ToolBase {
     super(screen);
     
     this.cursorbox = undefined;
-    
+    this.boxes = [];
+    this.boxes.active = undefined;
+
     this.sarea = sarea;
     this.start_mpos = new Vector2(mpos);
     this.screen = screen;
@@ -427,12 +474,14 @@ export class AreaDragTool extends ToolBase {
     let color = "rgba(100, 100, 100, 0.3)";
     let hcolor = "rgba(200, 200, 200, 0.55)";
     let idgen = 0;
+    let boxes = this.boxes;
     
     let box = (x, y, sz, horiz, t, side) => {
       //console.log(x, y, sz);
       
       let b = this.overdraw.rect([x-sz[0]*0.5, y-sz[1]*0.5], sz, color);
-      
+      boxes.push(b);
+
       b.sarea = sa;
       
       let style = document.createElement("style")
@@ -442,16 +491,19 @@ export class AreaDragTool extends ToolBase {
       b.t = t;
       b.side = side;
       b.setAttribute("class", cls);
-      
+      b.setAttribute("is_box", true);
+
       b.addEventListener("mousemove", this.on_mousemove.bind(this));
 
-      let onclick = (e) => {
+      let onclick = b.onclick = (e) => {
         let type = e.type.toLowerCase();
-        
+
         if ((e.type == "mousedown" || e.type == "mouseup") && e.button != 0) {
           return; //another handler will cancel
         }
-        
+
+        console.log("split click");
+
         if (!this._finished) {
           this.finish();
           this.doSplit(b);
@@ -464,7 +516,6 @@ export class AreaDragTool extends ToolBase {
       b.addEventListener("click", onclick);
       b.addEventListener("mousedown", onclick);
       b.addEventListener("mouseup", onclick);
-      b.addEventListener("touchend", onclick);
 
       b.addEventListener("mouseenter", (e) => {
         console.log("mouse enter box");
@@ -530,13 +581,69 @@ export class AreaDragTool extends ToolBase {
     box(cx, cy+sz*0.75+pad, [sz, sz*0.5], true, 0.5, 'b');
     box(cx, cy+sz*1.2+pad, [sz, sz*0.25], true, 0.7, 'b');
   }
-  
+
+  getActiveBox(x, y) {
+    for (let n of this.boxes) {
+      if (n.hasAttribute && n.hasAttribute("is_box")) {
+        let rect = n.getClientRects()[0];
+
+        //console.log(rect.x, rect.y);
+        if (x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height) {
+          console.log("found rect");
+          return n;
+        }
+      }
+    }
+  }
+
   on_mousemove(e) {
     let wid = 55;
     let color = "rgb(200, 200, 200, 0.7)";
     
-    //console.log("mouse move!", e.x, e.y);
-    
+    //console.trace("mouse move!", e.x, e.y, this.sarea);
+
+    /*
+     manually feed events to boxes so as to work right
+     with touch events; note that pushModalLight routes
+     touch to mouse events (if no touch handlers are present).
+     */
+    let n = this.getActiveBox(e.x, e.y);
+
+    if (this.boxes.active !== undefined && this.boxes.active !== n) {
+      this.boxes.active.dispatchEvent(new MouseEvent("mouseleave", e));
+    }
+
+    if (n !== undefined) {
+      n.dispatchEvent(new MouseEvent("mouseenter", e));
+    }
+    this.boxes.active = n;
+    /*
+    let rec = (n) => {
+      if (n.hasAttribute && n.hasAttribute("is_box")) {
+        let rect = n.getClientRects()[0];
+
+        console.log(rect.x, rect.y);
+        if (x >= rect.x && x >= rect.y && x < rect.x+rect.width && y < rect.y+rect.height) {
+          console.log("found rect");
+          n.dispatchEvent("mouseenter", new MouseEvent("mouseenter", e));
+        }
+      }
+      if (n === undefined || n.childNodes === undefined) {
+        return;
+      }
+
+      for (let n2 of n.childNodes) {
+        rec(n2);
+      }
+      if (n.shadow) {
+        for (let n2 of n.shadow.childNodes) {
+          rec(n2);
+        }
+      }
+    };
+
+    rec(this.overdraw);
+    //*/
     if (this.sarea === undefined) {
       return;
     }
@@ -551,9 +658,17 @@ export class AreaDragTool extends ToolBase {
   }
   
   on_mouseup(e) {
+    console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
+
     if (e.button) {
       this.stopPropagation();
       this.preventDefault();
+    } else {
+      let box = this.getActiveBox(e.x, e.y);
+
+      if (box !== undefined) {
+        box.onclick(e);
+      }
     }
     
     this.finish();

@@ -83,16 +83,20 @@ export class ModelInterface {
     throw new Error("implement me");
   }
   
-  /*returns {
-    obj : [object owning property key]
-    parent : [parent of obj]
-    key : [property key]
-    value : [value of property]
-    prop : [optional toolprop.ToolProperty representing the property definition]
-    struct : [optional datastruct representing the type, if value is an object]
-    mass_set : mass setter string, if controller implementation supports it
-  }
-  */
+  /**
+   * @example
+   *
+   * return {
+   *   obj      : [object owning property key]
+   *   parent   : [parent of obj]
+   *   key      : [property key]
+   *   subkey   : used by flag properties, represents a key within the property
+   *   value    : [value of property]
+   *   prop     : [optional toolprop.ToolProperty representing the property definition]
+   *   struct   : [optional datastruct representing the type, if value is an object]
+   *   mass_set : mass setter string, if controller implementation supports it
+   * }
+   */
   resolvePath(ctx, path) {
     //path = prefix + path;
   }

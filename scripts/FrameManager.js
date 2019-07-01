@@ -990,7 +990,12 @@ export class Screen extends ui_base.UIBase {
     
     ret.regenBorders();
     ret.setCSS();
-    
+
+    ret.doOnce(() => {
+      ret.loadUIData(ret.uidata);
+      ret.uidata = undefined;
+    });
+
     return ret;
   }
   
@@ -1028,6 +1033,24 @@ export class Screen extends ui_base.UIBase {
     console.log(data)
     return screen2;
   }
+
+  saveUIData() {
+    try {
+      return ui_base.saveUIData(this, "screen");
+    } catch (error) {
+      util.print_stack(error);
+      console.log("Failed to save UI state data");
+    }
+  }
+
+  loadUIData(str) {
+    try {
+      ui_base.loadUIData(this, str);
+    } catch (error) {
+      util.print_stack(error);
+      console.log("Failed to load UI state data");
+    }
+  }
 }
 
 Screen.STRUCT = `
@@ -1035,6 +1058,7 @@ pathux.Screen {
   size  : array(float);
   sareas : array(pathux.ScreenArea);
   idgen : int;
+  uidata : string | obj.saveUIData();
 }
 `;
   

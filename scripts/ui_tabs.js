@@ -312,11 +312,12 @@ export class TabBar extends UIBase {
     }
     
     let tabs = this.tabs;
+    let active = undefined;
     let ntabs = [];
-    
+
     ntabs.active = undefined;
     ntabs.highlight = undefined;
-    
+
     for (let tname of obj.taborder) {
       let tab = this.getTab(tname);
       
@@ -325,7 +326,7 @@ export class TabBar extends UIBase {
       }
       
       if (tab.name === obj.active) {
-        ntabs.active = tab;
+        active = tab;
       }
       
       ntabs.push(tab);
@@ -336,8 +337,15 @@ export class TabBar extends UIBase {
         ntabs.push(tab);
       }
     }
-    
+
     this.tabs = ntabs;
+
+    if (active !== undefined) {
+      this.setActive(active);
+    } else {
+      this.setActive(this.tabs[0]);
+    }
+
     this.update(true);
     
     return this;
@@ -687,21 +695,18 @@ export class TabContainer extends UIBase {
     
     this._remakeStyle();
     this.shadow.appendChild(this.dom);
-    
-    let li = document.createElement("li");
-    li.setAttribute("class", `_tab_li_${this._id}`);
-    li.appendChild(this.tbar);
-    
-    let ll = li;
-    
-    this.dom.appendChild(li);
-    
+
     this.tabs = {};
     
     this._last_horiz = undefined;
     this._last_bar_pos = undefined;
     this._tab = undefined;
-    
+
+    let li = document.createElement("li");
+    li.setAttribute("class", `_tab_li_${this._id}`);
+    li.appendChild(this.tbar);
+    this.dom.appendChild(li);
+
     this.tbar.onchange = (tab) => {
       if (this._tab) {
         this._tab.remove();
@@ -780,6 +785,10 @@ export class TabContainer extends UIBase {
 
     col.parentWidget = this;
     col.setCSS();
+
+    if (this._tab === undefined) {
+      this.setActive(col);
+    }
 
     return col;
   }

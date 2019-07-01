@@ -331,10 +331,11 @@ export class EnumProperty extends ToolProperty {
   {
     super(PropTypes.ENUM, undefined, apiname, uiname, description, flag, icon);
     
-    this.values = {}
+    this.values = {};
     this.keys = {};
-    this.ui_value_names = {}
-    
+    this.ui_value_names = {};
+    this.descriptions = {};
+
     if (valid_values === undefined) return this;
     
     if (valid_values instanceof Array || valid_values instanceof String) {
@@ -360,6 +361,7 @@ export class EnumProperty extends ToolProperty {
       
       uin = uin.replace(/\_/g, " ");
       this.ui_value_names[k] = uin;
+      this.descriptions = uin;
     }
     
     this.iconmap = {};

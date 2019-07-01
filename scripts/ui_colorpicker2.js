@@ -823,8 +823,8 @@ export class ColorPicker extends ui.ColumnFrame {
       return;
     }
 
-    let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    let val =  UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
@@ -857,7 +857,7 @@ export class ColorPicker extends ui.ColumnFrame {
 
   _setDataPath() {
     if (this.hasAttribute("datapath")) {
-      ui_base.UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
     }
   }
 
