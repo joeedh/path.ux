@@ -535,7 +535,7 @@ export class DropBox extends Button {
     this._menu = undefined;
     //this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
 
-    this.onclick = this._onclick.bind(this);
+    this._onpress = this._onpress.bind(this);
     this.updateWidth();
   }
 
@@ -655,7 +655,7 @@ export class DropBox extends Button {
     };
   }
 
-  _onclick(e) {
+  _onpress(e) {
     //console.log("menu dropbox click");
 
     if (this._menu !== undefined) {

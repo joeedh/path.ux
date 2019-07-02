@@ -1249,7 +1249,7 @@ export function loadUIData(node, buf) {
       }
       
       if (list === undefined || list[ni] === undefined) {
-        console.log("failed to load a ui data block", path, data, list);
+        //console.log("failed to load a ui data block", path);
         n = undefined;
         break;
       }

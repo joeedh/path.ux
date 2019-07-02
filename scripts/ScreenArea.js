@@ -184,7 +184,6 @@ export class Area extends ui_base.UIBase {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
-    console.log(icons, "ICONS<-------------------------------------------------");
     let row = container.row();
 
     row.background = ui_base.getDefault("AreaHeaderBG");
@@ -799,8 +798,6 @@ export class ScreenArea extends ui_base.UIBase {
       
       let areaname = area.constructor.define().areaname;
 
-      console.log(ret.area, areaname, "<-----------------");
-
       area.inactive = true;
       area.owning_sarea = undefined;
       ret.editormap[areaname] = area;
@@ -814,9 +811,7 @@ export class ScreenArea extends ui_base.UIBase {
       console.warn("Failed to find active area!", ret.area);
       ret.area = ret.editors[0];
     } 
-    
-    console.log("AREA:", ret.area);
-    
+
     if (ret.area !== undefined) {
       ret.area.style["width"] = "100%";
       ret.area.style["height"] = "100%";

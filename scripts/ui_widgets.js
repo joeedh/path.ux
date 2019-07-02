@@ -127,13 +127,20 @@ export class Button extends UIBase {
   
   bindEvents() {
     let background = this.dom._background;
+    let press_gen = 0;
+
     let press = (e) => {
+        console.log("button press");
+
         if (this.disabled) return;
+        if (this._pressed) return;
 
         background = this.dom._background;
         this.dom._background = this.getDefault("BoxDepressed");
         this._redraw();
-        
+
+        this._pressed = true;
+
         if (this._onpress) {
           this._onpress(this);
         }
@@ -143,6 +150,9 @@ export class Button extends UIBase {
     }
     
     let depress = (e) => {
+        console.log("button depress");
+
+        this._pressed = false;
         if (this.disabled) return;
 
         this.dom._background = background;
@@ -151,19 +161,21 @@ export class Button extends UIBase {
         e.preventDefault();
         e.stopPropagation();
         
-        if (e.type == "mouseup" && this.button != 0) {
+        if (e.type == "mouseup" && e.button) {
           return;
         }
-        
-        if (this.onclick) {
+
+        if (e.type.startsWith("touch") && this.onclick) {
           this.onclick(this);
         }
     }
     
     this.addEventListener("mousedown", press, {captured : true, passive : false});
+
     this.addEventListener("touchstart", press, {captured : true, passive : false});
-    
     this.addEventListener("touchend", depress);
+    this.addEventListener("touchcancel", depress);
+
     this.addEventListener("mouseup", depress);
     
     let holdbg = this.dom._background;

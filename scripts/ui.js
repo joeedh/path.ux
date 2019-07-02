@@ -453,7 +453,7 @@ export class Container extends ui_base.UIBase {
     
     if (create_cb === undefined) {
       create_cb = (cls) => {
-        return new cls();
+        return this.ctx.api.createTool(this.ctx, path_or_cls);
       }
     }
 
@@ -474,7 +474,7 @@ export class Container extends ui_base.UIBase {
     let ret;
     
     if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
-      console.log("iconbutton!");
+      //console.log("iconbutton!");
       ret = this.iconbutton(def.icon, tooltip, cb);
       
       if (packflag & PackFlags.SMALL_ICON) {
@@ -748,7 +748,7 @@ export class Container extends ui_base.UIBase {
           
           check.description = prop.descriptions[prop.keys[key]];
 
-          console.log("PATH", path);
+          //console.log("PATH", path);
         }          
       } else {
         for (let key in prop.values) {
@@ -756,7 +756,7 @@ export class Container extends ui_base.UIBase {
 
           check.description = prop.descriptions[prop.keys[key]];
 
-          console.log("PATH", path);
+          //console.log("PATH", path);
         }
       }
     }

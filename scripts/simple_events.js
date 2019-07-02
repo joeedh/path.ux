@@ -1,5 +1,9 @@
 export let modalstack = [];
 
+/*
+stupid DOM event system.  I hate it.
+*/
+
 export function copyEvent(e) {
   let ret = {};
   let keys = [];
@@ -32,6 +36,8 @@ export function copyEvent(e) {
 }
 
 export function pushModalLight(obj) {
+  console.log("pushModalLight");
+
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
     "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter", "mouseleave"
@@ -90,11 +96,11 @@ export function pushModalLight(obj) {
 
   function make_handler(type, key) {
     return function(e) {
-      let retval = key !== undefined ? obj[key](e) : undefined;
-
       e.preventDefault();
       e.stopPropagation();
-      return retval;
+
+      if (key !== undefined)
+        obj[key](e);
     }
   }
 
@@ -119,15 +125,16 @@ export function pushModalLight(obj) {
     let handler = make_handler(k, key);
     ret.handlers[k] = handler;
 
-    let settings = handler.settings = {passive : false};
+    let settings = handler.settings = {passive : false, capture : true};
     window.addEventListener(k, handler, settings);
   }
 
   for (let k in touchmap) {
     if (!(k in found)) {
-      console.log("making touch handler for", '"' + k + '"', ret.handlers[k]);
+      //console.log("making touch handler for", '"' + k + '"', ret.handlers[k]);
 
       ret.handlers[k] = make_default_touchhandler(k, ret);
+
       let settings = ret.handlers[k].settings = {passive : false, capture : true};
       window.addEventListener(k, ret.handlers[k], settings);
     }
@@ -139,6 +146,8 @@ export function pushModalLight(obj) {
 }
 
 export function popModalLight(state) {
+  console.log("popModalLight");
+
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");
     return;
@@ -154,7 +163,7 @@ export function popModalLight(state) {
   }
 
   for (let k in state.handlers) {
-    console.log(k);
+    //console.log(k);
     window.removeEventListener(k, state.handlers[k], state.handlers[k].settings);
   }
 
