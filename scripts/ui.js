@@ -746,10 +746,9 @@ export class Container extends ui_base.UIBase {
           check.dom.style["padding"] = "0px";
           check.dom.style["margin"] = "0px";
           
-          check.description = prop.descriptions[prop.keys[key]];
-
-          //console.log("PATH", path);
-        }          
+          check.description = prop.descriptions[key];
+          //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
+        }
       } else {
         for (let key in prop.values) {
           let check = frame.check(path + " = " + prop.values[key], prop.ui_value_names[key]);

@@ -160,7 +160,11 @@ export class Area extends ui_base.UIBase {
     
     return this;
   }
-  
+
+  getBarHeight() {
+    return this.headerRow.getClientRects()[0].height;
+  }
+
   makeHeader(container, add_note_area=true) {
     let areas = {};
     let icons = {};
@@ -184,7 +188,7 @@ export class Area extends ui_base.UIBase {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
-    let row = container.row();
+    let row = this.headerRow = container.row();
 
     row.background = ui_base.getDefault("AreaHeaderBG");
 

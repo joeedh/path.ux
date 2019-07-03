@@ -166,6 +166,11 @@ export const theme = {
     ListActive : "rgba(200, 205, 215, 1.0)",
     width : 110,
     height : 200
+  },
+
+  dopesheet : {
+    treeWidth : 100,
+    treeHeight : 600
   }
 };
 
@@ -461,8 +466,7 @@ export class UIBase extends HTMLElement {
   appendChild(child) {
     if (child instanceof UIBase) {
       child.ctx = this.ctx;
-      child.parentWidget =
-        this;
+      child.parentWidget = this;
     }
 
     return super.appendChild(child);
