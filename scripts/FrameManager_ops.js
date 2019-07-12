@@ -27,8 +27,8 @@ let Vector2 = vectormath.Vector2,
     UndoFlags = simple_toolsys.UndoFlags,
     ToolFlags = simple_toolsys.ToolFlags;
 
-import {pushModalLight, popModalLight, keymap} from "./simple_events";
-import {keymap} from './events';
+import {pushModalLight, popModalLight, keymap} from "./simple_events.js";
+//import {keymap} from './events';
 
 export class ToolBase { //extends simple_toolsys.ToolOp {
   constructor(screen) {

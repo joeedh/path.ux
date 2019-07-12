@@ -5,7 +5,7 @@ import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as events from './events.js';
 import * as ui from './ui.js';
-import {PropTypes} from 'toolprops';
+import {PropTypes} from './toolprop.js';
 
 let rgb_to_hsv_rets = new util.cachering(() => [0, 0, 0], 64);
 

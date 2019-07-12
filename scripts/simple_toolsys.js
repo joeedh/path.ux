@@ -3,16 +3,13 @@
 import * as util from './util.js';
 import * as events from './events.js';
 
-export class Context {
+//XXX need to get rid of this ContextExample class
+export class ContextExample {
   constructor() {
   }
   
   execTool(tool) {
     return this.state.toolstack.execTool(tool);
-  }
-  
-  get model() {
-    return _appstate.model;
   }
   
   get api() {
@@ -31,13 +28,15 @@ export class Context {
     _appstate.save();
   }
   
-  get mesh() {
-    return _appstate.mesh;
-  }
-  
   get editor() {
-    return undefined; //eek, implement me
+    throw new Error("implement me");
   }
+}
+
+//XXX we don't need access to a Context class in this file, get rid of this crap
+let ContextCls = ContextExample;
+export function setContextClass(cls) {
+  ContextCls = cls;
 }
 
 export const ToolFlags = {
@@ -313,17 +312,15 @@ export class ToolMacro extends ToolOp {
 }
 
 export class ToolStack extends Array {
-  constructor() {
+  constructor(ctx) {
     super();
     
     this.cur = -1;
-    this.ctx = new Context();
+    this.ctx = ctx === undefined ? new ContextCls() : ctx;  //XXX get rid of ContextCls crap
     this.modal_running = 0;
   }
   
-  execTool(toolop) {
-    var ctx = this.ctx;
-    
+  execTool(toolop, ctx=this.ctx) {
     if (!toolop.canRun(ctx)) {
       console.log("toolop.canRun returned false");
       return;

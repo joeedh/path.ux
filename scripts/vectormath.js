@@ -1,8 +1,5 @@
-//handle to module.  never access in code; for debug console use only.
-var _vectormath = undefined;
-
 import * as util from './util.js';
-
+import '../scripts/struct.js';
 
 var sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
     asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,
@@ -839,7 +836,26 @@ export class Matrix4 {
     this.$matrix.m34 = -this._determinant3x3(a1, a2, a3, b1, b2, b3, d1, d2, d3);
     this.$matrix.m44 = this._determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
   }
-};
+
+  static fromSTRUCT(reader) {
+    let ret = {};
+    reader(ret);
+    
+    let mat = new Matrix4();
+    mat.load(ret.mat);
+    mat.isPersp = ret.isPersp;
+    
+    return mat;
+  }
+}
+
+Matrix4.STRUCT = `
+mat4 {
+  mat     : array(float) | obj.getAsArray();
+  isPersp : obj.isPersp;
+}
+`;
+nstructjs.manager.add_class(Matrix4);
 
 function make_norm_safe_dot(cls) {
   var _dot = cls.prototype.dot;
@@ -1177,8 +1193,19 @@ export class Vector3 extends BaseVector {
     else 
       return 2.0*saasin(v2.vectorDistance(this)/2.0);
   }
+  
+  static fromSTRUCT(reader) {
+    let ret = {};
+    reader(ret);
+    return new Vector3(ret.vec);
+  }
 }
-
+Vector3.STRUCT = `
+vec3 {
+  vec : array(float) | obj;
+}
+`;
+nstructjs.manager.add_class(Vector3);
 
 export class Vector2 extends BaseVector {
   constructor(data) {

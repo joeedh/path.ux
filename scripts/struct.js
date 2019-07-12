@@ -1957,7 +1957,9 @@
       },
 
       //defined_classes is an array of class constructors
-      //with STRUCT scripts
+      //with STRUCT scripts.  it's optional, if not defined
+      //the list in exports.manager.struct_cls will be used
+      //(that was build by client calls to exports.manager.add_class)
       function parse_structs(buf, defined_classes) {
         console.log(buf);
 
@@ -2028,6 +2030,10 @@
       },
 
       function add_class(cls) {
+        if (cls.STRUCT === undefined) {
+          throw new Error("class has no STRUCT script");
+        }
+        
         var stt=struct_parse.parse(cls.STRUCT);
 
         cls.structName = stt.name;
@@ -2061,6 +2067,10 @@
       },
 
       Class.static_method(function inherit(child, parent) {
+        if (parent.STRUCT === undefined) {
+          return child.structName+"{\n";
+        }
+        
         var stt=struct_parse.parse(parent.STRUCT);
         var code=child.structName+"{\n";
         code+=STRUCT.fmt_struct(stt, true);
