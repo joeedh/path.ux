@@ -1257,7 +1257,7 @@ export function loadUIData(node, buf) {
       n = list[ni];
     }
     
-    if (n !== undefined) {
+    if (n !== undefined && n instanceof UIBase) {
       n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
       

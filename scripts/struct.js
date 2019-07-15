@@ -1793,9 +1793,9 @@
 
         //make sure inheritance is correct
         if (val.constructor.structName!=type.data && (val instanceof cls)) {
-          if (DEBUG.Struct) {
-            console.log(val.constructor.structName+" inherits from "+cls.structName);
-          }
+          //if (DEBUG.Struct) {
+          //  console.log(val.constructor.structName+" inherits from "+cls.structName);
+          //}
           stt = thestruct.get_struct(val.constructor.structName);
         } else if (val.constructor.structName==type.data) {
           stt = thestruct.get_struct(type.data);
@@ -2066,7 +2066,13 @@
         return this.struct_cls[name];
       },
 
-      Class.static_method(function inherit(child, parent) {
+      Class.static_method(function inherit(child, parent, structName) {
+        if (structName !== undefined) {
+          child.structName = structName;
+        } else if (!child.hasOwnProperty("structName")) {
+          child.structName = child.name;
+        }
+        
         if (parent.STRUCT === undefined) {
           return child.structName+"{\n";
         }
@@ -2227,6 +2233,14 @@
       },
 
       function read_object(data, cls, uctx) {
+        if (data instanceof Array) {
+            if (!(data instanceof Uint8Array)) {
+                data = new Uint8Array(data);
+            }
+            
+            data = new DataView(data.buffer);
+        }
+
         var stt=this.structs[cls.structName];
 
         if (uctx==undefined) {

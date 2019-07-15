@@ -1,6 +1,7 @@
 "use strict";
 
 import * as util from './util.js';
+import * as simple_events from './simple_events.js';
 
 export function copyMouseEvent(e) {
   let ret = {};
@@ -64,6 +65,9 @@ export function isModalHead(owner) {
 
 export class EventHandler {
   pushModal(dom, _is_root) {
+    this._modalstate = simple_events.pushModalLight(this);
+    return;
+    /*
     if (!_is_root) {
       console.trace("pushModal called");
     }
@@ -105,9 +109,15 @@ export class EventHandler {
       
       getDom(dom, type).addEventListener(type, this["__"+k], true);
     }
+    */
   }
   
   popModal(dom) {
+    if (this._modalstate !== undefined) {
+      simple_events.popModalLight(this._modalstate);
+      this._modalstate = undefined;
+    }
+    return;
     console.trace("popModal called");
     
     var ok = modalStack[modalStack.length-1] === this;

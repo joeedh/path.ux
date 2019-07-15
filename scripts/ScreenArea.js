@@ -308,7 +308,7 @@ export class Area extends ui_base.UIBase {
     row.addEventListener("touchend", (e) => {
       touchend(e);        
     }, false);
-
+    
     row.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
       let cls = areaclasses[id];
       this.owning_sarea.switch_editor(cls);
@@ -332,7 +332,7 @@ export class Area extends ui_base.UIBase {
     }
 
     this.header = row;
-
+    
     return row;
   }
   

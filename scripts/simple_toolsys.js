@@ -1,7 +1,12 @@
 "use strict";
+/*
+a basic, simple tool system implementation
+*/
 
 import * as util from './util.js';
 import * as events from './events.js';
+
+export let ToolClasses = [];
 
 //XXX need to get rid of this ContextExample class
 export class ContextExample {
@@ -64,6 +69,15 @@ export class ToolOp extends events.EventHandler {
     inputs   : {}, //tool properties
     outputs  : {}  //tool properties
   }}
+  
+  //creates a new instance from args
+  static invoke(ctx, args) {
+    return new this();
+  }
+  
+  static register(cls) {
+    ToolClasses.push(cls);
+  }
   
   constructor() {
     super();

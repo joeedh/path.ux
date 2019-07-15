@@ -81,6 +81,7 @@ function internal_matrix() {
 var lookat_cache_vs3;
 var lookat_cache_vs4;
 
+
 export class Matrix4 {
   constructor(m) {
     if (HasCSSMatrix)
@@ -91,12 +92,12 @@ export class Matrix4 {
     if (typeof m=='object') {
         if ("length" in m&&m.length>=16) {
             this.load(m);
-            return this;
+            return ;
         }
         else 
           if (m instanceof Matrix4) {
             this.load(m);
-            return this;
+            return ;
         }
     }
     this.makeIdentity();
@@ -648,9 +649,8 @@ export class Matrix4 {
     matrix.$matrix.m31 = xvec[2];
     matrix.$matrix.m32 = yvec[2];
     matrix.$matrix.m33 = zvec[2];
-    
-    //*/
-    /*
+
+    //*
     matrix.$matrix.m11 = xvec[0];
     matrix.$matrix.m12 = xvec[1];
     matrix.$matrix.m13 = xvec[2];
@@ -663,13 +663,12 @@ export class Matrix4 {
     matrix.$matrix.m32 = zvec[1];
     matrix.$matrix.m33 = zvec[2];
     matrix.$matrix.m34 = 0;
-    matrix.$matrix.m41 = 0;
-    matrix.$matrix.m42 = 0;
-    matrix.$matrix.m43 = 0;
+    matrix.$matrix.m41 = pos[0];
+    matrix.$matrix.m42 = pos[1];
+    matrix.$matrix.m43 = pos[2];
     matrix.$matrix.m44 = 1;
-    */
-    
-    matrix.translate(-pos[0], -pos[1], -pos[2]);
+    //*/
+  
     this.multiply(matrix);
   }
 
@@ -852,7 +851,7 @@ export class Matrix4 {
 Matrix4.STRUCT = `
 mat4 {
   mat     : array(float) | obj.getAsArray();
-  isPersp : obj.isPersp;
+  isPersp : int | obj.isPersp;
 }
 `;
 nstructjs.manager.add_class(Matrix4);
@@ -1036,11 +1035,13 @@ export class Vector4 extends BaseVector {
     var y=this[1];
     var z=this[2];
     var w=this[3];
-    this[0] = matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21+z*matrix.$matrix.m31+w*matrix.$matrix.m41;
-    this[1] = matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22+z*matrix.$matrix.m32+w*matrix.$matrix.m42;
-    this[2] = matrix.$matrix.m43+x*matrix.$matrix.m13+y*matrix.$matrix.m23+z*matrix.$matrix.m33+w*matrix.$matrix.m43;
+
+    this[0] = w*matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21+z*matrix.$matrix.m31;
+    this[1] = w*matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22+z*matrix.$matrix.m32;
+    this[2] = w*matrix.$matrix.m43+x*matrix.$matrix.m13+y*matrix.$matrix.m23+z*matrix.$matrix.m33;
     this[3] = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24+z*matrix.$matrix.m34;
-    return w;
+    
+    return this[3];
   }
   
   cross(v) {
@@ -1067,7 +1068,18 @@ export class Vector4 extends BaseVector {
     else 
       return 2.0*saasin(v2.vectorDistance(this)/2.0);
   }
+  static fromSTRUCT(reader) {
+    let ret = {};
+    reader(ret);
+    return new Vector4(ret.vec);
+  }
+};
+Vector4.STRUCT = `
+vec4 {
+  vec : array(float) | obj;
 }
+`;
+nstructjs.manager.add_class(Vector4);
 
 
 
@@ -1276,7 +1288,18 @@ export class Vector2 extends BaseVector {
     
     return this;
   }
+  static fromSTRUCT(reader) {
+    let ret = {};
+    reader(ret);
+    return new Vector2(ret.vec);
+  }
 };
+Vector2.STRUCT = `
+vec2 {
+  vec : array(float) | obj;
+}
+`;
+nstructjs.manager.add_class(Vector2);
 
 export class Quat extends Vector4 {
   makeUnitQuat() {
@@ -1517,7 +1540,18 @@ export class Quat extends Vector4 {
     
     return this;
   }
+  static fromSTRUCT(reader) {
+    let ret = {};
+    reader(ret);
+    return new Quat(ret.vec);
+  }
+};
+Quat.STRUCT = `
+quat {
+  vec : array(float) | obj;
 }
+`;
+nstructjs.manager.add_class(Quat);
 
 _v3nd4_n1_normalizedDot4 = new Vector3();
 _v3nd4_n2_normalizedDot4 = new Vector3();

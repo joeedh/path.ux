@@ -1,5 +1,11 @@
 "use strict";
 
+//set default datapath controller implementation class
+import {setImplementationClass} from './controller.js';
+import {DataAPI} from './simple_controller.js';
+
+setImplementationClass(DataAPI);
+
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';

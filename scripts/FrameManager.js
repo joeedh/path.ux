@@ -12,6 +12,15 @@ import * as ui_colorpicker from './ui_colorpicker.js';
 import * as ui_tabs from './ui_tabs.js';
 import './struct.js';
 
+//make sure all widgets are registered
+import './ui_widgets.js';
+import './ui_tabs.js';
+import './ui_colorpicker2.js';
+import './ui_noteframe.js';
+import './ui_listbox.js';
+import './ui_menu.js';
+import './ui_table.js';
+
 export function registerToolStackGetter(func) {
   FrameManager_ops.registerToolStackGetter(func);
 }
@@ -245,7 +254,9 @@ ui_base.UIBase.register(ScreenBorder);
 export class Screen extends ui_base.UIBase {
   constructor() {
     super();
-    
+
+    this._ctx = undefined;
+
     this.size = [512, 512];
     this.idgen = 0;
     this.sareas = [];
@@ -437,7 +448,39 @@ export class Screen extends ui_base.UIBase {
       this._update_gen = this.update_intern();
     }
   }
-  
+
+  get ctx() {
+    return this._ctx;
+  }
+
+  set ctx(val) {
+    this._ctx = val;
+
+    //fully recurse tree
+    let rec = (n) => {
+      if (n instanceof UIBase) {
+        n.ctx = val;
+      }
+
+      for (let n2 of n.childNodes) {
+        rec(n2);
+      }
+
+      if (n.shadow) {
+        for (let n2 of n.shadow.childNodes) {
+          rec(n2);
+        }
+      }
+    }
+
+    for (let n of this.childNodes) {
+      rec(n);
+    }
+
+    for (let n of this.shadow.childNodes) {
+      rec(n);
+    }
+  }
   //XXX race condition warning
   update_intern() {
     super.update();
