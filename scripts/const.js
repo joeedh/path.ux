@@ -1,1 +1,4 @@
-export var APP_VERSION = 0.0001
+export var DEBUG = {
+  screenborders : true
+};
+

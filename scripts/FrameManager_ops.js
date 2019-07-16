@@ -3,6 +3,7 @@
 //set default datapath controller implementation class
 import {setImplementationClass} from './controller.js';
 import {DataAPI} from './simple_controller.js';
+import {DEBUG} from './const.js';
 
 setImplementationClass(DataAPI);
 
@@ -209,9 +210,30 @@ export class AreaResizeTool extends ToolBase {
     
     let visit = new Set();
     let borders = this.getBorders();
-    
+
+    let color = DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
+
     for (let border of borders) {
-      this.overdraw.line(border.v1, border.v2, "red");
+      border.oldv1 = new Vector2(border.v1);
+      border.oldv2 = new Vector2(border.v2);
+    }
+
+    let check = () => {
+      let count = 0;
+
+      for (let sarea of this.screen.sareas) {
+        if (sarea.size[0] < 15 || sarea.size[1] < 15) {
+          count++;
+        }
+      }
+
+      return count;
+    };
+
+    let badcount = check();
+
+    for (let border of borders) {
+      this.overdraw.line(border.v1, border.v2, color);
       
       if (!visit.has(border.v1._id)) {
         border.v1[axis] += mpos[axis];
@@ -227,6 +249,19 @@ export class AreaResizeTool extends ToolBase {
     this.start_mpos[0] = e.x;
     this.start_mpos[1] = e.y;
     this.screen.loadFromVerts();
+    this.screen.setCSS();
+
+    if (check() != badcount) {
+      console.log("bad");
+
+      for (let border of borders) {
+        border.v1.load(border.oldv1);
+        border.v2.load(border.oldv2);
+      }
+    }
+
+    this.screen.loadFromVerts();
+    this.screen.setCSS();
   }
 }
 

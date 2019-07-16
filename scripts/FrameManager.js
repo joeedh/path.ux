@@ -1,5 +1,7 @@
 let _FrameManager = undefined;
 
+import {DEBUG} from './const.js';
+import {haveModal} from './simple_events.js';
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
@@ -36,25 +38,38 @@ let update_stack = new Array(8192);
 update_stack.cur = 0;
 
 export class ScreenVert extends Vector2 {
-  constructor(pos, id) {
+  constructor(pos, id, is_outer, side) {
     super(pos);
-    
+
+    this.is_outer = is_outer;
+    this.side = side;
     this.sareas = [];
     this.borders = [];
     
     this._id = id;
   }
   
-  static hash(pos) {
-    return pos[0].toFixed(3) + ":" + pos[1].toFixed(3);
+  static hash(pos, side, is_outer) {
+    //try to fix a bug where areas collapse into nothingness
+    //by hashing outer screenverts differently
+
+    return pos[0].toFixed(3) + ":" + pos[1].toFixed(3) + ":" + is_outer;
   }
   
   valueOf() {
-    return ScreenVert.hash(this);
+    return ScreenVert.hash(this, this.side, this.is_outer);
   }
   
   [Symbol.keystr]() {
-    return ScreenVert.hash(this);
+    return ScreenVert.hash(this, this.side, this.is_outer);
+  }
+}
+
+export class ScreenHalfEdge {
+  constructor(sarea, v1, v2, border) {
+    this.v1 = v1;
+    this.v2 = v2;
+    this.border = border;
   }
 }
 
@@ -66,7 +81,14 @@ export class ScreenBorder extends ui_base.UIBase {
     this.v1 = undefined;
     this.v2 = undefined;
     this._id = undefined;
-    
+
+    //are we a border on the outer of the screen?
+    //note that this is tricky if an area is collapsed
+    //to zero in one dimension
+    this.is_outer = false;
+
+    this.side = 0; //which side of area are we on, going counterclockwise
+
     this.sareas = [];
     
     this._innerstyle = document.createElement("style");
@@ -86,6 +108,11 @@ export class ScreenBorder extends ui_base.UIBase {
         console.log("ignoring border ScreenArea");
         return;
       }
+
+      if (!this.movable) {
+        return;
+      }
+
       console.log("area resize start!");
       let tool = new FrameManager_ops.AreaResizeTool(this.screen, this, [e.x, e.y]);
       
@@ -193,13 +220,22 @@ export class ScreenBorder extends ui_base.UIBase {
       mstyle = "margin-top : 2px;\n    margin-bottom : 2px;\n    ";
       mstyle += "width : 100%;\n    height:${iwid}px;\n";
     }
-    
+
+    let color = "rgba(220, 220, 220, 1.0)";
+    if (DEBUG.screenborders) {
+      if (!this.movable) {
+        color = "black";
+      } if (this.is_outer) {
+        color = "orange";
+      }
+    }
+
     let innerbuf = `
         .screenborder_inner_${this._id} {
           ${bstyle}
           ${mstyle}
           background-color : rgba(170, 170, 170, 1.0);
-          border-color : rgba(220, 220, 220, 1.0);
+          border-color : ${color};
           border-width : 1px;
           pointer-events : none;
         }`;
@@ -233,8 +269,8 @@ export class ScreenBorder extends ui_base.UIBase {
     this.style["z-index"] = 5;
   }
   
-  static hash(v1, v2) {
-    return (Math.min(v1._id, v2._id)<<16) + Math.max(v1._id, v2._id);
+  static hash(v1, v2, side, is_outer) {
+    return Math.min(v1._id, v2._id) + ":" + Math.max(v1._id, v2._id) + ":" + is_outer;
   }
   
   valueOf() {
@@ -268,7 +304,10 @@ export class Screen extends ui_base.UIBase {
     this._vertmap = {};
     this._edgemap = {};
     this._idmap = {};
-    
+
+    //effective bounds of screen
+    this._aabb = [new Vector2(), new Vector2()];
+
     this.shadow.addEventListener("mousemove", (e) => {
       this.mpos[0] = e.x;
       this.mpos[1] = e.y;
@@ -280,10 +319,32 @@ export class Screen extends ui_base.UIBase {
     });
     
   }
-  
+
+  _recalcAABB() {
+    let mm = new math.MinMax(2);
+
+    for (let sarea of this.sareas) {
+      this.minmaxArea(sarea, mm);
+    }
+
+    this._aabb[0].load(mm.min);
+    this._aabb[1].load(mm.max);
+  }
+
+  get borders() {
+    let this2 = this;
+
+    return (function*() {
+      for (let k in this2._edgemap) {
+        yield this2._edgemap[k];
+      }
+    })();
+  }
+  //XXX look at if this is referenced anywhere
   load() {
   }
-  
+
+  //XXX look at if this is referenced anywhere
   save() {
   }
   
@@ -430,6 +491,32 @@ export class Screen extends ui_base.UIBase {
   }
   
   update() {
+    for (let k in this._edgemap) {
+      let b = this._edgemap[k];
+
+      if (b === undefined) {
+        //how?
+        continue;
+      }
+      let is_outer = this.isBorderOuter(b, b.side);
+
+      if (is_outer != b.is_outer) {
+        console.log("detected collapsed area?");
+        this.regenBorders();
+      }
+    }
+
+    for (let sarea of this.sareas) {
+      for (let b of sarea._borders) {
+        let movable = this.isBorderMovable(sarea, b);
+
+        if (movable != b.movable) {
+          console.log("detected change in movable borders");
+          this.regenBorders();
+        }
+      }
+    }
+
     if (this._update_gen) {
       let ret;
       
@@ -672,6 +759,8 @@ export class Screen extends ui_base.UIBase {
       
       b.setCSS();
     }
+
+    this._recalcAABB();
   }
   
   snapScreenVerts() {
@@ -760,13 +849,15 @@ export class Screen extends ui_base.UIBase {
     this.size[0] = size[0];
     this.size[1] = size[1];
     this.setCSS();
+
+    this._recalcAABB();
   }
   
-  getScreenVert(pos) {
-    let key = ScreenVert.hash(pos);
-    
+  getScreenVert(pos, side, is_outer=false) {
+    let key = ScreenVert.hash(pos, side, is_outer);
+
     if (!(key in this._vertmap)) {
-      let v = new ScreenVert(pos, this.idgen++);
+      let v = new ScreenVert(pos, this.idgen++, is_outer, side);
       
       this._vertmap[key] = v;
       this._idmap[v._id] = v;
@@ -776,26 +867,99 @@ export class Screen extends ui_base.UIBase {
     
     return this._vertmap[key];
   }
-  
-  getScreenBorder(v1, v2) {
+
+
+  //XXX
+  //NOT WORKING, am preventing collapsed areas in FrameManager_ops's resize tool for now
+  //are we on the outerside of the screen (and *not*
+  //on the opposite edge of the area, e.g. for collapsed areas)?
+  isBorderOuter(b, side, v1=b.v1, b2=b.v2) {
+    return 0; //XXX
+    let is_outer = false;
+    const outer_snap_limit = 25;
+
+    const table = [
+      [0, 0], [1, 1],
+      [1, 0], [0, 1]
+    ];
+
+    //side = side == 2 ? side : undefined;
+
+    if (side !== undefined) {
+      let off = table[side];
+      let diff = Math.abs(v1[off[1]] - this._aabb[off[0]][off[1]]);
+
+      //console.log("getScreenBorder", diff, v1[off[1]], this._aabb[off[0]][off[1]]);
+
+      if (diff < outer_snap_limit) {
+        //console.log("outer border!", side);
+        is_outer = side+1;
+      }
+    }
+
+    return is_outer;
+  }
+
+  //XXX
+  //NOT WORKING, am preventing collapsed areas in FrameManager_ops's resize tool for now
+  isBorderMovable(sarea, b, side=b.side, v1=b.v1, v2=b.v2) {
+    return true; //XXX
+
+    let limit = 5;
+    let collapsed = sarea.size[0] < limit || sarea.size[1] < limit;
+
+    if (limit && b.valence > 1) {
+      return true;
+    }
+
+    let horiz = Math.abs(b.v2[0]-b.v1[0]) > Math.abs(b.v2[1]-b.v1[1]);
+    const snap_limit = 3;
+
+    let table = [
+      0, //min
+      1, //max
+      1, //max
+      0, //min
+    ]
+
+    let axis = this._aabb[b.side & 1][horiz ^ 1];
+    if (Math.abs(axis - b.v1[horiz^1]) < snap_limit) {
+      console.log("border is not movable");
+      return false;
+    }
+
+    return true;
+  }
+
+  getScreenBorder(sarea, v1, v2, side) {
+    let is_outer = this.isBorderOuter(undefined, side, v1, v2);
+
+    //XXX
+    side=is_outer = 0;
+
     if (!(v1 instanceof ScreenVert)) {
-      v1 = this.getScreenVert(v1);
+      v1 = this.getScreenVert(v1, side, is_outer);
     }
     
     if (!(v2 instanceof ScreenVert)) {
-      v2 = this.getScreenVert(v2);
+      v2 = this.getScreenVert(v2, side, is_outer);
     }
     
-    let hash = ScreenBorder.hash(v1, v2);
+    let hash = ScreenBorder.hash(v1, v2, side, is_outer);
     
     if (!(hash in this._edgemap)) {
       let sa = this._edgemap[hash] = document.createElement("screenborder-x");
-      
+
+      sa.is_outer = is_outer;
+      sa.side = side;
+
       sa.screen = this;
       sa.v1 = v1;
       sa.v2 = v2;
       sa._id = this.idgen++;
-      
+
+      sa.movable = 1;//this.isBorderMovable(sarea, sa, side, v1, v2);
+
       v1.borders.push(sa);
       v2.borders.push(sa);
       
@@ -951,19 +1115,20 @@ export class Screen extends ui_base.UIBase {
   }
       
   on_keydown(e) {
-    if (this.sareas.active !== undefined && this.sareas.active.on_keydown) {
-      return this.sareas.active.on_keydown(e);
+    if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keydown) {
+      let area = this.sareas.active;
+      let ret = this.sareas.active.on_keydown(e);
     }
   }
   
   on_keyup(e) {
-    if (this.sareas.active !== undefined && this.sareas.active.on_keyup) {
+    if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keyup) {
       return this.sareas.active.on_keyup(e);
     }
   }
   
   on_keypress(e) {
-    if (this.sareas.active !== undefined && this.sareas.active.on_keypress) {
+    if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keypress) {
       return this.sareas.active.on_keypress(e);
     }
   }

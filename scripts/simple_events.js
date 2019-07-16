@@ -171,6 +171,11 @@ export function popModalLight(state) {
   modalstack.remove(state);
 }
 
+export function haveModal() {
+  return modalstack.length > 0;
+}
+window._haveModal = haveModal; //for debugging console
+
 export var keymap_latin_1 = {
   "Space": 32,
   "Escape" : 27,

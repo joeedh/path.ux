@@ -917,7 +917,11 @@ export class UIBase extends HTMLElement {
   //scaling ratio for high-resolution displays
   static getDPI() {
     let dpi = window.devicePixelRatio;
-    
+
+
+    return dpi;
+
+    //. . .what was I thinking?
     let f = Math.fract(dpi);
     let steps = 6
     f = (Math.ceil(f*steps))/steps;

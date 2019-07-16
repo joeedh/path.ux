@@ -6,6 +6,8 @@ import * as ui_base from './ui_base.js';
 import * as ui from './ui.js';
 import * as ui_noteframe from './ui_noteframe.js';
 //import * as nstructjs from './struct.js';
+import {haveModal} from './simple_events.js';
+
 import './struct.js';
 
 let Vector2 = vectormath.Vector2;
@@ -223,11 +225,11 @@ export class Area extends ui_base.UIBase {
     }
     
     row.addEventListener("mouseout", (e) => {
-      console.log("mouse leave");
+      //console.log("mouse leave");
       mdown = false;
     });
     row.addEventListener("mouseleave", (e) => {
-      console.log("mouse out");
+      //console.log("mouse out");
       mdown = false;
     });
     
@@ -426,6 +428,28 @@ export class ScreenArea extends ui_base.UIBase {
     this.area = undefined;
     this.editors = [];
     this.editormap = {};
+
+    this.addEventListener("mouseover", (e) => {
+      if (haveModal()) {
+        return;
+      }
+
+      //console.log("screen area mouseover");
+      let screen = this.getScreen();
+      if (screen.sareas.active !== this && screen.sareas.active) {
+        screen.sareas.active.area.on_area_inactive();
+      }
+
+      if (screen.sareas.active !== this) {
+        this.area.on_area_active();
+      }
+
+      screen.sareas.active = this;
+    });
+
+    //this.addEventListener("mouseleave", (e) => {
+      //console.log("screen area mouseleave");
+    //});
   }
   
   /*
@@ -474,7 +498,15 @@ export class ScreenArea extends ui_base.UIBase {
     
     return Object.assign(super.toJSON(), ret);
   }
-  
+
+  on_keydown(e) {
+    if (this.area.on_keydown) {
+      this.area.push_ctx_active();
+      this.area.on_keydown(e);
+      this.area.pop_ctx_active();
+    }
+  }
+
   loadJSON(obj) {
     if (obj === undefined) {
       console.warn("undefined in loadJSON");
@@ -540,13 +572,24 @@ export class ScreenArea extends ui_base.UIBase {
   }
   
   getScreen() {
+    if (this.screen !== undefined) {
+      return this.screen;
+    }
+
+    //try to walk up graph, if possible
     let p = this.parentNode;
-    
-    while (p && !(p instanceof Screen)) {
+    let _i = 0;
+
+    while (p && !(p instanceof Screen) && p !== p.parentNode) {
       p = this.parentNode;
+
+      if (_i++ > 1000) {
+        console.warn("infinite loop detected in ScreenArea.prototype.getScreen()");
+        return undefined;
+      }
     }
     
-    return p;
+    return p instanceof Screen ? p : undefined;
   }
   
   copy(screen) {
@@ -635,20 +678,21 @@ export class ScreenArea extends ui_base.UIBase {
       new Vector2([p[0], p[1] + s[1]]),
       new Vector2([p[0] + s[0], p[1] + s[1]]),
       new Vector2([p[0] + s[0], p[1]])
-    ]
-    
-    for (let i=0; i<vs.length; i++) {
-      vs[i] = screen.getScreenVert(vs[i]);
-      
-      if (vs[i].sareas.indexOf(this) < 0) {
-        vs[i].sareas.push(this);
-      }
-    }
-    
+    ];
+
     for (let i=0; i<vs.length; i++) {
       let v1 = vs[i], v2 = vs[(i + 1) % vs.length];
-      let b = screen.getScreenBorder(v1, v2);
-      
+
+      let b = screen.getScreenBorder(this, v1, v2, i);
+
+      for (let j=0; j<2; j++) {
+        let v = j ? b.v2 : b.v1;
+
+        if (v.sareas.indexOf(this) < 0) {
+          v.sareas.push(this);
+        }
+      }
+
       if (b.sareas.indexOf(this) < 0) {
         b.sareas.push(this);
       }
