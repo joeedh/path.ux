@@ -701,7 +701,7 @@ export class Screen extends ui_base.UIBase {
     size[0] = ~~size[0];
     size[1] = ~~size[1];
 
-    console.trace("this.size", this.size, "newsize", size);
+    //console.trace("this.size", this.size, "newsize", size);
 
     let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
 
