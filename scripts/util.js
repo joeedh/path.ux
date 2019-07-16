@@ -172,7 +172,16 @@ export class set {
   [Symbol.iterator]() {
     return new SetIter(this);
   }
-  
+
+  clear() {
+    this.items.length = 0;
+    this.keys = {};
+    this.freelist.length = 0;
+    this.length = 0;
+
+    return this;
+  }
+
   add(item) {
     var key = item[Symbol.keystr]();
     

@@ -1,3 +1,5 @@
+import * as util from './util.js';
+
 let first = (iter) => {
   if (iter === undefined) {
     return undefined;
@@ -46,10 +48,16 @@ export const PropFlags = {
   USE_CUSTOM_GETSET : 128 //used by controller.js interface
 };
 
+export let customPropertyTypes = [];
+
 export class ToolProperty {
   constructor(type, subtype, apiname, uiname, description, flag, icon) {
     this.data = undefined;
-    
+
+    if (type === undefined) {
+      type = this.constructor.PROP_TYPE_ID;
+    }
+
     this.type = type;
     this.subtype = subtype;
     
@@ -61,7 +69,14 @@ export class ToolProperty {
     
     this.callbacks = {};
   } 
-  
+
+  static register(cls) {
+    cls.PROP_TYPE_ID = util.strhash(cls.name);
+    PropTypes[cls.name] = cls.PROP_TYPE_ID;
+
+    customPropertyTypes.push(cls);
+  }
+
   _fire(type, arg1, arg2) {
     if (this.callbacks[type] === undefined) {
       return;
@@ -286,6 +301,28 @@ export class IntProperty extends ToolProperty {
   }
 }
 
+export class BoolProperty extends ToolProperty {
+  constructor(value, apiname,
+              uiname, description, flag, icon)
+  {
+    super(PropTypes.BOOL, undefined, apiname, uiname, description, flag, icon);
+
+    this.data = !!value;
+  }
+
+  toJSON() {
+    let ret = super.toJSON();
+
+    return ret;
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    return this;
+  }
+}
+
 export class FloatProperty extends ToolProperty {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
@@ -376,7 +413,7 @@ export class EnumProperty extends ToolProperty {
     }
   }
 
-  copyTo(dst) {
+  copyTo(p) {
     p.keys = Object.create(this.keys);
     p.values = Object.create(this.values);
     p.data = this.data;

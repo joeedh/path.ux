@@ -6,7 +6,7 @@ import * as ui_base from './ui_base.js';
 import * as events from './events.js';
 import * as simple_toolsys from './simple_toolsys.js';
 import * as toolprop from './toolprop.js';
-import {Button} from "./ui_widgets";
+import {Button} from "./ui_widgets.js";
 
 let EnumProperty = toolprop.EnumProperty,
   PropTypes = toolprop.PropTypes;

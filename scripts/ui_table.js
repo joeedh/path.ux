@@ -3,7 +3,7 @@
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
 
-import {Container} from "./ui";
+import {Container} from "./ui.js";
 
 var _ui = undefined;
 

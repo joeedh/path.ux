@@ -1,18 +1,20 @@
 "use strict";
+/*
+a basic, simple tool system implementation
+*/
 
 import * as util from './util.js';
 import * as events from './events.js';
 
-export class Context {
+export let ToolClasses = [];
+
+//XXX need to get rid of this ContextExample class
+export class ContextExample {
   constructor() {
   }
   
   execTool(tool) {
     return this.state.toolstack.execTool(tool);
-  }
-  
-  get model() {
-    return _appstate.model;
   }
   
   get api() {
@@ -31,13 +33,15 @@ export class Context {
     _appstate.save();
   }
   
-  get mesh() {
-    return _appstate.mesh;
-  }
-  
   get editor() {
-    return undefined; //eek, implement me
+    throw new Error("implement me");
   }
+}
+
+//XXX we don't need access to a Context class in this file, get rid of this crap
+let ContextCls = ContextExample;
+export function setContextClass(cls) {
+  ContextCls = cls;
 }
 
 export const ToolFlags = {
@@ -52,6 +56,12 @@ export const UndoFlags = {
   HAS_UNDO_DATA : 16
 };
 
+class InheritFlag {
+  constructor(slots={}) {
+    this.slots = slots;
+  }
+}
+
 export class ToolOp extends events.EventHandler {
   static tooldef() {return {
     uiname   : "!untitled tool",
@@ -62,36 +72,102 @@ export class ToolOp extends events.EventHandler {
     hotkey : undefined,
     undoflag : 0,
     flag     : 0,
-    inputs   : {}, //tool properties
-    outputs  : {}  //tool properties
+    inputs   : {}, //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes
+    outputs  : {}  //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes
   }}
+
+  static inherit(slots) {
+    return new InheritFlag(slots);
+  }
+  
+  //creates a new instance from args
+  static invoke(ctx, args) {
+    return new this();
+  }
+  
+  static register(cls) {
+    ToolClasses.push(cls);
+  }
   
   constructor() {
     super();
+
     var def = this.constructor.tooldef();
-    
+
+    if (def.undoflag !== undefined) {
+      this.undoflag = def.undoflag;
+    }
+
+    if (def.flag !== undefined) {
+      this.flag = def.flag;
+    }
+
     this._accept = this._reject = undefined;
     this._promise = undefined;
     
     for (var k in def) {
       this[k] = def[k];
     }
-    
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this.constructor;
+
+      while (p !== undefined && p !== Object && p !== ToolOp) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag);
+
+            if (slots2 instanceof InheritFlag) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+
+        }
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
     this.inputs = {};
     this.outputs = {};
     
-    if (def.inputs) {
-      for (let k in def.inputs) {
-        this.inputs[k] = def.inputs[k].copy();
+    if (dinputs) {
+      for (let k in dinputs) {
+        this.inputs[k] = dinputs[k].copy();
       }
     }
     
-    if (def.outputs) {
-      for (let k in def.outputs) {
-        this.outputs[k] = def.outputs[k].copy();
+    if (doutputs) {
+      for (let k in doutputs) {
+        this.outputs[k] = doutputs[k].copy();
       }
     }
-    
+
     this.drawlines = [];
   }
 
@@ -313,17 +389,15 @@ export class ToolMacro extends ToolOp {
 }
 
 export class ToolStack extends Array {
-  constructor() {
+  constructor(ctx) {
     super();
     
     this.cur = -1;
-    this.ctx = new Context();
+    this.ctx = ctx === undefined ? new ContextCls() : ctx;  //XXX get rid of ContextCls crap
     this.modal_running = 0;
   }
   
-  execTool(toolop) {
-    var ctx = this.ctx;
-    
+  execTool(toolop, ctx=this.ctx) {
     if (!toolop.canRun(ctx)) {
       console.log("toolop.canRun returned false");
       return;

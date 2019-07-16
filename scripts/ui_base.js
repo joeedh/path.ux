@@ -4,7 +4,7 @@ import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
-import {pushModalLight, popModalLight, copyEvent} from './simple_events';
+import {pushModalLight, popModalLight, copyEvent} from './simple_events.js';
 
 let Vector4 = vectormath.Vector4;
 
@@ -1261,7 +1261,7 @@ export function loadUIData(node, buf) {
       n = list[ni];
     }
     
-    if (n !== undefined) {
+    if (n !== undefined && n instanceof UIBase) {
       n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
       
