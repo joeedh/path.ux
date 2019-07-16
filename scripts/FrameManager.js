@@ -12,6 +12,16 @@ import * as ui_colorpicker from './ui_colorpicker.js';
 import * as ui_tabs from './ui_tabs.js';
 import './struct.js';
 
+let Area = ScreenArea.Area;
+
+import './ui_widgets.js';
+import './ui_tabs.js';
+import './ui_colorpicker2.js';
+import './ui_noteframe.js';
+import './ui_listbox.js';
+import './ui_menu.js';
+import './ui_table.js';
+
 export function registerToolStackGetter(func) {
   FrameManager_ops.registerToolStackGetter(func);
 }
@@ -245,7 +255,9 @@ ui_base.UIBase.register(ScreenBorder);
 export class Screen extends ui_base.UIBase {
   constructor() {
     super();
-    
+
+    this._ctx = undefined;
+
     this.size = [512, 512];
     this.idgen = 0;
     this.sareas = [];
@@ -437,7 +449,39 @@ export class Screen extends ui_base.UIBase {
       this._update_gen = this.update_intern();
     }
   }
-  
+
+  get ctx() {
+    return this._ctx;
+  }
+
+  set ctx(val) {
+    this._ctx = val;
+
+    //fully recurse tree
+    let rec = (n) => {
+      if (n instanceof UIBase) {
+        n.ctx = val;
+      }
+
+      for (let n2 of n.childNodes) {
+        rec(n2);
+      }
+
+      if (n.shadow) {
+        for (let n2 of n.shadow.childNodes) {
+          rec(n2);
+        }
+      }
+    }
+
+    for (let n of this.childNodes) {
+      rec(n);
+    }
+
+    for (let n of this.shadow.childNodes) {
+      rec(n);
+    }
+  }
   //XXX race condition warning
   update_intern() {
     super.update();
@@ -469,8 +513,10 @@ export class Screen extends ui_base.UIBase {
       let ctx = this2.ctx;
 
       let SCOPE_POP = Symbol("pop");
+      let AREA_CTX_POP = Symbol("pop2");
 
       let scopestack = [];
+      let areastack = [];
 
       let t = util.time_ms();
       push(this2);
@@ -483,8 +529,19 @@ export class Screen extends ui_base.UIBase {
         } else if (n == SCOPE_POP) {
           scopestack.pop();
           continue;
+        } else if (n == AREA_CTX_POP) {
+          //console.log("POP", areastack[areastack.length-1].constructor.name);
+          areastack.pop().pop_ctx_active(ctx);
+          continue;
         }
-        
+
+        if (n instanceof Area) {
+          //console.log("PUSH", n.constructor.name);
+          areastack.push(n);
+          n.push_ctx_active(ctx);
+          push(AREA_CTX_POP);
+        }
+
         if (n !== this2 && n instanceof UIBase) {
           if (scopestack.length > 0 && scopestack[scopestack.length-1]) {
             n.parentWidget = scopestack[scopestack.length-1];
@@ -493,7 +550,7 @@ export class Screen extends ui_base.UIBase {
           n._ctx = ctx;
           n.update();
         }
-        
+
         if (util.time_ms() - t > 30) {
          yield; 
          t = util.time_ms();
@@ -502,7 +559,7 @@ export class Screen extends ui_base.UIBase {
         for (let n2 of n.childNodes) {
           push(n2);
         }
-        
+
         if (n.shadow === undefined) {
           continue;
         }
@@ -658,7 +715,7 @@ export class Screen extends ui_base.UIBase {
     size[0] = ~~size[0];
     size[1] = ~~size[1];
 
-    console.trace("this.size", this.size, "newsize", size);
+    //console.trace("this.size", this.size, "newsize", size);
 
     let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
 
@@ -990,7 +1047,12 @@ export class Screen extends ui_base.UIBase {
     
     ret.regenBorders();
     ret.setCSS();
-    
+
+    ret.doOnce(() => {
+      ret.loadUIData(ret.uidata);
+      ret.uidata = undefined;
+    });
+
     return ret;
   }
   
@@ -1028,6 +1090,24 @@ export class Screen extends ui_base.UIBase {
     console.log(data)
     return screen2;
   }
+
+  saveUIData() {
+    try {
+      return ui_base.saveUIData(this, "screen");
+    } catch (error) {
+      util.print_stack(error);
+      console.log("Failed to save UI state data");
+    }
+  }
+
+  loadUIData(str) {
+    try {
+      ui_base.loadUIData(this, str);
+    } catch (error) {
+      util.print_stack(error);
+      console.log("Failed to load UI state data");
+    }
+  }
 }
 
 Screen.STRUCT = `
@@ -1035,6 +1115,7 @@ pathux.Screen {
   size  : array(float);
   sareas : array(pathux.ScreenArea);
   idgen : int;
+  uidata : string | obj.saveUIData();
 }
 `;
   

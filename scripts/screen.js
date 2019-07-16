@@ -1,3 +1,4 @@
+//XXX delete this file
 var _screen = undefined;
 
 define([

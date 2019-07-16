@@ -1,5 +1,9 @@
 export let modalstack = [];
 
+/*
+stupid DOM event system.  I hate it.
+*/
+
 export function copyEvent(e) {
   let ret = {};
   let keys = [];
@@ -32,6 +36,8 @@ export function copyEvent(e) {
 }
 
 export function pushModalLight(obj) {
+  console.log("pushModalLight");
+
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
     "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter", "mouseleave"
@@ -39,7 +45,8 @@ export function pushModalLight(obj) {
 
   let ret = {
     keys : keys,
-    handlers : {}
+    handlers : {},
+    last_mpos : [0, 0]
   };
 
   let touchmap = {
@@ -49,39 +56,55 @@ export function pushModalLight(obj) {
     "touchcancel" : "mouseup"
   };
 
-  function make_default_touchhandler(type) {
+  function make_default_touchhandler(type, state) {
     return function(e) {
-      console.log("touch event!", type);
+      console.warn("touch event!", type, touchmap[type], e.touches.length);
 
-      if (e.touches.length > 0 && touchmap[type] in ret.handlers) {
+      if (touchmap[type] in ret.handlers) {
         let type2 = touchmap[type];
 
         let e2 = copyEvent(e);
         e2.type = type2;
+        e2.button = type == "touchcancel" ? 1 : 0;
 
-        let dpi = window.devicePixelRatio; //UIBase.getDPI();
-        let t = e.touches[0];
+        if (e.touches.length > 0) {
+          let dpi = window.devicePixelRatio; //UIBase.getDPI();
+          let t = e.touches[0];
 
-        e2.pageX = e2.x = t.pageX * dpi;
-        e2.pageY = e2.y = t.pageY * dpi;
-        e2.clientX = t.clientX * dpi;
-        e2.clientY = t.clientY * dpi;
+          e2.pageX = e2.x = t.pageX;// * dpi;
+          e2.pageY = e2.y = t.pageY;// * dpi;
+          e2.clientX = t.clientX;// * dpi;
+          e2.clientY = t.clientY;// * dpi;
+          e2.x = t.clientX;// * dpi;
+          e2.y = t.clientY;// * dpi;
 
-        console.log(t.pageX*dpi, t.pageY*dpi);
+          ret.last_mpos[0] = e2.x;
+          ret.last_mpos[1] = e2.y;
+        } else {
+          e2.x = e2.clientX = e2.pageX = e2.screenX = ret.last_mpos[0];
+          e2.y = e2.clientY = e2.pageY = e2.screenY = ret.last_mpos[1];
+        }
+
+        console.log(e2.x, e2.y);
         ret.handlers[type2](e2);
       }
+
+      e.preventDefault();
+      e.stopPropagation();
     }
   }
 
   function make_handler(type, key) {
     return function(e) {
-      let retval = key !== undefined ? obj[key](e) : undefined;
-
       e.preventDefault();
       e.stopPropagation();
-      return retval;
+
+      if (key !== undefined)
+        obj[key](e);
     }
   }
+
+  let found = {};
 
   for (let k of keys) {
     let key;
@@ -90,18 +113,30 @@ export function pushModalLight(obj) {
       key = "on" + k;
     else if (obj["on_"+k])
       key = "on_" + k;
+    else if (k in touchmap)
+      continue; //default touch event handlers will be done seperately
     else
-      key = undefined;
+      key = undefined; //make handler that still blocks events
+
+    if (key !== undefined) {
+      found[k] = 1;
+    }
 
     let handler = make_handler(k, key);
     ret.handlers[k] = handler;
-    window.addEventListener(k, handler, {passive : false});
+
+    let settings = handler.settings = {passive : false, capture : true};
+    window.addEventListener(k, handler, settings);
   }
 
   for (let k in touchmap) {
-    if (!(k in ret.handlers)) {
-      ret.handlers[k] = make_default_touchhandler(k);
-      window.addEventListener(k, ret.handlers[k], {passive : false});
+    if (!(k in found)) {
+      //console.log("making touch handler for", '"' + k + '"', ret.handlers[k]);
+
+      ret.handlers[k] = make_default_touchhandler(k, ret);
+
+      let settings = ret.handlers[k].settings = {passive : false, capture : true};
+      window.addEventListener(k, ret.handlers[k], settings);
     }
   }
 
@@ -111,6 +146,8 @@ export function pushModalLight(obj) {
 }
 
 export function popModalLight(state) {
+  console.log("popModalLight");
+
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");
     return;
@@ -126,7 +163,8 @@ export function popModalLight(state) {
   }
 
   for (let k in state.handlers) {
-    window.removeEventListener(k, state.handlers[k], {passive : false});
+    //console.log(k);
+    window.removeEventListener(k, state.handlers[k], state.handlers[k].settings);
   }
 
   state.handlers = {};

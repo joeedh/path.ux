@@ -5,8 +5,8 @@ import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as events from './events.js';
 import * as ui from './ui.js';
-import {PropTypes} from 'toolprops';
-import {keymap} from './simple_events';
+import {PropTypes} from './toolprop.js';
+import {keymap} from './simple_events.js';
 
 let rgb_to_hsv_rets = new util.cachering(() => [0, 0, 0], 64);
 
@@ -823,8 +823,8 @@ export class ColorPicker extends ui.ColumnFrame {
       return;
     }
 
-    let prop = UIBase.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    let val =  UIBase.getPathValue(this.ctx, this.getAttribute("datapath"));
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
@@ -857,7 +857,7 @@ export class ColorPicker extends ui.ColumnFrame {
 
   _setDataPath() {
     if (this.hasAttribute("datapath")) {
-      ui_base.UIBase.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
     }
   }
 

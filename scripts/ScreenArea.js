@@ -160,7 +160,11 @@ export class Area extends ui_base.UIBase {
     
     return this;
   }
-  
+
+  getBarHeight() {
+    return this.headerRow.getClientRects()[0].height;
+  }
+
   makeHeader(container, add_note_area=true) {
     let areas = {};
     let icons = {};
@@ -184,8 +188,7 @@ export class Area extends ui_base.UIBase {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
-    console.log(icons, "ICONS<-------------------------------------------------");
-    let row = container.row();
+    let row = this.headerRow = container.row();
 
     row.background = ui_base.getDefault("AreaHeaderBG");
 
@@ -309,7 +312,7 @@ export class Area extends ui_base.UIBase {
     row.addEventListener("touchend", (e) => {
       touchend(e);        
     }, false);
-
+    
     row.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
       let cls = areaclasses[id];
       this.owning_sarea.switch_editor(cls);
@@ -333,7 +336,7 @@ export class Area extends ui_base.UIBase {
     }
 
     this.header = row;
-
+    
     return row;
   }
   
@@ -799,8 +802,6 @@ export class ScreenArea extends ui_base.UIBase {
       
       let areaname = area.constructor.define().areaname;
 
-      console.log(ret.area, areaname, "<-----------------");
-
       area.inactive = true;
       area.owning_sarea = undefined;
       ret.editormap[areaname] = area;
@@ -814,9 +815,7 @@ export class ScreenArea extends ui_base.UIBase {
       console.warn("Failed to find active area!", ret.area);
       ret.area = ret.editors[0];
     } 
-    
-    console.log("AREA:", ret.area);
-    
+
     if (ret.area !== undefined) {
       ret.area.style["width"] = "100%";
       ret.area.style["height"] = "100%";

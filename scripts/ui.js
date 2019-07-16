@@ -35,53 +35,6 @@ var list = function list(iter) {
   return ret;
 }
 
-export function save_setting(key, val) {
-  var settings = localStorage.startup_file_bn6;
-  
-  if (settings == undefined) {
-      settings = {};
-  } else {
-    try {
-      settings = JSON.parse(settings);
-    } catch (error) {
-      console.log("Warning, failed to parse cached settings");
-      settings = {};
-    }
-  }
-  
-  settings[key] = val;
-  localStorage.startup_file_bn6 = JSON.stringify(settings);
-}
-
-export function load_setting(key) {
-  var settings = localStorage.startup_file_bn6;
-  
-  if (settings == undefined) {
-      settings = {};
-  } else {
-    try {
-      settings = JSON.parse(settings);
-    } catch (error) {
-      console.log("Warning, failed to parse cached settings");
-      settings = {};
-    }
-  }
-  
-  return settings[key];
-}
-
-class ObjectPath extends Array {
-    constructor(path) {
-        super();
-        
-        path = path.split(".");
-        
-        for (var key of path) {
-            this.push(key);
-        }
-    }
-}
-
 export class Label extends ui_base.UIBase {
   constructor() {
     super();
@@ -103,8 +56,8 @@ export class Label extends ui_base.UIBase {
     }
     
     let path = this.getAttribute("datapath");
-    let prop = UIBase.getPathMeta(this.ctx, path);
-    let val = UIBase.getPathValue(this.ctx, path);
+    let prop = this.getPathMeta(this.ctx, path);
+    let val = this.getPathValue(this.ctx, path);
     
     if (val === undefined) {
       return;
@@ -356,7 +309,7 @@ export class Container extends ui_base.UIBase {
     
     let ret = super.appendChild(child);
 
-    if (child instanceof ui_base.UIBase) {
+    if (child instanceof ui_base.UIBase && child.onadd) {
       child.onadd();
     }
     
@@ -394,7 +347,8 @@ export class Container extends ui_base.UIBase {
     
     this.dom.appendChild(li);
 
-    child.onadd();
+    if (child.onadd)
+      child.onadd();
     
     return li;
   }
@@ -499,7 +453,7 @@ export class Container extends ui_base.UIBase {
     
     if (create_cb === undefined) {
       create_cb = (cls) => {
-        return new cls();
+        return this.ctx.api.createTool(this.ctx, path_or_cls);
       }
     }
 
@@ -520,7 +474,7 @@ export class Container extends ui_base.UIBase {
     let ret;
     
     if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
-      console.log("iconbutton!");
+      //console.log("iconbutton!");
       ret = this.iconbutton(def.icon, tooltip, cb);
       
       if (packflag & PackFlags.SMALL_ICON) {
@@ -649,6 +603,12 @@ export class Container extends ui_base.UIBase {
 
     //console.log(prop, PropTypes, PropSubTypes);
 
+    function makeUIName(name) {
+      name = name[0].toUpperCase() + name.slice(1, name.length).toLowerCase();
+      name = name.replace(/_/g, " ");
+      return name;
+    }
+
     if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
       let ret = this.slider(path);
 
@@ -657,6 +617,8 @@ export class Container extends ui_base.UIBase {
       }
 
       return ret;
+    } else if (prop.type == PropTypes.BOOL) {
+      this.check(path, prop.uiname, packflag);
     } else if (prop.type == PropTypes.ENUM) {
       if (!(packflag & PackFlags.USE_ICONS)) {
         this.listenum(path, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
@@ -669,10 +631,40 @@ export class Container extends ui_base.UIBase {
       } else {
 
       }
+    } else if (prop.type == PropTypes.FLAG) {
+      if (rdef.subkey !== undefined) {
+        let tooltip = rdef.prop.flag_descriptions[rdef.subkey];
+        let name = rdef.prop.ui_value_names[rdef.subkey];
+
+        if (name === undefined) {
+          name = makeUIName(rdef.subkey);
+        }
+
+        let ret = this.check(path, name, packflag, mass_set_path);
+
+        if (tooltip) {
+          ret.description = tooltip;
+        }
+      } else {
+        for (let k in prop.keys) {
+          let name = prop.ui_key_names[k];
+          let tooltip = prop.flag_descriptions[k];
+
+          if (name === undefined) {
+            name = makeUIName(k);
+          }
+
+          let ret = this.check(`${path}[${k}]`, name, packflag, mass_set_path);
+
+          if (tooltip) {
+            ret.description = tooltip;
+          }
+        }
+      }
     }
   }
 
-  check(path, name, packflag=0) {
+  check(path, name, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
     
     //let prop = this.ctx.getProp(path);
@@ -690,7 +682,10 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.label = name;
     ret.setAttribute("datapath", path);
-    
+    if (mass_set_path) {
+      ret.setAttribute("mass_set_path", mass_set_path);
+    }
+
     this._add(ret);
     
     ret.update();
@@ -734,7 +729,8 @@ export class Container extends ui_base.UIBase {
           let check = frame.check(path + " == " + prop.values[key], "", packflag);
           
           check.icon = prop.iconmap[key];
-          
+          check.drawCheck = false;
+
           check.style["padding"] = "0px";
           check.style["margin"] = "0px";
           frame.style["padding"] = "0px";
@@ -750,14 +746,16 @@ export class Container extends ui_base.UIBase {
           check.dom.style["padding"] = "0px";
           check.dom.style["margin"] = "0px";
           
-          check.description = prop.ui_value_names[key];
-          
-          console.log("PATH", path);
-        }          
+          check.description = prop.descriptions[key];
+          //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
+        }
       } else {
         for (let key in prop.values) {
-          frame.check(path + " = " + prop.values[key], prop.ui_value_names[key]);
-          console.log("PATH", path);
+          let check = frame.check(path + " = " + prop.values[key], prop.ui_value_names[key]);
+
+          check.description = prop.descriptions[prop.keys[key]];
+
+          //console.log("PATH", path);
         }
       }
     }
@@ -932,7 +930,18 @@ export class Container extends ui_base.UIBase {
     
     return ret;      
   }
-  
+
+  listbox(packflag=0) {
+    packflag |= this.inherit_packflag;
+
+    let ret = document.createElement("listbox-x");
+    ret.packflag |= packflag;
+    ret.inherit_packflag |= packflag;
+
+    this._add(ret);
+    return ret;
+  }
+
   table(packflag=0) {
     packflag |= this.inherit_packflag;
     
@@ -1040,208 +1049,6 @@ export class ColumnFrame extends Container {
   };}
 }
 UIBase.register(ColumnFrame);
-
-export class TableRow extends Container {
-  constructor() {
-    super();
-    
-    this.dom.remove();
-    this.dom = document.createElement("tr");
-    
-    //kind of dumb, but this.dom doesn't live within this element itself, bleh
-    //this.shadow.appendChild(this.dom);
-    this.dom.setAttribute("class", "containerx");
-  }
-  
-  static define() {return {
-    tagname : "tablerow-x"
-  };}
-  
-  _add(child) {
-    child.ctx = this.ctx;
-    child.parentWidget = this;
-
-    let td = document.createElement("td");
-    td.appendChild(child);
-    
-    this.dom.appendChild(td);
-    child.onadd();
-  }
-};
-UIBase.register(TableRow);
-
-export class TableFrame extends Container {
-  constructor() {
-    super();
-    
-    this.dom.remove();
-    this.dom = document.createElement("table");
-    this.shadow.appendChild(this.dom);
-    this.dom.setAttribute("class", "containerx");
-    
-    //this.dom.style["display"] = "block";
-  }
-  
-  update() {
-    this.style["display"] = "inline-block";      
-    super.update();
-  }
-
-  _add(child) {
-    child.ctx = this.ctx;
-    child.parentWidget = this;
-    this.dom.appendChild(child);
-    child.onadd();
-  }
-  
-  row() {
-    let tr = document.createElement("tr");
-    let cls = "table-tr";
-    
-    tr.setAttribute("class", cls);
-    this.dom.appendChild(tr);
-    let this2 = this;
-    
-    function maketd() {
-      let td = document.createElement("td");
-      tr.appendChild(td);
-      
-      td.style["margin"] = tr.style["margin"];
-      td.style["padding"] = tr.style["padding"];
-      
-      let container = document.createElement("rowframe-x");
-      
-      container.ctx = this2.ctx;
-      container.setAttribute("class", cls);
-      container.dom.setAttribute("class", cls);
-      td.setAttribute("class", cls);
-      
-      //let div2 = document.createElement("div");
-      //div2.setAttribute("class", cls);
-      //div2.innerHTML = "sdfsdf";
-      
-      //td.appendChild(div2);
-      td.appendChild(container);
-      
-      return container;
-    }
-    
-    //hrm wish I could subclass html elements easier
-    let ret = {
-      _tr : tr,
-      
-      style : tr.style,
-      
-      focus : function(args) {
-        tr.focus(args);
-      },
-      
-      blur : function(args) {
-        tr.blur(args);
-      },
-      
-      remove : () => {
-        tr.remove();
-      },
-      
-      addEventListener : function(type, cb, arg) {
-        tr.addEventListener(type, cb, arg);
-      },
-      
-      removeEventListener : function(type, cb, arg) {
-        tr.removeEventListener(type, cb, arg);
-      },
-      
-      setAttribute : function(attr, val) {
-        if (attr == "class") {
-          cls = val;
-        }
-        
-        tr.setAttribute(attr, val);
-      },
-      
-      clear : function() {
-        for (let node of list(tr.childNodes)) {
-          tr.removeChild(node);
-        }
-      }
-    };
-
-    function makefunc(f) {
-      ret[f] = function() {
-        let container = maketd();
-        
-        container.background = tr.style["background-color"]; //"rgba(0,0,0,0)";
-        return container[f].apply(container, arguments);
-      }
-    }
-    
-    let _bg = "";
-    
-    //need to implement proper proxy here!
-    Object.defineProperty(ret, "tabIndex", {
-      set : function(f) {
-        tr.tabIndex = f;
-      },
-      
-      get : function(f) {
-        return tr.tabIndex;
-      }
-    });
-    
-    Object.defineProperty(ret, "background", {
-      set : function(bg) {
-        _bg = bg;
-        tr.style["background-color"] = bg;
-        
-        for (let node of tr.childNodes) {
-          if (node.childNodes.length > 0) {
-            node.childNodes[0].background = bg;
-            node.style["background-color"] = bg;
-          }
-        }
-      }, get : function() {
-        return _bg;
-      }
-    });
-    
-    /*
-    Object.defineProperty(ret, "class", {
-      set(bg) {
-        tr.class = bg;
-      }
-    });//*/
-    
-    makefunc("label");
-    makefunc("tool");
-    makefunc("pathlabel");
-    makefunc("button");
-    makefunc("textbox");
-    makefunc("col");
-    makefunc("row");
-    makefunc("table");
-    makefunc("listenum");
-    makefunc("check");
-    
-    return ret;
-  }
-  
-  update() {
-    super.update();
-  }
-  
-  clear() {
-    super.clear();
-    for (let child of list(this.dom.childNodes)) {
-      child.remove();
-    }
-  }
-  
-  static define() {return {
-    tagname : "tableframe-x"
-  };}
-}
-UIBase.register(TableFrame);
 
 export class PanelFrame extends Container {
   constructor() {

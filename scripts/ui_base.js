@@ -4,7 +4,7 @@ import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
-import {pushModalLight, popModalLight, copyEvent} from './simple_events';
+import {pushModalLight, popModalLight, copyEvent} from './simple_events.js';
 
 let Vector4 = vectormath.Vector4;
 
@@ -107,20 +107,20 @@ export const theme = {
     "TabTextSize" : 18,
     "TabTextColor" : "rgba(35, 35, 35, 1.0)",
 
-    "DefaultPanelBG" : "rgba(195, 195, 195, 1.0)",
-    "InnerPanelBG" : "rgba(175, 175, 175, 1.0)",
+    "DefaultPanelBG" : "rgba(155, 155, 155, 1.0)",
+    "InnerPanelBG" : "rgba(140, 140, 140, 1.0)",
 
     "BoxRadius" : 12,
     "BoxMargin" : 4,
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
-    "BoxDepressed" : "rgba(150, 150, 150, 1.0)",
-    "BoxBG" : "rgba(220, 220, 220, 1.0)",
+    "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
+    "BoxBG" : "rgba(170, 170, 170, 1.0)",
     "DisabledBG" : "rgba(110, 110, 110, 1.0)",
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)", //for subpanels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-    "AreaHeaderBG" : "rgba(245, 245, 245, 0.5)",
+    "AreaHeaderBG" : "rgba(170, 170, 170, 1.0)",
 
     //fonts
     "DefaultTextFont" : "sans-serif",
@@ -158,6 +158,19 @@ export const theme = {
     colorBoxHeight : 24,
     circleSize : 4,
     DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
+  },
+
+  listbox : {
+    DefaultPanelBG : "rgba(230, 230, 230, 1.0)",
+    ListHighlight : "rgba(155, 220, 255, 0.5)",
+    ListActive : "rgba(200, 205, 215, 1.0)",
+    width : 110,
+    height : 200
+  },
+
+  dopesheet : {
+    treeWidth : 100,
+    treeHeight : 600
   }
 };
 
@@ -438,16 +451,16 @@ export class UIBase extends HTMLElement {
 
     this.addEventListener("touchstart", (e) => {
       do_touch(e, "mousedown", 0);
-    });
+    }, {passive : false});
     this.addEventListener("touchmove", (e) => {
       do_touch(e, "mousemove");
-    });
+    }, {passive : false});
     this.addEventListener("touchcancel", (e) => {
       do_touch(e, "mouseup", 2);
-    });
+    }, {passive : false});
     this.addEventListener("touchend", (e) => {
       do_touch(e, "mouseup", 0);
-    });
+    }, {passive : false});
   }
 
   appendChild(child) {
@@ -782,7 +795,7 @@ export class UIBase extends HTMLElement {
     }
   }
   
-  static getPathValue(ctx, path) {
+  getPathValue(ctx, path) {
     try {
       return ctx.api.getValue(ctx, path);
     } catch (error) {
@@ -791,11 +804,16 @@ export class UIBase extends HTMLElement {
     }
   }
   
-  static setPathValue(ctx, path, val) {
-    ctx.api.setValue(ctx, path, val);
+  setPathValue(ctx, path, val) {
+    if (this.hasAttribute("mass_set_path")) {
+      ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
+      ctx.api.setValue(ctx, path, val);
+    } else {
+      ctx.api.setValue(ctx, path, val);
+    }
   }
   
-  static getPathMeta(ctx, path) {
+  getPathMeta(ctx, path) {
     return ctx.api.resolvePath(ctx, path).prop;
   }
 
@@ -808,7 +826,7 @@ export class UIBase extends HTMLElement {
   //but only if that method (for this instance, as differentiated
   //by ._id) isn't there already.
   
-  doOnce(func) {
+  doOnce(func, timeout=undefined) {
     if (func._doOnce === undefined) {
       func._doOnce_reqs = new Set();
       
@@ -823,7 +841,7 @@ export class UIBase extends HTMLElement {
           func._doOnce_reqs.delete(thisvar._id);
           
           func.call(thisvar);
-        });
+        }, timeout);
       }
     }
     
@@ -878,6 +896,11 @@ export class UIBase extends HTMLElement {
   
   //called regularly
   update() {
+    //use dom tooltips
+    if (this.description !== undefined && this.title != this.description) {
+      this.title = this.description;
+    }
+
     if (!this._init_done) {
       this._init();
     }
@@ -909,19 +932,27 @@ export class UIBase extends HTMLElement {
     return dpi;
   }
   
-  /*for saving ui state.
-    note that these methods should
-    fail gracefully.
-    
-    also, they don't rebuild the object graph,
-    they patch it; for true serialization use
-    the toJSON/loadJSON interface.
-    */
+  /**
+   * for saving ui state.
+   * see saveUIData() export
+   *
+   * should fail gracefully.
+   */
   saveData() {
     return {
     };
   }
-  
+
+  /**
+   * for saving ui state.
+   * see saveUIData() export
+   *
+   * should fail gracefully.
+   *
+   * also, it doesn't rebuild the object graph,
+   * it patches it; for true serialization use
+   * the toJSON/loadJSON or STRUCT interfaces.
+   */
   loadData(obj) {
     return this;
   }
@@ -1222,7 +1253,7 @@ export function loadUIData(node, buf) {
       }
       
       if (list === undefined || list[ni] === undefined) {
-        console.log("failed to load a ui data block", path, data, list);
+        //console.log("failed to load a ui data block", path);
         n = undefined;
         break;
       }
@@ -1230,7 +1261,8 @@ export function loadUIData(node, buf) {
       n = list[ni];
     }
     
-    if (n !== undefined) {
+    if (n !== undefined && n instanceof UIBase) {
+      n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
       
       //console.log(n, path, data);
