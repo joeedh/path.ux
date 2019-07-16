@@ -570,7 +570,7 @@ export class NumSlider extends ValueButtonBase {
     if (this.hasAttribute("is_int"))
       this.value = Math.floor(this.value);
 
-    if (fire_onchange && this.onchange !== undefined) {
+    if (fire_onchange && this.onchange) {
       this.onchange(this.value);
     }
     

@@ -12,6 +12,8 @@ import * as ui_colorpicker from './ui_colorpicker.js';
 import * as ui_tabs from './ui_tabs.js';
 import './struct.js';
 
+let Area = ScreenArea.Area;
+
 export function registerToolStackGetter(func) {
   FrameManager_ops.registerToolStackGetter(func);
 }
@@ -469,8 +471,10 @@ export class Screen extends ui_base.UIBase {
       let ctx = this2.ctx;
 
       let SCOPE_POP = Symbol("pop");
+      let AREA_CTX_POP = Symbol("pop2");
 
       let scopestack = [];
+      let areastack = [];
 
       let t = util.time_ms();
       push(this2);
@@ -483,8 +487,19 @@ export class Screen extends ui_base.UIBase {
         } else if (n == SCOPE_POP) {
           scopestack.pop();
           continue;
+        } else if (n == AREA_CTX_POP) {
+          //console.log("POP", areastack[areastack.length-1].constructor.name);
+          areastack.pop().pop_ctx_active(ctx);
+          continue;
         }
-        
+
+        if (n instanceof Area) {
+          //console.log("PUSH", n.constructor.name);
+          areastack.push(n);
+          n.push_ctx_active(ctx);
+          push(AREA_CTX_POP);
+        }
+
         if (n !== this2 && n instanceof UIBase) {
           if (scopestack.length > 0 && scopestack[scopestack.length-1]) {
             n.parentWidget = scopestack[scopestack.length-1];
@@ -493,7 +508,7 @@ export class Screen extends ui_base.UIBase {
           n._ctx = ctx;
           n.update();
         }
-        
+
         if (util.time_ms() - t > 30) {
          yield; 
          t = util.time_ms();
@@ -502,7 +517,7 @@ export class Screen extends ui_base.UIBase {
         for (let n2 of n.childNodes) {
           push(n2);
         }
-        
+
         if (n.shadow === undefined) {
           continue;
         }
