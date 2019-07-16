@@ -83,6 +83,11 @@ export class ModelInterface {
     throw new Error("implement me");
   }
   
+  //not yet supported by path.ux's controller implementation
+  massSetProp(ctx, mass_set_path, value) {
+    throw new Error("implement me");
+  }
+  
   /*returns {
     obj : [object owning property key]
     parent : [parent of obj]
