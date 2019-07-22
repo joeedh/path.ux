@@ -265,7 +265,7 @@ export class IconManager {
     this.tilex = horizontal_tile_count;
     
     for (let i=0; i<images.length; i++) {
-      this.iconsheets.push(new _IconManager(images[i], sizes[i], horizontal_tile_count));
+      this.iconsheets.push(new _IconManager(images[i], sizes[i], horizontal_tile_count, sizes[i]));
     }
   }
 
@@ -305,7 +305,7 @@ export class IconManager {
 export let iconmanager = new IconManager([
   document.getElementById("iconsheet16"),
   document.getElementById("iconsheet")
-], [32, 16], 16);
+], [16, 32], 16);
 
 window._iconmanager = iconmanager; //debug global
 

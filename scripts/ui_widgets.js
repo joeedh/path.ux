@@ -990,9 +990,15 @@ export class IconCheck extends Button {
         let icon, title;
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
+
         if (rdef.subkey && (rdef.prop.type == PropTypes.FLAG || rdef.prop.type == PropTypes.ENUM)) {
           icon = rdef.prop.iconmap[rdef.subkey];
-          title = rdef.prop.flag_descriptions[rdef.subkey];
+          title = rdef.prop.descriptions[rdef.subkey];
+
+          if (title === undefined && rdef.subkey.length > 0) {
+            title = rdef.subkey;
+            title = title[0].toUpperCase() + title.slice(1, title.length).toLowerCase();
+          }
         } else {
           icon = rdef.prop.icon;
           title = rdef.prop.description;
@@ -1002,7 +1008,6 @@ export class IconCheck extends Button {
           this.icon = icon;
         if (title !== undefined)
           this.description = title;
-
 
         this._redraw();
       }
@@ -1042,9 +1047,9 @@ export class IconCheck extends Button {
   }
   
   _repos_canvas() {
-    this.dom.style["height"] = this._getsize() + "px";
     this.dom.style["width"] = this._getsize() + "px";
-    
+    this.dom.style["height"] = this._getsize() + "px";
+
     super._repos_canvas();
   }
   

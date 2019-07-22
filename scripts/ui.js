@@ -633,7 +633,7 @@ export class Container extends ui_base.UIBase {
       }
     } else if (prop.type == PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {
-        let tooltip = rdef.prop.flag_descriptions[rdef.subkey];
+        let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
 
         if (name === undefined) {
@@ -648,7 +648,7 @@ export class Container extends ui_base.UIBase {
       } else {
         for (let k in prop.keys) {
           let name = prop.ui_key_names[k];
-          let tooltip = prop.flag_descriptions[k];
+          let tooltip = prop.descriptions[k];
 
           if (name === undefined) {
             name = makeUIName(k);

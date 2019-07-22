@@ -416,8 +416,8 @@ export class EnumProperty extends ToolProperty {
   }
 
   copyTo(p) {
-    p.keys = Object.create(this.keys);
-    p.values = Object.create(this.values);
+    p.keys = Object.assign({}, this.keys);
+    p.values = Object.assign({}, this.values);
     p.data = this.data;
     p.ui_value_names = this.ui_value_names;
     p.update = this.update;
@@ -432,18 +432,8 @@ export class EnumProperty extends ToolProperty {
   
   copy() {
     var p = new EnumProperty("dummy", {"dummy" : 0}, this.apiname, this.uiname, this.description, this.flag)
-    
-    p.keys = Object.create(this.keys);
-    p.values = Object.create(this.values);
-    p.data = this.data;
-    p.ui_value_names = this.ui_value_names;
-    p.update = this.update;
-    p.api_update = this.api_update;
-    
-    for (var k in this.iconmap) {
-      p.iconmap[k] = this.iconmap[k];
-    }
-    
+
+    this.copyTo(p);
     return p;
   }
 
@@ -472,6 +462,17 @@ export class EnumProperty extends ToolProperty {
 }
 
 export class FlagProperty extends EnumProperty {
+  constructor() {
+    super();
+  }
+
+  setValue(bitmask) {
+    this.data = bitmask;
+
+    //do not trigger EnumProperty's setValue
+    ToolProperty.prototype.setValue.call(this, bitmask);
+  }
+
   copy() {
     let ret = new FlagProperty();
     this.copyTo(ret);

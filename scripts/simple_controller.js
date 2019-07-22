@@ -38,7 +38,7 @@ function toolkey(cls) {
   if (!(Symbol.ToolID in cls)) {
     cls[Symbol.ToolID] = tool_idgen++;
   }
-  
+
   return cls[Symbol.ToolID];
 }
 
@@ -62,28 +62,28 @@ export class DataPath {
 
   read_only() {
     this.flag |= DataFlags.READ_ONLY;
-    return this;      
+    return this;
   }
-  
-  //get/set will be called 
+
+  //get/set will be called
   //like other callbacks,
   //e.g. the real object owning the property
   //will be stored in this.dataref
   customGetSet(get, set) {
     this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
-    
+
     this.data._getValue = this.data.getValue;
     this.data._setValue = this.data.setValue;
-    
+
     if (get)
       this.data.getValue = get;
-    
+
     if (set)
       this.data.setValue = set;
-    
+
     return this;
   }
-  
+
   //db will be executed with underlying data object
   //that contains this path in 'this.dataref'
   on(type, cb) {
@@ -92,46 +92,46 @@ export class DataPath {
     } else {
       throw new Error("invalid call to DataPath.on");
     }
-    
+
     return this;
   }
-  
+
   off(type, cb) {
     if (this.type == DataTypes.PROP) {
       this.data.off(type, cb);
     }
   }
-  
+
   range(min, max) {
     this.data.setRange(min, max);
     return this;
   }
-  
+
   decimalPlaces(n) {
     this.data.setDecimalPlaces(n);
     return this;
   }
-  
+
   radix(r) {
     this.data.setRadix(r);
     return this;
   }
-  
+
   step(s) {
     this.data.setStep(s);
     return this;
   }
-  
+
   icon(i) {
     this.data.setIcon(i);
     return this;
   }
-  
+
   icons(icons) { //for enum/flag properties
     this.data.addIcons(icons);
     return this;
   }
-  
+
   description(d) {
     this.data.description = d;
     return this;
@@ -143,29 +143,29 @@ export class DataStruct {
     this.members = [];
     this.name = name;
     this.pathmap = {};
-    
+
     for (let m of members) {
       this.add(m);
     }
   }
-  
+
   struct(path, apiname, uiname, existing_struct=undefined) {
     let ret = existing_struct ? existing_struct : new DataStruct();
 
     let dpath = new DataPath(path, apiname, ret, DataTypes.STRUCT);
-    
+
     this.add(dpath);
     return ret;
   }
-  
+
   float(path, apiname, uiname, description) {
     let prop = new toolprop.FloatProperty(0, apiname, uiname, description);
-    
+
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
     return dpath;
   }
-  
+
   string(path, apiname, uiname, description) {
     let prop = new toolprop.StringProperty(undefined, apiname, uiname, description);
 
@@ -173,41 +173,41 @@ export class DataStruct {
     this.add(dpath);
     return dpath;
   }
-  
+
   int(path, apiname, uiname, description) {
     let prop = new toolprop.IntProperty(0, apiname, uiname, description);
-    
+
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
     return dpath;
   }
-  
+
   enum(path, apiname, enumdef, uiname, description) {
     let prop = new toolprop.EnumProperty(undefined, enumdef, apiname, uiname, description);
-    
+
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
     return dpath;
   }
-  
+
   array(path, apiname, struct) {
     //do nothing for now
   }
-  
+
   flags(path, apiname, enumdef, uiname, description) {
     let prop = new toolprop.FlagProperty(undefined, enumdef, apiname, uiname, description);
-    
+
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
     return dpath;
   }
-  
+
   add(m) {
     this.members.push(m);
     m.parent = this;
-    
+
     this.pathmap[m.apiname] = m;
-    
+
     return this;
   }
 }
@@ -227,12 +227,12 @@ export class DataAPI extends ModelInterface {
 
   mapStruct(cls, auto_create=true) {
     let key = cls.__dp_map_id;
-    
+
     if (key === undefined && auto_create) {
       key = cls.__dp_map_id = _map_struct_idgen++;
       _map_structs[key] = new DataStruct(undefined, cls.name);
     }
-    
+
     return _map_structs[key];
   }
 
@@ -245,6 +245,7 @@ export class DataAPI extends ModelInterface {
     let dstruct = this.rootContextStruct;
     let obj = ctx;
     let lastobj = ctx;
+    let subkey;
     let lastobj2 = undefined;
     let lastkey = undefined;
     let prop = undefined;
@@ -307,6 +308,10 @@ export class DataAPI extends ModelInterface {
           throw new DataPathError("unknown value " + val1);
         }
 
+        if (val in prop.keys) {
+          subkey = prop.keys[val];
+        }
+
         key = path.path;
         obj = !!(lastobj[key] == val);
       } else if (t.type == "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
@@ -328,6 +333,10 @@ export class DataAPI extends ModelInterface {
           throw new DataPathError("unknown value " + val1);
         }
 
+        if (val in prop.keys) {
+          subkey = prop.keys[val];
+        }
+
         key = path.path;
         obj = !!(lastobj[key] & val);
       } else if (t.type == "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
@@ -347,6 +356,10 @@ export class DataAPI extends ModelInterface {
 
         if (val === undefined) {
           throw new DataPathError("unknown value " + val1);
+        }
+
+        if (val in prop.keys) {
+          subkey = prop.keys[val];
         }
 
         key = path.path;
@@ -373,51 +386,53 @@ export class DataAPI extends ModelInterface {
       value : obj,
       key : lastkey,
       dstruct : dstruct,
-      prop : prop
+      prop : prop,
+      subkey : subkey
     };
   }
 
   resolvePathOld2(ctx, path) {
     let splitchars = new Set([".", "[", "]", "=", "&"]);
+    let subkey = undefined;
 
     path = path.replace(/\=\=/g, "=");
 
     path = "." + this.prefix + path;
     //console.log(path);
-    
+
     let p = [""];
     for (let i=0; i<path.length; i++) {
       let s = path[i];
-      
+
       if (splitchars.has(s)) {
         if (s != "]") {
           p.push(s);
         }
-        
+
         p.push("");
         continue;
       }
-      
+
       p[p.length-1] += s;
     }
-    
+
     for (let i=0; i<p.length; i++) {
       p[i] = p[i].trim();
-      
+
       if (p[i].length == 0) {
         p.remove(p[i]);
         i--;
       }
-      
+
       let c = parseInt(p[i]);
       if (!isNaN(c)) {
         p[i] = c;
       }
     }
-    
+
     //console.log(p);
     let i = 0;
-    
+
     let parent1, obj = ctx, parent2;
     let key = undefined;
     let dstruct = undefined;
@@ -481,9 +496,21 @@ export class DataAPI extends ModelInterface {
             value = !!(value & key);
           }
 
+          if (key in prop.keys) {
+            subkey = prop.keys[key];
+          }
+
           obj = value;
           i++;
           continue;
+        }
+      }
+
+      if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
+        let dpath = dstruct.pathmap[lastkey];
+
+        if (dpath.type == DataTypes.PROP) {
+          prop = dpath.data;
         }
       }
 
@@ -507,13 +534,22 @@ export class DataAPI extends ModelInterface {
       } else if (a == "&") {
         obj &= b;
         arg = b;
-        
+
+        if (b in prop.keys) {
+          subkey = prop.keys[b];
+        }
+
         i += 2;
         type = "flag";
         continue;
       } else if (a == "=") {
         obj = obj == b;
         arg = b;
+
+        if (b in prop.keys) {
+          subkey = prop.keys[b];
+        }
+
         i += 2;
         type = "enum";
         continue;
@@ -553,6 +589,7 @@ export class DataAPI extends ModelInterface {
       value : obj,
       key : key,
       dstruct : dstruct,
+      subkey : subkey,
       prop : prop,
       arg : arg,
       type : type,

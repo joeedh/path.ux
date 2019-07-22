@@ -112,15 +112,19 @@ export class ModelInterface {
 
     let old = res.obj[res.key];
 
-    if (res.type == "enum") {
+    if (res.prop !== undefined && res.prop.type == PropTypes.ENUM) {
+      let ival = res.prop.values[res.subkey];
+
       if (val) {
-        res.obj[res.key] = res.arg;
+        res.obj[res.key] = ival;
       }
-    } else if (res.type == "flag") {
+    } else if (res.prop !== undefined && res.prop.type == PropTypes.FLAG) {
+      let ival = res.prop.values[res.subkey];
+
       if (val) {
-        res.obj[res.key] |= res.arg;
+        res.obj[res.key] |= ival;
       } else {
-        res.obj[res.key] &= ~res.arg;
+        res.obj[res.key] &= ~ival;
       }
     } else {
       res.obj[res.key] = val;
