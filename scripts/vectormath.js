@@ -55,6 +55,11 @@ function saasin(fac) {
     return Math.asin(fac);
 }
 
+var $_v3nd_n1_normalizedDot;
+var $_v3nd_n2_normalizedDot;
+var $_v3nd4_n1_normalizedDot4;
+var $_v3nd4_n2_normalizedDot4;
+
 var HasCSSMatrix=false;
 var HasCSSMatrixCopy=false;
 var M_SQRT2=Math.sqrt(2.0);
@@ -288,23 +293,27 @@ export class Matrix4 {
         y = t[1];
         z = t[2];
     }
+
     else {
-      if (x==undefined)
+      if (x===undefined)
         x = 0;
-      if (y==undefined)
+      if (y===undefined)
         y = 0;
-      if (z==undefined)
+      if (z===undefined)
         z = 0;
     }
+
     if (HasCSSMatrix) {
         this.$matrix = this.$matrix.translate(x, y, z);
         return ;
     }
+
     var matrix=new Matrix4();
     matrix.$matrix.m41 = x;
     matrix.$matrix.m42 = y;
     matrix.$matrix.m43 = z;
     this.multiply(matrix);
+    return this;
   }
 
   scale(x, y, z) {
@@ -313,22 +322,22 @@ export class Matrix4 {
         x = t[0];
         y = t[1];
         z = t[2];
-    }
-    else {
-      if (x==undefined)
+    } else {
+      if (x===undefined)
         x = 1;
-      if (z==undefined) {
-          if (y==undefined) {
+
+      if (z===undefined) {
+          if (y===undefined) {
               y = x;
               z = x;
+          } else {
+            z = x;
           }
-          else 
-            z = 1;
-      }
-      else 
-        if (y==undefined)
+      } else if (y===undefined) {
         y = x;
+      }
     }
+
     if (HasCSSMatrix) {
         this.$matrix = this.$matrix.scale(x, y, z);
         return ;
@@ -345,7 +354,14 @@ export class Matrix4 {
       order = "xyz"
     else
       order = order.toLowerCase();
-      
+
+    if (y === undefined) {
+      y = 0.0;
+    }
+    if (z === undefined) {
+      z = 0.0;
+    }
+
     var xmat = new Matrix4();
     var m = xmat.$matrix;
     
@@ -1035,7 +1051,32 @@ export class Vector4 extends BaseVector {
       this.load(data);
     }
   }
+
+  toCSS() {
+    let r = ~~(this[0]*255);
+    let g = ~~(this[1]*255);
+    let b = ~~(this[2]*255);
+    let a = this[3];
+    return `rgba(${r},${g},${b},${a})`
+  }
   
+  loadXYZW(x, y, z, w) {
+    this[0] = x;
+    this[1] = y;
+    this[2] = z;
+    this[3] = w;
+
+    return this;
+  }
+
+  loadXYZ(x, y, z) {
+    this[0] = x;
+    this[1] = y;
+    this[2] = z;
+
+    return this;
+  }
+
   load(data) {
     if (data == undefined) 
       return this;
@@ -1141,7 +1182,22 @@ export class Vector3 extends BaseVector {
       this.load(data);
     }
   }
-  
+
+  toCSS() {
+    let r = ~~(this[0]*255);
+    let g = ~~(this[1]*255);
+    let b = ~~(this[2]*255);
+    return `rgb(${r},${g},${b})`
+  }
+
+  loadXYZ(x, y, z) {
+    this[0] = x;
+    this[1] = y;
+    this[2] = z;
+
+    return this;
+  }
+
   toJSON() {
     return [this[0], this[1], this[2]];
   }
@@ -1170,7 +1226,7 @@ export class Vector3 extends BaseVector {
   dot(b) {
     return this[0]*b[0] + this[1]*b[1] + this[2]*b[2];
   }
-  
+
   normalizedDot(v) {
     $_v3nd_n1_normalizedDot.load(this);
     $_v3nd_n2_normalizedDot.load(v);
@@ -1269,13 +1325,20 @@ export class Vector2 extends BaseVector {
     }
     
     this.length = 2;
-    this[0] = this[1] = this[2] = 0.0;
+    this[0] = this[1] = 0.0;
     
     if (data != undefined) {
       this.load(data);
     }
   }
-  
+
+  loadXY(x, y) {
+    this[0] = x;
+    this[1] = y;
+
+    return this;
+  }
+
   toJSON() {
     return [this[0], this[1]];
   }
@@ -1311,19 +1374,46 @@ export class Vector2 extends BaseVector {
   }
   
   dot(b) {
-    return this[0]*b[0] + this[1]*b[1] + this[2]*b[2];
+    return this[0]*b[0] + this[1]*b[1];
   }
-  
+
+  multVecMatrix(matrix) {
+    var x=this[0];
+    var y=this[1];
+    var w = 1.0;
+
+    this[0] = w*matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21;
+    this[1] = w*matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22;
+
+    if (matrix.isPersp) {
+      let w2 = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24;
+
+      if (w2 != 0.0) {
+        this[0] /= w2;
+        this[1] /= w2;
+      }
+    }
+
+    return this;
+  }
+
   mulVecQuat(q) {
-    var t0=-this[1]*this[0]-this[2]*this[1]-this[3]*this[2];
-    var t1=this[0]*this[0]+this[2]*this[2]-this[3]*this[1];
-    var t2=this[0]*this[1]+this[3]*this[0]-this[1]*this[2];
-    this[2] = this[0]*this[2]+this[1]*this[1]-this[2]*this[0];
+    let w = 1.0;
+    let z = 0.0;
+
+    var t0=-this[1]*this[0]-z*this[1]-w*z;
+    var t1=this[0]*this[0]+z*z-w*this[1];
+    var t2=this[0]*this[1]+w*this[0]-this[1]*z;
+
+    z = this[0]*z+this[1]*this[1]-z*this[0];
+
     this[0] = t1;
     this[1] = t2;
-    t1 = t0*-this[1]+this[0]*this[0]-this[1]*this[3]+this[2]*this[2];
-    t2 = t0*-this[2]+this[1]*this[0]-this[2]*this[1]+this[0]*this[3];
-    this[2] = t0*-this[3]+this[2]*this[0]-this[0]*this[2]+this[1]*this[1];
+
+    t1 = t0*-this[1]+this[0]*this[0]-this[1]*w+z*z;
+    t2 = t0*-z+this[1]*this[0]-z*this[1]+this[0]*w;
+    z = t0*-w+z*this[0]-this[0]*z+this[1]*this[1];
+
     this[0] = t1;
     this[1] = t2;
     
@@ -1525,17 +1615,20 @@ export class Quat extends Vector4 {
 
   axisAngleToQuat(axis, angle) {
     var nor=new Vector3(axis);
-    if (nor.normalize()!=0.0) {
+    nor.normalize();
+
+    if (nor.dot(nor) != 0.0) {
         var phi=angle/2.0;
         var si=Math.sin(phi);
         this[0] = Math.cos(phi);
         this[1] = nor[0]*si;
         this[2] = nor[1]*si;
         this[3] = nor[2]*si;
-    }
-    else {
+    } else {
       this.makeUnitQuat();
     }
+
+    return this;
   }
 
   rotationBetweenVecs(v1, v2) {
@@ -1610,3 +1703,8 @@ BaseVector.inherit(Vector2, 2);
 lookat_cache_vs3 = util.cachering.fromConstructor(Vector3, 64);
 lookat_cache_vs4 = util.cachering.fromConstructor(Vector4, 64);
 makenormalcache = util.cachering.fromConstructor(Vector3, 64);
+
+$_v3nd_n1_normalizedDot = new Vector3();
+$_v3nd_n2_normalizedDot = new Vector3();
+$_v3nd4_n1_normalizedDot4 = new Vector3();
+$_v3nd4_n2_normalizedDot4 = new Vector3();
