@@ -49,15 +49,17 @@ window.color2css = color2css;
 
 let css2color_rets = util.cachering.fromConstructor(Vector4, 64);
 let cmap = {
-  red : [255, 0, 0, 1],
-  green : [0, 255, 0, 1],
-  blue : [0, 0, 255, 1],
-  yellow : [255, 255, 0, 1],
-  white : [255, 255, 255, 1],
+  red : [1, 0, 0, 1],
+  green : [0, 1, 0, 1],
+  blue : [0, 0, 1, 1],
+  yellow : [1, 1, 0, 1],
+  white : [1, 1, 1, 1],
   black : [0, 0, 0, 1],
-  grey : [127, 127, 127, 1],
-  teal : [0, 255, 255, 1]
-}
+  grey : [0.7, 0.7, 0.7, 1],
+  teal : [0, 1, 1, 1],
+  orange : [1,0.55,0.25,1],
+  brown  : [0.7, 0.4, 0.3, 1]
+};
 
 export function css2color(color) {
   let ret = css2color_rets.next();
@@ -301,9 +303,11 @@ export class IconManager {
 }
 
 export let iconmanager = new IconManager([
-  document.getElementById("iconsheet"),
-  document.getElementById("iconsheet16")
+  document.getElementById("iconsheet16"),
+  document.getElementById("iconsheet")
 ], [32, 16], 16);
+
+window._iconmanager = iconmanager; //debug global
 
 //if client code overrides iconsheets, they must follow logical convention
 //that the first one is "small" and the second is "large"
@@ -1273,3 +1277,4 @@ export function loadUIData(node, buf) {
     }
   }
 }
+

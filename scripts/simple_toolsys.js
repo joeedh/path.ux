@@ -92,6 +92,8 @@ export class ToolOp extends events.EventHandler {
   constructor() {
     super();
 
+    this._overdraw = undefined;
+
     var def = this.constructor.tooldef();
 
     if (def.undoflag !== undefined) {
@@ -197,13 +199,16 @@ export class ToolOp extends events.EventHandler {
   }
   exec(ctx) {
   }
-  
+  execPost(ctx) {
+
+  }
+
   //for use in modal mode only
   resetDrawLines() {
     var ctx = this.modal_ctx;
     
     for (var dl of this.drawlines) {
-      ctx.editor.removeDrawLine(dl);
+      dl.remove();
     }
     
     this.drawlines.length = 0;
@@ -212,19 +217,25 @@ export class ToolOp extends events.EventHandler {
   error(msg) {
     console.warn(msg);
   }
-  
+
+  getOverdraw() {
+    if (this._overdraw === undefined) {
+      this._overdraw = document.createElement("overdraw-x");
+      this._overdraw.start(this.modal_ctx.screen);
+    }
+
+    return this._overdraw;
+  }
   //for use in modal mode only
   addDrawLine(v1, v2, style) {
-    style = style === undefined ? "grey" : style;
-    
-    var dl = this.modal_ctx.editor.addDrawLine(v1, v2, style);
-    this.drawlines.push(dl);
-    return dl;
+    let line = this.getOverdraw().line(v1, v2, style);
+    this.drawlines.push(line);
+    return line;
   }
   
   //returns promise to be executed on modalEnd
   modalStart(ctx) {
-    if (this.modal_running) {
+    if (this.modalRunning) {
       console.warn("Warning, tool is already in modal mode consuming events");
       return this._promise;
     }
@@ -232,10 +243,10 @@ export class ToolOp extends events.EventHandler {
     console.trace("tool modal start");
     
     this.modal_ctx = ctx;
-    this.modal_running = true
+    this.modalRunning = true
     
     this.pushModal(ctx.screen);
-    
+
     this._promise = new Promise((function(accept, reject) {
       this._accept = accept;
       this._reject = reject;
@@ -248,9 +259,15 @@ export class ToolOp extends events.EventHandler {
   }
   
   modalEnd(was_cancelled) {
+    if (this._overdraw !== undefined) {
+      this._overdraw.end();
+      this._overdraw = undefined;
+    }
+
     console.log("tool modal end");
     
     if (was_cancelled && this._on_cancel !== undefined) {
+      this._accept(this.modal_ctx, true);
       this._on_cancel(this);
     }
     
@@ -259,13 +276,13 @@ export class ToolOp extends events.EventHandler {
     var ctx = this.modal_ctx;
     
     this.modal_ctx = undefined;
-    this.modal_running = false;
+    this.modalRunning = false;
     this.is_modal = false;
     
     this.popModal(_appstate._modal_dom_root);
     
     this._promise = undefined;
-    this._accept(ctx);
+    this._accept(ctx, false); //Context, was_cancelled
     this._accept = this._reject = undefined;
   }
 }
@@ -334,7 +351,9 @@ export class ToolMacro extends ToolOp {
         break;
       
       this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
       this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
       this._do_connections(this.tools[i]);
     }
     
@@ -346,7 +365,9 @@ export class ToolMacro extends ToolOp {
                !this.tools[this.curtool].is_modal) 
         {
             this.tools[this.curtool].undoPre(ctx);
+            this.tools[this.curtool].execPre(ctx);
             this.tools[this.curtool].exec(ctx);
+            this.tools[this.curtool].execPost(ctx);
             this._do_connections(this.tools[this.curtool]);
             
             this.curtool++;
@@ -356,7 +377,7 @@ export class ToolMacro extends ToolOp {
           this.tools[this.curtool].undoPre(ctx);
           this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
         } else {
-          this._accept(this);
+          this._accept(this, false);
         }
     }).bind(this);
     
@@ -372,7 +393,9 @@ export class ToolMacro extends ToolOp {
   exec(ctx) {
     for (var i=0; i<this.tools.length; i++) {
       this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
       this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
       this._do_connections(this.tools[i]);
     }
   }
@@ -394,9 +417,19 @@ export class ToolStack extends Array {
     
     this.cur = -1;
     this.ctx = ctx === undefined ? new ContextCls() : ctx;  //XXX get rid of ContextCls crap
-    this.modal_running = 0;
+    this.modalRunning = 0;
   }
-  
+
+  reset(ctx) {
+    if (ctx !== undefined) {
+      this.ctx = ctx;
+    }
+
+    this.modalRunning = 0;
+    this.cur = -1;
+    this.length = 0;
+  }
+
   execTool(toolop, ctx=this.ctx) {
     if (!toolop.canRun(ctx)) {
       console.log("toolop.canRun returned false");
@@ -414,7 +447,7 @@ export class ToolStack extends Array {
     }
     
     if (toolop.is_modal) {
-      this.modal_running = true;
+      this.modalRunning = true;
       
       toolop._on_cancel = (function(toolop) {
         this.pop_i(this.cur);
@@ -424,7 +457,9 @@ export class ToolStack extends Array {
       //will handle calling .exec itself
       toolop.modalStart(ctx);
     } else {
+      toolop.execPre(ctx);
       toolop.exec(ctx);
+      toolop.execPost(ctx);
     }
   }
   
@@ -445,7 +480,9 @@ export class ToolStack extends Array {
       this.cur++;
       
       this[this.cur].undoPre(this.ctx);
+      this[this.cur].execPre(this.ctx);
       this[this.cur].exec(this.ctx);
+      this[this.cur].execPost(this.ctx);
       this.ctx.save();
     }
   }

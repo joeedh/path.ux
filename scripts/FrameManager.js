@@ -1197,28 +1197,30 @@ export class Screen extends ui_base.UIBase {
     }
   }
   
-  static fromSTRUCT(reader) {
-    let ret = document.createElement(this.define().tagname);
+  static newSTRUCT() {
+    return document.createElement(this.define().tagname);
+  }
 
-    reader(ret);
+  loadSTRUCT(reader) {
+    reader(this);
     
-    let sareas = ret.sareas;
-    ret.sareas = [];
+    let sareas = this.sareas;
+    this.sareas = [];
     
     for (let sarea of sareas) {
-      sarea.screen = ret;
-      ret.appendChild(sarea);
+      sarea.screen = this;
+      this.appendChild(sarea);
     }
-    
-    ret.regenBorders();
-    ret.setCSS();
 
-    ret.doOnce(() => {
-      ret.loadUIData(ret.uidata);
-      ret.uidata = undefined;
+    this.regenBorders();
+    this.setCSS();
+
+    this.doOnce(() => {
+      this.loadUIData(this.uidata);
+      this.uidata = undefined;
     });
 
-    return ret;
+    return this;
   }
   
   test_struct() {

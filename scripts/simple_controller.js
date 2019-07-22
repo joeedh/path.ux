@@ -1,4 +1,27 @@
 import * as toolprop from './toolprop.js';
+import * as parseutil from './parseutil.js';
+
+let tk = (name, re, func) => new parseutil.tokdef(name, re, func);
+let tokens = [
+  tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
+  tk("NUM", /[0-9]+/, (t) => {
+    t.value = parseInt(t.value);
+    return t;
+  }),
+  tk("DOT", /\./),
+  tk("EQUALS", /(\=)|(\=\=)/),
+  tk("LSBRACKET", /\[/),
+  tk("RSBRACKET", /\]/),
+  tk("AND", /\&/),
+  tk("WS", /[ \t\n\r]+/, (t) => undefined) //drok token
+];
+
+let lexer = new parseutil.lexer(tokens, (t) => {
+  console.warn("Parse error", t);
+  throw new DataPathError();
+});
+
+export let pathParser = new parseutil.parser(lexer);
 
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
@@ -32,7 +55,11 @@ export class DataPath {
     this.path = path;
     this.struct = undefined;
   }
-  
+
+  setProp(prop) {
+    this.data = prop;
+  }
+
   read_only() {
     this.flag |= DataFlags.READ_ONLY;
     return this;      
@@ -179,7 +206,7 @@ export class DataStruct {
     this.members.push(m);
     m.parent = this;
     
-    this.pathmap[m.path] = m;
+    this.pathmap[m.apiname] = m;
     
     return this;
   }
@@ -191,6 +218,11 @@ let _map_structs = {};
 export class DataAPI extends ModelInterface {
   constructor() {
     super();
+    this.rootContextStruct = undefined;
+  }
+
+  setRoot(sdef) {
+    this.rootContextStruct = sdef;
   }
 
   mapStruct(cls, auto_create=true) {
@@ -204,9 +236,152 @@ export class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
-  resolvePath(ctx, path) {
+  resolvePath(ctx, inpath) {
+    let p = pathParser;
+    inpath = inpath.replace("==", "=");
+
+    p.input(inpath);
+
+    let dstruct = this.rootContextStruct;
+    let obj = ctx;
+    let lastobj = ctx;
+    let lastobj2 = undefined;
+    let lastkey = undefined;
+    let prop = undefined;
+
+    let _i=0;
+    while (!p.at_end()) {
+      let key = p.expect("ID");
+      let path = dstruct.pathmap[key];
+
+      if (path === undefined) {
+        console.log(dstruct);
+        throw new DataPathError(inpath + ": unknown property " + key);
+      }
+
+      if (path.type == DataTypes.STRUCT) {
+        dstruct = path.data;
+      } else {
+        prop = path.data;
+      }
+
+      if (path.path.search(/\./) >= 0) {
+        let keys = path.path.split(/\./);
+        for (let key of keys) {
+          lastobj2 = lastobj;
+          lastobj = obj;
+          lastkey = key;
+          obj = obj[key.trim()];
+        }
+      } else {
+        lastobj2 = lastobj;
+        lastobj = obj;
+
+        lastkey = path.path;
+        obj = obj[path.path];
+      }
+
+      let t = p.peeknext();
+      if (t === undefined) {
+        break;
+      }
+
+      if (t.type == "DOT") {
+        p.next();
+      } else if (t.type == "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+        p.expect("EQUALS");
+
+        let t2 = p.peeknext();
+        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+
+        let val = p.expect(type);
+
+        //console.log("== in resolvepath", lastobj, val, path.path);
+        let val1 = val;
+
+        if (typeof val == "string") {
+          val = prop.values[val];
+        }
+
+        if (val === undefined) {
+          throw new DataPathError("unknown value " + val1);
+        }
+
+        key = path.path;
+        obj = !!(lastobj[key] == val);
+      } else if (t.type == "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+        p.expect("AND");
+
+        let t2 = p.peeknext();
+        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+
+        let val = p.expect(type);
+
+        //console.log("== in resolvepath", lastobj, val, path.path);
+        let val1 = val;
+
+        if (typeof val == "string") {
+          val = prop.values[val];
+        }
+
+        if (val === undefined) {
+          throw new DataPathError("unknown value " + val1);
+        }
+
+        key = path.path;
+        obj = !!(lastobj[key] & val);
+      } else if (t.type == "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+        p.expect("LSBRACKET");
+
+        let t2 = p.peeknext();
+        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+
+        let val = p.expect(type);
+
+        //console.log("== in resolvepath", lastobj, val, path.path);
+        let val1 = val;
+
+        if (typeof val == "string") {
+          val = prop.values[val];
+        }
+
+        if (val === undefined) {
+          throw new DataPathError("unknown value " + val1);
+        }
+
+        key = path.path;
+        if (prop.type == PropTypes.ENUM) {
+          obj = !!(lastobj[key] == val);
+        } else {
+          obj = !!(lastobj[key] & val);
+        }
+
+        p.expect("RSBRACKET");
+      }
+
+
+
+      if (_i++ > 1000) {
+        console.warn("infinite loop in resolvePath parser");
+        break;
+      }
+    }
+
+    return {
+      parent : lastobj2,
+      obj : lastobj,
+      value : obj,
+      key : lastkey,
+      dstruct : dstruct,
+      prop : prop
+    };
+  }
+
+  resolvePathOld2(ctx, path) {
     let splitchars = new Set([".", "[", "]", "=", "&"]);
-    
+
+    path = path.replace(/\=\=/g, "=");
+
     path = "." + this.prefix + path;
     //console.log(path);
     
@@ -248,13 +423,72 @@ export class DataAPI extends ModelInterface {
     let dstruct = undefined;
     let arg = undefined;
     let type = "normal";
-    
+    let retpath = p;
+    let prop;
+    let lastkey=key, a;
+    let apiname = key;
+
     while (i < p.length-1) {
+      lastkey = key;
+      apiname = key;
+
+      if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
+        let dpath = dstruct.pathmap[lastkey];
+
+        apiname = dpath.apiname;
+      }
+
       let a = p[i];
       let b = p[i+1];
-      
+
+      //check for enum/flag propertys with [] form
+      if (a == "[") {
+        let ok = false;
+
+        key = b;
+        prop = undefined;
+
+        console.log("key", key, "lastkey", lastkey, "apiname", apiname);
+
+        if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
+          let dpath = dstruct.pathmap[lastkey];
+
+          if (dpath.type == DataTypes.PROP) {
+            prop = dpath.data;
+          }
+        }
+
+        if (prop !== undefined && (prop.type == PropTypes.ENUM || prop.type == PropTypes.FLAG)) {
+          console.log("found flag/enum property");
+          ok = true;
+        }
+
+        if (ok) {
+          if (isNaN(parseInt(key))) {
+            key = prop.values[key];
+          } else if (typeof key == "int") {
+            key = parseInt(key);
+          }
+
+          let value = obj;
+          if (typeof value == "string") {
+            value = prop.values[key];
+          }
+
+          if (prop.type == PropTypes.ENUM) {
+            value = !!(value == key);
+          } else { //flag
+            value = !!(value & key);
+          }
+
+          obj = value;
+          i++;
+          continue;
+        }
+      }
+
       if (a == "." || a == "[") {
-        key = b
+        key = b;
         
         parent2 = parent1;
         parent1 = obj;
@@ -283,6 +517,8 @@ export class DataAPI extends ModelInterface {
         i += 2;
         type = "enum";
         continue;
+      } else {
+        throw new DataPathError("bad path " + path);
       }
       
       i++;
@@ -293,8 +529,16 @@ export class DataAPI extends ModelInterface {
     console.log(parent1);
     console.log(obj);
     //*/
-    let prop;
-    
+
+    if (lastkey !== undefined && dstruct !== undefined && dstruct.pathmap[lastkey]) {
+      let dpath = dstruct.pathmap[key];
+
+      apiname = dpath.apiname;
+    }
+
+    if (apiname != "selectmode")
+      console.log(apiname);
+
     if (dstruct !== undefined && dstruct.pathmap[key]) {
       let dpath = dstruct.pathmap[key];
       
@@ -311,7 +555,8 @@ export class DataAPI extends ModelInterface {
       dstruct : dstruct,
       prop : prop,
       arg : arg,
-      type : type
+      type : type,
+      _path : retpath
     };
   }
   
@@ -393,7 +638,7 @@ export class DataAPI extends ModelInterface {
     let tpath = parseToolPath(path);
 
     let cls = tpath.toolclass;
-    let args = cls.args;
+    let args = tpath.args;
 
     let tool = cls.invoke(ctx, args);
 

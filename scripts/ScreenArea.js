@@ -37,6 +37,7 @@ export function getAreaIntName(name) {
 //XXX get rid of me
 window.getAreaIntName = getAreaIntName;
 
+//XXX get rid of me
 export var AreaTypes = {
   TEST_CANVAS_EDITOR : 0
 };
@@ -116,9 +117,19 @@ export class Area extends ui_base.UIBase {
 
   }
 
+  on_area_focus() {
+
+  }
+
+  on_area_blur() {
+
+  }
+
+  /** called when editors are swapped with another editor type*/
   on_area_active() {
   }
-  
+
+  /** called when editors are swapped with another editor type*/
   on_area_inactive() {
   }
 
@@ -376,7 +387,7 @@ export class Area extends ui_base.UIBase {
     icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
   };}
   
-  //subclassing fromSTRUCTs should call this
+  //subclassing loadSTRUCTs should either call this, or invoke super.loadSTRUCT()
   afterSTRUCT() {
     this.doOnce(() => {
       try {
@@ -388,14 +399,16 @@ export class Area extends ui_base.UIBase {
       }
     });
   }
-  
-  static fromSTRUCT(reader) {
-    let ret = document.createElement("areadata-x");
-    
-    reader(ret);
+
+  static newSTRUCT(reader) {
+    return document.createElement(this.define().tagname);
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
     this.afterSTRUCT();
     
-    return ret;
+    return;
   }
   
   _getSavedUIData() {
@@ -437,11 +450,11 @@ export class ScreenArea extends ui_base.UIBase {
       //console.log("screen area mouseover");
       let screen = this.getScreen();
       if (screen.sareas.active !== this && screen.sareas.active) {
-        screen.sareas.active.area.on_area_inactive();
+        screen.sareas.active.area.on_area_blur();
       }
 
       if (screen.sareas.active !== this) {
-        this.area.on_area_active();
+        this.area.on_area_focus();
       }
 
       screen.sareas.active = this;
@@ -825,21 +838,24 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.pop_ctx_active();
     }
   }
-  
-  static fromSTRUCT(reader) {
-    let ret = document.createElement("screenarea-x");
-    reader(ret);
-    
-    ret.pos = new Vector2(ret.pos);
-    ret.size = new Vector2(ret.size);
+
+  static newSTRUCT() {
+    return document.createElement("screenarea-x");
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.pos = new Vector2(this.pos);
+    this.size = new Vector2(this.size);
     
     //find active editor
     
-    for (let area of ret.editors) {
+    for (let area of this.editors) {
       
       /*
       if (area.constructor === undefined || area.constructor.define === undefined) {
-        console.warn("Missing class for area", area, "maybe buggy fromSTRUCT()?");
+        console.warn("Missing class for area", area, "maybe buggy loadSTRUCT()?");
         continue;
       }
       //*/
@@ -848,36 +864,34 @@ export class ScreenArea extends ui_base.UIBase {
 
       area.inactive = true;
       area.owning_sarea = undefined;
-      ret.editormap[areaname] = area;
+      this.editormap[areaname] = area;
       
-      if (areaname == ret.area) {
-        ret.area = area;
+      if (areaname == this.area) {
+        this.area = area;
       }
     }
     
-    if (typeof ret.area != "object") {
-      console.warn("Failed to find active area!", ret.area);
-      ret.area = ret.editors[0];
+    if (typeof this.area != "object") {
+      console.warn("Failed to find active area!", this.area);
+      this.area = this.editors[0];
     } 
 
-    if (ret.area !== undefined) {
-      ret.area.style["width"] = "100%";
-      ret.area.style["height"] = "100%";
-      ret.area.owning_sarea = ret;
-      
-      ret.area.pos = ret.pos;
-      ret.area.size = ret.size;
-      
-      ret.area.inactive = false;
-      ret.shadow.appendChild(ret.area);
-      
-      ret.doOnce(() => {
-        ret.area.on_area_active();
-        ret.area.onadd(); 
+    if (this.area !== undefined) {
+      this.area.style["width"] = "100%";
+      this.area.style["height"] = "100%";
+      this.area.owning_sarea = this;
+
+      this.area.pos = this.pos;
+      this.area.size = this.size;
+
+      this.area.inactive = false;
+      this.shadow.appendChild(this.area);
+
+      this.doOnce(() => {
+        this.area.on_area_active();
+        this.area.onadd();
       });        
     }
-    
-    return ret;
   }
   
   static define() {return {

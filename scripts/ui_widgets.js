@@ -1083,7 +1083,7 @@ export class IconCheck extends Button {
     ui_base.iconmanager.canvasDraw(this.dom, this.g, icon, undefined, undefined, this.iconsheet);
 
     if (this.drawCheck) {
-      let icon2 = this._checked ? Icons.CHECKED : Icons.UNCHECKED;
+      let icon2 = this._checked ? ui_base.Icons.CHECKED : ui_base.Icons.UNCHECKED;
       ui_base.iconmanager.canvasDraw(this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
     }
   }

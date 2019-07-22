@@ -1,4 +1,5 @@
 import * as toolprop from './toolprop.js';
+import {ToolOp} from './simple_toolsys.js';
 
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
@@ -46,10 +47,12 @@ export class ModelInterface {
   
   execTool(ctx, path, inputs={}, constructor_argument=undefined) {
     return new Promise((accept, reject) => {
-      let tool;
+      let tool = path;
       
       try {
-        tool = this.createTool(ctx, path ,inputs, constructor_argument);
+        if (typeof tool == "string" || !(tool instanceof ToolOp)) {
+          tool = this.createTool(ctx, path, inputs, constructor_argument);
+        }
       } catch (error) {
         reject(error);
         return;

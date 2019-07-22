@@ -1249,10 +1249,40 @@ export class PlaneOps {
   }
 }
 
+/*
+on factor;
+
+px := rox + rnx*t;
+py := roy + rny*t;
+pz := roz + rnz*t;
+
+f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
+ff := solve(f1, t);
+on fort;
+part(ff, 1, 2);
+off fort;
+
+* */
 var _isrp_ret=new Vector3();
 export function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
+  let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
+  
+  let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
+
+  if (Math.abs(div) < 0.00001) {
+    return undefined;
+  }
+
+  let t = ((po[1]-ro[1])*pn[1]+(po[2]-ro[2])*pn[2]+(po[0]-ro[0])*pn[0])/div;
+  _isrp_ret.load(ro).addFac(rn, t);
+
+  return _isrp_ret;
+}
+
+export function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   var p=planeorigin, n=planenormal;
   var r=rayorigin, v=raynormal;
+
   var d=p.vectorLength();
   var t=-(r.dot(n)-p.dot(n))/v.dot(n);
   _isrp_ret.load(v);

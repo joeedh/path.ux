@@ -318,7 +318,7 @@ export class parser {
       msg = type
 
     if (tok == undefined || tok.type != type) {
-      this.error(tok, "Expected " + msg);
+      this.error(tok, "Expected " + msg + ", not " + tok.type);
     }
 
     return tok.value;

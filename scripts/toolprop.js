@@ -1,4 +1,5 @@
 import * as util from './util.js';
+import {Vector2, Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
 
 let first = (iter) => {
   if (iter === undefined) {
@@ -478,3 +479,58 @@ export class FlagProperty extends EnumProperty {
     return ret;
   }
 }
+
+export class Vec3Property extends ToolProperty {
+  constructor(data) {
+    super(PropTypes.VEC3);
+    this.data = new Vector3(data);
+  }
+
+  setValue(v) {
+    this.data.load(v);
+    super.setValue(v);
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data.load(this.data);
+  }
+
+  copy() {
+    let ret = new Vec3Property();
+    this.copyTo(ret);
+    return ret;
+  }
+}
+
+export class Mat4Property extends ToolProperty {
+  constructor(data) {
+    super(PropTypes.MATRIX4);
+    this.data = new Matrix4(data);
+  }
+
+  setValue(v) {
+    this.data.load(v);
+    super.setValue(v);
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data.load(this.data);
+  }
+
+  copy() {
+    let ret = new Mat4Property();
+    this.copyTo(ret);
+    return ret;
+  }
+}
+

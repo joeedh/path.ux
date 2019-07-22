@@ -80,7 +80,7 @@ function internal_matrix() {
 
 var lookat_cache_vs3;
 var lookat_cache_vs4;
-
+var makenormalcache;
 
 export class Matrix4 {
   constructor(m) {
@@ -228,6 +228,9 @@ export class Matrix4 {
     this.$matrix.m42 = 0;
     this.$matrix.m43 = 0;
     this.$matrix.m44 = 1;
+
+    //drop isPersp
+    this.isPersp = false;
   }
 
   transpose() {
@@ -499,11 +502,51 @@ export class Matrix4 {
     this.multiply(mat);
   }
 
+  //this is really like the lookAt method, isn't it.
+  makeNormalMatrix(normal, up=undefined) {
+    let n = makenormalcache.next().load(normal).normalize();
+
+    if (up === undefined) {
+      up = makenormalcache.next().zero();
+
+      if (Math.abs(n[2]) > 0.95) {
+        up[1] = 0.0;
+      } else {
+        up[2] = 0.0;
+      }
+    }
+
+    let x = makenormalcache.next();
+    let y = makenormalcache.next();
+
+    x.load(n).cross(up).normalize();
+    y.load(x).cross(n).normalize();
+    //y.negate();
+
+    this.makeIdentity();
+    let m = this.$matrix;
+
+    m.m11 = x[0];
+    m.m12 = x[1];
+    m.m13 = x[2];
+
+    m.m21 = y[0];
+    m.m22 = y[1];
+    m.m23 = y[2];
+
+    m.m31 = n[0];
+    m.m32 = n[1];
+    m.m33 = n[2];
+    m.m44 = 1.0;
+
+    return this;
+  }
+
   preMultiply(mat) {
     var tmp = new Matrix4();
     
+    tmp.load(mat);
     tmp.multiply(this);
-    tmp.multiply(mat);
     
     this.load(tmp);
   }
@@ -836,22 +879,17 @@ export class Matrix4 {
     this.$matrix.m44 = this._determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
   }
 
-  static fromSTRUCT(reader) {
-    let ret = {};
-    reader(ret);
+  loadSTRUCT(reader) {
+    reader(this);
     
-    let mat = new Matrix4();
-    mat.load(ret.mat);
-    mat.isPersp = ret.isPersp;
-    
-    return mat;
+    this.load(this.mat);
   }
 }
 
 Matrix4.STRUCT = `
 mat4 {
-  mat     : array(float) | obj.getAsArray();
-  isPersp : int | obj.isPersp;
+  mat    : array(float) | obj.getAsArray();
+  isPersp  : int | obj.isPersp;
 }
 `;
 nstructjs.manager.add_class(Matrix4);
@@ -1068,10 +1106,12 @@ export class Vector4 extends BaseVector {
     else 
       return 2.0*saasin(v2.vectorDistance(this)/2.0);
   }
-  static fromSTRUCT(reader) {
-    let ret = {};
-    reader(ret);
-    return new Vector4(ret.vec);
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.load(this.vec);
+    delete this.vec;
   }
 };
 Vector4.STRUCT = `
@@ -1205,11 +1245,12 @@ export class Vector3 extends BaseVector {
     else 
       return 2.0*saasin(v2.vectorDistance(this)/2.0);
   }
-  
-  static fromSTRUCT(reader) {
-    let ret = {};
-    reader(ret);
-    return new Vector3(ret.vec);
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.load(this.vec);
+    delete this.vec;
   }
 }
 Vector3.STRUCT = `
@@ -1288,10 +1329,12 @@ export class Vector2 extends BaseVector {
     
     return this;
   }
-  static fromSTRUCT(reader) {
-    let ret = {};
-    reader(ret);
-    return new Vector2(ret.vec);
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.load(this.vec);
+    delete this.vec;
   }
 };
 Vector2.STRUCT = `
@@ -1540,10 +1583,12 @@ export class Quat extends Vector4 {
     
     return this;
   }
-  static fromSTRUCT(reader) {
-    let ret = {};
-    reader(ret);
-    return new Quat(ret.vec);
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.load(this.vec);
+    delete this.vec;
   }
 };
 Quat.STRUCT = `
@@ -1564,3 +1609,4 @@ BaseVector.inherit(Vector2, 2);
 
 lookat_cache_vs3 = util.cachering.fromConstructor(Vector3, 64);
 lookat_cache_vs4 = util.cachering.fromConstructor(Vector4, 64);
+makenormalcache = util.cachering.fromConstructor(Vector3, 64);
