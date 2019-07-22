@@ -4,6 +4,13 @@ export let modalstack = [];
 stupid DOM event system.  I hate it.
 */
 
+export function eventWasTouch(e) {
+  let ret = e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents;
+  ret = ret || e.was_touch;
+
+  return ret;
+}
+
 export function copyEvent(e) {
   let ret = {};
   let keys = [];
@@ -64,6 +71,8 @@ export function pushModalLight(obj) {
         let type2 = touchmap[type];
 
         let e2 = copyEvent(e);
+
+        e2.was_touch = true;
         e2.type = type2;
         e2.button = type == "touchcancel" ? 1 : 0;
 
@@ -85,6 +94,7 @@ export function pushModalLight(obj) {
           e2.y = e2.clientY = e2.pageY = e2.screenY = ret.last_mpos[1];
         }
 
+        e2.was_touch = true;
         console.log(e2.x, e2.y);
         ret.handlers[type2](e2);
       }

@@ -811,6 +811,8 @@ define('struct_binpack',[
 ], function(struct_typesystem, struct_util) {
   var exports = {};
   
+  window.STRUCT_ENDIAN = true; //little endian
+  
   var Class = struct_typesystem.Class;
   
   var temp_dataview = new DataView(new ArrayBuffer(16));
@@ -833,35 +835,41 @@ define('struct_binpack',[
   }
   
   var pack_int = exports.pack_int = function(array, val) {
-    temp_dataview.setInt32(array, val);
+    temp_dataview.setInt32(0, val, STRUCT_ENDIAN);
     
-    for (var i=0; i<4; i++) {
-      array.push(uint8_view[i]);
-    }
+    array.push(uint8_view[0]);
+    array.push(uint8_view[1]);
+    array.push(uint8_view[2]);
+    array.push(uint8_view[3]);
   }
   
   exports.pack_float = function(array, val) {
-    temp_dataview.setFloat32(array, val);
+    temp_dataview.setFloat32(0, val, STRUCT_ENDIAN);
     
-    for (var i=0; i<4; i++) {
-      array.push(uint8_view[i]);
-    }
+    array.push(uint8_view[0]);
+    array.push(uint8_view[1]);
+    array.push(uint8_view[2]);
+    array.push(uint8_view[3]);
   }
   
   exports.pack_double = function(array, val) {
-    temp_dataview.setFloat64(array, val);
+    temp_dataview.setFloat64(0, val, STRUCT_ENDIAN);
     
-    for (var i=0; i<8; i++) {
-      array.push(uint8_view[i]);
-    }
+    array.push(uint8_view[0]);
+    array.push(uint8_view[1]);
+    array.push(uint8_view[2]);
+    array.push(uint8_view[3]);
+    array.push(uint8_view[4]);
+    array.push(uint8_view[5]);
+    array.push(uint8_view[6]);
+    array.push(uint8_view[7]);
   }
   
   exports.pack_short = function(array, val) {
-    temp_dataview.setInt16(array, val);
+    temp_dataview.setInt16(0, val, STRUCT_ENDIAN);
     
-    for (var i=0; i<2; i++) {
-      array.push(uint8_view[i]);
-    }
+    array.push(uint8_view[0]);
+    array.push(uint8_view[1]);
   }
 
   var encode_utf8 = exports.encode_utf8 = function encode_utf8(arr, str) {
@@ -1002,22 +1010,22 @@ define('struct_binpack',[
   
   var unpack_int = exports.unpack_int = function(dview, uctx) {
     uctx.i += 4;
-    return dview.getInt32(uctx.i-4);
+    return dview.getInt32(uctx.i-4, STRUCT_ENDIAN);
   }
   
   exports.unpack_float = function(dview, uctx) {
     uctx.i += 4;
-    return dview.getFloat32(uctx.i-4);
+    return dview.getFloat32(uctx.i-4, STRUCT_ENDIAN);
   }
   
   exports.unpack_double = function(dview, uctx) {
     uctx.i += 8;
-    return dview.getFloat64(uctx.i-8);
+    return dview.getFloat64(uctx.i-8, STRUCT_ENDIAN);
   }
   
   exports.unpack_short = function(dview, uctx) {
     uctx.i += 2;
-    return dview.getInt16(uctx.i-2);
+    return dview.getInt16(uctx.i-2, STRUCT_ENDIAN);
   }
 
   var _static_arr_us = new Array(32);

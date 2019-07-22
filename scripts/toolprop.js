@@ -62,7 +62,11 @@ export class ToolProperty {
 
     this.type = type;
     this.subtype = subtype;
-    
+
+    //is false if this property still has its default value,
+    //i.e. it hasn't been set by the user or anyone else
+    this.wasSet = false;
+
     this.apiname = apiname;
     this.uiname = uiname;
     this.description = description;
@@ -138,7 +142,9 @@ export class ToolProperty {
     if (this.constructor === ToolProperty) {
       throw new Error("implement me!");
     }
-    
+
+    this.wasSet = true;
+
     this._fire("change", val);
   }
   
@@ -525,6 +531,7 @@ export class Mat4Property extends ToolProperty {
 
   copyTo(b) {
     super.copyTo(b);
+
     b.data.load(this.data);
   }
 

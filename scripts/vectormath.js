@@ -526,9 +526,9 @@ export class Matrix4 {
       up = makenormalcache.next().zero();
 
       if (Math.abs(n[2]) > 0.95) {
-        up[1] = 0.0;
+        up[1] = 1.0;
       } else {
-        up[2] = 0.0;
+        up[2] = 1.0;
       }
     }
 
@@ -899,12 +899,13 @@ export class Matrix4 {
     reader(this);
     
     this.load(this.mat);
+    delete this.mat;
   }
 }
 
 Matrix4.STRUCT = `
 mat4 {
-  mat    : array(float) | obj.getAsArray();
+  mat      : array(float) | obj.getAsArray();
   isPersp  : int | obj.isPersp;
 }
 `;

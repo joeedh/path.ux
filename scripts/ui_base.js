@@ -447,6 +447,7 @@ export class UIBase extends HTMLElement {
 
       e2 = new MouseEvent(type, e2);
 
+      e2.was_touch = true;
       e2.stopPropagation = e.stopPropagation.bind(e);
       e2.preventDefault = e.preventDefault.bind(e);
 
