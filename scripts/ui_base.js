@@ -803,7 +803,7 @@ export class UIBase extends HTMLElement {
     try {
       return ctx.api.getValue(ctx, path);
     } catch (error) {
-      report("data path error in ui for" + path);
+      //report("data path error in ui for" + path);
       return undefined;
     }
   }

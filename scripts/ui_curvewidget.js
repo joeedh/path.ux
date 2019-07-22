@@ -296,7 +296,19 @@ export class CurvePoint extends Vector2 {
     
     return w;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.load(this._vec);
+    delete this._vec;
+  }
 };
+CurvePoint.STRUCT = `
+CurvePoint {
+  _vec : vec2;
+}
+`;
 
 class BSplineCurve extends CurveTypeData {
   constructor() {

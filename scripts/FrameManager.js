@@ -63,7 +63,19 @@ export class ScreenVert extends Vector2 {
   [Symbol.keystr]() {
     return ScreenVert.hash(this, this.side, this.is_outer);
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.load(this._vec);
+    delete this._vec;
+  }
 }
+ScreenVert.STRUCT = `
+pathux.ScreenVert {
+  _vec : vec2;
+}
+`;
 
 export class ScreenHalfEdge {
   constructor(sarea, v1, v2, border) {
