@@ -260,13 +260,35 @@ class _IconManager {
 }
 
 export class IconManager {
+  /**
+   images is a list of dom ids of img tags
+
+   sizes is a list of tile sizes, one per image.
+   you can control the final *draw* size by passing an array
+   of [tilesize, drawsize] instead of just a number.
+   */
   constructor(images, sizes, horizontal_tile_count) {
     this.iconsheets = [];
     this.tilex = horizontal_tile_count;
     
     for (let i=0; i<images.length; i++) {
-      this.iconsheets.push(new _IconManager(images[i], sizes[i], horizontal_tile_count, sizes[i]));
+      let size, drawsize;
+
+      if (typeof sizes[i] == "object") {
+        size = sizes[i][0], drawsize = sizes[i][1];
+      } else {
+        size = drawsize = sizes[i];
+      }
+
+      this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
     }
+  }
+
+  load(manager2) {
+    this.iconsheets = manager2.iconsheets;
+    this.tilex = manager2.tilex;
+
+    return this;
   }
 
   reset(horizontal_tile_count) {
@@ -315,6 +337,16 @@ export let IconSheets = {
   SMALL : 0,
   LARGE : 1
 };
+
+export function setIconManager(manager, IconSheetsOverride) {
+  iconmanager.load(manager);
+
+  if (IconSheetsOverride !== undefined) {
+    for (let k in IconSheetsOverride) {
+      IconSheets[k] = IconSheetsOverride[k];
+    }
+  }
+}
 
 export function makeIconDiv(icon, sheet=0) {
     let size = iconmanager.getRealSize(sheet);

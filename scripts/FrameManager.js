@@ -13,6 +13,7 @@ import * as math from './math.js';
 import * as ui_colorpicker from './ui_colorpicker.js';
 import * as ui_tabs from './ui_tabs.js';
 import './struct.js';
+import {KeyMap, HotKey} from './simple_events.js';
 
 let Area = ScreenArea.Area;
 
@@ -306,6 +307,8 @@ export class Screen extends ui_base.UIBase {
 
     this._ctx = undefined;
 
+    this.keymap = new KeyMap();
+
     this.size = [512, 512];
     this.idgen = 0;
     this.sareas = [];
@@ -491,7 +494,65 @@ export class Screen extends ui_base.UIBase {
     
     return Object.assign(super.toJSON(), ret);
   }
-  
+
+  getHotKey(toolpath) {
+    let test = (keymap) => {
+      for (let hk of keymap) {
+        if (typeof hk.action != "string")
+          continue;
+
+        if (hk.action.trim() == toolpath.trim()) {
+          return hk;
+        }
+      }
+    }
+
+    let ret = test(this.keymap);
+    if (ret)
+      return ret;
+
+    if (this.sareas.active && this.sareas.active.keymap) {
+      ret = test(this.sareas.active.area.keymap);
+      if (ret)
+        return ret;
+    }
+
+    if (ret === undefined) {
+      //just to be safe, check all areas in case the
+      //context is confused as to which area is currently "active"
+
+      for (let sarea of this.sareas) {
+        if (sarea.area.keymap) {
+          ret = test(sarea.area.keymap);
+
+          if (ret)
+            return ret;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  execKeyMap(e) {
+    let handled = false;
+
+    if (this.sareas.active && this.sareas.active.area.keymap) {
+      let area = this.sareas.active.area;
+      //console.log(area.getKeyMaps());
+      for (let keymap of area.getKeyMaps()) {
+        if (keymap.handle(this.ctx, e)) {
+          handled = true;
+          break;
+        }
+      }
+    }
+
+    handled = handled || this.keymap.handle(this.ctx, e);
+
+    return handled;
+  }
+
   static define() {return {
     tagname : "screen-x"
   };}
@@ -1127,9 +1188,14 @@ export class Screen extends ui_base.UIBase {
   }
       
   on_keydown(e) {
+    if (!haveModal() && this.execKeyMap(e)) {
+      e.preventDefault();
+      return;
+    }
+
     if (!haveModal() && this.sareas.active !== undefined && this.sareas.active.on_keydown) {
       let area = this.sareas.active;
-      let ret = this.sareas.active.on_keydown(e);
+      return this.sareas.active.on_keydown(e);
     }
   }
   

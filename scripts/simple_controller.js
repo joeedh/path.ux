@@ -1,5 +1,6 @@
 import * as toolprop from './toolprop.js';
 import * as parseutil from './parseutil.js';
+import {print_stack} from './util.js';
 
 let tk = (name, re, func) => new parseutil.tokdef(name, re, func);
 let tokens = [
@@ -656,7 +657,7 @@ export class DataAPI extends ModelInterface {
       prop : prop
     };
   }
-  
+
   getToolDef(path) {
     let cls = this.parseToolPath(path);
     if (cls === undefined) {
@@ -665,7 +666,50 @@ export class DataAPI extends ModelInterface {
     
     return cls.tooldef();
   }
-  
+
+  getToolPathHotkey(ctx, path) {
+    try {
+      return this.getToolPathHotkey_intern(ctx, path);
+    } catch (error) {
+      print_stack(error);
+      console.log("failed to fetch tool path");
+
+      return undefined;
+    }
+  }
+
+  getToolPathHotkey_intern(ctx, path) {
+    let screen = ctx.screen;
+
+    function searchKeymap(keymap) {
+      for (let hk of keymap) {
+        if (typeof hk.action == "string" && hk.action == path) {
+          return hk.buildString();
+        }
+      }
+    }
+
+    if (screen.sareas.length == 0) {
+      return searchKeymap(screen.keymap);
+    }
+
+    //client might have its own area subclass with
+    //getActiveArea defined (that's encouraged),
+    //which is why we don't just call Area.getActiveArea
+    let areacls = screen.sareas[0].area.constructor;
+    let area = areacls.getActiveArea();
+
+    for (let keymap of area.getKeyMaps()) {
+      let ret = searchKeymap(keymap);
+
+      if (ret !== undefined) {
+        return ret;
+      }
+    }
+
+    return searchKeymap(this.keymap);
+  }
+
   parseToolPath(path) {
     return parseToolPath(path).toolclass;
   }

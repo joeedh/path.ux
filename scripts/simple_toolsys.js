@@ -240,7 +240,7 @@ export class ToolOp extends events.EventHandler {
       return this._promise;
     }
     
-    console.trace("tool modal start");
+    console.warn("tool modal start");
     
     this.modal_ctx = ctx;
     this.modalRunning = true

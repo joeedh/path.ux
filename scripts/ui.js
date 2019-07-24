@@ -450,7 +450,8 @@ export class Container extends ui_base.UIBase {
     }
     
     packflag |= this.inherit_packflag;
-    
+    let hotkey;
+
     if (create_cb === undefined) {
       create_cb = (cls) => {
         return this.ctx.api.createTool(this.ctx, path_or_cls);
@@ -466,9 +467,22 @@ export class Container extends ui_base.UIBase {
     
     let def = cls.tooldef();
     let tooltip = def.description === undefined ? def.uiname : def.description;
-    
+
+    //is there a hotkey hardcoded in the class?
     if (def.hotkey !== undefined) {
       tooltip += "\n\t" + def.hotkey;
+      hotkey = def.hotkey;
+    } else { //if not, use getToolPathHotkey api
+      let path = path_or_cls;
+
+      if (typeof path != "string") {
+        path = def.toolpath;
+      }
+
+      let hotkey = this.ctx.api.getToolPathHotkey(this.ctx, path);
+      if (hotkey !== undefined) {
+        tooltip += "\n\tHotkey: " + hotkey;
+      }
     }
     
     let ret;

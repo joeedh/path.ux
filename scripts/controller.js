@@ -1,5 +1,6 @@
 import * as toolprop from './toolprop.js';
 import {ToolOp} from './simple_toolsys.js';
+import {print_stack} from './util.js';
 
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
@@ -20,7 +21,6 @@ export class ToolOpIface {
     icon        : -1,
     toolpath    : "logical_module.tool", //logical_module need not match up to real module name
     description : undefined,
-    hotkey      : undefined,
     is_modal    : false,
     inputs      : {}, //tool properties
     outputs     : {}  //tool properties
@@ -35,7 +35,11 @@ export class ModelInterface {
   getToolDef(path) {
     throw new Error("implement me");
   }
-  
+
+  getToolPathHotkey(ctx, path) {
+    return undefined;
+  }
+
   createTool(path, inputs={}, constructor_argument=undefined) {
     throw new Error("implement me");
   }
@@ -54,6 +58,7 @@ export class ModelInterface {
           tool = this.createTool(ctx, path, inputs, constructor_argument);
         }
       } catch (error) {
+        print_stack(error);
         reject(error);
         return;
       }
@@ -62,7 +67,12 @@ export class ModelInterface {
       accept(tool);
       
       //execute
-      ctx.state.toolstack.execTool(tool);
+      try {
+        ctx.state.toolstack.execTool(tool);
+      } catch (error) { //for some reason chrome is suppressing errors
+        print_stack(error);
+        throw error;
+      }
     });
   }
   

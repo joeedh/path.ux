@@ -55,6 +55,12 @@ export function setAreaTypes(def) {
 export let areaclasses = {};
 let area_idgen = 0;
 
+let laststack = [];
+let last_area = undefined;
+
+/**
+ * Base class for all editors
+ **/
 export class Area extends ui_base.UIBase {
   constructor() {
     super();
@@ -67,7 +73,15 @@ export class Area extends ui_base.UIBase {
     this.pos = undefined; //set by screenarea parent
     this.size = undefined; //set by screenarea parent
   }
-  
+
+  /**
+   * Return a list of keymaps used by this editor
+   * @returns {Array<KeyMap>}
+   */
+  getKeyMaps() {
+    return [];
+  }
+
   buildDataPath() {
     let p = this;
     
@@ -133,13 +147,28 @@ export class Area extends ui_base.UIBase {
   on_area_inactive() {
   }
 
-  /*client code can implement these (no need to subclass Area, override Area.prototype.push/pop_ctx_actix).
+  /*client code can implement these next three methods
+  * either through subclassing or by override Area.prototype.xxx
   *
-  * the purpose is to keep track of which area is the "active" one for its type.  so if a UI
-  * has a slider with path "view2d.zoomfac", the controller knows where to find view2d*/
-  push_ctx_active() {
+  * their purpose is to keep track of which area is the "active" one for its type, as well as which
+  * area is "currently active."  This is needed so UI controls can know what their parent area is,
+  * e.g. a slider with path "view2d.zoomfac" needs to know where to find view2d*/
+  getActiveArea() {
+    //very simple default implementation
+    return last_area;
   }
+
+  push_ctx_active() {
+    laststack.push(last_area);
+    last_area = this;
+  }
+
   pop_ctx_active() {
+    let ret = laststack.pop();
+
+    if (ret !== undefined) {
+      last_area = ret;
+    }
   }
   
   static register(cls) {

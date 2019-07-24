@@ -784,7 +784,7 @@ var dt2l_v3 = new Vector2();
 var dt2l_v4 = new Vector2();
 var dt2l_v5 = new Vector2();
 
-export function dist_to_line_2d(p, v1, v2, clip) {
+export function dist_to_line_2d(p, v1, v2, clip, closest_co_out=undefined, t_out=undefined) {
   if (clip == undefined) {
       clip = true;
   }
@@ -804,7 +804,16 @@ export function dist_to_line_2d(p, v1, v2, clip) {
   }
   
   n.mulScalar(t).add(v1);
-  
+
+  if (closest_co_out) {
+    closest_co_out[0] = n[0];
+    closest_co_out[1] = n[1];
+  }
+
+  if (t_out !== undefined) {
+    t_out = t;
+  }
+
   return n.vectorDistance(p);
 }
 

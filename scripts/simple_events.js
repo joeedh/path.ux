@@ -1,3 +1,5 @@
+import * as util from "../../util/util.js";
+
 export let modalstack = [];
 
 /*
@@ -216,6 +218,13 @@ export var keymap_latin_1 = {
   "Tab" : 9,
   "-" : 189,
   "=" : 187,
+  "." : 190,
+  "/" : 191,
+  "," : 188,
+  ";" : 186,
+  "'" : 222,
+  "[" : 219,
+  "]" : 221,
   "NumPlus" : 107,
   "NumMinus" : 109,
   "Shift" : 16,
@@ -242,3 +251,103 @@ for (var k in keymap_latin_1) {
 
 export var keymap = keymap_latin_1;
 export var reverse_keymap = keymap_latin_1_rev;
+
+export class HotKey {
+  /**action can be a callback or a toolpath string*/
+  constructor(key, modifiers, action) {
+    this.action = action;
+    this.mods = modifiers;
+    this.key = keymap[key];
+  }
+
+  exec(ctx) {
+    if (typeof this.action == "string") {
+      ctx.api.execTool(ctx, this.action);
+    } else {
+      this.action(ctx);
+    }
+  }
+
+  buildString() {
+    let s = "";
+
+    for (let i=0; i<this.mods.length; i++) {
+      if (i > 0) {
+        s += "+";
+      }
+
+      s += this.mods[i].toLowerCase();
+    }
+
+    if (this.mods.length > 0) {
+      s += "+";
+    }
+
+    s += reverse_keymap[this.key];
+
+    return s.trim();
+  }
+}
+
+export class KeyMap extends Array {
+  constructor(hotkeys=[]) {
+    super();
+
+    for (let hk of hotkeys) {
+      this.add(hk);
+    }
+  }
+
+  handle(ctx, e) {
+    let mods = new util.set();
+    if (e.shiftKey)
+      mods.add("shift");
+    if (e.altKey)
+      mods.add("alt");
+    if (e.ctrlKey) {
+      mods.add("ctrl");
+    }
+    if (e.commandKey) {
+      mods.add("command");
+    }
+
+    for (let hk of this) {
+      let ok = e.keyCode == hk.key;
+      if (!ok) continue;
+
+      let count = 0;
+      for (let m of hk.mods) {
+        m = m.toLowerCase().trim();
+
+        if (!mods.has(m)) {
+          ok = false;
+          break;
+        }
+
+        count++;
+      }
+
+      if (count != mods.length) {
+        ok = false;
+      }
+
+      if (ok) {
+        try {
+          hk.exec(ctx);
+        } catch (error) {
+          util.print_stack(error);
+          console.log("failed to execute a hotkey", keymap[e.keyCode]);
+        }
+        return true;
+      }
+    }
+  }
+
+  add(hk) {
+    this.push(hk);
+  }
+
+  push(hk) {
+    super.push(hk);
+  }
+}
