@@ -29,7 +29,8 @@ export let PropTypes = {
   VEC2 : 64,
   VEC3 : 128,
   VEC4 : 256,
-  MATRIX4 : 512
+  MATRIX4 : 512,
+  QUAT : 1024
 };
 
 //set PropTypes to custom type integers
@@ -468,8 +469,12 @@ export class EnumProperty extends ToolProperty {
 }
 
 export class FlagProperty extends EnumProperty {
-  constructor() {
-    super();
+  constructor(string, valid_values, apiname,
+              uiname, description, flag, icon) {
+    super(string, valid_values, apiname,
+          uiname, description, flag, icon);
+
+    this.type = PropTypes.FLAG;
   }
 
   setValue(bitmask) {
@@ -483,6 +488,33 @@ export class FlagProperty extends EnumProperty {
     let ret = new FlagProperty();
     this.copyTo(ret);
     
+    return ret;
+  }
+}
+
+export class Vec2Property extends ToolProperty {
+  constructor(data) {
+    super(PropTypes.VEC2);
+    this.data = new Vector2(data);
+  }
+
+  setValue(v) {
+    this.data.load(v);
+    super.setValue(v);
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data.load(this.data);
+  }
+
+  copy() {
+    let ret = new Vec2Property();
+    this.copyTo(ret);
     return ret;
   }
 }
@@ -509,6 +541,60 @@ export class Vec3Property extends ToolProperty {
 
   copy() {
     let ret = new Vec3Property();
+    this.copyTo(ret);
+    return ret;
+  }
+}
+
+export class Vec4Property extends ToolProperty {
+  constructor(data) {
+    super(PropTypes.VEC4);
+    this.data = new Vector4(data);
+  }
+
+  setValue(v) {
+    this.data.load(v);
+    super.setValue(v);
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data.load(this.data);
+  }
+
+  copy() {
+    let ret = new Vec4Property();
+    this.copyTo(ret);
+    return ret;
+  }
+}
+
+export class QuatProperty extends ToolProperty {
+  constructor(data) {
+    super(PropTypes.QUAT);
+    this.data = new Quat(data);
+  }
+
+  setValue(v) {
+    this.data.load(v);
+    super.setValue(v);
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data.load(this.data);
+  }
+
+  copy() {
+    let ret = new QuatProperty();
     this.copyTo(ret);
     return ret;
   }

@@ -24,11 +24,11 @@ export function buildParser() {
     t('DOT', /\./),
     t('COMMA', /\,/),
     t('EQUALS', /\=/),
-    t('STRLIT', /".*"/, (t) => {
+    t('STRLIT', /"[^"]*"/, (t) => {
       t.value = t.value.slice(1, t.value.length-1);
       return t;
     }),
-    t('STRLIT', /'.*'/, (t) => {
+    t('STRLIT', /'[^']*'/, (t) => {
       t.value = t.value.slice(1, t.value.length-1);
       return t;
     }),

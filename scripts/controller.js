@@ -12,6 +12,23 @@ export const DataFlags = {
 export class DataPathError extends Error {
 };
 
+export class ListIface {
+  iterate(ctx, path) {
+    throw new Error("implement me");
+  }
+
+  getLength(ctx, path) {
+    throw new Error("implement me");
+  }
+
+  getObjectKey(ctx, listpath, object) {
+    throw new Error("implement me");
+  }
+
+  getObjectStruct(ctx, listpath, key) {
+
+  }
+}
 export class ToolOpIface {
   constructor() {
   }
@@ -38,6 +55,11 @@ export class ModelInterface {
 
   getToolPathHotkey(ctx, path) {
     return undefined;
+  }
+
+  get list() {
+    throw new Error("implement me");
+    return ListIface;
   }
 
   createTool(path, inputs={}, constructor_argument=undefined) {

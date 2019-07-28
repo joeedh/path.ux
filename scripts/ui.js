@@ -696,6 +696,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.label = name;
     ret.setAttribute("datapath", path);
+
     if (mass_set_path) {
       ret.setAttribute("mass_set_path", mass_set_path);
     }

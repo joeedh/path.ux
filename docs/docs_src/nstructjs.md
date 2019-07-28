@@ -1,6 +1,7 @@
 # NStructJS
 
-NStructJS is a little library for saving/loading highly structured JS objects as binary data.  
+NStructJS is a little library for saving/loading highly structured JS objects as binary data
+(for more info, see the [official documentation](https://github.com/joeedh/STRUCT/wiki) ).
 It is not suited for unstructed data (use JSON for that).  
 NStructJS arose out of the following shortcomings of JSON:
 

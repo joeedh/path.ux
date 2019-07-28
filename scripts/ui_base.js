@@ -370,6 +370,8 @@ export function makeIconDiv(icon, sheet=0) {
 let Vector2 = vectormath.Vector2;
 let Matrix4 = vectormath.Matrix4;
 
+export let dpistack = [];
+
 export const UIFlags = {
 
 };
@@ -950,27 +952,25 @@ export class UIBase extends HTMLElement {
       this._init();
     }
   }
-  
-  //scaling ratio for high-resolution displays
+
+  static pushDPI(dpi) {
+    dpistack.push(dpi);
+  }
+
+  static popDPI() {
+    return dpistack.pop();
+  }
+  /**UGH I should have made this a a method
+    so I could have parents override it for children
+
+    scaling ratio (e.g. for high-resolution displays)
+   */
   static getDPI() {
-    let dpi = window.devicePixelRatio;
-
-
-    return dpi;
-
-    //. . .what was I thinking?
-    let f = Math.fract(dpi);
-    let steps = 6
-    f = (Math.ceil(f*steps))/steps;
-    
-    //f = Math.ceil(Math.log(dpi) / Math.log(2));
-    //f = Math.pow(2, f);
-    
-    return (Math.floor(dpi) + f)*1.33333333;
-    
-    //try to snap to a reasonable value
-    
-    return dpi;
+    if (dpistack.length > 0) {
+      return dpistack[this.dpistack.length-1];
+    } else {
+      return window.devicePixelRatio;
+    }
   }
   
   /**

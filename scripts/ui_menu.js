@@ -31,7 +31,8 @@ export class Menu extends UIBase {
 
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
-
+    this.container.style["display"] = "flex";
+      ""
     //this.container.style["background-color"] = "red";
     this.container.setAttribute("class", "menucon");
 

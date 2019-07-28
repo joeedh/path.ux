@@ -9,6 +9,8 @@ let tokens = [
     t.value = parseInt(t.value);
     return t;
   }),
+  tk("STRLIT", /'.*'/),
+  tk("STRLIT", /".*"/),
   tk("DOT", /\./),
   tk("EQUALS", /(\=)|(\=\=)/),
   tk("LSBRACKET", /\[/),
@@ -28,8 +30,9 @@ let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
 
 import {ModelInterface, ToolOpIface,
-        DataFlags,DataPathError} from './controller.js';
+        DataFlags, DataPathError} from './controller.js';
 import {initToolPaths, parseToolPath} from './toolpath.js';
+export {DataPathError, DataFlags} from './controller.js';
 
 export let tool_classes = {};
 let tool_idgen = 1;
@@ -45,8 +48,9 @@ function toolkey(cls) {
 
 export const DataTypes = {
   STRUCT : 0,
-  PROP : 1
-}
+  PROP   : 1,
+  ARRAY  : 2
+};
 
 export class DataPath {
   constructor(path, apiname, prop, type=DataTypes.PROP) {
@@ -85,8 +89,11 @@ export class DataPath {
     return this;
   }
 
-  //db will be executed with underlying data object
-  //that contains this path in 'this.dataref'
+  /**db will be executed with underlying data object
+    that contains this path in 'this.dataref'
+
+    main event is 'change'
+   */
   on(type, cb) {
     if (this.type == DataTypes.PROP) {
       this.data.on(type, cb);
@@ -139,6 +146,110 @@ export class DataPath {
   }
 }
 
+/*this is a bitmask of standard filters
+* for the data list interface*/
+export const StandardListFilters = {
+  SELECTED : 1,
+  EDITABLE : 2,
+  VISIBLE  : 4,
+  ACTIVE   : 8
+};
+
+export class DataList {
+  /**
+    Okay, this is a simple interface for the controller to access lists,
+    whether it's {} object maps, [] arrays, util.set's, or whatever.
+
+    In fairmotion I used a lambda-type filter system, but that was problematic as it
+    didn't support any sort of abstraction or composition, so the lamba strings ended up
+    like this:
+      "($.flag & SELECT) && !($.flag & HIDE) && !($.flag & GHOST) && (ctx.spline.layers.active.id in $.layers)
+
+    Hopefully this new bitmask system will work better.
+
+  * Callbacks is an array of name functions, like so:
+   - function getStruct(api, list, key) //return DataStruct type of object in key, key is optional if omitted return base type of all objects?
+   - function get(api, list, key)
+   - function getLength(api, list)
+   - function set(api, list, key, val)
+   - function getActive(api, list)
+   - function setActive(api, list, key)
+   - function getIter(api, list)
+   - function filter(api, list, filter : StandardListFilters bitmask) returns an iterable
+   - function getKey(api, list, object) returns object's key in this list, either a string or a number
+  * */
+  constructor(callbacks) {
+    if (callbacks === undefined) {
+      throw new DataPathError("missing callbacks argument to DataList");
+    }
+
+    this.cb = {};
+    for (let cb of callbacks) {
+      this.cb[cb.name] = cb;
+    }
+
+    let check = (key) => {
+      if (!(key in this.cbs)) {
+        throw new DataPathError(`Missing ${key} callback in DataList`);
+      }
+    }
+  }
+
+  get(api, list, key) {
+    return this.cb.get(api, list, key);
+  }
+
+  getLength(api, list) {
+    this._check("getLength");
+    return this.cb.getLength(api, list);
+  }
+
+  _check(cb) {
+    if (!(cb in this.cb)) {
+      throw new DataPathError(cb + " not supported by this list");
+    }
+  }
+
+  set(api, list, key, val) {
+    this._check("set");
+    this.cb.set(api, list, key, val);
+  }
+
+  getIter(api, list) {
+    this._check("getIter");
+    return this.cb.getIter(api, list);
+  }
+
+  filter(api, list, bitmask) {
+    this._check("filter");
+    return this.cb.filter(api, list, bitmask);
+  }
+
+  getActive(api, list) {
+    this._check("getActive");
+    return this.cb.getActive(api, list);
+  }
+
+  setActive(api, list, key) {
+    this._check("setActive");
+    this.cb.setActive(api, list, key);
+  }
+
+  getKey(api, list, obj) {
+    this._check("getKey");
+    return this.cb.getKey(api, list, obj);
+  }
+
+  getStruct(api, list, key) {
+    let obj = this.get(api, list, key);
+
+    if (obj === undefined)
+      return undefined;
+
+    return api.getStruct(obj.constructor);
+  }
+}
+
 export class DataStruct {
   constructor(members=[], name="unnamed") {
     this.members = [];
@@ -157,6 +268,14 @@ export class DataStruct {
 
     this.add(dpath);
     return ret;
+  }
+
+  vec2(path, apiname, uiname, description) {
+    let prop = new toolprop.Vec2Property(undefined, apiname, uiname, description);
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
   }
 
   float(path, apiname, uiname, description) {
@@ -191,8 +310,14 @@ export class DataStruct {
     return dpath;
   }
 
-  array(path, apiname, struct) {
-    //do nothing for now
+  list(path, apiname, funcs) {
+    let array = new DataList(funcs);
+
+    let dpath = new DataPath(path, apiname, array);
+    dpath.type = DataTypes.ARRAY;
+
+    this.add(dpath);
+    return dpath;
   }
 
   flags(path, apiname, enumdef, uiname, description) {
@@ -216,14 +341,60 @@ export class DataStruct {
 let _map_struct_idgen = 1;
 let _map_structs = {};
 
+export class DataListIF {
+  constructor(api) {
+    this.api = api;
+  }
+
+  iterate(ctx, path) {
+    let res = this.api.resolvePath(ctx, path);
+
+    let list = res.obj;
+    return res.prop.getIter(this.api, list);
+  }
+
+  getLength(ctx, path) {
+    let res = this.api.resolvePath(ctx, path);
+
+    let list = res.obj;
+    return res.prop.getLength(this.api, list);
+  }
+
+  getObjectKey(ctx, listpath, object) {
+    let res = this.api.resolvePath(ctx, listpath);
+
+    let list = res.obj;
+    return res.prop.getKey(this.api, list, object);
+  }
+
+  getObjectStruct(ctx, listpath, key) {
+    let res = this.api.resolvePath(ctx, listpath);
+
+    let list = res.obj;
+    return res.prop.getStruct(this.api, list, key);
+  }
+}
+
+let _dummypath = new DataPath();
+
 export class DataAPI extends ModelInterface {
   constructor() {
     super();
+
+    this._list = new DataListIF(this);
     this.rootContextStruct = undefined;
+  }
+
+  get list() {
+    return this._list;
   }
 
   setRoot(sdef) {
     this.rootContextStruct = sdef;
+  }
+
+  getStruct(cls) {
+    return this.mapStruct(cls, false);
   }
 
   mapStruct(cls, auto_create=true) {
@@ -251,14 +422,42 @@ export class DataAPI extends ModelInterface {
     let lastkey = undefined;
     let prop = undefined;
 
+    function p_key() {
+      let t = p.peeknext();
+      if (t.type == "NUM" || t.type == "STRLIT") {
+        p.next();
+        return t.value;
+      } else {
+        throw new PUTLParseError("Expected list key");
+      }
+    }
+
     let _i=0;
     while (!p.at_end()) {
       let key = p.expect("ID");
       let path = dstruct.pathmap[key];
 
       if (path === undefined) {
-        console.log(dstruct);
-        throw new DataPathError(inpath + ": unknown property " + key);
+        if (prop !== undefined && prop instanceof DataList && key == "active") {
+          let act = prop.getActive(this, obj);
+
+          if (act === undefined) {
+            throw new DataPathError("no active element for list");
+          }
+
+          dstruct = prop.getStruct(this, obj, prop.getKey(this, obj, act));
+          if (dstruct === undefined) {
+            throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
+          }
+
+          path = _dummypath;
+
+          path.type = DataTypes.STRUCT;
+          path.data = dstruct;
+          path.path = key;
+        } else {
+          throw new DataPathError(inpath + ": unknown property " + key);
+        }
       }
 
       if (path.type == DataTypes.STRUCT) {
@@ -356,6 +555,7 @@ export class DataAPI extends ModelInterface {
         }
 
         if (val === undefined) {
+          console.log(prop.values, val1, prop);
           throw new DataPathError("unknown value " + val1);
         }
 
@@ -371,9 +571,27 @@ export class DataAPI extends ModelInterface {
         }
 
         p.expect("RSBRACKET");
+      } else if (t.type == "LSBRACKET") {
+        p.expect("LSBRACKET")
+
+        if (lastkey && typeof lastkey == "string" && lastkey.length > 0) {
+          lastobj = lastobj[lastkey];
+        }
+
+        lastkey = p_key();
+        p.expect("RSBRACKET");
+
+        if (!(prop instanceof DataList)) {
+          throw new DataPathError("bad property, not a list");
+        }
+
+        obj = prop.get(this, lastobj, lastkey);
+        dstruct = prop.getStruct(this, lastobj, lastkey);
+
+        if (p.peeknext() !== undefined && p.peeknext().type == "DOT") {
+          p.next();
+        }
       }
-
-
 
       if (_i++ > 1000) {
         console.warn("infinite loop in resolvePath parser");
@@ -707,13 +925,17 @@ export class DataAPI extends ModelInterface {
       }
     }
 
-    return searchKeymap(this.keymap);
+    return this.keymap ? searchKeymap(this.keymap) : false;
   }
 
   parseToolPath(path) {
     return parseToolPath(path).toolclass;
   }
-  
+
+  parseToolArgs(path) {
+    return parseToolPath(path).args;
+  }
+
   createTool(ctx, path, inputs={}) {
     //parseToolPath will raise DataPathError if path is malformed
     let tpath = parseToolPath(path);
