@@ -1318,6 +1318,13 @@ export class Screen extends ui_base.UIBase {
     return document.createElement(this.define().tagname);
   }
 
+  afterSTRUCT() {
+    for (let sarea of this.sareas) {
+      sarea._ctx = this.ctx;
+      sarea.afterSTRUCT();
+    }
+  }
+
   loadSTRUCT(reader) {
     reader(this);
     

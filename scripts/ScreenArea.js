@@ -425,6 +425,7 @@ export class Area extends ui_base.UIBase {
         this.saved_uidata = undefined;
       } catch (error) {
         console.log("failed to load ui data");
+        util.print_stack(error);
       }
     });
   }
@@ -435,9 +436,6 @@ export class Area extends ui_base.UIBase {
 
   loadSTRUCT(reader) {
     reader(this);
-    this.afterSTRUCT();
-    
-    return;
   }
   
   _getSavedUIData() {
@@ -835,22 +833,25 @@ export class ScreenArea extends ui_base.UIBase {
       }
       
       this.area = this.editormap[name];
-      
+
       this.area.inactive = false;
       
       //. . .and set references to pos/size
       this.area.pos = this.pos;
       this.area.size = this.size;
       this.area.owning_sarea = this;
-      
+      this.area.ctx = this.ctx;
+
       this.shadow.appendChild(this.area);
-      
-      //propegate new size
-      this.area.on_resize(this.size);
 
       this.area.style["width"] = "100%";
       this.area.style["height"] = "100%";
-      
+
+      //propegate new size
+      this.area.push_ctx_active();
+      this.area.on_resize(this.size);
+      this.area.pop_ctx_active();
+
       this.area.push_ctx_active();
       this.area.on_area_active();
       this.area.pop_ctx_active();
@@ -880,6 +881,19 @@ export class ScreenArea extends ui_base.UIBase {
 
   static newSTRUCT() {
     return document.createElement("screenarea-x");
+  }
+
+  afterSTRUCT() {
+    for (let area of this.editors) {
+      area.pos = this.pos;
+      area.size = this.size;
+      area.owning_sarea = this;
+
+      area.push_ctx_active();
+      area._ctx = this.ctx;
+      area.afterSTRUCT();
+      area.pop_ctx_active();
+    }
   }
 
   loadSTRUCT(reader) {
