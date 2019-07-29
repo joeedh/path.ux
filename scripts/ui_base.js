@@ -139,7 +139,11 @@ export const theme = {
 
     "MenuTextSize"  : 12,
     "MenuTextColor" : "rgba(25, 25, 25, 1.0)",
-    "MenuTextFont"  : "sans-serif"
+    "MenuTextFont"  : "sans-serif",
+    
+    "TitleTextSize"   : 16,
+    "TitleTextColor"  : "rgba(255, 255, 255, 1.0)",
+    "TitleTextFont"   : "sans-serif"
   },
 
   button : {
@@ -502,6 +506,10 @@ export class UIBase extends HTMLElement {
     }, {passive : false});
   }
 
+  setCSS() {
+
+  }
+
   appendChild(child) {
     if (child instanceof UIBase) {
       child.ctx = this.ctx;
@@ -598,6 +606,11 @@ export class UIBase extends HTMLElement {
     if (ret === undefined) {
       if (nodeclass !== undefined && !(this instanceof nodeclass))
         return undefined;
+
+      //ignore svg overdraw elements
+      if (this.tagName == "OVERDRAW-X") {
+        return undefined;
+      }
 
       for (let rect of rects) {
         if (x >= rect.x+sx && x <=rect.x+sx+rect.width && 
@@ -1170,13 +1183,13 @@ export function _getFont(size, font="DefaultText", do_dpi=true) {
   }
 }
 
-export function _ensureFont(canvas, g, size) {
+export function _ensureFont(elem, canvas, g, size) {
   let dpi = UIBase.getDPI();
   
   if (size !== undefined) {
     g.font = ""+Math.ceil(size * dpi) + "px sans-serif";
   } else if (!canvas.font) {
-    let size = getDefault("DefaultTextSize") * dpi;
+    let size = elem.getDefault("DefaultTextSize") * dpi;
 
     let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
     
@@ -1187,8 +1200,8 @@ export function _ensureFont(canvas, g, size) {
   }
 }
 
-export function measureText(text, canvas, g, size=undefined) {
-  _ensureFont(canvas, g, size);
+export function measureText(elem, text, canvas, g, size=undefined) {
+  _ensureFont(elem, canvas, g, size);
   
   let ret = g.measureText(text);
   
@@ -1200,10 +1213,10 @@ export function measureText(text, canvas, g, size=undefined) {
   return ret;
 }
 
-export function drawText(x, y, text, canvas, g, color=undefined, size=undefined) {
-  _ensureFont(canvas, g, size);
+export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined) {
+  _ensureFont(elem, canvas, g, size);
   
-  g.fillStyle = getDefault("DefaultTextColor");
+  g.fillStyle = elem.getDefault("DefaultTextColor");
   g.fillText(text, x+0.5, y+0.5);
   
   if (size !== undefined) {

@@ -208,6 +208,13 @@ export class TableFrame extends Container {
       }
     });//*/
 
+    ret.cell = () => {
+      let container = maketd();
+      container.background = tr.style["background-color"];
+      return container;
+    };
+
+    //makefunc("cell");
     makefunc("label");
     makefunc("tool");
     makefunc("prop");

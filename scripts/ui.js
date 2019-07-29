@@ -38,7 +38,9 @@ var list = function list(iter) {
 export class Label extends ui_base.UIBase {
   constructor() {
     super();
-    
+
+    this._font = "LabelText";
+
     this.dom = document.createElement("div");
     this.dom.style["font"] = ui_base._getFont(undefined, "LabelText", false);
     this.dom.style["color"] = this.getDefault("LabelTextColor");
@@ -46,7 +48,24 @@ export class Label extends ui_base.UIBase {
     this._label = "";
     this.shadow.appendChild(this.dom);
   }
-  
+
+  get font() {
+    return this._font;
+  }
+
+  /**Set a font defined in ui_base.defaults
+     e.g. DefaultText*/
+  set font(prefix) {
+    if (this._font == prefix) {
+      return;
+    }
+
+    this._font = prefix;
+
+    this.dom.style["font"] = ui_base._getFont(undefined, prefix, false);
+    this.dom.style["color"] = this.getDefault(prefix + "Color");
+  }
+
   init() {
   }
   
@@ -108,7 +127,9 @@ ui_base.UIBase.register(Label);
 export class Container extends ui_base.UIBase {
   constructor() {
       super();
-      
+
+      this.dataPrefix = '';
+
       this.inherit_packflag = 0;
       
       let ul = this.ul = document.createElement("ul")
@@ -135,8 +156,6 @@ export class Container extends ui_base.UIBase {
         }
       `
 
-      this.setCSS();
-
       this.shadow.appendChild(style);
       this.shadow.appendChild(this.div);
       
@@ -144,6 +163,8 @@ export class Container extends ui_base.UIBase {
   }
 
   init() {
+    this.setCSS();
+
     super.init();
   }
 
@@ -508,7 +529,11 @@ export class Container extends ui_base.UIBase {
   }
   
   //supports number types
-  textbox(path, text, cb, packflag=0) {
+  textbox(inpath, text, cb, packflag=0) {
+    let path;
+    if (inpath)
+      path = this._joinPrefix(inpath);
+
     packflag |= this.inherit_packflag;
     
     let ret = document.createElement("textbox-x")
@@ -526,7 +551,11 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
   
-  pathlabel(path, label="") {
+  pathlabel(inpath, label="") {
+    let path;
+    if (inpath)
+      path = this._joinPrefix(inpath);
+
     let ret = document.createElement("label-x");
     
     ret.text = label;
@@ -586,25 +615,16 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
   
-  _path_get(path) {
-    if (typeof path == "string" || path instanceof String) {
-      path = new ObjectPath(path);
-    }
-    
-    var obj = this.state;
-    var parentobj = undefined;
-    
-    for (var key of path) {
-      parentobj = obj;
-      
-      obj = obj[key];
-    }
-    
-    return [obj, parentobj];
-  }
+  _joinPrefix(path) {
+    let prefix = this.dataPrefix.trim();
 
-  prop(path, packflag=0, mass_set_path=undefined) {
+    return prefix + path;
+  }
+  
+  prop(inpath, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
+
+    let path = this._joinPrefix(inpath);
 
     let rdef = this.ctx.api.resolvePath(this.ctx, path);
 
@@ -624,7 +644,7 @@ export class Container extends ui_base.UIBase {
     }
 
     if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
-      let ret = this.slider(path);
+      let ret = this.slider(inpath);
 
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
@@ -632,16 +652,16 @@ export class Container extends ui_base.UIBase {
 
       return ret;
     } else if (prop.type == PropTypes.BOOL) {
-      this.check(path, prop.uiname, packflag);
+      this.check(inpath, prop.uiname, packflag);
     } else if (prop.type == PropTypes.ENUM) {
       if (!(packflag & PackFlags.USE_ICONS)) {
-        this.listenum(path, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
+        this.listenum(inpath, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
       } else {
-        this.checkenum(path, undefined, packflag);
+        this.checkenum(inpath, undefined, packflag);
       }
     } else if (prop.type == PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
       if (prop.subtype == PropSubTypes.COLOR) {
-        this.colorPicker(path, packflag, mass_set_path);
+        this.colorPicker(inpath, packflag, mass_set_path);
       } else {
 
       }
@@ -654,7 +674,7 @@ export class Container extends ui_base.UIBase {
           name = makeUIName(rdef.subkey);
         }
 
-        let ret = this.check(path, name, packflag, mass_set_path);
+        let ret = this.check(inpath, name, packflag, mass_set_path);
 
         if (tooltip) {
           ret.description = tooltip;
@@ -668,7 +688,7 @@ export class Container extends ui_base.UIBase {
             name = makeUIName(k);
           }
 
-          let ret = this.check(`${path}[${k}]`, name, packflag, mass_set_path);
+          let ret = this.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
           if (tooltip) {
             ret.description = tooltip;
@@ -678,9 +698,11 @@ export class Container extends ui_base.UIBase {
     }
   }
 
-  check(path, name, packflag=0, mass_set_path=undefined) {
+  check(inpath, name, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
-    
+
+    let path = this._joinPrefix(inpath);
+
     //let prop = this.ctx.getProp(path);
     let ret;
     if (packflag & PackFlags.USE_ICONS) {
@@ -708,10 +730,12 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  checkenum(path, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+  checkenum(inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag;
-    
+
+    let path = this._joinPrefix(inpath);
+
     /*let ret = document.createElement("dropbox-x")
     ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
     
@@ -741,7 +765,7 @@ export class Container extends ui_base.UIBase {
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {
-          let check = frame.check(path + " == " + prop.values[key], "", packflag);
+          let check = frame.check(inpath + " == " + prop.values[key], "", packflag);
           
           check.icon = prop.iconmap[key];
           check.drawCheck = false;
@@ -766,7 +790,7 @@ export class Container extends ui_base.UIBase {
         }
       } else {
         for (let key in prop.values) {
-          let check = frame.check(path + " = " + prop.values[key], prop.ui_value_names[key]);
+          let check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
 
           check.description = prop.descriptions[prop.keys[key]];
 
@@ -791,9 +815,15 @@ export class Container extends ui_base.UIBase {
 
     defaultval cannot be undefined
   */
-  listenum(path, name, enummap, defaultval, callback, iconmap, packflag=0) {
+  listenum(inpath, name, enummap, defaultval, callback, iconmap, packflag=0) {
     packflag |= this.inherit_packflag;
-    
+
+    let path;
+
+    if (inpath !== undefined) {
+      path = this._joinPrefix(inpath);
+    }
+
     let ret = document.createElement("dropbox-x")
     if (enummap !== undefined) {
       ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
@@ -863,13 +893,15 @@ export class Container extends ui_base.UIBase {
     return cw;
   }
 
-  slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
+  slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     packflag |= this.inherit_packflag;
 
     let ret = document.createElement("numslider-x")
     ret.packflag |= packflag;
     
-    if (path) {
+    if (inpath) {
+      let path = this._joinPrefix(inpath);
+      
       ret.setAttribute("datapath", path);
 
       let rdef = this.ctx.api.resolvePath(this.ctx, path);
@@ -979,7 +1011,12 @@ export class Container extends ui_base.UIBase {
     return ret;      
   }
   
-  colorPicker(path, packflag=0, mass_set_path=undefined) {
+  colorPicker(inpath, packflag=0, mass_set_path=undefined) {
+    let path;
+
+    if (inpath)
+      path = this._joinPrefix(inpath);
+
     packflag |= this.inherit_packflag;
     
     let ret = document.createElement("colorpicker-x");
@@ -1002,7 +1039,7 @@ export class Container extends ui_base.UIBase {
     this._add(ret);
     return ret;
   }
-  
+
   //
   tabs(position="top", packflag=0) {
     packflag |= this.inherit_packflag;

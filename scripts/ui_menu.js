@@ -32,7 +32,7 @@ export class Menu extends UIBase {
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
     this.container.style["display"] = "flex";
-      ""
+
     //this.container.style["background-color"] = "red";
     this.container.setAttribute("class", "menucon");
 
@@ -476,9 +476,15 @@ export class Menu extends UIBase {
             if (this.activeItem && this.activeItem !== active) {
               active._menu.close();
             }
-          }, 500);
+          }, 10);
         }
         if (li._isMenu) {
+          li._menu.onselect = (item) => {
+            console.log("submenu select", item);
+            this.onselect(item);
+            this.close();
+          };
+
           li._menu.start(false, false);
         }
 
@@ -545,7 +551,7 @@ export class DropBox extends Button {
     let dpi = UIBase.getDPI();
 
     let ts = this.getDefault("DefaultTextSize");
-    let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
+    let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
     tw = ~~tw;
 
     tw += 30;

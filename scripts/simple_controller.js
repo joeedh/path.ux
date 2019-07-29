@@ -9,8 +9,14 @@ let tokens = [
     t.value = parseInt(t.value);
     return t;
   }),
-  tk("STRLIT", /'.*'/),
-  tk("STRLIT", /".*"/),
+  tk("STRLIT", /'.*'/, (t) => {
+    t.value = t.value.slice(1, t.value.length-1);
+    return t;
+  }),
+  tk("STRLIT", /".*"/, (t) => {
+    t.value = t.value.slice(1, t.value.length-1);
+    return t;
+  }),
   tk("DOT", /\./),
   tk("EQUALS", /(\=)|(\=\=)/),
   tk("LSBRACKET", /\[/),
@@ -241,6 +247,10 @@ export class DataList {
   }
 
   getStruct(api, list, key) {
+    if (this.cb.getStruct !== undefined) {
+      return this.cb.getStruct(api, list, key);
+    }
+
     let obj = this.get(api, list, key);
 
     if (obj === undefined)
@@ -270,8 +280,40 @@ export class DataStruct {
     return ret;
   }
 
+  color3(path, apiname, uiname, description) {
+    let ret = this.vec3(path, apiname, uiname, description);
+
+    ret.data.subtype = toolprop.PropSubTypes.COLOR;
+
+    return ret;
+  }
+
+  color4(path, apiname, uiname, description) {
+    let ret = this.vec4(path, apiname, uiname, description);
+
+    ret.data.subtype = toolprop.PropSubTypes.COLOR;
+
+    return ret;
+  }
+
   vec2(path, apiname, uiname, description) {
     let prop = new toolprop.Vec2Property(undefined, apiname, uiname, description);
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
+  }
+
+  vec3(path, apiname, uiname, description) {
+    let prop = new toolprop.Vec3Property(undefined, apiname, uiname, description);
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
+  }
+
+  vec4(path, apiname, uiname, description) {
+    let prop = new toolprop.Vec4Property(undefined, apiname, uiname, description);
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);

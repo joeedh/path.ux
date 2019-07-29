@@ -22,22 +22,25 @@ function getpx(css) {
 export class Button extends UIBase {
   constructor() {
     super();
-      
+
     this.boxpad = this.getDefault("BoxMargin", 4);
     let dpi = UIBase.getDPI();
 
     this.r = this.getDefault("BoxRadius");
     this._name = "";
     this._namePad = undefined;
-    
+
+    this._last_w = 0;
+    this._last_h = 0;
+
     this._last_dpi = dpi;
-    
+
     this._lastw = undefined;
     this._lasth = undefined;
-    
+
     this.dom = document.createElement("canvas");
     this.g = this.dom.getContext("2d");
-    
+
     this.dom.setAttribute("class", "canvas1");
     this.dom.tabIndex = 0;
 
@@ -47,18 +50,18 @@ export class Button extends UIBase {
       if (this.disabled) return;
 
       console.log(e.keyCode);
-      
+
       switch (e.keyCode) {
         case 32: //spacebar
         case 13: //enter
           this.click();
           break;
       }
-      
+
       e.preventDefault();
       e.stopPropagation();
     });
-    
+
     this.addEventListener("focusin", () => {
       if (this.disabled) return;
 
@@ -67,7 +70,7 @@ export class Button extends UIBase {
       this.focus();
       console.log("focus2");
     });
-    
+
     this.addEventListener("blur", () => {
       if (this.disabled) return;
 
@@ -77,6 +80,10 @@ export class Button extends UIBase {
     });
 
     this._last_disabled = false;
+  }
+
+  init() {
+    let dpi = UIBase.getDPI();
 
     //set default dimensions
     let width = ~~(this.getDefault("defaultWidth"));
@@ -217,6 +224,30 @@ export class Button extends UIBase {
     }
   }
 
+  updateDefaultSize() {
+    let width = ~~(this.getDefault("defaultWidth"));
+    let height = ~~(this.getDefault("defaultHeight"));
+
+    return; //XXX
+    if (width !== this._last_w || height !== this._last_h) {
+      console.log("update default width");
+
+      this._last_w = width;
+      this._last_h = height;
+
+      let dpi = UIBase.getDPI();
+
+      this.dom.style["width"] = width + "px";
+      this.dom.style["height"] = height + "px";
+
+      this.dom.width = Math.ceil(width*dpi); //getpx(this.dom.style["width"])*dpi;
+      this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
+
+      this._repos_canvas();
+      this._redraw();
+    }
+  }
+
   update() {
     super.update();
 
@@ -224,6 +255,7 @@ export class Button extends UIBase {
       this.title = this.description;
     }
 
+    this.updateDefaultSize();
     this.updateWidth();
     this.updateDPI();
     this.updateName();
@@ -244,7 +276,7 @@ export class Button extends UIBase {
       let dpi = UIBase.getDPI();
       
       let ts = this.getDefault("DefaultTextSize");
-      let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
+      let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
       
       if (this._namePad !== undefined) {
         tw += this._namePad;
@@ -350,13 +382,13 @@ export class Button extends UIBase {
     
     //console.log(text, "text", this._name);
     
-    let tw = ui_base.measureText(text, this.dom, this.g).width;
+    let tw = ui_base.measureText(this, text, this.dom, this.g).width/dpi;
     let cx = this.dom.width/2 - tw/2;
     let cy = this.dom.height;
     
     cx = ~~cx;
     
-    ui_base.drawText(~~cx + 0.5, ~~(cy - ts*0.6*dpi) + 0.5, text, this.dom, this.g);
+    ui_base.drawText(this, ~~cx + 0.5, ~~(cy - ts*0.6*dpi) + 0.5, text, this.dom, this.g);
   }
   
   static define() {return {
@@ -740,7 +772,7 @@ export class NumSlider extends ValueButtonBase {
       let dpi = UIBase.getDPI();
       
       let ts = this.getDefault("DefaultTextSize");
-      let tw = ui_base.measureText(this._genLabel(), this.dom, this.g).width/dpi + ts*2;
+      let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
       
       let w = this.getDefault("numslider_width");
       
@@ -789,11 +821,11 @@ export class NumSlider extends ValueButtonBase {
     //if (this.value !== undefined) {
     let text = this._genLabel();
    
-    let tw = ui_base.measureText(text, this.dom, this.g).width;
+    let tw = ui_base.measureText(this, text, this.dom, this.g).width;
     let cx = this.dom.width/2 - tw/2;
     let cy = this.dom.height/2;
     
-    ui_base.drawText(cx, cy + ts/2, text, this.dom, this.g);
+    ui_base.drawText(this, cx, cy + ts/2, text, this.dom, this.g);
     //}
     
     g.fillStyle = "rgba(0,0,0,0.1)";
@@ -1186,11 +1218,11 @@ export class Check1 extends Button {
     
     //console.log(text, "text", this._name);
     
-    let tw = ui_base.measureText(text, this.dom, this.g).width;
+    let tw = ui_base.measureText(this, text, this.dom, this.g).width;
     let cx = this.dom.width/2 - tw/2;
     let cy = this.dom.height/2;
     
-    ui_base.drawText(box, cy + ts/2, text, this.dom, this.g);
+    ui_base.drawText(this, box, cy + ts/2, text, this.dom, this.g);
   }
 
   static define() {return {

@@ -81,25 +81,15 @@ export class Overdraw extends ui_base.UIBase {
   }
   
   rect(p, size, color="black") {
-    let s = size;
-   
-    let box = document.createElement("div");
-    
-    box.style["position"] = "absolute";
-    box.style["z-index"] = 10;
-    box.style["margin"] = box.style["padding"] = "0";
-    box.style["left"] = p[0] + "px";
-    box.style["top"] = p[1] + "px";
-    box.style["width"] = s[0] + "px";
-    box.style["height"] = s[1] + "px";
-    
-    box.style["background-color"] = color;
-    box.style["display"] = "float";
-    
-    document.body.appendChild(box);
-    this.otherChildren.push(box);
-    
-    return box;
+    let line = document.createElementNS(SVG_URL, "rect");
+    line.setAttribute("x", p[0]);
+    line.setAttribute("y", p[1]);
+    line.setAttribute("width", size[0]);
+    line.setAttribute("height", size[1]);
+    line.setAttribute("style", `fill:${color};stroke-width:2`);
+
+    this.svg.appendChild(line);
+    return line;
   }
   
   end() {

@@ -335,6 +335,45 @@ export class Screen extends ui_base.UIBase {
     
   }
 
+  /** makes a popup at x,y and returns a new container-x for it */
+  popup(elem_or_x, y) {
+    let x;
+
+    if (typeof elem_or_x == "object") {
+      let r = elem_or_x.getClientRects()[0];
+
+      x = r.x;
+      y = r.y;
+    } else {
+      x = elem_or_x;
+    }
+
+    let container = document.createElement("container-x");
+
+    container.background = this.getDefault("BoxSubBG");
+    container.style["position"] = "absolute";
+    container.style["z-index"] = 100;
+    container.style["left"] = x + "px";
+    container.style["top"] = y + "px";
+
+    this.shadow.appendChild(container);
+
+    let done = false;
+    let end = () => {
+      if (done) return;
+
+      done = true;
+      container.remove();
+    };
+
+    container.addEventListener("mouseleave", (e) => {
+      console.log("popup mouse leave");
+      end();
+    });
+
+    return container;
+  }
+
   _recalcAABB() {
     let mm = new math.MinMax(2);
 

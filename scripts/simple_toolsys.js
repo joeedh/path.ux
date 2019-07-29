@@ -5,6 +5,7 @@ a basic, simple tool system implementation
 
 import * as util from './util.js';
 import * as events from './events.js';
+import {keymap} from './simple_events.js';
 
 export let ToolClasses = [];
 
@@ -173,7 +174,21 @@ export class ToolOp extends events.EventHandler {
     this.drawlines = [];
   }
 
-  //for compatibility with fairmotion
+  //default on_keydown implementation for modal tools,
+  //no need to call super() to execute this if you don't want to
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap["Enter"]:
+      case keymap["Space"]:
+        this.modalEnd(false);
+        break;
+      case keymap["Escape"]:
+        this.modalEnd(true);
+        break;
+    }
+  }
+
+  /** for compatibility with fairmotion, don't use */
   can_call(ctx) {
     return this.canRun(ctx);
   }
@@ -254,7 +269,13 @@ export class ToolOp extends events.EventHandler {
     
     return this._promise;
   }
-  
+
+  /*eek, I've not been using this.
+    guess it's a non-enforced contract, I've been naming
+    cancel methods 'cancel' all this time.
+
+    XXX fix
+  */
   toolCancel() {
   }
   

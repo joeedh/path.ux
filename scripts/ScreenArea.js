@@ -671,9 +671,19 @@ export class ScreenArea extends ui_base.UIBase {
       ret.ctx = this.ctx;
       ret.area.ctx = this.ctx;
       
-      ret.area.push_ctx_active();
-      ret.area.on_area_active();
-      ret.area.pop_ctx_active();
+      if (ret.area._init_done) {
+        ret.area.push_ctx_active();
+        ret.area.on_area_active();
+        ret.area.pop_ctx_active();
+      } else {
+        ret.doOnce(() => {
+          ret._init();
+          ret.area._init();
+          ret.area.push_ctx_active();
+          ret.area.on_area_active();
+          ret.area.pop_ctx_active();
+        });
+      }
     }
     
     return ret;
@@ -917,6 +927,7 @@ export class ScreenArea extends ui_base.UIBase {
       this.shadow.appendChild(this.area);
 
       this.doOnce(() => {
+        this.area._init(); //ensure init has been called already
         this.area.on_area_active();
         this.area.onadd();
       });        
