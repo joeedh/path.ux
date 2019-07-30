@@ -32,7 +32,7 @@ export function buildParser() {
       t.value = t.value.slice(1, t.value.length-1);
       return t;
     }),
-    t('NUMBER', /[0-9]+/, (t) => {
+    t('NUMBER', /-?[0-9]+/, (t) => {
       t.value = parseInt(t.value);
       return t;
     }),

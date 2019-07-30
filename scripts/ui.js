@@ -42,11 +42,14 @@ export class Label extends ui_base.UIBase {
     this._font = "LabelText";
 
     this.dom = document.createElement("div");
-    this.dom.style["font"] = ui_base._getFont(undefined, "LabelText", false);
-    this.dom.style["color"] = this.getDefault("LabelTextColor");
-    
+
     this._label = "";
     this.shadow.appendChild(this.dom);
+  }
+
+  init() {
+    this.dom.style["font"] = ui_base._getFont(this, undefined, "LabelText", false);
+    this.dom.style["color"] = this.getDefault("LabelTextColor");
   }
 
   get font() {
@@ -62,13 +65,10 @@ export class Label extends ui_base.UIBase {
 
     this._font = prefix;
 
-    this.dom.style["font"] = ui_base._getFont(undefined, prefix, false);
+    this.dom.style["font"] = ui_base._getFont(this, undefined, prefix, false);
     this.dom.style["color"] = this.getDefault(prefix + "Color");
   }
 
-  init() {
-  }
-  
   updateDataPath() {
     if (this.ctx === undefined) {
       return;
@@ -626,7 +626,7 @@ export class Container extends ui_base.UIBase {
 
     let path = this._joinPrefix(inpath);
 
-    let rdef = this.ctx.api.resolvePath(this.ctx, path);
+    let rdef = this.ctx.api.resolvePath(this.ctx, path, true);
 
     if (rdef === undefined || rdef.prop === undefined) {
       console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path));

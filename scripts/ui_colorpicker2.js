@@ -274,7 +274,7 @@ export class HueField extends UIBase {
     this.shadow.appendChild(this.canvas);
 
     let setFromXY = (x, y) => {
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       let r = this.getDefault("circleSize");
 
       let h = x / ((this.canvas.width - r*4)/dpi);
@@ -321,7 +321,7 @@ export class HueField extends UIBase {
 
   _redraw() {
     let g = this.g, canvas = this.canvas;
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     let w = this.getDefault("defaultWidth");
     let h = this.getDefault("hueheight");
@@ -391,7 +391,7 @@ export class SatValField extends UIBase {
 
     let setFromXY = (x, y) => {
       let field = this._getField();
-      let r = ~~(this.getDefault("circleSize")*UIBase.getDPI());
+      let r = ~~(this.getDefault("circleSize")*this.getDPI());
 
       let sat = field.x2sat(x-r);
       let val = field.y2val(y-r);
@@ -437,7 +437,7 @@ export class SatValField extends UIBase {
   }
 
   _getField() {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     let canvas = this.canvas;
     let r = this.getDefault("circleSize");
     let w = this.getDefault("defaultWidth");
@@ -458,7 +458,7 @@ export class SatValField extends UIBase {
 
   _redraw() {
     let g = this.g, canvas = this.canvas;
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     let w = this.getDefault("defaultWidth");
     let h = this.getDefault("defaultHeight");
@@ -631,7 +631,7 @@ export class ColorField extends ui.RowFrame {
   }
 
   updateDPI(force_update=false, _in_update=false) {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     let update = force_update;
     update = update || dpi != this._last_dpi;

@@ -6,6 +6,7 @@ import * as ui_base from './ui_base.js';
 import * as events from './events.js';
 import * as simple_toolsys from './simple_toolsys.js';
 import * as toolprop from './toolprop.js';
+import {DataPathError} from './simple_controller.js';
 
 let EnumProperty = toolprop.EnumProperty,
     PropTypes = toolprop.PropTypes;
@@ -24,7 +25,7 @@ export class Button extends UIBase {
     super();
 
     this.boxpad = this.getDefault("BoxMargin", 4);
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     this.r = this.getDefault("BoxRadius");
     this._name = "";
@@ -83,7 +84,7 @@ export class Button extends UIBase {
   }
 
   init() {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     //set default dimensions
     let width = ~~(this.getDefault("defaultWidth"));
@@ -235,7 +236,7 @@ export class Button extends UIBase {
       this._last_w = width;
       this._last_h = height;
 
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
 
       this.dom.style["width"] = width + "px";
       this.dom.style["height"] = height + "px";
@@ -273,7 +274,7 @@ export class Button extends UIBase {
     
     if (name !== this._name) {
       this._name = name;
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       
       let ts = this.getDefault("DefaultTextSize");
       let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
@@ -293,7 +294,7 @@ export class Button extends UIBase {
   }
   
   updateWidth(w_add=0) {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     let pack = this.packflag;
     
@@ -312,14 +313,14 @@ export class Button extends UIBase {
   }
   
   _repos_canvas() {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     this.dom.width = Math.ceil(getpx(this.dom.style["width"])*dpi);
     this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
   }
   
   updateDPI() {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     if (this._last_dpi != dpi) {
       console.log("update dpi", dpi);
@@ -350,7 +351,7 @@ export class Button extends UIBase {
   _redraw(draw_text=true) {
     //console.log("button draw");
     
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, this.r, undefined, undefined, this.boxpad);
     
@@ -373,7 +374,7 @@ export class Button extends UIBase {
   }
   
   _draw_text() {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultTextSize");
@@ -769,7 +770,7 @@ export class NumSlider extends ValueButtonBase {
     
     if (name !== this._name) {
       this._name = name;
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       
       let ts = this.getDefault("DefaultTextSize");
       let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
@@ -809,7 +810,7 @@ export class NumSlider extends ValueButtonBase {
 
     //console.log("numslider draw");
     
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     let disabled = this.disabled; //this.hasAttribute("disabled");
     
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, undefined, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
@@ -1017,7 +1018,17 @@ export class IconCheck extends Button {
     }
 
     if (this._icon < 0) {
-      let rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+      let rdef;
+      try {
+        rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+      } catch(error) {
+        if (error instanceof DataPathError) {
+          return;
+        } else {
+          throw error;
+        }
+      }
+      
       if (rdef !== undefined && rdef.prop) {
         let icon, title;
 
@@ -1117,11 +1128,11 @@ export class IconCheck extends Button {
       icon = this._icon_pressed;
     }
 
-    ui_base.iconmanager.canvasDraw(this.dom, this.g, icon, undefined, undefined, this.iconsheet);
+    ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
 
     if (this.drawCheck) {
       let icon2 = this._checked ? ui_base.Icons.CHECKED : ui_base.Icons.UNCHECKED;
-      ui_base.iconmanager.canvasDraw(this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
+      ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
     }
   }
   
@@ -1184,7 +1195,7 @@ export class IconButton extends Button {
       icon = this._icon_pressed;
     }
     
-    ui_base.iconmanager.canvasDraw(this.dom, this.g, icon, undefined, undefined, this.iconsheet);
+    ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
   }
   
   static define() {return {
@@ -1205,7 +1216,7 @@ export class Check1 extends Button {
   _redraw() {
     //console.log("button draw");
     
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     let box = 40;
     ui_base.drawRoundBox(this, this.dom, this.g, box);
@@ -1244,7 +1255,7 @@ export class TextBox extends UIBase {
       this._focus = 0;
     });
     
-    let margin = Math.ceil(3 * UIBase.getDPI());
+    let margin = Math.ceil(3 * this.getDPI());
     
     this._had_error = false;
     

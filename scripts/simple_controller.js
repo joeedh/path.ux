@@ -67,6 +67,18 @@ export class DataPath {
     this.struct = undefined;
   }
 
+  copy() {
+    let ret = new DataPath();
+
+    ret.type = this.type;
+    ret.data = this.data;
+    ret.apiname = this.apiname;
+    ret.path = this.path;
+    ret.struct = this.struct;
+
+    return ret;
+  }
+
   setProp(prop) {
     this.data = prop;
   }
@@ -184,6 +196,17 @@ export class DataList {
    - function filter(api, list, filter : StandardListFilters bitmask) returns an iterable
    - function getKey(api, list, object) returns object's key in this list, either a string or a number
   * */
+
+  copy() {
+    let ret = new DataList([this.cb.get]);
+
+    for (let k in this.cb) {
+      ret.cb[k] = this.cb[k];
+    }
+
+    return ret;
+  }
+
   constructor(callbacks) {
     if (callbacks === undefined) {
       throw new DataPathError("missing callbacks argument to DataList");
@@ -383,6 +406,8 @@ export class DataStruct {
 let _map_struct_idgen = 1;
 let _map_structs = {};
 
+window._debug__map_structs = _map_structs; //global for debugging purposes only
+
 export class DataListIF {
   constructor(api) {
     this.api = api;
@@ -439,18 +464,38 @@ export class DataAPI extends ModelInterface {
     return this.mapStruct(cls, false);
   }
 
+  mergeStructs(dest, src) {
+    for (let m of src.members) {
+      dest.add(m.copy());
+    }
+  }
+
   mapStruct(cls, auto_create=true) {
-    let key = cls.__dp_map_id;
+    let key;
+
+    if (!cls.hasOwnProperty("__dp_map_id")) {
+      key = undefined;
+    } else {
+      key = cls.__dp_map_id;
+    }
 
     if (key === undefined && auto_create) {
       key = cls.__dp_map_id = _map_struct_idgen++;
       _map_structs[key] = new DataStruct(undefined, cls.name);
+    } else if (key === undefined) {
+      return undefined;
     }
 
     return _map_structs[key];
   }
 
-  resolvePath(ctx, inpath) {
+  /**
+    get meta information for a datapath.
+
+   @param ignoreExistence: don't try to get actual data associated with path,
+                           just want meta information
+    */
+  resolvePath(ctx, inpath, ignoreExistence=false) {
     let p = pathParser;
     inpath = inpath.replace("==", "=");
 
@@ -483,8 +528,8 @@ export class DataAPI extends ModelInterface {
         if (prop !== undefined && prop instanceof DataList && key == "active") {
           let act = prop.getActive(this, obj);
 
-          if (act === undefined) {
-            throw new DataPathError("no active element for list");
+          if (act === undefined && !ignoreExistence) {
+            throw new DataPathError("no active elem ent for list");
           }
 
           dstruct = prop.getStruct(this, obj, prop.getKey(this, obj, act));
@@ -514,14 +559,23 @@ export class DataAPI extends ModelInterface {
           lastobj2 = lastobj;
           lastobj = obj;
           lastkey = key;
-          obj = obj[key.trim()];
+
+          if (obj === undefined && !ignoreExistence) {
+            throw new DataPathError("no data for " + inpath);
+          } else if (obj !== undefined) {
+            obj = obj[key.trim()];
+          }
         }
       } else {
         lastobj2 = lastobj;
         lastobj = obj;
 
         lastkey = path.path;
-        obj = obj[path.path];
+        if (obj === undefined && !ignoreExistence) {
+          throw new DataPathError("no data for " + inpath);
+        } else if (obj !== undefined) {
+          obj = obj[path.path];
+        }
       }
 
       let t = p.peeknext();
@@ -606,10 +660,14 @@ export class DataAPI extends ModelInterface {
         }
 
         key = path.path;
-        if (prop.type == PropTypes.ENUM) {
-          obj = !!(lastobj[key] == val);
-        } else {
-          obj = !!(lastobj[key] & val);
+        if (lastobj === undefined && !ignoreExistence) {
+          throw new DataPathError("no data for path " + inpath);
+        } else if (lastobj !== undefined) {
+          if (prop.type == PropTypes.ENUM) {
+            obj = !!(lastobj[key] == val);
+          } else {
+            obj = !!(lastobj[key] & val);
+          }
         }
 
         p.expect("RSBRACKET");

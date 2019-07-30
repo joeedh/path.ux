@@ -234,7 +234,7 @@ export class Area extends ui_base.UIBase {
 
     row.background = ui_base.getDefault("AreaHeaderBG");
 
-    let rh = ~~(16*ui_base.UIBase.getDPI());
+    let rh = ~~(16*this.getDPI());
 
     //container.setSize(undefined, rh);
     //row.setSize(undefined, rh);

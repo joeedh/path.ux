@@ -1,5 +1,7 @@
 "use strict";
 
+/*FIXME: not sure this works anymore*/
+
 import * as util from './util.js';
 import * as ui_base from './ui_base.js';
 import * as vectormath from './vectormath.js';

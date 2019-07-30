@@ -82,7 +82,7 @@ export class ModalTabMove extends events.EventHandler {
   
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     x -= r.x;
     y -= r.y;
@@ -199,7 +199,7 @@ export class TabBar extends UIBase {
       mx = e.x - r.x;
       my = e.y - r.y;
       
-      let dpi = ui_base.UIBase.getDPI();
+      let dpi = this.getDPI();
       
       mx *= dpi;
       my *= dpi;
@@ -215,7 +215,7 @@ export class TabBar extends UIBase {
       mx = e.touches[0].pageX - r.x;
       my = e.touches[0].pageY - r.y;
       
-      let dpi = ui_base.UIBase.getDPI();
+      let dpi = this.getDPI();
       
       mx *= dpi;
       my *= dpi;
@@ -401,7 +401,7 @@ export class TabBar extends UIBase {
   }
   
   updateDPI(force_update=false) {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     if (dpi !== this._last_dpi) {
       if (debug) console.log("DPI update!");
@@ -414,7 +414,7 @@ export class TabBar extends UIBase {
   updateCanvas(force_update=false) {
     let canvas = this.canvas;
      
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     let rwidth = getpx(this.canvas.style["width"]);
     let rheight = getpx(this.canvas.style["height"]);
@@ -442,10 +442,10 @@ export class TabBar extends UIBase {
     
     if (debug) console.log("tab layout");
     
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     let tsize = this.getDefault("TabTextSize")*1;
     
-    g.font = ui_base._getFont(tsize, "TabText");
+    g.font = ui_base._getFont(this, tsize, "TabText");
     
     let axis = this.horiz ? 0 : 1;
     
@@ -509,10 +509,10 @@ export class TabBar extends UIBase {
     g.fillStyle = bgcolor;
     g.fill();
     
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     let tsize = this.getDefault("TabTextSize");
     
-    g.font = ui_base._getFont(tsize, "TabText");
+    g.font = ui_base._getFont(this, tsize, "TabText");
     tsize *= dpi;
     
     g.lineWidth = 2;

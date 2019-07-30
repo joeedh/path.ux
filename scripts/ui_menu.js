@@ -83,7 +83,7 @@ export class Menu extends UIBase {
           padding-left: 4px;
           padding-top : 0px;
           padding-bottom : 0px;
-          font : ${ui_base._getFont()};
+          font : ${ui_base._getFont(this)};
           background-color: ${this.getDefault("MenuBG")};
         }
         
@@ -148,7 +148,7 @@ export class Menu extends UIBase {
   float(x, y, zindex=undefined) {
     console.log("menu test!");
 
-    let dpi = ui_base.UIBase.getDPI();
+    let dpi = this.getDPI();
     let rect = this.dom.getClientRects();
     let maxx = this.getWinWidth()-10;
     let maxy = this.getWinHeight()-10;
@@ -336,9 +336,9 @@ export class Menu extends UIBase {
     let span = document.createElement("span");
 
     //stupid css doesn't get width right. . .
-    span.style["font"] = ui_base._getFont(undefined, "MenuText");
+    span.style["font"] = ui_base._getFont(this, undefined, "MenuText");
 
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     let tsize = this.getDefault("MenuTextSize");
     //XXX proportional font fail
 
@@ -353,7 +353,7 @@ export class Menu extends UIBase {
     let twid = Math.ceil(g.measureText(text).width);
     let hwid;
     if (hotkey) {
-      g.font = ui_base._getFont(undefined, "HotkeyText");
+      g.font = ui_base._getFont(this, undefined, "HotkeyText");
       hwid = Math.ceil(g.measureText(hotkey).width);
       twid += hwid + 8;
     }
@@ -387,7 +387,7 @@ export class Menu extends UIBase {
 
       let al = "right";
 
-      hotkey_span.style["font"] = ui_base._getFont(undefined, "HotkeyText");
+      hotkey_span.style["font"] = ui_base._getFont(this, undefined, "HotkeyText");
       hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
 
       //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
@@ -548,7 +548,7 @@ export class DropBox extends Button {
 
   updateWidth() {
     //let ret = super.updateWidth(10);
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultTextSize");
     let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
@@ -691,7 +691,7 @@ export class DropBox extends Button {
     let menu = this._menu;
 
     document.body.appendChild(menu);
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
 
     let x = e.x, y = e.y;
     let rects = this.dom.getClientRects();
@@ -723,9 +723,10 @@ export class DropBox extends Button {
 
     let g = this.g;
     let w = this.dom.width, h = this.dom.height;
+    let dpi = this.getDPI();
 
-    let p = 10*UIBase.getDPI();
-    let p2 = 4*UIBase.getDPI();
+    let p = 10*dpi;
+    let p2 = 4*dpi;
 
     g.fillStyle = "rgba(250, 250, 250, 0.7)";
     g.beginPath();

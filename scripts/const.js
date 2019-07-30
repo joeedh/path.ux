@@ -1,4 +1,7 @@
 export var DEBUG = {
-  screenborders : true
+  screenborders : false
 };
 
+if (window.DEBUG !== undefined) {
+  window.DEBUG = DEBUG;
+}

@@ -161,7 +161,7 @@ export function getFieldImage(size, hsva) {
   let scale = size2 / size;
   
   let idata = image.image.data;
-  let dpi = UIBase.getDPI();
+  let dpi = this.getDPI();
   
   let band = ui_base.IsMobile() ? 35 : 20;
   
@@ -333,7 +333,7 @@ export class ColorField extends UIBase {
     
     let do_mouse = (e) => {
       let r = this.canvas.getClientRects()[0];
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       
       mx = (e.pageX-r.x)*dpi;
       my = (e.pageY-r.y)*dpi;
@@ -346,7 +346,7 @@ export class ColorField extends UIBase {
       }
       
       let r = this.canvas.getClientRects()[0];
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       let t = e.touches[0];
       
       mx = (t.pageX-r.x)*dpi;
@@ -396,7 +396,7 @@ export class ColorField extends UIBase {
   pick_h(x, y) {
     let field = this._field;
     let size = field.width;
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     if (field === undefined) {
       console.error("no field in colorpicker");
@@ -468,7 +468,7 @@ export class ColorField extends UIBase {
         return;
       let size = field.width;
       
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       let r = Math.sqrt((x-size/2)**2 + (y-size/2)**2);
       let pad = 5*dpi;
       
@@ -560,7 +560,7 @@ export class ColorField extends UIBase {
     
     if (update) {
       let size = this.getDefault("fieldsize");
-      let dpi = UIBase.getDPI();
+      let dpi = this.getDPI();
       
       canvas.style["width"] = size + "px";
       canvas.style["height"] = size + "px";
@@ -580,7 +580,7 @@ export class ColorField extends UIBase {
   
   _redraw() {
     let canvas = this.canvas, g = this.g;
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     let size = canvas.width;
     let field = this._field = getFieldImage(size, this.hsva);
@@ -641,7 +641,7 @@ export class ColorField extends UIBase {
   }
   
   updateDPI(force_update=false, _in_update=false) {
-    let dpi = UIBase.getDPI();
+    let dpi = this.getDPI();
     
     let update = force_update;
     update = update || dpi != this._last_dpi;

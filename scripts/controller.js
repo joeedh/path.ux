@@ -125,7 +125,7 @@ export class ModelInterface {
    *   mass_set : mass setter string, if controller implementation supports it
    * }
    */
-  resolvePath(ctx, path) {
+  resolvePath(ctx, path, ignoreExistence) {
   }
   
   setValue(ctx, path, val) {

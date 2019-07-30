@@ -227,11 +227,11 @@ class _IconManager {
     this.image = image;
   }
   
-  canvasDraw(canvas, g, icon, x=0, y=0) {
+  canvasDraw(elem, canvas, g, icon, x=0, y=0) {
     let tx = icon % this.tilex;
     let ty = ~~(icon / this.tilex);
 
-    let dpi = UIBase.getDPI();
+    let dpi = elem.getDPI();
     let ts = this.tilesize;
     let ds = this.drawsize;
 
@@ -305,9 +305,9 @@ export class IconManager {
     return this;
   }
 
-  canvasDraw(canvas, g, icon, x=0, y=0, sheet=0) {
+  canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
     sheet = this.iconsheets[sheet];
-    sheet.canvasDraw(canvas, g, icon, x, y);
+    sheet.canvasDraw(elem, canvas, g, icon, x, y);
   }
   
   getTileSize(sheet=0) {
@@ -455,7 +455,7 @@ export class UIBase extends HTMLElement {
     let style = document.createElement("style");
     style.textContent = `
     .DefaultText {
-      font: `+_getFont()+`;
+      font: `+_getFont(this)+`;
     }
     `;
     this.shadow.appendChild(style);
@@ -507,7 +507,8 @@ export class UIBase extends HTMLElement {
   }
 
   setCSS() {
-
+    let zoom = this.getZoom();
+    this.style["transform"] = `scale(${zoom},${zoom})`;
   }
 
   appendChild(child) {
@@ -966,24 +967,37 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  static pushDPI(dpi) {
-    dpistack.push(dpi);
+  getZoom() {
+    if (this.parentWidget !== undefined) {
+      return this.parentWidget.getZoom();
+    }
+
+    return 1.0;
   }
 
-  static popDPI() {
-    return dpistack.pop();
+  /**try to use this method
+
+   scaling ratio (e.g. for high-resolution displays)
+   for zoom ratio use getZoom()
+   */
+  getDPI() {
+    if (this.parentWidget !== undefined) {
+      return this.parentWidget.getDPI();
+    }
+
+    return window.devicePixelRatio;
   }
-  /**UGH I should have made this a a method
-    so I could have parents override it for children
+
+  /**DEPRECATED
 
     scaling ratio (e.g. for high-resolution displays)
    */
   static getDPI() {
-    if (dpistack.length > 0) {
-      return dpistack[this.dpistack.length-1];
-    } else {
-      return window.devicePixelRatio;
-    }
+    //if (dpistack.length > 0) {
+    //  return dpistack[this.dpistack.length-1];
+    //} else {
+    return window.devicePixelRatio;
+    //}
   }
   
   /**
@@ -1097,7 +1111,7 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fi
     width = width === undefined ? canvas.width : width;
     height = height === undefined ? canvas.height : height;
     
-    let dpi = UIBase.getDPI();
+    let dpi = elem.getDPI();
     
     r = r === undefined ? elem.getDefault("BoxRadius") : r;
     if (pad === undefined) {
@@ -1162,8 +1176,8 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fi
 };
 
 //size is optional, defaults to font's default size
-export function _getFont(size, font="DefaultText", do_dpi=true) {
-  let dpi = UIBase.getDPI();
+export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
+  let dpi = elem.getDPI();
   
   if (!do_dpi) {
     dpi = 1;
@@ -1184,7 +1198,7 @@ export function _getFont(size, font="DefaultText", do_dpi=true) {
 }
 
 export function _ensureFont(elem, canvas, g, size) {
-  let dpi = UIBase.getDPI();
+  let dpi = elem.getDPI();
   
   if (size !== undefined) {
     g.font = ""+Math.ceil(size * dpi) + "px sans-serif";

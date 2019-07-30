@@ -739,7 +739,7 @@ export class Matrix4 {
     
     return this;
   }
-  
+
   decompose(_translate, _rotate, _scale, _skew, _perspective) {
     if (this.$matrix.m44==0)
       return false;
@@ -792,18 +792,18 @@ export class Matrix4 {
     var row1=new Vector3([matrix.$matrix.m21, matrix.$matrix.m22, matrix.$matrix.m23]);
     var row2=new Vector3([matrix.$matrix.m31, matrix.$matrix.m32, matrix.$matrix.m33]);
     scale[0] = row0.vectorLength();
-    row0.divide(scale[0]);
+    row0.div(scale[0]);
     skew[0] = row0.dot(row1);
     row1.combine(row0, 1.0, -skew[0]);
     scale[1] = row1.vectorLength();
-    row1.divide(scale[1]);
+    row1.div(scale[1]);
     skew[0]/=scale[1];
     skew[1] = row1.dot(row2);
     row2.combine(row0, 1.0, -skew[1]);
     skew[2] = row1.dot(row2);
     row2.combine(row1, 1.0, -skew[2]);
     scale[2] = row2.vectorLength();
-    row2.divide(scale[2]);
+    row2.div(scale[2]);
     skew[1]/=scale[2];
     skew[2]/=scale[2];
     var pdum3=new Vector3(row1);
