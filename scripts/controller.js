@@ -144,7 +144,7 @@ export class ModelInterface {
 
     let old = res.obj[res.key];
 
-    if (res.prop !== undefined && res.prop.type == PropTypes.ENUM) {
+    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type == PropTypes.ENUM) {
       let ival = res.prop.values[res.subkey];
 
       if (val) {

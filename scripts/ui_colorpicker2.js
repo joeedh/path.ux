@@ -857,7 +857,16 @@ export class ColorPicker extends ui.ColumnFrame {
 
   _setDataPath() {
     if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+      if (prop !== undefined && prop.type == PropTypes.VEC3) {
+        let rgb = new Vector3();
+        rgb.load(this.field.rgba);
+
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), rgb);
+      } else {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+      }
     }
   }
 

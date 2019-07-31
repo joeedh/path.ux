@@ -199,7 +199,7 @@ export class Menu extends UIBase {
     //return;
 
     this.closed = true;
-    console.log("menu close");
+    console.log("menu close", this.onclose);
 
     this.remove();
     this.dom.remove();
@@ -642,10 +642,15 @@ export class DropBox extends Button {
     }
 
     menu.onclose = () => {
+      this._pressed = false;
       this._menu = undefined;
+      this._redraw();
     }
 
     menu.onselect = (id) => {
+      console.log("dropbox select");
+      this._pressed = false;
+      this._redraw();
       //console.trace("got click!", id, ":::");
 
       this._menu = undefined;
@@ -657,6 +662,7 @@ export class DropBox extends Button {
       }
 
       if (this.hasAttribute("datapath") && this.ctx) {
+        console.log("setting data api value", id, this.getAttribute("datapath"));
         this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
       }
     };
