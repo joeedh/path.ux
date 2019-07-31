@@ -1000,6 +1000,10 @@ export class DataAPI extends ModelInterface {
     let screen = ctx.screen;
 
     function searchKeymap(keymap) {
+      if (keymap === undefined) {
+        return undefined;
+      }
+      
       for (let hk of keymap) {
         if (typeof hk.action == "string" && hk.action == path) {
           return hk.buildString();

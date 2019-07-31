@@ -430,7 +430,7 @@ export class Screen extends ui_base.UIBase {
     //unlike other ondestroy functions, this one physically dismantles the DOM tree
     let recurse = (n, second_pass, parent) => {
       if (n.__pass === second_pass) {
-        console.warn(n, "CYCLE IN EFFING DOM TREE!", parent);
+        console.warn("CYCLE IN EFFING DOM TREE!", n, parent);
         return;
       }
       

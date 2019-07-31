@@ -67,7 +67,7 @@ export function pushModalLight(obj) {
 
   function make_default_touchhandler(type, state) {
     return function(e) {
-      console.warn("touch event!", type, touchmap[type], e.touches.length);
+      //console.warn("touch event!", type, touchmap[type], e.touches.length);
 
       if (touchmap[type] in ret.handlers) {
         let type2 = touchmap[type];
@@ -97,7 +97,7 @@ export function pushModalLight(obj) {
         }
 
         e2.was_touch = true;
-        console.log(e2.x, e2.y);
+        //console.log(e2.x, e2.y);
         ret.handlers[type2](e2);
       }
 

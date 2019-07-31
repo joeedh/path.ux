@@ -972,7 +972,7 @@ UIBase.register(Check);
 export class IconCheck extends Button {
   constructor() {
     super();
-    
+
     this.boxpad = 1;
     this._checked = undefined;
     this.r = 5;

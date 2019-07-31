@@ -49,8 +49,10 @@ export class Label extends ui_base.UIBase {
   }
 
   init() {
-    this.dom.style["font"] = ui_base._getFont(this, undefined, "LabelText", false);
-    this.dom.style["color"] = this.getDefault("LabelTextColor");
+    let font = this.getDefault(this._font);
+
+    this.dom.style["font"] = font.genCSS();
+    this.dom.style["color"] = font.color;
   }
 
   get font() {
@@ -1143,6 +1145,7 @@ export class PanelFrame extends Container {
     iconcheck.ctx = this.ctx;
     iconcheck._icon_pressed = ui_base.Icons.UI_EXPAND;
     iconcheck._icon = ui_base.Icons.UI_COLLAPSE;
+    iconcheck.drawCheck = false;
     iconcheck.iconsheet = ui_base.IconSheets.SMALL;
     iconcheck.checked = this._closed;
     
@@ -1154,9 +1157,16 @@ export class PanelFrame extends Container {
     row._add(iconcheck);
     
     //stupid css, let's just hackishly put " " to create spacing2
+    row.overrideDefault("LabelText", this.getDefault("TitleText").copy());
+    //row.overrideDefault("LabelTextSize", this.getDefault("TitleTextSize"));
+    //row.overrideDefault("LabelTextColor", this.getDefault("TitleTextColor"));
+    //row.overrideDefault("LabelTextFont", this.getDefault("TitleTextFont"));
+
     row.label(this.getAttribute("title"));
     
     row.background = con.background = this.getDefault("BoxSubBG");
+    this.background = this.getDefault("BoxSub2BG");
+
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
     

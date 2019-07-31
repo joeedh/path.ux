@@ -90,6 +90,32 @@ export const ErrorColors = {
   OK : "green"
 };
 
+export class CSSFont {
+  constructor(args) {
+    this.size = args.size;
+    this.font = args.font;
+    this.style = args.style !== undefined ? args.style : "normal";
+    this.weight = args.weight !== undefined ? args.weight : "normal";
+    this.variant = args.variant !== undefined ? args.variant : "normal";
+    this.color = args.color;
+  }
+
+  copyTo(b) {
+    b.size = this.size;
+    b.font = this.font;
+    b.style = this.style;
+    b.color = this.color;
+  }
+
+  copy() {
+    return new CSSFont(this);
+  }
+
+  genCSS(size=this.size) {
+    return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
+  }
+}
+
 export const theme = {
   base : {
     "numslider_width" : 24,
@@ -118,20 +144,36 @@ export const theme = {
     "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
     "BoxBG" : "rgba(170, 170, 170, 1.0)",
     "DisabledBG" : "rgba(110, 110, 110, 1.0)",
-    "BoxSubBG" : "rgba(175, 175, 175, 1.0)", //for subpanels
+    "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
+    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
     "AreaHeaderBG" : "rgba(170, 170, 170, 1.0)",
 
+    "DefaultTextSize" : 14,
+
+    "DefaultText" : new CSSFont({
+      font  : "sans-serif",
+      size  : 14,
+      color :  "rgba(35, 35, 35, 1.0)",
+      weight : "bold"
+    }),
+
     //fonts
     "DefaultTextFont" : "sans-serif",
-    "DefaultTextSize" : 14,
     "DefaultTextColor" : "rgba(35, 35, 35, 1.0)",
 
-    "LabelTextFont" : "sans-serif",
-    "LabelTextSize" : 13,
-    "LabelTextColor" : "rgba(75, 75, 75, 1.0)",
+    "LabelText" : new CSSFont({
+      size     : 13,
+      color    : "rgba(75, 75, 75, 1.0)",
+      font     : "sans-serif",
+      weight   : "bold"
+    }),
+
+    //"LabelTextFont" : "sans-serif",
+    //"LabelTextSize" : 13,
+    //"LabelTextColor" : "rgba(75, 75, 75, 1.0)",
 
     "HotkeyTextSize"  : 12,
     "HotkeyTextColor" : "rgba(130, 130, 130, 1.0)",
@@ -140,7 +182,13 @@ export const theme = {
     "MenuTextSize"  : 12,
     "MenuTextColor" : "rgba(25, 25, 25, 1.0)",
     "MenuTextFont"  : "sans-serif",
-    
+
+    "TitleText" : new CSSFont({
+      size     : 16,
+      color    : "rgba(55, 55, 55, 1.0)",
+      font     : "sans-serif",
+      weight   : "bold"
+    }),
     "TitleTextSize"   : 16,
     "TitleTextColor"  : "rgba(255, 255, 255, 1.0)",
     "TitleTextFont"   : "sans-serif"
@@ -963,7 +1011,7 @@ export class UIBase extends HTMLElement {
   
   onadd() {
     if (!this._init_done) {
-      this._init();
+      this.doOnce(this._init);
     }
   }
 
@@ -1175,10 +1223,23 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fi
     }
 };
 
+export function _getFont_new(elem, size, font="DefaultText", do_dpi=true) {
+
+  font = elem.getDefault(font);
+
+  return font.genCSS(size);
+}
+
 //size is optional, defaults to font's default size
 export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
   let dpi = elem.getDPI();
-  
+
+  let font2 = elem.getDefault(font);
+  if (font2 !== undefined) {
+    console.warn("New style font detected", font2, font2.genCSS(size));
+    return _getFont_new(elem, size, font, do_dpi);
+  }
+
   if (!do_dpi) {
     dpi = 1;
   }

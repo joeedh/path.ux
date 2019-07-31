@@ -433,6 +433,48 @@ export class SatValField extends UIBase {
           }
         });
       }, 1);
+    });
+
+    this.canvas.addEventListener("touchstart", (e) => {
+      console.log("touch start");
+      let rect = this.canvas.getClientRects()[0];
+      let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+
+      setFromXY(x, y);
+
+      setTimeout(() => {
+        this.pushModal({
+          on_mousemove: (e) => {
+            let rect = this.canvas.getClientRects()[0];
+            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+
+            setFromXY(x, y);
+          },
+          on_touchmove: (e) => {
+            let rect = this.canvas.getClientRects()[0];
+            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+
+            setFromXY(x, y);
+          },
+          on_mousedown: (e) => {
+            this.popModal();
+          },
+          on_touchcancel: (e) => {
+            this.popModal();
+          },
+          on_touchend: (e) => {
+            this.popModal();
+          },
+          on_mouseup: (e) => {
+            this.popModal();
+          },
+          on_keydown: (e) => {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+              this.popModal();
+            }
+          }
+        });
+      }, 1);
     })
   }
 
