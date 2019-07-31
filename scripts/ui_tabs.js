@@ -82,7 +82,7 @@ export class ModalTabMove extends events.EventHandler {
   
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = this.getDPI();
+    let dpi = UIBase.getDPI();
 
     x -= r.x;
     y -= r.y;

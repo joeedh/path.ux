@@ -11,6 +11,7 @@ import * as ui_curvewidget from './ui_curvewidget.js';
 import * as ui_base from './ui_base.js';
 import * as ui_widgets from './ui_widgets.js';
 import * as toolprop from './toolprop.js';
+import './html5_fileapi.js';
 
 let PropFlags = toolprop.PropFlags;
 let PropSubTypes = toolprop.PropSubTypes;
