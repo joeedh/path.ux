@@ -372,10 +372,8 @@ export class Screen extends ui_base.UIBase {
     };
 
     touchstart = (e) => {
-      console.log("=======================================================popup touch start");
-      console.log(e);
-
-      e.stopPropagation();
+      //console.log("=======================================================popup touch start");
+      //console.log(e);
 
       let x = e.touches[0].screenX, y = e.touches[0].screenY;
       let elem = this.pickElement(x, y);
@@ -384,11 +382,9 @@ export class Screen extends ui_base.UIBase {
         return;
       }
 
-      e.stopPropagation();
-
       let p = elem;
       while (p) {
-        console.log(p, "<------------------------------------");
+        //console.log(p, "<------------------------------------");
 
         if (p === container) {
           break;
@@ -396,19 +392,24 @@ export class Screen extends ui_base.UIBase {
         p = p.parentWidget;
       }
 
-      e.stopPropagation();
-
       if (p === container) {
-        console.log("p was container -----------------------------");
+        //console.log("p was container -----------------------------");
         return;
       }
 
-      let r = container.getClientRects()[0];
+      let r = container.getTotalRect();
+      console.log("R", r);
+
       if (r) {
-        console.log(x, y);
-        console.log(r.x, r.y, r.width, r.height)
-        console.log(x >= r.x && y >= r.y && x <= r.x+r.width && y <=r.y+r.height);
-        if (x >= r.x && y >= r.y && x <= r.x+r.width && y <=r.y+r.height) {
+        //XXX hack! why is it so hard to get real bounds of DOM elements!!
+        //even UIBase.prototype.getTotalRect isn't working right!!
+        let pad = 15.0;
+        let pad2 = 150.0;
+
+        //console.log(x, y);
+        //console.log(r.x, r.y, r.width, r.height)
+        //console.log(x >= r.x-pad && y >= r.y-pad2 && x <= r.x+r.width+pad && y <=r.y+r.height+pad2);
+        if (x >= r.x-pad && y >= r.y-pad2 && x <= r.x+r.width+pad && y <=r.y+r.height+pad2) {
           return;
         }
       }

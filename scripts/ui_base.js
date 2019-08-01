@@ -596,6 +596,47 @@ export class UIBase extends HTMLElement {
     })
   }
 
+  getTotalRect() {
+    let found = false;
+
+    let min = new Vector2([1e17, 1e17]);
+    let max = new Vector2([-1e17, -1e17]);
+
+    let doaabb = (n) => {
+      let rs = n.getClientRects();
+
+      for (let r of rs) {
+        min[0] = Math.min(min[0], r.x);
+        min[1] = Math.min(min[1], r.y);
+        max[0] = Math.max(max[0], r.x+r.width);
+        max[1] = Math.max(max[1], r.y+r.height);
+
+        found = true;
+      }
+    };
+
+    doaabb(this);
+
+    this._forEachChildren((n) => {
+      doaabb(n);
+    });
+
+    if (found) {
+      return {
+        width  : max[0] - min[0],
+        height : max[1] - min[1],
+        x : min[0],
+        y : min[1],
+        left : min[0],
+        top : min[1],
+        right : max[0],
+        bottom : max[1]
+      };
+    } else {
+      return undefined;
+    }
+  }
+
   get useDataPathToolOp() {
     return this._useDataPathToolOp;
   }
