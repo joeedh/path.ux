@@ -1,7 +1,7 @@
 let _FrameManager = undefined;
 
 import {DEBUG} from './const.js';
-import {haveModal} from './simple_events.js';
+import {haveModal, pushModalLight, popModalLight} from './simple_events.js';
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
@@ -358,16 +358,79 @@ export class Screen extends ui_base.UIBase {
 
     this.shadow.appendChild(container);
 
+    let touchstart;
+
     let done = false;
     let end = () => {
       if (done) return;
+
+      _appstate.screen.removeEventListener("touchstart", touchstart, true);
+      _appstate.screen.removeEventListener("touchmove", touchstart, true);
 
       done = true;
       container.remove();
     };
 
+    touchstart = (e) => {
+      console.log("=======================================================popup touch start");
+      console.log(e);
+
+      e.stopPropagation();
+
+      let x = e.touches[0].screenX, y = e.touches[0].screenY;
+      let elem = this.pickElement(x, y);
+
+      if (elem === undefined) {
+        return;
+      }
+
+      e.stopPropagation();
+
+      let p = elem;
+      while (p) {
+        console.log(p, "<------------------------------------");
+
+        if (p === container) {
+          break;
+        }
+        p = p.parentWidget;
+      }
+
+      e.stopPropagation();
+
+      if (p === container) {
+        console.log("p was container -----------------------------");
+        return;
+      }
+
+      let r = container.getClientRects()[0];
+      if (r) {
+        console.log(x, y);
+        console.log(r.x, r.y, r.width, r.height)
+        console.log(x >= r.x && y >= r.y && x <= r.x+r.width && y <=r.y+r.height);
+        if (x >= r.x && y >= r.y && x <= r.x+r.width && y <=r.y+r.height) {
+          return;
+        }
+      }
+
+      console.log("container end");
+      end();
+      e.stopPropagation();
+    };
+
+    _appstate.screen.addEventListener("touchstart", touchstart, true);
+    _appstate.screen.addEventListener("touchmove", touchstart, true);
+
     container.addEventListener("mouseleave", (e) => {
       console.log("popup mouse leave");
+      end();
+    });
+    container.addEventListener("mouseout", (e) => {
+      console.log("popup mouse out");
+      end();
+    });
+    container.addEventListener("blur", (e) => {
+      console.log("popup blur");
       end();
     });
 
@@ -742,11 +805,16 @@ export class Screen extends ui_base.UIBase {
         }
 
         if (n !== this2 && n instanceof UIBase) {
+          n._ctx = ctx;
+
           if (scopestack.length > 0 && scopestack[scopestack.length-1]) {
             n.parentWidget = scopestack[scopestack.length-1];
+
+            if (n.parentWidget && n._useDataPathToolOp === undefined && n.parentWidget._useDataPathToolOp !== undefined) {
+              n._useDataPathToolOp = n.parentWidget._useDataPathToolOp;
+            }
           }
 
-          n._ctx = ctx;
           n.update();
         }
 
@@ -1167,6 +1235,12 @@ export class Screen extends ui_base.UIBase {
   }
   
   appendChild(child) {
+    if (child instanceof UIBase) {
+      if (child._useDataPathToolOp === undefined) {
+        child.useDataPathToolOp = this.useDataPathToolOp;
+      }
+    }
+
     if (child instanceof ScreenArea.ScreenArea) {
       child.screen = this;
       child.ctx = this.ctx;

@@ -493,8 +493,8 @@ export class FlagProperty extends EnumProperty {
 }
 
 export class Vec2Property extends ToolProperty {
-  constructor(data) {
-    super(PropTypes.VEC2);
+  constructor(data, apiname, uiname, description) {
+    super(PropTypes.VEC2, undefined, apiname, uiname, description);
     this.data = new Vector2(data);
   }
 
@@ -520,8 +520,8 @@ export class Vec2Property extends ToolProperty {
 }
 
 export class Vec3Property extends ToolProperty {
-  constructor(data) {
-    super(PropTypes.VEC3);
+  constructor(data, apiname, uiname, description) {
+    super(PropTypes.VEC3, undefined, apiname, uiname, description);
     this.data = new Vector3(data);
   }
 
@@ -547,8 +547,8 @@ export class Vec3Property extends ToolProperty {
 }
 
 export class Vec4Property extends ToolProperty {
-  constructor(data) {
-    super(PropTypes.VEC4);
+  constructor(data, apiname, uiname, description) {
+    super(PropTypes.VEC4, undefined, apiname, uiname, description);
     this.data = new Vector4(data);
   }
 
@@ -574,8 +574,8 @@ export class Vec4Property extends ToolProperty {
 }
 
 export class QuatProperty extends ToolProperty {
-  constructor(data) {
-    super(PropTypes.QUAT);
+  constructor(data, apiname, uiname, description) {
+    super(PropTypes.QUAT, undefined, apiname, uiname, description);
     this.data = new Quat(data);
   }
 
@@ -601,8 +601,8 @@ export class QuatProperty extends ToolProperty {
 }
 
 export class Mat4Property extends ToolProperty {
-  constructor(data) {
-    super(PropTypes.MATRIX4);
+  constructor(data, apiname, uiname, description) {
+    super(PropTypes.MATRIX4, undefined, apiname, uiname, description);
     this.data = new Matrix4(data);
   }
 

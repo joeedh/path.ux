@@ -1,6 +1,7 @@
 import * as toolprop from './toolprop.js';
 import * as parseutil from './parseutil.js';
 import {print_stack} from './util.js';
+import {ToolOp, UndoFlags} from "./simple_toolsys.js";
 
 let tk = (name, re, func) => new parseutil.tokdef(name, re, func);
 let tokens = [
@@ -283,11 +284,17 @@ export class DataList {
   }
 }
 
+export const StructFlags = {
+  NO_UNDO : 1 //struct and its child structs can't participate in undo
+              //via the DataPathToolOp
+};
+
 export class DataStruct {
   constructor(members=[], name="unnamed") {
     this.members = [];
     this.name = name;
     this.pathmap = {};
+    this.flag = 0;
 
     for (let m of members) {
       this.add(m);
@@ -329,6 +336,7 @@ export class DataStruct {
 
   vec3(path, apiname, uiname, description) {
     let prop = new toolprop.Vec3Property(undefined, apiname, uiname, description);
+    //prop.uiname = uiname;
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -337,6 +345,7 @@ export class DataStruct {
 
   vec4(path, apiname, uiname, description) {
     let prop = new toolprop.Vec4Property(undefined, apiname, uiname, description);
+    //prop.uiname = uiname;
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -1084,4 +1093,55 @@ export function registerTool(cls) {
 
 export function initSimpleController() {
   initToolPaths();
+}
+
+//
+export class DataPathToolOp extends ToolOp {
+  constructor() {
+    super();
+  }
+
+  static tooldef() {return {
+    toolpath : "app.datapath_set",
+    uiname   : "Data Path Set",
+    inputs   : {
+      path         :   new toolprop.StringProperty(),
+      newValueJSON :   new toolprop.StringProperty()
+    },
+
+    outputs : {
+      oldValueJSON : new toolprop.StringProperty()
+    }
+  }}
+
+  undoPre(ctx) {
+    let val = ctx.api.getValue(this.inputs.path.getValue());
+    this.outputs.oldValueJSON.setValue(JSON.stringify(val));
+  }
+
+  undo(ctx) {
+    ctx.api.setValue(this.inputs.path.getValue(), JSON.parse(this.outputs.oldValueJSON.getValue()));
+    window.redraw_viewport();
+    window.updateDataGraph();
+  }
+
+  exec(ctx) {
+    ctx.api.setValue(this.inputs.path.getValue, JSON.parse(this.inputs.newValueJSON.getValue()));
+  }
+}
+ToolOp.register(DataPathToolOp);
+
+let dpt = DataPathToolOp;
+export function getDataPathToolOp() {
+  return dpt;
+}
+
+export function setDataPathToolOp(cls) {
+  ToolOp.unregister(DataPathToolOp);
+
+  if (!ToolOp.isRegistered(cls)) {
+    ToolOp.register(cls);
+  }
+
+  dpt = cls;
 }

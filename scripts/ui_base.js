@@ -131,10 +131,6 @@ export const theme = {
     "TabInactive" : "rgba(150, 150, 150, 1.0)",
     "TabHighlight" : "rgba(50, 50, 50, 0.2)",
 
-    "TabTextFont" : "sans-serif",
-    "TabTextSize" : 18,
-    "TabTextColor" : "rgba(35, 35, 35, 1.0)",
-
     "DefaultPanelBG" : "rgba(155, 155, 155, 1.0)",
     "InnerPanelBG" : "rgba(140, 140, 140, 1.0)",
 
@@ -163,6 +159,13 @@ export const theme = {
     //fonts
     "DefaultTextFont" : "sans-serif",
     "DefaultTextColor" : "rgba(35, 35, 35, 1.0)",
+
+    "TabText" : new CSSFont({
+      size     : 18,
+      color    : "rgba(35, 35, 35, 1.0)",
+      font     : "sans-serif",
+      //weight   : "bold"
+    }),
 
     "LabelText" : new CSSFont({
       size     : 13,
@@ -225,6 +228,12 @@ export const theme = {
   dopesheet : {
     treeWidth : 100,
     treeHeight : 600
+  },
+
+  colorpickerbutton : {
+    defaultWidth  : 100,
+    defaultHeight : 25,
+    defaultFont   : "LabelText"
   }
 };
 
@@ -474,7 +483,26 @@ let _idgen = 0;
 export class UIBase extends HTMLElement {
   constructor() {
     super();
-    
+
+    this.parentWidget = undefined;
+
+    /*
+    this.shadow._appendChild = this.shadow.appendChild;
+    this.shadow.appendChild = (child) => {
+      if (child instanceof UIBase) {
+        child.ctx = this.ctx;
+        child.parentWidget = this;
+
+        if (child._useDataPathToolOp === undefined) {
+          child.useDataPathToolOp = this.useDataPathToolOp;
+        }
+      }
+
+      return this.shadow._appendChild(child);
+    };
+    //*/
+
+    this._useDataPathToolOp = undefined;
     let tagname = this.constructor.define().tagname;
     
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
@@ -554,6 +582,24 @@ export class UIBase extends HTMLElement {
     }, {passive : false});
   }
 
+  /**
+   causes calls to setPathValue to go through
+   toolpath app.datapath_set(path="" newValueJSON="")
+
+   every child will inherit
+  */
+  set useDataPathToolOp(val) {
+    this._useDataPathToolOp = val;
+
+    this._forEachChildren((n) => {
+      n.useDataPathToolOp = val;
+    })
+  }
+
+  get useDataPathToolOp() {
+    return this._useDataPathToolOp;
+  }
+
   setCSS() {
     let zoom = this.getZoom();
     this.style["transform"] = `scale(${zoom},${zoom})`;
@@ -563,6 +609,10 @@ export class UIBase extends HTMLElement {
     if (child instanceof UIBase) {
       child.ctx = this.ctx;
       child.parentWidget = this;
+
+      if (child._useDataPathToolOp === undefined) {
+        child.useDataPathToolOp = this.useDataPathToolOp;
+      }
     }
 
     return super.appendChild(child);
@@ -604,8 +654,14 @@ export class UIBase extends HTMLElement {
         for (let n2 of n.childNodes) {
           rec(n2);
         }
+
+        if (n.shadow !== undefined) {
+          for (let n2 of n.shadow.childNodes) {
+            rec(n2);
+          }
+        }
       }
-    }
+    };
     
     for (let n of this.childNodes) {
       rec(n);
@@ -1010,6 +1066,10 @@ export class UIBase extends HTMLElement {
   }
   
   onadd() {
+    if (this.parentWidget !== undefined) {
+      this._useDataPathToolOp = this.parentWidget._useDataPathToolOp;
+    }
+
     if (!this._init_done) {
       this.doOnce(this._init);
     }
@@ -1236,9 +1296,11 @@ export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
 
   let font2 = elem.getDefault(font);
   if (font2 !== undefined) {
-    console.warn("New style font detected", font2, font2.genCSS(size));
+    //console.warn("New style font detected", font2, font2.genCSS(size));
     return _getFont_new(elem, size, font, do_dpi);
   }
+
+  console.warn("Old style font detected");
 
   if (!do_dpi) {
     dpi = 1;

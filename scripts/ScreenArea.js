@@ -842,6 +842,10 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.owning_sarea = this;
       this.area.ctx = this.ctx;
 
+      if (this.area._useDataPathToolOp === undefined) {
+        this.area._useDataPathToolOp = this._useDataPathToolOp;
+      }
+
       this.shadow.appendChild(this.area);
 
       this.area.style["width"] = "100%";

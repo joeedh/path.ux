@@ -443,7 +443,7 @@ export class TabBar extends UIBase {
     if (debug) console.log("tab layout");
     
     let dpi = this.getDPI();
-    let tsize = this.getDefault("TabTextSize")*1;
+    let tsize = this.getDefault("TabText").size*1;
     
     g.font = ui_base._getFont(this, tsize, "TabText");
     
@@ -510,7 +510,7 @@ export class TabBar extends UIBase {
     g.fill();
     
     let dpi = this.getDPI();
-    let tsize = this.getDefault("TabTextSize");
+    let tsize = this.getDefault("TabText").size;
     
     g.font = ui_base._getFont(this, tsize, "TabText");
     tsize *= dpi;
@@ -546,7 +546,7 @@ export class TabBar extends UIBase {
         g.fill();
       }
         
-      g.fillStyle = this.getDefault("TabTextColor");
+      g.fillStyle = this.getDefault("TabText").color;
       
       if (!this.horiz) {
         let x3 = 0, y3 = y2;
@@ -600,7 +600,7 @@ export class TabBar extends UIBase {
         g.translate(-x3-tsize, -y3-tsize*0.5);
       }
       
-      g.fillStyle = this.getDefault("TabTextColor");
+      g.fillStyle = this.getDefault("TabText").color;
       g.fillText(tab.name, x2, y2);
 
       if (!this.horiz) {

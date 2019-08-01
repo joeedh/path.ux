@@ -7,6 +7,7 @@ import * as events from './events.js';
 import * as simple_toolsys from './simple_toolsys.js';
 import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
+import {Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
 
 let EnumProperty = toolprop.EnumProperty,
     PropTypes = toolprop.PropTypes;
@@ -1397,3 +1398,175 @@ export class TextBox extends UIBase {
 }
 
 UIBase.register(TextBox);
+
+export class ColorPickerButton extends UIBase {
+  constructor() {
+    super();
+
+    this._highlight = false;
+    this._depress = false;
+    this._label = "";
+
+    this.rgba = new Vector4([1, 1, 1, 1]);
+    this.labelDom = document.createElement("span");
+    this.labelDom.textContent = "yay";
+    this.dom = document.createElement("canvas");
+    this.g = this.dom.getContext("2d");
+
+    this.shadow.appendChild(this.labelDom);
+    this.shadow.appendChild(this.dom);
+  }
+
+  set label(val) {
+    this._label = val;
+    this.labelDom.textContent = val;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  init() {
+    super.init();
+    this._font = this.getDefault("defaultFont");
+
+    let enter = (e) => {
+      console.log(e.type);
+      this._highlight = true;
+      this._redraw();
+    };
+
+    let leave = (e) => {
+      console.log(e.type);
+      this._highlight = false;
+      this._redraw();
+    };
+
+
+    this.addEventListener("mousedown", (e) => {
+      this.click(e);
+    });
+
+    this.addEventListener("mouseover", enter);
+    this.addEventListener("mouseleave", leave);
+    this.addEventListener("mousein", enter);
+    this.addEventListener("mouseout", leave);
+    this.addEventListener("focus", enter);
+    this.addEventListener("blur", leave);
+
+    this.setCSS();
+  }
+
+  click(e) {
+    console.log("click!");
+
+    if (this.onclick) {
+      this.onclick(e);
+    }
+
+    let colorpicker = this.ctx.screen.popup(this);
+    let widget = colorpicker.colorPicker(this.getAttribute("datapath"));
+
+    widget.onchange = onchange;
+  }
+
+  get font() {
+    return this._font;
+  }
+
+  set font(val) {
+    this._font = val;
+
+    this.setCSS();
+  }
+
+  _redraw() {
+    let canvas = this.dom, g = this.g;
+
+    g.clearRect(0, 0, canvas.width, canvas.height);
+
+    //g.fillStyle = "orange";
+    //g.beginPath();
+    //g.rect(0, 0, canvas.width, canvas.height);
+    //g.fill();
+
+    let color = color2css(this.rgba);
+    console.log(color);
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+    //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
+
+    if (this._highlight) {
+      let color = "rgba(200, 200, 255, 0.5)";
+      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+    }
+  }
+  setCSS() {
+    let w = this.getDefault("defaultWidth");
+    let h = this.getDefault("defaultHeight");
+    let dpi = this.getDPI();
+
+    this.style["width"] = w + "px";
+    this.style["height"] = h + "px";
+
+    this.labelDom.style["color"] = color2css(this.getDefault(this._font).color);
+    this.labelDom.style["font"] = ui_base._getFont(this, undefined, this._font, false);
+
+    let canvas = this.dom;
+
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
+    canvas.width = ~~(w*dpi);
+    canvas.height = ~~(h*dpi);
+
+    this._redraw();
+  }
+
+  static define() {return {
+    tagname : "color-picker-button-x",
+    style   : "colorpickerbutton"
+  }}
+
+  updateDataPath() {
+    if (!(this.hasAttribute("datapath"))) {
+      return;
+    }
+
+    let path = this.getAttribute("datapath");
+    let prop = this.getPathMeta(this.ctx, path);
+
+    if ((prop === undefined || prop.data === undefined) && DEBUG.verboseDataPath) {
+      console.log("bad path", path);
+      return;
+    }
+    prop = prop;
+
+    if (prop.uiname !== this._label) {
+      console.log(prop);
+      this.label = prop.uiname;
+    }
+
+    let val = this.getPathValue(this.ctx, path);
+
+    if (val.vectorDistance(this.rgba) > 0.0001) {
+      if (prop.type == PropTypes.VEC3) {
+        this.rgba.load(val);
+        this.rgba[3] = 1.0;
+      } else {
+        this.rgba.load(val);
+      }
+
+      this._redraw();
+    }
+  }
+
+  update() {
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+  }
+
+  redraw() {
+
+  }
+};
+UIBase.register(ColorPickerButton);

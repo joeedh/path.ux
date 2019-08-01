@@ -87,9 +87,24 @@ export class ToolOp extends events.EventHandler {
   }
   
   static register(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
+      return;
+    }
+
     ToolClasses.push(cls);
   }
-  
+
+  static isRegistered(cls) {
+    return ToolClasses.indexOf(cls) >= 0;
+  }
+
+  static unregister(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      ToolClasses.remove(cls);
+    }
+  }
+
   constructor() {
     super();
 

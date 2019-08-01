@@ -356,13 +356,17 @@ export class Container extends ui_base.UIBase {
   }
 
   _add(child) {
+    //paranoia check for if we accidentally got a DOM NodeList
     if (child instanceof NodeList) {
       throw new Error("eek!");
     }
     
     child.parentWidget = this;
     child.ctx = this.ctx;
-    
+    if (child._useDataPathToolOp === undefined) {
+      child.useDataPathToolOp = this._useDataPathToolOp;
+    }
+
     let li = document.createElement("li");
     li.setAttribute("class", "containerx");
 
@@ -623,7 +627,26 @@ export class Container extends ui_base.UIBase {
 
     return prefix + path;
   }
-  
+
+  colorbutton(inpath, packflag, mass_set_path=undefined) {
+    packflag |= this.inherit_packflag;
+
+    let ret = document.createElement("color-picker-button-x");
+
+    if (inpath !== undefined) {
+      ret.setAttribute("datapath", inpath);
+    }
+
+    if (mass_set_path !== undefined) {
+      ret.setAttribute("mass_set_path", mass_set_path);
+    }
+
+    ret.packflag |= packflag;
+
+    this._add(ret);
+    return ret;
+  }
+
   prop(inpath, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
@@ -664,7 +687,8 @@ export class Container extends ui_base.UIBase {
       }
     } else if (prop.type == PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
       if (prop.subtype == PropSubTypes.COLOR) {
-        this.colorPicker(inpath, packflag, mass_set_path);
+        return this.colorbutton(inpath, packflag, mass_set_path);
+        //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
 
       }
