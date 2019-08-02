@@ -270,7 +270,7 @@ export class ToolOp extends events.EventHandler {
       return this._promise;
     }
     
-    console.warn("tool modal start");
+    //console.warn("tool modal start");
     
     this.modal_ctx = ctx;
     this.modalRunning = true
@@ -300,7 +300,7 @@ export class ToolOp extends events.EventHandler {
       this._overdraw = undefined;
     }
 
-    console.log("tool modal end");
+    //console.log("tool modal end");
     
     if (was_cancelled && this._on_cancel !== undefined) {
       this._accept(this.modal_ctx, true);

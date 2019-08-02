@@ -512,8 +512,8 @@ export class AreaDragTool extends ToolBase {
     let cx = sa.pos[0] + sa.size[0]*0.5;
     let cy = sa.pos[1] + sa.size[1]*0.5;
     
-    let color = "rgba(100, 100, 100, 0.3)";
-    let hcolor = "rgba(200, 200, 200, 0.55)";
+    let color = this.color = "rgba(200, 200, 200, 0.55)";
+    let hcolor = this.hcolor = "rgba(230, 230, 230, 0.75)";
     let idgen = 0;
     let boxes = this.boxes;
     
@@ -575,8 +575,10 @@ export class AreaDragTool extends ToolBase {
         
         b.rect = this.getBoxRect(b);
         this.curbox = b;
-        
-        b.style["background-color"] = hcolor;
+
+        console.log("setting hcolor");
+        b.setColor(hcolor);
+        //b.style["background-color"] = hcolor;
       })
       
       b.addEventListener("mouseleave", (e) => {
@@ -590,17 +592,21 @@ export class AreaDragTool extends ToolBase {
         if (this.curbox === b) {
           this.curbox = undefined;
         }
-        b.style["background-color"] = color;
+
+        b.setColor(color);
+        //b.style["background-color"] = color;
       })
       
       style.textContent = `
         .${cls}:hover {
           background-color : orange;
+          fill:orange;stroke-width:2
         }
       `
       //console.log(style.textContent);
       b.appendChild(style);
-      
+      b.setAttribute("class", cls);
+
       return b;
     }
     
@@ -640,7 +646,7 @@ export class AreaDragTool extends ToolBase {
   on_mousemove(e) {
     let wid = 55;
     let color = "rgb(200, 200, 200, 0.7)";
-    
+
     //console.trace("mouse move!", e.x, e.y, this.sarea);
 
     /*
@@ -650,13 +656,20 @@ export class AreaDragTool extends ToolBase {
      */
     let n = this.getActiveBox(e.x, e.y);
 
+    if (n !== undefined) {
+      n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
+    }
+    console.log("mouse move", n);
+
     if (this.boxes.active !== undefined && this.boxes.active !== n) {
+      this.boxes.active.setColor(this.color);
       this.boxes.active.dispatchEvent(new MouseEvent("mouseleave", e));
     }
 
     if (n !== undefined) {
       n.dispatchEvent(new MouseEvent("mouseenter", e));
     }
+
     this.boxes.active = n;
     /*
     let rec = (n) => {
@@ -690,11 +703,12 @@ export class AreaDragTool extends ToolBase {
     }
     
     if (this.cursorbox === undefined) {
+      wid = 25;
       this.cursorbox = this.overdraw.rect([e.x-wid*0.5, e.y-wid*0.5], [wid, wid], color);
       this.cursorbox.style["pointer-events"] = "none";
     } else {
-      this.cursorbox.style["left"] = (e.x-wid*0.5) + "px";
-      this.cursorbox.style["top"] = (e.y-wid*0.5) + "px";
+      this.cursorbox.style["x"] = (e.x-wid*0.5) + "px";
+      this.cursorbox.style["y"] = (e.y-wid*0.5) + "px";
     }
   }
   

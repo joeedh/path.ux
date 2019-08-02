@@ -88,6 +88,10 @@ export class Overdraw extends ui_base.UIBase {
     line.setAttribute("height", size[1]);
     line.setAttribute("style", `fill:${color};stroke-width:2`);
 
+    line.setColor = (color) => {
+      line.setAttribute("style", `fill:${color};stroke-width:2`);
+    };
+
     this.svg.appendChild(line);
     return line;
   }

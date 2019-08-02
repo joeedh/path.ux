@@ -468,7 +468,7 @@ export class Menu extends UIBase {
         }
       });
 
-      li.addEventListener("focus", (e) => {
+      let onfocus = (e) => {
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           let active = this.activeItem;
 
@@ -489,10 +489,33 @@ export class Menu extends UIBase {
         }
 
         this.activeItem = li;
+      };
+
+      li.addEventListener("touchend", (e) => {
+        onfocus(e);
+        //console.log("menu click!");
+
+        if (this.activeItem !== undefined && this.activeItem._isMenu) {
+          console.log("menu ignore");
+          //ignore
+          return;
+        }
+
+        this.click();
+      });
+
+      li.addEventListener("focus", (e) => {
+        onfocus(e);
       })
 
+      li.addEventListener("touchmove", (e) => {
+        console.log("menu touchmove");
+        onfocus(e);
+        li.focus();
+      });
+
       li.addEventListener("mouseenter", (e) => {
-        //console.log("mouse over");
+        console.log("menu mouse enter");
         li.focus();
       });
 

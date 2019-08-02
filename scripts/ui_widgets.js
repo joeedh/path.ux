@@ -1491,7 +1491,7 @@ export class ColorPickerButton extends UIBase {
     //g.fill();
 
     let color = color2css(this.rgba);
-    console.log(color);
+    //console.log(color);
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
