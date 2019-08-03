@@ -1,4 +1,4 @@
-import * as util from "../../util/util.js";
+import * as util from "./util.js";
 
 export let modalstack = [];
 

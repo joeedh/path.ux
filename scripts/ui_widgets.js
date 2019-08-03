@@ -1485,6 +1485,60 @@ export class ColorPickerButton extends UIBase {
 
     g.clearRect(0, 0, canvas.width, canvas.height);
 
+    if (this.disabled) {
+      let color = "rgb(55, 55, 55)";
+
+      g.save();
+
+      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+      let steps = 10;
+      let dt = canvas.width / steps, t = 0;
+
+      g.beginPath();
+      g.lineWidth = 2;
+      g.strokeStyle = "black";
+
+      for (let i=0; i<steps; i++, t += dt) {
+        g.moveTo(t, 0);
+        g.lineTo(t+dt, canvas.height);
+        g.moveTo(t+dt, 0);
+        g.lineTo(t, canvas.height);
+      }
+
+      g.stroke();
+      g.restore();
+      return;
+    }
+
+    //do checker pattern for alpha
+    g.save();
+
+    let grid1 = "rgb(100, 100, 100)";
+    let grid2 = "rgb(175, 175, 175)";
+
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
+
+    let cellsize = 10;
+    let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
+
+    console.log("TOTX, TOTY", totx, toty);
+
+    g.beginPath();
+    for (let x=0; x<totx; x++) {
+      for (let y=0; y<toty; y++) {
+        if ((x+y) & 1) {
+          continue;
+        }
+
+        g.rect(x*cellsize, y*cellsize, cellsize, cellsize);
+      }
+    }
+
+    g.fillStyle = grid2;
+    g.fill();
+
     //g.fillStyle = "orange";
     //g.beginPath();
     //g.rect(0, 0, canvas.width, canvas.height);
@@ -1492,13 +1546,15 @@ export class ColorPickerButton extends UIBase {
 
     let color = color2css(this.rgba);
     //console.log(color);
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
     if (this._highlight) {
       let color = "rgba(200, 200, 255, 0.5)";
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
     }
+
+    g.restore();
   }
   setCSS() {
     let w = this.getDefault("defaultWidth");
@@ -1538,6 +1594,7 @@ export class ColorPickerButton extends UIBase {
       console.log("bad path", path);
       return;
     }
+
     prop = prop;
 
     if (prop.uiname !== this._label) {
@@ -1547,7 +1604,27 @@ export class ColorPickerButton extends UIBase {
 
     let val = this.getPathValue(this.ctx, path);
 
-    if (val.vectorDistance(this.rgba) > 0.0001) {
+    if (val === undefined) {
+      let redraw = this.disabled !== true;
+
+      this.disabled = true;
+
+      if (redraw) {
+        this._redraw();
+      }
+
+      return;
+    } else {
+      let redraw = this.disabled;
+
+      this.disabled = false;
+
+      if (redraw) {
+        this._redraw();
+      }
+    }
+
+    if (this.rgba.vectorDistance(val) > 0.0001) {
       if (prop.type == PropTypes.VEC3) {
         this.rgba.load(val);
         this.rgba[3] = 1.0;
@@ -1566,7 +1643,7 @@ export class ColorPickerButton extends UIBase {
   }
 
   redraw() {
-
+    this._redraw();
   }
 };
 UIBase.register(ColorPickerButton);

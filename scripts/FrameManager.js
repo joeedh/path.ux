@@ -364,8 +364,8 @@ export class Screen extends ui_base.UIBase {
     let end = () => {
       if (done) return;
 
-      _appstate.screen.removeEventListener("touchstart", touchstart, true);
-      _appstate.screen.removeEventListener("touchmove", touchstart, true);
+      this.ctx.screen.removeEventListener("touchstart", touchstart, true);
+      this.ctx.screen.removeEventListener("touchmove", touchstart, true);
 
       done = true;
       container.remove();
@@ -419,8 +419,8 @@ export class Screen extends ui_base.UIBase {
       e.stopPropagation();
     };
 
-    _appstate.screen.addEventListener("touchstart", touchstart, true);
-    _appstate.screen.addEventListener("touchmove", touchstart, true);
+    this.ctx.screen.addEventListener("touchstart", touchstart, true);
+    this.ctx.screen.addEventListener("touchmove", touchstart, true);
 
     container.addEventListener("mouseleave", (e) => {
       console.log("popup mouse leave");
@@ -1440,7 +1440,7 @@ export class Screen extends ui_base.UIBase {
     let parent = this.parentElement;
     this.remove();
     
-    _appstate.screen = screen2;
+    this.ctx.screen = screen2;
     
     parent.appendChild(screen2);
     

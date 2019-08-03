@@ -1253,10 +1253,11 @@ export class UIBase extends HTMLElement {
   }
 }
 
-//okay, I need to refactor this function, 
-//it needs to take x, y as well as width, height,
-//and be usable for more use cases.
-export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
+/**okay, I need to refactor this function,
+  it needs to take x, y as well as width, height,
+  and be usable for more use cases.*/
+export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
+                             op="fill", color=undefined, pad=undefined, no_clear=false) {
     width = width === undefined ? canvas.width : width;
     height = height === undefined ? canvas.height : height;
     
@@ -1286,7 +1287,7 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fi
       bg = elem.getDefault("BoxBG");
     }
     
-    if (op == "fill") {
+    if (op == "fill" && !no_clear) {
       g.clearRect(0, 0, width, height);
     }
     
@@ -1315,8 +1316,10 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fi
 
     g.quadraticCurveTo(pad, pad, pad, pad+r1);
     g.closePath();
-    
-    if (op == "fill") {
+
+    if (op == "clip") {
+      g.clip();
+    } else if (op == "fill") {
       g.fill();
       g.stroke();
     } else {
