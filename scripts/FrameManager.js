@@ -335,6 +335,46 @@ export class Screen extends ui_base.UIBase {
     
   }
 
+  copy() {
+    let ret = document.createElement(this.constructor.define().tagname);
+    ret.ctx = this.ctx;
+    ret._init();
+
+    for (let sarea of this.sareas) {
+      let sarea2 = sarea.copy(ret);
+
+      sarea2._ctx = this.ctx;
+      sarea2.screen = ret;
+      sarea2.parentWidget = ret;
+
+      ret.appendChild(sarea2);
+    }
+
+    for (let sarea of ret.sareas) {
+      sarea.ctx = this.ctx;
+      sarea.area.ctx = this.ctx;
+
+      sarea.area.push_ctx_active();
+      sarea._init();
+      sarea.area._init();
+      sarea.area.pop_ctx_active();
+
+      for (let area of sarea.editors) {
+        area.ctx = this.ctx;
+
+        area.push_ctx_active();
+        area._init();
+        area.pop_ctx_active();
+      }
+    }
+
+    ret.update();
+    ret.regenBorders();
+    ret.setCSS();
+
+    return ret;
+  }
+
   /** makes a popup at x,y and returns a new container-x for it */
   popup(elem_or_x, y) {
     let x;
@@ -465,10 +505,15 @@ export class Screen extends ui_base.UIBase {
   //XXX look at if this is referenced anywhere
   save() {
   }
-  
-  remove() {
+
+  remove(trigger_destroy=true) {
     this.unlisten();
-    return super.remove();
+
+    if (trigger_destroy) {
+      return super.remove();
+    } else {
+      HTMLElement.prototype.remove.call(this);
+    }
   }
   
   unlisten() {
