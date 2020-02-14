@@ -635,7 +635,7 @@ export class ScreenArea extends ui_base.UIBase {
   copy(screen) {
     let ret = document.createElement("screenarea-x");
     
-    ret.screen = this.screen;
+    ret.screen = screen;
     ret.ctx = this.ctx;
     
     ret.pos[0] = this.pos[0];
@@ -655,19 +655,19 @@ export class ScreenArea extends ui_base.UIBase {
       }
     }
     
-    console.log("RET.AREA", this.area, ret.area);
-    
+    //console.trace("RET.AREA", this.area, ret.area);
+
+    ret.ctx = this.ctx;
+
     if (ret.area !== undefined) {
       ret.area.ctx = this.ctx;
+
       ret.area.pos = ret.pos;
       ret.area.size = ret.size;
       ret.area.owning_sarea = ret;
       
       ret.shadow.appendChild(ret.area);
       //ret.area.onadd();
-      
-      ret.ctx = this.ctx;
-      ret.area.ctx = this.ctx;
       
       if (ret.area._init_done) {
         ret.area.push_ctx_active();
@@ -826,6 +826,7 @@ export class ScreenArea extends ui_base.UIBase {
         this.area.owning_sarea = undefined;
         this.area.inactive = true;
         this.area.push_ctx_active();
+        this.area._init(); //check that init was called
         this.area.on_area_inactive();
         this.area.pop_ctx_active();
         
@@ -853,6 +854,7 @@ export class ScreenArea extends ui_base.UIBase {
 
       //propegate new size
       this.area.push_ctx_active();
+      this.area._init(); //check that init was called
       this.area.on_resize(this.size);
       this.area.pop_ctx_active();
 

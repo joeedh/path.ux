@@ -930,8 +930,18 @@ export class Container extends ui_base.UIBase {
       let path = this._joinPrefix(inpath);
       
       ret.setAttribute("datapath", path);
-
-      let rdef = this.ctx.api.resolvePath(this.ctx, path);
+      
+      let rdef;
+      try {
+        rdef = this.ctx.api.resolvePath(this.ctx, path, true);
+      } catch (error) {
+        if (error instanceof DataPathError) {
+          util.print_stack(error);
+          console.warn("Error resolving property", path);
+        } else {
+          throw error;
+        }
+      }
       if (rdef && rdef.prop) {
         let prop = rdef.prop;
 

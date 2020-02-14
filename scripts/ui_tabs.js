@@ -84,6 +84,12 @@ export class ModalTabMove extends events.EventHandler {
     let r = this.tbar.getClientRects()[0];
     let dpi = UIBase.getDPI();
 
+    if (r === undefined) {
+      //element was removed during/before move
+      this.finish();
+      return;
+    }
+
     x -= r.x;
     y -= r.y;
     
@@ -269,6 +275,10 @@ export class TabBar extends UIBase {
       
       if (ht !== undefined && this.tool === undefined) {
         this.setActive(ht);
+
+        if (this.ctx === undefined) {
+          return;
+        }
         
         let edom = this.getScreen();
         let tool = new ModalTabMove(ht, this, edom);
@@ -371,12 +381,15 @@ export class TabBar extends UIBase {
   }
   
   addTab(name, id, tooltip="") {
-    this.tabs.push(new TabItem(name, id, tooltip));
+    let tab = new TabItem(name, id, tooltip);
+    this.tabs.push(tab);
     this.update(true);
     
     if (this.tabs.length == 1) {
       this.setActive(this.tabs[0]);
     }
+
+    return tab;
   }
   
   updatePos(force_update=false) {
@@ -724,6 +737,10 @@ export class TabContainer extends UIBase {
       //XXX why is this necassary?
       //this._tab.style["margin-left"] = "40px";
       this.dom.appendChild(li);
+
+      if (this.onchange) {
+        this.onchange(tab);
+      }
     }
   }
   
@@ -769,7 +786,7 @@ export class TabContainer extends UIBase {
     
     this.shadow.prepend(style);
   }
-  
+
   tab(name, id=undefined, tooltip=undefined) {
     if (id === undefined) {
       id = tab_idgen++;
@@ -778,9 +795,10 @@ export class TabContainer extends UIBase {
     let col = document.createElement("colframe-x");
 
     this.tabs[id] = col;
-    col.ctx = this.ctx;
 
-    this.tbar.addTab(name, id, tooltip);
+    col.ctx = this.ctx;
+    col._tab = this.tbar.addTab(name, id, tooltip);
+
     //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
 
     col.parentWidget = this;
@@ -792,7 +810,11 @@ export class TabContainer extends UIBase {
 
     return col;
   }
-  
+
+  setActive(tab) {
+    this.tbar.setActive(tab._tab);
+  }
+
   updateBarPos() {
     let barpos = this.getAttribute("bar_pos");
     
