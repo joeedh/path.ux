@@ -70,7 +70,7 @@ export class Button extends UIBase {
       this._focus = 1;
       this._redraw();
       this.focus();
-      console.log("focus2");
+      //console.log("focus2");
     });
 
     this.addEventListener("blur", () => {
@@ -78,7 +78,7 @@ export class Button extends UIBase {
 
       this._focus = 0;
       this._redraw();
-      console.log("blur2");
+      //console.log("blur2");
     });
 
     this._last_disabled = false;
@@ -139,7 +139,7 @@ export class Button extends UIBase {
     let press_gen = 0;
 
     let press = (e) => {
-        console.log("button press");
+        //console.log("button press");
 
         if (this.disabled) return;
         if (this._pressed) return;
@@ -159,7 +159,7 @@ export class Button extends UIBase {
     }
     
     let depress = (e) => {
-        console.log("button depress");
+        //console.log("button depress");
 
         this._pressed = false;
         if (this.disabled) return;
@@ -303,7 +303,7 @@ export class Button extends UIBase {
       let p = this.parentNode;
       
       if (this._lastw != p.clientWidth + w_add) {
-        console.log(p.clientWidth+w_add);
+        //console.log(p.clientWidth+w_add);
         
         this.dom.style["width"] = Math.ceil(p.clientWidth+w_add) + "px";
         this._lastw = p.clientWidth + w_add;
@@ -1458,14 +1458,14 @@ export class ColorPickerButton extends UIBase {
   }
 
   click(e) {
-    console.log("click!");
+    //console.log("click!", this.getAttribute("mass_set_path"));
 
     if (this.onclick) {
       this.onclick(e);
     }
 
     let colorpicker = this.ctx.screen.popup(this);
-    let widget = colorpicker.colorPicker(this.getAttribute("datapath"));
+    let widget = colorpicker.colorPicker(this.getAttribute("datapath"), undefined, this.getAttribute("mass_set_path"));
 
     widget.onchange = onchange;
   }
@@ -1523,7 +1523,7 @@ export class ColorPickerButton extends UIBase {
     let cellsize = 10;
     let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
 
-    console.log("TOTX, TOTY", totx, toty);
+    //console.log("TOTX, TOTY", totx, toty);
 
     g.beginPath();
     for (let x=0; x<totx; x++) {
@@ -1598,7 +1598,7 @@ export class ColorPickerButton extends UIBase {
     prop = prop;
 
     if (prop.uiname !== this._label) {
-      console.log(prop);
+      //console.log(prop);
       this.label = prop.uiname;
     }
 

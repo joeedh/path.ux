@@ -678,7 +678,7 @@ export class Container extends ui_base.UIBase {
 
       return ret;
     } else if (prop.type == PropTypes.BOOL) {
-      this.check(inpath, prop.uiname, packflag);
+      this.check(inpath, prop.uiname, packflag, mass_set_path);
     } else if (prop.type == PropTypes.ENUM) {
       if (!(packflag & PackFlags.USE_ICONS)) {
         this.listenum(inpath, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
@@ -1056,6 +1056,7 @@ export class Container extends ui_base.UIBase {
       ret.setAttribute("datapath", path);
     }
 
+    console.warn("mass_set_path", mass_set_path);
     if (mass_set_path) {
       ret.setAttribute("mass_set_path", mass_set_path);
     }
@@ -1211,7 +1212,7 @@ export class PanelFrame extends Container {
   }
   
   _updateClosed() {
-    console.log(this._closed);
+    //console.log(this._closed);
     if (this._closed) {
       this.dom.remove();
     } else {
@@ -1228,7 +1229,7 @@ export class PanelFrame extends Container {
     let update = !!val != !!this.closed;
     this._closed = val;
     
-    console.log("closed set", update);
+    //console.log("closed set", update);
     if (update)
       this._updateClosed();
   }
