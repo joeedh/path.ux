@@ -771,10 +771,16 @@ export class Container extends ui_base.UIBase {
     }//*/
     
     let has_path = path !== undefined;
-    
+    let prop;
+
     if (path !== undefined) {
-      let prop = this.ctx.api.resolvePath(this.ctx, path).prop;
-      
+      prop = this.ctx.api.resolvePath(this.ctx, path);
+
+      if (prop !== undefined) 
+        prop = prop.prop;
+    }
+
+    if (path !== undefined) {
       if (prop === undefined) {
         console.warn("Bad path in checkenum", path);
         return;
@@ -860,9 +866,12 @@ export class Container extends ui_base.UIBase {
       }
     } else {
       let res = this.ctx.api.resolvePath(this.ctx, path);
-      ret.prop = res.prop;
 
-      name = name === undefined ? res.prop.uiname : name;
+      if (res !== undefined) {
+        ret.prop = res.prop;
+
+        name = name === undefined ? res.prop.uiname : name;
+      }
     }
     
     if (path !== undefined) {

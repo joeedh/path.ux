@@ -1,18 +1,24 @@
 "use strict";
 
+import * as simple_controller from './simple_controller.js';
+
 import * as util from './util.js';
 import * as icon_enum from './icon_enum.js';
 import * as events from './events.js';
+import * as simple_events from './simple_events.js';
 import * as toolsys from './simple_toolsys.js';
 import * as ui from './ui.js';
 import * as image from './image.js';
 import * as FrameManager from './FrameManager.js';
+import * as FrameManager_ops from './FrameManager_ops.js';
 import * as ScreenArea from './ScreenArea.js';
 import * as ui_widgets from './ui_widgets.js';
 import * as controller from './controller.js';
 import * as ui_base from './ui_base.js';
 import * as cconst from './const.js';
 import * as config from './config.js';
+import * as ui_menu from './ui_menu.js';
+import * as toolpath from './toolpath.js';
 
 let Icons = icon_enum.Icons;
 ui_base.setIconMap(Icons);
@@ -20,7 +26,6 @@ ui_base.setIconMap(Icons);
 import './struct.js';
 
 let PackFlags = ui_base.PackFlags;
-let SimpleContext = ui.SimpleContext;
 
 window.STARTUP_FILE_NAME = "startup_file_pathux";
 
@@ -84,7 +89,7 @@ export class CanvasArea extends ScreenArea.Area {
     
     row.tool("screen.area.split", PackFlags.USE_ICONS|PackFlags.SMALL_ICON, (cls) => new cls(_appstate.screen));
     row.tool("screen.area.split", 0, (cls) => new cls(_appstate.screen));
-    let SEP = ui_widgets.Menu.SEP;
+    let SEP = ui_menu.Menu.SEP;
     
     row.menu("File", [
       ["Open", () => console.log("yay open")],
@@ -94,13 +99,8 @@ export class CanvasArea extends ScreenArea.Area {
       ["Close", () => console.log("yay close")],
     ]);
     
-    row.check("EXAMPLE_OPTION", "ExampleCheck0");
-    row.check("EXAMPLE_OPTION", "ExampleCheck0");
-    row.check("EXAMPLE_OPTION", "ExampleCheck0");
-    //*
-    
-    row.checkenum("enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON|ui_base.PackFlags.VERTICAL);
-    row.listenum("enumval", "Enum");
+    row.checkenum("state.enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON);
+    row.listenum("state.enumval", "Enum");
     //*/
     
     row = ui.row();
@@ -114,12 +114,9 @@ export class CanvasArea extends ScreenArea.Area {
 
     //tab.float(1, 1, 7);
     //tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
-    tab.colorPicker();
+    tab.prop("state.color");
 
     tab = tabs.tab("Display");
-    tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
-    tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
-    tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
     
     tabs.tab("one");
     tabs.tab("two");
@@ -241,7 +238,7 @@ export class AppState extends events.EventHandler {
     
     this.last_save = 0;
     
-    this.ctx = new toolsys.Context();
+    this.ctx = new toolsys.ContextExample();
     this.toolstack = new toolsys.ToolStack();
     
     this._modal_dom_root = undefined;
@@ -251,12 +248,17 @@ export class AppState extends events.EventHandler {
     //this.makeGUI();
     this.image = undefined;
     this.enumval = 0;
+    this.color = [1, 0, 0, 1];
   }
   
   initAPI() {
-    this.api = new controller.DataAPI();
-    this.api.prefix = "state.";
-    let stt = this.api.mapStruct(AppState);
+    this.api = new simple_controller.DataAPI();
+    
+    toolpath.initToolPaths();
+    window._ToolPaths = toolpath.ToolPaths;
+    
+    let stt = this.api.rootContextStruct = this.api.mapStruct(toolsys.ContextExample);
+    stt = stt.struct("state", "state", "state", this.api.mapStruct(AppState));
     
     let def = stt.enum("enumval",  "enumval", {A : 0, Test : 1, Triangle : 2, Bleh : 3, Yay : 4});
     def.icons({
@@ -266,7 +268,8 @@ export class AppState extends events.EventHandler {
       Bleh : Icons.FOLDER,
       Yay : Icons.BACKSPACE
     });
-    
+
+    stt.color4("color", "color", "color", "color");
   }
   
   makeScreen() {
@@ -320,46 +323,6 @@ export class AppState extends events.EventHandler {
     
     document.body.appendChild(this.gui);
     this.gui.float(300, 10, 1);
-    
-    for (let i=0; i<5; i++) {
-      this.gui.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
-    }
-    this.gui.button("Test", (e) => {
-      console.log("click");
-    });
-    
-    this.gui.check("EXAMPLE_OPTION", "ExampleCheck0");
-    //*
-    this.gui.listenum("EXAMPLE_ENUM", "Enum", {A : 0, Test : 1, Triangle : 2, Bleh :                  3, Yay : 4}, 0, 
-    (name, id) => {
-      console.log("enum change", name, id);
-    }, {
-      A : Icons.DELETE,
-      Test : Icons.UNDO,
-      Triangle : Icons.REDO,
-      Bleh : Icons.FOLDER,
-      Yay : Icons.BACKSPACE
-    });
-    //*/
-    
-    for (let i=0; i<5; i++) {
-      this.gui.update();
-    }
-    
-    /*this.gui.check("EXAMPLE_OPTION", "Example Option");
-    
-    this.gui.button("load_image", "Load Image", () => {
-      console.log("load image!");
-      image.loadImageFile().then((imagedata) => {
-        console.log("got image!", imagedata);
-        
-        this.image = imagedata;
-        window.redraw_all();
-      });
-    });
-    //*/
-    
-    this.gui.load();
   }
   
   setsize() {
@@ -555,7 +518,7 @@ export function start() {
   window._appstate = new AppState();
   _appstate.makeScreen();
   
-  _appstate.pushModal(_appstate.screen, true);
+  //_appstate.pushModal(_appstate.screen, true);
   
   var animreq = undefined;
   function dodraw() {

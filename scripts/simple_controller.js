@@ -37,11 +37,13 @@ let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
 
 import {ModelInterface, ToolOpIface,
-        DataFlags, DataPathError} from './controller.js';
+        DataFlags, DataPathError, setImplementationClass} from './controller.js';
 import {initToolPaths, parseToolPath} from './toolpath.js';
 export {DataPathError, DataFlags} from './controller.js';
 
-export let tool_classes = {};
+import {ToolClasses} from './simple_toolsys.js';
+let tool_classes = ToolClasses;
+
 let tool_idgen = 1;
 Symbol.ToolID = Symbol("toolid");
 
@@ -457,7 +459,9 @@ export class DataAPI extends ModelInterface {
   constructor() {
     super();
 
+
     this._list = new DataListIF(this);
+    
     this.rootContextStruct = undefined;
   }
 
@@ -498,13 +502,24 @@ export class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
+  
+  resolvePath(ctx, inpath, ignoreExistence=false) {
+    try {
+      return this.resolvePath_intern(ctx, inpath, ignoreExistence)
+    } catch (error) {
+      //throw new DataPathError("bad path " + path);
+      console.warn("bad path " + inpath);
+      return undefined;
+    }
+  }
+
   /**
     get meta information for a datapath.
 
    @param ignoreExistence: don't try to get actual data associated with path,
                            just want meta information
     */
-  resolvePath(ctx, inpath, ignoreExistence=false) {
+  resolvePath_intern(ctx, inpath, ignoreExistence=false) {
     let p = pathParser;
     inpath = inpath.replace("==", "=");
 
@@ -1042,7 +1057,16 @@ export class DataAPI extends ModelInterface {
   }
 
   parseToolPath(path) {
-    return parseToolPath(path).toolclass;
+    try {
+      return parseToolPath(path).toolclass;
+    } catch (error) {
+      if (error instanceof DataPathError) {
+        console.warn("warning, bad tool path", path);
+        return undefined;
+      } else {
+        throw error;
+      }
+    }
   }
 
   parseToolArgs(path) {
@@ -1073,17 +1097,21 @@ export class DataAPI extends ModelInterface {
   }
   
   static toolRegistered(cls) {
-    let key = toolkey(cls);
-    
-    return key in tool_classes;
+    return ToolOp.isRegistered(cls);
+    //let key = toolkey(cls);
+    //return key in tool_classes;
   }
   
   static registerTool(cls) {
-    let key = toolkey(cls);
+    console.warn("Outdated function simple_controller.DataAPI.registerTool called");
     
-    if (!(key in tool_classes)) {
-      tool_classes[key] = cls;
-    }
+    return ToolOp.register(cls);
+    
+    //let key = toolkey(cls);
+    //
+    //if (!(key in tool_classes)) {
+    //  tool_classes[key] = cls;
+    //}
   }
 }
 
@@ -1145,3 +1173,5 @@ export function setDataPathToolOp(cls) {
 
   dpt = cls;
 }
+
+setImplementationClass(DataAPI);
