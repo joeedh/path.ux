@@ -205,13 +205,21 @@ export class ToolOp extends events.EventHandler {
 
   /** for compatibility with fairmotion, don't use */
   can_call(ctx) {
-    return this.canRun(ctx);
+    return this.constructor.canRun(ctx);
   }
 
-  canRun(ctx) {
+  static canRun(ctx) {
     return true;
   }
-  
+
+  /* eek this should have been static all along, make sure
+     to fix everything.
+  */
+  canRun(ctx) {
+    return this.constructor.canRun(ctx);
+  }
+
+
   undoPre(ctx) {
     this._undo = _appstate.genUndoFile();
   }
@@ -365,14 +373,19 @@ export class ToolMacro extends ToolOp {
       }
     }
   }
-  
+
+  static canRun(ctx) {
+    return true;
+  }
+
+  /*
   canRun(ctx) {
     if (this.tools.length == 0)
       return false;
     
     //poll first tool only in list
-    return this.tools[0].canRun(ctx);
-  }
+    return this.tools[0].constructor.canRun(ctx);
+  }//*/
   
   modalStart(ctx) {
     this._promise = new Promise((function(accept, reject) {
@@ -467,8 +480,8 @@ export class ToolStack extends Array {
   }
 
   execTool(toolop, ctx=this.ctx) {
-    if (!toolop.canRun(ctx)) {
-      console.log("toolop.canRun returned false");
+    if (!toolop.constructor.canRun(ctx)) {
+      console.log("toolop.constructor.canRun returned false");
       return;
     }
     

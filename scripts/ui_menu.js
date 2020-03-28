@@ -214,6 +214,10 @@ export class Menu extends UIBase {
   };}
 
   start_fancy(prepend, setActive=true) {
+    return this.startFancy(prepend, setActive);
+  }
+
+  startFancy(prepend, setActive=true) {
     console.log("menu fancy start");
 
     let dom2 = document.createElement("div");

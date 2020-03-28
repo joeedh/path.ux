@@ -213,7 +213,7 @@ export function progbarNote(screen, msg, percent, color, timeout) {
   }
 }
 
-export function sendNote(screen, msg, color, timeout) {
+export function sendNote(screen, msg, color, timeout=1000) {
   noteframes = getNoteFrames(screen);
 
   console.log(noteframes.length);
@@ -228,4 +228,8 @@ export function sendNote(screen, msg, color, timeout) {
       console.log("bad notification frame");
     }
   }
+}
+
+export function warning(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, [0.75, 0.75, 0.25, 1.0], timeout);
 }

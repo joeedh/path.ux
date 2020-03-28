@@ -1,7 +1,7 @@
 import * as toolprop from './toolprop.js';
 import * as parseutil from './parseutil.js';
 import {print_stack} from './util.js';
-import {ToolOp, UndoFlags} from "./simple_toolsys.js";
+import {ToolOp, UndoFlags, ToolFlags} from "./simple_toolsys.js";
 
 let tk = (name, re, func) => new parseutil.tokdef(name, re, func);
 let tokens = [
@@ -1108,6 +1108,8 @@ export class DataPathToolOp extends ToolOp {
       path         :   new toolprop.StringProperty(),
       newValueJSON :   new toolprop.StringProperty()
     },
+
+    flag : ToolFlags.PRIVATE,
 
     outputs : {
       oldValueJSON : new toolprop.StringProperty()

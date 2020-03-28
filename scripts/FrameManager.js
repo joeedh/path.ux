@@ -649,7 +649,7 @@ export class Screen extends ui_base.UIBase {
         if (typeof hk.action != "string")
           continue;
 
-        if (hk.action.trim() == toolpath.trim()) {
+        if (hk.action.trim().startsWith(toolpath.trim())) {
           return hk;
         }
       }
@@ -660,9 +660,14 @@ export class Screen extends ui_base.UIBase {
       return ret;
 
     if (this.sareas.active && this.sareas.active.keymap) {
-      ret = test(this.sareas.active.area.keymap);
-      if (ret)
-        return ret;
+      let area = this.sareas.active.area;
+
+      for (let keymap of area.getKeyMaps()) {
+        ret = test(keymap);
+
+        if (ret)
+          return ret;
+      }
     }
 
     if (ret === undefined) {
@@ -670,11 +675,14 @@ export class Screen extends ui_base.UIBase {
       //context is confused as to which area is currently "active"
 
       for (let sarea of this.sareas) {
-        if (sarea.area.keymap) {
-          ret = test(sarea.area.keymap);
+        let area = sarea.area;
 
-          if (ret)
+        for (let keymap of area.getKeyMaps()) {
+          ret = test(keymap);
+
+          if (ret) {
             return ret;
+          }
         }
       }
     }

@@ -79,7 +79,7 @@ export class Area extends ui_base.UIBase {
    * @returns {Array<KeyMap>}
    */
   getKeyMaps() {
-    return [];
+    return [this.keymap];
   }
 
   buildDataPath() {
@@ -947,6 +947,7 @@ export class ScreenArea extends ui_base.UIBase {
       this.shadow.appendChild(this.area);
 
       this.doOnce(() => {
+        this.area.ctx = this.ctx;
         this.area._init(); //ensure init has been called already
         this.area.on_area_active();
         this.area.onadd();
