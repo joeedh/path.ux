@@ -1012,7 +1012,9 @@ export class UIBase extends HTMLElement {
   }
   
   getPathMeta(ctx, path) {
-    return ctx.api.resolvePath(ctx, path).prop;
+    let ret = ctx.api.resolvePath(ctx, path);
+
+    return ret !== undefined ? ret.prop : undefined;
   }
 
   getScreen() {

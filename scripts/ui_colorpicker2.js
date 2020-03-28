@@ -901,14 +901,21 @@ export class ColorPicker extends ui.ColumnFrame {
     if (this.hasAttribute("datapath")) {
       let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
 
-      if (prop !== undefined && prop.type == PropTypes.VEC3) {
-        let rgb = new Vector3();
-        rgb.load(this.field.rgba);
-
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), rgb);
-      } else {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+      if (prop === undefined) {
+        console.warn("Bad data path for color field:", this.getAttribute("datapath"));
       }
+
+      let val = this.field.rgba;
+      if (prop !== undefined && prop.type == PropTypes.VEC3) {
+        val = new Vector3();
+        val.load(this.field.rgba);
+      }
+
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
+
+      //if (this.hasAttribute("mass_set_path")) {
+      //  let mass_set_path = this.getAttribute("mass_set_path");
+      //}
     }
   }
 
