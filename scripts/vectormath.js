@@ -13,6 +13,10 @@ var FLT_EPSILON=2.22e-16;
 var DOT_NORM_SNAP_LIMIT = 0.00000000001;
 
 var basic_funcs = {
+  equals  : [["b"], "this[X] == b[X]", "&&"],
+  /*dot is made manually so it's safe for acos
+  dot     : [["b"], "this[X]*b[X]", "+"],
+   */
   zero    : [[], "0.0;"],
   negate  : [[], "-this[X];"],
   combine : [["b", "u", "v"], "this[X]*u + this[X]*v;"],
@@ -107,8 +111,38 @@ export class Matrix4 {
     }
     this.makeIdentity();
   }
+
   clone() {
     return new Matrix4(this);
+  }
+
+  equals(m) {
+    let m1 = this.$matrix;
+    let m2 = m.$matrix;
+
+    let ok = 1;
+
+    ok = ok && m1.m11 == m2.m11;
+    ok = ok && m1.m12 == m2.m12;
+    ok = ok && m1.m13 == m2.m13;
+    ok = ok && m1.m14 == m2.m14;
+
+    ok = ok && m1.m21 == m2.m21;
+    ok = ok && m1.m22 == m2.m22;
+    ok = ok && m1.m23 == m2.m23;
+    ok = ok && m1.m24 == m2.m24;
+
+    ok = ok && m1.m31 == m2.m31;
+    ok = ok && m1.m32 == m2.m32;
+    ok = ok && m1.m33 == m2.m33;
+    ok = ok && m1.m34 == m2.m34;
+
+    ok = ok && m1.m41 == m2.m41;
+    ok = ok && m1.m42 == m2.m42;
+    ok = ok && m1.m43 == m2.m43;
+    ok = ok && m1.m44 == m2.m44;
+
+    return ok;
   }
 
   load() {
@@ -935,7 +969,7 @@ export class BaseVector extends Array {
     //this.xyz = this.init_swizzle(3);
     //this.xy = this.init_swizzle(2);
   }
-  
+
   load(data) {
     throw new Error("Implement me!");
   }
@@ -971,7 +1005,8 @@ export class BaseVector extends Array {
   static inherit(cls, vectorsize) {
     make_norm_safe_dot(cls);
    
-   var f;
+    var f;
+
     var vectorDotDistance = "f = function vectorDistance(b) {\n";
     for (var i=0; i<vectorsize; i++) {
       vectorDotDistance += "var d"+i+" = this["+i+"]-b["+i+"];\n";
@@ -1019,13 +1054,26 @@ export class BaseVector extends Array {
         code += args[i].toLowerCase();
       }
       code += ") {\n";
-      
-      for (var i=0; i<vectorsize; i++) {
-        var line2 = line.replace(/X/g, ""+i);
-        code += "    this["+i+"] = " + line2 + "\n";
+
+      if (func.length > 2) {
+        //make summation
+        code += "return ";
+
+        for (var i=0; i<vectorsize; i++) {
+          if (i > 0)
+            code += func[2];
+
+          code += "(" + line.replace(/X/g, ""+i) + ")";
+        }
+        code += ";\n";
+      } else {
+        for (var i = 0; i < vectorsize; i++) {
+          var line2 = line.replace(/X/g, "" + i);
+          code += "    this[" + i + "] = " + line2 + "\n";
+        }
+        code += "return this;"
       }
       
-      code += "return this;"
       code += "}\n";
       
       //console.log(code);

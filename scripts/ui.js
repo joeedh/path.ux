@@ -351,11 +351,16 @@ export class Container extends ui_base.UIBase {
     }
   }
 
+  //*
+  _prepend(child) {
+    return this._add(child, true);
+  }//*/
+
   add(child) {
     return this._add(child);
   }
 
-  _add(child) {
+  _add(child, prepend=false) {
     //paranoia check for if we accidentally got a DOM NodeList
     if (child instanceof NodeList) {
       throw new Error("eek!");
@@ -372,8 +377,12 @@ export class Container extends ui_base.UIBase {
 
     li.style["list-style-type"] = "none";
     li.appendChild(child);
-    
-    this.dom.appendChild(li);
+
+    if (prepend) {
+      this.dom.prepend(li);
+    } else {
+      this.dom.appendChild(li);
+    }
 
     if (child.onadd)
       child.onadd();
