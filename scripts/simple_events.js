@@ -45,7 +45,7 @@ export function copyEvent(e) {
 }
 
 export function pushModalLight(obj) {
-  console.log("pushModalLight");
+  console.trace("pushModalLight");
 
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
@@ -77,6 +77,7 @@ export function pushModalLight(obj) {
         e2.was_touch = true;
         e2.type = type2;
         e2.button = type == "touchcancel" ? 1 : 0;
+        e2.touches = e.touches;
 
         if (e.touches.length > 0) {
           let dpi = window.devicePixelRatio; //UIBase.getDPI();

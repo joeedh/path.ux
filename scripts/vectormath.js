@@ -970,6 +970,10 @@ export class BaseVector extends Array {
     //this.xy = this.init_swizzle(2);
   }
 
+  copy() {
+    return new this.constructor(this);
+  }
+
   load(data) {
     throw new Error("Implement me!");
   }

@@ -432,7 +432,7 @@ export class Container extends ui_base.UIBase {
 
           cbs[id] = (function (toolpath) {
             return function() {
-              this2.ctx.api.execTool(this.ctx, toolpath);
+              this2.ctx.api.execTool(this2.ctx, toolpath);
             }
           })(item);
           
