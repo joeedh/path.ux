@@ -99,7 +99,6 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
     }
 
     //window.setTimeout(() => {
-      console.log("KEYS", keys);
       this.modaldata = pushModalLight(handlers);
       console.log("HANDLERS", this.modaldata.handlers);
     //}, 100);

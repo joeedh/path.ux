@@ -379,7 +379,13 @@ export class DataStruct {
   }
 
   enum(path, apiname, enumdef, uiname, description) {
-    let prop = new toolprop.EnumProperty(undefined, enumdef, apiname, uiname, description);
+    let prop;
+
+    if (enumdef instanceof toolprop.EnumProperty) {
+      prop = enumdef;
+    } else {
+      prop = new toolprop.EnumProperty(undefined, enumdef, apiname, uiname, description);
+    }
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -508,6 +514,7 @@ export class DataAPI extends ModelInterface {
       return this.resolvePath_intern(ctx, inpath, ignoreExistence)
     } catch (error) {
       //throw new DataPathError("bad path " + path);
+      print_stack(error);
       console.warn("bad path " + inpath);
       return undefined;
     }

@@ -17,14 +17,16 @@ if (Array.prototype.set === undefined) {
         
         return this;
     }
-    
-    Float64Array.prototype.set = Array.prototype.set;
-    Float32Array.prototype.set = Array.prototype.set;
-    Uint8Array.prototype.set = Array.prototype.set;
-    Uint8ClampedArray.prototype.set = Array.prototype.set;
-    Int32Array.prototype.set = Array.prototype.set;
-    Int16Array.prototype.set = Array.prototype.set;
-    Int8Array.prototype.set = Array.prototype.set;
+
+    if (Float64Array.prototype.set === undefined) {
+      Float64Array.prototype.set = Array.prototype.set;
+      Float32Array.prototype.set = Array.prototype.set;
+      Uint8Array.prototype.set = Array.prototype.set;
+      Uint8ClampedArray.prototype.set = Array.prototype.set;
+      Int32Array.prototype.set = Array.prototype.set;
+      Int16Array.prototype.set = Array.prototype.set;
+      Int8Array.prototype.set = Array.prototype.set;
+    }
 }
 
 if (Array.prototype.reject === undefined) {
@@ -85,10 +87,12 @@ ArrayIter.prototype.next = function() {
   return ret;
 }
 
+//XXX surely browser vendors have fixed this by now. . .
 /*Override array iterator to not allocate too much*/
-Array.prototype[Symbol.iterator] = function() {
-  return new ArrayIter(this);
-}
+
+//Array.prototype[Symbol.iterator] = function() {
+//  return new ArrayIter(this);
+//}
 
 if (Math.fract == undefined) {
   Math.fract = function fract(f) {

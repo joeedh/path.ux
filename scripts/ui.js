@@ -656,6 +656,15 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  noteframe(packflag=0) {
+    let ret = document.createElement("noteframe-x");
+
+    ret.packflag |= this.inherit_packflag | packflag;
+
+    this._add(ret);
+    return ret;
+  }
+
   prop(inpath, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 

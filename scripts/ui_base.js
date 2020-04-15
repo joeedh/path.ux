@@ -1465,6 +1465,10 @@ export function saveUIData(node, key) {
 }
 
 export function loadUIData(node, buf) {
+  if (buf === undefined || buf === null) {
+    return;
+  }
+  
   let obj = JSON.parse(buf);
   let key = buf.key;
   

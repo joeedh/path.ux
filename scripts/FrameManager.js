@@ -539,7 +539,7 @@ export class Screen extends ui_base.UIBase {
     //unlike other ondestroy functions, this one physically dismantles the DOM tree
     let recurse = (n, second_pass, parent) => {
       if (n.__pass === second_pass) {
-        console.warn("CYCLE IN EFFING DOM TREE!", n, parent);
+        console.warn("CYCLE IN DOM TREE!", n, parent);
         return;
       }
       
@@ -573,8 +573,10 @@ export class Screen extends ui_base.UIBase {
       });
     };
     
-    recurse(this, 0);
-    recurse(this, 1);
+    let id = ~~(Math.random()*1024*1024);
+    
+    recurse(this, id);
+    recurse(this, id+1);
   }
 
   destroy() {

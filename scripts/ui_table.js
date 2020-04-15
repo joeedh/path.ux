@@ -213,7 +213,7 @@ export class TableFrame extends Container {
       container.background = tr.style["background-color"];
       return container;
     };
-
+    
     //makefunc("cell");
     makefunc("label");
     makefunc("tool");
