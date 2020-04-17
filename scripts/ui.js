@@ -698,6 +698,22 @@ export class Container extends ui_base.UIBase {
     } else if (prop.type == PropTypes.BOOL) {
       this.check(inpath, prop.uiname, packflag, mass_set_path);
     } else if (prop.type == PropTypes.ENUM) {
+      if (rdef.subkey !== undefined) {
+        let subkey = rdef.subkey;
+        let name = rdef.prop.ui_value_names[rdef.subkey];
+
+        if (name === undefined) {
+          name = makeUIName(rdef.subkey);
+        }
+
+        let check = this.check(inpath, rdef.prop.ui_value_names[subkey], packflag, mass_set_path);
+        let tooltip = rdef.prop.descriptions[subkey];
+
+        check.description = tooltip === undefined ? rdef.prop.ui_value_names[subkey] : tooltip;
+        check.icon = rdef.prop.iconmap[rdef.subkey];
+
+        return check;
+      }
       if (!(packflag & PackFlags.USE_ICONS)) {
         let val;
         try {
@@ -728,6 +744,8 @@ export class Container extends ui_base.UIBase {
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
+
+        ret.icon = rdef.prop.iconmap[rdef.subkey];
 
         if (tooltip) {
           ret.description = tooltip;

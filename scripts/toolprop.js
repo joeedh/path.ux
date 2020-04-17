@@ -412,7 +412,13 @@ export class EnumProperty extends ToolProperty {
     
     this.iconmap = {};
   }
-  
+
+  addUINames(map) {
+    for (let k in map) {
+      this.ui_value_names[k] = map[k];
+    }
+  }
+
   addDescriptions(map) {
     for (let k in map) {
       this.descriptions[k] = map[k];
@@ -462,8 +468,7 @@ export class EnumProperty extends ToolProperty {
       val = this.keys[val];
     
     if (!(val in this.values)) {
-      console.trace("Invalid value for enum!");
-      console.log("Invalid value for enum!", val, this.values);
+      console.warn("Invalid value for enum!", val, this.values);
       return;
     }
     

@@ -91,6 +91,8 @@ export class DataPath {
     return this;
   }
 
+  //XXX this doesn't appear to be implemented
+  //
   //get/set will be called
   //like other callbacks,
   //e.g. the real object owning the property
