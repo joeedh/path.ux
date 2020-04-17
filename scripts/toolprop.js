@@ -407,12 +407,18 @@ export class EnumProperty extends ToolProperty {
       
       uin = uin.replace(/\_/g, " ");
       this.ui_value_names[k] = uin;
-      this.descriptions = uin;
+      this.descriptions[k] = uin;
     }
     
     this.iconmap = {};
   }
   
+  addDescriptions(map) {
+    for (let k in map) {
+      this.descriptions[k] = map[k];
+    }
+  }
+
   addIcons(iconmap) {
     if (this.iconmap === undefined) {
       this.iconmap = {};

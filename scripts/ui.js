@@ -699,7 +699,15 @@ export class Container extends ui_base.UIBase {
       this.check(inpath, prop.uiname, packflag, mass_set_path);
     } else if (prop.type == PropTypes.ENUM) {
       if (!(packflag & PackFlags.USE_ICONS)) {
-        this.listenum(inpath, undefined, undefined, this.ctx.api.getValue(this.ctx, path), undefined, undefined, packflag);
+        let val;
+        try {
+          val = this.ctx.api.getValue(this.ctx, path);
+        } catch (error) {
+          if (!(error instanceof DataPathError)) {
+            throw error;
+          }
+        }
+        this.listenum(inpath, undefined, undefined, val, undefined, undefined, packflag);
       } else {
         this.checkenum(inpath, undefined, packflag);
       }

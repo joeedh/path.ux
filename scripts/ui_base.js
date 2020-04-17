@@ -465,7 +465,8 @@ let first = (iter) => {
 }
 
 
-export class DataPathError extends Error {};
+import {DataPathError} from './controller.js';
+export {DataPathError} from './controller.js';
 
 export class SimpleContext {
   constructor(stateobj, api) {

@@ -161,6 +161,10 @@ export class DataPath {
     return this;
   }
 
+  descriptions(description_map) { //for enum/flag properties
+    this.data.addDescriptions(description_map);
+  }
+
   description(d) {
     this.data.description = d;
     return this;
