@@ -16,7 +16,7 @@ let UIBase = ui_base.UIBase,
     PackFlags = ui_base.PackFlags,
     IconSheets = ui_base.IconSheets;
 
-function getpx(css) {
+function parsepx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
@@ -82,6 +82,30 @@ export class Button extends UIBase {
     });
 
     this._last_disabled = false;
+
+    let style = document.createElement("style");
+    style.textContent = `.canvas1 {
+      -moz-user-focus: normal;
+      moz-user-focus: normal;
+      user-focus: normal;
+      padding : 0px;
+      margin : 0px;
+    }
+    `;
+
+    this.shadow.appendChild(style);
+    let form = this._div = document.createElement("div");
+
+    form.style["tabindex"] = 4;
+    form.setAttribute("type", "hidden");
+    form.type ="hidden";
+    form.style["-moz-user-focus"] = "normal";
+    form.setAttribute("class", "canvas1");
+    form.style["padding"] = form.style["margin"] = "0px";
+
+    form.appendChild(this.dom);
+
+    this.shadow.appendChild(form);
   }
 
   init() {
@@ -95,32 +119,10 @@ export class Button extends UIBase {
     this.dom.style["height"] = height + "px";
     this.dom.style["padding"] = this.dom.style["margin"] = "0px";
 
-    this.dom.width = Math.ceil(width*dpi); //getpx(this.dom.style["width"])*dpi;
-    this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
+    this.dom.width = Math.ceil(width*dpi); //parsepx(this.dom.style["width"])*dpi;
+    this.dom.height = Math.ceil(parsepx(this.dom.style["height"])*dpi);
     
-    let style = document.createElement("style");
-    style.textContent = `.canvas1 {
-      -moz-user-focus: normal;
-      moz-user-focus: normal;
-      user-focus: normal;
-      padding : 0px;
-      margin : 0px;
-    }
-    `;
-    
-    this.shadow.appendChild(style);
-    let form = document.createElement("div");
-    form.style["tabindex"] = 4;
-    form.setAttribute("type", "hidden");
-    form.type ="hidden";
-    form.style["-moz-user-focus"] = "normal";
-    form.setAttribute("class", "canvas1");
-    form.appendChild(this.dom);
 
-    form.style["padding"] = form.style["margin"] = "0px";
-
-    this.shadow.appendChild(form);
-    
     this.bindEvents();
     this._redraw();
   }
@@ -242,8 +244,8 @@ export class Button extends UIBase {
       this.dom.style["width"] = width + "px";
       this.dom.style["height"] = height + "px";
 
-      this.dom.width = Math.ceil(width*dpi); //getpx(this.dom.style["width"])*dpi;
-      this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
+      this.dom.width = Math.ceil(width*dpi); //parsepx(this.dom.style["width"])*dpi;
+      this.dom.height = Math.ceil(parsepx(this.dom.style["height"])*dpi);
 
       this._repos_canvas();
       this._redraw();
@@ -316,8 +318,8 @@ export class Button extends UIBase {
   _repos_canvas() {
     let dpi = this.getDPI();
     
-    this.dom.width = Math.ceil(getpx(this.dom.style["width"])*dpi);
-    this.dom.height = Math.ceil(getpx(this.dom.style["height"])*dpi);
+    this.dom.width = Math.ceil(parsepx(this.dom.style["width"])*dpi);
+    this.dom.height = Math.ceil(parsepx(this.dom.style["height"])*dpi);
   }
   
   updateDPI() {
@@ -1094,9 +1096,14 @@ export class IconCheck extends Button {
     this.dom.style["width"] = this._getsize() + "px";
     this.dom.style["height"] = this._getsize() + "px";
 
+    if (this._div !== undefined) {
+      this._div.style["width"] = this._getsize() + "px";
+      this._div.style["height"] = this._getsize() + "px";
+    }
+
     super._repos_canvas();
   }
-  
+
   set icon(f) {
     this._icon = f;
     this._redraw();

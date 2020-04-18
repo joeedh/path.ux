@@ -65,7 +65,7 @@ export class NoteFrame extends ui.RowFrame {
   }
   
   init() {
-    this.noMargins();
+    this.noMarginsOrPadding();
 
     noteframes.push(this);
     this.background = ui_base.getDefault("NoteBG");

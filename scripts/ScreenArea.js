@@ -240,8 +240,8 @@ export class Area extends ui_base.UIBase {
     //row.setSize(undefined, rh);
     //row.setSize(undefined, rh);
 
-    container.noMargins();
-    row.noMargins();
+    container.noMarginsOrPadding();
+    row.noMarginsOrPadding();
 
     row.style["width"] = "100%";
     row.style["margin"] = "0px";

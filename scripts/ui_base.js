@@ -118,6 +118,10 @@ export class CSSFont {
 
 export const theme = {
   base : {
+    //used for by icon strips and the like
+    "oneAxisPadding" : 3,
+    "oneAxisMargin" : 3,
+
     "numslider_width" : 24,
     "numslider_height" : 24,
 
@@ -274,6 +278,13 @@ export function getDefault(key, elem) {
 export function IsMobile() {
   return false;
 };
+
+let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
+keys = keys.concat(["padding-block-start", "padding-block-end"]);
+
+keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
+keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
+export const marginPaddingCSSKeys = keys;
 
 class _IconManager {
   constructor(image, tilesize, number_of_horizontal_tiles, drawsize) {
@@ -596,6 +607,32 @@ export class UIBase extends HTMLElement {
     this._forEachChildren((n) => {
       n.useDataPathToolOp = val;
     })
+  }
+
+  noMarginsOrPadding() {
+    let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
+    keys = keys.concat(["padding-block-start", "padding-block-end"]);
+    
+    keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
+    keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
+
+    for (let k of keys) {
+      this.style[k] = "0px";
+    }
+
+    return this;
+  }
+
+  noMargins() {
+    this.style["margin"] = this.style["margin-left"] = this.style["margin-right"] = "0px";
+    this.style["margin-top"] = this.style["margin-bottom"] = "0px";
+    return this;
+  }
+
+  noPadding() {
+    this.style["padding"] = this.style["padding-left"] = this.style["padding-right"] = "0px";
+    this.style["padding-top"] = this.style["padding-bottom"] = "0px";
+    return this;
   }
 
   getTotalRect() {
