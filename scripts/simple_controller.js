@@ -3,6 +3,8 @@ import * as parseutil from './parseutil.js';
 import {print_stack} from './util.js';
 import {ToolOp, UndoFlags, ToolFlags} from "./simple_toolsys.js";
 
+let PUTLParseError = parseutil.PUTLParseError;
+
 let tk = (name, re, func) => new parseutil.tokdef(name, re, func);
 let tokens = [
   tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
@@ -57,8 +59,9 @@ function toolkey(cls) {
 
 export const DataTypes = {
   STRUCT : 0,
-  PROP   : 1,
-  ARRAY  : 2
+  DYNAMIC_STRUCT : 1,
+  PROP   : 2,
+  ARRAY  : 3
 };
 
 export class DataPath {
@@ -309,6 +312,26 @@ export class DataStruct {
     }
   }
 
+  /**
+   * Like .struct, but the type of struct is looked up
+   * for objects at runtime.  Note that to work correctly each object
+   * must create its own struct definition via api.mapStruct
+   * 
+   * @param path
+   * @param apiname
+   * @param uiname
+   * @param default_struct : default struct if one can't be looked up
+   * @returns {*}
+   */
+  dynamicStruct(path, apiname, uiname, default_struct=undefined) {
+    let ret = default_struct ? default_struct : new DataStruct();
+
+    let dpath = new DataPath(path, apiname, ret, DataTypes.DYNAMIC_STRUCT);
+
+    this.add(dpath);
+    return ret;
+  }
+
   struct(path, apiname, uiname, existing_struct=undefined) {
     let ret = existing_struct ? existing_struct : new DataStruct();
 
@@ -495,6 +518,14 @@ export class DataAPI extends ModelInterface {
     }
   }
 
+  /**
+   * Look up struct definition for a class.
+   *
+   * @param cls: the class
+   * @param auto_create: If true, automatically create definition if not already existing.
+   * @returns {IterableIterator<*>}
+   */
+
   mapStruct(cls, auto_create=true) {
     let key;
 
@@ -584,8 +615,32 @@ export class DataAPI extends ModelInterface {
         }
       }
 
-      if (path.type == DataTypes.STRUCT) {
+      if (path.type === DataTypes.STRUCT) {
         dstruct = path.data;
+      } else if (path.type === DataTypes.DYNAMIC_STRUCT) {
+        let ok = false;
+
+        if (obj !== undefined) {
+          let obj2 = obj[path.path];
+          if (obj2 !== undefined) {
+            dstruct = this.mapStruct(obj2.constructor, false);
+          } else {
+            dstruct = path.data;
+          }
+
+          if (dstruct === undefined) {
+            dstruct = path.data;
+          }
+
+          ok = dstruct !== undefined;
+        } else {
+          dstruct = path.data;
+          ok = dstruct !== undefined;
+        }
+
+        if (!ok) {
+          throw new DataPathError("dynamic struct error for path: " + inpath);
+        }
       } else {
         prop = path.data;
       }

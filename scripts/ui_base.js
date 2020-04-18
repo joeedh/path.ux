@@ -565,6 +565,7 @@ export class UIBase extends HTMLElement {
       e2.was_touch = true;
       e2.stopPropagation = e.stopPropagation.bind(e);
       e2.preventDefault = e.preventDefault.bind(e);
+      e2.touches = e.touches;
 
       this.dispatchEvent(e2);
     };
