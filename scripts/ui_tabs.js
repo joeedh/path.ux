@@ -458,7 +458,7 @@ export class TabBar extends UIBase {
     let dpi = this.getDPI();
     let tsize = this.getDefault("TabText").size*1;
     
-    g.font = ui_base._getFont(this, tsize, "TabText");
+    g.font = ui_base.getFont(this, tsize, "TabText");
     
     let axis = this.horiz ? 0 : 1;
     
@@ -525,7 +525,7 @@ export class TabBar extends UIBase {
     let dpi = this.getDPI();
     let tsize = this.getDefault("TabText").size;
     
-    g.font = ui_base._getFont(this, tsize, "TabText");
+    g.font = ui_base.getFont(this, tsize, "TabText");
     tsize *= dpi;
     
     g.lineWidth = 2;

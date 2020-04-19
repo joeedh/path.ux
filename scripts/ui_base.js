@@ -24,6 +24,7 @@ SMALL_PLUS  :
 TRANSLATE   : for moving things
 UI_EXPAND   : panel open icon
 UI_COLLAPSE : panel close icon
+NOTE_EXCL   : exclamation mark for notifications
 */
 export function setIconMap(icons) {
   for (let k in icons) {
@@ -122,6 +123,9 @@ export const theme = {
     "oneAxisPadding" : 6,
     "oneAxisMargin" : 6,
 
+    "ScreenBorderOuter" : "rgba(255, 255, 255, 1.0)",
+    "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
+
     "numslider_width" : 24,
     "numslider_height" : 24,
 
@@ -129,7 +133,13 @@ export const theme = {
     "defaultHeight" : 32,
 
     "NoteBG" : "rgba(220, 220, 220, 0.0)",
-    "NoteTextColor" : "rgb(100, 100, 100)",
+    "NoteText" : new CSSFont({
+      font  : "sans-serif",
+      size  : 12,
+      color :  "rgba(135, 135, 135, 1.0)",
+      weight : "bold"
+    }),
+
     "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
     "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
     "TabInactive" : "rgba(150, 150, 150, 1.0)",
@@ -151,18 +161,13 @@ export const theme = {
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
     "AreaHeaderBG" : "rgba(170, 170, 170, 1.0)",
 
-    "DefaultTextSize" : 14,
-
+    //fonts
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
       size  : 14,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
     }),
-
-    //fonts
-    "DefaultTextFont" : "sans-serif",
-    "DefaultTextColor" : "rgba(35, 35, 35, 1.0)",
 
     "TabText" : new CSSFont({
       size     : 18,
@@ -177,10 +182,6 @@ export const theme = {
       font     : "sans-serif",
       weight   : "bold"
     }),
-
-    //"LabelTextFont" : "sans-serif",
-    //"LabelTextSize" : 13,
-    //"LabelTextColor" : "rgba(75, 75, 75, 1.0)",
 
     "HotkeyText" : new CSSFont({
       size     : 12,
@@ -202,14 +203,18 @@ export const theme = {
       font     : "sans-serif",
       weight   : "bold"
     }),
-    "TitleTextSize"   : 16,
-    "TitleTextColor"  : "rgba(255, 255, 255, 1.0)",
-    "TitleTextFont"   : "sans-serif"
   },
 
   button : {
     "defaultWidth" : 100,
     "defaultHeight" : 24
+  },
+  iconcheck : {
+
+  },
+
+  iconbutton : {
+
   },
 
   numslider : {
@@ -315,6 +320,13 @@ class _IconManager {
   setCSS(icon, dom) {
     dom.style["background"] = this.getCSS(icon);
     dom.style["background-size"] = (this.drawsize*this.tilex) + "px";
+
+    if (!dom.style["width"]) {
+      dom.style["width"] = this.drawsize + "px";
+    }
+    if (!dom.style["height"]) {
+      dom.style["height"] = this.drawsize + "px";
+    }
   }
 
   //icon is an integer
@@ -391,6 +403,11 @@ export class IconManager {
   }
   
   findSheet(sheet) {
+    if (sheet === undefined) {
+      console.warn("sheet was undefined");
+      sheet = 0;
+    }
+    
     let base = this.iconsheets[sheet];
 
     /**sigh**/
@@ -430,7 +447,7 @@ export class IconManager {
     let ds = sheet.drawsize;
     
     sheet.drawsize = base.drawsize;
-    let ret = this.findSheet(sheet).getCSS(icon);
+    let ret = sheet.getCSS(icon);
     sheet.drawsize = ds;
     
     return ret;
@@ -444,7 +461,7 @@ export class IconManager {
     let ds = sheet.drawsize;
     
     sheet.drawsize = base.drawsize;
-    let ret = this.findSheet(sheet).setCSS(icon, dom);
+    let ret = sheet.setCSS(icon, dom);
     sheet.drawsize = ds;
 
     return ret;
@@ -582,6 +599,7 @@ export class UIBase extends HTMLElement {
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
 
     this.default_overrides = {};
+    this.class_default_overrides = {};
 
     //getting css to flow down properly can be a pain, so
     //some packing settings are set as bitflags here,
@@ -1380,6 +1398,14 @@ export class UIBase extends HTMLElement {
     this.default_overrides[key] = val;
   }
 
+  overrideClassDefault(style, key, val) {
+    if (!(style in this.class_default_overrides)) {
+      this.class_default_overrides[style] = {};
+    }
+
+    this.class_default_overrides[style][key] = val;
+  }
+
   getDefault(key) {
     let p = this;
 
@@ -1394,20 +1420,41 @@ export class UIBase extends HTMLElement {
     return this.getClassDefault(key);
   }
 
-  getClassDefault(key) {
+  getStyleClass() {
     let p = this.constructor, lastp = undefined;
 
     while (p && p !== lastp && p !== UIBase && p !== Object) {
       let def = p.define();
 
-      if (def.style && def.style in theme && key in theme[def.style]) {
-        return theme[def.style][key];
+      if (def.style) {
+        return def.style;
       }
 
       if (!p.prototype || !p.prototype.__proto__)
         break;
 
       p = p.prototype.__proto__.constructor;
+    }
+
+    return "base";
+  }
+
+  getClassDefault(key) {
+    let style = this.getStyleClass();
+
+    let p = this;
+    while (p) {
+      let def = p.class_default_overrides[style];
+
+      if (def && (key in def)) {
+        return def[key];
+      }
+
+      p = p.parentWidget;
+    }
+
+    if (style in theme && key in theme[style]) {
+      return theme[style][key];
     }
 
     return theme.base[key];
@@ -1457,6 +1504,7 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     let dpi = elem.getDPI();
     
     r = r === undefined ? elem.getDefault("BoxRadius") : r;
+
     if (pad === undefined) {
       pad = elem.getDefault("BoxMargin") * dpi;
     }
@@ -1527,6 +1575,10 @@ export function _getFont_new(elem, size, font="DefaultText", do_dpi=true) {
   return font.genCSS(size);
 }
 
+export function getFont(elem, size, font="DefaultText", do_dpi=true) {
+  return _getFont_new(elem, size, font="DefaultText", do_dpi=true);
+}
+
 //size is optional, defaults to font's default size
 export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
   let dpi = elem.getDPI();
@@ -1563,7 +1615,7 @@ export function _ensureFont(elem, canvas, g, size) {
   if (size !== undefined) {
     g.font = ""+Math.ceil(size * dpi) + "px sans-serif";
   } else if (!canvas.font) {
-    let size = elem.getDefault("DefaultTextSize") * dpi;
+    let size = elem.getDefault("DefaultText").size * dpi;
 
     let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
     
@@ -1590,7 +1642,7 @@ export function measureText(elem, text, canvas, g, size=undefined) {
 export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined) {
   _ensureFont(elem, canvas, g, size);
   
-  g.fillStyle = elem.getDefault("DefaultTextColor");
+  g.fillStyle = elem.getDefault("DefaultText").color;
   g.fillText(text, x+0.5, y+0.5);
   
   if (size !== undefined) {

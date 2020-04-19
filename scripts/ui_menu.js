@@ -85,7 +85,7 @@ export class Menu extends UIBase {
           padding-left: 4px;
           padding-top : 0px;
           padding-bottom : 0px;
-          font : ${ui_base._getFont(this)};
+          font : ${ui_base.getFont(this)};
           background-color: ${this.getDefault("MenuBG")};
         }
         
@@ -326,7 +326,7 @@ export class Menu extends UIBase {
     let span = document.createElement("span");
 
     //stupid css doesn't get width right. . .
-    span.style["font"] = ui_base._getFont(this, undefined, "MenuText");
+    span.style["font"] = ui_base.getFont(this, undefined, "MenuText");
 
     let dpi = this.getDPI();
     let tsize = this.getDefault("MenuText").size;
@@ -343,7 +343,7 @@ export class Menu extends UIBase {
     let twid = Math.ceil(g.measureText(text).width);
     let hwid;
     if (hotkey) {
-      g.font = ui_base._getFont(this, undefined, "HotkeyText");
+      g.font = ui_base.getFont(this, undefined, "HotkeyText");
       hwid = Math.ceil(g.measureText(hotkey).width);
       twid += hwid + 8;
     }
@@ -376,7 +376,7 @@ export class Menu extends UIBase {
 
       let al = "right";
 
-      hotkey_span.style["font"] = ui_base._getFont(this, undefined, "HotkeyText");
+      hotkey_span.style["font"] = ui_base.getFont(this, undefined, "HotkeyText");
       hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
 
       //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
@@ -567,7 +567,7 @@ export class DropBox extends Button {
     //let ret = super.updateWidth(10);
     let dpi = this.getDPI();
 
-    let ts = this.getDefault("DefaultTextSize");
+    let ts = this.getDefault("DefaultText").size;
     let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width*dpi; // + ts*2;
     tw = ~~tw;
 

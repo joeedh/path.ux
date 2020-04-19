@@ -1,6 +1,7 @@
 import * as util from './util.js';
 import * as ui from './ui.js';
 import * as ui_base from './ui_base.js';
+import {Icons, css2color, color2css} from './ui_base.js';
 
 let UIBase = ui_base.UIBase;
 
@@ -8,7 +9,6 @@ export class Note extends ui_base.UIBase {
   constructor() {
     super();
    
-    this.dom = document.createElement("span");
     let style = document.createElement("style");
 
     this._id = undefined;
@@ -24,32 +24,48 @@ export class Note extends ui_base.UIBase {
 
     this.color = "red";
     this.shadow.appendChild(style);
-    this.shadow.appendChild(this.dom);
   }
 
   setLabel(s) {
     let color = this.color;
     if (this.mark === undefined) {
+      this.mark = document.createElement("div");
+      //this.mark.style["width"]
+      let sheet = 0;
 
-      this.mark = document.createElement("span");
+      let size = ui_base.iconmanager.getTileSize(sheet);
+
+      this.mark.style["width"] = "" + size + "px";
+      this.mark.style["height"] = "" + size + "px";
+
+      this.shadow.appendChild(this.mark);
+
       this.ntext = document.createElement("span");
+      this.shadow.appendChild(this.ntext);
 
-      this.dom.appendChild(this.mark);
-      this.dom.appendChild(this.ntext);
+      ui_base.iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
 
-      this.mark.style["color"] = "white";
-      this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
-      this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
-      this.mark.style["background-color"] = color;
+      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
+      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
+      //this.mark.style["background-color"] = color;
     }
 
     let mark = this.mark, ntext = this.ntext;
-    mark.innerText = "!";
+    //mark.innerText = "!";
     ntext.innerText = " " + s;
   }
 
   init() {
-    this.style["color"] = ui_base.getDefault("NoteTextColor");
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = "row";
+    this.style["border-radius"] = "7px";
+    this.style["padding"] = "2px";
+
+    this.style["color"] = ui_base.getDefault("NoteText").color;
+    let clr = css2color(this.color);
+    clr = color2css([clr[0], clr[1], clr[2], 0.25]);
+
+    this.style["background-color"] = clr;
   }
 
   static define() {return {
@@ -131,27 +147,20 @@ export class NoteFrame extends ui.RowFrame {
 
     note.style["text-align"] = "center";
 
-    note.style["color"] = ui_base.getDefault("NoteTextColor");
+    note.style["font"] = ui_base.getFont(note, "NoteText");
+    note.style["color"] = ui_base.getDefault("NoteText").color;
 
-    this.dom.style["display"] = "inline-block";
-    this.dom.appendChild(note);
-    
-    this.style["margin-left"] = "0px";
-    this.style["margin-right"] = "0px";
-    this.style["padding"] = "0px";
-    this.dom.style["margin-left"] = "0px";
-    this.dom.style["margin-right"] = "0px";
-    this.dom.style["padding"] = "0px";
-    note.style["margin-left"] = "0px";
-    note.style["margin-right"] = "0px";
-    note.style["padding"] = "0px";
-    
+    this.style["display"] = "inline-block";
+    this.add(note);
+
+    this.noMarginsOrPadding();
+    note.noMarginsOrPadding();
+
     //this.dom.style["position"] = "absolute";
     //this.style["position"] = "absolute";
     //note.style["position"] = "absolute";
 
     this.style["height"] = this._h;
-    this.dom.style["height"] = this._h;
     note.style["height"] = this._h;
 
     if (timeout != -1) {

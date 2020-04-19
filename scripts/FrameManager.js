@@ -235,7 +235,7 @@ export class ScreenBorder extends ui_base.UIBase {
       mstyle += "width : 100%;\n    height:${iwid}px;\n";
     }
 
-    let color = "rgba(220, 220, 220, 1.0)";
+    let color = this.getDefault("ScreenBorderOuter");
     if (DEBUG.screenborders) {
       if (!this.movable) {
         color = "black";
@@ -246,7 +246,7 @@ export class ScreenBorder extends ui_base.UIBase {
         .screenborder_inner_${this._id} {
           ${bstyle}
           ${mstyle}
-          background-color : rgba(170, 170, 170, 1.0);
+          background-color : ${this.getDefault("ScreenBorderInner")};
           border-color : ${color};
           border-width : 1px;
           pointer-events : none;

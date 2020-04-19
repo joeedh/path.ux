@@ -28,7 +28,6 @@ export class Button extends UIBase {
     this.boxpad = this.getDefault("BoxMargin", 4);
     let dpi = this.getDPI();
 
-    this.r = this.getDefault("BoxRadius");
     this._name = "";
     this._namePad = undefined;
 
@@ -138,7 +137,15 @@ export class Button extends UIBase {
       this.updateWidth();
     }
   }
-  
+
+  get r() {
+    return this.getDefault("BoxRadius");
+  }
+
+  set r(val) {
+    this.overrideDefault("BoxRadius", val);
+  }
+
   bindEvents() {
     let press_gen = 0;
 
@@ -273,7 +280,7 @@ export class Button extends UIBase {
       this._name = name;
       let dpi = this.getDPI();
       
-      let ts = this.getDefault("DefaultTextSize");
+      let ts = this.getDefault("DefaultText").size;
       let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
       
       if (this._namePad !== undefined) {
@@ -381,7 +388,7 @@ export class Button extends UIBase {
     let dpi = this.getDPI();
     
     let pad = this.getDefault("BoxMargin") * dpi;
-    let ts = this.getDefault("DefaultTextSize");
+    let ts = this.getDefault("DefaultText").size;
     
     let text = this._genLabel();
     
@@ -776,7 +783,7 @@ export class NumSlider extends ValueButtonBase {
       this._name = name;
       let dpi = this.getDPI();
       
-      let ts = this.getDefault("DefaultTextSize");
+      let ts = this.getDefault("DefaultText").size;
       let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
       
       let w = this.getDefault("numslider_width");
@@ -821,7 +828,7 @@ export class NumSlider extends ValueButtonBase {
     
     let r = this.getDefault("BoxRadius") * dpi;
     let pad = this.getDefault("BoxMargin") * dpi;
-    let ts = this.getDefault("DefaultTextSize");
+    let ts = this.getDefault("DefaultText").size;
     
     //if (this.value !== undefined) {
     let text = this._genLabel();
@@ -905,7 +912,7 @@ export class Check extends UIBase {
       .checkx {
         height: 25px;
         width: 25px;
-        color : "${this.getDefault("DefaultTextColor")}";
+        color : "${this.getDefault("DefaultText").color}";
         border-radius: 50%;
       }
     `
@@ -979,7 +986,7 @@ export class IconCheck extends Button {
 
     this.boxpad = 1;
     this._checked = undefined;
-    this.r = 5;
+
     this._drawCheck = true;
     this._icon = -1;
     this._icon_pressed = undefined;
@@ -1090,7 +1097,8 @@ export class IconCheck extends Button {
   }
 
   _getsize() {
-    return ui_base.iconmanager.getTileSize(this.iconsheet);
+      let margin = this.getDefault("BoxMargin");
+      return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
   
   _repos_canvas() {
@@ -1137,16 +1145,25 @@ export class IconCheck extends Button {
       icon = this._icon_pressed;
     }
 
+    let tsize = ui_base.iconmanager.getTileSize(this.iconsheet);
+    let size = this._getsize();
+    let off = size > tsize ? (size - tsize)*0.5 : 0.0;
+
+    this.g.save();
+    this.g.translate(off, off);
     ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
 
     if (this.drawCheck) {
       let icon2 = this._checked ? ui_base.Icons.CHECKED : ui_base.Icons.UNCHECKED;
       ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
     }
+
+    this.g.restore();
   }
   
   static define() {return {
-    tagname : "iconcheck-x"
+    tagname : "iconcheck-x",
+    style   : "iconcheck"
   };}
 }
 
@@ -1157,7 +1174,7 @@ export class IconButton extends Button {
     super();
     
     this.boxpad = 1;
-    this.r = 5;
+
     this._icon = 0;
     this._icon_pressed = undefined;
     this.iconsheet = ui_base.Icons.LARGE;
@@ -1182,7 +1199,8 @@ export class IconButton extends Button {
   }
 
   _getsize() {
-    return ui_base.iconmanager.getTileSize(this.iconsheet);
+    let margin = this.getDefault("BoxMargin");
+    return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
   
   _repos_canvas() {
@@ -1198,17 +1216,27 @@ export class IconButton extends Button {
     //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
     //
     super._redraw(false);
+
     let icon = this._icon;
     
     if (this._checked && this._icon_pressed !== undefined) {
       icon = this._icon_pressed;
     }
-    
+
+    let tsize = ui_base.iconmanager.getTileSize(this.iconsheet);
+    let size = this._getsize();
+    let dpi = UIBase.getDPI();
+    let off = size > tsize ? (size - tsize)*0.5*dpi : 0.0;
+
+    this.g.save();
+    this.g.translate(off, off);
     ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
+    this.g.restore();
   }
   
   static define() {return {
-    tagname : "iconbutton-x"
+    tagname : "iconbutton-x",
+    style : "iconbutton",
   };}
 }
 
@@ -1232,7 +1260,7 @@ export class Check1 extends Button {
 
     let r = this.getDefault("BoxRadius") * dpi;
     let pad = this.getDefault("BoxMargin") * dpi;
-    let ts = this.getDefault("DefaultTextSize");
+    let ts = this.getDefault("DefaultText").size;
     
     let text = this._genLabel();
     
@@ -1406,252 +1434,3 @@ export class TextBox extends UIBase {
 }
 
 UIBase.register(TextBox);
-
-export class ColorPickerButton extends UIBase {
-  constructor() {
-    super();
-
-    this._highlight = false;
-    this._depress = false;
-    this._label = "";
-
-    this.rgba = new Vector4([1, 1, 1, 1]);
-    this.labelDom = document.createElement("span");
-    this.labelDom.textContent = "yay";
-    this.dom = document.createElement("canvas");
-    this.g = this.dom.getContext("2d");
-
-    this.shadow.appendChild(this.labelDom);
-    this.shadow.appendChild(this.dom);
-  }
-
-  set label(val) {
-    this._label = val;
-    this.labelDom.textContent = val;
-  }
-
-  get label() {
-    return this._label;
-  }
-
-  init() {
-    super.init();
-    this._font = this.getDefault("defaultFont");
-
-    let enter = (e) => {
-      console.log(e.type);
-      this._highlight = true;
-      this._redraw();
-    };
-
-    let leave = (e) => {
-      console.log(e.type);
-      this._highlight = false;
-      this._redraw();
-    };
-
-
-    this.addEventListener("mousedown", (e) => {
-      this.click(e);
-    });
-
-    this.addEventListener("mouseover", enter);
-    this.addEventListener("mouseleave", leave);
-    this.addEventListener("mousein", enter);
-    this.addEventListener("mouseout", leave);
-    this.addEventListener("focus", enter);
-    this.addEventListener("blur", leave);
-
-    this.setCSS();
-  }
-
-  click(e) {
-    //console.log("click!", this.getAttribute("mass_set_path"));
-
-    if (this.onclick) {
-      this.onclick(e);
-    }
-
-    let colorpicker = this.ctx.screen.popup(this);
-    let widget = colorpicker.colorPicker(this.getAttribute("datapath"), undefined, this.getAttribute("mass_set_path"));
-
-    widget.onchange = onchange;
-  }
-
-  get font() {
-    return this._font;
-  }
-
-  set font(val) {
-    this._font = val;
-
-    this.setCSS();
-  }
-
-  _redraw() {
-    let canvas = this.dom, g = this.g;
-
-    g.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (this.disabled) {
-      let color = "rgb(55, 55, 55)";
-
-      g.save();
-
-      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
-      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-      let steps = 10;
-      let dt = canvas.width / steps, t = 0;
-
-      g.beginPath();
-      g.lineWidth = 2;
-      g.strokeStyle = "black";
-
-      for (let i=0; i<steps; i++, t += dt) {
-        g.moveTo(t, 0);
-        g.lineTo(t+dt, canvas.height);
-        g.moveTo(t+dt, 0);
-        g.lineTo(t, canvas.height);
-      }
-
-      g.stroke();
-      g.restore();
-      return;
-    }
-
-    //do checker pattern for alpha
-    g.save();
-
-    let grid1 = "rgb(100, 100, 100)";
-    let grid2 = "rgb(175, 175, 175)";
-
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
-
-    let cellsize = 10;
-    let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
-
-    //console.log("TOTX, TOTY", totx, toty);
-
-    g.beginPath();
-    for (let x=0; x<totx; x++) {
-      for (let y=0; y<toty; y++) {
-        if ((x+y) & 1) {
-          continue;
-        }
-
-        g.rect(x*cellsize, y*cellsize, cellsize, cellsize);
-      }
-    }
-
-    g.fillStyle = grid2;
-    g.fill();
-
-    //g.fillStyle = "orange";
-    //g.beginPath();
-    //g.rect(0, 0, canvas.width, canvas.height);
-    //g.fill();
-
-    let color = color2css(this.rgba);
-    //console.log(color);
-    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
-    //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
-
-    if (this._highlight) {
-      let color = "rgba(200, 200, 255, 0.5)";
-      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
-    }
-
-    g.restore();
-  }
-  setCSS() {
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
-    let dpi = this.getDPI();
-
-    this.style["width"] = w + "px";
-    this.style["height"] = h + "px";
-
-    this.labelDom.style["color"] = color2css(this.getDefault(this._font).color);
-    this.labelDom.style["font"] = ui_base._getFont(this, undefined, this._font, false);
-
-    let canvas = this.dom;
-
-    canvas.style["width"] = w + "px";
-    canvas.style["height"] = h + "px";
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
-
-    this._redraw();
-  }
-
-  static define() {return {
-    tagname : "color-picker-button-x",
-    style   : "colorpickerbutton"
-  }}
-
-  updateDataPath() {
-    if (!(this.hasAttribute("datapath"))) {
-      return;
-    }
-
-    let path = this.getAttribute("datapath");
-    let prop = this.getPathMeta(this.ctx, path);
-
-    if ((prop === undefined || prop.data === undefined) && DEBUG.verboseDataPath) {
-      console.log("bad path", path);
-      return;
-    }
-
-    prop = prop;
-
-    if (prop.uiname !== this._label) {
-      //console.log(prop);
-      this.label = prop.uiname;
-    }
-
-    let val = this.getPathValue(this.ctx, path);
-
-    if (val === undefined) {
-      let redraw = this.disabled !== true;
-
-      this.disabled = true;
-
-      if (redraw) {
-        this._redraw();
-      }
-
-      return;
-    } else {
-      let redraw = this.disabled;
-
-      this.disabled = false;
-
-      if (redraw) {
-        this._redraw();
-      }
-    }
-
-    if (this.rgba.vectorDistance(val) > 0.0001) {
-      if (prop.type == PropTypes.VEC3) {
-        this.rgba.load(val);
-        this.rgba[3] = 1.0;
-      } else {
-        this.rgba.load(val);
-      }
-
-      this._redraw();
-    }
-  }
-
-  update() {
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
-  }
-
-  redraw() {
-    this._redraw();
-  }
-};
-UIBase.register(ColorPickerButton);

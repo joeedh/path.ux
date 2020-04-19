@@ -758,10 +758,8 @@ export class ColorPicker extends ui.ColumnFrame {
     cb.style["height"] = this.getDefault("colorBoxHeight") + "px";
     cb.style["background-color"] = "black";
 
-    this.shadow.appendChild(this.colorbox);
     this.shadow.appendChild(style);
     this.field.ctx = this.ctx;
-    this.shadow.appendChild(this.field);
   }
 
   updateColorBox() {
@@ -778,6 +776,9 @@ export class ColorPicker extends ui.ColumnFrame {
 
   init() {
     super.init();
+
+    this.add(this.colorbox);
+    this.add(this.field);
 
     this.style["width"] = this.getDefault("defaultWidth") + "px";
   }
@@ -938,3 +939,257 @@ export class ColorPicker extends ui.ColumnFrame {
 }
 
 UIBase.register(ColorPicker);
+
+
+export class ColorPickerButton extends UIBase {
+  constructor() {
+    super();
+
+    this._highlight = false;
+    this._depress = false;
+    this._label = "";
+
+    this.rgba = new Vector4([1, 1, 1, 1]);
+    this.labelDom = document.createElement("span");
+    this.labelDom.textContent = "yay";
+    this.dom = document.createElement("canvas");
+    this.g = this.dom.getContext("2d");
+
+    this.shadow.appendChild(this.labelDom);
+    this.shadow.appendChild(this.dom);
+  }
+
+  set label(val) {
+    this._label = val;
+    this.labelDom.textContent = val;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  init() {
+    super.init();
+    this._font = "DefaultText"; //this.getDefault("defaultFont");
+
+    let enter = (e) => {
+      console.log(e.type);
+      this._highlight = true;
+      this._redraw();
+    };
+
+    let leave = (e) => {
+      console.log(e.type);
+      this._highlight = false;
+      this._redraw();
+    };
+
+
+    this.addEventListener("mousedown", (e) => {
+      this.click(e);
+    });
+
+    this.addEventListener("mouseover", enter);
+    this.addEventListener("mouseleave", leave);
+    this.addEventListener("mousein", enter);
+    this.addEventListener("mouseout", leave);
+    this.addEventListener("focus", enter);
+    this.addEventListener("blur", leave);
+
+    this.setCSS();
+  }
+
+  click(e) {
+    //console.log("click!", this.getAttribute("mass_set_path"));
+
+    if (this.onclick) {
+      this.onclick(e);
+    }
+
+    let colorpicker = this.ctx.screen.popup(this);
+    let widget = colorpicker.colorPicker(this.getAttribute("datapath"), undefined, this.getAttribute("mass_set_path"));
+
+    widget.onchange = onchange;
+  }
+
+  get font() {
+    return this._font;
+  }
+
+  set font(val) {
+    this._font = val;
+
+    this.setCSS();
+  }
+
+  _redraw() {
+    let canvas = this.dom, g = this.g;
+
+    g.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (this.disabled) {
+      let color = "rgb(55, 55, 55)";
+
+      g.save();
+
+      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+      let steps = 10;
+      let dt = canvas.width / steps, t = 0;
+
+      g.beginPath();
+      g.lineWidth = 2;
+      g.strokeStyle = "black";
+
+      for (let i=0; i<steps; i++, t += dt) {
+        g.moveTo(t, 0);
+        g.lineTo(t+dt, canvas.height);
+        g.moveTo(t+dt, 0);
+        g.lineTo(t, canvas.height);
+      }
+
+      g.stroke();
+      g.restore();
+      return;
+    }
+
+    //do checker pattern for alpha
+    g.save();
+
+    let grid1 = "rgb(100, 100, 100)";
+    let grid2 = "rgb(175, 175, 175)";
+
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
+
+    let cellsize = 10;
+    let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
+
+    //console.log("TOTX, TOTY", totx, toty);
+
+    g.beginPath();
+    for (let x=0; x<totx; x++) {
+      for (let y=0; y<toty; y++) {
+        if ((x+y) & 1) {
+          continue;
+        }
+
+        g.rect(x*cellsize, y*cellsize, cellsize, cellsize);
+      }
+    }
+
+    g.fillStyle = grid2;
+    g.fill();
+
+    //g.fillStyle = "orange";
+    //g.beginPath();
+    //g.rect(0, 0, canvas.width, canvas.height);
+    //g.fill();
+
+    let color = color2css(this.rgba);
+    //console.log(color);
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
+    //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
+
+    if (this._highlight) {
+      //let color = "rgba(200, 200, 255, 0.5)";
+      let color = this.getDefault("BoxHighlight");
+      ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+    }
+
+    g.restore();
+  }
+  setCSS() {
+    let w = this.getDefault("defaultWidth");
+    let h = this.getDefault("defaultHeight");
+    let dpi = this.getDPI();
+
+    this.style["width"] = w + "px";
+    this.style["height"] = h + "px";
+
+    this.style["flex-direction"] = "row";
+    this.style["display"] = "flex";
+    
+    this.labelDom.style["color"] = this.getDefault(this._font).color;
+    this.labelDom.style["font"] = ui_base.getFont(this, undefined, this._font, false);
+
+    let canvas = this.dom;
+
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
+    canvas.width = ~~(w*dpi);
+    canvas.height = ~~(h*dpi);
+
+    this._redraw();
+  }
+
+  static define() {return {
+    tagname : "color-picker-button-x",
+    style   : "colorpickerbutton"
+  }}
+
+  updateDataPath() {
+    if (!(this.hasAttribute("datapath"))) {
+      return;
+    }
+
+    let path = this.getAttribute("datapath");
+    let prop = this.getPathMeta(this.ctx, path);
+
+    if ((prop === undefined || prop.data === undefined) && DEBUG.verboseDataPath) {
+      console.log("bad path", path);
+      return;
+    }
+
+    prop = prop;
+
+    if (prop.uiname !== this._label) {
+      //console.log(prop);
+      this.label = prop.uiname;
+    }
+
+    let val = this.getPathValue(this.ctx, path);
+
+    if (val === undefined) {
+      let redraw = this.disabled !== true;
+
+      this.disabled = true;
+
+      if (redraw) {
+        this._redraw();
+      }
+
+      return;
+    } else {
+      let redraw = this.disabled;
+
+      this.disabled = false;
+
+      if (redraw) {
+        this._redraw();
+      }
+    }
+
+    if (this.rgba.vectorDistance(val) > 0.0001) {
+      if (prop.type == PropTypes.VEC3) {
+        this.rgba.load(val);
+        this.rgba[3] = 1.0;
+      } else {
+        this.rgba.load(val);
+      }
+
+      this._redraw();
+    }
+  }
+
+  update() {
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+  }
+
+  redraw() {
+    this._redraw();
+  }
+};
+UIBase.register(ColorPickerButton);

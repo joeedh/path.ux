@@ -70,7 +70,7 @@ export class Label extends ui_base.UIBase {
 
     this._font = prefix;
 
-    this.dom.style["font"] = ui_base._getFont(this, undefined, prefix, false);
+    this.dom.style["font"] = ui_base.getFont(this, undefined, prefix, false);
     this.dom.style["color"] = this.getDefault(prefix + "Color");
   }
 
@@ -1095,8 +1095,9 @@ export class Container extends ui_base.UIBase {
     this._add(ret);
 
     ret.ctx = this.ctx;
+    ret.contents.ctx = ret.ctx;
 
-    return ret;
+    return ret.contents;
   }
 
   row(packflag = 0) {
@@ -1274,9 +1275,11 @@ export class ColumnFrame extends Container {
 
 UIBase.register(ColumnFrame);
 
-export class PanelFrame extends Container {
+export class PanelFrame extends ColumnFrame {
   constructor() {
     super();
+
+    this.contents = document.createElement("colframe-x");
 
     this._closed = false;
   }
@@ -1293,13 +1296,20 @@ export class PanelFrame extends Container {
     this.closed = obj._closed;
   }
 
+  clear() {
+    this.clear();
+    this.add(this.titleframe);
+  }
+
   init() {
-    let con = this.frame = new Container();
+    super.init();
 
     //con.style["margin-left"] = "5px";
+    let con = this.titleframe = this.row();
+
     this.setCSS();
 
-    let row = con.row();
+    let row = con;
 
     let iconcheck = document.createElement("iconcheck-x");
     this.iconcheck = iconcheck;
@@ -1327,19 +1337,19 @@ export class PanelFrame extends Container {
 
     //stupid css, let's just hackishly put " " to create spacing2
     row.overrideDefault("LabelText", this.getDefault("TitleText").copy());
-    //row.overrideDefault("LabelTextSize", this.getDefault("TitleTextSize"));
-    //row.overrideDefault("LabelTextColor", this.getDefault("TitleTextColor"));
-    //row.overrideDefault("LabelTextFont", this.getDefault("TitleTextFont"));
 
     row.label(this.getAttribute("title"));
 
-    row.background = con.background = this.getDefault("BoxSubBG");
+    row.background = this.getDefault("BoxSubBG");
+    row.style["border-radius"] = "5px";
+    
     this.background = this.getDefault("BoxSub2BG");
 
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
 
-    this.shadowRoot.appendChild(con);
+    this.contents.ctx = this.ctx;
+    this.add(this.contents);
   }
 
   static define() {
@@ -1353,8 +1363,16 @@ export class PanelFrame extends Container {
   }
 
   _setVisible(state) {
+    if (state) {
+      this.contents.remove();
+    } else {
+      this.add(this.contents, false);
+    }
+
+    this.contents.hidden = state;
+    return;
     for (let c of this.shadow.childNodes) {
-      if (c !== this.frame) {
+      if (c !== this.titleframe) {
         c.hidden = state;
       }
     }
@@ -1374,8 +1392,9 @@ export class PanelFrame extends Container {
     this._closed = val;
 
     //console.log("closed set", update);
-    if (update)
+    if (update) {
       this._updateClosed();
+    }
   }
 }
 
