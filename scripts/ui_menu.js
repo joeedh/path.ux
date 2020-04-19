@@ -7,6 +7,7 @@ import * as events from './events.js';
 import * as simple_toolsys from './simple_toolsys.js';
 import * as toolprop from './toolprop.js';
 import {Button} from "./ui_widgets.js";
+import {DomEventTypes} from './events.js';
 
 let EnumProperty = toolprop.EnumProperty,
   PropTypes = toolprop.PropTypes;
@@ -27,6 +28,7 @@ export class Menu extends UIBase {
 
     this.itemindex = 0;
     this.closed = false;
+    this.started = false;
     this.activeItem = undefined;
 
     //we have to make a container for any submenus to
@@ -95,44 +97,7 @@ export class Menu extends UIBase {
 
     this.dom.setAttribute("tabindex", -1);
 
-    this.dom.addEventListener("keydown", (e) => {
-      console.log("key", e.keyCode);
-
-      switch (e.keyCode) {
-        case 38: //up
-        case 40: //down
-          let item = this.activeItem;
-          if (!item) {
-            item = this.dom.childNodes[0];
-          }
-          if (!item) {
-            return;
-          }
-
-          console.log(item);
-          let item2;
-
-          if (e.keyCode == 38) {
-            item2 = item.previousElementSibling;
-          } else {
-            item2 = item.nextElementSibling;
-          }
-          console.log("item2:", item2);
-
-          if (item2) {
-            this.activeItem = item2;
-
-            item.blur();
-            item2.focus();
-          }
-          break;
-        case 13: //return key
-        case 32: //space key
-          this.click(this.activeItem);
-        case 27: //escape key
-          this.close();
-      }
-    }, false);
+    //let's have the menu wrangler handle key events
 
     this.container.addEventListener("mouseleave", (e) => {
       console.log("menu out");
@@ -194,12 +159,33 @@ export class Menu extends UIBase {
     this.close();
   }
 
+  _ondestroy() {
+    if (this.started) {
+      menuWrangler.popMenu(this);
+
+      if (this.onclose) {
+        this.onclose();
+      }
+    }
+  }
+
   close() {
     //XXX
     //return;
+    if (this.closed) {
+      return;
+    }
+
+    if (this.started) {
+      menuWrangler.popMenu(this);
+    }
 
     this.closed = true;
-    console.log("menu close", this.onclose);
+    this.started = false;
+
+    //if (this._popup.parentNode !== undefined) {
+    //  this._popup.remove();
+    //}
 
     this.remove();
     this.dom.remove();
@@ -279,14 +265,14 @@ export class Menu extends UIBase {
       return;
   }
 
-  start(prepend, setActive=true) {
+  start(prepend=false, setActive=true) {
+    this.started = true;
     this.focus();
+    menuWrangler.pushMenu(this);
 
     if (this.items.length > 10) {
       return this.start_fancy(prepend, setActive);
     }
-
-    console.log("menu start");
 
     if (prepend) {
       this.container.prepend(this.dom);
@@ -343,16 +329,16 @@ export class Menu extends UIBase {
     span.style["font"] = ui_base._getFont(this, undefined, "MenuText");
 
     let dpi = this.getDPI();
-    let tsize = this.getDefault("MenuTextSize");
+    let tsize = this.getDefault("MenuText").size;
     //XXX proportional font fail
 
     //XXX stupid!
     let canvas = document.createElement("canvas");
     let g = canvas.getContext("2d");
+
     g.font = span.style["font"];
-    console.log(g.font);
+
     let rect = span.getClientRects();
-    console.log(g.measureText(text));
 
     let twid = Math.ceil(g.measureText(text).width);
     let hwid;
@@ -362,7 +348,6 @@ export class Menu extends UIBase {
       twid += hwid + 8;
     }
 
-    console.log("TWID", twid);
     //let twid = Math.ceil(text.trim().length * tsize / dpi);
 
     span.innerText = text;
@@ -450,6 +435,7 @@ export class Menu extends UIBase {
     }
 
     li._id = id;
+
     this.items.push(li);
 
     if (add) {
@@ -457,7 +443,7 @@ export class Menu extends UIBase {
         //console.log("menu click!");
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          console.log("menu ignore");
+          //console.log("menu ignore");
           //ignore
           return;
         }
@@ -484,7 +470,7 @@ export class Menu extends UIBase {
         }
         if (li._isMenu) {
           li._menu.onselect = (item) => {
-            console.log("submenu select", item);
+            //console.log("submenu select", item);
             this.onselect(item);
             this.close();
           };
@@ -497,7 +483,6 @@ export class Menu extends UIBase {
 
       li.addEventListener("touchend", (e) => {
         onfocus(e);
-        //console.log("menu click!");
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           console.log("menu ignore");
@@ -513,13 +498,13 @@ export class Menu extends UIBase {
       })
 
       li.addEventListener("touchmove", (e) => {
-        console.log("menu touchmove");
+        //console.log("menu touchmove");
         onfocus(e);
         li.focus();
       });
 
       li.addEventListener("mouseenter", (e) => {
-        console.log("menu mouse enter");
+        //console.log("menu mouse enter");
         li.focus();
       });
 
@@ -567,9 +552,14 @@ export class DropBox extends Button {
 
     this.r = 5;
     this._menu = undefined;
+    this._auto_depress = false;
     //this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
 
     this._onpress = this._onpress.bind(this);
+  }
+
+  init() {
+    super.init();
     this.updateWidth();
   }
 
@@ -578,14 +568,19 @@ export class DropBox extends Button {
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultTextSize");
-    let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
+    let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width*dpi; // + ts*2;
     tw = ~~tw;
 
-    tw += 30;
+    //console.log("WIDTH", ui_base.measureText(this, this._genLabel(), this.dom, this.g));
+    tw += 5;
 
     if (tw != this._last_w) {
       this._last_w = tw;
       this.dom.style["width"] = tw + "px";
+      this.style["width"] = tw + "px";
+      this.width = tw;
+
+      this.overrideDefault("defaultWidth", tw);
       this._repos_canvas();
       this._redraw();
     }
@@ -644,6 +639,8 @@ export class DropBox extends Button {
     let menu = this._menu = document.createElement("menu-x");
     menu.setAttribute("title", name);
 
+    menu._dropbox = this;
+
     let valmap = {};
     let enummap = prop.values;
     let iconmap = prop.iconmap;
@@ -668,14 +665,8 @@ export class DropBox extends Button {
       }
     }
 
-    menu.onclose = () => {
-      this._pressed = false;
-      this._menu = undefined;
-      this._redraw();
-    }
-
     menu.onselect = (id) => {
-      console.log("dropbox select");
+      //console.log("dropbox select");
       this._pressed = false;
       this._redraw();
       //console.trace("got click!", id, ":::");
@@ -705,15 +696,26 @@ export class DropBox extends Button {
     }
 
     this._build_menu();
-
+    
     if (this._menu === undefined) {
       return;
     }
 
-    let onclose = this._menu.onclose;
+    this._menu._dropbox = this;
+    this.__last_background = this._background;
+    this.dom._background = this.getDefault("BoxDepressed");
+    this._background = this.getDefault("BoxDepressed");
+    this._redraw();
+    this._pressed = true;
+    this.setCSS();
 
+    let onclose = this._menu.onclose;
     this._menu.onclose = () => {
+      this._pressed = false;
+      this._redraw();
+
       let menu = this._menu;
+      this._menu._dropbox = undefined;
       this._menu = undefined;
 
       if (onclose) {
@@ -722,20 +724,22 @@ export class DropBox extends Button {
     }
 
     let menu = this._menu;
+    let screen = this.getScreen();
 
-    document.body.appendChild(menu);
     let dpi = this.getDPI();
 
     let x = e.x, y = e.y;
     let rects = this.dom.getClientRects();
 
-    console.log(rects[0], Math.ceil(rects[0].height), "::");
-
     x = rects[0].x;
-    y = rects[0].y + Math.ceil(rects[0].height);//dpi + 20*dpi;//Math.ceil(150/dpi);
+    y = rects[0].y + Math.ceil(rects[0].height);
+
+    let con = this._popup = screen.popup(x, y);
+    con.noMarginsOrPadding();
+
+    con.add(menu);
 
     menu.start();
-    menu.float(x, y, 8);
   }
 
   _redraw() {
@@ -810,3 +814,142 @@ export class DropBox extends Button {
 
 UIBase.register(DropBox);
 
+export class MenuWrangler {
+  constructor() {
+    this.screen = undefined;
+    this.menustack = [];
+
+  }
+
+  get menu() {
+    return this.menustack.length > 0 ? this.menustack[this.menustack.length-1] : undefined;
+  }
+
+  pushMenu(menu) {
+    this.menustack.push(menu);
+  }
+
+  popMenu(menu) {
+    return this.menustack.pop();
+  }
+
+  endMenus() {
+    for (let menu of this.menustack) {
+      menu.close();
+    }
+
+    this.menustack = [];
+  }
+
+  on_keydown(e) {
+    if (this.menu === undefined) {
+      return;
+    }
+
+    console.log("key", e.keyCode);
+    let menu = this.menu;
+
+    switch (e.keyCode) {
+      case 37: //left
+      case 39: //right
+        if (menu._dropbox) {
+          let dropbox = menu._dropbox;
+
+          if (e.keyCode === 37) {
+            dropbox = dropbox.previousElementSibling;
+          } else {
+            dropbox = dropbox.nextElementSibling;
+          }
+
+          if (dropbox !== undefined && dropbox instanceof DropBox) {
+            this.endMenus();
+            dropbox._onpress(e);
+          }
+        }
+        break;
+      case 38: //up
+      case 40: //down
+        let item = menu.activeItem;
+        if (!item) {
+          item = menu.items[0];
+        }
+
+        if (!item) {
+          return;
+        }
+
+        let item2;
+        let i = menu.items.indexOf(item);
+
+        if (e.keyCode == 38) {
+          i = (i - 1 + menu.items.length) % menu.items.length;
+        } else {
+          i = (i + 1) % menu.items.length;
+        }
+
+        item2 = menu.items[i];
+
+        if (item2) {
+          menu.activeItem = item2;
+
+          item.blur();
+          item2.focus();
+        }
+        break;
+      case 13: //return key
+      case 32: //space key
+        menu.click(menu.activeItem);
+        break;
+      case 27: //escape key
+        menu.close();
+        break;
+    }
+  }
+  
+  on_mousemove(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y);
+
+    if (element === undefined) {
+      return;
+    }
+
+    console.log(element.tagName);
+    if (element instanceof DropBox && element.menu !== this.menu) {
+      //destroy entire menu stack
+      this.endMenus();
+
+      //start new menu
+      element._onpress(e);
+    }
+  }
+}
+
+export let menuWrangler = new MenuWrangler();
+
+export function startMenuEventWrangling(screen) {
+  for (let k in DomEventTypes) {
+    if (menuWrangler[k] === undefined) {
+      continue;
+    }
+
+    let dom = k.search("key") >= 0 ? window : document.body;
+    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), false)
+  }
+
+  menuWrangler.screen = screen;
+}
+
+export function setWranglerScreen(screen) {
+  menuWrangler.screen = screen;
+}
+
+export function getWranglerScreen() {
+  return menuWrangler.screen;
+}

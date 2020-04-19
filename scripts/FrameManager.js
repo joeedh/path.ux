@@ -25,6 +25,10 @@ import './ui_listbox.js';
 import './ui_menu.js';
 import './ui_table.js';
 
+import * as ui_menu from './ui_menu.js';
+
+ui_menu.startMenuEventWrangling();
+
 export function registerToolStackGetter(func) {
   FrameManager_ops.registerToolStackGetter(func);
 }
@@ -301,9 +305,15 @@ export class ScreenBorder extends ui_base.UIBase {
 
 ui_base.UIBase.register(ScreenBorder);
 
+let screen_idgen = 0;
+
 export class Screen extends ui_base.UIBase {
   constructor() {
     super();
+
+    this._screen_id = screen_idgen++;
+
+    this._popups = [];
 
     this._ctx = undefined;
 
@@ -375,6 +385,22 @@ export class Screen extends ui_base.UIBase {
     return ret;
   }
 
+  //pickElement(x, y, sx=0, sy=0, nodeclass=undefined) {
+
+  //}
+
+  pickElement(x, y, sx, sy, nodeclass) {
+    let ret;
+
+    for (let popup of this._popups) {
+      ret = ret || popup.pickElement(...arguments);
+    }
+
+    ret = ret || super.pickElement(...arguments);
+
+    return ret;
+  }
+
   /** makes a popup at x,y and returns a new container-x for it */
   popup(elem_or_x, y) {
     let x;
@@ -390,6 +416,15 @@ export class Screen extends ui_base.UIBase {
 
     let container = document.createElement("container-x");
 
+    let remove = container.remove;
+    container.remove = () => {
+      if (this._popups.indexOf(container) >= 0) {
+        this._popups.remove(container);
+      }
+
+      return remove.apply(container, arguments);
+    };
+
     container.background = this.getDefault("BoxSubBG");
     container.style["position"] = "absolute";
     container.style["z-index"] = 100;
@@ -397,12 +432,14 @@ export class Screen extends ui_base.UIBase {
     container.style["top"] = y + "px";
 
     this.shadow.appendChild(container);
+    this._popups.push(container);
 
     let touchstart;
 
     let done = false;
     let end = () => {
       if (done) return;
+      console.log("container end");
 
       this.ctx.screen.removeEventListener("touchstart", touchstart, true);
       this.ctx.screen.removeEventListener("touchmove", touchstart, true);
@@ -416,47 +453,27 @@ export class Screen extends ui_base.UIBase {
       //console.log(e);
 
       let x = e.touches[0].screenX, y = e.touches[0].screenY;
-      let elem = this.pickElement(x, y);
+      let elem = this.pickElement(x, y, 55, 45);
 
       if (elem === undefined) {
+        end();
         return;
       }
 
-      let p = elem;
-      while (p) {
-        //console.log(p, "<------------------------------------");
+      let ok = false;
 
-        if (p === container) {
+      while (elem) {
+        if (elem === container) {
+          ok = true;
           break;
         }
-        p = p.parentWidget;
+        elem = elem.parentWidget;
       }
 
-      if (p === container) {
-        //console.log("p was container -----------------------------");
-        return;
+      if (!ok) {
+        e.stopPropagation();
+        end();
       }
-
-      let r = container.getTotalRect();
-      console.log("R", r);
-
-      if (r) {
-        //XXX hack! why is it so hard to get real bounds of DOM elements!!
-        //even UIBase.prototype.getTotalRect isn't working right!!
-        let pad = 15.0;
-        let pad2 = 150.0;
-
-        //console.log(x, y);
-        //console.log(r.x, r.y, r.width, r.height)
-        //console.log(x >= r.x-pad && y >= r.y-pad2 && x <= r.x+r.width+pad && y <=r.y+r.height+pad2);
-        if (x >= r.x-pad && y >= r.y-pad2 && x <= r.x+r.width+pad && y <=r.y+r.height+pad2) {
-          return;
-        }
-      }
-
-      console.log("container end");
-      end();
-      e.stopPropagation();
     };
 
     this.ctx.screen.addEventListener("touchstart", touchstart, true);
@@ -468,10 +485,6 @@ export class Screen extends ui_base.UIBase {
     });
     container.addEventListener("mouseout", (e) => {
       console.log("popup mouse out");
-      end();
-    });
-    container.addEventListener("blur", (e) => {
-      console.log("popup blur");
       end();
     });
 
@@ -524,6 +537,8 @@ export class Screen extends ui_base.UIBase {
   }
   
   listen() {
+    ui_menu.setWranglerScreen(this);
+
     if (this.listen_timer !== undefined) {
       return; //already listening
     }
@@ -534,6 +549,10 @@ export class Screen extends ui_base.UIBase {
   }
   
   _ondestroy() {
+    if (ui_menu.getWranglerScreen() === this) {
+      //ui_menu.setWranglerScreen(undefined);
+    }
+
     this.unlisten();
 
     //unlike other ondestroy functions, this one physically dismantles the DOM tree
@@ -545,7 +564,7 @@ export class Screen extends ui_base.UIBase {
       
       n.__pass = second_pass;
       
-      n._forEachChildren(n2 => {
+      n._forEachChildWidget(n2 => {
         if (n === n2)
           return;
         recurse(n2, second_pass, n);

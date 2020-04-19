@@ -182,13 +182,19 @@ export const theme = {
     //"LabelTextSize" : 13,
     //"LabelTextColor" : "rgba(75, 75, 75, 1.0)",
 
-    "HotkeyTextSize"  : 12,
-    "HotkeyTextColor" : "rgba(130, 130, 130, 1.0)",
-    "HotkeyTextFont"  : "courier",
+    "HotkeyText" : new CSSFont({
+      size     : 12,
+      color    : "rgba(130, 130, 130, 1.0)",
+      font     : "courier"
+      //weight   : "bold"
+    }),
 
-    "MenuTextSize"  : 12,
-    "MenuTextColor" : "rgba(25, 25, 25, 1.0)",
-    "MenuTextFont"  : "sans-serif",
+    "MenuText" : new CSSFont({
+      size     : 12,
+      color    : "rgba(25, 25, 25, 1.0)",
+      font     : "sans-serif"
+      //weight   : "bold"
+    }),
 
     "TitleText" : new CSSFont({
       size     : 16,
@@ -325,7 +331,7 @@ class _IconManager {
     //x = ~~x;
     //y = ~~y;
 
-    console.log(this.tilesize, this.drawsize, x, y);
+    //console.log(this.tilesize, this.drawsize, x, y);
 
     return `url("${this.image.src}") ${x}px ${y}px`;
   }
@@ -604,9 +610,13 @@ export class UIBase extends HTMLElement {
   set useDataPathToolOp(val) {
     this._useDataPathToolOp = val;
 
-    this._forEachChildren((n) => {
+    this._forEachChildWidget((n) => {
       n.useDataPathToolOp = val;
     })
+  }
+
+  connectedCallback() {
+
   }
 
   noMarginsOrPadding() {
@@ -635,6 +645,15 @@ export class UIBase extends HTMLElement {
     return this;
   }
 
+  get background() {
+    return this.__background;
+  }
+
+  set background(bg) {
+    this.__background = bg;
+    this.style["background-color"] = bg;
+  }
+
   getTotalRect() {
     let found = false;
 
@@ -656,7 +675,7 @@ export class UIBase extends HTMLElement {
 
     doaabb(this);
 
-    this._forEachChildren((n) => {
+    this._forEachChildWidget((n) => {
       doaabb(n);
     });
 
@@ -722,7 +741,16 @@ export class UIBase extends HTMLElement {
 
 
   //used by container nodes
-  _forEachChildren(cb, thisvar) {
+  /**
+   * Iterates over all child widgets,
+   * including ones that might be inside
+   * of normal DOM nodes.
+   *
+   * This is done by recursing into the dom
+   * tree and stopping at any node that's
+   * descended from ui_base.UIBase
+   **/
+  _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
       if (n instanceof UIBase) {
         if (thisvar !== undefined) {
@@ -746,6 +774,7 @@ export class UIBase extends HTMLElement {
     for (let n of this.childNodes) {
       rec(n);
     }
+
     for (let n of this.shadow.childNodes) {
       rec(n);
     }
@@ -771,24 +800,91 @@ export class UIBase extends HTMLElement {
   getWinHeight() {
     return window.innerHeight;
   }
-  
-  //are we exclusively 
-  pickElement(x, y, sx=0, sy=0, nodeclass=undefined) {
+
+  pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase) {
+    let ret = undefined;
+
+    let rec = (n, widget, depth=0) => {
+      if (n.getClientRects) {
+        let rects = n.getClientRects();
+
+        if (n instanceof nodeclass) {
+          widget = n;
+        }
+
+        for (let rect of rects) {
+          let ok =   x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
+          ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
+
+          //ok = x >= rect.x && x <= rect.x + rect.width;
+          //ok = ok && y >= rect.y && y <= rect.y + rect.height;
+
+          if (nodeclass !== undefined) {
+            ok = ok && (widget instanceof nodeclass);
+          }
+
+          //console.log(ok, "|", x, y, rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
+          if (ok) {
+            ret = widget;
+          }
+          //console.log(rect.width, rect.height, "eek", depth);
+        }
+      }
+
+      let isleaf = n.childNodes.length == 0;
+
+      if (n.shadow !== undefined) {
+        isleaf = isleaf && (n.shadow.childNodes.length == 0);
+      }
+
+      if (!isleaf) {
+        for (let n2 of n.childNodes) {
+          rec(n2, widget, depth+1);
+        }
+
+        if (n.shadow !== undefined) {
+          for (let n2 of n.shadow.childNodes) {
+            rec(n2, widget, depth+1);
+          }
+        }
+      }
+    };
+
+    rec(this, this);
+
+    return ret;
+  }
+  /**
+   *
+    * @param x
+   * @param y
+   * @param sx
+   * @param sy
+   * @param nodeclass
+   * @returns {*}
+   */
+  pickElement3(x, y, sx=0, sy=0, nodeclass=undefined) {
     let rects = this.getClientRects();
     let ret;
     
-    if (rects.length == 0)
-      return;
-    
-    this._forEachChildren((n) => {
-      let ret2 = n.pickElement(x, y, sx, sy, nodeclass); //sx+rects[0].x, sy+rects[0].y);
-      
-      if (ret2 !== undefined) {
-        ret = ret2;
-      }
+    //if (rects.length == 0)
+    //  return;
+
+    let nodes = [];
+    this._forEachChildWidget((n) => {
+      nodes.push(n);
     });
-    
-    if (ret === undefined) {
+
+    for (let n of nodes) {
+      let ret2 = n.pickElement(x, y, sx, sy, nodeclass); //sx+rects[0].x, sy+rects[0].y);
+
+      ret = ret2 || ret;
+      ret = ret2 !== undefined ? ret2 : ret;
+    }
+
+    if (ret === undefined && rects !== undefined) {
+      console.log(rects[0]);
+
       if (nodeclass !== undefined && !(this instanceof nodeclass))
         return undefined;
 
@@ -1124,7 +1220,7 @@ export class UIBase extends HTMLElement {
       return;
     }
     
-    this._forEachChildren((n) => {
+    this._forEachChildWidget((n) => {
       if (n.ctx === undefined) {
         n.ctx = ctx;
       }

@@ -70,7 +70,6 @@ export class TableFrame extends Container {
   constructor() {
     super();
 
-    this.dom.remove();
     this.dom = document.createElement("table");
     this.shadow.appendChild(this.dom);
     this.dom.setAttribute("class", "containerx");
@@ -109,7 +108,6 @@ export class TableFrame extends Container {
 
       container.ctx = this2.ctx;
       container.setAttribute("class", cls);
-      container.dom.setAttribute("class", cls);
       td.setAttribute("class", cls);
 
       //let div2 = document.createElement("div");

@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ Test app
+*/
+
 import * as simple_controller from './simple_controller.js';
 
 import * as util from './util.js';
@@ -29,6 +33,10 @@ let PackFlags = ui_base.PackFlags;
 
 window.STARTUP_FILE_NAME = "startup_file_pathux";
 
+ScreenArea.Area.prototype.getScreen = function() {
+  return _appstate.screen;
+}
+
 export class CanvasArea extends ScreenArea.Area {
   constructor() {
     super();
@@ -36,7 +44,6 @@ export class CanvasArea extends ScreenArea.Area {
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
     
-    this.remakeUI();
     this.shadow.appendChild(this.canvas);
     
     let mstart = (e) => {
@@ -70,7 +77,12 @@ export class CanvasArea extends ScreenArea.Area {
       e = mstart(e);
     });      
   }
-  
+
+  init() {
+    super.init();
+    this.remakeUI();
+  }
+
   remakeUI() {
     if (this.ui !== undefined) {
       this.ui.remove();
@@ -79,6 +91,10 @@ export class CanvasArea extends ScreenArea.Area {
     }
     
     let ui = this.ui = document.createElement("container-x");
+    let header = this.makeHeader(ui);
+    ui = header;
+    //ui = this.headerRow;
+
     ui.ctx = _appstate.ctx;
     ui.style["width"] = "100%";
     //ui.style["height"] = "245px";
@@ -98,7 +114,15 @@ export class CanvasArea extends ScreenArea.Area {
       SEP,
       ["Close", () => console.log("yay close")],
     ]);
-    
+
+    row.menu("File", [
+      "screen.area.split",
+      SEP,
+      ["Open", () => console.log("yay open")],
+      ["Close", () => console.log("yay close")],
+      "screen.area.drag",
+    ]);
+
     row.checkenum("state.enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON);
     row.listenum("state.enumval", "Enum");
     //*/
@@ -144,29 +168,7 @@ export class CanvasArea extends ScreenArea.Area {
       mpos[1] = e.y;
       mdown = false;
     });
-    
-    ui.addEventListener("mousemove", (e) => {
-      mpos[0] = e.x;
-      mpos[1] = e.y;
-      
-      if (!mdown) 
-        return;
-      
-      if (e.button == 0) {
-        let dx = start_mpos[0] - mpos[0];
-        let dy = start_mpos[1] - mpos[1];
-        
-        let dis = Math.sqrt(dx*dx + dy*dy);
-        if (dis > 5) {
-          mdown = false;
-          _appstate.screen.areaDragTool();
-        }
-      }
-      
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    
+
     this.shadow.appendChild(this.canvas);
   }
   
@@ -319,8 +321,7 @@ export class AppState extends events.EventHandler {
     this.gui = document.createElement("container-x")
     this.gui.ctx = this.ctx;
     this.gui.style["width"] = "300px";
-    this.gui.listen();
-    
+
     document.body.appendChild(this.gui);
     this.gui.float(300, 10, 1);
   }

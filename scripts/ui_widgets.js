@@ -82,6 +82,7 @@ export class Button extends UIBase {
     });
 
     this._last_disabled = false;
+    this._auto_depress = true;
 
     let style = document.createElement("style");
     style.textContent = `.canvas1 {
@@ -137,18 +138,13 @@ export class Button extends UIBase {
   }
   
   bindEvents() {
-    let background = this.dom._background;
     let press_gen = 0;
 
     let press = (e) => {
-        //console.log("button press");
+        console.log("button press", this._pressed);
 
         if (this.disabled) return;
         if (this._pressed) return;
-
-        background = this.dom._background;
-        this.dom._background = this.getDefault("BoxDepressed");
-        this._redraw();
 
         this._pressed = true;
 
@@ -161,14 +157,16 @@ export class Button extends UIBase {
     }
     
     let depress = (e) => {
-        //console.log("button depress");
+        console.log("button depress");
 
-        this._pressed = false;
-        if (this.disabled) return;
+        if (this._auto_depress) {
+          this._pressed = false;
 
-        this.dom._background = background;
-        this._redraw();
-        
+          if (this.disabled) return;
+
+          this._redraw();
+        }
+
         e.preventDefault();
         e.stopPropagation();
         
@@ -188,16 +186,11 @@ export class Button extends UIBase {
     this.addEventListener("touchcancel", depress);
 
     this.addEventListener("mouseup", depress);
-    
-    let holdbg = this.dom._background;
-    
+
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)
         return;
       
-      holdbg = this.dom._background;
-      
-      this.dom._background = this.getDefault("BoxHighlight");
       this._highlight = true;
       this._repos_canvas();
       this._redraw();
@@ -207,7 +200,6 @@ export class Button extends UIBase {
       if (this.disabled)
         return;
       
-      this.dom._background = holdbg; //ui_base.getDefault("BoxBG");
       this._highlight = false;
       this._repos_canvas();
       this._redraw();
@@ -355,7 +347,14 @@ export class Button extends UIBase {
     //console.log("button draw");
     
     let dpi = this.getDPI();
-    
+    if (this._highlight) {
+      this.dom._background = this.getDefault("BoxHighlight");
+    } else if (this._pressed) {
+      this.dom._background = this.getDefault("BoxDepressed");
+    } else {
+      this.dom._background = this.getDefault("BoxBG");
+    }
+
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, this.r, undefined, undefined, this.boxpad);
     
     if (this._focus) {

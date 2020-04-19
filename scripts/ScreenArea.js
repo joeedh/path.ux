@@ -404,7 +404,7 @@ export class Area extends ui_base.UIBase {
     
     //see FrameManager.js, we use a single update
     //function for everything now
-    //this._forEachChildren((n) => {
+    //this._forEachChildWidget((n) => {
     //  n.update();
     //});
   }
@@ -876,7 +876,7 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.push_ctx_active();
     }
 
-    this._forEachChildren((n) => {
+    this._forEachChildWidget((n) => {
       n.update();
     });
 

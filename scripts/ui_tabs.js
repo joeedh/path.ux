@@ -743,7 +743,12 @@ export class TabContainer extends UIBase {
       }
     }
   }
-  
+
+  init() {
+    super.init();
+    this.background = this.getDefault("DefaultPanelBG");
+  }
+
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
     
@@ -752,14 +757,17 @@ export class TabContainer extends UIBase {
   
   _remakeStyle() {
     let horiz = this.tbar.horiz;
-    let display = !horiz ? "inline-block" : "block";
-    
+    let display = "flex";
+    let flexDir = !horiz ? "row" : "column";
+    let bgcolor = this.__background; //this.getDefault("DefaultPanelBG");
+
     //display = "inline" //XXX
     let style = document.createElement("style");
     style.textContent = `
       ._tab_ul_${this._id} {
         list-style-type : none;
         display : ${display};
+        flex-direction : ${flexDir};
         margin : 0px;
         padding : 0px;
         ${!horiz ? "vertical-align : top;" : ""}
@@ -767,6 +775,7 @@ export class TabContainer extends UIBase {
       
       ._tab_li_${this._id} {
         display : ${display};
+        flex-direction : ${flexDir};
         margin : 0px;
         padding : 0px;
         align-self : flex-start;
@@ -776,6 +785,8 @@ export class TabContainer extends UIBase {
       ._tbar_${this._id} {
         list-style-type : none;
         align-self : flex-start;
+        background-color : ${bgcolor};
+        flex-direction : ${flexDir};
         ${!horiz ? "vertical-align : top;" : ""}
       }
     `;

@@ -135,58 +135,33 @@ export class Container extends ui_base.UIBase {
     super();
 
     this.dataPrefix = '';
-
     this.inherit_packflag = 0;
 
-    let ul = this.ul = document.createElement("ul")
-
-    ul.style["margin-block-start"] = "0px";
-    ul.style["margin-block-end"] = "0px";
-
-    /*
-    ul.style["height"] = "min-content";
-    ul.style["list-style-type"] = "none";
-    ul.style["clear"] = "none";
-    for (let key of ui_base.marginPaddingCSSKeys) {
-      ul.style[key] = "0px";
-    }
-    //*/
-
-    this.div = document.createElement("div")
-
-    this.div.appendChild(ul);
-    ul.style["list-style-type"] = "none";
-
     let style = this.styletag = document.createElement("style")
-    this.div.setAttribute("class", "containerx");
-
     style.textContent = `
-        display : flex;
-        
-        ul.containerx {
-          margin : 0px;
-          padding : 0px;
-        }
-        
-        li.containerx {
-          margin : 0px;
-          padding : 0px;
-        }
-      `
+    `;
 
     this.shadow.appendChild(style);
-    this.shadow.appendChild(this.div);
-
-    this.dom = ul;
   }
 
+  init() {
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = "column";
+    this.style["flex-wrap"] = "nowrap";
+
+    this.setCSS();
+
+    super.init();
+
+    this.setAttribute("class", "containerx");
+  }
   /**
    *
    * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse
    * @returns {Container}
    */
   wrap(mode="wrap") {
-    this.ul.style["flex-wrap"] = mode;
+    this.style["flex-wrap"] = mode;
     return this;
   }
 
@@ -197,16 +172,10 @@ export class Container extends ui_base.UIBase {
     keys = keys.concat(["padding-block-start", "padding-block-end"]);
 
     for (let k of keys) {
-      this.style[k] = this.div.style[k] = this.ul.style[k] = "0px";
+      this.style[k] = "0px";
     }
 
     return this;
-  }
-
-  init() {
-    this.setCSS();
-
-    super.init();
   }
 
   setCSS() {
@@ -254,16 +223,12 @@ export class Container extends ui_base.UIBase {
 
   setMargin(m) {
     this.style["margin"] = m + "px";
-    this.div.style["margin"] = m + "px";
-    this.ul.style["margin"] = m + "px";
 
     return this;
   }
 
   setPadding(m) {
     this.style["padding"] = m + "px";
-    this.div.style["padding"] = m + "px";
-    this.ul.style["padding"] = m + "px";
 
     return this;
   }
@@ -286,10 +251,6 @@ export class Container extends ui_base.UIBase {
     return this;
   }
 
-  get background() {
-    return this.__background;
-  }
-
   set background(bg) {
     this.__background = bg;
 
@@ -298,7 +259,6 @@ export class Container extends ui_base.UIBase {
       }
     `;
     this.style["background-color"] = bg;
-    this.dom.style["background-color"] = bg;
   }
 
   static define() {
@@ -378,7 +338,7 @@ export class Container extends ui_base.UIBase {
   get children() {
     let list = [];
 
-    this._forEachChildren((n) => {
+    this._forEachChildWidget((n) => {
       list.push(n);
     });
 
@@ -387,7 +347,7 @@ export class Container extends ui_base.UIBase {
 
   update() {
     super.update();
-    //this._forEachChildren((n) => {
+    //this._forEachChildWidget((n) => {
     //  n.update();
     //});
   }
@@ -438,29 +398,19 @@ export class Container extends ui_base.UIBase {
       throw new Error("eek!");
     }
 
-    child.parentWidget = this;
     child.ctx = this.ctx;
+    child.parentWidget = this;
+
     if (child._useDataPathToolOp === undefined) {
       child.useDataPathToolOp = this._useDataPathToolOp;
     }
 
-    let li = document.createElement("li");
-    li.setAttribute("class", "containerx");
-
-    li.style["list-style-type"] = "none";
-    li.style["padding"] = li.style["margin"] = "0px";
-    li.appendChild(child);
-
-    if (prepend) {
-      this.dom.prepend(li);
-    } else {
-      this.dom.appendChild(li);
-    }
+    this.shadow.appendChild(child);
 
     if (child.onadd)
       child.onadd();
 
-    return li;
+    return child;
   }
 
   /*
@@ -1222,7 +1172,25 @@ export class RowFrame extends Container {
   constructor() {
     super();
 
-    this.dom.style["display"] = "inline-flex";
+    let style = document.createElement("style");
+
+    this.shadow.appendChild(style);
+  }
+
+  //try to set styling as early as possible
+  connectedCallback() {
+    super.connectedCallback();
+
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = "row";
+  }
+
+  init() {
+    super.init();
+
+    //this.style["flex-direction"] = "row";
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = "row";
   }
 
   oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {
@@ -1239,14 +1207,7 @@ export class RowFrame extends Container {
     return this;
   }
 
-  _add(child) {
-    let li = super._add(child);
-    li.style["display"] = "inline-flex"
-    return li;
-  }
-
   update() {
-    this.style["display"] = "inline-flex";
     super.update();
   }
 
@@ -1262,8 +1223,6 @@ UIBase.register(RowFrame);
 export class ColumnFrame extends Container {
   constructor() {
     super();
-
-    //this.dom.style["display"] = "block";
   }
 
   init() {
@@ -1351,12 +1310,7 @@ export class PanelFrame extends Container {
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
 
-    this.dom.remove();
-
-    this.dom.style["padding-left"] = "10px";
-
     this.shadowRoot.appendChild(con);
-    con.shadowRoot.appendChild(this.dom);
   }
 
   static define() {
@@ -1369,13 +1323,16 @@ export class PanelFrame extends Container {
     super.update();
   }
 
-  _updateClosed() {
-    //console.log(this._closed);
-    if (this._closed) {
-      this.dom.remove();
-    } else {
-      this.frame.shadow.appendChild(this.dom);
+  _setVisible(state) {
+    for (let c of this.shadow.childNodes) {
+      if (c !== this.frame) {
+        c.hidden = state;
+      }
     }
+  }
+
+  _updateClosed() {
+    this._setVisible(this._closed);
     this.iconcheck.checked = this._closed;
   }
 

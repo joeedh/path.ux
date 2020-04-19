@@ -38,8 +38,10 @@ let Vector2 = vectormath.Vector2,
 import {pushModalLight, popModalLight, keymap} from "./simple_events.js";
 //import {keymap} from './events';
 
-export class ToolBase { //extends simple_toolsys.ToolOp {
+export class ToolBase extends simple_toolsys.ToolOp {
   constructor(screen) {
+    super();
+
     if (screen === undefined) screen = _appstate.screen; //XXX hackish!
     
     //super();
@@ -71,6 +73,8 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
   }
 
   modalStart(ctx) {
+    this.ctx = ctx;
+
     if (this.modaldata !== undefined) {
       console.log("Error, modaldata was not undefined");
       popModalLight(this.modaldata);
@@ -109,7 +113,6 @@ export class ToolBase { //extends simple_toolsys.ToolOp {
   }
   
   on_mousemove(e) {
-
   }
   
   on_mouseup(e) {
@@ -272,9 +275,13 @@ export class SplitTool extends ToolBase {
     if (screen === undefined) screen = _appstate.screen; //XXX hackish!
     
     super(screen);
-    
+
+    this.done = false;
     this.screen = screen;
     this.ctx = screen.ctx;
+    this.sarea = undefined;
+    this.t = undefined;
+
     this.start = false;
   }
   
@@ -304,19 +311,64 @@ export class SplitTool extends ToolBase {
   }
   
   cancel() {
-    return this.finish();
+    return this.finish(true);
   }
   
-  finish() {
+  finish(canceled=false) {
+    if (this.done) {
+      return;
+    }
+
+    this.done = true;
     this.overdraw.end();
 
     this.popModal(this.screen);
+
+    if (canceled || !this.sarea) {
+      return;
+    }
+
+    let sarea = this.sarea, screen = this.screen;
+    let t = this.t;
+
+    screen.splitArea(sarea, t, this.horiz);
+    screen._internalRegenAll();
   }
   
   on_mousemove(e) {
-    console.log(e.x, e.y);
+    let x = e.x, y = e.y;
+
+    let screen = this.screen;
+
+    let sarea = screen.pickElement(x, y, 0, 0, ScreenArea.ScreenArea);
     this.overdraw.clear();
-    this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
+
+    if (sarea !== undefined) {
+      //x -= sarea.pos[0];
+      //y -= sarea.pos[1];
+      x = (x - sarea.pos[0]) / (sarea.size[0]);
+      y = (y - sarea.pos[1]) / (sarea.size[1]);
+
+      let dx = 1.0 - Math.abs(x-0.5);
+      let dy = 1.0 - Math.abs(y-0.5);
+
+      this.sarea = sarea;
+      let horiz = this.horiz = dx < dy;
+
+      if (horiz) {
+        this.t = y;
+        this.overdraw.line([sarea.pos[0], e.y], [sarea.pos[0]+sarea.size[0], e.y]);
+      } else {
+        this.t = x;
+        this.overdraw.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1]+sarea.size[1]]);
+      }
+    }
+    //console.warn("sarea:", sarea);
+
+    //let sarea = this.
+    //console.log(e.x, e.y);
+    //this.overdraw.clear();
+    //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
   
   on_mousedown(e) {
@@ -636,7 +688,7 @@ export class AreaDragTool extends ToolBase {
 
         //console.log(rect.x, rect.y);
         if (x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height) {
-          console.log("found rect");
+          //console.log("found rect");
           return n;
         }
       }
@@ -659,7 +711,7 @@ export class AreaDragTool extends ToolBase {
     if (n !== undefined) {
       n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
     }
-    console.log("mouse move", n);
+    //console.log("mouse move", n);
 
     if (this.boxes.active !== undefined && this.boxes.active !== n) {
       this.boxes.active.setColor(this.color);

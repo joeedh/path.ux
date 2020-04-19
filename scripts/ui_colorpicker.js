@@ -1,5 +1,7 @@
 "use strict";
 
+//currently unused, see ui_colorpicker2.js
+
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';

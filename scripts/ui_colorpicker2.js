@@ -564,7 +564,7 @@ export class SatValField extends UIBase {
 
     if (this.disabled) {
       g.beginPath();
-      g.fillStyle = "rgba(25,25,25,0.75)"
+      g.fillStyle = "rgba(25,25,25,0.75)";
       g.rect(0, 0, this.canvas.width, this.canvas.height);
       g.fill();
     }
@@ -586,7 +586,7 @@ export class SatValField extends UIBase {
 
 UIBase.register(SatValField);
 
-export class ColorField extends ui.RowFrame {
+export class ColorField extends ui.ColumnFrame {
   constructor() {
     super();
 

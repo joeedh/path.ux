@@ -633,9 +633,6 @@ export class DataAPI extends ModelInterface {
           }
 
           ok = dstruct !== undefined;
-        } else {
-          dstruct = path.data;
-          ok = dstruct !== undefined;
         }
 
         if (!ok) {
@@ -1142,12 +1139,21 @@ export class DataAPI extends ModelInterface {
   }
 
   createTool(ctx, path, inputs={}) {
-    //parseToolPath will raise DataPathError if path is malformed
-    let tpath = parseToolPath(path);
+    let cls;
+    let args;
 
-    let cls = tpath.toolclass;
-    let args = tpath.args;
+    if (typeof path == "string" || path instanceof String) {
+      //parseToolPath will raise DataPathError if path is malformed
+      let tpath = parseToolPath(path);
 
+      cls = tpath.toolclass;
+      args = tpath.args;
+    } else {
+      cls = path;
+      args = {};
+    }
+
+    console.log(cls);
     let tool = cls.invoke(ctx, args);
 
     if (inputs !== undefined) {
