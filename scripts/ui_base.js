@@ -380,40 +380,91 @@ export class IconManager {
   }
 
   canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
-    sheet = this.iconsheets[sheet];
+    let base = this.iconsheets[sheet];
+    
+    sheet = this.findSheet(sheet);
+    let ds = sheet.drawsize;
+
+    sheet.drawsize = base.drawsize;
     sheet.canvasDraw(elem, canvas, g, icon, x, y);
+    sheet.drawsize = ds;
   }
   
+  findSheet(sheet) {
+    let base = this.iconsheets[sheet];
+
+    /**sigh**/
+    let dpi = UIBase.getDPI();
+    let minsheet = undefined;
+    let goal = dpi*base.drawsize;
+
+    for (let sheet of this.iconsheets) {
+      minsheet = sheet;
+
+      if (sheet.drawsize >= goal) {
+        break;
+      }
+    }
+
+    return minsheet === undefined ? base : minsheet;
+  }
+
   getTileSize(sheet=0) {
     return this.iconsheets[sheet].drawsize;
+    return this.findSheet(sheet).drawsize;
   }
 
   getRealSize(sheet=0) {
     return this.iconsheets[sheet].tilesize;
+    return this.findSheet(sheet).tilesize;
+    //return this.iconsheets[sheet].tilesize;
   }
   
   //icon is an integer
   getCSS(icon, sheet=0) {
-    return this.iconsheets[sheet].getCSS(icon);
+    //return this.iconsheets[sheet].getCSS(icon);
+    //return this.findSheet(sheet).getCSS(icon);
+
+    let base = this.iconsheets[sheet];
+    sheet = this.findSheet(sheet);
+    let ds = sheet.drawsize;
+    
+    sheet.drawsize = base.drawsize;
+    let ret = this.findSheet(sheet).getCSS(icon);
+    sheet.drawsize = ds;
+    
+    return ret;
   }
 
   setCSS(icon, dom, sheet=0) {
-    return this.iconsheets[sheet].setCSS(icon, dom);
+    //return this.iconsheets[sheet].setCSS(icon, dom);
+    
+    let base = this.iconsheets[sheet];
+    sheet = this.findSheet(sheet);
+    let ds = sheet.drawsize;
+    
+    sheet.drawsize = base.drawsize;
+    let ret = this.findSheet(sheet).setCSS(icon, dom);
+    sheet.drawsize = ds;
+
+    return ret;
   }
 }
 
 export let iconmanager = new IconManager([
   document.getElementById("iconsheet16"),
+  document.getElementById("iconsheet"),
   document.getElementById("iconsheet")
-], [16, 32], 16);
+], [16, 32, 64], 16);
 
 window._iconmanager = iconmanager; //debug global
 
 //if client code overrides iconsheets, they must follow logical convention
 //that the first one is "small" and the second is "large"
 export let IconSheets = {
-  SMALL : 0,
-  LARGE : 1
+  SMALL  : 0,
+  LARGE  : 1,
+  XLARGE : 2
 };
 
 export function setIconManager(manager, IconSheetsOverride) {
