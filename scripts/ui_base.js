@@ -119,8 +119,8 @@ export class CSSFont {
 export const theme = {
   base : {
     //used for by icon strips and the like
-    "oneAxisPadding" : 3,
-    "oneAxisMargin" : 3,
+    "oneAxisPadding" : 6,
+    "oneAxisMargin" : 6,
 
     "numslider_width" : 24,
     "numslider_height" : 24,
@@ -460,7 +460,12 @@ export const PackFlags = {
   VERTICAL : 4,
   USE_ICONS : 8,
   SMALL_ICON : 16,
-  LARGE_ICON : 32
+  LARGE_ICON : 32,
+
+  //internal flags
+  STRIP_HORIZ : 512,
+  STRIP_VERT : 1024,
+  STRIP : 512|1024
 };
  
 let first = (iter) => {

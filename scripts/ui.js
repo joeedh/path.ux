@@ -51,6 +51,8 @@ export class Label extends ui_base.UIBase {
   init() {
     let font = this.getDefault(this._font);
 
+    this.dom.style["width"] = "max-content";
+
     this.dom.style["font"] = font.genCSS();
     this.dom.style["color"] = font.color;
   }
@@ -155,6 +157,16 @@ export class Container extends ui_base.UIBase {
 
     this.setAttribute("class", "containerx");
   }
+
+  useIcons(enabled=true) {
+    if (enabled) {
+      this.packflag |= PackFlags.USE_ICONS;
+      this.inherit_packflag |= PackFlags.USE_ICONS;
+    } else {
+      this.packflag &= ~PackFlags.USE_ICONS;
+      this.inherit_packflag &= ~PackFlags.USE_ICONS;
+    }
+  }
   /**
    *
    * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse
@@ -198,7 +210,24 @@ export class Container extends ui_base.UIBase {
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
   strip(m = this.getDefault("oneAxisPadding"), m2 = 0) {
-    return this.row().oneAxisPadding(m, m2);
+    let horiz = this instanceof RowFrame;
+    horiz = horiz || this.style["flex-direction"] === "row";
+
+    let flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
+
+    let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
+    strip.packflag |= flag;
+
+    let prev = strip.previousElementSibling;
+    if (prev !== undefined && (prev.packflag & flag)) {
+      if (horiz) {
+        prev.style["padding-right"] = "0px";
+      } else {
+        prev.style["padding-top"] = "0px";
+      }
+    }
+
+    return strip;
   }
 
   /**

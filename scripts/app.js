@@ -479,8 +479,7 @@ export class AppState extends events.EventHandler {
   }
   
   on_keydown(e) {
-    console.log(e.keyCode);
-    
+
     switch (e.keyCode) {
       case 87: //wkey
         this.menuTest();

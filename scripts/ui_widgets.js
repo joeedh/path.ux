@@ -122,7 +122,9 @@ export class Button extends UIBase {
 
     this.dom.width = Math.ceil(width*dpi); //parsepx(this.dom.style["width"])*dpi;
     this.dom.height = Math.ceil(parsepx(this.dom.style["height"])*dpi);
-    
+
+    this._name = undefined;
+    this.updateName();
 
     this.bindEvents();
     this._redraw();

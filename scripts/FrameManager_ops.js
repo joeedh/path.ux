@@ -104,7 +104,8 @@ export class ToolBase extends simple_toolsys.ToolOp {
 
     //window.setTimeout(() => {
       this.modaldata = pushModalLight(handlers);
-      console.log("HANDLERS", this.modaldata.handlers);
+      //console.log("HANDLERS", this.modaldata.handlers);
+      
     //}, 100);
 
     //window.addEventListener("touchmove", (e) => {
@@ -216,9 +217,20 @@ export class AreaResizeTool extends ToolBase {
 
     let color = DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
+    let bad = false;
+
     for (let border of borders) {
+      for (let sarea of border.sareas) {
+        bad = bad || !this.screen.isBorderMovable(sarea, border);
+      }
+
       border.oldv1 = new Vector2(border.v1);
       border.oldv2 = new Vector2(border.v2);
+    }
+
+    if (bad) {
+      console.log("border is not movable");
+      return;
     }
 
     let check = () => {

@@ -58,13 +58,39 @@ let area_idgen = 0;
 let laststack = [];
 let last_area = undefined;
 
+export const BorderMask = {
+  LEFT    : 1,
+  BOTTOM  : 2,
+  RIGHT   : 4,
+  TOP     : 8,
+  ALL     : 1|2|4|8
+};
+
+export const BorderSides = {
+  LEFT   : 0,
+  BOTTOM : 1,
+  RIGHT  : 2,
+  TOP    : 3
+};
+
 /**
  * Base class for all editors
  **/
 export class Area extends ui_base.UIBase {
   constructor() {
     super();
-    
+
+    /**
+     * -----b4----
+     *
+     * b1       b3
+     *
+     * -----b2----
+     *
+     * */
+    //set bits in mask to keep
+    //borders from moving
+    this.borderLock = 0;
     this.inactive = true;
     
     this.owning_sarea = undefined;
@@ -204,10 +230,10 @@ export class Area extends ui_base.UIBase {
   }
 
   getBarHeight() {
-    return this.headerRow.getClientRects()[0].height;
+    return this.header.getClientRects()[0].height;
   }
 
-  makeHeader(container, add_note_area=true) {
+  makeAreaSwitcher(container) {
     let areas = {};
     let icons = {};
     let i = 0;
@@ -225,12 +251,22 @@ export class Area extends ui_base.UIBase {
         uiname = k.replace("_", " ").toLowerCase();
         uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
       }
-      
+
       areas[uiname] = k;
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
-    let row = this.headerRow = container.row();
+    return container.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
+      let cls = areaclasses[id];
+      this.owning_sarea.switch_editor(cls);
+    }, icons);
+  }
+
+  makeHeader(container, add_note_area=true) {
+    let row = this.header = container.row();
+
+    row.remove();
+    container._prepend(row);
 
     row.background = ui_base.getDefault("AreaHeaderBG");
 
@@ -354,23 +390,9 @@ export class Area extends ui_base.UIBase {
     row.addEventListener("touchend", (e) => {
       touchend(e);        
     }, false);
-    
-    row.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
-      let cls = areaclasses[id];
-      this.owning_sarea.switch_editor(cls);
-    }, icons);
-    
-    /*
-    row.button("------", () => {
-      _appstate.screen.splitTool();
-    }).dom.style["width"] = "50px";
-    
-    row.button("*", () => {
-      _appstate.screen.areaDragTool();
-    }).dom.style["width"] = "50px";
-    **/
-    
-    //ui_noteframe
+
+    this.makeAreaSwitcher(row);
+
     if (add_note_area) {
       let notef = document.createElement("noteframe-x");
       notef.ctx = this.ctx;
@@ -464,7 +486,9 @@ export class ScreenArea extends ui_base.UIBase {
     
     this.pos = new Vector2();
     this.size = new Vector2();
-    
+
+    this.floating = false;
+
     this.area = undefined;
     this.editors = [];
     this.editormap = {};
@@ -522,7 +546,11 @@ export class ScreenArea extends ui_base.UIBase {
     this.pos.load(obj.pos);
     this.size.load(obj.size);
   }//*/
-  
+
+  get borderLock() {
+    return this.area !== undefined ? this.area.borderLock : 0;
+  }
+
   draw() {
     this.area.draw();
   }
@@ -724,10 +752,10 @@ export class ScreenArea extends ui_base.UIBase {
     let p = this.pos, s = this.size;
     
     let vs = [
-      new Vector2([p[0], p[1]]),
-      new Vector2([p[0], p[1] + s[1]]),
-      new Vector2([p[0] + s[0], p[1] + s[1]]),
-      new Vector2([p[0] + s[0], p[1]])
+      new Vector2([p[0],      p[1]]),
+      new Vector2([p[0],      p[1]+s[1]]),
+      new Vector2([p[0]+s[0], p[1]+s[1]]),
+      new Vector2([p[0]+s[0], p[1]])
     ];
 
     for (let i=0; i<vs.length; i++) {
@@ -748,6 +776,8 @@ export class ScreenArea extends ui_base.UIBase {
       }
       
       this._borders.push(b);
+
+      b.movable = screen.isBorderMovable(this, b);
     }
     
     return this;
@@ -962,11 +992,12 @@ export class ScreenArea extends ui_base.UIBase {
 
 ScreenArea.STRUCT = `
 pathux.ScreenArea { 
-  pos     : array(float);
-  size    : array(float);
-  type    : string;
-  editors : array(abstract(pathux.Area));
-  area    : string | obj.area.constructor.define().areaname;
+  pos      : array(float);
+  size     : array(float);
+  type     : string;
+  floating : int; 
+  editors  : array(abstract(pathux.Area));
+  area     : string | obj.area.constructor.define().areaname;
 }
 `;
 
