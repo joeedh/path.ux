@@ -16,9 +16,7 @@ let UIBase = ui_base.UIBase,
     PackFlags = ui_base.PackFlags,
     IconSheets = ui_base.IconSheets;
 
-function parsepx(css) {
-  return parseFloat(css.trim().replace("px", ""))
-}
+let parsepx = ui_base.parsepx;
 
 //use .setAttribute("linear") to disable nonlinear sliding
 export class Button extends UIBase {

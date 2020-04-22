@@ -32,6 +32,10 @@ export function setIconMap(icons) {
   }
 }
 
+export function parsepx(css) {
+  return parseFloat(css.trim().replace("px", ""))
+}
+
 export function color2css(c, alpha_override) {
   let r = ~~(c[0]*255);
   let g = ~~(c[1]*255);
@@ -1640,14 +1644,22 @@ function get_measure_canvas() {
   return _mc;
 }
 
-export function measureText(elem, text, canvas, g, size=undefined) {
+export function measureText(elem, text, canvas=undefined, g=undefined, size=undefined, font=undefined) {
   if (g === undefined) {
     canvas = get_measure_canvas();
     g = canvas.g;
   }
 
-  _ensureFont(elem, canvas, g, size);
-  
+  if (font !== undefined) {
+    if (typeof font === "object" && font instanceof CSSFont) {
+      font = font.genCSS();
+    }
+
+    g.font = font;
+  } else {
+    _ensureFont(elem, canvas, g, size);
+  }
+
   let ret = g.measureText(text);
   
   if (size !== undefined) {

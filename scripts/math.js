@@ -3,6 +3,41 @@
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 
+export function aabb_overlap_area(pos1, size1, pos2, size2) {
+  let r1=0.0, r2=0.0;
+
+  for (let i=0; i<2; i++) {
+    let a1 = pos1[i], a2 = pos2[i];
+    let b1 = pos1[i] + size1[i];
+    let b2 = pos2[i] + size2[i];
+
+    if (b1 >= a2 && a1 <= b2) {
+      let r = a2 - b1;
+      
+      if (i) {
+        r2 = r;
+      } else {
+        r1 = r;
+      }
+    }
+  }
+
+  return r1*r2;
+}
+
+export function aabb_isect_2d(pos1, size1, pos2, size2) {
+  var ret=0;
+  for (var i=0; i<2; i++) {
+    var a=pos1[i];
+    var b=pos1[i]+size1[i];
+    var c=pos2[i];
+    var d=pos2[i]+size2[i];
+    if (b>=c&&a<=d)
+      ret+=1;
+  }
+  return ret==2;
+};
+
 
 //XXX refactor to use es6 classes,
 //    or at last the class system in typesystem.js
@@ -395,18 +430,6 @@ export function aabb_isect_line_2d(v1, v2, min, max) {
   return false;
 };
 
-export function aabb_isect_2d(pos1, size1, pos2, size2) {
-  var ret=0;
-  for (var i=0; i<2; i++) {
-      var a=pos1[i];
-      var b=pos1[i]+size1[i];
-      var c=pos2[i];
-      var d=pos2[i]+size2[i];
-      if (b>=c&&a<=d)
-        ret+=1;
-  }
-  return ret==2;
-};
 
 export function expand_rect2d(pos, size, margin) {
   pos[0]-=Math.floor(margin[0]);
