@@ -1109,7 +1109,7 @@ export class ColorPickerButton extends UIBase {
 
     this.style["flex-direction"] = "row";
     this.style["display"] = "flex";
-    
+
     this.labelDom.style["color"] = this.getDefault(this._font).color;
     this.labelDom.style["font"] = ui_base.getFont(this, undefined, this._font, false);
 

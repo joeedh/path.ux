@@ -25,8 +25,9 @@ export class Button extends UIBase {
   constructor() {
     super();
 
-    this.boxpad = this.getDefault("BoxMargin", 4);
     let dpi = this.getDPI();
+
+    this._last_update_key = "";
 
     this._name = "";
     this._namePad = undefined;
@@ -106,6 +107,18 @@ export class Button extends UIBase {
     form.appendChild(this.dom);
 
     this.shadow.appendChild(form);
+  }
+
+  get boxpad() {
+    throw new Error("Button.boxpad is deprecated");
+    return this.getDefault("BoxMargin");
+  }
+
+  set boxpad(val) {
+      throw new Error("Deprecated call to Button.boxpad setter");
+
+    //console.warn("Deprecated call to Button.boxpad setter");
+    //this.overrideDefault("BoxMargin", val);
   }
 
   init() {
@@ -253,6 +266,15 @@ export class Button extends UIBase {
     }
   }
 
+  _calcUpdateKey() {
+    let ret = this.getDefault("BoxBG") + ":" + this.getDefault("BoxHighlight") + ":";
+    ret += this.style["background-color"] + ":";
+    ret += this.getDefault("BoxRadius") + ":" + this.getDefault("BoxMargin") + ":";
+    ret += this.getAttribute("name") + ":";
+
+    return ret;
+  }
+
   update() {
     super.update();
 
@@ -268,6 +290,15 @@ export class Button extends UIBase {
 
     if (this.background !== this._last_bg) {
       this._last_bg = this.background;
+      this._repos_canvas();
+      this._redraw();
+    }
+
+    let key = this._calcUpdateKey();
+    if (key !== this._last_update_key) {
+      this._last_update_key = key;
+
+      this.setCSS();
       this._repos_canvas();
       this._redraw();
     }
@@ -364,7 +395,7 @@ export class Button extends UIBase {
       this.dom._background = this.getDefault("BoxBG");
     }
 
-    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, this.r, undefined, undefined, this.boxpad);
+    ui_base.drawRoundBox(this, this.dom, this.g);
     
     if (this._focus) {
       let w = this.dom.width, h = this.dom.height;
@@ -824,7 +855,8 @@ export class NumSlider extends ValueButtonBase {
     let dpi = this.getDPI();
     let disabled = this.disabled; //this.hasAttribute("disabled");
     
-    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, undefined, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
+    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
+      undefined, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
     
     let r = this.getDefault("BoxRadius") * dpi;
     let pad = this.getDefault("BoxMargin") * dpi;
@@ -984,13 +1016,16 @@ export class IconCheck extends Button {
   constructor() {
     super();
 
-    this.boxpad = 1;
     this._checked = undefined;
 
     this._drawCheck = true;
     this._icon = -1;
     this._icon_pressed = undefined;
     this.iconsheet = ui_base.IconSheets.LARGE;
+  }
+
+  _calcUpdateKey() {
+    return super._calcUpdateKey() + ":" + this._icon;
   }
 
   get drawCheck() {
@@ -1058,12 +1093,10 @@ export class IconCheck extends Button {
           title = rdef.prop.description;
         }
 
-        if (icon !== undefined)
+        if (icon !== undefined && icon !== this.icon)
           this.icon = icon;
         if (title !== undefined)
           this.description = title;
-
-        this._redraw();
       }
     }
 
@@ -1172,14 +1205,16 @@ UIBase.register(IconCheck);
 export class IconButton extends Button {
   constructor() {
     super();
-    
-    this.boxpad = 1;
 
     this._icon = 0;
     this._icon_pressed = undefined;
     this.iconsheet = ui_base.Icons.LARGE;
   }
-  
+
+  _calcUpdateKey() {
+    return super._calcUpdateKey() + ":" + this._icon;
+  }
+
   get icon() {
     return this._icon;
   }
@@ -1194,19 +1229,20 @@ export class IconButton extends Button {
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
     }
-    
+
     super.update();
   }
 
   _getsize() {
     let margin = this.getDefault("BoxMargin");
+
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
   
   _repos_canvas() {
     this.dom.style["height"] = this._getsize() + "px";
     this.dom.style["width"] = this._getsize() + "px";
-    
+
     super._repos_canvas();
   }
   
@@ -1225,6 +1261,7 @@ export class IconButton extends Button {
 
     let tsize = ui_base.iconmanager.getTileSize(this.iconsheet);
     let size = this._getsize();
+
     let dpi = UIBase.getDPI();
     let off = size > tsize ? (size - tsize)*0.5*dpi : 0.0;
 

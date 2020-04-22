@@ -2,6 +2,8 @@ import * as toolprop from './toolprop.js';
 import * as parseutil from './parseutil.js';
 import {print_stack} from './util.js';
 import {ToolOp, UndoFlags, ToolFlags} from "./simple_toolsys.js";
+import {Vec2Property, Vec3Property, Vec4Property, PropTypes, PropFlags} from './toolprop.js';
+import * as toolprop_abstract from './toolprop_abstract.js';
 
 let PUTLParseError = parseutil.PUTLParseError;
 
@@ -13,11 +15,11 @@ let tokens = [
     return t;
   }),
   tk("STRLIT", /'.*'/, (t) => {
-    t.value = t.value.slice(1, t.value.length-1);
+    t.value = t.value.slice(1, t.value.length - 1);
     return t;
   }),
   tk("STRLIT", /".*"/, (t) => {
-    t.value = t.value.slice(1, t.value.length-1);
+    t.value = t.value.slice(1, t.value.length - 1);
     return t;
   }),
   tk("DOT", /\./),
@@ -35,15 +37,17 @@ let lexer = new parseutil.lexer(tokens, (t) => {
 
 export let pathParser = new parseutil.parser(lexer);
 
-let PropFlags = toolprop.PropFlags,
-    PropTypes = toolprop.PropTypes;
-
-import {ModelInterface, ToolOpIface,
-        DataFlags, DataPathError, setImplementationClass} from './controller.js';
+import {
+  ModelInterface, ToolOpIface,
+  DataFlags, DataPathError, setImplementationClass,
+  isVecProperty, ListIface
+} from './controller.js';
 import {initToolPaths, parseToolPath} from './toolpath.js';
+
 export {DataPathError, DataFlags} from './controller.js';
 
 import {ToolClasses} from './simple_toolsys.js';
+
 let tool_classes = ToolClasses;
 
 let tool_idgen = 1;
@@ -58,14 +62,14 @@ function toolkey(cls) {
 }
 
 export const DataTypes = {
-  STRUCT : 0,
-  DYNAMIC_STRUCT : 1,
-  PROP   : 2,
-  ARRAY  : 3
+  STRUCT: 0,
+  DYNAMIC_STRUCT: 1,
+  PROP: 2,
+  ARRAY: 3
 };
 
 export class DataPath {
-  constructor(path, apiname, prop, type=DataTypes.PROP) {
+  constructor(path, apiname, prop, type = DataTypes.PROP) {
     this.type = type;
     this.data = prop;
     this.apiname = apiname;
@@ -116,9 +120,9 @@ export class DataPath {
   }
 
   /**db will be executed with underlying data object
-    that contains this path in 'this.dataref'
+   that contains this path in 'this.dataref'
 
-    main event is 'change'
+   main event is 'change'
    */
   on(type, cb) {
     if (this.type == DataTypes.PROP) {
@@ -179,35 +183,35 @@ export class DataPath {
 /*this is a bitmask of standard filters
 * for the data list interface*/
 export const StandardListFilters = {
-  SELECTED : 1,
-  EDITABLE : 2,
-  VISIBLE  : 4,
-  ACTIVE   : 8
+  SELECTED: 1,
+  EDITABLE: 2,
+  VISIBLE: 4,
+  ACTIVE: 8
 };
 
-export class DataList {
+export class DataList extends ListIface {
   /**
-    Okay, this is a simple interface for the controller to access lists,
-    whether it's {} object maps, [] arrays, util.set's, or whatever.
+   Okay, this is a simple interface for the controller to access lists,
+   whether it's {} object maps, [] arrays, util.set's, or whatever.
 
-    In fairmotion I used a lambda-type filter system, but that was problematic as it
-    didn't support any sort of abstraction or composition, so the lamba strings ended up
-    like this:
-      "($.flag & SELECT) && !($.flag & HIDE) && !($.flag & GHOST) && (ctx.spline.layers.active.id in $.layers)
+   In fairmotion I used a lambda-type filter system, but that was problematic as it
+   didn't support any sort of abstraction or composition, so the lamba strings ended up
+   like this:
+   "($.flag & SELECT) && !($.flag & HIDE) && !($.flag & GHOST) && (ctx.spline.layers.active.id in $.layers)
 
-    Hopefully this new bitmask system will work better.
+   Hopefully this new bitmask system will work better.
 
-  * Callbacks is an array of name functions, like so:
+   * Callbacks is an array of name functions, like so:
    - function getStruct(api, list, key) //return DataStruct type of object in key, key is optional if omitted return base type of all objects?
    - function get(api, list, key)
+   - function set(api, list, key, val) //this one has default behavior: list[key] = val
    - function getLength(api, list)
-   - function set(api, list, key, val)
    - function getActive(api, list)
    - function setActive(api, list, key)
    - function getIter(api, list)
    - function filter(api, list, filter : StandardListFilters bitmask) returns an iterable
    - function getKey(api, list, object) returns object's key in this list, either a string or a number
-  * */
+   * */
 
   copy() {
     let ret = new DataList([this.cb.get]);
@@ -220,6 +224,8 @@ export class DataList {
   }
 
   constructor(callbacks) {
+    super();
+
     if (callbacks === undefined) {
       throw new DataPathError("missing callbacks argument to DataList");
     }
@@ -252,8 +258,11 @@ export class DataList {
   }
 
   set(api, list, key, val) {
-    this._check("set");
-    this.cb.set(api, list, key, val);
+    if (this.cb.set === undefined) {
+      list[key] = val;
+    } else {
+      this.cb.set(api, list, key, val);
+    }
   }
 
   getIter(api, list) {
@@ -296,12 +305,12 @@ export class DataList {
 }
 
 export const StructFlags = {
-  NO_UNDO : 1 //struct and its child structs can't participate in undo
-              //via the DataPathToolOp
+  NO_UNDO: 1 //struct and its child structs can't participate in undo
+             //via the DataPathToolOp
 };
 
 export class DataStruct {
-  constructor(members=[], name="unnamed") {
+  constructor(members = [], name = "unnamed") {
     this.members = [];
     this.name = name;
     this.pathmap = {};
@@ -316,14 +325,14 @@ export class DataStruct {
    * Like .struct, but the type of struct is looked up
    * for objects at runtime.  Note that to work correctly each object
    * must create its own struct definition via api.mapStruct
-   * 
+   *
    * @param path
    * @param apiname
    * @param uiname
    * @param default_struct : default struct if one can't be looked up
    * @returns {*}
    */
-  dynamicStruct(path, apiname, uiname, default_struct=undefined) {
+  dynamicStruct(path, apiname, uiname, default_struct = undefined) {
     let ret = default_struct ? default_struct : new DataStruct();
 
     let dpath = new DataPath(path, apiname, ret, DataTypes.DYNAMIC_STRUCT);
@@ -332,7 +341,7 @@ export class DataStruct {
     return ret;
   }
 
-  struct(path, apiname, uiname, existing_struct=undefined) {
+  struct(path, apiname, uiname, existing_struct = undefined) {
     let ret = existing_struct ? existing_struct : new DataStruct();
 
     let dpath = new DataPath(path, apiname, ret, DataTypes.STRUCT);
@@ -432,7 +441,13 @@ export class DataStruct {
   }
 
   flags(path, apiname, enumdef, uiname, description) {
-    let prop = new toolprop.FlagProperty(undefined, enumdef, apiname, uiname, description);
+    let prop;
+
+    if (enumdef === undefined || !(enumdef instanceof toolprop.ToolProperty)) {
+      prop = new toolprop.FlagProperty(undefined, enumdef, apiname, uiname, description);
+    } else {
+      prop = enumdef;
+    }
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -454,54 +469,16 @@ let _map_structs = {};
 
 window._debug__map_structs = _map_structs; //global for debugging purposes only
 
-export class DataListIF {
-  constructor(api) {
-    this.api = api;
-  }
-
-  iterate(ctx, path) {
-    let res = this.api.resolvePath(ctx, path);
-
-    let list = res.obj;
-    return res.prop.getIter(this.api, list);
-  }
-
-  getLength(ctx, path) {
-    let res = this.api.resolvePath(ctx, path);
-
-    let list = res.obj;
-    return res.prop.getLength(this.api, list);
-  }
-
-  getObjectKey(ctx, listpath, object) {
-    let res = this.api.resolvePath(ctx, listpath);
-
-    let list = res.obj;
-    return res.prop.getKey(this.api, list, object);
-  }
-
-  getObjectStruct(ctx, listpath, key) {
-    let res = this.api.resolvePath(ctx, listpath);
-
-    let list = res.obj;
-    return res.prop.getStruct(this.api, list, key);
-  }
-}
-
 let _dummypath = new DataPath();
 
 export class DataAPI extends ModelInterface {
   constructor() {
     super();
-
-
-    this._list = new DataListIF(this);
-    
     this.rootContextStruct = undefined;
   }
 
   get list() {
-    return this._list;
+    return undefined;
   }
 
   setRoot(sdef) {
@@ -526,7 +503,7 @@ export class DataAPI extends ModelInterface {
    * @returns {IterableIterator<*>}
    */
 
-  mapStruct(cls, auto_create=true) {
+  mapStruct(cls, auto_create = true) {
     let key;
 
     if (!cls.hasOwnProperty("__dp_map_id")) {
@@ -545,8 +522,8 @@ export class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
-  
-  resolvePath(ctx, inpath, ignoreExistence=false) {
+
+  resolvePath(ctx, inpath, ignoreExistence = false) {
     try {
       return this.resolvePath_intern(ctx, inpath, ignoreExistence)
     } catch (error) {
@@ -558,12 +535,12 @@ export class DataAPI extends ModelInterface {
   }
 
   /**
-    get meta information for a datapath.
+   get meta information for a datapath.
 
    @param ignoreExistence: don't try to get actual data associated with path,
-                           just want meta information
-    */
-  resolvePath_intern(ctx, inpath, ignoreExistence=false) {
+   just want meta information
+   */
+  resolvePath_intern(ctx, inpath, ignoreExistence = false) {
     let p = pathParser;
     inpath = inpath.replace("==", "=");
 
@@ -587,7 +564,7 @@ export class DataAPI extends ModelInterface {
       }
     }
 
-    let _i=0;
+    let _i = 0;
     while (!p.at_end()) {
       let key = p.expect("ID");
       let path = dstruct.pathmap[key];
@@ -644,6 +621,7 @@ export class DataAPI extends ModelInterface {
 
       if (path.path.search(/\./) >= 0) {
         let keys = path.path.split(/\./);
+
         for (let key of keys) {
           lastobj2 = lastobj;
           lastobj = obj;
@@ -662,7 +640,7 @@ export class DataAPI extends ModelInterface {
         lastkey = path.path;
         if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
-        } else if (obj !== undefined) {
+        } else if (obj !== undefined && path.path !== "") {
           obj = obj[path.path];
         }
       }
@@ -674,7 +652,7 @@ export class DataAPI extends ModelInterface {
 
       if (t.type == "DOT") {
         p.next();
-      } else if (t.type == "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+      } else if (t.type == "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("EQUALS");
 
         let t2 = p.peeknext();
@@ -699,7 +677,7 @@ export class DataAPI extends ModelInterface {
 
         key = path.path;
         obj = !!(lastobj[key] == val);
-      } else if (t.type == "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+      } else if (t.type == "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("AND");
 
         let t2 = p.peeknext();
@@ -724,7 +702,7 @@ export class DataAPI extends ModelInterface {
 
         key = path.path;
         obj = !!(lastobj[key] & val);
-      } else if (t.type == "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+      } else if (t.type == "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("LSBRACKET");
 
         let t2 = p.peeknext();
@@ -760,10 +738,19 @@ export class DataAPI extends ModelInterface {
         }
 
         p.expect("RSBRACKET");
-      } else if (t.type == "LSBRACKET") {
+      } else if (t.type === "LSBRACKET" && prop !== undefined && isVecProperty(prop)) {
+        p.expect("LSBRACKET");
+        let num = p.expect("NUM");
+        p.expect("RSBRACKET");
+
+        subkey = num;
+
+        lastobj = obj;
+        obj = obj[num];
+      } else if (t.type === "LSBRACKET") {
         p.expect("LSBRACKET")
 
-        if (lastkey && typeof lastkey == "string" && lastkey.length > 0) {
+        if (lastkey && typeof lastkey === "string" && lastkey.length > 0) {
           lastobj = lastobj[lastkey];
         }
 
@@ -789,13 +776,13 @@ export class DataAPI extends ModelInterface {
     }
 
     return {
-      parent : lastobj2,
-      obj : lastobj,
-      value : obj,
-      key : lastkey,
-      dstruct : dstruct,
-      prop : prop,
-      subkey : subkey
+      parent: lastobj2,
+      obj: lastobj,
+      value: obj,
+      key: lastkey,
+      dstruct: dstruct,
+      prop: prop,
+      subkey: subkey
     };
   }
 
@@ -809,7 +796,7 @@ export class DataAPI extends ModelInterface {
     //console.log(path);
 
     let p = [""];
-    for (let i=0; i<path.length; i++) {
+    for (let i = 0; i < path.length; i++) {
       let s = path[i];
 
       if (splitchars.has(s)) {
@@ -821,10 +808,10 @@ export class DataAPI extends ModelInterface {
         continue;
       }
 
-      p[p.length-1] += s;
+      p[p.length - 1] += s;
     }
 
-    for (let i=0; i<p.length; i++) {
+    for (let i = 0; i < p.length; i++) {
       p[i] = p[i].trim();
 
       if (p[i].length == 0) {
@@ -848,10 +835,10 @@ export class DataAPI extends ModelInterface {
     let type = "normal";
     let retpath = p;
     let prop;
-    let lastkey=key, a;
+    let lastkey = key, a;
     let apiname = key;
 
-    while (i < p.length-1) {
+    while (i < p.length - 1) {
       lastkey = key;
       apiname = key;
 
@@ -862,7 +849,7 @@ export class DataAPI extends ModelInterface {
       }
 
       let a = p[i];
-      let b = p[i+1];
+      let b = p[i + 1];
 
       //check for enum/flag propertys with [] form
       if (a == "[") {
@@ -924,19 +911,19 @@ export class DataAPI extends ModelInterface {
 
       if (a == "." || a == "[") {
         key = b;
-        
+
         parent2 = parent1;
         parent1 = obj;
         obj = obj[b];
-        
+
         if (obj === undefined || obj === null) {
           break;
         }
-        
+
         if (typeof obj == "object") {
           dstruct = this.mapStruct(obj.constructor, false);
         }
-        
+
         i += 2;
         continue;
       } else if (a == "&") {
@@ -964,7 +951,7 @@ export class DataAPI extends ModelInterface {
       } else {
         throw new DataPathError("bad path " + path);
       }
-      
+
       i++;
     }
     /*
@@ -985,26 +972,26 @@ export class DataAPI extends ModelInterface {
 
     if (dstruct !== undefined && dstruct.pathmap[key]) {
       let dpath = dstruct.pathmap[key];
-      
+
       if (dpath.type == DataTypes.PROP) {
         prop = dpath.data;
       }
     }
-    
+
     return {
-      parent : parent2,
-      obj : parent1,
-      value : obj,
-      key : key,
-      dstruct : dstruct,
-      subkey : subkey,
-      prop : prop,
-      arg : arg,
-      type : type,
-      _path : retpath
+      parent: parent2,
+      obj: parent1,
+      value: obj,
+      key: key,
+      dstruct: dstruct,
+      subkey: subkey,
+      prop: prop,
+      arg: arg,
+      type: type,
+      _path: retpath
     };
   }
-  
+
   /*returns {
     obj : [object owning property key]
     parent : [parent of obj]
@@ -1013,21 +1000,21 @@ export class DataAPI extends ModelInterface {
     prop : [optional toolprop.ToolProperty representing the property definition]
     struct : [optional datastruct representing the type, if value is an object]
   }
-  */    
+  */
   resolvePathold(ctx, path) {
     path = this.prefix + path;
     path = path.replace(/\[/g, ".").replace(/\]/g, "").trim().split(".");
-    
+
     let parent1, obj = ctx, parent2;
     let key = undefined;
     let dstruct = undefined;
-    
+
     for (let c of path) {
       let c2 = parseInt(c);
       if (!isNaN(c2)) {
         c = c2;
       }
-      
+
       parent2 = parent1;
       parent1 = obj;
       key = c;
@@ -1039,29 +1026,29 @@ export class DataAPI extends ModelInterface {
       }
 
       obj = obj[c];
-      
+
       if (typeof obj == "object") {
         dstruct = this.mapStruct(obj.constructor, false);
       }
     }
-    
+
     let prop;
-    
+
     if (dstruct !== undefined && dstruct.pathmap[key]) {
       let dpath = dstruct.pathmap[key];
-      
+
       if (dpath.type == DataTypes.PROP) {
         prop = dpath.data;
       }
     }
-    
+
     return {
-      parent : parent2,
-      obj : parent1,
-      value : obj,
-      key : key,
-      dstruct : dstruct,
-      prop : prop
+      parent: parent2,
+      obj: parent1,
+      value: obj,
+      key: key,
+      dstruct: dstruct,
+      prop: prop
     };
   }
 
@@ -1070,7 +1057,7 @@ export class DataAPI extends ModelInterface {
     if (cls === undefined) {
       throw new DataPathError("unknown path \"" + path + "\"");
     }
-    
+
     return cls.tooldef();
   }
 
@@ -1092,7 +1079,7 @@ export class DataAPI extends ModelInterface {
       if (keymap === undefined) {
         return undefined;
       }
-      
+
       for (let hk of keymap) {
         if (typeof hk.action == "string" && hk.action == path) {
           return hk.buildString();
@@ -1138,7 +1125,7 @@ export class DataAPI extends ModelInterface {
     return parseToolPath(path).args;
   }
 
-  createTool(ctx, path, inputs={}) {
+  createTool(ctx, path, inputs = {}) {
     let cls;
     let args;
 
@@ -1162,25 +1149,25 @@ export class DataAPI extends ModelInterface {
           console.warn(cls.tooldef().uiname + ": Unknown tool property \"" + k + "\"");
           continue;
         }
-        
+
         tool.inputs[k].setValue(inputs[k]);
       }
     }
-    
+
     return tool;
   }
-  
+
   static toolRegistered(cls) {
     return ToolOp.isRegistered(cls);
     //let key = toolkey(cls);
     //return key in tool_classes;
   }
-  
+
   static registerTool(cls) {
     console.warn("Outdated function simple_controller.DataAPI.registerTool called");
-    
+
     return ToolOp.register(cls);
-    
+
     //let key = toolkey(cls);
     //
     //if (!(key in tool_classes)) {
@@ -1203,20 +1190,22 @@ export class DataPathToolOp extends ToolOp {
     super();
   }
 
-  static tooldef() {return {
-    toolpath : "app.datapath_set",
-    uiname   : "Data Path Set",
-    inputs   : {
-      path         :   new toolprop.StringProperty(),
-      newValueJSON :   new toolprop.StringProperty()
-    },
+  static tooldef() {
+    return {
+      toolpath: "app.datapath_set",
+      uiname: "Data Path Set",
+      inputs: {
+        path: new toolprop.StringProperty(),
+        newValueJSON: new toolprop.StringProperty()
+      },
 
-    flag : ToolFlags.PRIVATE,
+      flag: ToolFlags.PRIVATE,
 
-    outputs : {
-      oldValueJSON : new toolprop.StringProperty()
+      outputs: {
+        oldValueJSON: new toolprop.StringProperty()
+      }
     }
-  }}
+  }
 
   undoPre(ctx) {
     let val = ctx.api.getValue(this.inputs.path.getValue());
@@ -1233,9 +1222,11 @@ export class DataPathToolOp extends ToolOp {
     ctx.api.setValue(this.inputs.path.getValue, JSON.parse(this.inputs.newValueJSON.getValue()));
   }
 }
+
 ToolOp.register(DataPathToolOp);
 
 let dpt = DataPathToolOp;
+
 export function getDataPathToolOp() {
   return dpt;
 }

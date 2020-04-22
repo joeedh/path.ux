@@ -850,7 +850,7 @@ export class Container extends ui_base.UIBase {
 
     this._add(ret);
 
-    ret.update();
+    //ret.update();
 
     return ret;
   }

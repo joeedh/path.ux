@@ -1,5 +1,8 @@
 import * as util from './util.js';
 import {Vector2, Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
+import {ToolPropertyIF, PropTypes} from "./toolprop_abstract.js";
+
+export {PropTypes} from './toolprop_abstract.js';
 
 let first = (iter) => {
   if (iter === undefined) {
@@ -17,20 +20,6 @@ let first = (iter) => {
   for (let item of iter) {
     return item;
   }
-}
-
-export let PropTypes = {
-  INT : 1,
-  STRING : 2,
-  BOOL : 4,
-  ENUM : 8,
-  FLAG : 16,
-  //ITER : 32,
-  VEC2 : 64,
-  VEC3 : 128,
-  VEC4 : 256,
-  MATRIX4 : 512,
-  QUAT : 1024
 };
 
 //set PropTypes to custom type integers
@@ -53,8 +42,10 @@ export const PropFlags = {
 
 export let customPropertyTypes = [];
 
-export class ToolProperty {
+export class ToolProperty extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname, description, flag, icon) {
+    super();
+
     this.data = undefined;
 
     if (type === undefined) {
@@ -88,27 +79,27 @@ export class ToolProperty {
     if (this.callbacks[type] === undefined) {
       return;
     }
-    
+
     for (let cb of this.callbacks[type]) {
       cb.call(this, arg1, arg2);
     }
     return this;
   }
-  
+
   on(type, cb) {
     if (this.callbacks[type] === undefined) {
       this.callbacks[type] = [];
     }
-    
+
     this.callbacks[type].push(cb);
     return this;
   }
-  
+
   off(type, cb) {
     this.callbacks[type].remove(cb);
     return this;
   }
-  
+
   toJSON() {
     return {
       type : this.type,

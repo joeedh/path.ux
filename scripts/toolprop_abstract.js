@@ -16,7 +16,8 @@ export let PropTypes = {
   VEC2 : 64,
   VEC3 : 128,
   VEC4 : 256,
-  MATRIX4 : 512
+  MATRIX4 : 512,
+  QUAT : 1024
 };
 
 export const PropSubTypes = {
@@ -84,7 +85,7 @@ export class StringPropertyIF extends ToolPropertyIF {
 export class NumPropertyIF extends ToolPropertyIF {
 };
 
-export class IntProperty extends ToolProperty {
+export class IntProperty extends ToolPropertyIF {
   constructor() {
     super(PropTypes.INT);
   }
@@ -94,7 +95,7 @@ export class IntProperty extends ToolProperty {
   }
 }
 
-export class FloatProperty extends ToolProperty {
+export class FloatProperty extends ToolPropertyIF {
   constructor() {
     super(PropTypes.FLOAT);
   }
@@ -103,7 +104,7 @@ export class FloatProperty extends ToolProperty {
   }
 }
 
-export class EnumProperty extends ToolProperty {
+export class EnumProperty extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.ENUM);
 
@@ -144,7 +145,7 @@ export class EnumProperty extends ToolProperty {
   }
 }
 
-export class FlagPropertyIF extends EnumPropertyIF {
+export class FlagPropertyIF extends EnumProperty {
   constructor(valid_values) {
     super(PropTypes.FLAG);
   }

@@ -1,9 +1,28 @@
 import * as toolprop from './toolprop.js';
 import {ToolOp} from './simple_toolsys.js';
 import {print_stack} from './util.js';
+import * as toolprop_abstract from "./toolprop_abstract.js";
 
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
+
+export function isVecProperty(prop) {
+  if (!prop)
+    return false;
+
+  let ok = false;
+
+  ok = ok || prop instanceof toolprop_abstract.Vec2Property;
+  ok = ok || prop instanceof toolprop_abstract.Vec3Property;
+  ok = ok || prop instanceof toolprop_abstract.Vec4Property;
+
+  ok = ok || prop.type === PropTypes.VEC2;
+  ok = ok || prop.type === PropTypes.VEC3;
+  ok = ok || prop.type === PropTypes.VEC4;
+  ok = ok || prop.type === PropTypes.QUAT;
+
+  return ok;
+}
 
 export const DataFlags = {
   READ_ONLY : 1
@@ -13,22 +32,38 @@ export class DataPathError extends Error {
 };
 
 export class ListIface {
-  iterate(ctx, path) {
-    throw new Error("implement me");
+  getStruct(api, list, key) {
+
+  }
+  get(api, list, key) {
+
   }
 
-  getLength(ctx, path) {
-    throw new Error("implement me");
+  getKey(api, list, obj) {
+
   }
 
-  getObjectKey(ctx, listpath, object) {
-    throw new Error("implement me");
+  getActive(api, list) {
+
   }
 
-  getObjectStruct(ctx, listpath, key) {
+  setActive(api, list, val) {
+
+  }
+
+  set(api, list, key, val) {
+    list[key] = val;
+  }
+
+  getIter() {
+
+  }
+
+  filter(api, list, filter) {
 
   }
 }
+
 export class ToolOpIface {
   constructor() {
   }
@@ -137,9 +172,16 @@ export class ModelInterface {
       return;
     }
 
-    if (prop !== undefined && (prop.type & (PropTypes.INT|PropTypes.FLOAT)) && prop.range) {
-      console.log(prop.range);
-      val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
+    if (prop !== undefined) {
+      let use_range = (prop.type & (PropTypes.INT | PropTypes.FLOAT));
+
+      use_range = use_range || (res.subkey && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)));
+      use_range = use_range && prop.range;
+      use_range = use_range && !(prop.range[0] === 0.0 && prop.range[1] === 0.0);
+
+      if (use_range) {
+        val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
+      }
     }
 
     let old = res.obj[res.key];
@@ -158,11 +200,15 @@ export class ModelInterface {
       } else {
         res.obj[res.key] &= ~ival;
       }
-    } else {
+    } else if (res.subkey !== undefined && isVecProperty(res.prop)) {
+      res.obj[res.subkey] = val;
+    } else if (!(prop !== undefined && prop instanceof ListIface)) {
       res.obj[res.key] = val;
     }
 
-    if (prop !== undefined) {
+    if (prop !== undefined && prop instanceof ListIface) {
+      prop.set(this, res.obj, res.key, val);
+    } else if (prop !== undefined) {
       prop.dataref = res.obj;
       prop._fire("change", res.obj[res.key], old);
     }

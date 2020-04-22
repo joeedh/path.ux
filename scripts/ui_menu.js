@@ -702,7 +702,6 @@ export class DropBox extends Button {
     }
 
     this._menu._dropbox = this;
-    this.__last_background = this._background;
     this.dom._background = this.getDefault("BoxDepressed");
     this._background = this.getDefault("BoxDepressed");
     this._redraw();
@@ -715,8 +714,10 @@ export class DropBox extends Button {
       this._redraw();
 
       let menu = this._menu;
-      this._menu._dropbox = undefined;
-      this._menu = undefined;
+      if (menu) {
+        this._menu = undefined;
+        menu._dropbox = undefined;
+      }
 
       if (onclose) {
         onclose.call(menu);

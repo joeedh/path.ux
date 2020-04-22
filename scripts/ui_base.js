@@ -150,6 +150,7 @@ export const theme = {
 
     "BoxRadius" : 12,
     "BoxMargin" : 4,
+    "BoxDrawMargin" : 2, //how much to shrink rects drawn by drawRoundBox
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
     "BoxBG" : "rgba(170, 170, 170, 1.0)",
@@ -278,6 +279,8 @@ export function report(msg) {
 
 //this function is deprecated
 export function getDefault(key, elem) {
+  console.warn("Deprecated call to ui_base.js:getDefault");
+
   if (key in theme.base) {
     return theme.base[key];
   } else {
@@ -575,6 +578,7 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this._override_class = undefined;
     this.parentWidget = undefined;
 
     /*
@@ -1398,6 +1402,10 @@ export class UIBase extends HTMLElement {
     this.default_overrides[key] = val;
   }
 
+  overrideClass(style) {
+    this._override_class = style;
+  }
+
   overrideClassDefault(style, key, val) {
     if (!(style in this.class_default_overrides)) {
       this.class_default_overrides[style] = {};
@@ -1421,6 +1429,10 @@ export class UIBase extends HTMLElement {
   }
 
   getStyleClass() {
+    if (this._override_class !== undefined) {
+      return this._override_class;
+    }
+
     let p = this.constructor, lastp = undefined;
 
     while (p && p !== lastp && p !== UIBase && p !== Object) {
@@ -1461,21 +1473,8 @@ export class UIBase extends HTMLElement {
   }
 
   getStyle() {
-    let p = this.constructor, lastp = undefined;
-
-    while (p && p !== lastp && p !== Object) {
-      let def = p.define();
-
-      if (def.style)
-        return def.style;
-
-      if (!p.prototype || !p.prototype.__proto__)
-        break;
-
-      p = p.prototype.__proto__.constructor;
-    }
-
-    return "default";
+    console.warn("deprecated call to UIBase.getStyle");
+    return this.getStyleClass();
   }
 
   /**
@@ -1497,7 +1496,7 @@ export class UIBase extends HTMLElement {
   it needs to take x, y as well as width, height,
   and be usable for more use cases.*/
 export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
-                             op="fill", color=undefined, pad=undefined, no_clear=false) {
+                             op="fill", color=undefined, margin=undefined, no_clear=false) {
     width = width === undefined ? canvas.width : width;
     height = height === undefined ? canvas.height : height;
     
@@ -1505,19 +1504,19 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     
     r = r === undefined ? elem.getDefault("BoxRadius") : r;
 
-    if (pad === undefined) {
-      pad = elem.getDefault("BoxMargin") * dpi;
+    if (margin === undefined) {
+      margin = elem.getDefault("BoxDrawMargin");
     }
-    
+
     r *= dpi;
     let r1=r, r2=r;
     
-    if (r > (height - pad*2)*0.5) {
-      r1 = (height - pad*2)*0.5;
+    if (r > (height - margin*2)*0.5) {
+      r1 = (height - margin*2)*0.5;
     }
     
-    if (r > (width - pad*2)*0.5) {
-      r2 = (width - pad*2)*0.5;
+    if (r > (width - margin*2)*0.5) {
+      r2 = (width - margin*2)*0.5;
     }
     
     let bg = color;
@@ -1543,19 +1542,19 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     
     g.beginPath();
 
-    g.moveTo(pad, pad+r1);
-    g.lineTo(pad, h-r1-pad);
+    g.moveTo(margin, margin+r1);
+    g.lineTo(margin, h-r1-margin);
 
-    g.quadraticCurveTo(pad, h-pad, pad+r2, h-pad);
-    g.lineTo(w-pad-r2, h-pad);
+    g.quadraticCurveTo(margin, h-margin, margin+r2, h-margin);
+    g.lineTo(w-margin-r2, h-margin);
     
-    g.quadraticCurveTo(w-pad, h-pad, w-pad, h-pad-r1);
-    g.lineTo(w-pad, pad+r1);
+    g.quadraticCurveTo(w-margin, h-margin, w-margin, h-margin-r1);
+    g.lineTo(w-margin, margin+r1);
     
-    g.quadraticCurveTo(w-pad, pad, w-pad-r2, pad);
-    g.lineTo(pad+r2, pad);
+    g.quadraticCurveTo(w-margin, margin, w-margin-r2, margin);
+    g.lineTo(margin+r2, margin);
 
-    g.quadraticCurveTo(pad, pad, pad, pad+r1);
+    g.quadraticCurveTo(margin, margin, margin, margin+r1);
     g.closePath();
 
     if (op == "clip") {
