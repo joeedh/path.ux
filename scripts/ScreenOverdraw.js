@@ -118,7 +118,7 @@ export class Overdraw extends ui_base.UIBase {
       let pat = /[0-9]+px/;
       let size = font.match(pat)[0];
 
-      console.log("size", size);
+      //console.log("size", size);
 
       if (size === undefined) {
         size = this.getDefault("DefaultText").size;
@@ -126,7 +126,7 @@ export class Overdraw extends ui_base.UIBase {
         size = ui_base.parsepx(size);
       }
 
-      console.log(size);
+      //console.log(size);
       box.minsize = [
         ~~ui_base.measureText(this, text, undefined, undefined, undefined, font).width,
         ~~(size*1.33)
@@ -153,7 +153,7 @@ export class Overdraw extends ui_base.UIBase {
       };
 
       box.setCSS();
-      console.log(box.params);
+      //console.log(box.params);
       elems.push(box);
     }
 
@@ -191,7 +191,7 @@ export class Overdraw extends ui_base.UIBase {
     }
 
     function solve() {
-      console.log("ERROR", error());
+      //console.log("ERROR", error());
       let r1 = error();
       if (r1 === 0.0) {
         return;
@@ -217,7 +217,7 @@ export class Overdraw extends ui_base.UIBase {
       }
 
       r1 /= totgs;
-      let k = 0.25;
+      let k = 0.4;
 
       for (let box of boxes) {
         for (let i = 0; i < box.params.length; i++) {
