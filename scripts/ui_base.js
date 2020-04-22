@@ -882,6 +882,7 @@ export class UIBase extends HTMLElement {
   pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase) {
     let ret = undefined;
 
+
     let rec = (n, widget, depth=0) => {
       if (n.getClientRects) {
         let rects = n.getClientRects();

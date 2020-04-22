@@ -22,7 +22,7 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
-class ListItem extends ColumnFrame {
+class ListItem extends RowFrame {
   constructor() {
     super();
 
@@ -147,9 +147,9 @@ class ListBox extends Container {
 
     this.setCSS();
 
-    this.dom.style["width"] = this.getDefault("width") + "px";
-    this.dom.style["height"] = this.getDefault("height") + "px";
-    this.dom.style["overflow"] = "scroll";
+    this.style["width"] = this.getDefault("width") + "px";
+    this.style["height"] = this.getDefault("height") + "px";
+    this.style["overflow"] = "scroll";
 
     //this.setAttribute("class", "listbox");
     //this.setAttribute("tabindex", 0);
