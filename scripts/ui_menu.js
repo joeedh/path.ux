@@ -563,16 +563,23 @@ export class DropBox extends Button {
     this.updateWidth();
   }
 
+  setCSS() {
+    //do not call parent classes's setCSS here
+  }
+
   updateWidth() {
     //let ret = super.updateWidth(10);
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultText").size;
-    let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width*dpi; // + ts*2;
+    let tw = ui_base.measureText(this, this._genLabel()).width/dpi + 8;
     tw = ~~tw;
 
-    //console.log("WIDTH", ui_base.measureText(this, this._genLabel(), this.dom, this.g));
-    tw += 5;
+    tw += 15;
+
+    if (!this.getAttribute("simple")) {
+      tw += 35;
+    }
 
     if (tw != this._last_w) {
       this._last_w = tw;

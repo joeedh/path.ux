@@ -1626,7 +1626,26 @@ export function _ensureFont(elem, canvas, g, size) {
   }
 }
 
+let _mc;
+function get_measure_canvas() {
+  if (_mc !== undefined) {
+    return _mc;
+  }
+
+  _mc = document.createElement("canvas");
+  _mc.width = 256;
+  _mc.height = 256;
+  _mc.g = _mc.getContext("2d");
+
+  return _mc;
+}
+
 export function measureText(elem, text, canvas, g, size=undefined) {
+  if (g === undefined) {
+    canvas = get_measure_canvas();
+    g = canvas.g;
+  }
+
   _ensureFont(elem, canvas, g, size);
   
   let ret = g.measureText(text);

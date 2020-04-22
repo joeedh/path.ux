@@ -1050,7 +1050,7 @@ export class Screen extends ui_base.UIBase {
     size[0] = ~~size[0];
     size[1] = ~~size[1];
 
-    //console.trace("this.size", this.size, "newsize", size);
+    console.trace("this.size", this.size, "newsize", size);
 
     let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
 
@@ -1077,23 +1077,29 @@ export class Screen extends ui_base.UIBase {
     sz.div(vec);
 
     for (let v of this.screenverts) {
-      v.sub(min).mul(sz).floor();
+      v.sub(min).mul(sz);
     }
 
+    let olds = [];
+
     for (let sarea of this.sareas) {
-      sarea.on_resize([sarea.size[0] * ratio[0], sarea.size[1] * ratio[1]]);
+      olds.push([sarea.size[0], sarea.size[1]]);
+
       sarea.loadFromVerts();
-    }
-
-    this.regenBorders();
-
-    for (let sarea of this.sareas) {
-      sarea.makeBorders(this);
-      sarea.setCSS();
     }
 
     this.size[0] = size[0];
     this.size[1] = size[1];
+
+    this.regenBorders();
+
+    let i = 0;
+    for (let sarea of this.sareas) {
+      sarea.on_resize(sarea.size, olds[i]);
+      sarea.setCSS();
+      i++;
+    }
+
     this.setCSS();
 
     this._recalcAABB();

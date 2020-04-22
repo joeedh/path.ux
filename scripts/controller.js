@@ -215,6 +215,10 @@ export class ModelInterface {
   }
   
   getValue(ctx, path) {
+    if (typeof ctx == "string") {
+      throw new Error("You forgot to pass context to getValue");
+    }
+
     let ret = this.resolvePath(ctx, path);
     
     if (ret === undefined) {

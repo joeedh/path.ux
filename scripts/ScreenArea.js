@@ -153,8 +153,8 @@ export class Area extends ui_base.UIBase {
     throw new Error("implement me! Area.copy()");
   }
   
-  on_resize(size) {
-
+  on_resize(size, oldsize) {
+    super.on_resize(size, oldsize);
   }
 
   on_area_focus() {
@@ -729,20 +729,20 @@ export class ScreenArea extends ui_base.UIBase {
       }
     }
     
-    this.pos[0] = min[0];
-    this.pos[1] = min[1];
+    this.pos[0] = Math.floor(min[0]);
+    this.pos[1] = Math.floor(min[1]);
     
-    this.size[0] = max[0] - min[0];
-    this.size[1] = max[1] - min[1];
+    this.size[0] = Math.ceil(max[0] - min[0]);
+    this.size[1] = Math.ceil(max[1] - min[1]);
     
     this.setCSS();
   }
   
-  on_resize(size) {
-    super.on_resize(this);
+  on_resize(size, oldsize) {
+    super.on_resize(size, oldsize);
     
     if (this.area !== undefined) {
-      this.area.on_resize(size);
+      this.area.on_resize(size, oldsize);
     }      
   }
   
@@ -885,7 +885,7 @@ export class ScreenArea extends ui_base.UIBase {
       //propegate new size
       this.area.push_ctx_active();
       this.area._init(); //check that init was called
-      this.area.on_resize(this.size);
+      this.area.on_resize(this.size, this.size);
       this.area.pop_ctx_active();
 
       this.area.push_ctx_active();
