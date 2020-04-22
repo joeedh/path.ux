@@ -366,6 +366,60 @@ export class DataStruct {
     return ret;
   }
 
+  vectorList(size, path, apiname, uiname, description) {
+    let type;
+
+    switch (size) {
+      case 2:
+        type = toolprop.Vec2Property;
+        break;
+      case 3:
+        type = toolprop.Vec3Property;
+      case 4:
+        type = toolprop.Vec4Property;
+    }
+
+    if (type === undefined) {
+      throw new DataPathError("Invalid size for vectorList; expected 2 3 or 4");
+    }
+
+    let prop = new type(undefined, apiname, uiname, description);
+
+    let pstruct = new DataStruct(undefined, "Vector");
+    pstruct.vec3("", "co", "Coords", "Coordinates");
+
+    let ret = this.list(path, apiname, [
+      function getIter(api, list) {
+        return list[Symbol.iterator]();
+      },
+      function getLength(api, list) {
+        return list.length;
+      },
+      function get(api, list, key) {
+        return list[key];
+      },
+      function set(api, list, key, val) {
+        if (typeof key == "string") {
+          key = parseInt(key);
+        }
+
+        if (key < 0 || key >= list.length) {
+          throw new DataPathError("Invalid index " + key);
+        }
+
+        list[key] = val;
+        window.redraw_viewport();
+      },
+      function getKey(api, list, obj) {
+        return list.indexOf(obj);
+      },
+      function getStruct(api, list, key) {
+        return pstruct;
+      }]);
+
+    return ret;
+  }
+
   vec2(path, apiname, uiname, description) {
     let prop = new toolprop.Vec2Property(undefined, apiname, uiname, description);
 
