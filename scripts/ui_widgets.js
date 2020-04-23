@@ -380,7 +380,7 @@ export class Button extends UIBase {
     let dpi = this.getDPI();
     
     if (this._last_dpi != dpi) {
-      console.log("update dpi", dpi);
+      //console.log("update dpi", dpi);
       
       this._last_dpi = dpi;
       

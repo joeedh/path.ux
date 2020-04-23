@@ -34,8 +34,8 @@ var basic_funcs = {
   ceil      : [[], "Math.ceil(this[X])"],
   floor     : [[], "Math.floor(this[X])"],
   abs       : [[], "Math.abs(this[X])"],
-  min       : [[], "Math.min(this[X])"],
-  max       : [[], "Math.max(this[X])"],
+  min       : [["b"], "Math.min(this[X], b[X])"],
+  max       : [["b"], "Math.max(this[X], b[X])"],
   clamp     : [["MIN", "MAX"], "min(max(this[X], MAX), MIN)"],
 };
 
