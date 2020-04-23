@@ -42,6 +42,11 @@ export const PropFlags = {
 
 export let customPropertyTypes = [];
 
+export let PropClasses = {};
+function _addClass(cls) {
+  PropClasses[new cls().type] = cls;
+}
+
 export class ToolProperty extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname, description, flag, icon) {
     super();
@@ -237,6 +242,7 @@ export function isNumber(f) {
   
   return ok;
 }
+_addClass(StringProperty);
 
 window.isNumber = isNumber;
 
@@ -300,6 +306,7 @@ export class IntProperty extends ToolProperty {
     this.radix = radix;
   }
 }
+_addClass(IntProperty);
 
 export class BoolProperty extends ToolProperty {
   constructor(value, apiname,
@@ -322,6 +329,7 @@ export class BoolProperty extends ToolProperty {
     return this;
   }
 }
+_addClass(BoolProperty);
 
 export class FloatProperty extends ToolProperty {
   constructor(value, apiname, 
@@ -361,6 +369,7 @@ export class FloatProperty extends ToolProperty {
     return this;
   }
 }
+_addClass(FloatProperty);
 
 export class EnumProperty extends ToolProperty {
   constructor(string, valid_values, apiname, 
@@ -408,12 +417,16 @@ export class EnumProperty extends ToolProperty {
     for (let k in map) {
       this.ui_value_names[k] = map[k];
     }
+
+    return this;
   }
 
   addDescriptions(map) {
     for (let k in map) {
       this.descriptions[k] = map[k];
     }
+
+    return this;
   }
 
   addIcons(iconmap) {
@@ -423,6 +436,8 @@ export class EnumProperty extends ToolProperty {
     for (var k in iconmap) {
       this.iconmap[k] = iconmap[k];
     }
+
+    return this;
   }
 
   copyTo(p) {
@@ -469,6 +484,7 @@ export class EnumProperty extends ToolProperty {
     super.setValue(val);
   }
 }
+_addClass(EnumProperty);
 
 export class FlagProperty extends EnumProperty {
   constructor(string, valid_values, apiname,
@@ -493,6 +509,7 @@ export class FlagProperty extends EnumProperty {
     return ret;
   }
 }
+_addClass(FlagProperty);
 
 export class Vec2Property extends ToolProperty {
   constructor(data, apiname, uiname, description) {
@@ -520,6 +537,7 @@ export class Vec2Property extends ToolProperty {
     return ret;
   }
 }
+_addClass(Vec2Property);
 
 export class Vec3Property extends ToolProperty {
   constructor(data, apiname, uiname, description) {
@@ -547,6 +565,7 @@ export class Vec3Property extends ToolProperty {
     return ret;
   }
 }
+_addClass(Vec3Property);
 
 export class Vec4Property extends ToolProperty {
   constructor(data, apiname, uiname, description) {
@@ -574,6 +593,7 @@ export class Vec4Property extends ToolProperty {
     return ret;
   }
 }
+_addClass(Vec4Property);
 
 export class QuatProperty extends ToolProperty {
   constructor(data, apiname, uiname, description) {
@@ -601,6 +621,7 @@ export class QuatProperty extends ToolProperty {
     return ret;
   }
 }
+_addClass(QuatProperty);
 
 export class Mat4Property extends ToolProperty {
   constructor(data, apiname, uiname, description) {
@@ -629,4 +650,277 @@ export class Mat4Property extends ToolProperty {
     return ret;
   }
 }
+_addClass(Mat4Property);
 
+/**
+ * List of other tool props (all of one type)
+ */
+export class ListProperty extends ToolProperty {
+  /*
+  * Prop must be a ToolProperty subclass instance
+  * */
+  constructor(prop) {
+    super(PropTypes.PROPLIST);
+
+    if (typeof prop == "number") {
+      prop = PropClasses[prop];
+
+      if (prop !== undefined) {
+        prop = new prop();
+      }
+    } else if (prop !== undefined) {
+      if (prop instanceof ToolProperty) {
+        prop = prop.copy();
+      } else {
+        prop = new prop();
+      }
+    }
+
+
+    this.prop = prop;
+    this.value = [];
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+
+    b.prop = this.prop.copy();
+    for (let prop of this.value) {
+      b.value.push(prop.copy());
+    }
+
+    return b;
+  }
+
+  copy() {
+    let ret = new ListProperty(this.prop.copy());
+    this.copyTo(ret);
+    return ret;
+  }
+
+  push(item=undefined) {
+    if (item === undefined) {
+      item = this.prop.copy();
+    }
+
+    if (!(item instanceof ToolProperty)) {
+      let prop = this.prop.copy();
+      prop.setValue(item);
+      item = prop;
+    }
+
+    this.value.push(item);
+    return item;
+  }
+
+  clear() {
+    this.value.length = 0;
+  }
+
+  setValue(value) {
+    this.clear();
+
+    for (let item of value) {
+      let prop = this.push();
+
+      if (typeof item !== "object") {
+        prop.setValue(item);
+      } else if (item instanceof prop.constructor) {
+        item.copyTo(prop);
+      } else {
+        console.log(item);
+        throw new Error("invalid value " + item);
+      }
+    }
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  [Symbol.iterator]() {
+    let list = this.value;
+
+    return (function*() {
+      for (let item of list) {
+        yield item.getValue();
+      }
+    })();
+  }
+
+  get length() {
+    return this.value.length;
+  }
+
+  set length(val) {
+    this.value.length = val;
+  }
+}
+
+_addClass(ListProperty);
+
+//like FlagsProperty but uses strings
+export class StringSetProperty extends ToolProperty {
+  constructor(value=undefined, definition=[]) {
+    super(PropTypes.STRSET);
+
+    let values = [];
+
+    this.value = new util.set();
+
+    let def = definition;
+    if (Array.isArray(def) || def instanceof util.set || def instanceof Set) {
+      for (let item of def) {
+        values.push(item);
+      }
+    } else if (typeof def === "object") {
+      for (let k in def) {
+        values.push(k);
+      }
+    }
+
+    this.values = {};
+    this.ui_value_names = {};
+    this.descriptions = {};
+    this.iconmap = {};
+
+    for (let v of values) {
+      this.values[v] = v;
+      
+      let uiname = v.replace(/\_/g, " ").trim();
+      uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
+
+      this.ui_value_names[v] = uiname;
+    }
+
+    if (value !== undefined) {
+      this.setValue(value);
+    }
+  }
+
+  /*
+  * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+  * If destructive is true, then existing set will be cleared.
+  * */
+  setValue(values, destructive=true, soft_fail=true) {
+    let bad = typeof values !== "string";
+    bad = bad && typeof values !== "object";
+    bad = bad && values !== undefined && values !== null;
+
+    if (bad) {
+      if (soft_fail) {
+        console.warn("Invalid argument to StringSetProperty.prototype.setValue() " + values);
+        return;
+      } else {
+        throw new Error("Invalid argument to StringSetProperty.prototype.setValue() " + values);
+      }
+    }
+
+    //handle undefined/null
+    if (!values) {
+      this.value.clear();
+    } else if (typeof values === "string") {
+      if (destructive)
+        this.value.clear();
+
+      if (!(values in this.values)) {
+        if (soft_fail) {
+          console.warn(`"${values}" is not in this StringSetProperty`);
+          return;
+        } else {
+          throw new Error(`"${values}" is not in this StringSetProperty`);
+        }
+      }
+
+      this.value.add(values);
+    } else {
+      let data = [];
+
+      if (Array.isArray(values) || values instanceof util.set || values instanceof Set) {
+        for (let item of values) {
+          data.push(item);
+        }
+      } else { //object literal?
+        for (let k in values) {
+          data.push(k);
+        }
+      }
+
+      for (let item of data) {
+        if (!(item in this.values)) {
+          if (soft_fail) {
+            console.warn(`"${item}" is not in this StringSetProperty`);
+            continue;
+          } else {
+            throw new Error(`"${item}" is not in this StringSetProperty`);
+          }
+        }
+
+        this.value.add(item);
+      }
+    }
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  addIcons(iconmap) {
+    if (iconmap === undefined)
+      return;
+
+    for (let k in iconmap) {
+      this.iconmap[k] = iconmap[k];
+    }
+
+    return this;
+  }
+
+
+  addUINames(map) {
+    for (let k in map) {
+      this.ui_value_names[k] = map[k];
+    }
+    
+    return this;
+  }
+
+  addDescriptions(map) {
+    for (let k in map) {
+      this.descriptions[k] = map[k];
+    }
+
+    return this;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+
+    b.value = this.value.copy();
+    
+    b.values = {};
+    for (let k in this.values) {
+      b.values[k] = this.values[k];
+    }
+
+    for (let k in this.ui_value_names) {
+      b.ui_value_names[k] = this.ui_value_names[k];
+    }
+
+    for (let k in this.iconmap) {
+      b.iconmap[k] = this.iconmap[k];
+    }
+
+    for (let k in this.descriptions) {
+      b.descriptions[k] = this.descriptions[k];
+    }
+  }
+
+  copy() {
+    let ret = new StringSetProperty(undefined, {});
+    this.copyTo(ret);
+    return ret;
+  }
+}
+
+_addClass(StringSetProperty);

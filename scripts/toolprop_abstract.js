@@ -6,6 +6,9 @@ that any tool property library must implement to interface with path.ux.
 */
 
 //maps prop type names to integers
+import {ToolProperty} from "./toolprop.js";
+import * as util from "./util.js";
+
 export let PropTypes = {
   INT : 1,
   STRING : 2,
@@ -17,7 +20,9 @@ export let PropTypes = {
   VEC3 : 128,
   VEC4 : 256,
   MATRIX4 : 512,
-  QUAT : 1024
+  QUAT : 1024,
+  PROPLIST : 4096,
+  STRSET : 8192
 };
 
 export const PropSubTypes = {
@@ -45,6 +50,14 @@ export class ToolPropertyIF {
     this.description = description;
     this.flag = flag;
     this.icon = icon;
+  }
+
+  copyTo(b) {
+
+  }
+
+  copy() {
+
   }
 
   _fire(type, arg1, arg2) {
@@ -169,3 +182,74 @@ export class Vec4Property extends ToolPropertyIF {
   }
 }
 
+/**
+ * List of other tool props (all of one type)
+ */
+export class ListProperty extends ToolPropertyIF {
+  /*
+  * Prop must be a ToolProperty subclass instance
+  * */
+  constructor(prop) {
+    super(PropTypes.PROPLIST);
+
+    this.prop = prop;
+  }
+
+  copyTo(b) {
+  }
+
+  copy() {
+  }
+
+  /**
+   * clear list
+   * */
+  clear() {
+
+  }
+
+  push(item=this.prop.copy()) {
+  }
+
+  [Symbol.iterator]() {
+  }
+
+  get length() {
+  }
+
+  set length(val) {
+  }
+}
+
+//like FlagsProperty but uses strings
+export class StringSetProperty extends ToolPropertyIF {
+  constructor(value=undefined, definition=[]) {
+    super(PropTypes.STRSET);
+  }
+
+  /*
+  * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+  * If destructive is true, then existing set will be cleared.
+  * */
+  setValue(values, destructive=true, soft_fail=true) {
+  }
+
+  getValue() {
+  }
+
+  addIcons(iconmap) {
+  }
+
+
+  addUINames(map) {
+  }
+
+  addDescriptions(map) {
+  }
+
+  copyTo(b) {
+  }
+
+  copy() {
+  }
+}

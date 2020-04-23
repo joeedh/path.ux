@@ -1,44 +1,36 @@
 import './polyfill.js';
+import './struct.js';
 
 window.tm = 0.0;
 
 var EmptySlot = {};
 
-//uses hex
 export function btoa(buf) {
-  if (typeof buf == "string") {
-    var b = [];
-    for (var i=0; i<buf.length; i++) {
-      b.push(buf.charCodeAt(i));
-    }
-    buf = b;
-  }
-
   if (buf instanceof ArrayBuffer) {
     buf = new Uint8Array(buf);
   }
 
-  var ret = "";
-  for (var i=0; i<buf.length; i++) {
-    var s = buf[i].toString(16);
-    while (s.length < 2) {
-      s = "0" + s;
-    }
-
-    ret += s;
+  if (typeof buf == "string" || buf instanceof String) {
+    return window.btoa(buf);
   }
 
-  return ret;
+  var ret = "";
+  for (var i=0; i<buf.length; i++) {
+    ret += String.fromCharCode(buf[i]);
+  }
+
+  return btoa(ret);
 };
 
 export function atob(buf) {
-  var ret = [];
+  let data = window.atob(buf);
+  let ret = [];
 
-  for (var i=0; i<buf.length/2; i++) {
-    ret.push(parseInt(buf.slice(i*2, i*2+2), 16));
+  for (let i=0; i<data.length; i++) {
+    ret.push(data.charCodeAt(i));
   }
 
-  return new Uint8Array(ret).buffer;
+  return new Uint8Array(ret);
 }
 
 export function time_ms() {
@@ -180,6 +172,15 @@ export class set {
     this.length = 0;
 
     return this;
+  }
+
+  copy() {
+    let ret = new set();
+    for (let item of this) {
+      ret.add(item);
+    }
+
+    return ret;
   }
 
   add(item) {
@@ -381,30 +382,40 @@ export class IDGen {
   constructor() {
     this._cur = 1;
   }
-  
+
   next() {
     return this._cur++;
   }
-  
+
+  copy() {
+    let ret = new IDGen();
+    ret._cur = this._cur;
+    return ret;
+  }
+
   max_cur(id) {
     this._cur = Math.max(this._cur, id+1);
   }
-  
+
   toJSON() {
     return {
       _cur : this._cur
     };
   }
-  
+
   static fromJSON(obj) {
-    return new IDGen().loadJSON(obj);
-  }
-  
-  loadJSON(obj) {
-    this._cur = obj._cur;
-    return this;
+    var ret = new IDGen();
+    ret._cur = obj._cur;
+    return ret;
   }
 }
+
+IDGen.STRUCT = `
+IDGen {
+  _cur : int;
+}
+`;
+nstructjs.manager.add_class(IDGen);
 
 
 function get_callstack(err) {
