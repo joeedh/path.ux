@@ -13,7 +13,9 @@ let Vector2 = vectormath.Vector2;
 export class Overdraw extends ui_base.UIBase {
   constructor() {
     super();
-    
+
+    this.visibleToPick = false;
+
     this.screen = undefined;
     this.shapes = [];
     this.otherChildren = []; //non-svg elements

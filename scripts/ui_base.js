@@ -582,6 +582,8 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this.visibleToPick = true;
+
     this._override_class = undefined;
     this.parentWidget = undefined;
 
@@ -892,6 +894,10 @@ export class UIBase extends HTMLElement {
         let rects = n.getClientRects();
 
         if (n instanceof nodeclass) {
+          if (!n.visibleToPick) {
+            return;
+          }
+
           widget = n;
         }
 
