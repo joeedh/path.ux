@@ -254,6 +254,10 @@ export const theme = {
     defaultWidth  : 100,
     defaultHeight : 25,
     defaultFont   : "LabelText"
+  },
+
+  dropbox : {
+    dropTextBG : "rgba(250, 250, 250, 0.7)" //if undefined, will use BoxBG
   }
 };
 

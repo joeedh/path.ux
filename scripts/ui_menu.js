@@ -773,10 +773,17 @@ export class DropBox extends Button {
     let p = 10*dpi;
     let p2 = 4*dpi;
 
-    g.fillStyle = "rgba(250, 250, 250, 0.7)";
-    g.beginPath();
-    g.rect(p2, p2, this.dom.width-p2 - h, this.dom.height-p2*2);
-    g.fill();
+
+    //*
+    let bg = this.getDefault("dropTextBG");
+    if (bg !== undefined) {
+      g.fillStyle = bg;
+
+      g.beginPath();
+      g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2 * 2);
+      g.fill();
+    }
+    //*/
 
     g.fillStyle = "rgba(50, 50, 50, 0.2)";
     g.strokeStyle = "rgba(50, 50, 50, 0.8)";
@@ -816,7 +823,8 @@ export class DropBox extends Button {
   }
 
   static define() {return {
-    tagname : "dropbox-x"
+    tagname : "dropbox-x",
+    style   : "dropbox"
   };}
 }
 
