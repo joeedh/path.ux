@@ -30,6 +30,7 @@ export class Unit {
   static unitDefine() {return {
     name    : "",
     uiname  : "",
+    type    : "", //e.g. distance
     icon    : -1,
     pattern : undefined //a re literal to validate strings
   }}
@@ -68,6 +69,7 @@ export class MeterUnit extends Unit {
   static unitDefine() {return {
     name    : "meter",
     uiname  : "Meter",
+    type    : "distance",
     icon    : -1,
     pattern : /\d+(\.\d*)?m/
   }}
@@ -102,6 +104,7 @@ export class InchUnit extends Unit {
   static unitDefine() {return {
     name    : "inch",
     uiname  : "Inch",
+    type    : "distance",
     icon    : -1,
     pattern : /\d+(\.\d*)?in/
   }}
@@ -132,6 +135,7 @@ export class FootUnit extends Unit {
   static unitDefine() {return {
     name    : "foot",
     uiname  : "Foot",
+    type    : "distance",
     icon    : -1,
     pattern : foot_re
   }}
@@ -206,6 +210,13 @@ export function parseValue(string) {
       return base.fromInternal(value);
     }
   }
+}
+
+export function convert(value, unita, unitb) {
+  unita = Unit.getUnit(unita);
+  unitb = Unit.getUnit(unitb);
+
+  return unitb.fromInternal(unita.toInternal(value));
 }
 
 /**
