@@ -192,6 +192,38 @@ export class FootUnit extends Unit {
 }
 Unit.register(FootUnit);
 
+
+export class MileUnit extends Unit {
+  static unitDefine() {return {
+    name    : "mile",
+    uiname  : "Mile",
+    type    : "distance",
+    icon    : -1,
+    pattern : /\d+(\.\d+)?miles/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    string = string.replace(/miles/, "");
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*1609.34;
+  }
+
+  static fromInternal(value) {
+    return value/1609.34;
+  }
+
+  static buildString(value, decimals=3) {
+    return ""+value.toFixed(decimals) + " miles";
+  }
+}
+Unit.register(MileUnit);
+
 export function setBaseUnit(unit) {
   Unit.baseUnit = unit;
 }

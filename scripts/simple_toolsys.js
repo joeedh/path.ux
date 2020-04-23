@@ -394,8 +394,10 @@ export class ToolMacro extends ToolOp {
     }).bind(this));
     
     this.curtool = 0;
-    
-    for (var i=0; i<this.tools.length; i++) {
+
+    let i;
+
+    for (i=0; i<this.tools.length; i++) {
       if (this.tools[i].is_modal)
         break;
       

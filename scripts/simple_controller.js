@@ -366,6 +366,39 @@ export class DataStruct {
     return ret;
   }
 
+  arrayList(path, apiname, structdef, uiname, description) {
+    let ret = this.list(path, apiname, [
+      function getIter(api, list) {
+        return list[Symbol.iterator]();
+      },
+      function getLength(api, list) {
+        return list.length;
+      },
+      function get(api, list, key) {
+        return list[key];
+      },
+      function set(api, list, key, val) {
+        if (typeof key === "string") {
+          key = parseInt(key);
+        }
+
+        if (key < 0 || key >= list.length) {
+          throw new DataPathError("Invalid index " + key);
+        }
+
+        list[key] = val;
+        window.redraw_viewport();
+      },
+      function getKey(api, list, obj) {
+        return list.indexOf(obj);
+      },
+      function getStruct(api, list, key) {
+        return structdef;
+      }]);
+
+    return ret;
+  }
+
   vectorList(size, path, apiname, uiname, description) {
     let type;
 
