@@ -1,5 +1,6 @@
 let _ui_base = undefined;
 
+import './units.js';
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as toolprop from './toolprop.js';
