@@ -891,6 +891,8 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.push_ctx_active();
       this.area.on_area_active();
       this.area.pop_ctx_active();
+
+      this.regenTabOrder();
     //}
   }
   

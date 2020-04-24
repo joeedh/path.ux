@@ -314,6 +314,8 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
+    this.needsTabRecalc = true;
+
     this._screen_id = screen_idgen++;
 
     this._popups = [];
@@ -405,10 +407,10 @@ export class Screen extends ui_base.UIBase {
   }
 
   /** makes a popup at x,y and returns a new container-x for it */
-  popup(elem_or_x, y) {
+  popup(elem_or_x, y, closeOnMouseOut=true) {
     let x;
 
-    if (typeof elem_or_x == "object") {
+    if (typeof elem_or_x === "object") {
       let r = elem_or_x.getClientRects()[0];
 
       x = r.x;
@@ -429,8 +431,9 @@ export class Screen extends ui_base.UIBase {
     };
 
     container.background = this.getDefault("BoxSubBG");
+    container.style["display"] = "float";
     container.style["position"] = "absolute";
-    container.style["z-index"] = 100;
+    container.style["z-index"] = 205;
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
 
@@ -451,6 +454,8 @@ export class Screen extends ui_base.UIBase {
       container.remove();
     };
 
+    container.end = end;
+
     touchstart = (e) => {
       //console.log("=======================================================popup touch start");
       //console.log(e);
@@ -459,7 +464,9 @@ export class Screen extends ui_base.UIBase {
       let elem = this.pickElement(x, y, 55, 45);
 
       if (elem === undefined) {
-        end();
+        if (closeOnMouseOut) {
+          end();
+        }
         return;
       }
 
@@ -475,21 +482,30 @@ export class Screen extends ui_base.UIBase {
 
       if (!ok) {
         e.stopPropagation();
-        end();
+
+        if (closeOnMouseOut) {
+          end();
+        }
       }
     };
 
+    //*
     this.ctx.screen.addEventListener("touchstart", touchstart, true);
     this.ctx.screen.addEventListener("touchmove", touchstart, true);
 
     container.addEventListener("mouseleave", (e) => {
       console.log("popup mouse leave");
-      end();
+      if (closeOnMouseOut)
+        end();
     });
     container.addEventListener("mouseout", (e) => {
       console.log("popup mouse out");
-      end();
+      if (closeOnMouseOut)
+        end();
     });
+    //*/
+
+    this.calcTabOrder();
 
     return container;
   }
@@ -740,6 +756,71 @@ export class Screen extends ui_base.UIBase {
     };
   }
 
+  calcTabOrder() {
+    console.warn("Recalculating tab order");
+
+    let nodes = [];
+    let visit = {};
+
+    let rec = (n) => {
+      let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
+
+      if (n._id in visit || n.hidden) {
+        return;
+      }
+
+      visit[n._id] = 1;
+
+      if (!bad) {
+        n.__pos = n.getClientRects()[0];
+        if (n.__pos) {
+          nodes.push(n);
+        }
+      }
+
+      n._forEachChildWidget((n2) => {
+        rec(n2);
+      });
+    };
+
+    for (let sarea of this.sareas) {
+      rec(sarea);
+    }
+
+    for (let popup of this._popups) {
+      rec(popup);
+    }
+
+    let nodes2 = [];
+    let visit2 = {};
+
+    for (let node of nodes) {
+      let r = node.__pos;
+      let elem = this.pickElement(~~(r.x+r.width*0.5), ~~(r.y+r.height*0.5), 2, 2);
+
+      if (elem === undefined) {
+        elem = node;
+      }
+
+      if (elem !== node) {
+        console.log("Overlapping leaf UI elements detected:", elem, node);
+      }
+
+      if (!(elem._id in visit2)) {
+        visit2[elem._id] = 1;
+        nodes2.push(elem);
+      }
+    }
+
+    //console.log("nodes2", nodes2);
+    for (let i=0; i<nodes2.length; i++) {
+      let n = nodes2[i];
+
+      n.tabIndex = i + 1;
+      //console.log(n.tabIndex);
+    }
+  }
+
   drawUpdate() {
     if (window.redraw_all !== undefined) {
       window.redraw_all();
@@ -747,6 +828,11 @@ export class Screen extends ui_base.UIBase {
   }
 
   update() {
+    if (this.needsTabRecalc) {
+      this.needsTabRecalc = false;
+      this.calcTabOrder();
+    }
+
     for (let sarea of this.sareas) {
       for (let b of sarea._borders) {
         let movable = this.isBorderMovable(sarea, b);
@@ -1104,6 +1190,7 @@ export class Screen extends ui_base.UIBase {
     this.setCSS();
 
     this._recalcAABB();
+    this.calcTabOrder();
   }
 
   getScreenVert(pos, side, is_outer = false) {
@@ -1328,6 +1415,7 @@ export class Screen extends ui_base.UIBase {
   _internalRegenAll() {
     this.regenBorders();
     this._updateAll();
+    this.calcTabOrder();
   }
 
 

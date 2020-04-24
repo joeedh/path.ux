@@ -204,6 +204,10 @@ export class NumSliderSimple extends UIBase {
             fac *= 0.1;
           }
 
+          if (this.isInt) {
+            fac = Math.max(fac, 1);
+          }
+
           this.value += e.keyCode === keymap["Left"] ? -dt*fac : dt*fac;
 
           break;

@@ -597,8 +597,9 @@ export class Container extends ui_base.UIBase {
   }
 
   //supports number types
-  textbox(inpath, text, cb, packflag = 0) {
+  textbox(inpath, text="", cb=undefined, packflag = 0) {
     let path;
+
     if (inpath)
       path = this._joinPrefix(inpath);
 

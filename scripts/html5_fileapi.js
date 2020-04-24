@@ -37,8 +37,8 @@ export function loadFile(filename="unnamed", exts=[]) {
   });
 }
 
-window._testLoadFile = function() {
-  loadFile(undefined, [".w3d"]).then((data) => {
+window._testLoadFile = function(exts=["*.*"]) {
+  loadFile(undefined, exts).then((data) => {
     console.log("got file data:", data);
   });
 };

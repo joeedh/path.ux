@@ -734,6 +734,19 @@ export class UIBase extends HTMLElement {
     return this;
   }
 
+  /**
+   * find owning screen and tell it to update
+   * the global tab order
+   * */
+  regenTabOrder() {
+    let screen = this.getScreen();
+    if (screen !== undefined) {
+      screen.needsTabRecalc = true;
+    }
+
+    return this;
+  }
+
   noMargins() {
     this.style["margin"] = this.style["margin-left"] = this.style["margin-right"] = "0px";
     this.style["margin-top"] = this.style["margin-bottom"] = "0px";
@@ -824,12 +837,20 @@ export class UIBase extends HTMLElement {
   }
   
   _ondestroy() {
+    if (this.tabIndex >= 0) {
+      this.regenTabOrder();
+    }
+
     if (this.ondestroy !== undefined) {
       this.ondestroy();
     }
   }
   
   remove() {
+    if (this.tabIndex >= 0) {
+      this.regenTabOrder();
+    }
+
     super.remove();
     this._ondestroy();
   }
@@ -1258,7 +1279,8 @@ export class UIBase extends HTMLElement {
   }
 
   getScreen() {
-    return this.ctx.screen;
+    if (this.ctx !== undefined)
+      return this.ctx.screen;
   }
 
   //not sure I'm happy about this. . .
@@ -1355,6 +1377,10 @@ export class UIBase extends HTMLElement {
 
     if (!this._init_done) {
       this.doOnce(this._init);
+    }
+
+    if (this.tabIndex >= 0) {
+      this.regenTabOrder();
     }
   }
 

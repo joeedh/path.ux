@@ -52,14 +52,16 @@ export class Button extends UIBase {
       console.log(e.keyCode);
 
       switch (e.keyCode) {
+        case 27: //escape
+          this.blur();
+          break;
         case 32: //spacebar
         case 13: //enter
           this.click();
+          e.preventDefault();
+          e.stopPropagation();
           break;
       }
-
-      e.preventDefault();
-      e.stopPropagation();
     });
 
     this.addEventListener("focusin", () => {
@@ -96,6 +98,7 @@ export class Button extends UIBase {
     let form = this._div = document.createElement("div");
 
     form.style["tabindex"] = 4;
+    form.tabIndex = 4;
     form.setAttribute("type", "hidden");
     form.type ="hidden";
     form.style["-moz-user-focus"] = "normal";
@@ -107,11 +110,32 @@ export class Button extends UIBase {
     this.shadow.appendChild(form);
   }
 
+  get tabIndex() {
+    return this._div.tabIndex;
+  }
+
+  set tabIndex(val) {
+    this._div.tabIndex = val;
+  }
+
   get boxpad() {
     throw new Error("Button.boxpad is deprecated");
     return this.getDefault("BoxMargin");
   }
 
+  click() {
+    if (this._onpress) {
+      let rect = this.getClientRects();
+      let x = rect.x + rect.width*0.5;
+      let y = rect.y + rect.height*0.5;
+
+      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+
+      this._onpress(e);
+    }
+
+    super.click();
+  }
   set boxpad(val) {
       throw new Error("Deprecated call to Button.boxpad setter");
 
@@ -1353,8 +1377,9 @@ export class TextBox extends UIBase {
     
     this.addEventListener("focusin", () => {
       this._focus = 1;
+      this.dom.focus();
     });
-    
+
     this.addEventListener("blur", () => {
       this._focus = 0;
     });
@@ -1364,8 +1389,12 @@ export class TextBox extends UIBase {
     this._had_error = false;
     
     this.decimalPlaces = 4;
-    
+
     this.dom = document.createElement("input");
+
+    this.dom.tabIndex = 0;
+    this.dom.setAttribute("tabindex", 0);
+    this.dom.setAttribute("tab-index", 0);
     this.dom.style["margin"] = margin + "px";
     this.dom.style["width"] = "min-contents";
 
@@ -1373,7 +1402,7 @@ export class TextBox extends UIBase {
     this.dom.onchange = (e) => {
       this._change(this.dom.value);
     }
-    
+
     this.radix = 16;
     
     this.dom.oninput = (e) => {
@@ -1383,11 +1412,19 @@ export class TextBox extends UIBase {
     this.shadow.appendChild(this.dom);
   }
 
+  get tabIndex() {
+    return this.dom.tabIndex;
+  }
+
+  set tabIndex(val) {
+    this.dom.tabIndex = val;
+  }
+
   init() {
     super.init();
 
     this.style["display"] = "flex";
-    //this.style["width"] = "min-content";
+    this.style["width"] = "min-content";
 
     this.setCSS();
   }
@@ -1399,9 +1436,9 @@ export class TextBox extends UIBase {
       this.dom.style["font"] = this.style["font"];
     }
 
-    for (let k of this.style) {
-      this.dom.style[k] = this.style[k];
-    }
+//    for (let k of this.style) {
+  //    this.dom.style[k] = this.style[k];
+   // }
 
     this.dom.style["width"] = this.style["width"];
   }
@@ -1541,3 +1578,13 @@ export class TextBox extends UIBase {
 }
 
 UIBase.register(TextBox);
+
+export function checkForTextBox(screen, x, y) {
+  let elem = screen.pickElement(x, y, undefined, undefined, TextBox);
+  console.log(elem);
+  if (elem && elem.tagName === "TEXTBOX-X") {
+    return true;
+  }
+
+  return false;
+}
