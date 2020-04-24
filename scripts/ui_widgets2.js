@@ -49,6 +49,7 @@ export class NumSliderSimple extends UIBase {
   }
 
   set value(val) {
+    console.log(val, this.range);
     val = Math.min(Math.max(val, this.range[0]), this.range[1]);
 
     if (this.isInt) {
@@ -354,6 +355,8 @@ export class NumSliderSimple extends UIBase {
     let w2 = w - boxw;
 
     x = (x - boxw*0.5) / w2;
+    x = x*(this.range[1] - this.range[0]) + this.range[0];
+
     return x;
   }
 
