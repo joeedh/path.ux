@@ -1367,6 +1367,8 @@ export class TextBox extends UIBase {
     
     this.dom = document.createElement("input");
     this.dom.style["margin"] = margin + "px";
+    this.dom.style["width"] = "min-contents";
+
     this.dom.setAttribute("type", "textbox");
     this.dom.onchange = (e) => {
       this._change(this.dom.value);
@@ -1380,7 +1382,30 @@ export class TextBox extends UIBase {
     
     this.shadow.appendChild(this.dom);
   }
-  
+
+  init() {
+    super.init();
+
+    this.style["display"] = "flex";
+    //this.style["width"] = "min-content";
+
+    this.setCSS();
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    if (this.style["font"]) {
+      this.dom.style["font"] = this.style["font"];
+    }
+
+    for (let k of this.style) {
+      this.dom.style[k] = this.style[k];
+    }
+
+    this.dom.style["width"] = this.style["width"];
+  }
+
   updateDataPath() {
     if (!this.ctx || !this.hasAttribute("datapath")) {
       return;
@@ -1401,7 +1426,20 @@ export class TextBox extends UIBase {
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
     
     let text = this.text;
-    
+
+    function myToFixed(s, n) {
+      s = s.toFixed(n);
+
+      while (s.endsWith('0')) {
+        s = s.slice(0, s.length-1);
+      }
+      if (s.endsWith("\.")) {
+        s = s.slice(0, s.length-1);
+      }
+
+      return s;
+    }
+
     if (prop !== undefined && (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
       let is_int = prop.type == PropTypes.INT;
       
@@ -1415,7 +1453,7 @@ export class TextBox extends UIBase {
           text += "h";
         }
       } else {
-        text = val.toFixed(this.decimalPlaces);
+        text = myToFixed(val, this.decimalPlaces);
       }
     } else if (prop !== undefined && prop.type == PropTypes.STRING) {
       text = val;
@@ -1427,11 +1465,13 @@ export class TextBox extends UIBase {
   }
   
   update() {
+    super.update();
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
 
-    super.update();
+    this.setCSS();
   }
   
   select() {

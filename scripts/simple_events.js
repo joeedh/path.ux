@@ -122,7 +122,9 @@ export function pushModalLight(obj) {
   for (let k of keys) {
     let key;
 
-    if (obj["on"+k])
+    if (obj[k])
+      key = k;
+    else if (obj["on"+k])
       key = "on" + k;
     else if (obj["on_"+k])
       key = "on_" + k;

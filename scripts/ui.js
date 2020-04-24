@@ -1019,10 +1019,21 @@ export class Container extends ui_base.UIBase {
     return cw;
   }
 
+  simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+    return this.slider(inpath, name, defaultval, min,
+      max, step, is_int, do_redraw,
+      callback, packflag | PackFlags.SIMPLE_NUMSLIDERS);
+  }
+
   slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     packflag |= this.inherit_packflag;
+    let ret;
 
-    let ret = document.createElement("numslider-x")
+    if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
+      ret = document.createElement("numslider-simple-x")
+    } else {
+      ret = document.createElement("numslider-x")
+    }
     ret.packflag |= packflag;
 
     if (inpath) {

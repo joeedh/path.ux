@@ -128,6 +128,7 @@ export const theme = {
     "oneAxisPadding" : 6,
     "oneAxisMargin" : 6,
 
+    "BasePackFlag" : 0,
     "ScreenBorderOuter" : "rgba(255, 255, 255, 1.0)",
     "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
 
@@ -226,6 +227,16 @@ export const theme = {
   numslider : {
     "defaultWidth" : 100,
     "defaultHeight" : 29
+  },
+
+  numslider_simple : {
+    BoxBG : "rgb(125, 125, 125)",
+    BoxBorder : "rgb(75, 75, 75)",
+    SlideHeight : 18,
+    DefaultWidth : 125,
+    DefaultHeight : 32,
+    BoxRadius : 5,
+    TextBoxWidth : 40
   },
 
   colorfield : {
@@ -545,7 +556,8 @@ export const PackFlags = {
   //internal flags
   STRIP_HORIZ : 512,
   STRIP_VERT : 1024,
-  STRIP : 512|1024
+  STRIP : 512|1024,
+  SIMPLE_NUMSLIDERS : 2048
 };
  
 let first = (iter) => {
@@ -627,7 +639,7 @@ export class UIBase extends HTMLElement {
     //*/
 
     this._modaldata = undefined;
-    this.packflag = 0;
+    this.packflag = this.getDefault("BasePackFlag");
     this._disabled = false;
     this._disdata = undefined;
     this.shadow = this.attachShadow({mode : 'open'});
@@ -1097,10 +1109,11 @@ export class UIBase extends HTMLElement {
   }
 
   flash(color, rect_element=this, timems=355) {
-    console.warn("flash disabled due to bug");
-    return;
+    //console.warn("flash disabled due to bug");
+    //return;
     
-    console.trace("flash");
+    console.warn("flash");
+
     if (typeof color != "object") {
         color = css2color(color);
     }
@@ -1125,14 +1138,16 @@ export class UIBase extends HTMLElement {
     //okay, dom apparently calls onchange() on .remove, so we have
     //to put the timer code first to avoid loops
     let timer;
-    
+    let tick = 0;
+    let max = ~~(timems/20);
+
     this._flashtimer = timer = window.setInterval((e) => {
       if (timer === undefined) {
         return
       }
       
       let a = 1.0 - tick / max;
-      div2.style["background-color"] = color2css(color, a*a*0.5);
+      div.style["background-color"] = color2css(color, a*a*0.5);
       
       if (tick > max) {
         window.clearInterval(timer);
@@ -1142,8 +1157,8 @@ export class UIBase extends HTMLElement {
         timer = undefined;
         
         try {
-          this.remove();
-          div.parentNode.insertBefore(this, div);
+          //this.remove();
+          //div.parentNode.insertBefore(this, div);
         } catch (error) {
           console.log("dom removal error");
           div.appendChild(this);
@@ -1163,36 +1178,32 @@ export class UIBase extends HTMLElement {
     
     let div = document.createElement("div");
     
-    this.parentNode.insertBefore(div, this);
+    //this.parentNode.insertBefore(div, this);
     
     try {
-      this.remove();
+      //this.remove();
     } catch (error) {
       console.log("this.remove() failure in UIBase.flash()");
     }        
     
-    div.appendChild(this);
-    
-    let div2 = document.createElement("div");
-    
-    div2.style["pointer-events"] = "transparent";
-    div2.tabIndex = undefined;
-    div2.style["z-index"] = "100";
-    div2.style["display"] = "float";
-    div2.style["position"] = "absolute";
-    div2.style["left"] = rect.x + "px";
-    div2.style["top"] = rect.y + "px";
+    //div.appendChild(this);
 
-    div2.style["background-color"] = color2css(color, 0.5);
-    div2.style["width"] = rect.width + "px";
-    div2.style["height"] = rect.height + "px";
+    div.style["pointer-events"] = "transparent";
+    div.tabIndex = undefined;
+    div.style["z-index"] = "100";
+    div.style["display"] = "float";
+    div.style["position"] = "absolute";
+    div.style["left"] = rect.x + "px";
+    div.style["top"] = rect.y + "px";
 
-    div.appendChild(div2);
+    div.style["background-color"] = color2css(color, 0.5);
+    div.style["width"] = rect.width + "px";
+    div.style["height"] = rect.height + "px";
+
+    document.body.appendChild(div);
+
     this.focus();
-    
-    let tick = 0;
-    let max = ~~(timems/20);
-    
+
     this._flashcolor = csscolor;
   }
   

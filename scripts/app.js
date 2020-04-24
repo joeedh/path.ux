@@ -126,7 +126,9 @@ export class CanvasArea extends ScreenArea.Area {
     row.checkenum("state.enumval", "Enum", ui_base.PackFlags.USE_ICONS|ui_base.PackFlags.SMALL_ICON);
     row.listenum("state.enumval", "Enum");
     //*/
-    
+
+    row.simpleslider("state.sliderval", "sliderval");
+
     row = ui.row();
     let tabs = row.tabs("right");
     tabs.style["width"] = "300px";
@@ -139,6 +141,7 @@ export class CanvasArea extends ScreenArea.Area {
     //tab.float(1, 1, 7);
     //tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
     tab.prop("state.color");
+    tab.simpleslider("state.sliderval", "sliderval");
 
     tab = tabs.tab("Display");
     
@@ -250,6 +253,7 @@ export class AppState extends events.EventHandler {
     //this.makeGUI();
     this.image = undefined;
     this.enumval = 0;
+    this.sliderval = 0;
     this.color = [1, 0, 0, 1];
   }
   
@@ -270,6 +274,8 @@ export class AppState extends events.EventHandler {
       Bleh : Icons.FOLDER,
       Yay : Icons.BACKSPACE
     });
+
+    stt.float("sliderval", "sliderval", "Sliderval");
 
     stt.color4("color", "color", "color", "color");
   }

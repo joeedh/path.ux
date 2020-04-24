@@ -1,4 +1,5 @@
 let _FrameManager = undefined;
+import './ui_widgets2.js';
 
 import {DEBUG} from './const.js';
 import {haveModal, pushModalLight, popModalLight} from './simple_events.js';

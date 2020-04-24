@@ -102,7 +102,7 @@ export class Overdraw extends ui_base.UIBase {
     this.otherChildren.length = 0;
   }
 
-  drawTextBubbles(texts, cos) {
+  drawTextBubbles(texts, cos, colors) {
     let boxes = [];
     let elems = [];
 
@@ -111,9 +111,14 @@ export class Overdraw extends ui_base.UIBase {
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
       let text = texts[i];
+      let color;
+
+      if (colors !== undefined) {
+        color = colors[i];
+      }
 
       cent.add(co);
-      let box = this.text(texts[i], co[0], co[1]);
+      let box = this.text(texts[i], co[0], co[1], {color : color});
 
       boxes.push(box);
       let font = box.style["font"];

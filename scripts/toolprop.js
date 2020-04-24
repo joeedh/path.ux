@@ -65,7 +65,7 @@ export class ToolProperty extends ToolPropertyIF {
     this.wasSet = false;
 
     this.apiname = apiname;
-    this.uiname = uiname;
+    this.uiname = uiname !== undefined ? uiname : apiname;
     this.description = description;
     this.flag = flag;
     this.icon = icon;
