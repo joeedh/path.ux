@@ -120,6 +120,10 @@ export class CSSFont {
   genCSS(size=this.size) {
     return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
   }
+  
+  hash() {
+    return this.genCSS + ":" + this.size + ":" + this.color;
+  }
 }
 
 export const theme = {
@@ -218,6 +222,9 @@ export const theme = {
   },
   iconcheck : {
 
+  },
+
+  checkbox : {
   },
 
   iconbutton : {
@@ -493,8 +500,8 @@ export class IconManager {
 
 export let iconmanager = new IconManager([
   document.getElementById("iconsheet16"),
-  document.getElementById("iconsheet"),
-  document.getElementById("iconsheet")
+  document.getElementById("iconsheet32"),
+  document.getElementById("iconsheet48")
 ], [16, 32, 64], 16);
 
 window._iconmanager = iconmanager; //debug global

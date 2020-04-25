@@ -913,6 +913,12 @@ export class Container extends ui_base.UIBase {
           //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
         }
       } else {
+        if (name === undefined) {
+          name = prop.uiname;
+        }
+
+        frame.label(name).font = "TitleText";
+
         for (let key in prop.values) {
           let check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
 

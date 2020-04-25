@@ -142,6 +142,7 @@ export class CanvasArea extends ScreenArea.Area {
     //tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
     tab.prop("state.color");
     tab.simpleslider("state.sliderval", "sliderval");
+    tab.checkenum("state.enumval", undefined, PackFlags.VERTICAL);
 
     tab = tabs.tab("Display");
     

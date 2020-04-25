@@ -947,33 +947,68 @@ export class Check extends UIBase {
     super();
     
     this._checked = false;
-    
+    this._highlight = false;
+
     let shadow = this.shadow;
     
     //let form = document.createElement("form");
     
     let span = document.createElement("span");
-    span.setAttribute("class", "checkx");
-    
+    //span.setAttribute("class", "checkx");
+    span.style["display"] = "flex";
+    span.style["flex-direction"] = "row";
+    span.style["margin"] = span.style["padding"] = "0px";
     //span.style["background"] = ui_base.iconmanager.getCSS(1);
 
-    let check = document.createElement("input");
-    check.setAttribute("type", "checkbox");
-    check.setAttribute("class", "checkx");
+    let sheet = 0;
+    let size = ui_base.iconmanager.getTileSize(0);
+
+    let check = this.canvas = document.createElement("canvas");
+    this.g = check.getContext("2d");
+
+    //let check = document.createElement("div");
+    //check.style["margin"] = check.style["padding"] = "0px";
+
+    //check.setAttribute("type", "checkbox");
+    //check.setAttribute("class", "checkx");
     check.setAttribute("id", check._id);
     check.setAttribute("name", check._id);
-    
-    check.addEventListener("click", (e) => {
+
+    ui_base.iconmanager.setCSS(ui_base.Icons.LARGE_CHECK, check);
+    check.style["foreground"] = check.style["background"];
+    check.style["background"] = "";
+
+    let mdown = (e) => {
       let val = check.checked;
-      
+
       if (this.onclick) {
         this.onclick(val);
       }
-      
+
       if (this.hasAttribute("datapath")) {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), !!val);
       }
-    });
+
+      this._highlight = false;
+      this._redraw();
+    };
+
+    let mover = (e) => {
+      this._highlight = true;
+      this._redraw();
+    };
+    let mleave = (e) => {
+      this._highlight = false;
+      this._redraw();
+    };
+
+    span.addEventListener("mouseover", mover);
+    span.addEventListener("mousein", mover);
+    span.addEventListener("mouseleave", mleave);
+    span.addEventListener("mouseout", mleave);
+
+    check.addEventListener("mousedown", mdown);
+    check.addEventListener("touchstart", mdown);
     
     this.checkbox = check;
     
@@ -981,28 +1016,32 @@ export class Check extends UIBase {
     let label = this._label = document.createElement("label");
     
     label.setAttribute("for", check._id);
-    label.setAttribute("class", "DefaultText");
-    
+    label.setAttribute("class", "checkx");
+
     span.appendChild(label);
-    
-    let style = document.createElement("style");
-    style.textContent = `
-      .checkx {
-        height: 25px;
-        width: 25px;
-        color : "${this.getDefault("DefaultText").color}";
-        border-radius: 50%;
-      }
-    `
-//          background-color: #eee;
-    
-    //icontest 
-    //form.appendChild(this.dom);
-    //shadow.appendChild(form);
-    shadow.appendChild(style);
     shadow.appendChild(span);
   }
-  
+
+  init() {
+    this.tabIndex = 1;
+  }
+
+  get disabled() {
+    return super.disabled;
+  }
+
+  set disabled(val) {
+    super.disabled = val;
+    this._redraw();
+  }
+
+  setCSS() {
+    this._label.style["font"] = this.getDefault("DefaultText").genCSS();
+    this._label.style["color"] = this.getDefault("DefaultText").color;
+
+    super.setCSS();
+  }
+
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
       return;
@@ -1021,26 +1060,93 @@ export class Check extends UIBase {
 
     if (!!this._checked != !!val) {
       this._checked = val;
-      this.checkbox.checked = val;
+      this._redraw();
     }
   }
-  
+
+  _repos_canvas() {
+    if (this.canvas === undefined)
+      return;
+
+    let r = this.canvas.getClientRects()[0];
+
+    if (r === undefined) {
+      return;
+    }
+
+  }
+
+  _redraw() {
+    if (this.canvas === undefined)
+      return;
+
+    let canvas = this.canvas, g = this.g;
+    let dpi = UIBase.getDPI();
+    let tilesize = ui_base.iconmanager.getTileSize(0);
+
+    canvas.style["width"] = tilesize + "px";
+    canvas.style["height"] = tilesize + "px";
+
+    tilesize = ~~(tilesize*dpi + 0.5);
+    canvas.width = tilesize;
+    canvas.height = tilesize;
+
+    g.clearRect(0, 0, canvas.width, canvas.height);
+
+    g.beginPath();
+    g.rect(0, 0, canvas.width, canvas.height);
+    g.fill();
+
+    let color;
+
+    if (!this._checked && this._highlight) {
+      color = this.getDefault("BoxHighlight");
+    }
+
+    ui_base.drawRoundBox(this, canvas, g, undefined, undefined, undefined, undefined, color);
+    if (this._checked) {
+      //canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
+      let x=0, y=0;
+      ui_base.iconmanager.canvasDraw(this, canvas, g, ui_base.Icons.LARGE_CHECK, x, y);
+    }
+  }
+
   set checked(v) {
     if (!!this._checked != !!v) {
       this._checked = v;
-      this.dom.checked = v;
+      //this.dom.checked = v;
+
+      this._redraw();
     }
   }
   
   get checked() {
     return this._checked;
   }
-  
+
+  updateDPI() {
+    let dpi = UIBase.getDPI();
+
+    if (dpi !== this._last_dpi) {
+      this._last_dpi = dpi;
+      this._redraw();
+    }
+  }
+
   update() {
     super.update();
 
+    this.updateDPI();
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
+    }
+
+    let updatekey = this.getDefault("DefaultText").hash();
+
+    if (updatekey !== this._updatekey) {
+      this._updatekey = updatekey;
+      this.setCSS();
     }
   }
   
@@ -1053,7 +1159,8 @@ export class Check extends UIBase {
   }
   
   static define() {return {
-    tagname : "check-x"
+    tagname : "check-x",
+    style   : "checkbox"
   };}
 }
 UIBase.register(Check);
