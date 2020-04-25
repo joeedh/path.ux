@@ -9,6 +9,8 @@ import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
 
+let keymap = events.keymap;
+
 let EnumProperty = toolprop.EnumProperty,
     PropTypes = toolprop.PropTypes;
 
@@ -54,6 +56,8 @@ export class Button extends UIBase {
       switch (e.keyCode) {
         case 27: //escape
           this.blur();
+          e.preventDefault();
+          e.stopPropagation();
           break;
         case 32: //spacebar
         case 13: //enter
@@ -948,13 +952,15 @@ export class Check extends UIBase {
     
     this._checked = false;
     this._highlight = false;
+    this._focus = false;
 
     let shadow = this.shadow;
     
     //let form = document.createElement("form");
     
     let span = document.createElement("span");
-    //span.setAttribute("class", "checkx");
+    span.setAttribute("class", "checkx");
+
     span.style["display"] = "flex";
     span.style["flex-direction"] = "row";
     span.style["margin"] = span.style["padding"] = "0px";
@@ -966,30 +972,27 @@ export class Check extends UIBase {
     let check = this.canvas = document.createElement("canvas");
     this.g = check.getContext("2d");
 
-    //let check = document.createElement("div");
-    //check.style["margin"] = check.style["padding"] = "0px";
-
-    //check.setAttribute("type", "checkbox");
-    //check.setAttribute("class", "checkx");
     check.setAttribute("id", check._id);
     check.setAttribute("name", check._id);
 
-    ui_base.iconmanager.setCSS(ui_base.Icons.LARGE_CHECK, check);
-    check.style["foreground"] = check.style["background"];
-    check.style["background"] = "";
+    /*
+    let doblur = () => {
+      this.blur();
+    };
+    check.addEventListener("mousedown", doblur);
+    check.addEventListener("mouseup", doblur);
+    check.addEventListener("touchstart", doblur);
+    check.addEventListener("touchend", doblur);
+    //*/
 
     let mdown = (e) => {
-      let val = check.checked;
-
-      if (this.onclick) {
-        this.onclick(val);
-      }
-
-      if (this.hasAttribute("datapath")) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), !!val);
-      }
-
       this._highlight = false;
+      this.checked = !this.checked;
+    };
+
+    let mup = (e) => {
+      this._highlight = false;
+      this.blur();
       this._redraw();
     };
 
@@ -997,6 +1000,7 @@ export class Check extends UIBase {
       this._highlight = true;
       this._redraw();
     };
+
     let mleave = (e) => {
       this._highlight = false;
       this._redraw();
@@ -1006,24 +1010,79 @@ export class Check extends UIBase {
     span.addEventListener("mousein", mover);
     span.addEventListener("mouseleave", mleave);
     span.addEventListener("mouseout", mleave);
+    this.addEventListener("blur", (e) => {
+      this._highlight = this._focus = false;
+      this._redraw();
+    });
+    this.addEventListener("focusin", (e) => {
+      this._focus = true;
+      this._redraw();
+    });
+    this.addEventListener("focus", (e) => {
+      this._focus = true;
+      this._redraw();
+    });
 
-    check.addEventListener("mousedown", mdown);
-    check.addEventListener("touchstart", mdown);
-    
+
+    span.addEventListener("mousedown", mdown);
+    span.addEventListener("touchstart", mdown);
+    span.addEventListener("mouseup", mup);
+    span.addEventListener("touchend", mup);
+
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap["Escape"]:
+          this._highlight = undefined;
+          this._redraw();
+          e.preventDefault();
+          e.stopPropagation();
+
+          this.blur();
+          break;
+        case keymap["Enter"]:
+        case keymap["Space"]:
+          this.checked = !this.checked;
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+      }
+    });
     this.checkbox = check;
-    
-    span.appendChild(check);
-    let label = this._label = document.createElement("label");
-    
-    label.setAttribute("for", check._id);
-    label.setAttribute("class", "checkx");
 
-    span.appendChild(label);
+    span.appendChild(check);
+
+    let label = this._label = document.createElement("label");
+    label.setAttribute("class", "checkx");
+    span.setAttribute("class", "checkx");
+
+    let side = this.getDefault("CheckSide");
+    if (side === "right") {
+      span.prepend(label);
+    } else {
+      span.appendChild(label);
+    }
+
     shadow.appendChild(span);
   }
 
   init() {
     this.tabIndex = 1;
+    this.setAttribute("class", "checkx");
+
+
+    let style = document.createElement("style");
+    //let style = this.cssStyleTag();
+
+    let color = this.getDefault("FocusOutline");
+
+    style.textContent = `
+      .checkx:focus {
+        outline : none;
+      }
+    `;
+
+    //document.body.prepend(style);
+    this.prepend(style);
   }
 
   get disabled() {
@@ -1083,13 +1142,19 @@ export class Check extends UIBase {
     let canvas = this.canvas, g = this.g;
     let dpi = UIBase.getDPI();
     let tilesize = ui_base.iconmanager.getTileSize(0);
+    let pad = this.getDefault("BoxMargin");
 
-    canvas.style["width"] = tilesize + "px";
-    canvas.style["height"] = tilesize + "px";
+    let csize = tilesize + pad*2;
 
+    canvas.style["margin"] = "2px";
+    canvas.style["width"] = csize + "px";
+    canvas.style["height"] = csize + "px";
+
+    csize = ~~(csize*dpi + 0.5);
     tilesize = ~~(tilesize*dpi + 0.5);
-    canvas.width = tilesize;
-    canvas.height = tilesize;
+
+    canvas.width = csize;
+    canvas.height = csize;
 
     g.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1106,8 +1171,14 @@ export class Check extends UIBase {
     ui_base.drawRoundBox(this, canvas, g, undefined, undefined, undefined, undefined, color);
     if (this._checked) {
       //canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
-      let x=0, y=0;
+      let x=(csize-tilesize)*0.5, y=(csize-tilesize)*0.5;
       ui_base.iconmanager.canvasDraw(this, canvas, g, ui_base.Icons.LARGE_CHECK, x, y);
+    }
+
+    if (this._focus) {
+      color = this.getDefault("FocusOutline");
+      g.lineWidth *= dpi;
+      ui_base.drawRoundBox(this, canvas, g, undefined, undefined, undefined, "stroke", color);
     }
   }
 
@@ -1115,8 +1186,18 @@ export class Check extends UIBase {
     if (!!this._checked != !!v) {
       this._checked = v;
       //this.dom.checked = v;
-
       this._redraw();
+
+      if (this.onclick) {
+        this.onclick(v);
+      }
+      if (this.onchange) {
+        this.onchange(v);
+      }
+
+      if (this.hasAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), this._checked);
+      }
     }
   }
   
@@ -1136,6 +1217,7 @@ export class Check extends UIBase {
   update() {
     super.update();
 
+    this.title = this.description;
     this.updateDPI();
 
     if (this.hasAttribute("datapath")) {
@@ -1212,6 +1294,10 @@ export class IconCheck extends Button {
     if (!!val != !!this._checked) {
       this._checked = val;
       this._redraw();
+
+      if (this.onchange) {
+        this.onchange(val);
+      }
     }
   }
   
@@ -1688,7 +1774,7 @@ UIBase.register(TextBox);
 
 export function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y, undefined, undefined, TextBox);
-  console.log(elem);
+  //console.log(elem);
   if (elem && elem.tagName === "TEXTBOX-X") {
     return true;
   }

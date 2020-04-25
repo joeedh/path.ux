@@ -143,6 +143,7 @@ export class CanvasArea extends ScreenArea.Area {
     tab.prop("state.color");
     tab.simpleslider("state.sliderval", "sliderval");
     tab.checkenum("state.enumval", undefined, PackFlags.VERTICAL);
+    tab.checkenum_panel("state.enumval", undefined, PackFlags.VERTICAL);
 
     tab = tabs.tab("Display");
     

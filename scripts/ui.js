@@ -40,11 +40,21 @@ export class Label extends ui_base.UIBase {
   constructor() {
     super();
 
+    this._label = "";
     this._font = "LabelText";
 
     this.dom = document.createElement("div");
+    this.dom.setAttribute("class", "_labelx");
 
-    this._label = "";
+    let style = document.createElement("style");
+    style.textContent = `
+      div._labelx::selection {
+        color: none;
+        background: none;
+      }
+    `;
+
+    this.shadow.appendChild(style);
     this.shadow.appendChild(this.dom);
   }
 
@@ -862,13 +872,6 @@ export class Container extends ui_base.UIBase {
 
     let path = this._joinPrefix(inpath);
 
-    /*let ret = document.createElement("dropbox-x")
-    ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
-    
-    if (iconmap !== undefined) {
-      ret.prop.addIcons(iconmap)
-    }//*/
-
     let has_path = path !== undefined;
     let prop;
 
@@ -919,15 +922,142 @@ export class Container extends ui_base.UIBase {
 
         frame.label(name).font = "TitleText";
 
+        let checks = {};
+
+        let ignorecb = false;
+
+        function makecb(key) {
+          return () => {
+            if (ignorecb) return;
+
+            ignorecb = true;
+            for (let k in checks) {
+              if (k !== key) {
+                checks[k].checked = false;
+              }
+            }
+            ignorecb = false;
+
+            if (callback) {
+              callback(key);
+            }
+          }
+        }
+
         for (let key in prop.values) {
           let check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
+          checks[key] = check;
+
+          if (mass_set_path) {
+            check.setAttribute("mass_set_path", mass_set_path);
+          }
+
 
           check.description = prop.descriptions[prop.keys[key]];
-
+          if (!check.description) {
+            check.description = ""+prop.ui_value_names[key];
+          }
+          check.onchange = makecb(key);
           //console.log("PATH", path);
         }
       }
     }
+  }
+
+  checkenum_panel(inpath, name, packflag=0, callback=undefined, mass_set_path=undefined, prop=undefined) {
+    packflag = packflag === undefined ? 0 : packflag;
+    packflag |= this.inherit_packflag;
+
+    let path = this._joinPrefix(inpath);
+
+    let has_path = path !== undefined;
+
+    if (path !== undefined && prop === undefined) {
+      prop = this.ctx.api.resolvePath(this.ctx, path);
+
+      if (prop !== undefined)
+        prop = prop.prop;
+    }
+
+    if (!name) {
+      name = prop.uiname;
+    }
+
+    if (path !== undefined) {
+      if (prop === undefined) {
+        console.warn("Bad path in checkenum", path);
+        return;
+      }
+
+      let frame = this.panel(name, name, packflag);
+
+      frame.oneAxisPadding();
+      frame.background = this.getDefault("BoxSub2BG");
+
+      if (packflag & PackFlags.USE_ICONS) {
+        for (let key in prop.values) {
+          let check = frame.check(inpath + " == " + prop.values[key], "", packflag);
+
+          check.icon = prop.iconmap[key];
+          check.drawCheck = false;
+
+          check.style["padding"] = "0px";
+          check.style["margin"] = "0px";
+
+          check.dom.style["padding"] = "0px";
+          check.dom.style["margin"] = "0px";
+
+          check.description = prop.descriptions[key];
+          //console.log(check.description, key, prop.keys[key], prop.descriptions, prop.keys);
+        }
+      } else {
+        if (name === undefined) {
+          name = prop.uiname;
+        }
+
+        frame.label(name).font = "TitleText";
+
+        let checks = {};
+
+        let ignorecb = false;
+
+        function makecb(key) {
+          return () => {
+            if (ignorecb) return;
+
+            ignorecb = true;
+            for (let k in checks) {
+              if (k !== key) {
+                checks[k].checked = false;
+              }
+            }
+            ignorecb = false;
+
+            if (callback) {
+              callback(key);
+            }
+          }
+        }
+
+        for (let key in prop.values) {
+          let check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
+          checks[key] = check;
+
+          if (mass_set_path) {
+            check.setAttribute("mass_set_path", mass_set_path);
+          }
+
+
+          check.description = prop.descriptions[prop.keys[key]];
+          if (!check.description) {
+            check.description = ""+prop.ui_value_names[key];
+          }
+          check.onchange = makecb(key);
+          //console.log("PATH", path);
+        }
+      }
+    }
+
   }
 
   /*
@@ -1334,6 +1464,11 @@ export class PanelFrame extends ColumnFrame {
 
     this.style["width"] = "100%";
 
+    this.overrideDefault("BoxMargin", 0);
+    iconcheck.overrideDefault("BoxMargin", 0);
+
+    iconcheck.noMarginsOrPadding();
+
     iconcheck.overrideDefault("BoxBG", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("BoxSubBG", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
@@ -1346,17 +1481,25 @@ export class PanelFrame extends ColumnFrame {
     iconcheck.iconsheet = ui_base.IconSheets.SMALL;
     iconcheck.checked = this._closed;
 
-    this.iconcheck.onclick = (e) => {
+    this.iconcheck.onchange = (e) => {
       this.closed = this.iconcheck.checked;
-      console.log("icon click!", this.checked);
     };
 
     row._add(iconcheck);
 
     //stupid css, let's just hackishly put " " to create spacing2
-    row.overrideDefault("LabelText", this.getDefault("TitleText").copy());
 
-    row.label(this.getAttribute("title"));
+    let onclick = (e) => {
+      console.log("panel header click");
+      iconcheck.checked = !iconcheck.checked;
+    };
+
+    let label = row.label(this.getAttribute("title"));
+
+    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
+    label.noMarginsOrPadding();
+    label.addEventListener("mousedown", onclick);
+    label.addEventListener("touchdown", onclick);
 
     row.background = this.getDefault("BoxSubBG");
     row.style["border-radius"] = "5px";

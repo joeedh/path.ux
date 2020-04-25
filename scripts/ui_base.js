@@ -7,6 +7,16 @@ import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
 import {pushModalLight, popModalLight, copyEvent} from './simple_events.js';
 
+export * from './ui_theme.js';
+
+import {DefaultTheme} from './theme.js';
+export let theme = {};
+
+//load default theme
+for (let k in DefaultTheme) {
+  theme[k] = DefaultTheme[k];
+}
+
 let Vector4 = vectormath.Vector4;
 
 export let Icons = {};
@@ -33,61 +43,6 @@ export function setIconMap(icons) {
   }
 }
 
-export function parsepx(css) {
-  return parseFloat(css.trim().replace("px", ""))
-}
-
-export function color2css(c, alpha_override) {
-  let r = ~~(c[0]*255);
-  let g = ~~(c[1]*255);
-  let b = ~~(c[2]*255);
-  let a = c.length < 4 ? 1.0 : c[3];
-  
-  a = alpha_override !== undefined ? alpha_override : a;
-  
-  if (c.length == 3 && alpha_override === undefined) {
-    return `rgb(${r},${g},${b})`;
-  } else {
-    return `rgba(${r},${g},${b}, ${a})`;
-  }
-}
-window.color2css = color2css;
-
-let css2color_rets = util.cachering.fromConstructor(Vector4, 64);
-let cmap = {
-  red : [1, 0, 0, 1],
-  green : [0, 1, 0, 1],
-  blue : [0, 0, 1, 1],
-  yellow : [1, 1, 0, 1],
-  white : [1, 1, 1, 1],
-  black : [0, 0, 0, 1],
-  grey : [0.7, 0.7, 0.7, 1],
-  teal : [0, 1, 1, 1],
-  orange : [1,0.55,0.25,1],
-  brown  : [0.7, 0.4, 0.3, 1]
-};
-
-export function css2color(color) {
-  let ret = css2color_rets.next();
-  
-  if (color in cmap) {
-    return ret.load(cmap[color]);
-  }
-  
-  color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",")
-  
-  for (let i=0; i<color.length; i++) {
-    ret[i] = parseFloat(color[i]);
-    if (i < 3) {
-      ret[i] /= 255;
-    }
-  }
-  
-  return ret;
-}
-
-window.css2color = css2color
-
 export const EnumProperty = toolprop.EnumProperty;
 
 export const ErrorColors = {
@@ -95,191 +50,6 @@ export const ErrorColors = {
   ERROR : "red",
   OK : "green"
 };
-
-export class CSSFont {
-  constructor(args) {
-    this.size = args.size;
-    this.font = args.font;
-    this.style = args.style !== undefined ? args.style : "normal";
-    this.weight = args.weight !== undefined ? args.weight : "normal";
-    this.variant = args.variant !== undefined ? args.variant : "normal";
-    this.color = args.color;
-  }
-
-  copyTo(b) {
-    b.size = this.size;
-    b.font = this.font;
-    b.style = this.style;
-    b.color = this.color;
-  }
-
-  copy() {
-    return new CSSFont(this);
-  }
-
-  genCSS(size=this.size) {
-    return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
-  }
-  
-  hash() {
-    return this.genCSS + ":" + this.size + ":" + this.color;
-  }
-}
-
-export const theme = {
-  base : {
-    //used for by icon strips and the like
-    "oneAxisPadding" : 6,
-    "oneAxisMargin" : 6,
-
-    "BasePackFlag" : 0,
-    "ScreenBorderOuter" : "rgba(255, 255, 255, 1.0)",
-    "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
-
-    "numslider_width" : 24,
-    "numslider_height" : 24,
-
-    "defaultWidth" : 32,
-    "defaultHeight" : 32,
-
-    "NoteBG" : "rgba(220, 220, 220, 0.0)",
-    "NoteText" : new CSSFont({
-      font  : "sans-serif",
-      size  : 12,
-      color :  "rgba(135, 135, 135, 1.0)",
-      weight : "bold"
-    }),
-
-    "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-    "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
-    "TabInactive" : "rgba(150, 150, 150, 1.0)",
-    "TabHighlight" : "rgba(50, 50, 50, 0.2)",
-
-    "DefaultPanelBG" : "rgba(155, 155, 155, 1.0)",
-    "InnerPanelBG" : "rgba(140, 140, 140, 1.0)",
-
-    "BoxRadius" : 12,
-    "BoxMargin" : 4,
-    "BoxDrawMargin" : 2, //how much to shrink rects drawn by drawRoundBox
-    "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
-    "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
-    "BoxBG" : "rgba(170, 170, 170, 1.0)",
-    "DisabledBG" : "rgba(110, 110, 110, 1.0)",
-    "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
-    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
-    "BoxBorder" : "rgba(255, 255, 255, 1.0)",
-    "MenuBG" : "rgba(250, 250, 250, 1.0)",
-    "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-    "AreaHeaderBG" : "rgba(170, 170, 170, 1.0)",
-
-    //fonts
-    "DefaultText" : new CSSFont({
-      font  : "sans-serif",
-      size  : 14,
-      color :  "rgba(35, 35, 35, 1.0)",
-      weight : "bold"
-    }),
-
-    "TabText" : new CSSFont({
-      size     : 18,
-      color    : "rgba(35, 35, 35, 1.0)",
-      font     : "sans-serif",
-      //weight   : "bold"
-    }),
-
-    "LabelText" : new CSSFont({
-      size     : 13,
-      color    : "rgba(75, 75, 75, 1.0)",
-      font     : "sans-serif",
-      weight   : "bold"
-    }),
-
-    "HotkeyText" : new CSSFont({
-      size     : 12,
-      color    : "rgba(130, 130, 130, 1.0)",
-      font     : "courier"
-      //weight   : "bold"
-    }),
-
-    "MenuText" : new CSSFont({
-      size     : 12,
-      color    : "rgba(25, 25, 25, 1.0)",
-      font     : "sans-serif"
-      //weight   : "bold"
-    }),
-
-    "TitleText" : new CSSFont({
-      size     : 16,
-      color    : "rgba(55, 55, 55, 1.0)",
-      font     : "sans-serif",
-      weight   : "bold"
-    }),
-  },
-
-  button : {
-    "defaultWidth" : 100,
-    "defaultHeight" : 24
-  },
-  iconcheck : {
-
-  },
-
-  checkbox : {
-  },
-
-  iconbutton : {
-
-  },
-
-  numslider : {
-    "defaultWidth" : 100,
-    "defaultHeight" : 29
-  },
-
-  numslider_simple : {
-    BoxBG : "rgb(125, 125, 125)",
-    BoxBorder : "rgb(75, 75, 75)",
-    SlideHeight : 18,
-    DefaultWidth : 125,
-    DefaultHeight : 32,
-    BoxRadius : 5,
-    TextBoxWidth : 40
-  },
-
-  colorfield : {
-    fieldsize : 32,
-    defaultWidth : 200,
-    defaultHeight : 200,
-    hueheight : 24,
-    colorBoxHeight : 24,
-    circleSize : 4,
-    DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
-  },
-
-  listbox : {
-    DefaultPanelBG : "rgba(230, 230, 230, 1.0)",
-    ListHighlight : "rgba(155, 220, 255, 0.5)",
-    ListActive : "rgba(200, 205, 215, 1.0)",
-    width : 110,
-    height : 200
-  },
-
-  dopesheet : {
-    treeWidth : 100,
-    treeHeight : 600
-  },
-
-  colorpickerbutton : {
-    defaultWidth  : 100,
-    defaultHeight : 25,
-    defaultFont   : "LabelText"
-  },
-
-  dropbox : {
-    dropTextBG : "rgba(250, 250, 250, 0.7)" //if undefined, will use BoxBG
-  }
-};
-
 
 export function setTheme(theme2) {
   //merge theme
@@ -315,7 +85,7 @@ export function getDefault(key, elem) {
   }
 }
 
-//XXX remember to set this properly
+//XXX implement me!
 export function IsMobile() {
   return false;
 };

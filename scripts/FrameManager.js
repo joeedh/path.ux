@@ -803,7 +803,7 @@ export class Screen extends ui_base.UIBase {
       }
 
       if (elem !== node) {
-        console.log("Overlapping leaf UI elements detected:", elem, node);
+        //console.log("Overlapping leaf UI elements detected:", elem, node);
       }
 
       if (!(elem._id in visit2)) {
