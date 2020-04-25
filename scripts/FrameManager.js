@@ -791,6 +791,8 @@ export class Screen extends ui_base.UIBase {
       rec(popup);
     }
 
+    let nodes2 = nodes;
+    /*
     let nodes2 = [];
     let visit2 = {};
 
@@ -811,6 +813,7 @@ export class Screen extends ui_base.UIBase {
         nodes2.push(elem);
       }
     }
+    //*/
 
     //console.log("nodes2", nodes2);
     for (let i=0; i<nodes2.length; i++) {
@@ -819,6 +822,8 @@ export class Screen extends ui_base.UIBase {
       n.tabIndex = i + 1;
       //console.log(n.tabIndex);
     }
+
+    console.log("done");
   }
 
   drawUpdate() {

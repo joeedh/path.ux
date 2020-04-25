@@ -403,11 +403,16 @@ export class EnumProperty extends ToolProperty {
     }
     
     for (var k in this.values) {
-      var uin = k[0].toUpperCase() + k.slice(1, k.length);
-      
-      uin = uin.replace(/\_/g, " ");
-      this.ui_value_names[k] = uin;
-      this.descriptions[k] = uin;
+      let uin = k.replace(/\[_-]/g, " ").trim();
+      uin = uin.split(" ")
+      let uiname = "";
+
+      for (let word of uin) {
+        uiname += word[0].toUpperCase() + word.slice(1, word.length).toLowerCase();
+      }
+
+      this.ui_value_names[k] = uiname;
+      this.descriptions[k] = uiname;
     }
     
     this.iconmap = {};

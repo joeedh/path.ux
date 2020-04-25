@@ -1469,7 +1469,29 @@ function get_measure_canvas() {
   return _mc;
 }
 
-export function measureText(elem, text, canvas=undefined, g=undefined, size=undefined, font=undefined) {
+export function measureTextBlock(elem, text, canvas=undefined,
+                                 g=undefined, size=undefined, font=undefined) {
+  let lines = text.split("\n");
+
+  let ret = {
+    width : 0,
+    height : 0
+  };
+
+  if (size === undefined) {
+    size = elem.getDefault("DefaultText").size;
+  }
+
+  for (let line of lines) {
+    ret.width = Math.max(ret.width, measureText(elem, line, canvas, g, size, font).width);
+    ret.height += Math.ceil(size*1.2+0.5);
+  }
+
+  return ret;
+}
+
+export function measureText(elem, text, canvas=undefined,
+                            g=undefined, size=undefined, font=undefined) {
   if (g === undefined) {
     canvas = get_measure_canvas();
     g = canvas.g;

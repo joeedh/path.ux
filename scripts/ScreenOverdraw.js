@@ -134,10 +134,13 @@ export class Overdraw extends ui_base.UIBase {
       }
 
       //console.log(size);
+      let tsize = ui_base.measureTextBlock(this, text, undefined, undefined, size, font);
+
       box.minsize = [
-        ~~ui_base.measureText(this, text, undefined, undefined, undefined, font).width,
-        ~~(size*1.33)
+        ~~tsize.width,
+        ~~tsize.height
       ];
+
       let pad = ui_base.parsepx(box.style["padding"]);
 
       box.minsize[0] += pad*2;
@@ -298,6 +301,10 @@ export class Overdraw extends ui_base.UIBase {
 
     box.style["left"] = x + "px";
     box.style["top"] = y + "px";
+
+    box.style["display"] = "flex";
+    box.style["justify-content"] = "center";
+    box.style["align-items"] = "center";
 
     box.innerText = text;
     box.style["font"] = args.font;

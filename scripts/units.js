@@ -227,6 +227,11 @@ Unit.register(MileUnit);
 export function setBaseUnit(unit) {
   Unit.baseUnit = unit;
 }
+export function setMetric(val) {
+  Unit.isMetric = val;
+}
+
+Unit.isMetric = true;
 Unit.baseUnit = "meter";
 
 export function parseValue(string) {

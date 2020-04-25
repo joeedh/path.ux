@@ -1412,9 +1412,17 @@ export class IconCheck extends Button {
   _redraw() {
     this._repos_canvas();
     
-    this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
+    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
+    if (this._checked) {
+      this._highlight = false;
+    }
+
     //
+    let pressed = this._pressed;
+    this._pressed = this._checked;
     super._redraw(false);
+    this._pressed = pressed;
+
     let icon = this._icon;
     
     if (this._checked && this._icon_pressed !== undefined) {

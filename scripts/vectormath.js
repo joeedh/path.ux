@@ -350,7 +350,7 @@ export class Matrix4 {
     return this;
   }
 
-  scale(x, y, z) {
+  scale(x, y, z, w=1.0) {
     if (typeof x=='object'&&"length" in x) {
         var t=x;
         x = t[0];
@@ -380,6 +380,7 @@ export class Matrix4 {
     matrix.$matrix.m11 = x;
     matrix.$matrix.m22 = y;
     matrix.$matrix.m33 = z;
+    matrix.$matrix.m44 = w;
     this.multiply(matrix);
   }
   
@@ -661,6 +662,8 @@ export class Matrix4 {
   }
 
   ortho(left, right, bottom, top, near, far) {
+    console.warn("Matrix4.ortho() is deprecated, use .orthographic() instead");
+
     var tx=(left+right)/(left-right);
     var ty=(top+bottom)/(top-bottom);
     var tz=(far+near)/(far-near);
@@ -708,6 +711,19 @@ export class Matrix4 {
     matrix.$matrix.m44 = 0;
     this.isPersp = true;
     this.multiply(matrix);
+  }
+
+  orthographic(scale, aspect, near, far) {
+    let mat = new Matrix4();
+
+    let zscale = far - near;
+
+    mat.scale(2.0/aspect, 2.0, -1.0/scale/zscale, 1.0/scale);
+    mat.translate(0.0, 0.0, 0.5*zscale - near);
+
+    this.isPersp = true; //we still make use of homogenous divide
+    this.multiply(mat);
+    return mat;
   }
 
   perspective(fovy, aspect, zNear, zFar) {

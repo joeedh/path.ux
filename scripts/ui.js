@@ -815,8 +815,8 @@ export class Container extends ui_base.UIBase {
           ret.description = tooltip;
         }
       } else {
-        for (let k in prop.keys) {
-          let name = prop.ui_key_names[k];
+        for (let k in prop.values) {
+          let name = prop.ui_value_names[k];
           let tooltip = prop.descriptions[k];
 
           if (name === undefined) {
@@ -901,7 +901,7 @@ export class Container extends ui_base.UIBase {
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {
-          let check = frame.check(inpath + " == " + prop.values[key], "", packflag);
+          let check = frame.check(inpath + "["+key+"]", "", packflag);
 
           check.icon = prop.iconmap[key];
           check.drawCheck = false;
