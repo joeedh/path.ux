@@ -1502,7 +1502,9 @@ define('struct_parser',[
     T_TSTRUCT : 10,
     T_ARRAY   : 11,
     T_ITER    : 12,
-    T_SHORT   : 13
+    T_SHORT   : 13,
+    T_BYTE    : 14,
+    T_BOOL    : 15
   };
   
   var StructTypes = exports.StructTypes = {
@@ -1515,7 +1517,9 @@ define('struct_parser',[
     "abstract": StructEnum.T_TSTRUCT, 
     "array": StructEnum.T_ARRAY, 
     "iter": StructEnum.T_ITER,
-    "short": StructEnum.T_SHORT
+    "short": StructEnum.T_SHORT,
+    "byte": StructEnum.T_BYTE,
+    "bool": StructEnum.T_BOOL
   };
   
   var StructTypeMap = exports.StructTypeMap = {};
@@ -1534,12 +1538,12 @@ define('struct_parser',[
   
   function StructParser() {
     var basic_types=new struct_util.set([
-      "int", "float", "double", "string", "short"
+      "int", "float", "double", "string", "short", "byte", "bool"
     ]);
     
     var reserved_tokens=new struct_util.set([
       "int", "float", "double", "string", "static_string", "array", 
-      "iter", "abstract", "short"
+      "iter", "abstract", "short", "byte", "bool"
     ]);
   
     function tk(name, re, func) {
@@ -1963,6 +1967,14 @@ define('struct_intern',[
     packer_debug("short "+val);
     
     struct_binpack.pack_short(data, Math.floor(val));
+  }, function pack_byte(data, val) {
+    packer_debug("byte "+val);
+    
+    struct_binpack.pack_byte(data, Math.floor(val));
+  }, function pack_bool(data, val) {
+    packer_debug("bool "+val);
+    
+    struct_binpack.pack_byte(data, !!val);
   }];
   
   function do_pack(data, val, obj, thestruct, field, type) {
@@ -2471,7 +2483,19 @@ define('struct_intern',[
           packer_debug("-short "+ret);
           
           return ret;
-        }
+        }, function t_byte(type) {
+          var ret=struct_binpack.unpack_byte(data, uctx);
+          
+          packer_debug("-byte "+ret);
+          
+          return ret;
+        }, function t_bool(type) {
+          var ret=struct_binpack.unpack_byte(data, uctx);
+          
+          packer_debug("-bool "+ret);
+          
+          return !!ret;
+        }          
       ];
       
       function unpack_field(type) {

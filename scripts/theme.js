@@ -17,6 +17,9 @@ export const DefaultTheme = {
 
     "defaultWidth" : 32,
     "defaultHeight" : 32,
+    
+    "ProgressBarBG" : "rgba(110, 110, 110, 1.0)",
+    "ProgressBar" : "rgba(75, 175, 255, 1.0)",
 
     "NoteBG" : "rgba(220, 220, 220, 0.0)",
     "NoteText" : new CSSFont({

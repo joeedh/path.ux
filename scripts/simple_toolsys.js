@@ -13,7 +13,7 @@ export let ToolClasses = [];
 export class ContextExample {
   constructor() {
   }
-  
+
   execTool(tool) {
     return this.state.toolstack.execTool(tool);
   }
