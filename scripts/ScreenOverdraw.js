@@ -315,7 +315,24 @@ export class Overdraw extends ui_base.UIBase {
 
     return box;
   }
-  
+
+  circle(p, r, stroke="black", fill="none") {
+    let circle = document.createElementNS(SVG_URL, "circle");
+    circle.setAttribute("cx", p[0]);
+    circle.setAttribute("cy", p[1]);
+    circle.setAttribute("r", r);
+
+    if (fill) {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
+    } else {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
+    }
+
+    this.svg.appendChild(circle);
+
+    return circle;
+  }
+
   line(v1, v2, color="black") {
     let line = document.createElementNS(SVG_URL, "line");
     line.setAttribute("x1", v1[0]);
