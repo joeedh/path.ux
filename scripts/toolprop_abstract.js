@@ -6,7 +6,6 @@ that any tool property library must implement to interface with path.ux.
 */
 
 //maps prop type names to integers
-import {ToolProperty} from "./toolprop.js";
 import * as util from "./util.js";
 
 export let PropTypes = {
@@ -15,14 +14,15 @@ export let PropTypes = {
   BOOL : 4,
   ENUM : 8,
   FLAG : 16,
-  //ITER : 32,
+  FLOAT : 32,
   VEC2 : 64,
   VEC3 : 128,
   VEC4 : 256,
   MATRIX4 : 512,
   QUAT : 1024,
   PROPLIST : 4096,
-  STRSET : 8192
+  STRSET : 8192,
+  //ITER : 8192<<1
 };
 
 export const PropSubTypes = {

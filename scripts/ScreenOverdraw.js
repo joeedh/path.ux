@@ -253,10 +253,6 @@ export class Overdraw extends ui_base.UIBase {
   }
 
   text(text, x, y, args={}) {
-    if (typeof color === "object") {
-      color = ui_base.color2css(color);
-    }
-
     args = Object.assign({}, args);
 
     if (args.font === undefined) {
@@ -271,6 +267,9 @@ export class Overdraw extends ui_base.UIBase {
     }
 
     args.color = args.color ? args.color : "white";
+    if (typeof args.color === "object") {
+      args.color = ui_base.color2css(args.color);
+    }
 
     args["padding"] = args["padding"] === undefined ? "5px" : args["padding"];
     args["border-color"] = args["border-color"] ? args["border-color"] : "grey";
