@@ -1,5 +1,5 @@
 import * as util from './util.js';
-import '../scripts/struct.js';
+import './struct.js';
 
 var sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
     asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,

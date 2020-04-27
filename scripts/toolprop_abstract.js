@@ -118,7 +118,7 @@ export class FloatProperty extends ToolPropertyIF {
 }
 
 export class EnumProperty extends ToolPropertyIF {
-  constructor(valid_values) {
+  constructor(value, valid_values) {
     super(PropTypes.ENUM);
 
     this.values = {}

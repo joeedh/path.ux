@@ -533,8 +533,9 @@ export class TabBar extends UIBase {
       
     let r = this.r;
     this._layout();
-    
-    for (let tab of this.tabs) {
+    let tab;
+
+    for (tab of this.tabs) {
       if (tab === this.tabs.active)
         continue;
 
@@ -588,7 +589,7 @@ export class TabBar extends UIBase {
     let th = tsize;
     
     //draw active tab
-    let tab = this.tabs.active;
+    tab = this.tabs.active;
     if (tab === undefined) {
       return;
     } else {

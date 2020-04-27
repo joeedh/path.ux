@@ -527,7 +527,7 @@ export function fetch_file(path) {
     });
 }
 
-//from: https://en.wikipedia.org/wiki/Mersenne_Twister
+//from:https://en.wikipedia.org/wiki/Mersenne_Twister
 function _int32(x) {
   // Get the 31 least significant bits.
   return ~~(((1<<30)-1) & (~~x))

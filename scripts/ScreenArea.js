@@ -256,10 +256,13 @@ export class Area extends ui_base.UIBase {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
+
     return container.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
       let cls = areaclasses[id];
       this.owning_sarea.switch_editor(cls);
     }, icons);
+
+    //return areas;
   }
 
   makeHeader(container, add_note_area=true) {
@@ -391,7 +394,7 @@ export class Area extends ui_base.UIBase {
       touchend(e);        
     }, false);
 
-    this.makeAreaSwitcher(row);
+    this.switcher = this.makeAreaSwitcher(row);
 
     if (add_note_area) {
       let notef = document.createElement("noteframe-x");

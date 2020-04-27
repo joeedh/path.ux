@@ -694,8 +694,6 @@ export class DropBox extends Button {
   }
 
   _onpress(e) {
-    //console.log("menu dropbox click");
-
     if (this._menu !== undefined) {
       this._menu.close();
       this._menu = undefined;
@@ -703,7 +701,9 @@ export class DropBox extends Button {
     }
 
     this._build_menu();
-    
+
+    console.log("menu dropbox click", this._menu);
+
     if (this._menu === undefined) {
       return;
     }
