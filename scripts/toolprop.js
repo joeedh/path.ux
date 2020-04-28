@@ -191,7 +191,7 @@ export class StringProperty extends ToolProperty {
   
   copyTo(b) {
     super.copyTo(b);
-    b.value = this.value;
+    b.data = this.data;
     
     return this;
   }
@@ -205,7 +205,6 @@ export class StringProperty extends ToolProperty {
   setValue(val) {
     //fire events
     super.setValue(val);
-    
     this.data = val;
   }
 }  
@@ -288,7 +287,13 @@ export class IntProperty extends ToolProperty {
     
     return this;
   }
-  
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data = this.data;
+    return this;
+  }
+
   setStep(step) {
     super.setStep(Math.floor(step));
   }
@@ -359,7 +364,13 @@ export class FloatProperty extends ToolProperty {
     this.decimalPlaces = n;
     return this;
   }
-  
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.data = this.data;
+    return this;
+  }
+
   setValue(val) {
     this.data = val;
     
@@ -664,8 +675,10 @@ export class ListProperty extends ToolProperty {
   /*
   * Prop must be a ToolProperty subclass instance
   * */
-  constructor(prop) {
+  constructor(prop, list=[], uiname="") {
     super(PropTypes.PROPLIST);
+
+    this.uiname = uiname;
 
     if (typeof prop == "number") {
       prop = PropClasses[prop];
@@ -684,12 +697,17 @@ export class ListProperty extends ToolProperty {
 
     this.prop = prop;
     this.value = [];
+
+    for (let val of list) {
+      this.push(val);
+    }
   }
 
   copyTo(b) {
     super.copyTo(b);
 
     b.prop = this.prop.copy();
+
     for (let prop of this.value) {
       b.value.push(prop.copy());
     }
@@ -782,6 +800,8 @@ export class StringSetProperty extends ToolProperty {
       for (let k in def) {
         values.push(k);
       }
+    } else if (typeof def === "string") {
+      values.push(def);
     }
 
     this.values = {};
@@ -901,7 +921,9 @@ export class StringSetProperty extends ToolProperty {
   copyTo(b) {
     super.copyTo(b);
 
-    b.value = this.value.copy();
+    for (let val of this.value) {
+      b.value.add(val);
+    }
     
     b.values = {};
     for (let k in this.values) {

@@ -280,7 +280,7 @@ export class AreaResizeTool extends ToolBase {
   }
 }
 
-controller.registerTool(AreaResizeTool);
+//controller.registerTool(AreaResizeTool);
 
 export class SplitTool extends ToolBase {
   constructor(screen) {
@@ -410,7 +410,7 @@ export class SplitTool extends ToolBase {
   }
 }
 
-controller.registerTool(SplitTool);
+//controller.registerTool(SplitTool);
 
 
 export class AreaDragTool extends ToolBase {
@@ -813,4 +813,4 @@ export class AreaDragTool extends ToolBase {
   }
 }
 
-controller.registerTool(AreaDragTool);
+//controller.registerTool(AreaDragTool);

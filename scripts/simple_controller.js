@@ -1227,7 +1227,6 @@ export class DataAPI extends ModelInterface {
       args = {};
     }
 
-    console.log(cls);
     let tool = cls.invoke(ctx, args);
 
     if (inputs !== undefined) {

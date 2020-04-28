@@ -757,8 +757,6 @@ export class Screen extends ui_base.UIBase {
   }
 
   calcTabOrder() {
-    console.warn("Recalculating tab order");
-
     let nodes = [];
     let visit = {};
 
@@ -822,8 +820,6 @@ export class Screen extends ui_base.UIBase {
       n.tabIndex = i + 1;
       //console.log(n.tabIndex);
     }
-
-    console.log("done");
   }
 
   drawUpdate() {
@@ -1141,8 +1137,6 @@ export class Screen extends ui_base.UIBase {
   on_resize(size) {
     size[0] = ~~size[0];
     size[1] = ~~size[1];
-
-    console.trace("this.size", this.size, "newsize", size);
 
     let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
 

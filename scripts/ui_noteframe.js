@@ -325,6 +325,15 @@ export function sendNote(screen, msg, color, timeout=1000) {
 
 window._sendNote = sendNote;
 
-export function warning(screen, msg, timeout=1000) {
+export function error(screen, msg, timeout=1000) {
   return sendNote(screen, msg, ui_base.color2css([1.0, 0.0, 0.0, 1.0]), timeout);
 }
+
+export function warning(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, ui_base.color2css([0.78, 0.78, 0.2, 1.0]), timeout);
+}
+
+export function message(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, ui_base.color2css([0.4, 1.0, 0.5, 1.0]), timeout);
+}
+

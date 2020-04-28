@@ -6,6 +6,7 @@ a basic, simple tool system implementation
 import * as util from './util.js';
 import * as events from './events.js';
 import {keymap} from './simple_events.js';
+import {PropTypes} from './toolprop.js';
 
 export let ToolClasses = [];
 
@@ -83,7 +84,30 @@ export class ToolOp extends events.EventHandler {
   
   //creates a new instance from args
   static invoke(ctx, args) {
-    return new this();
+    let tool = new this();
+
+    for (let k in args) {
+      if (!(k in tool.inputs)) {
+        console.warn("Unknown tool argument " + k);
+        continue;
+      }
+
+      let prop = tool.inputs[k];
+      let val = args[k];
+
+      if ((typeof val === "string") && prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
+        if (val in prop.values) {
+          val = prop.values[val];
+        } else {
+          console.warn("Possible invalid enum/flag:", val);
+          continue;
+        }
+      }
+
+      tool.inputs[k].setValue(val);
+    }
+
+    return tool;
   }
   
   static register(cls) {
@@ -520,7 +544,6 @@ export class ToolStack extends Array {
       
       this[this.cur].undo(this.ctx);
       this.cur--;
-      this.ctx.save();
     }
   }
   
@@ -534,7 +557,6 @@ export class ToolStack extends Array {
       this[this.cur].execPre(this.ctx);
       this[this.cur].exec(this.ctx);
       this[this.cur].execPost(this.ctx);
-      this.ctx.save();
     }
   }
 }

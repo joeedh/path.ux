@@ -125,7 +125,7 @@ export class ModelInterface {
       
       //execute
       try {
-        ctx.state.toolstack.execTool(tool);
+        ctx.state.toolstack.execTool(tool, ctx);
       } catch (error) { //for some reason chrome is suppressing errors
         print_stack(error);
         throw error;
