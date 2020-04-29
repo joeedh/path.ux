@@ -10,7 +10,7 @@ let PUTLParseError = parseutil.PUTLParseError;
 let tk = (name, re, func) => new parseutil.tokdef(name, re, func);
 let tokens = [
   tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
-  tk("NUM", /[0-9]+/, (t) => {
+  tk("NUM", /-?[0-9]+/, (t) => {
     t.value = parseInt(t.value);
     return t;
   }),
@@ -47,6 +47,7 @@ import {initToolPaths, parseToolPath} from './toolpath.js';
 export {DataPathError, DataFlags} from './controller.js';
 
 import {ToolClasses} from './simple_toolsys.js';
+import {ToolProperty, IntProperty} from "./toolprop.js";
 
 let tool_classes = ToolClasses;
 
@@ -74,12 +75,14 @@ export class DataPath {
     this.data = prop;
     this.apiname = apiname;
     this.path = path;
+    this.flag = 0;
     this.struct = undefined;
   }
 
   copy() {
     let ret = new DataPath();
 
+    ret.flag = this.flag;
     ret.type = this.type;
     ret.data = this.data;
     ret.apiname = this.apiname;
@@ -321,6 +324,27 @@ export class DataStruct {
     }
   }
 
+  copy() {
+    let ret = new DataStruct();
+
+    ret.name = this.name;
+    ret.flag = this.flag;
+
+    for (let m of this.members) {
+      let m2 = m.copy();
+
+      //don't copy struct or list references, just
+      //direct properties
+
+      if (m2.type === DataTypes.PROP) {
+        m2.data = m2.data.copy();
+      }
+
+      ret.add(m2);
+    }
+
+    return ret;
+  }
   /**
    * Like .struct, but the type of struct is looked up
    * for objects at runtime.  Note that to work correctly each object
@@ -558,6 +582,8 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 
 let _dummypath = new DataPath();
 
+let DummyIntProperty = new IntProperty();
+
 export class DataAPI extends ModelInterface {
   constructor() {
     super();
@@ -582,6 +608,20 @@ export class DataAPI extends ModelInterface {
     }
   }
 
+  inheritStruct(cls, parent, auto_create_parent = false) {
+    let st = this.mapStruct(parent, auto_create_parent);
+
+    if (st === undefined) {
+      throw new Error("parent has no struct definition");
+    }
+
+    st = st.copy();
+    st.name = cls.name;
+
+    this._addClass(cls, st);
+    return st;
+  }
+
   /**
    * Look up struct definition for a class.
    *
@@ -589,6 +629,13 @@ export class DataAPI extends ModelInterface {
    * @param auto_create: If true, automatically create definition if not already existing.
    * @returns {IterableIterator<*>}
    */
+
+  _addClass(cls, dstruct) {
+    let key =  _map_struct_idgen++;
+    cls.__dp_map_id = key;
+
+    _map_structs[key] = dstruct;
+  }
 
   mapStruct(cls, auto_create = true) {
     let key;
@@ -600,10 +647,11 @@ export class DataAPI extends ModelInterface {
     }
 
     if (key === undefined && auto_create) {
-      key = cls.__dp_map_id = _map_struct_idgen++;
-      _map_structs[key] = new DataStruct(undefined, cls.name);
+      let dstruct = new DataStruct(undefined, cls.name);
+      this._addClass(cls, dstruct);
+      return dstruct;
     } else if (key === undefined) {
-      return undefined;
+      throw new Error("class does not have a struct definition: " + cls.name);
     }
 
     return _map_structs[key];
@@ -657,7 +705,29 @@ export class DataAPI extends ModelInterface {
       let path = dstruct.pathmap[key];
 
       if (path === undefined) {
-        if (prop !== undefined && prop instanceof DataList && key == "active") {
+        if (prop !== undefined && prop instanceof DataList && key === "length") {
+          prop.getLength(this, obj);
+          key = "length";
+
+          prop = DummyIntProperty;
+
+          prop.name = "length";
+          prop.flag = PropFlags.READ_ONLY;
+
+          path = _dummypath;
+          path.type = DataTypes.PROP;
+          path.data = prop;
+          path.struct = path.parent = dstruct;
+          path.flag = DataFlags.READ_ONLY;
+          path.path = "length";
+
+          /*
+          parent: lastobj2,
+            obj: lastobj,
+            value: obj,
+            key: lastkey,
+            //*/
+        } else if (prop !== undefined && prop instanceof DataList && key === "active") {
           let act = prop.getActive(this, obj);
 
           if (act === undefined && !ignoreExistence) {
@@ -837,7 +907,7 @@ export class DataAPI extends ModelInterface {
       } else if (t.type === "LSBRACKET") {
         p.expect("LSBRACKET")
 
-        if (lastkey && typeof lastkey === "string" && lastkey.length > 0) {
+        if (lastobj && lastkey && typeof lastkey === "string" && lastkey.length > 0) {
           lastobj = lastobj[lastkey];
         }
 

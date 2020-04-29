@@ -1508,6 +1508,8 @@ export class PanelFrame extends ColumnFrame {
 
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
+    row.style["padding-top"] = "7px";
+    row.style["padding-bottom"] = "5px";
 
     this.contents.ctx = this.ctx;
     this.add(this.contents);

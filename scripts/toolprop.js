@@ -37,7 +37,8 @@ export const PropFlags = {
   SELECT            : 1,
   USE_ICONS         : 64,
   USE_CUSTOM_GETSET : 128, //used by controller.js interface
-  SAVE_LAST_VALUE   : 256
+  SAVE_LAST_VALUE   : 256,
+  READ_ONLY         : 512
 };
 
 export let customPropertyTypes = [];
@@ -152,6 +153,10 @@ export class ToolProperty extends ToolPropertyIF {
     b.flag = this.flag;
     b.icon = this.icon;
     b.subtype = this.subtype;
+
+    for (let k in this.callbacks) {
+      b.callbacks[k] = this.callbacks[k];
+    }
   }
   
   copy() { //default copy method
@@ -464,9 +469,8 @@ export class EnumProperty extends ToolProperty {
     p.update = this.update;
     p.api_update = this.api_update;
     
-    for (var k in this.iconmap) {
-      p.iconmap[k] = this.iconmap[k];
-    }
+    p.iconmap = this.iconmap;
+    p.descriptions = this.descriptions;
     
     return p;
   }

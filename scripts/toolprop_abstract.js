@@ -35,7 +35,8 @@ export var PropFlags = {
   PRIVATE   : 2,
   LABEL     : 4,
   USE_ICONS : 64,
-  USE_CUSTOM_GETSET : 128 //used by controller.js interface
+  USE_CUSTOM_GETSET : 128, //used by controller.js interface
+  READ_ONLY         : 512
 };
 
 export class ToolPropertyIF {
