@@ -30,12 +30,13 @@ export const PropSubTypes = {
 };
 
 //flags
-export var PropFlags = {
-  SELECT    : 1,
-  PRIVATE   : 2,
-  LABEL     : 4,
-  USE_ICONS : 64,
+export const PropFlags = {
+  SELECT            : 1,
+  PRIVATE           : 2,
+  LABEL             : 4,
+  USE_ICONS         : 64,
   USE_CUSTOM_GETSET : 128, //used by controller.js interface
+  SAVE_LAST_VALUE   : 256,
   READ_ONLY         : 512
 };
 

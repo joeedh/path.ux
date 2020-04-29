@@ -49,7 +49,6 @@ export class NumSliderSimple extends UIBase {
   }
 
   set value(val) {
-    console.log(val, this.range);
     val = Math.min(Math.max(val, this.range[0]), this.range[1]);
 
     if (this.isInt) {
@@ -505,3 +504,146 @@ export class NumSliderSimple2 extends ColumnFrame {
 }
 UIBase.register(NumSliderSimple2);
 
+export class VectorPanel extends ColumnFrame {
+  constructor() {
+    super();
+
+    this.range = [-1e17, 1e17];
+
+    this.name = "";
+
+    this.isInt = false;
+    this.axes = "XYZW";
+    this.value = new Vector3();
+    this.sliders = [];
+  }
+
+  init() {
+    super.init();
+    this.rebuild();
+    this.setCSS();
+
+    this.background = this.getDefault("InnerPanelBG");
+    this.style["padding"] = "5px";
+  }
+
+  rebuild() {
+    this.clear();
+
+    console.log("rebuilding");
+
+    if (this.name) {
+      this.label(this.name);
+    }
+
+    this.sliders = [];
+
+    for (let i=0; i<this.value.length; i++) {
+      //inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+
+      let slider = this.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
+      slider.axis = i;
+      let this2 = this;
+
+      slider.onchange = function(e) {
+        this2.value[this.axis] = this.value;
+
+        if (this2.hasAttribute("datapath")) {
+          this2.setPathValue(this2.ctx, this2.getAttribute("datapath"), this2.value);
+        }
+
+        if (this2.onchange) {
+          this2.onchange(this2.value);
+        }
+      }
+
+      this.sliders.push(slider);
+    }
+
+    this.setCSS();
+  }
+
+  setValue(value) {
+    if (!value) {
+      return;
+    }
+
+    if (value.length !== this.value.length) {
+      switch (value) {
+        case 2:
+          this.value = new Vector2(value);
+          break;
+        case 3:
+          this.value = new Vector3(value);
+          break;
+        default:
+          this.value = new Vector4(value);
+          break;
+      }
+
+      this.rebuild();
+    } else {
+      this.value.load(value);
+    }
+
+    if (this.onchange) {
+      this.onchange(this.value);
+    }
+
+    return this;
+  }
+
+  updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let path = this.getAttribute("datapath");
+
+    let val = this.getPathValue(this.ctx, path);
+    if (val === undefined) {
+      this.disabled = true;
+      return;
+    }
+
+
+    let meta = this.getPathMeta(this.ctx, path);
+    let name = meta.uiname !== undefined ? meta.uiname : meta.name;
+    if (this.hasAttribute("name")) {
+      name = this.getAttribute("name");
+    }
+
+    if (name && name !== this.name) {
+      this.name = name;
+      this.rebuild();
+      return;
+    }
+
+    this.disabled = false;
+
+    if (val.length !== this.value.length) {
+      //we do this to avoid copying a subclass.
+      //this.value should always be of a base Vector type.
+      this.value = meta.prop.getValue().copy().load(val);
+      this.rebuild();
+    } else {
+      if (this.value.vectorDistance(val) > 0) {
+        this.value.load(val);
+
+        for (let i=0; i<this.value.length; i++) {
+          this.sliders[i].setValue(val[i], false);
+          this.sliders[i]._redraw();
+        }
+      }
+    }
+  }
+  update() {
+    super.update();
+    this.updateDataPath();
+  }
+
+  static define() {return {
+    tagname : "vector-panel-x"
+  }}
+}
+UIBase.register(VectorPanel);

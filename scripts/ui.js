@@ -791,12 +791,24 @@ export class Container extends ui_base.UIBase {
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
-    } else if (prop.type == PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
-      if (prop.subtype == PropSubTypes.COLOR) {
+    } else if (prop.type === PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
+      if (prop.subtype === PropSubTypes.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
+        let ret = document.createElement("vector-panel-x");
 
+        if (inpath) {
+          ret.setAttribute("datapath", inpath);
+        }
+
+        if (mass_set_path) {
+          ret.setAttribute("mass_set_path", mass_set_path);
+        }
+
+        this.add(ret);
+
+        return ret;
       }
     } else if (prop.type == PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {

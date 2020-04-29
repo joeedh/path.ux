@@ -519,8 +519,10 @@ export class DataStruct {
     return dpath;
   }
 
-  int(path, apiname, uiname, description) {
-    let prop = new toolprop.IntProperty(0, apiname, uiname, description);
+  int(path, apiname, uiname, description, prop=undefined) {
+    if (!prop) {
+      prop = new toolprop.IntProperty(0, apiname, uiname, description);
+    }
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);

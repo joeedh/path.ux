@@ -23,6 +23,7 @@ import * as cconst from './const.js';
 import * as config from './config.js';
 import * as ui_menu from './ui_menu.js';
 import * as toolpath from './toolpath.js';
+import {Vector3} from "./vectormath.js";
 
 let Icons = icon_enum.Icons;
 ui_base.setIconMap(Icons);
@@ -142,8 +143,12 @@ export class CanvasArea extends ScreenArea.Area {
     //tab.slider("EXAMPLE_PARAM", "Example", 128, 1, 512, true, false);
     tab.prop("state.color");
     tab.simpleslider("state.sliderval", "sliderval");
-    tab.checkenum("state.enumval", undefined, PackFlags.VERTICAL);
-    tab.checkenum_panel("state.enumval", undefined, PackFlags.VERTICAL);
+    //tab.checkenum("state.enumval", undefined, PackFlags.VERTICAL);
+    //tab.checkenum_panel("state.enumval", undefined, PackFlags.VERTICAL);
+
+    tab.prop("state.vec3").onchange = (val) => {
+      console.log(val);
+    };
 
     tab = tabs.tab("Display");
     
@@ -256,6 +261,7 @@ export class AppState extends events.EventHandler {
     this.image = undefined;
     this.enumval = 0;
     this.sliderval = 0;
+    this.vec3 = new Vector3();
     this.color = [1, 0, 0, 1];
   }
   
@@ -267,7 +273,8 @@ export class AppState extends events.EventHandler {
     
     let stt = this.api.rootContextStruct = this.api.mapStruct(toolsys.ContextExample);
     stt = stt.struct("state", "state", "state", this.api.mapStruct(AppState));
-    
+    stt.vec3("vec3", "vec3", "vec3");
+
     let def = stt.enum("enumval",  "enumval", {A : 0, Test : 1, Triangle : 2, Bleh : 3, Yay : 4});
     def.icons({
       A : Icons.DELETE,

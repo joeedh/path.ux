@@ -1,8 +1,8 @@
 import * as util from './util.js';
 import {Vector2, Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
-import {ToolPropertyIF, PropTypes} from "./toolprop_abstract.js";
+import {ToolPropertyIF, PropTypes, PropFlags} from "./toolprop_abstract.js";
 
-export {PropTypes} from './toolprop_abstract.js';
+export {PropTypes, PropFlags} from './toolprop_abstract.js';
 
 let first = (iter) => {
   if (iter === undefined) {
@@ -31,14 +31,6 @@ export function setPropTypes(types) {
 
 export const PropSubTypes = {
   COLOR : 1
-};
-
-export const PropFlags = {
-  SELECT            : 1,
-  USE_ICONS         : 64,
-  USE_CUSTOM_GETSET : 128, //used by controller.js interface
-  SAVE_LAST_VALUE   : 256,
-  READ_ONLY         : 512
 };
 
 export let customPropertyTypes = [];
@@ -79,6 +71,11 @@ export class ToolProperty extends ToolPropertyIF {
     PropTypes[cls.name] = cls.PROP_TYPE_ID;
 
     customPropertyTypes.push(cls);
+  }
+
+  private() {
+    this.flag |= PropFlags.PRIVATE;
+    return this;
   }
 
   _fire(type, arg1, arg2) {
@@ -327,6 +324,29 @@ export class BoolProperty extends ToolProperty {
     this.data = !!value;
   }
 
+  copyTo(b) {
+    super.copyTo(b);
+    b.data = this.data;
+
+    return this;
+  }
+
+  copy() {
+    let ret = new BoolProperty();
+    this.copyTo(ret);
+
+    return ret;
+  }
+
+  setValue(val) {
+    this.data = !!val;
+    return this;
+  }
+
+  getValue() {
+    return this.data;
+  }
+
   toJSON() {
     let ret = super.toJSON();
 
@@ -462,6 +482,8 @@ export class EnumProperty extends ToolProperty {
   }
 
   copyTo(p) {
+    super.copyTo(p);
+
     p.keys = Object.assign({}, this.keys);
     p.values = Object.assign({}, this.values);
     p.data = this.data;
