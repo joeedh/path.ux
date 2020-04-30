@@ -40,10 +40,8 @@ export class ContextExample {
   }
 }
 
-//XXX we don't need access to a Context class in this file, get rid of this crap
-let ContextCls = ContextExample;
 export function setContextClass(cls) {
-  ContextCls = cls;
+  console.warn("setContextClass is deprecated");
 }
 
 export const ToolFlags = {
@@ -491,7 +489,7 @@ export class ToolStack extends Array {
     super();
     
     this.cur = -1;
-    this.ctx = ctx === undefined ? new ContextCls() : ctx;  //XXX get rid of ContextCls crap
+    this.ctx = ctx;
     this.modalRunning = 0;
   }
 

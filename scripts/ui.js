@@ -177,6 +177,7 @@ export class Container extends ui_base.UIBase {
       this.inherit_packflag &= ~PackFlags.USE_ICONS;
     }
   }
+
   /**
    *
    * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse

@@ -5,6 +5,83 @@ window.tm = 0.0;
 
 var EmptySlot = {};
 
+export function getClassParent(cls) {
+  let p = cls.prototype;
+
+  if (p) p = p.__proto__;
+  if (p) p = p.constructor
+  ;
+  return p;
+}
+
+//make global for debugging purposes in console
+window._getClassParent = getClassParent;
+
+export function list(iterable) {
+  let ret = [];
+
+  for (let item of iterable) {
+    ret.push(item);
+  }
+
+  return ret;
+}
+
+/*
+* returns all object keys, including
+* inherited ones
+* */
+export function getAllKeys(obj) {
+  let keys = new Set();
+
+  if (typeof obj !== "object") {
+    throw new Error("must pass an object ot getAllKeys; object was: " + obj);
+  }
+
+  let p;
+
+  while (p && p !== Object) {
+    for (let k in Object.getOwnPropertyDescriptors(obj)) {
+      if (k === "__proto__")
+        continue;
+
+      keys.add(k);
+    }
+
+    for (let k of Object.getOwnPropertySymbols(obj)) {
+      keys.add(k);
+    }
+
+    p = p.__proto__;
+  }
+
+  let cls = obj.constructor;
+  if (!cls)
+    return keys;
+
+  while (cls) {
+    let proto = cls.prototype;
+    if (!proto) {
+      cls = getClassParent(cls);
+      continue;
+    }
+
+    for (let k in proto) {
+      keys.add(k);
+    }
+
+    for (let k in Object.getOwnPropertyDescriptors(proto)) {
+      keys.add(k);
+    }
+
+    cls = getClassParent(cls);
+  }
+
+  return keys;
+}
+
+window._getAllKeys = getAllKeys;
+
 export function btoa(buf) {
   if (buf instanceof ArrayBuffer) {
     buf = new Uint8Array(buf);
@@ -132,6 +209,15 @@ export class SetIter {
   }
 }
 
+/**
+ Set
+
+ Stores objects in a set; each object is converted to a value via
+ a [Symbol.keystr] method, and if that value already exists in the set
+ then the object is not added.
+
+
+* */
 export class set {
   constructor(input) {
     this.items = [];
@@ -161,7 +247,7 @@ export class set {
     }
   }
   
-  [Symbol.iterator]() {
+  [Symbol.iterator] () {
     return new SetIter(this);
   }
 
