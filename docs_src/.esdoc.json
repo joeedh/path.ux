@@ -2,10 +2,12 @@
   "source": "../scripts",
   "destination": "../docs",
   "index": "../docs/index.html",
+  "outputAST" : false,
   "plugins": [{
     "name": "esdoc-standard-plugin",
     "option": {
       "coverage": {"enable": true},
+      "lint": {"lint" : false},
       "accessor": {"access": ["public", "protected", "private"], "autoPrivate": true},
       "undocumentIdentifier": {"enable": true},
       "unexportedIdentifier": {"enable": false},
