@@ -1,6 +1,7 @@
 # Introduction
 
-Path.ux is a small app framework based on the Blender's architecture.
+Path.ux is a small app framework inspired by the architecture of 
+Blender, a 3D animation/modeling/visualization app.  
 
 # Architecture
 

@@ -86,6 +86,44 @@ will generate id/datapath wrappers.  The laternative is to use _save and _load m
       }
     }
 
+## Tool Contexts
 
+We encourage you to put Context properties related to the view inside
+a separate ContextOverlay.  That way you can keep ToolOps from accessing
+the view by feeding them a special context that lacks that overlay
+(but note that tools in modal mode should always get a full context). 
+
+```
+class ToolOverlay extends ContextOverlay {
+    static contextDefine() {return {
+        name : "tool"
+    }}
+    
+    get mesh() {
+        return this.state.mesh;
+    }
+    
+    get material() {
+        return this.state.material;
+    }
+}
+Context.register(ToolOverlay);
+
+class ViewOverlay extends ContextOverlay {
+    static contextDefine() {return {
+        name : "view",
+        flag : ContextFlags.IS_VIEW
+    }}
+    
+    get screen() {
+        return this.state.screen;
+    }
+    
+    get textEditor() {
+        return 
+    }
+}
+Context.register(ToolOverlay);
+```
 
 

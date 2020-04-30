@@ -1,10 +1,13 @@
 # Introduction
 
-Path.ux follows a strict model/view/controller paradigm.  The application state
-is the model, path.ux is the (or a) view, and the controller is the means by which
-path.ux queries the model.
-
-The controller is based on the concept of object paths.  
+Path.ux follows a strict model/view/controller paradigm.  The application 
+state is the model, path.ux is the (or a) view, and the controller is 
+the means by which path.ux queries the model.  In addition, there are two
+layers of controllers: the first, [Context](manual/context.html), is a simple
+(and application-defined) API to access the application state, while the
+second is small scripting language akin to Angle's data bindings and builds
+on the first.
+  
 For example, you might see code like this:
 
 ```
@@ -14,92 +17,23 @@ function makePanel(layout) {
 }
 ```
 
-The controller is responsible for telling path.ux what type "view3d.selectmode" is, 
-what its icon is, the current value, etc.  Similarly the controller tells path.ux
-what the tool view3d.select_all() is: it's icon, if it can run in the current context (more on context later),
-it's hotkey, etc.
+"View3d.selectmode" is a data path.  It's akin to an object path or Angle's data bindings.
+"View3d.select_all()" is a tool path, which is a bit different.  
 
+Note that path.ux mostly makes use of the data path controller.  It does pass
+around a (client-provided) Context instance, which is required to have the 
+following properties:
+
+- api       : a ModelInterface class (typically a simple_controller.js:DataAPI instance)
+- screen    : The current screen, a FrameManager.js:Screen instance (or subclass of)
+- toolstack : The tool stack, see simple_toolsys.js:ToolStack
+ 
 Path.ux allows different controller implementations (though they must all pass type information via the 
-classes in toolprop.js).  The included implementation can be found in "simple_controller.js", and the abstract interface
-in "controller.js".
+classes in toolprop.js).  The included implementation can be found in 
+"simple_controller.js", and the abstract interface in "controller.js".
 
 # Context
-Contexts are bundles of data that tell the UI (and tools, and whatever else needs them) the current application state.
 
-Path.ux requires the following context abstract class:
-
-```
-class Context {
-  get screen() {
-    //get current Screen instance, or instance of a subclass of it
-  }
-  
-  get area() {
-    //get active area editor
-    return Area.getActiveArea()
-  }
-  
-  get state() {
-    //get application state
-  }
-  
-  get api() {
-    //returns a subclass of controller.js:ModalInterface
-    //this is the controller
-  }
-  
-  get toolstack() {
-    //returns an instance (or subclass instance) of simple_toolsys.js:ToolStack
-  }
-}
-```
-
-To use a ctx class, simply assign an instance of one 
-to .ctx on a Screen instance.  For example:
-
-```
-let screen = document.createElement("screen-x");
-screen.ctx = new Context();
-```
-
-## Tool Contexts
-
-It's encouraged to have a restricted Context struct for the model to use, and have 
-path.ux's context subclass off of that.  This is so the model doesnt have access to 
-the screen and area properties.  For example:
-
-```
-class ToolContext {
-  get state() {
-    //get application state
-  }
-  
-  get api() {
-    //returns a subclass of controller.js:ModalInterface
-    //this is the controller
-  }
-  
-  get toolstack() {
-    //returns an instance (or subclass instance) of simple_toolsys.js:ToolStack
-  }
-  
-  get selected_3d_object() {
-    //this is how you would pass things like the current selected object in
-    //CAD apps to tool operators.
-  }
-}
-
-class Context extends ToolContext {
-  get screen() {
-    //get current Screen instance, or instance of a subclass of it
-  }
-  
-  get area() {
-    //get active area editor
-    return Area.getActiveArea()
-  }
-}
-```
 
 # History
 

@@ -32,18 +32,28 @@
     <ul class="manual-toc">
       
     <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#introduction" data-ice="link">Introduction</a></li>
-<li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#data-bindings" data-ice="link">Data Bindings</a></li>
+<li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#context" data-ice="link">Context</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/architecture.html"><a href="manual/architecture.html#tool-contexts" data-ice="link">Tool Contexts</a></li>
+<li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#history" data-ice="link">History</a></li>
 </ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/nstructjs.html"><a href="manual/nstructjs.html" data-ice="link">NStructJS</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/nstructjs.html"><a href="manual/nstructjs.html#controller-how-fields-are-saved" data-ice="link">Controller How Fields Are Saved</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/nstructjs.html"><a href="manual/nstructjs.html#versioning" data-ice="link">Versioning</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolsystem.html"><a href="manual/toolsystem.html" data-ice="link">Tool System</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolsystem.html"><a href="manual/toolsystem.html#context" data-ice="link">Context</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolsystem.html"><a href="manual/toolsystem.html#undo" data-ice="link">Undo</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolsystem.html"><a href="manual/toolsystem.html#tooldef--" data-ice="link">tooldef()</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolsystem.html"><a href="manual/toolsystem.html#tool-properties" data-ice="link">Tool Properties</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -66,10 +76,61 @@
       
     </ul>
   </div>
+<div data-ice="manual">
+    <ul class="manual-toc">
+      
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#context-design-" data-ice="link">Context design:</a></li>
+<li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#context-overlay-" data-ice="link">Context Overlay:</a></li>
+<li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#locked-contexts" data-ice="link">Locked contexts</a></li>
+</ul>
+  </div>
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><p>s</p>
+<div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><h1 id="nstructjs">NStructJS</h1><p>NStructJS is a little library for saving/loading highly structured JS objects as binary data
+(for more info, see the <a href="https://github.com/joeedh/STRUCT/wiki">official documentation</a> ).
+It is not suited for unstructed data (use JSON for that).<br>NStructJS arose out of the following shortcomings of JSON:</p>
+<ul>
+<li>JSON allocates objects twice.</li>
+<li>JSON is slow compared to what you can get with a structured binary format</li>
+</ul>
+<p>The idea of NStructJS is to attach little scripts to your classes that define that 
+class&apos;s data and how it is saved.  For example:</p>
+<pre><code><code class="source-code prettyprint">class SomeClass {
+  constructor() {
+    this.data1 = 0;
+    this.data2 = [1, 2, 3];
+  }
+
+  //reader &quot;fills in&quot; fields in a newly created object with loaded data
+  static fromSTRUCT(reader) {
+    let ret = new SomeClass();
+
+    reader(ret);
+
+    return ret;
+  }
+}
+SomeClass.STRUCT = `
+my_module.SomeClass {
+  data1 : int;
+  data2 : array;
+}
+nstructjs.manager.add_class(SomeClass);
+`;</code>
+</code></pre><h2 id="controller-how-fields-are-saved">Controller How Fields Are Saved</h2><p>Note that you can specify little code snippets to control how fields are saved.
+For example, if you want to save an integer ID instead of a reference for an 
+object property, you might do this:</p>
+<pre><code><code class="source-code prettyprint">my_module.AnotherClass {
+  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;
+}</code>
+</code></pre><p>Here, everything after &apos;|&apos; until &apos;;&apos; defines how someclass is saved.  For various dumb reasons
+&apos;this&apos; is bound to &apos;obj&apos;; as you can see, the basic idea is to check if this.someclass exists,
+if so use this.someclass.id, else use -1.</p>
+<h2 id="versioning">Versioning</h2><p>To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a
+copy of your struct scripts with each file, that way each file knows how to load itself.</p>
+<p>For more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.
+They&apos;re used when the automatic versioning from nstructjs isn&apos;t enough.</p>
 </div>
 </div>
 

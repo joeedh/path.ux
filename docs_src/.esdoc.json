@@ -29,7 +29,8 @@
           "controller.md",
           "libblock.md",
           "toolprop.md",
-          "tutorial.md"
+          "tutorial.md",
+          "context.md"
         ]
       }
     }

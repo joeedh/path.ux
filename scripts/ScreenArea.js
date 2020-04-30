@@ -53,10 +53,58 @@ export function setAreaTypes(def) {
 }
 
 export let areaclasses = {};
-let area_idgen = 0;
+class AreaWrangler {
+  constructor() {
+    this.stacks = {};
+    this.lasts = {};
+    this.lastArea = undefined;
+    this.stack = [];
+    this.idgen = 0;
+  }
 
-let laststack = [];
-let last_area = undefined;
+  push(type, area) {
+    this.lasts[type.name] = area;
+    this.lastArea = area;
+
+    if (!(type.name in this.stacks)) {
+      this.stacks[type.name] = [];
+    }
+
+    this.stacks[type.name].push(area);
+    this.stack.push(area);
+  }
+
+  pop(type, area) {
+    if (!(type.name in this.stacks)) {
+      throw new Error("pop_ctx_area called in error");
+    }
+
+    this.stacks[type.name].pop();
+    this.stack.pop();
+  }
+
+  getLastArea(type) {
+    if (type === undefined) {
+      if (this.stack.length > 0) {
+        return this.stack[this.stack.length-1];
+      } else {
+        return this.lastArea;
+      }
+    } else {
+      if (type.name in this.stacks) {
+        let stack = this.stacks[type.name];
+
+        if (stack.length > 0) {
+          return stack[stack.length-1];
+        }
+      }
+
+      return this.lasts[type.name];
+    }
+  }
+}
+
+let contextWrangler = new AreaWrangler();
 
 export const BorderMask = {
   LEFT    : 1,
@@ -94,7 +142,7 @@ export class Area extends ui_base.UIBase {
     this.inactive = true;
     
     this.owning_sarea = undefined;
-    this._area_id = area_idgen++;
+    this._area_id = contextWrangler.idgen++;
     
     this.pos = undefined; //set by screenarea parent
     this.size = undefined; //set by screenarea parent
@@ -173,28 +221,40 @@ export class Area extends ui_base.UIBase {
   on_area_inactive() {
   }
 
-  /*client code can implement these next three methods
-  * either through subclassing or by override Area.prototype.xxx
+  /**
+   * Get active area as defined by push_ctx_active and pop_ctx_active.
+   *
+   * Type should be an Area subclass, if undefined the last accessed area
+   * will be returned.
+   * */
+  static getActiveArea(type) {
+    return contextWrangler.getLastArea(type);
+  }
+
+  /*
+  * This is needed so UI controls can know what their parent area is.
+  * For example, a slider with data path "view2d.zoomfac" needs to know where
+  * to find view2d.
   *
-  * their purpose is to keep track of which area is the "active" one for its type, as well as which
-  * area is "currently active."  This is needed so UI controls can know what their parent area is,
-  * e.g. a slider with path "view2d.zoomfac" needs to know where to find view2d*/
-  getActiveArea() {
-    //very simple default implementation
-    return last_area;
-  }
-
+  * Typically this works by adding a field to a ContextOverlay:
+  *
+  * class ContextOverlay {
+  *   get view3d() {
+  *     return Area.getActiveArea(View3D);
+  *   }
+  * }
+  *
+  * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
+  * */
   push_ctx_active() {
-    laststack.push(last_area);
-    last_area = this;
+    contextWrangler.push(this.constructor, this);
   }
 
+  /**
+   * see push_ctx_active
+   * */
   pop_ctx_active() {
-    let ret = laststack.pop();
-
-    if (ret !== undefined) {
-      last_area = ret;
-    }
+    contextWrangler.pop(this.constructor, this);
   }
   
   static register(cls) {
@@ -271,7 +331,7 @@ export class Area extends ui_base.UIBase {
     row.remove();
     container._prepend(row);
 
-    row.background = ui_base.getDefault("AreaHeaderBG");
+    row.background = this.getDefault("AreaHeaderBG");
 
     let rh = ~~(16*this.getDPI());
 
@@ -477,15 +537,13 @@ pathux.Area {
 nstructjs.manager.add_class(Area);  
 //ui_base.UIBase.register(Area);
 
-let sarea_idgen = 0;
-
 export class ScreenArea extends ui_base.UIBase {
   constructor() {
     super();
     
     this._borders = [];
     
-    this._sarea_id = sarea_idgen++;
+    this._sarea_id = contextWrangler.idgen++;
     
     this.pos = new Vector2();
     this.size = new Vector2();
