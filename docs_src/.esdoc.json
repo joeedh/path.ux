@@ -1,7 +1,7 @@
 {
-  "source": "../../scripts",
-  "destination": "../",
-  "index": "../index.html",
+  "source": "../scripts",
+  "destination": "../docs",
+  "index": "../docs/index.html",
   "plugins": [{
     "name": "esdoc-standard-plugin",
     "option": {

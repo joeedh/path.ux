@@ -5,6 +5,7 @@ Path.ux is a small app framework based on the Blender's architecture.
 # Architecture
 
 - [Overview](manual/architecture.html)
+- [Context](manual/context.html)
 - [Tool Properties](manual/toolprop.html)
 - [Tool System](manual/toolsystem.html)
 - [Controller](manual/controller.html)
