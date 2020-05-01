@@ -116,20 +116,38 @@ export class ContextOverlay {
 export const excludedKeys = new Set(["onRemove", "reset", "toString",
   "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
   "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
-  "state"]);
+  "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
 
 export class LockedContext {
   constructor(ctx) {
     this.props = {};
 
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+
     this.load(ctx);
   }
 
   load(ctx) {
-    let keys = util.getAllKeys(ctx);
+    //let keys = util.getAllKeys(ctx);
+    let keys = ctx._props;
+
+    function wrapget(name) {
+      return function(ctx2, data) {
+        return ctx.loadProperty(ctx2, name, data);
+      }
+    }
 
     for (let k of keys) {
       let v;
+      if (k === "state" || k === "toolstack" || k === "api") {
+        continue;
+      }
+
+      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
+        continue;
+      }
 
       try {
         v = ctx[k];
@@ -138,8 +156,50 @@ export class LockedContext {
         continue;
       }
 
+      let data, getter;
+      let overlay = ctx.getOwningOverlay(k);
 
+      if (overlay === undefined) {
+        //property must no longer be used?
+        continue;
+      }
+
+      if (typeof k === "string" && (overlay[k+"_save"] && overlay[k+"_load"])) {
+        data = overlay[k + "_save"]();
+        getter = overlay[k + "_load"];
+      } else {
+        data = ctx.saveProperty(k);
+        getter = wrapget(k);
+      }
+
+      this.props[k] = {
+        data : data,
+        get  : getter
+      };
     }
+
+    let defineProp = (name) => {
+      Object.defineProperty(this, name, {
+        get : function() {
+          let def = this.props[name];
+          return def.get(this.ctx, def.data)
+        }
+      })
+    };
+
+    for (let k in this.props) {
+      defineProp(k);
+    }
+
+    this.ctx = ctx;
+  }
+
+  setContext(ctx) {
+    this.ctx = ctx;
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
   }
 }
 
@@ -148,8 +208,36 @@ let idgen = 1;
 
 export class Context {
   constructor(appstate) {
-    this._stack = [];
     this.state = appstate;
+
+    this._props = new Set();
+    this._stack = [];
+    this._inside_map = {};
+  }
+
+  validateOverlays() {
+    let stack = this._stack;
+    let stack2 = [];
+
+    for (let i=0; i<stack.length; i++) {
+      if (stack[i].validate()) {
+        stack2.push(stack[i]);
+      }
+    }
+
+    this._stack = stack2;
+  }
+  
+  hasOverlay(cls) {
+    return this.getOverlay(cls) !== undefined;
+  }
+
+  getOverlay(cls) {
+    for (let overlay of this._stack) {
+      if (overlay.constructor === cls) {
+        return overlay;
+      }
+    }
   }
 
   clear(have_new_file=false) {
@@ -181,7 +269,7 @@ export class Context {
   }
 
   copy() {
-    let ret = new this.constructor();
+    let ret = new this.constructor(this.state);
 
     for (let item of this._stack) {
       ret.pushOverlay(item.copy());
@@ -210,54 +298,89 @@ export class Context {
     return next_key;
   }
 
+  /**
+   *
+   * saves a property into some kind of non-object-reference form
+   *
+   * */
+  saveProperty(key) {
+    throw new Error("implement me");
+  }
+
+  /**
+   *
+   * lookup property based on saved data
+   *
+   * */
+  loadProperty(ctx, key, data) {
+    throw new Error("implement me");
+  }
+
+  getOwningOverlay(name, _val_out) {
+    let inside_map = this._inside_map;
+    let stack = this._stack;
+
+    if (cconst.DEBUG.contextSystem) {
+      console.log(name, inside_map);
+    }
+
+    for (let i=stack.length-1; i >= 0; i--) {
+      let overlay = stack[i];
+      let ret = next_key;
+
+      if (cconst.DEBUG.contextSystem) {
+        console.log(overlay[Symbol.ContextID], overlay);
+      }
+
+      if (inside_map[overlay[Symbol.ContextID]]) {
+        continue;
+      }
+
+      if (overlay.__allKeys.has(name)) {
+        if (cconst.DEBUG.contextSystem) {
+          console.log("getting value");
+        }
+
+        inside_map[overlay[Symbol.ContextID]] = 1;
+
+        try {
+          ret = overlay[name];
+        } catch (error) {
+          inside_map[overlay[Symbol.ContextID]] = 0;
+          throw error;
+        }
+
+        inside_map[overlay[Symbol.ContextID]] = 0;
+      }
+
+      if (ret !== next_key) {
+        if (_val_out !== undefined) {
+          _val_out[0] = ret;
+        }
+        return overlay;
+      }
+    }
+
+    if (_val_out !== undefined) {
+      _val_out[0] = undefined;
+    }
+
+    return undefined;
+  }
+
   ensureProperty(name) {
     if (this.hasOwnProperty(name)) {
       return;
     }
 
-    let inside_map = {};
+    this._props.add(name);
 
     Object.defineProperty(this, name, {
       get : function() {
-        let stack = this._stack;
+        let ret = [undefined];
 
-        if (cconst.DEBUG.contextSystem) {
-          console.log(name, inside_map);
-        }
-
-        for (let i=stack.length-1; i >= 0; i--) {
-          let overlay = stack[i];
-          let ret = next_key;
-
-          if (cconst.DEBUG.contextSystem) {
-            console.log(overlay[Symbol.ContextID], overlay);
-          }
-
-          if (inside_map[overlay[Symbol.ContextID]]) {
-            continue;
-          }
-
-          if (overlay.__allKeys.has(name)) {
-            if (cconst.DEBUG.contextSystem) {
-              console.log("getting value");
-            }
-
-            inside_map[overlay[Symbol.ContextID]] = 1;
-
-            try {
-              ret = overlay[name];
-            } catch (error) {
-              inside_map[overlay[Symbol.ContextID]] = 0;
-              throw error;
-            }
-
-            inside_map[overlay[Symbol.ContextID]] = 0;
-          }
-
-          if (ret !== next_key) {
-            return ret;
-          }
-        }
+        this.getOwningOverlay(name, ret);
+        return ret[0];
       }, set : function() {
         throw new Error("Cannot set ctx properties")
       }

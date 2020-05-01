@@ -9,8 +9,10 @@ method that is polled regularly; if it returns false the overlay is removed.
 
 Contexts can be "frozen" with .lock.  When frozen they should *have no direct object 
 references at all*, other then .state, .datalib and .api.  
+
 Properties can control this with "_save" and "_load" methods inside
-of the overlay classes.
+of the overlay classes, as well as overriding saveProperty and loadProperty
+inside of Context subclasses.
 
 Example of a context overlay:
 
@@ -52,11 +54,11 @@ Example of a context overlay:
         return ret;
       }
     
-      selectedObjects_load(data) {
+      selectedObjects_load(ctx, data) {
         let ret = [];
         
         for (let id of data) {
-            ret.push([lookup object from data])
+            ret.push([lookup object from data using (possible new) context ctx])
         }
         
         return ret;
@@ -69,8 +71,7 @@ Locked contexts are contexts whose properties are "saved", but not as direct ref
 Instead, each property is (ideally) saved as some sort of ID or datapath to look up
 the true value on property access.
 
-We suggest you subclass Context and implement a defaultPropertyWrapper function which
-will generate id/datapath wrappers.  The laternative is to use _save and _load methods:
+We suggest you subclass Context and implement saveProperty and loadProperty methods.
 
     class Overlay extends ContextOverlay {
       get something() {
@@ -81,7 +82,7 @@ will generate id/datapath wrappers.  The laternative is to use _save and _load m
         return this.state.something.id;
       }
     
-      something_load(id) {
+      something_load(ctx, id) {
         return [lookup id somewhere to get something];
       }
     }
