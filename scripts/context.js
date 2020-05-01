@@ -1,6 +1,7 @@
 import * as util from './util.js';
 
 import cconst from './const.js';
+import * as ui_noteframe from "./ui_noteframe.js";
 
 /*
 see doc_src/context.md
@@ -129,6 +130,19 @@ export class LockedContext {
     this.load(ctx);
   }
 
+  error() {
+    return this.ctx.error(...arguments);
+  }
+  warning() {
+    return this.ctx.warning(...arguments);
+  }
+  message() {
+    return this.ctx.message(...arguments);
+  }
+  progbar() {
+    return this.ctx.progbar(...arguments);
+  }
+
   load(ctx) {
     //let keys = util.getAllKeys(ctx);
     let keys = ctx._props;
@@ -215,6 +229,45 @@ export class Context {
     this._inside_map = {};
   }
 
+  error(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return ui_noteframe.error(state.screen, message, timeout);
+    }
+  }
+
+  warning(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return ui_noteframe.warning(state.screen, message, timeout);
+    }
+  }
+
+  message(msg, timeout=1500) {
+    let state = this.state;
+
+    console.warn(msg);
+
+    if (state && state.screen) {
+      return ui_noteframe.message(state.screen, msg, timeout);
+    }
+  }
+
+  progbar(msg, perc=0.0, timeout=1500, id=msg) {
+    let state = this.state;
+
+    if (state && state.screen) {
+      //progbarNote(screen, msg, percent, color, timeout) {
+      return ui_noteframe.progbarNote(state.screen, msg, perc, "green", timeout, id);
+    }
+  }
+
   validateOverlays() {
     let stack = this._stack;
     let stack2 = [];
@@ -227,7 +280,7 @@ export class Context {
 
     this._stack = stack2;
   }
-  
+
   hasOverlay(cls) {
     return this.getOverlay(cls) !== undefined;
   }
