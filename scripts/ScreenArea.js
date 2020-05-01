@@ -884,7 +884,6 @@ export class ScreenArea extends ui_base.UIBase {
   
   setCSS() {
     this.style["position"] = "absolute";
-    this.style["overflow"] = "scroll";
     
     this.style["left"] = ~~this.pos[0] + "px";
     this.style["top"] = ~~this.pos[1] + "px";

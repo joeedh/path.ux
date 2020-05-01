@@ -612,7 +612,7 @@ export class UIBase extends HTMLElement {
 
     //delayed init
   init() {
-    
+    this._init_done = true;
   }
   
   _ondestroy() {
