@@ -1,7 +1,15 @@
-export var DEBUG = {
-  screenborders : false
+let exports = {
+  menu_close_time : 500,
+  DEBUG           : {},
+
+  loadConstants : function(args) {
+    for (let k in args) {
+      if (k === "loadConstants")
+        continue;
+
+      this[k] = args[k];
+    }
+  }
 };
 
-if (window.DEBUG !== undefined) {
-  window.DEBUG = DEBUG;
-}
+export default exports;

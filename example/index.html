@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Path.UX</title>
+<script type="module">
+import * as app from './example/app.js'
+window.init = function() {
+  console.log("init");
+  app.start();
+}
+</script>
+<style>
+body {
+  overflow : hidden;
+}
+</style>
+</head>
+<body onload="init()">
+<img id="iconsheet16" style="display:none" src="./example/iconsheet16.png"></img>
+<img id="iconsheet32" style="display:none" src="./example/iconsheet32.png"></img>
+<img id="iconsheet48" style="display:none" src="./example/iconsheet48.png"></img>
+</body>
+</html>

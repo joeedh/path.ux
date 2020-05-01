@@ -148,6 +148,12 @@ export class Area extends ui_base.UIBase {
     this.size = undefined; //set by screenarea parent
   }
 
+  init() {
+    super.init();
+
+    this.noMarginsOrPadding();
+  }
+
   /**
    * Return a list of keymaps used by this editor
    * @returns {Array<KeyMap>}
@@ -198,7 +204,9 @@ export class Area extends ui_base.UIBase {
   }
   
   copy() {
-    throw new Error("implement me! Area.copy()");
+    console.warn("You might want to implement this, Area.prototype.copy based method called");
+    let ret = document.createElement(this.constructor.define().tagname);
+    return ret;
   }
   
   on_resize(size, oldsize) {
@@ -409,10 +417,35 @@ export class Area extends ui_base.UIBase {
       }
     };
 
+    row.setAttribute("draggable", true);
+    row.draggable = true;
+
+    row.addEventListener("dragstart", (e) => {
+      console.log("drag start!", e);
+      e.dataTransfer.setData("text/json", "SplitAreaDrag");
+
+      let canvas = document.createElement("canvas");
+      let g = canvas.g;
+
+      canvas.width = 32;
+      canvas.height = 32;
+
+      e.dataTransfer.setDragImage(canvas, 0, 0);
+
+      mdown = false;
+      console.log("area drag tool!");
+      this.getScreen().areaDragTool(this.owning_sarea);
+    });
+
+    row.addEventListener("drag", (e) => {
+      console.log("drag!", e);
+    });
+
+    //*
     row.addEventListener("mousemove", (e) => {
       return do_mousemove(e, e.pageX, e.pageY);
     }, false);
-
+      //*/
     row.addEventListener("mouseup", (e) => {
       if (!mpre(e)) return;
 
@@ -612,6 +645,12 @@ export class ScreenArea extends ui_base.UIBase {
     return this.area !== undefined ? this.area.borderLock : 0;
   }
 
+  init() {
+    super.init();
+
+    this.noMarginsOrPadding();
+  }
+
   draw() {
     this.area.draw();
   }
@@ -778,23 +817,22 @@ export class ScreenArea extends ui_base.UIBase {
   
   loadFromVerts() {
     let bs = this._borders;
-    let min = [1e17, 1e17], max = [-1e17, -1e17];
-    
+
+    let min = new Vector2([1e17, 1e17]);
+    let max = new Vector2([-1e17, -1e17]);
+
     for (let b of bs) {
-      for (let i=0; i<2; i++) {
-        min[i] = Math.min(min[i], b.v1[i]);
-        min[i] = Math.min(min[i], b.v2[i]);
-        
-        max[i] = Math.max(max[i], b.v1[i]);
-        max[i] = Math.max(max[i], b.v2[i]);
-      }
+      min.min(b.v1);
+      min.min(b.v2);
+      max.max(b.v1);
+      max.max(b.v2);
     }
     
     this.pos[0] = Math.floor(min[0]);
     this.pos[1] = Math.floor(min[1]);
     
-    this.size[0] = Math.ceil(max[0] - min[0]);
-    this.size[1] = Math.ceil(max[1] - min[1]);
+    this.size[0] = Math.floor(max[0] - min[0]);
+    this.size[1] = Math.floor(max[1] - min[1]);
     
     this.setCSS();
   }
@@ -846,7 +884,7 @@ export class ScreenArea extends ui_base.UIBase {
   
   setCSS() {
     this.style["position"] = "absolute";
-    this.style["overflow"] = "hidden";
+    this.style["overflow"] = "scroll";
     
     this.style["left"] = ~~this.pos[0] + "px";
     this.style["top"] = ~~this.pos[1] + "px";

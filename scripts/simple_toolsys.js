@@ -10,36 +10,6 @@ import {PropTypes} from './toolprop.js';
 
 export let ToolClasses = [];
 
-//XXX need to get rid of this ContextExample class
-export class ContextExample {
-  constructor() {
-  }
-
-  execTool(tool) {
-    return this.state.toolstack.execTool(tool);
-  }
-  
-  get api() {
-    return _appstate.api;
-  }
-  
-  get screen() {
-    return _appstate.screen;
-  }
-  
-  get state() {
-    return _appstate;
-  }
-  
-  save() {
-    _appstate.save();
-  }
-  
-  get editor() {
-    throw new Error("implement me");
-  }
-}
-
 export function setContextClass(cls) {
   console.warn("setContextClass is deprecated");
 }
@@ -225,22 +195,9 @@ export class ToolOp extends events.EventHandler {
     }
   }
 
-  /** for compatibility with fairmotion, don't use */
-  can_call(ctx) {
-    return this.constructor.canRun(ctx);
-  }
-
   static canRun(ctx) {
     return true;
   }
-
-  /* eek this should have been static all along, make sure
-     to fix everything.
-  */
-  canRun(ctx) {
-    return this.constructor.canRun(ctx);
-  }
-
 
   undoPre(ctx) {
     this._undo = _appstate.genUndoFile();

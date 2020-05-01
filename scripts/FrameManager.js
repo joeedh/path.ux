@@ -1,7 +1,7 @@
 let _FrameManager = undefined;
 import './ui_widgets2.js';
 
-import {DEBUG} from './const.js';
+import cconst from './const.js';
 import {haveModal, pushModalLight, popModalLight} from './simple_events.js';
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
@@ -13,6 +13,7 @@ import * as FrameManager_ops from './FrameManager_ops.js';
 import * as math from './math.js';
 import * as ui_colorpicker from './ui_colorpicker.js';
 import * as ui_tabs from './ui_tabs.js';
+import * as ui_menu from './ui_menu.js';
 import './struct.js';
 import {KeyMap, HotKey} from './simple_events.js';
 
@@ -23,10 +24,7 @@ import './ui_tabs.js';
 import './ui_colorpicker2.js';
 import './ui_noteframe.js';
 import './ui_listbox.js';
-import './ui_menu.js';
 import './ui_table.js';
-
-import * as ui_menu from './ui_menu.js';
 
 ui_menu.startMenuEventWrangling();
 
@@ -55,10 +53,10 @@ export class ScreenVert extends Vector2 {
   }
 
   static hash(pos, side) {
-    //try to fix a bug where areas collapse into nothingness
-    //by hashing outer screenverts differently
+    let x = Math.floor(pos[0]/2.0);
+    let y = Math.floor(pos[1]/2.0);
 
-    return pos[0].toFixed(3) + ":" + pos[1].toFixed(3);
+    return ""+x + ":" + y;
   }
 
   valueOf() {
@@ -237,11 +235,20 @@ export class ScreenBorder extends ui_base.UIBase {
     }
 
     let color = this.getDefault("ScreenBorderOuter");
-    if (DEBUG.screenborders) {
+    let width = this.getDefault("ScreenBorderWidth");
+
+    if (cconst.DEBUG.screenborders) {
+      width = 4;
+      let alpha = 1.0;
+      let c = this.sareas.length*75;
+
       if (!this.movable) {
-        color = "black";
+        color = `rgba(0,${c},${c},${alpha})`;
+      } else {
+        color = `rgba(255, ${c}, ${c}, ${alpha})`;
       }
     }
+
 
     let innerbuf = `
         .screenborder_inner_${this._id} {
@@ -249,7 +256,7 @@ export class ScreenBorder extends ui_base.UIBase {
           ${mstyle}
           background-color : ${this.getDefault("ScreenBorderInner")};
           border-color : ${color};
-          border-width : 1px;
+          border-width : ${width}px;
           pointer-events : none;
         }`;
 
@@ -324,7 +331,7 @@ export class Screen extends ui_base.UIBase {
 
     this.keymap = new KeyMap();
 
-    this.size = [512, 512];
+    this.size = [window.innerWidth, window.innerHeight];
     this.idgen = 0;
     this.sareas = [];
     this.sareas.active = undefined;
@@ -348,6 +355,17 @@ export class Screen extends ui_base.UIBase {
       this.mpos[1] = e.touches[0].pageY;
     });
 
+  }
+
+  newScreenArea() {
+    let ret = document.createElement("screenarea-x");
+    ret.ctx = this.ctx;
+
+    if (ret.ctx) {
+      ret.init();
+    }
+
+    return ret;
   }
 
   copy() {
@@ -556,12 +574,24 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
-  listen() {
+  updateSize() {
+    let width = ~~window.innerWidth;
+    let height = ~~window.innerHeight;
+
+    if (width !== this.size[0] || height !== this.size[1]) {
+      console.log("resizing");
+      this.on_resize([width, height]);
+    }
+  }
+
+  listen(args={updateSize : true}) {
     ui_menu.setWranglerScreen(this);
 
     if (this.listen_timer !== undefined) {
       return; //already listening
     }
+
+    this._do_updateSize = args.updateSize !== undefined ? args.updateSize : true;
 
     this.listen_timer = window.setInterval(() => {
       this.update();
@@ -829,6 +859,10 @@ export class Screen extends ui_base.UIBase {
   }
 
   update() {
+    if (this._do_updateSize) {
+      this.updateSize();
+    }
+
     if (this.needsTabRecalc) {
       this.needsTabRecalc = false;
       this.calcTabOrder();
@@ -1142,30 +1176,12 @@ export class Screen extends ui_base.UIBase {
 
     //console.log("resize!", ratio);
 
-    this.regenBorders();
-
-    let min = [1e17, 1e17], max = [-1e17, -1e17];
-
-    //fit entire screen to, well, the entire screen (size)
     for (let v of this.screenverts) {
       v[0] *= ratio[0];
       v[1] *= ratio[1];
-
-      for (let i = 0; i < 2; i++) {
-        min[i] = Math.min(min[i], v[i]);
-        max[i] = Math.max(max[i], v[i]);
-      }
     }
 
-    let vec = new Vector2(max).sub(min);
-    let sz = new Vector2(size);
-
-    sz.div(vec);
-
-    for (let v of this.screenverts) {
-      v.sub(min).mul(sz);
-    }
-
+    let min = [1e17, 1e17], max = [-1e17, -1e17];
     let olds = [];
 
     for (let sarea of this.sareas) {
@@ -1177,14 +1193,15 @@ export class Screen extends ui_base.UIBase {
     this.size[0] = size[0];
     this.size[1] = size[1];
 
-    this.regenBorders();
-
     let i = 0;
     for (let sarea of this.sareas) {
       sarea.on_resize(sarea.size, olds[i]);
       sarea.setCSS();
       i++;
     }
+
+    this.snapScreenVerts();
+    this.regenScreenMesh();
 
     this.setCSS();
 
@@ -1206,7 +1223,6 @@ export class Screen extends ui_base.UIBase {
 
     return this._vertmap[key];
   }
-
 
   isBorderOuter(sarea, border) {
     let side = sarea._borders.indexOf(border);
@@ -1237,26 +1253,8 @@ export class Screen extends ui_base.UIBase {
 
     let axis = side & 1;
 
-    return Math.abs(v1[axis] - box[side]) < 5;
-
-    return false;
-
-
-    //side = side == 2 ? side : undefined;
-
-    if (side !== undefined) {
-      let off = table[side];
-      let diff = Math.abs(v1[off[1]] - this._aabb[off[0]][off[1]]);
-
-      //console.log("getScreenBorder", diff, v1[off[1]], this._aabb[off[0]][off[1]]);
-
-      if (diff < outer_snap_limit) {
-        //console.log("outer border!", side);
-        is_outer = side + 1;
-      }
-    }
-
-    return is_outer;
+    //console.log("EEEK! ", Math.abs(v1[axis] - box[side]));
+    return Math.abs(v1[axis] - box[side]) < 12;
   }
 
   isBorderMovable(sarea, b, limit = 5) {
@@ -1286,7 +1284,7 @@ export class Screen extends ui_base.UIBase {
             let horiz = side2 % 2;
 
             if (!!horiz !== !!b.horiz) {
-              //continue;
+              continue;
             }
 
             //console.log(box[side2], b.v1[axis], b.v2[axis]);
@@ -1310,17 +1308,10 @@ export class Screen extends ui_base.UIBase {
     let horiz = Math.abs(b.v2[0] - b.v1[0]) > Math.abs(b.v2[1] - b.v1[1]);
     const snap_limit = 3;
 
-    let table = [
-      0, //min
-      1, //max
-      1, //max
-      0, //min
-    ]
-
     let axis = this._aabb[b.side & 1][horiz ^ 1];
     if (Math.abs(axis - b.v1[horiz ^ 1]) < snap_limit) {
       //console.log("border is not movable");
-      return false;
+      //return false;
     }
 
     return true;
@@ -1400,19 +1391,22 @@ export class Screen extends ui_base.UIBase {
       this.appendChild(src);
     }
 
+    src.setCSS();
+
     //this.sareas.remove(dst);
     //dst.remove();
 
     this.removeArea(dst);
 
-    this.regenBorders();
+    this.regenScreenMesh();
     this.snapScreenVerts();
     this._updateAll();
   }
 
   //regenerates borders, sets css and calls this.update
   _internalRegenAll() {
-    this.regenBorders();
+    this.regenScreenMesh();
+    this.snapScreenVerts();
     this._updateAll();
     this.calcTabOrder();
   }
@@ -1435,8 +1429,10 @@ export class Screen extends ui_base.UIBase {
     this.sareas.remove(sarea);
     sarea.remove();
 
-    this.snapScreenVerts();
-    this.regenBorders();
+    for (let i=0; i<2; i++) {
+      this.snapScreenVerts();
+      this.regenScreenMesh();
+    }
 
     this._updateAll();
     this.drawUpdate();
@@ -1452,6 +1448,11 @@ export class Screen extends ui_base.UIBase {
     if (child instanceof ScreenArea.ScreenArea) {
       child.screen = this;
       child.ctx = this.ctx;
+
+      if (child.size.dot(child.size) === 0) {
+        child.size[0] = this.size[0];
+        child.size[1] = this.size[1];
+      }
 
       if (!child._has_evts) {
         child._has_evts = true;
@@ -1473,11 +1474,16 @@ export class Screen extends ui_base.UIBase {
       }
 
       this.sareas.push(child);
+      child.setCSS();
       this.drawUpdate();
     }
 
     return this.shadow.appendChild(child);
     //return super.appendChild(child);
+  }
+
+  add(child) {
+    return this.appendChild(child);
   }
 
   splitTool() {

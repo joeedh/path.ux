@@ -6,10 +6,11 @@ export const DefaultTheme = {
     "oneAxisPadding" : 6,
     "oneAxisMargin" : 6,
 
+    "ScreenBorderWidth" : 2,
     "FocusOutline" : "rgba(100, 150, 255, 1.0)",
 
     "BasePackFlag" : 0,
-    "ScreenBorderOuter" : "rgba(255, 255, 255, 1.0)",
+    "ScreenBorderOuter" : "rgba(150, 150, 150, 1.0)",
     "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
 
     "numslider_width" : 24,
@@ -95,9 +96,20 @@ export const DefaultTheme = {
     }),
   },
 
+  richtext : {
+    "background-color" : "rgb(200, 200, 200)",
+    "DefaultText" : new CSSFont({
+      font  : "sans-serif",
+      size  : 16,
+      color :  "rgba(35, 35, 35, 1.0)",
+      weight : "normal"
+    })
+  },
+
   button : {
-    "defaultWidth" : 100,
-    "defaultHeight" : 24
+    defaultWidth : 100,
+    defaultHeight : 24,
+    BoxMargin     : 10
   },
   iconcheck : {
 

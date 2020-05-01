@@ -115,6 +115,8 @@ export class Label extends ui_base.UIBase {
   }
 
   update() {
+    this.dom.style["pointer-events"] = this.style["pointer-events"];
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
@@ -1339,6 +1341,51 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  textarea(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
+    packflag |= this.inherit_packflag;
+
+    let ret = document.createElement("rich-text-editor-x");
+    ret.ctx = this.ctx;
+
+    ret.packflag |= packflag;
+
+    if (value !== undefined) {
+      ret.value = value;
+    }
+
+    if (datapath)
+      ret.setAttribute("datapath", datapath)
+    if (mass_set_path)
+      ret.setAttribute("mass_set_path", mass_set_path)
+
+    this.add(ret);
+    return ret;
+  }
+
+  /**
+   * html5 viewer
+   * */
+  viewer(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
+    packflag |= this.inherit_packflag;
+
+    let ret = document.createElement("html-viewer-x");
+    ret.ctx = this.ctx;
+
+    ret.packflag |= packflag;
+
+    if (value !== undefined) {
+      ret.value = value;
+    }
+
+    if (datapath)
+      ret.setAttribute("datapath", datapath)
+    if (mass_set_path)
+      ret.setAttribute("mass_set_path", mass_set_path)
+
+    this.add(ret);
+    return ret;
+  }
+
   //
   tabs(position = "top", packflag = 0) {
     packflag |= this.inherit_packflag;
@@ -1382,6 +1429,7 @@ export class RowFrame extends Container {
     //this.style["flex-direction"] = "row";
     this.style["display"] = "flex";
     this.style["flex-direction"] = "row";
+    this.style["align-items"] = "center";
   }
 
   oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {

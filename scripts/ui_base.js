@@ -9,6 +9,8 @@ import {pushModalLight, popModalLight, copyEvent} from './simple_events.js';
 
 export * from './ui_theme.js';
 
+import {CSSFont} from "./ui_theme.js";
+
 import {DefaultTheme} from './theme.js';
 export let theme = {};
 

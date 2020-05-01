@@ -1,4 +1,5 @@
 "use strict";
+import './ui_richedit.js';
 
 import * as util from './util.js';
 import * as ui_base from './ui_base.js';

@@ -1,6 +1,7 @@
 "use strict";
 
 import * as util from './util.js';
+import cconst from './const.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as events from './events.js';
@@ -835,6 +836,7 @@ export class MenuWrangler {
     this.screen = undefined;
     this.menustack = [];
 
+    this.closetimer = 0;
   }
 
   get menu() {
@@ -924,8 +926,10 @@ export class MenuWrangler {
   
   on_mousemove(e) {
     if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = util.time_ms();
       return;
     }
+    console.log(e.x, e.y);
 
     let screen = this.screen;
     let x = e.pageX, y = e.pageY;
@@ -937,19 +941,55 @@ export class MenuWrangler {
     }
 
     console.log(element.tagName);
+
     if (element instanceof DropBox && element.menu !== this.menu) {
       //destroy entire menu stack
       this.endMenus();
 
+      this.closetimer = util.time_ms();
+
       //start new menu
       element._onpress(e);
+      return;
+    }
+
+    let ok = false;
+
+    let w = element;
+    while (w) {
+      if (w === this.menu) {
+        ok = true;
+        break;
+      }
+
+      if (w instanceof DropBox && w.menu === this.menu) {
+        ok = true;
+        break;
+      }
+
+      w = w.parentWidget;
+    }
+
+    if (!ok && (util.time_ms() - this.closetimer > cconst.menu_close_time)) {
+      this.endMenus();
+    } else if (ok) {
+      this.closetimer = util.time_ms();
     }
   }
 }
 
 export let menuWrangler = new MenuWrangler();
+let wrangerStarted = false;
 
 export function startMenuEventWrangling(screen) {
+  menuWrangler.screen = screen;
+
+  if (wrangerStarted) {
+    return;
+  }
+
+  wrangerStarted = true;
+
   for (let k in DomEventTypes) {
     if (menuWrangler[k] === undefined) {
       continue;
@@ -963,7 +1003,7 @@ export function startMenuEventWrangling(screen) {
 }
 
 export function setWranglerScreen(screen) {
-  menuWrangler.screen = screen;
+  startMenuEventWrangling(screen);
 }
 
 export function getWranglerScreen() {

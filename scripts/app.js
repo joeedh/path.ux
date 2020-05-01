@@ -19,7 +19,7 @@ import * as ScreenArea from './ScreenArea.js';
 import * as ui_widgets from './ui_widgets.js';
 import * as controller from './controller.js';
 import * as ui_base from './ui_base.js';
-import * as cconst from './const.js';
+import cconst from './const.js';
 import * as config from './config.js';
 import * as ui_menu from './ui_menu.js';
 import * as toolpath from './toolpath.js';

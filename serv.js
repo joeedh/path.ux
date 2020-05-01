@@ -7,8 +7,7 @@ const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-const INDEX = "main.html"
-const SAVEPATH = "data/zelda_mm.json"
+const INDEX = "example/index.html";
 const basedir = process.cwd();
 
 let mimemap = {

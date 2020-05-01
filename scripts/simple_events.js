@@ -49,7 +49,9 @@ export function pushModalLight(obj) {
 
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
-    "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter", "mouseleave"
+    "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter",
+    "mouseleave", "dragstart", "drag", "dragend", "dragexit", "dragleave", "dragover",
+    "dragenter", "drop"
   ]);
 
   let ret = {

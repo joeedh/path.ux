@@ -1,8 +1,11 @@
 import * as util from './util.js';
 
+import cconst from './const.js';
+
 /*
 see doc_src/context.md
 */
+window.ccosnt = cconst;
 
 export const ContextFlags = {
   IS_VIEW : 1
@@ -112,7 +115,8 @@ export class ContextOverlay {
 
 export const excludedKeys = new Set(["onRemove", "reset", "toString",
   "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
-  "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf"]);
+  "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
+  "state"]);
 
 export class LockedContext {
   constructor(ctx) {
@@ -143,8 +147,9 @@ let next_key = {};
 let idgen = 1;
 
 export class Context {
-  constructor() {
+  constructor(appstate) {
     this._stack = [];
+    this.state = appstate;
   }
 
   clear(have_new_file=false) {
@@ -216,7 +221,7 @@ export class Context {
       get : function() {
         let stack = this._stack;
 
-        if (DEBUG.contextSystem) {
+        if (cconst.DEBUG.contextSystem) {
           console.log(name, inside_map);
         }
 
@@ -224,7 +229,7 @@ export class Context {
           let overlay = stack[i];
           let ret = next_key;
 
-          if (DEBUG.contextSystem) {
+          if (cconst.DEBUG.contextSystem) {
             console.log(overlay[Symbol.ContextID], overlay);
           }
 
@@ -233,7 +238,7 @@ export class Context {
           }
 
           if (overlay.__allKeys.has(name)) {
-            if (DEBUG.contextSystem) {
+            if (cconst.DEBUG.contextSystem) {
               console.log("getting value");
             }
 

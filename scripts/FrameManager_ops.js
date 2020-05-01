@@ -1,7 +1,7 @@
 "use strict";
 
 //set default datapath controller implementation class
-import {DEBUG} from './const.js';
+import cconst from './const.js';
 
 //XXX eek why was this here!
 //import {DataAPI} from './simple_controller.js';
@@ -215,7 +215,7 @@ export class AreaResizeTool extends ToolBase {
     let visit = new Set();
     let borders = this.getBorders();
 
-    let color = DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
+    let color = cconst.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
     let bad = false;
 
@@ -545,14 +545,13 @@ export class AreaDragTool extends ToolBase {
           
           src.size[0] = mm.max[0] - mm.min[0];
           src.size[1] = mm.max[1] - mm.min[1];
-          
-          console.log("b:", src.size[0], src.size[1], "\n");
-          
+
           screen._internalRegenAll();
         }
       } else {
-        console.log("copying. . .");
+        //console.log("copying. . .");
         screen.replaceArea(dst, src.copy());
+        screen._internalRegenAll();
       }
     } else {
       let src = this.sarea, dst = b.sarea;
@@ -562,12 +561,14 @@ export class AreaDragTool extends ToolBase {
       let nsa = screen.splitArea(dst, t, b.horiz);
       
       if (can_rip) {
-        console.log("replacing");
+        //console.log("replacing");
         screen.replaceArea(nsa, src);
       } else {
-        console.log("copying");
+        //console.log("copying");
         screen.replaceArea(nsa, src.copy());
       }
+
+      screen._internalRegenAll();
     }
   }
   
@@ -707,6 +708,14 @@ export class AreaDragTool extends ToolBase {
     }
   }
 
+  on_drag(e) {
+    this.on_mousemove(e);
+  }
+
+  on_dragend(e) {
+    this.on_mouseup(e);
+  }
+
   on_mousemove(e) {
     let wid = 55;
     let color = "rgb(200, 200, 200, 0.7)";
@@ -780,8 +789,8 @@ export class AreaDragTool extends ToolBase {
     console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
 
     if (e.button) {
-      this.stopPropagation();
-      this.preventDefault();
+      e.stopPropagation();
+      e.preventDefault();
     } else {
       let box = this.getActiveBox(e.x, e.y);
 
