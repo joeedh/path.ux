@@ -183,15 +183,6 @@ export class DataPath {
   }
 }
 
-/*this is a bitmask of standard filters
-* for the data list interface*/
-export const StandardListFilters = {
-  SELECTED: 1,
-  EDITABLE: 2,
-  VISIBLE: 4,
-  ACTIVE: 8
-};
-
 export class DataList extends ListIface {
   /**
    Okay, this is a simple interface for the controller to access lists,
@@ -212,7 +203,6 @@ export class DataList extends ListIface {
    - function getActive(api, list)
    - function setActive(api, list, key)
    - function getIter(api, list)
-   - function filter(api, list, filter : StandardListFilters bitmask) returns an iterable
    - function getKey(api, list, object) returns object's key in this list, either a string or a number
    * */
 
@@ -659,6 +649,64 @@ export class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
+  /*
+  massSetProp operate on lists.  The idea is to
+  write a filter str inside a data path, e.g.
+
+  ctx.api.massSetProp(ctx, "obj.list[{$.select}].value", 1);
+
+
+  * */
+  massSetProp(ctx, massSetPath, value) {
+    for (let path of this.resolveMassSetPaths(ctx, massSetPath)) {
+      console.log(path);
+      this.setValue(ctx, path, value);
+    }
+  }
+
+  resolveMassSetPaths(ctx, massSetPath) {
+    let start = massSetPath.search("{");
+    let end = massSetPath.search("}");
+
+    if (start < 0 || end < 0) {
+      throw new DataPathError("Invalid mass set datapath: " + massSetPath);
+      return;
+    }
+
+    let prefix = massSetPath.slice(0, start-1);
+    let filter = massSetPath.slice(start+1, end);
+    let suffix = massSetPath.slice(end+2, massSetPath.length);
+
+    let rdef = this.resolvePath(ctx, prefix);
+
+    if (!(rdef.prop instanceof DataList)) {
+      throw new DataPathError("massSetPath expected a path resolving to a DataList: " + massSetPath);
+    }
+
+    let paths = [];
+
+    let list = rdef.prop;
+    console.log(list);
+
+    function applyFilter(obj) {
+      let $ = obj;
+
+      return eval(filter);
+    }
+
+    for (let obj of list.getIter(this, rdef.value)) {
+      if (!applyFilter(obj)) {
+        continue;
+      }
+
+      let key = ""+list.getKey(this, rdef.value, obj);
+      let path = `${prefix}[${key}]${suffix}`;
+
+      paths.push(path);
+    }
+
+    return paths;
+  }
 
   resolvePath(ctx, inpath, ignoreExistence = false) {
     try {
@@ -1342,55 +1390,16 @@ export function initSimpleController() {
   initToolPaths();
 }
 
-//
-export class DataPathToolOp extends ToolOp {
-  constructor() {
-    super();
-  }
+import {DataPathSetOp} from "./controller_ops.js";
 
-  static tooldef() {
-    return {
-      toolpath: "app.datapath_set",
-      uiname: "Data Path Set",
-      inputs: {
-        path: new toolprop.StringProperty(),
-        newValueJSON: new toolprop.StringProperty()
-      },
-
-      flag: ToolFlags.PRIVATE,
-
-      outputs: {
-        oldValueJSON: new toolprop.StringProperty()
-      }
-    }
-  }
-
-  undoPre(ctx) {
-    let val = ctx.api.getValue(this.inputs.path.getValue());
-    this.outputs.oldValueJSON.setValue(JSON.stringify(val));
-  }
-
-  undo(ctx) {
-    ctx.api.setValue(this.inputs.path.getValue(), JSON.parse(this.outputs.oldValueJSON.getValue()));
-    window.redraw_viewport();
-    window.updateDataGraph();
-  }
-
-  exec(ctx) {
-    ctx.api.setValue(this.inputs.path.getValue, JSON.parse(this.inputs.newValueJSON.getValue()));
-  }
-}
-
-ToolOp.register(DataPathToolOp);
-
-let dpt = DataPathToolOp;
+let dpt = DataPathSetOp;
 
 export function getDataPathToolOp() {
   return dpt;
 }
 
 export function setDataPathToolOp(cls) {
-  ToolOp.unregister(DataPathToolOp);
+  ToolOp.unregister(DataPathSetOp);
 
   if (!ToolOp.isRegistered(cls)) {
     ToolOp.register(cls);

@@ -6,6 +6,7 @@ import * as vectormath from './vectormath.js';
 import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
 import {pushModalLight, popModalLight, copyEvent} from './simple_events.js';
+import {getDataPathToolOp} from './simple_controller.js';
 
 export * from './ui_theme.js';
 
@@ -390,8 +391,8 @@ export class UIBase extends HTMLElement {
         child.ctx = this.ctx;
         child.parentWidget = this;
 
-        if (child._useDataPathToolOp === undefined) {
-          child.useDataPathToolOp = this.useDataPathToolOp;
+        if (child._useDataPathUndo === undefined) {
+          child.useDataPathUndo = this.useDataPathUndo;
         }
       }
 
@@ -399,7 +400,7 @@ export class UIBase extends HTMLElement {
     };
     //*/
 
-    this._useDataPathToolOp = undefined;
+    this._useDataPathUndo = undefined;
     let tagname = this.constructor.define().tagname;
     
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
@@ -487,12 +488,22 @@ export class UIBase extends HTMLElement {
 
    every child will inherit
   */
-  set useDataPathToolOp(val) {
-    this._useDataPathToolOp = val;
+  set useDataPathUndo(val) {
+    this._useDataPathUndo = val;
+  }
 
-    this._forEachChildWidget((n) => {
-      n.useDataPathToolOp = val;
-    })
+  get useDataPathUndo() {
+    let p = this;
+
+    while (p) {
+      if (p._useDataPathUndo !== undefined) {
+        return p._useDataPathUndo;
+      }
+
+      p = p.parentWidget;
+    }
+
+    return false;
   }
 
   connectedCallback() {
@@ -588,10 +599,6 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  get useDataPathToolOp() {
-    return this._useDataPathToolOp;
-  }
-
   setCSS() {
     let zoom = this.getZoom();
     this.style["transform"] = `scale(${zoom},${zoom})`;
@@ -602,9 +609,7 @@ export class UIBase extends HTMLElement {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
-      if (child._useDataPathToolOp === undefined) {
-        child.useDataPathToolOp = this.useDataPathToolOp;
-      }
+      child.useDataPathUndo = this.useDataPathUndo;
     }
 
     return super.appendChild(child);
@@ -1041,8 +1046,45 @@ export class UIBase extends HTMLElement {
       return undefined;
     }
   }
-  
+
+  setPathValueUndo(ctx, path, val) {
+    let mass_set_path = this.getAttribute("mass_set_path");
+    let rdef = ctx.api.resolvePath(ctx, path);
+    let prop = rdef.prop;
+
+    if (ctx.api.getValue(ctx, path) == val) {
+      return;
+    }
+
+    let toolstack = this.ctx.toolstack;
+    let head = toolstack[toolstack.cur];
+
+    let bad = head === undefined || !(head instanceof getDataPathToolOp());
+    bad = bad || head.hashThis() !== head.hash(mass_set_path, path, prop.type, this._id);
+
+    console.log(head, getDataPathToolOp());
+
+    if (head !== undefined && head instanceof getDataPathToolOp()) {
+      console.log("===>", bad, head.hashThis());
+      console.log("    ->", head.hash(mass_set_path, path, prop.type, this._id));
+    }
+
+    if (!bad) {
+      toolstack.undo();
+      head.setValue(ctx, val);
+      toolstack.redo();
+    } else {
+      let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
+      ctx.toolstack.execTool(this.ctx, toolop);
+    }
+  }
+
   setPathValue(ctx, path, val) {
+    if (this.useDataPathUndo) {
+      this.setPathValueUndo(ctx, path, val);
+      return;
+    }
+
     if (this.hasAttribute("mass_set_path")) {
       ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
       ctx.api.setValue(ctx, path, val);
@@ -1150,9 +1192,9 @@ export class UIBase extends HTMLElement {
   }
   
   onadd() {
-    if (this.parentWidget !== undefined) {
-      this._useDataPathToolOp = this.parentWidget._useDataPathToolOp;
-    }
+    //if (this.parentWidget !== undefined) {
+    //  this._useDataPathUndo = this.parentWidget._useDataPathUndo;
+    //}
 
     if (!this._init_done) {
       this.doOnce(this._init);

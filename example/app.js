@@ -4,9 +4,9 @@ import {ToolContext, ViewContext} from "./context.js";
 import {Screen} from "../scripts/FrameManager.js";
 import {UIBase, setIconManager, setIconMap, setTheme,
         IconManager} from "../scripts/ui_base.js";
-
+import {keymap} from "../scripts/events.js";
 import {ScreenArea} from "../scripts/ScreenArea.js";
-import {SimpleEditor, SimpleEditor2} from "./editors.js";
+import {SimpleEditor, SimpleEditor2, SimpleEditor3} from "./editors.js";
 import * as nstructjs from '../scripts/struct.js';
 
 import {theme} from './theme.js';
@@ -17,6 +17,7 @@ setIconMap(Icons);
 
 import cconst1 from './const.js';
 import cconst2 from '../scripts/const.js';
+import {HotKey, KeyMap} from "../scripts/simple_events.js";
 
 cconst2.loadConstants(cconst1);
 
@@ -51,6 +52,9 @@ export class AppState {
     let sarea2 = screen.splitArea(sarea, 0.5, false);
     sarea2.switch_editor(SimpleEditor2);
 
+    let sarea3 = screen.splitArea(sarea2, 0.5, true);
+    sarea3.switch_editor(SimpleEditor3);
+
     //setTimeout(() => {
     //  screen.splitArea(sarea2, 0.55, true);
     //}, 500);
@@ -72,6 +76,25 @@ export class AppState {
 export class AppScreen extends Screen {
   constructor() {
     super();
+
+    this.defineKeymap();
+  }
+
+  defineKeymap() {
+    this.keymap = new KeyMap([
+      new HotKey("Z", ["CTRL"], () => {
+        console.log("undo hotkey");
+        _appstate.toolstack.undo();
+      }),
+      new HotKey("Z", ["CTRL", "SHIFT"], () => {
+        console.log("redo hotkey");
+        _appstate.toolstack.redo();
+      }),
+      new HotKey("Y", ["CTRL"], () => {
+        console.log("redo hotkey");
+        _appstate.toolstack.redo();
+      })
+    ]);
   }
 
   init() {

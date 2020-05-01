@@ -1,3 +1,4 @@
+import "./controller_ops.js";
 import * as toolprop from './toolprop.js';
 import {ToolOp} from './simple_toolsys.js';
 import {print_stack} from './util.js';
@@ -125,7 +126,7 @@ export class ModelInterface {
       
       //execute
       try {
-        ctx.state.toolstack.execTool(tool, ctx);
+        ctx.state.toolstack.execTool(ctx, tool);
       } catch (error) { //for some reason chrome is suppressing errors
         print_stack(error);
         throw error;
@@ -143,6 +144,10 @@ export class ModelInterface {
   
   //not yet supported by path.ux's controller implementation
   massSetProp(ctx, mass_set_path, value) {
+    throw new Error("implement me");
+  }
+
+  resolveMassSetPaths(ctx, mass_set_path) {
     throw new Error("implement me");
   }
   

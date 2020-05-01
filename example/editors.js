@@ -3,10 +3,23 @@ import * as nstructjs from "../scripts/struct.js";
 import {Icons} from "./icon_enum.js";
 import {MyAreaBase} from "./area.js";
 import {Menu} from "../scripts/ui_menu.js";
+import {DataPathSetOp} from "../scripts/controller_ops.js";
+import {HotKey, KeyMap} from "../scripts/simple_events.js";
 
 export class SimpleEditor extends MyAreaBase {
   constructor() {
     super();
+
+    this.useDataPathUndo = true;
+  }
+
+  getKeyMaps() {
+    return [new KeyMap([
+      new HotKey("A", [], () => {
+        console.log("A was pressed!");
+        this.ctx.message("A was pressed!");
+      })
+    ])];
   }
 
   init() {
@@ -40,6 +53,9 @@ export class SimpleEditor extends MyAreaBase {
 
     tab = tabs.tab("A tab");
     tab.prop("data.color");
+
+    tab.useIcons();
+    tab.prop("data.enum");
 
     tabs.tab("Another tab");
     tabs.tab("A third tab");
@@ -115,16 +131,76 @@ export class SimpleEditor2 extends MyAreaBase {
   init() {
     super.init();
 
+    this.style["overflow"] = "scroll";
+
     let header = this.header;
     let label = header.label("Drag me");
 
     label.style["pointer-events"] = "none";
 
+    this.table = this.container.table();
+
+    this.rebuild();
+  }
+
+  rebuild() {
+    let lines = [];
+
+    let ctx = this.ctx;
+
+    for (let tool of ctx.toolstack) {
+      lines.push(tool.genToolString());
+    }
+
+    let buf = lines.join("\n") + ctx.toolstack.cur;
+
+    if (this._last_lines !== buf) {
+      this._last_lines = buf;
+
+      this.table.clear();
+
+      let i = 0;
+      for (let l of lines) {
+        let tool = ctx.toolstack[i];
+        let row = this.table.row();
+        let row2;
+
+
+        if (tool.constructor.name === "DataPathSetOp") {
+          l += "\n" + tool.hashThis();
+          row.label(l);
+        } else {
+          row.label(l);
+        }
+
+        if (i === ctx.toolstack.cur) {
+          row.style["background-color"] = "teal";
+          if (row2) {
+            row2.style["background-color"] = "teal";
+          }
+        }
+        i++;
+      }
+    }
+
+    this.setCSS();
+  }
+
+  update() {
+    super.update();
+
+    this.rebuild();
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.style["overflow"] = "scroll";
   }
 
   static define() {return {
     areaname : "simple2",
-    uiname   : "Simple2",
+    uiname   : "History",
     tagname  : "simple-editor2-x",
     icon     : Icons.HELP
   }}
@@ -134,3 +210,80 @@ SimpleEditor2.STRUCT = nstructjs.STRUCT.inherit(SimpleEditor2, MyAreaBase) + `
 `;
 nstructjs.register(SimpleEditor2);
 Area.register(SimpleEditor2);
+
+
+export class SimpleEditor3 extends MyAreaBase {
+  constructor() {
+    super();
+  }
+
+  init() {
+    super.init();
+
+    this.useDataPathUndo = true;
+
+    this.style["overflow"] = "scroll";
+
+    let header = this.header;
+    let label = header.label("Drag me");
+
+    label.style["pointer-events"] = "none";
+
+    this.container.label("Mass setter path test");
+    let row = this.container.row();
+
+    let mass_set_path = "data.sheet[{$.a == 2}].b";
+    row.prop("data.sheet.active.b", undefined, mass_set_path);
+
+    this.table = this.container.table();
+
+    this.rebuild();
+  }
+
+  rebuild() {
+    let lines = [];
+
+    for (let sline of this.ctx.data.sheet) {
+      let line = `${sline.a} ${sline.b} ${sline.c}`;
+      lines.push(line);
+    }
+
+    let buf = lines.join("\n");
+    if (this._last_lines !== buf) {
+      this._last_lines = buf;
+
+      this.table.clear();
+
+      let i = 0;
+      for (let l of lines) {
+        this.table.row().label(l);
+      }
+    }
+
+    this.setCSS();
+  }
+
+  update() {
+    super.update();
+
+    this.rebuild();
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.style["overflow"] = "scroll";
+  }
+
+  static define() {return {
+    areaname : "simple2",
+    uiname   : "Simple2",
+    tagname  : "simple-editor3-x",
+    icon     : Icons.HELP
+  }}
+}
+SimpleEditor3.STRUCT = nstructjs.STRUCT.inherit(SimpleEditor3, MyAreaBase) + `
+}
+`;
+nstructjs.register(SimpleEditor3);
+Area.register(SimpleEditor3);

@@ -28,6 +28,8 @@ import './ui_table.js';
 
 ui_menu.startMenuEventWrangling();
 
+let _events_started = false;
+
 export function registerToolStackGetter(func) {
   FrameManager_ops.registerToolStackGetter(func);
 }
@@ -321,8 +323,11 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
-    this.needsTabRecalc = true;
+    //if true, will test all areas for keymaps on keypress,
+    //not just the active one
+    this.testAllKeyMaps = false;
 
+    this.needsTabRecalc = true;
     this._screen_id = screen_idgen++;
 
     this._popups = [];
@@ -346,6 +351,12 @@ export class Screen extends ui_base.UIBase {
     this._aabb = [new Vector2(), new Vector2()];
 
     this.shadow.addEventListener("mousemove", (e) => {
+      let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea.ScreenArea);
+
+      if (elem !== undefined) {
+        this.sareas.active = elem;
+      }
+
       this.mpos[0] = e.x;
       this.mpos[1] = e.y;
     });
@@ -587,6 +598,9 @@ export class Screen extends ui_base.UIBase {
   listen(args={updateSize : true}) {
     ui_menu.setWranglerScreen(this);
 
+    let ctx = this.ctx;
+    startEvents(() => ctx.screen);
+
     if (this.listen_timer !== undefined) {
       return; //already listening
     }
@@ -724,7 +738,7 @@ export class Screen extends ui_base.UIBase {
           return hk;
         }
       }
-    }
+    };
 
     let ret = test(this.keymap);
     if (ret)
@@ -764,7 +778,7 @@ export class Screen extends ui_base.UIBase {
   execKeyMap(e) {
     let handled = false;
 
-    if (this.sareas.active && this.sareas.active.area.keymap) {
+    if (this.sareas.active) {
       let area = this.sareas.active.area;
       //console.log(area.getKeyMaps());
       for (let keymap of area.getKeyMaps()) {
@@ -776,6 +790,21 @@ export class Screen extends ui_base.UIBase {
     }
 
     handled = handled || this.keymap.handle(this.ctx, e);
+
+    if (!handled && this.testAllKeyMaps) {
+      for (let sarea of this.sareas) {
+        if (handled) {
+          break;
+        }
+
+        for (let keymap of sarea.area.getKeyMaps()) {
+          if (keymap.handle(this.ctx, e)) {
+            handled = true;
+            break;
+          }
+        }
+      }
+    }
 
     return handled;
   }
@@ -998,9 +1027,9 @@ export class Screen extends ui_base.UIBase {
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
             n.parentWidget = scopestack[scopestack.length - 1];
 
-            if (n.parentWidget && n._useDataPathToolOp === undefined && n.parentWidget._useDataPathToolOp !== undefined) {
-              n._useDataPathToolOp = n.parentWidget._useDataPathToolOp;
-            }
+            //if (n.parentWidget && n._useDataPathUndo === undefined && n.parentWidget._useDataPathUndo !== undefined) {
+            //  n._useDataPathUndo = n.parentWidget._useDataPathUndo;
+            //}
           }
 
           n.update();
@@ -1439,11 +1468,12 @@ export class Screen extends ui_base.UIBase {
   }
 
   appendChild(child) {
+    /*
     if (child instanceof UIBase) {
-      if (child._useDataPathToolOp === undefined) {
-        child.useDataPathToolOp = this.useDataPathToolOp;
+      if (child._useDataPathUndo === undefined) {
+        child.useDataPathUndo = this.useDataPathUndo;
       }
-    }
+    }*/
 
     if (child instanceof ScreenArea.ScreenArea) {
       child.screen = this;
@@ -1703,3 +1733,16 @@ ui_base.UIBase.register(Screen);
 
 ScreenArea.setScreenClass(Screen);
 
+
+export function startEvents(get_screen_cb) {
+  if (_events_started) {
+    return;
+  }
+
+  _events_started = true;
+  window.addEventListener("keydown", (e) => {
+    let screen = get_screen_cb();
+
+    return screen.on_keydown(e);
+  });
+}

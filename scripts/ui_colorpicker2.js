@@ -1007,6 +1007,8 @@ export class ColorPickerButton extends UIBase {
     }
 
     let colorpicker = this.ctx.screen.popup(this);
+    colorpicker.useDataPathUndo = this.useDataPathUndo;
+
     let widget = colorpicker.colorPicker(this.getAttribute("datapath"), undefined, this.getAttribute("mass_set_path"));
 
     widget.onchange = onchange;

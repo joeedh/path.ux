@@ -520,7 +520,7 @@ export class EnumProperty extends ToolProperty {
       return;
     }
     
-    this.data = new String(val);
+    this.data = val;
     
     //fire events
     super.setValue(val);

@@ -443,10 +443,6 @@ export class Container extends ui_base.UIBase {
     child.ctx = this.ctx;
     child.parentWidget = this;
 
-    if (child._useDataPathToolOp === undefined) {
-      child.useDataPathToolOp = this._useDataPathToolOp;
-    }
-
     this.shadow.appendChild(child);
 
     if (child.onadd)

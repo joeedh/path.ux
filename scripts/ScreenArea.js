@@ -10,6 +10,7 @@ import {haveModal} from './simple_events.js';
 
 import './struct.js';
 
+let UIBase = ui_base.UIBase;
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
@@ -146,6 +147,23 @@ export class Area extends ui_base.UIBase {
     
     this.pos = undefined; //set by screenarea parent
     this.size = undefined; //set by screenarea parent
+
+    let appendChild = this.shadow.appendChild;
+    this.shadow.appendChild = (child) => {
+      appendChild.call(this.shadow, child);
+      if (child instanceof UIBase) {
+        child.parentWidget = this;
+      }
+    }
+
+    let prepend = this.shadow.prepend;
+    this.shadow.prepend = (child) => {
+      prepend.call(this.shadow, child);
+
+      if (child instanceof UIBase) {
+        child.parentWidget = this;
+      }
+    }
   }
 
   init() {
@@ -159,7 +177,7 @@ export class Area extends ui_base.UIBase {
    * @returns {Array<KeyMap>}
    */
   getKeyMaps() {
-    return [this.keymap];
+    return this.keymap !== undefined ? [this.keymap] : [];
   }
 
   buildDataPath() {
@@ -971,9 +989,7 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.owning_sarea = this;
       this.area.ctx = this.ctx;
 
-      if (this.area._useDataPathToolOp === undefined) {
-        this.area._useDataPathToolOp = this._useDataPathToolOp;
-      }
+      this.area.packflag |= this.packflag;
 
       this.shadow.appendChild(this.area);
 

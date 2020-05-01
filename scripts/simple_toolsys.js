@@ -77,7 +77,25 @@ export class ToolOp extends events.EventHandler {
 
     return tool;
   }
-  
+
+  genToolString() {
+    let def = this.constructor.tooldef();
+    let path = def.toolpath + "(";
+
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      path += k + "=";
+      if (prop.type === PropTypes.STRING)
+        path += "'";
+      path += prop.getValue();
+      if (prop.type === PropTypes.STRING)
+        path += "'";
+      path += " ";
+    }
+    path +=")";
+    return path;
+  }
   static register(cls) {
     if (ToolClasses.indexOf(cls) >= 0) {
       console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
@@ -460,7 +478,11 @@ export class ToolStack extends Array {
     this.length = 0;
   }
 
-  execTool(toolop, ctx=this.ctx) {
+  execTool(ctx, toolop) {
+    if (this.ctx === undefined) {
+      this.ctx = ctx;
+    }
+    
     if (!toolop.constructor.canRun(ctx)) {
       console.log("toolop.constructor.canRun returned false");
       return;

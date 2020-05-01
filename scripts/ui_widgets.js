@@ -81,6 +81,7 @@ export class NumSlider extends ValueButtonBase {
     this._step = 0.1;
     this._value = 0.0;
 
+
     this._redraw();
   }
   
