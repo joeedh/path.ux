@@ -560,8 +560,8 @@ export class Vec2Property extends ToolProperty {
   }
 
   setValue(v) {
-    this.data.load(v);
     super.setValue(v);
+    this.data.load(v);
   }
 
   getValue() {

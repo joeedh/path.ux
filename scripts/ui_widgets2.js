@@ -625,8 +625,17 @@ export class VectorPanel extends ColumnFrame {
     if (val.length !== this.value.length) {
       //we do this to avoid copying a subclass.
       //this.value should always be of a base Vector type.
-      this.value = meta.prop.getValue().copy().load(val);
+      if (meta === undefined) {
+        console.log("eek", meta);
+      } else {
+        this.value = meta.getValue().copy().load(val);
+      }
       this.rebuild();
+
+      for (let i=0; i<this.value.length; i++) {
+        this.sliders[i].setValue(val[i], false);
+        this.sliders[i]._redraw();
+      }
     } else {
       if (this.value.vectorDistance(val) > 0) {
         this.value.load(val);

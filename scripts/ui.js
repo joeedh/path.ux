@@ -790,7 +790,7 @@ export class Container extends ui_base.UIBase {
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
-    } else if (prop.type === PropTypes.VEC3 || prop.type == PropTypes.VEC4) {
+    } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
       if (prop.subtype === PropSubTypes.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);

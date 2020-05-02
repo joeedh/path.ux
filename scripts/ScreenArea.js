@@ -663,6 +663,10 @@ export class ScreenArea extends ui_base.UIBase {
     return this.area !== undefined ? this.area.borderLock : 0;
   }
 
+  _side(border) {
+    return this._borders.indexOf(border);
+  }
+
   init() {
     super.init();
 

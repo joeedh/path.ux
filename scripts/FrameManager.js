@@ -83,6 +83,25 @@ pathux.ScreenVert {
 }
 `;
 
+export class ScreenHalfEdge {
+  constructor(border, sarea) {
+    this.sarea = sarea;
+    this.border = border;
+  }
+
+  get v1() {
+    return this.border.v1;
+  }
+
+  get v2() {
+    return this.border.v2;
+  }
+
+  get side() {
+    return this.sarea._side(this.border);
+  }
+}
+
 export class ScreenBorder extends ui_base.UIBase {
   constructor() {
     super();
@@ -94,6 +113,7 @@ export class ScreenBorder extends ui_base.UIBase {
 
     this.side = 0; //which side of area are we on, going counterclockwise
 
+    this.halfedges = []; //all bordering borders, including ones with nonshared verts
     this.sareas = [];
 
     this._innerstyle = document.createElement("style");
@@ -244,11 +264,15 @@ export class ScreenBorder extends ui_base.UIBase {
       let alpha = 1.0;
       let c = this.sareas.length*75;
 
-      if (!this.movable) {
-        color = `rgba(0,${c},${c},${alpha})`;
-      } else {
-        color = `rgba(255, ${c}, ${c}, ${alpha})`;
+      let r=0, g=0, b=0;
+
+      if (this.movable) {
+        b=255;
       }
+      if (this.halfedges.length > 1) {
+        g=255;
+      }
+      color = `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
 
@@ -342,6 +366,7 @@ export class Screen extends ui_base.UIBase {
     this.sareas.active = undefined;
     this.mpos = [0, 0];
 
+    this.screenborders = [];
     this.screenverts = [];
     this._vertmap = {};
     this._edgemap = {};
@@ -901,7 +926,7 @@ export class Screen extends ui_base.UIBase {
       for (let b of sarea._borders) {
         let movable = this.isBorderMovable(sarea, b);
 
-        if (movable != b.movable) {
+        if (movable !== b.movable) {
           console.log("detected change in movable borders");
           this.regenBorders();
         }
@@ -1135,6 +1160,81 @@ export class Screen extends ui_base.UIBase {
     this.regenBorders();
   }
 
+  regenBorders_stage2() {
+    for (let b of this.screenborders) {
+      b.halfedges = []
+    }
+
+    function hashHalfEdge(border, sarea) {
+      return border._id + ":" + sarea._id;
+    }
+
+    function has_he(border, border2, sarea) {
+      for (let he of border.halfedges) {
+        if (border2 === he.border && sarea === he.sarea) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    for (let b1 of this.screenborders) {
+      for (let sarea of b1.sareas) {
+        let he = new ScreenHalfEdge(b1, sarea);
+        b1.halfedges.push(he);
+      }
+    }
+
+    for (let b1 of this.screenborders) {
+      let s1 = b1;
+
+      let min, max;
+      let axis = b1.horiz ^ 1;
+
+      min = Math.min(b1.v1[axis], b1.v2[axis]);
+      max = Math.max(b1.v1[axis], b1.v2[axis]);
+
+      for (let i = 0; i < 2; i++) {
+        let v = i ? b1.v2 : b1.v1;
+
+        for (let b2 of v.borders) {
+          if (b2.horiz !== b1.horiz) {
+            continue;
+          }
+
+          for (let he of b2.halfedges) {
+            if (has_he(b1, he.border, he.sarea)) {
+              continue;
+            }
+
+            let ok = b2.v1[axis] > min && b2.v1[axis] < max;
+            ok = ok || (b2.v2[axis] > min && b2.v2[axis] < max);
+
+            if (ok) {
+              b1.halfedges.push(he);
+              let he2 = b1.halfedges[0];
+
+              if (!has_he(b2, b1, he2.sarea)) {
+                b2.halfedges.push(he2);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (let b of this.screenborders) {
+      let movable = true;
+
+      for (let sarea of b.sareas) {
+        movable = movable && this.isBorderMovable(sarea, b);
+      }
+
+      b.movable = movable;
+    }
+  }
+
   //XXX rename to regenScreenMesh
   regenBorders() {
     for (let k in this._edgemap) {
@@ -1143,6 +1243,7 @@ export class Screen extends ui_base.UIBase {
       b.remove();
     }
 
+    this.screenborders = [];
     this._edgemap = {};
     this._vertmap = {};
     this.screenverts.length = 0;
@@ -1156,6 +1257,8 @@ export class Screen extends ui_base.UIBase {
 
       b.setCSS();
     }
+
+    this.regenBorders_stage2();
 
     this._recalcAABB();
   }
@@ -1254,6 +1357,14 @@ export class Screen extends ui_base.UIBase {
   }
 
   isBorderOuter(sarea, border) {
+    if (border.halfedges.length < 2) {
+      if (border.halfedges.length === 1 && border.halfedges[0].sarea.floating) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+
     let side = sarea._borders.indexOf(border);
 
     if (side < 0) {
@@ -1330,18 +1441,9 @@ export class Screen extends ui_base.UIBase {
       return false;
     }
 
-    if (limit && b.valence > 1) {
-      return true;
-    }
-
-    let horiz = Math.abs(b.v2[0] - b.v1[0]) > Math.abs(b.v2[1] - b.v1[1]);
-    const snap_limit = 3;
-
-    let axis = this._aabb[b.side & 1][horiz ^ 1];
-    if (Math.abs(axis - b.v1[horiz ^ 1]) < snap_limit) {
-      //console.log("border is not movable");
-      //return false;
-    }
+    //if (limit && b.valence > 1) {
+    //  return true;
+    //}
 
     return true;
   }
@@ -1371,6 +1473,8 @@ export class Screen extends ui_base.UIBase {
       v2.borders.push(sb);
 
       sb.ctx = this.ctx;
+
+      this.screenborders.push(sb);
       this.appendChild(sb);
 
       sb.setCSS();

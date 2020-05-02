@@ -467,6 +467,14 @@ export class DataStruct {
     return ret;
   }
 
+  bool(path, apiname, uiname, description) {
+    let prop = new toolprop.BoolProperty(undefined, apiname, uiname, description);
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
+  }
+
   vec2(path, apiname, uiname, description) {
     let prop = new toolprop.Vec2Property(undefined, apiname, uiname, description);
 
