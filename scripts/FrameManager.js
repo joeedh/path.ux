@@ -16,6 +16,7 @@ import * as ui_tabs from './ui_tabs.js';
 import * as ui_menu from './ui_menu.js';
 import './struct.js';
 import {KeyMap, HotKey} from './simple_events.js';
+import {keymap} from "./simple_events.js";
 
 let Area = ScreenArea.Area;
 
@@ -347,6 +348,8 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
+    this._popup_safe = 0;
+
     //if true, will test all areas for keymaps on keypress,
     //not just the active one
     this.testAllKeyMaps = false;
@@ -379,6 +382,12 @@ export class Screen extends ui_base.UIBase {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea.ScreenArea);
 
       if (elem !== undefined) {
+        if (elem.area) {
+          //make sure context area stacks are up to date
+          elem.area.push_ctx_active();
+          elem.area.pop_ctx_active();
+        }
+
         this.sareas.active = elem;
       }
 
@@ -448,7 +457,7 @@ export class Screen extends ui_base.UIBase {
 
   //}
 
-  pickElement(x, y, sx, sy, nodeclass) {
+  pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
     let ret;
 
     for (let popup of this._popups) {
@@ -460,6 +469,25 @@ export class Screen extends ui_base.UIBase {
     return ret;
   }
 
+  _enterPopupSafe() {
+    if (this._popup_safe === undefined) {
+      this._popup_safe = 0;
+    }
+
+    this._popup_safe++;
+  }
+
+  * _allAreas() {
+    for (let sarea of this.sareas) {
+      for (let area of sarea.editors) {
+        yield [area, area._area_id, sarea];
+      }
+    }
+  }
+
+  _exitPopupSafe() {
+    this._popup_safe = Math.max(this._popup_safe-1, 0);
+  }
   /** makes a popup at x,y and returns a new container-x for it */
   popup(elem_or_x, y, closeOnMouseOut=true) {
     let x;
@@ -474,6 +502,9 @@ export class Screen extends ui_base.UIBase {
     }
 
     let container = document.createElement("container-x");
+
+    container.ctx = this.ctx;
+    container._init();
 
     let remove = container.remove;
     container.remove = () => {
@@ -494,15 +525,23 @@ export class Screen extends ui_base.UIBase {
     this.shadow.appendChild(container);
     this._popups.push(container);
 
-    let touchstart;
+    let touchpick, mousepick, keydown;
 
     let done = false;
     let end = () => {
+      if (this._popup_safe) {
+        return;
+      }
+
       if (done) return;
       console.log("container end");
 
-      this.ctx.screen.removeEventListener("touchstart", touchstart, true);
-      this.ctx.screen.removeEventListener("touchmove", touchstart, true);
+      this.ctx.screen.removeEventListener("touchstart", touchpick, true);
+      this.ctx.screen.removeEventListener("touchmove", touchpick, true);
+      this.ctx.screen.removeEventListener("mousedown", mousepick, true);
+      this.ctx.screen.removeEventListener("mousemove", mousepick, true);
+      this.ctx.screen.removeEventListener("mouseup", mousepick, true);
+      window.removeEventListener("keydown", keydown);
 
       done = true;
       container.remove();
@@ -510,12 +549,30 @@ export class Screen extends ui_base.UIBase {
 
     container.end = end;
 
-    touchstart = (e) => {
+    let _remove = container.remove;
+    container.remove = function() {
+      end();
+      _remove.call(this);
+    };
+
+    container._ondestroy = () => {
+      end();
+    };
+
+    let bad_time = util.time_ms();
+
+    mousepick = (e, x, y, do_timeout=true) => {
       //console.log("=======================================================popup touch start");
       //console.log(e);
+      
+      if (x === undefined) {
+        console.log(e.x, e.y, "M");
+      }
+      x = x === undefined ? e.x : x;
+      y = y === undefined ? e.y : y;
 
-      let x = e.touches[0].screenX, y = e.touches[0].screenY;
-      let elem = this.pickElement(x, y, 55, 45);
+      let elem = this.pickElement(x, y, 2, 2, undefined, [ScreenBorder]);
+      let startelem = elem;
 
       if (elem === undefined) {
         if (closeOnMouseOut) {
@@ -537,16 +594,40 @@ export class Screen extends ui_base.UIBase {
       if (!ok) {
         e.stopPropagation();
 
-        if (closeOnMouseOut) {
+        do_timeout = !do_timeout || (util.time_ms() - bad_time > 100);
+
+        if (closeOnMouseOut && do_timeout) {
           end();
         }
+      } else {
+        bad_time = util.time_ms();
       }
     };
 
-    //*
-    this.ctx.screen.addEventListener("touchstart", touchstart, true);
-    this.ctx.screen.addEventListener("touchmove", touchstart, true);
+    touchpick = (e) => {
+      let x = e.touches[0].pageX, y = e.touches[0].pageY;
 
+      return mousepick(e, x, y, false);
+    };
+
+    keydown = (e) => {
+      console.log(e.keyCode);
+
+      switch (e.keyCode) {
+        case keymap["Escape"]:
+          end();
+          break;
+      }
+    };
+
+    this.ctx.screen.addEventListener("touchstart", touchpick, true);
+    this.ctx.screen.addEventListener("touchmove", touchpick, true);
+    this.ctx.screen.addEventListener("mousemove", mousepick, true);
+    this.ctx.screen.addEventListener("mousedown", mousepick, true);
+    this.ctx.screen.addEventListener("mouseup", mousepick, true);
+    window.addEventListener("keydown", keydown);
+
+    /*
     container.addEventListener("mouseleave", (e) => {
       console.log("popup mouse leave");
       if (closeOnMouseOut)
@@ -1030,19 +1111,19 @@ export class Screen extends ui_base.UIBase {
         if (n === undefined) {
           //console.log("eek!", stack.length);
           continue;
-        } else if (n == SCOPE_POP) {
+        } else if (n === SCOPE_POP) {
           scopestack.pop();
           continue;
-        } else if (n == AREA_CTX_POP) {
+        } else if (n === AREA_CTX_POP) {
           //console.log("POP", areastack[areastack.length-1].constructor.name);
-          areastack.pop().pop_ctx_active(ctx);
+          areastack.pop().pop_ctx_active(ctx, true);
           continue;
         }
 
         if (n instanceof Area) {
           //console.log("PUSH", n.constructor.name);
           areastack.push(n);
-          n.push_ctx_active(ctx);
+          n.push_ctx_active(ctx, true);
           push(AREA_CTX_POP);
         }
 
@@ -1838,7 +1919,10 @@ ui_base.UIBase.register(Screen);
 ScreenArea.setScreenClass(Screen);
 
 
-export function startEvents(get_screen_cb) {
+let get_screen_cb;
+export function startEvents(getScreenFunc) {
+  get_screen_cb = getScreenFunc;
+
   if (_events_started) {
     return;
   }

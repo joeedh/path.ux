@@ -9,6 +9,21 @@ import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
 
+import cconst from './const.js';
+
+function myToFixed(s, n) {
+  s = s.toFixed(n);
+
+  while (s.endsWith('0')) {
+    s = s.slice(0, s.length-1);
+  }
+  if (s.endsWith("\.")) {
+    s = s.slice(0, s.length-1);
+  }
+
+  return s;
+}
+
 let keymap = events.keymap;
 
 let EnumProperty = toolprop.EnumProperty,
@@ -44,7 +59,6 @@ export class ValueButtonBase extends Button {
     if (!this.hasAttribute("datapath")) return;
     if (this.ctx === undefined) return;
     
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
     let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
@@ -58,10 +72,12 @@ export class ValueButtonBase extends Button {
       this.disabled = false;
     }
 
-    if (val != this._value) {
+    if (val !== this._value) {
       this._value = val;
       this.updateWidth();
+      this._repos_canvas();
       this._redraw();
+      this.setCSS();
     }
   }
   
@@ -76,18 +92,54 @@ export class ValueButtonBase extends Button {
 export class NumSlider extends ValueButtonBase {
   constructor() {
     super();
-      
+
+    this._last_label = undefined;
+
     this._name = "";
     this._step = 0.1;
     this._value = 0.0;
+    this._expRate = 1.333;
+    this.decimalPlaces = 4;
+    this.radix = 4;
 
+    this.isInt = false;
 
     this._redraw();
   }
-  
+
+  updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+    if (prop && prop.expRate) {
+      this._expRate = prop.expRate;
+    }
+    if (prop && prop.radix !== undefined) {
+      this.radix = prop.radix;
+    }
+
+    if (prop && prop.step) {
+      this._step = prop.step;
+    }
+    if (prop && prop.decimalPlaces !== undefined) {
+      this.decimalPlaces = prop.decimalPlaces;
+    }
+
+    super.updateDataPath();
+  }
+
   swapWithTextbox() {
     let tbox = document.createElement("textbox-x");
-    tbox.text = this.value.toFixed(5);
+
+    tbox.ctx = this.ctx;
+    tbox._init();
+
+    tbox.decimalPlaces = this.decimalPlaces;
+    tbox.isInt = this.isInt;
+    tbox.text = myToFixed(this.value, this.decimalPlaces);
     tbox.select();
     
     this.parentNode.insertBefore(tbox, this);
@@ -211,22 +263,41 @@ export class NumSlider extends ValueButtonBase {
   
   doRange() {
     if (this.hasAttribute("min")) {
-      let min = this.getAttribute("min");
-      this.value = Math.max(this.value, min);
+      let min = parseFloat(this.getAttribute("min"));
+      this._value = Math.max(this._value, min);
     }
     
     if (this.hasAttribute("max")) {
-      let max = this.getAttribute("max");
-      this.value = Math.min(this.value, max);
+      let max = parseFloat(this.getAttribute("max"));
+      this._value = Math.min(this._value, max);
     }
   }
-  
+
+  get value() {
+    return this._value;
+  }
+
+  set value(val) {
+    this.setValue(val, true, false);
+  }
+
   setValue(value, fire_onchange=true) {
-    this.value = value;
+    this._value = value;
+
+    if (this.hasAttribute("integer")) {
+      this.isInt = true;
+    }
+
+    if (this.isInt) {
+      this._value = Math.floor(this._value);
+    }
+
     this.doRange();
 
-    if (this.hasAttribute("is_int"))
-      this.value = Math.floor(this.value);
+    if (this.ctx && this.hasAttribute("datapath")) {
+      console.log(this.getAttribute("datapath"), this._value);
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
+    }
 
     if (fire_onchange && this.onchange) {
       this.onchange(this.value);
@@ -287,7 +358,7 @@ export class NumSlider extends ValueButtonBase {
         let dsign = Math.sign(dvalue);
 
         if (!this.hasAttribute("linear")) {
-          dvalue = Math.pow(Math.abs(dvalue), 1.333) * dsign;
+          dvalue = Math.pow(Math.abs(dvalue), this._expRate) * dsign;
         }
 
         this.value = startvalue + dvalue;
@@ -315,7 +386,7 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseout: (e) => {
-        console.log("leave");
+        //console.log("leave");
         last_background = this.getDefault("BoxBG");
 
         e.preventDefault();
@@ -323,7 +394,7 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseover: (e) => {
-        console.log("over");
+        //console.log("over");
         last_background = this.getDefault("BoxHighlight");
 
         e.preventDefault();
@@ -389,24 +460,57 @@ export class NumSlider extends ValueButtonBase {
     this.addEventListener("mouseout", mouseout, true);
     //*/
   }
-  
-  updateName() {
+
+  setCSS() {
+    //do not call parent class implementation
+    let dpi = this.getDPI();
+
+    let ts = this.getDefault("DefaultText").size;
+
+    let dd = this.isInt ? 5 : this.decimalPlaces + 8;
+
+    let label = this._name;
+    if (this.isInt) {
+      label += ": 0";
+      for (let i=0; i<this.radix; i++) {
+        label += "0";
+      }
+    } else {
+      label += ": 0.";
+      for (let i=0; i<this.decimalPlaces+1; i++) {
+        label += "0";
+      }
+    }
+
+    let tw = ui_base.measureText(this, label, undefined, undefined,
+                                 ts, this.getDefault("DefaultText")).width ;
+
+    tw += this._getArrowSize()*2.0 + ts;
+    tw = ~~tw;
+
+    let defw = this.getDefault("numslider_width");
+
+    //tw = Math.max(tw, w);
+
+    this.style["width"] = tw+"px";
+    this.dom.style["width"] = tw+"px";
+
+    this._repos_canvas();
+    this._redraw();
+  }
+
+  updateName(force) {
     let name = this.getAttribute("name");
-    
-    if (name !== this._name) {
+
+    if (force || name !== this._name) {
       this._name = name;
-      let dpi = this.getDPI();
-      
-      let ts = this.getDefault("DefaultText").size;
-      let tw = ui_base.measureText(this, this._genLabel(), this.dom, this.g).width/dpi + ts*2;
-      
-      let w = this.getDefault("numslider_width");
-      
-      w = Math.max(w, tw);
-      this.dom.style["width"] = w+"px";
-      
-      this._repos_canvas();
-      this._redraw();
+      this.setCSS();
+    }
+
+    let label = this._genLabel();
+    if (label !== this._last_label) {
+      this._last_label = label;
+      this.setCSS();
     }
   }
   
@@ -418,7 +522,7 @@ export class NumSlider extends ValueButtonBase {
       text = "error";
     } else {
       val = val === undefined ? 0.0 : val;
-      val = val.toFixed(3);
+      val = myToFixed(val, this.decimalPlaces);
 
       text = val;
       if (this._name) {
@@ -437,19 +541,24 @@ export class NumSlider extends ValueButtonBase {
     
     let dpi = this.getDPI();
     let disabled = this.disabled; //this.hasAttribute("disabled");
-    
+
+    let r = this.getDefault("BoxRadius");
+    if (this.isInt) {
+      r *= 0.25;
+    }
+
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      undefined, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
-    
-    let r = this.getDefault("BoxRadius") * dpi;
+      r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
+
+    r *= dpi;
     let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultText").size;
     
     //if (this.value !== undefined) {
     let text = this._genLabel();
-   
+
     let tw = ui_base.measureText(this, text, this.dom, this.g).width;
-    let cx = this.dom.width/2 - tw/2;
+    let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
     let cy = this.dom.height/2;
     
     ui_base.drawText(this, cx, cy + ts/2, text, this.dom, this.g);
@@ -458,7 +567,7 @@ export class NumSlider extends ValueButtonBase {
     g.fillStyle = "rgba(0,0,0,0.1)";
     
     let d = 7, w=canvas.width, h=canvas.height;
-    let sz = 10*dpi;
+    let sz = this._getArrowSize();
     
     g.beginPath();
     g.moveTo(d, h*0.5);
@@ -471,7 +580,10 @@ export class NumSlider extends ValueButtonBase {
     
     g.fill();
   }
-  
+
+  _getArrowSize() {
+    return UIBase.getDPI()*10;
+  }
   static define() {return {
     tagname : "numslider-x",
     style : "numslider"
@@ -1108,7 +1220,9 @@ UIBase.register(Check1);
 export class TextBox extends UIBase {
   constructor() {
     super();
-    
+
+    this._width = "min-content";
+
     this.addEventListener("focusin", () => {
       this._focus = 1;
       this.dom.focus();
@@ -1130,7 +1244,6 @@ export class TextBox extends UIBase {
     this.dom.setAttribute("tabindex", 0);
     this.dom.setAttribute("tab-index", 0);
     this.dom.style["margin"] = margin + "px";
-    this.dom.style["width"] = "min-contents";
 
     this.dom.setAttribute("type", "textbox");
     this.dom.onchange = (e) => {
@@ -1138,7 +1251,7 @@ export class TextBox extends UIBase {
     }
 
     this.radix = 16;
-    
+
     this.dom.oninput = (e) => {
       this._change(this.dom.value);
     }
@@ -1158,9 +1271,18 @@ export class TextBox extends UIBase {
     super.init();
 
     this.style["display"] = "flex";
-    this.style["width"] = "min-content";
+    this.style["width"] = this._width;
 
     this.setCSS();
+  }
+
+  set width(val) {
+    if (typeof val === "number") {
+      val += "px";
+    }
+
+    this._width = val;
+    this.style["width"] = val;
   }
 
   setCSS() {
@@ -1170,11 +1292,8 @@ export class TextBox extends UIBase {
       this.dom.style["font"] = this.style["font"];
     }
 
-//    for (let k of this.style) {
-  //    this.dom.style[k] = this.style[k];
-   // }
-
     this.dom.style["width"] = this.style["width"];
+    this.dom.style["height"] = this.style["height"];
   }
 
   updateDataPath() {
@@ -1197,19 +1316,6 @@ export class TextBox extends UIBase {
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
     
     let text = this.text;
-
-    function myToFixed(s, n) {
-      s = s.toFixed(n);
-
-      while (s.endsWith('0')) {
-        s = s.slice(0, s.length-1);
-      }
-      if (s.endsWith("\.")) {
-        s = s.slice(0, s.length-1);
-      }
-
-      return s;
-    }
 
     if (prop !== undefined && (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
       let is_int = prop.type == PropTypes.INT;
@@ -1237,6 +1343,13 @@ export class TextBox extends UIBase {
   
   update() {
     super.update();
+
+    if (this.dom.style["width"] !== this.style["width"]) {
+      this.dom.style["width"] = this.style["width"];
+    }
+    if (this.dom.style["height"] !== this.style["height"]) {
+      this.dom.style["height"] = this.style["height"];
+    }
 
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();

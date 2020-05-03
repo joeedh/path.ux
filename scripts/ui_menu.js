@@ -187,6 +187,10 @@ export class Menu extends UIBase {
     //if (this._popup.parentNode !== undefined) {
     //  this._popup.remove();
     //}
+    if (this._popup) {
+      this._popup.end();
+      this._popup = undefined;
+    }
 
     this.remove();
     this.dom.remove();
@@ -743,11 +747,10 @@ export class DropBox extends Button {
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
 
-    let con = this._popup = screen.popup(x, y);
+    let con = this._popup = menu._popup = screen.popup(x, y, false);
     con.noMarginsOrPadding();
 
     con.add(menu);
-
     menu.start();
   }
 

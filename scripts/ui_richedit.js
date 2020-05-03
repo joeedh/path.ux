@@ -217,6 +217,14 @@ export class RichViewer extends UIBase {
     this._value = "";
   }
 
+  hideScrollBars() {
+    this.contents.style["overflow"] = "hidden"
+  }
+
+  showScrollBars() {
+    this.contents.style["overflow"] = "scroll"
+  }
+
   //transforms text into final html form
   //note that client code is allowed to override this directly
   textTransform(text) {

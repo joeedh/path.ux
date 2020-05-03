@@ -26,8 +26,6 @@ export class DataPathSetOp extends ToolOp {
     }
 
     prop.setValue(val);
-
-    console.log("val:", val);
   }
 
   static create(ctx, datapath, value, id, massSetPath) {
@@ -43,8 +41,14 @@ export class DataPathSetOp extends ToolOp {
 
     tool.propType = prop.type;
 
-    if (rdef.subkey !== undefined && (prop.type & (PropTypes.FLAG|PropTypes.ENUM))) {
-      tool.inputs.prop = new IntProperty();
+    let mask = PropTypes.FLAG|PropTypes.ENUM;
+    mask |= PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT;
+
+    if (rdef.subkey !== undefined && (prop.type & mask)) {
+      if (prop.type & (PropTypes.ENUM|PropTypes.FLAG))
+        tool.inputs.prop = new IntProperty();
+      else
+        tool.inputs.prop = new FloatProperty();
 
       //value = rdef.obj[rdef.key];
       //console.log("rdef.value", value);
@@ -82,6 +86,9 @@ export class DataPathSetOp extends ToolOp {
   }
 
   undoPre(ctx) {
+    if (this.__ctx)
+      ctx = this.__ctx;
+
     this._undo = {};
 
     let paths = new util.set();
@@ -117,6 +124,9 @@ export class DataPathSetOp extends ToolOp {
   }
 
   undo(ctx) {
+    if (this.__ctx)
+      ctx = this.__ctx;
+
     for (let path in this._undo) {
       let rdef = ctx.api.resolvePath(ctx, path);
 
@@ -136,6 +146,11 @@ export class DataPathSetOp extends ToolOp {
   }
 
   exec(ctx) {
+    //use saved ctx we got from modal start
+    if (this.__ctx) {
+      ctx = this.__ctx;
+    }
+
     let path = this.inputs.dataPath.getValue();
     let massSetPath = this.inputs.massSetPath.getValue().trim();
 
@@ -145,10 +160,21 @@ export class DataPathSetOp extends ToolOp {
     }
   }
 
+  modalStart(ctx) {
+    this.__ctx = ctx.toLocked();
+
+    //save full, modal ctx
+    super.modalStart(this.__ctx);
+
+    this.exec(this.__ctx);
+    this.modalEnd(false);
+  }
+
   static tooldef() {return {
     uiname : "Property Set",
     toolpath : "app.prop_set",
     icon : -1,
+    is_modal : true,
     inputs : {
       dataPath : new StringProperty(),
       massSetPath : new StringProperty()

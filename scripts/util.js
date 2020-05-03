@@ -99,6 +99,26 @@ export function btoa(buf) {
   return btoa(ret);
 };
 
+export function formatNumberUI(val, isInt=false, decimals=5) {
+  if (val === undefined || val === null) {
+    val = "0";
+  } else if (isNaN(val)) {
+    val = "NaN";
+  } else if (val === -Infinity) {
+    val = "-" + String.fromCharCode(0x221E);
+  } else if (val === Infinity) {
+    val = "+" + String.fromCharCode(0x221E);
+  } else if (!isInt) {
+    val = val.toFixed(decimals);
+  } else {
+    val = ""+Math.floor(val);
+  }
+
+  return val;
+}
+
+//window.formatNumberUI = formatNumberUI;
+
 export function atob(buf) {
   let data = window.atob(buf);
   let ret = [];

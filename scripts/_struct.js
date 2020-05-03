@@ -2100,7 +2100,7 @@ define('struct_intern',[
             dummy.prototype.structName = dummy.name;
             
             this.struct_cls[dummy.structName] = dummy;
-            this.struct_cls[dummy.structName] = stt;
+            this.structs[dummy.structName] = stt;
             
             if (stt.id!=-1)
               this.struct_ids[stt.id] = stt;

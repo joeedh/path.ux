@@ -51,7 +51,7 @@ export function pushModalLight(obj) {
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
     "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter",
     "mouseleave", "dragstart", "drag", "dragend", "dragexit", "dragleave", "dragover",
-    "dragenter", "drop"
+    "dragenter", "drop", "pointerdown", "pointermove", "pointerup", "pointercancel"
   ]);
 
   let ret = {

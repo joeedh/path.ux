@@ -45,11 +45,7 @@ export class NumSliderSimple extends UIBase {
     this.modal = undefined;
   }
 
-  get value() {
-    return this._value;
-  }
-
-  set value(val) {
+  setValue(val, ignore_events=false) {
     val = Math.min(Math.max(val, this.range[0]), this.range[1]);
 
     if (this.isInt) {
@@ -60,7 +56,7 @@ export class NumSliderSimple extends UIBase {
       this._value = val;
       this._redraw();
 
-      if (this.onchange) {
+      if (this.onchange && !ignore_events) {
         this.onchange(val);
       }
 
@@ -71,10 +67,22 @@ export class NumSliderSimple extends UIBase {
     }
   }
 
+  get value() {
+    return this._value;
+  }
+
+  set value(val) {
+    this.setValue(val);
+  }
+
   updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
     let path = this.getAttribute("datapath");
 
-    if (!path) {
+    if (!path || path === "null" || path === "undefined") {
       return;
     }
 
@@ -412,6 +420,13 @@ export class NumSliderSimple extends UIBase {
     }
   }
 
+  _ondestroy() {
+    if (this._modal) {
+      popModalLight(this._modal);
+      this._modal = undefined;
+    }
+  }
+
   update() {
     super.update();
 
@@ -436,15 +451,17 @@ export class NumSliderSimple2 extends ColumnFrame {
 
     this._value = undefined;
     this._name = undefined;
+    this.decimalPlaces = 4;
+    this.isInt = false;
+
+    this.numslider = document.createElement("numslider-simple-base-x");
   }
 
   init() {
     super.init();
 
-    this.slider = document.createElement("numslider-simple-base-x");
-
-    if (this.hasAttribute("title")) {
-      this._name = this.hasAttribute("title");
+    if (this.hasAttribute("name")) {
+      this._name = this.hasAttribute("name");
     } else {
       this._name = "slider";
     }
@@ -454,19 +471,93 @@ export class NumSliderSimple2 extends ColumnFrame {
     this.l.overrideClass("numslider", "numslider_simpled");
 
     let strip = this.row();
-    strip.add(this.slider);
+    strip.add(this.numslider);
 
-    this.textbox = strip.textbox(this.getAttribute("datapath"));
-    this.textbox.style["width"] = "" + this.getDefault("TextBoxWidth") + "px";
-    this.textbox.setCSS();
+    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
 
-    this.slider.onchange = (val) => {
+    let textbox = this.textbox = document.createElement("textbox-x");
+
+    textbox.ctx = this.ctx;
+    textbox.packflag |= this.inherit_packflag;
+    if (path) {
+      textbox.setAttribute("datapath", path);
+    }
+
+    textbox._width = this.getDefault("TextBoxWidth")+"px";
+    textbox._init();
+    textbox.style["margin"] = "5px";
+
+    strip.add(textbox);
+
+    if (!path) {
+      this.linkTextBox();
+    }
+
+    this.numslider.onchange = (val) => {
+      this._value = val;
+
+      let onchange = this.numslider.onchange;
+      let onchange2 = this.onchange;
+
+      this.numslider.onchange = undefined;
+      this.onchange = undefined;
+
+      try {
+        if (onchange2) {
+          onchange2.call(this, this);
+        }
+      } catch (error) {
+        this.onchange = onchange2;
+        this.numslider.onchange = onchange;
+
+        throw error;
+      }
+
+      if (this.onchange) {
+        this.onchange(this);
+      }
+
       this.textbox.update();
+
+      this.numslider.onchange = onchange;
+      this.onchange = onchange2;
     }
   }
 
+  updateTextBox() {
+    this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+  }
+
+  linkTextBox() {
+    this.updateTextBox();
+
+    let onchange = this.numslider.onchange;
+    this.numslider.onchange = (val) => {
+      this._value = val;
+      this.updateTextBox();
+
+      onchange(this.numslider.onchange);
+    }
+  }
+
+  setValue(val) {
+    this.numslider.setValue(val);
+
+    if (!this.hasAttribute("datapath")) {
+      this.updateTextBox();
+    }
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(val) {
+    this.setValue(val);
+  }
+
   updateName() {
-    let name = this.getAttribute("title");
+    let name = this.getAttribute("name");
 
     if (!name && this.hasAttribute("datapath")) {
       let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
@@ -489,9 +580,22 @@ export class NumSliderSimple2 extends ColumnFrame {
   update() {
     super.update();
 
+    if (this.hasAttribute("integer")) {
+      this.isInt = true;
+      this.numslider.isInt = true;
+    }
+
     this.updateName();
-    this.slider.setAttribute("datapath", this.getAttribute("datapath"));
-    this.textbox.setAttribute("datapath", this.getAttribute("datapath"));
+
+    if (this.hasAttribute("datapath")) {
+      this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
+      this.textbox.setAttribute("datapath", this.getAttribute("datapath"));
+    }
+
+    if (this.hasAttribute("mass_set_path")) {
+      this.textbox.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
+      this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"))
+    }
   }
 
   setCSS() {

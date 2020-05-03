@@ -1,13 +1,19 @@
-import {Area} from "../scripts/ScreenArea.js";
-import * as nstructjs from "../scripts/struct.js";
+import {Area} from "../../scripts/ScreenArea.js";
+import * as nstructjs from "../../scripts/struct.js";
 
-export class MyAreaBase extends Area {
+export class Editor extends Area {
   constructor() {
     super();
+
+    this.useDataPathUndo = true;
   }
 
   getScreen() {
     return this.ctx.screen;
+  }
+
+  on_fileload(isActiveEditor) {
+
   }
 
   init() {
@@ -20,7 +26,7 @@ export class MyAreaBase extends Area {
     this.header = this.makeHeader(this.container, true);
   }
 }
-MyAreaBase.STRUCT = nstructjs.STRUCT.inherit(MyAreaBase, Area) + `
+Editor.STRUCT = nstructjs.STRUCT.inherit(Editor, Area) + `
 }
 `;
-nstructjs.register(MyAreaBase);
+nstructjs.register(Editor);

@@ -37,7 +37,8 @@ export const PropFlags = {
   USE_ICONS         : 64,
   USE_CUSTOM_GETSET : 128, //used by controller.js interface
   SAVE_LAST_VALUE   : 256,
-  READ_ONLY         : 512
+  READ_ONLY         : 512,
+  SIMPLE_SLIDER     : 1024
 };
 
 export class ToolPropertyIF {

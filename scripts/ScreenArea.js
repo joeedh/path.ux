@@ -61,11 +61,45 @@ class AreaWrangler {
     this.lastArea = undefined;
     this.stack = [];
     this.idgen = 0;
+    this._last_screen_id = undefined;
   }
 
-  push(type, area) {
-    this.lasts[type.name] = area;
-    this.lastArea = area;
+  _checkWrangler(ctx) {
+    if (ctx === undefined) {
+      return true;
+    }
+
+    if (this._last_screen_id === undefined) {
+      this._last_screen_id = ctx.screen._id;
+      return true;
+    }
+
+    if (ctx.screen._id !== this._last_screen_id) {
+      this.reset();
+
+      this._last_screen_id = ctx.screen._id;
+      console.warn("contextWrangler detected a new screen; new file?");
+      return false;
+    }
+
+    return true;
+  }
+
+  reset() {
+    this.stacks = {};
+    this.lasts = {};
+    this.lastArea = undefined;
+    this.stack = [];
+    this._last_screen_id = undefined;
+
+    return this;
+  }
+
+  push(type, area, pushLastRef=true) {
+    if (pushLastRef || this.lasts[type.name] === undefined) {
+      this.lasts[type.name] = area;
+      this.lastArea = area;
+    }
 
     if (!(type.name in this.stacks)) {
       this.stacks[type.name] = [];
@@ -77,11 +111,18 @@ class AreaWrangler {
 
   pop(type, area) {
     if (!(type.name in this.stacks)) {
-      throw new Error("pop_ctx_area called in error");
+      console.warn("pop_ctx_area called in error");
+      //throw new Error("pop_ctx_area called in error");
+      return;
     }
 
-    this.stacks[type.name].pop();
-    this.stack.pop();
+    if (this.stacks[type.name].length > 0) {
+      this.stacks[type.name].pop();
+    }
+
+    if (this.stack.length > 0) {
+      this.stack.pop();
+    }
   }
 
   getLastArea(type) {
@@ -106,6 +147,8 @@ class AreaWrangler {
 }
 
 let contextWrangler = new AreaWrangler();
+
+window._contextWrangler = contextWrangler;
 
 export const BorderMask = {
   LEFT    : 1,
@@ -163,13 +206,29 @@ export class Area extends ui_base.UIBase {
       if (child instanceof UIBase) {
         child.parentWidget = this;
       }
-    }
+    };
   }
 
   init() {
     super.init();
 
     this.noMarginsOrPadding();
+
+    let onover = (e) => {
+      //console.log(this._area_id, this.ctx.workspace._area_id);
+
+      //try to trigger correct entry in context area stacks
+      this.push_ctx_active();
+      this.pop_ctx_active();
+    };
+
+    this.addEventListener("mouseover", onover, {passive : true});
+    this.addEventListener("mousemove", onover, {passive : true});
+    this.addEventListener("mousein", onover, {passive : true});
+    this.addEventListener("mouseenter", onover, {passive : true});
+    this.addEventListener("touchstart", onover, {passive : true});
+    this.addEventListener("focusin", onover, {passive : true});
+    this.addEventListener("focus", onover, {passive : true});
   }
 
   /**
@@ -178,6 +237,10 @@ export class Area extends ui_base.UIBase {
    */
   getKeyMaps() {
     return this.keymap !== undefined ? [this.keymap] : [];
+  }
+
+  on_fileload(isActiveEditor) {
+    contextWrangler.reset();
   }
 
   buildDataPath() {
@@ -272,15 +335,15 @@ export class Area extends ui_base.UIBase {
   *
   * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
   * */
-  push_ctx_active() {
-    contextWrangler.push(this.constructor, this);
+  push_ctx_active(dontSetLastRef=false) {
+    contextWrangler.push(this.constructor, this, !dontSetLastRef);
   }
 
   /**
    * see push_ctx_active
    * */
-  pop_ctx_active() {
-    contextWrangler.pop(this.constructor, this);
+  pop_ctx_active(dontSetLastRef=false) {
+    contextWrangler.pop(this.constructor, this, !dontSetLastRef);
   }
   
   static register(cls) {
@@ -544,7 +607,11 @@ export class Area extends ui_base.UIBase {
     //  n.update();
     //});
   }
-  
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+
   static define() {return {
     tagname  : undefined, // e.g. "areadata-x",
     areaname : undefined, //api name for area type
@@ -674,7 +741,11 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   draw() {
-    this.area.draw();
+    if (this.area.draw) {
+      this.area.push_ctx_active();
+      this.area.draw();
+      this.area.pop_ctx_active();
+    }
   }
   
   toJSON() {
@@ -1013,8 +1084,14 @@ export class ScreenArea extends ui_base.UIBase {
       this.regenTabOrder();
     //}
   }
-  
+
+  _checkWrangler() {
+    contextWrangler._checkWrangler(this.ctx);
+  }
+
   update() {
+    this._checkWrangler();
+
     super.update();
 
     //flag client controller implementation that
@@ -1023,7 +1100,8 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.owning_sarea = this;
       this.area.size = this.size;
       this.area.pos = this.pos;
-      this.area.push_ctx_active();
+
+      this.area.push_ctx_active(true);
     }
 
     this._forEachChildWidget((n) => {
@@ -1031,7 +1109,7 @@ export class ScreenArea extends ui_base.UIBase {
     });
 
     if (this.area !== undefined) {
-      this.area.pop_ctx_active();
+      this.area.pop_ctx_active(true);
     }
   }
 
@@ -1060,8 +1138,14 @@ export class ScreenArea extends ui_base.UIBase {
     
     //find active editor
     
+    let editors = [];
+
     for (let area of this.editors) {
-      
+      if (!area.constructor || !area.constructor.define) {
+        //failed to load this area
+        continue;
+      }
+
       /*
       if (area.constructor === undefined || area.constructor.define === undefined) {
         console.warn("Missing class for area", area, "maybe buggy loadSTRUCT()?");
@@ -1075,15 +1159,36 @@ export class ScreenArea extends ui_base.UIBase {
       area.owning_sarea = undefined;
       this.editormap[areaname] = area;
       
-      if (areaname == this.area) {
+      if (areaname === this.area) {
+        this.area = area;
+      }
+
+      editors.push(area);
+    }
+    this.editors = editors;
+    
+    if (typeof this.area !== "object") {
+      let area = this.editors[0];
+
+      console.warn("Failed to find active area!", this.area);
+
+      if (typeof area !== "object") {
+        for (let k in areaclasses) {
+          area = areaclasses[k].define().tagname;
+          area = document.createElement(area);
+          let areaname = area.constructor.define().areaname;
+
+          this.editors.push(area);
+          this.editormap[areaname] = area;
+
+          break;
+        }
+      }
+
+      if (area) {
         this.area = area;
       }
     }
-    
-    if (typeof this.area != "object") {
-      console.warn("Failed to find active area!", this.area);
-      this.area = this.editors[0];
-    } 
 
     if (this.area !== undefined) {
       this.area.style["width"] = "100%";

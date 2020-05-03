@@ -143,6 +143,16 @@ export class DataPath {
     }
   }
 
+  simpleSlider() {
+    this.data.flag |= PropFlags.SIMPLE_SLIDER;
+    return this;
+  }
+
+  rollerSlider() {
+    this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
+    return this;
+  }
+
   range(min, max) {
     this.data.setRange(min, max);
     return this;
@@ -150,6 +160,11 @@ export class DataPath {
 
   decimalPlaces(n) {
     this.data.setDecimalPlaces(n);
+    return this;
+  }
+
+  expRate(exp) {
+    this.data.setExpRate(exp);
     return this;
   }
 
@@ -368,6 +383,7 @@ export class DataStruct {
     let ret = this.vec3(path, apiname, uiname, description);
 
     ret.data.subtype = toolprop.PropSubTypes.COLOR;
+    ret.simpleSlider();
 
     return ret;
   }
@@ -376,6 +392,7 @@ export class DataStruct {
     let ret = this.vec4(path, apiname, uiname, description);
 
     ret.data.subtype = toolprop.PropSubTypes.COLOR;
+    ret.simpleSlider();
 
     return ret;
   }
@@ -667,7 +684,6 @@ export class DataAPI extends ModelInterface {
   * */
   massSetProp(ctx, massSetPath, value) {
     for (let path of this.resolveMassSetPaths(ctx, massSetPath)) {
-      console.log(path);
       this.setValue(ctx, path, value);
     }
   }
@@ -694,7 +710,6 @@ export class DataAPI extends ModelInterface {
     let paths = [];
 
     let list = rdef.prop;
-    console.log(list);
 
     function applyFilter(obj) {
       let $ = obj;

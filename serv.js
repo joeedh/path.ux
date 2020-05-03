@@ -7,7 +7,7 @@ const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-const INDEX = "example/index.html";
+const INDEX = "index.html";
 const basedir = process.cwd();
 
 let mimemap = {

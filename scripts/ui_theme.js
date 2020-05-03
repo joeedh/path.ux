@@ -35,8 +35,70 @@ let cmap = {
   brown  : [0.7, 0.4, 0.3, 1]
 };
 
+export function color2web(color) {
+  function tostr(n) {
+    n = ~~(n*255);
+    let s = n.toString(16);
+
+    if (s.length > 2) {
+      s = s.slice(0, 2);
+    }
+
+    while (s.length < 2) {
+      s = "0" + s;
+    }
+
+    return s;
+  }
+
+  if (color.length === 3 || color[3] === 1.0) {
+    let r = tostr(color[0]);
+    let g = tostr(color[1]);
+    let b = tostr(color[2]);
+
+    return "#" + r + g + b;
+  } else {
+    let r = tostr(color[0]);
+    let g = tostr(color[1]);
+    let b = tostr(color[2]);
+    let a = tostr(color[3]);
+
+    return "#" + r + g + b + a;
+  }
+}
+
+window.color2web = color2web;
+
 export function css2color(color) {
+  if (!color) {
+    return new Vector4([0,0,0,1]);
+  }
+
+  color = (""+color).trim();
+
   let ret = css2color_rets.next();
+
+  if (color[0] === "#") {
+    color = color.slice(1, color.length);
+    let parts = [];
+
+    for (let i=0; i<color.length>>1; i++) {
+      let part = "0x" + color.slice(i*2, i*2+2);
+      parts.push(parseInt(part));
+    }
+
+    ret.zero();
+    let i;
+    for (i=0; i<Math.min(parts.length, ret.length); i++) {
+      ret[i] = parts[i] / 255.0;
+    }
+
+    if (i < 4) {
+      ret[3] = 1.0;
+    }
+
+    return ret;
+  }
 
   if (color in cmap) {
     return ret.load(cmap[color]);
@@ -56,6 +118,25 @@ export function css2color(color) {
 
 window.css2color = css2color
 
+export function web2color(str) {
+  if (typeof str === "string" && str.trim()[0] !== "#") {
+    str = "#" + str.trim();
+  }
+
+  return css2color(str);
+}
+window.web2color = web2color;
+
+let validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+
+export function validateWebColor(str) {
+  if (typeof str !== "string" && !(str instanceof String))
+    return false;
+
+  return str.trim().search(validate_pat) === 0;
+}
+
+window.validateWebColor = validateWebColor;
 
 export class CSSFont {
   constructor(args) {

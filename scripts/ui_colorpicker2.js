@@ -7,6 +7,8 @@ import * as events from './events.js';
 import * as ui from './ui.js';
 import {PropTypes} from './toolprop.js';
 import {keymap} from './simple_events.js';
+import cconst from './const.js';
+import {color2web, web2color, validateWebColor} from "./ui_base.js";
 
 let rgb_to_hsv_rets = new util.cachering(() => [0, 0, 0], 64);
 
@@ -416,6 +418,10 @@ export class SatValField extends UIBase {
         this.pushModal({
           on_mousemove: (e) => {
             let rect = this.canvas.getClientRects()[0];
+            if (rect === undefined) {
+              return;
+            }
+            
             let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
             setFromXY(x, y);
@@ -731,9 +737,16 @@ UIBase.register(ColorField);
 export class ColorPicker extends ui.ColumnFrame {
   constructor() {
     super();
+  }
+
+  init() {
+    super.init();
 
     this.field = document.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
+
+    this.field.packflag |= this.inherit_packflag;
+    this.field.packflag |= this.packflag;
 
     this.field.onchange = () => {
       this._setDataPath();
@@ -760,6 +773,11 @@ export class ColorPicker extends ui.ColumnFrame {
 
     this.shadow.appendChild(style);
     this.field.ctx = this.ctx;
+
+    this.add(this.colorbox);
+    this.add(this.field);
+
+    this.style["width"] = this.getDefault("defaultWidth") + "px";
   }
 
   updateColorBox() {
@@ -774,17 +792,32 @@ export class ColorPicker extends ui.ColumnFrame {
     this.colorbox.style["background-color"] = css;
   }
 
-  init() {
-    super.init();
-
-    this.add(this.colorbox);
-    this.add(this.field);
-
-    this.style["width"] = this.getDefault("defaultWidth") + "px";
-  }
-
   static setDefault(node) {
     let tabs = node.tabs();
+
+    node.cssText = node.textbox();
+    node.cssText.onchange = (val) => {
+      let ok = validateWebColor(val);
+      if (!ok) {
+        node.cssText.flash("red");
+        return;
+      } else {
+        node.cssText.flash("green");
+      }
+
+      val = val.trim();
+
+      let color = web2color(val);
+
+      console.log(color);
+
+      node._no_update_textbox = true;
+      console.log(color);
+      node.field.setRGBA(color[0], color[1], color[2], color[3]);
+      node._setSliders();
+
+      node._no_update_textbox = false;
+    };
 
     tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
 
@@ -794,6 +827,7 @@ export class ColorPicker extends ui.ColumnFrame {
       let hsva = node.hsva;
       node.setHSVA(e.value, hsva[1], hsva[2], hsva[3]);
     });
+
     node.s = tab.slider(undefined, "Saturation", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
       let hsva = node.hsva;
       node.setHSVA(hsva[0], e.value, hsva[2], hsva[3]);
@@ -806,7 +840,6 @@ export class ColorPicker extends ui.ColumnFrame {
       let hsva = node.hsva;
       node.setHSVA(hsva[0], hsva[1], hsva[2], e.value);
     });
-
 
     tab = tabs.tab("RGB");
 
@@ -851,6 +884,10 @@ export class ColorPicker extends ui.ColumnFrame {
     this.a2.setValue(rgba[3], false);
 
     this.updateColorBox();
+
+    if (!this._no_update_textbox) {
+      this.cssText.text = color2web(this.field.rgba);
+    }
   }
 
   get hsva() {
@@ -913,10 +950,6 @@ export class ColorPicker extends ui.ColumnFrame {
       }
 
       this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
-
-      //if (this.hasAttribute("mass_set_path")) {
-      //  let mass_set_path = this.getAttribute("mass_set_path");
-      //}
     }
   }
 
@@ -1009,8 +1042,12 @@ export class ColorPickerButton extends UIBase {
     let colorpicker = this.ctx.screen.popup(this);
     colorpicker.useDataPathUndo = this.useDataPathUndo;
 
-    let widget = colorpicker.colorPicker(this.getAttribute("datapath"), undefined, this.getAttribute("mass_set_path"));
+    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
 
+    let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
+    widget._init();
+
+    widget.style["padding"] = "20px";
     widget.onchange = onchange;
   }
 
@@ -1101,12 +1138,13 @@ export class ColorPickerButton extends UIBase {
 
     g.restore();
   }
+
   setCSS() {
     let w = this.getDefault("defaultWidth");
     let h = this.getDefault("defaultHeight");
     let dpi = this.getDPI();
 
-    this.style["width"] = w + "px";
+    this.style["width"] = "min-contents" + "px";
     this.style["height"] = h + "px";
 
     this.style["flex-direction"] = "row";
@@ -1138,10 +1176,15 @@ export class ColorPickerButton extends UIBase {
     let path = this.getAttribute("datapath");
     let prop = this.getPathMeta(this.ctx, path);
 
-    if ((prop === undefined || prop.data === undefined) && DEBUG.verboseDataPath) {
+    if ((prop === undefined || prop.data === undefined) && cconst.DEBUG.verboseDataPath) {
       console.log("bad path", path);
       return;
+    } else if (prop === undefined) {
+      this.disabled = true;
+      return;
     }
+
+    this.disabled = false;
 
     prop = prop;
 

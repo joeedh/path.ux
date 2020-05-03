@@ -88,7 +88,12 @@ export class ToolOp extends events.EventHandler {
       path += k + "=";
       if (prop.type === PropTypes.STRING)
         path += "'";
-      path += prop.getValue();
+
+      if (prop.type === PropTypes.FLOAT)
+        path += prop.getValue().toFixed(3);
+      else
+        path += prop.getValue();
+
       if (prop.type === PropTypes.STRING)
         path += "'";
       path += " ";
@@ -279,14 +284,14 @@ export class ToolOp extends events.EventHandler {
     
     this.modal_ctx = ctx;
     this.modalRunning = true
-    
-    this.pushModal(ctx.screen);
 
-    this._promise = new Promise((function(accept, reject) {
+    this._promise = new Promise((accept, reject) => {
       this._accept = accept;
       this._reject = reject;
-    }).bind(this));
-    
+
+      this.pushModal(ctx.screen);
+    });
+
     return this._promise;
   }
 
@@ -462,10 +467,14 @@ export class ToolMacro extends ToolOp {
 export class ToolStack extends Array {
   constructor(ctx) {
     super();
-    
+
     this.cur = -1;
     this.ctx = ctx;
     this.modalRunning = 0;
+  }
+
+  setRestrictedToolContext(ctx) {
+    this.toolctx = ctx;
   }
 
   reset(ctx) {
@@ -482,12 +491,17 @@ export class ToolStack extends Array {
     if (this.ctx === undefined) {
       this.ctx = ctx;
     }
-    
+
     if (!toolop.constructor.canRun(ctx)) {
       console.log("toolop.constructor.canRun returned false");
       return;
     }
-    
+
+    let tctx = this.toolctx !== undefined ? this.toolctx : ctx;
+    tctx = tctx.toLocked();
+
+    toolop._execCtx = tctx;
+
     if (!(toolop.undoflag & UndoFlags.NO_UNDO)) {
       this.cur++;
 
@@ -495,7 +509,7 @@ export class ToolStack extends Array {
       this.length = this.cur+1;
       
       this[this.cur] = toolop;
-      toolop.undoPre(ctx);
+      toolop.undoPre(tctx);
     }
     
     if (toolop.is_modal) {
@@ -507,33 +521,34 @@ export class ToolStack extends Array {
       }).bind(this);
       
       //will handle calling .exec itself
-      toolop.modalStart(ctx);
+      toolop.modalStart(ctx.toLocked());
     } else {
-      toolop.execPre(ctx);
-      toolop.exec(ctx);
-      toolop.execPost(ctx);
+      toolop.execPre(tctx);
+      toolop.exec(tctx);
+      toolop.execPost(tctx);
     }
   }
   
   undo() {
     if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
-      console.log("undo!", this.cur, this.length);
-      
-      this[this.cur].undo(this.ctx);
+      let tool = this[this.cur];
+      tool.undo(tool._execCtx);
       this.cur--;
     }
   }
   
   redo() {
     if (this.cur >= -1 && this.cur+1 < this.length) {
-      console.log("redo!", this.cur, this.length);
-      
       this.cur++;
-      
-      this[this.cur].undoPre(this.ctx);
-      this[this.cur].execPre(this.ctx);
-      this[this.cur].exec(this.ctx);
-      this[this.cur].execPost(this.ctx);
+
+      let tool = this[this.cur];
+      let ctx = tool._execCtx;
+      //ctx = this.ctx;
+
+      tool.undoPre(ctx);
+      tool.execPre(ctx);
+      tool.exec(ctx);
+      tool.execPost(ctx);
     }
   }
 }

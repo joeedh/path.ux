@@ -498,6 +498,8 @@ export class TabBar extends UIBase {
   }
   
   setActive(tab) {
+    console.warn("tab setActive");
+
     let update = tab !== this.tabs.active;
     this.tabs.active = tab;
     
@@ -699,7 +701,10 @@ UIBase.register(TabBar);
 export class TabContainer extends UIBase {
   constructor() {
     super();
-    
+
+    this.inherit_packflag = 0;
+    this.packflag = 0;
+
     this.dom = document.createElement("ul");
     this.dom.setAttribute("class", `_tab_ul_${this._id}`);
     
@@ -810,6 +815,9 @@ export class TabContainer extends UIBase {
 
     col.ctx = this.ctx;
     col._tab = this.tbar.addTab(name, id, tooltip);
+
+    col.inherit_packflag |= this.inherit_packflag;
+    col.packflag |= this.packflag;
 
     //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
 

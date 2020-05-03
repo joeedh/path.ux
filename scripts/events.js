@@ -48,6 +48,11 @@ export const DomEventTypes = {
   on_mousewheel  : 'mousewheel',
   on_keydown     : 'keydown',
   on_keyup       : 'keyup',
+  on_pointerdown : 'pointerdown',
+  on_pointermove : 'pointermove',
+  on_pointercancel : 'pointercancel',
+  on_pointerup   : 'pointerup',
+
   //on_keypress    : 'keypress'
 };
 

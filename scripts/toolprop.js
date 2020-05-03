@@ -105,15 +105,18 @@ export class ToolProperty extends ToolPropertyIF {
 
   toJSON() {
     return {
-      type : this.type,
-      subtype : this.subtype,
-      apiname : this.apiname,
-      uiname : this.uiname,
+      type        : this.type,
+      subtype     : this.subtype,
+      apiname     : this.apiname,
+      uiname      : this.uiname,
       description : this.description,
-      flag : this.flag,
-      icon : this.icon,
-      data : this.data
-    }
+      flag        : this.flag,
+      icon        : this.icon,
+      data        : this.data,
+      range       : this.range,
+      uiRange     : this.uiRange,
+      step        : this.step
+    };
   }
   
   loadJSON(obj) {
@@ -178,7 +181,16 @@ export class ToolProperty extends ToolPropertyIF {
     this.range = [min, max];
     return this;
   }
-  
+
+  setUIRange(min, max) {
+    if (min === undefined || max === undefined) {
+      throw new Error("min and/or max cannot be undefined");
+    }
+
+    this.uiRange = [min, max];
+    return this;
+  }
+
   setIcon(icon) {
     this.icon = icon;
     
@@ -257,61 +269,125 @@ export class NumProperty extends ToolProperty {
   }
 };
 
-export class IntProperty extends ToolProperty {
-  constructor(value, apiname, 
-              uiname, description, flag, icon)  
-  {
-    super(PropTypes.INT, undefined, apiname, uiname, description, flag, icon);
-    
-    this.radix = 10;
-    this.data = value !== undefined ? Math.floor(value) : 0;
+export class _NumberPropertyBase extends ToolProperty {
+  constructor(type, value, apiname,
+              uiname, description, flag, icon) {
+    super(type, undefined, apiname, uiname, description, flag, icon);
+
+    this.data = 0.0;
+    this.expRate = 1.33;
+    this.step = 0.1;
+
+    this.range = [-1e17, 1e17];
+    this.uiRange = undefined; //if undefined, this.range will be used
+
+    if (value !== undefined) {
+      this.setValue(value);
+    }
   }
-  
+
+  get ui_range() {
+    console.warn("NumberProperty.ui_range is deprecated");
+    return this.uiRange;
+  }
+
   toJSON() {
-    let ret = super.toJSON();
-    ret.range = this.range;
-    
-    return ret;
+    let json = super.toJSON();
+
+    json.data = this.data;
+    json.expRate = this.expRate;
+
+    return json;
   }
-  
+
   loadJSON(obj) {
     super.loadJSON(obj);
-    
-    this.range = obj.range;
+
+    this.data = obj.data || this.data;
+    this.expRate = obj.expRate || this.expRate;
+
     return this;
   }
-  
-  setValue(val) {
-    this.data = Math.floor(val);
-    
-    //fire events
-    super.setValue(val);
-    
-    return this;
+
+  set ui_range(val) {
+    console.warn("NumberProperty.ui_range is deprecated");
+    this.uiRange = val;
   }
 
   copyTo(b) {
-    super.copyTo(b);
     b.data = this.data;
+  }
+
+
+  /*
+  * non-linear exponent for number sliders
+  * in roll mode
+  * */
+  setExpRate(exp) {
+    this.expRate = exp;
+  }
+
+  setValue(val) {
+    this.data = val;
+
+    super.setValue(val);
     return this;
   }
 
-  setStep(step) {
-    super.setStep(Math.floor(step));
-  }
+  loadJSON(obj) {
+    super.loadJSON(obj);
 
-  setRange(min, max) {
-    if (min === undefined || max === undefined) {
-      throw new Error("min and/or max cannot be undefined");
-    }
+    let get = (key) => {
+      if (key in obj) {
+        this[key] = obj[key];
+      }
+    };
+
+    get("range");
+    get("step");
+    get("expRate");
+    get("ui_range");
+
+    return this;
+  }
+}
+
+export class IntProperty extends _NumberPropertyBase {
+  constructor(value, apiname, 
+              uiname, description, flag, icon)  
+  {
+    super(PropTypes.INT, apiname, uiname, description, flag, icon);
     
-    super.setRange(Math.floor(min), Math.floor(max));
+    this.radix = 10;
+  }
+
+  setValue(val) {
+    super.setValue(Math.floor(val));
     return this;
   }
-  
+
   setRadix(radix) {
     this.radix = radix;
   }
+
+  toJSON() {
+    let json = super.toJSON();
+
+    json.data = this.data;
+    json.radix = this.radix;
+
+    return json;
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    this.data = obj.data || this.data;
+    this.radix = obj.radix || this.radix;
+
+    return this;
+  }
+
 }
 _addClass(IntProperty);
 
@@ -361,30 +437,16 @@ export class BoolProperty extends ToolProperty {
 }
 _addClass(BoolProperty);
 
-export class FloatProperty extends ToolProperty {
+
+export class FloatProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
-    super(PropTypes.FLOAT, undefined, apiname, uiname, description, flag, icon);
+    super(PropTypes.FLOAT, apiname, uiname, description, flag, icon);
     
-    this.data = value !== undefined ? ~~value : 0;
     this.decimalPlaces = 4;
   }
-  
-  toJSON() {
-    let ret = super.toJSON();
-    ret.range = this.range;
-    
-    return ret;
-  }
-  
-  loadJSON(obj) {
-    super.loadJSON(obj);
-    
-    this.range = obj.range;
-    return this;
-  }
-  
+
   setDecimalPlaces(n) {
     this.decimalPlaces = n;
     return this;
@@ -402,6 +464,24 @@ export class FloatProperty extends ToolProperty {
     //fire events
     super.setValue(val);
     
+    return this;
+  }
+
+  toJSON() {
+    let json = super.toJSON();
+
+    json.data = this.data;
+    json.decimalPlaces = this.decimalPlaces;
+
+    return json;
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    this.data = obj.data || this.data;
+    this.decimalPlaces = obj.decimalPlaces || this.decimalPlaces;
+
     return this;
   }
 }
@@ -524,6 +604,7 @@ export class EnumProperty extends ToolProperty {
     
     //fire events
     super.setValue(val);
+    return this;
   }
 }
 _addClass(EnumProperty);
@@ -541,7 +622,9 @@ export class FlagProperty extends EnumProperty {
     this.data = bitmask;
 
     //do not trigger EnumProperty's setValue
-    ToolProperty.prototype.setValue.call(this, bitmask);
+    super.super.setValue(bitmask);
+    //ToolProperty.prototype.setValue.call(this, bitmask);
+    return this;
   }
 
   copy() {
@@ -560,8 +643,9 @@ export class Vec2Property extends ToolProperty {
   }
 
   setValue(v) {
-    super.setValue(v);
     this.data.load(v);
+    super.setValue(v);
+    return this;
   }
 
   getValue() {
@@ -590,6 +674,7 @@ export class Vec3Property extends ToolProperty {
   setValue(v) {
     this.data.load(v);
     super.setValue(v);
+    return this;
   }
 
   getValue() {
@@ -618,6 +703,7 @@ export class Vec4Property extends ToolProperty {
   setValue(v) {
     this.data.load(v);
     super.setValue(v);
+    return this;
   }
 
   getValue() {
@@ -646,6 +732,7 @@ export class QuatProperty extends ToolProperty {
   setValue(v) {
     this.data.load(v);
     super.setValue(v);
+    return this;
   }
 
   getValue() {
@@ -674,6 +761,7 @@ export class Mat4Property extends ToolProperty {
   setValue(v) {
     this.data.load(v);
     super.setValue(v);
+    return this;
   }
 
   getValue() {
@@ -781,6 +869,9 @@ export class ListProperty extends ToolProperty {
         throw new Error("invalid value " + item);
       }
     }
+
+    super.setValue(value);
+    return this;
   }
 
   getValue() {
@@ -910,6 +1001,9 @@ export class StringSetProperty extends ToolProperty {
         this.value.add(item);
       }
     }
+
+    super.setValue();
+    return this;
   }
 
   getValue() {

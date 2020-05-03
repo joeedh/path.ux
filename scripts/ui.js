@@ -347,9 +347,9 @@ export class Container extends ui_base.UIBase {
   }
 
   _ondestroy() {
-    for (let child of this.children) {
-      child._ondestroy();
-    }
+    this._forEachChildWidget((n) => {
+      n._ondestroy();
+    });
 
     super._ondestroy();
   }
@@ -614,16 +614,21 @@ export class Container extends ui_base.UIBase {
 
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("textbox-x")
-
-    ret.ctx = this.ctx;
-    ret.packflag |= packflag;
-    ret.onchange = cb;
-    ret.text = text;
+    let ret = document.createElement("textbox-x");
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
     }
+
+    ret.ctx = this.ctx;
+    ret.parentWidget = this;
+    ret._init();
+    ret.setCSS();
+    ret.update();
+
+    ret.packflag |= packflag;
+    ret.onchange = cb;
+    ret.text = text;
 
     this._add(ret);
     return ret;
@@ -791,7 +796,9 @@ export class Container extends ui_base.UIBase {
         this.checkenum(inpath, undefined, packflag);
       }
     } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
-      if (prop.subtype === PropSubTypes.COLOR) {
+      if (rdef.subkey !== undefined) {
+        return this.slider(path);
+      } else if (prop.subtype === PropSubTypes.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
@@ -1177,12 +1184,21 @@ export class Container extends ui_base.UIBase {
     packflag |= this.inherit_packflag;
     let ret;
 
+    if (inpath) {
+      let rdef = this.ctx.api.resolvePath(this.ctx, inpath);
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags.SIMPLE_SLIDER)) {
+        packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+      }
+    }
+
     if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
       ret = document.createElement("numslider-simple-x")
     } else {
       ret = document.createElement("numslider-x")
     }
     ret.packflag |= packflag;
+
+    let decimals;
 
     if (inpath) {
       let path = this._joinPrefix(inpath);
@@ -1203,19 +1219,16 @@ export class Container extends ui_base.UIBase {
       if (rdef && rdef.prop) {
         let prop = rdef.prop;
 
-        let range = prop.ui_range !== undefined ? prop.ui_range : prop.range;
-        range = range === undefined ? [-10000, 10000] : range;
+        let range = prop.uiRange !== undefined ? prop.uiRange : prop.range;
+        range = range === undefined ? [-100000, 100000] : range;
 
-        if (min === undefined)
-          min = range[0];
-        if (max === undefined)
-          max = range[1];
-        if (is_int === undefined)
-          is_int = prop.type === PropTypes.INT;
-        if (name === undefined)
-          name = prop.uiname;
-        if (step === undefined)
-          step = prop.step;
+        min = min === undefined ? range[0] : min;
+        max = max === undefined ? range[1] : max;
+        is_int = is_int === undefined ? prop.type === PropTypes.INT : is_int;
+        name = name === undefined ? prop.uiname : name;
+        step = step === undefined ? prop.step : step;
+        step = step === undefined ? (is_int ? 1 : 0.1) : step;
+        decimals = decimals === undefined ? prop.decimalPlaces : decimals;
       } else {
         console.warn("warning, failed to lookup property info for path", path);
       }
@@ -1228,7 +1241,10 @@ export class Container extends ui_base.UIBase {
     if (max !== undefined)
       ret.setAttribute("max", max);
     if (is_int)
-      ret.setAttribute("is_int", is_int);
+      ret.setAttribute("integer", is_int);
+    if (decimals !== undefined) {
+      ret.decimalPlaces = decimals;
+    }
 
     if (callback) {
       ret.onchange = callback;
@@ -1317,9 +1333,17 @@ export class Container extends ui_base.UIBase {
 
     let ret = document.createElement("colorpicker-x");
 
-    ret.constructor.setDefault(ret);
+    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+
+    ret.ctx = this.ctx;
+    ret.parentWidget = this;
+    ret._init();
+    ret.packflag |= packflag;
+    ret.inherit_packflag |= packflag;
+    ret.constructor.setDefault(ret);
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);

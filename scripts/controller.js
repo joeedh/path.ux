@@ -16,6 +16,9 @@ export function isVecProperty(prop) {
   ok = ok || prop instanceof toolprop_abstract.Vec2Property;
   ok = ok || prop instanceof toolprop_abstract.Vec3Property;
   ok = ok || prop instanceof toolprop_abstract.Vec4Property;
+  ok = ok || prop instanceof toolprop.Vec2Property;
+  ok = ok || prop instanceof toolprop.Vec3Property;
+  ok = ok || prop instanceof toolprop.Vec4Property;
 
   ok = ok || prop.type === PropTypes.VEC2;
   ok = ok || prop.type === PropTypes.VEC3;

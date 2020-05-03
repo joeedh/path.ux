@@ -5,6 +5,8 @@ import {cachering} from './util.js';
 
 export let ToolPaths = {};
 
+var initToolPaths_run = false;
+
 export function buildParser() {
   let t = (name, re, func) => new tokdef(name, re, func);
 
@@ -87,6 +89,11 @@ let parse_rets = new cachering(() => return {
 //*/
 
 export function parseToolPath(str, check_tool_exists=true) {
+  if (!initToolPaths_run) {
+    initToolPaths_run = true;
+    initToolPaths();
+  }
+
   let i1 = str.search(/\(/);
   let i2 = str.search(/\)/);
   let args = "";

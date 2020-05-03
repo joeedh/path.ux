@@ -130,6 +130,11 @@ export class LockedContext {
     this.load(ctx);
   }
 
+  toLocked() {
+    //just return itself
+    return this;
+  }
+
   error() {
     return this.ctx.error(...arguments);
   }
@@ -357,7 +362,8 @@ export class Context {
    *
    * */
   saveProperty(key) {
-    throw new Error("implement me");
+    console.warn("Missing saveProperty implementation in Context; passing through values...")
+    return this[key];
   }
 
   /**
@@ -366,7 +372,8 @@ export class Context {
    *
    * */
   loadProperty(ctx, key, data) {
-    throw new Error("implement me");
+    console.warn("Missing loadProperty implementation in Context; passing through values...")
+    return data;
   }
 
   getOwningOverlay(name, _val_out) {

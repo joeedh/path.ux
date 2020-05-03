@@ -707,7 +707,7 @@ export class UIBase extends HTMLElement {
     return window.innerHeight;
   }
 
-  pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase) {
+  pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
     let ret = undefined;
 
 
@@ -716,7 +716,10 @@ export class UIBase extends HTMLElement {
         let rects = n.getClientRects();
 
         if (n instanceof nodeclass) {
-          if (!n.visibleToPick) {
+          let ok = n.visibleToPick;
+          ok = ok || !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
+
+          if (!ok) {
             return;
           }
 
@@ -733,6 +736,9 @@ export class UIBase extends HTMLElement {
           if (nodeclass !== undefined) {
             ok = ok && (widget instanceof nodeclass);
           }
+
+          ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
+
 
           //console.log(ok, "|", x, y, rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
           if (ok) {
@@ -925,7 +931,7 @@ export class UIBase extends HTMLElement {
     color = new Vector4(color);
     let csscolor = color2css(color);
     
-    if (this._flashtimer !== undefined && this._flashcolor != csscolor) {
+    if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
       window.setTimeout(() => {
         this.flash(color, rect_element, timems);
       }, 100);
@@ -993,9 +999,9 @@ export class UIBase extends HTMLElement {
     
     //div.appendChild(this);
 
-    div.style["pointer-events"] = "transparent";
+    div.style["pointer-events"] = "none";
     div.tabIndex = undefined;
-    div.style["z-index"] = "100";
+    div.style["z-index"] = "900";
     div.style["display"] = "float";
     div.style["position"] = "absolute";
     div.style["left"] = rect.x + "px";
@@ -1004,12 +1010,20 @@ export class UIBase extends HTMLElement {
     div.style["background-color"] = color2css(color, 0.5);
     div.style["width"] = rect.width + "px";
     div.style["height"] = rect.height + "px";
+    div.setAttribute("class", "UIBaseFlash");
+
+    let screen = this.getScreen();
+    if (screen !== undefined) {
+      screen._enterPopupSafe();
+    }
 
     document.body.appendChild(div);
-
     this.focus();
-
     this._flashcolor = csscolor;
+
+    if (screen !== undefined) {
+      screen._exitPopupSafe();
+    }
   }
   
   destory() {
@@ -1062,12 +1076,10 @@ export class UIBase extends HTMLElement {
     let bad = head === undefined || !(head instanceof getDataPathToolOp());
     bad = bad || head.hashThis() !== head.hash(mass_set_path, path, prop.type, this._id);
 
-    console.log(head, getDataPathToolOp());
-
-    if (head !== undefined && head instanceof getDataPathToolOp()) {
-      console.log("===>", bad, head.hashThis());
-      console.log("    ->", head.hash(mass_set_path, path, prop.type, this._id));
-    }
+    //if (head !== undefined && head instanceof getDataPathToolOp()) {
+      //console.log("===>", bad, head.hashThis());
+      //console.log("    ->", head.hash(mass_set_path, path, prop.type, this._id));
+    //}
 
     if (!bad) {
       toolstack.undo();
@@ -1169,6 +1181,8 @@ export class UIBase extends HTMLElement {
     }
     
     this._forEachChildWidget((n) => {
+      n.parentWidget = this;
+
       if (n.ctx === undefined) {
         n.ctx = ctx;
       }
