@@ -125,18 +125,27 @@ export const DefaultTheme = {
   },
 
   numslider : {
-    "defaultWidth" : 100,
-    "defaultHeight" : 29
+    DefaultText : new CSSFont({
+      font   : "sans-serif",
+      color  : "black",
+      size   : 16,
+      weight : 'bold'
+    }),
+    defaultWidth : 100,
+    defaultHeight : 29
   },
 
   numslider_simple : {
+    TitleText : new CSSFont({
+      size : 14
+    }),
     BoxBG : "rgb(125, 125, 125)",
     BoxBorder : "rgb(75, 75, 75)",
-    SlideHeight : 18,
-    DefaultWidth : 125,
-    DefaultHeight : 32,
+    SlideHeight : 10,
+    DefaultWidth : 135,
+    DefaultHeight : 24,
     BoxRadius : 5,
-    TextBoxWidth : 40
+    TextBoxWidth : 45
   },
 
   colorfield : {

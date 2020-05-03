@@ -755,7 +755,14 @@ export class Container extends ui_base.UIBase {
     }
 
     if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
-      let ret = this.slider(inpath);
+      let ret;
+      if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
+        ret = this.simpleslider(inpath);
+      } else {
+        ret = this.slider(inpath);
+      }
+
+      ret.packflag |= packflag;
 
       if (mass_set_path) {
         ret.setAttribute("mass_set_path", mass_set_path);
@@ -797,7 +804,9 @@ export class Container extends ui_base.UIBase {
       }
     } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
       if (rdef.subkey !== undefined) {
-        return this.slider(path);
+        let ret = (packflag & PackFlags.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
+        ret.packflag |= packflag;
+        return ret;
       } else if (prop.subtype === PropSubTypes.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);

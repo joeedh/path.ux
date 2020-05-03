@@ -4,6 +4,7 @@ import {PropTypes, BoolProperty, IntProperty, FloatProperty, FlagProperty,
         QuatProperty, Mat4Property} from "./toolprop.js";
 
 import * as util from './util.js';
+import {isVecProperty} from "./controller.js";
 
 export class DataPathSetOp extends ToolOp {
   constructor() {
@@ -115,9 +116,14 @@ export class DataPathSetOp extends ToolOp {
 
       if (prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
         this._undo[path] = rdef.obj[rdef.key];
+      } else if (isVecProperty(prop)) {
+        if (rdef.subkey) {
+          this._undo[path] = rdef.value;
+        }
       } else {
         let prop2 = prop.copy();
         prop2.setValue(value);
+
         this._undo[path] = prop2.getValue();
       }
     }
@@ -131,9 +137,6 @@ export class DataPathSetOp extends ToolOp {
       let rdef = ctx.api.resolvePath(ctx, path);
 
       if (rdef.prop !== undefined && (rdef.prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
-        console.log("flag/enum property");
-        console.log(rdef);
-
         rdef.obj[rdef.key] = this._undo[path];
       }
       try {

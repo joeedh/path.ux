@@ -45,7 +45,7 @@ export function copyEvent(e) {
 }
 
 export function pushModalLight(obj) {
-  console.trace("pushModalLight");
+  console.warn("pushModalLight");
 
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
@@ -163,7 +163,7 @@ export function pushModalLight(obj) {
 }
 
 export function popModalLight(state) {
-  console.log("popModalLight");
+  console.warn("popModalLight");
 
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");

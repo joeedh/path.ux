@@ -726,15 +726,20 @@ export class TabContainer extends UIBase {
     li.appendChild(this.tbar);
     this.dom.appendChild(li);
 
+    this.tbar.parentWidget = this;
+
     this.tbar.onchange = (tab) => {
       if (this._tab) {
-        this._tab.remove();
+        HTMLElement.prototype.remove.call(this._tab);
       }
       
       this._tab = this.tabs[tab.id];
       //this._tab = document.createElement("div");
       //this._tab.innerText = "SDfdsfsdyay";
-      
+
+      this._tab.parentWidget = this;
+      this._tab.update();
+
       let li = document.createElement("li");
       li.style["background-color"] = this.getDefault("DefaultPanelBG");
       li.setAttribute("class", `_tab_li_${this._id}`);

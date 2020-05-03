@@ -747,7 +747,7 @@ export class DropBox extends Button {
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
 
-    let con = this._popup = menu._popup = screen.popup(x, y, false);
+    let con = this._popup = menu._popup = screen.popup(this, x, y, false);
     con.noMarginsOrPadding();
 
     con.add(menu);

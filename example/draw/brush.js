@@ -5,8 +5,8 @@ import {Vector4} from "../../scripts/vectormath.js";
 
 export class BrushSettings {
   constructor() {
-    this.size = 25;
-    this.soft = 0.0;
+    this.size = 35;
+    this.soft = 0.3;
     this.type = "circle";
     this.spacing = 0.145;
     this.color = new Vector4([0,0,0,1]);

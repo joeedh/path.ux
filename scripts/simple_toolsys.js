@@ -509,7 +509,9 @@ export class ToolStack extends Array {
       this.length = this.cur+1;
       
       this[this.cur] = toolop;
-      toolop.undoPre(tctx);
+      //let undoPre use full context
+      //needed by DataPathSetOp
+      toolop.undoPre(ctx.toLocked());
     }
     
     if (toolop.is_modal) {

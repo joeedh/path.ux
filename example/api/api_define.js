@@ -61,10 +61,13 @@ function api_define_dynamics(api) {
 function api_define_brushsettings(api) {
   let st = api.mapStruct(BrushSettings, true);
 
-  st.float("size", "size", "Size").range(0, 1024).decimalPlaces(1).expRate(1.5).step(0.5);
-  st.float("spacing", "spacing", "spacing").range(0, 4).decimalPlaces(2).expRate(1.4).step(0.025);
+  st.float("size", "size", "Size").range(0, 1024).uiRange(0, 512).decimalPlaces(1).expRate(1.5)
+  .step(0.5);
+  st.float("spacing", "spacing", "spacing").range(0, 4).decimalPlaces(2)
+           .expRate(1.4).step(0.025).simpleSlider();
   st.color4("color", "color", "Color");
-  st.float("soft", "soft", "Soft").range(0, 1.0).decimalPlaces(3).step(0.025).expRate(1.4);
+  st.float("soft", "soft", "Soft").range(0, 1.0).decimalPlaces(3).step(0.025)
+           .expRate(1.4).simpleSlider();
 }
 
 function api_define_workspace(api) {

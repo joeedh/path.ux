@@ -10,6 +10,9 @@ import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
 import {Vector2, Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
 import {RowFrame, ColumnFrame} from "./ui.js";
+import {isNumber} from "./toolprop.js";
+
+import './ui_widgets.js';
 
 let keymap = events.keymap;
 
@@ -29,8 +32,8 @@ export class NumSliderSimple extends UIBase {
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
 
-    this.canvas.style["width"] = "100%";
-    this.canvas.style["height"] = this.getDefault("defaultHeight") + "px";
+    this.canvas.style["width"] = this.getDefault("DefaultWidth") + "px";
+    this.canvas.style["height"] = this.getDefault("DefaultHeight") + "px";
     this.canvas.style["pointer-events"] = "none";
 
     this.highlight = false;
@@ -100,9 +103,14 @@ export class NumSliderSimple extends UIBase {
         this.range[0] = prop.range[0];
         this.range[1] = prop.range[1];
       }
+      if (prop.uiRange !== undefined) {
+        this.uiRange = new Array(2);
+        this.uiRange[0] = prop.uiRange[0];
+        this.uiRange[1] = prop.uiRange[1];
+      }
 
 
-      console.log("updating numsplider simple value");
+      //console.log("updating numsplider simple value", val);
       this.value = val;
     }
   }
@@ -390,7 +398,7 @@ export class NumSliderSimple extends UIBase {
   setCSS() {
     super.setCSS();
 
-    this.canvas.style["width"] = "100%"
+    this.canvas.style["width"] = "min-contents";
     this.canvas.style["min-width"] = this.getDefault("DefaultWidth") + "px";
     this.style["min-width"] = this.getDefault("DefaultWidth") + "px";
     this._redraw();
@@ -415,6 +423,7 @@ export class NumSliderSimple extends UIBase {
       //console.log("canvas size update", w, h);
       this.canvas.width = w;
       this.canvas.height = h;
+
       this.setCSS();
       this._redraw();
     }
@@ -449,10 +458,13 @@ export class NumSliderSimple2 extends ColumnFrame {
   constructor() {
     super();
 
-    this._value = undefined;
+    this._value = 0;
     this._name = undefined;
     this.decimalPlaces = 4;
     this.isInt = false;
+    this._lock_textbox = false;
+
+    this.textbox = document.createElement("textbox-x");
 
     this.numslider = document.createElement("numslider-simple-base-x");
   }
@@ -468,84 +480,103 @@ export class NumSliderSimple2 extends ColumnFrame {
 
     this.l = this.label(this._name);
     this.l.font = "TitleText";
-    this.l.overrideClass("numslider", "numslider_simpled");
+    this.l.overrideClass("numslider_simple");
 
     let strip = this.row();
     strip.add(this.numslider);
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
 
-    let textbox = this.textbox = document.createElement("textbox-x");
+    let textbox = this.textbox;
+
+    textbox.onchange = () => {
+      let text = textbox.text;
+
+      if (!isNumber(text)) {
+        textbox.flash("red");
+        return;
+      } else {
+        textbox.flash("green");
+        let f = parseFloat(text);
+
+        if (isNaN(f)) {
+          this.flash("red");
+          return;
+        }
+
+        if (this.isInt) {
+          f = Math.floor(f);
+        }
+
+        this._lock_textbox = 1;
+        this.setValue(f);
+        this._lock_textbox = 0;
+      }
+    }
 
     textbox.ctx = this.ctx;
     textbox.packflag |= this.inherit_packflag;
-    if (path) {
-      textbox.setAttribute("datapath", path);
-    }
-
     textbox._width = this.getDefault("TextBoxWidth")+"px";
     textbox._init();
     textbox.style["margin"] = "5px";
 
     strip.add(textbox);
 
-    if (!path) {
-      this.linkTextBox();
-    }
+    this.linkTextBox();
+
+    let in_onchange = 0;
 
     this.numslider.onchange = (val) => {
-      this._value = val;
+      this._value = this.numslider.value;
+      this.updateTextBox();
 
-      let onchange = this.numslider.onchange;
-      let onchange2 = this.onchange;
+      if (in_onchange) {
+        return;
+      }
 
-      this.numslider.onchange = undefined;
-      this.onchange = undefined;
-
-      try {
-        if (onchange2) {
-          onchange2.call(this, this);
+      if (this.onchange !== undefined) {
+        in_onchange++;
+        try {
+          if (this.onchange) {
+            this.onchange(this);
+          }
+        } catch (error) {
+          util.print_stack(error);
         }
-      } catch (error) {
-        this.onchange = onchange2;
-        this.numslider.onchange = onchange;
-
-        throw error;
       }
 
-      if (this.onchange) {
-        this.onchange(this);
-      }
-
-      this.textbox.update();
-
-      this.numslider.onchange = onchange;
-      this.onchange = onchange2;
+      in_onchange--;
     }
   }
 
   updateTextBox() {
+    if (!this._init_done) {
+      return;
+    }
+
+    if (this._lock_textbox > 0)
+      return;
+
     this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+    this.textbox.update();
   }
 
   linkTextBox() {
     this.updateTextBox();
 
     let onchange = this.numslider.onchange;
-    this.numslider.onchange = (val) => {
-      this._value = val;
+    this.numslider.onchange = (e) => {
+      this._value = e.value;
       this.updateTextBox();
 
-      onchange(this.numslider.onchange);
+      onchange(e);
     }
   }
 
   setValue(val) {
+    this._value = val;
     this.numslider.setValue(val);
-
-    if (!this.hasAttribute("datapath")) {
-      this.updateTextBox();
-    }
+    this.updateTextBox();
   }
 
   get value() {
@@ -589,11 +620,9 @@ export class NumSliderSimple2 extends ColumnFrame {
 
     if (this.hasAttribute("datapath")) {
       this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
-      this.textbox.setAttribute("datapath", this.getAttribute("datapath"));
     }
 
     if (this.hasAttribute("mass_set_path")) {
-      this.textbox.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
       this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"))
     }
   }

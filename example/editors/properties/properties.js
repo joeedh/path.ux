@@ -63,7 +63,7 @@ let massSetPath
   = "canvas.paths[{$.id % 2 === 0}].material.color";
 
 col.prop(path, undefined, massSetPath);</pre>
-    `).hideScrollBars();
+    `);
   }
 
   static define() {return {

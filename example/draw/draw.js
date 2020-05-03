@@ -277,9 +277,23 @@ export class Canvas {
 
       let blur = p.material.blur;
 
+      let bluroff = 10000;
+
       if (blur) {
+        g.save();
         g.shadowBlur = blur;
+
+        let color = p.material.color;
+
+        g.fillStyle = color2css(color);
+        g.shadowColor = color2css([color[0], color[1], color[2]]);
+
+
+        g.translate(-bluroff, -bluroff);
+        g.shadowOffsetX = bluroff;
+        g.shadowOffsetY = bluroff;
       }
+
       g.beginPath();
       g.fillStyle = color2css(p.material.color);
 
@@ -300,6 +314,11 @@ export class Canvas {
       }
 
       g.fill();
+
+      if (blur) {
+        g.shadowBlur = 0;
+        g.restore();
+      }
     }
   }
 };

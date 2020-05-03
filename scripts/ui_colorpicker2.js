@@ -695,7 +695,16 @@ export class ColorField extends ui.ColumnFrame {
   }
 
   setRGBA(r, g, b, a=1.0, fire_onchange=true) {
+    if (bad(r) || bad(g) || bad(b) || bad(a)) {
+      console.warn("Invalid value!");
+      return;
+    }
+
     let ret = rgb_to_hsv(r, g, b);
+
+    function bad(f) {
+      return typeof f !== "number" || isNaN(f);
+    }
 
     this.hsva[0] = ret[0];
     this.hsva[1] = ret[1];
@@ -1039,7 +1048,7 @@ export class ColorPickerButton extends UIBase {
       this.onclick(e);
     }
 
-    let colorpicker = this.ctx.screen.popup(this);
+    let colorpicker = this.ctx.screen.popup(this, this);
     colorpicker.useDataPathUndo = this.useDataPathUndo;
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;

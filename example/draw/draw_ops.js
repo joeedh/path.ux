@@ -42,6 +42,8 @@ export class DrawOp extends ToolOp {
       ret.inputs.brushType.setValue(bs.type);
     if (!args.fillColor)
       ret.inputs.fillColor.setValue(bs.color);
+    if (!args.strokeColor)
+      ret.inputs.strokeColor.setValue(bs.color);
     if (!args.brushSize)
       ret.inputs.brushSize.setValue(bs.size);
     if (!args.brushSoft)

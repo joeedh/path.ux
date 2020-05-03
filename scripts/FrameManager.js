@@ -489,8 +489,19 @@ export class Screen extends ui_base.UIBase {
     this._popup_safe = Math.max(this._popup_safe-1, 0);
   }
   /** makes a popup at x,y and returns a new container-x for it */
-  popup(elem_or_x, y, closeOnMouseOut=true) {
+  popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
+
+    let sarea = this.sareas.active;
+
+    let w = owning_node;
+    while (w) {
+      if (w instanceof ScreenArea.ScreenArea) {
+        sarea = w;
+        break;
+      }
+      w = w.parentWidget;
+    }
 
     if (typeof elem_or_x === "object") {
       let r = elem_or_x.getClientRects()[0];
@@ -551,8 +562,10 @@ export class Screen extends ui_base.UIBase {
 
     let _remove = container.remove;
     container.remove = function() {
-      end();
-      _remove.call(this);
+      if (arguments.length == 0) {
+        end();
+      }
+      _remove.apply(this, arguments);
     };
 
     container._ondestroy = () => {
@@ -560,14 +573,21 @@ export class Screen extends ui_base.UIBase {
     };
 
     let bad_time = util.time_ms();
+    let last_pick_time = util.time_ms();
 
     mousepick = (e, x, y, do_timeout=true) => {
+      if (sarea && sarea.area) {
+        sarea.area.push_ctx_active();
+        sarea.area.pop_ctx_active();
+      }
       //console.log("=======================================================popup touch start");
       //console.log(e);
       
-      if (x === undefined) {
-        console.log(e.x, e.y, "M");
+      if (util.time_ms() - last_pick_time < 250) {
+        return;
       }
+      last_pick_time = util.time_ms();
+
       x = x === undefined ? e.x : x;
       y = y === undefined ? e.y : y;
 

@@ -4,6 +4,7 @@ import {print_stack} from './util.js';
 import {ToolOp, UndoFlags, ToolFlags} from "./simple_toolsys.js";
 import {Vec2Property, Vec3Property, Vec4Property, PropTypes, PropFlags} from './toolprop.js';
 import * as toolprop_abstract from './toolprop_abstract.js';
+import * as util from './util.js';
 
 let PUTLParseError = parseutil.PUTLParseError;
 
@@ -62,6 +63,27 @@ function toolkey(cls) {
   return cls[Symbol.ToolID];
 }
 
+let lt = util.time_ms();
+let lastmsg = undefined;
+let lcount = 0;
+function _report(msg) {
+  let skip = msg === lastmsg;
+
+  skip = skip && util.time_ms()-lt < 500;
+  if (skip) {
+    return;
+  }
+
+  if (lcount > 0) {
+    console.warn(`${msg} [${lcount+1}]`);
+  } else {
+    console.warn(msg);
+  }
+
+  lastmsg = msg;
+  lcount = 1;
+  lt = util.time_ms;
+}
 export const DataTypes = {
   STRUCT: 0,
   DYNAMIC_STRUCT: 1,
@@ -155,6 +177,11 @@ export class DataPath {
 
   range(min, max) {
     this.data.setRange(min, max);
+    return this;
+  }
+
+  uiRange(min, max) {
+    this.data.setUIRange(min, max);
     return this;
   }
 
@@ -736,8 +763,11 @@ export class DataAPI extends ModelInterface {
       return this.resolvePath_intern(ctx, inpath, ignoreExistence)
     } catch (error) {
       //throw new DataPathError("bad path " + path);
-      print_stack(error);
-      console.warn("bad path " + inpath);
+      if (!(error instanceof DataPathError)) {
+        util.print_stack(error);
+      }
+
+      _report("bad path " + inpath);
       return undefined;
     }
   }

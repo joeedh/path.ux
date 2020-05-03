@@ -86,15 +86,33 @@ export class WorkspaceEditor extends Editor {
 
     let header = this.header;
 
+    let strip = header.strip();
+    strip.iconbutton(Icons.UNDO, "Undo", () => {
+      this.ctx.toolstack.undo();
+    });
+    strip.iconbutton(Icons.REDO, "Redo", () => {
+      this.ctx.toolstack.redo();
+    });
+
     let container = this.container;
     let row = container.row();
     row.background = row.getDefault("AreaHeaderBG");
 
-    row.prop("workspace.brush.size")
-    row.prop("workspace.brush.soft")
-    row.prop("workspace.brush.spacing")
+
+
+    let table = row.table();
+
+    let row2 = table.row();
+
+
+    row2.prop("workspace.brush.size", PackFlags.SIMPLE_NUMSLIDERS);
+    row2.prop("workspace.brush.soft");
+
+    row2 = table.row();
+    row2.prop("workspace.brush.spacing")
+    row2.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
+
     row.prop("workspace.brush.color");
-    row.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
 
     this.setCSS();
   }

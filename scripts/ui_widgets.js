@@ -8,6 +8,7 @@ import * as simple_toolsys from './simple_toolsys.js';
 import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
+import {isNumber} from "./toolprop.js";
 
 import cconst from './const.js';
 
@@ -295,7 +296,6 @@ export class NumSlider extends ValueButtonBase {
     this.doRange();
 
     if (this.ctx && this.hasAttribute("datapath")) {
-      console.log(this.getAttribute("datapath"), this._value);
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
     }
 
