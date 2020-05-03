@@ -212,6 +212,7 @@ export class Area extends ui_base.UIBase {
   init() {
     super.init();
 
+    this.style["overflow"] = "hidden";
     this.noMarginsOrPadding();
 
     let onover = (e) => {
@@ -584,8 +585,6 @@ export class Area extends ui_base.UIBase {
   }
   
   setCSS() {
-    this.style["overflow"] = "hidden";
-    
     if (this.size !== undefined) {
       this.style["position"] = "absolute";
       //this.style["left"] = this.pos[0] + "px";
