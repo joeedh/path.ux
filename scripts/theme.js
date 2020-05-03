@@ -135,6 +135,12 @@ export const DefaultTheme = {
     defaultHeight : 29
   },
 
+  curvewidget : {
+    CanvasWidth : 256,
+    CanvasHeight : 256,
+    CanvasBG : "rgba(50, 50, 50, 0.75)"
+  },
+
   numslider_simple : {
     TitleText : new CSSFont({
       size : 14

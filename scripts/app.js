@@ -235,11 +235,11 @@ export class CanvasArea extends ScreenArea.Area {
 
 }
 
-CanvasArea.STRUCT = nstructjs.STRUCT.inherit(CanvasArea, ScreenArea.Area) + `
+CanvasArea.STRUCT = nstructjs.inherit(CanvasArea, ScreenArea.Area) + `
   }
 `;
 
-nstructjs.manager.add_class(CanvasArea);
+nstructjs.register(CanvasArea);
 ScreenArea.Area.register(CanvasArea);
 
 export class AppState extends events.EventHandler {

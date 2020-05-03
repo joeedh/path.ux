@@ -22,29 +22,11 @@ for (let k in DefaultTheme) {
 
 let Vector4 = vectormath.Vector4;
 
-export let Icons = {};
+export {Icons} from './icon_enum.js';
+import {Icons} from './icon_enum.js';
 
-/*
-Icons are defined in spritesheets that live in 
-the iconsheet16/32 dom nodes.  Icons are numbered start from
-the upper left sprite tile.
-
-This function sets the mapping between icon numbers and names.
-
-The following icons should be in the icon sheet and in this map:
-
-RESIZE      :
-SMALL_PLUS  :
-TRANSLATE   : for moving things
-UI_EXPAND   : panel open icon
-UI_COLLAPSE : panel close icon
-NOTE_EXCL   : exclamation mark for notifications
-*/
-export function setIconMap(icons) {
-  for (let k in icons) {
-    Icons[k] = icons[k];
-  }
-}
+export {setIconMap} from './icon_enum.js';
+import {setIconMap} from './icon_enum.js';
 
 export const EnumProperty = toolprop.EnumProperty;
 

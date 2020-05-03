@@ -1,17 +1,18 @@
+import * as pathux from '../../scripts/path.ux.js';
+window.pathux = pathux;
+
+import {nstructjs, ToolStack, UIBase, setIconManager, setIconMap,
+        setTheme, IconManager, keymap, ScreenArea, util,
+        HotKey, KeyMap, Screen, DataPathSetOp} from "../../scripts/path.ux.js";
+
 import {ModelData} from "./state.js";
 import {defineAPI} from "../api/api_define.js"
-import {ToolStack} from "../../scripts/simple_toolsys.js";
 import {ToolContext, ViewContext} from "./context.js";
-import {Screen} from "../../scripts/FrameManager.js";
-import {UIBase, setIconManager, setIconMap, setTheme,
-        IconManager} from "../../scripts/ui_base.js";
-import {keymap} from "../../scripts/events.js";
-import {ScreenArea} from "../../scripts/ScreenArea.js";
-import * as nstructjs from '../../scripts/struct.js';
+
 import {WorkspaceEditor} from '../editors/workspace/workspace.js';
 import {AppScreen} from "../editors/screen.js";
 import cconst from "./const.js";
-import * as util from '../util/util.js';
+//import * as util from '../util/util.js';
 import './toolop.js';
 
 import {theme} from '../theme.js';
@@ -22,7 +23,7 @@ setIconMap(Icons);
 
 import cconst1 from './const.js';
 import cconst2 from '../../scripts/const.js';
-import {HotKey, KeyMap} from "../../scripts/simple_events.js";
+//import {HotKey, KeyMap} from "../../scripts/simple_events.js";
 import {PropsEditor} from "../editors/properties/properties.js";
 import {LogEditor} from "../editors/log/log_editor.js";
 
@@ -35,6 +36,20 @@ let iconmanager = new IconManager([
 ], [16, 32, 48], 16);
 
 setIconManager(iconmanager);
+
+/*
+let dopExecPost = DataPathSetOp.prototype.execPost;
+DataPathSetOp.prototype.execPost = function() {
+  dopExecPost.call(this, ...arguments);
+  window.redraw_all_full();
+};
+
+let dopUndo = DataPathSetOp.prototype.undo;
+DataPathSetOp.prototype.undo = function() {
+  dopUndo.call(this, ...arguments);
+  window.redraw_all_full();
+};
+//*/
 
 export class AppState {
   constructor() {

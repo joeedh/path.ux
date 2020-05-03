@@ -119,6 +119,8 @@ export class DataPathSetOp extends ToolOp {
       } else if (isVecProperty(prop)) {
         if (rdef.subkey) {
           this._undo[path] = rdef.value;
+        } else {
+          this._undo[path] = rdef.value.copy();
         }
       } else {
         let prop2 = prop.copy();
@@ -137,7 +139,12 @@ export class DataPathSetOp extends ToolOp {
       let rdef = ctx.api.resolvePath(ctx, path);
 
       if (rdef.prop !== undefined && (rdef.prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+        let old = rdef.obj[rdef.key];
+
         rdef.obj[rdef.key] = this._undo[path];
+
+        rdef.prop.dataref = rdef.obj;
+        rdef.prop._fire("change", rdef.obj[rdef.key], old);
       }
       try {
         ctx.api.setValue(ctx, path, this._undo[path]);

@@ -3,6 +3,7 @@ import {DataAPI, DataStruct, DataPath} from '../../scripts/simple_controller.js'
 import * as nstructjs from '../../scripts/struct.js';
 import {Icons} from '../editors/icon_enum.js';
 import {Canvas} from '../draw/draw.js';
+import {Curve1D} from "../../scripts/curve1d.js";
 
 export class Cell {
   constructor(a, b, c) {
@@ -33,6 +34,8 @@ export class ModelData {
     this.canvas = new Canvas();
     this.sheet.active = this.sheet[0];
 
+    this.curvemap = new Curve1D();
+
     this.value = 0;
     this.enum = 0;
     this.color = new Vector4([0, 0, 0, 1]);
@@ -41,12 +44,13 @@ export class ModelData {
 }
 ModelData.STRUCT = `
 example.ModelData {
-  color   : vec4;
-  enum    : int;
-  value   : float;
-  text    : string;
-  sheet   : array(Cell);
-  canvas  : Canvas;
+  color     : vec4;
+  enum      : int;
+  value     : float;
+  text      : string;
+  sheet     : array(Cell);
+  canvas    : Canvas;
+  curvemap  : Curve1D;
 }
 `;
 nstructjs.register(ModelData);

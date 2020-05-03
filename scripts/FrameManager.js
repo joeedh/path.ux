@@ -4,6 +4,7 @@ import './ui_widgets2.js';
 import cconst from './const.js';
 import {haveModal, pushModalLight, popModalLight} from './simple_events.js';
 import * as util from './util.js';
+import './ui_curvewidget.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as ui from './ui.js';

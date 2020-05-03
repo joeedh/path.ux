@@ -1,4 +1,3 @@
-import "./controller_ops.js";
 import * as toolprop from './toolprop.js';
 import {ToolOp} from './simple_toolsys.js';
 import {print_stack} from './util.js';
@@ -181,6 +180,10 @@ export class ModelInterface {
     }
 
     if (prop !== undefined) {
+      if (prop.type === PropTypes.CURVE && !val) {
+        throw new DataPathError("can't set curve data to nothing");
+      }
+
       let use_range = (prop.type & (PropTypes.INT | PropTypes.FLOAT));
 
       use_range = use_range || (res.subkey && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)));

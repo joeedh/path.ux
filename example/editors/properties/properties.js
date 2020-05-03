@@ -28,7 +28,15 @@ export class PropsEditor extends Editor {
     tabs.tab("Settings");
     tabs.setActive(tab1);
 
+    this.buildCurve(tabs.tab("Curve Mapping"));
+
     this.setCSS();
+  }
+
+  buildCurve(tab) {
+    tab.prop("data.curvemap");
+    //let c = document.createElement("curve-widget-x");
+    //tab.add(c);
   }
 
   buildFill(tab) {
@@ -44,7 +52,8 @@ export class PropsEditor extends Editor {
     let massSetPath = "canvas.paths[{$.id % 2 === 0}].material.color";
 
     col.label("Stripe fun!");
-    col.prop(path, undefined, massSetPath);
+    let ret = col.prop(path, undefined, massSetPath);
+    ret.style["padding"] = "10px";
 
     col.viewer(undefined, `
       <h2>Mass Paths Example</h2>

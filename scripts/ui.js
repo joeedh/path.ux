@@ -7,7 +7,6 @@ var _ui = undefined;
 
 import * as util from './util.js';
 import * as vectormath from './util.js';
-import * as ui_curvewidget from './ui_curvewidget.js';
 import * as ui_base from './ui_base.js';
 import * as ui_widgets from './ui_widgets.js';
 import * as toolprop from './toolprop.js';
@@ -732,6 +731,24 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  curve1d(inpath, packflag=0, mass_set_path=undefined) {
+    packflag |= this.inherit_packflag;
+
+    let ret = document.createElement("curve-widget-x");
+
+    ret.ctx = this.ctx;
+    ret.packflag |= packflag;
+
+    if (inpath)
+      ret.setAttribute("datapath", inpath);
+    if (mass_set_path)
+      ret.setAttribute("mass_set_path", mass_set_path);
+
+    this.add(ret);
+
+    return ret;
+  }
+
   prop(inpath, packflag = 0, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
@@ -754,7 +771,9 @@ export class Container extends ui_base.UIBase {
       return name;
     }
 
-    if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
+    if (prop.type == PropTypes.CURVE) {
+      return this.curve1d(path, packflag, mass_set_path);
+    } else if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
       let ret;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath);
@@ -1113,7 +1132,11 @@ export class Container extends ui_base.UIBase {
 
     let ret = document.createElement("dropbox-x")
     if (enummap !== undefined) {
-      ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+      if (enummap instanceof ui_base.EnumProperty) {
+        ret.prop = enummap;
+      } else {
+        ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+      }
 
       if (iconmap !== undefined) {
         ret.prop.addIcons(iconmap)
@@ -1134,11 +1157,8 @@ export class Container extends ui_base.UIBase {
 
     ret.setAttribute("name", name);
 
-    ret.onselect = (id) => {
-      if (callback !== undefined) {
-        callback(id);
-      }
-    }
+    ret.onchange = callback;
+    ret.onselect = callback;
 
     ret.packflag |= packflag;
 
@@ -1161,26 +1181,6 @@ export class Container extends ui_base.UIBase {
 
     //XXX don't forget to OR packflag into widget
     throw new Error("implement me!");
-
-    var cw = new CurveWidget(this.storagePrefix + id);
-
-    if (default_preset !== undefined)
-      cw.load(default_preset);
-
-    var l = this.dat.add({bleh: "name"}, "bleh");
-
-    var parent = l.domElement.parentElement.parentElement.parentElement;
-
-    parent["class"] = parent.style["class"] = "closed";
-
-    cw.bind(parent, this);
-    cw.draw();
-
-    l.remove();
-
-    this.curve_widgets.push(cw);
-
-    return cw;
   }
 
   simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {

@@ -571,6 +571,18 @@ export class DataStruct {
     return dpath;
   }
 
+  curve1d(path, apiname, uiname, description) {
+    let prop = new toolprop.Curve1DProperty(undefined);
+
+    prop.apiname = apiname;
+    prop.uiname = uiname;
+    prop.description = description;
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
+  }
+
   enum(path, apiname, enumdef, uiname, description) {
     let prop;
 
@@ -1444,7 +1456,6 @@ export function initSimpleController() {
 }
 
 import {DataPathSetOp} from "./controller_ops.js";
-
 let dpt = DataPathSetOp;
 
 export function getDataPathToolOp() {

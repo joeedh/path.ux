@@ -22,6 +22,7 @@ export let PropTypes = {
   QUAT : 1024,
   PROPLIST : 4096,
   STRSET : 8192,
+  CURVE  : 8192<<1
   //ITER : 8192<<1
 };
 
@@ -256,3 +257,29 @@ export class StringSetProperty extends ToolPropertyIF {
   copy() {
   }
 }
+
+export class Curve1DPropertyIF extends ToolPropertyIF {
+  constructor(curve, uiname) {
+    super(PropTypes.CURVE);
+
+    this.data = curve;
+  }
+
+  getValue() {
+    return this.curve;
+  }
+
+  setValue(curve) {
+    if (curve === undefined) {
+      return;
+    }
+
+    let json = JSON.parse(JSON.stringify(curve));
+    this.data.load(json);
+  }
+
+  copyTo(b) {
+    b.setValue(this.data);
+  }
+}
+

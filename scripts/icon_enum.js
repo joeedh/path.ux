@@ -1,5 +1,27 @@
 "use strict";
 
+/*
+Icons are defined in spritesheets that live in
+the iconsheet16/32 dom nodes.  Icons are numbered start from
+the upper left sprite tile.
+
+This function sets the mapping between icon numbers and names.
+
+The following icons should be in the icon sheet and in this map:
+
+RESIZE      :
+SMALL_PLUS  :
+TRANSLATE   : for moving things
+UI_EXPAND   : panel open icon
+UI_COLLAPSE : panel close icon
+NOTE_EXCL   : exclamation mark for notifications
+*/
+export function setIconMap(icons) {
+  for (let k in icons) {
+    Icons[k] = icons[k];
+  }
+}
+
 export let Icons = {
   HFLIP          : 0,
   TRANSLATE      : 1,
@@ -42,3 +64,4 @@ export let Icons = {
   APPEND_VERTEX  : 38,
   LARGE_CHECK    : 39
 };
+

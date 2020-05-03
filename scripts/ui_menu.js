@@ -822,6 +822,31 @@ export class DropBox extends Button {
     }
   }
 
+  setValue(val) {
+    if (this.prop !== undefined) {
+      this.prop.setValue(val);
+      let val2=val;
+
+      if (val2 in this.prop.keys)
+        val2 = this.prop.keys[val2];
+      val2 = this.prop.ui_value_names[val2];
+
+      this.setAttribute("name", ""+val2);
+      this._name = ""+val2;
+    } else {
+      this.setAttribute("name", ""+val);
+      this._name = ""+val;
+    }
+
+    if (this.onchange) {
+      this.onchange(val);
+    }
+
+    this.setCSS();
+    this.update();
+    this._redraw();
+  }
+
   get menu() {
     return this._menu;
   }
@@ -932,7 +957,6 @@ export class MenuWrangler {
       this.closetimer = util.time_ms();
       return;
     }
-    console.log(e.x, e.y);
 
     let screen = this.screen;
     let x = e.pageX, y = e.pageY;
@@ -942,8 +966,6 @@ export class MenuWrangler {
     if (element === undefined) {
       return;
     }
-
-    console.log(element.tagName);
 
     if (element instanceof DropBox && element.menu !== this.menu) {
       //destroy entire menu stack

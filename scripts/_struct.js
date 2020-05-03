@@ -2119,6 +2119,10 @@ define('struct_intern',[
       }
     },
 
+    function register(cls, structName) {
+      return this.add_class(cls, structName);
+    },
+    
     function add_class(cls, structName) {
       if (!cls.STRUCT) {
         throw new Error("class " + cls.name + " has no STRUCT script");
@@ -2825,6 +2829,13 @@ define('structjs',[
   //forward struct_intern's exports
   for (var k in struct_intern) {
     exports[k] = struct_intern[k];
+  }
+  
+  exports.register = function register(cls, name) {
+    return exports.manager.register(cls, name);
+  }
+  exports.inherit = function() {
+    return exports.STRUCT.inherit(...arguments);
   }
   
   //export other modules

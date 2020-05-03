@@ -40,6 +40,8 @@ function _addClass(cls) {
   PropClasses[new cls().type] = cls;
 }
 
+let customPropTypeBase = 17;
+
 export class ToolProperty extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname, description, flag, icon) {
     super();
@@ -67,10 +69,13 @@ export class ToolProperty extends ToolPropertyIF {
   } 
 
   static register(cls) {
-    cls.PROP_TYPE_ID = util.strhash(cls.name);
+    cls.PROP_TYPE_ID = (1<<customPropTypeBase);
     PropTypes[cls.name] = cls.PROP_TYPE_ID;
 
+    customPropTypeBase++;
     customPropertyTypes.push(cls);
+
+    return cls.PROP_TYPE_ID;
   }
 
   private() {
@@ -1079,3 +1084,46 @@ export class StringSetProperty extends ToolProperty {
 }
 
 _addClass(StringSetProperty);
+
+import {Curve1D} from './curve1d.js';
+
+export class Curve1DProperty extends ToolPropertyIF {
+  constructor(curve, apiname, uiname, description, flag, icon) {
+    super(PropTypes.CURVE, undefined, apiname, uiname, description, flag, icon);
+
+    this.data = new Curve1D();
+
+    if (curve !== undefined) {
+      this.setValue(curve);
+    }
+  }
+
+  getValue() {
+    return this.data;
+  }
+
+  evaluate(t) {
+    return this.data.evaluate(t);
+  }
+
+  setValue(curve) {
+    if (curve === undefined) {
+      return;
+    }
+
+    this.data.load(curve);
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+
+    b.setValue(this.data);
+  }
+
+  copy() {
+    let ret = new Curve1DProperty();
+    this.copyTo(ret);
+    return ret;
+  }
+}
+
