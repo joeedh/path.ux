@@ -89,11 +89,12 @@ export class ToolOp extends events.EventHandler {
       if (prop.type === PropTypes.STRING)
         path += "'";
 
-      if (prop.type === PropTypes.FLOAT)
+      if (prop.type === PropTypes.FLOAT) {
         path += prop.getValue().toFixed(3);
-      else
+      } else {
         path += prop.getValue();
-
+      }
+      
       if (prop.type === PropTypes.STRING)
         path += "'";
       path += " ";

@@ -978,7 +978,7 @@ export class DataAPI extends ModelInterface {
         }
 
         if (val === undefined) {
-          console.log(prop.values, val1, prop);
+          console.warn(inpath, prop.values, val1, prop);
           throw new DataPathError("unknown value " + val1);
         }
 

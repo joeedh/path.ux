@@ -281,7 +281,7 @@ export class _NumberPropertyBase extends ToolProperty {
     this.range = [-1e17, 1e17];
     this.uiRange = undefined; //if undefined, this.range will be used
 
-    if (value !== undefined) {
+    if (value !== undefined && value !== null) {
       this.setValue(value);
     }
   }
@@ -328,6 +328,14 @@ export class _NumberPropertyBase extends ToolProperty {
   }
 
   setValue(val) {
+    if (val === undefined || val === null) {
+      return;
+    }
+
+    if (typeof val !== "number") {
+      throw new Error("Invalid number " + val);
+    }
+
     this.data = val;
 
     super.setValue(val);
@@ -356,7 +364,7 @@ export class IntProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
-    super(PropTypes.INT, apiname, uiname, description, flag, icon);
+    super(PropTypes.INT, value, apiname, uiname, description, flag, icon);
     
     this.radix = 10;
   }
@@ -442,7 +450,7 @@ export class FloatProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
-    super(PropTypes.FLOAT, apiname, uiname, description, flag, icon);
+    super(PropTypes.FLOAT, value, apiname, uiname, description, flag, icon);
     
     this.decimalPlaces = 4;
   }

@@ -171,7 +171,9 @@ export class LockedContext {
       try {
         v = ctx[k];
       } catch (error) {
-        console.warn("failed to look up property in context: ", k);
+        if (cconst.DEBUG.contextSystem) {
+          console.warn("failed to look up property in context: ", k);
+        }
         continue;
       }
 
@@ -183,12 +185,17 @@ export class LockedContext {
         continue;
       }
 
-      if (typeof k === "string" && (overlay[k+"_save"] && overlay[k+"_load"])) {
-        data = overlay[k + "_save"]();
-        getter = overlay[k + "_load"];
-      } else {
-        data = ctx.saveProperty(k);
-        getter = wrapget(k);
+      try {
+        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
+          data = overlay[k + "_save"]();
+          getter = overlay[k + "_load"];
+        } else {
+          data = ctx.saveProperty(k);
+          getter = wrapget(k);
+        }
+      } catch (error) {
+        console.warn("Failed to save context property", k);
+        continue;
       }
 
       this.props[k] = {

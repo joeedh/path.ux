@@ -1006,7 +1006,7 @@ export class Container extends ui_base.UIBase {
         prop = prop.prop;
     }
 
-    if (!name) {
+    if (!name && prop) {
       name = prop.uiname;
     }
 
@@ -1519,6 +1519,8 @@ export class PanelFrame extends ColumnFrame {
 
     this.contents = document.createElement("colframe-x");
 
+    this.packflag = this.inherit_packflag = 0;
+
     this._closed = false;
   }
 
@@ -1537,6 +1539,26 @@ export class PanelFrame extends ColumnFrame {
   clear() {
     this.clear();
     this.add(this.titleframe);
+  }
+
+  get inherit_packflag() {
+    if (!this.contents) return;
+    return this.contents.inherit_packflag;
+  }
+
+  set inherit_packflag(val) {
+    if (!this.contents) return;
+    this.contents.inherit_packflag = val;
+  }
+
+  get packflag () {
+    if (!this.contents) return;
+    return this.contents.packflag;
+  }
+
+  set packflag(val) {
+    if (!this.contents) return;
+    this.contents.packflag = val;
   }
 
   init() {

@@ -222,6 +222,7 @@ export class Area extends ui_base.UIBase {
       this.pop_ctx_active();
     };
 
+    //*
     this.addEventListener("mouseover", onover, {passive : true});
     this.addEventListener("mousemove", onover, {passive : true});
     this.addEventListener("mousein", onover, {passive : true});
@@ -229,6 +230,7 @@ export class Area extends ui_base.UIBase {
     this.addEventListener("touchstart", onover, {passive : true});
     this.addEventListener("focusin", onover, {passive : true});
     this.addEventListener("focus", onover, {passive : true});
+    //*/
   }
 
   /**
