@@ -192,6 +192,11 @@ export class AreaResizeTool extends ToolBase {
     this.finish();
   }
 
+  finish() {
+    super.finish();
+    this.screen.regenBorders();
+  }
+
   on_keydown(e) {
     switch (e.keyCode) {
       case keymap["Escape"]:
@@ -276,6 +281,7 @@ export class AreaResizeTool extends ToolBase {
     }
 
     this.screen.loadFromVerts();
+    this.screen.solveAreaConstraints();
     this.screen.setCSS();
   }
 }

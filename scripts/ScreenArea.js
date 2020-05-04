@@ -14,6 +14,10 @@ let UIBase = ui_base.UIBase;
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
+export const AreaFlags = {
+  HIDDEN : 1
+};
+
 export function setScreenClass(cls) {
   Screen = cls;
 }
@@ -190,6 +194,8 @@ export class Area extends ui_base.UIBase {
     
     this.pos = undefined; //set by screenarea parent
     this.size = undefined; //set by screenarea parent
+    this.minSize = [5, 5];
+    this.maxSize = [undefined, undefined];
 
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
@@ -394,7 +400,7 @@ export class Area extends ui_base.UIBase {
       let cls = areaclasses[k];
       let def = cls.define();
 
-      if (def.hidden)
+      if (def.flag & AreaFlags.HIDDEN)
         continue;
 
       let uiname = def.uiname;
@@ -661,6 +667,7 @@ export class ScreenArea extends ui_base.UIBase {
     super();
     
     this._borders = [];
+    this._verts = [];
     
     this._sarea_id = contextWrangler.idgen++;
     
@@ -680,7 +687,7 @@ export class ScreenArea extends ui_base.UIBase {
 
       //console.log("screen area mouseover");
       let screen = this.getScreen();
-      if (screen.sareas.active !== this && screen.sareas.active) {
+      if (screen.sareas.active !== this && screen.sareas.active && screen.sareas.active.area) {
         screen.sareas.active.area.on_area_blur();
       }
 
@@ -729,6 +736,14 @@ export class ScreenArea extends ui_base.UIBase {
 
   get borderLock() {
     return this.area !== undefined ? this.area.borderLock : 0;
+  }
+
+  get minSize() {
+    return this.area !== undefined ? this.area.minSize : [5, 5];
+  }
+
+  get maxSize() {
+    return this.area !== undefined ? this.area.maxSize : [undefined, undefined];
   }
 
   _side(border) {
@@ -941,6 +956,7 @@ export class ScreenArea extends ui_base.UIBase {
   
   makeBorders(screen) {
     this._borders.length = 0;
+    this._verts.length = 0;
     
     let p = this.pos, s = this.size;
     
@@ -952,9 +968,15 @@ export class ScreenArea extends ui_base.UIBase {
     ];
 
     for (let i=0; i<vs.length; i++) {
+      vs[i] = screen.getScreenVert(vs[i], i);
+      this._verts.push(vs[i]);
+    }
+
+    for (let i=0; i<vs.length; i++) {
       let v1 = vs[i], v2 = vs[(i + 1) % vs.length];
 
       let b = screen.getScreenBorder(this, v1, v2, i);
+
 
       for (let j=0; j<2; j++) {
         let v = j ? b.v2 : b.v1;
@@ -1024,8 +1046,12 @@ export class ScreenArea extends ui_base.UIBase {
       child.onadd();
     }
   }
-  
+
   switch_editor(cls) {
+    return this.switchEditor(cls);
+  }
+
+  switchEditor(cls) {
     let def = cls.define();
     let name = def.areaname;
     

@@ -50,12 +50,12 @@ export const DefaultTheme = {
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-    "AreaHeaderBG" : "rgba(170, 170, 170, 1.0)",
+    "AreaHeaderBG" : "rgba(155, 155, 155, 1.0)",
 
     //fonts
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
-      size  : 14,
+      size  : 16,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
     }),
@@ -81,19 +81,32 @@ export const DefaultTheme = {
       //weight   : "bold"
     }),
 
-    "MenuText" : new CSSFont({
-      size     : 12,
-      color    : "rgba(25, 25, 25, 1.0)",
-      font     : "sans-serif"
-      //weight   : "bold"
-    }),
-
     "TitleText" : new CSSFont({
       size     : 16,
       color    : "rgba(55, 55, 55, 1.0)",
       font     : "sans-serif",
       weight   : "bold"
     }),
+  },
+
+  menu : {
+    MenuText : new CSSFont({
+      size     : 12,
+      color    : "rgba(25, 25, 25, 1.0)",
+      font     : "sans-serif"
+      //weight   : "bold"
+    }),
+
+    MenuSeparator : `
+      width : 100%;
+      height : 2px;
+      padding : 0px;
+      margin : 0px;
+      border : none;
+      background-color : grey; 
+    `,
+
+    MenuBorder : "1px solid grey",
   },
 
   richtext : {
@@ -142,6 +155,7 @@ export const DefaultTheme = {
   },
 
   numslider_simple : {
+    labelOnTop : false,
     TitleText : new CSSFont({
       size : 14
     }),
@@ -149,7 +163,7 @@ export const DefaultTheme = {
     BoxBorder : "rgb(75, 75, 75)",
     SlideHeight : 10,
     DefaultWidth : 135,
-    DefaultHeight : 24,
+    DefaultHeight : 18,
     BoxRadius : 5,
     TextBoxWidth : 45
   },
@@ -184,7 +198,9 @@ export const DefaultTheme = {
   },
 
   dropbox : {
-    dropTextBG : "rgba(250, 250, 250, 0.7)" //if undefined, will use BoxBG
+    dropTextBG : "rgba(250, 250, 250, 0.7)", //if undefined, will use BoxBG
+    BoxHighlight : "rgba(155, 220, 255, 0.4)",
+    defaultHeight : 24
   }
 };
 

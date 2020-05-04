@@ -693,34 +693,27 @@ export class UIBase extends HTMLElement {
     let ret = undefined;
 
 
+    let testwidget = (n) => {
+      if (n instanceof nodeclass) {
+        let ok;
+        ok = n.visibleToPick;
+        ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
+
+        return ok;
+      }
+    };
+
     let rec = (n, widget, depth=0) => {
-      if (n.getClientRects) {
+      if (n.getClientRects && n.getClientRects().length > 0) {
         let rects = n.getClientRects();
 
-        if (n instanceof nodeclass) {
-          let ok = n.visibleToPick;
-          ok = ok || !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
-
-          if (!ok) {
-            return;
-          }
-
+        if (testwidget(n)) {
           widget = n;
         }
 
         for (let rect of rects) {
           let ok =   x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
           ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
-
-          //ok = x >= rect.x && x <= rect.x + rect.width;
-          //ok = ok && y >= rect.y && y <= rect.y + rect.height;
-
-          if (nodeclass !== undefined) {
-            ok = ok && (widget instanceof nodeclass);
-          }
-
-          ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
-
 
           //console.log(ok, "|", x, y, rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
           if (ok) {
@@ -737,70 +730,22 @@ export class UIBase extends HTMLElement {
       }
 
       if (!isleaf) {
-        for (let n2 of n.childNodes) {
+        for (let i=n.childNodes.length-1; i>=0; i--) {
+          let n2 = n.childNodes[i];
           rec(n2, widget, depth+1);
         }
 
         if (n.shadow !== undefined) {
-          for (let n2 of n.shadow.childNodes) {
+          for (let i=n.shadow.childNodes.length-1; i>=0; i--) {
+            let n2 = n.shadow.childNodes[i];
             rec(n2, widget, depth+1);
           }
         }
       }
     };
 
-    rec(this, this);
+    rec(this, testwidget(this) ? this : undefined);
 
-    return ret;
-  }
-  /**
-   *
-    * @param x
-   * @param y
-   * @param sx
-   * @param sy
-   * @param nodeclass
-   * @returns {*}
-   */
-  pickElement3(x, y, sx=0, sy=0, nodeclass=undefined) {
-    let rects = this.getClientRects();
-    let ret;
-    
-    //if (rects.length == 0)
-    //  return;
-
-    let nodes = [];
-    this._forEachChildWidget((n) => {
-      nodes.push(n);
-    });
-
-    for (let n of nodes) {
-      let ret2 = n.pickElement(x, y, sx, sy, nodeclass); //sx+rects[0].x, sy+rects[0].y);
-
-      ret = ret2 || ret;
-      ret = ret2 !== undefined ? ret2 : ret;
-    }
-
-    if (ret === undefined && rects !== undefined) {
-      console.log(rects[0]);
-
-      if (nodeclass !== undefined && !(this instanceof nodeclass))
-        return undefined;
-
-      //ignore svg overdraw elements
-      if (this.tagName == "OVERDRAW-X") {
-        return undefined;
-      }
-
-      for (let rect of rects) {
-        if (x >= rect.x+sx && x <=rect.x+sx+rect.width && 
-            y >= rect.y+sy && y <=rect.y+sy+rect.height)
-        {
-          return this;
-        }
-      }
-    }
-    
     return ret;
   }
 
@@ -1362,6 +1307,10 @@ export class UIBase extends HTMLElement {
   }
 }
 
+export function drawRoundBox2(elem, options={}) {
+  drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
+}
+
 /**okay, I need to refactor this function,
   it needs to take x, y as well as width, height,
   and be usable for more use cases.*/
@@ -1369,7 +1318,8 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
                              op="fill", color=undefined, margin=undefined, no_clear=false) {
     width = width === undefined ? canvas.width : width;
     height = height === undefined ? canvas.height : height;
-    
+    g.save();
+
     let dpi = elem.getDPI();
     
     r = r === undefined ? elem.getDefault("BoxRadius") : r;
@@ -1435,6 +1385,8 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     } else {
       g.stroke();
     }
+
+    g.restore();
 };
 
 export function _getFont_new(elem, size, font="DefaultText", do_dpi=true) {
@@ -1539,7 +1491,7 @@ export function measureText(elem, text, canvas=undefined,
 
   if (font !== undefined) {
     if (typeof font === "object" && font instanceof CSSFont) {
-      font = font.genCSS();
+      font = font.genCSS(size);
     }
 
     g.font = font;
@@ -1557,10 +1509,26 @@ export function measureText(elem, text, canvas=undefined,
   return ret;
 }
 
-export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined) {
-  _ensureFont(elem, canvas, g, size);
-  
-  g.fillStyle = elem.getDefault("DefaultText").color;
+export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+  if (font === undefined) {
+    _ensureFont(elem, canvas, g, size);
+  } else if (typeof font === "object" && font instanceof CSSFont) {
+    font = font.genCSS(size);
+  }
+
+  if (font) {
+    g.font = font;
+  }
+
+  if (color === undefined) {
+    color = elem.getDefault("DefaultText").color;
+  }
+  if (typeof color === "object") {
+    color = color2css(color);
+  }
+
+
+  g.fillStyle = color;
   g.fillText(text, x+0.5, y+0.5);
   
   if (size !== undefined) {

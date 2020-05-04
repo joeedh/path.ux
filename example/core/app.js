@@ -20,7 +20,7 @@ setTheme(theme);
 
 import {Icons} from "../editors/icon_enum.js";
 setIconMap(Icons);
-
+import {MenuBarEditor} from "../editors/menu/menu.js";
 import cconst1 from './const.js';
 import cconst2 from '../../scripts/const.js';
 //import {HotKey, KeyMap} from "../../scripts/simple_events.js";
@@ -78,11 +78,21 @@ export class AppState {
 
     let t = 300 / window.innerWidth;
 
-    let sarea2 = screen.splitArea(sarea, 1.0-t, false);
-    sarea2.switch_editor(PropsEditor);
+    let sarea2 = screen.splitArea(sarea, 0.1, true);
+
+    sarea.switchEditor(MenuBarEditor);
+
+    sarea2 = screen.splitArea(sarea2, 0.7, false);
+    sarea2.switchEditor(PropsEditor);
+
+    //sarea2 = screen.splitArea(sarea, 1.0-t, false);
+    //sarea2.switch_editor(PropsEditor);
     //setTimeout(() => {
     //  screen.splitArea(sarea2, 0.55, true);
     //}, 500);
+
+    screen.solveAreaConstraints();
+    screen.regenBorders();
 
     screen.update();
     return screen;

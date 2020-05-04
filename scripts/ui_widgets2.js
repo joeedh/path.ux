@@ -463,14 +463,49 @@ export class NumSliderSimple2 extends ColumnFrame {
     this.decimalPlaces = 4;
     this.isInt = false;
     this._lock_textbox = false;
+    this.labelOnTop = undefined;
+
+    this._last_label_on_top = undefined;
+
+    this.styletag.textContent = `
+    .numslider_simple_textbox {
+      padding : 0px;
+      margin  : 0px;
+      height  : 15px;
+    }
+    `;
+
+
+    this.container = this;
 
     this.textbox = document.createElement("textbox-x");
-
     this.numslider = document.createElement("numslider-simple-base-x");
+
+    this.textbox.setAttribute("class", "numslider_simple_textbox");
   }
 
   init() {
     super.init();
+
+    if (this.hasAttribute("labelOnTop")) {
+      this.labelOnTop = this.getAttribute("labelOnTop");
+    } else {
+      this.labelOnTop = this.getDefault("labelOnTop");
+    }
+
+    this.rebuild();
+  }
+
+  rebuild() {
+    this._last_label_on_top = this.labelOnTop;
+
+    this.container.clear();
+
+    if (this.labelOnTop) {
+      this.container = this.row();
+    } else {
+      this.container = this;
+    }
 
     if (this.hasAttribute("name")) {
       this._name = this.hasAttribute("name");
@@ -478,11 +513,19 @@ export class NumSliderSimple2 extends ColumnFrame {
       this._name = "slider";
     }
 
-    this.l = this.label(this._name);
+
+    this.l = this.container.label(this._name);
     this.l.font = "TitleText";
     this.l.overrideClass("numslider_simple");
+    this.l.style["display"] = "float";
+    this.l.style["position"] = "relative";
+    
+    if (!this.labelOnTop) {
+      this.l.style["left"] = "8px";
+      this.l.style["top"] = "5px";
+    }
 
-    let strip = this.row();
+    let strip = this.container.row();
     strip.add(this.numslider);
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
@@ -517,8 +560,8 @@ export class NumSliderSimple2 extends ColumnFrame {
     textbox.ctx = this.ctx;
     textbox.packflag |= this.inherit_packflag;
     textbox._width = this.getDefault("TextBoxWidth")+"px";
+    textbox.style["height"] = (this.getDefault("DefaultHeight")-2) + "px";
     textbox._init();
-    textbox.style["margin"] = "5px";
 
     strip.add(textbox);
 
@@ -608,7 +651,16 @@ export class NumSliderSimple2 extends ColumnFrame {
     }
   }
 
+  updateLabelOnTop() {
+    if (this.labelOnTop !== this._last_label_on_top) {
+      this._last_label_on_top = this.labelOnTop;
+      this.rebuild();
+    }
+  }
+
   update() {
+    this.updateLabelOnTop();
+
     super.update();
 
     if (this.hasAttribute("integer")) {
@@ -629,6 +681,9 @@ export class NumSliderSimple2 extends ColumnFrame {
 
   setCSS() {
     super.setCSS();
+
+    //textbox.style["margin"] = "5px";
+
   }
 
   static define() {return {

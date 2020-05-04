@@ -455,7 +455,7 @@ export class Button extends UIBase {
     let cy = h*0.5 + ts*0.5;
 
     let g = this.g;
-    ui_base.drawText(this, ~~cx, ~~cy, text, this.dom, g);
+    ui_base.drawText(this, ~~cx, ~~cy, text, this.dom, g, undefined, undefined, font);
   }
 
   static define() {return {

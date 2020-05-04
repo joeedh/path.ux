@@ -14125,7 +14125,8 @@ let exports = {
   }
 };
 
-let UIBase$1 = UIBase;
+let UIBase$1 = UIBase;
+
 
 let parsepx$1 = parsepx;
 
@@ -14589,7 +14590,8 @@ let keymap$1 = keymap;
 
 let PropTypes$2 = PropTypes;
 
-let UIBase$2 = UIBase; 
+let UIBase$2 = UIBase; 
+
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -17954,7 +17956,8 @@ let keymap$2 = keymap;
 
 let PropTypes$4 = PropTypes;
 
-let UIBase$5 = UIBase;
+let UIBase$5 = UIBase;
+
 
 class NumSliderSimple extends UIBase$5 {
   constructor() {
@@ -20198,6 +20201,7 @@ class ScreenArea extends UIBase {
   
   makeBorders(screen) {
     this._borders.length = 0;
+    this._verts.length = 0;
     
     let p = this.pos, s = this.size;
     
@@ -20212,6 +20216,12 @@ class ScreenArea extends UIBase {
       let v1 = vs[i], v2 = vs[(i + 1) % vs.length];
 
       let b = screen.getScreenBorder(this, v1, v2, i);
+
+      if (v1.vectorDistance(b.v1) < v1.vectorDistance(b.v2)) {
+        this._verts.push(b.v1);
+      } else {
+        this._verts.push(b.v2);
+      }
 
       for (let j=0; j<2; j++) {
         let v = j ? b.v2 : b.v1;
@@ -22609,7 +22619,8 @@ class ColorPicker extends ColumnFrame {
 
 UIBase$8.register(ColorPicker);
 
-let UIBase$9 = UIBase; 
+let UIBase$9 = UIBase; 
+
 
 let tab_idgen = 1;
 

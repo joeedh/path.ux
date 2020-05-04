@@ -32,6 +32,8 @@ export class Menu extends UIBase {
     this.started = false;
     this.activeItem = undefined;
 
+    this.overrideDefault("DefaultText", this.getDefault("MenuText"));
+
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
     this.container.style["display"] = "flex";
@@ -63,13 +65,12 @@ export class Menu extends UIBase {
         }
         
         ul.menu {
-          display : block;
+          display        : flex;
+          flex-direction : column;
           
           margin : 0px;
           padding : 0px;
-          border-style : solid;
-          border-width : 1px;
-          border-color: grey;
+          border : ${this.getDefault("MenuBorder")};
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
         }
@@ -82,16 +83,20 @@ export class Menu extends UIBase {
           
           margin : 0;
           padding : 0px;
-          padding-right: 2px;
-          padding-left: 4px;
+          padding-right: 16px;
+          padding-left: 16px;
           padding-top : 0px;
           padding-bottom : 0px;
-          font : ${ui_base.getFont(this)};
+          font : ${this.getDefault("MenuText").genCSS()};
           background-color: ${this.getDefault("MenuBG")};
         }
         
+        .menuseparator {
+          ${this.getDefault("MenuSeparator")}
+        }
+        
         .menuitem:focus {
-          background-color: rgba(155, 220, 255, 1.0);
+          background-color: ${this.getDefault("MenuHighlight")};
           -moz-user-focus: normal;
         }
       `;
@@ -201,7 +206,8 @@ export class Menu extends UIBase {
   }
 
   static define() {return {
-    tagname : "menu-x"
+    tagname : "menu-x",
+    style   : "menu"
   };}
 
   start_fancy(prepend, setActive=true) {
@@ -415,8 +421,6 @@ export class Menu extends UIBase {
     li.setAttribute("tabindex", this.itemindex++);
     li.setAttribute("class", "menuitem");
 
-    li.style["margin-top"] = "10px";
-
     if (item instanceof Menu) {
       console.log("submenu!");
 
@@ -520,16 +524,11 @@ export class Menu extends UIBase {
   }
 
   seperator() {
-    let li = document.createElement("li");
-    let span = document.createElement("hr");
+    let bar = document.createElement("div");
+    bar.setAttribute("class", "menuseparator");
 
-    //span.textContent = "--"
-    //span.style["textcolor"] = span.style["color"] = "grey";
 
-    li.setAttribute("class", "menuitem");
-    li.appendChild(span);
-
-    this.dom.appendChild(li);
+    this.dom.appendChild(bar);
 
     return this;
   }
@@ -756,11 +755,14 @@ export class DropBox extends Button {
 
   _redraw() {
     if (this.getAttribute("simple")) {
+      let color;
+
       if (this._highlight) {
-        ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, 2);
+        ui_base.drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
       }
 
       if (this._focus) {
+        ui_base.drawRoundBox2(this, {canvas: this.dom, g : this.g, color : this.getDefault("BoxHighlight"), op : "stroke", no_clear : true});
         ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
       }
 
@@ -865,6 +867,7 @@ export class MenuWrangler {
     this.menustack = [];
 
     this.closetimer = 0;
+    this.closeOnMouseUp = undefined;
   }
 
   get menu() {
@@ -872,6 +875,10 @@ export class MenuWrangler {
   }
 
   pushMenu(menu) {
+    if (this.menustack.length === 0) {
+      this.closeOnMouseUp = true;
+    }
+
     this.menustack.push(menu);
   }
 
@@ -951,7 +958,49 @@ export class MenuWrangler {
         break;
     }
   }
-  
+
+  on_mousedown(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = util.time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y);
+    console.log("wrangler mousedown", element);
+
+    if (element !== undefined && element instanceof DropBox) {
+      this.endMenus();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  on_mouseup(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = util.time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y, undefined, undefined, DropBox);
+    if (element !== undefined) {
+      this.closeOnMouseUp = false;
+    } else {
+      element = screen.pickElement(x, y, undefined, undefined, Menu);
+
+      //closeOnMouseUp
+      if (element && this.closeOnMouseUp) {
+        element.click();
+      }
+    }
+
+  }
+
   on_mousemove(e) {
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = util.time_ms();
@@ -967,7 +1016,7 @@ export class MenuWrangler {
       return;
     }
 
-    if (element instanceof DropBox && element.menu !== this.menu) {
+    if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
       //destroy entire menu stack
       this.endMenus();
 
@@ -1021,7 +1070,8 @@ export function startMenuEventWrangling(screen) {
     }
 
     let dom = k.search("key") >= 0 ? window : document.body;
-    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), false)
+    dom = window;
+    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), {passive : false, capture : true})
   }
 
   menuWrangler.screen = screen;

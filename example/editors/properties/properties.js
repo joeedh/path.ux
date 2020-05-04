@@ -8,6 +8,9 @@ import {KeyMap, HotKey} from "../../../scripts/simple_events.js";
 export class PropsEditor extends Editor {
   constructor() {
     super();
+
+    this.minSize = [55, undefined];
+    //this.maxSize = [350, undefined]
   }
 
   getKeyMaps() {
