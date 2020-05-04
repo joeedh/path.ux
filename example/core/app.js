@@ -1,9 +1,9 @@
-import * as pathux from '../../scripts/path.ux.js';
+import * as pathux from '../../scripts/pathux.js';
 window.pathux = pathux;
 
 import {nstructjs, ToolStack, UIBase, setIconManager, setIconMap,
         setTheme, IconManager, keymap, ScreenArea, util,
-        HotKey, KeyMap, Screen, DataPathSetOp} from "../../scripts/path.ux.js";
+        HotKey, KeyMap, Screen, DataPathSetOp} from "../../scripts/pathux.js";
 
 import {ModelData} from "./state.js";
 import {defineAPI} from "../api/api_define.js"

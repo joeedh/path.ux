@@ -10,7 +10,9 @@
     "esdoc": "^1.1.0",
     "esdoc-standard-plugin": "^1.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "rollup": "^2.7.6"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
