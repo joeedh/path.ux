@@ -1,4 +1,4 @@
-import './_struct.js';
+import './nstructjs.js';
 
 export let nstructjs = window.nstructjs;
 
