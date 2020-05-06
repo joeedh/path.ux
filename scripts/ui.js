@@ -668,9 +668,20 @@ export class Container extends ui_base.UIBase {
    * to view tooltips on mobile devices
    * */
   helppicker() {
-    return this.iconbutton(ui_base.Icons.HELP, "Help Picker", () => {
+    let ret = this.iconbutton(ui_base.Icons.HELP, "Help Picker", () => {
       this.getScreen().hintPickerTool();
     })
+
+    if (util.isMobile()) {
+      ret.iconsheet = 2;
+    }
+
+    if (ret.ctx) {
+      ret._init();
+      ret.setCSS();
+    }
+
+    return ret;
   }
 
   iconbutton(icon, description, cb, thisvar, packflag = 0) {

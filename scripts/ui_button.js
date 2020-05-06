@@ -449,6 +449,10 @@ export class Button extends UIBase {
   _draw_text() {
     let dpi = this.getDPI();
 
+    if (util.isMobile()) {
+      dpi = dpi; //visualViewport.scale;
+    }
+
     let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultText").size * dpi;
 
@@ -459,13 +463,13 @@ export class Button extends UIBase {
 
     let w = this.dom.width, h = this.dom.height;
 
-    let tw = ui_base.measureText(this, text, undefined, undefined, undefined, font).width;
+    let tw = ui_base.measureText(this, text, undefined, undefined, ts, font).width;
 
     let cx = pad*0.5;
     let cy = h*0.5 + ts*0.5;
 
     let g = this.g;
-    ui_base.drawText(this, ~~cx, ~~cy, text, this.dom, g, undefined, undefined, font);
+    ui_base.drawText(this, ~~cx, ~~cy, text, this.dom, g, undefined, ts, font);
   }
 
   static define() {return {

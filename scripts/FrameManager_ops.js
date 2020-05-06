@@ -609,7 +609,7 @@ export class AreaDragTool extends ToolBase {
   }
   
   makeBoxes(sa) {
-    let sz = 40;
+    let sz = util.isMobile() ? 100 : 40;
     let cx = sa.pos[0] + sa.size[0]*0.5;
     let cy = sa.pos[1] + sa.size[1]*0.5;
     

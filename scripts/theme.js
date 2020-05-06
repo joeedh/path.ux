@@ -1,8 +1,9 @@
 import {CSSFont} from "./ui_theme.js";
+import * as util from './util.js';
 
 export const DefaultTheme = {
   base : {
-    mobileTextSizeMultiplier : 3,
+    mobileTextSizeMultiplier : 1.5,
     mobileSizeMultiplier : 2, //does not include text
 
     //used for by icon strips and the like
@@ -14,8 +15,8 @@ export const DefaultTheme = {
     "BasePackFlag" : 0,
     "ScreenBorderOuter" : "rgba(120, 120, 120, 1.0)",
     "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
-    "ScreenBorderWidth" : 2,
-    "ScreenBorderMousePadding" : 5,
+    "ScreenBorderWidth" : util.isMobile() ? 5 : 2,
+    "ScreenBorderMousePadding" : util.isMobile() ? 6 : 5,
 
     "numslider_width" : 24,
     "numslider_height" : 24,
@@ -178,7 +179,7 @@ export const DefaultTheme = {
     TitleText : new CSSFont({
       size : 14
     }),
-    BoxBG : "rgb(125, 125, 125)",
+    BoxBG : "rgb(225, 225, 225)",
     BoxBorder : "rgb(75, 75, 75)",
     SlideHeight : 10,
     DefaultWidth : 135,

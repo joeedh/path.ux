@@ -54,6 +54,9 @@ export class Menu extends UIBase {
               place-items : start;
               justify-items : start;
     */
+
+    let pad1 = util.isMobile() ? 15 : 0;
+
     let style = document.createElement("style");
     style.textContent = `
         .menucon {
@@ -85,8 +88,8 @@ export class Menu extends UIBase {
           padding : 0px;
           padding-right: 16px;
           padding-left: 16px;
-          padding-top : 0px;
-          padding-bottom : 0px;
+          padding-top : ${pad1}px;
+          padding-bottom : ${pad1}px;
           font : ${this.getDefault("MenuText").genCSS()};
           background-color: ${this.getDefault("MenuBG")};
         }
@@ -576,7 +579,7 @@ export class DropBox extends Button {
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultText").size;
-    let tw = ui_base.measureText(this, this._genLabel()).width/dpi + 8;
+    let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width/dpi + 8;
     tw = ~~tw;
 
     tw += 15;

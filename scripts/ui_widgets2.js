@@ -331,7 +331,7 @@ export class NumSliderSimple extends UIBase {
       color = this.getDefault("BoxBorder");
     }
 
-    g.arc(co[0], co[1], co[2], -Math.PI, Math.PI);
+    g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
     g.fill();
 
     g.strokeStyle = color;
