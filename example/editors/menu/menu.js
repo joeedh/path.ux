@@ -12,8 +12,16 @@ export class MenuBarEditor extends Editor {
     super();
 
     this.updateHeight();
+    this.borderLock = 1|2|4|8;
 
   }
+
+  copy() {
+    let ret = document.createElement(this.constructor.define().tagname);
+    ret.ctx = this.ctx;
+    return ret;
+  }
+
 
   init() {
     super.init();

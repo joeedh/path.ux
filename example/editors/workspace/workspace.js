@@ -13,6 +13,8 @@ import {Dynamics} from "../../core/dynamics.js";
 export class WorkspaceEditor extends Editor {
   constructor() {
     super();
+    
+    this.minSize = [75, 75];
 
     this._last_dpi = undefined;
     this._last_id = undefined;
@@ -62,6 +64,12 @@ export class WorkspaceEditor extends Editor {
     makeEventListener("mouseup");
   }
 
+  copy() {
+    let ret = document.createElement(this.constructor.define().tagname);
+    ret.ctx = this.ctx;
+    return ret;
+  }
+
   on_resize() {
     super.on_resize(...arguments);
 
@@ -86,7 +94,10 @@ export class WorkspaceEditor extends Editor {
 
     let header = this.header;
 
-    let strip = header.strip();
+    let row = this.container.row();
+    row.background = row.getDefault("AreaHeaderBG");
+
+    let strip = row.row();
     strip.iconbutton(Icons.UNDO, "Undo", () => {
       this.ctx.toolstack.undo();
     });
@@ -95,9 +106,6 @@ export class WorkspaceEditor extends Editor {
     });
 
     let container = this.container;
-    let row = container.row();
-    row.background = row.getDefault("AreaHeaderBG");
-
 
 
     let table = row.table();

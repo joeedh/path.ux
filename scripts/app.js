@@ -24,6 +24,10 @@ import * as config from './config.js';
 import * as ui_menu from './ui_menu.js';
 import * as toolpath from './toolpath.js';
 import {Vector3} from "./vectormath.js";
+import cconst1 from './const.js';
+import cconst2 from '../../scripts/const.js';
+
+cconst2.loadConstants(cconst1);
 
 let Icons = icon_enum.Icons;
 ui_base.setIconMap(Icons);

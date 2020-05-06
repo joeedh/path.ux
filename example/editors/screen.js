@@ -23,6 +23,9 @@ export class AppScreen extends Screen {
       new HotKey("Y", ["CTRL"], () => {
         console.log("redo hotkey");
         _appstate.toolstack.redo();
+      }),
+      new HotKey("S", [], () => {
+        _appstate.screen.splitTool();
       })
     ]);
   }

@@ -14,6 +14,8 @@ let UIBase = ui_base.UIBase;
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
+import {snap, snapi} from './FrameManager_mesh.js';
+
 export const AreaFlags = {
   HIDDEN : 1
 };
@@ -452,7 +454,7 @@ export class Area extends ui_base.UIBase {
       pageY = pageY === undefined ? e.pageY : pageY;
 
       let node = this.getScreen().pickElement(pageX, pageY);
-     // console.log(node.tagName, node === row)
+      console.log(node.tagName, node === row)
       
       if (node !== row) {
         return false;
@@ -479,8 +481,10 @@ export class Area extends ui_base.UIBase {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
-      if (!mdown || !mpre(e, pageX, pageY)) return;
+      let mdown2 = e.button != 0 || (e.touches && e.touches.length > 0);
 
+      if (!mdown2 || !mpre(e, pageX, pageY)) return;
+      return;
       //console.log(mdown);
       let dx = pageX - mpos[0];
       let dy = pageY - mpos[1];
@@ -579,6 +583,10 @@ export class Area extends ui_base.UIBase {
 
     this.switcher = this.makeAreaSwitcher(row);
 
+    if (util.isMobile()||1) {
+      row.helppicker().iconsheet = 2;
+    }
+
     if (add_note_area) {
       let notef = document.createElement("noteframe-x");
       notef.ctx = this.ctx;
@@ -595,8 +603,8 @@ export class Area extends ui_base.UIBase {
       this.style["position"] = "absolute";
       //this.style["left"] = this.pos[0] + "px";
       //this.style["top"] = this.pos[1] + "px";
-      this.style["width"] = ~~this.size[0] + "px";
-      this.style["height"] = ~~this.size[1] + "px";
+      this.style["width"] = this.size[0] + "px";
+      this.style["height"] = this.size[1] + "px";
     }
   }
   
@@ -747,7 +755,12 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   _side(border) {
-    return this._borders.indexOf(border);
+    let ret = this._borders.indexOf(border);
+    if (ret < 0) {
+      throw new Error("border not in screen area");
+    }
+
+    return ret;
   }
 
   init() {
@@ -923,27 +936,46 @@ export class ScreenArea extends ui_base.UIBase {
     
     return ret;
   }
-  
-  loadFromVerts() {
-    let bs = this._borders;
 
+  /**
+   *
+   * Sets screen verts from pos/size
+   * */
+  loadFromPosSize() {
+    let screen = this.getScreen();
+    if (!screen) return;
+
+    for (let b of this._borders) {
+      screen.freeBorder(b);
+    }
+
+    this.makeBorders(screen);
+    this.setCSS();
+
+    return this;
+  }
+
+  /**
+   *
+   * Sets pos/size from screen verts
+   * */
+  loadFromVerts() {
     let min = new Vector2([1e17, 1e17]);
     let max = new Vector2([-1e17, -1e17]);
 
-    for (let b of bs) {
-      min.min(b.v1);
-      min.min(b.v2);
-      max.max(b.v1);
-      max.max(b.v2);
+    for (let v of this._verts) {
+      min.min(v);
+      max.max(v);
     }
     
-    this.pos[0] = Math.floor(min[0]);
-    this.pos[1] = Math.floor(min[1]);
-    
-    this.size[0] = Math.floor(max[0] - min[0]);
-    this.size[1] = Math.floor(max[1] - min[1]);
-    
+    this.pos[0] = min[0];
+    this.pos[1] = min[1];
+
+    this.size[0] = max[0]-min[0];
+    this.size[1] = max[1]-min[1];
+
     this.setCSS();
+    return this;
   }
   
   on_resize(size, oldsize) {
@@ -959,7 +991,9 @@ export class ScreenArea extends ui_base.UIBase {
     this._verts.length = 0;
     
     let p = this.pos, s = this.size;
-    
+
+    //s = snapi(new Vector2(s));
+
     let vs = [
       new Vector2([p[0],      p[1]]),
       new Vector2([p[0],      p[1]+s[1]]),
@@ -968,6 +1002,7 @@ export class ScreenArea extends ui_base.UIBase {
     ];
 
     for (let i=0; i<vs.length; i++) {
+      vs[i] = snap(vs[i]);
       vs[i] = screen.getScreenVert(vs[i], i);
       this._verts.push(vs[i]);
     }
@@ -992,7 +1027,7 @@ export class ScreenArea extends ui_base.UIBase {
       
       this._borders.push(b);
 
-      b.movable = screen.isBorderMovable(this, b);
+      b.movable = screen.isBorderMovable(b);
     }
     
     return this;
@@ -1001,11 +1036,11 @@ export class ScreenArea extends ui_base.UIBase {
   setCSS() {
     this.style["position"] = "absolute";
     
-    this.style["left"] = ~~this.pos[0] + "px";
-    this.style["top"] = ~~this.pos[1] + "px";
+    this.style["left"] = this.pos[0] + "px";
+    this.style["top"] = this.pos[1] + "px";
     
-    this.style["width"] = ~~this.size[0] + "px";
-    this.style["height"] = ~~this.size[1] + "px";
+    this.style["width"] = this.size[0] + "px";
+    this.style["height"] = this.size[1] + "px";
     
     
     if (this.area !== undefined) {
@@ -1127,6 +1162,16 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.owning_sarea = this;
       this.area.size = this.size;
       this.area.pos = this.pos;
+
+      let screen = this.getScreen();
+      let oldsize = [this.size[0], this.size[1]];
+
+      /*
+      if (screen && screen.checkAreaConstraint(this, true)) {
+        screen.solveAreaConstraints();
+        screen.regenBorders();
+        this.on_resize(oldsize);
+      }//*/
 
       this.area.push_ctx_active(true);
     }

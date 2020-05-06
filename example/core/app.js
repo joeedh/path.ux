@@ -71,6 +71,12 @@ export class AppState {
     let screen = this.screen = document.createElement("app-screen-x");
     screen.ctx = this.viewctx;
 
+    if (cconst.DEBUG.customWindowSize) {
+      screen.size[0] = cconst.DEBUG.customWindowSize.width;
+      screen.size[1] = cconst.DEBUG.customWindowSize.height;
+    }
+
+
     let sarea = this.screen.newScreenArea();
     sarea.switch_editor(WorkspaceEditor);
 
@@ -78,13 +84,24 @@ export class AppState {
 
     let t = 300 / window.innerWidth;
 
-    let sarea2 = screen.splitArea(sarea, 0.1, true);
+    let wsarea = screen.splitArea(sarea, 0.1, true);
 
     sarea.switchEditor(MenuBarEditor);
 
-    sarea2 = screen.splitArea(sarea2, 0.7, false);
+    let sarea2 = screen.splitArea(wsarea, 0.7, true);
     sarea2.switchEditor(PropsEditor);
+    //*
+    
+    if (!util.isMobile) {
+      screen.splitArea(wsarea, 0.5, false);
+      screen.splitArea(sarea2, 0.5, false);
 
+      screen.splitArea(wsarea, 0.5, true);
+      screen.splitArea(sarea2, 0.5, true);
+    }
+//*/
+
+    //screen.splitArea(sarea2, 0.55, false);
     //sarea2 = screen.splitArea(sarea, 1.0-t, false);
     //sarea2.switch_editor(PropsEditor);
     //setTimeout(() => {
@@ -95,6 +112,7 @@ export class AppState {
     screen.regenBorders();
 
     screen.update();
+    screen.setCSS();
     return screen;
   }
 
@@ -258,7 +276,9 @@ export class AppState {
       screen.listen();
       screen.update();
       screen.setCSS();
-      screen.on_resize([window.innerWidth, window.innerHeight])
+
+      let size = cconst.customWindowSize ? cconst.customWindowSize : [window.innerWidth, window.innerHeight];
+      screen.on_resize(screen.size, size);
     }
 
     if (args.resetToolStack) {

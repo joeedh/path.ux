@@ -1,5 +1,158 @@
 import './polyfill.js';
 import './struct.js';
+import './mobile-detect.js';
+
+let mdetect = undefined;
+let mret = undefined;
+
+export function isMobile() {
+  if (mdetect === undefined) {
+    let r = new MobileDetect(navigator.userAgent);
+    let ret = r.mobile();
+
+    if (typeof ret === "string") {
+      ret = ret.toLowerCase();
+    }
+
+    mret = ret;
+  }
+
+  return mret;
+}
+
+//window._isMobile = isMobile;
+
+export class SmartConsoleContext {
+  constructor(name, console) {
+    this.name = name;
+
+    let c = [random(), random(), random()];
+    let sum = Math.sqrt(c[0]*c[0] + c[1]*c[1] + c[2]*c[2]);
+    sum = 255 / sum;
+
+    let r = ~~(c[0]*sum);
+    let g = ~~(c[1]*sum);
+    let b = ~~(c[2]*sum);
+
+    this.color = `rgb(${r},${g},${b})`;
+    this.__console = console;
+
+    this.timeInterval = 1500;
+
+    this._last = undefined;
+    this._data = {};
+    this._data_length = 0;
+    this.maxCache = 256;
+  }
+
+
+  hash(args) {
+    let args2 = [];
+    for (let i=0; i<args.length; i++) {
+      args2.push(args[i]);
+    }
+
+    return JSON.stringify(args2);
+  }
+
+  clearCache() {
+    this._data_length = 0;
+    this._data = {};
+    return this;
+  }
+
+  _getData(args) {
+    let key = this.hash(args);
+
+    if (!(key in this._data)) {
+      if (this._data_length > this.maxCache) {
+        this.clearCache();
+      }
+
+      this._data[key] = {
+        time    : 0,
+        count   : 0
+      };
+
+      this._data_length++;
+    }
+
+    return this._data[key];
+  }
+
+  _check(args) {
+    let d = this._getData(args);
+    let last = this.last;
+
+    this.last = d;
+
+    if (d !== last) {
+      d.count = 0;
+      d.time = time_ms();
+      return true;
+    }
+
+    if (time_ms() - d.time > this.timeInterval) {
+      //d.time = time_ms();
+      //return true;
+    }
+
+    return false;
+  }
+
+  log() {
+
+    if (this._check(arguments)) {
+      window.console.log("%c", "color:"+this.color, ...arguments);
+    }
+  }
+
+  warn() {
+    if (this._check(arguments)) {
+      window.console.log("%c"+this.name, "color : "+this.color, ...arguments);
+    }
+  }
+
+  trace() {
+    if (this._check(arguments)) {
+      window.console.trace(...arguments);
+    }
+  }
+
+}
+
+export class SmartConsole {
+  constructor() {
+    this.contexts = {};
+  }
+
+  context(name) {
+    if (!(name in this.contexts)) {
+      this.contexts[name] = new SmartConsoleContext(name, this);
+    }
+
+    return this.contexts[name];
+  }
+
+  log() {
+    let c = this.context("default");
+    return c.log(...arguments);
+  }
+  warn() {
+    let c = this.context("default");
+    return c.warn(...arguments);
+  }
+  trace() {
+    let c = this.context("default");
+    return c.trace(...arguments);
+  }
+  error() {
+    let c = this.context("default");
+    return c.error(...arguments);
+  }
+}
+
+export const console = new SmartConsole();
 
 window.tm = 0.0;
 
@@ -139,18 +292,18 @@ export function time_ms() {
 
 export function color2css(c) {
   var ret = c.length == 3 ? "rgb(" : "rgba(";
-  
+
   for (var i=0; i<3; i++) {
     if (i > 0)
       ret += ",";
-    
+
     ret += ~~(c[i]*255);
   }
-  
+
   if (c.length == 4)
     ret += "," + c[3];
   ret += ")";
-  
+
   return ret;
 }
 
@@ -158,15 +311,15 @@ export function merge(obja, objb) {
   return Object.assign({}, obja, objb);
   /*
   var ret = {};
-  
+
   for (var k in obja) {
     ret[k] = obja[k];
   }
-  
+
   for (var k in objb) {
     ret[k] = objb[k];
   }
-  
+
   return ret;
   //*/
 };
@@ -174,26 +327,26 @@ export function merge(obja, objb) {
 export class cachering extends Array {
   constructor(func, size) {
     super()
-    
+
     this.cur = 0;
-    
+
     for (var i=0; i<size; i++) {
       this.push(func());
     }
   }
-  
+
   static fromConstructor(cls, size) {
     var func = function() {
       return new cls();
     }
-    
+
     return new cachering(func, size);
   }
-  
+
   next() {
     var ret = this[this.cur];
     this.cur = (this.cur+1)%this.length;
-    
+
     return ret;
   }
 }
@@ -204,26 +357,26 @@ export class SetIter {
     this.i   = 0;
     this.ret = {done : false, value : undefined};
   }
-  
+
   [Symbol.iterator]() {
     return this;
   }
-  
+
   next() {
     var ret = this.ret;
 
     while (this.i < this.set.items.length && this.set.items[this.i] === EmptySlot) {
       this.i++;
     }
-    
+
     if (this.i >= this.set.items.length) {
       ret.done = true;
       ret.value = undefined;
-      
+
       return ret;
     }
-    
-    
+
+
     ret.value = this.set.items[this.i++];
     return ret;
   }
@@ -243,13 +396,13 @@ export class set {
     this.items = [];
     this.keys = {};
     this.freelist = [];
-    
+
     this.length = 0;
-    
+
     if (typeof input == "string") {
       input = new String(input);
     }
-    
+
     if (input != undefined) {
       if (Symbol.iterator in input) {
         for (var item of input) {
@@ -266,7 +419,7 @@ export class set {
       }
     }
   }
-  
+
   [Symbol.iterator] () {
     return new SetIter(this);
   }
@@ -291,54 +444,54 @@ export class set {
 
   add(item) {
     var key = item[Symbol.keystr]();
-    
+
     if (key in this.keys) return;
-    
+
     if (this.freelist.length > 0) {
       var i = this.freelist.pop();
-      
+
       this.keys[key] = i;
       this.items[i] = item;
     } else {
       var i = this.items.length;
-      
+
       this.keys[key] = i;
       this.items.push(item);
     }
-    
+
     this.length++;
   }
-  
+
   remove(item, ignore_existence) {
     var key = item[Symbol.keystr]();
-    
+
     if (!(key in this.keys)) {
       if (!ignore_existence) {
         console.trace("Warning, item", item, "is not in set");
       }
       return;
     }
-    
+
     var i = this.keys[key];
     this.freelist.push(i);
     this.items[i] = EmptySlot;
-    
+
     delete this.keys[key];
-    
+
     this.length--;
   }
-  
+
   has(item) {
     return item[Symbol.keystr]() in this.keys;
   }
-  
+
   forEach(func, thisvar) {
     for (var i=0; i<this.items.length; i++) {
       var item = this.items[i];
-      
-      if (item === EmptySlot) 
+
+      if (item === EmptySlot)
         continue;
-        
+
       thisvar != undefined ? func.call(thisvar, item) : func(item);
     }
   }
@@ -350,21 +503,21 @@ export class HashIter {
     this.i = 0;
     this.ret = {done : false, value : undefined};
   }
-  
+
   next() {
     var items = this.hash._items;
-    
+
     if (this.i >= items.length) {
       this.ret.done = true;
       this.ret.value = undefined;
-      
+
       return this.ret;
     }
-    
+
     do {
       this.i += 2;
     } while (this.i < items.length && items[i] === _hash_null);
-    
+
     return this.ret;
   }
 }
@@ -376,18 +529,18 @@ export class hashtable {
     this._keys = {};
     this.length = 0;
   }
-  
+
   [Symbol.iterator]() {
     return new HashIter(this);
   }
-  
+
   set(key, val) {
     var key2 = key[Symbol.keystr]();
-    
+
     var i;
     if (!(key2 in this._keys)) {
       i = this._items.length;
-      
+
       try {
         this._items.push(0);
         this._items.push(0);
@@ -395,90 +548,90 @@ export class hashtable {
         console.log(":::", this._items.length, key, key2, val)
         throw error;
       }
-      
+
       this._keys[key2] = i;
       this.length++;
     } else {
       i = this._keys[key2];
     }
-    
+
     this._items[i] = key;
     this._items[i+1] = val;
   }
-  
+
   remove(key) {
     var key2 = key[Symbol.keystr]();
-    
+
     if (!(key2 in this._keys)) {
       console.trace("Warning, key not in hashtable:", key, key2);
       return;
     }
-    
+
     var i = this._keys[key2];
-    
+
     this._items[i] = _hash_null;
     this._items[i+1] = _hash_null;
-    
+
     delete this._keys[key2];
     this.length--;
   }
-  
+
   has(key) {
     var key2 = key[Symbol.keystr]();
-    
+
     return key2 in this._keys;
   }
-  
+
   get(key) {
     var key2 = key[Symbol.keystr]();
-    
+
     if (!(key2 in this._keys)) {
       console.trace("Warning, item not in hash", key, key2);
       return undefined;
     }
-    
+
     return this._items[this._keys[key2]+1];
   }
-  
+
   add(key, val) {
     return this.set(key, val);
   }
-  
+
   keys() {
     var ret = [];
-    
+
     for (var i=0; i<this._items.length; i += 2) {
       var key = this._items[i];
-      
+
       if (key !== _hash_null) {
         ret.push(key);
       }
     }
-    
+
     return ret;
   }
-  
+
   values() {
     var ret = [];
-    
+
     for (var i=0; i<this._items.length; i += 2) {
       var item = this._items[i+1];
-      
+
       if (item !== _hash_null) {
         ret.push(item);
       }
     }
-    
+
     return ret;
   }
-  
+
   forEach(cb, thisvar) {
     if (thisvar == undefined)
       thisvar = self;
-    
+
     for (var k in this._keys) {
       var i = this._keys[k];
-      
+
       cb.call(thisvar, k, this._items[i]);
     }
   }
@@ -551,7 +704,7 @@ function get_callstack(err) {
           callstack.push(lines[i]);
         }
       }
-      
+
       //Remove call to printStackTrace()
       if (err_was_undefined) {
         //callstack.shift();
@@ -589,11 +742,11 @@ function get_callstack(err) {
         var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
         callstack.push(fname);
         currentFunction = currentFunction.caller;
-        
+
         i++;
       }
     }
-  
+
   return callstack;
 }
 
@@ -604,7 +757,7 @@ export function print_stack(err) {
     console.log("Could not fetch call stack.");
     return;
   }
-  
+
   console.log("Callstack:");
   for (var i=0; i<cs.length; i++) {
     console.log(cs[i]);
@@ -616,10 +769,10 @@ window.print_stack = print_stack;
 
 export function fetch_file(path) {
     var url = location.origin + "/" + path
-    
+
     var req = new XMLHttpRequest(
     );
-    
+
     return new Promise(function(accept, reject) {
       req.open("GET", url)
       req.onreadystatechange = function(e) {
@@ -856,50 +1009,50 @@ export class ImageReader {
   load_image() {
     let input = document.createElement("input");
     input.type = "file";
-    
+
     let doaccept;
-    
+
     let promise = new Promise((accept, reject) => {
       doaccept = accept;
     });
-    
+
     input.addEventListener("change", function(e) {
       let files = this.files;
       console.log("got file", e, files)
-          
+
       if (files.length == 0) return;
-      
+
       var reader = new FileReader();
       var this2 = this;
-      
+
       reader.onload = (e) => {
         let data = e.target.result;
         let image = new Image();
-        
+
         image.src = data;
         image.onload = (e) => {
           console.log("got image", image.width, image.height);
-          
+
           let canvas = document.createElement("canvas");
           let g = canvas.getContext("2d");
-          
+
           canvas.width = image.width;
           canvas.height = image.height;
-          
+
           g.drawImage(image, 0, 0);
           let idata = g.getImageData(0, 0, image.width, image.height);
-          
+
           doaccept(idata);
         }
       };
-      
+
       reader.readAsDataURL(files[0]);
     });
-    
+
     input.click();
     return promise;
   }
-  
+
   example() {
     this.load_image().then((idata) => {
       console.log(idata);

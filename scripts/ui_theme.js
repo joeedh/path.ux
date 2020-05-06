@@ -136,16 +136,33 @@ export function validateWebColor(str) {
   return str.trim().search(validate_pat) === 0;
 }
 
+export let theme = {};
+
 window.validateWebColor = validateWebColor;
 
 export class CSSFont {
   constructor(args) {
-    this.size = args.size;
+    this._size = args.size ? args.size : 12;
     this.font = args.font;
     this.style = args.style !== undefined ? args.style : "normal";
     this.weight = args.weight !== undefined ? args.weight : "normal";
     this.variant = args.variant !== undefined ? args.variant : "normal";
     this.color = args.color;
+  }
+
+  set size(val) {
+    this._size = val;
+  }
+
+  get size() {
+    if (util.isMobile()) {
+      let mul = theme.base.mobileTextSizeMultiplier;
+      if (mul) {
+        return this._size * mul;
+      }
+    }
+
+    return this._size;
   }
 
   copyTo(b) {

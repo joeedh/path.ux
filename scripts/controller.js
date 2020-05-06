@@ -2,6 +2,8 @@ import * as toolprop from './toolprop.js';
 import {ToolOp} from './simple_toolsys.js';
 import {print_stack} from './util.js';
 import * as toolprop_abstract from "./toolprop_abstract.js";
+import {ToolProperty} from "./toolprop.js";
+import * as util from './util.js';
 
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
@@ -135,7 +137,17 @@ export class ModelInterface {
       }
     });
   }
-  
+
+  //used by simple_controller.js for tagging error messages
+  pushReportContext(name) {
+
+  }
+
+  //used by simple_controller.js for tagging error messages
+  popReportContext() {
+
+  }
+
   static toolRegistered(tool) {
     throw new Error("implement me");
   }
@@ -224,7 +236,46 @@ export class ModelInterface {
       prop._fire("change", res.obj[res.key], old);
     }
   }
-  
+
+  getDescription(ctx, path) {
+    let rdef = this.resolvePath(ctx, path);
+    if (rdef === undefined) {
+      throw new DataPathError("invalid path " + path);
+    }
+
+    if (!rdef.prop || !(rdef.prop instanceof ToolProperty)) {
+      return "";
+    }
+
+    let type = rdef.prop.type;
+    let prop = rdef.prop;
+
+    if (rdef.subkey !== undefined) {
+      let subkey = rdef.subkey;
+
+      if (type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type & (PropTypes.ENUM|PropTypes.FLAG)) {
+        if (!(subkey in prop.values) && subkey in prop.keys) {
+          subkey = prop.keys[subkey]
+        };
+
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type === PropTypes.PROPLIST) {
+        let val = tdef.value;
+        if (typeof val === "object" && val instanceof ToolProperty) {
+          return val.description;
+        }
+      }
+    }
+
+    return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
+  }
+
   getValue(ctx, path) {
     if (typeof ctx == "string") {
       throw new Error("You forgot to pass context to getValue");

@@ -7,7 +7,7 @@ export class Editor extends Area {
 
     this.useDataPathUndo = true;
   }
-
+  
   getScreen() {
     return this.ctx.screen;
   }

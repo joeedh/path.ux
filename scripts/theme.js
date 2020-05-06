@@ -2,16 +2,20 @@ import {CSSFont} from "./ui_theme.js";
 
 export const DefaultTheme = {
   base : {
+    mobileTextSizeMultiplier : 3,
+    mobileSizeMultiplier : 2, //does not include text
+
     //used for by icon strips and the like
     "oneAxisPadding" : 6,
     "oneAxisMargin" : 6,
 
-    "ScreenBorderWidth" : 2,
     "FocusOutline" : "rgba(100, 150, 255, 1.0)",
 
     "BasePackFlag" : 0,
-    "ScreenBorderOuter" : "rgba(150, 150, 150, 1.0)",
+    "ScreenBorderOuter" : "rgba(120, 120, 120, 1.0)",
     "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
+    "ScreenBorderWidth" : 2,
+    "ScreenBorderMousePadding" : 5,
 
     "numslider_width" : 24,
     "numslider_height" : 24,
@@ -60,6 +64,15 @@ export const DefaultTheme = {
       weight : "bold"
     }),
 
+    "ToolTipText" : new CSSFont({
+      font  : "sans-serif",
+      size  : 16,
+      color :  "rgba(35, 35, 35, 1.0)",
+      weight : "bold"
+    }),
+
+
+
     "TabText" : new CSSFont({
       size     : 18,
       color    : "rgba(35, 35, 35, 1.0)",
@@ -107,6 +120,12 @@ export const DefaultTheme = {
     `,
 
     MenuBorder : "1px solid grey",
+  },
+
+
+  tooltip : {
+    "BoxBG" : "rgb(245, 245, 245, 1.0)",
+    "BoxBorder" : "rgb(145, 145, 145, 1.0)"
   },
 
   richtext : {

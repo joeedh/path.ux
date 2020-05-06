@@ -17,6 +17,7 @@ import * as events from './events.js';
 import * as controller from './controller.js';
 import * as ScreenOverdraw from './ScreenOverdraw.js';
 import * as simple_toolsys from './simple_toolsys.js';
+import {ToolTip} from "./ui_widgets2.js";
 
 /*
 why am I using a toolstack here at all?  time to remove!
@@ -41,15 +42,12 @@ import {pushModalLight, popModalLight, keymap} from "./simple_events.js";
 export class ToolBase extends simple_toolsys.ToolOp {
   constructor(screen) {
     super();
-
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
-    
-    //super();
+    this.screen = screen;
+   //super();
     
     this._finished = false;
-    this.screen = screen;
   }
-  
+
   start() {
     //toolstack_getter().execTool(this);
     this.modalStart(undefined);
@@ -142,10 +140,22 @@ export class AreaResizeTool extends ToolBase {
     super(screen);
     
     this.start_mpos = new Vector2(mpos);
-    this.border = border;
+
+    this.sarea = border.sareas[0];
+    if (!this.sarea || border.dead) {
+      console.log(border.dead, border);
+      throw new Error("border corruption");
+    }
+
     this.screen = screen;
+
+    this.side = this.sarea._side(border);
   }
-  
+
+  get border() {
+    return this.sarea._borders[this.side];
+  }
+
   static tooldef() {return {
     uiname   : "Resize Area",
     toolpath : "screen.area.resize",
@@ -177,7 +187,7 @@ export class AreaResizeTool extends ToolBase {
           visit.add(border._id);
           ret.push(border);
           
-          rec(border.otherVert(v));
+          rec(border.otherVertex(v));
         }
       }
     }
@@ -194,7 +204,10 @@ export class AreaResizeTool extends ToolBase {
 
   finish() {
     super.finish();
+    this.screen.snapScreenVerts();
     this.screen.regenBorders();
+    this.screen.snapScreenVerts();
+    this.screen.loadFromVerts();
   }
 
   on_keydown(e) {
@@ -225,9 +238,7 @@ export class AreaResizeTool extends ToolBase {
     let bad = false;
 
     for (let border of borders) {
-      for (let sarea of border.sareas) {
-        bad = bad || !this.screen.isBorderMovable(sarea, border);
-      }
+      bad = bad || !this.screen.isBorderMovable(border);
 
       border.oldv1 = new Vector2(border.v1);
       border.oldv2 = new Vector2(border.v2);
@@ -252,18 +263,23 @@ export class AreaResizeTool extends ToolBase {
 
     let badcount = check();
 
+
+    let snapMode = true;
+
+    let df = mpos[axis];
+    let border = this.border;
+
+    this.screen.moveBorder(border, df, false);
+
     for (let border of borders) {
+      //if false, stead of forcing areas to fit within screen bounds
+      //in snapScreenVerts the screen bounds will be modified instead.
+
+      if (border.outer) {
+        snapMode = false;
+      }
+
       this.overdraw.line(border.v1, border.v2, color);
-      
-      if (!visit.has(border.v1._id)) {
-        border.v1[axis] += mpos[axis];
-        visit.add(border.v1._id);
-      }
-      
-      if (!visit.has(border.v2._id)) {
-        border.v2[axis] += mpos[axis];
-        visit.add(border.v2._id);
-      }
     }
     
     this.start_mpos[0] = e.x;
@@ -280,9 +296,12 @@ export class AreaResizeTool extends ToolBase {
       }
     }
 
+
+    this.screen.snapScreenVerts(snapMode);
     this.screen.loadFromVerts();
-    this.screen.solveAreaConstraints();
+    this.screen.solveAreaConstraints(snapMode);
     this.screen.setCSS();
+    this.screen.updateDebugBoxes();
   }
 }
 
@@ -300,7 +319,7 @@ export class SplitTool extends ToolBase {
     this.sarea = undefined;
     this.t = undefined;
 
-    this.start = false;
+    this.started = false;
   }
   
   static tooldef() {return {
@@ -358,7 +377,9 @@ export class SplitTool extends ToolBase {
 
     let screen = this.screen;
 
-    let sarea = screen.pickElement(x, y, 0, 0, ScreenArea.ScreenArea);
+    let sarea = screen.findScreenArea(x, y);
+    console.log(sarea, x, y);
+
     this.overdraw.clear();
 
     if (sarea !== undefined) {
@@ -449,7 +470,12 @@ export class AreaDragTool extends ToolBase {
   
   finish() {
     super.finish();
-    
+
+    this.screen.regenBorders();
+    this.screen.solveAreaConstraints();
+    this.screen.snapScreenVerts();
+    this.screen._recalcAABB();
+
     console.log("tool finish");
   }
   
@@ -506,6 +532,8 @@ export class AreaDragTool extends ToolBase {
     if (b.horiz == -1 && b.sarea === this.sarea) {
       return;
     }
+
+    console.log("BBBB", b.horiz, b.sarea===this.sarea, b);
     
     let can_rip = false;
     let sa = this.sarea;
@@ -544,13 +572,15 @@ export class AreaDragTool extends ToolBase {
         screen.replaceArea(dst, src);
         
         if (expand) {
-          console.log("\na:", src.size[0], src.size[1]);
+          console.log("\nEXPANDING:", src.size[0], src.size[1]);
           
           src.pos[0] = mm.min[0];
           src.pos[1] = mm.min[1];
           
           src.size[0] = mm.max[0] - mm.min[0];
           src.size[1] = mm.max[1] - mm.min[1];
+
+          src.loadFromPosSize();
 
           screen._internalRegenAll();
         }
@@ -829,3 +859,74 @@ export class AreaDragTool extends ToolBase {
 }
 
 //controller.registerTool(AreaDragTool);
+
+export class ToolTipViewer extends ToolBase {
+  constructor(screen) {
+    super(screen);
+
+    this.tooltip = undefined;
+    this.element = undefined;
+  }
+
+  static tooldef() {return {
+    uiname   : "Help Tool",
+    toolpath : "screen.help_picker",
+    icon     : ui_base.Icons.HELP,
+    description : "view tooltips",
+    is_modal : true,
+    hotkey : undefined,
+    undoflag : UndoFlags.NO_UNDO,
+    flag     : 0,
+    inputs   : {}, //tool properties
+    outputs  : {}  //tool properties
+  }}
+
+  on_mousemove(e) {
+    this.pick(e);
+  }
+
+  on_mousedown(e) {
+    this.pick(e);
+  }
+
+  on_mouseup(e) {
+    this.finish();
+  }
+
+  finish() {
+    super.finish();
+  }
+
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap.Escape:
+      case keymap.Enter:
+      case Keymap.Space:
+        if (this.tooltip) {
+          this.tooltip.end();
+        }
+        this.finish();
+        break;
+    }
+  }
+  pick(e) {
+    let x = e.x, y = e.y;
+
+    let ele = this.screen.pickElement(x, y);
+    console.log(ele ? ele.tagName : ele);
+
+    if (ele !== undefined && ele !== this.element && ele.title) {
+      if (this.tooltip) {
+        this.tooltip.end();
+      }
+
+      this.element = ele;
+      let tip = ele.title;
+
+      this.tooltip = ToolTip.show(tip, this.screen, x, y);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+

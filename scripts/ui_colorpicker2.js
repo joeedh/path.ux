@@ -1237,6 +1237,8 @@ export class ColorPickerButton extends UIBase {
   }
 
   update() {
+    super.update();
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }

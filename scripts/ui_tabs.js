@@ -498,8 +498,6 @@ export class TabBar extends UIBase {
   }
   
   setActive(tab) {
-    console.warn("tab setActive");
-
     let update = tab !== this.tabs.active;
     this.tabs.active = tab;
     
@@ -844,8 +842,6 @@ export class TabContainer extends UIBase {
     let barpos = this.getAttribute("bar_pos");
     
     if (barpos !== this._last_bar_pos) {
-      console.log("position update!", barpos);
-      
       this.horiz = barpos == "top" || barpos == "bottom";
       this._last_bar_pos = barpos;
       

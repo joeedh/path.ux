@@ -30,7 +30,7 @@ export class Overdraw extends ui_base.UIBase {
     
     this.shadow.appendChild(style);
     
-    this.zindex_base = 100;
+    this.zindex_base = 1000;
   }
 
   startNode(node, screen) {

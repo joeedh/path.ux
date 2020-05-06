@@ -1,7 +1,7 @@
 import {DataAPI, DataStruct} from "../../scripts/simple_controller.js";
 import {Icons} from "../editors/icon_enum.js";
 import {WorkspaceEditor} from "../editors/workspace/workspace.js";
-import {Canvas, CanvasPath, Material, CanvasPoint, CanvasEdge} from "../draw/draw.js";
+import {Canvas, DrawFlags, CanvasPath, Material, CanvasPoint, CanvasEdge} from "../draw/draw.js";
 import {Brushes, BrushSettings, Brush} from "../draw/brush.js";
 import {Dynamics, DynamicsState, DynamicModes, DynamicKey} from "../core/dynamics.js";
 
@@ -26,6 +26,11 @@ function api_define_canvas(api) {
   let st = api.mapStruct(Canvas);
   let pathst = api.mapStruct(CanvasPath);
 
+  let onchange = () => {
+    window.redraw_all_full();
+  };
+
+  st.flags("drawflag", "drawflag", DrawFlags).on('change', onchange);
   st.list("paths", "paths", [
     function getStruct(api, list, key) {
       return pathst;

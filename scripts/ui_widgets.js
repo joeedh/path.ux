@@ -1290,6 +1290,8 @@ export class TextBox extends UIBase {
 
     if (this.style["font"]) {
       this.dom.style["font"] = this.style["font"];
+    } else {
+      this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
     }
 
     this.dom.style["width"] = this.style["width"];

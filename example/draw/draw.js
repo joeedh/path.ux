@@ -4,6 +4,11 @@ import {Vector2, Vector3, Vector4, Matrix4} from "../../scripts/vectormath.js";
 import {color2css} from "../../scripts/ui_theme.js";
 let STRUCT = nstructjs.STRUCT;
 
+export const DrawFlags = {
+  BLUR  : 1,
+  COLOR : 2
+};
+
 export const PathTypes = {
   PATH    : 0,
   CIRCLE  : 1,
@@ -109,6 +114,8 @@ export class Canvas {
     this.verts = [];
     this.edges = [];
     this.paths = [];
+
+    this.drawflag = DrawFlags.BLUR | DrawFlags.COLOR;
 
     this.idgen = 0;
     this.indexMap = {};
@@ -256,6 +263,9 @@ export class Canvas {
       this.paths.active = this.paths[this.paths.length-1];
     }
 
+    let doblur = this.drawflag & DrawFlags.BLUR;
+    let docolor = this.drawflag & DrawFlags.COLOR;
+
     if (idstart === undefined) {
       console.log("full canvas draw");
       g.clearRect(0, 0, canvas.width, canvas.height);
@@ -276,6 +286,8 @@ export class Canvas {
       }
 
       let blur = p.material.blur;
+      if (!doblur)
+        blur = 0;
 
       let bluroff = 10000;
 
@@ -285,7 +297,7 @@ export class Canvas {
 
         let color = p.material.color;
 
-        g.fillStyle = color2css(color);
+        g.fillStyle = !docolor ? "black" : color2css(color);
         g.shadowColor = color2css([color[0], color[1], color[2]]);
 
 
@@ -329,6 +341,7 @@ Canvas {
   edges : array(CanvasEdge);
   paths : array(CanvasPath);
   idgen : int;
+  drawflag : int;
 }
 `;
 nstructjs.register(Canvas);

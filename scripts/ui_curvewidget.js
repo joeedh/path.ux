@@ -95,7 +95,6 @@ export class Curve1DWidget extends ColumnFrame {
     ret.setValue(this.value.generatorType);
     ret._name = "sdfdsf";
 
-    console.log(ret.__proto__);
     this.container = this.col();
   }
 

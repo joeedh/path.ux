@@ -66,24 +66,28 @@ function toolkey(cls) {
 let lt = util.time_ms();
 let lastmsg = undefined;
 let lcount = 0;
-function _report(msg) {
-  let skip = msg === lastmsg;
 
-  skip = skip && util.time_ms()-lt < 500;
-  if (skip) {
-    return;
+let reportstack = ["api"];
+export function pushReportName(name) {
+  if (reportstack.length > 1024) {
+    console.trace("eerk, reportstack overflowed");
+    reportstack.length = 0;
+    reportstack.push("api");
   }
 
-  if (lcount > 0) {
-    console.warn(`${msg} [${lcount+1}]`);
-  } else {
-    console.warn(msg);
-  }
-
-  lastmsg = msg;
-  lcount = 1;
-  lt = util.time_ms;
+  reportstack.push(name);
 }
+
+function report(msg) {
+  let name = reportstack.length === 0 ? "api" : reportstack[reportstack.length-1];
+
+  util.console.context(name).warn(msg);
+}
+
+export function popReportName() {
+  reportstack.pop();
+}
+
 export const DataTypes = {
   STRUCT: 0,
   DYNAMIC_STRUCT: 1,
@@ -713,6 +717,17 @@ export class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
+  //used by simple_controller.js for tagging error messages
+  pushReportContext(name) {
+    pushReportName(name);
+  }
+
+  //used by simple_controller.js for tagging error messages
+  popReportContext() {
+    popReportName();
+  }
+
+
   /*
   massSetProp operate on lists.  The idea is to
   write a filter str inside a data path, e.g.
@@ -779,7 +794,7 @@ export class DataAPI extends ModelInterface {
         util.print_stack(error);
       }
 
-      _report("bad path " + inpath);
+      report("bad path " + inpath);
       return undefined;
     }
   }
@@ -932,7 +947,6 @@ export class DataAPI extends ModelInterface {
 
         let val = p.expect(type);
 
-        //console.log("== in resolvepath", lastobj, val, path.path);
         let val1 = val;
 
         if (typeof val == "string") {
@@ -957,7 +971,6 @@ export class DataAPI extends ModelInterface {
 
         let val = p.expect(type);
 
-        //console.log("== in resolvepath", lastobj, val, path.path);
         let val1 = val;
 
         if (typeof val == "string") {
@@ -982,7 +995,6 @@ export class DataAPI extends ModelInterface {
 
         let val = p.expect(type);
 
-        //console.log("== in resolvepath", lastobj, val, path.path);
         let val1 = val;
 
         if (typeof val == "string") {
@@ -1065,7 +1077,6 @@ export class DataAPI extends ModelInterface {
     path = path.replace(/\=\=/g, "=");
 
     path = "." + this.prefix + path;
-    //console.log(path);
 
     let p = [""];
     for (let i = 0; i < path.length; i++) {
@@ -1097,7 +1108,6 @@ export class DataAPI extends ModelInterface {
       }
     }
 
-    //console.log(p);
     let i = 0;
 
     let parent1, obj = ctx, parent2;
@@ -1130,8 +1140,6 @@ export class DataAPI extends ModelInterface {
         key = b;
         prop = undefined;
 
-        console.log("key", key, "lastkey", lastkey, "apiname", apiname);
-
         if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
           let dpath = dstruct.pathmap[lastkey];
 
@@ -1141,7 +1149,7 @@ export class DataAPI extends ModelInterface {
         }
 
         if (prop !== undefined && (prop.type == PropTypes.ENUM || prop.type == PropTypes.FLAG)) {
-          console.log("found flag/enum property");
+          util.console.context("api").log("found flag/enum property");
           ok = true;
         }
 
@@ -1226,12 +1234,6 @@ export class DataAPI extends ModelInterface {
 
       i++;
     }
-    /*
-    console.log(p);
-    console.log(parent2);
-    console.log(parent1);
-    console.log(obj);
-    //*/
 
     if (lastkey !== undefined && dstruct !== undefined && dstruct.pathmap[lastkey]) {
       let dpath = dstruct.pathmap[key];
@@ -1239,8 +1241,6 @@ export class DataAPI extends ModelInterface {
       apiname = dpath.apiname;
     }
 
-    if (apiname != "selectmode")
-      console.log(apiname);
 
     if (dstruct !== undefined && dstruct.pathmap[key]) {
       let dpath = dstruct.pathmap[key];
@@ -1338,7 +1338,7 @@ export class DataAPI extends ModelInterface {
       return this.getToolPathHotkey_intern(ctx, path);
     } catch (error) {
       print_stack(error);
-      console.log("failed to fetch tool path");
+      util.console.context("api").log("failed to fetch tool path: " + path);
 
       return undefined;
     }

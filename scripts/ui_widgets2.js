@@ -97,6 +97,9 @@ export class NumSliderSimple extends UIBase {
 
     if (val !== this._value) {
       let prop = this.getPathMeta(this.ctx, path);
+      if (!prop) {
+        return;
+      }
       this.isInt = prop.type === PropTypes.INT;
 
       if (prop.range !== undefined) {
@@ -670,6 +673,9 @@ export class NumSliderSimple2 extends ColumnFrame {
 
     this.updateName();
 
+    this.numslider.description = this.description;
+    this.textbox.description = this.title; //get full, transformed toolip
+
     if (this.hasAttribute("datapath")) {
       this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
     }
@@ -845,3 +851,80 @@ export class VectorPanel extends ColumnFrame {
   }}
 }
 UIBase.register(VectorPanel);
+
+export class ToolTip extends UIBase {
+  constructor() {
+    super();
+
+    this.visibleToPick = false;
+    this.div = document.createElement("div");
+
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      div {
+        padding : 15px;
+      }
+    `;
+
+    this.shadow.appendChild(this.styletag);
+    this.shadow.appendChild(this.div);
+  }
+
+  static show(message, screen, x, y) {
+    let ret = document.createElement(this.define().tagname);
+
+    ret.text = message;
+    let size = ret._estimateSize();
+
+    console.log(size);
+    x = Math.min(Math.max(x, 0), screen.size[0] - size[0]);
+    y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
+
+    ret._popup = screen.popup(ret, x, y);
+    ret._popup.add(ret);
+
+    return ret;
+  }
+
+  end() {
+    this._popup.end();
+  }
+
+  init() {
+    super.init();
+    this.setCSS();
+  }
+
+  set text(val) {
+    this.div.innerHTML = val.replace(/[\n]/g, "<br>\n");
+  }
+
+  get text() {
+    return this.div.innerHTML;
+  }
+
+  _estimateSize() {
+    let text = this.div.textContent;
+    let block = ui_base.measureTextBlock(this, text, undefined, undefined, undefined, this.getDefault("ToolTipText"));
+
+    return [block.width+50, block.height+30];
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let color = this.getDefault("BoxBG");
+    let bcolor = this.getDefault("BoxBorder");
+
+    this.div.style["background-color"] = color;
+    this.div.style["border"] = "2px solid " + bcolor;
+
+    this.div.style["font"] = this.getDefault("ToolTipText").genCSS();
+  }
+
+  static define() {return {
+    tagname : "tool-tip-x",
+    style   : "tooltip"
+  }}
+};
+UIBase.register(ToolTip);

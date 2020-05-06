@@ -189,6 +189,8 @@ export class Button extends UIBase {
     let press_gen = 0;
 
     let press = (e) => {
+      e.stopPropagation();
+
       console.log("button press", this._pressed);
 
       if (this.disabled) return;
@@ -203,8 +205,7 @@ export class Button extends UIBase {
       this._redraw();
 
       e.preventDefault();
-      e.stopPropagation();
-    }
+    };
 
     let depress = (e) => {
       console.log("button depress");
@@ -216,27 +217,36 @@ export class Button extends UIBase {
         this._redraw();
       }
 
+      console.log("a");
+
       e.preventDefault();
       e.stopPropagation();
 
-      if (e.type == "mouseup" && e.button) {
+      console.warn(e.type, e.button, this.onclick, e);
+      if (e.type === "mouseup" && (e.button || e.was_touch)) {
         return;
       }
 
       this._redraw();
 
-      if (e.type.startsWith("touch") && this.onclick) {
+      console.log("exec", this.onclick);
+      if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
       }
     }
 
     this.addEventListener("mousedown", press, {captured : true, passive : false});
 
-    this.addEventListener("touchstart", press, {captured : true, passive : false});
+    this.addEventListener("touchstart", (e) => {
+      press(e);
+      if (e.onclick) {
+        e.onclick(e);
+      }
+    }, {captured : true, passive : false});
     this.addEventListener("touchend", depress);
     this.addEventListener("touchcancel", depress);
 
-    this.addEventListener("mouseup", depress);
+    this.addEventListener("mouseup", depress, {captured : true, passive : false});
 
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)

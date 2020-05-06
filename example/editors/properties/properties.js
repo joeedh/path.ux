@@ -36,6 +36,12 @@ export class PropsEditor extends Editor {
     this.setCSS();
   }
 
+  copy() {
+    let ret = document.createElement(this.constructor.define().tagname);
+    ret.ctx = this.ctx;
+    return ret;
+  }
+
   buildCurve(tab) {
     tab.prop("data.curvemap");
     //let c = document.createElement("curve-widget-x");

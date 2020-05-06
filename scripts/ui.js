@@ -444,6 +444,11 @@ export class Container extends ui_base.UIBase {
 
     this.shadow.appendChild(child);
 
+    /*
+    if (child._ctx) {
+      child._init();
+    }//*/
+
     if (child.onadd)
       child.onadd();
 
@@ -655,6 +660,17 @@ export class Container extends ui_base.UIBase {
     this._add(ret);
 
     return ret;
+  }
+
+  /**
+   *
+   * makes a button for a help picker tool
+   * to view tooltips on mobile devices
+   * */
+  helppicker() {
+    return this.iconbutton(ui_base.Icons.HELP, "Help Picker", () => {
+      this.getScreen().hintPickerTool();
+    })
   }
 
   iconbutton(icon, description, cb, thisvar, packflag = 0) {

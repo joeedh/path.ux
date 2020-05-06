@@ -10,15 +10,12 @@ import {getDataPathToolOp} from './simple_controller.js';
 
 export * from './ui_theme.js';
 
-import {CSSFont} from "./ui_theme.js";
+import {CSSFont, theme} from "./ui_theme.js";
 
 import {DefaultTheme} from './theme.js';
-export let theme = {};
+export {theme} from "./ui_theme.js";
 
-//load default theme
-for (let k in DefaultTheme) {
-  theme[k] = DefaultTheme[k];
-}
+import cconst from './const.js';
 
 let Vector4 = vectormath.Vector4;
 
@@ -41,6 +38,11 @@ export function setTheme(theme2) {
   for (let k in theme2) {
     let v = theme2[k];
 
+    if (typeof v !== "object") {
+      theme[k] = v;
+      continue;
+    }
+
     if (!(k in theme)) {
       theme[k] = {};
     }
@@ -50,6 +52,8 @@ export function setTheme(theme2) {
     }
   }
 }
+
+setTheme(DefaultTheme);
 
 let _last_report = util.time_ms();
 export function report(msg) {
@@ -153,6 +157,10 @@ export class IconManager {
         size = sizes[i][0], drawsize = sizes[i][1];
       } else {
         size = drawsize = sizes[i];
+      }
+
+      if (util.isMobile()) {
+        drawsize = ~~(drawsize * theme.base.mobileSizeMultiplier);
       }
 
       this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
@@ -353,7 +361,16 @@ export class SimpleContext {
     this.api = api;
   }
 }
-  
+
+let _mobile_theme_patterns = [
+  /.*width.*/,
+  /.*height.*/,
+  /.*size.*/,
+  /.*margin.*/,
+  /.*pad/,
+  /.*radius.*/
+];
+
 
 let _idgen = 0;
 
@@ -390,6 +407,8 @@ export class UIBase extends HTMLElement {
     this.default_overrides = {};
     this.class_default_overrides = {};
 
+    this._last_description = undefined;
+
     //getting css to flow down properly can be a pain, so
     //some packing settings are set as bitflags here,
     //see PackFlags
@@ -407,7 +426,7 @@ export class UIBase extends HTMLElement {
     this.shadow = this.attachShadow({mode : 'open'});
     this._ctx = undefined;
     
-    this.description = undefined;
+    this._description = undefined;
     
     let style = document.createElement("style");
     style.textContent = `
@@ -490,6 +509,35 @@ export class UIBase extends HTMLElement {
 
   connectedCallback() {
 
+  }
+
+  get description() {
+
+    return this._description;
+  }
+
+  set description(val) {
+    this._description = val;
+
+    if (val === undefined || val === null) {
+      return;
+    }
+
+    if (cconst.showPathsInToolTips && this.hasAttribute("datapath")) {
+      let s = "" + this._description;
+
+      let path = this.getAttribute("datapath");
+      s += "\n    path: " + path;
+
+      if (this.hasAttribute("mass_set_path")) {
+        let m = this.getAttribute("mass_set_path");
+        s += "\n    massSetPath: " + m;
+      }
+      this.title = s;
+
+    } else {
+      this.title = ""+val;
+    }
   }
 
   noMarginsOrPadding() {
@@ -692,6 +740,7 @@ export class UIBase extends HTMLElement {
   pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
     let ret = undefined;
 
+    let retzindex = undefined;
 
     let testwidget = (n) => {
       if (n instanceof nodeclass) {
@@ -703,48 +752,70 @@ export class UIBase extends HTMLElement {
       }
     };
 
-    let rec = (n, widget, depth=0) => {
+    let rec = (n, widget, widget_zindex, zindex, depth=0) => {
+
+      if (n.style && n.style["z-index"]) {
+        if (!(n instanceof UIBase) || n.visibleToPick) {
+          zindex = parseInt(n.style["z-index"]);
+        }
+      }
+
       if (n.getClientRects && n.getClientRects().length > 0) {
         let rects = n.getClientRects();
 
         if (testwidget(n)) {
           widget = n;
+          widget_zindex = zindex;
         }
 
         for (let rect of rects) {
-          let ok =   x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
+          let ok = true;
+
+          if (n instanceof UIBase) {
+            ok = ok && n.visibleToPick;
+          }
+
+          ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
+          ok = ok && (retzindex === undefined || zindex >= retzindex);
+
+          ok =  ok && x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
           ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
 
-          //console.log(ok, "|", x, y, rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
           if (ok) {
             ret = widget;
+            retzindex = zindex;
           }
-          //console.log(rect.width, rect.height, "eek", depth);
         }
       }
 
-      let isleaf = n.childNodes.length == 0;
+      let isleaf = n.childNodes.length === 0;
 
       if (n.shadow !== undefined) {
-        isleaf = isleaf && (n.shadow.childNodes.length == 0);
+        isleaf = isleaf && (n.shadow.childNodes.length === 0);
       }
 
       if (!isleaf) {
-        for (let i=n.childNodes.length-1; i>=0; i--) {
-          let n2 = n.childNodes[i];
-          rec(n2, widget, depth+1);
-        }
-
         if (n.shadow !== undefined) {
           for (let i=n.shadow.childNodes.length-1; i>=0; i--) {
             let n2 = n.shadow.childNodes[i];
-            rec(n2, widget, depth+1);
+            rec(n2, widget, widget_zindex, zindex, depth+1);
           }
+        }
+        for (let i=n.childNodes.length-1; i>=0; i--) {
+          let n2 = n.childNodes[i];
+          rec(n2, widget, widget_zindex, zindex, depth+1);
         }
       }
     };
 
-    rec(this, testwidget(this) ? this : undefined);
+    let p = this;
+
+    while (p && !p.style["z-index"] && p.style["z-index"] !== 0.0) {
+      p = p.parentWidget;
+    }
+    let zindex = p !== undefined ? parseInt(p.style["z-index"]) : 0;
+
+    rec(this, testwidget(this) ? this : undefined, zindex, zindex);
 
     return ret;
   }
@@ -912,8 +983,6 @@ export class UIBase extends HTMLElement {
       tick++;
     }, 20);
 
-    console.log(this.parentNode);
-    
     let div = document.createElement("div");
     
     //this.parentNode.insertBefore(div, this);
@@ -1020,22 +1089,77 @@ export class UIBase extends HTMLElement {
 
   setPathValue(ctx, path, val) {
     if (this.useDataPathUndo) {
-      this.setPathValueUndo(ctx, path, val);
+      ctx.api.pushReportContext(this._reportCtxName);
+
+      try {
+        this.setPathValueUndo(ctx, path, val);
+      } catch (error) {
+        ctx.api.popReportContext();
+
+        if (!(error instanceof DataPathError)) {
+          throw error;
+        } else {
+          return;
+        }
+      }
+
+      ctx.api.popReportContext();
       return;
     }
 
-    if (this.hasAttribute("mass_set_path")) {
-      ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
-      ctx.api.setValue(ctx, path, val);
-    } else {
-      ctx.api.setValue(ctx, path, val);
+    ctx.api.pushReportContext(this._reportCtxName);
+
+    try {
+      if (this.hasAttribute("mass_set_path")) {
+        ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
+        ctx.api.setValue(ctx, path, val);
+      } else {
+        ctx.api.setValue(ctx, path, val);
+      }
+    } catch (error) {
+      ctx.api.popReportContext();
+
+      if (!(error instanceof DataPathError)) {
+        throw error;
+      }
+
+      return;
     }
+
+    ctx.api.popReportContext();
   }
-  
+
+  get _reportCtxName() {
+    return ""+this._id;
+  }
+
   getPathMeta(ctx, path) {
+    ctx.api.pushReportContext(this._reportCtxName);
     let ret = ctx.api.resolvePath(ctx, path);
+    ctx.api.popReportContext();
 
     return ret !== undefined ? ret.prop : undefined;
+  }
+
+  getPathDescription(ctx, path) {
+    let ret;
+    ctx.api.pushReportContext(this._reportCtxName);
+
+    try {
+      ret = ctx.api.getDescription(ctx, path);
+    } catch (error) {
+      ctx.api.popReportContext();
+
+      if (error instanceof DataPathError) {
+        //console.warn("Invalid data path '" + path + "'");
+        return undefined;
+      } else {
+        throw error;
+      }
+    }
+
+    ctx.api.popReportContext();
+    return ret;
   }
 
   getScreen() {
@@ -1120,9 +1244,10 @@ export class UIBase extends HTMLElement {
   
   //called regularly
   update() {
-    //use dom tooltips
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
+    if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
+      let d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
+
+      this.description = d;
     }
 
     if (!this._init_done) {
@@ -1229,18 +1354,41 @@ export class UIBase extends HTMLElement {
     this.class_default_overrides[style][key] = val;
   }
 
-  getDefault(key) {
+  _doMobileDefault(key, val) {
+    if (!util.isMobile())
+      return val;
+
+    key = key.toLowerCase();
+    let ok = false;
+
+    for (let re of _mobile_theme_patterns) {
+      if (key.search(re) >= 0) {
+        ok = true;
+        break;
+      }
+    }
+
+    if (ok) {
+      val *= theme.base.mobileSizeMultiplier;
+    }
+
+    return val;
+  }
+
+  getDefault(key, doMobile=true) {
     let p = this;
 
     while (p) {
       if (key in p.default_overrides) {
-        return p.default_overrides[key];
+        let v = p.default_overrides[key];
+
+        return doMobile ? this._doMobileDefault(key, v) : v;
       }
 
       p = p.parentWidget;
     }
 
-    return this.getClassDefault(key);
+    return this.getClassDefault(key, doMobile);
   }
 
   getStyleClass() {
@@ -1266,25 +1414,29 @@ export class UIBase extends HTMLElement {
     return "base";
   }
 
-  getClassDefault(key) {
+  getClassDefault(key, doMobile=true) {
     let style = this.getStyleClass();
 
+    let val = undefined;
     let p = this;
     while (p) {
       let def = p.class_default_overrides[style];
 
       if (def && (key in def)) {
-        return def[key];
+        val = def[key];
+        break;
       }
 
       p = p.parentWidget;
     }
 
-    if (style in theme && key in theme[style]) {
-      return theme[style][key];
+    if (val === undefined && style in theme && key in theme[style]) {
+      val = theme[style][key];
+    } else if (val === undefined) {
+      val = theme.base[key];
     }
 
-    return theme.base[key];
+    return doMobile ? this._doMobileDefault(key, val) : val;
   }
 
   getStyle() {
@@ -1471,12 +1623,22 @@ export function measureTextBlock(elem, text, canvas=undefined,
   };
 
   if (size === undefined) {
-    size = elem.getDefault("DefaultText").size;
+    if (font !== undefined && typeof font === "object") {
+      size = font.size;
+    }
+
+    if (size === undefined) {
+      size = elem.getDefault("DefaultText").size;
+    }
   }
 
   for (let line of lines) {
-    ret.width = Math.max(ret.width, measureText(elem, line, canvas, g, size, font).width);
-    ret.height += Math.ceil(size*1.2+0.5);
+    let m = measureText(elem, line, canvas, g, size, font);
+
+    ret.width = Math.max(ret.width, m.width);
+    let h = m.height !== undefined ? m.height : size*1.25;
+
+    ret.height += h;
   }
 
   return ret;
@@ -1510,6 +1672,16 @@ export function measureText(elem, text, canvas=undefined,
 }
 
 export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+  if (size === undefined) {
+    if (font !== undefined && font instanceof CSSFont) {
+      size = font.size;
+    } else {
+      size = elem.getDefault("DefaultText").size;
+    }
+  }
+
+  size *= UIBase.getDPI();
+
   if (font === undefined) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
