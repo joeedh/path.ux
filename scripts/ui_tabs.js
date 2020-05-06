@@ -428,7 +428,7 @@ export class TabBar extends UIBase {
     let canvas = this.canvas;
      
     let dpi = this.getDPI();
-    
+
     let rwidth = getpx(this.canvas.style["width"]);
     let rheight = getpx(this.canvas.style["height"]);
     
@@ -523,11 +523,12 @@ export class TabBar extends UIBase {
     g.fill();
     
     let dpi = this.getDPI();
-    let tsize = this.getDefault("TabText").size;
-    
-    g.font = ui_base.getFont(this, tsize, "TabText");
+    let font = this.getDefault("TabText");
+    let tsize = font.size;
+
     tsize *= dpi;
-    
+    g.font = font.genCSS(tsize*dpi);
+
     g.lineWidth = 2;
     g.strokeStyle = this.getDefault("TabStrokeStyle1");
       
@@ -541,7 +542,8 @@ export class TabBar extends UIBase {
 
       let x = tab.pos[0], y = tab.pos[1];
       let w = tab.size[0], h = tab.size[1];
-      let tw = g.measureText(tab.name).width;
+      //let tw = g.measureText(tab.name).width;
+      let tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize).width;
       
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
       let y2 = y + tsize*1.0;
@@ -595,11 +597,12 @@ export class TabBar extends UIBase {
     } else {
       let x = tab.pos[0], y = tab.pos[1];
       let w = tab.size[0], h = tab.size[1];
-      let tw = g.measureText(tab.name).width;
+      //let tw = g.measureText(tab.name).width;
+      let tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize).width;
       
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
-      let y2 = y + tsize*1.0;
-      
+      let y2 = y + tsize;
+
       g.beginPath();
       g.rect(x, y, w, h);
       g.fillStyle = bgcolor;
@@ -615,6 +618,8 @@ export class TabBar extends UIBase {
       }
       
       g.fillStyle = this.getDefault("TabText").color;
+
+      //y2 += tsize*0.3;
       g.fillText(tab.name, x2, y2);
 
       if (!this.horiz) {

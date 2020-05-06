@@ -186,6 +186,11 @@ export class Screen extends ui_base.UIBase {
   //}
 
   pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
+    if (!this.ctx) {
+      console.warn("no ctx in screen");
+      return;
+    }
+
     let ret;
 
     for (let i=this._popups.length-1; i >= 0; i--) {
@@ -263,6 +268,36 @@ export class Screen extends ui_base.UIBase {
     container.style["top"] = y + "px";
 
     container.parentWidget = this;
+
+    let mm = new math.MinMax(2);
+    let p = new Vector2();
+
+    let _update = container.update;
+    container.update = () => {
+      _update.call(container);
+
+      let rects = container.getClientRects();
+      mm.reset();
+
+      for (let r of rects) {
+        p[0] = r.x;
+        p[1] = r.y;
+        mm.minmax(p);
+
+        p[0] += r.width;
+        p[1] += r.height;
+        mm.minmax(p);
+      }
+
+      let x = mm.min[0], y = mm.min[1];
+
+      x = Math.min(x, this.size[0]-(mm.max[0]-mm.min[0]));
+      y = Math.min(y, this.size[1]-(mm.max[1]-mm.min[1]));
+
+      container.style["left"] = x + "px";
+      container.style["top"] = y + "px";
+    }
+
     document.body.appendChild(container);
     //this.shadow.appendChild(container);
     this.setCSS();
@@ -460,10 +495,13 @@ export class Screen extends ui_base.UIBase {
       width = window.screen.availWidth || window.screen.width;
       height = window.screen.availHeight || window.screen.height;
 
-      let dpi = UIBase.getDPI();
+      //let dpi = UIBase.getDPI();
+      let dpi = 0.985 / visualViewport.scale;
 
-      width *= dpi;
+      width *= dpi*0.985;
       height *= dpi;
+      width = ~~width;
+      height = ~~height;
     }
 
     if (cconst.DEBUG.customWindowSize) {
@@ -830,6 +868,8 @@ export class Screen extends ui_base.UIBase {
 
   //XXX race condition warning
   update_intern() {
+    let popups = this._popups;
+
     if (this.needsBorderRegen) {
       this.needsBorderRegen = false;
       this.regenBorders();
@@ -871,6 +911,11 @@ export class Screen extends ui_base.UIBase {
 
       let t = util.time_ms();
       push(this2);
+
+      for (let p of popups) {
+        push(p);
+      }
+
       while (stack.cur > 0) {
         let n = pop();
 

@@ -1197,16 +1197,11 @@ export class UIBase extends HTMLElement {
   
   set ctx(c) {
     this._ctx = c;
-    
-    let rec = (n) => { 
-      if (n instanceof UIBase) {
-        n.ctx = c;
-      }
-      for (let child of n.childNodes) {
-        rec(child);
-      }
-    }
-    
+
+    this._forEachChildWidget((n) => {
+      n.ctx = c;
+    });
+
     if (this._init_done) {
       this.update();
     }
@@ -1289,7 +1284,7 @@ export class UIBase extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return window.devicePixelRatio;
+    return UIBase.getDPI();
   }
 
   /**DEPRECATED
@@ -1300,6 +1295,10 @@ export class UIBase extends HTMLElement {
     //if (dpistack.length > 0) {
     //  return dpistack[this.dpistack.length-1];
     //} else {
+    if (util.isMobile()) {
+      return window.devicePixelRatio * visualViewport.scale;
+    }
+
     return window.devicePixelRatio;
     //}
   }
@@ -1584,11 +1583,16 @@ export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
 
 export function _ensureFont(elem, canvas, g, size) {
   let dpi = elem.getDPI();
-  
+  //size *= dpi;
+
+  if (g.font) {
+    return;
+  }
+
   if (size !== undefined) {
-    g.font = ""+Math.ceil(size * dpi) + "px sans-serif";
+    g.font = ""+Math.ceil(size) + "px sans-serif";
   } else if (!canvas.font) {
-    let size = elem.getDefault("DefaultText").size * dpi;
+    let size = elem.getDefault("DefaultText").size;
 
     let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
     
@@ -1662,6 +1666,24 @@ export function measureText(elem, text, canvas=undefined,
   }
 
   let ret = g.measureText(text);
+
+  if (ret && util.isMobile()) {
+    let ret2 = {};
+    let dpi = UIBase.getDPI();
+
+    for (let k in ret) {
+      let v = ret[k];
+
+      if (typeof v === "number") {
+        v *= dpi;
+        //v *= window.devicePixelRatio;
+      }
+
+      ret2[k] = v;
+    }
+
+    ret = ret2;
+  }
   
   if (size !== undefined) {
     //clear custom font for next time

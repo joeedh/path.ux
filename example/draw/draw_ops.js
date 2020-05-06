@@ -125,7 +125,8 @@ export class DrawOp extends ToolOp {
 
       if (lastpoint !== undefined) {
         let len = lastpoint.vectorDistance(co);
-        let spacing2 = 0.25;//this.dynamicsGet("brushSpacing", ds, spacing);
+
+        let spacing2 = spacing;//this.dynamicsGet("brushSpacing", ds, spacing);
         let size2 = this.dynamicsGet("brushSize", ds, size)*spacing2;
         let size3 = this.dynamicsGet("brushSize", lastdstate, size)*spacing2;
 
@@ -133,7 +134,7 @@ export class DrawOp extends ToolOp {
         size2 = Math.max(size2, 1);
 
         let steps = Math.floor(len / size2);
-        steps = Math.min(Math.max(steps, 2), 24); //1024*32);
+        steps = Math.min(Math.max(steps, 2), 1024); //1024*32);
 
         let dt = 1.0 / (steps - 1);
         for (let j=1, t=dt; j<steps; j++, t += dt) {

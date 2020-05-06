@@ -8,7 +8,7 @@ export class BrushSettings {
     this.size = 35;
     this.soft = 0.3;
     this.type = "circle";
-    this.spacing = 0.145;
+    this.spacing = 0.5;
     this.color = new Vector4([0,0,0,1]);
   }
 }

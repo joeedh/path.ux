@@ -120,9 +120,18 @@ export class WorkspaceEditor extends Editor {
     row2.prop("workspace.brush.spacing")
     row2.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
 
-    row.prop("workspace.brush.color");
+    row2 = table.row()
+    row2.prop("workspace.brush.color");
 
     this.setCSS();
+  }
+
+  getFinalScale() {
+    let dpi = UIBase.getDPI();
+    let scale = visualViewport.scale;
+
+
+    return this.scale;
   }
 
   getLocalMouse(mpos) {
@@ -136,8 +145,10 @@ export class WorkspaceEditor extends Editor {
     ret[0] += this.pan[0];
     ret[1] += this.pan[1];
 
-    ret[0] *= dpi*this.scale;
-    ret[1] *= dpi*this.scale;
+    let scale = this.getFinalScale();
+
+    ret[0] *= dpi*scale;
+    ret[1] *= dpi*scale;
 
     return ret;
   }
@@ -170,9 +181,9 @@ export class WorkspaceEditor extends Editor {
   }
 
   updateSize(){
+    let dpi = UIBase.getDPI();
     let w1 = this.size[0];
     let h1 = this.size[1];
-    let dpi = UIBase.getDPI();
 
     let w2 = ~~(w1*dpi);
     let h2 = ~~(h1*dpi);
@@ -199,17 +210,16 @@ export class WorkspaceEditor extends Editor {
     console.log("canvas draw");
     let g = this.g;
 
-    g.save();
+    let scale = this.getFinalScale();
 
-    g.scale(this.scale, this.scale);
+    g.resetTransform();
+    g.scale(scale, scale);
     g.translate(this.pan[0], this.pan[1]);
 
     let canvas = this.ctx.canvas;
 
     canvas.draw(this.canvas, this.g, this._last_id);
     this._last_id = canvas.idgen-1;
-
-    g.restore();
   }
 
   update() {

@@ -156,9 +156,9 @@ export class CSSFont {
 
   get size() {
     if (util.isMobile()) {
-      let mul = theme.base.mobileTextSizeMultiplier;
+      let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
       if (mul) {
-        return this._size * mul;
+        return this._size * mul;;
       }
     }
 

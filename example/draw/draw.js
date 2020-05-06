@@ -121,6 +121,7 @@ export class Canvas {
     this.indexMap = {};
 
     this.needsUpdate = true;
+    this.drawTask = undefined;
 
     this.idmap = {};
   }
@@ -166,7 +167,7 @@ export class Canvas {
     let v = new CanvasPoint(co);
 
     v.id = this.idgen++;
-    this.indexMap[v.id] = this.verts.length;
+    //this.indexMap[v.id] = this.verts.length;
     this.verts.push(v);
     this.idmap[v.id] = v;
 
@@ -184,7 +185,7 @@ export class Canvas {
 
     e.id = this.idgen++;
 
-    this.indexMap[e.id] = this.edges.length;
+    //this.indexMap[e.id] = this.edges.length;
     this.edges.push(e);
     this.idmap[e.id] = e;
 
@@ -258,7 +259,55 @@ export class Canvas {
     this.needsUpdate = true;
   }
 
-  draw(canvas, g, idstart=undefined) {
+  asyncFullDraw(g, canvas) {
+    let idend = 0;
+
+    if (this.drawTask !== undefined) {
+      window.clearInterval(this.drawTask);
+    }
+
+    let time = 0, first=true;
+
+    let time2 = 0;
+    let time0 = util.time_ms();
+
+    this.drawTask = 1;
+    let animreq = 0;
+
+    let f = () => {
+      if (first) {
+        g.save();
+        g.resetTransform();
+        g.clearRect(0, 0, canvas.width, canvas.height);
+        g.restore();
+
+        first = false;
+      }
+
+      time = util.time_ms();
+      while (util.time_ms() - time < 30) {
+        if (idend >= this.paths.length) {
+          console.warn("clear task", idend, this.paths.length, time2.toFixed(4), (util.time_ms()-time0).toFixed(4));
+          this.drawTask = undefined;
+          return;
+        }
+        let s = util.time_ms();
+
+        let delta = 60;
+        this.draw(canvas, g, idend, idend + delta, true, true);
+        idend += delta;
+
+        let time3 = util.time_ms() - s;
+        time2 = Math.max(time2, time3);
+      }
+
+      animreq = requestAnimationFrame(f);
+    };
+
+    animreq = requestAnimationFrame(f);
+  }
+
+  draw(canvas, g, idstart=undefined, idend=this.idgen, force=false, use_idx=false) {
     if (this.paths.active === undefined) {
       this.paths.active = this.paths[this.paths.length-1];
     }
@@ -268,21 +317,40 @@ export class Canvas {
 
     if (idstart === undefined) {
       console.log("full canvas draw");
+      this.asyncFullDraw(g, canvas);
+      return;
+      g.save();
+      g.resetTransform();
       g.clearRect(0, 0, canvas.width, canvas.height);
-        idstart = -1;
+      g.restore();
+      idstart = -1;
+    }
+
+    if (this.drawTask !== undefined && !force) {
+      return;
     }
 
     let i=0;
 
-    if (idstart in this.indexMap) {
-      i = this.indexMap[idstart];
+    if (use_idx && idstart in this.indexMap) {
+      i = Math.max(this.indexMap[idstart]-10, 0);
+    } else if (use_idx) {
+      i = idstart;
     }
 
     for (; i<this.paths.length; i++) {
       let p = this.paths[i];
 
-      if (p.id < idstart) {
+      if (!use_idx && p.id < idstart) {
         continue;
+      }
+
+      if (!use_idx && p.id >= idend) {
+        break;
+      }
+
+      if (use_idx && i >= idend) {
+        break;
       }
 
       let blur = p.material.blur;

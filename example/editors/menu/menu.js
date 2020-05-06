@@ -13,6 +13,7 @@ export class MenuBarEditor extends Editor {
 
     this.updateHeight();
     this.borderLock = 1|2|4|8;
+    this.areaDragToolEnabled = false;
 
   }
 
@@ -55,7 +56,13 @@ export class MenuBarEditor extends Editor {
   }
 
   updateHeight() {
-    this._height = this.getDefault("TitleText").size + 22;
+    if (!this.header)
+      return;
+
+    let rect = this.header.getClientRects()[0];
+    if (rect) {
+      this._height = rect.height;
+    }
 
     let update = this._height !== this.minSize[1];
     this.minSize[1] = this.maxSize[1] = this._height;

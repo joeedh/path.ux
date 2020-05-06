@@ -190,6 +190,7 @@ export class Area extends ui_base.UIBase {
     //borders from moving
     this.borderLock = 0;
     this.inactive = true;
+    this.areaDragToolEnabled = true
     
     this.owning_sarea = undefined;
     this._area_id = contextWrangler.idgen++;
@@ -481,10 +482,17 @@ export class Area extends ui_base.UIBase {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
-      let mdown2 = e.button != 0 || (e.touches && e.touches.length > 0);
+      let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
 
       if (!mdown2 || !mpre(e, pageX, pageY)) return;
-      return;
+
+
+      if (e.type === "mousemove" && e.was_touch) {
+        //okay how are patched events getting here?
+        //avoid double call. . .
+        return;
+      }
+
       //console.log(mdown);
       let dx = pageX - mpos[0];
       let dy = pageY - mpos[1];
@@ -505,16 +513,21 @@ export class Area extends ui_base.UIBase {
           return;
         }
 
+        if (!this.areaDragToolEnabled) {
+          return;
+        }
         mdown = false;
-        console.log("area drag tool!");
+        console.log("area drag tool!", e.type, e);
         screen.areaDragTool(this.owning_sarea);
       }
     };
 
-    row.setAttribute("draggable", true);
-    row.draggable = true;
-
+    //not working on mobile
+    //row.setAttribute("draggable", true);
+    //row.draggable = true;
+    /*
     row.addEventListener("dragstart", (e) => {
+      return;
       console.log("drag start!", e);
       e.dataTransfer.setData("text/json", "SplitAreaDrag");
 
@@ -533,7 +546,7 @@ export class Area extends ui_base.UIBase {
 
     row.addEventListener("drag", (e) => {
       console.log("drag!", e);
-    });
+    });*/
 
     //*
     row.addEventListener("mousemove", (e) => {
@@ -584,7 +597,7 @@ export class Area extends ui_base.UIBase {
     this.switcher = this.makeAreaSwitcher(row);
 
     if (util.isMobile()||1) {
-      row.helppicker().iconsheet = 2;
+      this.helppicker = row.helppicker();
     }
 
     if (add_note_area) {
@@ -633,10 +646,32 @@ export class Area extends ui_base.UIBase {
     uiname   : undefined,
     icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
   };}
-  
+
+  _isDead() {
+    if (this.dead) {
+      return true;
+    }
+
+    let screen = this.getScreen();
+
+    if (screen === undefined)
+      return true;
+
+    if (screen.parentNode === undefined)
+      return true;
+  }
+
   //subclassing loadSTRUCTs should either call this, or invoke super.loadSTRUCT()
   afterSTRUCT() {
-    this.doOnce(() => {
+    let f = () => {
+      if (this._isDead()) {
+        return;
+      }
+      if (!this.ctx) {
+        this.doOnce(f);
+        return;
+      }
+
       try {
         console.log("load ui data");
         ui_base.loadUIData(this, this.saved_uidata);
@@ -645,7 +680,9 @@ export class Area extends ui_base.UIBase {
         console.log("failed to load ui data");
         util.print_stack(error);
       }
-    });
+    };
+
+    this.doOnce(f);
   }
 
   static newSTRUCT(reader) {
@@ -676,6 +713,7 @@ export class ScreenArea extends ui_base.UIBase {
     
     this._borders = [];
     this._verts = [];
+    this.dead = false;
     
     this._sarea_id = contextWrangler.idgen++;
     
@@ -776,7 +814,21 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.pop_ctx_active();
     }
   }
-  
+
+  _isDead() {
+    if (this.dead) {
+      return true;
+    }
+
+    let screen = this.getScreen();
+
+    if (screen === undefined)
+      return true;
+
+    if (screen.parentNode === undefined)
+      return true;
+  }
+
   toJSON() {
     let ret = {
       editors : this.editors,
@@ -853,6 +905,8 @@ export class ScreenArea extends ui_base.UIBase {
   
   _ondestroy() {
     super._ondestroy();
+
+    this.dead = true;
     
     for (let editor of this.editors) {
       if (editor === this.area) continue;
@@ -925,6 +979,9 @@ export class ScreenArea extends ui_base.UIBase {
         ret.area.pop_ctx_active();
       } else {
         ret.doOnce(() => {
+          if (this.dead) {
+            return;
+          }
           ret._init();
           ret.area._init();
           ret.area.push_ctx_active();
@@ -1273,13 +1330,26 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.inactive = false;
       this.shadow.appendChild(this.area);
 
-      this.doOnce(() => {
+      let f = () => {
+        if (this._isDead()) {
+          return;
+        }
+
+        if (!this.ctx && this.parentNode) {
+          console.log("waiting to start. . .");
+          this.doOnce(f);
+          return;
+        }
+
         this.area.ctx = this.ctx;
         this.area._init(); //ensure init has been called already
         this.area.on_area_active();
         this.area.onadd();
-      });        
+      };
+
+      this.doOnce(f);
     }
+
   }
   
   static define() {return {
