@@ -452,7 +452,15 @@ export class SatValField extends UIBase {
         this.pushModal({
           on_mousemove: (e) => {
             let rect = this.canvas.getClientRects()[0];
-            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+            let x, y;
+
+            if (e.touches && e.touches.length) {
+              x = e.touches[0].clientX - rect.x;
+              y = e.touches[0].clientY - rect.y;
+            } else {
+              x = e.x;
+              y = e.y;
+            }
 
             setFromXY(x, y);
           },

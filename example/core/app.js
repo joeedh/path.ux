@@ -316,6 +316,7 @@ export class AppState {
       let buf = localStorage[cconst.LOCALSTORAGE_KEY];
       buf = new DataView(util.atob(buf).buffer);
 
+      return this.loadFile(buf);
       try {
         this.loadFile(buf);
       } catch (error) {

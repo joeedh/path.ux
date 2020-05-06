@@ -1864,10 +1864,10 @@ export class Screen extends ui_base.UIBase {
   }
 
   //regenerates borders, sets css and calls this.update
+
   _internalRegenAll() {
     this.snapScreenVerts();
     this._recalcAABB();
-    this._updateAll();
     this.calcTabOrder();
     this.setCSS();
   }
