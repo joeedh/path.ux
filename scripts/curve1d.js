@@ -359,6 +359,8 @@ class BSplineCurve extends CurveTypeData {
     this.add(0, 0);
     this.add(1, 1);
 
+    this.mpos = new Vector2();
+
     this.on_mousedown = this.on_mousedown.bind(this);
     this.on_mousemove = this.on_mousemove.bind(this);
     this.on_mouseup = this.on_mouseup.bind(this);
@@ -775,51 +777,41 @@ class BSplineCurve extends CurveTypeData {
     return this.uidata !== undefined;
   }
 
-  on_touchstart(e) {
-    this.mpos[0] = e.touches[0].pageX;
-    this.mpos[1] = e.touches[0].pageY;
-
-    this.on_mousedown({
-      x          : e.touches[0].pageX,
-      y          : e.touches[0].pageY,
+  _wrapTouchEvent(e) {
+    return {
+      x          : e.touches.length ? e.touches[0].pageX : this.mpos[0],
+      y          : e.touches.length ? e.touches[0].pageY : this.mpos[1],
       button     : 0,
       shiftKey   : e.shiftKey,
       altKey     : e.altKey,
       ctrlKey    : e.ctrlKey,
       isTouch    : true,
-      commandKey : e.commandKey
-    });
+      commandKey : e.commandKey,
+      stopPropagation : e.stopPropagation(),
+      preventDefault : e.preventDefault()
+    };
+  }
+
+  on_touchstart(e) {
+    this.mpos[0] = e.touches[0].pageX;
+    this.mpos[1] = e.touches[0].pageY;
+
+    let e2 = this._wrapTouchEvent(e);
+
+    this.on_mousemove(e2);
+    this.on_mousedown(e2);
   }
 
   on_touchmove(e) {
     this.mpos[0] = e.touches[0].pageX;
     this.mpos[1] = e.touches[0].pageY;
 
-    this.on_mousemove({
-      x          : e.touches[0].pageX,
-      y          : e.touches[0].pageY,
-      button     : 0,
-      shiftKey   : e.shiftKey,
-      altKey     : e.altKey,
-      ctrlKey    : e.ctrlKey,
-      commandKey : e.commandKey,
-      preventDefault : () => e.preventDefault(),
-      stopPropagation : () => e.stopPropagation(),
-      isTouch : true,
-    });
+    let e2 = this._wrapTouchEvent(e);
+    this.on_mousemove(e2);
   }
 
   on_touchend(e) {
-    this.on_mouseup({
-      x          : this.mpos[0],
-      y          : this.mpos[1],
-      button     : 0,
-      shiftKey   : e.shiftKey,
-      altKey     : e.altKey,
-      ctrlKey    : e.ctrlKey,
-      isTouch : true,
-      commandKey : e.commandKey
-    });
+    this.on_mouseup(this._wrapTouchEvent(e));
   }
 
   on_touchcancel(e) {
@@ -930,10 +922,12 @@ class BSplineCurve extends CurveTypeData {
   }
 
   on_mousedown(e) {
-    console.log("bspline mdown");
+    console.log("bspline mdown", e.x, e.y);
 
     this.uidata.start_mpos.load(this.transform_mpos(e.x, e.y));
     this.fastmode = true;
+
+    console.log(this.uidata.start_mpos, this.uidata.draw_trans);
 
     var mpos = this.transform_mpos(e.x, e.y);
     var x=mpos[0], y = mpos[1];
@@ -1029,7 +1023,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   on_mousemove(e) {
-    //console.log("bspline mmove");
+    console.log("bspline mmove", e.x, e.y);
 
     if (e.isTouch && this.uidata.transforming) {
       e.preventDefault();
