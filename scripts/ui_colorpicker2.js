@@ -1001,7 +1001,7 @@ export class ColorPickerButton extends UIBase {
 
     this.rgba = new Vector4([1, 1, 1, 1]);
     this.labelDom = document.createElement("span");
-    this.labelDom.textContent = "yay";
+    this.labelDom.textContent = "error";
     this.dom = document.createElement("canvas");
     this.g = this.dom.getContext("2d");
 
@@ -1157,6 +1157,8 @@ export class ColorPickerButton extends UIBase {
   }
 
   setCSS() {
+    super.setCSS();
+
     let w = this.getDefault("defaultWidth");
     let h = this.getDefault("defaultHeight");
     let dpi = this.getDPI();

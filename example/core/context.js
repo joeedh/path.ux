@@ -1,7 +1,7 @@
-import {Context, ContextOverlay, ContextFlags} from "../../scripts/context.js";
-import {Area} from "../../scripts/ScreenArea.js";
 import {WorkspaceEditor} from "../editors/workspace/workspace.js";
 import {Editor} from "../editors/editor_base.js";
+
+import {Context, ContextOverlay, ContextFlags, Area} from '../pathux.js';
 
 export class BaseOverlay extends ContextOverlay {
   static contextDefine() {return {

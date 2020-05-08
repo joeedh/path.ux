@@ -2,6 +2,23 @@ import './polyfill.js';
 import './struct.js';
 import './mobile-detect.js';
 
+
+export let timers = {};
+
+export function pollTimer(id, interval) {
+  if (!(id in timers)) {
+    timers[id] = time_ms();
+  }
+
+  if (time_ms() - timers[id] >= interval) {
+    timers[id] = time_ms();
+    return true;
+  }
+
+  return false;
+}
+window._pollTimer = pollTimer;
+
 let mdetect = undefined;
 let mret = undefined;
 

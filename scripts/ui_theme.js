@@ -141,7 +141,7 @@ export let theme = {};
 window.validateWebColor = validateWebColor;
 
 export class CSSFont {
-  constructor(args) {
+  constructor(args={}) {
     this._size = args.size ? args.size : 12;
     this.font = args.font;
     this.style = args.style !== undefined ? args.style : "normal";
@@ -166,14 +166,18 @@ export class CSSFont {
   }
 
   copyTo(b) {
-    b.size = this.size;
+    b._size = this._size;
     b.font = this.font;
     b.style = this.style;
     b.color = this.color;
+    b.variant = this.variant;
+    b.weight = this.weight;
   }
 
   copy() {
-    return new CSSFont(this);
+    let ret = new CSSFont();
+    this.copyTo(ret);
+    return ret;
   }
 
   genCSS(size=this.size) {

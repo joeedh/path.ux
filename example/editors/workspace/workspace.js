@@ -1,10 +1,5 @@
+import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, Vector2} from '../../pathux.js';
 import {Editor} from "../editor_base.js";
-import {UIBase} from "../../../scripts/ui_base.js";
-import {PackFlags} from "../../../scripts/ui_base.js";
-import {Icons} from "../icon_enum.js";
-import * as nstructjs from "../../util/struct.js";
-import {KeyMap, HotKey} from "../../../scripts/simple_events.js";
-import {Vector2} from "../../../scripts/vectormath.js";
 import {PanOp} from "./workspace_ops.js";
 import {DrawOp} from "../../draw/draw_ops.js";
 import {BrushSettings} from '../../draw/brush.js';

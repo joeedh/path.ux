@@ -154,6 +154,14 @@ export class TableFrame extends Container {
         tr.setAttribute(attr, val);
       },
 
+      scrollTo : function() {
+        return this._tr.scrollTo(...arguments);
+      },
+
+      scrollIntoView : function() {
+        return this._tr.scrollIntoView(...arguments);
+      },
+
       clear : function() {
         for (let node of list(tr.childNodes)) {
           tr.removeChild(node);

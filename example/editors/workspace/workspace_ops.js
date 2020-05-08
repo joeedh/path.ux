@@ -1,6 +1,4 @@
-import {ToolOp, ToolFlags, UndoFlags} from "../../../scripts/simple_toolsys.js";
-import {keymap} from "../../../scripts/simple_events.js";
-import {Vector2} from "../../../scripts/vectormath.js";
+import {ToolOp, ToolFlags, UndoFlags, keymap, Vector2, util} from '../../pathux.js';
 
 export class PanOp extends ToolOp {
   constructor(start_mpos) {

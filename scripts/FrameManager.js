@@ -2,6 +2,7 @@ import {ToolTipViewer} from "./FrameManager_ops.js";
 
 let _FrameManager = undefined;
 import './ui_widgets2.js';
+import './ui_panel.js';
 
 import './ScreenOverdraw.js';
 import cconst from './const.js';
@@ -529,6 +530,12 @@ export class Screen extends ui_base.UIBase {
     this._do_updateSize = args.updateSize !== undefined ? args.updateSize : true;
 
     this.listen_timer = window.setInterval(() => {
+      if (this.isDead()) {
+        console.log("dead screen");
+        this.unlisten();
+        return;
+      }
+      
       this.update();
     }, 150);
   }
@@ -698,6 +705,8 @@ export class Screen extends ui_base.UIBase {
 
   execKeyMap(e) {
     let handled = false;
+
+    console.warn("execKeyMap called");
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -1364,57 +1373,98 @@ export class Screen extends ui_base.UIBase {
     let min = sarea.minSize, max = sarea.maxSize;
     let vs = sarea._verts;
     let chg = 0.0;
+    let mask = 0;
 
-    let moveBorder = (b, df) => {
-      if (!b) {
-        console.warn("missing border");
-        return;
+    let moveBorder = (sidea, sideb, dh) => {
+      let b1 = sarea._borders[sidea];
+      let b2 = sarea._borders[sideb];
+      let bad = 0;
+
+      for (let i=0; i<2; i++) {
+        let b = i ? b2 : b1;
+        let bad2 = sarea.borderLock & (1<<sidea);
+
+        bad2 = bad2 || !b.movable;
+        bad2 = bad2 || this.isBorderOuter(b);
+
+        if (bad2)
+          bad |= 1<<i;
       }
 
-      if (this.isBorderOuter(b) || checkOnly) {
-        return;
+      if (bad === 0) {
+        this.moveBorder(b1, dh*0.5);
+        this.moveBorder(b2, -dh*0.5);
+      } else if (bad === 1) {
+        this.moveBorder(b2, -dh);
+      } else if (bad === 2) {
+        this.moveBorder(b1, dh);
+      } else if (bad === 3) {
+        //both borders are bad, yet we need to move anyway. . .
+        console.warn("got case of two borders being bad");
+        if (!this.isBorderOuter(b1)) {
+          this.moveBorder(b1, dh);
+        } else if (!this.isBorderOuter(b2)) {
+          this.moveBorder(b2, -dh);
+        } else {
+          this.moveBorder(b1, dh * 0.5);
+          this.moveBorder(b2, -dh * 0.5);
+        }
       }
-      return this.moveBorder(b, df);
     };
 
     if (max[0] !== undefined && sarea.size[0] > max[0]) {
-      let dh = (sarea.size[0] - max[0]) * 0.5;
-      chg += dh;
-      
-      moveBorder(sarea._borders[0], dh);
-      moveBorder(sarea._borders[2], -dh);
+      let dh = (sarea.size[0] - max[0]) ;
+      chg += Math.abs(dh);
+      mask |= 1;
 
+      moveBorder(0, 2, dh);
     }
 
     if (min[0] !== undefined && sarea.size[0] < min[0]) {
-      let dh = (min[0] - sarea.size[0]) * 0.5;
-      chg += dh;
+      let dh = (min[0] - sarea.size[0]);
+      chg += Math.abs(dh);
+      mask |= 2;
 
-      this.moveBorder(sarea._borders[0], -dh);
-      this.moveBorder(sarea._borders[2], dh);
+      moveBorder(2, 0, dh);
     }
 
 
     if (max[1] !== undefined && sarea.size[1] > max[1]) {
-      let dh = (sarea.size[1] - max[1]) * 0.5;
-      chg += dh;
+      let dh = (sarea.size[1] - max[1]);
+      chg += Math.abs(dh);
+      mask |= 4;
 
-      moveBorder(sarea._borders[1], -dh);
-      moveBorder(sarea._borders[3], dh);
-
+      moveBorder(3, 1, dh);
     }
 
     if (min[1] !== undefined && sarea.size[1] < min[1]) {
-      let dh = (min[1] - sarea.size[1]) * 0.5;
-      chg += dh;
-      moveBorder(sarea._borders[1], dh);
-      moveBorder(sarea._borders[3], -dh);
+      let dh = (min[1] - sarea.size[1]) ;
+      chg += Math.abs(dh);
+      mask |= 8;
+
+      moveBorder(1, 3, dh);
     }
+    
+    if (sarea.pos[0]+sarea.size[0] > this.size[0]) {
+      mask |= 16;
+      let dh = ((this.size[0] - sarea.size[0]) - sarea.pos[0]);
+
+      chg += Math.abs(dh);
+
+      if (sarea.floating) {
+        sarea.pos[0] = this.size[0] - sarea.size[0];
+        sarea.loadFromPosSize();
+      } else {
+        this.moveBorder(sarea._borders[0], dh);
+        this.moveBorder(sarea._borders[2], dh);
+      }
+    }
+    
     if (chg === 0.0) {
       return false;
     }
 
-    return true;
+    return mask;
   }
 
   walkBorderLine(b) {
@@ -1767,11 +1817,11 @@ export class Screen extends ui_base.UIBase {
 
   }
 
-  getScreenVert(pos, side, is_outer = false) {
-    let key = ScreenVert.hash(pos);
+  getScreenVert(pos, added_id="") {
+    let key = ScreenVert.hash(pos, added_id);
 
     if (!(key in this._vertmap)) {
-      let v = new ScreenVert(pos, this.idgen++, is_outer, side);
+      let v = new ScreenVert(pos, this.idgen++, added_id);
 
       this._vertmap[key] = v;
       this._idmap[v._id] = v;
@@ -1794,8 +1844,23 @@ export class Screen extends ui_base.UIBase {
       bits += (sides & (1<<i)) ? 1 : 0;
     }
 
-    border.outer = bits < 2;
-    return border.outer;
+    let ret = bits < 2;
+    let floating = false;
+
+    for (let sarea of border.sareas) {
+      floating = floating || sarea.floating;
+    }
+
+    if (floating) {
+      //check if border is on screen limits
+      let axis = border.horiz ? 1 : 0;
+
+      ret = Math.abs(border.v1[axis] - this.pos[axis]) < 2;
+      ret = ret || Math.abs(border.v1[axis] - this.pos[axis] - this.size[axis]) < 2;
+    }
+
+    border.outer = ret;
+    return ret;
   }
 
   isBorderMovable(b, limit = 5) {
@@ -1821,12 +1886,14 @@ export class Screen extends ui_base.UIBase {
   }
 
   getScreenBorder(sarea, v1, v2, side) {
+    let suffix = sarea._get_v_suffix();
+
     if (!(v1 instanceof ScreenVert)) {
-      v1 = this.getScreenVert(v1, side);
+      v1 = this.getScreenVert(v1, suffix);
     }
 
     if (!(v2 instanceof ScreenVert)) {
-      v2 = this.getScreenVert(v2, side);
+      v2 = this.getScreenVert(v2, suffix);
     }
 
     let hash = ScreenBorder.hash(v1, v2);
@@ -1955,6 +2022,7 @@ export class Screen extends ui_base.UIBase {
     if (child instanceof ScreenArea.ScreenArea) {
       child.screen = this;
       child.ctx = this.ctx;
+      child.parentWidget = this;
 
       this.sareas.push(child);
 
@@ -2080,6 +2148,8 @@ export class Screen extends ui_base.UIBase {
 
     for (let sarea of sareas) {
       sarea.screen = this;
+      sarea.parentWidget = this;
+
       this.appendChild(sarea);
     }
 

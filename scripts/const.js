@@ -3,6 +3,7 @@ let exports = {
   DEBUG : {
     screenborders: false,
     allBordersMovable: false,
+    doOnce: false,
     /*
     customWindowSize: {
       width: 512, height: 512

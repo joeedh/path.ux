@@ -1,4 +1,4 @@
-import {ToolOp} from "../../scripts/simple_toolsys.js";
+import {ToolOp} from "../pathux.js";
 
 /*
 * make base undo handlers

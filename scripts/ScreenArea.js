@@ -17,140 +17,14 @@ let Screen = undefined;
 import {snap, snapi} from './FrameManager_mesh.js';
 
 export const AreaFlags = {
-  HIDDEN : 1
+  HIDDEN          : 1,
+  FLOATING        : 2,
+  INDEPENDENT     : 4 //area is indpendent of the screen mesh
 };
 
-export function setScreenClass(cls) {
-  Screen = cls;
-}
 
-export function getAreaIntName(name) {
-  let hash = 0;
-  
-  for (let i=0; i<name.length; i++) {
-    let c = name.charCodeAt(i);
-    
-    if (i % 2 == 0) {
-      hash += c<<8;
-      hash *= 13;
-      hash = hash & ((1<<15)-1);
-    } else {
-      hash += c;
-    }
-  }
-  
-  return hash;
-}
-//XXX get rid of me
-window.getAreaIntName = getAreaIntName;
-
-//XXX get rid of me
-export var AreaTypes = {
-  TEST_CANVAS_EDITOR : 0
-};
-
-export function setAreaTypes(def) {
-  for (let k in AreaTypes) {
-    delete AreaTypes[k];
-  }
-  
-  for (let k in def) {
-    AreaTypes[k] = def[k];
-  }
-}
-
-export let areaclasses = {};
-class AreaWrangler {
-  constructor() {
-    this.stacks = {};
-    this.lasts = {};
-    this.lastArea = undefined;
-    this.stack = [];
-    this.idgen = 0;
-    this._last_screen_id = undefined;
-  }
-
-  _checkWrangler(ctx) {
-    if (ctx === undefined) {
-      return true;
-    }
-
-    if (this._last_screen_id === undefined) {
-      this._last_screen_id = ctx.screen._id;
-      return true;
-    }
-
-    if (ctx.screen._id !== this._last_screen_id) {
-      this.reset();
-
-      this._last_screen_id = ctx.screen._id;
-      console.warn("contextWrangler detected a new screen; new file?");
-      return false;
-    }
-
-    return true;
-  }
-
-  reset() {
-    this.stacks = {};
-    this.lasts = {};
-    this.lastArea = undefined;
-    this.stack = [];
-    this._last_screen_id = undefined;
-
-    return this;
-  }
-
-  push(type, area, pushLastRef=true) {
-    if (pushLastRef || this.lasts[type.name] === undefined) {
-      this.lasts[type.name] = area;
-      this.lastArea = area;
-    }
-
-    if (!(type.name in this.stacks)) {
-      this.stacks[type.name] = [];
-    }
-
-    this.stacks[type.name].push(area);
-    this.stack.push(area);
-  }
-
-  pop(type, area) {
-    if (!(type.name in this.stacks)) {
-      console.warn("pop_ctx_area called in error");
-      //throw new Error("pop_ctx_area called in error");
-      return;
-    }
-
-    if (this.stacks[type.name].length > 0) {
-      this.stacks[type.name].pop();
-    }
-
-    if (this.stack.length > 0) {
-      this.stack.pop();
-    }
-  }
-
-  getLastArea(type) {
-    if (type === undefined) {
-      if (this.stack.length > 0) {
-        return this.stack[this.stack.length-1];
-      } else {
-        return this.lastArea;
-      }
-    } else {
-      if (type.name in this.stacks) {
-        let stack = this.stacks[type.name];
-
-        if (stack.length > 0) {
-          return stack[stack.length-1];
-        }
-      }
-
-      return this.lasts[type.name];
-    }
-  }
-}
+export * from './area_wrangler.js';
+import {getAreaIntName, setAreaTypes, AreaWrangler, areaclasses} from './area_wrangler.js';
 
 let contextWrangler = new AreaWrangler();
 
@@ -186,11 +60,16 @@ export class Area extends ui_base.UIBase {
      * -----b2----
      *
      * */
+
+    let def = this.constructor.define();
+
     //set bits in mask to keep
     //borders from moving
-    this.borderLock = 0;
+    this.borderLock = def.borderLock || 0;
+    this.flag = def.flag || 0;
+
     this.inactive = true;
-    this.areaDragToolEnabled = true
+    this.areaDragToolEnabled = true;
     
     this.owning_sarea = undefined;
     this._area_id = contextWrangler.idgen++;
@@ -218,6 +97,18 @@ export class Area extends ui_base.UIBase {
     };
   }
 
+  set floating(val) {
+    if (val) {
+      this.flag |= AreaFlags.FLOATING;
+    } else {
+      this.flag &= ~AreaFlags.FLOATING;
+    }
+  }
+
+  get floating() {
+    return ~~(this.flag & AreaFlags.FLOATING);
+  }
+
   init() {
     super.init();
 
@@ -242,6 +133,15 @@ export class Area extends ui_base.UIBase {
     this.addEventListener("focus", onover, {passive : true});
     //*/
   }
+
+  _get_v_suffix() {
+    if (this.flag & AreaFlags.INDEPENDENT) {
+      return this._id;
+    } else {
+      return "";
+    }
+  }
+
 
   /**
    * Return a list of keymaps used by this editor
@@ -720,8 +620,6 @@ export class ScreenArea extends ui_base.UIBase {
     this.pos = new Vector2();
     this.size = new Vector2();
 
-    this.floating = false;
-
     this.area = undefined;
     this.editors = [];
     this.editormap = {};
@@ -779,6 +677,24 @@ export class ScreenArea extends ui_base.UIBase {
     this.pos.load(obj.pos);
     this.size.load(obj.size);
   }//*/
+
+  get floating() {
+    return this.area ? this.area.floating : undefined;
+  }
+
+  set floating(val) {
+    if (this.area) {
+      this.area.floating = val;
+    }
+  }
+
+  get flag() {
+    return this.area ? this.area.flag : 0;
+  }
+
+  _get_v_suffix() {
+    return this.area ? this.area._get_v_suffix() : "";
+  }
 
   get borderLock() {
     return this.area !== undefined ? this.area.borderLock : 0;
@@ -902,7 +818,7 @@ export class ScreenArea extends ui_base.UIBase {
     
     this.setCSS();
   }
-  
+
   _ondestroy() {
     super._ondestroy();
 
@@ -933,7 +849,7 @@ export class ScreenArea extends ui_base.UIBase {
       }
     }
     
-    return p instanceof Screen ? p : undefined;
+    return p && p instanceof Screen ? p : undefined;
   }
   
   copy(screen) {
@@ -952,6 +868,8 @@ export class ScreenArea extends ui_base.UIBase {
       let cpy = area.copy();
       
       cpy.ctx = this.ctx;
+
+      cpy.parentWidget = ret;
       ret.editors.push(cpy);
 
       if (area === this.area) {
@@ -969,6 +887,7 @@ export class ScreenArea extends ui_base.UIBase {
       ret.area.pos = ret.pos;
       ret.area.size = ret.size;
       ret.area.owning_sarea = ret;
+      ret.area.parentWidget = ret;
       
       ret.shadow.appendChild(ret.area);
       //ret.area.onadd();
@@ -1151,6 +1070,7 @@ export class ScreenArea extends ui_base.UIBase {
     if (!(name in this.editormap)) {
       this.editormap[name] = document.createElement(def.tagname);
       this.editormap[name].ctx = this.ctx;
+      this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
       this.editormap[name].inactive = false;
       
@@ -1176,7 +1096,8 @@ export class ScreenArea extends ui_base.UIBase {
       this.area = this.editormap[name];
 
       this.area.inactive = false;
-      
+      this.area.parentWidget = this;
+
       //. . .and set references to pos/size
       this.area.pos = this.pos;
       this.area.size = this.size;
@@ -1205,7 +1126,8 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   _checkWrangler() {
-    contextWrangler._checkWrangler(this.ctx);
+    if (this.ctx)
+      contextWrangler._checkWrangler(this.ctx);
   }
 
   update() {
@@ -1217,14 +1139,17 @@ export class ScreenArea extends ui_base.UIBase {
     //this area is active for its type
     if (this.area !== undefined) {
       this.area.owning_sarea = this;
+      this.area.parentWidget = this;
       this.area.size = this.size;
       this.area.pos = this.pos;
 
       let screen = this.getScreen();
       let oldsize = [this.size[0], this.size[1]];
 
-      /*
-      if (screen && screen.checkAreaConstraint(this, true)) {
+      let moved = screen ? screen.checkAreaConstraint(this, true) : 0;
+      //*
+      if (moved) {
+        console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
         screen.solveAreaConstraints();
         screen.regenBorders();
         this.on_resize(oldsize);
@@ -1292,6 +1217,15 @@ export class ScreenArea extends ui_base.UIBase {
         this.area = area;
       }
 
+      /*
+      * originally inactive areas weren't supposed to have
+      * a reference to their owning ScreenAreas.
+      *
+      * Unfortunately this will cause isDead() to return true,
+      * which might lead to nasty problems.
+      * */
+      area.parentWidget = this;
+
       editors.push(area);
     }
     this.editors = editors;
@@ -1322,7 +1256,8 @@ export class ScreenArea extends ui_base.UIBase {
     if (this.area !== undefined) {
       this.area.style["width"] = "100%";
       this.area.style["height"] = "100%";
-      this.area.owning_sarea = this;
+      this.area.owning_saea = this;
+      this.area.parentWidget = this;
 
       this.area.pos = this.pos;
       this.area.size = this.size;
