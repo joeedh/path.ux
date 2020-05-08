@@ -103,7 +103,7 @@ export class AppState {
 
     //screen.splitArea(sarea2, 0.55, false);
     //sarea2 = screen.splitArea(sarea, 1.0-t, false);
-    //sarea2.switch_editor(PropsEditor);
+    //sarea2.switch_editor(SideBarEditor);
     //setTimeout(() => {
     //  screen.splitArea(sarea2, 0.55, true);
     //}, 500);

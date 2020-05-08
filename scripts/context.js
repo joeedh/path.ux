@@ -394,12 +394,19 @@ export class Context {
     for (let i=stack.length-1; i >= 0; i--) {
       let overlay = stack[i];
       let ret = next_key;
-
+      
+      if (overlay[Symbol.ContextID] === undefined) {
+        throw new Error("context corruption");
+      }
+      
+      let ikey = overlay[Symbol.ContextID];
+      
       if (cconst.DEBUG.contextSystem) {
-        console.log(overlay[Symbol.ContextID], overlay);
+        console.log(ikey, overlay);
       }
 
-      if (inside_map[overlay[Symbol.ContextID]]) {
+      //prevent infinite recursion
+      if (inside_map[ikey]) {
         continue;
       }
 
@@ -408,16 +415,17 @@ export class Context {
           console.log("getting value");
         }
 
-        inside_map[overlay[Symbol.ContextID]] = 1;
+        inside_map[ikey] = 1;
 
         try {
           ret = overlay[name];
         } catch (error) {
-          inside_map[overlay[Symbol.ContextID]] = 0;
+
+          inside_map[ikey] = 0;
           throw error;
         }
 
-        inside_map[overlay[Symbol.ContextID]] = 0;
+        inside_map[ikey] = 0;
       }
 
       if (ret !== next_key) {

@@ -34,29 +34,29 @@ export function snapi(c, snap_limit=SnapLimit) {
 }
 
 export class ScreenVert extends Vector2 {
-  constructor(pos, id, side) {
+  constructor(pos, id, added_id) {
     super(pos);
 
-    this.side = side;
+    this.added_id = added_id;
     this.sareas = [];
     this.borders = [];
 
     this._id = id;
   }
 
-  static hash(pos, side) {
+  static hash(pos, added_id) {
     let x = snap(pos[0]);
     let y = snap(pos[1]);
 
-    return ""+x + ":" + y;
+    return ""+x + ":" + y + ": + added_id";
   }
 
   valueOf() {
-    return ScreenVert.hash(this);
+    return ScreenVert.hash(this, this.added_id);
   }
 
   [Symbol.keystr]() {
-    return ScreenVert.hash(this);
+    return ScreenVert.hash(this, this.added_id);
   }
 
   loadSTRUCT(reader) {

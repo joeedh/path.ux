@@ -33,6 +33,8 @@ export const ErrorColors = {
   OK : "green"
 };
 
+window.__theme = theme;
+
 export function setTheme(theme2) {
   //merge theme
   for (let k in theme2) {
@@ -378,6 +380,8 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this._wasAddedToNodeAtSomeTime = false;
+
     this.visibleToPick = true;
 
     this._override_class = undefined;
@@ -491,6 +495,18 @@ export class UIBase extends HTMLElement {
   */
   set useDataPathUndo(val) {
     this._useDataPathUndo = val;
+  }
+
+  get parentWidget() {
+    return this._parentWidget;
+  }
+
+  set parentWidget(val) {
+    if (val) {
+      this._wasAddedToNodeAtSomeTime = true;
+    }
+
+    this._parentWidget = val;
   }
 
   get useDataPathUndo() {
@@ -648,6 +664,9 @@ export class UIBase extends HTMLElement {
     //delayed init
   init() {
     this._init_done = true;
+
+    if (this._id)
+      this.setAttribute("id", this._id);
   }
   
   _ondestroy() {
@@ -660,19 +679,40 @@ export class UIBase extends HTMLElement {
     }
   }
   
-  remove() {
+  remove(trigger_on_destroy=true) {
     if (this.tabIndex >= 0) {
       this.regenTabOrder();
     }
 
     super.remove();
-    this._ondestroy();
+
+    if (trigger_on_destroy) {
+      this._ondestroy();
+    }
+
+    if (this.on_remove) {
+      this.on_remove();
+    }
+
+    this.parentWidget = undefined;
+  }
+
+  /*
+  *
+  * called when elements are removed.
+  * you should assume the element will be reused later;
+  * on_destroy is the callback for when elements are permanently destroyed
+  * */
+  on_remove() {
+
   }
   
-  removeChild(child) {
+  removeChild(child, trigger_on_destroy=true) {
     super.removeChild(child);
-    
-    child._ondestroy();
+
+    if (trigger_on_destroy) {
+      child._ondestroy();
+    }
   }
 
 
@@ -720,7 +760,7 @@ export class UIBase extends HTMLElement {
     if (this._init_done) {
       return;
     }
-    
+
     this._init_done = true;
     this.init();
   }
@@ -1167,10 +1207,33 @@ export class UIBase extends HTMLElement {
       return this.ctx.screen;
   }
 
-  //not sure I'm happy about this. . .
-  //it adds a method call to the event queue,
-  //but only if that method (for this instance, as differentiated
-  //by ._id) isn't there already.
+  isDead() {
+    let p = this, lastp = this;
+
+    while (p) {
+      lastp = p;
+
+      let parent = p.parentWidget;
+      if (!parent) {
+        parent = p.parentElement ? p.parentElement : p.parentNode;
+      }
+
+      p = parent;
+
+      if (p === document.body) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  /*
+    adds a method call to the event queue,
+    but only if that method (for this instance, as differentiated
+    by ._id) isn't there already.
+
+    also, method won't be ran until this.ctx exists
+  */
   
   doOnce(func, timeout=undefined) {
     if (func._doOnce === undefined) {
@@ -1182,12 +1245,30 @@ export class UIBase extends HTMLElement {
         }
         
         func._doOnce_reqs.add(thisvar._id);
-        
-        window.setTimeout(() => {
+        let f = () => {
+          if (this.isDead()) {
+            if (func === this._init || !cconst.DEBUG.doOnce) {
+              return;
+            }
+
+            console.warn("Ignoring doOnce call for dead element", this._id, func);
+            return;
+          }
+
+          if (!this.ctx) {
+            if (cconst.DEBUG.doOnce) {
+              console.warn("doOnce call is waiting for context...", this._id, func);
+            }
+
+            window.setTimeout(f, 0);
+            return;
+          }
+
           func._doOnce_reqs.delete(thisvar._id);
-          
           func.call(thisvar);
-        }, timeout);
+        };
+
+        window.setTimeout(f, timeout);
       }
     }
     
@@ -1201,10 +1282,6 @@ export class UIBase extends HTMLElement {
     this._forEachChildWidget((n) => {
       n.ctx = c;
     });
-
-    if (this._init_done) {
-      this.update();
-    }
   }
   
   float(x=0, y=0, zindex=undefined) {

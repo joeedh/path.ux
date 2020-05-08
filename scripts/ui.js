@@ -12,6 +12,8 @@ import * as ui_widgets from './ui_widgets.js';
 import * as toolprop from './toolprop.js';
 import './html5_fileapi.js';
 
+import {CSSFont} from './ui_theme.js';
+
 let PropFlags = toolprop.PropFlags;
 let PropSubTypes = toolprop.PropSubTypes;
 
@@ -33,14 +35,13 @@ var list = function list(iter) {
   }
 
   return ret;
-}
+};
 
 export class Label extends ui_base.UIBase {
   constructor() {
     super();
 
     this._label = "";
-    this._font = "LabelText";
 
     this.dom = document.createElement("div");
     this.dom.setAttribute("class", "_labelx");
@@ -55,15 +56,12 @@ export class Label extends ui_base.UIBase {
 
     this.shadow.appendChild(style);
     this.shadow.appendChild(this.dom);
+
+    this.font = "LabelText";
   }
 
   init() {
-    let font = this.getDefault(this._font);
-
     this.dom.style["width"] = "max-content";
-
-    this.dom.style["font"] = font.genCSS();
-    this.dom.style["color"] = font.color;
   }
 
   get font() {
@@ -72,15 +70,27 @@ export class Label extends ui_base.UIBase {
 
   /**Set a font defined in ui_base.defaults
    e.g. DefaultText*/
-  set font(prefix) {
-    if (this._font == prefix) {
-      return;
+  set font(fontDefaultName) {
+    if (typeof fontDefaultName === "string") {
+      this._font = this.getDefault(fontDefaultName);
+      if (!this._font) {
+        console.warn("Invalid font", fontDefaultName);
+      }
+    } else if (typeof fontDefaultName === "object" && fontDefaultName instanceof CSSFont) {
+      this._font = fontDefaultName;
+    } else {
+      console.warn("Invalid font", fontDefaultName);
     }
 
-    this._font = prefix;
+    this._updateFont();
+  }
 
-    this.dom.style["font"] = ui_base.getFont(this, undefined, prefix, false);
-    this.dom.style["color"] = this.getDefault(prefix + "Color");
+  _updateFont() {
+    let font = this._font;
+    if (!font) return;
+
+    this.dom.style["font"] = font.genCSS();
+    this.dom.style["color"] = font.color;
   }
 
   updateDataPath() {
@@ -413,15 +423,28 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  clear() {
+  clear(trigger_on_destroy=true) {
     for (let child of this.children) {
       if (child instanceof ui_base.UIBase) {
-        child.remove();
-
-        if (child.on_destroy !== undefined)
-          child.on_destroy();
+        child.remove(trigger_on_destroy);
       }
     }
+  }
+
+  removeChild(child, trigger_on_destroy=true) {
+    let ret = super.removeChild(child);
+
+    if (child.on_remove) {
+      child.on_remove();
+    }
+
+    if (trigger_on_destroy && child.on_destroy) {
+      child.on_destroy();
+    }
+
+    child.parentWidget = undefined;
+
+    return ret;
   }
 
   //*
@@ -1540,164 +1563,3 @@ export class ColumnFrame extends Container {
 
 UIBase.register(ColumnFrame);
 
-export class PanelFrame extends ColumnFrame {
-  constructor() {
-    super();
-
-    this.contents = document.createElement("colframe-x");
-
-    this.packflag = this.inherit_packflag = 0;
-
-    this._closed = false;
-  }
-
-  saveData() {
-    let ret = {
-      _closed: this._closed
-    };
-
-    return Object.assign(super.saveData(), ret);
-  }
-
-  loadData(obj) {
-    this.closed = obj._closed;
-  }
-
-  clear() {
-    this.clear();
-    this.add(this.titleframe);
-  }
-
-  get inherit_packflag() {
-    if (!this.contents) return;
-    return this.contents.inherit_packflag;
-  }
-
-  set inherit_packflag(val) {
-    if (!this.contents) return;
-    this.contents.inherit_packflag = val;
-  }
-
-  get packflag () {
-    if (!this.contents) return;
-    return this.contents.packflag;
-  }
-
-  set packflag(val) {
-    if (!this.contents) return;
-    this.contents.packflag = val;
-  }
-
-  init() {
-    super.init();
-
-    //con.style["margin-left"] = "5px";
-    let con = this.titleframe = this.row();
-
-    this.setCSS();
-
-    let row = con;
-
-    let iconcheck = document.createElement("iconcheck-x");
-    this.iconcheck = iconcheck;
-
-    this.style["width"] = "100%";
-
-    this.overrideDefault("BoxMargin", 0);
-    iconcheck.overrideDefault("BoxMargin", 0);
-
-    iconcheck.noMarginsOrPadding();
-
-    iconcheck.overrideDefault("BoxBG", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxSubBG", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
-
-    iconcheck.ctx = this.ctx;
-    iconcheck._icon_pressed = ui_base.Icons.UI_EXPAND;
-    iconcheck._icon = ui_base.Icons.UI_COLLAPSE;
-    iconcheck.drawCheck = false;
-    iconcheck.iconsheet = ui_base.IconSheets.SMALL;
-    iconcheck.checked = this._closed;
-
-    this.iconcheck.onchange = (e) => {
-      this.closed = this.iconcheck.checked;
-    };
-
-    row._add(iconcheck);
-
-    //stupid css, let's just hackishly put " " to create spacing2
-
-    let onclick = (e) => {
-      console.log("panel header click");
-      iconcheck.checked = !iconcheck.checked;
-    };
-
-    let label = row.label(this.getAttribute("title"));
-
-    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
-    label.noMarginsOrPadding();
-    label.addEventListener("mousedown", onclick);
-    label.addEventListener("touchdown", onclick);
-
-    row.background = this.getDefault("BoxSubBG");
-    row.style["border-radius"] = "5px";
-    
-    this.background = this.getDefault("BoxSub2BG");
-
-    row.style["padding-right"] = "20px";
-    row.style["padding-left"] = "5px";
-    row.style["padding-top"] = "7px";
-    row.style["padding-bottom"] = "5px";
-
-    this.contents.ctx = this.ctx;
-    this.add(this.contents);
-  }
-
-  static define() {
-    return {
-      tagname: "panelframe-x"
-    };
-  }
-
-  update() {
-    super.update();
-  }
-
-  _setVisible(state) {
-    if (state) {
-      this.contents.remove();
-    } else {
-      this.add(this.contents, false);
-    }
-
-    this.contents.hidden = state;
-    return;
-    for (let c of this.shadow.childNodes) {
-      if (c !== this.titleframe) {
-        c.hidden = state;
-      }
-    }
-  }
-
-  _updateClosed() {
-    this._setVisible(this._closed);
-    this.iconcheck.checked = this._closed;
-  }
-
-  get closed() {
-    return this._closed;
-  }
-
-  set closed(val) {
-    let update = !!val != !!this.closed;
-    this._closed = val;
-
-    //console.log("closed set", update);
-    if (update) {
-      this._updateClosed();
-    }
-  }
-}
-
-UIBase.register(PanelFrame);
