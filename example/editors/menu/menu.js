@@ -54,7 +54,7 @@ export class MenuBarEditor extends Editor {
       ["Save Default File", () => {this.ctx.state.saveLocalStorage()}],
       ["Clear Default File", () => {this.ctx.state.clearLocalStorage()}]
     ]);
-    
+
     this.setCSS();
   }
 

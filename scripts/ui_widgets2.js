@@ -41,6 +41,7 @@ export class NumSliderSimple extends UIBase {
 
     this.shadow.appendChild(this.canvas);
     this.range = [0, 1];
+
     this.step = 0.1;
     this._value = 0.5;
     this._focus = false;
