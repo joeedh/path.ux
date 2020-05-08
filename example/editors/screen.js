@@ -1,7 +1,4 @@
-import {HotKey, KeyMap} from "../../scripts/simple_events.js";
-import {UIBase} from "../../scripts/ui_base.js";
-import * as nstructjs from "../../scripts/struct.js";
-import {Screen} from "../../scripts/FrameManager.js";
+import {HotKey, KeyMap, UIBase, nstructjs, Screen} from '../pathux.js';
 
 export class AppScreen extends Screen {
   constructor() {

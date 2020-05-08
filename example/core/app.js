@@ -1,9 +1,6 @@
-import * as pathux from '../../scripts/pathux.js';
-window.pathux = pathux;
-
 import {nstructjs, ToolStack, UIBase, setIconManager, setIconMap,
         setTheme, IconManager, keymap, ScreenArea, util,
-        HotKey, KeyMap, Screen, DataPathSetOp} from "../../scripts/pathux.js";
+        HotKey, KeyMap, Screen, DataPathSetOp} from "../pathux.js";
 
 import {ModelData} from "./state.js";
 import {defineAPI} from "../api/api_define.js"
@@ -11,7 +8,6 @@ import {ToolContext, ViewContext} from "./context.js";
 
 import {WorkspaceEditor} from '../editors/workspace/workspace.js';
 import {AppScreen} from "../editors/screen.js";
-import cconst from "./const.js";
 //import * as util from '../util/util.js';
 import './toolop.js';
 
@@ -22,12 +18,13 @@ import {Icons} from "../editors/icon_enum.js";
 setIconMap(Icons);
 import {MenuBarEditor} from "../editors/menu/menu.js";
 import cconst1 from './const.js';
-import cconst2 from '../../scripts/const.js';
-//import {HotKey, KeyMap} from "../../scripts/simple_events.js";
+import {cconst} from '../pathux.js';
+
 import {PropsEditor} from "../editors/properties/properties.js";
 import {LogEditor} from "../editors/log/log_editor.js";
 
-cconst2.loadConstants(cconst1);
+/*load our application's constants into pathux*/
+cconst.loadConstants(cconst1);
 
 let iconmanager = new IconManager([
   document.getElementById("iconsheet16"),
@@ -88,10 +85,10 @@ export class AppState {
 
     sarea.switchEditor(MenuBarEditor);
 
-    let sarea2 = screen.splitArea(wsarea, 0.7, true);
+    let sarea2 = screen.splitArea(wsarea, 0.7, false);
     sarea2.switchEditor(PropsEditor);
-    //*
-    
+
+    /*
     if (!util.isMobile) {
       screen.splitArea(wsarea, 0.5, false);
       screen.splitArea(sarea2, 0.5, false);

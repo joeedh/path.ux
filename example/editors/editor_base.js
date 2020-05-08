@@ -1,5 +1,4 @@
-import {Area} from "../../scripts/ScreenArea.js";
-import * as nstructjs from "../../scripts/struct.js";
+import {Area, nstructjs} from '../pathux.js';
 
 export class Editor extends Area {
   constructor() {

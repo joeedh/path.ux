@@ -1,9 +1,6 @@
+import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey} from '../../pathux.js';
+
 import {Editor} from "../editor_base.js";
-import {UIBase} from "../../../scripts/ui_base.js";
-import {PackFlags} from "../../../scripts/ui_base.js";
-import {Icons} from "../icon_enum.js";
-import * as nstructjs from "../../util/struct.js";
-import {KeyMap, HotKey} from "../../../scripts/simple_events.js";
 
 export class PropsEditor extends Editor {
   constructor() {

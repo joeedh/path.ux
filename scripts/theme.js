@@ -40,8 +40,9 @@ export const DefaultTheme = {
     "TabInactive" : "rgba(150, 150, 150, 1.0)",
     "TabHighlight" : "rgba(50, 50, 50, 0.2)",
 
-    "DefaultPanelBG" : "rgba(155, 155, 155, 1.0)",
-    "InnerPanelBG" : "rgba(140, 140, 140, 1.0)",
+    "DefaultPanelBG" : "rgba(225, 225, 225, 1.0)",
+    "InnerPanelBG" : "rgba(195, 195, 195, 1.0)",
+    "AreaHeaderBG" : "rgba(205, 205, 205, 1.0)",
 
     "BoxRadius" : 12,
     "BoxMargin" : 4,
@@ -53,21 +54,21 @@ export const DefaultTheme = {
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
+
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-    "AreaHeaderBG" : "rgba(155, 155, 155, 1.0)",
 
     //fonts
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
-      size  : 16,
+      size  : 12,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
     }),
 
     "ToolTipText" : new CSSFont({
       font  : "sans-serif",
-      size  : 16,
+      size  : 12,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
     }),

@@ -1,7 +1,6 @@
 import {Canvas, CanvasPoint, CanvasEdge, CanvasPath} from "./draw.js";
 import {PathTypes} from "./draw.js";
-import * as nstructjs from '../util/struct.js';
-import {Vector4} from "../../scripts/vectormath.js";
+import {nstructjs, Vector4} from '../pathux.js';
 
 export class BrushSettings {
   constructor() {

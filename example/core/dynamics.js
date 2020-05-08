@@ -1,6 +1,4 @@
-import * as nstructjs from '../util/struct.js';
-import {PropTypes, ToolProperty} from "../../scripts/toolprop.js";
-import {Vector2} from "../../scripts/vectormath.js";
+import {PropTypes, ToolProperty, Vector2, nstructjs, util} from "../pathux.js";
 
 export const DynamicModes = {
   MULTIPLY : 1,

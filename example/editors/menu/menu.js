@@ -1,11 +1,5 @@
 import {Editor} from "../editor_base.js";
-import {UIBase} from "../../../scripts/ui_base.js";
-import {PackFlags} from "../../../scripts/ui_base.js";
-import {Icons} from "../icon_enum.js";
-import * as nstructjs from "../../util/struct.js";
-import {KeyMap, HotKey} from "../../../scripts/simple_events.js";
-import {Menu} from "../../../scripts/ui_menu.js";
-import {AreaFlags} from "../../../scripts/ScreenArea.js";
+import {UIBase, PackFlags, Icons, KeyMap, HotKey, nstructjs, Menu, AreaFlags, util} from '../../pathux.js';
 
 export class MenuBarEditor extends Editor {
   constructor() {
@@ -28,6 +22,10 @@ export class MenuBarEditor extends Editor {
     super.init();
 
     this.background = this.getDefault("AreaHeaderBG");
+
+    if (!util.isMobile()) {
+      this.helppicker.iconsheet = 0;
+    }
 
     this.switcher.remove();
     let header = this.header;
@@ -52,6 +50,11 @@ export class MenuBarEditor extends Editor {
       ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z"]
     ]);
 
+    span.menu("Session", [
+      ["Save Default File", () => {this.ctx.state.saveLocalStorage()}],
+      ["Clear Default File", () => {this.ctx.state.clearLocalStorage()}]
+    ]);
+    
     this.setCSS();
   }
 

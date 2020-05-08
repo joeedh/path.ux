@@ -1,9 +1,6 @@
-import {Vector4} from '../../scripts/vectormath.js';
-import {DataAPI, DataStruct, DataPath} from '../../scripts/simple_controller.js';
-import * as nstructjs from '../../scripts/struct.js';
+import {Vector4, DataAPI, DataStruct, DataPath, nstructjs, Curve1D} from '../pathux.js';
 import {Icons} from '../editors/icon_enum.js';
 import {Canvas} from '../draw/draw.js';
-import {Curve1D} from "../../scripts/curve1d.js";
 
 export class Cell {
   constructor(a, b, c) {

@@ -1,7 +1,5 @@
-import * as nstructjs from '../util/struct.js';
-import * as util from '../util/util.js';
-import {Vector2, Vector3, Vector4, Matrix4} from "../../scripts/vectormath.js";
-import {color2css} from "../../scripts/ui_theme.js";
+import {nstructjs, Vector2, Vector3, Vector4, Matrix4, util,
+        color2css} from '../pathux.js';
 let STRUCT = nstructjs.STRUCT;
 
 export const DrawFlags = {

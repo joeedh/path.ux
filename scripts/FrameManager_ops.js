@@ -11,11 +11,6 @@ import cconst from './const.js';
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
-import * as ui from './ui.js';
-import * as ScreenArea from './ScreenArea.js';
-import * as events from './events.js';
-import * as controller from './controller.js';
-import * as ScreenOverdraw from './ScreenOverdraw.js';
 import * as simple_toolsys from './simple_toolsys.js';
 import {ToolTip} from "./ui_widgets2.js";
 

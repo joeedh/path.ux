@@ -2813,11 +2813,1178 @@ let nstructjs$1 = window.nstructjs;
 const STRUCT = nstructjs$1.STRUCT;
 const manager = nstructjs$1.manager;
 const write_scripts = nstructjs$1.write_scripts;
-
+const inherit = nstructjs$1.inherit;
 
 function register(cls) {
   manager.add_class(cls);
 }
+
+// THIS FILE IS GENERATED - DO NOT EDIT!
+/*!mobile-detect v1.4.4 2019-09-21*/
+/*global module:false, define:false*/
+/*jshint latedef:false*/
+/*!@license Copyright 2013, Heinrich Goebl, License: MIT, see https://github.com/hgoebl/mobile-detect.js*/
+(function (define, undefined$1) {
+define(function () {
+
+    var impl = {};
+
+    impl.mobileDetectRules = {
+    "phones": {
+        "iPhone": "\\biPhone\\b|\\biPod\\b",
+        "BlackBerry": "BlackBerry|\\bBB10\\b|rim[0-9]+|\\b(BBA100|BBB100|BBD100|BBE100|BBF100|STH100)\\b-[0-9]+",
+        "HTC": "HTC|HTC.*(Sensation|Evo|Vision|Explorer|6800|8100|8900|A7272|S510e|C110e|Legend|Desire|T8282)|APX515CKT|Qtek9090|APA9292KT|HD_mini|Sensation.*Z710e|PG86100|Z715e|Desire.*(A8181|HD)|ADR6200|ADR6400L|ADR6425|001HT|Inspire 4G|Android.*\\bEVO\\b|T-Mobile G1|Z520m|Android [0-9.]+; Pixel",
+        "Nexus": "Nexus One|Nexus S|Galaxy.*Nexus|Android.*Nexus.*Mobile|Nexus 4|Nexus 5|Nexus 6",
+        "Dell": "Dell[;]? (Streak|Aero|Venue|Venue Pro|Flash|Smoke|Mini 3iX)|XCD28|XCD35|\\b001DL\\b|\\b101DL\\b|\\bGS01\\b",
+        "Motorola": "Motorola|DROIDX|DROID BIONIC|\\bDroid\\b.*Build|Android.*Xoom|HRI39|MOT-|A1260|A1680|A555|A853|A855|A953|A955|A956|Motorola.*ELECTRIFY|Motorola.*i1|i867|i940|MB200|MB300|MB501|MB502|MB508|MB511|MB520|MB525|MB526|MB611|MB612|MB632|MB810|MB855|MB860|MB861|MB865|MB870|ME501|ME502|ME511|ME525|ME600|ME632|ME722|ME811|ME860|ME863|ME865|MT620|MT710|MT716|MT720|MT810|MT870|MT917|Motorola.*TITANIUM|WX435|WX445|XT300|XT301|XT311|XT316|XT317|XT319|XT320|XT390|XT502|XT530|XT531|XT532|XT535|XT603|XT610|XT611|XT615|XT681|XT701|XT702|XT711|XT720|XT800|XT806|XT860|XT862|XT875|XT882|XT883|XT894|XT901|XT907|XT909|XT910|XT912|XT928|XT926|XT915|XT919|XT925|XT1021|\\bMoto E\\b|XT1068|XT1092|XT1052",
+        "Samsung": "\\bSamsung\\b|SM-G950F|SM-G955F|SM-G9250|GT-19300|SGH-I337|BGT-S5230|GT-B2100|GT-B2700|GT-B2710|GT-B3210|GT-B3310|GT-B3410|GT-B3730|GT-B3740|GT-B5510|GT-B5512|GT-B5722|GT-B6520|GT-B7300|GT-B7320|GT-B7330|GT-B7350|GT-B7510|GT-B7722|GT-B7800|GT-C3010|GT-C3011|GT-C3060|GT-C3200|GT-C3212|GT-C3212I|GT-C3262|GT-C3222|GT-C3300|GT-C3300K|GT-C3303|GT-C3303K|GT-C3310|GT-C3322|GT-C3330|GT-C3350|GT-C3500|GT-C3510|GT-C3530|GT-C3630|GT-C3780|GT-C5010|GT-C5212|GT-C6620|GT-C6625|GT-C6712|GT-E1050|GT-E1070|GT-E1075|GT-E1080|GT-E1081|GT-E1085|GT-E1087|GT-E1100|GT-E1107|GT-E1110|GT-E1120|GT-E1125|GT-E1130|GT-E1160|GT-E1170|GT-E1175|GT-E1180|GT-E1182|GT-E1200|GT-E1210|GT-E1225|GT-E1230|GT-E1390|GT-E2100|GT-E2120|GT-E2121|GT-E2152|GT-E2220|GT-E2222|GT-E2230|GT-E2232|GT-E2250|GT-E2370|GT-E2550|GT-E2652|GT-E3210|GT-E3213|GT-I5500|GT-I5503|GT-I5700|GT-I5800|GT-I5801|GT-I6410|GT-I6420|GT-I7110|GT-I7410|GT-I7500|GT-I8000|GT-I8150|GT-I8160|GT-I8190|GT-I8320|GT-I8330|GT-I8350|GT-I8530|GT-I8700|GT-I8703|GT-I8910|GT-I9000|GT-I9001|GT-I9003|GT-I9010|GT-I9020|GT-I9023|GT-I9070|GT-I9082|GT-I9100|GT-I9103|GT-I9220|GT-I9250|GT-I9300|GT-I9305|GT-I9500|GT-I9505|GT-M3510|GT-M5650|GT-M7500|GT-M7600|GT-M7603|GT-M8800|GT-M8910|GT-N7000|GT-S3110|GT-S3310|GT-S3350|GT-S3353|GT-S3370|GT-S3650|GT-S3653|GT-S3770|GT-S3850|GT-S5210|GT-S5220|GT-S5229|GT-S5230|GT-S5233|GT-S5250|GT-S5253|GT-S5260|GT-S5263|GT-S5270|GT-S5300|GT-S5330|GT-S5350|GT-S5360|GT-S5363|GT-S5369|GT-S5380|GT-S5380D|GT-S5560|GT-S5570|GT-S5600|GT-S5603|GT-S5610|GT-S5620|GT-S5660|GT-S5670|GT-S5690|GT-S5750|GT-S5780|GT-S5830|GT-S5839|GT-S6102|GT-S6500|GT-S7070|GT-S7200|GT-S7220|GT-S7230|GT-S7233|GT-S7250|GT-S7500|GT-S7530|GT-S7550|GT-S7562|GT-S7710|GT-S8000|GT-S8003|GT-S8500|GT-S8530|GT-S8600|SCH-A310|SCH-A530|SCH-A570|SCH-A610|SCH-A630|SCH-A650|SCH-A790|SCH-A795|SCH-A850|SCH-A870|SCH-A890|SCH-A930|SCH-A950|SCH-A970|SCH-A990|SCH-I100|SCH-I110|SCH-I400|SCH-I405|SCH-I500|SCH-I510|SCH-I515|SCH-I600|SCH-I730|SCH-I760|SCH-I770|SCH-I830|SCH-I910|SCH-I920|SCH-I959|SCH-LC11|SCH-N150|SCH-N300|SCH-R100|SCH-R300|SCH-R351|SCH-R400|SCH-R410|SCH-T300|SCH-U310|SCH-U320|SCH-U350|SCH-U360|SCH-U365|SCH-U370|SCH-U380|SCH-U410|SCH-U430|SCH-U450|SCH-U460|SCH-U470|SCH-U490|SCH-U540|SCH-U550|SCH-U620|SCH-U640|SCH-U650|SCH-U660|SCH-U700|SCH-U740|SCH-U750|SCH-U810|SCH-U820|SCH-U900|SCH-U940|SCH-U960|SCS-26UC|SGH-A107|SGH-A117|SGH-A127|SGH-A137|SGH-A157|SGH-A167|SGH-A177|SGH-A187|SGH-A197|SGH-A227|SGH-A237|SGH-A257|SGH-A437|SGH-A517|SGH-A597|SGH-A637|SGH-A657|SGH-A667|SGH-A687|SGH-A697|SGH-A707|SGH-A717|SGH-A727|SGH-A737|SGH-A747|SGH-A767|SGH-A777|SGH-A797|SGH-A817|SGH-A827|SGH-A837|SGH-A847|SGH-A867|SGH-A877|SGH-A887|SGH-A897|SGH-A927|SGH-B100|SGH-B130|SGH-B200|SGH-B220|SGH-C100|SGH-C110|SGH-C120|SGH-C130|SGH-C140|SGH-C160|SGH-C170|SGH-C180|SGH-C200|SGH-C207|SGH-C210|SGH-C225|SGH-C230|SGH-C417|SGH-C450|SGH-D307|SGH-D347|SGH-D357|SGH-D407|SGH-D415|SGH-D780|SGH-D807|SGH-D980|SGH-E105|SGH-E200|SGH-E315|SGH-E316|SGH-E317|SGH-E335|SGH-E590|SGH-E635|SGH-E715|SGH-E890|SGH-F300|SGH-F480|SGH-I200|SGH-I300|SGH-I320|SGH-I550|SGH-I577|SGH-I600|SGH-I607|SGH-I617|SGH-I627|SGH-I637|SGH-I677|SGH-I700|SGH-I717|SGH-I727|SGH-i747M|SGH-I777|SGH-I780|SGH-I827|SGH-I847|SGH-I857|SGH-I896|SGH-I897|SGH-I900|SGH-I907|SGH-I917|SGH-I927|SGH-I937|SGH-I997|SGH-J150|SGH-J200|SGH-L170|SGH-L700|SGH-M110|SGH-M150|SGH-M200|SGH-N105|SGH-N500|SGH-N600|SGH-N620|SGH-N625|SGH-N700|SGH-N710|SGH-P107|SGH-P207|SGH-P300|SGH-P310|SGH-P520|SGH-P735|SGH-P777|SGH-Q105|SGH-R210|SGH-R220|SGH-R225|SGH-S105|SGH-S307|SGH-T109|SGH-T119|SGH-T139|SGH-T209|SGH-T219|SGH-T229|SGH-T239|SGH-T249|SGH-T259|SGH-T309|SGH-T319|SGH-T329|SGH-T339|SGH-T349|SGH-T359|SGH-T369|SGH-T379|SGH-T409|SGH-T429|SGH-T439|SGH-T459|SGH-T469|SGH-T479|SGH-T499|SGH-T509|SGH-T519|SGH-T539|SGH-T559|SGH-T589|SGH-T609|SGH-T619|SGH-T629|SGH-T639|SGH-T659|SGH-T669|SGH-T679|SGH-T709|SGH-T719|SGH-T729|SGH-T739|SGH-T746|SGH-T749|SGH-T759|SGH-T769|SGH-T809|SGH-T819|SGH-T839|SGH-T919|SGH-T929|SGH-T939|SGH-T959|SGH-T989|SGH-U100|SGH-U200|SGH-U800|SGH-V205|SGH-V206|SGH-X100|SGH-X105|SGH-X120|SGH-X140|SGH-X426|SGH-X427|SGH-X475|SGH-X495|SGH-X497|SGH-X507|SGH-X600|SGH-X610|SGH-X620|SGH-X630|SGH-X700|SGH-X820|SGH-X890|SGH-Z130|SGH-Z150|SGH-Z170|SGH-ZX10|SGH-ZX20|SHW-M110|SPH-A120|SPH-A400|SPH-A420|SPH-A460|SPH-A500|SPH-A560|SPH-A600|SPH-A620|SPH-A660|SPH-A700|SPH-A740|SPH-A760|SPH-A790|SPH-A800|SPH-A820|SPH-A840|SPH-A880|SPH-A900|SPH-A940|SPH-A960|SPH-D600|SPH-D700|SPH-D710|SPH-D720|SPH-I300|SPH-I325|SPH-I330|SPH-I350|SPH-I500|SPH-I600|SPH-I700|SPH-L700|SPH-M100|SPH-M220|SPH-M240|SPH-M300|SPH-M305|SPH-M320|SPH-M330|SPH-M350|SPH-M360|SPH-M370|SPH-M380|SPH-M510|SPH-M540|SPH-M550|SPH-M560|SPH-M570|SPH-M580|SPH-M610|SPH-M620|SPH-M630|SPH-M800|SPH-M810|SPH-M850|SPH-M900|SPH-M910|SPH-M920|SPH-M930|SPH-N100|SPH-N200|SPH-N240|SPH-N300|SPH-N400|SPH-Z400|SWC-E100|SCH-i909|GT-N7100|GT-N7105|SCH-I535|SM-N900A|SGH-I317|SGH-T999L|GT-S5360B|GT-I8262|GT-S6802|GT-S6312|GT-S6310|GT-S5312|GT-S5310|GT-I9105|GT-I8510|GT-S6790N|SM-G7105|SM-N9005|GT-S5301|GT-I9295|GT-I9195|SM-C101|GT-S7392|GT-S7560|GT-B7610|GT-I5510|GT-S7582|GT-S7530E|GT-I8750|SM-G9006V|SM-G9008V|SM-G9009D|SM-G900A|SM-G900D|SM-G900F|SM-G900H|SM-G900I|SM-G900J|SM-G900K|SM-G900L|SM-G900M|SM-G900P|SM-G900R4|SM-G900S|SM-G900T|SM-G900V|SM-G900W8|SHV-E160K|SCH-P709|SCH-P729|SM-T2558|GT-I9205|SM-G9350|SM-J120F|SM-G920F|SM-G920V|SM-G930F|SM-N910C|SM-A310F|GT-I9190|SM-J500FN|SM-G903F|SM-J330F",
+        "LG": "\\bLG\\b;|LG[- ]?(C800|C900|E400|E610|E900|E-900|F160|F180K|F180L|F180S|730|855|L160|LS740|LS840|LS970|LU6200|MS690|MS695|MS770|MS840|MS870|MS910|P500|P700|P705|VM696|AS680|AS695|AX840|C729|E970|GS505|272|C395|E739BK|E960|L55C|L75C|LS696|LS860|P769BK|P350|P500|P509|P870|UN272|US730|VS840|VS950|LN272|LN510|LS670|LS855|LW690|MN270|MN510|P509|P769|P930|UN200|UN270|UN510|UN610|US670|US740|US760|UX265|UX840|VN271|VN530|VS660|VS700|VS740|VS750|VS910|VS920|VS930|VX9200|VX11000|AX840A|LW770|P506|P925|P999|E612|D955|D802|MS323|M257)|LM-G710",
+        "Sony": "SonyST|SonyLT|SonyEricsson|SonyEricssonLT15iv|LT18i|E10i|LT28h|LT26w|SonyEricssonMT27i|C5303|C6902|C6903|C6906|C6943|D2533",
+        "Asus": "Asus.*Galaxy|PadFone.*Mobile",
+        "NokiaLumia": "Lumia [0-9]{3,4}",
+        "Micromax": "Micromax.*\\b(A210|A92|A88|A72|A111|A110Q|A115|A116|A110|A90S|A26|A51|A35|A54|A25|A27|A89|A68|A65|A57|A90)\\b",
+        "Palm": "PalmSource|Palm",
+        "Vertu": "Vertu|Vertu.*Ltd|Vertu.*Ascent|Vertu.*Ayxta|Vertu.*Constellation(F|Quest)?|Vertu.*Monika|Vertu.*Signature",
+        "Pantech": "PANTECH|IM-A850S|IM-A840S|IM-A830L|IM-A830K|IM-A830S|IM-A820L|IM-A810K|IM-A810S|IM-A800S|IM-T100K|IM-A725L|IM-A780L|IM-A775C|IM-A770K|IM-A760S|IM-A750K|IM-A740S|IM-A730S|IM-A720L|IM-A710K|IM-A690L|IM-A690S|IM-A650S|IM-A630K|IM-A600S|VEGA PTL21|PT003|P8010|ADR910L|P6030|P6020|P9070|P4100|P9060|P5000|CDM8992|TXT8045|ADR8995|IS11PT|P2030|P6010|P8000|PT002|IS06|CDM8999|P9050|PT001|TXT8040|P2020|P9020|P2000|P7040|P7000|C790",
+        "Fly": "IQ230|IQ444|IQ450|IQ440|IQ442|IQ441|IQ245|IQ256|IQ236|IQ255|IQ235|IQ245|IQ275|IQ240|IQ285|IQ280|IQ270|IQ260|IQ250",
+        "Wiko": "KITE 4G|HIGHWAY|GETAWAY|STAIRWAY|DARKSIDE|DARKFULL|DARKNIGHT|DARKMOON|SLIDE|WAX 4G|RAINBOW|BLOOM|SUNSET|GOA(?!nna)|LENNY|BARRY|IGGY|OZZY|CINK FIVE|CINK PEAX|CINK PEAX 2|CINK SLIM|CINK SLIM 2|CINK +|CINK KING|CINK PEAX|CINK SLIM|SUBLIM",
+        "iMobile": "i-mobile (IQ|i-STYLE|idea|ZAA|Hitz)",
+        "SimValley": "\\b(SP-80|XT-930|SX-340|XT-930|SX-310|SP-360|SP60|SPT-800|SP-120|SPT-800|SP-140|SPX-5|SPX-8|SP-100|SPX-8|SPX-12)\\b",
+        "Wolfgang": "AT-B24D|AT-AS50HD|AT-AS40W|AT-AS55HD|AT-AS45q2|AT-B26D|AT-AS50Q",
+        "Alcatel": "Alcatel",
+        "Nintendo": "Nintendo (3DS|Switch)",
+        "Amoi": "Amoi",
+        "INQ": "INQ",
+        "OnePlus": "ONEPLUS",
+        "GenericPhone": "Tapatalk|PDA;|SAGEM|\\bmmp\\b|pocket|\\bpsp\\b|symbian|Smartphone|smartfon|treo|up.browser|up.link|vodafone|\\bwap\\b|nokia|Series40|Series60|S60|SonyEricsson|N900|MAUI.*WAP.*Browser"
+    },
+    "tablets": {
+        "iPad": "iPad|iPad.*Mobile",
+        "NexusTablet": "Android.*Nexus[\\s]+(7|9|10)",
+        "GoogleTablet": "Android.*Pixel C",
+        "SamsungTablet": "SAMSUNG.*Tablet|Galaxy.*Tab|SC-01C|GT-P1000|GT-P1003|GT-P1010|GT-P3105|GT-P6210|GT-P6800|GT-P6810|GT-P7100|GT-P7300|GT-P7310|GT-P7500|GT-P7510|SCH-I800|SCH-I815|SCH-I905|SGH-I957|SGH-I987|SGH-T849|SGH-T859|SGH-T869|SPH-P100|GT-P3100|GT-P3108|GT-P3110|GT-P5100|GT-P5110|GT-P6200|GT-P7320|GT-P7511|GT-N8000|GT-P8510|SGH-I497|SPH-P500|SGH-T779|SCH-I705|SCH-I915|GT-N8013|GT-P3113|GT-P5113|GT-P8110|GT-N8010|GT-N8005|GT-N8020|GT-P1013|GT-P6201|GT-P7501|GT-N5100|GT-N5105|GT-N5110|SHV-E140K|SHV-E140L|SHV-E140S|SHV-E150S|SHV-E230K|SHV-E230L|SHV-E230S|SHW-M180K|SHW-M180L|SHW-M180S|SHW-M180W|SHW-M300W|SHW-M305W|SHW-M380K|SHW-M380S|SHW-M380W|SHW-M430W|SHW-M480K|SHW-M480S|SHW-M480W|SHW-M485W|SHW-M486W|SHW-M500W|GT-I9228|SCH-P739|SCH-I925|GT-I9200|GT-P5200|GT-P5210|GT-P5210X|SM-T311|SM-T310|SM-T310X|SM-T210|SM-T210R|SM-T211|SM-P600|SM-P601|SM-P605|SM-P900|SM-P901|SM-T217|SM-T217A|SM-T217S|SM-P6000|SM-T3100|SGH-I467|XE500|SM-T110|GT-P5220|GT-I9200X|GT-N5110X|GT-N5120|SM-P905|SM-T111|SM-T2105|SM-T315|SM-T320|SM-T320X|SM-T321|SM-T520|SM-T525|SM-T530NU|SM-T230NU|SM-T330NU|SM-T900|XE500T1C|SM-P605V|SM-P905V|SM-T337V|SM-T537V|SM-T707V|SM-T807V|SM-P600X|SM-P900X|SM-T210X|SM-T230|SM-T230X|SM-T325|GT-P7503|SM-T531|SM-T330|SM-T530|SM-T705|SM-T705C|SM-T535|SM-T331|SM-T800|SM-T700|SM-T537|SM-T807|SM-P907A|SM-T337A|SM-T537A|SM-T707A|SM-T807A|SM-T237|SM-T807P|SM-P607T|SM-T217T|SM-T337T|SM-T807T|SM-T116NQ|SM-T116BU|SM-P550|SM-T350|SM-T550|SM-T9000|SM-P9000|SM-T705Y|SM-T805|GT-P3113|SM-T710|SM-T810|SM-T815|SM-T360|SM-T533|SM-T113|SM-T335|SM-T715|SM-T560|SM-T670|SM-T677|SM-T377|SM-T567|SM-T357T|SM-T555|SM-T561|SM-T713|SM-T719|SM-T813|SM-T819|SM-T580|SM-T355Y?|SM-T280|SM-T817A|SM-T820|SM-W700|SM-P580|SM-T587|SM-P350|SM-P555M|SM-P355M|SM-T113NU|SM-T815Y|SM-T585|SM-T285|SM-T825|SM-W708|SM-T835|SM-T830|SM-T837V|SM-T720|SM-T510|SM-T387V",
+        "Kindle": "Kindle|Silk.*Accelerated|Android.*\\b(KFOT|KFTT|KFJWI|KFJWA|KFOTE|KFSOWI|KFTHWI|KFTHWA|KFAPWI|KFAPWA|WFJWAE|KFSAWA|KFSAWI|KFASWI|KFARWI|KFFOWI|KFGIWI|KFMEWI)\\b|Android.*Silk\/[0-9.]+ like Chrome\/[0-9.]+ (?!Mobile)",
+        "SurfaceTablet": "Windows NT [0-9.]+; ARM;.*(Tablet|ARMBJS)",
+        "HPTablet": "HP Slate (7|8|10)|HP ElitePad 900|hp-tablet|EliteBook.*Touch|HP 8|Slate 21|HP SlateBook 10",
+        "AsusTablet": "^.*PadFone((?!Mobile).)*$|Transformer|TF101|TF101G|TF300T|TF300TG|TF300TL|TF700T|TF700KL|TF701T|TF810C|ME171|ME301T|ME302C|ME371MG|ME370T|ME372MG|ME172V|ME173X|ME400C|Slider SL101|\\bK00F\\b|\\bK00C\\b|\\bK00E\\b|\\bK00L\\b|TX201LA|ME176C|ME102A|\\bM80TA\\b|ME372CL|ME560CG|ME372CG|ME302KL| K010 | K011 | K017 | K01E |ME572C|ME103K|ME170C|ME171C|\\bME70C\\b|ME581C|ME581CL|ME8510C|ME181C|P01Y|PO1MA|P01Z|\\bP027\\b|\\bP024\\b|\\bP00C\\b",
+        "BlackBerryTablet": "PlayBook|RIM Tablet",
+        "HTCtablet": "HTC_Flyer_P512|HTC Flyer|HTC Jetstream|HTC-P715a|HTC EVO View 4G|PG41200|PG09410",
+        "MotorolaTablet": "xoom|sholest|MZ615|MZ605|MZ505|MZ601|MZ602|MZ603|MZ604|MZ606|MZ607|MZ608|MZ609|MZ615|MZ616|MZ617",
+        "NookTablet": "Android.*Nook|NookColor|nook browser|BNRV200|BNRV200A|BNTV250|BNTV250A|BNTV400|BNTV600|LogicPD Zoom2",
+        "AcerTablet": "Android.*; \\b(A100|A101|A110|A200|A210|A211|A500|A501|A510|A511|A700|A701|W500|W500P|W501|W501P|W510|W511|W700|G100|G100W|B1-A71|B1-710|B1-711|A1-810|A1-811|A1-830)\\b|W3-810|\\bA3-A10\\b|\\bA3-A11\\b|\\bA3-A20\\b|\\bA3-A30",
+        "ToshibaTablet": "Android.*(AT100|AT105|AT200|AT205|AT270|AT275|AT300|AT305|AT1S5|AT500|AT570|AT700|AT830)|TOSHIBA.*FOLIO",
+        "LGTablet": "\\bL-06C|LG-V909|LG-V900|LG-V700|LG-V510|LG-V500|LG-V410|LG-V400|LG-VK810\\b",
+        "FujitsuTablet": "Android.*\\b(F-01D|F-02F|F-05E|F-10D|M532|Q572)\\b",
+        "PrestigioTablet": "PMP3170B|PMP3270B|PMP3470B|PMP7170B|PMP3370B|PMP3570C|PMP5870C|PMP3670B|PMP5570C|PMP5770D|PMP3970B|PMP3870C|PMP5580C|PMP5880D|PMP5780D|PMP5588C|PMP7280C|PMP7280C3G|PMP7280|PMP7880D|PMP5597D|PMP5597|PMP7100D|PER3464|PER3274|PER3574|PER3884|PER5274|PER5474|PMP5097CPRO|PMP5097|PMP7380D|PMP5297C|PMP5297C_QUAD|PMP812E|PMP812E3G|PMP812F|PMP810E|PMP880TD|PMT3017|PMT3037|PMT3047|PMT3057|PMT7008|PMT5887|PMT5001|PMT5002",
+        "LenovoTablet": "Lenovo TAB|Idea(Tab|Pad)( A1|A10| K1|)|ThinkPad([ ]+)?Tablet|YT3-850M|YT3-X90L|YT3-X90F|YT3-X90X|Lenovo.*(S2109|S2110|S5000|S6000|K3011|A3000|A3500|A1000|A2107|A2109|A1107|A5500|A7600|B6000|B8000|B8080)(-|)(FL|F|HV|H|)|TB-X103F|TB-X304X|TB-X304F|TB-X304L|TB-X505F|TB-X505L|TB-X505X|TB-X605F|TB-X605L|TB-8703F|TB-8703X|TB-8703N|TB-8704N|TB-8704F|TB-8704X|TB-8704V|TB-7304F|TB-7304I|TB-7304X|Tab2A7-10F|Tab2A7-20F|TB2-X30L|YT3-X50L|YT3-X50F|YT3-X50M|YT-X705F|YT-X703F|YT-X703L|YT-X705L|YT-X705X|TB2-X30F|TB2-X30L|TB2-X30M|A2107A-F|A2107A-H|TB3-730F|TB3-730M|TB3-730X|TB-7504F|TB-7504X",
+        "DellTablet": "Venue 11|Venue 8|Venue 7|Dell Streak 10|Dell Streak 7",
+        "YarvikTablet": "Android.*\\b(TAB210|TAB211|TAB224|TAB250|TAB260|TAB264|TAB310|TAB360|TAB364|TAB410|TAB411|TAB420|TAB424|TAB450|TAB460|TAB461|TAB464|TAB465|TAB467|TAB468|TAB07-100|TAB07-101|TAB07-150|TAB07-151|TAB07-152|TAB07-200|TAB07-201-3G|TAB07-210|TAB07-211|TAB07-212|TAB07-214|TAB07-220|TAB07-400|TAB07-485|TAB08-150|TAB08-200|TAB08-201-3G|TAB08-201-30|TAB09-100|TAB09-211|TAB09-410|TAB10-150|TAB10-201|TAB10-211|TAB10-400|TAB10-410|TAB13-201|TAB274EUK|TAB275EUK|TAB374EUK|TAB462EUK|TAB474EUK|TAB9-200)\\b",
+        "MedionTablet": "Android.*\\bOYO\\b|LIFE.*(P9212|P9514|P9516|S9512)|LIFETAB",
+        "ArnovaTablet": "97G4|AN10G2|AN7bG3|AN7fG3|AN8G3|AN8cG3|AN7G3|AN9G3|AN7dG3|AN7dG3ST|AN7dG3ChildPad|AN10bG3|AN10bG3DT|AN9G2",
+        "IntensoTablet": "INM8002KP|INM1010FP|INM805ND|Intenso Tab|TAB1004",
+        "IRUTablet": "M702pro",
+        "MegafonTablet": "MegaFon V9|\\bZTE V9\\b|Android.*\\bMT7A\\b",
+        "EbodaTablet": "E-Boda (Supreme|Impresspeed|Izzycomm|Essential)",
+        "AllViewTablet": "Allview.*(Viva|Alldro|City|Speed|All TV|Frenzy|Quasar|Shine|TX1|AX1|AX2)",
+        "ArchosTablet": "\\b(101G9|80G9|A101IT)\\b|Qilive 97R|Archos5|\\bARCHOS (70|79|80|90|97|101|FAMILYPAD|)(b|c|)(G10| Cobalt| TITANIUM(HD|)| Xenon| Neon|XSK| 2| XS 2| PLATINUM| CARBON|GAMEPAD)\\b",
+        "AinolTablet": "NOVO7|NOVO8|NOVO10|Novo7Aurora|Novo7Basic|NOVO7PALADIN|novo9-Spark",
+        "NokiaLumiaTablet": "Lumia 2520",
+        "SonyTablet": "Sony.*Tablet|Xperia Tablet|Sony Tablet S|SO-03E|SGPT12|SGPT13|SGPT114|SGPT121|SGPT122|SGPT123|SGPT111|SGPT112|SGPT113|SGPT131|SGPT132|SGPT133|SGPT211|SGPT212|SGPT213|SGP311|SGP312|SGP321|EBRD1101|EBRD1102|EBRD1201|SGP351|SGP341|SGP511|SGP512|SGP521|SGP541|SGP551|SGP621|SGP641|SGP612|SOT31|SGP771|SGP611|SGP612|SGP712",
+        "PhilipsTablet": "\\b(PI2010|PI3000|PI3100|PI3105|PI3110|PI3205|PI3210|PI3900|PI4010|PI7000|PI7100)\\b",
+        "CubeTablet": "Android.*(K8GT|U9GT|U10GT|U16GT|U17GT|U18GT|U19GT|U20GT|U23GT|U30GT)|CUBE U8GT",
+        "CobyTablet": "MID1042|MID1045|MID1125|MID1126|MID7012|MID7014|MID7015|MID7034|MID7035|MID7036|MID7042|MID7048|MID7127|MID8042|MID8048|MID8127|MID9042|MID9740|MID9742|MID7022|MID7010",
+        "MIDTablet": "M9701|M9000|M9100|M806|M1052|M806|T703|MID701|MID713|MID710|MID727|MID760|MID830|MID728|MID933|MID125|MID810|MID732|MID120|MID930|MID800|MID731|MID900|MID100|MID820|MID735|MID980|MID130|MID833|MID737|MID960|MID135|MID860|MID736|MID140|MID930|MID835|MID733|MID4X10",
+        "MSITablet": "MSI \\b(Primo 73K|Primo 73L|Primo 81L|Primo 77|Primo 93|Primo 75|Primo 76|Primo 73|Primo 81|Primo 91|Primo 90|Enjoy 71|Enjoy 7|Enjoy 10)\\b",
+        "SMiTTablet": "Android.*(\\bMID\\b|MID-560|MTV-T1200|MTV-PND531|MTV-P1101|MTV-PND530)",
+        "RockChipTablet": "Android.*(RK2818|RK2808A|RK2918|RK3066)|RK2738|RK2808A",
+        "FlyTablet": "IQ310|Fly Vision",
+        "bqTablet": "Android.*(bq)?.*\\b(Elcano|Curie|Edison|Maxwell|Kepler|Pascal|Tesla|Hypatia|Platon|Newton|Livingstone|Cervantes|Avant|Aquaris ([E|M]10|M8))\\b|Maxwell.*Lite|Maxwell.*Plus",
+        "HuaweiTablet": "MediaPad|MediaPad 7 Youth|IDEOS S7|S7-201c|S7-202u|S7-101|S7-103|S7-104|S7-105|S7-106|S7-201|S7-Slim|M2-A01L|BAH-L09|BAH-W09|AGS-L09|CMR-AL19",
+        "NecTablet": "\\bN-06D|\\bN-08D",
+        "PantechTablet": "Pantech.*P4100",
+        "BronchoTablet": "Broncho.*(N701|N708|N802|a710)",
+        "VersusTablet": "TOUCHPAD.*[78910]|\\bTOUCHTAB\\b",
+        "ZyncTablet": "z1000|Z99 2G|z930|z990|z909|Z919|z900",
+        "PositivoTablet": "TB07STA|TB10STA|TB07FTA|TB10FTA",
+        "NabiTablet": "Android.*\\bNabi",
+        "KoboTablet": "Kobo Touch|\\bK080\\b|\\bVox\\b Build|\\bArc\\b Build",
+        "DanewTablet": "DSlide.*\\b(700|701R|702|703R|704|802|970|971|972|973|974|1010|1012)\\b",
+        "TexetTablet": "NaviPad|TB-772A|TM-7045|TM-7055|TM-9750|TM-7016|TM-7024|TM-7026|TM-7041|TM-7043|TM-7047|TM-8041|TM-9741|TM-9747|TM-9748|TM-9751|TM-7022|TM-7021|TM-7020|TM-7011|TM-7010|TM-7023|TM-7025|TM-7037W|TM-7038W|TM-7027W|TM-9720|TM-9725|TM-9737W|TM-1020|TM-9738W|TM-9740|TM-9743W|TB-807A|TB-771A|TB-727A|TB-725A|TB-719A|TB-823A|TB-805A|TB-723A|TB-715A|TB-707A|TB-705A|TB-709A|TB-711A|TB-890HD|TB-880HD|TB-790HD|TB-780HD|TB-770HD|TB-721HD|TB-710HD|TB-434HD|TB-860HD|TB-840HD|TB-760HD|TB-750HD|TB-740HD|TB-730HD|TB-722HD|TB-720HD|TB-700HD|TB-500HD|TB-470HD|TB-431HD|TB-430HD|TB-506|TB-504|TB-446|TB-436|TB-416|TB-146SE|TB-126SE",
+        "PlaystationTablet": "Playstation.*(Portable|Vita)",
+        "TrekstorTablet": "ST10416-1|VT10416-1|ST70408-1|ST702xx-1|ST702xx-2|ST80208|ST97216|ST70104-2|VT10416-2|ST10216-2A|SurfTab",
+        "PyleAudioTablet": "\\b(PTBL10CEU|PTBL10C|PTBL72BC|PTBL72BCEU|PTBL7CEU|PTBL7C|PTBL92BC|PTBL92BCEU|PTBL9CEU|PTBL9CUK|PTBL9C)\\b",
+        "AdvanTablet": "Android.* \\b(E3A|T3X|T5C|T5B|T3E|T3C|T3B|T1J|T1F|T2A|T1H|T1i|E1C|T1-E|T5-A|T4|E1-B|T2Ci|T1-B|T1-D|O1-A|E1-A|T1-A|T3A|T4i)\\b ",
+        "DanyTechTablet": "Genius Tab G3|Genius Tab S2|Genius Tab Q3|Genius Tab G4|Genius Tab Q4|Genius Tab G-II|Genius TAB GII|Genius TAB GIII|Genius Tab S1",
+        "GalapadTablet": "Android.*\\bG1\\b(?!\\))",
+        "MicromaxTablet": "Funbook|Micromax.*\\b(P250|P560|P360|P362|P600|P300|P350|P500|P275)\\b",
+        "KarbonnTablet": "Android.*\\b(A39|A37|A34|ST8|ST10|ST7|Smart Tab3|Smart Tab2)\\b",
+        "AllFineTablet": "Fine7 Genius|Fine7 Shine|Fine7 Air|Fine8 Style|Fine9 More|Fine10 Joy|Fine11 Wide",
+        "PROSCANTablet": "\\b(PEM63|PLT1023G|PLT1041|PLT1044|PLT1044G|PLT1091|PLT4311|PLT4311PL|PLT4315|PLT7030|PLT7033|PLT7033D|PLT7035|PLT7035D|PLT7044K|PLT7045K|PLT7045KB|PLT7071KG|PLT7072|PLT7223G|PLT7225G|PLT7777G|PLT7810K|PLT7849G|PLT7851G|PLT7852G|PLT8015|PLT8031|PLT8034|PLT8036|PLT8080K|PLT8082|PLT8088|PLT8223G|PLT8234G|PLT8235G|PLT8816K|PLT9011|PLT9045K|PLT9233G|PLT9735|PLT9760G|PLT9770G)\\b",
+        "YONESTablet": "BQ1078|BC1003|BC1077|RK9702|BC9730|BC9001|IT9001|BC7008|BC7010|BC708|BC728|BC7012|BC7030|BC7027|BC7026",
+        "ChangJiaTablet": "TPC7102|TPC7103|TPC7105|TPC7106|TPC7107|TPC7201|TPC7203|TPC7205|TPC7210|TPC7708|TPC7709|TPC7712|TPC7110|TPC8101|TPC8103|TPC8105|TPC8106|TPC8203|TPC8205|TPC8503|TPC9106|TPC9701|TPC97101|TPC97103|TPC97105|TPC97106|TPC97111|TPC97113|TPC97203|TPC97603|TPC97809|TPC97205|TPC10101|TPC10103|TPC10106|TPC10111|TPC10203|TPC10205|TPC10503",
+        "GUTablet": "TX-A1301|TX-M9002|Q702|kf026",
+        "PointOfViewTablet": "TAB-P506|TAB-navi-7-3G-M|TAB-P517|TAB-P-527|TAB-P701|TAB-P703|TAB-P721|TAB-P731N|TAB-P741|TAB-P825|TAB-P905|TAB-P925|TAB-PR945|TAB-PL1015|TAB-P1025|TAB-PI1045|TAB-P1325|TAB-PROTAB[0-9]+|TAB-PROTAB25|TAB-PROTAB26|TAB-PROTAB27|TAB-PROTAB26XL|TAB-PROTAB2-IPS9|TAB-PROTAB30-IPS9|TAB-PROTAB25XXL|TAB-PROTAB26-IPS10|TAB-PROTAB30-IPS10",
+        "OvermaxTablet": "OV-(SteelCore|NewBase|Basecore|Baseone|Exellen|Quattor|EduTab|Solution|ACTION|BasicTab|TeddyTab|MagicTab|Stream|TB-08|TB-09)|Qualcore 1027",
+        "HCLTablet": "HCL.*Tablet|Connect-3G-2.0|Connect-2G-2.0|ME Tablet U1|ME Tablet U2|ME Tablet G1|ME Tablet X1|ME Tablet Y2|ME Tablet Sync",
+        "DPSTablet": "DPS Dream 9|DPS Dual 7",
+        "VistureTablet": "V97 HD|i75 3G|Visture V4( HD)?|Visture V5( HD)?|Visture V10",
+        "CrestaTablet": "CTP(-)?810|CTP(-)?818|CTP(-)?828|CTP(-)?838|CTP(-)?888|CTP(-)?978|CTP(-)?980|CTP(-)?987|CTP(-)?988|CTP(-)?989",
+        "MediatekTablet": "\\bMT8125|MT8389|MT8135|MT8377\\b",
+        "ConcordeTablet": "Concorde([ ]+)?Tab|ConCorde ReadMan",
+        "GoCleverTablet": "GOCLEVER TAB|A7GOCLEVER|M1042|M7841|M742|R1042BK|R1041|TAB A975|TAB A7842|TAB A741|TAB A741L|TAB M723G|TAB M721|TAB A1021|TAB I921|TAB R721|TAB I720|TAB T76|TAB R70|TAB R76.2|TAB R106|TAB R83.2|TAB M813G|TAB I721|GCTA722|TAB I70|TAB I71|TAB S73|TAB R73|TAB R74|TAB R93|TAB R75|TAB R76.1|TAB A73|TAB A93|TAB A93.2|TAB T72|TAB R83|TAB R974|TAB R973|TAB A101|TAB A103|TAB A104|TAB A104.2|R105BK|M713G|A972BK|TAB A971|TAB R974.2|TAB R104|TAB R83.3|TAB A1042",
+        "ModecomTablet": "FreeTAB 9000|FreeTAB 7.4|FreeTAB 7004|FreeTAB 7800|FreeTAB 2096|FreeTAB 7.5|FreeTAB 1014|FreeTAB 1001 |FreeTAB 8001|FreeTAB 9706|FreeTAB 9702|FreeTAB 7003|FreeTAB 7002|FreeTAB 1002|FreeTAB 7801|FreeTAB 1331|FreeTAB 1004|FreeTAB 8002|FreeTAB 8014|FreeTAB 9704|FreeTAB 1003",
+        "VoninoTablet": "\\b(Argus[ _]?S|Diamond[ _]?79HD|Emerald[ _]?78E|Luna[ _]?70C|Onyx[ _]?S|Onyx[ _]?Z|Orin[ _]?HD|Orin[ _]?S|Otis[ _]?S|SpeedStar[ _]?S|Magnet[ _]?M9|Primus[ _]?94[ _]?3G|Primus[ _]?94HD|Primus[ _]?QS|Android.*\\bQ8\\b|Sirius[ _]?EVO[ _]?QS|Sirius[ _]?QS|Spirit[ _]?S)\\b",
+        "ECSTablet": "V07OT2|TM105A|S10OT1|TR10CS1",
+        "StorexTablet": "eZee[_']?(Tab|Go)[0-9]+|TabLC7|Looney Tunes Tab",
+        "VodafoneTablet": "SmartTab([ ]+)?[0-9]+|SmartTabII10|SmartTabII7|VF-1497|VFD 1400",
+        "EssentielBTablet": "Smart[ ']?TAB[ ]+?[0-9]+|Family[ ']?TAB2",
+        "RossMoorTablet": "RM-790|RM-997|RMD-878G|RMD-974R|RMT-705A|RMT-701|RME-601|RMT-501|RMT-711",
+        "iMobileTablet": "i-mobile i-note",
+        "TolinoTablet": "tolino tab [0-9.]+|tolino shine",
+        "AudioSonicTablet": "\\bC-22Q|T7-QC|T-17B|T-17P\\b",
+        "AMPETablet": "Android.* A78 ",
+        "SkkTablet": "Android.* (SKYPAD|PHOENIX|CYCLOPS)",
+        "TecnoTablet": "TECNO P9|TECNO DP8D",
+        "JXDTablet": "Android.* \\b(F3000|A3300|JXD5000|JXD3000|JXD2000|JXD300B|JXD300|S5800|S7800|S602b|S5110b|S7300|S5300|S602|S603|S5100|S5110|S601|S7100a|P3000F|P3000s|P101|P200s|P1000m|P200m|P9100|P1000s|S6600b|S908|P1000|P300|S18|S6600|S9100)\\b",
+        "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)",
+        "FX2Tablet": "FX2 PAD7|FX2 PAD10",
+        "XoroTablet": "KidsPAD 701|PAD[ ]?712|PAD[ ]?714|PAD[ ]?716|PAD[ ]?717|PAD[ ]?718|PAD[ ]?720|PAD[ ]?721|PAD[ ]?722|PAD[ ]?790|PAD[ ]?792|PAD[ ]?900|PAD[ ]?9715D|PAD[ ]?9716DR|PAD[ ]?9718DR|PAD[ ]?9719QR|PAD[ ]?9720QR|TelePAD1030|Telepad1032|TelePAD730|TelePAD731|TelePAD732|TelePAD735Q|TelePAD830|TelePAD9730|TelePAD795|MegaPAD 1331|MegaPAD 1851|MegaPAD 2151",
+        "ViewsonicTablet": "ViewPad 10pi|ViewPad 10e|ViewPad 10s|ViewPad E72|ViewPad7|ViewPad E100|ViewPad 7e|ViewSonic VB733|VB100a",
+        "VerizonTablet": "QTAQZ3|QTAIR7|QTAQTZ3|QTASUN1|QTASUN2|QTAXIA1",
+        "OdysTablet": "LOOX|XENO10|ODYS[ -](Space|EVO|Xpress|NOON)|\\bXELIO\\b|Xelio10Pro|XELIO7PHONETAB|XELIO10EXTREME|XELIOPT2|NEO_QUAD10",
+        "CaptivaTablet": "CAPTIVA PAD",
+        "IconbitTablet": "NetTAB|NT-3702|NT-3702S|NT-3702S|NT-3603P|NT-3603P|NT-0704S|NT-0704S|NT-3805C|NT-3805C|NT-0806C|NT-0806C|NT-0909T|NT-0909T|NT-0907S|NT-0907S|NT-0902S|NT-0902S",
+        "TeclastTablet": "T98 4G|\\bP80\\b|\\bX90HD\\b|X98 Air|X98 Air 3G|\\bX89\\b|P80 3G|\\bX80h\\b|P98 Air|\\bX89HD\\b|P98 3G|\\bP90HD\\b|P89 3G|X98 3G|\\bP70h\\b|P79HD 3G|G18d 3G|\\bP79HD\\b|\\bP89s\\b|\\bA88\\b|\\bP10HD\\b|\\bP19HD\\b|G18 3G|\\bP78HD\\b|\\bA78\\b|\\bP75\\b|G17s 3G|G17h 3G|\\bP85t\\b|\\bP90\\b|\\bP11\\b|\\bP98t\\b|\\bP98HD\\b|\\bG18d\\b|\\bP85s\\b|\\bP11HD\\b|\\bP88s\\b|\\bA80HD\\b|\\bA80se\\b|\\bA10h\\b|\\bP89\\b|\\bP78s\\b|\\bG18\\b|\\bP85\\b|\\bA70h\\b|\\bA70\\b|\\bG17\\b|\\bP18\\b|\\bA80s\\b|\\bA11s\\b|\\bP88HD\\b|\\bA80h\\b|\\bP76s\\b|\\bP76h\\b|\\bP98\\b|\\bA10HD\\b|\\bP78\\b|\\bP88\\b|\\bA11\\b|\\bA10t\\b|\\bP76a\\b|\\bP76t\\b|\\bP76e\\b|\\bP85HD\\b|\\bP85a\\b|\\bP86\\b|\\bP75HD\\b|\\bP76v\\b|\\bA12\\b|\\bP75a\\b|\\bA15\\b|\\bP76Ti\\b|\\bP81HD\\b|\\bA10\\b|\\bT760VE\\b|\\bT720HD\\b|\\bP76\\b|\\bP73\\b|\\bP71\\b|\\bP72\\b|\\bT720SE\\b|\\bC520Ti\\b|\\bT760\\b|\\bT720VE\\b|T720-3GE|T720-WiFi",
+        "OndaTablet": "\\b(V975i|Vi30|VX530|V701|Vi60|V701s|Vi50|V801s|V719|Vx610w|VX610W|V819i|Vi10|VX580W|Vi10|V711s|V813|V811|V820w|V820|Vi20|V711|VI30W|V712|V891w|V972|V819w|V820w|Vi60|V820w|V711|V813s|V801|V819|V975s|V801|V819|V819|V818|V811|V712|V975m|V101w|V961w|V812|V818|V971|V971s|V919|V989|V116w|V102w|V973|Vi40)\\b[\\s]+|V10 \\b4G\\b",
+        "JaytechTablet": "TPC-PA762",
+        "BlaupunktTablet": "Endeavour 800NG|Endeavour 1010",
+        "DigmaTablet": "\\b(iDx10|iDx9|iDx8|iDx7|iDxD7|iDxD8|iDsQ8|iDsQ7|iDsQ8|iDsD10|iDnD7|3TS804H|iDsQ11|iDj7|iDs10)\\b",
+        "EvolioTablet": "ARIA_Mini_wifi|Aria[ _]Mini|Evolio X10|Evolio X7|Evolio X8|\\bEvotab\\b|\\bNeura\\b",
+        "LavaTablet": "QPAD E704|\\bIvoryS\\b|E-TAB IVORY|\\bE-TAB\\b",
+        "AocTablet": "MW0811|MW0812|MW0922|MTK8382|MW1031|MW0831|MW0821|MW0931|MW0712",
+        "MpmanTablet": "MP11 OCTA|MP10 OCTA|MPQC1114|MPQC1004|MPQC994|MPQC974|MPQC973|MPQC804|MPQC784|MPQC780|\\bMPG7\\b|MPDCG75|MPDCG71|MPDC1006|MP101DC|MPDC9000|MPDC905|MPDC706HD|MPDC706|MPDC705|MPDC110|MPDC100|MPDC99|MPDC97|MPDC88|MPDC8|MPDC77|MP709|MID701|MID711|MID170|MPDC703|MPQC1010",
+        "CelkonTablet": "CT695|CT888|CT[\\s]?910|CT7 Tab|CT9 Tab|CT3 Tab|CT2 Tab|CT1 Tab|C820|C720|\\bCT-1\\b",
+        "WolderTablet": "miTab \\b(DIAMOND|SPACE|BROOKLYN|NEO|FLY|MANHATTAN|FUNK|EVOLUTION|SKY|GOCAR|IRON|GENIUS|POP|MINT|EPSILON|BROADWAY|JUMP|HOP|LEGEND|NEW AGE|LINE|ADVANCE|FEEL|FOLLOW|LIKE|LINK|LIVE|THINK|FREEDOM|CHICAGO|CLEVELAND|BALTIMORE-GH|IOWA|BOSTON|SEATTLE|PHOENIX|DALLAS|IN 101|MasterChef)\\b",
+        "MediacomTablet": "M-MPI10C3G|M-SP10EG|M-SP10EGP|M-SP10HXAH|M-SP7HXAH|M-SP10HXBH|M-SP8HXAH|M-SP8MXA",
+        "MiTablet": "\\bMI PAD\\b|\\bHM NOTE 1W\\b",
+        "NibiruTablet": "Nibiru M1|Nibiru Jupiter One",
+        "NexoTablet": "NEXO NOVA|NEXO 10|NEXO AVIO|NEXO FREE|NEXO GO|NEXO EVO|NEXO 3G|NEXO SMART|NEXO KIDDO|NEXO MOBI",
+        "LeaderTablet": "TBLT10Q|TBLT10I|TBL-10WDKB|TBL-10WDKBO2013|TBL-W230V2|TBL-W450|TBL-W500|SV572|TBLT7I|TBA-AC7-8G|TBLT79|TBL-8W16|TBL-10W32|TBL-10WKB|TBL-W100",
+        "UbislateTablet": "UbiSlate[\\s]?7C",
+        "PocketBookTablet": "Pocketbook",
+        "KocasoTablet": "\\b(TB-1207)\\b",
+        "HisenseTablet": "\\b(F5281|E2371)\\b",
+        "Hudl": "Hudl HT7S3|Hudl 2",
+        "TelstraTablet": "T-Hub2",
+        "GenericTablet": "Android.*\\b97D\\b|Tablet(?!.*PC)|BNTV250A|MID-WCDMA|LogicPD Zoom2|\\bA7EB\\b|CatNova8|A1_07|CT704|CT1002|\\bM721\\b|rk30sdk|\\bEVOTAB\\b|M758A|ET904|ALUMIUM10|Smartfren Tab|Endeavour 1010|Tablet-PC-4|Tagi Tab|\\bM6pro\\b|CT1020W|arc 10HD|\\bTP750\\b|\\bQTAQZ3\\b|WVT101|TM1088|KT107"
+    },
+    "oss": {
+        "AndroidOS": "Android",
+        "BlackBerryOS": "blackberry|\\bBB10\\b|rim tablet os",
+        "PalmOS": "PalmOS|avantgo|blazer|elaine|hiptop|palm|plucker|xiino",
+        "SymbianOS": "Symbian|SymbOS|Series60|Series40|SYB-[0-9]+|\\bS60\\b",
+        "WindowsMobileOS": "Windows CE.*(PPC|Smartphone|Mobile|[0-9]{3}x[0-9]{3})|Windows Mobile|Windows Phone [0-9.]+|WCE;",
+        "WindowsPhoneOS": "Windows Phone 10.0|Windows Phone 8.1|Windows Phone 8.0|Windows Phone OS|XBLWP7|ZuneWP7|Windows NT 6.[23]; ARM;",
+        "iOS": "\\biPhone.*Mobile|\\biPod|\\biPad|AppleCoreMedia",
+        "iPadOS": "CPU OS 13",
+        "MeeGoOS": "MeeGo",
+        "MaemoOS": "Maemo",
+        "JavaOS": "J2ME\/|\\bMIDP\\b|\\bCLDC\\b",
+        "webOS": "webOS|hpwOS",
+        "badaOS": "\\bBada\\b",
+        "BREWOS": "BREW"
+    },
+    "uas": {
+        "Chrome": "\\bCrMo\\b|CriOS|Android.*Chrome\/[.0-9]* (Mobile)?",
+        "Dolfin": "\\bDolfin\\b",
+        "Opera": "Opera.*Mini|Opera.*Mobi|Android.*Opera|Mobile.*OPR\/[0-9.]+$|Coast\/[0-9.]+",
+        "Skyfire": "Skyfire",
+        "Edge": "Mobile Safari\/[.0-9]* Edge",
+        "IE": "IEMobile|MSIEMobile",
+        "Firefox": "fennec|firefox.*maemo|(Mobile|Tablet).*Firefox|Firefox.*Mobile|FxiOS",
+        "Bolt": "bolt",
+        "TeaShark": "teashark",
+        "Blazer": "Blazer",
+        "Safari": "Version.*Mobile.*Safari|Safari.*Mobile|MobileSafari",
+        "WeChat": "\\bMicroMessenger\\b",
+        "UCBrowser": "UC.*Browser|UCWEB",
+        "baiduboxapp": "baiduboxapp",
+        "baidubrowser": "baidubrowser",
+        "DiigoBrowser": "DiigoBrowser",
+        "Mercury": "\\bMercury\\b",
+        "ObigoBrowser": "Obigo",
+        "NetFront": "NF-Browser",
+        "GenericBrowser": "NokiaBrowser|OviBrowser|OneBrowser|TwonkyBeamBrowser|SEMC.*Browser|FlyFlow|Minimo|NetFront|Novarra-Vision|MQQBrowser|MicroMessenger",
+        "PaleMoon": "Android.*PaleMoon|Mobile.*PaleMoon"
+    },
+    "props": {
+        "Mobile": "Mobile\/[VER]",
+        "Build": "Build\/[VER]",
+        "Version": "Version\/[VER]",
+        "VendorID": "VendorID\/[VER]",
+        "iPad": "iPad.*CPU[a-z ]+[VER]",
+        "iPhone": "iPhone.*CPU[a-z ]+[VER]",
+        "iPod": "iPod.*CPU[a-z ]+[VER]",
+        "Kindle": "Kindle\/[VER]",
+        "Chrome": [
+            "Chrome\/[VER]",
+            "CriOS\/[VER]",
+            "CrMo\/[VER]"
+        ],
+        "Coast": [
+            "Coast\/[VER]"
+        ],
+        "Dolfin": "Dolfin\/[VER]",
+        "Firefox": [
+            "Firefox\/[VER]",
+            "FxiOS\/[VER]"
+        ],
+        "Fennec": "Fennec\/[VER]",
+        "Edge": "Edge\/[VER]",
+        "IE": [
+            "IEMobile\/[VER];",
+            "IEMobile [VER]",
+            "MSIE [VER];",
+            "Trident\/[0-9.]+;.*rv:[VER]"
+        ],
+        "NetFront": "NetFront\/[VER]",
+        "NokiaBrowser": "NokiaBrowser\/[VER]",
+        "Opera": [
+            " OPR\/[VER]",
+            "Opera Mini\/[VER]",
+            "Version\/[VER]"
+        ],
+        "Opera Mini": "Opera Mini\/[VER]",
+        "Opera Mobi": "Version\/[VER]",
+        "UCBrowser": [
+            "UCWEB[VER]",
+            "UC.*Browser\/[VER]"
+        ],
+        "MQQBrowser": "MQQBrowser\/[VER]",
+        "MicroMessenger": "MicroMessenger\/[VER]",
+        "baiduboxapp": "baiduboxapp\/[VER]",
+        "baidubrowser": "baidubrowser\/[VER]",
+        "SamsungBrowser": "SamsungBrowser\/[VER]",
+        "Iron": "Iron\/[VER]",
+        "Safari": [
+            "Version\/[VER]",
+            "Safari\/[VER]"
+        ],
+        "Skyfire": "Skyfire\/[VER]",
+        "Tizen": "Tizen\/[VER]",
+        "Webkit": "webkit[ \/][VER]",
+        "PaleMoon": "PaleMoon\/[VER]",
+        "Gecko": "Gecko\/[VER]",
+        "Trident": "Trident\/[VER]",
+        "Presto": "Presto\/[VER]",
+        "Goanna": "Goanna\/[VER]",
+        "iOS": " \\bi?OS\\b [VER][ ;]{1}",
+        "Android": "Android [VER]",
+        "BlackBerry": [
+            "BlackBerry[\\w]+\/[VER]",
+            "BlackBerry.*Version\/[VER]",
+            "Version\/[VER]"
+        ],
+        "BREW": "BREW [VER]",
+        "Java": "Java\/[VER]",
+        "Windows Phone OS": [
+            "Windows Phone OS [VER]",
+            "Windows Phone [VER]"
+        ],
+        "Windows Phone": "Windows Phone [VER]",
+        "Windows CE": "Windows CE\/[VER]",
+        "Windows NT": "Windows NT [VER]",
+        "Symbian": [
+            "SymbianOS\/[VER]",
+            "Symbian\/[VER]"
+        ],
+        "webOS": [
+            "webOS\/[VER]",
+            "hpwOS\/[VER];"
+        ]
+    },
+    "utils": {
+        "Bot": "Googlebot|facebookexternalhit|Google-AMPHTML|s~amp-validator|AdsBot-Google|Google Keyword Suggestion|Facebot|YandexBot|YandexMobileBot|bingbot|ia_archiver|AhrefsBot|Ezooms|GSLFbot|WBSearchBot|Twitterbot|TweetmemeBot|Twikle|PaperLiBot|Wotbox|UnwindFetchor|Exabot|MJ12bot|YandexImages|TurnitinBot|Pingdom|contentkingapp",
+        "MobileBot": "Googlebot-Mobile|AdsBot-Google-Mobile|YahooSeeker\/M1A1-R2D2",
+        "DesktopMode": "WPDesktop",
+        "TV": "SonyDTV|HbbTV",
+        "WebKit": "(webkit)[ \/]([\\w.]+)",
+        "Console": "\\b(Nintendo|Nintendo WiiU|Nintendo 3DS|Nintendo Switch|PLAYSTATION|Xbox)\\b",
+        "Watch": "SM-V700"
+    }
+};
+
+    // following patterns come from http://detectmobilebrowsers.com/
+    impl.detectMobileBrowsers = {
+        fullPattern: /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i,
+        shortPattern: /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i,
+        tabletPattern: /android|ipad|playbook|silk/i
+    };
+
+    var hasOwnProp = Object.prototype.hasOwnProperty,
+        isArray;
+
+    impl.FALLBACK_PHONE = 'UnknownPhone';
+    impl.FALLBACK_TABLET = 'UnknownTablet';
+    impl.FALLBACK_MOBILE = 'UnknownMobile';
+
+    isArray = ('isArray' in Array) ?
+        Array.isArray : function (value) { return Object.prototype.toString.call(value) === '[object Array]'; };
+
+    function equalIC(a, b) {
+        return a != null && b != null && a.toLowerCase() === b.toLowerCase();
+    }
+
+    function containsIC(array, value) {
+        var valueLC, i, len = array.length;
+        if (!len || !value) {
+            return false;
+        }
+        valueLC = value.toLowerCase();
+        for (i = 0; i < len; ++i) {
+            if (valueLC === array[i].toLowerCase()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function convertPropsToRegExp(object) {
+        for (var key in object) {
+            if (hasOwnProp.call(object, key)) {
+                object[key] = new RegExp(object[key], 'i');
+            }
+        }
+    }
+
+    function prepareUserAgent(userAgent) {
+        return (userAgent || '').substr(0, 500); // mitigate vulnerable to ReDoS
+    }
+
+    (function init() {
+        var key, values, value, i, len, verPos, mobileDetectRules = impl.mobileDetectRules;
+        for (key in mobileDetectRules.props) {
+            if (hasOwnProp.call(mobileDetectRules.props, key)) {
+                values = mobileDetectRules.props[key];
+                if (!isArray(values)) {
+                    values = [values];
+                }
+                len = values.length;
+                for (i = 0; i < len; ++i) {
+                    value = values[i];
+                    verPos = value.indexOf('[VER]');
+                    if (verPos >= 0) {
+                        value = value.substring(0, verPos) + '([\\w._\\+]+)' + value.substring(verPos + 5);
+                    }
+                    values[i] = new RegExp(value, 'i');
+                }
+                mobileDetectRules.props[key] = values;
+            }
+        }
+        convertPropsToRegExp(mobileDetectRules.oss);
+        convertPropsToRegExp(mobileDetectRules.phones);
+        convertPropsToRegExp(mobileDetectRules.tablets);
+        convertPropsToRegExp(mobileDetectRules.uas);
+        convertPropsToRegExp(mobileDetectRules.utils);
+
+        // copy some patterns to oss0 which are tested first (see issue#15)
+        mobileDetectRules.oss0 = {
+            WindowsPhoneOS: mobileDetectRules.oss.WindowsPhoneOS,
+            WindowsMobileOS: mobileDetectRules.oss.WindowsMobileOS
+        };
+    }());
+
+    /**
+     * Test userAgent string against a set of rules and find the first matched key.
+     * @param {Object} rules (key is String, value is RegExp)
+     * @param {String} userAgent the navigator.userAgent (or HTTP-Header 'User-Agent').
+     * @returns {String|null} the matched key if found, otherwise <tt>null</tt>
+     * @private
+     */
+    impl.findMatch = function(rules, userAgent) {
+        for (var key in rules) {
+            if (hasOwnProp.call(rules, key)) {
+                if (rules[key].test(userAgent)) {
+                    return key;
+                }
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Test userAgent string against a set of rules and return an array of matched keys.
+     * @param {Object} rules (key is String, value is RegExp)
+     * @param {String} userAgent the navigator.userAgent (or HTTP-Header 'User-Agent').
+     * @returns {Array} an array of matched keys, may be empty when there is no match, but not <tt>null</tt>
+     * @private
+     */
+    impl.findMatches = function(rules, userAgent) {
+        var result = [];
+        for (var key in rules) {
+            if (hasOwnProp.call(rules, key)) {
+                if (rules[key].test(userAgent)) {
+                    result.push(key);
+                }
+            }
+        }
+        return result;
+    };
+
+    /**
+     * Check the version of the given property in the User-Agent.
+     *
+     * @param {String} propertyName
+     * @param {String} userAgent
+     * @return {String} version or <tt>null</tt> if version not found
+     * @private
+     */
+    impl.getVersionStr = function (propertyName, userAgent) {
+        var props = impl.mobileDetectRules.props, patterns, i, len, match;
+        if (hasOwnProp.call(props, propertyName)) {
+            patterns = props[propertyName];
+            len = patterns.length;
+            for (i = 0; i < len; ++i) {
+                match = patterns[i].exec(userAgent);
+                if (match !== null) {
+                    return match[1];
+                }
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Check the version of the given property in the User-Agent.
+     * Will return a float number. (eg. 2_0 will return 2.0, 4.3.1 will return 4.31)
+     *
+     * @param {String} propertyName
+     * @param {String} userAgent
+     * @return {Number} version or <tt>NaN</tt> if version not found
+     * @private
+     */
+    impl.getVersion = function (propertyName, userAgent) {
+        var version = impl.getVersionStr(propertyName, userAgent);
+        return version ? impl.prepareVersionNo(version) : NaN;
+    };
+
+    /**
+     * Prepare the version number.
+     *
+     * @param {String} version
+     * @return {Number} the version number as a floating number
+     * @private
+     */
+    impl.prepareVersionNo = function (version) {
+        var numbers;
+
+        numbers = version.split(/[a-z._ \/\-]/i);
+        if (numbers.length === 1) {
+            version = numbers[0];
+        }
+        if (numbers.length > 1) {
+            version = numbers[0] + '.';
+            numbers.shift();
+            version += numbers.join('');
+        }
+        return Number(version);
+    };
+
+    impl.isMobileFallback = function (userAgent) {
+        return impl.detectMobileBrowsers.fullPattern.test(userAgent) ||
+            impl.detectMobileBrowsers.shortPattern.test(userAgent.substr(0,4));
+    };
+
+    impl.isTabletFallback = function (userAgent) {
+        return impl.detectMobileBrowsers.tabletPattern.test(userAgent);
+    };
+
+    impl.prepareDetectionCache = function (cache, userAgent, maxPhoneWidth) {
+        if (cache.mobile !== undefined$1) {
+            return;
+        }
+        var phone, tablet, phoneSized;
+
+        // first check for stronger tablet rules, then phone (see issue#5)
+        tablet = impl.findMatch(impl.mobileDetectRules.tablets, userAgent);
+        if (tablet) {
+            cache.mobile = cache.tablet = tablet;
+            cache.phone = null;
+            return; // unambiguously identified as tablet
+        }
+
+        phone = impl.findMatch(impl.mobileDetectRules.phones, userAgent);
+        if (phone) {
+            cache.mobile = cache.phone = phone;
+            cache.tablet = null;
+            return; // unambiguously identified as phone
+        }
+
+        // our rules haven't found a match -> try more general fallback rules
+        if (impl.isMobileFallback(userAgent)) {
+            phoneSized = MobileDetect.isPhoneSized(maxPhoneWidth);
+            if (phoneSized === undefined$1) {
+                cache.mobile = impl.FALLBACK_MOBILE;
+                cache.tablet = cache.phone = null;
+            } else if (phoneSized) {
+                cache.mobile = cache.phone = impl.FALLBACK_PHONE;
+                cache.tablet = null;
+            } else {
+                cache.mobile = cache.tablet = impl.FALLBACK_TABLET;
+                cache.phone = null;
+            }
+        } else if (impl.isTabletFallback(userAgent)) {
+            cache.mobile = cache.tablet = impl.FALLBACK_TABLET;
+            cache.phone = null;
+        } else {
+            // not mobile at all!
+            cache.mobile = cache.tablet = cache.phone = null;
+        }
+    };
+
+    // t is a reference to a MobileDetect instance
+    impl.mobileGrade = function (t) {
+        // impl note:
+        // To keep in sync w/ Mobile_Detect.php easily, the following code is tightly aligned to the PHP version.
+        // When changes are made in Mobile_Detect.php, copy this method and replace:
+        //     $this-> / t.
+        //     self::MOBILE_GRADE_(.) / '$1'
+        //     , self::VERSION_TYPE_FLOAT / (nothing)
+        //     isIOS() / os('iOS')
+        //     [reg] / (nothing)   <-- jsdelivr complaining about unescaped unicode character U+00AE
+        var $isMobile = t.mobile() !== null;
+
+        if (
+            // Apple iOS 3.2-5.1 - Tested on the original iPad (4.3 / 5.0), iPad 2 (4.3), iPad 3 (5.1), original iPhone (3.1), iPhone 3 (3.2), 3GS (4.3), 4 (4.3 / 5.0), and 4S (5.1)
+            t.os('iOS') && t.version('iPad')>=4.3 ||
+            t.os('iOS') && t.version('iPhone')>=3.1 ||
+            t.os('iOS') && t.version('iPod')>=3.1 ||
+
+            // Android 2.1-2.3 - Tested on the HTC Incredible (2.2), original Droid (2.2), HTC Aria (2.1), Google Nexus S (2.3). Functional on 1.5 & 1.6 but performance may be sluggish, tested on Google G1 (1.5)
+            // Android 3.1 (Honeycomb)  - Tested on the Samsung Galaxy Tab 10.1 and Motorola XOOM
+            // Android 4.0 (ICS)  - Tested on a Galaxy Nexus. Note: transition performance can be poor on upgraded devices
+            // Android 4.1 (Jelly Bean)  - Tested on a Galaxy Nexus and Galaxy 7
+            ( t.version('Android')>2.1 && t.is('Webkit') ) ||
+
+            // Windows Phone 7-7.5 - Tested on the HTC Surround (7.0) HTC Trophy (7.5), LG-E900 (7.5), Nokia Lumia 800
+            t.version('Windows Phone OS')>=7.0 ||
+
+            // Blackberry 7 - Tested on BlackBerry Torch 9810
+            // Blackberry 6.0 - Tested on the Torch 9800 and Style 9670
+            t.is('BlackBerry') && t.version('BlackBerry')>=6.0 ||
+            // Blackberry Playbook (1.0-2.0) - Tested on PlayBook
+            t.match('Playbook.*Tablet') ||
+
+            // Palm WebOS (1.4-2.0) - Tested on the Palm Pixi (1.4), Pre (1.4), Pre 2 (2.0)
+            ( t.version('webOS')>=1.4 && t.match('Palm|Pre|Pixi') ) ||
+            // Palm WebOS 3.0  - Tested on HP TouchPad
+            t.match('hp.*TouchPad') ||
+
+            // Firefox Mobile (12 Beta) - Tested on Android 2.3 device
+            ( t.is('Firefox') && t.version('Firefox')>=12 ) ||
+
+            // Chrome for Android - Tested on Android 4.0, 4.1 device
+            ( t.is('Chrome') && t.is('AndroidOS') && t.version('Android')>=4.0 ) ||
+
+            // Skyfire 4.1 - Tested on Android 2.3 device
+            ( t.is('Skyfire') && t.version('Skyfire')>=4.1 && t.is('AndroidOS') && t.version('Android')>=2.3 ) ||
+
+            // Opera Mobile 11.5-12: Tested on Android 2.3
+            ( t.is('Opera') && t.version('Opera Mobi')>11 && t.is('AndroidOS') ) ||
+
+            // Meego 1.2 - Tested on Nokia 950 and N9
+            t.is('MeeGoOS') ||
+
+            // Tizen (pre-release) - Tested on early hardware
+            t.is('Tizen') ||
+
+            // Samsung Bada 2.0 - Tested on a Samsung Wave 3, Dolphin browser
+            // @todo: more tests here!
+            t.is('Dolfin') && t.version('Bada')>=2.0 ||
+
+            // UC Browser - Tested on Android 2.3 device
+            ( (t.is('UC Browser') || t.is('Dolfin')) && t.version('Android')>=2.3 ) ||
+
+            // Kindle 3 and Fire  - Tested on the built-in WebKit browser for each
+            ( t.match('Kindle Fire') ||
+                t.is('Kindle') && t.version('Kindle')>=3.0 ) ||
+
+            // Nook Color 1.4.1 - Tested on original Nook Color, not Nook Tablet
+            t.is('AndroidOS') && t.is('NookTablet') ||
+
+            // Chrome Desktop 11-21 - Tested on OS X 10.7 and Windows 7
+            t.version('Chrome')>=11 && !$isMobile ||
+
+            // Safari Desktop 4-5 - Tested on OS X 10.7 and Windows 7
+            t.version('Safari')>=5.0 && !$isMobile ||
+
+            // Firefox Desktop 4-13 - Tested on OS X 10.7 and Windows 7
+            t.version('Firefox')>=4.0 && !$isMobile ||
+
+            // Internet Explorer 7-9 - Tested on Windows XP, Vista and 7
+            t.version('MSIE')>=7.0 && !$isMobile ||
+
+            // Opera Desktop 10-12 - Tested on OS X 10.7 and Windows 7
+            // @reference: http://my.opera.com/community/openweb/idopera/
+            t.version('Opera')>=10 && !$isMobile
+
+            ){
+            return 'A';
+        }
+
+        if (
+            t.os('iOS') && t.version('iPad')<4.3 ||
+            t.os('iOS') && t.version('iPhone')<3.1 ||
+            t.os('iOS') && t.version('iPod')<3.1 ||
+
+            // Blackberry 5.0: Tested on the Storm 2 9550, Bold 9770
+            t.is('Blackberry') && t.version('BlackBerry')>=5 && t.version('BlackBerry')<6 ||
+
+            //Opera Mini (5.0-6.5) - Tested on iOS 3.2/4.3 and Android 2.3
+            ( t.version('Opera Mini')>=5.0 && t.version('Opera Mini')<=6.5 &&
+                (t.version('Android')>=2.3 || t.is('iOS')) ) ||
+
+            // Nokia Symbian^3 - Tested on Nokia N8 (Symbian^3), C7 (Symbian^3), also works on N97 (Symbian^1)
+            t.match('NokiaN8|NokiaC7|N97.*Series60|Symbian/3') ||
+
+            // @todo: report this (tested on Nokia N71)
+            t.version('Opera Mobi')>=11 && t.is('SymbianOS')
+            ){
+            return 'B';
+        }
+
+        if (
+        // Blackberry 4.x - Tested on the Curve 8330
+            t.version('BlackBerry')<5.0 ||
+            // Windows Mobile - Tested on the HTC Leo (WinMo 5.2)
+            t.match('MSIEMobile|Windows CE.*Mobile') || t.version('Windows Mobile')<=5.2
+
+            ){
+            return 'C';
+        }
+
+        //All older smartphone platforms and featurephones - Any device that doesn't support media queries
+        //will receive the basic, C grade experience.
+        return 'C';
+    };
+
+    impl.detectOS = function (ua) {
+        return impl.findMatch(impl.mobileDetectRules.oss0, ua) ||
+            impl.findMatch(impl.mobileDetectRules.oss, ua);
+    };
+
+    impl.getDeviceSmallerSide = function () {
+        return window.screen.width < window.screen.height ?
+            window.screen.width :
+            window.screen.height;
+    };
+
+    /**
+     * Constructor for MobileDetect object.
+     * <br>
+     * Such an object will keep a reference to the given user-agent string and cache most of the detect queries.<br>
+     * <div style="background-color: #d9edf7; border: 1px solid #bce8f1; color: #3a87ad; padding: 14px; border-radius: 2px; margin-top: 20px">
+     *     <strong>Find information how to download and install:</strong>
+     *     <a href="https://github.com/hgoebl/mobile-detect.js/">github.com/hgoebl/mobile-detect.js/</a>
+     * </div>
+     *
+     * @example <pre>
+     *     var md = new MobileDetect(window.navigator.userAgent);
+     *     if (md.mobile()) {
+     *         location.href = (md.mobileGrade() === 'A') ? '/mobile/' : '/lynx/';
+     *     }
+     * </pre>
+     *
+     * @param {string} userAgent typically taken from window.navigator.userAgent or http_header['User-Agent']
+     * @param {number} [maxPhoneWidth=600] <strong>only for browsers</strong> specify a value for the maximum
+     *        width of smallest device side (in logical "CSS" pixels) until a device detected as mobile will be handled
+     *        as phone.
+     *        This is only used in cases where the device cannot be classified as phone or tablet.<br>
+     *        See <a href="http://developer.android.com/guide/practices/screens_support.html">Declaring Tablet Layouts
+     *        for Android</a>.<br>
+     *        If you provide a value < 0, then this "fuzzy" check is disabled.
+     * @constructor
+     * @global
+     */
+    function MobileDetect(userAgent, maxPhoneWidth) {
+        this.ua = prepareUserAgent(userAgent);
+        this._cache = {};
+        //600dp is typical 7" tablet minimum width
+        this.maxPhoneWidth = maxPhoneWidth || 600;
+    }
+
+    MobileDetect.prototype = {
+        constructor: MobileDetect,
+
+        /**
+         * Returns the detected phone or tablet type or <tt>null</tt> if it is not a mobile device.
+         * <br>
+         * For a list of possible return values see {@link MobileDetect#phone} and {@link MobileDetect#tablet}.<br>
+         * <br>
+         * If the device is not detected by the regular expressions from Mobile-Detect, a test is made against
+         * the patterns of <a href="http://detectmobilebrowsers.com/">detectmobilebrowsers.com</a>. If this test
+         * is positive, a value of <code>UnknownPhone</code>, <code>UnknownTablet</code> or
+         * <code>UnknownMobile</code> is returned.<br>
+         * When used in browser, the decision whether phone or tablet is made based on <code>screen.width/height</code>.<br>
+         * <br>
+         * When used server-side (node.js), there is no way to tell the difference between <code>UnknownTablet</code>
+         * and <code>UnknownMobile</code>, so you will get <code>UnknownMobile</code> here.<br>
+         * Be aware that since v1.0.0 in this special case you will get <code>UnknownMobile</code> only for:
+         * {@link MobileDetect#mobile}, not for {@link MobileDetect#phone} and {@link MobileDetect#tablet}.
+         * In versions before v1.0.0 all 3 methods returned <code>UnknownMobile</code> which was tedious to use.
+         * <br>
+         * In most cases you will use the return value just as a boolean.
+         *
+         * @returns {String} the key for the phone family or tablet family, e.g. "Nexus".
+         * @function MobileDetect#mobile
+         */
+        mobile: function () {
+            impl.prepareDetectionCache(this._cache, this.ua, this.maxPhoneWidth);
+            return this._cache.mobile;
+        },
+
+        /**
+         * Returns the detected phone type/family string or <tt>null</tt>.
+         * <br>
+         * The returned tablet (family or producer) is one of following keys:<br>
+         * <br><tt>iPhone, BlackBerry, HTC, Nexus, Dell, Motorola, Samsung, LG, Sony, Asus,
+         * NokiaLumia, Micromax, Palm, Vertu, Pantech, Fly, Wiko, iMobile, SimValley,
+         * Wolfgang, Alcatel, Nintendo, Amoi, INQ, OnePlus, GenericPhone</tt><br>
+         * <br>
+         * If the device is not detected by the regular expressions from Mobile-Detect, a test is made against
+         * the patterns of <a href="http://detectmobilebrowsers.com/">detectmobilebrowsers.com</a>. If this test
+         * is positive, a value of <code>UnknownPhone</code> or <code>UnknownMobile</code> is returned.<br>
+         * When used in browser, the decision whether phone or tablet is made based on <code>screen.width/height</code>.<br>
+         * <br>
+         * When used server-side (node.js), there is no way to tell the difference between <code>UnknownTablet</code>
+         * and <code>UnknownMobile</code>, so you will get <code>null</code> here, while {@link MobileDetect#mobile}
+         * will return <code>UnknownMobile</code>.<br>
+         * Be aware that since v1.0.0 in this special case you will get <code>UnknownMobile</code> only for:
+         * {@link MobileDetect#mobile}, not for {@link MobileDetect#phone} and {@link MobileDetect#tablet}.
+         * In versions before v1.0.0 all 3 methods returned <code>UnknownMobile</code> which was tedious to use.
+         * <br>
+         * In most cases you will use the return value just as a boolean.
+         *
+         * @returns {String} the key of the phone family or producer, e.g. "iPhone"
+         * @function MobileDetect#phone
+         */
+        phone: function () {
+            impl.prepareDetectionCache(this._cache, this.ua, this.maxPhoneWidth);
+            return this._cache.phone;
+        },
+
+        /**
+         * Returns the detected tablet type/family string or <tt>null</tt>.
+         * <br>
+         * The returned tablet (family or producer) is one of following keys:<br>
+         * <br><tt>iPad, NexusTablet, GoogleTablet, SamsungTablet, Kindle, SurfaceTablet,
+         * HPTablet, AsusTablet, BlackBerryTablet, HTCtablet, MotorolaTablet, NookTablet,
+         * AcerTablet, ToshibaTablet, LGTablet, FujitsuTablet, PrestigioTablet,
+         * LenovoTablet, DellTablet, YarvikTablet, MedionTablet, ArnovaTablet,
+         * IntensoTablet, IRUTablet, MegafonTablet, EbodaTablet, AllViewTablet,
+         * ArchosTablet, AinolTablet, NokiaLumiaTablet, SonyTablet, PhilipsTablet,
+         * CubeTablet, CobyTablet, MIDTablet, MSITablet, SMiTTablet, RockChipTablet,
+         * FlyTablet, bqTablet, HuaweiTablet, NecTablet, PantechTablet, BronchoTablet,
+         * VersusTablet, ZyncTablet, PositivoTablet, NabiTablet, KoboTablet, DanewTablet,
+         * TexetTablet, PlaystationTablet, TrekstorTablet, PyleAudioTablet, AdvanTablet,
+         * DanyTechTablet, GalapadTablet, MicromaxTablet, KarbonnTablet, AllFineTablet,
+         * PROSCANTablet, YONESTablet, ChangJiaTablet, GUTablet, PointOfViewTablet,
+         * OvermaxTablet, HCLTablet, DPSTablet, VistureTablet, CrestaTablet,
+         * MediatekTablet, ConcordeTablet, GoCleverTablet, ModecomTablet, VoninoTablet,
+         * ECSTablet, StorexTablet, VodafoneTablet, EssentielBTablet, RossMoorTablet,
+         * iMobileTablet, TolinoTablet, AudioSonicTablet, AMPETablet, SkkTablet,
+         * TecnoTablet, JXDTablet, iJoyTablet, FX2Tablet, XoroTablet, ViewsonicTablet,
+         * VerizonTablet, OdysTablet, CaptivaTablet, IconbitTablet, TeclastTablet,
+         * OndaTablet, JaytechTablet, BlaupunktTablet, DigmaTablet, EvolioTablet,
+         * LavaTablet, AocTablet, MpmanTablet, CelkonTablet, WolderTablet, MediacomTablet,
+         * MiTablet, NibiruTablet, NexoTablet, LeaderTablet, UbislateTablet,
+         * PocketBookTablet, KocasoTablet, HisenseTablet, Hudl, TelstraTablet,
+         * GenericTablet</tt><br>
+         * <br>
+         * If the device is not detected by the regular expressions from Mobile-Detect, a test is made against
+         * the patterns of <a href="http://detectmobilebrowsers.com/">detectmobilebrowsers.com</a>. If this test
+         * is positive, a value of <code>UnknownTablet</code> or <code>UnknownMobile</code> is returned.<br>
+         * When used in browser, the decision whether phone or tablet is made based on <code>screen.width/height</code>.<br>
+         * <br>
+         * When used server-side (node.js), there is no way to tell the difference between <code>UnknownTablet</code>
+         * and <code>UnknownMobile</code>, so you will get <code>null</code> here, while {@link MobileDetect#mobile}
+         * will return <code>UnknownMobile</code>.<br>
+         * Be aware that since v1.0.0 in this special case you will get <code>UnknownMobile</code> only for:
+         * {@link MobileDetect#mobile}, not for {@link MobileDetect#phone} and {@link MobileDetect#tablet}.
+         * In versions before v1.0.0 all 3 methods returned <code>UnknownMobile</code> which was tedious to use.
+         * <br>
+         * In most cases you will use the return value just as a boolean.
+         *
+         * @returns {String} the key of the tablet family or producer, e.g. "SamsungTablet"
+         * @function MobileDetect#tablet
+         */
+        tablet: function () {
+            impl.prepareDetectionCache(this._cache, this.ua, this.maxPhoneWidth);
+            return this._cache.tablet;
+        },
+
+        /**
+         * Returns the (first) detected user-agent string or <tt>null</tt>.
+         * <br>
+         * The returned user-agent is one of following keys:<br>
+         * <br><tt>Chrome, Dolfin, Opera, Skyfire, Edge, IE, Firefox, Bolt, TeaShark, Blazer,
+         * Safari, WeChat, UCBrowser, baiduboxapp, baidubrowser, DiigoBrowser, Mercury,
+         * ObigoBrowser, NetFront, GenericBrowser, PaleMoon</tt><br>
+         * <br>
+         * In most cases calling {@link MobileDetect#userAgent} will be sufficient. But there are rare
+         * cases where a mobile device pretends to be more than one particular browser. You can get the
+         * list of all matches with {@link MobileDetect#userAgents} or check for a particular value by
+         * providing one of the defined keys as first argument to {@link MobileDetect#is}.
+         *
+         * @returns {String} the key for the detected user-agent or <tt>null</tt>
+         * @function MobileDetect#userAgent
+         */
+        userAgent: function () {
+            if (this._cache.userAgent === undefined$1) {
+                this._cache.userAgent = impl.findMatch(impl.mobileDetectRules.uas, this.ua);
+            }
+            return this._cache.userAgent;
+        },
+
+        /**
+         * Returns all detected user-agent strings.
+         * <br>
+         * The array is empty or contains one or more of following keys:<br>
+         * <br><tt>Chrome, Dolfin, Opera, Skyfire, Edge, IE, Firefox, Bolt, TeaShark, Blazer,
+         * Safari, WeChat, UCBrowser, baiduboxapp, baidubrowser, DiigoBrowser, Mercury,
+         * ObigoBrowser, NetFront, GenericBrowser, PaleMoon</tt><br>
+         * <br>
+         * In most cases calling {@link MobileDetect#userAgent} will be sufficient. But there are rare
+         * cases where a mobile device pretends to be more than one particular browser. You can get the
+         * list of all matches with {@link MobileDetect#userAgents} or check for a particular value by
+         * providing one of the defined keys as first argument to {@link MobileDetect#is}.
+         *
+         * @returns {Array} the array of detected user-agent keys or <tt>[]</tt>
+         * @function MobileDetect#userAgents
+         */
+        userAgents: function () {
+            if (this._cache.userAgents === undefined$1) {
+                this._cache.userAgents = impl.findMatches(impl.mobileDetectRules.uas, this.ua);
+            }
+            return this._cache.userAgents;
+        },
+
+        /**
+         * Returns the detected operating system string or <tt>null</tt>.
+         * <br>
+         * The operating system is one of following keys:<br>
+         * <br><tt>AndroidOS, BlackBerryOS, PalmOS, SymbianOS, WindowsMobileOS, WindowsPhoneOS,
+         * iOS, iPadOS, MeeGoOS, MaemoOS, JavaOS, webOS, badaOS, BREWOS</tt><br>
+         *
+         * @returns {String} the key for the detected operating system.
+         * @function MobileDetect#os
+         */
+        os: function () {
+            if (this._cache.os === undefined$1) {
+                this._cache.os = impl.detectOS(this.ua);
+            }
+            return this._cache.os;
+        },
+
+        /**
+         * Get the version (as Number) of the given property in the User-Agent.
+         * <br>
+         * Will return a float number. (eg. 2_0 will return 2.0, 4.3.1 will return 4.31)
+         *
+         * @param {String} key a key defining a thing which has a version.<br>
+         *        You can use one of following keys:<br>
+         * <br><tt>Mobile, Build, Version, VendorID, iPad, iPhone, iPod, Kindle, Chrome, Coast,
+         * Dolfin, Firefox, Fennec, Edge, IE, NetFront, NokiaBrowser, Opera, Opera Mini,
+         * Opera Mobi, UCBrowser, MQQBrowser, MicroMessenger, baiduboxapp, baidubrowser,
+         * SamsungBrowser, Iron, Safari, Skyfire, Tizen, Webkit, PaleMoon, Gecko, Trident,
+         * Presto, Goanna, iOS, Android, BlackBerry, BREW, Java, Windows Phone OS, Windows
+         * Phone, Windows CE, Windows NT, Symbian, webOS</tt><br>
+         *
+         * @returns {Number} the version as float or <tt>NaN</tt> if User-Agent doesn't contain this version.
+         *          Be careful when comparing this value with '==' operator!
+         * @function MobileDetect#version
+         */
+        version: function (key) {
+            return impl.getVersion(key, this.ua);
+        },
+
+        /**
+         * Get the version (as String) of the given property in the User-Agent.
+         * <br>
+         *
+         * @param {String} key a key defining a thing which has a version.<br>
+         *        You can use one of following keys:<br>
+         * <br><tt>Mobile, Build, Version, VendorID, iPad, iPhone, iPod, Kindle, Chrome, Coast,
+         * Dolfin, Firefox, Fennec, Edge, IE, NetFront, NokiaBrowser, Opera, Opera Mini,
+         * Opera Mobi, UCBrowser, MQQBrowser, MicroMessenger, baiduboxapp, baidubrowser,
+         * SamsungBrowser, Iron, Safari, Skyfire, Tizen, Webkit, PaleMoon, Gecko, Trident,
+         * Presto, Goanna, iOS, Android, BlackBerry, BREW, Java, Windows Phone OS, Windows
+         * Phone, Windows CE, Windows NT, Symbian, webOS</tt><br>
+         *
+         * @returns {String} the "raw" version as String or <tt>null</tt> if User-Agent doesn't contain this version.
+         *
+         * @function MobileDetect#versionStr
+         */
+        versionStr: function (key) {
+            return impl.getVersionStr(key, this.ua);
+        },
+
+        /**
+         * Global test key against userAgent, os, phone, tablet and some other properties of userAgent string.
+         *
+         * @param {String} key the key (case-insensitive) of a userAgent, an operating system, phone or
+         *        tablet family.<br>
+         *        For a complete list of possible values, see {@link MobileDetect#userAgent},
+         *        {@link MobileDetect#os}, {@link MobileDetect#phone}, {@link MobileDetect#tablet}.<br>
+         *        Additionally you have following keys:<br>
+         * <br><tt>Bot, MobileBot, DesktopMode, TV, WebKit, Console, Watch</tt><br>
+         *
+         * @returns {boolean} <tt>true</tt> when the given key is one of the defined keys of userAgent, os, phone,
+         *                    tablet or one of the listed additional keys, otherwise <tt>false</tt>
+         * @function MobileDetect#is
+         */
+        is: function (key) {
+            return containsIC(this.userAgents(), key) ||
+                   equalIC(key, this.os()) ||
+                   equalIC(key, this.phone()) ||
+                   equalIC(key, this.tablet()) ||
+                   containsIC(impl.findMatches(impl.mobileDetectRules.utils, this.ua), key);
+        },
+
+        /**
+         * Do a quick test against navigator::userAgent.
+         *
+         * @param {String|RegExp} pattern the pattern, either as String or RegExp
+         *                        (a string will be converted to a case-insensitive RegExp).
+         * @returns {boolean} <tt>true</tt> when the pattern matches, otherwise <tt>false</tt>
+         * @function MobileDetect#match
+         */
+        match: function (pattern) {
+            if (!(pattern instanceof RegExp)) {
+                pattern = new RegExp(pattern, 'i');
+            }
+            return pattern.test(this.ua);
+        },
+
+        /**
+         * Checks whether the mobile device can be considered as phone regarding <code>screen.width</code>.
+         * <br>
+         * Obviously this method makes sense in browser environments only (not for Node.js)!
+         * @param {number} [maxPhoneWidth] the maximum logical pixels (aka. CSS-pixels) to be considered as phone.<br>
+         *        The argument is optional and if not present or falsy, the value of the constructor is taken.
+         * @returns {boolean|undefined} <code>undefined</code> if screen size wasn't detectable, else <code>true</code>
+         *          when screen.width is less or equal to maxPhoneWidth, otherwise <code>false</code>.<br>
+         *          Will always return <code>undefined</code> server-side.
+         */
+        isPhoneSized: function (maxPhoneWidth) {
+            return MobileDetect.isPhoneSized(maxPhoneWidth || this.maxPhoneWidth);
+        },
+
+        /**
+         * Returns the mobile grade ('A', 'B', 'C').
+         *
+         * @returns {String} one of the mobile grades ('A', 'B', 'C').
+         * @function MobileDetect#mobileGrade
+         */
+        mobileGrade: function () {
+            if (this._cache.grade === undefined$1) {
+                this._cache.grade = impl.mobileGrade(this);
+            }
+            return this._cache.grade;
+        }
+    };
+
+    // environment-dependent
+    if (typeof window !== 'undefined' && window.screen) {
+        MobileDetect.isPhoneSized = function (maxPhoneWidth) {
+            return maxPhoneWidth < 0 ? undefined$1 : impl.getDeviceSmallerSide() <= maxPhoneWidth;
+        };
+    } else {
+        MobileDetect.isPhoneSized = function () {};
+    }
+
+    // should not be replaced by a completely new object - just overwrite existing methods
+    MobileDetect._impl = impl;
+    
+    MobileDetect.version = '1.4.4 2019-09-21';
+
+    return MobileDetect;
+}); // end of call of define()
+})((function (undefined$1) {
+    if (typeof module !== 'undefined' && module.exports) {
+        return function (factory) { module.exports = factory(); };
+    } else if (typeof define === 'function' && define.amd) {
+        return define;
+    } else if (typeof window !== 'undefined') {
+        return function (factory) { window.MobileDetect = factory(); };
+    } else {
+        // please file a bug if you get this error!
+        throw new Error('unknown environment');
+    }
+})());
+
+let timers = {};
+
+function pollTimer(id, interval) {
+  if (!(id in timers)) {
+    timers[id] = time_ms();
+  }
+
+  if (time_ms() - timers[id] >= interval) {
+    timers[id] = time_ms();
+    return true;
+  }
+
+  return false;
+}
+window._pollTimer = pollTimer;
+let mret = undefined;
+
+function isMobile() {
+  {
+    let r = new MobileDetect(navigator.userAgent);
+    let ret = r.mobile();
+
+    if (typeof ret === "string") {
+      ret = ret.toLowerCase();
+    }
+
+    mret = ret;
+  }
+
+  return mret;
+}
+
+//window._isMobile = isMobile;
+
+class SmartConsoleContext {
+  constructor(name, console) {
+    this.name = name;
+
+    let c = [random(), random(), random()];
+    let sum = Math.sqrt(c[0]*c[0] + c[1]*c[1] + c[2]*c[2]);
+    sum = 255 / sum;
+
+    let r = ~~(c[0]*sum);
+    let g = ~~(c[1]*sum);
+    let b = ~~(c[2]*sum);
+
+    this.color = `rgb(${r},${g},${b})`;
+    this.__console = console;
+
+    this.timeInterval = 1500;
+
+    this._last = undefined;
+    this._data = {};
+    this._data_length = 0;
+    this.maxCache = 256;
+  }
+
+
+  hash(args) {
+    let args2 = [];
+    for (let i=0; i<args.length; i++) {
+      args2.push(args[i]);
+    }
+
+    return JSON.stringify(args2);
+  }
+
+  clearCache() {
+    this._data_length = 0;
+    this._data = {};
+    return this;
+  }
+
+  _getData(args) {
+    let key = this.hash(args);
+
+    if (!(key in this._data)) {
+      if (this._data_length > this.maxCache) {
+        this.clearCache();
+      }
+
+      this._data[key] = {
+        time    : 0,
+        count   : 0
+      };
+
+      this._data_length++;
+    }
+
+    return this._data[key];
+  }
+
+  _check(args) {
+    let d = this._getData(args);
+    let last = this.last;
+
+    this.last = d;
+
+    if (d !== last) {
+      d.count = 0;
+      d.time = time_ms();
+      return true;
+    }
+
+    if (time_ms() - d.time > this.timeInterval) ;
+
+    return false;
+  }
+
+  log() {
+
+    if (this._check(arguments)) {
+      window.console.log("%c", "color:"+this.color, ...arguments);
+    }
+  }
+
+  warn() {
+    if (this._check(arguments)) {
+      window.console.log("%c"+this.name, "color : "+this.color, ...arguments);
+    }
+  }
+
+  trace() {
+    if (this._check(arguments)) {
+      window.console.trace(...arguments);
+    }
+  }
+
+}
+
+class SmartConsole {
+  constructor() {
+    this.contexts = {};
+  }
+
+  context(name) {
+    if (!(name in this.contexts)) {
+      this.contexts[name] = new SmartConsoleContext(name, this);
+    }
+
+    return this.contexts[name];
+  }
+
+  log() {
+    let c = this.context("default");
+    return c.log(...arguments);
+  }
+  warn() {
+    let c = this.context("default");
+    return c.warn(...arguments);
+  }
+  trace() {
+    let c = this.context("default");
+    return c.trace(...arguments);
+  }
+  error() {
+    let c = this.context("default");
+    return c.error(...arguments);
+  }
+}
+
+const console$1 = new SmartConsole();
 
 window.tm = 0.0;
 
@@ -2956,18 +4123,18 @@ function time_ms() {
 
 function color2css$1(c) {
   var ret = c.length == 3 ? "rgb(" : "rgba(";
-  
+
   for (var i=0; i<3; i++) {
     if (i > 0)
       ret += ",";
-    
+
     ret += ~~(c[i]*255);
   }
-  
+
   if (c.length == 4)
     ret += "," + c[3];
   ret += ")";
-  
+
   return ret;
 }
 
@@ -2975,41 +4142,41 @@ function merge(obja, objb) {
   return Object.assign({}, obja, objb);
   /*
   var ret = {};
-  
+
   for (var k in obja) {
     ret[k] = obja[k];
   }
-  
+
   for (var k in objb) {
     ret[k] = objb[k];
   }
-  
+
   return ret;
   //*/
 }
 class cachering extends Array {
   constructor(func, size) {
     super();
-    
+
     this.cur = 0;
-    
+
     for (var i=0; i<size; i++) {
       this.push(func());
     }
   }
-  
+
   static fromConstructor(cls, size) {
     var func = function() {
       return new cls();
     };
-    
+
     return new cachering(func, size);
   }
-  
+
   next() {
     var ret = this[this.cur];
     this.cur = (this.cur+1)%this.length;
-    
+
     return ret;
   }
 }
@@ -3020,26 +4187,26 @@ class SetIter {
     this.i   = 0;
     this.ret = {done : false, value : undefined};
   }
-  
+
   [Symbol.iterator]() {
     return this;
   }
-  
+
   next() {
     var ret = this.ret;
 
     while (this.i < this.set.items.length && this.set.items[this.i] === EmptySlot) {
       this.i++;
     }
-    
+
     if (this.i >= this.set.items.length) {
       ret.done = true;
       ret.value = undefined;
-      
+
       return ret;
     }
-    
-    
+
+
     ret.value = this.set.items[this.i++];
     return ret;
   }
@@ -3059,13 +4226,13 @@ class set {
     this.items = [];
     this.keys = {};
     this.freelist = [];
-    
+
     this.length = 0;
-    
+
     if (typeof input == "string") {
       input = new String(input);
     }
-    
+
     if (input != undefined) {
       if (Symbol.iterator in input) {
         for (var item of input) {
@@ -3082,7 +4249,7 @@ class set {
       }
     }
   }
-  
+
   [Symbol.iterator] () {
     return new SetIter(this);
   }
@@ -3107,54 +4274,54 @@ class set {
 
   add(item) {
     var key = item[Symbol.keystr]();
-    
+
     if (key in this.keys) return;
-    
+
     if (this.freelist.length > 0) {
       var i = this.freelist.pop();
-      
+
       this.keys[key] = i;
       this.items[i] = item;
     } else {
       var i = this.items.length;
-      
+
       this.keys[key] = i;
       this.items.push(item);
     }
-    
+
     this.length++;
   }
-  
+
   remove(item, ignore_existence) {
     var key = item[Symbol.keystr]();
-    
+
     if (!(key in this.keys)) {
       if (!ignore_existence) {
-        console.trace("Warning, item", item, "is not in set");
+        console$1.trace("Warning, item", item, "is not in set");
       }
       return;
     }
-    
+
     var i = this.keys[key];
     this.freelist.push(i);
     this.items[i] = EmptySlot;
-    
+
     delete this.keys[key];
-    
+
     this.length--;
   }
-  
+
   has(item) {
     return item[Symbol.keystr]() in this.keys;
   }
-  
+
   forEach(func, thisvar) {
     for (var i=0; i<this.items.length; i++) {
       var item = this.items[i];
-      
-      if (item === EmptySlot) 
+
+      if (item === EmptySlot)
         continue;
-        
+
       thisvar != undefined ? func.call(thisvar, item) : func(item);
     }
   }
@@ -3166,21 +4333,21 @@ class HashIter {
     this.i = 0;
     this.ret = {done : false, value : undefined};
   }
-  
+
   next() {
     var items = this.hash._items;
-    
+
     if (this.i >= items.length) {
       this.ret.done = true;
       this.ret.value = undefined;
-      
+
       return this.ret;
     }
-    
+
     do {
       this.i += 2;
     } while (this.i < items.length && items[i] === _hash_null);
-    
+
     return this.ret;
   }
 }
@@ -3192,109 +4359,109 @@ class hashtable {
     this._keys = {};
     this.length = 0;
   }
-  
+
   [Symbol.iterator]() {
     return new HashIter(this);
   }
-  
+
   set(key, val) {
     var key2 = key[Symbol.keystr]();
-    
+
     var i;
     if (!(key2 in this._keys)) {
       i = this._items.length;
-      
+
       try {
         this._items.push(0);
         this._items.push(0);
       } catch(error) {
-        console.log(":::", this._items.length, key, key2, val);
+        console$1.log(":::", this._items.length, key, key2, val);
         throw error;
       }
-      
+
       this._keys[key2] = i;
       this.length++;
     } else {
       i = this._keys[key2];
     }
-    
+
     this._items[i] = key;
     this._items[i+1] = val;
   }
-  
+
   remove(key) {
     var key2 = key[Symbol.keystr]();
-    
+
     if (!(key2 in this._keys)) {
-      console.trace("Warning, key not in hashtable:", key, key2);
+      console$1.trace("Warning, key not in hashtable:", key, key2);
       return;
     }
-    
+
     var i = this._keys[key2];
-    
+
     this._items[i] = _hash_null;
     this._items[i+1] = _hash_null;
-    
+
     delete this._keys[key2];
     this.length--;
   }
-  
+
   has(key) {
     var key2 = key[Symbol.keystr]();
-    
+
     return key2 in this._keys;
   }
-  
+
   get(key) {
     var key2 = key[Symbol.keystr]();
-    
+
     if (!(key2 in this._keys)) {
-      console.trace("Warning, item not in hash", key, key2);
+      console$1.trace("Warning, item not in hash", key, key2);
       return undefined;
     }
-    
+
     return this._items[this._keys[key2]+1];
   }
-  
+
   add(key, val) {
     return this.set(key, val);
   }
-  
+
   keys() {
     var ret = [];
-    
+
     for (var i=0; i<this._items.length; i += 2) {
       var key = this._items[i];
-      
+
       if (key !== _hash_null) {
         ret.push(key);
       }
     }
-    
+
     return ret;
   }
-  
+
   values() {
     var ret = [];
-    
+
     for (var i=0; i<this._items.length; i += 2) {
       var item = this._items[i+1];
-      
+
       if (item !== _hash_null) {
         ret.push(item);
       }
     }
-    
+
     return ret;
   }
-  
+
   forEach(cb, thisvar) {
     if (thisvar == undefined)
       thisvar = self;
-    
+
     for (var k in this._keys) {
       var i = this._keys[k];
-      
+
       cb.call(thisvar, k, this._items[i]);
     }
   }
@@ -3398,11 +4565,11 @@ function get_callstack(err) {
         var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
         callstack.push(fname);
         currentFunction = currentFunction.caller;
-        
+
         i++;
       }
     }
-  
+
   return callstack;
 }
 
@@ -3410,13 +4577,13 @@ function print_stack$1(err) {
   try {
     var cs = get_callstack(err);
   } catch (err2) {
-    console.log("Could not fetch call stack.");
+    console$1.log("Could not fetch call stack.");
     return;
   }
-  
-  console.log("Callstack:");
+
+  console$1.log("Callstack:");
   for (var i=0; i<cs.length; i++) {
-    console.log(cs[i]);
+    console$1.log(cs[i]);
   }
 }
 
@@ -3425,10 +4592,10 @@ window.print_stack = print_stack$1;
 
 function fetch_file(path) {
     var url = location.origin + "/" + path;
-    
+
     var req = new XMLHttpRequest(
     );
-    
+
     return new Promise(function(accept, reject) {
       req.open("GET", url);
       req.onreadystatechange = function(e) {
@@ -3650,13 +4817,13 @@ class FastHash extends Array {
 
 function test_fasthash() {
   var h = new FastHash();
-  console.log("bleh hash:", strhash("bleh"));
+  console$1.log("bleh hash:", strhash("bleh"));
 
   h.set("bleh", 1);
   h.set("bleh", 2);
   h.set("bleh", 3);
 
-  console.log(h);
+  console$1.log(h);
 
   return h;
 }
@@ -3664,58 +4831,64 @@ class ImageReader {
   load_image() {
     let input = document.createElement("input");
     input.type = "file";
-    
+
     let doaccept;
-    
+
     let promise = new Promise((accept, reject) => {
       doaccept = accept;
     });
-    
+
     input.addEventListener("change", function(e) {
       let files = this.files;
-      console.log("got file", e, files);
-          
+      console$1.log("got file", e, files);
+
       if (files.length == 0) return;
-      
+
       var reader = new FileReader();
-      
+
       reader.onload = (e) => {
         let data = e.target.result;
         let image = new Image();
-        
+
         image.src = data;
         image.onload = (e) => {
-          console.log("got image", image.width, image.height);
-          
+          console$1.log("got image", image.width, image.height);
+
           let canvas = document.createElement("canvas");
           let g = canvas.getContext("2d");
-          
+
           canvas.width = image.width;
           canvas.height = image.height;
-          
+
           g.drawImage(image, 0, 0);
           let idata = g.getImageData(0, 0, image.width, image.height);
-          
+
           doaccept(idata);
         };
       };
-      
+
       reader.readAsDataURL(files[0]);
     });
-    
+
     input.click();
     return promise;
   }
-  
+
   example() {
     this.load_image().then((idata) => {
-      console.log(idata);
+      console$1.log(idata);
     });
   }
 }
 
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  timers: timers,
+  pollTimer: pollTimer,
+  isMobile: isMobile,
+  SmartConsoleContext: SmartConsoleContext,
+  SmartConsole: SmartConsole,
+  console: console$1,
   getClassParent: getClassParent,
   list: list$1,
   getAllKeys: getAllKeys,
@@ -6546,7 +7719,11 @@ function mySafeJSONStringify(obj) {
     return v;
   });
 }
+function mySafeJSONParse(buf) {
+  return JSON.parse(buf, (key, val) => {
 
+  });
+}
 window.mySafeJSONStringify = mySafeJSONStringify;
 
 
@@ -9969,7 +11146,17 @@ class ModelInterface {
       }
     });
   }
-  
+
+  //used by simple_controller.js for tagging error messages
+  pushReportContext(name) {
+
+  }
+
+  //used by simple_controller.js for tagging error messages
+  popReportContext() {
+
+  }
+
   static toolRegistered(tool) {
     throw new Error("implement me");
   }
@@ -10058,7 +11245,45 @@ class ModelInterface {
       prop._fire("change", res.obj[res.key], old);
     }
   }
-  
+
+  getDescription(ctx, path) {
+    let rdef = this.resolvePath(ctx, path);
+    if (rdef === undefined) {
+      throw new DataPathError("invalid path " + path);
+    }
+
+    if (!rdef.prop || !(rdef.prop instanceof ToolProperty)) {
+      return "";
+    }
+
+    let type = rdef.prop.type;
+    let prop = rdef.prop;
+
+    if (rdef.subkey !== undefined) {
+      let subkey = rdef.subkey;
+
+      if (type & (PropTypes$1.VEC2|PropTypes$1.VEC3|PropTypes$1.VEC4)) {
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type & (PropTypes$1.ENUM|PropTypes$1.FLAG)) {
+        if (!(subkey in prop.values) && subkey in prop.keys) {
+          subkey = prop.keys[subkey];
+        }
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type === PropTypes$1.PROPLIST) {
+        let val = tdef.value;
+        if (typeof val === "object" && val instanceof ToolProperty) {
+          return val.description;
+        }
+      }
+    }
+
+    return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
+  }
+
   getValue(ctx, path) {
     if (typeof ctx == "string") {
       throw new Error("You forgot to pass context to getValue");
@@ -10420,6 +11645,15 @@ class parser {
   }
 }
 
+var parseutil1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  token: token,
+  tokdef: tokdef,
+  PUTLParseError: PUTLParseError,
+  lexer: lexer,
+  parser: parser
+});
+
 let ToolPaths = {};
 
 var initToolPaths_run = false;
@@ -10767,26 +12001,28 @@ let pathParser = new parser(lexer$1);
 Symbol.ToolID = Symbol("toolid");
 
 let lt = time_ms();
-let lastmsg = undefined;
-let lcount = 0;
-function _report(msg) {
-  let skip = msg === lastmsg;
 
-  skip = skip && time_ms()-lt < 500;
-  if (skip) {
-    return;
+let reportstack = ["api"];
+function pushReportName(name) {
+  if (reportstack.length > 1024) {
+    console.trace("eerk, reportstack overflowed");
+    reportstack.length = 0;
+    reportstack.push("api");
   }
 
-  if (lcount > 0) {
-    console.warn(`${msg} [${lcount+1}]`);
-  } else {
-    console.warn(msg);
-  }
-
-  lastmsg = msg;
-  lcount = 1;
-  lt = time_ms;
+  reportstack.push(name);
 }
+
+function report(msg) {
+  let name = reportstack.length === 0 ? "api" : reportstack[reportstack.length-1];
+
+  console$1.context(name).warn(msg);
+}
+
+function popReportName() {
+  reportstack.pop();
+}
+
 const DataTypes = {
   STRUCT: 0,
   DYNAMIC_STRUCT: 1,
@@ -11410,6 +12646,17 @@ class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
+  //used by simple_controller.js for tagging error messages
+  pushReportContext(name) {
+    pushReportName(name);
+  }
+
+  //used by simple_controller.js for tagging error messages
+  popReportContext() {
+    popReportName();
+  }
+
+
   /*
   massSetProp operate on lists.  The idea is to
   write a filter str inside a data path, e.g.
@@ -11474,7 +12721,7 @@ class DataAPI extends ModelInterface {
         print_stack$1(error);
       }
 
-      _report("bad path " + inpath);
+      report("bad path " + inpath);
       return undefined;
     }
   }
@@ -11627,7 +12874,6 @@ class DataAPI extends ModelInterface {
 
         let val = p.expect(type);
 
-        //console.log("== in resolvepath", lastobj, val, path.path);
         let val1 = val;
 
         if (typeof val == "string") {
@@ -11652,7 +12898,6 @@ class DataAPI extends ModelInterface {
 
         let val = p.expect(type);
 
-        //console.log("== in resolvepath", lastobj, val, path.path);
         let val1 = val;
 
         if (typeof val == "string") {
@@ -11677,7 +12922,6 @@ class DataAPI extends ModelInterface {
 
         let val = p.expect(type);
 
-        //console.log("== in resolvepath", lastobj, val, path.path);
         let val1 = val;
 
         if (typeof val == "string") {
@@ -11760,7 +13004,6 @@ class DataAPI extends ModelInterface {
     path = path.replace(/\=\=/g, "=");
 
     path = "." + this.prefix + path;
-    //console.log(path);
 
     let p = [""];
     for (let i = 0; i < path.length; i++) {
@@ -11792,7 +13035,6 @@ class DataAPI extends ModelInterface {
       }
     }
 
-    //console.log(p);
     let i = 0;
 
     let parent1, obj = ctx, parent2;
@@ -11825,8 +13067,6 @@ class DataAPI extends ModelInterface {
         key = b;
         prop = undefined;
 
-        console.log("key", key, "lastkey", lastkey, "apiname", apiname);
-
         if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
           let dpath = dstruct.pathmap[lastkey];
 
@@ -11836,7 +13076,7 @@ class DataAPI extends ModelInterface {
         }
 
         if (prop !== undefined && (prop.type == PropTypes.ENUM || prop.type == PropTypes.FLAG)) {
-          console.log("found flag/enum property");
+          console$1.context("api").log("found flag/enum property");
           ok = true;
         }
 
@@ -11919,12 +13159,6 @@ class DataAPI extends ModelInterface {
         throw new DataPathError("bad path " + path);
       }
     }
-    /*
-    console.log(p);
-    console.log(parent2);
-    console.log(parent1);
-    console.log(obj);
-    //*/
 
     if (lastkey !== undefined && dstruct !== undefined && dstruct.pathmap[lastkey]) {
       let dpath = dstruct.pathmap[key];
@@ -11932,8 +13166,6 @@ class DataAPI extends ModelInterface {
       apiname = dpath.apiname;
     }
 
-    if (apiname != "selectmode")
-      console.log(apiname);
 
     if (dstruct !== undefined && dstruct.pathmap[key]) {
       let dpath = dstruct.pathmap[key];
@@ -12031,7 +13263,7 @@ class DataAPI extends ModelInterface {
       return this.getToolPathHotkey_intern(ctx, path);
     } catch (error) {
       print_stack$1(error);
-      console.log("failed to fetch tool path");
+      console$1.context("api").log("failed to fetch tool path: " + path);
 
       return undefined;
     }
@@ -12296,11 +13528,13 @@ function validateWebColor(str) {
   return str.trim().search(validate_pat) === 0;
 }
 
+let theme = {};
+
 window.validateWebColor = validateWebColor;
 
 class CSSFont {
-  constructor(args) {
-    this.size = args.size;
+  constructor(args={}) {
+    this._size = args.size ? args.size : 12;
     this.font = args.font;
     this.style = args.style !== undefined ? args.style : "normal";
     this.weight = args.weight !== undefined ? args.weight : "normal";
@@ -12308,15 +13542,33 @@ class CSSFont {
     this.color = args.color;
   }
 
+  set size(val) {
+    this._size = val;
+  }
+
+  get size() {
+    if (isMobile()) {
+      let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
+      if (mul) {
+        return this._size * mul;      }
+    }
+
+    return this._size;
+  }
+
   copyTo(b) {
-    b.size = this.size;
+    b._size = this._size;
     b.font = this.font;
     b.style = this.style;
     b.color = this.color;
+    b.variant = this.variant;
+    b.weight = this.weight;
   }
 
   copy() {
-    return new CSSFont(this);
+    let ret = new CSSFont();
+    this.copyTo(ret);
+    return ret;
   }
 
   genCSS(size=this.size) {
@@ -12330,16 +13582,20 @@ class CSSFont {
 
 const DefaultTheme = {
   base : {
+    mobileTextSizeMultiplier : 1.5,
+    mobileSizeMultiplier : 2, //does not include text
+
     //used for by icon strips and the like
     "oneAxisPadding" : 6,
     "oneAxisMargin" : 6,
 
-    "ScreenBorderWidth" : 2,
     "FocusOutline" : "rgba(100, 150, 255, 1.0)",
 
     "BasePackFlag" : 0,
-    "ScreenBorderOuter" : "rgba(150, 150, 150, 1.0)",
+    "ScreenBorderOuter" : "rgba(120, 120, 120, 1.0)",
     "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
+    "ScreenBorderWidth" : isMobile() ? 5 : 2,
+    "ScreenBorderMousePadding" : isMobile() ? 6 : 5,
 
     "numslider_width" : 24,
     "numslider_height" : 24,
@@ -12363,8 +13619,9 @@ const DefaultTheme = {
     "TabInactive" : "rgba(150, 150, 150, 1.0)",
     "TabHighlight" : "rgba(50, 50, 50, 0.2)",
 
-    "DefaultPanelBG" : "rgba(155, 155, 155, 1.0)",
-    "InnerPanelBG" : "rgba(140, 140, 140, 1.0)",
+    "DefaultPanelBG" : "rgba(225, 225, 225, 1.0)",
+    "InnerPanelBG" : "rgba(195, 195, 195, 1.0)",
+    "AreaHeaderBG" : "rgba(205, 205, 205, 1.0)",
 
     "BoxRadius" : 12,
     "BoxMargin" : 4,
@@ -12376,17 +13633,26 @@ const DefaultTheme = {
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
+
     "MenuBG" : "rgba(250, 250, 250, 1.0)",
     "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-    "AreaHeaderBG" : "rgba(170, 170, 170, 1.0)",
 
     //fonts
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
-      size  : 14,
+      size  : 12,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
     }),
+
+    "ToolTipText" : new CSSFont({
+      font  : "sans-serif",
+      size  : 12,
+      color :  "rgba(35, 35, 35, 1.0)",
+      weight : "bold"
+    }),
+
+
 
     "TabText" : new CSSFont({
       size     : 18,
@@ -12409,19 +13675,38 @@ const DefaultTheme = {
       //weight   : "bold"
     }),
 
-    "MenuText" : new CSSFont({
-      size     : 12,
-      color    : "rgba(25, 25, 25, 1.0)",
-      font     : "sans-serif"
-      //weight   : "bold"
-    }),
-
     "TitleText" : new CSSFont({
       size     : 16,
       color    : "rgba(55, 55, 55, 1.0)",
       font     : "sans-serif",
       weight   : "bold"
     }),
+  },
+
+  menu : {
+    MenuText : new CSSFont({
+      size     : 12,
+      color    : "rgba(25, 25, 25, 1.0)",
+      font     : "sans-serif"
+      //weight   : "bold"
+    }),
+
+    MenuSeparator : `
+      width : 100%;
+      height : 2px;
+      padding : 0px;
+      margin : 0px;
+      border : none;
+      background-color : grey; 
+    `,
+
+    MenuBorder : "1px solid grey",
+  },
+
+
+  tooltip : {
+    "BoxBG" : "rgb(245, 245, 245, 1.0)",
+    "BoxBorder" : "rgb(145, 145, 145, 1.0)"
   },
 
   richtext : {
@@ -12470,14 +13755,15 @@ const DefaultTheme = {
   },
 
   numslider_simple : {
+    labelOnTop : false,
     TitleText : new CSSFont({
       size : 14
     }),
-    BoxBG : "rgb(125, 125, 125)",
+    BoxBG : "rgb(225, 225, 225)",
     BoxBorder : "rgb(75, 75, 75)",
     SlideHeight : 10,
     DefaultWidth : 135,
-    DefaultHeight : 24,
+    DefaultHeight : 18,
     BoxRadius : 5,
     TextBoxWidth : 45
   },
@@ -12512,16 +13798,37 @@ const DefaultTheme = {
   },
 
   dropbox : {
-    dropTextBG : "rgba(250, 250, 250, 0.7)" //if undefined, will use BoxBG
+    dropTextBG : "rgba(250, 250, 250, 0.7)", //if undefined, will use BoxBG
+    BoxHighlight : "rgba(155, 220, 255, 0.4)",
+    defaultHeight : 24
   }
 };
 
-let theme = {};
+let exports = {
+  menu_close_time : 500,
+  DEBUG : {
+    screenborders: false,
+    allBordersMovable: false,
+    doOnce: false,
+    /*
+    customWindowSize: {
+      width: 512, height: 512
+    },
+    */
+  },
 
-//load default theme
-for (let k in DefaultTheme) {
-  theme[k] = DefaultTheme[k];
-}
+  autoSizeUpdate : true,
+  showPathsInToolTips: true,
+
+  loadConstants : function(args) {
+    for (let k in args) {
+      if (k === "loadConstants")
+        continue;
+
+      this[k] = args[k];
+    }
+  }
+};
 
 let Vector4$1 = Vector4;
 
@@ -12533,10 +13840,17 @@ const ErrorColors = {
   OK : "green"
 };
 
+window.__theme = theme;
+
 function setTheme(theme2) {
   //merge theme
   for (let k in theme2) {
     let v = theme2[k];
+
+    if (typeof v !== "object") {
+      theme[k] = v;
+      continue;
+    }
 
     if (!(k in theme)) {
       theme[k] = {};
@@ -12548,8 +13862,10 @@ function setTheme(theme2) {
   }
 }
 
+setTheme(DefaultTheme);
+
 let _last_report = time_ms();
-function report(msg) {
+function report$1(msg) {
   if (time_ms() - _last_report > 350) {
     console.warn(msg);
     _last_report = time_ms();
@@ -12649,6 +13965,10 @@ class IconManager {
         size = sizes[i][0], drawsize = sizes[i][1];
       } else {
         size = drawsize = sizes[i];
+      }
+
+      if (isMobile()) {
+        drawsize = ~~(drawsize * theme.base.mobileSizeMultiplier);
       }
 
       this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
@@ -12824,13 +14144,24 @@ class SimpleContext {
     this.api = api;
   }
 }
-  
+
+let _mobile_theme_patterns = [
+  /.*width.*/,
+  /.*height.*/,
+  /.*size.*/,
+  /.*margin.*/,
+  /.*pad/,
+  /.*radius.*/
+];
+
 
 let _idgen = 0;
 
 class UIBase extends HTMLElement {
   constructor() {
     super();
+
+    this._wasAddedToNodeAtSomeTime = false;
 
     this.visibleToPick = true;
 
@@ -12861,6 +14192,8 @@ class UIBase extends HTMLElement {
     this.default_overrides = {};
     this.class_default_overrides = {};
 
+    this._last_description = undefined;
+
     //getting css to flow down properly can be a pain, so
     //some packing settings are set as bitflags here,
     //see PackFlags
@@ -12878,7 +14211,7 @@ class UIBase extends HTMLElement {
     this.shadow = this.attachShadow({mode : 'open'});
     this._ctx = undefined;
     
-    this.description = undefined;
+    this._description = undefined;
     
     let style = document.createElement("style");
     style.textContent = `
@@ -12943,6 +14276,18 @@ class UIBase extends HTMLElement {
     this._useDataPathUndo = val;
   }
 
+  get parentWidget() {
+    return this._parentWidget;
+  }
+
+  set parentWidget(val) {
+    if (val) {
+      this._wasAddedToNodeAtSomeTime = true;
+    }
+
+    this._parentWidget = val;
+  }
+
   get useDataPathUndo() {
     let p = this;
 
@@ -12959,6 +14304,35 @@ class UIBase extends HTMLElement {
 
   connectedCallback() {
 
+  }
+
+  get description() {
+
+    return this._description;
+  }
+
+  set description(val) {
+    this._description = val;
+
+    if (val === undefined || val === null) {
+      return;
+    }
+
+    if (exports.showPathsInToolTips && this.hasAttribute("datapath")) {
+      let s = "" + this._description;
+
+      let path = this.getAttribute("datapath");
+      s += "\n    path: " + path;
+
+      if (this.hasAttribute("mass_set_path")) {
+        let m = this.getAttribute("mass_set_path");
+        s += "\n    massSetPath: " + m;
+      }
+      this.title = s;
+
+    } else {
+      this.title = ""+val;
+    }
   }
 
   noMarginsOrPadding() {
@@ -13069,6 +14443,9 @@ class UIBase extends HTMLElement {
     //delayed init
   init() {
     this._init_done = true;
+
+    if (this._id)
+      this.setAttribute("id", this._id);
   }
   
   _ondestroy() {
@@ -13081,19 +14458,40 @@ class UIBase extends HTMLElement {
     }
   }
   
-  remove() {
+  remove(trigger_on_destroy=true) {
     if (this.tabIndex >= 0) {
       this.regenTabOrder();
     }
 
     super.remove();
-    this._ondestroy();
+
+    if (trigger_on_destroy) {
+      this._ondestroy();
+    }
+
+    if (this.on_remove) {
+      this.on_remove();
+    }
+
+    this.parentWidget = undefined;
+  }
+
+  /*
+  *
+  * called when elements are removed.
+  * you should assume the element will be reused later;
+  * on_destroy is the callback for when elements are permanently destroyed
+  * */
+  on_remove() {
+
   }
   
-  removeChild(child) {
+  removeChild(child, trigger_on_destroy=true) {
     super.removeChild(child);
-    
-    child._ondestroy();
+
+    if (trigger_on_destroy) {
+      child._ondestroy();
+    }
   }
 
 
@@ -13141,7 +14539,7 @@ class UIBase extends HTMLElement {
     if (this._init_done) {
       return;
     }
-    
+
     this._init_done = true;
     this.init();
   }
@@ -13161,115 +14559,83 @@ class UIBase extends HTMLElement {
   pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
     let ret = undefined;
 
+    let retzindex = undefined;
 
-    let rec = (n, widget, depth=0) => {
-      if (n.getClientRects) {
+    let testwidget = (n) => {
+      if (n instanceof nodeclass) {
+        let ok;
+        ok = n.visibleToPick;
+        ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
+
+        return ok;
+      }
+    };
+
+    let rec = (n, widget, widget_zindex, zindex, depth=0) => {
+
+      if (n.style && n.style["z-index"]) {
+        if (!(n instanceof UIBase) || n.visibleToPick) {
+          zindex = parseInt(n.style["z-index"]);
+        }
+      }
+
+      if (n.getClientRects && n.getClientRects().length > 0) {
         let rects = n.getClientRects();
 
-        if (n instanceof nodeclass) {
-          let ok = n.visibleToPick;
-          ok = ok || !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
-
-          if (!ok) {
-            return;
-          }
-
+        if (testwidget(n)) {
           widget = n;
+          widget_zindex = zindex;
         }
 
         for (let rect of rects) {
-          let ok =   x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
+          let ok = true;
+
+          if (n instanceof UIBase) {
+            ok = ok && n.visibleToPick;
+          }
+
+          ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
+          ok = ok && (retzindex === undefined || zindex >= retzindex);
+
+          ok =  ok && x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
           ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
 
-          //ok = x >= rect.x && x <= rect.x + rect.width;
-          //ok = ok && y >= rect.y && y <= rect.y + rect.height;
-
-          if (nodeclass !== undefined) {
-            ok = ok && (widget instanceof nodeclass);
-          }
-
-          ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
-
-
-          //console.log(ok, "|", x, y, rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
           if (ok) {
             ret = widget;
+            retzindex = zindex;
           }
-          //console.log(rect.width, rect.height, "eek", depth);
         }
       }
 
-      let isleaf = n.childNodes.length == 0;
+      let isleaf = n.childNodes.length === 0;
 
       if (n.shadow !== undefined) {
-        isleaf = isleaf && (n.shadow.childNodes.length == 0);
+        isleaf = isleaf && (n.shadow.childNodes.length === 0);
       }
 
       if (!isleaf) {
-        for (let n2 of n.childNodes) {
-          rec(n2, widget, depth+1);
-        }
-
         if (n.shadow !== undefined) {
-          for (let n2 of n.shadow.childNodes) {
-            rec(n2, widget, depth+1);
+          for (let i=n.shadow.childNodes.length-1; i>=0; i--) {
+            let n2 = n.shadow.childNodes[i];
+            rec(n2, widget, widget_zindex, zindex, depth+1);
           }
+        }
+        for (let i=n.childNodes.length-1; i>=0; i--) {
+          let n2 = n.childNodes[i];
+          rec(n2, widget, widget_zindex, zindex, depth+1);
         }
       }
     };
 
-    rec(this, this);
+    let p = this;
 
-    return ret;
-  }
-  /**
-   *
-    * @param x
-   * @param y
-   * @param sx
-   * @param sy
-   * @param nodeclass
-   * @returns {*}
-   */
-  pickElement3(x, y, sx=0, sy=0, nodeclass=undefined) {
-    let rects = this.getClientRects();
-    let ret;
-    
-    //if (rects.length == 0)
-    //  return;
-
-    let nodes = [];
-    this._forEachChildWidget((n) => {
-      nodes.push(n);
-    });
-
-    for (let n of nodes) {
-      let ret2 = n.pickElement(x, y, sx, sy, nodeclass); //sx+rects[0].x, sy+rects[0].y);
-
-      ret = ret2 || ret;
-      ret = ret2 !== undefined ? ret2 : ret;
+    while (p && !p.style["z-index"] && p.style["z-index"] !== 0.0) {
+      p = p.parentWidget;
     }
+    let zindex = p !== undefined ? parseInt(p.style["z-index"]) : 0;
 
-    if (ret === undefined && rects !== undefined) {
-      console.log(rects[0]);
+    rec(this, testwidget(this) ? this : undefined, zindex, zindex);
 
-      if (nodeclass !== undefined && !(this instanceof nodeclass))
-        return undefined;
-
-      //ignore svg overdraw elements
-      if (this.tagName == "OVERDRAW-X") {
-        return undefined;
-      }
-
-      for (let rect of rects) {
-        if (x >= rect.x+sx && x <=rect.x+sx+rect.width && 
-            y >= rect.y+sy && y <=rect.y+sy+rect.height)
-        {
-          return this;
-        }
-      }
-    }
-    
     return ret;
   }
 
@@ -13427,8 +14793,6 @@ class UIBase extends HTMLElement {
       tick++;
     }, 20);
 
-    console.log(this.parentNode);
-    
     let div = document.createElement("div");
     
     //div.appendChild(this);
@@ -13527,22 +14891,77 @@ class UIBase extends HTMLElement {
 
   setPathValue(ctx, path, val) {
     if (this.useDataPathUndo) {
-      this.setPathValueUndo(ctx, path, val);
+      ctx.api.pushReportContext(this._reportCtxName);
+
+      try {
+        this.setPathValueUndo(ctx, path, val);
+      } catch (error) {
+        ctx.api.popReportContext();
+
+        if (!(error instanceof DataPathError)) {
+          throw error;
+        } else {
+          return;
+        }
+      }
+
+      ctx.api.popReportContext();
       return;
     }
 
-    if (this.hasAttribute("mass_set_path")) {
-      ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
-      ctx.api.setValue(ctx, path, val);
-    } else {
-      ctx.api.setValue(ctx, path, val);
+    ctx.api.pushReportContext(this._reportCtxName);
+
+    try {
+      if (this.hasAttribute("mass_set_path")) {
+        ctx.api.massSetProp(ctx, this.getAttribute("mass_set_path"), val);
+        ctx.api.setValue(ctx, path, val);
+      } else {
+        ctx.api.setValue(ctx, path, val);
+      }
+    } catch (error) {
+      ctx.api.popReportContext();
+
+      if (!(error instanceof DataPathError)) {
+        throw error;
+      }
+
+      return;
     }
+
+    ctx.api.popReportContext();
   }
-  
+
+  get _reportCtxName() {
+    return ""+this._id;
+  }
+
   getPathMeta(ctx, path) {
+    ctx.api.pushReportContext(this._reportCtxName);
     let ret = ctx.api.resolvePath(ctx, path);
+    ctx.api.popReportContext();
 
     return ret !== undefined ? ret.prop : undefined;
+  }
+
+  getPathDescription(ctx, path) {
+    let ret;
+    ctx.api.pushReportContext(this._reportCtxName);
+
+    try {
+      ret = ctx.api.getDescription(ctx, path);
+    } catch (error) {
+      ctx.api.popReportContext();
+
+      if (error instanceof DataPathError) {
+        //console.warn("Invalid data path '" + path + "'");
+        return undefined;
+      } else {
+        throw error;
+      }
+    }
+
+    ctx.api.popReportContext();
+    return ret;
   }
 
   getScreen() {
@@ -13550,10 +14969,32 @@ class UIBase extends HTMLElement {
       return this.ctx.screen;
   }
 
-  //not sure I'm happy about this. . .
-  //it adds a method call to the event queue,
-  //but only if that method (for this instance, as differentiated
-  //by ._id) isn't there already.
+  isDead() {
+    let p = this;
+
+    while (p) {
+
+      let parent = p.parentWidget;
+      if (!parent) {
+        parent = p.parentElement ? p.parentElement : p.parentNode;
+      }
+
+      p = parent;
+
+      if (p === document.body) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  /*
+    adds a method call to the event queue,
+    but only if that method (for this instance, as differentiated
+    by ._id) isn't there already.
+
+    also, method won't be ran until this.ctx exists
+  */
   
   doOnce(func, timeout=undefined) {
     if (func._doOnce === undefined) {
@@ -13565,12 +15006,30 @@ class UIBase extends HTMLElement {
         }
         
         func._doOnce_reqs.add(thisvar._id);
-        
-        window.setTimeout(() => {
+        let f = () => {
+          if (this.isDead()) {
+            if (func === this._init || !exports.DEBUG.doOnce) {
+              return;
+            }
+
+            console.warn("Ignoring doOnce call for dead element", this._id, func);
+            return;
+          }
+
+          if (!this.ctx) {
+            if (exports.DEBUG.doOnce) {
+              console.warn("doOnce call is waiting for context...", this._id, func);
+            }
+
+            window.setTimeout(f, 0);
+            return;
+          }
+
           func._doOnce_reqs.delete(thisvar._id);
-          
           func.call(thisvar);
-        }, timeout);
+        };
+
+        window.setTimeout(f, timeout);
       };
     }
     
@@ -13580,10 +15039,10 @@ class UIBase extends HTMLElement {
   
   set ctx(c) {
     this._ctx = c;
-    
-    if (this._init_done) {
-      this.update();
-    }
+
+    this._forEachChildWidget((n) => {
+      n.ctx = c;
+    });
   }
   
   float(x=0, y=0, zindex=undefined) {
@@ -13618,9 +15077,10 @@ class UIBase extends HTMLElement {
   
   //called regularly
   update() {
-    //use dom tooltips
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
+    if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
+      let d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
+
+      this.description = d;
     }
 
     if (!this._init_done) {
@@ -13662,7 +15122,7 @@ class UIBase extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return window.devicePixelRatio;
+    return UIBase.getDPI();
   }
 
   /**DEPRECATED
@@ -13673,6 +15133,10 @@ class UIBase extends HTMLElement {
     //if (dpistack.length > 0) {
     //  return dpistack[this.dpistack.length-1];
     //} else {
+    if (isMobile()) {
+      return window.devicePixelRatio * visualViewport.scale;
+    }
+
     return window.devicePixelRatio;
     //}
   }
@@ -13727,18 +15191,41 @@ class UIBase extends HTMLElement {
     this.class_default_overrides[style][key] = val;
   }
 
-  getDefault(key) {
+  _doMobileDefault(key, val) {
+    if (!isMobile())
+      return val;
+
+    key = key.toLowerCase();
+    let ok = false;
+
+    for (let re of _mobile_theme_patterns) {
+      if (key.search(re) >= 0) {
+        ok = true;
+        break;
+      }
+    }
+
+    if (ok) {
+      val *= theme.base.mobileSizeMultiplier;
+    }
+
+    return val;
+  }
+
+  getDefault(key, doMobile=true) {
     let p = this;
 
     while (p) {
       if (key in p.default_overrides) {
-        return p.default_overrides[key];
+        let v = p.default_overrides[key];
+
+        return doMobile ? this._doMobileDefault(key, v) : v;
       }
 
       p = p.parentWidget;
     }
 
-    return this.getClassDefault(key);
+    return this.getClassDefault(key, doMobile);
   }
 
   getStyleClass() {
@@ -13764,25 +15251,29 @@ class UIBase extends HTMLElement {
     return "base";
   }
 
-  getClassDefault(key) {
+  getClassDefault(key, doMobile=true) {
     let style = this.getStyleClass();
 
+    let val = undefined;
     let p = this;
     while (p) {
       let def = p.class_default_overrides[style];
 
       if (def && (key in def)) {
-        return def[key];
+        val = def[key];
+        break;
       }
 
       p = p.parentWidget;
     }
 
-    if (style in theme && key in theme[style]) {
-      return theme[style][key];
+    if (val === undefined && style in theme && key in theme[style]) {
+      val = theme[style][key];
+    } else if (val === undefined) {
+      val = theme.base[key];
     }
 
-    return theme.base[key];
+    return doMobile ? this._doMobileDefault(key, val) : val;
   }
 
   getStyle() {
@@ -13805,6 +15296,10 @@ class UIBase extends HTMLElement {
   }
 }
 
+function drawRoundBox2(elem, options={}) {
+  drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
+}
+
 /**okay, I need to refactor this function,
   it needs to take x, y as well as width, height,
   and be usable for more use cases.*/
@@ -13812,7 +15307,8 @@ function drawRoundBox(elem, canvas, g, width, height, r=undefined,
                              op="fill", color=undefined, margin=undefined, no_clear=false) {
     width = width === undefined ? canvas.width : width;
     height = height === undefined ? canvas.height : height;
-    
+    g.save();
+
     let dpi = elem.getDPI();
     
     r = r === undefined ? elem.getDefault("BoxRadius") : r;
@@ -13875,6 +15371,8 @@ function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     } else {
       g.stroke();
     }
+
+    g.restore();
 }
 function _getFont_new(elem, size, font="DefaultText", do_dpi=true) {
 
@@ -13919,11 +15417,16 @@ function _getFont(elem, size, font="DefaultText", do_dpi=true) {
 
 function _ensureFont(elem, canvas, g, size) {
   let dpi = elem.getDPI();
-  
+  //size *= dpi;
+
+  if (g.font) {
+    return;
+  }
+
   if (size !== undefined) {
-    g.font = ""+Math.ceil(size * dpi) + "px sans-serif";
+    g.font = ""+Math.ceil(size) + "px sans-serif";
   } else if (!canvas.font) {
-    let size = elem.getDefault("DefaultText").size * dpi;
+    let size = elem.getDefault("DefaultText").size;
 
     let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
     
@@ -13958,12 +15461,22 @@ function measureTextBlock(elem, text, canvas=undefined,
   };
 
   if (size === undefined) {
-    size = elem.getDefault("DefaultText").size;
+    if (font !== undefined && typeof font === "object") {
+      size = font.size;
+    }
+
+    if (size === undefined) {
+      size = elem.getDefault("DefaultText").size;
+    }
   }
 
   for (let line of lines) {
-    ret.width = Math.max(ret.width, measureText(elem, line, canvas, g, size, font).width);
-    ret.height += Math.ceil(size*1.2+0.5);
+    let m = measureText(elem, line, canvas, g, size, font);
+
+    ret.width = Math.max(ret.width, m.width);
+    let h = m.height !== undefined ? m.height : size*1.25;
+
+    ret.height += h;
   }
 
   return ret;
@@ -13978,7 +15491,7 @@ function measureText(elem, text, canvas=undefined,
 
   if (font !== undefined) {
     if (typeof font === "object" && font instanceof CSSFont) {
-      font = font.genCSS();
+      font = font.genCSS(size);
     }
 
     g.font = font;
@@ -13987,6 +15500,24 @@ function measureText(elem, text, canvas=undefined,
   }
 
   let ret = g.measureText(text);
+
+  if (ret && isMobile()) {
+    let ret2 = {};
+    let dpi = UIBase.getDPI();
+
+    for (let k in ret) {
+      let v = ret[k];
+
+      if (typeof v === "number") {
+        v *= dpi;
+        //v *= window.devicePixelRatio;
+      }
+
+      ret2[k] = v;
+    }
+
+    ret = ret2;
+  }
   
   if (size !== undefined) {
     //clear custom font for next time
@@ -13996,10 +15527,36 @@ function measureText(elem, text, canvas=undefined,
   return ret;
 }
 
-function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined) {
-  _ensureFont(elem, canvas, g, size);
-  
-  g.fillStyle = elem.getDefault("DefaultText").color;
+function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+  if (size === undefined) {
+    if (font !== undefined && font instanceof CSSFont) {
+      size = font.size;
+    } else {
+      size = elem.getDefault("DefaultText").size;
+    }
+  }
+
+  size *= UIBase.getDPI();
+
+  if (font === undefined) {
+    _ensureFont(elem, canvas, g, size);
+  } else if (typeof font === "object" && font instanceof CSSFont) {
+    font = font.genCSS(size);
+  }
+
+  if (font) {
+    g.font = font;
+  }
+
+  if (color === undefined) {
+    color = elem.getDefault("DefaultText").color;
+  }
+  if (typeof color === "object") {
+    color = color2css(color);
+  }
+
+
+  g.fillStyle = color;
   g.fillText(text, x+0.5, y+0.5);
   
   if (size !== undefined) {
@@ -14111,22 +15668,7 @@ function loadUIData(node, buf) {
   }
 }
 
-let exports = {
-  menu_close_time : 500,
-  DEBUG           : {},
-
-  loadConstants : function(args) {
-    for (let k in args) {
-      if (k === "loadConstants")
-        continue;
-
-      this[k] = args[k];
-    }
-  }
-};
-
-let UIBase$1 = UIBase;
-
+let UIBase$1 = UIBase;
 
 let parsepx$1 = parsepx;
 
@@ -14297,6 +15839,8 @@ class Button extends UIBase$1 {
   bindEvents() {
 
     let press = (e) => {
+      e.stopPropagation();
+
       console.log("button press", this._pressed);
 
       if (this.disabled) return;
@@ -14311,7 +15855,6 @@ class Button extends UIBase$1 {
       this._redraw();
 
       e.preventDefault();
-      e.stopPropagation();
     };
 
     let depress = (e) => {
@@ -14324,27 +15867,36 @@ class Button extends UIBase$1 {
         this._redraw();
       }
 
+      console.log("a");
+
       e.preventDefault();
       e.stopPropagation();
 
-      if (e.type == "mouseup" && e.button) {
+      console.warn(e.type, e.button, this.onclick, e);
+      if (e.type === "mouseup" && (e.button || e.was_touch)) {
         return;
       }
 
       this._redraw();
 
-      if (e.type.startsWith("touch") && this.onclick) {
+      console.log("exec", this.onclick);
+      if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
       }
     };
 
     this.addEventListener("mousedown", press, {captured : true, passive : false});
 
-    this.addEventListener("touchstart", press, {captured : true, passive : false});
+    this.addEventListener("touchstart", (e) => {
+      press(e);
+      if (e.onclick) {
+        e.onclick(e);
+      }
+    }, {captured : true, passive : false});
     this.addEventListener("touchend", depress);
     this.addEventListener("touchcancel", depress);
 
-    this.addEventListener("mouseup", depress);
+    this.addEventListener("mouseup", depress, {captured : true, passive : false});
 
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)
@@ -14547,6 +16099,10 @@ class Button extends UIBase$1 {
   _draw_text() {
     let dpi = this.getDPI();
 
+    if (isMobile()) {
+      dpi = dpi; //visualViewport.scale;
+    }
+
     let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultText").size * dpi;
 
@@ -14557,13 +16113,13 @@ class Button extends UIBase$1 {
 
     let w = this.dom.width, h = this.dom.height;
 
-    let tw = measureText(this, text, undefined, undefined, undefined, font).width;
+    let tw = measureText(this, text, undefined, undefined, ts, font).width;
 
     let cx = pad*0.5;
     let cy = h*0.5 + ts*0.5;
 
     let g = this.g;
-    drawText(this, ~~cx, ~~cy, text, this.dom, g);
+    drawText(this, ~~cx, ~~cy, text, this.dom, g, undefined, ts, font);
   }
 
   static define() {return {
@@ -14590,8 +16146,7 @@ let keymap$1 = keymap;
 
 let PropTypes$2 = PropTypes;
 
-let UIBase$2 = UIBase; 
-
+let UIBase$2 = UIBase; 
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -15841,6 +17396,8 @@ class TextBox extends UIBase$2 {
 
     if (this.style["font"]) {
       this.dom.style["font"] = this.style["font"];
+    } else {
+      this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
     }
 
     this.dom.style["width"] = this.style["width"];
@@ -16059,7 +17616,6 @@ class Label extends UIBase {
     super();
 
     this._label = "";
-    this._font = "LabelText";
 
     this.dom = document.createElement("div");
     this.dom.setAttribute("class", "_labelx");
@@ -16074,15 +17630,12 @@ class Label extends UIBase {
 
     this.shadow.appendChild(style);
     this.shadow.appendChild(this.dom);
+
+    this.font = "LabelText";
   }
 
   init() {
-    let font = this.getDefault(this._font);
-
     this.dom.style["width"] = "max-content";
-
-    this.dom.style["font"] = font.genCSS();
-    this.dom.style["color"] = font.color;
   }
 
   get font() {
@@ -16091,15 +17644,27 @@ class Label extends UIBase {
 
   /**Set a font defined in ui_base.defaults
    e.g. DefaultText*/
-  set font(prefix) {
-    if (this._font == prefix) {
-      return;
+  set font(fontDefaultName) {
+    if (typeof fontDefaultName === "string") {
+      this._font = this.getDefault(fontDefaultName);
+      if (!this._font) {
+        console.warn("Invalid font", fontDefaultName);
+      }
+    } else if (typeof fontDefaultName === "object" && fontDefaultName instanceof CSSFont) {
+      this._font = fontDefaultName;
+    } else {
+      console.warn("Invalid font", fontDefaultName);
     }
 
-    this._font = prefix;
+    this._updateFont();
+  }
 
-    this.dom.style["font"] = getFont(this, undefined, prefix, false);
-    this.dom.style["color"] = this.getDefault(prefix + "Color");
+  _updateFont() {
+    let font = this._font;
+    if (!font) return;
+
+    this.dom.style["font"] = font.genCSS();
+    this.dom.style["color"] = font.color;
   }
 
   updateDataPath() {
@@ -16425,15 +17990,28 @@ class Container extends UIBase {
     return ret;
   }
 
-  clear() {
+  clear(trigger_on_destroy=true) {
     for (let child of this.children) {
       if (child instanceof UIBase) {
-        child.remove();
-
-        if (child.on_destroy !== undefined)
-          child.on_destroy();
+        child.remove(trigger_on_destroy);
       }
     }
+  }
+
+  removeChild(child, trigger_on_destroy=true) {
+    let ret = super.removeChild(child);
+
+    if (child.on_remove) {
+      child.on_remove();
+    }
+
+    if (trigger_on_destroy && child.on_destroy) {
+      child.on_destroy();
+    }
+
+    child.parentWidget = undefined;
+
+    return ret;
   }
 
   //*
@@ -16455,6 +18033,11 @@ class Container extends UIBase {
     child.parentWidget = this;
 
     this.shadow.appendChild(child);
+
+    /*
+    if (child._ctx) {
+      child._init();
+    }//*/
 
     if (child.onadd)
       child.onadd();
@@ -16665,6 +18248,28 @@ class Container extends UIBase {
     ret.text = text;
 
     this._add(ret);
+
+    return ret;
+  }
+
+  /**
+   *
+   * makes a button for a help picker tool
+   * to view tooltips on mobile devices
+   * */
+  helppicker() {
+    let ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
+      this.getScreen().hintPickerTool();
+    });
+
+    if (isMobile()) {
+      ret.iconsheet = 2;
+    }
+
+    if (ret.ctx) {
+      ret._init();
+      ret.setCSS();
+    }
 
     return ret;
   }
@@ -17520,163 +19125,6 @@ class ColumnFrame extends Container {
 
 UIBase$3.register(ColumnFrame);
 
-class PanelFrame extends ColumnFrame {
-  constructor() {
-    super();
-
-    this.contents = document.createElement("colframe-x");
-
-    this.packflag = this.inherit_packflag = 0;
-
-    this._closed = false;
-  }
-
-  saveData() {
-    let ret = {
-      _closed: this._closed
-    };
-
-    return Object.assign(super.saveData(), ret);
-  }
-
-  loadData(obj) {
-    this.closed = obj._closed;
-  }
-
-  clear() {
-    this.clear();
-    this.add(this.titleframe);
-  }
-
-  get inherit_packflag() {
-    if (!this.contents) return;
-    return this.contents.inherit_packflag;
-  }
-
-  set inherit_packflag(val) {
-    if (!this.contents) return;
-    this.contents.inherit_packflag = val;
-  }
-
-  get packflag () {
-    if (!this.contents) return;
-    return this.contents.packflag;
-  }
-
-  set packflag(val) {
-    if (!this.contents) return;
-    this.contents.packflag = val;
-  }
-
-  init() {
-    super.init();
-
-    //con.style["margin-left"] = "5px";
-    let con = this.titleframe = this.row();
-
-    this.setCSS();
-
-    let row = con;
-
-    let iconcheck = document.createElement("iconcheck-x");
-    this.iconcheck = iconcheck;
-
-    this.style["width"] = "100%";
-
-    this.overrideDefault("BoxMargin", 0);
-    iconcheck.overrideDefault("BoxMargin", 0);
-
-    iconcheck.noMarginsOrPadding();
-
-    iconcheck.overrideDefault("BoxBG", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxSubBG", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
-
-    iconcheck.ctx = this.ctx;
-    iconcheck._icon_pressed = Icons.UI_EXPAND;
-    iconcheck._icon = Icons.UI_COLLAPSE;
-    iconcheck.drawCheck = false;
-    iconcheck.iconsheet = IconSheets.SMALL;
-    iconcheck.checked = this._closed;
-
-    this.iconcheck.onchange = (e) => {
-      this.closed = this.iconcheck.checked;
-    };
-
-    row._add(iconcheck);
-
-    //stupid css, let's just hackishly put " " to create spacing2
-
-    let onclick = (e) => {
-      console.log("panel header click");
-      iconcheck.checked = !iconcheck.checked;
-    };
-
-    let label = row.label(this.getAttribute("title"));
-
-    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
-    label.noMarginsOrPadding();
-    label.addEventListener("mousedown", onclick);
-    label.addEventListener("touchdown", onclick);
-
-    row.background = this.getDefault("BoxSubBG");
-    row.style["border-radius"] = "5px";
-    
-    this.background = this.getDefault("BoxSub2BG");
-
-    row.style["padding-right"] = "20px";
-    row.style["padding-left"] = "5px";
-    row.style["padding-top"] = "7px";
-    row.style["padding-bottom"] = "5px";
-
-    this.contents.ctx = this.ctx;
-    this.add(this.contents);
-  }
-
-  static define() {
-    return {
-      tagname: "panelframe-x"
-    };
-  }
-
-  update() {
-    super.update();
-  }
-
-  _setVisible(state) {
-    if (state) {
-      this.contents.remove();
-    } else {
-      this.add(this.contents, false);
-    }
-
-    this.contents.hidden = state;
-    return;
-  }
-
-  _updateClosed() {
-    this._setVisible(this._closed);
-    this.iconcheck.checked = this._closed;
-  }
-
-  get closed() {
-    return this._closed;
-  }
-
-  set closed(val) {
-    let update = !!val != !!this.closed;
-    this._closed = val;
-
-    //console.log("closed set", update);
-    if (update) {
-      this._updateClosed();
-    }
-  }
-}
-
-UIBase$3.register(PanelFrame);
-
 let UIBase$4 = UIBase;
 
 class RichEditor extends UIBase$4 {
@@ -17956,8 +19404,7 @@ let keymap$2 = keymap;
 
 let PropTypes$4 = PropTypes;
 
-let UIBase$5 = UIBase;
-
+let UIBase$5 = UIBase;
 
 class NumSliderSimple extends UIBase$5 {
   constructor() {
@@ -18031,6 +19478,9 @@ class NumSliderSimple extends UIBase$5 {
 
     if (val !== this._value) {
       let prop = this.getPathMeta(this.ctx, path);
+      if (!prop) {
+        return;
+      }
       this.isInt = prop.type === PropTypes$4.INT;
 
       if (prop.range !== undefined) {
@@ -18260,7 +19710,7 @@ class NumSliderSimple extends UIBase$5 {
       color = this.getDefault("BoxBorder");
     }
 
-    g.arc(co[0], co[1], co[2], -Math.PI, Math.PI);
+    g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
     g.fill();
 
     g.strokeStyle = color;
@@ -18395,14 +19845,49 @@ class NumSliderSimple2 extends ColumnFrame {
     this.decimalPlaces = 4;
     this.isInt = false;
     this._lock_textbox = false;
+    this.labelOnTop = undefined;
+
+    this._last_label_on_top = undefined;
+
+    this.styletag.textContent = `
+    .numslider_simple_textbox {
+      padding : 0px;
+      margin  : 0px;
+      height  : 15px;
+    }
+    `;
+
+
+    this.container = this;
 
     this.textbox = document.createElement("textbox-x");
-
     this.numslider = document.createElement("numslider-simple-base-x");
+
+    this.textbox.setAttribute("class", "numslider_simple_textbox");
   }
 
   init() {
     super.init();
+
+    if (this.hasAttribute("labelOnTop")) {
+      this.labelOnTop = this.getAttribute("labelOnTop");
+    } else {
+      this.labelOnTop = this.getDefault("labelOnTop");
+    }
+
+    this.rebuild();
+  }
+
+  rebuild() {
+    this._last_label_on_top = this.labelOnTop;
+
+    this.container.clear();
+
+    if (this.labelOnTop) {
+      this.container = this.row();
+    } else {
+      this.container = this;
+    }
 
     if (this.hasAttribute("name")) {
       this._name = this.hasAttribute("name");
@@ -18410,11 +19895,19 @@ class NumSliderSimple2 extends ColumnFrame {
       this._name = "slider";
     }
 
-    this.l = this.label(this._name);
+
+    this.l = this.container.label(this._name);
     this.l.font = "TitleText";
     this.l.overrideClass("numslider_simple");
+    this.l.style["display"] = "float";
+    this.l.style["position"] = "relative";
+    
+    if (!this.labelOnTop) {
+      this.l.style["left"] = "8px";
+      this.l.style["top"] = "5px";
+    }
 
-    let strip = this.row();
+    let strip = this.container.row();
     strip.add(this.numslider);
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
@@ -18449,8 +19942,8 @@ class NumSliderSimple2 extends ColumnFrame {
     textbox.ctx = this.ctx;
     textbox.packflag |= this.inherit_packflag;
     textbox._width = this.getDefault("TextBoxWidth")+"px";
+    textbox.style["height"] = (this.getDefault("DefaultHeight")-2) + "px";
     textbox._init();
-    textbox.style["margin"] = "5px";
 
     strip.add(textbox);
 
@@ -18540,7 +20033,16 @@ class NumSliderSimple2 extends ColumnFrame {
     }
   }
 
+  updateLabelOnTop() {
+    if (this.labelOnTop !== this._last_label_on_top) {
+      this._last_label_on_top = this.labelOnTop;
+      this.rebuild();
+    }
+  }
+
   update() {
+    this.updateLabelOnTop();
+
     super.update();
 
     if (this.hasAttribute("integer")) {
@@ -18549,6 +20051,9 @@ class NumSliderSimple2 extends ColumnFrame {
     }
 
     this.updateName();
+
+    this.numslider.description = this.description;
+    this.textbox.description = this.title; //get full, transformed toolip
 
     if (this.hasAttribute("datapath")) {
       this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
@@ -18561,6 +20066,9 @@ class NumSliderSimple2 extends ColumnFrame {
 
   setCSS() {
     super.setCSS();
+
+    //textbox.style["margin"] = "5px";
+
   }
 
   static define() {return {
@@ -18723,6 +20231,82 @@ class VectorPanel extends ColumnFrame {
 }
 UIBase$5.register(VectorPanel);
 
+class ToolTip extends UIBase$5 {
+  constructor() {
+    super();
+
+    this.visibleToPick = false;
+    this.div = document.createElement("div");
+
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      div {
+        padding : 15px;
+      }
+    `;
+
+    this.shadow.appendChild(this.styletag);
+    this.shadow.appendChild(this.div);
+  }
+
+  static show(message, screen, x, y) {
+    let ret = document.createElement(this.define().tagname);
+
+    ret.text = message;
+    let size = ret._estimateSize();
+
+    console.log(size);
+    x = Math.min(Math.max(x, 0), screen.size[0] - size[0]);
+    y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
+
+    ret._popup = screen.popup(ret, x, y);
+    ret._popup.add(ret);
+
+    return ret;
+  }
+
+  end() {
+    this._popup.end();
+  }
+
+  init() {
+    super.init();
+    this.setCSS();
+  }
+
+  set text(val) {
+    this.div.innerHTML = val.replace(/[\n]/g, "<br>\n");
+  }
+
+  get text() {
+    return this.div.innerHTML;
+  }
+
+  _estimateSize() {
+    let text = this.div.textContent;
+    let block = measureTextBlock(this, text, undefined, undefined, undefined, this.getDefault("ToolTipText"));
+
+    return [block.width+50, block.height+30];
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let color = this.getDefault("BoxBG");
+    let bcolor = this.getDefault("BoxBorder");
+
+    this.div.style["background-color"] = color;
+    this.div.style["border"] = "2px solid " + bcolor;
+
+    this.div.style["font"] = this.getDefault("ToolTipText").genCSS();
+  }
+
+  static define() {return {
+    tagname : "tool-tip-x",
+    style   : "tooltip"
+  }}
+}UIBase$5.register(ToolTip);
+
 function makeGenEnum() {
   let enumdef = {};
   let uinames = {};
@@ -18833,7 +20417,6 @@ class Curve1DWidget extends ColumnFrame {
     ret.setValue(this.value.generatorType);
     ret._name = "sdfdsf";
 
-    console.log(ret.__proto__);
     this.container = this.col();
   }
 
@@ -18964,2840 +20547,174 @@ class Curve1DWidget extends ColumnFrame {
 }
 UIBase.register(Curve1DWidget);
 
+//bind module to global var to get at it in console.
+
 let UIBase$6 = UIBase;
 
-class Note extends UIBase {
+class PanelFrame extends ColumnFrame {
   constructor() {
     super();
 
-    let style = document.createElement("style");
+    this.contents = document.createElement("colframe-x");
 
-    this._noteid = undefined;
-    this.height = 20;
+    this.packflag = this.inherit_packflag = 0;
 
-    style.textContent = `
-    .notex {
-      display : flex;
-      flex-direction : row;
-      flex-wrap : nowrap;
-      height : {this.height}px;
-      padding : 0px;
-      margin : 0px;
-    }
-    `;
-
-    this.dom = document.createElement("div");
-    this.dom.setAttribute("class", "notex");
-    this.color = "red";
-
-    this.shadow.appendChild(style);
-    this.shadow.append(this.dom);
-    this.setLabel("");
+    this._closed = false;
   }
 
-  setLabel(s) {
-    let color = this.color;
-    if (this.mark === undefined) {
-      this.mark = document.createElement("div");
-      this.mark.style["display"] = "flex";
-      this.mark.style["flex-direction"] = "row";
-      this.mark.style["flex-wrap"] = "nowrap";
-
-      //this.mark.style["width"]
-      let sheet = 0;
-
-      let size = iconmanager.getTileSize(sheet);
-
-      this.mark.style["width"] = "" + size + "px";
-      this.mark.style["height"] = "" + size + "px";
-
-      this.dom.appendChild(this.mark);
-
-      this.ntext = document.createElement("div");
-      this.ntext.style["display"] = "inline-flex";
-      this.ntext.style["flex-wrap"] = "nowrap";
-
-      this.dom.appendChild(this.ntext);
-
-      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
-
-      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
-      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
-      //this.mark.style["background-color"] = color;
-    }
-
-    let mark = this.mark, ntext = this.ntext;
-    //mark.innerText = "!";
-    ntext.innerText = " " + s;
-  }
-
-  init() {
-    super.init();
-
-    this.setAttribute("class", "notex");
-
-    this.style["display"] = "flex";
-    this.style["flex-wrap"] = "nowrap";
-    this.style["flex-direction"] = "row";
-    this.style["border-radius"] = "7px";
-    this.style["padding"] = "2px";
-
-    this.style["color"] = this.getDefault("NoteText").color;
-    let clr = css2color$1(this.color);
-    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
-
-    this.style["background-color"] = clr;
-    this.setCSS();
-  }
-
-  static define() {return {
-    tagname : "note-x"
-  }}
-}
-UIBase$6.register(Note);
-
-class ProgBarNote extends Note {
-  constructor() {
-    super();
-
-    this._percent = 0.0;
-    this.barWidth = 100;
-
-    let bar = this.bar = document.createElement("div");
-    bar.style["display"] = "flex";
-    bar.style["flex-direction"] = "row";
-    bar.style["width"] = this.barWidth + "px";
-    bar.style["height"] = this.height + "px";
-    bar.style["background-color"] = this.getDefault("ProgressBarBG");
-    bar.style["border-radius"] = "12px";
-    bar.style["align-items"] = "center";
-    bar.style["padding"] = bar.style["margin"] = "0px";
-
-    let bar2 = this.bar2 = document.createElement("div");
-
-    bar2.style["display"] = "flex";
-    bar2.style["flex-direction"] = "row";
-    bar2.style["height"] = this.height + "px";
-    bar2.style["background-color"] = this.getDefault("ProgressBar");
-    bar2.style["border-radius"] = "12px";
-    bar2.style["align-items"] = "center";
-    bar2.style["padding"] = bar2.style["margin"] = "0px";
-
-    this.bar.appendChild(bar2);
-    this.dom.appendChild(this.bar);
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    let w = ~~(this.percent * this.barWidth + 0.5);
-
-    this.bar2.style["width"] = w + "px";
-  }
-
-  set percent(val) {
-    this._percent = val;
-    this.setCSS();
-  }
-
-  get percent() {
-    return this._percent;
-  }
-
-  init() {
-    super.init();
-  }
-
-  static define() {return {
-    tagname : "note-progress-x"
-  }}
-}
-UIBase$6.register(ProgBarNote);
-
-class NoteFrame extends RowFrame {
-  constructor() {
-    super();
-    this._h = 20;
-  }
-
-  init() {
-    super.init();
-
-    this.noMarginsOrPadding();
-
-    noteframes.push(this);
-    this.background = this.getDefault("NoteBG");
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    this.style["width"] = "min-contents";
-    this.style["height"] = this._h + "px";
-  }
-
-  _ondestroy() {
-    if (noteframes.indexOf(this) >= 0) {
-      noteframes.remove(this);
-    }
-
-    super._ondestroy();
-  }
-
-  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
-    let note;
-
-    for (let child of this.children) {
-      if (child._noteid === id) {
-        note = child;
-        break;
-      }
-    }
-
-    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
-
-    if (note === undefined) {
-      note = this.addNote(msg, color, -1, "note-progress-x");
-      note._noteid = id;
-    }
-
-    //note.setLabel(msg + " " + f + "%");
-    note.percent = percent;
-
-    if (percent >= 1.0) {
-      //note.setLabel(msg + " " + f + "%");
-
-      window.setTimeout(() => {
-        note.remove();
-      }, timeout);
-    }
-
-    return note;
-  }
-
-  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
-    //let note = document.createElement("note-x");
-
-    //note.ctx = this.ctx;
-    //note.background = "red";
-    //note.dom.innerText = msg;
-
-    //this._add(note);
-
-    let note = document.createElement(tagname);
-
-    note.color = color;
-    note.setLabel(msg);
-
-    note.style["text-align"] = "center";
-
-    note.style["font"] = getFont(note, "NoteText");
-    note.style["color"] = this.getDefault("NoteText").color;
-
-    this.add(note);
-
-    this.noMarginsOrPadding();
-    note.noMarginsOrPadding();
-
-    //this.dom.style["position"] = "absolute";
-    //this.style["position"] = "absolute";
-    //note.style["position"] = "absolute";
-
-    note.style["height"] = this._h + "px";
-    note.height = this._h;
-
-
-    if (timeout != -1) {
-      window.setTimeout(() => {
-        console.log("remove!");
-        note.remove();
-      }, timeout);
-    }
-
-    //this.appendChild(note);
-    return note;
-
-  }
-
-  static define() {return {
-    tagname : "noteframe-x"
-  }}
-}
-UIBase$6.register(NoteFrame);
-
-function getNoteFrames(screen) {
-  let ret = [];
-
-  let rec = (n) => {
-
-    if (n instanceof NoteFrame) {
-      ret.push(n);
-    }
-
-    if (n.childNodes !== undefined) {
-      for (let node of n.childNodes) {
-        rec(node);
-      }
-    }
-
-    if (n instanceof UIBase && n.shadow !== undefined && n.shadow.childNodes) {
-      for (let node of n.shadow.childNodes) {
-        rec(node);
-      }
-    }
-  };
-
-  rec(screen);
-  return ret;
-}
-
-let noteframes = [];
-
-function sendNote(screen, msg, color, timeout=1000) {
-  noteframes = getNoteFrames(screen);
-
-  console.log(noteframes.length);
-
-  for (let frame of noteframes) {
-    console.log(frame);
-
-    try {
-      frame.addNote(msg, color, timeout);
-    } catch (error) {
-      print_stack(error);
-      console.log("bad notification frame");
-    }
-  }
-}
-
-window._sendNote = sendNote;
-
-let UIBase$7 = UIBase;
-let Vector2$3 = Vector2;
-let Screen = undefined;
-
-function setScreenClass(cls) {
-  Screen = cls;
-}
-
-function getAreaIntName(name) {
-  let hash = 0;
-  
-  for (let i=0; i<name.length; i++) {
-    let c = name.charCodeAt(i);
-    
-    if (i % 2 == 0) {
-      hash += c<<8;
-      hash *= 13;
-      hash = hash & ((1<<15)-1);
-    } else {
-      hash += c;
-    }
-  }
-  
-  return hash;
-}
-//XXX get rid of me
-window.getAreaIntName = getAreaIntName;
-
-//XXX get rid of me
-var AreaTypes = {
-  TEST_CANVAS_EDITOR : 0
-};
-
-function setAreaTypes(def) {
-  for (let k in AreaTypes) {
-    delete AreaTypes[k];
-  }
-  
-  for (let k in def) {
-    AreaTypes[k] = def[k];
-  }
-}
-
-let areaclasses = {};
-class AreaWrangler {
-  constructor() {
-    this.stacks = {};
-    this.lasts = {};
-    this.lastArea = undefined;
-    this.stack = [];
-    this.idgen = 0;
-    this._last_screen_id = undefined;
-  }
-
-  _checkWrangler(ctx) {
-    if (ctx === undefined) {
-      return true;
-    }
-
-    if (this._last_screen_id === undefined) {
-      this._last_screen_id = ctx.screen._id;
-      return true;
-    }
-
-    if (ctx.screen._id !== this._last_screen_id) {
-      this.reset();
-
-      this._last_screen_id = ctx.screen._id;
-      console.warn("contextWrangler detected a new screen; new file?");
-      return false;
-    }
-
-    return true;
-  }
-
-  reset() {
-    this.stacks = {};
-    this.lasts = {};
-    this.lastArea = undefined;
-    this.stack = [];
-    this._last_screen_id = undefined;
-
-    return this;
-  }
-
-  push(type, area, pushLastRef=true) {
-    if (pushLastRef || this.lasts[type.name] === undefined) {
-      this.lasts[type.name] = area;
-      this.lastArea = area;
-    }
-
-    if (!(type.name in this.stacks)) {
-      this.stacks[type.name] = [];
-    }
-
-    this.stacks[type.name].push(area);
-    this.stack.push(area);
-  }
-
-  pop(type, area) {
-    if (!(type.name in this.stacks)) {
-      console.warn("pop_ctx_area called in error");
-      //throw new Error("pop_ctx_area called in error");
-      return;
-    }
-
-    if (this.stacks[type.name].length > 0) {
-      this.stacks[type.name].pop();
-    }
-
-    if (this.stack.length > 0) {
-      this.stack.pop();
-    }
-  }
-
-  getLastArea(type) {
-    if (type === undefined) {
-      if (this.stack.length > 0) {
-        return this.stack[this.stack.length-1];
-      } else {
-        return this.lastArea;
-      }
-    } else {
-      if (type.name in this.stacks) {
-        let stack = this.stacks[type.name];
-
-        if (stack.length > 0) {
-          return stack[stack.length-1];
-        }
-      }
-
-      return this.lasts[type.name];
-    }
-  }
-}
-
-let contextWrangler = new AreaWrangler();
-
-window._contextWrangler = contextWrangler;
-
-const BorderMask = {
-  LEFT    : 1,
-  BOTTOM  : 2,
-  RIGHT   : 4,
-  TOP     : 8,
-  ALL     : 1|2|4|8
-};
-
-const BorderSides = {
-  LEFT   : 0,
-  BOTTOM : 1,
-  RIGHT  : 2,
-  TOP    : 3
-};
-
-/**
- * Base class for all editors
- **/
-class Area extends UIBase {
-  constructor() {
-    super();
-
-    /**
-     * -----b4----
-     *
-     * b1       b3
-     *
-     * -----b2----
-     *
-     * */
-    //set bits in mask to keep
-    //borders from moving
-    this.borderLock = 0;
-    this.inactive = true;
-    
-    this.owning_sarea = undefined;
-    this._area_id = contextWrangler.idgen++;
-    
-    this.pos = undefined; //set by screenarea parent
-    this.size = undefined; //set by screenarea parent
-
-    let appendChild = this.shadow.appendChild;
-    this.shadow.appendChild = (child) => {
-      appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$7) {
-        child.parentWidget = this;
-      }
-    };
-
-    let prepend = this.shadow.prepend;
-    this.shadow.prepend = (child) => {
-      prepend.call(this.shadow, child);
-
-      if (child instanceof UIBase$7) {
-        child.parentWidget = this;
-      }
-    };
-  }
-
-  init() {
-    super.init();
-
-    this.style["overflow"] = "hidden";
-    this.noMarginsOrPadding();
-
-    let onover = (e) => {
-      //console.log(this._area_id, this.ctx.workspace._area_id);
-
-      //try to trigger correct entry in context area stacks
-      this.push_ctx_active();
-      this.pop_ctx_active();
-    };
-
-    //*
-    this.addEventListener("mouseover", onover, {passive : true});
-    this.addEventListener("mousemove", onover, {passive : true});
-    this.addEventListener("mousein", onover, {passive : true});
-    this.addEventListener("mouseenter", onover, {passive : true});
-    this.addEventListener("touchstart", onover, {passive : true});
-    this.addEventListener("focusin", onover, {passive : true});
-    this.addEventListener("focus", onover, {passive : true});
-    //*/
-  }
-
-  /**
-   * Return a list of keymaps used by this editor
-   * @returns {Array<KeyMap>}
-   */
-  getKeyMaps() {
-    return this.keymap !== undefined ? [this.keymap] : [];
-  }
-
-  on_fileload(isActiveEditor) {
-    contextWrangler.reset();
-  }
-
-  buildDataPath() {
-    
-    let sarea = this.owning_sarea;
-    
-    if (sarea === undefined || sarea.screen === undefined) {
-      console.warn("Area.buildDataPath(): Failed to build data path");
-      return "";
-    }
-    
-    let screen = sarea.screen;
-    
-    let idx1 = screen.sareas.indexOf(sarea);
-    let idx2 = sarea.editors.indexOf(this);
-    
-    if (idx1 < 0 || idx2 < 0) {
-      throw new Error("malformed area data");
-    }
-    
-    let ret = `screen.sareas[${idx1}].editors[${idx2}]`;
-    return ret;
-  }
-  
   saveData() {
-    return {
-      _area_id : this._area_id,
-      areaName : this.areaName
-    };
-  }
-  
-  loadData(obj) {
-    let id = obj._area_id;
-    
-    if (id !== undefined && id !== null) {
-      this._area_id = id;
-    }
-  }
-  
-  draw() {
-  }
-  
-  copy() {
-    console.warn("You might want to implement this, Area.prototype.copy based method called");
-    let ret = document.createElement(this.constructor.define().tagname);
-    return ret;
-  }
-  
-  on_resize(size, oldsize) {
-    super.on_resize(size, oldsize);
-  }
-
-  on_area_focus() {
-
-  }
-
-  on_area_blur() {
-
-  }
-
-  /** called when editors are swapped with another editor type*/
-  on_area_active() {
-  }
-
-  /** called when editors are swapped with another editor type*/
-  on_area_inactive() {
-  }
-
-  /**
-   * Get active area as defined by push_ctx_active and pop_ctx_active.
-   *
-   * Type should be an Area subclass, if undefined the last accessed area
-   * will be returned.
-   * */
-  static getActiveArea(type) {
-    return contextWrangler.getLastArea(type);
-  }
-
-  /*
-  * This is needed so UI controls can know what their parent area is.
-  * For example, a slider with data path "view2d.zoomfac" needs to know where
-  * to find view2d.
-  *
-  * Typically this works by adding a field to a ContextOverlay:
-  *
-  * class ContextOverlay {
-  *   get view3d() {
-  *     return Area.getActiveArea(View3D);
-  *   }
-  * }
-  *
-  * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
-  * */
-  push_ctx_active(dontSetLastRef=false) {
-    contextWrangler.push(this.constructor, this, !dontSetLastRef);
-  }
-
-  /**
-   * see push_ctx_active
-   * */
-  pop_ctx_active(dontSetLastRef=false) {
-    contextWrangler.pop(this.constructor, this, !dontSetLastRef);
-  }
-  
-  static register(cls) {
-    let def = cls.define();
-    
-    if (!def.areaname) {
-      throw new Error("Missing areaname key in define()");
-    }
-    
-    areaclasses[def.areaname] = cls;
-    
-    UIBase.register(cls);
-  }
-  
-  getScreen() {
-    //XXX
-    //return _appstate.screen;
-    throw new Error("replace me in Area.prototype");
-  }
-  
-  toJSON() {
-    return Object.assign(super.toJSON(), {
-      areaname : this.constructor.define().areaname,
-      _area_id : this._area_id
-    });
-  }
-  
-  loadJSON(obj) {
-    super.loadJSON(obj);
-    this._area_id = obj._area_id;
-    
-    return this;
-  }
-
-  getBarHeight() {
-    return this.header.getClientRects()[0].height;
-  }
-
-  makeAreaSwitcher(container) {
-    let areas = {};
-    let icons = {};
-
-    for (let k in areaclasses) {
-      let cls = areaclasses[k];
-      let def = cls.define();
-
-      if (def.hidden)
-        continue;
-
-      let uiname = def.uiname;
-
-      if (uiname === undefined) {
-        uiname = k.replace("_", " ").toLowerCase();
-        uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
-      }
-
-      areas[uiname] = k;
-      icons[uiname] = def.icon !== undefined ? def.icon : -1;
-    }
-
-
-    return container.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
-      let cls = areaclasses[id];
-      this.owning_sarea.switch_editor(cls);
-    }, icons);
-
-    //return areas;
-  }
-
-  makeHeader(container, add_note_area=true) {
-    let row = this.header = container.row();
-
-    row.remove();
-    container._prepend(row);
-
-    row.background = this.getDefault("AreaHeaderBG");
-
-    let rh = ~~(16*this.getDPI());
-
-    //container.setSize(undefined, rh);
-    //row.setSize(undefined, rh);
-    //row.setSize(undefined, rh);
-
-    container.noMarginsOrPadding();
-    row.noMarginsOrPadding();
-
-    row.style["width"] = "100%";
-    row.style["margin"] = "0px";
-    row.style["padding"] = "0px";
-
-    let mdown = false;
-    let mpos = new Vector2$3();
-    
-    let mpre = (e, pageX, pageY) => {
-      pageX = pageX === undefined ? e.pageX : pageX;
-      pageY = pageY === undefined ? e.pageY : pageY;
-
-      let node = this.getScreen().pickElement(pageX, pageY);
-     // console.log(node.tagName, node === row)
-      
-      if (node !== row) {
-        return false;
-      }
-      
-      return true;
-    };
-    
-    row.addEventListener("mouseout", (e) => {
-      //console.log("mouse leave");
-      mdown = false;
-    });
-    row.addEventListener("mouseleave", (e) => {
-      //console.log("mouse out");
-      mdown = false;
-    });
-    
-    row.addEventListener("mousedown", (e) => {
-      if (!mpre(e)) return;
-      
-      mpos[0] = e.pageX;
-      mpos[1] = e.pageY;
-      mdown = true;
-    }, false);
-
-    let do_mousemove = (e, pageX, pageY) => {
-      if (!mdown || !mpre(e, pageX, pageY)) return;
-
-      //console.log(mdown);
-      let dx = pageX - mpos[0];
-      let dy = pageY - mpos[1];
-
-      let dis = dx*dx + dy*dy;
-      let limit = 7;
-
-      if (dis > limit*limit) {
-        let sarea = this.owning_sarea;
-        if (sarea === undefined) {
-          console.warn("Error: missing sarea ref");
-          return;
-        }
-
-        let screen = sarea.screen;
-        if (screen === undefined) {
-          console.log("Error: missing screen ref");
-          return;
-        }
-
-        mdown = false;
-        console.log("area drag tool!");
-        screen.areaDragTool(this.owning_sarea);
-      }
-    };
-
-    row.setAttribute("draggable", true);
-    row.draggable = true;
-
-    row.addEventListener("dragstart", (e) => {
-      console.log("drag start!", e);
-      e.dataTransfer.setData("text/json", "SplitAreaDrag");
-
-      let canvas = document.createElement("canvas");
-      let g = canvas.g;
-
-      canvas.width = 32;
-      canvas.height = 32;
-
-      e.dataTransfer.setDragImage(canvas, 0, 0);
-
-      mdown = false;
-      console.log("area drag tool!");
-      this.getScreen().areaDragTool(this.owning_sarea);
-    });
-
-    row.addEventListener("drag", (e) => {
-      console.log("drag!", e);
-    });
-
-    //*
-    row.addEventListener("mousemove", (e) => {
-      return do_mousemove(e, e.pageX, e.pageY);
-    }, false);
-      //*/
-    row.addEventListener("mouseup", (e) => {
-      if (!mpre(e)) return;
-
-      mdown = false;
-    }, false);
-
-    row.addEventListener("touchstart", (e) => {
-      console.log("touchstart", e);
-
-      if (!mpre(e, e.touches[0].pageX, e.touches[0].pageY)) return;
-      
-      if (e.touches.length == 0)
-        return;
-      
-      mpos[0] = e.touches[0].pageX;
-      mpos[1] = e.touches[0].pageY;
-      mdown = true;
-    }, false);
-    
-    row.addEventListener("touchmove", (e) => {
-      return do_mousemove(e, e.touches[0].pageX, e.touches[0].pageY);
-    }, false);
-
-    let touchend = (e) => {
-      let node = this.getScreen().pickElement(e.pageX, e.pageY);
-      if (node !== row) {
-        return;
-      }
-      if (e.touches.length == 0)
-        return;
-      
-      mdown = false;
-    };
-    
-    row.addEventListener("touchcancel", (e) => {
-      touchend(e);        
-    }, false);
-    row.addEventListener("touchend", (e) => {
-      touchend(e);        
-    }, false);
-
-    this.switcher = this.makeAreaSwitcher(row);
-
-    if (add_note_area) {
-      let notef = document.createElement("noteframe-x");
-      notef.ctx = this.ctx;
-      row._add(notef);
-    }
-
-    this.header = row;
-    
-    return row;
-  }
-  
-  setCSS() {
-    if (this.size !== undefined) {
-      this.style["position"] = "absolute";
-      //this.style["left"] = this.pos[0] + "px";
-      //this.style["top"] = this.pos[1] + "px";
-      this.style["width"] = ~~this.size[0] + "px";
-      this.style["height"] = ~~this.size[1] + "px";
-    }
-  }
-  
-  update() {
-    //don't update non-active editors
-    if (this.owning_sarea === undefined || this !== this.owning_sarea.area) {
-      return;
-    }
-
-    super.update();
-    
-    //see FrameManager.js, we use a single update
-    //function for everything now
-    //this._forEachChildWidget((n) => {
-    //  n.update();
-    //});
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-  }
-
-  static define() {return {
-    tagname  : undefined, // e.g. "areadata-x",
-    areaname : undefined, //api name for area type
-    uiname   : undefined,
-    icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
-  };}
-  
-  //subclassing loadSTRUCTs should either call this, or invoke super.loadSTRUCT()
-  afterSTRUCT() {
-    this.doOnce(() => {
-      try {
-        console.log("load ui data");
-        loadUIData(this, this.saved_uidata);
-        this.saved_uidata = undefined;
-      } catch (error) {
-        console.log("failed to load ui data");
-        print_stack$1(error);
-      }
-    });
-  }
-
-  static newSTRUCT(reader) {
-    return document.createElement(this.define().tagname);
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-  }
-  
-  _getSavedUIData() {
-    return saveUIData(this, "area");
-  }
-}
-
-Area.STRUCT = `
-pathux.Area { 
-  saved_uidata : string | obj._getSavedUIData();
-}
-`;
-
-nstructjs.manager.add_class(Area);  
-//ui_base.UIBase.register(Area);
-
-class ScreenArea extends UIBase {
-  constructor() {
-    super();
-    
-    this._borders = [];
-    
-    this._sarea_id = contextWrangler.idgen++;
-    
-    this.pos = new Vector2$3();
-    this.size = new Vector2$3();
-
-    this.floating = false;
-
-    this.area = undefined;
-    this.editors = [];
-    this.editormap = {};
-
-    this.addEventListener("mouseover", (e) => {
-      if (haveModal()) {
-        return;
-      }
-
-      //console.log("screen area mouseover");
-      let screen = this.getScreen();
-      if (screen.sareas.active !== this && screen.sareas.active) {
-        screen.sareas.active.area.on_area_blur();
-      }
-
-      if (screen.sareas.active !== this) {
-        this.area.on_area_focus();
-      }
-
-      screen.sareas.active = this;
-    });
-
-    //this.addEventListener("mouseleave", (e) => {
-      //console.log("screen area mouseleave");
-    //});
-  }
-  
-  /*
-  saveData() {
-    return {
-      _sarea_id : this._sarea_id,
-      pos       : this.pos,
-      size      : this.size,
-    };
-  }
-  loadData(obj) {
-    super.loadData(obj);
-
-    let id = obj._sarea_id;
-    
-    let type = obj.areatype;
-    
-    if (id !== undefined && id !== null) {
-      this._sarea_id = id;
-    }
-    
-    for (let area of this.editors) {
-      if (area.areaType == type) {
-        console.log("             found saved area type");
-        
-        this.switch_editor(area.constructor);
-      }
-    }
-    
-    this.pos.load(obj.pos);
-    this.size.load(obj.size);
-  }//*/
-
-  get borderLock() {
-    return this.area !== undefined ? this.area.borderLock : 0;
-  }
-
-  _side(border) {
-    return this._borders.indexOf(border);
-  }
-
-  init() {
-    super.init();
-
-    this.noMarginsOrPadding();
-  }
-
-  draw() {
-    if (this.area.draw) {
-      this.area.push_ctx_active();
-      this.area.draw();
-      this.area.pop_ctx_active();
-    }
-  }
-  
-  toJSON() {
     let ret = {
-      editors : this.editors,
-      _sarea_id : this._sarea_id,
-      area : this.area.constructor.define().areaname,
-      pos : this.pos,
-      size : this.size
+      _closed: this._closed
     };
-    
-    return Object.assign(super.toJSON(), ret);
+
+    return Object.assign(super.saveData(), ret);
   }
 
-  on_keydown(e) {
-    if (this.area.on_keydown) {
-      this.area.push_ctx_active();
-      this.area.on_keydown(e);
-      this.area.pop_ctx_active();
-    }
+  loadData(obj) {
+    this.closed = obj._closed;
   }
 
-  loadJSON(obj) {
-    if (obj === undefined) {
-      console.warn("undefined in loadJSON");
-      return;
-    }
+  clear() {
+    this.clear();
+    this.add(this.titleframe);
+  }
 
-    super.loadJSON(obj);
-    
-    this.pos.load(obj.pos);
-    this.size.load(obj.size);
-    
-    for (let editor of obj.editors) {
-      let areaname = editor.areaname;
-      
-      //console.log(editor);
-      
-      let tagname = areaclasses[areaname].define().tagname;
-      let area = document.createElement(tagname);
-      
-      area.owning_sarea = this;
-      this.editormap[areaname] = area;
-      this.editors.push(this.editormap[areaname]);
+  get inherit_packflag() {
+    if (!this.contents) return;
+    return this.contents.inherit_packflag;
+  }
 
-      area.pos = new Vector2$3(obj.pos);
-      area.size = new Vector2$3(obj.size);
-      area.ctx = this.ctx;
-      
-      area.inactive = true;
-      area.loadJSON(editor);
-      area.owning_sarea = undefined;
-      
-      if (areaname === obj.area) {
-        this.area = area;
-      }
-    }
-    
-    if (this.area !== undefined) {
-      this.area.ctx = this.ctx;
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
-      this.area.owning_sarea = this;
-      
-      this.area.pos = this.pos;
-      this.area.size = this.size;
-      
-      this.area.inactive = false;
-      this.shadow.appendChild(this.area);
-      this.area.on_area_active();
-      this.area.onadd();
-    }
-    
+  set inherit_packflag(val) {
+    if (!this.contents) return;
+    this.contents.inherit_packflag = val;
+  }
+
+  get packflag () {
+    if (!this.contents) return;
+    return this.contents.packflag;
+  }
+
+  set packflag(val) {
+    if (!this.contents) return;
+    this.contents.packflag = val;
+  }
+
+  init() {
+    super.init();
+
+    //con.style["margin-left"] = "5px";
+    let con = this.titleframe = this.row();
+
     this.setCSS();
-  }
-  
-  _ondestroy() {
-    super._ondestroy();
-    
-    for (let editor of this.editors) {
-      if (editor === this.area) continue;
-      
-      editor._ondestroy();
-    }
-  }
-  
-  getScreen() {
-    if (this.screen !== undefined) {
-      return this.screen;
-    }
 
-    //try to walk up graph, if possible
-    let p = this.parentNode;
-    let _i = 0;
+    let row = con;
 
-    while (p && !(p instanceof Screen) && p !== p.parentNode) {
-      p = this.parentNode;
+    let iconcheck = document.createElement("iconcheck-x");
+    this.iconcheck = iconcheck;
 
-      if (_i++ > 1000) {
-        console.warn("infinite loop detected in ScreenArea.prototype.getScreen()");
-        return undefined;
-      }
-    }
-    
-    return p instanceof Screen ? p : undefined;
-  }
-  
-  copy(screen) {
-    let ret = document.createElement("screenarea-x");
-    
-    ret.screen = screen;
-    ret.ctx = this.ctx;
-    
-    ret.pos[0] = this.pos[0];
-    ret.pos[1] = this.pos[1];
-    
-    ret.size[0] = this.size[0];
-    ret.size[1] = this.size[1];
-    
-    for (let area of this.editors) {
-      let cpy = area.copy();
-      
-      cpy.ctx = this.ctx;
-      ret.editors.push(cpy);
+    this.style["width"] = "100%";
 
-      if (area === this.area) {
-        ret.area = cpy;
-      }
-    }
-    
-    //console.trace("RET.AREA", this.area, ret.area);
+    this.overrideDefault("BoxMargin", 0);
+    iconcheck.overrideDefault("BoxMargin", 0);
 
-    ret.ctx = this.ctx;
+    iconcheck.noMarginsOrPadding();
 
-    if (ret.area !== undefined) {
-      ret.area.ctx = this.ctx;
+    iconcheck.overrideDefault("BoxBG", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("BoxSubBG", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
 
-      ret.area.pos = ret.pos;
-      ret.area.size = ret.size;
-      ret.area.owning_sarea = ret;
-      
-      ret.shadow.appendChild(ret.area);
-      //ret.area.onadd();
-      
-      if (ret.area._init_done) {
-        ret.area.push_ctx_active();
-        ret.area.on_area_active();
-        ret.area.pop_ctx_active();
-      } else {
-        ret.doOnce(() => {
-          ret._init();
-          ret.area._init();
-          ret.area.push_ctx_active();
-          ret.area.on_area_active();
-          ret.area.pop_ctx_active();
-        });
-      }
-    }
-    
-    return ret;
-  }
-  
-  loadFromVerts() {
-    let bs = this._borders;
+    iconcheck.ctx = this.ctx;
+    iconcheck._icon_pressed = Icons.UI_EXPAND;
+    iconcheck._icon = Icons.UI_COLLAPSE;
+    iconcheck.drawCheck = false;
+    iconcheck.iconsheet = IconSheets.SMALL;
+    iconcheck.checked = this._closed;
 
-    let min = new Vector2$3([1e17, 1e17]);
-    let max = new Vector2$3([-1e17, -1e17]);
+    this.iconcheck.onchange = (e) => {
+      this.closed = this.iconcheck.checked;
+    };
 
-    for (let b of bs) {
-      min.min(b.v1);
-      min.min(b.v2);
-      max.max(b.v1);
-      max.max(b.v2);
-    }
-    
-    this.pos[0] = Math.floor(min[0]);
-    this.pos[1] = Math.floor(min[1]);
-    
-    this.size[0] = Math.floor(max[0] - min[0]);
-    this.size[1] = Math.floor(max[1] - min[1]);
-    
-    this.setCSS();
-  }
-  
-  on_resize(size, oldsize) {
-    super.on_resize(size, oldsize);
-    
-    if (this.area !== undefined) {
-      this.area.on_resize(size, oldsize);
-    }      
-  }
-  
-  makeBorders(screen) {
-    this._borders.length = 0;
-    this._verts.length = 0;
-    
-    let p = this.pos, s = this.size;
-    
-    let vs = [
-      new Vector2$3([p[0],      p[1]]),
-      new Vector2$3([p[0],      p[1]+s[1]]),
-      new Vector2$3([p[0]+s[0], p[1]+s[1]]),
-      new Vector2$3([p[0]+s[0], p[1]])
-    ];
+    row._add(iconcheck);
 
-    for (let i=0; i<vs.length; i++) {
-      let v1 = vs[i], v2 = vs[(i + 1) % vs.length];
+    //stupid css, let's just hackishly put " " to create spacing2
 
-      let b = screen.getScreenBorder(this, v1, v2, i);
+    let onclick = (e) => {
+      console.log("panel header click");
+      iconcheck.checked = !iconcheck.checked;
+    };
 
-      if (v1.vectorDistance(b.v1) < v1.vectorDistance(b.v2)) {
-        this._verts.push(b.v1);
-      } else {
-        this._verts.push(b.v2);
-      }
+    let label = row.label(this.getAttribute("title"));
 
-      for (let j=0; j<2; j++) {
-        let v = j ? b.v2 : b.v1;
+    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
+    label.overrideDefault("DefaultText", this.getDefault("TitleText").copy());
 
-        if (v.sareas.indexOf(this) < 0) {
-          v.sareas.push(this);
-        }
-      }
+    label.noMarginsOrPadding();
+    label.addEventListener("mousedown", onclick);
+    label.addEventListener("touchdown", onclick);
 
-      if (b.sareas.indexOf(this) < 0) {
-        b.sareas.push(this);
-      }
-      
-      this._borders.push(b);
+    row.background = this.getDefault("BoxSubBG");
+    row.style["border-radius"] = "5px";
 
-      b.movable = screen.isBorderMovable(this, b);
-    }
-    
-    return this;
-  }
-  
-  setCSS() {
-    this.style["position"] = "absolute";
-    
-    this.style["left"] = ~~this.pos[0] + "px";
-    this.style["top"] = ~~this.pos[1] + "px";
-    
-    this.style["width"] = ~~this.size[0] + "px";
-    this.style["height"] = ~~this.size[1] + "px";
-    
-    
-    if (this.area !== undefined) {
-      this.area.setCSS();
-      //this.style["overflow"] = this.area.style["overflow"];
-      
-      //this.area.style["width"] = this.size[0] + "px";
-      //this.area.style["height"] = this.size[1] + "px";
-    }
-      
-    /*
-    if (this.area) {
-      let area = this.area;
-      area.style["position"] = "absolute";
-      
-      area.style["width"] = this.size[0] + "px";
-      area.style["height"] = this.size[1] + "px";
-    }
-    //*/
-  }
-  
-  appendChild(child) {
-    if (child instanceof Area) {
-      child.ctx = this.ctx;
-      child.pos = this.pos;
-      child.size = this.size;
-      
-      if (this.editors.indexOf(child) < 0) {
-        this.editors.push(child);
-      }
-      
-      child.owning_sarea = undefined;
-    }
-    
-    super.appendChild(child);
-    
-    if (child instanceof UIBase) {
-      child.onadd();
-    }
-  }
-  
-  switch_editor(cls) {
-    let def = cls.define();
-    let name = def.areaname;
-    
-    //areaclasses[name]
-    if (!(name in this.editormap)) {
-      this.editormap[name] = document.createElement(def.tagname);
-      this.editormap[name].ctx = this.ctx;
-      this.editormap[name].owning_sarea = this;
-      this.editormap[name].inactive = false;
-      
-      this.editors.push(this.editormap[name]);
-    }
-    
-    //var finish = () => {
-      if (this.area !== undefined) {
-        //break direct pos/size references for old active area
-        this.area.pos = new Vector2$3(this.area.pos);
-        this.area.size = new Vector2$3(this.area.size);
-        
-        this.area.owning_sarea = undefined;
-        this.area.inactive = true;
-        this.area.push_ctx_active();
-        this.area._init(); //check that init was called
-        this.area.on_area_inactive();
-        this.area.pop_ctx_active();
-        
-        this.area.remove();
-      }
-      
-      this.area = this.editormap[name];
+    this.background = this.getDefault("BoxSub2BG");
 
-      this.area.inactive = false;
-      
-      //. . .and set references to pos/size
-      this.area.pos = this.pos;
-      this.area.size = this.size;
-      this.area.owning_sarea = this;
-      this.area.ctx = this.ctx;
+    row.style["padding-right"] = "20px";
+    row.style["padding-left"] = "5px";
+    row.style["padding-top"] = "7px";
+    row.style["padding-bottom"] = "5px";
 
-      this.area.packflag |= this.packflag;
-
-      this.shadow.appendChild(this.area);
-
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
-
-      //propegate new size
-      this.area.push_ctx_active();
-      this.area._init(); //check that init was called
-      this.area.on_resize(this.size, this.size);
-      this.area.pop_ctx_active();
-
-      this.area.push_ctx_active();
-      this.area.on_area_active();
-      this.area.pop_ctx_active();
-
-      this.regenTabOrder();
-    //}
+    this.contents.ctx = this.ctx;
+    this.add(this.contents);
   }
 
-  _checkWrangler() {
-    contextWrangler._checkWrangler(this.ctx);
+  static define() {
+    return {
+      tagname: "panelframe-x"
+    };
   }
 
   update() {
-    this._checkWrangler();
-
     super.update();
-
-    //flag client controller implementation that
-    //this area is active for its type
-    if (this.area !== undefined) {
-      this.area.owning_sarea = this;
-      this.area.size = this.size;
-      this.area.pos = this.pos;
-
-      this.area.push_ctx_active(true);
-    }
-
-    this._forEachChildWidget((n) => {
-      n.update();
-    });
-
-    if (this.area !== undefined) {
-      this.area.pop_ctx_active(true);
-    }
   }
 
-  static newSTRUCT() {
-    return document.createElement("screenarea-x");
-  }
-
-  afterSTRUCT() {
-    for (let area of this.editors) {
-      area.pos = this.pos;
-      area.size = this.size;
-      area.owning_sarea = this;
-
-      area.push_ctx_active();
-      area._ctx = this.ctx;
-      area.afterSTRUCT();
-      area.pop_ctx_active();
-    }
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    this.pos = new Vector2$3(this.pos);
-    this.size = new Vector2$3(this.size);
-    
-    //find active editor
-    
-    let editors = [];
-
-    for (let area of this.editors) {
-      if (!area.constructor || !area.constructor.define) {
-        //failed to load this area
-        continue;
-      }
-
-      /*
-      if (area.constructor === undefined || area.constructor.define === undefined) {
-        console.warn("Missing class for area", area, "maybe buggy loadSTRUCT()?");
-        continue;
-      }
-      //*/
-      
-      let areaname = area.constructor.define().areaname;
-
-      area.inactive = true;
-      area.owning_sarea = undefined;
-      this.editormap[areaname] = area;
-      
-      if (areaname === this.area) {
-        this.area = area;
-      }
-
-      editors.push(area);
-    }
-    this.editors = editors;
-    
-    if (typeof this.area !== "object") {
-      let area = this.editors[0];
-
-      console.warn("Failed to find active area!", this.area);
-
-      if (typeof area !== "object") {
-        for (let k in areaclasses) {
-          area = areaclasses[k].define().tagname;
-          area = document.createElement(area);
-          let areaname = area.constructor.define().areaname;
-
-          this.editors.push(area);
-          this.editormap[areaname] = area;
-
-          break;
-        }
-      }
-
-      if (area) {
-        this.area = area;
-      }
-    }
-
-    if (this.area !== undefined) {
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
-      this.area.owning_sarea = this;
-
-      this.area.pos = this.pos;
-      this.area.size = this.size;
-
-      this.area.inactive = false;
-      this.shadow.appendChild(this.area);
-
-      this.doOnce(() => {
-        this.area.ctx = this.ctx;
-        this.area._init(); //ensure init has been called already
-        this.area.on_area_active();
-        this.area.onadd();
-      });        
-    }
-  }
-  
-  static define() {return {
-    tagname : "screenarea-x"
-  };}
-}
-
-ScreenArea.STRUCT = `
-pathux.ScreenArea { 
-  pos      : array(float);
-  size     : array(float);
-  type     : string;
-  floating : int; 
-  editors  : array(abstract(pathux.Area));
-  area     : string | obj.area.constructor.define().areaname;
-}
-`;
-
-nstructjs.manager.add_class(ScreenArea);  
-UIBase.register(ScreenArea);
-
-function aabb_overlap_area(pos1, size1, pos2, size2) {
-  let r1=0.0, r2=0.0;
-
-  for (let i=0; i<2; i++) {
-    let a1 = pos1[i], a2 = pos2[i];
-    let b1 = pos1[i] + size1[i];
-    let b2 = pos2[i] + size2[i];
-
-    if (b1 >= a2 && a1 <= b2) {
-      let r = a2 - b1;
-      
-      if (i) {
-        r2 = r;
-      } else {
-        r1 = r;
-      }
-    }
-  }
-
-  return r1*r2;
-}
-
-var Vector2$4 = Vector2, Vector3$1 = Vector3;
-var Vector4$2 = Vector4;
-
-var _cross_vec1=new Vector3$1();
-var _cross_vec2=new Vector3$1();
-const FLOAT_MIN = -1e+21;
-const FLOAT_MAX = 1e+22;
-
-var _static_grp_points4=new Array(4);
-var _static_grp_points8=new Array(8);
-
-class MinMax {
-  constructor(totaxis) {
-    if (totaxis==undefined) {
-        totaxis = 1;
-    }
-    this.totaxis = totaxis;
-    if (totaxis!=1) {
-        let cls;
-        
-        switch (totaxis) {
-          case 2:
-            cls = Vector2$4;
-            break;
-          case 3:
-            cls = Vector3$1;
-            break;
-          case 4:
-            cls = Vector4$2;
-            break;
-          default:
-            cls = Array;
-            break;
-        }
-        
-        this._min = new cls(totaxis);
-        this._max = new cls(totaxis);
-        this.min = new cls(totaxis);
-        this.max = new cls(totaxis);
-    }
-    else {
-      this.min = this.max = 0;
-      this._min = FLOAT_MAX;
-      this._max = FLOAT_MIN;
-    }
-    this.reset();
-    this._static_mr_co = new Array(this.totaxis);
-    this._static_mr_cs = new Array(this.totaxis*this.totaxis);
-  }
-  
-  load(mm) {
-    if (this.totaxis==1) {
-        this.min = mm.min;
-        this.max = mm.max;
-        this._min = mm.min;
-        this._max = mm.max;
-    }
-    else {
-      this.min = new Vector3$1(mm.min);
-      this.max = new Vector3$1(mm.max);
-      this._min = new Vector3$1(mm._min);
-      this._max = new Vector3$1(mm._max);
-    }
-  }
-  
-  reset() {
-    var totaxis=this.totaxis;
-    if (totaxis==1) {
-        this.min = this.max = 0;
-        this._min = FLOAT_MAX;
-        this._max = FLOAT_MIN;
-    }
-    else {
-      for (var i=0; i<totaxis; i++) {
-          this._min[i] = FLOAT_MAX;
-          this._max[i] = FLOAT_MIN;
-          this.min[i] = 0;
-          this.max[i] = 0;
-      }
-    }
-  }
-
-  minmax_rect(p, size) {
-    var totaxis=this.totaxis;
-    var cs=this._static_mr_cs;
-    if (totaxis==2) {
-        cs[0] = p;
-        cs[1] = [p[0]+size[0], p[1]];
-        cs[2] = [p[0]+size[0], p[1]+size[1]];
-        cs[3] = [p[0], p[1]+size[1]];
-    }
-    else 
-      if (totaxis = 3) {
-        cs[0] = p;
-        cs[1] = [p[0]+size[0], p[1], p[2]];
-        cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
-        cs[3] = [p[0], p[1]+size[0], p[2]];
-        cs[4] = [p[0], p[1], p[2]+size[2]];
-        cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
-        cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
-        cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
-    }
-    else {
-      throw "Minmax.minmax_rect has no implementation for "+totaxis+"-dimensional data";
-    }
-    for (var i=0; i<cs.length; i++) {
-        this.minmax(cs[i]);
-    }
-  }
-
-  minmax(p) {
-    var totaxis=this.totaxis;
-    
-    if (totaxis==1) {
-        this._min = this.min = Math.min(this._min, p);
-        this._max = this.max = Math.max(this._max, p);
-    } else if (totaxis == 2) {
-      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
-      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
-      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
-      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-    } else if (totaxis == 3) {
-      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
-      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
-      this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
-      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
-      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-      this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
+  _setVisible(state) {
+    if (state) {
+      this.contents.remove();
     } else {
-      for (var i=0; i<totaxis; i++) {
-          this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
-          this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
-      }
+      this.add(this.contents, false);
     }
+
+    this.contents.hidden = state;
+    return;
   }
 
-  static fromSTRUCT(reader) {
-    var ret=new MinMax();
-    reader(ret);
-    return ret;
-  }
-}MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
-var $smin_aabb_isect_line_2d=new Vector2$4();
-var $ssize_aabb_isect_line_2d=new Vector2$4();
-var $sv1_aabb_isect_line_2d=new Vector2$4();
-var $ps_aabb_isect_line_2d=[new Vector2$4(), new Vector2$4(), new Vector2$4()];
-var $smax_aabb_isect_line_2d=new Vector2$4();
-var $sv2_aabb_isect_line_2d=new Vector2$4();
-
-var _llc_l1=[new Vector3$1(), new Vector3$1()];
-var _llc_l2=[new Vector3$1(), new Vector3$1()];
-var _llc_l3=[new Vector3$1(), new Vector3$1()];
-var _llc_l4=[new Vector3$1(), new Vector3$1()];
-
-var lli_v1 = new Vector3$1(), lli_v2 = new Vector3$1(), lli_v3 = new Vector3$1(), lli_v4 = new Vector3$1();
-
-var _zero_cn = new Vector3$1();
-var _tmps_cn = cachering.fromConstructor(Vector3$1, 64);
-var _rets_cn = cachering.fromConstructor(Vector3$1, 64);
-
-var _asi_v1 = new Vector3$1();
-var _asi_v2 = new Vector3$1();
-var _asi_v3 = new Vector3$1();
-var _asi_v4 = new Vector3$1();
-var _asi_v5 = new Vector3$1();
-var _asi_v6 = new Vector3$1();
-
-var _asi2d_v1 = new Vector2$4();
-var _asi2d_v2 = new Vector2$4();
-var _asi2d_v3 = new Vector2$4();
-var _asi2d_v4 = new Vector2$4();
-var _asi2d_v5 = new Vector2$4();
-var _asi2d_v6 = new Vector2$4();
-
-var $e1_normal_tri=new Vector3$1();
-var $e3_normal_tri=new Vector3$1();
-var $e2_normal_tri=new Vector3$1();
-
-var $n2_normal_quad=new Vector3$1();
-
-var _li_vi=new Vector3$1();
-
-var dt2l_v1 = new Vector2$4();
-var dt2l_v2 = new Vector2$4();
-var dt2l_v3 = new Vector2$4();
-var dt2l_v4 = new Vector2$4();
-var dt2l_v5 = new Vector2$4();
-
-var dt3l_v1 = new Vector3$1();
-var dt3l_v2 = new Vector3$1();
-var dt3l_v3 = new Vector3$1();
-var dt3l_v4 = new Vector3$1();
-var dt3l_v5 = new Vector3$1();
-
-//p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
-var _cplw_vs4 = cachering.fromConstructor(Vector4$2, 64);
-var _cplw_vs3 = cachering.fromConstructor(Vector3$1, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$4, 64);
-
-//clip is optional, true.  clip point to lie within line segment v1->v2
-var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$1, 64);
-var _closest_point_rets = new cachering(function() {
-  return [0, 0];
-}, 64);
-
-var _closest_tmps = [new Vector3$1(), new Vector3$1(), new Vector3$1()];
-
-/*given input line (a,d) and tangent t,
-  returns a circle that goes through both
-  a and d, whose normalized tangent at a is the same
-  as normalized t.
-  
-  note that t need not be normalized, this function
-  does that itself*/
-var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$1, 32);
-var _circ_from_line_tan_ret = new cachering(function() {
-  return [new Vector3$1(), 0];
-});
-
-var _gtc_e1=new Vector3$1();
-var _gtc_e2=new Vector3$1();
-var _gtc_e3=new Vector3$1();
-var _gtc_p1=new Vector3$1();
-var _gtc_p2=new Vector3$1();
-var _gtc_v1=new Vector3$1();
-var _gtc_v2=new Vector3$1();
-var _gtc_p12=new Vector3$1();
-var _gtc_p22=new Vector3$1();
-var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
-
-var _sh_minv=new Vector3$1();
-var _sh_maxv=new Vector3$1();
-
-var static_cent_gbw = new Vector3$1();
-
-/*
-on factor;
-
-px := rox + rnx*t;
-py := roy + rny*t;
-pz := roz + rnz*t;
-
-f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
-ff := solve(f1, t);
-on fort;
-part(ff, 1, 2);
-off fort;
-
-* */
-var _isrp_ret=new Vector3$1();
-
-let SVG_URL = 'http://www.w3.org/2000/svg';
-
-let Vector2$5 = Vector2;
-
-class Overdraw extends UIBase {
-  constructor() {
-    super();
-
-    this.visibleToPick = false;
-
-    this.screen = undefined;
-    this.shapes = [];
-    this.otherChildren = []; //non-svg elements
-    this.font = undefined;
-
-    let style = document.createElement("style");
-    style.textContent = `
-      .overdrawx {
-        pointer-events : none;
-      }
-    `;
-    
-    this.shadow.appendChild(style);
-    
-    this.zindex_base = 100;
+  _updateClosed() {
+    this._setVisible(this._closed);
+    this.iconcheck.checked = this._closed;
   }
 
-  startNode(node, screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
-
-    if (!this.parentNode) {
-      node.appendChild(this);
-    }
-
-    this.style["display"] = "float";
-    this.style["z-index"] = this.zindex_base;
-
-    this.style["position"] = "absolute";
-    this.style["left"] = "0px";
-    this.style["top"] = "0px";
-
-    this.style["width"] = "100%"; //screen.size[0] + "px";
-    this.style["height"] = "100%"; //screen.size[1] + "px";
-
-    this.style["pointer-events"] = "none";
-
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style["width"] = "100%";
-    this.svg.style["height"] = "100%";
-
-    this.svg.style["pointer-events"] = "none";
-
-    this.shadow.appendChild(this.svg);
-    //this.style["background-color"] = "green";
+  get closed() {
+    return this._closed;
   }
 
-  start(screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
-    
-    screen.parentNode.appendChild(this);
-    
-    this.style["display"] = "float";
-    this.style["z-index"] = this.zindex_base;
-    
-    this.style["position"] = "absolute";
-    this.style["left"] = "0px";
-    this.style["top"] = "0px";
-    
-    this.style["width"] = "100%"; //screen.size[0] + "px";
-    this.style["height"] = "100%"; //screen.size[1] + "px";
-    
-    this.style["pointer-events"] = "none";
-    
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style["width"] = "100%";
-    this.svg.style["height"] = "100%";
-    
-    this.shadow.appendChild(this.svg);
-    
-    //this.style["background-color"] = "green";
-  }
-  
-  clear() {
-    for (let child of list(this.svg.childNodes)) {
-      child.remove();
-    }
-    
-    for (let child of this.otherChildren) {
-      child.remove();
-    }
-    
-    this.otherChildren.length = 0;
-  }
-
-  drawTextBubbles(texts, cos, colors) {
-    let boxes = [];
-    let elems = [];
-
-    let cent = new Vector2$5();
-
-    for (let i=0; i<texts.length; i++) {
-      let co = cos[i];
-      let text = texts[i];
-      let color;
-
-      if (colors !== undefined) {
-        color = colors[i];
-      }
-
-      cent.add(co);
-      let box = this.text(texts[i], co[0], co[1], {color : color});
-
-      boxes.push(box);
-      let font = box.style["font"];
-      let pat = /[0-9]+px/;
-      let size = font.match(pat)[0];
-
-      //console.log("size", size);
-
-      if (size === undefined) {
-        size = this.getDefault("DefaultText").size;
-      } else {
-        size = parsepx(size);
-      }
-
-      //console.log(size);
-      let tsize = measureTextBlock(this, text, undefined, undefined, size, font);
-
-      box.minsize = [
-        ~~tsize.width,
-        ~~tsize.height
-      ];
-
-      let pad = parsepx(box.style["padding"]);
-
-      box.minsize[0] += pad*2;
-      box.minsize[1] += pad*2;
-
-      let x = parsepx(box.style["left"]);
-      let y = parsepx(box.style["top"]);
-
-      box.grads = new Array(4);
-      box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$5([x, y]);
-
-      box.setCSS = function() {
-        this.style["padding"] = "0px";
-        this.style["margin"] = "0px";
-        this.style["left"] = ~~this.params[0] + "px";
-        this.style["top"] = ~~this.params[1] + "px";
-        this.style["width"] = ~~this.params[2] + "px";
-        this.style["height"] = ~~this.params[3] + "px";
-      };
-
-      box.setCSS();
-      //console.log(box.params);
-      elems.push(box);
-    }
-
-    if (boxes.length === 0) {
-      return;
-    }
-
-    cent.mulScalar(1.0 / boxes.length);
-
-    function error() {
-      let s1 = [0, 0], s2 = [0, 0];
-
-      let ret = 0.0;
-
-      for (let box1 of boxes) {
-        for (let box2 of boxes) {
-          if (box2 === box1) {
-            continue;
-          }
-
-          s1[0] = box1.params[2];
-          s1[1] = box1.params[3];
-          s2[0] = box2.params[2];
-          s2[1] = box2.params[3];
-
-          let overlap = aabb_overlap_area(box1.params, s1, box2.params, s2);
-          ret += overlap;
-        }
-
-        ret += box1.startpos.vectorDistance(box1.params)*0.25;
-      }
-
-      return ret;
-    }
-
-    function solve() {
-      //console.log("ERROR", error());
-      let r1 = error();
-      if (r1 === 0.0) {
-        return;
-      }
-
-      let df = 0.0001;
-      let totgs = 0.0;
-
-      for (let box of boxes) {
-        for (let i=0; i<box.params.length; i++) {
-          let orig = box.params[i];
-          box.params[i] += df;
-          let r2 = error();
-          box.params[i] = orig;
-
-          box.grads[i] = (r2 - r1) / df;
-          totgs += box.grads[i]**2;
-        }
-      }
-
-      if (totgs === 0.0) {
-        return;
-      }
-
-      r1 /= totgs;
-      let k = 0.4;
-
-      for (let box of boxes) {
-        for (let i = 0; i < box.params.length; i++) {
-          box.params[i] += -r1*box.grads[i]*k;
-        }
-
-        box.params[2] = Math.max(box.params[2], box.minsize[0]);
-        box.params[3] = Math.max(box.params[3], box.minsize[1]);
-
-        box.setCSS();
-      }
-    }
-
-    for (let i=0; i<15; i++) {
-      solve();
-    }
-
-    for (let box of boxes) {
-      elems.push(this.line(box.startpos, box.params));
-    }
-
-    return elems;
-  }
-
-  text(text, x, y, args={}) {
-    args = Object.assign({}, args);
-
-    if (args.font === undefined) {
-      if (this.font !== undefined)
-        args.font = this.font;
-      else
-        args.font = this.getDefault("DefaultText").genCSS();
-    }
-
-    if (!args["background-color"]) {
-      args["background-color"] = "rgba(75, 75, 75, 0.75)";
-    }
-
-    args.color = args.color ? args.color : "white";
-    if (typeof args.color === "object") {
-      args.color = color2css$2(args.color);
-    }
-
-    args["padding"] = args["padding"] === undefined ? "5px" : args["padding"];
-    args["border-color"] = args["border-color"] ? args["border-color"] : "grey";
-    args["border-radius"] = args["border-radius"] ? args["border-radius"] : "25px";
-    args["border-width"] = args["border-width"] !== undefined ? args["border-width"] : "2px";
-
-    if (typeof args["border-width"] === "number") {
-      args["border-width"] = "" + args["border-width"] + "px";
-    }
-    if (typeof args["border-radius"] === "number") {
-      args["border-radius"] = "" + args["border-radius"] + "px";
-    }
-
-      //not sure I need SVG for this. . .
-    let box = document.createElement("div");
-
-    box.setAttribute("class", "overdrawx");
-
-    box.style["position"] = "absolute";
-    box.style["width"] = "min-contents";
-    box.style["height"] = "min-contents";
-    box.style["border-width"] = args["border-width"];
-    box.style["border-radius"] = "25px";
-    box.style["pointer-events"] = "none";
-    box.style["z-index"] = this.zindex_base + 1;
-    box.style["background-color"] = args["background-color"];
-    box.style["padding"] = args["padding"];
-
-    box.style["left"] = x + "px";
-    box.style["top"] = y + "px";
-
-    box.style["display"] = "flex";
-    box.style["justify-content"] = "center";
-    box.style["align-items"] = "center";
-
-    box.innerText = text;
-    box.style["font"] = args.font;
-    box.style["color"] = args.color;
-
-    this.otherChildren.push(box);
-    this.shadow.appendChild(box);
-
-    return box;
-  }
-
-  circle(p, r, stroke="black", fill="none") {
-    let circle = document.createElementNS(SVG_URL, "circle");
-    circle.setAttribute("cx", p[0]);
-    circle.setAttribute("cy", p[1]);
-    circle.setAttribute("r", r);
-
-    if (fill) {
-      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
-    } else {
-      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
-    }
-
-    this.svg.appendChild(circle);
-
-    return circle;
-  }
-
-  line(v1, v2, color="black") {
-    let line = document.createElementNS(SVG_URL, "line");
-    line.setAttribute("x1", v1[0]);
-    line.setAttribute("y1", v1[1]);
-    line.setAttribute("x2", v2[0]);
-    line.setAttribute("y2", v2[1]);
-    line.setAttribute("style", `stroke:${color};stroke-width:2`);
-    
-    this.svg.appendChild(line);
-    return line;
-  }
-  
-  rect(p, size, color="black") {
-    let line = document.createElementNS(SVG_URL, "rect");
-    line.setAttribute("x", p[0]);
-    line.setAttribute("y", p[1]);
-    line.setAttribute("width", size[0]);
-    line.setAttribute("height", size[1]);
-    line.setAttribute("style", `fill:${color};stroke-width:2`);
-
-    line.setColor = (color) => {
-      line.setAttribute("style", `fill:${color};stroke-width:2`);
-    };
-
-    this.svg.appendChild(line);
-    return line;
-  }
-  
-  end() {
-    this.clear();
-    this.remove();
-  }
-  
-  static define() {return {
-    tagname : "overdraw-x"
-  };}
-}
-
-UIBase.register(Overdraw);
-
-let Vector2$6 = Vector2,
-    UndoFlags$1 = UndoFlags;
-//import {keymap} from './events';
-
-class ToolBase extends ToolOp {
-  constructor(screen) {
-    super();
-
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
-    
-    //super();
-    
-    this._finished = false;
-    this.screen = screen;
-  }
-  
-  start() {
-    //toolstack_getter().execTool(this);
-    this.modalStart(undefined);
-  }
-  
-  cancel() {
-    this.finish();
-  }
-  
-  finish() {
-    this._finished = true;
-    this.overdraw.end();
-    this.popModal(this.screen);
-  }
-
-  popModal() {
-    console.log("popModal called");
-
-    popModalLight(this.modaldata);
-    this.modaldata = undefined;
-  }
-
-  modalStart(ctx) {
-    this.ctx = ctx;
-
-    if (this.modaldata !== undefined) {
-      console.log("Error, modaldata was not undefined");
-      popModalLight(this.modaldata);
-    }
-
-    this.overdraw = document.createElement("overdraw-x");
-    this.overdraw.start(this.screen);
-
-    let handlers = {};
-    let keys = Object.getOwnPropertyNames(this);
-    for (let k in this.__proto__) {
-      keys.push(k);
-    }
-    for (let k of Object.getOwnPropertyNames(this.__proto__)) {
-      keys.push(k);
-    }
-
-    for (let k in this) {
-      keys.push(k);
-    }
-
-    for (let k of keys) {
-      if (k.startsWith("on")) {
-        handlers[k] = this[k].bind(this);
-      }
-    }
-
-    //window.setTimeout(() => {
-      this.modaldata = pushModalLight(handlers);
-      //console.log("HANDLERS", this.modaldata.handlers);
-      
-    //}, 100);
-
-    //window.addEventListener("touchmove", (e) => {
-    //  console.log("touchmove");
-    //}, {passive : false});
-  }
-  
-  on_mousemove(e) {
-  }
-  
-  on_mouseup(e) {
-    this.finish();
-  }
-  
-  on_keydown(e) {
-    console.log("s", e.keyCode);
-    
-    switch (e.keyCode) {
-      case keymap.Escape: //esc
-        this.cancel();
-        break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
-        this.finish();
-        break;
+  set closed(val) {
+    let update = !!val != !!this.closed;
+    this._closed = val;
+
+    //console.log("closed set", update);
+    if (update) {
+      this._updateClosed();
     }
   }
 }
 
-class AreaResizeTool extends ToolBase {
-  constructor(screen, border, mpos) {
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
-    
-    super(screen);
-    
-    this.start_mpos = new Vector2$6(mpos);
-    this.border = border;
-    this.screen = screen;
-  }
-  
-  static tooldef() {return {
-    uiname   : "Resize Area",
-    toolpath : "screen.area.resize",
-    icon     : Icons.RESIZE,
-    description : "change size of area",
-    is_modal : true,
-    hotkey : undefined,
-    undoflag : UndoFlags$1.NO_UNDO,
-    flag     : 0,
-    inputs   : {}, //tool properties
-    outputs  : {}  //tool properties
-  }}
-  
-  getBorders() {
-    let horiz = this.border.horiz;
-    
-    let ret = [];
-    let visit = new Set();
-    
-    let rec = (v) => {
-      if (visit.has(v._id)) {
-        return;
-      }
-      
-      visit.add(v._id);
-      
-      for (let border of v.borders) {
-        if (border.horiz == horiz && !visit.has(border._id)) {
-          visit.add(border._id);
-          ret.push(border);
-          
-          rec(border.otherVert(v));
-        }
-      }
-    };
-    
-    rec(this.border.v1);
-    rec(this.border.v2);
-    
-    return ret;
-  }
-
-  on_mouseup(e) {
-    this.finish();
-  }
-
-  on_keydown(e) {
-    switch (e.keyCode) {
-      case keymap["Escape"]:
-      case keymap["Enter"]:
-      case keymap["Space"]:
-        this.finish();
-        break;
-    }
-  }
-  on_mousemove(e) {
-    let mpos = new Vector2$6([e.x, e.y]);
-    
-    mpos.sub(this.start_mpos);
-    
-    let axis = this.border.horiz ? 1 : 0;
-    
-    //console.log(this.border.horiz);
-    
-    this.overdraw.clear();
-    
-    let visit = new Set();
-    let borders = this.getBorders();
-
-    let color =  "rgba(1.0, 0.5, 0.0, 1.0)";
-
-    let bad = false;
-
-    for (let border of borders) {
-      for (let sarea of border.sareas) {
-        bad = bad || !this.screen.isBorderMovable(sarea, border);
-      }
-
-      border.oldv1 = new Vector2$6(border.v1);
-      border.oldv2 = new Vector2$6(border.v2);
-    }
-
-    if (bad) {
-      console.log("border is not movable");
-      return;
-    }
-
-    let check = () => {
-      let count = 0;
-
-      for (let sarea of this.screen.sareas) {
-        if (sarea.size[0] < 15 || sarea.size[1] < 15) {
-          count++;
-        }
-      }
-
-      return count;
-    };
-
-    let badcount = check();
-
-    for (let border of borders) {
-      this.overdraw.line(border.v1, border.v2, color);
-      
-      if (!visit.has(border.v1._id)) {
-        border.v1[axis] += mpos[axis];
-        visit.add(border.v1._id);
-      }
-      
-      if (!visit.has(border.v2._id)) {
-        border.v2[axis] += mpos[axis];
-        visit.add(border.v2._id);
-      }
-    }
-    
-    this.start_mpos[0] = e.x;
-    this.start_mpos[1] = e.y;
-    this.screen.loadFromVerts();
-    this.screen.setCSS();
-
-    if (check() != badcount) {
-      console.log("bad");
-
-      for (let border of borders) {
-        border.v1.load(border.oldv1);
-        border.v2.load(border.oldv2);
-      }
-    }
-
-    this.screen.loadFromVerts();
-    this.screen.setCSS();
-  }
-}
-
-//controller.registerTool(SplitTool);
-
-
-class AreaDragTool extends ToolBase {
-  constructor(screen, sarea, mpos) {
-    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
-    
-    super(screen);
-    
-    this.cursorbox = undefined;
-    this.boxes = [];
-    this.boxes.active = undefined;
-
-    this.sarea = sarea;
-    this.start_mpos = new Vector2$6(mpos);
-    this.screen = screen;
-  }
-  
-  static tooldef() {return {
-    uiname   : "Drag Area",
-    toolpath : "screen.area.drag",
-    icon     : Icons.TRANSLATE,
-    description : "move or duplicate area",
-    is_modal : true,
-    hotkey : undefined,
-    undoflag : UndoFlags$1.NO_UNDO,
-    flag     : 0,
-    inputs   : {}, //tool properties
-    outputs  : {}  //tool properties
-  }}
-  
-  finish() {
-    super.finish();
-    
-    console.log("tool finish");
-  }
-  
-  getBoxRect(b) {
-    let sa = b.sarea;
-    let pos, size;
-    
-    if (b.horiz == -1) {
-      //replacement mode
-      pos = sa.pos;
-      size = sa.size;
-    } else if (b.horiz) {
-      if (b.side == 'b') {
-        pos = [sa.pos[0], sa.pos[1]+sa.size[1]*b.t];
-        size = [sa.size[0], sa.size[1]*(1.0-b.t)];
-      } else {
-        pos = [sa.pos[0], sa.pos[1]];
-        size = [sa.size[0], sa.size[1]*b.t];
-      }
-    } else {
-      if (b.side == 'r') {
-        pos = [sa.pos[0]+sa.size[0]*b.t, sa.pos[1]];
-        size = [sa.size[0]*(1.0-b.t), sa.size[1]];
-      } else {
-        pos = [sa.pos[0], sa.pos[1]];
-        size = [sa.size[0]*b.t, sa.size[1]];
-      }
-    }
-    
-    let color = "rgba(100, 100, 100, 0.2)";
-    
-    let ret = this.overdraw.rect(pos, size, color);
-    ret.style["pointer-events"] = "none";
-    
-    return ret;
-  }
-  
-  doSplit(b) {
-    if (this.sarea) {
-      return this.doSplitDrop(b);
-    }
-    
-    let src = this.sarea, dst = b.sarea;
-    let screen = this.screen;
-    
-    let t = b.t;
-    
-    screen.splitArea(dst, t, b.horiz);
-    screen._internalRegenAll();
-  }
-  
-  doSplitDrop(b) {
-    //first check if there was no change
-    if (b.horiz == -1 && b.sarea === this.sarea) {
-      return;
-    }
-    
-    let can_rip = false;
-    let sa = this.sarea;
-    let screen = this.screen;
-    
-    //rip conditions
-    can_rip = sa.size[0] == screen.size[0] || sa.size[1] == screen.size[1];
-    can_rip = can_rip && b.sarea !== sa;
-    can_rip = can_rip && (b.horiz == -1 || !screen.areasBorder(sa, b.sarea));
-    
-    let expand = b.horiz == -1 && b.sarea !== sa && screen.areasBorder(b.sarea, sa);
-    
-    can_rip = can_rip || expand;
-    
-    console.log("can_rip:", can_rip, expand);
-    
-    if (can_rip) {
-      screen.removeArea(sa);
-      screen.snapScreenVerts();
-    }
-    
-    if (b.horiz == -1) {
-      //replacement
-      let src = this.sarea, dst = b.sarea;
-      
-      if (can_rip) {
-        let mm;
-        
-        //handle case of one area "consuming" another
-        if (expand) {
-          mm = screen.minmaxArea(src);
-          screen.minmaxArea(dst, mm);
-        }
-        
-        console.log("replacing. . .", expand);
-        screen.replaceArea(dst, src);
-        
-        if (expand) {
-          console.log("\na:", src.size[0], src.size[1]);
-          
-          src.pos[0] = mm.min[0];
-          src.pos[1] = mm.min[1];
-          
-          src.size[0] = mm.max[0] - mm.min[0];
-          src.size[1] = mm.max[1] - mm.min[1];
-
-          screen._internalRegenAll();
-        }
-      } else {
-        //console.log("copying. . .");
-        screen.replaceArea(dst, src.copy());
-        screen._internalRegenAll();
-      }
-    } else {
-      let src = this.sarea, dst = b.sarea;
-      
-      let t = b.t;
-      
-      let nsa = screen.splitArea(dst, t, b.horiz);
-      
-      if (can_rip) {
-        //console.log("replacing");
-        screen.replaceArea(nsa, src);
-      } else {
-        //console.log("copying");
-        screen.replaceArea(nsa, src.copy());
-      }
-
-      screen._internalRegenAll();
-    }
-  }
-  
-  makeBoxes(sa) {
-    let sz = 40;
-    let cx = sa.pos[0] + sa.size[0]*0.5;
-    let cy = sa.pos[1] + sa.size[1]*0.5;
-    
-    let color = this.color = "rgba(200, 200, 200, 0.55)";
-    let hcolor = this.hcolor = "rgba(230, 230, 230, 0.75)";
-    let idgen = 0;
-    let boxes = this.boxes;
-    
-    let box = (x, y, sz, horiz, t, side) => {
-      //console.log(x, y, sz);
-      
-      let b = this.overdraw.rect([x-sz[0]*0.5, y-sz[1]*0.5], sz, color);
-      boxes.push(b);
-
-      b.sarea = sa;
-      
-      let style = document.createElement("style");
-      let cls = `mybox_${idgen++}`;
-      
-      b.horiz = horiz;
-      b.t = t;
-      b.side = side;
-      b.setAttribute("class", cls);
-      b.setAttribute("is_box", true);
-
-      b.addEventListener("mousemove", this.on_mousemove.bind(this));
-
-      let onclick = b.onclick = (e) => {
-        let type = e.type.toLowerCase();
-
-        if ((e.type == "mousedown" || e.type == "mouseup") && e.button != 0) {
-          return; //another handler will cancel
-        }
-
-        console.log("split click");
-
-        if (!this._finished) {
-          this.finish();
-          this.doSplit(b);
-          
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      };
-      
-      b.addEventListener("click", onclick);
-      b.addEventListener("mousedown", onclick);
-      b.addEventListener("mouseup", onclick);
-
-      b.addEventListener("mouseenter", (e) => {
-        console.log("mouse enter box");
-        
-        if (this.curbox !== undefined) {
-          if (this.curbox.rect) {
-            this.curbox.rect.remove();
-            this.curbox.rect = undefined;
-          }
-        }
-        
-        if (b.rect !== undefined) {
-          b.rect.remove();
-          b.rect = undefined;
-        }
-        
-        b.rect = this.getBoxRect(b);
-        this.curbox = b;
-
-        console.log("setting hcolor");
-        b.setColor(hcolor);
-        //b.style["background-color"] = hcolor;
-      });
-      
-      b.addEventListener("mouseleave", (e) => {
-        console.log("mouse leave box");
-        
-        if (b.rect) {
-          b.rect.remove();
-          b.rect = undefined;
-        }
-        
-        if (this.curbox === b) {
-          this.curbox = undefined;
-        }
-
-        b.setColor(color);
-        //b.style["background-color"] = color;
-      });
-      
-      style.textContent = `
-        .${cls}:hover {
-          background-color : orange;
-          fill:orange;stroke-width:2
-        }
-      `;
-      //console.log(style.textContent);
-      b.appendChild(style);
-      b.setAttribute("class", cls);
-
-      return b;
-    };
-    
-    let pad = 5;
-    
-    if (this.sarea) {
-      box(cx, cy, [sz, sz], -1, -1, -1);
-    }
-    
-    box(cx-sz*0.75-pad, cy, [sz*0.5, sz], false, 0.5, 'l');
-    box(cx-sz*1.2-pad, cy, [sz*0.25, sz], false, 0.3, 'l');
-    
-    box(cx+sz*0.75+pad, cy, [sz*0.5, sz], false, 0.5, 'r');
-    box(cx+sz*1.2+pad, cy, [sz*0.25, sz], false, 0.7, 'r');
-    
-    box(cx, cy-sz*0.75-pad, [sz, sz*0.5], true, 0.5, 't');
-    box(cx, cy-sz*1.2-pad, [sz, sz*0.25], true, 0.3, 't');
-    
-    box(cx, cy+sz*0.75+pad, [sz, sz*0.5], true, 0.5, 'b');
-    box(cx, cy+sz*1.2+pad, [sz, sz*0.25], true, 0.7, 'b');
-  }
-
-  getActiveBox(x, y) {
-    for (let n of this.boxes) {
-      if (n.hasAttribute && n.hasAttribute("is_box")) {
-        let rect = n.getClientRects()[0];
-
-        //console.log(rect.x, rect.y);
-        if (x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height) {
-          //console.log("found rect");
-          return n;
-        }
-      }
-    }
-  }
-
-  on_drag(e) {
-    this.on_mousemove(e);
-  }
-
-  on_dragend(e) {
-    this.on_mouseup(e);
-  }
-
-  on_mousemove(e) {
-    let wid = 55;
-    let color = "rgb(200, 200, 200, 0.7)";
-
-    //console.trace("mouse move!", e.x, e.y, this.sarea);
-
-    /*
-     manually feed events to boxes so as to work right
-     with touch events; note that pushModalLight routes
-     touch to mouse events (if no touch handlers are present).
-     */
-    let n = this.getActiveBox(e.x, e.y);
-
-    if (n !== undefined) {
-      n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
-    }
-    //console.log("mouse move", n);
-
-    if (this.boxes.active !== undefined && this.boxes.active !== n) {
-      this.boxes.active.setColor(this.color);
-      this.boxes.active.dispatchEvent(new MouseEvent("mouseleave", e));
-    }
-
-    if (n !== undefined) {
-      n.dispatchEvent(new MouseEvent("mouseenter", e));
-    }
-
-    this.boxes.active = n;
-    /*
-    let rec = (n) => {
-      if (n.hasAttribute && n.hasAttribute("is_box")) {
-        let rect = n.getClientRects()[0];
-
-        console.log(rect.x, rect.y);
-        if (x >= rect.x && x >= rect.y && x < rect.x+rect.width && y < rect.y+rect.height) {
-          console.log("found rect");
-          n.dispatchEvent("mouseenter", new MouseEvent("mouseenter", e));
-        }
-      }
-      if (n === undefined || n.childNodes === undefined) {
-        return;
-      }
-
-      for (let n2 of n.childNodes) {
-        rec(n2);
-      }
-      if (n.shadow) {
-        for (let n2 of n.shadow.childNodes) {
-          rec(n2);
-        }
-      }
-    };
-
-    rec(this.overdraw);
-    //*/
-    if (this.sarea === undefined) {
-      return;
-    }
-    
-    if (this.cursorbox === undefined) {
-      wid = 25;
-      this.cursorbox = this.overdraw.rect([e.x-wid*0.5, e.y-wid*0.5], [wid, wid], color);
-      this.cursorbox.style["pointer-events"] = "none";
-    } else {
-      this.cursorbox.style["x"] = (e.x-wid*0.5) + "px";
-      this.cursorbox.style["y"] = (e.y-wid*0.5) + "px";
-    }
-  }
-  
-  on_mouseup(e) {
-    console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
-
-    if (e.button) {
-      e.stopPropagation();
-      e.preventDefault();
-    } else {
-      let box = this.getActiveBox(e.x, e.y);
-
-      if (box !== undefined) {
-        box.onclick(e);
-      }
-    }
-    
-    this.finish();
-  }
-  
-  modalStart(ctx) {
-    super.modalStart(ctx);
-    
-    let screen = this.screen;
-    
-    this.overdraw.clear();
-    
-    if (this.sarea) {
-      let sa = this.sarea;
-      let box = this.overdraw.rect(sa.pos, sa.size, "rgba(100, 100, 100, 0.5)");
-      
-      box.style["pointer-events"] = "none";
-    }
-    
-    for (let sa of screen.sareas) {
-      this.makeBoxes(sa);
-    }
-  }
-}
-
-//controller.registerTool(AreaDragTool);
+UIBase$6.register(PanelFrame);
 
 let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
 
-let Vector4$3 = Vector4;
+let Vector2$3 = Vector2,
+  Vector3$1 = Vector3,
+  Vector4$2 = Vector4;
 
 function rgb_to_hsv (r,g,b) {
   var computedH = 0;
@@ -21805,8 +20722,8 @@ function rgb_to_hsv (r,g,b) {
   var computedV = 0;
 
   if ( r==null || g==null || b==null ||
-     isNaN(r) || isNaN(g)|| isNaN(b) ) {
-   throw new Error('Please enter numeric RGB values!');
+    isNaN(r) || isNaN(g)|| isNaN(b) ) {
+    throw new Error('Please enter numeric RGB values!');
   }
   /*
   if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
@@ -21820,7 +20737,7 @@ function rgb_to_hsv (r,g,b) {
   // Black-gray-white
   if (minRGB==maxRGB) {
     computedV = minRGB;
-    
+
     let ret = rgb_to_hsv_rets.next();
     ret[0] = 0, ret[1] = 0, ret[2] = computedV;
     return ret;
@@ -21829,11 +20746,11 @@ function rgb_to_hsv (r,g,b) {
   // Colors other than black-gray-white:
   var d = (r==minRGB) ? g-b : ((b==minRGB) ? r-g : b-r);
   var h = (r==minRGB) ? 3 : ((b==minRGB) ? 1 : 5);
-  
+
   computedH = (60*(h - d/(maxRGB - minRGB))) / 360.0;
   computedS = (maxRGB - minRGB)/maxRGB;
   computedV = maxRGB;
-  
+
   let ret = rgb_to_hsv_rets.next();
   ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
   return ret;
@@ -21844,68 +20761,68 @@ let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
 function hsv_to_rgb(h, s, v) {
   let c=0, m=0, x=0;
   let ret = hsv_to_rgb_rets.next();
-  
+
   ret[0] = ret[1] = ret[2] = 0.0;
   h *= 360.0;
-  
+
   c = v * s;
   x = c * (1.0 - Math.abs(((h / 60.0) % 2) - 1.0));
   m = v - c;
   let color;
-  
+
   function RgbF_Create(r, g, b) {
     ret[0] = r;
     ret[1] = g;
     ret[2] = b;
-    
+
     return ret;
   }
-  
+
   if (h >= 0.0 && h < 60.0)
   {
-      color = RgbF_Create(c + m, x + m, m);
+    color = RgbF_Create(c + m, x + m, m);
   }
   else if (h >= 60.0 && h < 120.0)
   {
-      color = RgbF_Create(x + m, c + m, m);
+    color = RgbF_Create(x + m, c + m, m);
   }
   else if (h >= 120.0 && h < 180.0)
   {
-      color = RgbF_Create(m, c + m, x + m);
+    color = RgbF_Create(m, c + m, x + m);
   }
   else if (h >= 180.0 && h < 240.0)
   {
-      color = RgbF_Create(m, x + m, c + m);
+    color = RgbF_Create(m, x + m, c + m);
   }
   else if (h >= 240.0 && h < 300.0)
   {
-      color = RgbF_Create(x + m, m, c + m);
+    color = RgbF_Create(x + m, m, c + m);
   }
-  else if (h >= 300.0 && h < 360.0)
+  else if (h >= 300.0)
   {
-      color = RgbF_Create(c + m, m, x + m);
+    color = RgbF_Create(c + m, m, x + m);
   }
   else
   {
-      color = RgbF_Create(m, m, m);
+    color = RgbF_Create(m, m, m);
   }
-  
+
   return color;
 }
 
-let UIBase$8 = UIBase; 
+let UIBase$7 = UIBase;
 
 let UPW = 1.25, VPW = 0.75;
 
 //*
-let sample_rets = new cachering(() => [0, 0], 64);      
+let sample_rets = new cachering(() => [0, 0], 64);
 function inv_sample(u, v) {
   let ret = sample_rets.next();
 
   ret[0] = Math.pow(u, UPW);
   ret[1] = Math.pow(v, VPW);
 
-return ret;
+  return ret;
 }
 
 function sample(u, v) {
@@ -21919,153 +20836,109 @@ function sample(u, v) {
 //*/
 
 let fieldrand = new MersenneRandom(0);
-    
+
+let huefields = {};
+function getHueField(width, height, dpi) {
+  let key = width + ":" + height + ":" + dpi.toFixed(4);
+
+  if (key in huefields) {
+    return huefields[key];
+  }
+
+  let field = new ImageData(width, height);
+  let idata = field.data;
+
+  for (let i=0; i<width*height; i++) {
+    let ix = i % width;
+    let idx = i*4;
+
+    let rgb = hsv_to_rgb(ix/width, 1, 1);
+
+    idata[idx] = rgb[0]*255;
+    idata[idx+1] = rgb[1]*255;
+    idata[idx+2] = rgb[2]*255;
+    idata[idx+3] = 255;
+  }
+
+  //*
+  let canvas = document.createElement("canvas");
+  canvas.width = field.width;
+  canvas.height = field.height;
+  let g = canvas.getContext("2d");
+  g.putImageData(field, 0, 0);
+  field = canvas;
+  //*/
+
+  huefields[key] = field;
+  return field;
+}
+
 let fields = {};
-function getFieldImage(size, hsva) {
+function getFieldImage(fieldsize, width, height, hsva) {
   fieldrand.seed(0);
-  
+
   let hue = hsva[0];
   let hue_rgb = hsv_to_rgb(hue, 1.0, 1.0);
-  let key = size + ":" + hue.toFixed(4);
-  
+  let key = fieldsize + ":" + width + ":" + height + ":" + hue.toFixed(5);
+
   if (key in fields)
     return fields[key];
-  
-  //console.log("generation color picker field of size", size);
-  
-  let size2 = 128;
-  let image = {
-    width : size, 
-    height : size, 
-    image : new ImageData(size2, size2)
-  };
-  
-  let scale = size2 / size;
-  
-  let idata = image.image.data;
-  let dpi = this.getDPI();
-  
-  let band =  20;
-  
-  let r2 = Math.ceil(size*0.5), r1 = r2 - band*dpi;
-  
-  let pad = 5*dpi;
-  let px1 = size*0.5 - r1 / Math.sqrt(2.0) + pad;
-  let py1 = size*0.5 - r1 / Math.sqrt(2.0) + pad;
-  
-  let pw = r1 / Math.sqrt(2)*2 - pad*2, ph = pw;
-  
-  image.params = {
-    r1 : r1,
-    r2 : r2,
-    
-    box : {
-      x : px1,
-      y : py1,
-      width : pw,
-      height : ph
-    }
-  };
-  
-  for (let i=0; i<size2*size2; i++) {
-    let x = i % size2, y = ~~(i / size2);
-    let idx = i*4;
-    let alpha = 0.0;
-    
-    let r = Math.sqrt((x-size2*0.5)**2 + (y-size2*0.5)**2);
-    
-    if (r < r2*scale && r > r1*scale) {
-      let th = Math.atan2(y-size2*0.5, x-size2*0.5) / (2 * Math.PI) + 0.5;
-      let eps = 0.001;
-      th = th*(1.0 - eps*2) + eps;
-      
-      let r=0, g=0, b=0;
-      
-      if (th < 1.0/6.0) {
-        r = 1.0;
-        g = th*6.0;
-      } else if (th < 2.0/6.0) {
-        th -= 1.0/6.0;
-        r = 1.0 - th*6.0;
-        g = 1.0;
-      } else if (th < 3.0/6.0) {
-        th -= 2.0/6.0;
-        g = 1.0;
-        b = th*6.0;
-      } else if (th < 4.0/6.0) {
-        th -= 3.0/6.0;
-        b = 1.0;
-        g = 1.0 - th*6.0;
-      } else if (th < 5.0/6.0) {
-        th -= 4.0/6.0;
-        r = th * 6.0;
-        b = 1.0;
-      } else if (th < 6.0/6.0) {
-        th -= 5.0/6.0;
-        r = 1.0;
-        b = 1.0 - th*6.0;
-      }
-      
-      /*
-      let l = Math.sqrt(r*r + g*g + b*b);
-      if (l > 0.0) {
-        r = (r / l)*255;
-        g = (g / l)*255;
-        b = (b / l)*255;
-      }//*/
-      //*
-      r = r*255 + (fieldrand.random()-0.5);
-      g = g*255 + (fieldrand.random()-0.5);
-      b = b*255 + (fieldrand.random()-0.5);
-      //*/
-      
-      idata[idx] = r;
-      idata[idx+1] = g;
-      idata[idx+2] = b;
-      
-      alpha = 1.0;
-    }
-    
-    let px2 = (px1 + pw)*scale, py2 = (py1 + ph)*scale;
-    
-    if (x > px1*scale && y > py1*scale && x < px2 && y < py2) {
-      let u = 1.0 - (x - px1*scale) / (px2 - px1*scale);
-      let v = 1.0 - (y - py1*scale) / (py2 - py1*scale);
-      
-      //let inv = fields.inv_sample(u, v);
-      //u = inv[0], v = inv[1];
-      u = Math.pow(u, UPW);
-      v = Math.pow(v, VPW);
-      
-      //u = u*u*(3.0 - 2.0*u);
-      //v = v*v*(3.0 - 2.0*v);
-      
-      let r=0, g=0, b=0;
-      
-      //(u*v)*255;
-      r = hue_rgb[0]*(1.0-u) + u;
-      g = hue_rgb[1]*(1.0-u) + u;
-      b = hue_rgb[2]*(1.0-u) + u;
-      
-      //let s = 255;
-      let fac = 1.0;
-      
-      //r = (~~(r*s + (fieldrand.random()-0.5)*fac))/s;
-      //g = (~~(g*s + (fieldrand.random()-0.5)*fac))/s;
-      //b = (~~(b*s + (fieldrand.random()-0.5)*fac))/s;
 
-      idata[idx+0] = r*v*255 + (fieldrand.random()-0.5)*fac;
-      idata[idx+1] = g*v*255 + (fieldrand.random()-0.5)*fac;
-      idata[idx+2] = b*v*255 + (fieldrand.random()-0.5)*fac;
-      
-      alpha = 1.0;
+  //console.log("generation color picker field of size", size);
+
+  let size2 = fieldsize;
+  let valpow = 0.75;
+
+  let image = {
+    width : width,
+    height : height,
+    image : new ImageData(fieldsize, fieldsize),
+
+    x2sat : (x) => {
+      return Math.min(Math.max(x/width, 0), 1);
+    },
+    y2val : (y) => {
+      y = 1.0 - Math.min(Math.max(y/height, 0), 1);
+
+      return y === 0.0 ? 0.0 : y**valpow;
+    },
+    sat2x : (s) => {
+       return s*width;
+    },
+    val2y : (v) => {
+      if (v == 0)
+        return height;
+
+      v = v**(1.0 / valpow);
+      return (1.0 - v)*height;
     }
-    
-    idata[idx+3] = alpha*255;
+  };
+
+  image.params = {
+    box : {
+      x : 0,
+      y : 0,
+      width : width,
+      height : height
+    }
+  };
+
+  let idata = image.image.data;
+  for (let i=0; i<idata.length; i += 4) {
+    let i2 = i/4;
+    let x = i2 % size2, y = ~~(i2 / size2);
+
+    let v = 1.0 - (y / size2);
+    let s = (x/size2);
+
+    let rgb = hsv_to_rgb(hsva[0], s, v**valpow);
+
+    idata[i] = rgb[0]*255;
+    idata[i+1] = rgb[1]*255;
+    idata[i+2] = rgb[2]*255;
+    idata[i+3] = 255;
   }
-  
-  //console.log("done.");
-  
+
   //*
   let image2 = document.createElement("canvas");
   image2.width = size2;
@@ -22074,426 +20947,600 @@ function getFieldImage(size, hsva) {
   g.putImageData(image.image, 0, 0);
   //*/
   image.canvas = image2;
-  image.scale = size / size2;
-  
+  image.scale = width / size2;
+
   fields[key] = image;
   return image;
 }
 
-let _update_temp = new Vector4$3();
+let _update_temp = new Vector4$2();
 
-class ColorField extends UIBase$8 {
+class SimpleBox {
+  constructor(pos=[0, 0], size=[1, 1]) {
+    this.pos = new Vector2$3(pos);
+    this.size = new Vector2$3(size);
+    this.r = 0;
+  }
+}
+
+class HueField extends UIBase$7 {
   constructor() {
     super();
-    
+
+    this.canvas = document.createElement("canvas");
+    this.g = this.canvas.getContext("2d");
+    this.shadow.appendChild(this.canvas);
+
+    let setFromXY = (x, y) => {
+      let dpi = this.getDPI();
+      let r = this.getDefault("circleSize");
+
+      let h = x / ((this.canvas.width - r*4)/dpi);
+      h = Math.min(Math.max(h, 0.0), 1.0);
+
+      this.hsva[0] = h;
+
+      if (this.onchange !== undefined) {
+        this.onchange(this.hsva);
+      }
+
+      this._redraw();
+    };
+
+    this.addEventListener("mousedown", (e) => {
+      let rect = this.canvas.getClientRects()[0];
+      let x = e.clientX - rect.x, y = e.clientY - rect.y;
+
+      setFromXY(x);
+
+      setTimeout(() => {
+        this.pushModal({
+          on_mousemove: (e) => {
+            let rect = this.canvas.getClientRects()[0];
+            let x = e.clientX - rect.x, y = e.clientY - rect.y;
+
+            setFromXY(x);
+          },
+          on_mousedown: (e) => {
+            this.popModal();
+          },
+          on_mouseup: (e) => {
+            this.popModal();
+          },
+          on_keydown: (e) => {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+              this.popModal();
+            }
+          }
+        });
+      }, 1);
+    });
+  }
+
+  _redraw() {
+    let g = this.g, canvas = this.canvas;
+    let dpi = this.getDPI();
+
+    let w = this.getDefault("defaultWidth");
+    let h = this.getDefault("hueheight");
+
+    canvas.width = ~~(w*dpi);
+    canvas.height = ~~(h*dpi);
+
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
+
+    let rselector = ~~(this.getDefault("circleSize") * dpi);
+
+    let w2 = canvas.width - rselector*4, h2 = canvas.height;
+
+    g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector*2, 0, w2, h2);
+
+    let x = this.hsva[0]*(canvas.width - rselector*4) + rselector*2;
+    let y = canvas.height*0.5;
+
+    g.beginPath();
+    g.arc(x, y, rselector, -Math.PI, Math.PI);
+    g.closePath();
+
+    g.strokeStyle = "white";
+    g.lineWidth = 3*dpi;
+    g.stroke();
+
+    g.strokeStyle = "grey";
+    g.lineWidth = 1*dpi;
+    g.stroke();
+
+    if (this.disabled) {
+      g.beginPath();
+      g.fillStyle = "rgba(25,25,25,0.75)";
+      g.rect(0, 0, this.canvas.width, this.canvas.height);
+      g.fill();
+    }
+  }
+
+  on_disabled() {
+    this._redraw();
+  }
+
+  on_enabled() {
+    this._redraw();
+  }
+
+  static define() {return {
+    tagname : "huefield-x",
+    style   : "colorfield"
+  };}
+}
+
+UIBase$7.register(HueField);
+
+class SatValField extends UIBase$7 {
+  constructor() {
+    super();
+
+    this.hsva = [0,0,0,1];
+
+    this.canvas = document.createElement("canvas");
+    this.g = this.canvas.getContext("2d");
+    this.shadow.appendChild(this.canvas);
+
+    this.onchange = undefined;
+
+    let setFromXY = (x, y) => {
+      let field = this._getField();
+      let r = ~~(this.getDefault("circleSize")*this.getDPI());
+
+      let sat = field.x2sat(x-r);
+      let val = field.y2val(y-r);
+
+      this.hsva[1] = sat;
+      this.hsva[2] = val;
+
+      if (this.onchange) {
+        this.onchange(this.hsva);
+      }
+
+      this._redraw();
+    };
+
+    this.canvas.addEventListener("mousedown", (e) => {
+      let rect = this.canvas.getClientRects()[0];
+      let x = e.clientX - rect.x, y = e.clientY - rect.y;
+
+      setFromXY(x, y);
+
+      setTimeout(() => {
+        this.pushModal({
+          on_mousemove: (e) => {
+            let rect = this.canvas.getClientRects()[0];
+            if (rect === undefined) {
+              return;
+            }
+            
+            let x = e.clientX - rect.x, y = e.clientY - rect.y;
+
+            setFromXY(x, y);
+          },
+          on_mousedown: (e) => {
+            this.popModal();
+          },
+          on_mouseup: (e) => {
+            this.popModal();
+          },
+          on_keydown: (e) => {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+              this.popModal();
+            }
+          }
+        });
+      }, 1);
+    });
+
+    this.canvas.addEventListener("touchstart", (e) => {
+      console.log("touch start");
+      let rect = this.canvas.getClientRects()[0];
+      let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+
+      setFromXY(x, y);
+
+      setTimeout(() => {
+        this.pushModal({
+          on_mousemove: (e) => {
+            let rect = this.canvas.getClientRects()[0];
+            let x, y;
+
+            if (e.touches && e.touches.length) {
+              x = e.touches[0].clientX - rect.x;
+              y = e.touches[0].clientY - rect.y;
+            } else {
+              x = e.x;
+              y = e.y;
+            }
+
+            setFromXY(x, y);
+          },
+          on_touchmove: (e) => {
+            let rect = this.canvas.getClientRects()[0];
+            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+
+            setFromXY(x, y);
+          },
+          on_mousedown: (e) => {
+            this.popModal();
+          },
+          on_touchcancel: (e) => {
+            this.popModal();
+          },
+          on_touchend: (e) => {
+            this.popModal();
+          },
+          on_mouseup: (e) => {
+            this.popModal();
+          },
+          on_keydown: (e) => {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+              this.popModal();
+            }
+          }
+        });
+      }, 1);
+    });
+  }
+
+  _getField() {
+    let dpi = this.getDPI();
+    let canvas = this.canvas;
+    let r = this.getDefault("circleSize");
+    let w = this.getDefault("defaultWidth");
+    let h = this.getDefault("defaultHeight");
+
+    //r = ~~(r*dpi);
+
+    return getFieldImage(this.getDefault("fieldsize"), w-r*2, h-r*2, this.hsva);
+  }
+
+  update(force_update=false) {
+    super.update();
+
+    if (force_update) {
+      this._redraw();
+    }
+  }
+
+  _redraw() {
+    let g = this.g, canvas = this.canvas;
+    let dpi = this.getDPI();
+
+    let w = this.getDefault("defaultWidth");
+    let h = this.getDefault("defaultHeight");
+
+    canvas.width = ~~(w*dpi);
+    canvas.height = ~~(h*dpi);
+
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
+    //SatValField
+
+    let rselector = ~~(this.getDefault("circleSize") * dpi);
+
+    let field = this._getField();
+    let image = field.canvas;
+
+    g.globalAlpha = 1.0;
+    g.beginPath();
+    g.rect(0, 0, canvas.width, canvas.height);
+    g.fillStyle = "rgb(200, 200, 200)";
+    g.fill();
+
+    g.beginPath();
+
+    let steps = 17;
+    let dx = canvas.width / steps;
+    let dy = canvas.height / steps;
+
+    for (let i=0; i<steps*steps; i++) {
+      let x = (i % steps)*dx, y = (~~(i / steps))*dy;
+
+      if (i % 2 == 0) {
+        continue;
+      }
+      g.rect(x, y, dx, dy);
+    }
+
+    g.fillStyle = "rgb(110, 110, 110)";
+    g.fill();
+
+    g.globalAlpha = this.hsva[3];
+    g.drawImage(image, 0, 0, image.width, image.height, rselector, rselector, canvas.width-rselector*2, canvas.height-rselector*2);
+
+    let hsva = this.hsva;
+
+    let x = field.sat2x(hsva[1])*dpi + rselector;
+    let y = field.val2y(hsva[2])*dpi + rselector;
+    let r = rselector;
+
+    g.beginPath();
+    g.arc(x, y, r, -Math.PI, Math.PI);
+    g.closePath();
+
+    g.strokeStyle = "white";
+    g.lineWidth = 3*dpi;
+    g.stroke();
+
+    g.strokeStyle = "grey";
+    g.lineWidth = 1*dpi;
+    g.stroke();
+
+    if (this.disabled) {
+      g.beginPath();
+      g.fillStyle = "rgba(25,25,25,0.75)";
+      g.rect(0, 0, this.canvas.width, this.canvas.height);
+      g.fill();
+    }
+  }
+
+  on_disabled() {
+    this._redraw();
+  }
+
+  on_enabled() {
+    this._redraw();
+  }
+
+  static define() {return {
+    tagname : "satvalfield-x",
+    style   : "colorfield"
+  };}
+}
+
+UIBase$7.register(SatValField);
+
+class ColorField extends ColumnFrame {
+  constructor() {
+    super();
+
     this.hsva = [0.05, 0.6, 0.15, 1.0];
-    this.rgba =new Vector4$3([0, 0, 0, 0]);
-    
+    this.rgba = new Vector4$2([0, 0, 0, 0]);
+
     this._recalcRGBA();
-    
+
     /*
     this.hbox = new SimpleBox();
     this.svbox = new SimpleBox();
     //*/
-    
+
     this._last_dpi = undefined;
-    
-    let canvas = this.canvas = document.createElement("canvas");
-    let g = this.g = canvas.getContext("2d");
-    
-    this.shadow.appendChild(canvas);
-    
-    let mx, my;
-    
-    let do_mouse = (e) => {
-      let r = this.canvas.getClientRects()[0];
-      let dpi = this.getDPI();
-      
-      mx = (e.pageX-r.x)*dpi;
-      my = (e.pageY-r.y)*dpi;
-    };
-    
-    let do_touch = (e) => {
-      if (e.touches.length == 0) {
-        mx = my = undefined;
-        return;
+
+    let satvalfield = this.satvalfield = document.createElement("satvalfield-x");
+    satvalfield.hsva = this.hsva;
+
+    let huefield = this.huefield = document.createElement("huefield-x");
+    huefield.hsva = this.hsva;
+
+    huefield.onchange = (e) => {
+      this.satvalfield._redraw();
+      this._recalcRGBA();
+
+      if (this.onchange) {
+        this.onchange(this.rgba);
       }
-      
-      let r = this.canvas.getClientRects()[0];
-      let dpi = this.getDPI();
-      let t = e.touches[0];
-      
-      mx = (t.pageX-r.x)*dpi;
-      my = (t.pageY-r.y)*dpi;
     };
-    
-    this.canvas.addEventListener("mousedown", (e) => {
-      do_mouse(e);
-      return this.on_mousedown(e, mx, my, e.button);
-    });
-    this.canvas.addEventListener("mousemove", (e) => {
-      do_mouse(e);
-      return this.on_mousemove(e, mx, my, e.button);
-    });
-    this.canvas.addEventListener("mouseup", (e) => {
-      do_mouse(e);
-      return this.on_mouseup(e, mx, my, e.button);
-    });
-    
-    this.canvas.addEventListener("touchstart", (e) => {
-      do_touch(e);
-      if (mx !== undefined)
-        return this.on_mousedown(e, mx, my, 0);
-    });
-    
-    this.canvas.addEventListener("touchmove", (e) => {
-      do_touch(e);
-      if (mx !== undefined)
-        return this.on_mousemove(e, mx, my, 0);
-    });
-    
-    this.canvas.addEventListener("touchend", (e) => {
-      do_touch(e);
-      if (mx !== undefined)
-        return this.on_mouseup(e, mx, my, 0);
-    });
-    
-    this.canvas.addEventListener("touchcancel", (e) => {
-      do_touch(e);
-      if (mx !== undefined)
-        return this.on_mouseup(e, mx, my, 0);
-    });
 
-    this.updateCanvas(true);
-  }
-  
-  pick_h(x, y) {
-    let field = this._field;
-    let size = field.width;
-    let dpi = this.getDPI();
-    
-    if (field === undefined) {
-      console.error("no field in colorpicker");
-      return //no field!
-    }
-    
-    
-    //console.log(x, y, size, "SIZE");
-    let th = Math.atan2(y-size/2, x-size/2)/(2*Math.PI) + 0.5;
-    
-    this.hsva[0] = th;
+    satvalfield.onchange = (e) => {
+      this._recalcRGBA();
 
-    this.update(true);
-    this._recalcRGBA();
-    
-    
-    if (this.onchange) {
-      this.onchange(this.hsva, this.rgba);
-    }
+      if (this.onchange) {
+        this.onchange(this.rgba);
+      }
+    };
+
+    this._add(satvalfield);
+    this._add(huefield);
+    //this.shadow.appendChild(canvas);
+    //this.shadow.appendChild(huecanvas);
   }
-  
+
   setHSVA(h, s, v, a=1.0, fire_onchange=true) {
     this.hsva[0] = h;
     this.hsva[1] = s;
     this.hsva[2] = v;
     this.hsva[3] = a;
-    
+
     this._recalcRGBA();
     this.update(true);
-    
+
     if (this.onchange && fire_onchange) {
       this.onchange(this.hsva, this.rgba);
     }
   }
-  
+
   setRGBA(r, g, b, a=1.0, fire_onchange=true) {
-    let ret = rgb_to_hsv(r, g, b);
-    
-    this.hsva[0] = ret[0];
-    this.hsva[1] = ret[1];
-    this.hsva[2] = ret[2];
+    let hsv = rgb_to_hsv(r, g, b);
+
+    this.hsva[0] = hsv[0];
+    this.hsva[1] = hsv[1];
+    this.hsva[2] = hsv[2];
     this.hsva[3] = a;
-    
+
     this._recalcRGBA();
     this.update(true);
-    
+
     if (this.onchange && fire_onchange) {
       this.onchange(this.hsva, this.rgba);
     }
   }
-  
+
   _recalcRGBA() {
     let ret = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    
+
     this.rgba[0] = ret[0];
     this.rgba[1] = ret[1];
     this.rgba[2] = ret[2];
     this.rgba[3] = this.hsva[3];
-    
+
     return this;
   }
-  
-  on_mousedown(e, x, y, button) {
-      if (button != 0)
-        return
-      
-      let field = this._field;
-      if (field === undefined)
-        return;
-      let size = field.width;
-      
-      let dpi = this.getDPI();
-      let r = Math.sqrt((x-size/2)**2 + (y-size/2)**2);
-      let pad = 5*dpi;
-      
-      let px1 = field.params.box.x, py1 = field.params.box.y, 
-          px2 = px1 + field.params.box.width, py2 = py1 + field.params.box.height;
-        
-      px1 -= pad*0.5;
-      py1 -= pad*0.5;
-      px2 += pad*0.5;
-      py2 += pad*0.5;
-      
-      if (r > field.params.r1-pad && r < field.params.r2+pad) {
-        this.pick_h(x, y);
-        this._mode = "h";
-      } else if (x >= px1 && x <= px2 && y >= py1 && y <= py2) {
-        this.pick_sv(x, y);
-        console.log("in box");
-        this._mode = "sv";
-      }
-      
-      
-      
-      e.preventDefault();
-      e.stopPropagation();
-      
-      console.log(x, y);
-      
+
+  updateDPI(force_update=false, _in_update=false) {
+    let dpi = this.getDPI();
+
+    let update = force_update;
+    update = update || dpi != this._last_dpi;
+
+    if (update) {
+      this._last_dpi = dpi;
+
+      if (!_in_update)
+        this._redraw();
+
+      return true;
+    }
   }
-  
-  pick_sv(x, y) {
-    let sv = this._sample_box(x, y);
-    
-    this.hsva[1] = sv[0];
-    this.hsva[2] = sv[1];
-    
+
+  setRGBA(r, g, b, a=1.0, fire_onchange=true) {
+    if (bad(r) || bad(g) || bad(b) || bad(a)) {
+      console.warn("Invalid value!");
+      return;
+    }
+
+    let ret = rgb_to_hsv(r, g, b);
+
+    function bad(f) {
+      return typeof f !== "number" || isNaN(f);
+    }
+
+    this.hsva[0] = ret[0];
+    this.hsva[1] = ret[1];
+    this.hsva[2] = ret[2];
+    this.hsva[3] = a;
+
     this._recalcRGBA();
     this.update(true);
-    
-    if (this.onchange) {
+
+    if (this.onchange && fire_onchange) {
       this.onchange(this.hsva, this.rgba);
     }
   }
-  
-  //return saturation and value
-  _sample_box(x, y) {
-    let field = this._field;
-    
-    if (field === undefined) {
-      return [-1, -1];
-    }
-    
-    let px = field.params.box.x, py = field.params.box.y, 
-        pw = field.params.box.width, ph = field.params.box.height;
-        
-    let u = (x - px) / pw;
-    let v = 1.0 - (y - py) / ph;
-    
-    u = Math.min(Math.max(u, 0.0), 1.0);
-    v = Math.min(Math.max(v, 0.0), 1.0);
-    
-    let ret = sample(u, 1.0-v);
-    u = ret[0], v = 1.0-ret[1];
-    
-    return [u, v];
-  }
-  
-  on_mousemove(e, x, y, button) {
-      if (this._mode == "h") {
-        this.pick_h(x, y);
-      } else if (this._mode == "sv") {
-        this.pick_sv(x, y);
-      }
-      
-      e.preventDefault();
-      e.stopPropagation();
-  }
-  
-  on_mouseup(e, x, y, button) {
-      this._mode = undefined;
-      
-      e.preventDefault();
-      e.stopPropagation();
-      console.log(x, y);
-  }
-  
-  updateCanvas(force_update=false, _in_update=false) {
-    let canvas = this.canvas;
-    let update = force_update;
-    
-    if (update) {
-      let size = this.getDefault("fieldsize");
-      let dpi = this.getDPI();
-      
-      canvas.style["width"] = size + "px";
-      canvas.style["height"] = size + "px";
-      
-      canvas.width = canvas.height = Math.ceil(size*dpi);
-      
-      //console.log("SIZE!", canvas.style["width"], canvas.style["height"]);
-      
-      //this._redraw();
-      if (!_in_update)
-        this._redraw();
-      
-      //this.doOnce(this._redraw);
-      return true;
-    }
-  }
-  
-  _redraw() {
-    let canvas = this.canvas, g = this.g;
-    let dpi = this.getDPI();
-    
-    let size = canvas.width;
-    let field = this._field = getFieldImage(size, this.hsva);
-    let w = size, h = size * field.height / field.width;
-    
-    //console.log("Redraw called!"); //, canvas, canvas.width, canvas.height, canvas.style);
-    
-    g.clearRect(0, 0, w, h); //canvas.width, canvas.height);
-    //g.putImageData(field.image, 0, 0);
-    g.drawImage(field.canvas, 0, 0, field.width, field.height);
-    
-    g.lineWidth = 2.0;
-
-    function circle(x, y, r) {
-      g.strokeStyle = "white";
-      g.beginPath();
-      g.arc(x, y, r, -Math.PI, Math.PI);
-      g.stroke();
-      
-      g.strokeStyle = "grey";
-      g.beginPath();
-      g.arc(x, y, r-1, -Math.PI, Math.PI);
-      g.stroke();
-      
-      g.fillStyle = "black";
-      g.beginPath();
-      g.arc(x, y, 2*dpi, -Math.PI, Math.PI);
-      g.fill();
-    }
-    
-    let hsva = this.hsva;
-    let r = (field.params.r2 - field.params.r1)*0.7;
-    let bandr = (field.params.r2 + field.params.r1)*0.5;
-    
-    //let th = Math.fract(hsva[0]+1/Math.PI**0.5);
-    let th = Math.fract(1.0 - hsva[0] - 0.25);
-    
-    let x = Math.sin(th*Math.PI*2)*bandr + size/2;
-    let y = Math.cos(th*Math.PI*2)*bandr + size/2;
-    
-    /*
-    this.hbox.pos[0] = x;
-    this.hbox.pos[1] = y;
-    this.hbox.size[0] = r;
-    this.hbox.size[1] = r;
-    //*/
-    
-    circle(x, y, r);
-    
-    let u = this.hsva[1], v = 1.0 - this.hsva[2];
-    let ret = inv_sample(u, v);
-    u = ret[0], v = ret[1];
-    
-    x = field.params.box.x + u*field.params.box.width;
-    y = field.params.box.y + v*field.params.box.height;
-    
-    circle(x, y, r);
-  }
-  
-  updateDPI(force_update=false, _in_update=false) {
-    let dpi = this.getDPI();
-    
-    let update = force_update;
-    update = update || dpi != this._last_dpi;
-    
-    if (update) {
-      this._last_dpi = dpi;
-      
-      this.updateCanvas(true);
-      
-      if (!_in_update)
-        this._redraw();
-      
-      return true;
-    }
-  }
-  
   update(force_update=false) {
     super.update();
-    
+
     let redraw = false;
-    
-    redraw = redraw || this.updateCanvas(force_update, true);
+
     redraw = redraw || this.updateDPI(force_update, true);
-    
+
     if (redraw) {
+      this.satvalfield.update(true);
       this._redraw();
     }
   }
-  
+
   static define() {return {
-    tagname : "colorfield0-x",
+    tagname : "colorfield-x",
     style : "colorfield"
   };}
-}
 
-UIBase$8.register(ColorField);
+  _redraw() {
+    this.satvalfield._redraw();
+    this.huefield._redraw();
+  }
+}
+UIBase$7.register(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
     super();
-    
+  }
+
+  init() {
+    super.init();
+
     this.field = document.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
-    
-    this.field.onchange = (hsva, rgba) => {
-      if (this.onchange) {
-        this.onchange(hsva, rgba);
-      }
 
+    this.field.packflag |= this.inherit_packflag;
+    this.field.packflag |= this.packflag;
+
+    this.field.onchange = () => {
       this._setDataPath();
       this._setSliders();
+
+      if (this.onchange) {
+        this.onchange(this.field.rgba);
+      }
     };
-    
+
     let style = document.createElement("style");
     style.textContent = `
       .colorpicker {
-        background-color : ${getDefault("InnerPanelBG")};
+        background-color : ${this.getDefault("BoxBG")};
       }
     `;
-    
-    
+
     this._style = style;
-    
+
+    let cb = this.colorbox = document.createElement("div");
+    cb.style["width"] = "100%";
+    cb.style["height"] = this.getDefault("colorBoxHeight") + "px";
+    cb.style["background-color"] = "black";
+
     this.shadow.appendChild(style);
     this.field.ctx = this.ctx;
-    this.shadow.appendChild(this.field);
-    //this._add(this.field);
-    //this.style["background-color"] = ui_base.getDefault("InnerPanelBG");
+
+    this.add(this.colorbox);
+    this.add(this.field);
+
+    this.style["width"] = this.getDefault("defaultWidth") + "px";
   }
-  
+
+  updateColorBox() {
+    let r = this.field.rgba[0], g = this.field.rgba[1], b = this.field.rgba[2];
+    //let a = this.field.rgba[3];
+
+    r = ~~(r*255);
+    g = ~~(g*255);
+    b = ~~(b*255);
+
+    let css = `rgb(${r},${g},${b})`;
+    this.colorbox.style["background-color"] = css;
+  }
+
   static setDefault(node) {
     let tabs = node.tabs();
+
+    node.cssText = node.textbox();
+    node.cssText.onchange = (val) => {
+      let ok = validateWebColor(val);
+      if (!ok) {
+        node.cssText.flash("red");
+        return;
+      } else {
+        node.cssText.flash("green");
+      }
+
+      val = val.trim();
+
+      let color = web2color(val);
+
+      console.log(color);
+
+      node._no_update_textbox = true;
+      console.log(color);
+      node.field.setRGBA(color[0], color[1], color[2], color[3]);
+      node._setSliders();
+
+      node._no_update_textbox = false;
+    };
+
+    tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
+
     let tab = tabs.tab("HSV");
-    
+
     node.h = tab.slider(undefined, "Hue", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
       let hsva = node.hsva;
       node.setHSVA(e.value, hsva[1], hsva[2], hsva[3]);
     });
+
     node.s = tab.slider(undefined, "Saturation", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
       let hsva = node.hsva;
       node.setHSVA(hsva[0], e.value, hsva[2], hsva[3]);
@@ -22507,9 +21554,8 @@ class ColorPicker extends ColumnFrame {
       node.setHSVA(hsva[0], hsva[1], hsva[2], e.value);
     });
 
-    
     tab = tabs.tab("RGB");
-    
+
     node.r = tab.slider(undefined, "R", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
       let rgba = node.rgba;
       node.setRGBA(e.value, rgba[1], rgba[2], rgba[3]);
@@ -22529,14 +21575,14 @@ class ColorPicker extends ColumnFrame {
 
     node._setSliders();
   }
-  
+
   _setSliders() {
     if (this.h === undefined) {
       //setDefault() wasn't called
       console.warn("colorpicker ERROR");
       return;
     }
-    
+
     let hsva = this.hsva;
     this.h.setValue(hsva[0], false);
     this.s.setValue(hsva[1], false);
@@ -22544,17 +21590,23 @@ class ColorPicker extends ColumnFrame {
     this.a.setValue(hsva[3], false);
 
     let rgba = this.rgba;
-    
+
     this.r.setValue(rgba[0], false);
     this.g.setValue(rgba[1], false);
     this.b.setValue(rgba[2], false);
     this.a2.setValue(rgba[3], false);
+
+    this.updateColorBox();
+
+    if (!this._no_update_textbox) {
+      this.cssText.text = color2web(this.field.rgba);
+    }
   }
-  
+
   get hsva() {
     return this.field.hsva;
   }
-  
+
   get rgba() {
     return this.field.rgba;
   }
@@ -22582,9 +21634,9 @@ class ColorPicker extends ColumnFrame {
     }
 
     if (_update_temp.vectorDistance(this.field.rgba) > 0.01)  {
-        console.log("VAL", val);
-      console.log("color changed!");
-      this.setRGBA(_update_temp[0], _update_temp[1], _update_temp[2], _update_temp[3]);
+      this.field.setRGBA(_update_temp[0], _update_temp[1], _update_temp[2], _update_temp[3], false);
+      this._setSliders();
+      this.field.update(true);
     }
   }
 
@@ -22598,29 +21650,312 @@ class ColorPicker extends ColumnFrame {
 
   _setDataPath() {
     if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+      if (prop === undefined) {
+        console.warn("Bad data path for color field:", this.getAttribute("datapath"));
+      }
+
+      let val = this.field.rgba;
+      if (prop !== undefined && prop.type == PropTypes.VEC3) {
+        val = new Vector3$1();
+        val.load(this.field.rgba);
+      }
+
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
     }
   }
 
   setHSVA(h, s, v, a) {
     this.field.setHSVA(h, s, v, a);
+    this._setSliders();
     this._setDataPath();
   }
-  
+
   setRGBA(r, g, b, a) {
     this.field.setRGBA(r, g, b, a);
+    this._setSliders();
     this._setDataPath();
   }
-  
+
   static define() {return {
-    tagname : "colorpicker0-x"
+    tagname : "colorpicker-x",
+    style : "colorfield"
   };}
 }
 
-UIBase$8.register(ColorPicker);
+UIBase$7.register(ColorPicker);
 
-let UIBase$9 = UIBase; 
 
+class ColorPickerButton extends UIBase$7 {
+  constructor() {
+    super();
+
+    this._highlight = false;
+    this._depress = false;
+    this._label = "";
+
+    this.rgba = new Vector4$2([1, 1, 1, 1]);
+    this.labelDom = document.createElement("span");
+    this.labelDom.textContent = "error";
+    this.dom = document.createElement("canvas");
+    this.g = this.dom.getContext("2d");
+
+    this.shadow.appendChild(this.labelDom);
+    this.shadow.appendChild(this.dom);
+  }
+
+  set label(val) {
+    this._label = val;
+    this.labelDom.textContent = val;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  init() {
+    super.init();
+    this._font = "DefaultText"; //this.getDefault("defaultFont");
+
+    let enter = (e) => {
+      console.log(e.type);
+      this._highlight = true;
+      this._redraw();
+    };
+
+    let leave = (e) => {
+      console.log(e.type);
+      this._highlight = false;
+      this._redraw();
+    };
+
+
+    this.addEventListener("mousedown", (e) => {
+      this.click(e);
+    });
+
+    this.addEventListener("mouseover", enter);
+    this.addEventListener("mouseleave", leave);
+    this.addEventListener("mousein", enter);
+    this.addEventListener("mouseout", leave);
+    this.addEventListener("focus", enter);
+    this.addEventListener("blur", leave);
+
+    this.setCSS();
+  }
+
+  click(e) {
+    //console.log("click!", this.getAttribute("mass_set_path"));
+
+    if (this.onclick) {
+      this.onclick(e);
+    }
+
+    let colorpicker = this.ctx.screen.popup(this, this);
+    colorpicker.useDataPathUndo = this.useDataPathUndo;
+
+    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
+
+    let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
+    widget._init();
+
+    widget.style["padding"] = "20px";
+    widget.onchange = onchange;
+  }
+
+  get font() {
+    return this._font;
+  }
+
+  set font(val) {
+    this._font = val;
+
+    this.setCSS();
+  }
+
+  _redraw() {
+    let canvas = this.dom, g = this.g;
+
+    g.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (this.disabled) {
+      let color = "rgb(55, 55, 55)";
+
+      g.save();
+
+      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+      let steps = 10;
+      let dt = canvas.width / steps, t = 0;
+
+      g.beginPath();
+      g.lineWidth = 2;
+      g.strokeStyle = "black";
+
+      for (let i=0; i<steps; i++, t += dt) {
+        g.moveTo(t, 0);
+        g.lineTo(t+dt, canvas.height);
+        g.moveTo(t+dt, 0);
+        g.lineTo(t, canvas.height);
+      }
+
+      g.stroke();
+      g.restore();
+      return;
+    }
+
+    //do checker pattern for alpha
+    g.save();
+
+    let grid1 = "rgb(100, 100, 100)";
+    let grid2 = "rgb(175, 175, 175)";
+
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
+
+    let cellsize = 10;
+    let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
+
+    //console.log("TOTX, TOTY", totx, toty);
+
+    g.beginPath();
+    for (let x=0; x<totx; x++) {
+      for (let y=0; y<toty; y++) {
+        if ((x+y) & 1) {
+          continue;
+        }
+
+        g.rect(x*cellsize, y*cellsize, cellsize, cellsize);
+      }
+    }
+
+    g.fillStyle = grid2;
+    g.fill();
+
+    //g.fillStyle = "orange";
+    //g.beginPath();
+    //g.rect(0, 0, canvas.width, canvas.height);
+    //g.fill();
+
+    let color = color2css(this.rgba);
+    //console.log(color);
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
+    //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
+
+    if (this._highlight) {
+      //let color = "rgba(200, 200, 255, 0.5)";
+      let color = this.getDefault("BoxHighlight");
+      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
+    }
+
+    g.restore();
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let w = this.getDefault("defaultWidth");
+    let h = this.getDefault("defaultHeight");
+    let dpi = this.getDPI();
+
+    this.style["width"] = "min-contents" + "px";
+    this.style["height"] = h + "px";
+
+    this.style["flex-direction"] = "row";
+    this.style["display"] = "flex";
+
+    this.labelDom.style["color"] = this.getDefault(this._font).color;
+    this.labelDom.style["font"] = getFont(this, undefined, this._font, false);
+
+    let canvas = this.dom;
+
+    canvas.style["width"] = w + "px";
+    canvas.style["height"] = h + "px";
+    canvas.width = ~~(w*dpi);
+    canvas.height = ~~(h*dpi);
+
+    this._redraw();
+  }
+
+  static define() {return {
+    tagname : "color-picker-button-x",
+    style   : "colorpickerbutton"
+  }}
+
+  updateDataPath() {
+    if (!(this.hasAttribute("datapath"))) {
+      return;
+    }
+
+    let path = this.getAttribute("datapath");
+    let prop = this.getPathMeta(this.ctx, path);
+
+    if ((prop === undefined || prop.data === undefined) && exports.DEBUG.verboseDataPath) {
+      console.log("bad path", path);
+      return;
+    } else if (prop === undefined) {
+      this.disabled = true;
+      return;
+    }
+
+    this.disabled = false;
+
+    prop = prop;
+
+    if (prop.uiname !== this._label) {
+      //console.log(prop);
+      this.label = prop.uiname;
+    }
+
+    let val = this.getPathValue(this.ctx, path);
+
+    if (val === undefined) {
+      let redraw = this.disabled !== true;
+
+      this.disabled = true;
+
+      if (redraw) {
+        this._redraw();
+      }
+
+      return;
+    } else {
+      let redraw = this.disabled;
+
+      this.disabled = false;
+
+      if (redraw) {
+        this._redraw();
+      }
+    }
+
+    if (this.rgba.vectorDistance(val) > 0.0001) {
+      if (prop.type == PropTypes.VEC3) {
+        this.rgba.load(val);
+        this.rgba[3] = 1.0;
+      } else {
+        this.rgba.load(val);
+      }
+
+      this._redraw();
+    }
+  }
+
+  update() {
+    super.update();
+
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+  }
+
+  redraw() {
+    this._redraw();
+  }
+}UIBase$7.register(ColorPickerButton);
+
+let UIBase$8 = UIBase; 
 
 let tab_idgen = 1;
 
@@ -22690,7 +22025,7 @@ class ModalTabMove extends EventHandler {
   
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$9.getDPI();
+    let dpi = UIBase$8.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -22752,7 +22087,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$9 {
+class TabBar extends UIBase$8 {
   constructor() {
     super();
     
@@ -23026,7 +22361,7 @@ class TabBar extends UIBase$9 {
     let canvas = this.canvas;
      
     let dpi = this.getDPI();
-    
+
     let rwidth = getpx(this.canvas.style["width"]);
     let rheight = getpx(this.canvas.style["height"]);
     
@@ -23094,8 +22429,6 @@ class TabBar extends UIBase$9 {
   }
   
   setActive(tab) {
-    console.warn("tab setActive");
-
     let update = tab !== this.tabs.active;
     this.tabs.active = tab;
     
@@ -23119,11 +22452,12 @@ class TabBar extends UIBase$9 {
     g.fill();
     
     let dpi = this.getDPI();
-    let tsize = this.getDefault("TabText").size;
-    
-    g.font = getFont(this, tsize, "TabText");
+    let font = this.getDefault("TabText");
+    let tsize = font.size;
+
     tsize *= dpi;
-    
+    g.font = font.genCSS(tsize*dpi);
+
     g.lineWidth = 2;
     g.strokeStyle = this.getDefault("TabStrokeStyle1");
       
@@ -23137,7 +22471,8 @@ class TabBar extends UIBase$9 {
 
       let x = tab.pos[0], y = tab.pos[1];
       let w = tab.size[0], h = tab.size[1];
-      let tw = g.measureText(tab.name).width;
+      //let tw = g.measureText(tab.name).width;
+      let tw = measureText(this, tab.name, this.canvas, g, tsize).width;
       
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
       let y2 = y + tsize*1.0;
@@ -23189,11 +22524,12 @@ class TabBar extends UIBase$9 {
     } else {
       let x = tab.pos[0], y = tab.pos[1];
       let w = tab.size[0], h = tab.size[1];
-      let tw = g.measureText(tab.name).width;
+      //let tw = g.measureText(tab.name).width;
+      let tw = measureText(this, tab.name, this.canvas, g, tsize).width;
       
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
-      let y2 = y + tsize*1.0;
-      
+      let y2 = y + tsize;
+
       g.beginPath();
       g.rect(x, y, w, h);
       g.fillStyle = bgcolor;
@@ -23209,6 +22545,8 @@ class TabBar extends UIBase$9 {
       }
       
       g.fillStyle = this.getDefault("TabText").color;
+
+      //y2 += tsize*0.3;
       g.fillText(tab.name, x2, y2);
 
       if (!this.horiz) {
@@ -23286,9 +22624,9 @@ class TabBar extends UIBase$9 {
     tagname : "tabbar-x"
   };}
 }
-UIBase$9.register(TabBar);
+UIBase$8.register(TabBar);
 
-class TabContainer extends UIBase$9 {
+class TabContainer extends UIBase$8 {
   constructor() {
     super();
 
@@ -23434,8 +22772,6 @@ class TabContainer extends UIBase$9 {
     let barpos = this.getAttribute("bar_pos");
     
     if (barpos !== this._last_bar_pos) {
-      console.log("position update!", barpos);
-      
       this.horiz = barpos == "top" || barpos == "bottom";
       this._last_bar_pos = barpos;
       
@@ -23471,12 +22807,453 @@ class TabContainer extends UIBase$9 {
   };}
 }
 
-UIBase$9.register(TabContainer);
+UIBase$8.register(TabContainer);
 
-let UIBase$a = UIBase,
+//bind module to global var to get at it in console.
+
+let UIBase$9 = UIBase;
+
+var list$2 = function list(iter) {
+  let ret = [];
+
+  for (let item of iter) {
+    ret.push(item);
+  }
+
+  return ret;
+};
+
+class TableRow extends Container {
+  constructor() {
+    super();
+
+    this.dom.remove();
+    this.dom = document.createElement("tr");
+
+    //kind of dumb, but this.dom doesn't live within this element itself, bleh
+    //this.shadow.appendChild(this.dom);
+    this.dom.setAttribute("class", "containerx");
+  }
+
+  static define() {return {
+    tagname : "tablerow-x"
+  };}
+
+  _add(child) {
+    child.ctx = this.ctx;
+    child.parentWidget = this;
+
+    let td = document.createElement("td");
+    td.appendChild(child);
+
+    this.dom.appendChild(td);
+    child.onadd();
+  }
+}UIBase$9.register(TableRow);
+
+class TableFrame extends Container {
+  constructor() {
+    super();
+
+    this.dom = document.createElement("table");
+    this.shadow.appendChild(this.dom);
+    this.dom.setAttribute("class", "containerx");
+
+    //this.dom.style["display"] = "block";
+  }
+
+  update() {
+    this.style["display"] = "inline-block";
+    super.update();
+  }
+
+  _add(child) {
+    child.ctx = this.ctx;
+    child.parentWidget = this;
+    this.dom.appendChild(child);
+    child.onadd();
+  }
+
+  row() {
+    let tr = document.createElement("tr");
+    let cls = "table-tr";
+
+    tr.setAttribute("class", cls);
+    this.dom.appendChild(tr);
+    let this2 = this;
+
+    function maketd() {
+      let td = document.createElement("td");
+      tr.appendChild(td);
+
+      td.style["margin"] = tr.style["margin"];
+      td.style["padding"] = tr.style["padding"];
+
+      let container = document.createElement("rowframe-x");
+
+      container.ctx = this2.ctx;
+      container.setAttribute("class", cls);
+      td.setAttribute("class", cls);
+
+      //let div2 = document.createElement("div");
+      //div2.setAttribute("class", cls);
+      //div2.innerHTML = "sdfsdf";
+
+      //td.appendChild(div2);
+      td.appendChild(container);
+
+      return container;
+    }
+
+    //hrm wish I could subclass html elements easier
+    let ret = {
+      _tr : tr,
+
+      style : tr.style,
+
+      focus : function(args) {
+        tr.focus(args);
+      },
+
+      blur : function(args) {
+        tr.blur(args);
+      },
+
+      remove : () => {
+        tr.remove();
+      },
+
+      addEventListener : function(type, cb, arg) {
+        tr.addEventListener(type, cb, arg);
+      },
+
+      removeEventListener : function(type, cb, arg) {
+        tr.removeEventListener(type, cb, arg);
+      },
+
+      setAttribute : function(attr, val) {
+        if (attr == "class") {
+          cls = val;
+        }
+
+        tr.setAttribute(attr, val);
+      },
+
+      scrollTo : function() {
+        return this._tr.scrollTo(...arguments);
+      },
+
+      scrollIntoView : function() {
+        return this._tr.scrollIntoView(...arguments);
+      },
+
+      clear : function() {
+        for (let node of list$2(tr.childNodes)) {
+          tr.removeChild(node);
+        }
+      }
+    };
+
+    function makefunc(f) {
+      ret[f] = function() {
+        let container = maketd();
+
+        container.background = tr.style["background-color"]; //"rgba(0,0,0,0)";
+        return container[f].apply(container, arguments);
+      };
+    }
+
+    let _bg = "";
+
+    //need to implement proper proxy here!
+    Object.defineProperty(ret, "tabIndex", {
+      set : function(f) {
+        tr.tabIndex = f;
+      },
+
+      get : function(f) {
+        return tr.tabIndex;
+      }
+    });
+
+    Object.defineProperty(ret, "background", {
+      set : function(bg) {
+        _bg = bg;
+        tr.style["background-color"] = bg;
+
+        for (let node of tr.childNodes) {
+          if (node.childNodes.length > 0) {
+            node.childNodes[0].background = bg;
+            node.style["background-color"] = bg;
+          }
+        }
+      }, get : function() {
+        return _bg;
+      }
+    });
+
+    /*
+    Object.defineProperty(ret, "class", {
+      set(bg) {
+        tr.class = bg;
+      }
+    });//*/
+
+    ret.cell = () => {
+      let container = maketd();
+      container.background = tr.style["background-color"];
+      return container;
+    };
+    
+    //makefunc("cell");
+    makefunc("label");
+    makefunc("tool");
+    makefunc("prop");
+    makefunc("pathlabel");
+    makefunc("button");
+    makefunc("iconbutton");
+    makefunc("textbox");
+    makefunc("col");
+    makefunc("row");
+    makefunc("table");
+    makefunc("listenum");
+    makefunc("check");
+
+    return ret;
+  }
+
+  update() {
+    super.update();
+  }
+
+  clear() {
+    super.clear();
+    for (let child of list$2(this.dom.childNodes)) {
+      child.remove();
+    }
+  }
+
+  static define() {return {
+    tagname : "tableframe-x"
+  };}
+}
+UIBase$9.register(TableFrame);
+
+let UIBase$a = UIBase;
+
+class ListItem extends RowFrame {
+  constructor() {
+    super();
+
+    let highlight = () => {
+      console.log("listitem mouseover");
+      this.highlight = true;
+      this.setBackground();
+    };
+
+    let unhighlight = () => {
+      console.log("listitem mouseleave");
+      this.highlight = false;
+      this.setBackground();
+    };
+
+    this.addEventListener("mouseover", highlight);
+    this.addEventListener("mousein", highlight);
+
+    this.addEventListener("mouseleave", unhighlight);
+    this.addEventListener("mouseout", unhighlight);
+    this.addEventListener("blur", unhighlight);
+
+    this.addEventListener("click", (e) => {
+      console.log("click!");
+      if (this.onclick) {
+        this.onclick();
+      }
+    });
+
+    let style = document.createElement("style");
+    style.textContent = `
+      .listitem {
+        -moz-user-focus: normal;
+        moz-user-focus: normal;
+        user-focus: normal;
+      }
+    `;
+
+    this.shadowRoot.prepend(style);
+  }
+
+  init() {
+    super.init();
+
+    this.setAttribute("class", "listitem");
+    this.style["width"] = "100%";
+    this.setCSS();
+  }
+
+  setBackground() {
+    if (this.highlight) {
+      this.background = this.getDefault("ListHighlight");
+    } else if (this.is_active) {
+      this.background = this.getDefault("ListActive");
+    } else {
+      this.background = this.getDefault("DefaultPanelBG");
+    }
+  }
+
+  static define() {return {
+    tagname : "listitem-x",
+    style : "listbox"
+  }}
+}
+UIBase$a.register(ListItem);
+
+class ListBox extends Container {
+  constructor() {
+    super();
+
+    this.items = [];
+    this.idmap = {};
+    this.items.active = undefined;
+    this.highlight = false;
+    this.is_active = false;
+
+    let style = document.createElement("style");
+    style.textContent = `
+      .listbox {
+        -moz-user-focus: normal;
+        moz-user-focus: normal;
+        user-focus: normal;
+      }
+    `;
+    this.shadow.prepend(style);
+
+    this.onkeydown = (e) => {
+      console.log("yay", e.keyCode);
+
+      switch (e.keyCode) {
+        case keymap["Up"]:
+        case keymap["Down"]:
+          if (this.items.length == 0)
+            return;
+
+          if (this.items.active === undefined) {
+            this.setActive(this.items[0]);
+            return;
+          }
+
+          let i = this.items.indexOf(this.items.active);
+          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
+
+          i = Math.max(Math.min(i+dir, this.items.length-1), 0);
+          this.setActive(this.items[i]);
+
+          break;
+      }
+    };
+
+    //this.addEventListener("keydown", on_keydown);
+
+    //this._table =  this.table();
+  }
+
+  setCSS() {
+    super.setCSS();
+  }
+
+  init() {
+    super.init();
+
+    this.setCSS();
+
+    this.style["width"] = this.getDefault("width") + "px";
+    this.style["height"] = this.getDefault("height") + "px";
+    this.style["overflow"] = "scroll";
+
+    //this.setAttribute("class", "listbox");
+    //this.setAttribute("tabindex", 0);
+    //this.tabIndex = 0;
+  }
+
+  addItem(name, id) {
+    let item = document.createElement("listitem-x");
+
+    item._id = id === undefined ? this.items.length : id;
+    this.idmap[item._id] = item;
+
+    //item.addEventListener("keydown", this.onkeydown);
+    this.tabIndex = 1;
+    this.setAttribute("tabindex", 1);
+
+    this.add(item);
+    this.items.push(item);
+
+    item.label(name);
+    let this2 = this;
+
+    item.onclick = function() {
+      this2.setActive(this);
+      this.setBackground();
+    };
+
+    return item;
+  }
+
+  removeItem(item) {
+    if (typeof item == "number") {
+      item = this.idmap[item];
+    }
+
+    item.remove();
+    delete this.idmap[item._id];
+    this.items.remove(item);
+  }
+
+  setActive(item) {
+    if (typeof item == "number") {
+      item = this.idmap[item];
+    }
+
+    console.log("set active!");
+
+    if (item === this.items.active) {
+      return;
+    }
+
+    if (this.items.active !== undefined) {
+      this.items.active.highlight = false;
+      this.items.active.is_active = false;
+      this.items.active.setBackground();
+    }
+
+    item.is_active = true;
+    this.items.active = item;
+
+    if (item !== undefined) {
+      item.setBackground();
+      item.scrollIntoViewIfNeeded();
+    }
+
+    if (this.onchange) {
+      this.onchange(item._id, item);
+    }
+  }
+
+  clear() {
+
+  }
+
+  static define() {return {
+    tagname : "listbox-x",
+    style : "listbox"
+  }}
+}
+UIBase$a.register(ListBox);
+
+let UIBase$b = UIBase,
   IconSheets$1 = IconSheets;
 
-class Menu extends UIBase$a {
+class Menu extends UIBase$b {
   constructor() {
     super();
 
@@ -23486,6 +23263,8 @@ class Menu extends UIBase$a {
     this.closed = false;
     this.started = false;
     this.activeItem = undefined;
+
+    this.overrideDefault("DefaultText", this.getDefault("MenuText"));
 
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
@@ -23507,6 +23286,9 @@ class Menu extends UIBase$a {
               place-items : start;
               justify-items : start;
     */
+
+    let pad1 = isMobile() ? 15 : 0;
+
     let style = document.createElement("style");
     style.textContent = `
         .menucon {
@@ -23518,13 +23300,12 @@ class Menu extends UIBase$a {
         }
         
         ul.menu {
-          display : block;
+          display        : flex;
+          flex-direction : column;
           
           margin : 0px;
           padding : 0px;
-          border-style : solid;
-          border-width : 1px;
-          border-color: grey;
+          border : ${this.getDefault("MenuBorder")};
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
         }
@@ -23537,16 +23318,20 @@ class Menu extends UIBase$a {
           
           margin : 0;
           padding : 0px;
-          padding-right: 2px;
-          padding-left: 4px;
-          padding-top : 0px;
-          padding-bottom : 0px;
-          font : ${getFont(this)};
+          padding-right: 16px;
+          padding-left: 16px;
+          padding-top : ${pad1}px;
+          padding-bottom : ${pad1}px;
+          font : ${this.getDefault("MenuText").genCSS()};
           background-color: ${this.getDefault("MenuBG")};
         }
         
+        .menuseparator {
+          ${this.getDefault("MenuSeparator")}
+        }
+        
         .menuitem:focus {
-          background-color: rgba(155, 220, 255, 1.0);
+          background-color: ${this.getDefault("MenuHighlight")};
           -moz-user-focus: normal;
         }
       `;
@@ -23656,7 +23441,8 @@ class Menu extends UIBase$a {
   }
 
   static define() {return {
-    tagname : "menu-x"
+    tagname : "menu-x",
+    style   : "menu"
   };}
 
   start_fancy(prepend, setActive=true) {
@@ -23861,8 +23647,6 @@ class Menu extends UIBase$a {
     li.setAttribute("tabindex", this.itemindex++);
     li.setAttribute("class", "menuitem");
 
-    li.style["margin-top"] = "10px";
-
     if (item instanceof Menu) {
       console.log("submenu!");
 
@@ -23966,16 +23750,11 @@ class Menu extends UIBase$a {
   }
 
   seperator() {
-    let li = document.createElement("li");
-    let span = document.createElement("hr");
+    let bar = document.createElement("div");
+    bar.setAttribute("class", "menuseparator");
 
-    //span.textContent = "--"
-    //span.style["textcolor"] = span.style["color"] = "grey";
 
-    li.setAttribute("class", "menuitem");
-    li.appendChild(span);
-
-    this.dom.appendChild(li);
+    this.dom.appendChild(bar);
 
     return this;
   }
@@ -23995,7 +23774,7 @@ class Menu extends UIBase$a {
 }
 
 Menu.SEP = Symbol("menu seperator");
-UIBase$a.register(Menu);
+UIBase$b.register(Menu);
 
 class DropBox extends Button {
   constructor() {
@@ -24023,7 +23802,7 @@ class DropBox extends Button {
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultText").size;
-    let tw = measureText(this, this._genLabel()).width/dpi + 8;
+    let tw = measureText(this, this._genLabel(), undefined, undefined, ts).width/dpi + 8;
     tw = ~~tw;
 
     tw += 15;
@@ -24202,11 +23981,13 @@ class DropBox extends Button {
 
   _redraw() {
     if (this.getAttribute("simple")) {
+
       if (this._highlight) {
-        drawRoundBox(this, this.dom, this.g, undefined, undefined, 2);
+        drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
       }
 
       if (this._focus) {
+        drawRoundBox2(this, {canvas: this.dom, g : this.g, color : this.getDefault("BoxHighlight"), op : "stroke", no_clear : true});
         drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
       }
 
@@ -24303,7 +24084,7 @@ class DropBox extends Button {
   };}
 }
 
-UIBase$a.register(DropBox);
+UIBase$b.register(DropBox);
 
 class MenuWrangler {
   constructor() {
@@ -24311,6 +24092,7 @@ class MenuWrangler {
     this.menustack = [];
 
     this.closetimer = 0;
+    this.closeOnMouseUp = undefined;
   }
 
   get menu() {
@@ -24318,6 +24100,10 @@ class MenuWrangler {
   }
 
   pushMenu(menu) {
+    if (this.menustack.length === 0) {
+      this.closeOnMouseUp = true;
+    }
+
     this.menustack.push(menu);
   }
 
@@ -24397,7 +24183,49 @@ class MenuWrangler {
         break;
     }
   }
-  
+
+  on_mousedown(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y);
+    console.log("wrangler mousedown", element);
+
+    if (element !== undefined && element instanceof DropBox) {
+      this.endMenus();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  on_mouseup(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y, undefined, undefined, DropBox);
+    if (element !== undefined) {
+      this.closeOnMouseUp = false;
+    } else {
+      element = screen.pickElement(x, y, undefined, undefined, Menu);
+
+      //closeOnMouseUp
+      if (element && this.closeOnMouseUp) {
+        element.click();
+      }
+    }
+
+  }
+
   on_mousemove(e) {
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = time_ms();
@@ -24413,7 +24241,7 @@ class MenuWrangler {
       return;
     }
 
-    if (element instanceof DropBox && element.menu !== this.menu) {
+    if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
       //destroy entire menu stack
       this.endMenus();
 
@@ -24467,7 +24295,8 @@ function startMenuEventWrangling(screen) {
     }
 
     let dom = k.search("key") >= 0 ? window : document.body;
-    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), false);
+    dom = window;
+    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), {passive : false, capture : true});
   }
 
   menuWrangler.screen = screen;
@@ -24477,1706 +24306,1946 @@ function setWranglerScreen(screen) {
   startMenuEventWrangling(screen);
 }
 
-let rgb_to_hsv_rets$1 = new cachering(() => [0, 0, 0], 64);
+function getWranglerScreen() {
+  return menuWrangler.screen;
+}
 
-let Vector3$2 = Vector3,
-  Vector4$4 = Vector4;
+let Vector2$4 = Vector2,
+    UndoFlags$1 = UndoFlags;
+//import {keymap} from './events';
 
-function rgb_to_hsv$1 (r,g,b) {
-  var computedH = 0;
-  var computedS = 0;
-  var computedV = 0;
-
-  if ( r==null || g==null || b==null ||
-    isNaN(r) || isNaN(g)|| isNaN(b) ) {
-    throw new Error('Please enter numeric RGB values!');
+class ToolBase extends ToolOp {
+  constructor(screen) {
+    super();
+    this.screen = screen;
+   //super();
+    
+    this._finished = false;
   }
-  /*
-  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
-   throw new Error('RGB values must be in the range 0 to 1.0');
-   return;
-  }//*/
 
-  var minRGB = Math.min(r,Math.min(g,b));
-  var maxRGB = Math.max(r,Math.max(g,b));
+  start() {
+    //toolstack_getter().execTool(this);
+    this.modalStart(undefined);
+  }
+  
+  cancel() {
+    this.finish();
+  }
+  
+  finish() {
+    this._finished = true;
+    this.overdraw.end();
+    this.popModal(this.screen);
+  }
 
-  // Black-gray-white
-  if (minRGB==maxRGB) {
-    computedV = minRGB;
+  popModal() {
+    console.log("popModal called");
 
-    let ret = rgb_to_hsv_rets$1.next();
-    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
+    popModalLight(this.modaldata);
+    this.modaldata = undefined;
+  }
+
+  modalStart(ctx) {
+    this.ctx = ctx;
+
+    if (this.modaldata !== undefined) {
+      console.log("Error, modaldata was not undefined");
+      popModalLight(this.modaldata);
+    }
+
+    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw.start(this.screen);
+
+    let handlers = {};
+    let keys = Object.getOwnPropertyNames(this);
+    for (let k in this.__proto__) {
+      keys.push(k);
+    }
+    for (let k of Object.getOwnPropertyNames(this.__proto__)) {
+      keys.push(k);
+    }
+
+    for (let k in this) {
+      keys.push(k);
+    }
+
+    for (let k of keys) {
+      if (k.startsWith("on")) {
+        handlers[k] = this[k].bind(this);
+      }
+    }
+
+    //window.setTimeout(() => {
+      this.modaldata = pushModalLight(handlers);
+      //console.log("HANDLERS", this.modaldata.handlers);
+      
+    //}, 100);
+
+    //window.addEventListener("touchmove", (e) => {
+    //  console.log("touchmove");
+    //}, {passive : false});
+  }
+  
+  on_mousemove(e) {
+  }
+  
+  on_mouseup(e) {
+    this.finish();
+  }
+  
+  on_keydown(e) {
+    console.log("s", e.keyCode);
+    
+    switch (e.keyCode) {
+      case keymap.Escape: //esc
+        this.cancel();
+        break;
+      case keymap.Space: //space
+      case keymap.Enter: //return
+        this.finish();
+        break;
+    }
+  }
+}
+
+class AreaResizeTool extends ToolBase {
+  constructor(screen, border, mpos) {
+    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+    
+    super(screen);
+    
+    this.start_mpos = new Vector2$4(mpos);
+
+    this.sarea = border.sareas[0];
+    if (!this.sarea || border.dead) {
+      console.log(border.dead, border);
+      throw new Error("border corruption");
+    }
+
+    this.screen = screen;
+
+    this.side = this.sarea._side(border);
+  }
+
+  get border() {
+    return this.sarea._borders[this.side];
+  }
+
+  static tooldef() {return {
+    uiname   : "Resize Area",
+    toolpath : "screen.area.resize",
+    icon     : Icons.RESIZE,
+    description : "change size of area",
+    is_modal : true,
+    hotkey : undefined,
+    undoflag : UndoFlags$1.NO_UNDO,
+    flag     : 0,
+    inputs   : {}, //tool properties
+    outputs  : {}  //tool properties
+  }}
+  
+  getBorders() {
+    let horiz = this.border.horiz;
+    
+    let ret = [];
+    let visit = new Set();
+    
+    let rec = (v) => {
+      if (visit.has(v._id)) {
+        return;
+      }
+      
+      visit.add(v._id);
+      
+      for (let border of v.borders) {
+        if (border.horiz == horiz && !visit.has(border._id)) {
+          visit.add(border._id);
+          ret.push(border);
+          
+          rec(border.otherVertex(v));
+        }
+      }
+    };
+    
+    rec(this.border.v1);
+    rec(this.border.v2);
+    
     return ret;
   }
 
-  // Colors other than black-gray-white:
-  var d = (r==minRGB) ? g-b : ((b==minRGB) ? r-g : b-r);
-  var h = (r==minRGB) ? 3 : ((b==minRGB) ? 1 : 5);
-
-  computedH = (60*(h - d/(maxRGB - minRGB))) / 360.0;
-  computedS = (maxRGB - minRGB)/maxRGB;
-  computedV = maxRGB;
-
-  let ret = rgb_to_hsv_rets$1.next();
-  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
-  return ret;
-}
-
-let hsv_to_rgb_rets$1 = new cachering(() => [0, 0, 0], 64);
-
-function hsv_to_rgb$1(h, s, v) {
-  let c=0, m=0, x=0;
-  let ret = hsv_to_rgb_rets$1.next();
-
-  ret[0] = ret[1] = ret[2] = 0.0;
-  h *= 360.0;
-
-  c = v * s;
-  x = c * (1.0 - Math.abs(((h / 60.0) % 2) - 1.0));
-  m = v - c;
-  let color;
-
-  function RgbF_Create(r, g, b) {
-    ret[0] = r;
-    ret[1] = g;
-    ret[2] = b;
-
-    return ret;
+  on_mouseup(e) {
+    this.finish();
   }
 
-  if (h >= 0.0 && h < 60.0)
-  {
-    color = RgbF_Create(c + m, x + m, m);
-  }
-  else if (h >= 60.0 && h < 120.0)
-  {
-    color = RgbF_Create(x + m, c + m, m);
-  }
-  else if (h >= 120.0 && h < 180.0)
-  {
-    color = RgbF_Create(m, c + m, x + m);
-  }
-  else if (h >= 180.0 && h < 240.0)
-  {
-    color = RgbF_Create(m, x + m, c + m);
-  }
-  else if (h >= 240.0 && h < 300.0)
-  {
-    color = RgbF_Create(x + m, m, c + m);
-  }
-  else if (h >= 300.0)
-  {
-    color = RgbF_Create(c + m, m, x + m);
-  }
-  else
-  {
-    color = RgbF_Create(m, m, m);
+  finish() {
+    super.finish();
+    this.screen.snapScreenVerts();
+    this.screen.regenBorders();
+    this.screen.snapScreenVerts();
+    this.screen.loadFromVerts();
   }
 
-  return color;
-}
-
-let UIBase$b = UIBase;
-
-//*
-let sample_rets$1 = new cachering(() => [0, 0], 64);
-//*/
-
-let fieldrand$1 = new MersenneRandom(0);
-
-let huefields = {};
-function getHueField(width, height, dpi) {
-  let key = width + ":" + height + ":" + dpi.toFixed(4);
-
-  if (key in huefields) {
-    return huefields[key];
-  }
-
-  let field = new ImageData(width, height);
-  let idata = field.data;
-
-  for (let i=0; i<width*height; i++) {
-    let ix = i % width;
-    let idx = i*4;
-
-    let rgb = hsv_to_rgb$1(ix/width, 1, 1);
-
-    idata[idx] = rgb[0]*255;
-    idata[idx+1] = rgb[1]*255;
-    idata[idx+2] = rgb[2]*255;
-    idata[idx+3] = 255;
-  }
-
-  //*
-  let canvas = document.createElement("canvas");
-  canvas.width = field.width;
-  canvas.height = field.height;
-  let g = canvas.getContext("2d");
-  g.putImageData(field, 0, 0);
-  field = canvas;
-  //*/
-
-  huefields[key] = field;
-  return field;
-}
-
-let fields$1 = {};
-function getFieldImage$1(fieldsize, width, height, hsva) {
-  fieldrand$1.seed(0);
-
-  let hue = hsva[0];
-  let hue_rgb = hsv_to_rgb$1(hue, 1.0, 1.0);
-  let key = fieldsize + ":" + width + ":" + height + ":" + hue.toFixed(5);
-
-  if (key in fields$1)
-    return fields$1[key];
-
-  //console.log("generation color picker field of size", size);
-
-  let size2 = fieldsize;
-  let valpow = 0.75;
-
-  let image = {
-    width : width,
-    height : height,
-    image : new ImageData(fieldsize, fieldsize),
-
-    x2sat : (x) => {
-      return Math.min(Math.max(x/width, 0), 1);
-    },
-    y2val : (y) => {
-      y = 1.0 - Math.min(Math.max(y/height, 0), 1);
-
-      return y === 0.0 ? 0.0 : y**valpow;
-    },
-    sat2x : (s) => {
-       return s*width;
-    },
-    val2y : (v) => {
-      if (v == 0)
-        return height;
-
-      v = v**(1.0 / valpow);
-      return (1.0 - v)*height;
-    }
-  };
-
-  image.params = {
-    box : {
-      x : 0,
-      y : 0,
-      width : width,
-      height : height
-    }
-  };
-
-  let idata = image.image.data;
-  for (let i=0; i<idata.length; i += 4) {
-    let i2 = i/4;
-    let x = i2 % size2, y = ~~(i2 / size2);
-
-    let v = 1.0 - (y / size2);
-    let s = (x/size2);
-
-    let rgb = hsv_to_rgb$1(hsva[0], s, v**valpow);
-
-    idata[i] = rgb[0]*255;
-    idata[i+1] = rgb[1]*255;
-    idata[i+2] = rgb[2]*255;
-    idata[i+3] = 255;
-  }
-
-  //*
-  let image2 = document.createElement("canvas");
-  image2.width = size2;
-  image2.height = size2;
-  let g = image2.getContext("2d");
-  g.putImageData(image.image, 0, 0);
-  //*/
-  image.canvas = image2;
-  image.scale = width / size2;
-
-  fields$1[key] = image;
-  return image;
-}
-
-let _update_temp$1 = new Vector4$4();
-
-class HueField extends UIBase$b {
-  constructor() {
-    super();
-
-    this.canvas = document.createElement("canvas");
-    this.g = this.canvas.getContext("2d");
-    this.shadow.appendChild(this.canvas);
-
-    let setFromXY = (x, y) => {
-      let dpi = this.getDPI();
-      let r = this.getDefault("circleSize");
-
-      let h = x / ((this.canvas.width - r*4)/dpi);
-      h = Math.min(Math.max(h, 0.0), 1.0);
-
-      this.hsva[0] = h;
-
-      if (this.onchange !== undefined) {
-        this.onchange(this.hsva);
-      }
-
-      this._redraw();
-    };
-
-    this.addEventListener("mousedown", (e) => {
-      let rect = this.canvas.getClientRects()[0];
-      let x = e.clientX - rect.x, y = e.clientY - rect.y;
-
-      setFromXY(x);
-
-      setTimeout(() => {
-        this.pushModal({
-          on_mousemove: (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            let x = e.clientX - rect.x, y = e.clientY - rect.y;
-
-            setFromXY(x);
-          },
-          on_mousedown: (e) => {
-            this.popModal();
-          },
-          on_mouseup: (e) => {
-            this.popModal();
-          },
-          on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
-              this.popModal();
-            }
-          }
-        });
-      }, 1);
-    });
-  }
-
-  _redraw() {
-    let g = this.g, canvas = this.canvas;
-    let dpi = this.getDPI();
-
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("hueheight");
-
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
-
-    canvas.style["width"] = w + "px";
-    canvas.style["height"] = h + "px";
-
-    let rselector = ~~(this.getDefault("circleSize") * dpi);
-
-    let w2 = canvas.width - rselector*4, h2 = canvas.height;
-
-    g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector*2, 0, w2, h2);
-
-    let x = this.hsva[0]*(canvas.width - rselector*4) + rselector*2;
-    let y = canvas.height*0.5;
-
-    g.beginPath();
-    g.arc(x, y, rselector, -Math.PI, Math.PI);
-    g.closePath();
-
-    g.strokeStyle = "white";
-    g.lineWidth = 3*dpi;
-    g.stroke();
-
-    g.strokeStyle = "grey";
-    g.lineWidth = 1*dpi;
-    g.stroke();
-
-    if (this.disabled) {
-      g.beginPath();
-      g.fillStyle = "rgba(25,25,25,0.75)";
-      g.rect(0, 0, this.canvas.width, this.canvas.height);
-      g.fill();
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap["Escape"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
+        this.finish();
+        break;
     }
   }
+  on_mousemove(e) {
+    let mpos = new Vector2$4([e.x, e.y]);
+    
+    mpos.sub(this.start_mpos);
+    
+    let axis = this.border.horiz ? 1 : 0;
+    
+    //console.log(this.border.horiz);
+    
+    this.overdraw.clear();
+    let borders = this.getBorders();
 
-  on_disabled() {
-    this._redraw();
-  }
+    let color = exports.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
-  on_enabled() {
-    this._redraw();
-  }
+    let bad = false;
 
-  static define() {return {
-    tagname : "huefield-x",
-    style   : "colorfield"
-  };}
-}
+    for (let border of borders) {
+      bad = bad || !this.screen.isBorderMovable(border);
 
-UIBase$b.register(HueField);
-
-class SatValField extends UIBase$b {
-  constructor() {
-    super();
-
-    this.hsva = [0,0,0,1];
-
-    this.canvas = document.createElement("canvas");
-    this.g = this.canvas.getContext("2d");
-    this.shadow.appendChild(this.canvas);
-
-    this.onchange = undefined;
-
-    let setFromXY = (x, y) => {
-      let field = this._getField();
-      let r = ~~(this.getDefault("circleSize")*this.getDPI());
-
-      let sat = field.x2sat(x-r);
-      let val = field.y2val(y-r);
-
-      this.hsva[1] = sat;
-      this.hsva[2] = val;
-
-      if (this.onchange) {
-        this.onchange(this.hsva);
-      }
-
-      this._redraw();
-    };
-
-    this.canvas.addEventListener("mousedown", (e) => {
-      let rect = this.canvas.getClientRects()[0];
-      let x = e.clientX - rect.x, y = e.clientY - rect.y;
-
-      setFromXY(x, y);
-
-      setTimeout(() => {
-        this.pushModal({
-          on_mousemove: (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            if (rect === undefined) {
-              return;
-            }
-            
-            let x = e.clientX - rect.x, y = e.clientY - rect.y;
-
-            setFromXY(x, y);
-          },
-          on_mousedown: (e) => {
-            this.popModal();
-          },
-          on_mouseup: (e) => {
-            this.popModal();
-          },
-          on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
-              this.popModal();
-            }
-          }
-        });
-      }, 1);
-    });
-
-    this.canvas.addEventListener("touchstart", (e) => {
-      console.log("touch start");
-      let rect = this.canvas.getClientRects()[0];
-      let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
-
-      setFromXY(x, y);
-
-      setTimeout(() => {
-        this.pushModal({
-          on_mousemove: (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
-
-            setFromXY(x, y);
-          },
-          on_touchmove: (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
-
-            setFromXY(x, y);
-          },
-          on_mousedown: (e) => {
-            this.popModal();
-          },
-          on_touchcancel: (e) => {
-            this.popModal();
-          },
-          on_touchend: (e) => {
-            this.popModal();
-          },
-          on_mouseup: (e) => {
-            this.popModal();
-          },
-          on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
-              this.popModal();
-            }
-          }
-        });
-      }, 1);
-    });
-  }
-
-  _getField() {
-    let dpi = this.getDPI();
-    let canvas = this.canvas;
-    let r = this.getDefault("circleSize");
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
-
-    //r = ~~(r*dpi);
-
-    return getFieldImage$1(this.getDefault("fieldsize"), w-r*2, h-r*2, this.hsva);
-  }
-
-  update(force_update=false) {
-    super.update();
-
-    if (force_update) {
-      this._redraw();
-    }
-  }
-
-  _redraw() {
-    let g = this.g, canvas = this.canvas;
-    let dpi = this.getDPI();
-
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
-
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
-
-    canvas.style["width"] = w + "px";
-    canvas.style["height"] = h + "px";
-    //SatValField
-
-    let rselector = ~~(this.getDefault("circleSize") * dpi);
-
-    let field = this._getField();
-    let image = field.canvas;
-
-    g.globalAlpha = 1.0;
-    g.beginPath();
-    g.rect(0, 0, canvas.width, canvas.height);
-    g.fillStyle = "rgb(200, 200, 200)";
-    g.fill();
-
-    g.beginPath();
-
-    let steps = 17;
-    let dx = canvas.width / steps;
-    let dy = canvas.height / steps;
-
-    for (let i=0; i<steps*steps; i++) {
-      let x = (i % steps)*dx, y = (~~(i / steps))*dy;
-
-      if (i % 2 == 0) {
-        continue;
-      }
-      g.rect(x, y, dx, dy);
+      border.oldv1 = new Vector2$4(border.v1);
+      border.oldv2 = new Vector2$4(border.v2);
     }
 
-    g.fillStyle = "rgb(110, 110, 110)";
-    g.fill();
-
-    g.globalAlpha = this.hsva[3];
-    g.drawImage(image, 0, 0, image.width, image.height, rselector, rselector, canvas.width-rselector*2, canvas.height-rselector*2);
-
-    let hsva = this.hsva;
-
-    let x = field.sat2x(hsva[1])*dpi + rselector;
-    let y = field.val2y(hsva[2])*dpi + rselector;
-    let r = rselector;
-
-    g.beginPath();
-    g.arc(x, y, r, -Math.PI, Math.PI);
-    g.closePath();
-
-    g.strokeStyle = "white";
-    g.lineWidth = 3*dpi;
-    g.stroke();
-
-    g.strokeStyle = "grey";
-    g.lineWidth = 1*dpi;
-    g.stroke();
-
-    if (this.disabled) {
-      g.beginPath();
-      g.fillStyle = "rgba(25,25,25,0.75)";
-      g.rect(0, 0, this.canvas.width, this.canvas.height);
-      g.fill();
-    }
-  }
-
-  on_disabled() {
-    this._redraw();
-  }
-
-  on_enabled() {
-    this._redraw();
-  }
-
-  static define() {return {
-    tagname : "satvalfield-x",
-    style   : "colorfield"
-  };}
-}
-
-UIBase$b.register(SatValField);
-
-class ColorField$1 extends ColumnFrame {
-  constructor() {
-    super();
-
-    this.hsva = [0.05, 0.6, 0.15, 1.0];
-    this.rgba = new Vector4$4([0, 0, 0, 0]);
-
-    this._recalcRGBA();
-
-    /*
-    this.hbox = new SimpleBox();
-    this.svbox = new SimpleBox();
-    //*/
-
-    this._last_dpi = undefined;
-
-    let satvalfield = this.satvalfield = document.createElement("satvalfield-x");
-    satvalfield.hsva = this.hsva;
-
-    let huefield = this.huefield = document.createElement("huefield-x");
-    huefield.hsva = this.hsva;
-
-    huefield.onchange = (e) => {
-      this.satvalfield._redraw();
-      this._recalcRGBA();
-
-      if (this.onchange) {
-        this.onchange(this.rgba);
-      }
-    };
-
-    satvalfield.onchange = (e) => {
-      this._recalcRGBA();
-
-      if (this.onchange) {
-        this.onchange(this.rgba);
-      }
-    };
-
-    this._add(satvalfield);
-    this._add(huefield);
-    //this.shadow.appendChild(canvas);
-    //this.shadow.appendChild(huecanvas);
-  }
-
-  setHSVA(h, s, v, a=1.0, fire_onchange=true) {
-    this.hsva[0] = h;
-    this.hsva[1] = s;
-    this.hsva[2] = v;
-    this.hsva[3] = a;
-
-    this._recalcRGBA();
-    this.update(true);
-
-    if (this.onchange && fire_onchange) {
-      this.onchange(this.hsva, this.rgba);
-    }
-  }
-
-  setRGBA(r, g, b, a=1.0, fire_onchange=true) {
-    let hsv = rgb_to_hsv$1(r, g, b);
-
-    this.hsva[0] = hsv[0];
-    this.hsva[1] = hsv[1];
-    this.hsva[2] = hsv[2];
-    this.hsva[3] = a;
-
-    this._recalcRGBA();
-    this.update(true);
-
-    if (this.onchange && fire_onchange) {
-      this.onchange(this.hsva, this.rgba);
-    }
-  }
-
-  _recalcRGBA() {
-    let ret = hsv_to_rgb$1(this.hsva[0], this.hsva[1], this.hsva[2]);
-
-    this.rgba[0] = ret[0];
-    this.rgba[1] = ret[1];
-    this.rgba[2] = ret[2];
-    this.rgba[3] = this.hsva[3];
-
-    return this;
-  }
-
-  updateDPI(force_update=false, _in_update=false) {
-    let dpi = this.getDPI();
-
-    let update = force_update;
-    update = update || dpi != this._last_dpi;
-
-    if (update) {
-      this._last_dpi = dpi;
-
-      if (!_in_update)
-        this._redraw();
-
-      return true;
-    }
-  }
-
-  setRGBA(r, g, b, a=1.0, fire_onchange=true) {
-    if (bad(r) || bad(g) || bad(b) || bad(a)) {
-      console.warn("Invalid value!");
+    if (bad) {
+      console.log("border is not movable");
       return;
     }
 
-    let ret = rgb_to_hsv$1(r, g, b);
+    let check = () => {
+      let count = 0;
 
-    function bad(f) {
-      return typeof f !== "number" || isNaN(f);
+      for (let sarea of this.screen.sareas) {
+        if (sarea.size[0] < 15 || sarea.size[1] < 15) {
+          count++;
+        }
+      }
+
+      return count;
+    };
+
+    let badcount = check();
+
+
+    let snapMode = true;
+
+    let df = mpos[axis];
+    let border = this.border;
+
+    this.screen.moveBorder(border, df, false);
+
+    for (let border of borders) {
+      //if false, stead of forcing areas to fit within screen bounds
+      //in snapScreenVerts the screen bounds will be modified instead.
+
+      if (border.outer) {
+        snapMode = false;
+      }
+
+      this.overdraw.line(border.v1, border.v2, color);
+    }
+    
+    this.start_mpos[0] = e.x;
+    this.start_mpos[1] = e.y;
+    this.screen.loadFromVerts();
+    this.screen.setCSS();
+
+    if (check() != badcount) {
+      console.log("bad");
+
+      for (let border of borders) {
+        border.v1.load(border.oldv1);
+        border.v2.load(border.oldv2);
+      }
     }
 
-    this.hsva[0] = ret[0];
-    this.hsva[1] = ret[1];
-    this.hsva[2] = ret[2];
-    this.hsva[3] = a;
 
-    this._recalcRGBA();
-    this.update(true);
-
-    if (this.onchange && fire_onchange) {
-      this.onchange(this.hsva, this.rgba);
-    }
-  }
-  update(force_update=false) {
-    super.update();
-
-    let redraw = false;
-
-    redraw = redraw || this.updateDPI(force_update, true);
-
-    if (redraw) {
-      this.satvalfield.update(true);
-      this._redraw();
-    }
-  }
-
-  static define() {return {
-    tagname : "colorfield-x",
-    style : "colorfield"
-  };}
-
-  _redraw() {
-    this.satvalfield._redraw();
-    this.huefield._redraw();
+    this.screen.snapScreenVerts(snapMode);
+    this.screen.loadFromVerts();
+    this.screen.solveAreaConstraints(snapMode);
+    this.screen.setCSS();
+    this.screen.updateDebugBoxes();
   }
 }
-UIBase$b.register(ColorField$1);
 
-class ColorPicker$1 extends ColumnFrame {
-  constructor() {
-    super();
+//controller.registerTool(AreaResizeTool);
+
+class SplitTool extends ToolBase {
+  constructor(screen) {
+    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+    
+    super(screen);
+
+    this.done = false;
+    this.screen = screen;
+    this.ctx = screen.ctx;
+    this.sarea = undefined;
+    this.t = undefined;
+
+    this.started = false;
+  }
+  
+  static tooldef() {return {
+    uiname   : "Split Area",
+    toolpath : "screen.area.split",
+    icon     : Icons.SMALL_PLUS,
+    description : "split an area in two",
+    is_modal : true,
+    hotkey   : "BLEH-B",
+    undoflag : UndoFlags$1.NO_UNDO,
+    flag     : 0,
+    inputs   : {}, //tool properties
+    outputs  : {}  //tool properties
+  }}
+  
+  modalStart(ctx) {
+    if (this.started) {
+      console.trace("double call to modalStart()");
+      return;
+    }
+    
+    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw.start(this.screen);
+    
+    super.modalStart(ctx);
+  }
+  
+  cancel() {
+    return this.finish(true);
+  }
+  
+  finish(canceled=false) {
+    if (this.done) {
+      return;
+    }
+
+    this.done = true;
+    this.overdraw.end();
+
+    this.popModal(this.screen);
+
+    if (canceled || !this.sarea) {
+      return;
+    }
+
+    let sarea = this.sarea, screen = this.screen;
+    let t = this.t;
+
+    screen.splitArea(sarea, t, this.horiz);
+    screen._internalRegenAll();
+  }
+  
+  on_mousemove(e) {
+    let x = e.x, y = e.y;
+
+    let screen = this.screen;
+
+    let sarea = screen.findScreenArea(x, y);
+    console.log(sarea, x, y);
+
+    this.overdraw.clear();
+
+    if (sarea !== undefined) {
+      //x -= sarea.pos[0];
+      //y -= sarea.pos[1];
+      x = (x - sarea.pos[0]) / (sarea.size[0]);
+      y = (y - sarea.pos[1]) / (sarea.size[1]);
+
+      let dx = 1.0 - Math.abs(x-0.5);
+      let dy = 1.0 - Math.abs(y-0.5);
+
+      this.sarea = sarea;
+      let horiz = this.horiz = dx < dy;
+
+      if (horiz) {
+        this.t = y;
+        this.overdraw.line([sarea.pos[0], e.y], [sarea.pos[0]+sarea.size[0], e.y]);
+      } else {
+        this.t = x;
+        this.overdraw.line([e.x, sarea.pos[1]], [e.x, sarea.pos[1]+sarea.size[1]]);
+      }
+    }
+    //console.warn("sarea:", sarea);
+
+    //let sarea = this.
+    //console.log(e.x, e.y);
+    //this.overdraw.clear();
+    //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
+  }
+  
+  on_mousedown(e) {
+  }
+  
+  on_mouseup(e) {
+    this.finish();
+    
+    if (e.button) {
+      this.stopPropagation();
+      this.preventDefault();
+    }
+  }
+  
+  on_keydown(e) {
+    console.log("s", e.keyCode);
+    
+    switch (e.keyCode) {
+      case keymap.Escape: //esc
+        this.cancel();
+        break;
+      case keymap.Space: //space
+      case keymap.Enter: //return
+        this.finish();
+        break;
+    }
+  }
+}
+
+//controller.registerTool(SplitTool);
+
+
+class AreaDragTool extends ToolBase {
+  constructor(screen, sarea, mpos) {
+    if (screen === undefined) screen = _appstate.screen; //XXX hackish!
+    
+    super(screen);
+    
+    this.cursorbox = undefined;
+    this.boxes = [];
+    this.boxes.active = undefined;
+
+    this.sarea = sarea;
+    this.start_mpos = new Vector2$4(mpos);
+    this.screen = screen;
+  }
+  
+  static tooldef() {return {
+    uiname   : "Drag Area",
+    toolpath : "screen.area.drag",
+    icon     : Icons.TRANSLATE,
+    description : "move or duplicate area",
+    is_modal : true,
+    hotkey : undefined,
+    undoflag : UndoFlags$1.NO_UNDO,
+    flag     : 0,
+    inputs   : {}, //tool properties
+    outputs  : {}  //tool properties
+  }}
+  
+  finish() {
+    super.finish();
+
+    this.screen.regenBorders();
+    this.screen.solveAreaConstraints();
+    this.screen.snapScreenVerts();
+    this.screen._recalcAABB();
+
+    console.log("tool finish");
+  }
+  
+  getBoxRect(b) {
+    let sa = b.sarea;
+    let pos, size;
+    
+    if (b.horiz == -1) {
+      //replacement mode
+      pos = sa.pos;
+      size = sa.size;
+    } else if (b.horiz) {
+      if (b.side == 'b') {
+        pos = [sa.pos[0], sa.pos[1]+sa.size[1]*b.t];
+        size = [sa.size[0], sa.size[1]*(1.0-b.t)];
+      } else {
+        pos = [sa.pos[0], sa.pos[1]];
+        size = [sa.size[0], sa.size[1]*b.t];
+      }
+    } else {
+      if (b.side == 'r') {
+        pos = [sa.pos[0]+sa.size[0]*b.t, sa.pos[1]];
+        size = [sa.size[0]*(1.0-b.t), sa.size[1]];
+      } else {
+        pos = [sa.pos[0], sa.pos[1]];
+        size = [sa.size[0]*b.t, sa.size[1]];
+      }
+    }
+    
+    let color = "rgba(100, 100, 100, 0.2)";
+    
+    let ret = this.overdraw.rect(pos, size, color);
+    ret.style["pointer-events"] = "none";
+    
+    return ret;
+  }
+  
+  doSplit(b) {
+    if (this.sarea) {
+      return this.doSplitDrop(b);
+    }
+    
+    let src = this.sarea, dst = b.sarea;
+    let screen = this.screen;
+    
+    let t = b.t;
+    
+    screen.splitArea(dst, t, b.horiz);
+    screen._internalRegenAll();
+  }
+  
+  doSplitDrop(b) {
+    //first check if there was no change
+    if (b.horiz == -1 && b.sarea === this.sarea) {
+      return;
+    }
+
+    console.log("BBBB", b.horiz, b.sarea===this.sarea, b);
+    
+    let can_rip = false;
+    let sa = this.sarea;
+    let screen = this.screen;
+    
+    //rip conditions
+    can_rip = sa.size[0] == screen.size[0] || sa.size[1] == screen.size[1];
+    can_rip = can_rip && b.sarea !== sa;
+    can_rip = can_rip && (b.horiz == -1 || !screen.areasBorder(sa, b.sarea));
+    
+    let expand = b.horiz == -1 && b.sarea !== sa && screen.areasBorder(b.sarea, sa);
+    
+    can_rip = can_rip || expand;
+    
+    console.log("can_rip:", can_rip, expand);
+    
+    if (can_rip) {
+      screen.removeArea(sa);
+      screen.snapScreenVerts();
+    }
+    
+    if (b.horiz == -1) {
+      //replacement
+      let src = this.sarea, dst = b.sarea;
+      
+      if (can_rip) {
+        let mm;
+        
+        //handle case of one area "consuming" another
+        if (expand) {
+          mm = screen.minmaxArea(src);
+          screen.minmaxArea(dst, mm);
+        }
+        
+        console.log("replacing. . .", expand);
+        screen.replaceArea(dst, src);
+        
+        if (expand) {
+          console.log("\nEXPANDING:", src.size[0], src.size[1]);
+          
+          src.pos[0] = mm.min[0];
+          src.pos[1] = mm.min[1];
+          
+          src.size[0] = mm.max[0] - mm.min[0];
+          src.size[1] = mm.max[1] - mm.min[1];
+
+          src.loadFromPosSize();
+
+          screen._internalRegenAll();
+        }
+      } else {
+        //console.log("copying. . .");
+        screen.replaceArea(dst, src.copy());
+        screen._internalRegenAll();
+      }
+    } else {
+      let src = this.sarea, dst = b.sarea;
+      
+      let t = b.t;
+      
+      let nsa = screen.splitArea(dst, t, b.horiz);
+      
+      if (can_rip) {
+        //console.log("replacing");
+        screen.replaceArea(nsa, src);
+      } else {
+        //console.log("copying");
+        screen.replaceArea(nsa, src.copy());
+      }
+
+      screen._internalRegenAll();
+    }
+  }
+  
+  makeBoxes(sa) {
+    let sz = isMobile() ? 100 : 40;
+    let cx = sa.pos[0] + sa.size[0]*0.5;
+    let cy = sa.pos[1] + sa.size[1]*0.5;
+    
+    let color = this.color = "rgba(200, 200, 200, 0.55)";
+    let hcolor = this.hcolor = "rgba(230, 230, 230, 0.75)";
+    let idgen = 0;
+    let boxes = this.boxes;
+    
+    let box = (x, y, sz, horiz, t, side) => {
+      //console.log(x, y, sz);
+      
+      let b = this.overdraw.rect([x-sz[0]*0.5, y-sz[1]*0.5], sz, color);
+      boxes.push(b);
+
+      b.sarea = sa;
+      
+      let style = document.createElement("style");
+      let cls = `mybox_${idgen++}`;
+      
+      b.horiz = horiz;
+      b.t = t;
+      b.side = side;
+      b.setAttribute("class", cls);
+      b.setAttribute("is_box", true);
+
+      b.addEventListener("mousemove", this.on_mousemove.bind(this));
+
+      let onclick = b.onclick = (e) => {
+        let type = e.type.toLowerCase();
+
+        if ((e.type == "mousedown" || e.type == "mouseup") && e.button != 0) {
+          return; //another handler will cancel
+        }
+
+        console.log("split click");
+
+        if (!this._finished) {
+          this.finish();
+          this.doSplit(b);
+          
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      };
+      
+      b.addEventListener("click", onclick);
+      b.addEventListener("mousedown", onclick);
+      b.addEventListener("mouseup", onclick);
+
+      b.addEventListener("mouseenter", (e) => {
+        console.log("mouse enter box");
+        
+        if (this.curbox !== undefined) {
+          if (this.curbox.rect) {
+            this.curbox.rect.remove();
+            this.curbox.rect = undefined;
+          }
+        }
+        
+        if (b.rect !== undefined) {
+          b.rect.remove();
+          b.rect = undefined;
+        }
+        
+        b.rect = this.getBoxRect(b);
+        this.curbox = b;
+
+        console.log("setting hcolor");
+        b.setColor(hcolor);
+        //b.style["background-color"] = hcolor;
+      });
+      
+      b.addEventListener("mouseleave", (e) => {
+        console.log("mouse leave box");
+        
+        if (b.rect) {
+          b.rect.remove();
+          b.rect = undefined;
+        }
+        
+        if (this.curbox === b) {
+          this.curbox = undefined;
+        }
+
+        b.setColor(color);
+        //b.style["background-color"] = color;
+      });
+      
+      style.textContent = `
+        .${cls}:hover {
+          background-color : orange;
+          fill:orange;stroke-width:2
+        }
+      `;
+      //console.log(style.textContent);
+      b.appendChild(style);
+      b.setAttribute("class", cls);
+
+      return b;
+    };
+    
+    let pad = 5;
+    
+    if (this.sarea) {
+      box(cx, cy, [sz, sz], -1, -1, -1);
+    }
+    
+    box(cx-sz*0.75-pad, cy, [sz*0.5, sz], false, 0.5, 'l');
+    box(cx-sz*1.2-pad, cy, [sz*0.25, sz], false, 0.3, 'l');
+    
+    box(cx+sz*0.75+pad, cy, [sz*0.5, sz], false, 0.5, 'r');
+    box(cx+sz*1.2+pad, cy, [sz*0.25, sz], false, 0.7, 'r');
+    
+    box(cx, cy-sz*0.75-pad, [sz, sz*0.5], true, 0.5, 't');
+    box(cx, cy-sz*1.2-pad, [sz, sz*0.25], true, 0.3, 't');
+    
+    box(cx, cy+sz*0.75+pad, [sz, sz*0.5], true, 0.5, 'b');
+    box(cx, cy+sz*1.2+pad, [sz, sz*0.25], true, 0.7, 'b');
   }
 
-  init() {
-    super.init();
+  getActiveBox(x, y) {
+    for (let n of this.boxes) {
+      if (n.hasAttribute && n.hasAttribute("is_box")) {
+        let rect = n.getClientRects()[0];
 
-    this.field = document.createElement("colorfield-x");
-    this.field.setAttribute("class", "colorpicker");
+        //console.log(rect.x, rect.y);
+        if (x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height) {
+          //console.log("found rect");
+          return n;
+        }
+      }
+    }
+  }
 
-    this.field.packflag |= this.inherit_packflag;
-    this.field.packflag |= this.packflag;
+  on_drag(e) {
+    this.on_mousemove(e);
+  }
 
-    this.field.onchange = () => {
-      this._setDataPath();
-      this._setSliders();
+  on_dragend(e) {
+    this.on_mouseup(e);
+  }
 
-      if (this.onchange) {
-        this.onchange(this.field.rgba);
+  on_mousemove(e) {
+    let wid = 55;
+    let color = "rgb(200, 200, 200, 0.7)";
+
+    //console.trace("mouse move!", e.x, e.y, this.sarea);
+
+    /*
+     manually feed events to boxes so as to work right
+     with touch events; note that pushModalLight routes
+     touch to mouse events (if no touch handlers are present).
+     */
+    let n = this.getActiveBox(e.x, e.y);
+
+    if (n !== undefined) {
+      n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
+    }
+    //console.log("mouse move", n);
+
+    if (this.boxes.active !== undefined && this.boxes.active !== n) {
+      this.boxes.active.setColor(this.color);
+      this.boxes.active.dispatchEvent(new MouseEvent("mouseleave", e));
+    }
+
+    if (n !== undefined) {
+      n.dispatchEvent(new MouseEvent("mouseenter", e));
+    }
+
+    this.boxes.active = n;
+    /*
+    let rec = (n) => {
+      if (n.hasAttribute && n.hasAttribute("is_box")) {
+        let rect = n.getClientRects()[0];
+
+        console.log(rect.x, rect.y);
+        if (x >= rect.x && x >= rect.y && x < rect.x+rect.width && y < rect.y+rect.height) {
+          console.log("found rect");
+          n.dispatchEvent("mouseenter", new MouseEvent("mouseenter", e));
+        }
+      }
+      if (n === undefined || n.childNodes === undefined) {
+        return;
+      }
+
+      for (let n2 of n.childNodes) {
+        rec(n2);
+      }
+      if (n.shadow) {
+        for (let n2 of n.shadow.childNodes) {
+          rec(n2);
+        }
       }
     };
+
+    rec(this.overdraw);
+    //*/
+    if (this.sarea === undefined) {
+      return;
+    }
+    
+    if (this.cursorbox === undefined) {
+      wid = 25;
+      this.cursorbox = this.overdraw.rect([e.x-wid*0.5, e.y-wid*0.5], [wid, wid], color);
+      this.cursorbox.style["pointer-events"] = "none";
+    } else {
+      this.cursorbox.style["x"] = (e.x-wid*0.5) + "px";
+      this.cursorbox.style["y"] = (e.y-wid*0.5) + "px";
+    }
+  }
+  
+  on_mouseup(e) {
+    console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
+
+    if (e.button) {
+      e.stopPropagation();
+      e.preventDefault();
+    } else {
+      let box = this.getActiveBox(e.x, e.y);
+
+      if (box !== undefined) {
+        box.onclick(e);
+      }
+    }
+    
+    this.finish();
+  }
+  
+  modalStart(ctx) {
+    super.modalStart(ctx);
+    
+    let screen = this.screen;
+    
+    this.overdraw.clear();
+    
+    if (this.sarea) {
+      let sa = this.sarea;
+      let box = this.overdraw.rect(sa.pos, sa.size, "rgba(100, 100, 100, 0.5)");
+      
+      box.style["pointer-events"] = "none";
+    }
+    
+    for (let sa of screen.sareas) {
+      this.makeBoxes(sa);
+    }
+  }
+}
+
+//controller.registerTool(AreaDragTool);
+
+class ToolTipViewer extends ToolBase {
+  constructor(screen) {
+    super(screen);
+
+    this.tooltip = undefined;
+    this.element = undefined;
+  }
+
+  static tooldef() {return {
+    uiname   : "Help Tool",
+    toolpath : "screen.help_picker",
+    icon     : Icons.HELP,
+    description : "view tooltips",
+    is_modal : true,
+    hotkey : undefined,
+    undoflag : UndoFlags$1.NO_UNDO,
+    flag     : 0,
+    inputs   : {}, //tool properties
+    outputs  : {}  //tool properties
+  }}
+
+  on_mousemove(e) {
+    this.pick(e);
+  }
+
+  on_mousedown(e) {
+    this.pick(e);
+  }
+
+  on_mouseup(e) {
+    this.finish();
+  }
+
+  finish() {
+    super.finish();
+  }
+
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap.Escape:
+      case keymap.Enter:
+      case Keymap.Space:
+        if (this.tooltip) {
+          this.tooltip.end();
+        }
+        this.finish();
+        break;
+    }
+  }
+  pick(e) {
+    let x = e.x, y = e.y;
+
+    let ele = this.screen.pickElement(x, y);
+    console.log(ele ? ele.tagName : ele);
+
+    if (ele !== undefined && ele !== this.element && ele.title) {
+      if (this.tooltip) {
+        this.tooltip.end();
+      }
+
+      this.element = ele;
+      let tip = ele.title;
+
+      this.tooltip = ToolTip.show(tip, this.screen, x, y);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+
+function aabb_overlap_area(pos1, size1, pos2, size2) {
+  let r1=0.0, r2=0.0;
+
+  for (let i=0; i<2; i++) {
+    let a1 = pos1[i], a2 = pos2[i];
+    let b1 = pos1[i] + size1[i];
+    let b2 = pos2[i] + size2[i];
+
+    if (b1 >= a2 && a1 <= b2) {
+      let r = a2 - b1;
+      
+      if (i) {
+        r2 = r;
+      } else {
+        r1 = r;
+      }
+    }
+  }
+
+  return r1*r2;
+}
+
+var Vector2$5 = Vector2, Vector3$2 = Vector3;
+var Vector4$3 = Vector4;
+
+var _cross_vec1=new Vector3$2();
+var _cross_vec2=new Vector3$2();
+const FLOAT_MIN = -1e+21;
+const FLOAT_MAX = 1e+22;
+
+var _static_grp_points4=new Array(4);
+var _static_grp_points8=new Array(8);
+
+class MinMax {
+  constructor(totaxis) {
+    if (totaxis==undefined) {
+        totaxis = 1;
+    }
+    this.totaxis = totaxis;
+    if (totaxis!=1) {
+        let cls;
+        
+        switch (totaxis) {
+          case 2:
+            cls = Vector2$5;
+            break;
+          case 3:
+            cls = Vector3$2;
+            break;
+          case 4:
+            cls = Vector4$3;
+            break;
+          default:
+            cls = Array;
+            break;
+        }
+        
+        this._min = new cls(totaxis);
+        this._max = new cls(totaxis);
+        this.min = new cls(totaxis);
+        this.max = new cls(totaxis);
+    }
+    else {
+      this.min = this.max = 0;
+      this._min = FLOAT_MAX;
+      this._max = FLOAT_MIN;
+    }
+    this.reset();
+    this._static_mr_co = new Array(this.totaxis);
+    this._static_mr_cs = new Array(this.totaxis*this.totaxis);
+  }
+  
+  load(mm) {
+    if (this.totaxis==1) {
+        this.min = mm.min;
+        this.max = mm.max;
+        this._min = mm.min;
+        this._max = mm.max;
+    }
+    else {
+      this.min = new Vector3$2(mm.min);
+      this.max = new Vector3$2(mm.max);
+      this._min = new Vector3$2(mm._min);
+      this._max = new Vector3$2(mm._max);
+    }
+  }
+  
+  reset() {
+    var totaxis=this.totaxis;
+    if (totaxis==1) {
+        this.min = this.max = 0;
+        this._min = FLOAT_MAX;
+        this._max = FLOAT_MIN;
+    }
+    else {
+      for (var i=0; i<totaxis; i++) {
+          this._min[i] = FLOAT_MAX;
+          this._max[i] = FLOAT_MIN;
+          this.min[i] = 0;
+          this.max[i] = 0;
+      }
+    }
+  }
+
+  minmax_rect(p, size) {
+    var totaxis=this.totaxis;
+    var cs=this._static_mr_cs;
+    if (totaxis==2) {
+        cs[0] = p;
+        cs[1] = [p[0]+size[0], p[1]];
+        cs[2] = [p[0]+size[0], p[1]+size[1]];
+        cs[3] = [p[0], p[1]+size[1]];
+    }
+    else 
+      if (totaxis = 3) {
+        cs[0] = p;
+        cs[1] = [p[0]+size[0], p[1], p[2]];
+        cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
+        cs[3] = [p[0], p[1]+size[0], p[2]];
+        cs[4] = [p[0], p[1], p[2]+size[2]];
+        cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
+        cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
+        cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
+    }
+    else {
+      throw "Minmax.minmax_rect has no implementation for "+totaxis+"-dimensional data";
+    }
+    for (var i=0; i<cs.length; i++) {
+        this.minmax(cs[i]);
+    }
+  }
+
+  minmax(p) {
+    var totaxis=this.totaxis;
+    
+    if (totaxis==1) {
+        this._min = this.min = Math.min(this._min, p);
+        this._max = this.max = Math.max(this._max, p);
+    } else if (totaxis == 2) {
+      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
+      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
+      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
+      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
+    } else if (totaxis == 3) {
+      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
+      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
+      this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
+      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
+      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
+      this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
+    } else {
+      for (var i=0; i<totaxis; i++) {
+          this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
+          this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
+      }
+    }
+  }
+
+  static fromSTRUCT(reader) {
+    var ret=new MinMax();
+    reader(ret);
+    return ret;
+  }
+}MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
+var $smin_aabb_isect_line_2d=new Vector2$5();
+var $ssize_aabb_isect_line_2d=new Vector2$5();
+var $sv1_aabb_isect_line_2d=new Vector2$5();
+var $ps_aabb_isect_line_2d=[new Vector2$5(), new Vector2$5(), new Vector2$5()];
+var $smax_aabb_isect_line_2d=new Vector2$5();
+var $sv2_aabb_isect_line_2d=new Vector2$5();
+
+var _llc_l1=[new Vector3$2(), new Vector3$2()];
+var _llc_l2=[new Vector3$2(), new Vector3$2()];
+var _llc_l3=[new Vector3$2(), new Vector3$2()];
+var _llc_l4=[new Vector3$2(), new Vector3$2()];
+
+var lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
+
+var _zero_cn = new Vector3$2();
+var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
+var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
+
+var _asi_v1 = new Vector3$2();
+var _asi_v2 = new Vector3$2();
+var _asi_v3 = new Vector3$2();
+var _asi_v4 = new Vector3$2();
+var _asi_v5 = new Vector3$2();
+var _asi_v6 = new Vector3$2();
+
+var _asi2d_v1 = new Vector2$5();
+var _asi2d_v2 = new Vector2$5();
+var _asi2d_v3 = new Vector2$5();
+var _asi2d_v4 = new Vector2$5();
+var _asi2d_v5 = new Vector2$5();
+var _asi2d_v6 = new Vector2$5();
+
+var $e1_normal_tri=new Vector3$2();
+var $e3_normal_tri=new Vector3$2();
+var $e2_normal_tri=new Vector3$2();
+
+var $n2_normal_quad=new Vector3$2();
+
+var _li_vi=new Vector3$2();
+
+var dt2l_v1 = new Vector2$5();
+var dt2l_v2 = new Vector2$5();
+var dt2l_v3 = new Vector2$5();
+var dt2l_v4 = new Vector2$5();
+var dt2l_v5 = new Vector2$5();
+
+var dt3l_v1 = new Vector3$2();
+var dt3l_v2 = new Vector3$2();
+var dt3l_v3 = new Vector3$2();
+var dt3l_v4 = new Vector3$2();
+var dt3l_v5 = new Vector3$2();
+
+//p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
+var _cplw_vs4 = cachering.fromConstructor(Vector4$3, 64);
+var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2$5, 64);
+
+//clip is optional, true.  clip point to lie within line segment v1->v2
+var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
+var _closest_point_rets = new cachering(function() {
+  return [0, 0];
+}, 64);
+
+var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
+
+/*given input line (a,d) and tangent t,
+  returns a circle that goes through both
+  a and d, whose normalized tangent at a is the same
+  as normalized t.
+  
+  note that t need not be normalized, this function
+  does that itself*/
+var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
+var _circ_from_line_tan_ret = new cachering(function() {
+  return [new Vector3$2(), 0];
+});
+
+var _gtc_e1=new Vector3$2();
+var _gtc_e2=new Vector3$2();
+var _gtc_e3=new Vector3$2();
+var _gtc_p1=new Vector3$2();
+var _gtc_p2=new Vector3$2();
+var _gtc_v1=new Vector3$2();
+var _gtc_v2=new Vector3$2();
+var _gtc_p12=new Vector3$2();
+var _gtc_p22=new Vector3$2();
+var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
+
+var _sh_minv=new Vector3$2();
+var _sh_maxv=new Vector3$2();
+
+var static_cent_gbw = new Vector3$2();
+
+/*
+on factor;
+
+px := rox + rnx*t;
+py := roy + rny*t;
+pz := roz + rnz*t;
+
+f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
+ff := solve(f1, t);
+on fort;
+part(ff, 1, 2);
+off fort;
+
+* */
+var _isrp_ret=new Vector3$2();
+
+let SVG_URL = 'http://www.w3.org/2000/svg';
+
+let Vector2$6 = Vector2;
+
+class Overdraw extends UIBase {
+  constructor() {
+    super();
+
+    this.visibleToPick = false;
+
+    this.screen = undefined;
+    this.shapes = [];
+    this.otherChildren = []; //non-svg elements
+    this.font = undefined;
 
     let style = document.createElement("style");
     style.textContent = `
-      .colorpicker {
-        background-color : ${this.getDefault("BoxBG")};
+      .overdrawx {
+        pointer-events : none;
       }
     `;
-
-    this._style = style;
-
-    let cb = this.colorbox = document.createElement("div");
-    cb.style["width"] = "100%";
-    cb.style["height"] = this.getDefault("colorBoxHeight") + "px";
-    cb.style["background-color"] = "black";
-
+    
     this.shadow.appendChild(style);
-    this.field.ctx = this.ctx;
-
-    this.add(this.colorbox);
-    this.add(this.field);
-
-    this.style["width"] = this.getDefault("defaultWidth") + "px";
+    
+    this.zindex_base = 1000;
   }
 
-  updateColorBox() {
-    let r = this.field.rgba[0], g = this.field.rgba[1], b = this.field.rgba[2];
-    //let a = this.field.rgba[3];
+  startNode(node, screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
 
-    r = ~~(r*255);
-    g = ~~(g*255);
-    b = ~~(b*255);
+    if (!this.parentNode) {
+      node.appendChild(this);
+    }
 
-    let css = `rgb(${r},${g},${b})`;
-    this.colorbox.style["background-color"] = css;
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+
+    this.style["width"] = "100%"; //screen.size[0] + "px";
+    this.style["height"] = "100%"; //screen.size[1] + "px";
+
+    this.style["pointer-events"] = "none";
+
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+
+    this.svg.style["pointer-events"] = "none";
+
+    this.shadow.appendChild(this.svg);
+    //this.style["background-color"] = "green";
   }
 
-  static setDefault(node) {
-    let tabs = node.tabs();
+  start(screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
+    
+    screen.parentNode.appendChild(this);
+    
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+    
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+    
+    this.style["width"] = "100%"; //screen.size[0] + "px";
+    this.style["height"] = "100%"; //screen.size[1] + "px";
+    
+    this.style["pointer-events"] = "none";
+    
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+    
+    this.shadow.appendChild(this.svg);
+    
+    //this.style["background-color"] = "green";
+  }
+  
+  clear() {
+    for (let child of list(this.svg.childNodes)) {
+      child.remove();
+    }
+    
+    for (let child of this.otherChildren) {
+      child.remove();
+    }
+    
+    this.otherChildren.length = 0;
+  }
 
-    node.cssText = node.textbox();
-    node.cssText.onchange = (val) => {
-      let ok = validateWebColor(val);
-      if (!ok) {
-        node.cssText.flash("red");
-        return;
-      } else {
-        node.cssText.flash("green");
+  drawTextBubbles(texts, cos, colors) {
+    let boxes = [];
+    let elems = [];
+
+    let cent = new Vector2$6();
+
+    for (let i=0; i<texts.length; i++) {
+      let co = cos[i];
+      let text = texts[i];
+      let color;
+
+      if (colors !== undefined) {
+        color = colors[i];
       }
 
-      val = val.trim();
+      cent.add(co);
+      let box = this.text(texts[i], co[0], co[1], {color : color});
 
-      let color = web2color(val);
+      boxes.push(box);
+      let font = box.style["font"];
+      let pat = /[0-9]+px/;
+      let size = font.match(pat)[0];
 
-      console.log(color);
+      //console.log("size", size);
 
-      node._no_update_textbox = true;
-      console.log(color);
-      node.field.setRGBA(color[0], color[1], color[2], color[3]);
-      node._setSliders();
+      if (size === undefined) {
+        size = this.getDefault("DefaultText").size;
+      } else {
+        size = parsepx(size);
+      }
 
-      node._no_update_textbox = false;
+      //console.log(size);
+      let tsize = measureTextBlock(this, text, undefined, undefined, size, font);
+
+      box.minsize = [
+        ~~tsize.width,
+        ~~tsize.height
+      ];
+
+      let pad = parsepx(box.style["padding"]);
+
+      box.minsize[0] += pad*2;
+      box.minsize[1] += pad*2;
+
+      let x = parsepx(box.style["left"]);
+      let y = parsepx(box.style["top"]);
+
+      box.grads = new Array(4);
+      box.params = [x, y, box.minsize[0], box.minsize[1]];
+      box.startpos = new Vector2$6([x, y]);
+
+      box.setCSS = function() {
+        this.style["padding"] = "0px";
+        this.style["margin"] = "0px";
+        this.style["left"] = ~~this.params[0] + "px";
+        this.style["top"] = ~~this.params[1] + "px";
+        this.style["width"] = ~~this.params[2] + "px";
+        this.style["height"] = ~~this.params[3] + "px";
+      };
+
+      box.setCSS();
+      //console.log(box.params);
+      elems.push(box);
+    }
+
+    if (boxes.length === 0) {
+      return;
+    }
+
+    cent.mulScalar(1.0 / boxes.length);
+
+    function error() {
+      let s1 = [0, 0], s2 = [0, 0];
+
+      let ret = 0.0;
+
+      for (let box1 of boxes) {
+        for (let box2 of boxes) {
+          if (box2 === box1) {
+            continue;
+          }
+
+          s1[0] = box1.params[2];
+          s1[1] = box1.params[3];
+          s2[0] = box2.params[2];
+          s2[1] = box2.params[3];
+
+          let overlap = aabb_overlap_area(box1.params, s1, box2.params, s2);
+          ret += overlap;
+        }
+
+        ret += box1.startpos.vectorDistance(box1.params)*0.25;
+      }
+
+      return ret;
+    }
+
+    function solve() {
+      //console.log("ERROR", error());
+      let r1 = error();
+      if (r1 === 0.0) {
+        return;
+      }
+
+      let df = 0.0001;
+      let totgs = 0.0;
+
+      for (let box of boxes) {
+        for (let i=0; i<box.params.length; i++) {
+          let orig = box.params[i];
+          box.params[i] += df;
+          let r2 = error();
+          box.params[i] = orig;
+
+          box.grads[i] = (r2 - r1) / df;
+          totgs += box.grads[i]**2;
+        }
+      }
+
+      if (totgs === 0.0) {
+        return;
+      }
+
+      r1 /= totgs;
+      let k = 0.4;
+
+      for (let box of boxes) {
+        for (let i = 0; i < box.params.length; i++) {
+          box.params[i] += -r1*box.grads[i]*k;
+        }
+
+        box.params[2] = Math.max(box.params[2], box.minsize[0]);
+        box.params[3] = Math.max(box.params[3], box.minsize[1]);
+
+        box.setCSS();
+      }
+    }
+
+    for (let i=0; i<15; i++) {
+      solve();
+    }
+
+    for (let box of boxes) {
+      elems.push(this.line(box.startpos, box.params));
+    }
+
+    return elems;
+  }
+
+  text(text, x, y, args={}) {
+    args = Object.assign({}, args);
+
+    if (args.font === undefined) {
+      if (this.font !== undefined)
+        args.font = this.font;
+      else
+        args.font = this.getDefault("DefaultText").genCSS();
+    }
+
+    if (!args["background-color"]) {
+      args["background-color"] = "rgba(75, 75, 75, 0.75)";
+    }
+
+    args.color = args.color ? args.color : "white";
+    if (typeof args.color === "object") {
+      args.color = color2css$2(args.color);
+    }
+
+    args["padding"] = args["padding"] === undefined ? "5px" : args["padding"];
+    args["border-color"] = args["border-color"] ? args["border-color"] : "grey";
+    args["border-radius"] = args["border-radius"] ? args["border-radius"] : "25px";
+    args["border-width"] = args["border-width"] !== undefined ? args["border-width"] : "2px";
+
+    if (typeof args["border-width"] === "number") {
+      args["border-width"] = "" + args["border-width"] + "px";
+    }
+    if (typeof args["border-radius"] === "number") {
+      args["border-radius"] = "" + args["border-radius"] + "px";
+    }
+
+      //not sure I need SVG for this. . .
+    let box = document.createElement("div");
+
+    box.setAttribute("class", "overdrawx");
+
+    box.style["position"] = "absolute";
+    box.style["width"] = "min-contents";
+    box.style["height"] = "min-contents";
+    box.style["border-width"] = args["border-width"];
+    box.style["border-radius"] = "25px";
+    box.style["pointer-events"] = "none";
+    box.style["z-index"] = this.zindex_base + 1;
+    box.style["background-color"] = args["background-color"];
+    box.style["padding"] = args["padding"];
+
+    box.style["left"] = x + "px";
+    box.style["top"] = y + "px";
+
+    box.style["display"] = "flex";
+    box.style["justify-content"] = "center";
+    box.style["align-items"] = "center";
+
+    box.innerText = text;
+    box.style["font"] = args.font;
+    box.style["color"] = args.color;
+
+    this.otherChildren.push(box);
+    this.shadow.appendChild(box);
+
+    return box;
+  }
+
+  circle(p, r, stroke="black", fill="none") {
+    let circle = document.createElementNS(SVG_URL, "circle");
+    circle.setAttribute("cx", p[0]);
+    circle.setAttribute("cy", p[1]);
+    circle.setAttribute("r", r);
+
+    if (fill) {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
+    } else {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
+    }
+
+    this.svg.appendChild(circle);
+
+    return circle;
+  }
+
+  line(v1, v2, color="black") {
+    let line = document.createElementNS(SVG_URL, "line");
+    line.setAttribute("x1", v1[0]);
+    line.setAttribute("y1", v1[1]);
+    line.setAttribute("x2", v2[0]);
+    line.setAttribute("y2", v2[1]);
+    line.setAttribute("style", `stroke:${color};stroke-width:2`);
+    
+    this.svg.appendChild(line);
+    return line;
+  }
+  
+  rect(p, size, color="black") {
+    let line = document.createElementNS(SVG_URL, "rect");
+    line.setAttribute("x", p[0]);
+    line.setAttribute("y", p[1]);
+    line.setAttribute("width", size[0]);
+    line.setAttribute("height", size[1]);
+    line.setAttribute("style", `fill:${color};stroke-width:2`);
+
+    line.setColor = (color) => {
+      line.setAttribute("style", `fill:${color};stroke-width:2`);
     };
 
-    tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
-
-    let tab = tabs.tab("HSV");
-
-    node.h = tab.slider(undefined, "Hue", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let hsva = node.hsva;
-      node.setHSVA(e.value, hsva[1], hsva[2], hsva[3]);
-    });
-
-    node.s = tab.slider(undefined, "Saturation", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let hsva = node.hsva;
-      node.setHSVA(hsva[0], e.value, hsva[2], hsva[3]);
-    });
-    node.v = tab.slider(undefined, "Value", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let hsva = node.hsva;
-      node.setHSVA(hsva[0], hsva[1], e.value, hsva[3]);
-    });
-    node.a = tab.slider(undefined, "Alpha", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let hsva = node.hsva;
-      node.setHSVA(hsva[0], hsva[1], hsva[2], e.value);
-    });
-
-    tab = tabs.tab("RGB");
-
-    node.r = tab.slider(undefined, "R", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let rgba = node.rgba;
-      node.setRGBA(e.value, rgba[1], rgba[2], rgba[3]);
-    });
-    node.g = tab.slider(undefined, "G", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let rgba = node.rgba;
-      node.setRGBA(rgba[0], e.value, rgba[2], rgba[3]);
-    });
-    node.b = tab.slider(undefined, "B", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let rgba = node.rgba;
-      node.setRGBA(rgba[0], rgba[1], e.value, rgba[3]);
-    });
-    node.a2 = tab.slider(undefined, "Alpha", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-      let rgba = node.rgba;
-      node.setRGBA(rgba[0], rgba[1], rgba[2], e.value);
-    });
-
-    node._setSliders();
+    this.svg.appendChild(line);
+    return line;
   }
-
-  _setSliders() {
-    if (this.h === undefined) {
-      //setDefault() wasn't called
-      console.warn("colorpicker ERROR");
-      return;
-    }
-
-    let hsva = this.hsva;
-    this.h.setValue(hsva[0], false);
-    this.s.setValue(hsva[1], false);
-    this.v.setValue(hsva[2], false);
-    this.a.setValue(hsva[3], false);
-
-    let rgba = this.rgba;
-
-    this.r.setValue(rgba[0], false);
-    this.g.setValue(rgba[1], false);
-    this.b.setValue(rgba[2], false);
-    this.a2.setValue(rgba[3], false);
-
-    this.updateColorBox();
-
-    if (!this._no_update_textbox) {
-      this.cssText.text = color2web(this.field.rgba);
-    }
+  
+  end() {
+    this.clear();
+    this.remove();
   }
-
-  get hsva() {
-    return this.field.hsva;
-  }
-
-  get rgba() {
-    return this.field.rgba;
-  }
-
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
-
-    if (val === undefined) {
-      //console.warn("Bad datapath", this.getAttribute("datapath"));
-      this.disabled = true;
-      return;
-    }
-
-    this.disabled = false;
-
-    _update_temp$1.load(val);
-
-    if (prop.type == PropTypes.VEC3) {
-      _update_temp$1[3] = 1.0;
-    }
-
-    if (_update_temp$1.vectorDistance(this.field.rgba) > 0.01)  {
-      this.field.setRGBA(_update_temp$1[0], _update_temp$1[1], _update_temp$1[2], _update_temp$1[3], false);
-      this._setSliders();
-      this.field.update(true);
-    }
-  }
-
-  update() {
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
-
-    super.update();
-  }
-
-  _setDataPath() {
-    if (this.hasAttribute("datapath")) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-
-      if (prop === undefined) {
-        console.warn("Bad data path for color field:", this.getAttribute("datapath"));
-      }
-
-      let val = this.field.rgba;
-      if (prop !== undefined && prop.type == PropTypes.VEC3) {
-        val = new Vector3$2();
-        val.load(this.field.rgba);
-      }
-
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
-    }
-  }
-
-  setHSVA(h, s, v, a) {
-    this.field.setHSVA(h, s, v, a);
-    this._setSliders();
-    this._setDataPath();
-  }
-
-  setRGBA(r, g, b, a) {
-    this.field.setRGBA(r, g, b, a);
-    this._setSliders();
-    this._setDataPath();
-  }
-
+  
   static define() {return {
-    tagname : "colorpicker-x",
-    style : "colorfield"
+    tagname : "overdraw-x"
   };}
 }
 
-UIBase$b.register(ColorPicker$1);
-
-
-class ColorPickerButton extends UIBase$b {
-  constructor() {
-    super();
-
-    this._highlight = false;
-    this._depress = false;
-    this._label = "";
-
-    this.rgba = new Vector4$4([1, 1, 1, 1]);
-    this.labelDom = document.createElement("span");
-    this.labelDom.textContent = "yay";
-    this.dom = document.createElement("canvas");
-    this.g = this.dom.getContext("2d");
-
-    this.shadow.appendChild(this.labelDom);
-    this.shadow.appendChild(this.dom);
-  }
-
-  set label(val) {
-    this._label = val;
-    this.labelDom.textContent = val;
-  }
-
-  get label() {
-    return this._label;
-  }
-
-  init() {
-    super.init();
-    this._font = "DefaultText"; //this.getDefault("defaultFont");
-
-    let enter = (e) => {
-      console.log(e.type);
-      this._highlight = true;
-      this._redraw();
-    };
-
-    let leave = (e) => {
-      console.log(e.type);
-      this._highlight = false;
-      this._redraw();
-    };
-
-
-    this.addEventListener("mousedown", (e) => {
-      this.click(e);
-    });
-
-    this.addEventListener("mouseover", enter);
-    this.addEventListener("mouseleave", leave);
-    this.addEventListener("mousein", enter);
-    this.addEventListener("mouseout", leave);
-    this.addEventListener("focus", enter);
-    this.addEventListener("blur", leave);
-
-    this.setCSS();
-  }
-
-  click(e) {
-    //console.log("click!", this.getAttribute("mass_set_path"));
-
-    if (this.onclick) {
-      this.onclick(e);
-    }
-
-    let colorpicker = this.ctx.screen.popup(this, this);
-    colorpicker.useDataPathUndo = this.useDataPathUndo;
-
-    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
-
-    let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
-    widget._init();
-
-    widget.style["padding"] = "20px";
-    widget.onchange = onchange;
-  }
-
-  get font() {
-    return this._font;
-  }
-
-  set font(val) {
-    this._font = val;
-
-    this.setCSS();
-  }
-
-  _redraw() {
-    let canvas = this.dom, g = this.g;
-
-    g.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (this.disabled) {
-      let color = "rgb(55, 55, 55)";
-
-      g.save();
-
-      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
-      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-      let steps = 10;
-      let dt = canvas.width / steps, t = 0;
-
-      g.beginPath();
-      g.lineWidth = 2;
-      g.strokeStyle = "black";
-
-      for (let i=0; i<steps; i++, t += dt) {
-        g.moveTo(t, 0);
-        g.lineTo(t+dt, canvas.height);
-        g.moveTo(t+dt, 0);
-        g.lineTo(t, canvas.height);
-      }
-
-      g.stroke();
-      g.restore();
-      return;
-    }
-
-    //do checker pattern for alpha
-    g.save();
-
-    let grid1 = "rgb(100, 100, 100)";
-    let grid2 = "rgb(175, 175, 175)";
-
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
-
-    let cellsize = 10;
-    let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
-
-    //console.log("TOTX, TOTY", totx, toty);
-
-    g.beginPath();
-    for (let x=0; x<totx; x++) {
-      for (let y=0; y<toty; y++) {
-        if ((x+y) & 1) {
-          continue;
-        }
-
-        g.rect(x*cellsize, y*cellsize, cellsize, cellsize);
-      }
-    }
-
-    g.fillStyle = grid2;
-    g.fill();
-
-    //g.fillStyle = "orange";
-    //g.beginPath();
-    //g.rect(0, 0, canvas.width, canvas.height);
-    //g.fill();
-
-    let color = color2css(this.rgba);
-    //console.log(color);
-    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
-    //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
-
-    if (this._highlight) {
-      //let color = "rgba(200, 200, 255, 0.5)";
-      let color = this.getDefault("BoxHighlight");
-      drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
-    }
-
-    g.restore();
-  }
-
-  setCSS() {
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
-    let dpi = this.getDPI();
-
-    this.style["width"] = "min-contents" + "px";
-    this.style["height"] = h + "px";
-
-    this.style["flex-direction"] = "row";
-    this.style["display"] = "flex";
-
-    this.labelDom.style["color"] = this.getDefault(this._font).color;
-    this.labelDom.style["font"] = getFont(this, undefined, this._font, false);
-
-    let canvas = this.dom;
-
-    canvas.style["width"] = w + "px";
-    canvas.style["height"] = h + "px";
-    canvas.width = ~~(w*dpi);
-    canvas.height = ~~(h*dpi);
-
-    this._redraw();
-  }
-
-  static define() {return {
-    tagname : "color-picker-button-x",
-    style   : "colorpickerbutton"
-  }}
-
-  updateDataPath() {
-    if (!(this.hasAttribute("datapath"))) {
-      return;
-    }
-
-    let path = this.getAttribute("datapath");
-    let prop = this.getPathMeta(this.ctx, path);
-
-    if ((prop === undefined || prop.data === undefined) && exports.DEBUG.verboseDataPath) {
-      console.log("bad path", path);
-      return;
-    } else if (prop === undefined) {
-      this.disabled = true;
-      return;
-    }
-
-    this.disabled = false;
-
-    prop = prop;
-
-    if (prop.uiname !== this._label) {
-      //console.log(prop);
-      this.label = prop.uiname;
-    }
-
-    let val = this.getPathValue(this.ctx, path);
-
-    if (val === undefined) {
-      let redraw = this.disabled !== true;
-
-      this.disabled = true;
-
-      if (redraw) {
-        this._redraw();
-      }
-
-      return;
-    } else {
-      let redraw = this.disabled;
-
-      this.disabled = false;
-
-      if (redraw) {
-        this._redraw();
-      }
-    }
-
-    if (this.rgba.vectorDistance(val) > 0.0001) {
-      if (prop.type == PropTypes.VEC3) {
-        this.rgba.load(val);
-        this.rgba[3] = 1.0;
-      } else {
-        this.rgba.load(val);
-      }
-
-      this._redraw();
-    }
-  }
-
-  update() {
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
-  }
-
-  redraw() {
-    this._redraw();
-  }
-}UIBase$b.register(ColorPickerButton);
-
-//bind module to global var to get at it in console.
+UIBase.register(Overdraw);
 
 let UIBase$c = UIBase;
 
-var list$2 = function list(iter) {
-  let ret = [];
-
-  for (let item of iter) {
-    ret.push(item);
-  }
-
-  return ret;
-};
-
-class TableRow extends Container {
+class Note extends UIBase {
   constructor() {
     super();
-
-    this.dom.remove();
-    this.dom = document.createElement("tr");
-
-    //kind of dumb, but this.dom doesn't live within this element itself, bleh
-    //this.shadow.appendChild(this.dom);
-    this.dom.setAttribute("class", "containerx");
-  }
-
-  static define() {return {
-    tagname : "tablerow-x"
-  };}
-
-  _add(child) {
-    child.ctx = this.ctx;
-    child.parentWidget = this;
-
-    let td = document.createElement("td");
-    td.appendChild(child);
-
-    this.dom.appendChild(td);
-    child.onadd();
-  }
-}UIBase$c.register(TableRow);
-
-class TableFrame extends Container {
-  constructor() {
-    super();
-
-    this.dom = document.createElement("table");
-    this.shadow.appendChild(this.dom);
-    this.dom.setAttribute("class", "containerx");
-
-    //this.dom.style["display"] = "block";
-  }
-
-  update() {
-    this.style["display"] = "inline-block";
-    super.update();
-  }
-
-  _add(child) {
-    child.ctx = this.ctx;
-    child.parentWidget = this;
-    this.dom.appendChild(child);
-    child.onadd();
-  }
-
-  row() {
-    let tr = document.createElement("tr");
-    let cls = "table-tr";
-
-    tr.setAttribute("class", cls);
-    this.dom.appendChild(tr);
-    let this2 = this;
-
-    function maketd() {
-      let td = document.createElement("td");
-      tr.appendChild(td);
-
-      td.style["margin"] = tr.style["margin"];
-      td.style["padding"] = tr.style["padding"];
-
-      let container = document.createElement("rowframe-x");
-
-      container.ctx = this2.ctx;
-      container.setAttribute("class", cls);
-      td.setAttribute("class", cls);
-
-      //let div2 = document.createElement("div");
-      //div2.setAttribute("class", cls);
-      //div2.innerHTML = "sdfsdf";
-
-      //td.appendChild(div2);
-      td.appendChild(container);
-
-      return container;
-    }
-
-    //hrm wish I could subclass html elements easier
-    let ret = {
-      _tr : tr,
-
-      style : tr.style,
-
-      focus : function(args) {
-        tr.focus(args);
-      },
-
-      blur : function(args) {
-        tr.blur(args);
-      },
-
-      remove : () => {
-        tr.remove();
-      },
-
-      addEventListener : function(type, cb, arg) {
-        tr.addEventListener(type, cb, arg);
-      },
-
-      removeEventListener : function(type, cb, arg) {
-        tr.removeEventListener(type, cb, arg);
-      },
-
-      setAttribute : function(attr, val) {
-        if (attr == "class") {
-          cls = val;
-        }
-
-        tr.setAttribute(attr, val);
-      },
-
-      clear : function() {
-        for (let node of list$2(tr.childNodes)) {
-          tr.removeChild(node);
-        }
-      }
-    };
-
-    function makefunc(f) {
-      ret[f] = function() {
-        let container = maketd();
-
-        container.background = tr.style["background-color"]; //"rgba(0,0,0,0)";
-        return container[f].apply(container, arguments);
-      };
-    }
-
-    let _bg = "";
-
-    //need to implement proper proxy here!
-    Object.defineProperty(ret, "tabIndex", {
-      set : function(f) {
-        tr.tabIndex = f;
-      },
-
-      get : function(f) {
-        return tr.tabIndex;
-      }
-    });
-
-    Object.defineProperty(ret, "background", {
-      set : function(bg) {
-        _bg = bg;
-        tr.style["background-color"] = bg;
-
-        for (let node of tr.childNodes) {
-          if (node.childNodes.length > 0) {
-            node.childNodes[0].background = bg;
-            node.style["background-color"] = bg;
-          }
-        }
-      }, get : function() {
-        return _bg;
-      }
-    });
-
-    /*
-    Object.defineProperty(ret, "class", {
-      set(bg) {
-        tr.class = bg;
-      }
-    });//*/
-
-    ret.cell = () => {
-      let container = maketd();
-      container.background = tr.style["background-color"];
-      return container;
-    };
-    
-    //makefunc("cell");
-    makefunc("label");
-    makefunc("tool");
-    makefunc("prop");
-    makefunc("pathlabel");
-    makefunc("button");
-    makefunc("iconbutton");
-    makefunc("textbox");
-    makefunc("col");
-    makefunc("row");
-    makefunc("table");
-    makefunc("listenum");
-    makefunc("check");
-
-    return ret;
-  }
-
-  update() {
-    super.update();
-  }
-
-  clear() {
-    super.clear();
-    for (let child of list$2(this.dom.childNodes)) {
-      child.remove();
-    }
-  }
-
-  static define() {return {
-    tagname : "tableframe-x"
-  };}
-}
-UIBase$c.register(TableFrame);
-
-let UIBase$d = UIBase;
-
-class ListItem extends RowFrame {
-  constructor() {
-    super();
-
-    let highlight = () => {
-      console.log("listitem mouseover");
-      this.highlight = true;
-      this.setBackground();
-    };
-
-    let unhighlight = () => {
-      console.log("listitem mouseleave");
-      this.highlight = false;
-      this.setBackground();
-    };
-
-    this.addEventListener("mouseover", highlight);
-    this.addEventListener("mousein", highlight);
-
-    this.addEventListener("mouseleave", unhighlight);
-    this.addEventListener("mouseout", unhighlight);
-    this.addEventListener("blur", unhighlight);
-
-    this.addEventListener("click", (e) => {
-      console.log("click!");
-      if (this.onclick) {
-        this.onclick();
-      }
-    });
 
     let style = document.createElement("style");
+
+    this._noteid = undefined;
+    this.height = 20;
+
     style.textContent = `
-      .listitem {
-        -moz-user-focus: normal;
-        moz-user-focus: normal;
-        user-focus: normal;
-      }
+    .notex {
+      display : flex;
+      flex-direction : row;
+      flex-wrap : nowrap;
+      height : {this.height}px;
+      padding : 0px;
+      margin : 0px;
+    }
     `;
 
-    this.shadowRoot.prepend(style);
+    this.dom = document.createElement("div");
+    this.dom.setAttribute("class", "notex");
+    this.color = "red";
+
+    this.shadow.appendChild(style);
+    this.shadow.append(this.dom);
+    this.setLabel("");
+  }
+
+  setLabel(s) {
+    let color = this.color;
+    if (this.mark === undefined) {
+      this.mark = document.createElement("div");
+      this.mark.style["display"] = "flex";
+      this.mark.style["flex-direction"] = "row";
+      this.mark.style["flex-wrap"] = "nowrap";
+
+      //this.mark.style["width"]
+      let sheet = 0;
+
+      let size = iconmanager.getTileSize(sheet);
+
+      this.mark.style["width"] = "" + size + "px";
+      this.mark.style["height"] = "" + size + "px";
+
+      this.dom.appendChild(this.mark);
+
+      this.ntext = document.createElement("div");
+      this.ntext.style["display"] = "inline-flex";
+      this.ntext.style["flex-wrap"] = "nowrap";
+
+      this.dom.appendChild(this.ntext);
+
+      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
+
+      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
+      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
+      //this.mark.style["background-color"] = color;
+    }
+
+    let mark = this.mark, ntext = this.ntext;
+    //mark.innerText = "!";
+    ntext.innerText = " " + s;
   }
 
   init() {
     super.init();
 
-    this.setAttribute("class", "listitem");
-    this.style["width"] = "100%";
+    this.setAttribute("class", "notex");
+
+    this.style["display"] = "flex";
+    this.style["flex-wrap"] = "nowrap";
+    this.style["flex-direction"] = "row";
+    this.style["border-radius"] = "7px";
+    this.style["padding"] = "2px";
+
+    this.style["color"] = this.getDefault("NoteText").color;
+    let clr = css2color$1(this.color);
+    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
+
+    this.style["background-color"] = clr;
     this.setCSS();
   }
 
-  setBackground() {
-    if (this.highlight) {
-      this.background = this.getDefault("ListHighlight");
-    } else if (this.is_active) {
-      this.background = this.getDefault("ListActive");
-    } else {
-      this.background = this.getDefault("DefaultPanelBG");
-    }
-  }
-
   static define() {return {
-    tagname : "listitem-x",
-    style : "listbox"
+    tagname : "note-x"
   }}
 }
-UIBase$d.register(ListItem);
+UIBase$c.register(Note);
 
-class ListBox extends Container {
+class ProgBarNote extends Note {
   constructor() {
     super();
 
-    this.items = [];
-    this.idmap = {};
-    this.items.active = undefined;
-    this.highlight = false;
-    this.is_active = false;
+    this._percent = 0.0;
+    this.barWidth = 100;
 
-    let style = document.createElement("style");
-    style.textContent = `
-      .listbox {
-        -moz-user-focus: normal;
-        moz-user-focus: normal;
-        user-focus: normal;
-      }
-    `;
-    this.shadow.prepend(style);
+    let bar = this.bar = document.createElement("div");
+    bar.style["display"] = "flex";
+    bar.style["flex-direction"] = "row";
+    bar.style["width"] = this.barWidth + "px";
+    bar.style["height"] = this.height + "px";
+    bar.style["background-color"] = this.getDefault("ProgressBarBG");
+    bar.style["border-radius"] = "12px";
+    bar.style["align-items"] = "center";
+    bar.style["padding"] = bar.style["margin"] = "0px";
 
-    this.onkeydown = (e) => {
-      console.log("yay", e.keyCode);
+    let bar2 = this.bar2 = document.createElement("div");
 
-      switch (e.keyCode) {
-        case keymap["Up"]:
-        case keymap["Down"]:
-          if (this.items.length == 0)
-            return;
+    bar2.style["display"] = "flex";
+    bar2.style["flex-direction"] = "row";
+    bar2.style["height"] = this.height + "px";
+    bar2.style["background-color"] = this.getDefault("ProgressBar");
+    bar2.style["border-radius"] = "12px";
+    bar2.style["align-items"] = "center";
+    bar2.style["padding"] = bar2.style["margin"] = "0px";
 
-          if (this.items.active === undefined) {
-            this.setActive(this.items[0]);
-            return;
-          }
-
-          let i = this.items.indexOf(this.items.active);
-          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
-
-          i = Math.max(Math.min(i+dir, this.items.length-1), 0);
-          this.setActive(this.items[i]);
-
-          break;
-      }
-    };
-
-    //this.addEventListener("keydown", on_keydown);
-
-    //this._table =  this.table();
+    this.bar.appendChild(bar2);
+    this.dom.appendChild(this.bar);
   }
 
   setCSS() {
     super.setCSS();
+
+    let w = ~~(this.percent * this.barWidth + 0.5);
+
+    this.bar2.style["width"] = w + "px";
+  }
+
+  set percent(val) {
+    this._percent = val;
+    this.setCSS();
+  }
+
+  get percent() {
+    return this._percent;
+  }
+
+  init() {
+    super.init();
+  }
+
+  static define() {return {
+    tagname : "note-progress-x"
+  }}
+}
+UIBase$c.register(ProgBarNote);
+
+class NoteFrame extends RowFrame {
+  constructor() {
+    super();
+    this._h = 20;
   }
 
   init() {
     super.init();
 
-    this.setCSS();
+    this.noMarginsOrPadding();
 
-    this.style["width"] = this.getDefault("width") + "px";
-    this.style["height"] = this.getDefault("height") + "px";
-    this.style["overflow"] = "scroll";
-
-    //this.setAttribute("class", "listbox");
-    //this.setAttribute("tabindex", 0);
-    //this.tabIndex = 0;
+    noteframes.push(this);
+    this.background = this.getDefault("NoteBG");
   }
 
-  addItem(name, id) {
-    let item = document.createElement("listitem-x");
+  setCSS() {
+    super.setCSS();
 
-    item._id = id === undefined ? this.items.length : id;
-    this.idmap[item._id] = item;
-
-    //item.addEventListener("keydown", this.onkeydown);
-    this.tabIndex = 1;
-    this.setAttribute("tabindex", 1);
-
-    this.add(item);
-    this.items.push(item);
-
-    item.label(name);
-    let this2 = this;
-
-    item.onclick = function() {
-      this2.setActive(this);
-      this.setBackground();
-    };
-
-    return item;
+    this.style["width"] = "min-contents";
+    this.style["height"] = this._h + "px";
   }
 
-  removeItem(item) {
-    if (typeof item == "number") {
-      item = this.idmap[item];
+  _ondestroy() {
+    if (noteframes.indexOf(this) >= 0) {
+      noteframes.remove(this);
     }
 
-    item.remove();
-    delete this.idmap[item._id];
-    this.items.remove(item);
+    super._ondestroy();
   }
 
-  setActive(item) {
-    if (typeof item == "number") {
-      item = this.idmap[item];
+  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
+    let note;
+
+    for (let child of this.children) {
+      if (child._noteid === id) {
+        note = child;
+        break;
+      }
     }
 
-    console.log("set active!");
+    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
 
-    if (item === this.items.active) {
-      return;
+    if (note === undefined) {
+      note = this.addNote(msg, color, -1, "note-progress-x");
+      note._noteid = id;
     }
 
-    if (this.items.active !== undefined) {
-      this.items.active.highlight = false;
-      this.items.active.is_active = false;
-      this.items.active.setBackground();
+    //note.setLabel(msg + " " + f + "%");
+    note.percent = percent;
+
+    if (percent >= 1.0) {
+      //note.setLabel(msg + " " + f + "%");
+
+      window.setTimeout(() => {
+        note.remove();
+      }, timeout);
     }
 
-    item.is_active = true;
-    this.items.active = item;
-
-    if (item !== undefined) {
-      item.setBackground();
-      item.scrollIntoViewIfNeeded();
-    }
-
-    if (this.onchange) {
-      this.onchange(item._id, item);
-    }
+    return note;
   }
 
-  clear() {
+  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
+    //let note = document.createElement("note-x");
+
+    //note.ctx = this.ctx;
+    //note.background = "red";
+    //note.dom.innerText = msg;
+
+    //this._add(note);
+
+    let note = document.createElement(tagname);
+
+    note.color = color;
+    note.setLabel(msg);
+
+    note.style["text-align"] = "center";
+
+    note.style["font"] = getFont(note, "NoteText");
+    note.style["color"] = this.getDefault("NoteText").color;
+
+    this.add(note);
+
+    this.noMarginsOrPadding();
+    note.noMarginsOrPadding();
+
+    //this.dom.style["position"] = "absolute";
+    //this.style["position"] = "absolute";
+    //note.style["position"] = "absolute";
+
+    note.style["height"] = this._h + "px";
+    note.height = this._h;
+
+
+    if (timeout != -1) {
+      window.setTimeout(() => {
+        console.log("remove!");
+        note.remove();
+      }, timeout);
+    }
+
+    //this.appendChild(note);
+    return note;
 
   }
 
   static define() {return {
-    tagname : "listbox-x",
-    style : "listbox"
+    tagname : "noteframe-x"
   }}
 }
-UIBase$d.register(ListBox);
+UIBase$c.register(NoteFrame);
 
-let Area$1 = Area;
+function getNoteFrames(screen) {
+  let ret = [];
 
-startMenuEventWrangling();
+  let rec = (n) => {
 
-let _events_started = false;
+    if (n instanceof NoteFrame) {
+      ret.push(n);
+    }
 
-function registerToolStackGetter(func) {
+    if (n.childNodes !== undefined) {
+      for (let node of n.childNodes) {
+        rec(node);
+      }
+    }
+
+    if (n instanceof UIBase && n.shadow !== undefined && n.shadow.childNodes) {
+      for (let node of n.shadow.childNodes) {
+        rec(node);
+      }
+    }
+  };
+
+  rec(screen);
+  return ret;
 }
 
-//XXX why!!!
-window._nstructjs = nstructjs;
+let noteframes = [];
 
-let Vector2$7 = Vector2,
-  UIBase$e = UIBase;
+function progbarNote(screen, msg, percent, color, timeout) {
+  noteframes = getNoteFrames(screen);
 
-let update_stack = new Array(8192);
-update_stack.cur = 0;
+  for (let frame of noteframes) {
+    try {
+      frame.progbarNote(msg, percent, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log("bad notification frame");
+    }
+  }
+}
 
-class ScreenVert extends Vector2$7 {
-  constructor(pos, id, side) {
+function sendNote(screen, msg, color, timeout=1000) {
+  noteframes = getNoteFrames(screen);
+
+  console.log(noteframes.length);
+
+  for (let frame of noteframes) {
+    console.log(frame);
+
+    try {
+      frame.addNote(msg, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log("bad notification frame");
+    }
+  }
+}
+
+window._sendNote = sendNote;
+
+function error(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, color2css$2([1.0, 0.0, 0.0, 1.0]), timeout);
+}
+
+function warning(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, color2css$2([0.78, 0.78, 0.2, 1.0]), timeout);
+}
+
+function message(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, color2css$2([0.4, 1.0, 0.5, 1.0]), timeout);
+}
+
+let SnapLimit = 1;
+
+function snap(c, snap_limit=SnapLimit) {
+  if (Array.isArray(c)) {
+    for (let i=0; i<c.length; i++) {
+      c[i] = Math.floor(c[i]/snap_limit)*snap_limit;
+    }
+  } else {
+    c = Math.floor(c/snap_limit)*snap_limit;
+  }
+
+  return c;
+}
+
+function snapi(c, snap_limit=SnapLimit) {
+  //return snap(c, snap_limit);
+
+  if (Array.isArray(c)) {
+    for (let i=0; i<c.length; i++) {
+      c[i] = Math.ceil(c[i]/snap_limit)*snap_limit;
+    }
+  } else {
+    c = Math.ceil(c/snap_limit)*snap_limit;
+  }
+
+  return c;
+}
+
+class ScreenVert extends Vector2 {
+  constructor(pos, id, added_id) {
     super(pos);
 
-    this.side = side;
+    this.added_id = added_id;
     this.sareas = [];
     this.borders = [];
 
     this._id = id;
   }
 
-  static hash(pos, side) {
-    let x = Math.floor(pos[0]/2.0);
-    let y = Math.floor(pos[1]/2.0);
+  static hash(pos, added_id) {
+    let x = snap(pos[0]);
+    let y = snap(pos[1]);
 
-    return ""+x + ":" + y;
+    return ""+x + ":" + y + ": + added_id";
   }
 
   valueOf() {
-    return ScreenVert.hash(this, this.side);
+    return ScreenVert.hash(this, this.added_id);
   }
 
   [Symbol.keystr]() {
-    return ScreenVert.hash(this, this.side);
+    return ScreenVert.hash(this, this.added_id);
   }
 
   loadSTRUCT(reader) {
     reader(this);
-
-    this.load(this._vec);
-    delete this._vec;
   }
 }
 
 ScreenVert.STRUCT = `
 pathux.ScreenVert {
-  _vec : vec2;
+  0 : float;
+  1 : float;
 }
 `;
+register(ScreenVert);
 
 class ScreenHalfEdge {
   constructor(border, sarea) {
     this.sarea = sarea;
     this.border = border;
+    this.side = sarea._side(border);
   }
 
   get v1() {
@@ -26187,21 +26256,24 @@ class ScreenHalfEdge {
     return this.border.v2;
   }
 
-  get side() {
-    return this.sarea._side(this.border);
+  [Symbol.keystr]() {
+    return this.sarea._id + ":" + this.border._id;
   }
+
 }
 
 class ScreenBorder extends UIBase {
   constructor() {
     super();
 
+    this.visibleToPick = false;
+
     this.screen = undefined;
     this.v1 = undefined;
     this.v2 = undefined;
     this._id = undefined;
 
-    this.side = 0; //which side of area are we on, going counterclockwise
+    this.outer = undefined;
 
     this.halfedges = []; //all bordering borders, including ones with nonshared verts
     this.sareas = [];
@@ -26218,23 +26290,10 @@ class ScreenBorder extends UIBase {
     this.addEventListener("mousedown", (e) => {
       console.log(this.sareas.length, this.sareas, "|||||");
 
-      if (this.valence < 2) {
-        let ok = false;
+      let ok = this.movable;
 
-        for (let sarea of this.sareas) {
-          if (sarea.floating) {
-            ok = true;
-          }
-        }
-
-        if (!ok) {
-          console.log(this, this.sareas);
-          console.log("ignoring border ScreenArea");
-          return;
-        }
-      }
-
-      if (!this.movable) {
+      if (!ok) {
+        console.log("border is not movable");
         return;
       }
 
@@ -26246,6 +26305,18 @@ class ScreenBorder extends UIBase {
       e.preventDefault();
       e.stopPropagation();
     });
+  }
+
+  get dead() {
+    return !this.parentNode;
+  }
+
+  get side() {
+    throw new Error("side accedd");
+  }
+
+  set side(val) {
+    throw new Error("side accedd");
   }
 
   get valence() {
@@ -26295,7 +26366,7 @@ class ScreenBorder extends UIBase {
     return ret;
   }
 
-  otherVert(v) {
+  otherVertex(v) {
     if (v === this.v1)
       return this.v2;
     else
@@ -26315,59 +26386,88 @@ class ScreenBorder extends UIBase {
       this.appendChild(this._style);
     }
 
-    let wid = 8;
+    let pad = this.getDefault("ScreenBorderMousePadding");
+    let wid = this.getDefault("ScreenBorderWidth");
 
     let v1 = this.v1, v2 = this.v2;
-    let vec = new Vector2$7(v2).sub(v1);
+    let vec = new Vector2(v2).sub(v1);
 
     let x = Math.min(v1[0], v2[0]), y = Math.min(v1[1], v2[1]);
     let w, h;
-    let cursor, bstyle, mstyle;
+    let cursor, bstyle;
 
-    if (Math.abs(vec[0]) < Math.abs(vec[1])) {
-      x -= wid / 2;
 
-      w = wid;
+    this.style["display"] = "flex";
+    this.style["display"] = this.horiz ? "row" : "column";
+    this.style["justify-content"] = "center";
+    this.style["align-items"] = "center";
+
+    if (!this.horiz) {
+      this.style["padding-left"] = this.style["padding-right"] = pad + "px";
+      x -= wid*0.5 + pad;
+
+      w = wid*2;
       h = Math.abs(vec[1]);
 
       cursor = 'e-resize';
-
       bstyle = "border-left-style : solid;\n    border-right-style : solid;\n";
-      mstyle = "margin-left : 2px;\n    margin-right : 2px;\n    ";
-      mstyle += "height : 100%;\n    width:${iwid}px;\n";
+      bstyle = "border-top-style : none;\n    border-bottom-style : none;\n";
     } else {
-      y -= wid / 2;
+      this.style["padding-top"] = this.style["padding-bottom"] = pad + "px";
+      y -= wid*0.5 + pad;
 
       w = Math.abs(vec[0]);
       h = wid;
+
       cursor = 'n-resize';
       bstyle = "border-top-style : solid;\n    border-bottom-style : solid;\n";
-      mstyle = "margin-top : 2px;\n    margin-bottom : 2px;\n    ";
-      mstyle += "width : 100%;\n    height:${iwid}px;\n";
     }
 
+
     let color = this.getDefault("ScreenBorderOuter");
-    let width = this.getDefault("ScreenBorderWidth");
+    let debug = exports.DEBUG.screenborders;
+
+    if (debug) {
+      wid = 4;
+      let alpha = 1.0;
+      let c = this.sareas.length*75;
+
+      let r=0, g=0, b=0;
+
+      if (this.movable) {
+        b=255;
+      }
+      if (this.halfedges.length > 1) {
+        g=255;
+      }
+      if (this.outer) {
+        r = 255;
+      }
+      color = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
 
 
     let innerbuf = `
         .screenborder_inner_${this._id} {
           ${bstyle}
-          ${mstyle}
+          ${this.horiz ? 'height' : 'width'} : ${wid}px;
+          ${!this.horiz ? 'height' : 'width'} : 100%;
+          margin : 0px;
+          padding : 0px;
+          
           background-color : ${this.getDefault("ScreenBorderInner")};
           border-color : ${color};
-          border-width : ${width}px;
+          border-width : ${wid*0.5}px;
+          border-style : ${debug && this.outer ? "dashed" : "solid"};
           pointer-events : none;
         }`;
 
     let sbuf = `
         .screenborder_${this._id} {
-          padding : 0;
-          margin : 0;
         }
     `;
 
-    let ok = this.valence >= 2;
+    let ok = this.movable;
     for (let sarea of this.sareas) {
       ok = ok || sarea.floating;
     }
@@ -26391,10 +26491,10 @@ class ScreenBorder extends UIBase {
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
-    this.style["z-index"] = 5;
+    this.style["z-index"] = "25";
   }
 
-  static hash(v1, v2, side) {
+  static hash(v1, v2) {
     return Math.min(v1._id, v2._id) + ":" + Math.max(v1._id, v2._id);
   }
 
@@ -26415,11 +26515,2262 @@ class ScreenBorder extends UIBase {
 
 UIBase.register(ScreenBorder);
 
+function setScreenClass(cls) {
+}
+
+function getAreaIntName(name) {
+  let hash = 0;
+
+  for (let i=0; i<name.length; i++) {
+    let c = name.charCodeAt(i);
+
+    if (i % 2 == 0) {
+      hash += c<<8;
+      hash *= 13;
+      hash = hash & ((1<<15)-1);
+    } else {
+      hash += c;
+    }
+  }
+
+  return hash;
+}
+//XXX get rid of me
+window.getAreaIntName = getAreaIntName;
+
+//XXX get rid of me
+var AreaTypes = {
+  TEST_CANVAS_EDITOR : 0
+};
+
+function setAreaTypes(def) {
+  for (let k in AreaTypes) {
+    delete AreaTypes[k];
+  }
+
+  for (let k in def) {
+    AreaTypes[k] = def[k];
+  }
+}
+
+let areaclasses = {};
+class AreaWrangler {
+  constructor() {
+    this.stacks = {};
+    this.lasts = {};
+    this.lastArea = undefined;
+    this.stack = [];
+    this.idgen = 0;
+    this._last_screen_id = undefined;
+  }
+
+  _checkWrangler(ctx) {
+    if (ctx === undefined) {
+      return true;
+    }
+
+    if (this._last_screen_id === undefined) {
+      this._last_screen_id = ctx.screen._id;
+      return true;
+    }
+
+    if (ctx.screen._id !== this._last_screen_id) {
+      this.reset();
+
+      this._last_screen_id = ctx.screen._id;
+      console.warn("contextWrangler detected a new screen; new file?");
+      return false;
+    }
+
+    return true;
+  }
+
+  reset() {
+    this.stacks = {};
+    this.lasts = {};
+    this.lastArea = undefined;
+    this.stack = [];
+    this._last_screen_id = undefined;
+
+    return this;
+  }
+
+  push(type, area, pushLastRef=true) {
+    if (pushLastRef || this.lasts[type.name] === undefined) {
+      this.lasts[type.name] = area;
+      this.lastArea = area;
+    }
+
+    if (!(type.name in this.stacks)) {
+      this.stacks[type.name] = [];
+    }
+
+    this.stacks[type.name].push(area);
+    this.stack.push(area);
+  }
+
+  pop(type, area) {
+    if (!(type.name in this.stacks)) {
+      console.warn("pop_ctx_area called in error");
+      //throw new Error("pop_ctx_area called in error");
+      return;
+    }
+
+    if (this.stacks[type.name].length > 0) {
+      this.stacks[type.name].pop();
+    }
+
+    if (this.stack.length > 0) {
+      this.stack.pop();
+    }
+  }
+
+  getLastArea(type) {
+    if (type === undefined) {
+      if (this.stack.length > 0) {
+        return this.stack[this.stack.length-1];
+      } else {
+        return this.lastArea;
+      }
+    } else {
+      if (type.name in this.stacks) {
+        let stack = this.stacks[type.name];
+
+        if (stack.length > 0) {
+          return stack[stack.length-1];
+        }
+      }
+
+      return this.lasts[type.name];
+    }
+  }
+}
+
+let UIBase$d = UIBase;
+let Vector2$7 = Vector2;
+let Screen = undefined;
+
+const AreaFlags = {
+  HIDDEN          : 1,
+  FLOATING        : 2,
+  INDEPENDENT     : 4 //area is indpendent of the screen mesh
+};
+
+let contextWrangler = new AreaWrangler();
+
+window._contextWrangler = contextWrangler;
+
+const BorderMask = {
+  LEFT    : 1,
+  BOTTOM  : 2,
+  RIGHT   : 4,
+  TOP     : 8,
+  ALL     : 1|2|4|8
+};
+
+const BorderSides = {
+  LEFT   : 0,
+  BOTTOM : 1,
+  RIGHT  : 2,
+  TOP    : 3
+};
+
+/**
+ * Base class for all editors
+ **/
+class Area extends UIBase {
+  constructor() {
+    super();
+
+    /**
+     * -----b4----
+     *
+     * b1       b3
+     *
+     * -----b2----
+     *
+     * */
+
+    let def = this.constructor.define();
+
+    //set bits in mask to keep
+    //borders from moving
+    this.borderLock = def.borderLock || 0;
+    this.flag = def.flag || 0;
+
+    this.inactive = true;
+    this.areaDragToolEnabled = true;
+    
+    this.owning_sarea = undefined;
+    this._area_id = contextWrangler.idgen++;
+    
+    this.pos = undefined; //set by screenarea parent
+    this.size = undefined; //set by screenarea parent
+    this.minSize = [5, 5];
+    this.maxSize = [undefined, undefined];
+
+    let appendChild = this.shadow.appendChild;
+    this.shadow.appendChild = (child) => {
+      appendChild.call(this.shadow, child);
+      if (child instanceof UIBase$d) {
+        child.parentWidget = this;
+      }
+    };
+
+    let prepend = this.shadow.prepend;
+    this.shadow.prepend = (child) => {
+      prepend.call(this.shadow, child);
+
+      if (child instanceof UIBase$d) {
+        child.parentWidget = this;
+      }
+    };
+  }
+
+  set floating(val) {
+    if (val) {
+      this.flag |= AreaFlags.FLOATING;
+    } else {
+      this.flag &= ~AreaFlags.FLOATING;
+    }
+  }
+
+  get floating() {
+    return ~~(this.flag & AreaFlags.FLOATING);
+  }
+
+  init() {
+    super.init();
+
+    this.style["overflow"] = "hidden";
+    this.noMarginsOrPadding();
+
+    let onover = (e) => {
+      //console.log(this._area_id, this.ctx.workspace._area_id);
+
+      //try to trigger correct entry in context area stacks
+      this.push_ctx_active();
+      this.pop_ctx_active();
+    };
+
+    //*
+    this.addEventListener("mouseover", onover, {passive : true});
+    this.addEventListener("mousemove", onover, {passive : true});
+    this.addEventListener("mousein", onover, {passive : true});
+    this.addEventListener("mouseenter", onover, {passive : true});
+    this.addEventListener("touchstart", onover, {passive : true});
+    this.addEventListener("focusin", onover, {passive : true});
+    this.addEventListener("focus", onover, {passive : true});
+    //*/
+  }
+
+  _get_v_suffix() {
+    if (this.flag & AreaFlags.INDEPENDENT) {
+      return this._id;
+    } else {
+      return "";
+    }
+  }
+
+
+  /**
+   * Return a list of keymaps used by this editor
+   * @returns {Array<KeyMap>}
+   */
+  getKeyMaps() {
+    return this.keymap !== undefined ? [this.keymap] : [];
+  }
+
+  on_fileload(isActiveEditor) {
+    contextWrangler.reset();
+  }
+
+  buildDataPath() {
+    
+    let sarea = this.owning_sarea;
+    
+    if (sarea === undefined || sarea.screen === undefined) {
+      console.warn("Area.buildDataPath(): Failed to build data path");
+      return "";
+    }
+    
+    let screen = sarea.screen;
+    
+    let idx1 = screen.sareas.indexOf(sarea);
+    let idx2 = sarea.editors.indexOf(this);
+    
+    if (idx1 < 0 || idx2 < 0) {
+      throw new Error("malformed area data");
+    }
+    
+    let ret = `screen.sareas[${idx1}].editors[${idx2}]`;
+    return ret;
+  }
+  
+  saveData() {
+    return {
+      _area_id : this._area_id,
+      areaName : this.areaName
+    };
+  }
+  
+  loadData(obj) {
+    let id = obj._area_id;
+    
+    if (id !== undefined && id !== null) {
+      this._area_id = id;
+    }
+  }
+  
+  draw() {
+  }
+  
+  copy() {
+    console.warn("You might want to implement this, Area.prototype.copy based method called");
+    let ret = document.createElement(this.constructor.define().tagname);
+    return ret;
+  }
+  
+  on_resize(size, oldsize) {
+    super.on_resize(size, oldsize);
+  }
+
+  on_area_focus() {
+
+  }
+
+  on_area_blur() {
+
+  }
+
+  /** called when editors are swapped with another editor type*/
+  on_area_active() {
+  }
+
+  /** called when editors are swapped with another editor type*/
+  on_area_inactive() {
+  }
+
+  /**
+   * Get active area as defined by push_ctx_active and pop_ctx_active.
+   *
+   * Type should be an Area subclass, if undefined the last accessed area
+   * will be returned.
+   * */
+  static getActiveArea(type) {
+    return contextWrangler.getLastArea(type);
+  }
+
+  /*
+  * This is needed so UI controls can know what their parent area is.
+  * For example, a slider with data path "view2d.zoomfac" needs to know where
+  * to find view2d.
+  *
+  * Typically this works by adding a field to a ContextOverlay:
+  *
+  * class ContextOverlay {
+  *   get view3d() {
+  *     return Area.getActiveArea(View3D);
+  *   }
+  * }
+  *
+  * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
+  * */
+  push_ctx_active(dontSetLastRef=false) {
+    contextWrangler.push(this.constructor, this, !dontSetLastRef);
+  }
+
+  /**
+   * see push_ctx_active
+   * */
+  pop_ctx_active(dontSetLastRef=false) {
+    contextWrangler.pop(this.constructor, this, !dontSetLastRef);
+  }
+  
+  static register(cls) {
+    let def = cls.define();
+    
+    if (!def.areaname) {
+      throw new Error("Missing areaname key in define()");
+    }
+    
+    areaclasses[def.areaname] = cls;
+    
+    UIBase.register(cls);
+  }
+  
+  getScreen() {
+    //XXX
+    //return _appstate.screen;
+    throw new Error("replace me in Area.prototype");
+  }
+  
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      areaname : this.constructor.define().areaname,
+      _area_id : this._area_id
+    });
+  }
+  
+  loadJSON(obj) {
+    super.loadJSON(obj);
+    this._area_id = obj._area_id;
+    
+    return this;
+  }
+
+  getBarHeight() {
+    return this.header.getClientRects()[0].height;
+  }
+
+  makeAreaSwitcher(container) {
+    let areas = {};
+    let icons = {};
+
+    for (let k in areaclasses) {
+      let cls = areaclasses[k];
+      let def = cls.define();
+
+      if (def.flag & AreaFlags.HIDDEN)
+        continue;
+
+      let uiname = def.uiname;
+
+      if (uiname === undefined) {
+        uiname = k.replace("_", " ").toLowerCase();
+        uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
+      }
+
+      areas[uiname] = k;
+      icons[uiname] = def.icon !== undefined ? def.icon : -1;
+    }
+
+
+    return container.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
+      let cls = areaclasses[id];
+      this.owning_sarea.switch_editor(cls);
+    }, icons);
+
+    //return areas;
+  }
+
+  makeHeader(container, add_note_area=true) {
+    let row = this.header = container.row();
+
+    row.remove();
+    container._prepend(row);
+
+    row.background = this.getDefault("AreaHeaderBG");
+
+    let rh = ~~(16*this.getDPI());
+
+    //container.setSize(undefined, rh);
+    //row.setSize(undefined, rh);
+    //row.setSize(undefined, rh);
+
+    container.noMarginsOrPadding();
+    row.noMarginsOrPadding();
+
+    row.style["width"] = "100%";
+    row.style["margin"] = "0px";
+    row.style["padding"] = "0px";
+    let mpos = new Vector2$7();
+    
+    let mpre = (e, pageX, pageY) => {
+      pageX = pageX === undefined ? e.pageX : pageX;
+      pageY = pageY === undefined ? e.pageY : pageY;
+
+      let node = this.getScreen().pickElement(pageX, pageY);
+      console.log(node.tagName, node === row);
+      
+      if (node !== row) {
+        return false;
+      }
+      
+      return true;
+    };
+    
+    row.addEventListener("mouseout", (e) => {
+    });
+    row.addEventListener("mouseleave", (e) => {
+    });
+    
+    row.addEventListener("mousedown", (e) => {
+      if (!mpre(e)) return;
+      
+      mpos[0] = e.pageX;
+      mpos[1] = e.pageY;
+    }, false);
+
+    let do_mousemove = (e, pageX, pageY) => {
+      let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
+
+      if (!mdown2 || !mpre(e, pageX, pageY)) return;
+
+
+      if (e.type === "mousemove" && e.was_touch) {
+        //okay how are patched events getting here?
+        //avoid double call. . .
+        return;
+      }
+
+      //console.log(mdown);
+      let dx = pageX - mpos[0];
+      let dy = pageY - mpos[1];
+
+      let dis = dx*dx + dy*dy;
+      let limit = 7;
+
+      if (dis > limit*limit) {
+        let sarea = this.owning_sarea;
+        if (sarea === undefined) {
+          console.warn("Error: missing sarea ref");
+          return;
+        }
+
+        let screen = sarea.screen;
+        if (screen === undefined) {
+          console.log("Error: missing screen ref");
+          return;
+        }
+
+        if (!this.areaDragToolEnabled) {
+          return;
+        }
+        console.log("area drag tool!", e.type, e);
+        screen.areaDragTool(this.owning_sarea);
+      }
+    };
+
+    //not working on mobile
+    //row.setAttribute("draggable", true);
+    //row.draggable = true;
+    /*
+    row.addEventListener("dragstart", (e) => {
+      return;
+      console.log("drag start!", e);
+      e.dataTransfer.setData("text/json", "SplitAreaDrag");
+
+      let canvas = document.createElement("canvas");
+      let g = canvas.g;
+
+      canvas.width = 32;
+      canvas.height = 32;
+
+      e.dataTransfer.setDragImage(canvas, 0, 0);
+
+      mdown = false;
+      console.log("area drag tool!");
+      this.getScreen().areaDragTool(this.owning_sarea);
+    });
+
+    row.addEventListener("drag", (e) => {
+      console.log("drag!", e);
+    });*/
+
+    //*
+    row.addEventListener("mousemove", (e) => {
+      return do_mousemove(e, e.pageX, e.pageY);
+    }, false);
+      //*/
+    row.addEventListener("mouseup", (e) => {
+      if (!mpre(e)) return;
+    }, false);
+
+    row.addEventListener("touchstart", (e) => {
+      console.log("touchstart", e);
+
+      if (!mpre(e, e.touches[0].pageX, e.touches[0].pageY)) return;
+      
+      if (e.touches.length == 0)
+        return;
+      
+      mpos[0] = e.touches[0].pageX;
+      mpos[1] = e.touches[0].pageY;
+    }, false);
+    
+    row.addEventListener("touchmove", (e) => {
+      return do_mousemove(e, e.touches[0].pageX, e.touches[0].pageY);
+    }, false);
+
+    let touchend = (e) => {
+      let node = this.getScreen().pickElement(e.pageX, e.pageY);
+      if (node !== row) {
+        return;
+      }
+      if (e.touches.length == 0)
+        return;
+    };
+    
+    row.addEventListener("touchcancel", (e) => {
+      touchend(e);        
+    }, false);
+    row.addEventListener("touchend", (e) => {
+      touchend(e);        
+    }, false);
+
+    this.switcher = this.makeAreaSwitcher(row);
+
+    if (isMobile()||1) {
+      this.helppicker = row.helppicker();
+    }
+
+    if (add_note_area) {
+      let notef = document.createElement("noteframe-x");
+      notef.ctx = this.ctx;
+      row._add(notef);
+    }
+
+    this.header = row;
+    
+    return row;
+  }
+  
+  setCSS() {
+    if (this.size !== undefined) {
+      this.style["position"] = "absolute";
+      //this.style["left"] = this.pos[0] + "px";
+      //this.style["top"] = this.pos[1] + "px";
+      this.style["width"] = this.size[0] + "px";
+      this.style["height"] = this.size[1] + "px";
+    }
+  }
+  
+  update() {
+    //don't update non-active editors
+    if (this.owning_sarea === undefined || this !== this.owning_sarea.area) {
+      return;
+    }
+
+    super.update();
+    
+    //see FrameManager.js, we use a single update
+    //function for everything now
+    //this._forEachChildWidget((n) => {
+    //  n.update();
+    //});
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+
+  static define() {return {
+    tagname  : undefined, // e.g. "areadata-x",
+    areaname : undefined, //api name for area type
+    uiname   : undefined,
+    icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
+  };}
+
+  _isDead() {
+    if (this.dead) {
+      return true;
+    }
+
+    let screen = this.getScreen();
+
+    if (screen === undefined)
+      return true;
+
+    if (screen.parentNode === undefined)
+      return true;
+  }
+
+  //subclassing loadSTRUCTs should either call this, or invoke super.loadSTRUCT()
+  afterSTRUCT() {
+    let f = () => {
+      if (this._isDead()) {
+        return;
+      }
+      if (!this.ctx) {
+        this.doOnce(f);
+        return;
+      }
+
+      try {
+        console.log("load ui data");
+        loadUIData(this, this.saved_uidata);
+        this.saved_uidata = undefined;
+      } catch (error) {
+        console.log("failed to load ui data");
+        print_stack$1(error);
+      }
+    };
+
+    this.doOnce(f);
+  }
+
+  static newSTRUCT(reader) {
+    return document.createElement(this.define().tagname);
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+  
+  _getSavedUIData() {
+    return saveUIData(this, "area");
+  }
+}
+
+Area.STRUCT = `
+pathux.Area { 
+  saved_uidata : string | obj._getSavedUIData();
+}
+`;
+
+nstructjs.manager.add_class(Area);  
+//ui_base.UIBase.register(Area);
+
+class ScreenArea extends UIBase {
+  constructor() {
+    super();
+    
+    this._borders = [];
+    this._verts = [];
+    this.dead = false;
+    
+    this._sarea_id = contextWrangler.idgen++;
+    
+    this.pos = new Vector2$7();
+    this.size = new Vector2$7();
+
+    this.area = undefined;
+    this.editors = [];
+    this.editormap = {};
+
+    this.addEventListener("mouseover", (e) => {
+      if (haveModal()) {
+        return;
+      }
+
+      //console.log("screen area mouseover");
+      let screen = this.getScreen();
+      if (screen.sareas.active !== this && screen.sareas.active && screen.sareas.active.area) {
+        screen.sareas.active.area.on_area_blur();
+      }
+
+      if (screen.sareas.active !== this) {
+        this.area.on_area_focus();
+      }
+
+      screen.sareas.active = this;
+    });
+
+    //this.addEventListener("mouseleave", (e) => {
+      //console.log("screen area mouseleave");
+    //});
+  }
+  
+  /*
+  saveData() {
+    return {
+      _sarea_id : this._sarea_id,
+      pos       : this.pos,
+      size      : this.size,
+    };
+  }
+  loadData(obj) {
+    super.loadData(obj);
+
+    let id = obj._sarea_id;
+    
+    let type = obj.areatype;
+    
+    if (id !== undefined && id !== null) {
+      this._sarea_id = id;
+    }
+    
+    for (let area of this.editors) {
+      if (area.areaType == type) {
+        console.log("             found saved area type");
+        
+        this.switch_editor(area.constructor);
+      }
+    }
+    
+    this.pos.load(obj.pos);
+    this.size.load(obj.size);
+  }//*/
+
+  get floating() {
+    return this.area ? this.area.floating : undefined;
+  }
+
+  set floating(val) {
+    if (this.area) {
+      this.area.floating = val;
+    }
+  }
+
+  get flag() {
+    return this.area ? this.area.flag : 0;
+  }
+
+  _get_v_suffix() {
+    return this.area ? this.area._get_v_suffix() : "";
+  }
+
+  get borderLock() {
+    return this.area !== undefined ? this.area.borderLock : 0;
+  }
+
+  get minSize() {
+    return this.area !== undefined ? this.area.minSize : [5, 5];
+  }
+
+  get maxSize() {
+    return this.area !== undefined ? this.area.maxSize : [undefined, undefined];
+  }
+
+  _side(border) {
+    let ret = this._borders.indexOf(border);
+    if (ret < 0) {
+      throw new Error("border not in screen area");
+    }
+
+    return ret;
+  }
+
+  init() {
+    super.init();
+
+    this.noMarginsOrPadding();
+  }
+
+  draw() {
+    if (this.area.draw) {
+      this.area.push_ctx_active();
+      this.area.draw();
+      this.area.pop_ctx_active();
+    }
+  }
+
+  _isDead() {
+    if (this.dead) {
+      return true;
+    }
+
+    let screen = this.getScreen();
+
+    if (screen === undefined)
+      return true;
+
+    if (screen.parentNode === undefined)
+      return true;
+  }
+
+  toJSON() {
+    let ret = {
+      editors : this.editors,
+      _sarea_id : this._sarea_id,
+      area : this.area.constructor.define().areaname,
+      pos : this.pos,
+      size : this.size
+    };
+    
+    return Object.assign(super.toJSON(), ret);
+  }
+
+  on_keydown(e) {
+    if (this.area.on_keydown) {
+      this.area.push_ctx_active();
+      this.area.on_keydown(e);
+      this.area.pop_ctx_active();
+    }
+  }
+
+  loadJSON(obj) {
+    if (obj === undefined) {
+      console.warn("undefined in loadJSON");
+      return;
+    }
+
+    super.loadJSON(obj);
+    
+    this.pos.load(obj.pos);
+    this.size.load(obj.size);
+    
+    for (let editor of obj.editors) {
+      let areaname = editor.areaname;
+      
+      //console.log(editor);
+      
+      let tagname = areaclasses[areaname].define().tagname;
+      let area = document.createElement(tagname);
+      
+      area.owning_sarea = this;
+      this.editormap[areaname] = area;
+      this.editors.push(this.editormap[areaname]);
+
+      area.pos = new Vector2$7(obj.pos);
+      area.size = new Vector2$7(obj.size);
+      area.ctx = this.ctx;
+      
+      area.inactive = true;
+      area.loadJSON(editor);
+      area.owning_sarea = undefined;
+      
+      if (areaname === obj.area) {
+        this.area = area;
+      }
+    }
+    
+    if (this.area !== undefined) {
+      this.area.ctx = this.ctx;
+      this.area.style["width"] = "100%";
+      this.area.style["height"] = "100%";
+      this.area.owning_sarea = this;
+      
+      this.area.pos = this.pos;
+      this.area.size = this.size;
+      
+      this.area.inactive = false;
+      this.shadow.appendChild(this.area);
+      this.area.on_area_active();
+      this.area.onadd();
+    }
+    
+    this.setCSS();
+  }
+
+  _ondestroy() {
+    super._ondestroy();
+
+    this.dead = true;
+    
+    for (let editor of this.editors) {
+      if (editor === this.area) continue;
+      
+      editor._ondestroy();
+    }
+  }
+  
+  getScreen() {
+    if (this.screen !== undefined) {
+      return this.screen;
+    }
+
+    //try to walk up graph, if possible
+    let p = this.parentNode;
+    let _i = 0;
+
+    while (p && !(p instanceof Screen) && p !== p.parentNode) {
+      p = this.parentNode;
+
+      if (_i++ > 1000) {
+        console.warn("infinite loop detected in ScreenArea.prototype.getScreen()");
+        return undefined;
+      }
+    }
+    
+    return p && p instanceof Screen ? p : undefined;
+  }
+  
+  copy(screen) {
+    let ret = document.createElement("screenarea-x");
+    
+    ret.screen = screen;
+    ret.ctx = this.ctx;
+    
+    ret.pos[0] = this.pos[0];
+    ret.pos[1] = this.pos[1];
+    
+    ret.size[0] = this.size[0];
+    ret.size[1] = this.size[1];
+    
+    for (let area of this.editors) {
+      let cpy = area.copy();
+      
+      cpy.ctx = this.ctx;
+
+      cpy.parentWidget = ret;
+      ret.editors.push(cpy);
+
+      if (area === this.area) {
+        ret.area = cpy;
+      }
+    }
+    
+    //console.trace("RET.AREA", this.area, ret.area);
+
+    ret.ctx = this.ctx;
+
+    if (ret.area !== undefined) {
+      ret.area.ctx = this.ctx;
+
+      ret.area.pos = ret.pos;
+      ret.area.size = ret.size;
+      ret.area.owning_sarea = ret;
+      ret.area.parentWidget = ret;
+      
+      ret.shadow.appendChild(ret.area);
+      //ret.area.onadd();
+      
+      if (ret.area._init_done) {
+        ret.area.push_ctx_active();
+        ret.area.on_area_active();
+        ret.area.pop_ctx_active();
+      } else {
+        ret.doOnce(() => {
+          if (this.dead) {
+            return;
+          }
+          ret._init();
+          ret.area._init();
+          ret.area.push_ctx_active();
+          ret.area.on_area_active();
+          ret.area.pop_ctx_active();
+        });
+      }
+    }
+    
+    return ret;
+  }
+
+  /**
+   *
+   * Sets screen verts from pos/size
+   * */
+  loadFromPosSize() {
+    let screen = this.getScreen();
+    if (!screen) return;
+
+    for (let b of this._borders) {
+      screen.freeBorder(b);
+    }
+
+    this.makeBorders(screen);
+    this.setCSS();
+
+    return this;
+  }
+
+  /**
+   *
+   * Sets pos/size from screen verts
+   * */
+  loadFromVerts() {
+    let min = new Vector2$7([1e17, 1e17]);
+    let max = new Vector2$7([-1e17, -1e17]);
+
+    for (let v of this._verts) {
+      min.min(v);
+      max.max(v);
+    }
+    
+    this.pos[0] = min[0];
+    this.pos[1] = min[1];
+
+    this.size[0] = max[0]-min[0];
+    this.size[1] = max[1]-min[1];
+
+    this.setCSS();
+    return this;
+  }
+  
+  on_resize(size, oldsize) {
+    super.on_resize(size, oldsize);
+    
+    if (this.area !== undefined) {
+      this.area.on_resize(size, oldsize);
+    }      
+  }
+  
+  makeBorders(screen) {
+    this._borders.length = 0;
+    this._verts.length = 0;
+    
+    let p = this.pos, s = this.size;
+
+    //s = snapi(new Vector2(s));
+
+    let vs = [
+      new Vector2$7([p[0],      p[1]]),
+      new Vector2$7([p[0],      p[1]+s[1]]),
+      new Vector2$7([p[0]+s[0], p[1]+s[1]]),
+      new Vector2$7([p[0]+s[0], p[1]])
+    ];
+
+    for (let i=0; i<vs.length; i++) {
+      vs[i] = snap(vs[i]);
+      vs[i] = screen.getScreenVert(vs[i], i);
+      this._verts.push(vs[i]);
+    }
+
+    for (let i=0; i<vs.length; i++) {
+      let v1 = vs[i], v2 = vs[(i + 1) % vs.length];
+
+      let b = screen.getScreenBorder(this, v1, v2, i);
+
+
+      for (let j=0; j<2; j++) {
+        let v = j ? b.v2 : b.v1;
+
+        if (v.sareas.indexOf(this) < 0) {
+          v.sareas.push(this);
+        }
+      }
+
+      if (b.sareas.indexOf(this) < 0) {
+        b.sareas.push(this);
+      }
+      
+      this._borders.push(b);
+
+      b.movable = screen.isBorderMovable(b);
+    }
+    
+    return this;
+  }
+  
+  setCSS() {
+    this.style["position"] = "absolute";
+    
+    this.style["left"] = this.pos[0] + "px";
+    this.style["top"] = this.pos[1] + "px";
+    
+    this.style["width"] = this.size[0] + "px";
+    this.style["height"] = this.size[1] + "px";
+    
+    
+    if (this.area !== undefined) {
+      this.area.setCSS();
+      //this.style["overflow"] = this.area.style["overflow"];
+      
+      //this.area.style["width"] = this.size[0] + "px";
+      //this.area.style["height"] = this.size[1] + "px";
+    }
+      
+    /*
+    if (this.area) {
+      let area = this.area;
+      area.style["position"] = "absolute";
+      
+      area.style["width"] = this.size[0] + "px";
+      area.style["height"] = this.size[1] + "px";
+    }
+    //*/
+  }
+  
+  appendChild(child) {
+    if (child instanceof Area) {
+      child.ctx = this.ctx;
+      child.pos = this.pos;
+      child.size = this.size;
+      
+      if (this.editors.indexOf(child) < 0) {
+        this.editors.push(child);
+      }
+      
+      child.owning_sarea = undefined;
+    }
+    
+    super.appendChild(child);
+    
+    if (child instanceof UIBase) {
+      child.onadd();
+    }
+  }
+
+  switch_editor(cls) {
+    return this.switchEditor(cls);
+  }
+
+  switchEditor(cls) {
+    let def = cls.define();
+    let name = def.areaname;
+    
+    //areaclasses[name]
+    if (!(name in this.editormap)) {
+      this.editormap[name] = document.createElement(def.tagname);
+      this.editormap[name].ctx = this.ctx;
+      this.editormap[name].parentWidget = this;
+      this.editormap[name].owning_sarea = this;
+      this.editormap[name].inactive = false;
+      
+      this.editors.push(this.editormap[name]);
+    }
+    
+    //var finish = () => {
+      if (this.area !== undefined) {
+        //break direct pos/size references for old active area
+        this.area.pos = new Vector2$7(this.area.pos);
+        this.area.size = new Vector2$7(this.area.size);
+        
+        this.area.owning_sarea = undefined;
+        this.area.inactive = true;
+        this.area.push_ctx_active();
+        this.area._init(); //check that init was called
+        this.area.on_area_inactive();
+        this.area.pop_ctx_active();
+        
+        this.area.remove();
+      }
+      
+      this.area = this.editormap[name];
+
+      this.area.inactive = false;
+      this.area.parentWidget = this;
+
+      //. . .and set references to pos/size
+      this.area.pos = this.pos;
+      this.area.size = this.size;
+      this.area.owning_sarea = this;
+      this.area.ctx = this.ctx;
+
+      this.area.packflag |= this.packflag;
+
+      this.shadow.appendChild(this.area);
+
+      this.area.style["width"] = "100%";
+      this.area.style["height"] = "100%";
+
+      //propegate new size
+      this.area.push_ctx_active();
+      this.area._init(); //check that init was called
+      this.area.on_resize(this.size, this.size);
+      this.area.pop_ctx_active();
+
+      this.area.push_ctx_active();
+      this.area.on_area_active();
+      this.area.pop_ctx_active();
+
+      this.regenTabOrder();
+    //}
+  }
+
+  _checkWrangler() {
+    if (this.ctx)
+      contextWrangler._checkWrangler(this.ctx);
+  }
+
+  update() {
+    this._checkWrangler();
+
+    super.update();
+
+    //flag client controller implementation that
+    //this area is active for its type
+    if (this.area !== undefined) {
+      this.area.owning_sarea = this;
+      this.area.parentWidget = this;
+      this.area.size = this.size;
+      this.area.pos = this.pos;
+
+      let screen = this.getScreen();
+      let oldsize = [this.size[0], this.size[1]];
+
+      let moved = screen ? screen.checkAreaConstraint(this, true) : 0;
+      //*
+      if (moved) {
+        console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+        screen.solveAreaConstraints();
+        screen.regenBorders();
+        this.on_resize(oldsize);
+      }//*/
+
+      this.area.push_ctx_active(true);
+    }
+
+    this._forEachChildWidget((n) => {
+      n.update();
+    });
+
+    if (this.area !== undefined) {
+      this.area.pop_ctx_active(true);
+    }
+  }
+
+  static newSTRUCT() {
+    return document.createElement("screenarea-x");
+  }
+
+  afterSTRUCT() {
+    for (let area of this.editors) {
+      area.pos = this.pos;
+      area.size = this.size;
+      area.owning_sarea = this;
+
+      area.push_ctx_active();
+      area._ctx = this.ctx;
+      area.afterSTRUCT();
+      area.pop_ctx_active();
+    }
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.pos = new Vector2$7(this.pos);
+    this.size = new Vector2$7(this.size);
+    
+    //find active editor
+    
+    let editors = [];
+
+    for (let area of this.editors) {
+      if (!area.constructor || !area.constructor.define) {
+        //failed to load this area
+        continue;
+      }
+
+      /*
+      if (area.constructor === undefined || area.constructor.define === undefined) {
+        console.warn("Missing class for area", area, "maybe buggy loadSTRUCT()?");
+        continue;
+      }
+      //*/
+      
+      let areaname = area.constructor.define().areaname;
+
+      area.inactive = true;
+      area.owning_sarea = undefined;
+      this.editormap[areaname] = area;
+      
+      if (areaname === this.area) {
+        this.area = area;
+      }
+
+      /*
+      * originally inactive areas weren't supposed to have
+      * a reference to their owning ScreenAreas.
+      *
+      * Unfortunately this will cause isDead() to return true,
+      * which might lead to nasty problems.
+      * */
+      area.parentWidget = this;
+
+      editors.push(area);
+    }
+    this.editors = editors;
+    
+    if (typeof this.area !== "object") {
+      let area = this.editors[0];
+
+      console.warn("Failed to find active area!", this.area);
+
+      if (typeof area !== "object") {
+        for (let k in areaclasses) {
+          area = areaclasses[k].define().tagname;
+          area = document.createElement(area);
+          let areaname = area.constructor.define().areaname;
+
+          this.editors.push(area);
+          this.editormap[areaname] = area;
+
+          break;
+        }
+      }
+
+      if (area) {
+        this.area = area;
+      }
+    }
+
+    if (this.area !== undefined) {
+      this.area.style["width"] = "100%";
+      this.area.style["height"] = "100%";
+      this.area.owning_saea = this;
+      this.area.parentWidget = this;
+
+      this.area.pos = this.pos;
+      this.area.size = this.size;
+
+      this.area.inactive = false;
+      this.shadow.appendChild(this.area);
+
+      let f = () => {
+        if (this._isDead()) {
+          return;
+        }
+
+        if (!this.ctx && this.parentNode) {
+          console.log("waiting to start. . .");
+          this.doOnce(f);
+          return;
+        }
+
+        this.area.ctx = this.ctx;
+        this.area._init(); //ensure init has been called already
+        this.area.on_area_active();
+        this.area.onadd();
+      };
+
+      this.doOnce(f);
+    }
+
+  }
+  
+  static define() {return {
+    tagname : "screenarea-x"
+  };}
+}
+
+ScreenArea.STRUCT = `
+pathux.ScreenArea { 
+  pos      : array(float);
+  size     : array(float);
+  type     : string;
+  floating : int; 
+  editors  : array(abstract(pathux.Area));
+  area     : string | obj.area.constructor.define().areaname;
+}
+`;
+
+nstructjs.manager.add_class(ScreenArea);  
+UIBase.register(ScreenArea);
+
+let rgb_to_hsv_rets$1 = new cachering(() => [0, 0, 0], 64);
+
+let Vector4$4 = Vector4;
+
+function rgb_to_hsv$1 (r,g,b) {
+  var computedH = 0;
+  var computedS = 0;
+  var computedV = 0;
+
+  if ( r==null || g==null || b==null ||
+     isNaN(r) || isNaN(g)|| isNaN(b) ) {
+   throw new Error('Please enter numeric RGB values!');
+  }
+  /*
+  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
+   throw new Error('RGB values must be in the range 0 to 1.0');
+   return;
+  }//*/
+
+  var minRGB = Math.min(r,Math.min(g,b));
+  var maxRGB = Math.max(r,Math.max(g,b));
+
+  // Black-gray-white
+  if (minRGB==maxRGB) {
+    computedV = minRGB;
+    
+    let ret = rgb_to_hsv_rets$1.next();
+    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
+    return ret;
+  }
+
+  // Colors other than black-gray-white:
+  var d = (r==minRGB) ? g-b : ((b==minRGB) ? r-g : b-r);
+  var h = (r==minRGB) ? 3 : ((b==minRGB) ? 1 : 5);
+  
+  computedH = (60*(h - d/(maxRGB - minRGB))) / 360.0;
+  computedS = (maxRGB - minRGB)/maxRGB;
+  computedV = maxRGB;
+  
+  let ret = rgb_to_hsv_rets$1.next();
+  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
+  return ret;
+}
+
+let hsv_to_rgb_rets$1 = new cachering(() => [0, 0, 0], 64);
+
+function hsv_to_rgb$1(h, s, v) {
+  let c=0, m=0, x=0;
+  let ret = hsv_to_rgb_rets$1.next();
+  
+  ret[0] = ret[1] = ret[2] = 0.0;
+  h *= 360.0;
+  
+  c = v * s;
+  x = c * (1.0 - Math.abs(((h / 60.0) % 2) - 1.0));
+  m = v - c;
+  let color;
+  
+  function RgbF_Create(r, g, b) {
+    ret[0] = r;
+    ret[1] = g;
+    ret[2] = b;
+    
+    return ret;
+  }
+  
+  if (h >= 0.0 && h < 60.0)
+  {
+      color = RgbF_Create(c + m, x + m, m);
+  }
+  else if (h >= 60.0 && h < 120.0)
+  {
+      color = RgbF_Create(x + m, c + m, m);
+  }
+  else if (h >= 120.0 && h < 180.0)
+  {
+      color = RgbF_Create(m, c + m, x + m);
+  }
+  else if (h >= 180.0 && h < 240.0)
+  {
+      color = RgbF_Create(m, x + m, c + m);
+  }
+  else if (h >= 240.0 && h < 300.0)
+  {
+      color = RgbF_Create(x + m, m, c + m);
+  }
+  else if (h >= 300.0 && h < 360.0)
+  {
+      color = RgbF_Create(c + m, m, x + m);
+  }
+  else
+  {
+      color = RgbF_Create(m, m, m);
+  }
+  
+  return color;
+}
+
+let UIBase$e = UIBase; 
+
+let UPW$1 = 1.25, VPW$1 = 0.75;
+
+//*
+let sample_rets$1 = new cachering(() => [0, 0], 64);      
+function inv_sample$1(u, v) {
+  let ret = sample_rets$1.next();
+
+  ret[0] = Math.pow(u, UPW$1);
+  ret[1] = Math.pow(v, VPW$1);
+
+return ret;
+}
+
+function sample$1(u, v) {
+  let ret = sample_rets$1.next();
+
+  ret[0] = Math.pow(u, 1.0/UPW$1);
+  ret[1] = Math.pow(v, 1.0/VPW$1);
+
+  return ret;
+}
+//*/
+
+let fieldrand$1 = new MersenneRandom(0);
+    
+let fields$1 = {};
+function getFieldImage$1(size, hsva) {
+  fieldrand$1.seed(0);
+  
+  let hue = hsva[0];
+  let hue_rgb = hsv_to_rgb$1(hue, 1.0, 1.0);
+  let key = size + ":" + hue.toFixed(4);
+  
+  if (key in fields$1)
+    return fields$1[key];
+  
+  //console.log("generation color picker field of size", size);
+  
+  let size2 = 128;
+  let image = {
+    width : size, 
+    height : size, 
+    image : new ImageData(size2, size2)
+  };
+  
+  let scale = size2 / size;
+  
+  let idata = image.image.data;
+  let dpi = this.getDPI();
+  
+  let band =  20;
+  
+  let r2 = Math.ceil(size*0.5), r1 = r2 - band*dpi;
+  
+  let pad = 5*dpi;
+  let px1 = size*0.5 - r1 / Math.sqrt(2.0) + pad;
+  let py1 = size*0.5 - r1 / Math.sqrt(2.0) + pad;
+  
+  let pw = r1 / Math.sqrt(2)*2 - pad*2, ph = pw;
+  
+  image.params = {
+    r1 : r1,
+    r2 : r2,
+    
+    box : {
+      x : px1,
+      y : py1,
+      width : pw,
+      height : ph
+    }
+  };
+  
+  for (let i=0; i<size2*size2; i++) {
+    let x = i % size2, y = ~~(i / size2);
+    let idx = i*4;
+    let alpha = 0.0;
+    
+    let r = Math.sqrt((x-size2*0.5)**2 + (y-size2*0.5)**2);
+    
+    if (r < r2*scale && r > r1*scale) {
+      let th = Math.atan2(y-size2*0.5, x-size2*0.5) / (2 * Math.PI) + 0.5;
+      let eps = 0.001;
+      th = th*(1.0 - eps*2) + eps;
+      
+      let r=0, g=0, b=0;
+      
+      if (th < 1.0/6.0) {
+        r = 1.0;
+        g = th*6.0;
+      } else if (th < 2.0/6.0) {
+        th -= 1.0/6.0;
+        r = 1.0 - th*6.0;
+        g = 1.0;
+      } else if (th < 3.0/6.0) {
+        th -= 2.0/6.0;
+        g = 1.0;
+        b = th*6.0;
+      } else if (th < 4.0/6.0) {
+        th -= 3.0/6.0;
+        b = 1.0;
+        g = 1.0 - th*6.0;
+      } else if (th < 5.0/6.0) {
+        th -= 4.0/6.0;
+        r = th * 6.0;
+        b = 1.0;
+      } else if (th < 6.0/6.0) {
+        th -= 5.0/6.0;
+        r = 1.0;
+        b = 1.0 - th*6.0;
+      }
+      
+      /*
+      let l = Math.sqrt(r*r + g*g + b*b);
+      if (l > 0.0) {
+        r = (r / l)*255;
+        g = (g / l)*255;
+        b = (b / l)*255;
+      }//*/
+      //*
+      r = r*255 + (fieldrand$1.random()-0.5);
+      g = g*255 + (fieldrand$1.random()-0.5);
+      b = b*255 + (fieldrand$1.random()-0.5);
+      //*/
+      
+      idata[idx] = r;
+      idata[idx+1] = g;
+      idata[idx+2] = b;
+      
+      alpha = 1.0;
+    }
+    
+    let px2 = (px1 + pw)*scale, py2 = (py1 + ph)*scale;
+    
+    if (x > px1*scale && y > py1*scale && x < px2 && y < py2) {
+      let u = 1.0 - (x - px1*scale) / (px2 - px1*scale);
+      let v = 1.0 - (y - py1*scale) / (py2 - py1*scale);
+      
+      //let inv = fields.inv_sample(u, v);
+      //u = inv[0], v = inv[1];
+      u = Math.pow(u, UPW$1);
+      v = Math.pow(v, VPW$1);
+      
+      //u = u*u*(3.0 - 2.0*u);
+      //v = v*v*(3.0 - 2.0*v);
+      
+      let r=0, g=0, b=0;
+      
+      //(u*v)*255;
+      r = hue_rgb[0]*(1.0-u) + u;
+      g = hue_rgb[1]*(1.0-u) + u;
+      b = hue_rgb[2]*(1.0-u) + u;
+      
+      //let s = 255;
+      let fac = 1.0;
+      
+      //r = (~~(r*s + (fieldrand.random()-0.5)*fac))/s;
+      //g = (~~(g*s + (fieldrand.random()-0.5)*fac))/s;
+      //b = (~~(b*s + (fieldrand.random()-0.5)*fac))/s;
+
+      idata[idx+0] = r*v*255 + (fieldrand$1.random()-0.5)*fac;
+      idata[idx+1] = g*v*255 + (fieldrand$1.random()-0.5)*fac;
+      idata[idx+2] = b*v*255 + (fieldrand$1.random()-0.5)*fac;
+      
+      alpha = 1.0;
+    }
+    
+    idata[idx+3] = alpha*255;
+  }
+  
+  //console.log("done.");
+  
+  //*
+  let image2 = document.createElement("canvas");
+  image2.width = size2;
+  image2.height = size2;
+  let g = image2.getContext("2d");
+  g.putImageData(image.image, 0, 0);
+  //*/
+  image.canvas = image2;
+  image.scale = size / size2;
+  
+  fields$1[key] = image;
+  return image;
+}
+
+let _update_temp$1 = new Vector4$4();
+
+class ColorField$1 extends UIBase$e {
+  constructor() {
+    super();
+    
+    this.hsva = [0.05, 0.6, 0.15, 1.0];
+    this.rgba =new Vector4$4([0, 0, 0, 0]);
+    
+    this._recalcRGBA();
+    
+    /*
+    this.hbox = new SimpleBox();
+    this.svbox = new SimpleBox();
+    //*/
+    
+    this._last_dpi = undefined;
+    
+    let canvas = this.canvas = document.createElement("canvas");
+    let g = this.g = canvas.getContext("2d");
+    
+    this.shadow.appendChild(canvas);
+    
+    let mx, my;
+    
+    let do_mouse = (e) => {
+      let r = this.canvas.getClientRects()[0];
+      let dpi = this.getDPI();
+      
+      mx = (e.pageX-r.x)*dpi;
+      my = (e.pageY-r.y)*dpi;
+    };
+    
+    let do_touch = (e) => {
+      if (e.touches.length == 0) {
+        mx = my = undefined;
+        return;
+      }
+      
+      let r = this.canvas.getClientRects()[0];
+      let dpi = this.getDPI();
+      let t = e.touches[0];
+      
+      mx = (t.pageX-r.x)*dpi;
+      my = (t.pageY-r.y)*dpi;
+    };
+    
+    this.canvas.addEventListener("mousedown", (e) => {
+      do_mouse(e);
+      return this.on_mousedown(e, mx, my, e.button);
+    });
+    this.canvas.addEventListener("mousemove", (e) => {
+      do_mouse(e);
+      return this.on_mousemove(e, mx, my, e.button);
+    });
+    this.canvas.addEventListener("mouseup", (e) => {
+      do_mouse(e);
+      return this.on_mouseup(e, mx, my, e.button);
+    });
+    
+    this.canvas.addEventListener("touchstart", (e) => {
+      do_touch(e);
+      if (mx !== undefined)
+        return this.on_mousedown(e, mx, my, 0);
+    });
+    
+    this.canvas.addEventListener("touchmove", (e) => {
+      do_touch(e);
+      if (mx !== undefined)
+        return this.on_mousemove(e, mx, my, 0);
+    });
+    
+    this.canvas.addEventListener("touchend", (e) => {
+      do_touch(e);
+      if (mx !== undefined)
+        return this.on_mouseup(e, mx, my, 0);
+    });
+    
+    this.canvas.addEventListener("touchcancel", (e) => {
+      do_touch(e);
+      if (mx !== undefined)
+        return this.on_mouseup(e, mx, my, 0);
+    });
+
+    this.updateCanvas(true);
+  }
+  
+  pick_h(x, y) {
+    let field = this._field;
+    let size = field.width;
+    let dpi = this.getDPI();
+    
+    if (field === undefined) {
+      console.error("no field in colorpicker");
+      return //no field!
+    }
+    
+    
+    //console.log(x, y, size, "SIZE");
+    let th = Math.atan2(y-size/2, x-size/2)/(2*Math.PI) + 0.5;
+    
+    this.hsva[0] = th;
+
+    this.update(true);
+    this._recalcRGBA();
+    
+    
+    if (this.onchange) {
+      this.onchange(this.hsva, this.rgba);
+    }
+  }
+  
+  setHSVA(h, s, v, a=1.0, fire_onchange=true) {
+    this.hsva[0] = h;
+    this.hsva[1] = s;
+    this.hsva[2] = v;
+    this.hsva[3] = a;
+    
+    this._recalcRGBA();
+    this.update(true);
+    
+    if (this.onchange && fire_onchange) {
+      this.onchange(this.hsva, this.rgba);
+    }
+  }
+  
+  setRGBA(r, g, b, a=1.0, fire_onchange=true) {
+    let ret = rgb_to_hsv$1(r, g, b);
+    
+    this.hsva[0] = ret[0];
+    this.hsva[1] = ret[1];
+    this.hsva[2] = ret[2];
+    this.hsva[3] = a;
+    
+    this._recalcRGBA();
+    this.update(true);
+    
+    if (this.onchange && fire_onchange) {
+      this.onchange(this.hsva, this.rgba);
+    }
+  }
+  
+  _recalcRGBA() {
+    let ret = hsv_to_rgb$1(this.hsva[0], this.hsva[1], this.hsva[2]);
+    
+    this.rgba[0] = ret[0];
+    this.rgba[1] = ret[1];
+    this.rgba[2] = ret[2];
+    this.rgba[3] = this.hsva[3];
+    
+    return this;
+  }
+  
+  on_mousedown(e, x, y, button) {
+      if (button != 0)
+        return
+      
+      let field = this._field;
+      if (field === undefined)
+        return;
+      let size = field.width;
+      
+      let dpi = this.getDPI();
+      let r = Math.sqrt((x-size/2)**2 + (y-size/2)**2);
+      let pad = 5*dpi;
+      
+      let px1 = field.params.box.x, py1 = field.params.box.y, 
+          px2 = px1 + field.params.box.width, py2 = py1 + field.params.box.height;
+        
+      px1 -= pad*0.5;
+      py1 -= pad*0.5;
+      px2 += pad*0.5;
+      py2 += pad*0.5;
+      
+      if (r > field.params.r1-pad && r < field.params.r2+pad) {
+        this.pick_h(x, y);
+        this._mode = "h";
+      } else if (x >= px1 && x <= px2 && y >= py1 && y <= py2) {
+        this.pick_sv(x, y);
+        console.log("in box");
+        this._mode = "sv";
+      }
+      
+      
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log(x, y);
+      
+  }
+  
+  pick_sv(x, y) {
+    let sv = this._sample_box(x, y);
+    
+    this.hsva[1] = sv[0];
+    this.hsva[2] = sv[1];
+    
+    this._recalcRGBA();
+    this.update(true);
+    
+    if (this.onchange) {
+      this.onchange(this.hsva, this.rgba);
+    }
+  }
+  
+  //return saturation and value
+  _sample_box(x, y) {
+    let field = this._field;
+    
+    if (field === undefined) {
+      return [-1, -1];
+    }
+    
+    let px = field.params.box.x, py = field.params.box.y, 
+        pw = field.params.box.width, ph = field.params.box.height;
+        
+    let u = (x - px) / pw;
+    let v = 1.0 - (y - py) / ph;
+    
+    u = Math.min(Math.max(u, 0.0), 1.0);
+    v = Math.min(Math.max(v, 0.0), 1.0);
+    
+    let ret = sample$1(u, 1.0-v);
+    u = ret[0], v = 1.0-ret[1];
+    
+    return [u, v];
+  }
+  
+  on_mousemove(e, x, y, button) {
+      if (this._mode == "h") {
+        this.pick_h(x, y);
+      } else if (this._mode == "sv") {
+        this.pick_sv(x, y);
+      }
+      
+      e.preventDefault();
+      e.stopPropagation();
+  }
+  
+  on_mouseup(e, x, y, button) {
+      this._mode = undefined;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      console.log(x, y);
+  }
+  
+  updateCanvas(force_update=false, _in_update=false) {
+    let canvas = this.canvas;
+    let update = force_update;
+    
+    if (update) {
+      let size = this.getDefault("fieldsize");
+      let dpi = this.getDPI();
+      
+      canvas.style["width"] = size + "px";
+      canvas.style["height"] = size + "px";
+      
+      canvas.width = canvas.height = Math.ceil(size*dpi);
+      
+      //console.log("SIZE!", canvas.style["width"], canvas.style["height"]);
+      
+      //this._redraw();
+      if (!_in_update)
+        this._redraw();
+      
+      //this.doOnce(this._redraw);
+      return true;
+    }
+  }
+  
+  _redraw() {
+    let canvas = this.canvas, g = this.g;
+    let dpi = this.getDPI();
+    
+    let size = canvas.width;
+    let field = this._field = getFieldImage$1(size, this.hsva);
+    let w = size, h = size * field.height / field.width;
+    
+    //console.log("Redraw called!"); //, canvas, canvas.width, canvas.height, canvas.style);
+    
+    g.clearRect(0, 0, w, h); //canvas.width, canvas.height);
+    //g.putImageData(field.image, 0, 0);
+    g.drawImage(field.canvas, 0, 0, field.width, field.height);
+    
+    g.lineWidth = 2.0;
+
+    function circle(x, y, r) {
+      g.strokeStyle = "white";
+      g.beginPath();
+      g.arc(x, y, r, -Math.PI, Math.PI);
+      g.stroke();
+      
+      g.strokeStyle = "grey";
+      g.beginPath();
+      g.arc(x, y, r-1, -Math.PI, Math.PI);
+      g.stroke();
+      
+      g.fillStyle = "black";
+      g.beginPath();
+      g.arc(x, y, 2*dpi, -Math.PI, Math.PI);
+      g.fill();
+    }
+    
+    let hsva = this.hsva;
+    let r = (field.params.r2 - field.params.r1)*0.7;
+    let bandr = (field.params.r2 + field.params.r1)*0.5;
+    
+    //let th = Math.fract(hsva[0]+1/Math.PI**0.5);
+    let th = Math.fract(1.0 - hsva[0] - 0.25);
+    
+    let x = Math.sin(th*Math.PI*2)*bandr + size/2;
+    let y = Math.cos(th*Math.PI*2)*bandr + size/2;
+    
+    /*
+    this.hbox.pos[0] = x;
+    this.hbox.pos[1] = y;
+    this.hbox.size[0] = r;
+    this.hbox.size[1] = r;
+    //*/
+    
+    circle(x, y, r);
+    
+    let u = this.hsva[1], v = 1.0 - this.hsva[2];
+    let ret = inv_sample$1(u, v);
+    u = ret[0], v = ret[1];
+    
+    x = field.params.box.x + u*field.params.box.width;
+    y = field.params.box.y + v*field.params.box.height;
+    
+    circle(x, y, r);
+  }
+  
+  updateDPI(force_update=false, _in_update=false) {
+    let dpi = this.getDPI();
+    
+    let update = force_update;
+    update = update || dpi != this._last_dpi;
+    
+    if (update) {
+      this._last_dpi = dpi;
+      
+      this.updateCanvas(true);
+      
+      if (!_in_update)
+        this._redraw();
+      
+      return true;
+    }
+  }
+  
+  update(force_update=false) {
+    super.update();
+    
+    let redraw = false;
+    
+    redraw = redraw || this.updateCanvas(force_update, true);
+    redraw = redraw || this.updateDPI(force_update, true);
+    
+    if (redraw) {
+      this._redraw();
+    }
+  }
+  
+  static define() {return {
+    tagname : "colorfield0-x",
+    style : "colorfield"
+  };}
+}
+
+UIBase$e.register(ColorField$1);
+
+class ColorPicker$1 extends ColumnFrame {
+  constructor() {
+    super();
+    
+    this.field = document.createElement("colorfield-x");
+    this.field.setAttribute("class", "colorpicker");
+    
+    this.field.onchange = (hsva, rgba) => {
+      if (this.onchange) {
+        this.onchange(hsva, rgba);
+      }
+
+      this._setDataPath();
+      this._setSliders();
+    };
+    
+    let style = document.createElement("style");
+    style.textContent = `
+      .colorpicker {
+        background-color : ${getDefault("InnerPanelBG")};
+      }
+    `;
+    
+    
+    this._style = style;
+    
+    this.shadow.appendChild(style);
+    this.field.ctx = this.ctx;
+    this.shadow.appendChild(this.field);
+    //this._add(this.field);
+    //this.style["background-color"] = ui_base.getDefault("InnerPanelBG");
+  }
+  
+  static setDefault(node) {
+    let tabs = node.tabs();
+    let tab = tabs.tab("HSV");
+    
+    node.h = tab.slider(undefined, "Hue", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let hsva = node.hsva;
+      node.setHSVA(e.value, hsva[1], hsva[2], hsva[3]);
+    });
+    node.s = tab.slider(undefined, "Saturation", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let hsva = node.hsva;
+      node.setHSVA(hsva[0], e.value, hsva[2], hsva[3]);
+    });
+    node.v = tab.slider(undefined, "Value", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let hsva = node.hsva;
+      node.setHSVA(hsva[0], hsva[1], e.value, hsva[3]);
+    });
+    node.a = tab.slider(undefined, "Alpha", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let hsva = node.hsva;
+      node.setHSVA(hsva[0], hsva[1], hsva[2], e.value);
+    });
+
+    
+    tab = tabs.tab("RGB");
+    
+    node.r = tab.slider(undefined, "R", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let rgba = node.rgba;
+      node.setRGBA(e.value, rgba[1], rgba[2], rgba[3]);
+    });
+    node.g = tab.slider(undefined, "G", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let rgba = node.rgba;
+      node.setRGBA(rgba[0], e.value, rgba[2], rgba[3]);
+    });
+    node.b = tab.slider(undefined, "B", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let rgba = node.rgba;
+      node.setRGBA(rgba[0], rgba[1], e.value, rgba[3]);
+    });
+    node.a2 = tab.slider(undefined, "Alpha", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+      let rgba = node.rgba;
+      node.setRGBA(rgba[0], rgba[1], rgba[2], e.value);
+    });
+
+    node._setSliders();
+  }
+  
+  _setSliders() {
+    if (this.h === undefined) {
+      //setDefault() wasn't called
+      console.warn("colorpicker ERROR");
+      return;
+    }
+    
+    let hsva = this.hsva;
+    this.h.setValue(hsva[0], false);
+    this.s.setValue(hsva[1], false);
+    this.v.setValue(hsva[2], false);
+    this.a.setValue(hsva[3], false);
+
+    let rgba = this.rgba;
+    
+    this.r.setValue(rgba[0], false);
+    this.g.setValue(rgba[1], false);
+    this.b.setValue(rgba[2], false);
+    this.a2.setValue(rgba[3], false);
+  }
+  
+  get hsva() {
+    return this.field.hsva;
+  }
+  
+  get rgba() {
+    return this.field.rgba;
+  }
+
+  updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (val === undefined) {
+      //console.warn("Bad datapath", this.getAttribute("datapath"));
+      this.disabled = true;
+      return;
+    }
+
+    this.disabled = false;
+
+    _update_temp$1.load(val);
+
+    if (prop.type == PropTypes.VEC3) {
+      _update_temp$1[3] = 1.0;
+    }
+
+    if (_update_temp$1.vectorDistance(this.field.rgba) > 0.01)  {
+        console.log("VAL", val);
+      console.log("color changed!");
+      this.setRGBA(_update_temp$1[0], _update_temp$1[1], _update_temp$1[2], _update_temp$1[3]);
+    }
+  }
+
+  update() {
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+
+    super.update();
+  }
+
+  _setDataPath() {
+    if (this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.field.rgba);
+    }
+  }
+
+  setHSVA(h, s, v, a) {
+    this.field.setHSVA(h, s, v, a);
+    this._setDataPath();
+  }
+  
+  setRGBA(r, g, b, a) {
+    this.field.setRGBA(r, g, b, a);
+    this._setDataPath();
+  }
+  
+  static define() {return {
+    tagname : "colorpicker0-x"
+  };}
+}
+
+UIBase$e.register(ColorPicker$1);
+
+let Area$1 = Area;
+
+startMenuEventWrangling();
+
+let _events_started = false;
+
+function registerToolStackGetter(func) {
+}
+
+//XXX why!!!
+window._nstructjs = nstructjs;
+
+let Vector2$8 = Vector2,
+  UIBase$f = UIBase;
+
+let update_stack = new Array(8192);
+update_stack.cur = 0;
+
 let screen_idgen = 0;
 
 class Screen$1 extends UIBase {
   constructor() {
     super();
+
+    this.allBordersMovable = exports.DEBUG.allBordersMovable;
+    this.needsBorderRegen = true;
 
     this._popup_safe = 0;
 
@@ -26436,7 +28787,9 @@ class Screen$1 extends UIBase {
 
     this.keymap = new KeyMap();
 
-    this.size = [window.innerWidth, window.innerHeight];
+    this.size = new Vector2$8([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2$8();
+
     this.idgen = 0;
     this.sareas = [];
     this.sareas.active = undefined;
@@ -26449,7 +28802,7 @@ class Screen$1 extends UIBase {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$7(), new Vector2$7()];
+    this._aabb = [new Vector2$8(), new Vector2$8()];
 
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
@@ -26526,14 +28879,33 @@ class Screen$1 extends UIBase {
     return ret;
   }
 
+  findScreenArea(x, y) {
+    for (let i=this.sareas.length-1; i>=0; i--) {
+      let sarea = this.sareas[i];
+
+      let ok = x >= sarea.pos[0] && x <= sarea.pos[0] + sarea.size[0];
+      ok = ok && (y >= sarea.pos[1] && y <= sarea.pos[1] + sarea.size[1]);
+
+      if (ok) {
+        return sarea;
+      }
+    }
+  }
   //pickElement(x, y, sx=0, sy=0, nodeclass=undefined) {
 
   //}
 
   pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
+    if (!this.ctx) {
+      console.warn("no ctx in screen");
+      return;
+    }
+
     let ret;
 
-    for (let popup of this._popups) {
+    for (let i=this._popups.length-1; i >= 0; i--) {
+      let popup = this._popups[i];
+
       ret = ret || popup.pickElement(...arguments);
     }
 
@@ -26600,13 +28972,46 @@ class Screen$1 extends UIBase {
     };
 
     container.background = this.getDefault("BoxSubBG");
-    container.style["display"] = "float";
     container.style["position"] = "absolute";
     container.style["z-index"] = 205;
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
 
-    this.shadow.appendChild(container);
+    container.parentWidget = this;
+
+    let mm = new MinMax(2);
+    let p = new Vector2$8();
+
+    let _update = container.update;
+    container.update = () => {
+      _update.call(container);
+
+      let rects = container.getClientRects();
+      mm.reset();
+
+      for (let r of rects) {
+        p[0] = r.x;
+        p[1] = r.y;
+        mm.minmax(p);
+
+        p[0] += r.width;
+        p[1] += r.height;
+        mm.minmax(p);
+      }
+
+      let x = mm.min[0], y = mm.min[1];
+
+      x = Math.min(x, this.size[0]-(mm.max[0]-mm.min[0]));
+      y = Math.min(y, this.size[1]-(mm.max[1]-mm.min[1]));
+
+      container.style["left"] = x + "px";
+      container.style["top"] = y + "px";
+    };
+
+    document.body.appendChild(container);
+    //this.shadow.appendChild(container);
+    this.setCSS();
+
     this._popups.push(container);
 
     let touchpick, mousepick, keydown;
@@ -26737,15 +29142,19 @@ class Screen$1 extends UIBase {
     return container;
   }
 
-  _recalcAABB() {
+  _recalcAABB(save=true) {
     let mm = new MinMax(2);
 
-    for (let sarea of this.sareas) {
-      this.minmaxArea(sarea, mm);
+    for (let v of this.screenverts) {
+      mm.minmax(v);
     }
 
-    this._aabb[0].load(mm.min);
-    this._aabb[1].load(mm.max);
+    if (save) {
+      this._aabb[0].load(mm.min);
+      this._aabb[1].load(mm.max);
+    }
+
+    return [new Vector2$8(mm.min), new Vector2$8(mm.max)];
   }
 
   get borders() {
@@ -26784,12 +29193,35 @@ class Screen$1 extends UIBase {
   }
 
   updateSize() {
-    let width = ~~window.innerWidth;
-    let height = ~~window.innerHeight;
+    if (!exports.autoSizeUpdate) {
+      return;
+    }
 
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    if (isMobile()) {
+      width = window.screen.availWidth || window.screen.width;
+      height = window.screen.availHeight || window.screen.height;
+
+      //let dpi = UIBase.getDPI();
+      let dpi = 0.985 / visualViewport.scale;
+
+      width *= dpi*0.985;
+      height *= dpi;
+      width = ~~width;
+      height = ~~height;
+    }
+
+    if (exports.DEBUG.customWindowSize) {
+      let s = exports.DEBUG.customWindowSize;
+      width = s.width;
+      height = s.height; 
+    }
+    
     if (width !== this.size[0] || height !== this.size[1]) {
-      console.log("resizing");
-      this.on_resize([width, height]);
+      console.log("resizing", width, height, this.size[0], this.size[1]);
+      this.on_resize(this.size, [width, height]);
     }
   }
 
@@ -26806,6 +29238,12 @@ class Screen$1 extends UIBase {
     this._do_updateSize = args.updateSize !== undefined ? args.updateSize : true;
 
     this.listen_timer = window.setInterval(() => {
+      if (this.isDead()) {
+        console.log("dead screen");
+        this.unlisten();
+        return;
+      }
+      
       this.update();
     }, 150);
   }
@@ -26902,7 +29340,7 @@ class Screen$1 extends UIBase {
 
     if (schedule_resize) {
       window.setTimeout(() => {
-        this.on_resize([window.innerWidth, window.innerHeight]);
+        this.on_resize(this.size, [window.innerWidth, window.innerHeight]);
       }, 50);
     }
   }
@@ -26973,10 +29411,19 @@ class Screen$1 extends UIBase {
   execKeyMap(e) {
     let handled = false;
 
+    console.warn("execKeyMap called");
+
     if (this.sareas.active) {
       let area = this.sareas.active.area;
       //console.log(area.getKeyMaps());
+      if (!area) {
+        console.warn("eek");
+        return;
+      }
       for (let keymap of area.getKeyMaps()) {
+        if (keymap === undefined) {
+          console.warn("eek!");
+        }
         if (keymap.handle(this.ctx, e)) {
           handled = true;
           break;
@@ -27043,33 +29490,9 @@ class Screen$1 extends UIBase {
       rec(popup);
     }
 
-    let nodes2 = nodes;
-    /*
-    let nodes2 = [];
-    let visit2 = {};
-
-    for (let node of nodes) {
-      let r = node.__pos;
-      let elem = this.pickElement(~~(r.x+r.width*0.5), ~~(r.y+r.height*0.5), 2, 2);
-
-      if (elem === undefined) {
-        elem = node;
-      }
-
-      if (elem !== node) {
-        //console.log("Overlapping leaf UI elements detected:", elem, node);
-      }
-
-      if (!(elem._id in visit2)) {
-        visit2[elem._id] = 1;
-        nodes2.push(elem);
-      }
-    }
-    //*/
-
     //console.log("nodes2", nodes2);
-    for (let i=0; i<nodes2.length; i++) {
-      let n = nodes2[i];
+    for (let i=0; i<nodes.length; i++) {
+      let n = nodes[i];
 
       n.tabIndex = i + 1;
       //console.log(n.tabIndex);
@@ -27092,13 +29515,14 @@ class Screen$1 extends UIBase {
       this.calcTabOrder();
     }
 
-    for (let sarea of this.sareas) {
+    outer: for (let sarea of this.sareas) {
       for (let b of sarea._borders) {
-        let movable = this.isBorderMovable(sarea, b);
+        let movable = this.isBorderMovable(b);
 
         if (movable !== b.movable) {
           console.log("detected change in movable borders");
           this.regenBorders();
+          break outer;
         }
       }
     }
@@ -27132,7 +29556,7 @@ class Screen$1 extends UIBase {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$e) {
+      if (n instanceof UIBase$f) {
         n.ctx = val;
       }
 
@@ -27158,6 +29582,13 @@ class Screen$1 extends UIBase {
 
   //XXX race condition warning
   update_intern() {
+    let popups = this._popups;
+
+    if (this.needsBorderRegen) {
+      this.needsBorderRegen = false;
+      this.regenBorders();
+    }
+
     super.update();
     let this2 = this;
 
@@ -27192,6 +29623,11 @@ class Screen$1 extends UIBase {
 
       let t = time_ms();
       push(this2);
+
+      for (let p of popups) {
+        push(p);
+      }
+
       while (stack.cur > 0) {
         let n = pop();
 
@@ -27214,7 +29650,7 @@ class Screen$1 extends UIBase {
           push(AREA_CTX_POP);
         }
 
-        if (n !== this2 && n instanceof UIBase$e) {
+        if (n !== this2 && n instanceof UIBase$f) {
           n._ctx = ctx;
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
@@ -27245,7 +29681,7 @@ class Screen$1 extends UIBase {
           push(n2);
         }
 
-        if (n instanceof UIBase$e) {
+        if (n instanceof UIBase$f) {
           scopestack.push(n);
           push(SCOPE_POP);
         }
@@ -27253,10 +29689,15 @@ class Screen$1 extends UIBase {
     })();
   }
 
+  //load pos/size from screenverts
   loadFromVerts() {
+    let old = [0, 0];
     for (let sarea of this.sareas) {
+      old[0] = sarea.size[0];
+      old[1] = sarea.size[1];
+
       sarea.loadFromVerts();
-      sarea.on_resize(sarea.size);
+      sarea.on_resize(old);
       sarea.setCSS();
     }
 
@@ -27299,6 +29740,7 @@ class Screen$1 extends UIBase {
     s2.on_resize(s2.size);
 
     this.regenBorders();
+    this.solveAreaConstraints();
 
     s1.setCSS();
     s2.setCSS();
@@ -27348,54 +29790,136 @@ class Screen$1 extends UIBase {
         let he = new ScreenHalfEdge(b1, sarea);
         b1.halfedges.push(he);
       }
-    }
 
-    for (let b1 of this.screenborders) {
+      let axis = b1.horiz ? 1 : 0;
 
-      let min, max;
-      let axis = b1.horiz ^ 1;
+      let min = Math.min(b1.v1[axis], b1.v2[axis]);
+      let max = Math.max(b1.v1[axis], b1.v2[axis]);
 
-      min = Math.min(b1.v1[axis], b1.v2[axis]);
-      max = Math.max(b1.v1[axis], b1.v2[axis]);
+      for (let b2 of this.walkBorderLine(b1)) {
+        if (b1 === b2) {
+          continue;
+        }
 
-      for (let i = 0; i < 2; i++) {
-        let v = i ? b1.v2 : b1.v1;
+        let ok = b2.v1[axis] >= min && b2.v1[axis] <= max;
+        ok = ok || (b2.v2[axis] >= min && b2.v2[axis] <= max);
 
-        for (let b2 of v.borders) {
-          if (b2.horiz !== b1.horiz) {
-            continue;
-          }
-
-          for (let he of b2.halfedges) {
-            if (has_he(b1, he.border, he.sarea)) {
-              continue;
-            }
-
-            let ok = b2.v1[axis] > min && b2.v1[axis] < max;
-            ok = ok || (b2.v2[axis] > min && b2.v2[axis] < max);
-
-            if (ok) {
-              b1.halfedges.push(he);
-              let he2 = b1.halfedges[0];
-
-              if (!has_he(b2, b1, he2.sarea)) {
-                b2.halfedges.push(he2);
-              }
-            }
+        for (let sarea of b2.sareas) {
+          let ok2 = ok && !has_he(b2, b1, sarea);
+          if (ok2) {
+            let he2 = new ScreenHalfEdge(b2, sarea);
+            b1.halfedges.push(he2);
           }
         }
+
       }
     }
+
 
     for (let b of this.screenborders) {
       let movable = true;
 
       for (let sarea of b.sareas) {
-        movable = movable && this.isBorderMovable(sarea, b);
+        movable = movable && this.isBorderMovable(b);
       }
 
       b.movable = movable;
     }
+  }
+
+  hasBorder(b) {
+    return b._id in this._idmap;
+  }
+
+  killScreenVertex(v) {
+    this.screenverts.remove(v);
+
+    delete this._edgemap[ScreenVert.hash(v)];
+    delete this._idmap[v._id];
+
+    return this;
+  }
+
+  freeBorder(b, sarea) {
+    if (b.sareas.indexOf(sarea) >= 0) {
+      b.sareas.remove(sarea);
+    }
+
+    let dels = [];
+
+    for (let he of b.halfedges) {
+      if (he.sarea === sarea) {
+        dels.push([b, he]);
+      }
+
+      for (let he2 of he.border.halfedges) {
+        if (he2 === he)
+          continue;
+
+        if (he2.sarea === sarea) {
+          dels.push([he.border, he2]);
+        }
+      }
+    }
+
+    for (let d of dels) {
+      if (d[0].halfedges.indexOf(d[1]) < 0) {
+        console.warn("Double remove detected; use util.set?");
+        continue;
+      }
+
+      d[0].halfedges.remove(d[1]);
+    }
+
+    if (b.sareas.length === 0) {
+      this.killBorder(b);
+    }
+  }
+
+  killBorder(b) {
+    console.log("killing border", b._id, b);
+    
+    if (this.screenborders.indexOf(b) < 0) {
+      console.log("unknown border", b);
+      b.remove();
+      return;
+    }
+
+    this.screenborders.remove(b);
+
+    let del = [];
+
+    for (let he of b.halfedges) {
+      if (he === he2)
+        continue;
+
+      for (let he2 of he.border.halfedges) {
+        if (he2.border === b) {
+          del.push([he.border, he2]);
+        }
+      }
+    }
+
+    for (let d of del) {
+      d[0].halfedges.remove(d[1]);
+    }
+
+    delete this._edgemap[ScreenBorder.hash(b.v1, b.v2)];
+    delete this._idmap[b._id];
+
+    b.v1.borders.remove(b);
+    b.v2.borders.remove(b);
+
+    if (b.v1.borders.length === 0) {
+      this.killScreenVertex(b.v1);
+    }
+    if (b.v2.borders.length === 0) {
+      this.killScreenVertex(b.v2);
+    }
+
+    b.remove();
+
+    return this;
   }
 
   //XXX rename to regenScreenMesh
@@ -27422,52 +29946,534 @@ class Screen$1 extends UIBase {
     }
 
     this.regenBorders_stage2();
-
     this._recalcAABB();
+
+    for (let b of this.screenborders) {
+      b.outer = this.isBorderOuter(b);
+      b.movable = this.isBorderMovable(b);
+      b.setCSS();
+    }
+
+    this.updateDebugBoxes();
   }
 
-  snapScreenVerts() {
-    let min = [1e17, 1e17], max = [-1e17, -1e17];
+  _get_debug_overlay() {
+    if (!this._debug_overlay) {
+      this._debug_overlay = document.createElement("overdraw-x");
+      let s = this._debug_overlay;
 
-    this.regenBorders();
+      s.startNode(this, this);
+    }
 
-    //fit entire screen to, well, the entire screen (size)
-    for (let v of this.screenverts) {
-      for (let i = 0; i < 2; i++) {
-        min[i] = Math.min(min[i], v[i]);
-        max[i] = Math.max(max[i], v[i]);
+    return this._debug_overlay;
+  }
+
+  updateDebugBoxes() {
+    if (exports.DEBUG.screenborders) {
+      let overlay = this._get_debug_overlay();
+      overlay.clear();
+
+      for (let b of this.screenborders) {
+        overlay.line(b.v1, b.v2, "red");
+      }
+      let del = [];
+      for (let child of document.body.childNodes) {
+        if (child.getAttribute && child.getAttribute("class") === "__debug") {
+          del.push(child);
+        }
+      }
+      for (let n of del) {
+        n.remove();
+      }
+
+      let box = (x, y, s, text, color = "red") => {
+        x -= s * 0.5;
+        y -= s * 0.5;
+
+        x = Math.min(Math.max(x, 0.0), this.size[0]-s);
+        y = Math.min(Math.max(y, 0.0), this.size[1]-s);
+
+        let ret = document.createElement("div");
+        ret.setAttribute("class", "__debug");
+
+
+        ret.style["position"] = "absolute";
+        ret.style["left"] = x + "px";
+        ret.style["top"] = y + "px";
+        ret.style["height"] = s + "px";
+        ret.style["width"] = s + "px";//"200px";
+        ret.style["z-index"] = "1000";
+        ret.style["pointer-events"] = "none";
+        ret.style["padding"] = ret.style["margin"] = "0px";
+        ret.style['display'] = "float";
+        ret.style["background-color"] = color;
+        document.body.appendChild(ret);
+
+        let colors = [
+          "orange",
+          "black",
+          "white",
+        ];
+
+        for (let i=2; i>=0; i--) {
+          ret = document.createElement("div");
+
+          ret.setAttribute("class", "__debug");
+
+          ret.style["position"] = "absolute";
+          ret.style["left"] = x + "px";
+          ret.style["top"] = y + "px";
+          ret.style["height"] = s + "px";
+          ret.style["width"] = "250px";//"200px";
+          ret.style["z-index"] = ""+(1005-i-1);
+          ret.style["pointer-events"] = "none";
+          ret.style["color"] = colors[i];
+
+          let w = (i)*2;
+          ret.style["-webkit-text-stroke-width"] = w + "px";
+          ret.style["-webkit-text-stroke-color"] = colors[i];
+          ret.style["text-stroke-width"] = w + "px";
+          ret.style["text-stroke-color"] = colors[i];
+
+          ret.style["padding"] = ret.style["margin"] = "0px";
+          ret.style['display'] = "float";
+          ret.style["background-color"] = "rgba(0,0,0,0)";
+          ret.innerText = ""+text;
+          document.body.appendChild(ret);
+        }
+
+      };
+
+      for (let v of this.screenverts) {
+        box(v[0], v[1], 10 * v.borders.length, ""+v.borders.length, "rgba(255,0,0,0.5)");
+      }
+
+      for (let b of this.screenborders) {
+        for (let he of b.halfedges) {
+          let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
+          let p = new Vector2$8(b.v1).add(b.v2).mulScalar(0.5);
+          let size = 10 * b.halfedges.length;
+
+          let wadd = 25+size*0.5;
+          let axis = b.horiz & 1;
+
+          if (p[axis] > he.sarea.pos[axis]) {
+            p[axis] -= wadd;
+          } else {
+            p[axis] += wadd;
+          }
+          box(p[0], p[1], size, txt, "rgba(155,255,75,0.5)");
+        }
+      }
+    }
+  }
+
+  checkAreaConstraint(sarea, checkOnly=false) {
+    let min = sarea.minSize, max = sarea.maxSize;
+    let vs = sarea._verts;
+    let chg = 0.0;
+    let mask = 0;
+
+    let moveBorder = (sidea, sideb, dh) => {
+      let b1 = sarea._borders[sidea];
+      let b2 = sarea._borders[sideb];
+      let bad = 0;
+
+      for (let i=0; i<2; i++) {
+        let b = i ? b2 : b1;
+        let bad2 = sarea.borderLock & (1<<sidea);
+
+        bad2 = bad2 || !b.movable;
+        bad2 = bad2 || this.isBorderOuter(b);
+
+        if (bad2)
+          bad |= 1<<i;
+      }
+
+      if (bad === 0) {
+        this.moveBorder(b1, dh*0.5);
+        this.moveBorder(b2, -dh*0.5);
+      } else if (bad === 1) {
+        this.moveBorder(b2, -dh);
+      } else if (bad === 2) {
+        this.moveBorder(b1, dh);
+      } else if (bad === 3) {
+        //both borders are bad, yet we need to move anyway. . .
+        console.warn("got case of two borders being bad");
+        if (!this.isBorderOuter(b1)) {
+          this.moveBorder(b1, dh);
+        } else if (!this.isBorderOuter(b2)) {
+          this.moveBorder(b2, -dh);
+        } else {
+          this.moveBorder(b1, dh * 0.5);
+          this.moveBorder(b2, -dh * 0.5);
+        }
+      }
+    };
+
+    if (max[0] !== undefined && sarea.size[0] > max[0]) {
+      let dh = (sarea.size[0] - max[0]) ;
+      chg += Math.abs(dh);
+      mask |= 1;
+
+      moveBorder(0, 2, dh);
+    }
+
+    if (min[0] !== undefined && sarea.size[0] < min[0]) {
+      let dh = (min[0] - sarea.size[0]);
+      chg += Math.abs(dh);
+      mask |= 2;
+
+      moveBorder(2, 0, dh);
+    }
+
+
+    if (max[1] !== undefined && sarea.size[1] > max[1]) {
+      let dh = (sarea.size[1] - max[1]);
+      chg += Math.abs(dh);
+      mask |= 4;
+
+      moveBorder(3, 1, dh);
+    }
+
+    if (min[1] !== undefined && sarea.size[1] < min[1]) {
+      let dh = (min[1] - sarea.size[1]) ;
+      chg += Math.abs(dh);
+      mask |= 8;
+
+      moveBorder(1, 3, dh);
+    }
+    
+    if (sarea.pos[0]+sarea.size[0] > this.size[0]) {
+      mask |= 16;
+      let dh = ((this.size[0] - sarea.size[0]) - sarea.pos[0]);
+
+      chg += Math.abs(dh);
+
+      if (sarea.floating) {
+        sarea.pos[0] = this.size[0] - sarea.size[0];
+        sarea.loadFromPosSize();
+      } else {
+        this.moveBorder(sarea._borders[0], dh);
+        this.moveBorder(sarea._borders[2], dh);
+      }
+    }
+    
+    if (chg === 0.0) {
+      return false;
+    }
+
+    return mask;
+  }
+
+  walkBorderLine(b) {
+    let visit = new set();
+    let ret = [b];
+    visit.add(b);
+
+    let rec = (b, v) => {
+      for (let b2 of v.borders) {
+        if (b2 === b) {
+          continue;
+        }
+
+        if (b2.horiz === b.horiz && !visit.has(b2)) {
+          visit.add(b2);
+          ret.push(b2);
+          rec(b2, b2.otherVertex(v));
+        }
+      }
+    };
+
+    rec(b, b.v1);
+    let ret2 = ret;
+    ret = [];
+
+    rec(b, b.v2);
+    ret2.reverse();
+
+    return ret2.concat(ret);
+  }
+
+  moveBorderWithoutVerts(halfedge, df) {
+    let side = halfedge.side;
+    let sarea = halfedge.sarea;
+
+    switch (side) {
+      case 0:
+        sarea.pos[0] += df;
+        sarea.size[0] -= df;
+        break;
+      case 1:
+        sarea.size[1] += df;
+        break;
+      case 2:
+        sarea.size[0] += df;
+        break;
+      case 3:
+        sarea.pos[1] += df;
+        sarea.size[1] -= df;
+        break;
+    }
+  }
+
+  moveBorder(b, df, strict=true) {
+    return this.moveBorderSimple(b, df, strict);
+  }
+
+  moveBorderSimple(b, df, strict=true) {
+    let axis = b.horiz & 1;
+    let axis2 = axis^1;
+
+    let min = Math.min(b.v1[axis2], b.v2[axis2]);
+    let max = Math.max(b.v1[axis2], b.v2[axis2]);
+
+    let test = (v) => {
+      return v[axis2] >= min && v[axis2] <= max;
+    };
+
+    let vs = new set();
+
+    for (let b2 of this.walkBorderLine(b)) {
+      if (strict && !test(b2.v1) && !test(b2.v2)) {
+        return false;
+      }
+
+      vs.add(b2.v1);
+      vs.add(b2.v2);
+    }
+
+    for (let v of vs) {
+      v[axis] += df;
+    }
+
+    for (let v of vs) {
+      for (let b of v.borders) {
+        for (let sarea of b.sareas) {
+          sarea.loadFromVerts();
+        }
+      }
+    }
+    return true;
+  }
+
+  moveBorderUnused(b, df, strict=true) {
+    if (!b) {
+      console.warn("missing border");
+      return false;
+    }
+
+    let axis = b.horiz & 1;
+
+    let vs = new set();
+
+    let visit = new set();
+
+    let axis2 = axis^1;
+
+    let min = Math.min(b.v1[axis2], b.v2[axis2]);
+    let max = Math.max(b.v1[axis2], b.v2[axis2]);
+
+    let test = (v) => {
+      return v[axis2] >= min && v[axis2] <= max;
+    };
+
+    let first = true;
+    let found = false;
+    let halfedges = new set();
+    let borders = new set();
+
+    for (let b2 of this.walkBorderLine(b)) {
+      /*
+      if (first) {
+        first = false;
+        df = Math.max(Math.abs(df), FrameManager_mesh.SnapLimit) * Math.sign(df);
+      }
+      found = true;
+      for (let sarea of b2.sareas) {
+        halfedges.add(new ScreenHalfEdge(b2, sarea))
+      }
+      vs.add(b2.v1);
+      vs.add(b2.v2);
+      continue;
+      //*/
+
+      if (!strict) {
+        vs.add(b2.v1);
+        vs.add(b2.v2);
+        continue;
+      }
+
+
+      let t1 = test(b2.v1), t2 = test(b2.v2);
+
+      if (!t1 || !t2) {
+        found = true;
+
+        if (first) {
+          first = false;
+          df = Math.max(Math.abs(df), SnapLimit) * Math.sign(df);
+        }
+      }
+      if (!t1 && !t2) {
+        continue;
+      }
+
+      borders.add(b2);
+
+      //make dummy half edges to keep track of border/sarea pairs
+      //and especailly what the border side is
+      for (let sarea of b2.sareas) {
+        halfedges.add(new ScreenHalfEdge(b2, sarea));
+      }
+
+      vs.add(b2.v1);
+      vs.add(b2.v2);
+    }
+
+    for (let b2 of this.walkBorderLine(b)) {
+      if (borders.has(b2)) {
+        continue;
+      }
+
+      for (let he of b2.halfedges) {
+        borders.remove(he.border);
+        if (halfedges.has(he)) {
+          halfedges.remove(he);
+        }
       }
     }
 
-    let vec = new Vector2$7(max).sub(min);
-    let sz = new Vector2$7(this.size);
-
-    sz.div(vec);
-
-    for (let v of this.screenverts) {
-      v.sub(min).mul(sz);
+    for (let v of vs) {
+      let ok = v[axis2] >= min && v[axis2] <= max;
     }
 
-    for (let sarea of this.sareas) {
-      sarea.on_resize(sarea.size);
+    if (!found || !strict) {
+      for (let v of vs) {
+        v[axis] += df;
+      }
+    } else {
+      let borders = new set();
+
+      for (let he of halfedges) {
+        borders.add(he.border);
+        this.moveBorderWithoutVerts(he, df);
+      }
+
+      for (let he of halfedges) {
+        he.sarea.loadFromPosSize();
+      }
+
+      for (let b of borders) {
+        let sareas = b.sareas.slice(0, b.sareas.length);
+
+        this.killBorder(b);
+        for (let sarea of sareas) {
+          sarea.loadFromPosSize();
+        }
+      }
+
+      return halfedges.length > 0;
+    }
+
+
+    for (let sarea of b.sareas) {
       sarea.loadFromVerts();
     }
 
-    this.regenBorders();
+    for (let he of b.halfedges) {
+      he.sarea.loadFromVerts();
 
-    for (let sarea of this.sareas) {
-      sarea.makeBorders(this);
-      sarea.setCSS();
+      for (let sarea of he.border.sareas) {
+        sarea.loadFromVerts();
+        for (let b2 of sarea._borders) {
+          b2.setCSS();
+        }
+      }
     }
 
+    b.setCSS();
+
+    return true;
+  }
+
+  solveAreaConstraints(snapArgument=true) {
+    let repeat = false;
+    let found = false;
+
+    for (let i=0; i<10; i++) {
+      repeat = false;
+
+      for (let sarea of this.sareas) {
+        repeat = repeat || this.checkAreaConstraint(sarea);
+      }
+
+      found = found || repeat;
+
+      if (repeat) {
+        for (let sarea of this.sareas) {
+          sarea.loadFromVerts();
+        }
+
+        this.snapScreenVerts(snapArgument);
+      } else {
+        break;
+      }
+    }
+
+    if (found) {
+      this.snapScreenVerts(snapArgument);
+      console.log("enforced area constraint");
+      this._recalcAABB();
+      this.setCSS();
+    }
+  }
+
+  snapScreenVerts(fitToSize=true) {
+    let mm = this._recalcAABB();
+    let min = mm[0], max = mm[1];
+
+    snap(min);
+    snapi(max);
+
+    if (fitToSize) {
+      //fit entire screen to, well, the entire screen (size)
+      let vec = new Vector2$8(max).sub(min);
+      let sz = new Vector2$8(this.size);
+
+      sz.div(vec);
+
+      for (let v of this.screenverts) {
+        snap(v.sub(min).mul(sz)).add(this.pos);
+      }
+    } else {
+      for (let v of this.screenverts) {
+        snap(v);
+      }
+
+      [min, max] = this._recalcAABB();
+      snap(min);
+      snapi(max);
+
+      this.size.load(max).sub(min);
+      this.pos.load(min);
+    }
+
+
+    for (let sarea of this.sareas) {
+      let old = new Vector2$8(sarea.size);
+      sarea.loadFromVerts();
+      sarea.on_resize(old);
+    }
+
+    this._recalcAABB();
     this.setCSS();
   }
 
-  on_resize(size) {
-    size[0] = ~~size[0];
-    size[1] = ~~size[1];
+  on_resize(oldsize, newsize=this.size) {
+    console.warn("resizing");
 
-    let ratio = [size[0] / this.size[0], size[1] / this.size[1]];
+    let ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
 
     //console.log("resize!", ratio);
 
@@ -27483,8 +30489,13 @@ class Screen$1 extends UIBase {
       sarea.loadFromVerts();
     }
 
-    this.size[0] = size[0];
-    this.size[1] = size[1];
+    this.size[0] = newsize[0];
+    this.size[1] = newsize[1];
+
+    this.snapScreenVerts();
+    this.solveAreaConstraints();
+    this._recalcAABB();
+
 
     let i = 0;
     for (let sarea of this.sareas) {
@@ -27493,20 +30504,17 @@ class Screen$1 extends UIBase {
       i++;
     }
 
-    this.snapScreenVerts();
-    this.regenScreenMesh();
-
+    this.regenBorders();
     this.setCSS();
-
-    this._recalcAABB();
     this.calcTabOrder();
+
   }
 
-  getScreenVert(pos, side, is_outer = false) {
-    let key = ScreenVert.hash(pos, side);
+  getScreenVert(pos, added_id="") {
+    let key = ScreenVert.hash(pos, added_id);
 
     if (!(key in this._vertmap)) {
-      let v = new ScreenVert(pos, this.idgen++, is_outer, side);
+      let v = new ScreenVert(pos, this.idgen++, added_id);
 
       this._vertmap[key] = v;
       this._idmap[v._id] = v;
@@ -27517,82 +30525,74 @@ class Screen$1 extends UIBase {
     return this._vertmap[key];
   }
 
-  isBorderOuter(sarea, border) {
-    if (border.halfedges.length < 2) {
-      if (border.halfedges.length === 1 && border.halfedges[0].sarea.floating) {
-        return false;
-      }
-      return true;
+  isBorderOuter(border) {
+    let sides = 0;
+
+    for (let he of border.halfedges) {
+      sides |= 1 << he.side;
     }
-    return false;
+
+    let bits = 0;
+    for (let i=0; i<4; i++) {
+      bits += (sides & (1<<i)) ? 1 : 0;
+    }
+
+    let ret = bits < 2;
+    let floating = false;
+
+    for (let sarea of border.sareas) {
+      floating = floating || sarea.floating;
+    }
+
+    if (floating) {
+      //check if border is on screen limits
+      let axis = border.horiz ? 1 : 0;
+
+      ret = Math.abs(border.v1[axis] - this.pos[axis]) < 2;
+      ret = ret || Math.abs(border.v1[axis] - this.pos[axis] - this.size[axis]) < 2;
+    }
+
+    border.outer = ret;
+    return ret;
   }
 
-  isBorderMovable(sarea, b, limit = 5) {
-    let side = sarea._borders.indexOf(b);
-
-    if (side < 0) {
-      console.warn("border corruption");
+  isBorderMovable(b, limit = 5) {
+    if (this.allBordersMovable)
       return true;
-    }
 
-    let bad = sarea.size[0] < limit || sarea.size[1] < limit;
-    bad = bad || this.isBorderOuter(sarea, b);
-    bad = bad || (sarea.borderLock & (1 << side));
-
-    for (let v of [b.v1, b.v2]) {
-      for (let b2 of v.borders) {
-        for (let sarea2 of b2.sareas) {
-          let box = [
-            sarea2.pos[0],
-            sarea2.pos[1] + sarea2.size[1],
-            sarea2.pos[0] + sarea2.size[0],
-            sarea2.pos[1],
-          ];
-
-          for (let side2 = 0; side2 < 4; side2++) {
-            let axis = side % 2;
-            let horiz = side2 % 2;
-
-            if (!!horiz !== !!b.horiz) {
-              continue;
-            }
-
-            //console.log(box[side2], b.v1[axis], b.v2[axis]);
-
-            if (Math.abs(box[side2] - b.v1[axis]) < 3) {
-              bad = bad || (sarea2.borderLock & (1 << side2));
-            }
-          }
-        }
+    for (let he of b.halfedges){
+      if (he.sarea.borderLock & (1<<he.side)) {
+        return false;
       }
     }
 
-    if (bad) {
-      return false;
+    let ok = !this.isBorderOuter(b);
+
+    for (let sarea of b.sareas) {
+      if (sarea.floating) {
+        ok = true;
+        break;
+      }
     }
 
-    //if (limit && b.valence > 1) {
-    //  return true;
-    //}
-
-    return true;
+    return ok;
   }
 
   getScreenBorder(sarea, v1, v2, side) {
+    let suffix = sarea._get_v_suffix();
+
     if (!(v1 instanceof ScreenVert)) {
-      v1 = this.getScreenVert(v1, side);
+      v1 = this.getScreenVert(v1, suffix);
     }
 
     if (!(v2 instanceof ScreenVert)) {
-      v2 = this.getScreenVert(v2, side);
+      v2 = this.getScreenVert(v2, suffix);
     }
 
-    let hash = ScreenBorder.hash(v1, v2, side);
+    let hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
       let sb = this._edgemap[hash] = document.createElement("screenborder-x");
-
-      sb.side = side;
 
       sb.screen = this;
       sb.v1 = v1;
@@ -27650,6 +30650,8 @@ class Screen$1 extends UIBase {
     src.size[0] = dst.size[0];
     src.size[1] = dst.size[1];
 
+    src.loadFromPosSize();
+
     if (this.sareas.indexOf(src) < 0) {
       this.appendChild(src);
     }
@@ -27667,11 +30669,12 @@ class Screen$1 extends UIBase {
   }
 
   //regenerates borders, sets css and calls this.update
+
   _internalRegenAll() {
-    this.regenScreenMesh();
     this.snapScreenVerts();
-    this._updateAll();
+    this._recalcAABB();
     this.calcTabOrder();
+    this.setCSS();
   }
 
 
@@ -27712,6 +30715,9 @@ class Screen$1 extends UIBase {
     if (child instanceof ScreenArea) {
       child.screen = this;
       child.ctx = this.ctx;
+      child.parentWidget = this;
+
+      this.sareas.push(child);
 
       if (child.size.dot(child.size) === 0) {
         child.size[0] = this.size[0];
@@ -27737,9 +30743,10 @@ class Screen$1 extends UIBase {
         child.addEventListener("mouseleave", onblur);
       }
 
-      this.sareas.push(child);
+      this.regenBorders();
       child.setCSS();
       this.drawUpdate();
+      child._init();
     }
 
     return this.shadow.appendChild(child);
@@ -27750,11 +30757,15 @@ class Screen$1 extends UIBase {
     return this.appendChild(child);
   }
 
+  hintPickerTool() {
+    (new ToolTipViewer(this)).start();
+  }
+
   splitTool() {
     console.log("screen split!");
 
-    //let tool = new FrameManager_ops.SplitTool(this);
-    let tool = new AreaDragTool(this, undefined, this.mpos);
+    let tool = new SplitTool(this);
+    //let tool = new FrameManager_ops.AreaDragTool(this, undefined, this.mpos);
     tool.start();
   }
 
@@ -27802,64 +30813,6 @@ class Screen$1 extends UIBase {
     }
   }
 
-  /*
-  _do_mouse_event(e) {
-    let type = e.type.toLowerCase();
-    
-    if (this.sareas.active !== undefined) {
-      let x = e.x, y = e.y;
-      let ret, sa = this.sareas.active;
-      
-      e.x -= sa.pos[0];
-      e.y -= sa.pos[1];
-      
-      let key = "on_" + type.toLowerCase();
-      
-      try {
-        ret = sa[key](e);
-      } catch (error) {
-        util.print_stack(error);
-        console.error("Exception raised in Screen._do_mouse_event for a ScreenArea");
-        
-        ret = undefined;
-      }
-      
-      e.x = x;
-      e.y = y;
-    }
-    
-    return e;
-  }
-  
-  on_mousedown(e) {
-    super.on_mousedown(e);
-    return this._do_mouse_event(e);
-  }
-  on_mousemove(e) {
-    super.on_mousemove(e);
-    return this._do_mouse_event(e);
-  }
-  on_mouseup(e) {
-    super.on_mouseup(e);
-    return this._do_mouse_event(e);
-  }
-  on_touchstart(e) {
-    super.on_touchstart(e);
-    return this._do_mouse_event(e);
-  }
-  on_touchmove(e) {
-    super.on_touchmove(e);
-    return this._do_mouse_event(e);
-  }
-  on_touchcancel(e) {
-    super.on_touchcancel(e);
-    return this._do_mouse_event(e);
-  }
-  on_touchend(e) {
-    super.on_touchend(e);
-    return this._do_mouse_event(e);
-  }//*/
-
   draw() {
     for (let sarea of this.sareas) {
       sarea.draw();
@@ -27880,11 +30833,16 @@ class Screen$1 extends UIBase {
   loadSTRUCT(reader) {
     reader(this);
 
+    //handle old files that might have saved as simple arrays
+    this.size = new Vector2$8(this.size);
+
     let sareas = this.sareas;
     this.sareas = [];
 
     for (let sarea of sareas) {
       sarea.screen = this;
+      sarea.parentWidget = this;
+
       this.appendChild(sarea);
     }
 
@@ -27927,7 +30885,7 @@ class Screen$1 extends UIBase {
     screen2.listen();
 
     screen2.doOnce(() => {
-      screen2.on_resize([window.innerWidth, window.innerHeight]);
+      screen2.on_resize(screen2.size, [window.innerWidth, window.innerHeight]);
     });
 
     console.log(data);
@@ -27955,7 +30913,8 @@ class Screen$1 extends UIBase {
 
 Screen$1.STRUCT = `
 pathux.Screen { 
-  size  : array(float);
+  size  : vec2;
+  pos   : vec2;
   sareas : array(pathux.ScreenArea);
   idgen : int;
   uidata : string | obj.saveUIData();
@@ -27964,8 +30923,6 @@ pathux.Screen {
 
 nstructjs.manager.add_class(Screen$1);
 UIBase.register(Screen$1);
-
-setScreenClass(Screen$1);
 
 
 let get_screen_cb;
@@ -28052,9 +31009,606 @@ function loadImageFile() {
   });
 }
 
+/*
+see doc_src/context.md
+*/
+window.ccosnt = exports;
+
+const ContextFlags = {
+  IS_VIEW : 1
+};
+
+class InheritFlag$1 {
+  constructor(data) {
+    this.data = data;
+  }
+}
+
+let __idgen = 1;
+
+if (Symbol.ContextID === undefined) {
+  Symbol.ContextID = Symbol("ContextID");
+}
+
+if (Symbol.CachedDef === undefined) {
+  Symbol.CachedDef = Symbol("CachedDef");
+}
+
+const OverlayClasses = [];
+
+class ContextOverlay {
+  constructor(appstate) {
+    this.ctx = undefined; //owning context
+    this._state = appstate;
+  }
+
+  get state() {
+    return this._state;
+  }
+
+  onRemove(have_new_file=false) {
+  }
+
+  copy() {
+    return new this.constructor(this._state);
+  }
+
+  validate() {
+    throw new Error("Implement me!");
+  }
+
+
+  //base classes override this
+  static contextDefine() {
+    throw new Error("implement me!");
+  }
+
+  //don't override this
+  static resolveDef() {
+    if (this.hasOwnProperty(Symbol.CachedDef)) {
+      return this[Symbol.CachedDef];
+    }
+
+    let def2 = Symbol.CachedDef = {};
+
+    let def = this.contextDefine();
+
+    if (def === undefined) {
+      def = {};
+    }
+
+    for (let k in def) {
+      def2[k] = def[k];
+    }
+
+    if (!("flag") in def) {
+      def2.flag = Context.inherit(0);
+    }
+
+    let parents = [];
+    let p = getClassParent(this);
+
+    while (p && p !== ContextOverlay) {
+      parents.push(p);
+      p = getClassParent(p);
+    }
+
+    if (def2.flag instanceof InheritFlag$1) {
+      let flag = def2.flag.data;
+      for (let p of parents) {
+        let def = p.contextDefine();
+
+        if (!def.flag) {
+          continue;
+        }else if (def.flag instanceof InheritFlag$1) {
+          flag |= def.flag.data;
+        } else {
+          flag |= def.flag;
+          //don't go past non-inheritable parents
+          break;
+        }
+      }
+
+      def2.flag = flag;
+    }
+
+    return def2;
+  }
+}
+
+const excludedKeys = new Set(["onRemove", "reset", "toString",
+  "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
+  "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
+  "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
+
+class LockedContext {
+  constructor(ctx) {
+    this.props = {};
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+
+    this.load(ctx);
+  }
+
+  toLocked() {
+    //just return itself
+    return this;
+  }
+
+  error() {
+    return this.ctx.error(...arguments);
+  }
+  warning() {
+    return this.ctx.warning(...arguments);
+  }
+  message() {
+    return this.ctx.message(...arguments);
+  }
+  progbar() {
+    return this.ctx.progbar(...arguments);
+  }
+
+  load(ctx) {
+    //let keys = util.getAllKeys(ctx);
+    let keys = ctx._props;
+
+    function wrapget(name) {
+      return function(ctx2, data) {
+        return ctx.loadProperty(ctx2, name, data);
+      }
+    }
+
+    for (let k of keys) {
+      let v;
+      if (k === "state" || k === "toolstack" || k === "api") {
+        continue;
+      }
+
+      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
+        continue;
+      }
+
+      try {
+        v = ctx[k];
+      } catch (error) {
+        if (exports.DEBUG.contextSystem) {
+          console.warn("failed to look up property in context: ", k);
+        }
+        continue;
+      }
+
+      let data, getter;
+      let overlay = ctx.getOwningOverlay(k);
+
+      if (overlay === undefined) {
+        //property must no longer be used?
+        continue;
+      }
+
+      try {
+        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
+          data = overlay[k + "_save"]();
+          getter = overlay[k + "_load"];
+        } else {
+          data = ctx.saveProperty(k);
+          getter = wrapget(k);
+        }
+      } catch (error) {
+        console.warn("Failed to save context property", k);
+        continue;
+      }
+
+      this.props[k] = {
+        data : data,
+        get  : getter
+      };
+    }
+
+    let defineProp = (name) => {
+      Object.defineProperty(this, name, {
+        get : function() {
+          let def = this.props[name];
+          return def.get(this.ctx, def.data)
+        }
+      });
+    };
+
+    for (let k in this.props) {
+      defineProp(k);
+    }
+
+    this.ctx = ctx;
+  }
+
+  setContext(ctx) {
+    this.ctx = ctx;
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+  }
+}
+
+let next_key = {};
+let idgen = 1;
+
+class Context {
+  constructor(appstate) {
+    this.state = appstate;
+
+    this._props = new Set();
+    this._stack = [];
+    this._inside_map = {};
+  }
+
+  error(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return error(state.screen, message, timeout);
+    }
+  }
+
+  warning(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return warning(state.screen, message, timeout);
+    }
+  }
+
+  message(msg, timeout=1500) {
+    let state = this.state;
+
+    console.warn(msg);
+
+    if (state && state.screen) {
+      return message(state.screen, msg, timeout);
+    }
+  }
+
+  progbar(msg, perc=0.0, timeout=1500, id=msg) {
+    let state = this.state;
+
+    if (state && state.screen) {
+      //progbarNote(screen, msg, percent, color, timeout) {
+      return progbarNote(state.screen, msg, perc, "green", timeout);
+    }
+  }
+
+  validateOverlays() {
+    let stack = this._stack;
+    let stack2 = [];
+
+    for (let i=0; i<stack.length; i++) {
+      if (stack[i].validate()) {
+        stack2.push(stack[i]);
+      }
+    }
+
+    this._stack = stack2;
+  }
+
+  hasOverlay(cls) {
+    return this.getOverlay(cls) !== undefined;
+  }
+
+  getOverlay(cls) {
+    for (let overlay of this._stack) {
+      if (overlay.constructor === cls) {
+        return overlay;
+      }
+    }
+  }
+
+  clear(have_new_file=false) {
+    for (let overlay of this._stack) {
+      overlay.onRemove(have_new_file);
+    }
+
+    this._stack = [];
+  }
+
+  //this is implemented by child classes
+  //it should load the same default overlays as in constructor
+  reset(have_new_file=false) {
+    this.clear(have_new_file);
+  }
+
+  //returns a new context with overriden properties
+  //unlike pushOverlay, overrides can be a simple object
+  override(overrides) {
+    if (overrides.copy === undefined) {
+      overrides.copy = function() {
+        return Object.assign({}, this);
+      };
+    }
+
+    let ctx = this.copy();
+    ctx.pushOverlay(overrides);
+    return ctx;
+  }
+
+  copy() {
+    let ret = new this.constructor(this.state);
+
+    for (let item of this._stack) {
+      ret.pushOverlay(item.copy());
+    }
+
+    return ret;
+  }
+
+  /**
+   Used by overlay property getters.  If returned,
+   the next overlay in the struct will have its getter used.
+
+   Example:
+
+   class overlay {
+      get scene() {
+        if (some_reason) {
+          return Context.super();
+        }
+
+        return something_else;
+      }
+    }
+   */
+  static super() {
+    return next_key;
+  }
+
+  /**
+   *
+   * saves a property into some kind of non-object-reference form
+   *
+   * */
+  saveProperty(key) {
+    console.warn("Missing saveProperty implementation in Context; passing through values...");
+    return this[key];
+  }
+
+  /**
+   *
+   * lookup property based on saved data
+   *
+   * */
+  loadProperty(ctx, key, data) {
+    console.warn("Missing loadProperty implementation in Context; passing through values...");
+    return data;
+  }
+
+  getOwningOverlay(name, _val_out) {
+    let inside_map = this._inside_map;
+    let stack = this._stack;
+
+    if (exports.DEBUG.contextSystem) {
+      console.log(name, inside_map);
+    }
+
+    for (let i=stack.length-1; i >= 0; i--) {
+      let overlay = stack[i];
+      let ret = next_key;
+      
+      if (overlay[Symbol.ContextID] === undefined) {
+        throw new Error("context corruption");
+      }
+      
+      let ikey = overlay[Symbol.ContextID];
+      
+      if (exports.DEBUG.contextSystem) {
+        console.log(ikey, overlay);
+      }
+
+      //prevent infinite recursion
+      if (inside_map[ikey]) {
+        continue;
+      }
+
+      if (overlay.__allKeys.has(name)) {
+        if (exports.DEBUG.contextSystem) {
+          console.log("getting value");
+        }
+
+        inside_map[ikey] = 1;
+
+        try {
+          ret = overlay[name];
+        } catch (error) {
+
+          inside_map[ikey] = 0;
+          throw error;
+        }
+
+        inside_map[ikey] = 0;
+      }
+
+      if (ret !== next_key) {
+        if (_val_out !== undefined) {
+          _val_out[0] = ret;
+        }
+        return overlay;
+      }
+    }
+
+    if (_val_out !== undefined) {
+      _val_out[0] = undefined;
+    }
+
+    return undefined;
+  }
+
+  ensureProperty(name) {
+    if (this.hasOwnProperty(name)) {
+      return;
+    }
+
+    this._props.add(name);
+
+    Object.defineProperty(this, name, {
+      get : function() {
+        let ret = [undefined];
+
+        this.getOwningOverlay(name, ret);
+        return ret[0];
+      }, set : function() {
+        throw new Error("Cannot set ctx properties")
+      }
+    });
+  }
+
+  /**
+   * Returns a new context that doesn't
+   * contain any direct object references
+   * except for .state .datalib and .api, but
+   * instead uses those three to look up references
+   * on property access.
+   * */
+  toLocked() {
+    return new LockedContext(this);
+  }
+
+  pushOverlay(overlay) {
+    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
+      overlay[Symbol.ContextID] = idgen++;
+    }
+
+    let keys = new Set();
+    for (let key of getAllKeys(overlay)) {
+      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
+        keys.add(key);
+      }
+    }
+
+    overlay.ctx = this;
+
+    if (overlay.__allKeys === undefined) {
+      overlay.__allKeys = keys;
+    }
+
+    for (let k of keys) {
+      let bad = typeof k === "symbol" || excludedKeys.has(k);
+      bad = bad || (typeof k === "string" && k[0] === "_");
+      bad = bad || (typeof k === "string" && k.endsWith("_save"));
+      bad = bad || (typeof k === "string" && k.endsWith("_load"));
+
+      if (bad) {
+        continue;
+      }
+
+      this.ensureProperty(k);
+    }
+
+    if (this._stack.indexOf(overlay) >= 0) {
+      console.warn("Overlay already added once");
+      if (this._stack[this._stack.length-1] === overlay) {
+        console.warn("  Definitely an error, overlay is already at top of stack");
+        return;
+      }
+    }
+
+    this._stack.push(overlay);
+  }
+
+  popOverlay(overlay) {
+    if (overlay !== this._stack[this._stack.length-1]) {
+      console.warn("Context.popOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.pop();
+  }
+
+  removeOverlay(overlay) {
+    if (this._stack.indexOf(overlay) < 0) {
+      console.warn("Context.removeOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.remove(overlay);
+  }
+
+  static inherit(data) {
+    return new InheritFlag$1(data);
+  }
+
+  static register(cls) {
+    if (cls[Symbol.ContextID]) {
+      console.warn("Tried to register same class twice:", cls);
+      return;
+    }
+
+    cls[Symbol.ContextID] = __idgen++;
+    OverlayClasses.push(cls);
+  }
+}
+
+function test() {
+  function testInheritance() {
+    class Test0 extends ContextOverlay {
+      static contextDefine() {
+        return {
+          flag: 1
+        }
+      }
+    }
+
+    class Test1 extends Test0 {
+      static contextDefine() {
+        return {
+          flag: 2
+        }
+      }
+    }
+
+    class Test2 extends Test1 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(4)
+        }
+      }
+    }
+
+    class Test3 extends Test2 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(8)
+        }
+      }
+    }
+
+    class Test4 extends Test3 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(16)
+        }
+      }
+    }
+
+    return Test4.resolveDef().flag === 30;
+  }
+
+  return testInheritance();
+}
+
+if (!test()) {
+  throw new Error("Context test failed");
+}
+
 let util = util1;
 let vectormath = vectormath1;
 let html5_fileapi = html5_fileapi1;
+let parseutil = parseutil1;
+let cconst = exports;
 
-export { Area, AreaTypes, BoolProperty, BorderMask, BorderSides, Button, CSSFont, Check, Check1, ColumnFrame, Container, Curve1DProperty, Curve1DPropertyIF, Curve1DWidget, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FlagPropertyIF, FloatProperty, HotKey, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, ListIface, ListProperty, Mat4Property, ModelInterface, NumProperty, NumPropertyIF, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, PackFlags, PanelFrame, PropClasses, PropFlags, PropSubTypes, PropTypes, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleContext, StringProperty, StringPropertyIF, StringSetProperty, StructFlags, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolPropertyIF, ToolStack, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawText, eventWasTouch, getAreaIntName, getDataPathToolOp, getDefault, getFont, getImageData, haveModal, html5_fileapi, iconmanager, initSimpleController, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, modalStack, modalstack, nstructjs$1 as nstructjs, parsepx, pathParser, popModalLight, pushModal, pushModalLight, register, registerTool, registerToolStackGetter, report, reverse_keymap, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, startEvents, theme, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DPropertyIF, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypes, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FlagPropertyIF, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumPropertyIF, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PanelFrame, PropClasses, PropFlags, PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringPropertyIF, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolPropertyIF, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, binomial, cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeGenEnum, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, startEvents, startMenuEventWrangling, tab_idgen, test, theme, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

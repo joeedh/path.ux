@@ -1,9 +1,5 @@
 import {Editor} from "../editor_base.js";
-import {UIBase} from "../../../scripts/ui_base.js";
-import {PackFlags} from "../../../scripts/ui_base.js";
-import {Icons} from "../icon_enum.js";
-import * as nstructjs from "../../util/struct.js";
-import {KeyMap, HotKey} from "../../../scripts/simple_events.js";
+import {nstructjs, util} from '../../pathux.js';
 
 export class LogEditor extends Editor {
   constructor() {
