@@ -689,7 +689,7 @@ export class DropBox extends Button {
       this.prop.setValue(id);
 
       this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
-      if (this.onselect !== undefined) {
+      if (this.onselect) {
         this.onselect(id);
       }
 

@@ -14,6 +14,7 @@ export * from './ui_tabs.js';
 export * from './ui_listbox.js';
 export * from './ui_menu.js';
 export * from './ui_table.js';
+export * from './ui_lasttool.js';
 
 export * from './FrameManager.js';
 import * as util1 from './util.js';

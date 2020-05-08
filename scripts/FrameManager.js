@@ -1400,7 +1400,8 @@ export class Screen extends ui_base.UIBase {
         this.moveBorder(b1, dh);
       } else if (bad === 3) {
         //both borders are bad, yet we need to move anyway. . .
-        console.warn("got case of two borders being bad");
+        //console.warn("got case of two borders being bad");
+
         if (!this.isBorderOuter(b1)) {
           this.moveBorder(b1, dh);
         } else if (!this.isBorderOuter(b2)) {
@@ -1728,7 +1729,9 @@ export class Screen extends ui_base.UIBase {
 
     if (found) {
       this.snapScreenVerts(snapArgument);
-      console.log("enforced area constraint");
+      if (cconst.DEBUG.areaConstraintSolver) {
+        console.log("enforced area constraint");
+      }
       this._recalcAABB();
       this.setCSS();
     }

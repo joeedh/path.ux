@@ -224,6 +224,77 @@ export class MileUnit extends Unit {
 }
 Unit.register(MileUnit);
 
+export class DegreeUnit extends Unit {
+  static unitDefine() {return {
+    name    : "degree",
+    uiname  : "Degrees",
+    type    : "angle",
+    icon    : -1,
+    pattern : /\d+(\.\d+)?(\u00B0|deg|d|degree|degrees)?/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("d") >= 0) {
+      string = string.slice(0, string.search("d")).trim();
+    } else if (string.search("\u00B0") >= 0) {
+      string = string.slice(0, string.search("\u00B0")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value/180.0*Math.PI;
+  }
+
+  static fromInternal(value) {
+    return value*180.0*Math.PI;
+  }
+
+  static buildString(value, decimals=3) {
+    return ""+value.toFixed(decimals) + " \u00B0";
+  }
+};
+Unit.register(DegreeUnit);
+
+export class RadianUnit extends Unit {
+  static unitDefine() {return {
+    name    : "radian",
+    uiname  : "Radians",
+    type    : "angle",
+    icon    : -1,
+    pattern : /\d+(\.\d+)?(r|rad|radian|radians)/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("r") >= 0) {
+      string = string.slice(0, string.search("d")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value/180.0*Math.PI;
+  }
+
+  static fromInternal(value) {
+    return value*180.0*Math.PI;
+  }
+
+  static buildString(value, decimals=3) {
+    return ""+value.toFixed(decimals) + " r";
+  }
+};
+
+Unit.register(RadianUnit);
+
 export function setBaseUnit(unit) {
   Unit.baseUnit = unit;
 }
@@ -234,8 +305,18 @@ export function setMetric(val) {
 Unit.isMetric = true;
 Unit.baseUnit = "meter";
 
-export function parseValue(string) {
-  let base = Unit.getUnit(Unit.baseUnit);
+export function parseValue(string, baseUnit=undefined) {
+  let base;
+
+  if (baseUnit) {
+    base = Unit.getUnit(baseUnit);
+    if (base === undefined) {
+      console.warn("Unknown unit " + baseUnit);
+      return NaN;
+    }
+  } else {
+    base = Unit.getUnit(Unit.baseUnit);
+  }
 
   for (let unit of Units) {
     let def = unit.unitDefine();
@@ -262,9 +343,12 @@ export function convert(value, unita, unitb) {
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
-export function buildString(value, unit=Unit.baseUnit) {
-  unit = Unit.getUnit(unit);
-  return unit.buildString(value);
+export function buildString(value, unit=Unit.baseUnit, decimalPlaces=3) {
+  if (typeof unit === "string") {
+    unit = Unit.getUnit(unit);
+  }
+
+  return unit.buildString(value, decimalPlaces);
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;

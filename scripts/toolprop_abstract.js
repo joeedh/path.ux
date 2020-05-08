@@ -85,6 +85,9 @@ export class ToolPropertyIF {
   setRange(min, max) {
   }
 
+  setUnit(unit) {
+  }
+
   //some clients have seperate ui range
   setUIRange(min, max) {
   }

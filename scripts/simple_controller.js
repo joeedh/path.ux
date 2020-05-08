@@ -179,6 +179,16 @@ export class DataPath {
     return this;
   }
 
+  baseUnit(unit) {
+    this.data.setBaseUnit(unit);
+    return this;
+  }
+
+  displayUnit(unit) {
+    this.data.setDisplayUnit(unit);
+    return this;
+  }
+
   range(min, max) {
     this.data.setRange(min, max);
     return this;
