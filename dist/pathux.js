@@ -6881,11 +6881,90 @@ class MileUnit extends Unit {
 }
 Unit.register(MileUnit);
 
+class DegreeUnit extends Unit {
+  static unitDefine() {return {
+    name    : "degree",
+    uiname  : "Degrees",
+    type    : "angle",
+    icon    : -1,
+    pattern : /\d+(\.\d+)?(\u00B0|deg|d|degree|degrees)?/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("d") >= 0) {
+      string = string.slice(0, string.search("d")).trim();
+    } else if (string.search("\u00B0") >= 0) {
+      string = string.slice(0, string.search("\u00B0")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value/180.0*Math.PI;
+  }
+
+  static fromInternal(value) {
+    return value*180.0*Math.PI;
+  }
+
+  static buildString(value, decimals=3) {
+    return ""+value.toFixed(decimals) + " \u00B0";
+  }
+}Unit.register(DegreeUnit);
+
+class RadianUnit extends Unit {
+  static unitDefine() {return {
+    name    : "radian",
+    uiname  : "Radians",
+    type    : "angle",
+    icon    : -1,
+    pattern : /\d+(\.\d+)?(r|rad|radian|radians)/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("r") >= 0) {
+      string = string.slice(0, string.search("d")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value/180.0*Math.PI;
+  }
+
+  static fromInternal(value) {
+    return value*180.0*Math.PI;
+  }
+
+  static buildString(value, decimals=3) {
+    return ""+value.toFixed(decimals) + " r";
+  }
+}
+Unit.register(RadianUnit);
+
 Unit.isMetric = true;
 Unit.baseUnit = "meter";
 
-function parseValue(string) {
-  let base = Unit.getUnit(Unit.baseUnit);
+function parseValue(string, baseUnit=undefined) {
+  let base;
+
+  if (baseUnit) {
+    base = Unit.getUnit(baseUnit);
+    if (base === undefined) {
+      console.warn("Unknown unit " + baseUnit);
+      return NaN;
+    }
+  } else {
+    base = Unit.getUnit(Unit.baseUnit);
+  }
 
   for (let unit of Units) {
     let def = unit.unitDefine();
@@ -6905,9 +6984,12 @@ function parseValue(string) {
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
-function buildString(value, unit=Unit.baseUnit) {
-  unit = Unit.getUnit(unit);
-  return unit.buildString(value);
+function buildString(value, unit=Unit.baseUnit, decimalPlaces=3) {
+  if (typeof unit === "string") {
+    unit = Unit.getUnit(unit);
+  }
+
+  return unit.buildString(value, decimalPlaces);
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
@@ -6983,6 +7065,9 @@ class ToolPropertyIF {
   }
 
   setRange(min, max) {
+  }
+
+  setUnit(unit) {
   }
 
   //some clients have seperate ui range
@@ -7156,6 +7241,34 @@ let Icons = {
   LARGE_CHECK    : 39
 };
 
+let exports = {
+  menu_close_time : 500,
+  DEBUG : {
+    screenborders: false,
+    allBordersMovable: false,
+    doOnce: false,
+    modalEvents : true,
+    areaConstraintSolver : false,
+    /*
+    customWindowSize: {
+      width: 512, height: 512
+    },
+    */
+  },
+
+  autoSizeUpdate : true,
+  showPathsInToolTips: true,
+
+  loadConstants : function(args) {
+    for (let k in args) {
+      if (k === "loadConstants")
+        continue;
+
+      this[k] = args[k];
+    }
+  }
+};
+
 let modalstack = [];
 
 /*
@@ -7201,7 +7314,9 @@ function copyEvent(e) {
 }
 
 function pushModalLight(obj) {
-  console.warn("pushModalLight");
+  if (exports.DEBUG.modalEvents) {
+    console.warn("pushModalLight");
+  }
 
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
@@ -7323,7 +7438,9 @@ function pushModalLight(obj) {
 }
 
 function popModalLight(state) {
-  console.warn("popModalLight");
+  if (exports.DEBUG.modalEvents) {
+    console.warn("popModalLight");
+  }
 
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");
@@ -8019,6 +8136,8 @@ class BSplineCurve extends CurveTypeData {
     this.add(0, 0);
     this.add(1, 1);
 
+    this.mpos = new Vector2$1();
+
     this.on_mousedown = this.on_mousedown.bind(this);
     this.on_mousemove = this.on_mousemove.bind(this);
     this.on_mouseup = this.on_mouseup.bind(this);
@@ -8432,51 +8551,41 @@ class BSplineCurve extends CurveTypeData {
     return this.uidata !== undefined;
   }
 
-  on_touchstart(e) {
-    this.mpos[0] = e.touches[0].pageX;
-    this.mpos[1] = e.touches[0].pageY;
-
-    this.on_mousedown({
-      x          : e.touches[0].pageX,
-      y          : e.touches[0].pageY,
+  _wrapTouchEvent(e) {
+    return {
+      x          : e.touches.length ? e.touches[0].pageX : this.mpos[0],
+      y          : e.touches.length ? e.touches[0].pageY : this.mpos[1],
       button     : 0,
       shiftKey   : e.shiftKey,
       altKey     : e.altKey,
       ctrlKey    : e.ctrlKey,
       isTouch    : true,
-      commandKey : e.commandKey
-    });
+      commandKey : e.commandKey,
+      stopPropagation : e.stopPropagation(),
+      preventDefault : e.preventDefault()
+    };
+  }
+
+  on_touchstart(e) {
+    this.mpos[0] = e.touches[0].pageX;
+    this.mpos[1] = e.touches[0].pageY;
+
+    let e2 = this._wrapTouchEvent(e);
+
+    this.on_mousemove(e2);
+    this.on_mousedown(e2);
   }
 
   on_touchmove(e) {
     this.mpos[0] = e.touches[0].pageX;
     this.mpos[1] = e.touches[0].pageY;
 
-    this.on_mousemove({
-      x          : e.touches[0].pageX,
-      y          : e.touches[0].pageY,
-      button     : 0,
-      shiftKey   : e.shiftKey,
-      altKey     : e.altKey,
-      ctrlKey    : e.ctrlKey,
-      commandKey : e.commandKey,
-      preventDefault : () => e.preventDefault(),
-      stopPropagation : () => e.stopPropagation(),
-      isTouch : true,
-    });
+    let e2 = this._wrapTouchEvent(e);
+    this.on_mousemove(e2);
   }
 
   on_touchend(e) {
-    this.on_mouseup({
-      x          : this.mpos[0],
-      y          : this.mpos[1],
-      button     : 0,
-      shiftKey   : e.shiftKey,
-      altKey     : e.altKey,
-      ctrlKey    : e.ctrlKey,
-      isTouch : true,
-      commandKey : e.commandKey
-    });
+    this.on_mouseup(this._wrapTouchEvent(e));
   }
 
   on_touchcancel(e) {
@@ -8560,10 +8669,12 @@ class BSplineCurve extends CurveTypeData {
   }
 
   on_mousedown(e) {
-    console.log("bspline mdown");
+    console.log("bspline mdown", e.x, e.y);
 
     this.uidata.start_mpos.load(this.transform_mpos(e.x, e.y));
     this.fastmode = true;
+
+    console.log(this.uidata.start_mpos, this.uidata.draw_trans);
 
     var mpos = this.transform_mpos(e.x, e.y);
     var x=mpos[0], y = mpos[1];
@@ -8659,7 +8770,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   on_mousemove(e) {
-    //console.log("bspline mmove");
+    console.log("bspline mmove", e.x, e.y);
 
     if (e.isTouch && this.uidata.transforming) {
       e.preventDefault();
@@ -9502,7 +9613,9 @@ class ToolProperty extends ToolPropertyIF {
     b.description = this.description;
     b.flag = this.flag;
     b.icon = this.icon;
+    b.baseUnit = this.baseUnit;
     b.subtype = this.subtype;
+    b.displayUnit = this.displayUnit;
 
     for (let k in this.callbacks) {
       b.callbacks[k] = this.callbacks[k];
@@ -9530,6 +9643,14 @@ class ToolProperty extends ToolPropertyIF {
     
     this.range = [min, max];
     return this;
+  }
+
+  setBaseUnit(unit) {
+    this.baseUnit = unit;
+  }
+
+  setDisplayUnit(unit) {
+    this.displayUnit = unit;
   }
 
   setUIRange(min, max) {
@@ -9979,7 +10100,7 @@ class FlagProperty extends EnumProperty$1 {
     this.data = bitmask;
 
     //do not trigger EnumProperty's setValue
-    super.super.setValue(bitmask);
+    super.setValue(bitmask);
     //ToolProperty.prototype.setValue.call(this, bitmask);
     return this;
   }
@@ -12114,6 +12235,16 @@ class DataPath {
     return this;
   }
 
+  baseUnit(unit) {
+    this.data.setBaseUnit(unit);
+    return this;
+  }
+
+  displayUnit(unit) {
+    this.data.setDisplayUnit(unit);
+    return this;
+  }
+
   range(min, max) {
     this.data.setRange(min, max);
     return this;
@@ -12572,6 +12703,7 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 let _dummypath = new DataPath();
 
 let DummyIntProperty = new IntProperty();
+const CLS_API_KEY = "__dp_map_id";
 
 class DataAPI extends ModelInterface {
   constructor() {
@@ -12585,6 +12717,10 @@ class DataAPI extends ModelInterface {
 
   setRoot(sdef) {
     this.rootContextStruct = sdef;
+  }
+
+  hasStruct(cls) {
+    return cls.hasOwnProperty(CLS_API_KEY);
   }
 
   getStruct(cls) {
@@ -12621,7 +12757,7 @@ class DataAPI extends ModelInterface {
 
   _addClass(cls, dstruct) {
     let key =  _map_struct_idgen++;
-    cls.__dp_map_id = key;
+    cls[CLS_API_KEY] = key;
 
     _map_structs[key] = dstruct;
   }
@@ -12629,10 +12765,10 @@ class DataAPI extends ModelInterface {
   mapStruct(cls, auto_create = true) {
     let key;
 
-    if (!cls.hasOwnProperty("__dp_map_id")) {
+    if (!cls.hasOwnProperty(CLS_API_KEY)) {
       key = undefined;
     } else {
-      key = cls.__dp_map_id;
+      key = cls[CLS_API_KEY];
     }
 
     if (key === undefined && auto_create) {
@@ -13804,32 +13940,6 @@ const DefaultTheme = {
   }
 };
 
-let exports = {
-  menu_close_time : 500,
-  DEBUG : {
-    screenborders: false,
-    allBordersMovable: false,
-    doOnce: false,
-    /*
-    customWindowSize: {
-      width: 512, height: 512
-    },
-    */
-  },
-
-  autoSizeUpdate : true,
-  showPathsInToolTips: true,
-
-  loadConstants : function(args) {
-    for (let k in args) {
-      if (k === "loadConstants")
-        continue;
-
-      this[k] = args[k];
-    }
-  }
-};
-
 let Vector4$1 = Vector4;
 
 const EnumProperty$2 = EnumProperty$1;
@@ -14565,6 +14675,7 @@ class UIBase extends HTMLElement {
       if (n instanceof nodeclass) {
         let ok;
         ok = n.visibleToPick;
+        ok = ok && !n.hidden;
         ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
 
         return ok;
@@ -14594,6 +14705,7 @@ class UIBase extends HTMLElement {
             ok = ok && n.visibleToPick;
           }
 
+          ok = ok && !n.hidden;
           ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
           ok = ok && (retzindex === undefined || zindex >= retzindex);
 
@@ -19410,6 +19522,8 @@ class NumSliderSimple extends UIBase$5 {
   constructor() {
     super();
 
+    this.baseUnit = undefined;
+
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
 
@@ -19422,6 +19536,7 @@ class NumSliderSimple extends UIBase$5 {
 
     this.shadow.appendChild(this.canvas);
     this.range = [0, 1];
+
     this.step = 0.1;
     this._value = 0.5;
     this._focus = false;
@@ -19846,6 +19961,7 @@ class NumSliderSimple2 extends ColumnFrame {
     this.isInt = false;
     this._lock_textbox = false;
     this.labelOnTop = undefined;
+    this.baseUnit = undefined;
 
     this._last_label_on_top = undefined;
 
@@ -19922,7 +20038,8 @@ class NumSliderSimple2 extends ColumnFrame {
         return;
       } else {
         textbox.flash("green");
-        let f = parseFloat(text);
+
+        let f = parseValue(text, this.baseUnit);
 
         if (isNaN(f)) {
           this.flash("red");
@@ -19982,7 +20099,8 @@ class NumSliderSimple2 extends ColumnFrame {
     if (this._lock_textbox > 0)
       return;
 
-    this.textbox.text = formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+    //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+    this.textbox.text = buildString(this._value, this.baseUnit, this.decimalPlaces);
     this.textbox.update();
   }
 
@@ -20040,10 +20158,24 @@ class NumSliderSimple2 extends ColumnFrame {
     }
   }
 
+  updateDataPath() {
+    if (!this.ctx || !this.getAttribute("datapath")) {
+      return;
+    }
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+    if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
+      this.baseUnit = prop.baseUnit;
+      this.slider.baseUnit = prop.baseUnit;
+    }
+  }
+
   update() {
     this.updateLabelOnTop();
-
     super.update();
+
+    this.updateDataPath();
 
     if (this.hasAttribute("integer")) {
       this.isInt = true;
@@ -23912,7 +24044,7 @@ class DropBox extends Button {
       this.prop.setValue(id);
 
       this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
-      if (this.onselect !== undefined) {
+      if (this.onselect) {
         this.onselect(id);
       }
 
@@ -24310,7 +24442,925 @@ function getWranglerScreen() {
   return menuWrangler.screen;
 }
 
-let Vector2$4 = Vector2,
+const LastKey = Symbol("LastToolPanelId");
+let tool_idgen = 0;
+
+/*
+*
+* This panel shows the most recently executed ToolOp's
+* settings.  It assumes that recent toolops are accessible
+* in ctx.last_tool.
+* */
+class LastToolPanel extends ColumnFrame {
+  constructor() {
+    super();
+
+    this._tool_id = undefined;
+    this.useDataPathUndo = false;
+  }
+
+  init() {
+    super.init();
+
+    this.useDataPathUndo = false;
+    this.rebuild();
+  }
+
+  rebuild() {
+    let ctx = this.ctx;
+    if (ctx === undefined) {
+      this._tool_id = -1; //wait for .ctx
+      return;
+    }
+
+    this.clear();
+
+    this.label("Recent Command Settings");
+
+    //don't process the root toolop
+    let bad = ctx.toolstack.length === 0;
+    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+
+    if (bad) {
+      this.setCSS();
+      return;
+    }
+
+    let tool = ctx.toolstack[ctx.toolstack.cur];
+    let def = tool.constructor.tooldef();
+    let name = def.uiname !== undefined ? def.uiname : def.name;
+
+    let panel = this.panel(def.uiname);
+
+    let fakecls = {};
+    fakecls.constructor = fakecls;
+
+    //in theory it shouldn't matter if multiple last tool panels
+    //override _last_tool, since they all access the same data
+    this.ctx.state._last_tool = fakecls;
+    let lastkey = tool[LastKey];
+
+    let getTool = () => {
+      let tool = this.ctx.toolstack[this.ctx.toolstack.cur];
+      if (!tool || tool[LastKey] !== lastkey) {
+        return undefined;
+      }
+
+      return tool;
+    };
+
+    let st = this.ctx.api.mapStruct(fakecls, true);
+    let paths = [];
+
+    function defineProp(k, key) {
+      Object.defineProperty(fakecls, key, {
+        get : function() {
+          let tool = getTool();
+          if (tool) {
+            return tool.inputs[k].getValue();
+          }
+        },
+
+        set : function(val) {
+          let tool = getTool();
+          if (tool) {
+            tool.inputs[k].setValue(val);
+            ctx.toolstack.rerun(tool);
+
+            window.redraw_viewport();
+          }
+        }
+      });
+    }
+
+    for (let k in tool.inputs) {
+      let prop = tool.inputs[k];
+
+      console.log("PROP FLAG", prop.flag, k);
+      if (prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY)) {
+        continue;
+      }
+
+      let uiname = prop.uiname !== undefined ? prop.uiname : k;
+
+      prop.uiname = uiname;
+      let apikey = k.replace(/[\t ]/g, "_");
+
+      let dpath = new DataPath(apikey, apikey, prop, DataTypes.PROP);
+      st.add(dpath);
+
+      paths.push(dpath);
+
+      defineProp(k, apikey);
+    }
+
+    for (let dpath of paths) {
+      let path = "last_tool." + dpath.path;
+
+      panel.label(dpath.data.uiname);
+      panel.prop(path);
+    }
+    this.setCSS();
+
+    console.log("Building last tool settings");
+  }
+
+  update() {
+    super.update();
+    let ctx = this.ctx;
+
+    if (ctx.toolstack.length == 0) {
+      return;
+    }
+
+    let tool = ctx.toolstack[ctx.toolstack.cur];
+    if (!(LastKey in tool) || tool[LastKey] !== this._tool_id) {
+      tool[LastKey] = tool_idgen++;
+      this._tool_id = tool[LastKey];
+
+      this.rebuild();
+    }
+  }
+
+  static define() {return {
+    tagname : "last-tool-panel-x"
+  }}
+}
+UIBase.register(LastToolPanel);
+
+function aabb_overlap_area(pos1, size1, pos2, size2) {
+  let r1=0.0, r2=0.0;
+
+  for (let i=0; i<2; i++) {
+    let a1 = pos1[i], a2 = pos2[i];
+    let b1 = pos1[i] + size1[i];
+    let b2 = pos2[i] + size2[i];
+
+    if (b1 >= a2 && a1 <= b2) {
+      let r = a2 - b1;
+      
+      if (i) {
+        r2 = r;
+      } else {
+        r1 = r;
+      }
+    }
+  }
+
+  return r1*r2;
+}
+
+var Vector2$4 = Vector2, Vector3$2 = Vector3;
+var Vector4$3 = Vector4;
+
+var _cross_vec1=new Vector3$2();
+var _cross_vec2=new Vector3$2();
+const FLOAT_MIN = -1e+21;
+const FLOAT_MAX = 1e+22;
+
+var _static_grp_points4=new Array(4);
+var _static_grp_points8=new Array(8);
+
+class MinMax {
+  constructor(totaxis) {
+    if (totaxis==undefined) {
+        totaxis = 1;
+    }
+    this.totaxis = totaxis;
+    if (totaxis!=1) {
+        let cls;
+        
+        switch (totaxis) {
+          case 2:
+            cls = Vector2$4;
+            break;
+          case 3:
+            cls = Vector3$2;
+            break;
+          case 4:
+            cls = Vector4$3;
+            break;
+          default:
+            cls = Array;
+            break;
+        }
+        
+        this._min = new cls(totaxis);
+        this._max = new cls(totaxis);
+        this.min = new cls(totaxis);
+        this.max = new cls(totaxis);
+    }
+    else {
+      this.min = this.max = 0;
+      this._min = FLOAT_MAX;
+      this._max = FLOAT_MIN;
+    }
+    this.reset();
+    this._static_mr_co = new Array(this.totaxis);
+    this._static_mr_cs = new Array(this.totaxis*this.totaxis);
+  }
+  
+  load(mm) {
+    if (this.totaxis==1) {
+        this.min = mm.min;
+        this.max = mm.max;
+        this._min = mm.min;
+        this._max = mm.max;
+    }
+    else {
+      this.min = new Vector3$2(mm.min);
+      this.max = new Vector3$2(mm.max);
+      this._min = new Vector3$2(mm._min);
+      this._max = new Vector3$2(mm._max);
+    }
+  }
+  
+  reset() {
+    var totaxis=this.totaxis;
+    if (totaxis==1) {
+        this.min = this.max = 0;
+        this._min = FLOAT_MAX;
+        this._max = FLOAT_MIN;
+    }
+    else {
+      for (var i=0; i<totaxis; i++) {
+          this._min[i] = FLOAT_MAX;
+          this._max[i] = FLOAT_MIN;
+          this.min[i] = 0;
+          this.max[i] = 0;
+      }
+    }
+  }
+
+  minmax_rect(p, size) {
+    var totaxis=this.totaxis;
+    var cs=this._static_mr_cs;
+    if (totaxis==2) {
+        cs[0] = p;
+        cs[1] = [p[0]+size[0], p[1]];
+        cs[2] = [p[0]+size[0], p[1]+size[1]];
+        cs[3] = [p[0], p[1]+size[1]];
+    }
+    else 
+      if (totaxis = 3) {
+        cs[0] = p;
+        cs[1] = [p[0]+size[0], p[1], p[2]];
+        cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
+        cs[3] = [p[0], p[1]+size[0], p[2]];
+        cs[4] = [p[0], p[1], p[2]+size[2]];
+        cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
+        cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
+        cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
+    }
+    else {
+      throw "Minmax.minmax_rect has no implementation for "+totaxis+"-dimensional data";
+    }
+    for (var i=0; i<cs.length; i++) {
+        this.minmax(cs[i]);
+    }
+  }
+
+  minmax(p) {
+    var totaxis=this.totaxis;
+    
+    if (totaxis==1) {
+        this._min = this.min = Math.min(this._min, p);
+        this._max = this.max = Math.max(this._max, p);
+    } else if (totaxis == 2) {
+      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
+      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
+      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
+      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
+    } else if (totaxis == 3) {
+      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
+      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
+      this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
+      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
+      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
+      this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
+    } else {
+      for (var i=0; i<totaxis; i++) {
+          this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
+          this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
+      }
+    }
+  }
+
+  static fromSTRUCT(reader) {
+    var ret=new MinMax();
+    reader(ret);
+    return ret;
+  }
+}MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
+var $smin_aabb_isect_line_2d=new Vector2$4();
+var $ssize_aabb_isect_line_2d=new Vector2$4();
+var $sv1_aabb_isect_line_2d=new Vector2$4();
+var $ps_aabb_isect_line_2d=[new Vector2$4(), new Vector2$4(), new Vector2$4()];
+var $smax_aabb_isect_line_2d=new Vector2$4();
+var $sv2_aabb_isect_line_2d=new Vector2$4();
+
+var _llc_l1=[new Vector3$2(), new Vector3$2()];
+var _llc_l2=[new Vector3$2(), new Vector3$2()];
+var _llc_l3=[new Vector3$2(), new Vector3$2()];
+var _llc_l4=[new Vector3$2(), new Vector3$2()];
+
+var lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
+
+var _zero_cn = new Vector3$2();
+var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
+var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
+
+var _asi_v1 = new Vector3$2();
+var _asi_v2 = new Vector3$2();
+var _asi_v3 = new Vector3$2();
+var _asi_v4 = new Vector3$2();
+var _asi_v5 = new Vector3$2();
+var _asi_v6 = new Vector3$2();
+
+var _asi2d_v1 = new Vector2$4();
+var _asi2d_v2 = new Vector2$4();
+var _asi2d_v3 = new Vector2$4();
+var _asi2d_v4 = new Vector2$4();
+var _asi2d_v5 = new Vector2$4();
+var _asi2d_v6 = new Vector2$4();
+
+var $e1_normal_tri=new Vector3$2();
+var $e3_normal_tri=new Vector3$2();
+var $e2_normal_tri=new Vector3$2();
+
+var $n2_normal_quad=new Vector3$2();
+
+var _li_vi=new Vector3$2();
+
+var dt2l_v1 = new Vector2$4();
+var dt2l_v2 = new Vector2$4();
+var dt2l_v3 = new Vector2$4();
+var dt2l_v4 = new Vector2$4();
+var dt2l_v5 = new Vector2$4();
+
+var dt3l_v1 = new Vector3$2();
+var dt3l_v2 = new Vector3$2();
+var dt3l_v3 = new Vector3$2();
+var dt3l_v4 = new Vector3$2();
+var dt3l_v5 = new Vector3$2();
+
+//p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
+var _cplw_vs4 = cachering.fromConstructor(Vector4$3, 64);
+var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2$4, 64);
+
+//clip is optional, true.  clip point to lie within line segment v1->v2
+var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
+var _closest_point_rets = new cachering(function() {
+  return [0, 0];
+}, 64);
+
+var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
+
+/*given input line (a,d) and tangent t,
+  returns a circle that goes through both
+  a and d, whose normalized tangent at a is the same
+  as normalized t.
+  
+  note that t need not be normalized, this function
+  does that itself*/
+var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
+var _circ_from_line_tan_ret = new cachering(function() {
+  return [new Vector3$2(), 0];
+});
+
+var _gtc_e1=new Vector3$2();
+var _gtc_e2=new Vector3$2();
+var _gtc_e3=new Vector3$2();
+var _gtc_p1=new Vector3$2();
+var _gtc_p2=new Vector3$2();
+var _gtc_v1=new Vector3$2();
+var _gtc_v2=new Vector3$2();
+var _gtc_p12=new Vector3$2();
+var _gtc_p22=new Vector3$2();
+var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
+
+var _sh_minv=new Vector3$2();
+var _sh_maxv=new Vector3$2();
+
+var static_cent_gbw = new Vector3$2();
+
+/*
+on factor;
+
+px := rox + rnx*t;
+py := roy + rny*t;
+pz := roz + rnz*t;
+
+f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
+ff := solve(f1, t);
+on fort;
+part(ff, 1, 2);
+off fort;
+
+* */
+var _isrp_ret=new Vector3$2();
+
+class Constraint {
+  constructor(name, func, klst, params, k=1.0) {
+    this.glst = [];
+    this.klst = klst;
+    this.k = k;
+    this.params = params;
+    this.name = name;
+
+    for (let ks of klst) {
+      this.glst.push(new Float64Array(ks.length));
+    }
+
+    this.df = 0.0005;
+    this.threshold = 0.0001;
+    this.func = func;
+  }
+
+  evaluate(no_dvs=false) {
+    let r1 = this.func(this.params);
+
+    if (Math.abs(r1) < this.threshold)
+      return 0.0;
+
+    let df = this.df;
+
+    if (no_dvs)
+      return r1;
+
+    for (let i=0; i<this.klst.length; i++) {
+      let gs = this.glst[i];
+      let ks = this.klst[i];
+
+      for (let j=0; j<ks.length; j++) {
+        let orig = ks[j];
+        ks[j] += df;
+        let r2 = this.func(this.params);
+        ks[j] = orig;
+
+        gs[j] = (r2 - r1) / df;
+      }
+    }
+
+    return r1;
+  }
+}
+
+class Solver {
+
+  constructor() {
+    this.constraints = [];
+    this.gk = 0.99;
+  }
+
+  add(con) {
+    this.constraints.push(con);
+  }
+
+  solveStep(gk=this.gk) {
+    let err = 0.0;
+
+    for (let con of this.constraints) {
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0)  {
+        continue;
+      }
+
+      r1 /= totgs;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          ks[j] += -r1*gs[j]*con.k*gk;
+        }
+      }
+    }
+
+    return err;
+  }
+
+  solve(steps, gk=this.gk) {
+    let err = 0.0;
+
+    for (let i=0; i<steps; i++) {
+      err = this.solveStep(gk);
+
+      if (err < 0.01 / this.constraints.length) {
+        break;
+      }
+    }
+
+    return err;
+  }
+}
+
+var solver1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  Constraint: Constraint,
+  Solver: Solver
+});
+
+let idgen = 0;
+
+class NodeVertex extends Vector2 {
+  constructor(node, co) {
+    super(co);
+
+    this.node = node;
+    this._id = idgen++;
+    this.edges = [];
+    this._absPos = new Vector2();
+  }
+
+  get absPos() {
+    this._absPos.load(this).add(this.node.pos);
+    return this._absPos;
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+class Node {
+  constructor() {
+    this.pos = new Vector2();
+    this.vel = new Vector2();
+    this.oldpos = new Vector2();
+    this._id = idgen++;
+    this.size = new Vector2();
+    this.verts = [];
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+function copyGraph(nodes) {
+  let ret = [];
+  let idmap = {};
+
+  for (let n of nodes) {
+    let n2 = new Node();
+    n2._id = n._id;
+    n2.pos.load(n.pos);
+    n2.vel.load(n.vel);
+    n2.size.load(n.size);
+
+    n2.verts = [];
+    idmap[n2._id] = n2;
+
+    for (let v of n.verts) {
+      let v2 = new NodeVertex(n2, v);
+      v2._id = v._id;
+      idmap[v2._id] = v2;
+
+      n2.verts.push(v2);
+    }
+
+    ret.push(n2);
+  }
+
+  for (let n of nodes) {
+    for (let v of n.verts) {
+      let v2 = idmap[v._id];
+
+      for (let v3 of v.edges) {
+        v2.edges.push(idmap[v3._id]);
+      }
+    }
+  }
+
+  return ret;
+}
+
+function getCenter(nodes) {
+  let cent = new Vector2();
+
+  for (let n of nodes) {
+    cent.add(n.pos);
+  }
+
+  if (nodes.length === 0)
+    return cent;
+
+  cent.mulScalar(1.0 / nodes.length);
+
+  return cent;
+}
+
+function loadGraph(nodes, copy) {
+
+  for (let i=0; i<nodes.length; i++) {
+    nodes[i].pos.load(copy[i].pos);
+    nodes[i].oldpos.load(copy[i].oldpos);
+    nodes[i].vel.load(copy[i].vel);
+  }
+}
+
+function graphGetIslands(nodes) {
+  let islands = [];
+  let visit1 = new set();
+
+  let rec = (n, island) => {
+    island.push(n);
+    visit1.add(n);
+
+    for (let v of n.verts) {
+      for (let e of v.edges) {
+        let n2 = e.node;
+        if (n2 !== n && !visit1.has(n2)) {
+          rec(n2, island);
+        }
+      }
+    }
+  };
+
+  for (let n of nodes) {
+    if (visit1.has(n)) {
+      continue;
+    }
+
+    let island = [];
+    islands.push(island);
+    rec(n, island);
+  }
+
+  return islands;
+}
+
+function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
+  let orignodes = nodes;
+  nodes = copyGraph(nodes);
+
+  for (let n of nodes) {
+    n.pos[0] += (Math.random()-0.5)*1.0;
+    n.pos[1] += (Math.random()-0.5)*1.0;
+  }
+
+  let nodemap = {};
+  for (let n of nodes) {
+    n.vel.zero();
+    nodemap[n._id] = n;
+    for (let v of n.verts) {
+      nodemap[v._id] = v;
+    }
+  }
+
+  let visit = new set();
+  let verts = new set();
+  let isect = [];
+
+  let disableEdges = false;
+
+  function edge_c(params) {
+    let [v1, v2] = params;
+
+    if (disableEdges) return 0;
+
+    return v1.absPos.vectorDistance(v2.absPos);
+  }
+
+  let p1 = new Vector2();
+  let p2 = new Vector2();
+  let s1 = new Vector2();
+  let s2 = new Vector2();
+
+  function loadBoxes(n1, n2, margin1=margin) {
+    p1.load(n1.pos);
+    p2.load(n2.pos);
+    s1.load(n1.size);
+    s2.load(n2.size);
+
+    p1.subScalar(margin1);
+    p2.subScalar(margin1);
+    s1.addScalar(margin1*2.0);
+    s2.addScalar(margin1*2.0);
+  }
+
+  let disableArea = false;
+
+  function area_c(params) {
+    let [n1, n2] = params;
+
+    if (disableArea)
+      return 0.0;
+
+    loadBoxes(n1, n2);
+
+    let a1 = n1.size[0]*n1.size[1];
+    let a2 = n2.size[0]*n2.size[1];
+
+    return aabb_overlap_area(p1, s1, p2, s2);
+  }
+
+  let lasterr, besterr, best;
+
+  let islands = graphGetIslands(nodes);
+  let fakeVerts = [];
+  for (let island of islands) {
+    let n = island[0];
+    let fv = new NodeVertex(n);
+    fakeVerts.push(fv);
+  }
+
+  let solveStep1 = (gk=1.0) => {
+    let solver = new Solver();
+
+    isect.length = 0;
+    visit = new set();
+
+    if (fakeVerts.length > 1) {
+      for (let i=1; i<fakeVerts.length; i++) {
+        let v1 = fakeVerts[0];
+        let v2 = fakeVerts[i];
+
+        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2]);
+        con.k = 0.25;
+        solver.add(con);
+      }
+    }
+
+    for (let n1 of nodes) {
+      for (let v of n1.verts) {
+        verts.add(v);
+        for (let v2 of v.edges) {
+          //hueristic to avoid adding same constraint twice
+          if (v2._id < v._id) continue;
+
+          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2]);
+          con.k = 1.0;
+          solver.add(con);
+        }
+      }
+
+      for (let n2 of nodes) {
+        if (n1 === n2) continue;
+        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
+        if (visit.has(key)) continue;
+
+        loadBoxes(n1, n2);
+        let area = aabb_overlap_area(p1, s1, p2, s2);
+
+        if (area > 0.01) {
+          isect.push([n1, n2]);
+          visit.add(key);
+        }
+      }
+
+      for (let [n1, n2] of isect) {
+        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
+        solver.add(con);
+        con.k = 1.0;
+      }
+    }
+
+    return solver;
+  };
+
+  let i = 1;
+  let solveStep = (gk=0.5) => {
+    let solver = solveStep1();
+
+    if (i % 40 === 0.0) {
+      let c1 = getCenter(nodes);
+
+      let rfac = 1000.0;
+
+      if (best) loadGraph(nodes, best);
+
+      for (let n of nodes) {
+        n.pos[0] += (Math.random() - 0.5) * rfac;
+        n.pos[1] += (Math.random() - 0.5) * rfac;
+        n.vel.zero();
+      }
+
+      let c2 = getCenter(nodes);
+      c1.sub(c2);
+
+      for (let n of nodes) {
+        n.pos.add(c1);
+      }
+    }
+
+    let err = 1e17;
+
+    for (let n of nodes) {
+      n.oldpos.load(n.pos);
+      n.pos.addFac(n.vel, 0.5);
+    }
+
+    disableEdges = false;
+    disableArea = true;
+    solver.solve(1, gk);
+
+    //solve so boxes don't overlap
+    disableEdges = true;
+    disableArea = false;
+
+    for (let j=0; j<10; j++) {
+      solver = solveStep1();
+      err = solver.solve(10, gk);
+    }
+
+    for (let n of nodes) {
+      n.vel.load(n.pos).sub(n.oldpos);
+    }
+
+    //get error from edge constraints
+
+    disableEdges = false;
+    disableArea = true;
+
+    err = 0.0;
+    for (let con of solver.constraints) {
+      err += con.evaluate(true);
+    }
+
+    disableEdges = false;
+    disableArea = false;
+
+    /*
+    loadGraph(orignodes, nodes);
+    if (updateCb) {
+      updateCb();
+    }//*/
+
+    lasterr = err;
+
+    let add = Math.random()*besterr*Math.exp(-i*0.1);
+
+    if (besterr === undefined || err < besterr+add) {
+      best = copyGraph(nodes);
+      besterr = err;
+    }
+
+    i++;
+
+    return err;
+  };
+
+
+  for (let j=0; j<steps; j++) {
+    solveStep();
+  }
+
+  if (updateCb) {
+    if (nodes._timer !== undefined) {
+      window.clearInterval(nodes._timer);
+    }
+
+    nodes._timer = window.setInterval(() => {
+      let time = time_ms();
+
+      while (time_ms() - time < 50) {
+        let err = solveStep();
+      }
+
+      if (cconst.DEBUG.boxPacker) {
+        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
+      }
+
+      if (best) loadGraph(orignodes, best);
+
+      if (updateCb() === false) {
+        clearInterval(nodes._timer);
+        return;
+      }
+    }, 100);
+
+    let timer = nodes._timer;
+
+    return {
+      stop : () => {
+        if (best) loadGraph(nodes, best);
+
+        window.clearInterval(timer);
+        nodes._timer = undefined;
+      }
+    }
+  }
+
+  loadGraph(orignodes, best ? best : nodes);
+}
+
+let Vector2$5 = Vector2,
     UndoFlags$1 = UndoFlags;
 //import {keymap} from './events';
 
@@ -24414,7 +25464,7 @@ class AreaResizeTool extends ToolBase {
     
     super(screen);
     
-    this.start_mpos = new Vector2$4(mpos);
+    this.start_mpos = new Vector2$5(mpos);
 
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
@@ -24495,7 +25545,7 @@ class AreaResizeTool extends ToolBase {
     }
   }
   on_mousemove(e) {
-    let mpos = new Vector2$4([e.x, e.y]);
+    let mpos = new Vector2$5([e.x, e.y]);
     
     mpos.sub(this.start_mpos);
     
@@ -24513,8 +25563,8 @@ class AreaResizeTool extends ToolBase {
     for (let border of borders) {
       bad = bad || !this.screen.isBorderMovable(border);
 
-      border.oldv1 = new Vector2$4(border.v1);
-      border.oldv2 = new Vector2$4(border.v2);
+      border.oldv1 = new Vector2$5(border.v1);
+      border.oldv2 = new Vector2$5(border.v2);
     }
 
     if (bad) {
@@ -24724,7 +25774,7 @@ class AreaDragTool extends ToolBase {
     this.boxes.active = undefined;
 
     this.sarea = sarea;
-    this.start_mpos = new Vector2$4(mpos);
+    this.start_mpos = new Vector2$5(mpos);
     this.screen = screen;
   }
   
@@ -25202,279 +26252,6 @@ class ToolTipViewer extends ToolBase {
     e.stopPropagation();
   }
 }
-
-function aabb_overlap_area(pos1, size1, pos2, size2) {
-  let r1=0.0, r2=0.0;
-
-  for (let i=0; i<2; i++) {
-    let a1 = pos1[i], a2 = pos2[i];
-    let b1 = pos1[i] + size1[i];
-    let b2 = pos2[i] + size2[i];
-
-    if (b1 >= a2 && a1 <= b2) {
-      let r = a2 - b1;
-      
-      if (i) {
-        r2 = r;
-      } else {
-        r1 = r;
-      }
-    }
-  }
-
-  return r1*r2;
-}
-
-var Vector2$5 = Vector2, Vector3$2 = Vector3;
-var Vector4$3 = Vector4;
-
-var _cross_vec1=new Vector3$2();
-var _cross_vec2=new Vector3$2();
-const FLOAT_MIN = -1e+21;
-const FLOAT_MAX = 1e+22;
-
-var _static_grp_points4=new Array(4);
-var _static_grp_points8=new Array(8);
-
-class MinMax {
-  constructor(totaxis) {
-    if (totaxis==undefined) {
-        totaxis = 1;
-    }
-    this.totaxis = totaxis;
-    if (totaxis!=1) {
-        let cls;
-        
-        switch (totaxis) {
-          case 2:
-            cls = Vector2$5;
-            break;
-          case 3:
-            cls = Vector3$2;
-            break;
-          case 4:
-            cls = Vector4$3;
-            break;
-          default:
-            cls = Array;
-            break;
-        }
-        
-        this._min = new cls(totaxis);
-        this._max = new cls(totaxis);
-        this.min = new cls(totaxis);
-        this.max = new cls(totaxis);
-    }
-    else {
-      this.min = this.max = 0;
-      this._min = FLOAT_MAX;
-      this._max = FLOAT_MIN;
-    }
-    this.reset();
-    this._static_mr_co = new Array(this.totaxis);
-    this._static_mr_cs = new Array(this.totaxis*this.totaxis);
-  }
-  
-  load(mm) {
-    if (this.totaxis==1) {
-        this.min = mm.min;
-        this.max = mm.max;
-        this._min = mm.min;
-        this._max = mm.max;
-    }
-    else {
-      this.min = new Vector3$2(mm.min);
-      this.max = new Vector3$2(mm.max);
-      this._min = new Vector3$2(mm._min);
-      this._max = new Vector3$2(mm._max);
-    }
-  }
-  
-  reset() {
-    var totaxis=this.totaxis;
-    if (totaxis==1) {
-        this.min = this.max = 0;
-        this._min = FLOAT_MAX;
-        this._max = FLOAT_MIN;
-    }
-    else {
-      for (var i=0; i<totaxis; i++) {
-          this._min[i] = FLOAT_MAX;
-          this._max[i] = FLOAT_MIN;
-          this.min[i] = 0;
-          this.max[i] = 0;
-      }
-    }
-  }
-
-  minmax_rect(p, size) {
-    var totaxis=this.totaxis;
-    var cs=this._static_mr_cs;
-    if (totaxis==2) {
-        cs[0] = p;
-        cs[1] = [p[0]+size[0], p[1]];
-        cs[2] = [p[0]+size[0], p[1]+size[1]];
-        cs[3] = [p[0], p[1]+size[1]];
-    }
-    else 
-      if (totaxis = 3) {
-        cs[0] = p;
-        cs[1] = [p[0]+size[0], p[1], p[2]];
-        cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
-        cs[3] = [p[0], p[1]+size[0], p[2]];
-        cs[4] = [p[0], p[1], p[2]+size[2]];
-        cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
-        cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
-        cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
-    }
-    else {
-      throw "Minmax.minmax_rect has no implementation for "+totaxis+"-dimensional data";
-    }
-    for (var i=0; i<cs.length; i++) {
-        this.minmax(cs[i]);
-    }
-  }
-
-  minmax(p) {
-    var totaxis=this.totaxis;
-    
-    if (totaxis==1) {
-        this._min = this.min = Math.min(this._min, p);
-        this._max = this.max = Math.max(this._max, p);
-    } else if (totaxis == 2) {
-      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
-      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
-      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
-      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-    } else if (totaxis == 3) {
-      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
-      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
-      this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
-      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
-      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-      this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
-    } else {
-      for (var i=0; i<totaxis; i++) {
-          this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
-          this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
-      }
-    }
-  }
-
-  static fromSTRUCT(reader) {
-    var ret=new MinMax();
-    reader(ret);
-    return ret;
-  }
-}MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
-var $smin_aabb_isect_line_2d=new Vector2$5();
-var $ssize_aabb_isect_line_2d=new Vector2$5();
-var $sv1_aabb_isect_line_2d=new Vector2$5();
-var $ps_aabb_isect_line_2d=[new Vector2$5(), new Vector2$5(), new Vector2$5()];
-var $smax_aabb_isect_line_2d=new Vector2$5();
-var $sv2_aabb_isect_line_2d=new Vector2$5();
-
-var _llc_l1=[new Vector3$2(), new Vector3$2()];
-var _llc_l2=[new Vector3$2(), new Vector3$2()];
-var _llc_l3=[new Vector3$2(), new Vector3$2()];
-var _llc_l4=[new Vector3$2(), new Vector3$2()];
-
-var lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
-
-var _zero_cn = new Vector3$2();
-var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
-var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
-
-var _asi_v1 = new Vector3$2();
-var _asi_v2 = new Vector3$2();
-var _asi_v3 = new Vector3$2();
-var _asi_v4 = new Vector3$2();
-var _asi_v5 = new Vector3$2();
-var _asi_v6 = new Vector3$2();
-
-var _asi2d_v1 = new Vector2$5();
-var _asi2d_v2 = new Vector2$5();
-var _asi2d_v3 = new Vector2$5();
-var _asi2d_v4 = new Vector2$5();
-var _asi2d_v5 = new Vector2$5();
-var _asi2d_v6 = new Vector2$5();
-
-var $e1_normal_tri=new Vector3$2();
-var $e3_normal_tri=new Vector3$2();
-var $e2_normal_tri=new Vector3$2();
-
-var $n2_normal_quad=new Vector3$2();
-
-var _li_vi=new Vector3$2();
-
-var dt2l_v1 = new Vector2$5();
-var dt2l_v2 = new Vector2$5();
-var dt2l_v3 = new Vector2$5();
-var dt2l_v4 = new Vector2$5();
-var dt2l_v5 = new Vector2$5();
-
-var dt3l_v1 = new Vector3$2();
-var dt3l_v2 = new Vector3$2();
-var dt3l_v3 = new Vector3$2();
-var dt3l_v4 = new Vector3$2();
-var dt3l_v5 = new Vector3$2();
-
-//p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
-var _cplw_vs4 = cachering.fromConstructor(Vector4$3, 64);
-var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$5, 64);
-
-//clip is optional, true.  clip point to lie within line segment v1->v2
-var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
-var _closest_point_rets = new cachering(function() {
-  return [0, 0];
-}, 64);
-
-var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
-
-/*given input line (a,d) and tangent t,
-  returns a circle that goes through both
-  a and d, whose normalized tangent at a is the same
-  as normalized t.
-  
-  note that t need not be normalized, this function
-  does that itself*/
-var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
-var _circ_from_line_tan_ret = new cachering(function() {
-  return [new Vector3$2(), 0];
-});
-
-var _gtc_e1=new Vector3$2();
-var _gtc_e2=new Vector3$2();
-var _gtc_e3=new Vector3$2();
-var _gtc_p1=new Vector3$2();
-var _gtc_p2=new Vector3$2();
-var _gtc_v1=new Vector3$2();
-var _gtc_v2=new Vector3$2();
-var _gtc_p12=new Vector3$2();
-var _gtc_p22=new Vector3$2();
-var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
-
-var _sh_minv=new Vector3$2();
-var _sh_maxv=new Vector3$2();
-
-var static_cent_gbw = new Vector3$2();
-
-/*
-on factor;
-
-px := rox + rnx*t;
-py := roy + rny*t;
-pz := roz + rnz*t;
-
-f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
-ff := solve(f1, t);
-on fort;
-part(ff, 1, 2);
-off fort;
-
-* */
-var _isrp_ret=new Vector3$2();
 
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
@@ -27323,6 +28100,28 @@ class ScreenArea extends UIBase {
     return this.area !== undefined ? this.area.maxSize : [undefined, undefined];
   }
 
+  bringToFront() {
+    let screen = this.getScreen();
+
+    this.remove(false);
+    screen.appendChild(this);
+
+    let zindex = 0;
+
+    if (screen.style["z-index"]) {
+      zindex = parseInt(screen.style["z-index"]) + 1;
+    }
+
+    for (let sarea of screen.sareas) {
+      let zindex = sarea.style["z-index"];
+      if (sarea.style["z-index"]) {
+        zindex = Math.max(zindex, parseInt(sarea.style["z-index"]) + 1);
+      }
+    }
+
+    this.style["z-index"] = zindex;
+  }
+
   _side(border) {
     let ret = this._borders.indexOf(border);
     if (ret < 0) {
@@ -27764,7 +28563,10 @@ class ScreenArea extends UIBase {
       let moved = screen ? screen.checkAreaConstraint(this, true) : 0;
       //*
       if (moved) {
-        console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+        if (exports.DEBUG.areaConstraintSolver) {
+          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+        }
+
         screen.solveAreaConstraints();
         screen.regenBorders();
         this.on_resize(oldsize);
@@ -28745,6 +29547,44 @@ class ColorPicker$1 extends ColumnFrame {
 
 UIBase$e.register(ColorPicker$1);
 
+function makePopupArea(area_class, screen, args={}) {
+  let sarea = document.createElement("screenarea-x");
+
+  let width = args.width || (screen.size[0]*0.7);
+  let height = args.height || (screen.size[1]*0.7);
+  let addEscapeKeyHandler = args.addEscapeKeyHandler !== undefined ? args.addEscapeKeyHandler : true;
+
+  sarea.ctx = screen.ctx;
+  sarea.size[0] = width;
+  sarea.size[1] = height;
+  sarea.pos[0] = 100;
+  sarea.pos[1] = 100;
+
+  sarea.pos[0] = Math.min(sarea.pos[0], screen.size[0] - sarea.size[0] - 2);
+  sarea.pos[1] = Math.min(sarea.pos[1], screen.size[1] - sarea.size[1] - 2);
+
+  sarea.switch_editor(area_class);
+
+  sarea.style["background-color"] = sarea.getDefault("DefaultPanelBG");
+
+  sarea.area.flag |= AreaFlags.FLOATING | AreaFlags.INDEPENDENT;
+
+  screen.appendChild(sarea);
+  sarea.setCSS();
+
+  if (addEscapeKeyHandler) {
+    sarea.on_keydown = (e) => {
+      if (e.keyCode === keymap.Escape) {
+        screen.removeArea(sarea);
+      }
+    };
+  }
+
+  sarea.bringToFront();
+
+  return sarea;
+}
+
 let Area$1 = Area;
 
 startMenuEventWrangling();
@@ -29173,6 +30013,10 @@ class Screen$1 extends UIBase {
 
   //XXX look at if this is referenced anywhere
   save() {
+  }
+
+  popupArea(area_class) {
+    return makePopupArea(area_class, this);
   }
 
   remove(trigger_destroy = true) {
@@ -29650,7 +30494,7 @@ class Screen$1 extends UIBase {
           push(AREA_CTX_POP);
         }
 
-        if (n !== this2 && n instanceof UIBase$f) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$f) {
           n._ctx = ctx;
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
@@ -29936,6 +30780,8 @@ class Screen$1 extends UIBase {
     this.screenverts.length = 0;
 
     for (let sarea of this.sareas) {
+      if (sarea.hidden) continue;
+
       sarea.makeBorders(this);
     }
 
@@ -30099,7 +30945,8 @@ class Screen$1 extends UIBase {
         this.moveBorder(b1, dh);
       } else if (bad === 3) {
         //both borders are bad, yet we need to move anyway. . .
-        console.warn("got case of two borders being bad");
+        //console.warn("got case of two borders being bad");
+
         if (!this.isBorderOuter(b1)) {
           this.moveBorder(b1, dh);
         } else if (!this.isBorderOuter(b2)) {
@@ -30405,6 +31252,8 @@ class Screen$1 extends UIBase {
       repeat = false;
 
       for (let sarea of this.sareas) {
+        if (sarea.hidden) continue;
+
         repeat = repeat || this.checkAreaConstraint(sarea);
       }
 
@@ -30423,7 +31272,9 @@ class Screen$1 extends UIBase {
 
     if (found) {
       this.snapScreenVerts(snapArgument);
-      console.log("enforced area constraint");
+      if (exports.DEBUG.areaConstraintSolver) {
+        console.log("enforced area constraint");
+      }
       this._recalcAABB();
       this.setCSS();
     }
@@ -30461,6 +31312,8 @@ class Screen$1 extends UIBase {
 
 
     for (let sarea of this.sareas) {
+      if (sarea.hidden) continue;
+
       let old = new Vector2$8(sarea.size);
       sarea.loadFromVerts();
       sarea.on_resize(old);
@@ -31232,7 +32085,7 @@ class LockedContext {
 }
 
 let next_key = {};
-let idgen = 1;
+let idgen$1 = 1;
 
 class Context {
   constructor(appstate) {
@@ -31477,7 +32330,7 @@ class Context {
 
   pushOverlay(overlay) {
     if (!overlay.hasOwnProperty(Symbol.ContextID)) {
-      overlay[Symbol.ContextID] = idgen++;
+      overlay[Symbol.ContextID] = idgen$1++;
     }
 
     let keys = new Set();
@@ -31604,11 +32457,12 @@ if (!test()) {
   throw new Error("Context test failed");
 }
 
+let solver = solver1;
 let util = util1;
 let vectormath = vectormath1;
 let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
-let cconst = exports;
+let cconst$1 = exports;
 
-export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DPropertyIF, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypes, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FlagPropertyIF, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumPropertyIF, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PanelFrame, PropClasses, PropFlags, PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringPropertyIF, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolPropertyIF, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, binomial, cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeGenEnum, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, startEvents, startMenuEventWrangling, tab_idgen, test, theme, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DPropertyIF, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypes, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FlagPropertyIF, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Node, NodeVertex, NumProperty, NumPropertyIF, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PanelFrame, PropClasses, PropFlags, PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringPropertyIF, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolPropertyIF, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, binomial, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeGenEnum, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

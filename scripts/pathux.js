@@ -15,6 +15,10 @@ export * from './ui_listbox.js';
 export * from './ui_menu.js';
 export * from './ui_table.js';
 export * from './ui_lasttool.js';
+export * from './graphpack.js';
+import * as solver1 from './solver.js';
+
+export let solver = solver1;
 
 export * from './FrameManager.js';
 import * as util1 from './util.js';
