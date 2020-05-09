@@ -1,4 +1,5 @@
 import * as util from "./util.js";
+import cconst from './const.js';
 
 export let modalstack = [];
 
@@ -45,7 +46,9 @@ export function copyEvent(e) {
 }
 
 export function pushModalLight(obj) {
-  console.warn("pushModalLight");
+  if (cconst.DEBUG.modalEvents) {
+    console.warn("pushModalLight");
+  }
 
   let keys = new Set([
     "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
@@ -168,7 +171,9 @@ export function pushModalLight(obj) {
 }
 
 export function popModalLight(state) {
-  console.warn("popModalLight");
+  if (cconst.DEBUG.modalEvents) {
+    console.warn("popModalLight");
+  }
 
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");

@@ -4,6 +4,8 @@ let exports = {
     screenborders: false,
     allBordersMovable: false,
     doOnce: false,
+    modalEvents : true,
+    areaConstraintSolver : false,
     /*
     customWindowSize: {
       width: 512, height: 512

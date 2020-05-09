@@ -179,6 +179,16 @@ export class DataPath {
     return this;
   }
 
+  baseUnit(unit) {
+    this.data.setBaseUnit(unit);
+    return this;
+  }
+
+  displayUnit(unit) {
+    this.data.setDisplayUnit(unit);
+    return this;
+  }
+
   range(min, max) {
     this.data.setRange(min, max);
     return this;
@@ -643,6 +653,7 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 let _dummypath = new DataPath();
 
 let DummyIntProperty = new IntProperty();
+const CLS_API_KEY = "__dp_map_id";
 
 export class DataAPI extends ModelInterface {
   constructor() {
@@ -656,6 +667,10 @@ export class DataAPI extends ModelInterface {
 
   setRoot(sdef) {
     this.rootContextStruct = sdef;
+  }
+
+  hasStruct(cls) {
+    return cls.hasOwnProperty(CLS_API_KEY);
   }
 
   getStruct(cls) {
@@ -692,7 +707,7 @@ export class DataAPI extends ModelInterface {
 
   _addClass(cls, dstruct) {
     let key =  _map_struct_idgen++;
-    cls.__dp_map_id = key;
+    cls[CLS_API_KEY] = key;
 
     _map_structs[key] = dstruct;
   }
@@ -700,10 +715,10 @@ export class DataAPI extends ModelInterface {
   mapStruct(cls, auto_create = true) {
     let key;
 
-    if (!cls.hasOwnProperty("__dp_map_id")) {
+    if (!cls.hasOwnProperty(CLS_API_KEY)) {
       key = undefined;
     } else {
-      key = cls.__dp_map_id;
+      key = cls[CLS_API_KEY];
     }
 
     if (key === undefined && auto_create) {

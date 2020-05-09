@@ -157,7 +157,9 @@ export class ToolProperty extends ToolPropertyIF {
     b.description = this.description;
     b.flag = this.flag;
     b.icon = this.icon;
+    b.baseUnit = this.baseUnit;
     b.subtype = this.subtype;
+    b.displayUnit = this.displayUnit;
 
     for (let k in this.callbacks) {
       b.callbacks[k] = this.callbacks[k];
@@ -185,6 +187,14 @@ export class ToolProperty extends ToolPropertyIF {
     
     this.range = [min, max];
     return this;
+  }
+
+  setBaseUnit(unit) {
+    this.baseUnit = unit;
+  }
+
+  setDisplayUnit(unit) {
+    this.displayUnit = unit;
   }
 
   setUIRange(min, max) {
@@ -635,7 +645,7 @@ export class FlagProperty extends EnumProperty {
     this.data = bitmask;
 
     //do not trigger EnumProperty's setValue
-    super.super.setValue(bitmask);
+    super.setValue(bitmask);
     //ToolProperty.prototype.setValue.call(this, bitmask);
     return this;
   }

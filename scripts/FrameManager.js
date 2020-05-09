@@ -27,6 +27,7 @@ import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameMana
 export {ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
 
 import * as FrameManager_mesh from './FrameManager_mesh.js';
+import {makePopupArea} from "./ui_dialog.js";
 
 let Area = ScreenArea.Area;
 
@@ -465,6 +466,10 @@ export class Screen extends ui_base.UIBase {
 
   //XXX look at if this is referenced anywhere
   save() {
+  }
+
+  popupArea(area_class) {
+    return makePopupArea(area_class, this);
   }
 
   remove(trigger_destroy = true) {
@@ -947,7 +952,7 @@ export class Screen extends ui_base.UIBase {
           push(AREA_CTX_POP);
         }
 
-        if (n !== this2 && n instanceof UIBase) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase) {
           n._ctx = ctx;
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
@@ -1237,6 +1242,8 @@ export class Screen extends ui_base.UIBase {
     this.screenverts.length = 0;
 
     for (let sarea of this.sareas) {
+      if (sarea.hidden) continue;
+
       sarea.makeBorders(this);
     }
 
@@ -1400,7 +1407,8 @@ export class Screen extends ui_base.UIBase {
         this.moveBorder(b1, dh);
       } else if (bad === 3) {
         //both borders are bad, yet we need to move anyway. . .
-        console.warn("got case of two borders being bad");
+        //console.warn("got case of two borders being bad");
+
         if (!this.isBorderOuter(b1)) {
           this.moveBorder(b1, dh);
         } else if (!this.isBorderOuter(b2)) {
@@ -1710,6 +1718,8 @@ export class Screen extends ui_base.UIBase {
       repeat = false;
 
       for (let sarea of this.sareas) {
+        if (sarea.hidden) continue;
+
         repeat = repeat || this.checkAreaConstraint(sarea);
       }
 
@@ -1728,7 +1738,9 @@ export class Screen extends ui_base.UIBase {
 
     if (found) {
       this.snapScreenVerts(snapArgument);
-      console.log("enforced area constraint");
+      if (cconst.DEBUG.areaConstraintSolver) {
+        console.log("enforced area constraint");
+      }
       this._recalcAABB();
       this.setCSS();
     }
@@ -1766,6 +1778,8 @@ export class Screen extends ui_base.UIBase {
 
 
     for (let sarea of this.sareas) {
+      if (sarea.hidden) continue;
+
       let old = new Vector2(sarea.size);
       sarea.loadFromVerts();
       sarea.on_resize(old);

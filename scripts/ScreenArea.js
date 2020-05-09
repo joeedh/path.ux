@@ -7,6 +7,7 @@ import * as ui from './ui.js';
 import * as ui_noteframe from './ui_noteframe.js';
 //import * as nstructjs from './struct.js';
 import {haveModal} from './simple_events.js';
+import cconst from './const.js';
 
 import './struct.js';
 
@@ -708,6 +709,28 @@ export class ScreenArea extends ui_base.UIBase {
     return this.area !== undefined ? this.area.maxSize : [undefined, undefined];
   }
 
+  bringToFront() {
+    let screen = this.getScreen();
+
+    this.remove(false);
+    screen.appendChild(this);
+
+    let zindex = 0;
+
+    if (screen.style["z-index"]) {
+      zindex = parseInt(screen.style["z-index"]) + 1;
+    }
+
+    for (let sarea of screen.sareas) {
+      let zindex = sarea.style["z-index"];
+      if (sarea.style["z-index"]) {
+        zindex = Math.max(zindex, parseInt(sarea.style["z-index"]) + 1);
+      }
+    }
+
+    this.style["z-index"] = zindex;
+  }
+
   _side(border) {
     let ret = this._borders.indexOf(border);
     if (ret < 0) {
@@ -1149,7 +1172,10 @@ export class ScreenArea extends ui_base.UIBase {
       let moved = screen ? screen.checkAreaConstraint(this, true) : 0;
       //*
       if (moved) {
-        console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+        if (cconst.DEBUG.areaConstraintSolver) {
+          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+        }
+
         screen.solveAreaConstraints();
         screen.regenBorders();
         this.on_resize(oldsize);

@@ -25,9 +25,13 @@ let UIBase = ui_base.UIBase,
 
 let parsepx = ui_base.parsepx;
 
+import * as units from './units.js';
+
 export class NumSliderSimple extends UIBase {
   constructor() {
     super();
+
+    this.baseUnit = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -468,6 +472,7 @@ export class NumSliderSimple2 extends ColumnFrame {
     this.isInt = false;
     this._lock_textbox = false;
     this.labelOnTop = undefined;
+    this.baseUnit = undefined;
 
     this._last_label_on_top = undefined;
 
@@ -544,7 +549,8 @@ export class NumSliderSimple2 extends ColumnFrame {
         return;
       } else {
         textbox.flash("green");
-        let f = parseFloat(text);
+
+        let f = units.parseValue(text, this.baseUnit);
 
         if (isNaN(f)) {
           this.flash("red");
@@ -604,7 +610,8 @@ export class NumSliderSimple2 extends ColumnFrame {
     if (this._lock_textbox > 0)
       return;
 
-    this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+    //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+    this.textbox.text = units.buildString(this._value, this.baseUnit, this.decimalPlaces);
     this.textbox.update();
   }
 
@@ -662,10 +669,24 @@ export class NumSliderSimple2 extends ColumnFrame {
     }
   }
 
+  updateDataPath() {
+    if (!this.ctx || !this.getAttribute("datapath")) {
+      return;
+    }
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"))
+
+    if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
+      this.baseUnit = prop.baseUnit;
+      this.slider.baseUnit = prop.baseUnit;
+    }
+  }
+
   update() {
     this.updateLabelOnTop();
-
     super.update();
+
+    this.updateDataPath();
 
     if (this.hasAttribute("integer")) {
       this.isInt = true;
