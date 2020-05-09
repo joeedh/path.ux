@@ -786,6 +786,7 @@ export class UIBase extends HTMLElement {
       if (n instanceof nodeclass) {
         let ok;
         ok = n.visibleToPick;
+        ok = ok && !n.hidden;
         ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
 
         return ok;
@@ -815,6 +816,7 @@ export class UIBase extends HTMLElement {
             ok = ok && n.visibleToPick;
           }
 
+          ok = ok && !n.hidden;
           ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
           ok = ok && (retzindex === undefined || zindex >= retzindex);
 
