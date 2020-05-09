@@ -8,7 +8,7 @@ import {Constraint, Solver} from './solver.js';
 
 let idgen = 0;
 
-export class NodeVertex extends Vector2 {
+export class PackNodeVertex extends Vector2 {
   constructor(node, co) {
     super(co);
 
@@ -28,7 +28,7 @@ export class NodeVertex extends Vector2 {
   }
 }
 
-export class Node {
+export class PackNode {
   constructor() {
     this.pos = new Vector2();
     this.vel = new Vector2();
@@ -48,7 +48,7 @@ function copyGraph(nodes) {
   let idmap = {};
 
   for (let n of nodes) {
-    let n2 = new Node();
+    let n2 = new PackNode();
     n2._id = n._id;
     n2.pos.load(n.pos);
     n2.vel.load(n.vel);
@@ -58,7 +58,7 @@ function copyGraph(nodes) {
     idmap[n2._id] = n2;
 
     for (let v of n.verts) {
-      let v2 = new NodeVertex(n2, v);
+      let v2 = new PackNodeVertex(n2, v);
       v2._id = v._id;
       idmap[v2._id] = v2;
 
@@ -142,8 +142,8 @@ export function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   nodes = copyGraph(nodes);
 
   for (let n of nodes) {
-    n.pos[0] += (Math.random()-0.5)*1.0;
-    n.pos[1] += (Math.random()-0.5)*1.0;
+    n.pos[0] += (Math.random()-0.5)*5.0;
+    n.pos[1] += (Math.random()-0.5)*5.0;
   }
 
   let nodemap = {};
@@ -210,7 +210,7 @@ export function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   let fakeVerts = [];
   for (let island of islands) {
     let n = island[0];
-    let fv = new NodeVertex(n);
+    let fv = new PackNodeVertex(n);
     fakeVerts.push(fv);
   }
 
@@ -355,6 +355,8 @@ export function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
     solveStep();
   }
 
+  loadGraph(orignodes, best ? best : nodes);
+
   if (updateCb) {
     if (nodes._timer !== undefined) {
       window.clearInterval(nodes._timer);
@@ -390,6 +392,4 @@ export function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
       }
     }
   }
-
-  loadGraph(orignodes, best ? best : nodes);
 }

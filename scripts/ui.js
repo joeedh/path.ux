@@ -26,6 +26,7 @@ let Vector2 = vectormath.Vector2,
 
 export const SimpleContext = ui_base.SimpleContext;
 export const DataPathError = ui_base.DataPathError;
+import cconst from './const.js';
 
 var list = function list(iter) {
   let ret = [];
@@ -807,7 +808,7 @@ export class Container extends ui_base.UIBase {
     let rdef = this.ctx.api.resolvePath(this.ctx, path, true);
 
     if (rdef === undefined || rdef.prop === undefined) {
-      console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path));
+      console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path, true));
       return;
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
@@ -972,7 +973,7 @@ export class Container extends ui_base.UIBase {
     let prop;
 
     if (path !== undefined) {
-      prop = this.ctx.api.resolvePath(this.ctx, path);
+      prop = this.ctx.api.resolvePath(this.ctx, path, true);
 
       if (prop !== undefined)
         prop = prop.prop;
@@ -1069,7 +1070,7 @@ export class Container extends ui_base.UIBase {
     let has_path = path !== undefined;
 
     if (path !== undefined && prop === undefined) {
-      prop = this.ctx.api.resolvePath(this.ctx, path);
+      prop = this.ctx.api.resolvePath(this.ctx, path, true);
 
       if (prop !== undefined)
         prop = prop.prop;
@@ -1192,7 +1193,7 @@ export class Container extends ui_base.UIBase {
         ret.prop.addIcons(iconmap)
       }
     } else {
-      let res = this.ctx.api.resolvePath(this.ctx, path);
+      let res = this.ctx.api.resolvePath(this.ctx, path, true);
 
       if (res !== undefined) {
         ret.prop = res.prop;
@@ -1244,7 +1245,7 @@ export class Container extends ui_base.UIBase {
     let ret;
 
     if (inpath) {
-      let rdef = this.ctx.api.resolvePath(this.ctx, inpath);
+      let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags.SIMPLE_SLIDER)) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       }

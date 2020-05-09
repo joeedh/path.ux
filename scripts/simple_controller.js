@@ -5,6 +5,8 @@ import {ToolOp, UndoFlags, ToolFlags} from "./simple_toolsys.js";
 import {Vec2Property, Vec3Property, Vec4Property, PropTypes, PropFlags} from './toolprop.js';
 import * as toolprop_abstract from './toolprop_abstract.js';
 import * as util from './util.js';
+import cconst from './const.js';
+
 
 let PUTLParseError = parseutil.PUTLParseError;
 
@@ -806,6 +808,10 @@ export class DataAPI extends ModelInterface {
     } catch (error) {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
+        util.print_stack(error);
+      }
+
+      if (cconst.DEBUG.datapaths) {
         util.print_stack(error);
       }
 

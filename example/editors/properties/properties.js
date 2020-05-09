@@ -1,5 +1,5 @@
 import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
-        Node, NodeVertex, Vector2, graphPack} from '../../pathux.js';
+        PackNode, PackNodeVertex, Vector2, graphPack} from '../../pathux.js';
 
 import {Editor} from "../editor_base.js";
 
@@ -67,7 +67,7 @@ export class PropsEditor extends Editor {
     size = Math.sqrt(size)*0.75;
 
     for (let i=0; i<count; i++) {
-      let n = new Node();
+      let n = new PackNode();
       n.pos[0] = 0;
       n.pos[1] = 0;
 
@@ -80,7 +80,7 @@ export class PropsEditor extends Editor {
         let y = 0, socksize = Math.min(20, n.size[1]/scount);
 
         for (let j=0; j<scount; j++) {
-          let v = new NodeVertex(n, [x, y]);
+          let v = new PackNodeVertex(n, [x, y]);
           v.side = i;
           n.verts.push(v);
 

@@ -6,6 +6,8 @@ let exports = {
     doOnce: false,
     modalEvents : true,
     areaConstraintSolver : false,
+    datapaths : false,
+
     /*
     customWindowSize: {
       width: 512, height: 512
