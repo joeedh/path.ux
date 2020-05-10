@@ -1503,6 +1503,8 @@ vec2 {
 `;
 nstructjs.manager.add_class(Vector2);
 
+let _quat_vs3_temps = util.cachering.fromConstructor(Vector3, 64);
+
 export class Quat extends Vector4 {
   makeUnitQuat() {
     this[0] = 1.0;
@@ -1683,7 +1685,7 @@ export class Quat extends Vector4 {
   }
 
   axisAngleToQuat(axis, angle) {
-    var nor=new Vector3(axis);
+    let nor = _quat_vs3_temps.next().load(axis);
     nor.normalize();
 
     if (nor.dot(nor) != 0.0) {

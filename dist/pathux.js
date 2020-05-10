@@ -64,6 +64,29 @@ window.list = function list(iter) {
   return ret;
 };
 
+function ArrayIter(array) {
+  this.array = array;
+  this.i = 0;
+  this.ret = {done : false, value : undefined};
+}
+
+ArrayIter.prototype[Symbol.iterator] = function() {
+  return this;
+};
+
+ArrayIter.prototype.next = function() {
+  var ret = this.ret;
+  
+  if (this.i >= this.array.length) {
+    ret.done = true;
+    ret.value = undefined;
+    return ret;
+  }
+  
+  ret.value = this.array[this.i++];
+  return ret;
+};
+
 //XXX surely browser vendors have fixed this by now. . .
 /*Override array iterator to not allocate too much*/
 
@@ -148,6 +171,9 @@ Number.prototype[Symbol.keystr] = Boolean.prototype[Symbol.keystr] = function() 
         //the closure below.
         define([], factory);
     } else {
+      function getGlobal() {
+        return this;
+      }
       
       //Browser globals case. Just assign the
       //result to a property on the global.
@@ -601,6 +627,7 @@ define("../node_modules/almond/almond", function(){});
 
 //zebra-style class system, see zebkit.org
 define('struct_typesystem',[],function() {
+  "use strict";
   
   var exports = {};
   
@@ -820,10 +847,24 @@ define('struct_typesystem',[],function() {
 define('struct_util',[
   "struct_typesystem"
 ], function(struct_typesystem) {
+  "use strict";
   
   var Class = struct_typesystem.Class;
   
   var exports = {};
+  var _o_basic_types = {"String" : 0, "Number" : 0, "Array" : 0, "Function" : 0};
+  
+  function is_obj_lit(obj) {
+    if (obj.constructor.name in _o_basic_types)
+      return false;
+      
+    if (obj.constructor.name == "Object")
+      return true;
+    if (obj.prototype == undefined)
+      return true;
+    
+    return false;
+  }
   
   function set_getkey(obj) {
     if (typeof obj == "number" || typeof obj == "boolean")
@@ -1020,6 +1061,7 @@ define('struct_binpack',[
       var c = arr[i];
       var sum = c & 127;
       var j = 0;
+      var lasti = i;
       
       while (i < arr.length && (c & 128)) {
         j += 7;
@@ -1063,6 +1105,7 @@ define('struct_binpack',[
     
     var incode = false;
     var i = 0;
+    var code = 0;
     while (i < len) {
       incode = arr[i] & 128;
       
@@ -1152,6 +1195,7 @@ define('struct_binpack',[
 
   var _static_arr_us = new Array(32);
   exports.unpack_string = function(data, uctx) {
+    var str = "";
     
     var slen = unpack_int(data, uctx);
     var arr = slen < 2048 ? _static_arr_us : new Array(slen);
@@ -1166,6 +1210,7 @@ define('struct_binpack',[
   
   var _static_arr_uss = new Array(2048);
   exports.unpack_static_string = function unpack_static_string(data, uctx, length) {
+    var str = "";
     
     if (length == undefined)
       throw new Error("'length' cannot be undefined in unpack_static_string()");
@@ -1203,6 +1248,8 @@ http://www.dabeaz.com/ply/ply.html
 define('struct_parseutil',[
   "struct_typesystem", "struct_util"
 ], function(struct_typesystem, struct_util) {
+  "use strict";
+  var t;
   
   var Class = struct_typesystem.Class;
   
@@ -1469,12 +1516,141 @@ define('struct_parseutil',[
       return tok.value;
     }
   ]);
+  function test_parser() {
+    var basic_types=new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
+    var reserved_tokens=new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
+    function tk(name, re, func) {
+      return new exports.tokdef(name, re, func);
+    }
+    var tokens=[tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
+      if (reserved_tokens.has(t.value)) {
+          t.type = t.value.toUpperCase();
+      }
+      return t;
+    }), tk("OPEN", /\{/), tk("CLOSE", /}/), tk("COLON", /:/), tk("JSCRIPT", /\|/, function(t) {
+      var js="";
+      var lexer=t.lexer;
+      while (lexer.lexpos<lexer.lexdata.length) {
+        var c=lexer.lexdata[lexer.lexpos];
+        if (c=="\n")
+          break;
+        js+=c;
+        lexer.lexpos++;
+      }
+      if (js.endsWith(";")) {
+          js = js.slice(0, js.length-1);
+          lexer.lexpos--;
+      }
+      t.value = js;
+      return t;
+    }), tk("LPARAM", /\(/), tk("RPARAM", /\)/), tk("COMMA", /,/), tk("NUM", /[0-9]/), tk("SEMI", /;/), tk("NEWLINE", /\n/, function(t) {
+      t.lexer.lineno+=1;
+    }), tk("SPACE", / |\t/, function(t) {
+    })];
+    var __iter_rt=__get_iter(reserved_tokens);
+    var rt;
+    while (1) {
+      var __ival_rt=__iter_rt.next();
+      if (__ival_rt.done) {
+          break;
+      }
+      rt = __ival_rt.value;
+      tokens.push(tk(rt.toUpperCase()));
+    }
+    var a="\n  Loop {\n    eid : int;\n    flag : int;\n    index : int;\n    type : int;\n\n    co : vec3;\n    no : vec3;\n    loop : int | eid(loop);\n    edges : array(e, int) | e.eid;\n\n    loops : array(Loop);\n  }\n  ";
+    function errfunc(lexer) {
+      return true;
+    }
+    var lex=new exports.lexer(tokens, errfunc);
+    console.log("Testing lexical scanner...");
+    lex.input(a);
+    var token;
+    while (token = lex.next()) {
+      console.log(token.toString());
+    }
+    var parser=new exports.parser(lex);
+    parser.input(a);
+    function p_Array(p) {
+      p.expect("ARRAY");
+      p.expect("LPARAM");
+      var arraytype=p_Type(p);
+      var itername="";
+      if (p.optional("COMMA")) {
+          itername = arraytype;
+          arraytype = p_Type(p);
+      }
+      p.expect("RPARAM");
+      return {type: "array", data: {type: arraytype, iname: itername}}
+    }
+    function p_Type(p) {
+      var tok=p.peek();
+      if (tok.type=="ID") {
+          p.next();
+          return {type: "struct", data: "\""+tok.value+"\""}
+      }
+      else 
+        if (basic_types.has(tok.type.toLowerCase())) {
+          p.next();
+          return {type: tok.type.toLowerCase()}
+      }
+      else 
+        if (tok.type=="ARRAY") {
+          return p_Array(p);
+      }
+      else {
+        p.error(tok, "invalid type "+tok.type);
+      }
+    }
+    function p_Field(p) {
+      var field={};
+      console.log("-----", p.peek().type);
+      field.name = p.expect("ID", "struct field name");
+      p.expect("COLON");
+      field.type = p_Type(p);
+      field.set = undefined;
+      field.get = undefined;
+      var tok=p.peek();
+      if (tok.type=="JSCRIPT") {
+          field.get = tok.value;
+          p.next();
+      }
+      tok = p.peek();
+      if (tok.type=="JSCRIPT") {
+          field.set = tok.value;
+          p.next();
+      }
+      p.expect("SEMI");
+      return field;
+    }
+    function p_Struct(p) {
+      var st={};
+      st.name = p.expect("ID", "struct name");
+      st.fields = [];
+      p.expect("OPEN");
+      while (1) {
+        if (p.at_end()) {
+            p.error(undefined);
+        }
+        else 
+          if (p.optional("CLOSE")) {
+            break;
+        }
+        else {
+          st.fields.push(p_Field(p));
+        }
+      }
+      return st;
+    }
+    var ret=p_Struct(parser);
+    console.log(JSON.stringify(ret));
+  }
   
   return exports;
 });
 define('struct_parser',[
   "struct_parseutil", "struct_util"
 ], function(struct_parseutil, struct_util) {
+  "use strict";
   
   var exports = {};
   
@@ -1515,6 +1691,14 @@ define('struct_parser',[
   
   for (var k in StructTypes) {
     StructTypeMap[StructTypes[k]] = k;
+  }
+
+  function gen_tabstr(t) {
+    var s="";
+    for (var i=0; i<t; i++) {
+        s+="  ";
+    }
+    return s;
   }
   
   function StructParser() {
@@ -1692,6 +1876,7 @@ define('struct_parser',[
       st.fields = [];
       st.id = -1;
       var tok=p.peek();
+      var id=-1;
       if (tok.type=="ID"&&tok.value=="id") {
           p.next();
           p.expect("EQUALS");
@@ -1725,6 +1910,7 @@ define('struct_parser',[
 define('struct_intern',[
   "struct_util", "struct_binpack", "struct_parseutil", "struct_typesystem", "struct_parser"
 ], function(struct_util, struct_binpack, struct_parseutil, struct_typesystem, struct_parser) {
+  "use strict";
 
   var exports = {};
   
@@ -1761,12 +1947,37 @@ define('struct_intern',[
   var StructEnum = struct_parser.StructEnum;
   
   var _static_envcode_null="";
+  var debug_struct=0;
+  var packdebug_tablevel=0;
   
-  if (false) {
-      var packer_debug;
-      var packer_debug_start;
+  function gen_tabstr(tot) {
+    var ret = "";
+    
+    for (var i=0; i<tot; i++) {
+      ret += " ";
+    }
+    
+    return ret;
+  }
+  
+  if (debug_struct) {
+      var packer_debug=function(msg) {
+        if (msg!=undefined) {
+            var t=gen_tabstr(packdebug_tablevel);
+            console.log(t+msg);
+        } else {
+          console.log("Warning: undefined msg");
+        }
+      };
+      var packer_debug_start=function(funcname) {
+        packer_debug("Start "+funcname);
+        packdebug_tablevel++;
+      };
       
-      var packer_debug_end;
+      var packer_debug_end=function(funcname) {
+        packdebug_tablevel--;
+        packer_debug("Leave "+funcname);
+      };
   }
   else {
     var packer_debug=function() {};
@@ -1826,7 +2037,8 @@ define('struct_intern',[
       throw new Error("Bad struct "+val.constructor.structName+" passed to write_struct");
     }
     
-    if (stt.id==0) ;
+    if (stt.id==0) {
+    }
     
     packer_debug_start("tstruct '"+stt.name+"'");
     packer_debug("int "+stt.id);
@@ -2291,6 +2503,7 @@ define('struct_intern',[
           
           if (use_helper_js(f)) {
               var val;
+              var type=t2;
               if (f.get!=undefined) {
                   val = thestruct._env_call(f.get, obj);
               }
@@ -2560,6 +2773,7 @@ define('struct_filehelper',[
 ], function(structjs, struct_util, struct_binpack, struct_parseutil, 
             struct_typesystem, struct_parser) 
 {
+  'use strict';
   
   var exports = {};
   var Class = struct_typesystem.Class;
@@ -2769,6 +2983,7 @@ define('structjs',[
 ], function(struct_intern, struct_filehelper, struct_util, struct_binpack, 
             struct_parseutil, struct_typesystem, struct_parser)
 {
+  "use strict";
 
   var exports = {};
   
@@ -2826,6 +3041,7 @@ function register(cls) {
 /*!@license Copyright 2013, Heinrich Goebl, License: MIT, see https://github.com/hgoebl/mobile-detect.js*/
 (function (define, undefined$1) {
 define(function () {
+    'use strict';
 
     var impl = {};
 
@@ -3838,12 +4054,14 @@ function pollTimer(id, interval) {
   return false;
 }
 window._pollTimer = pollTimer;
+
+let mdetect = undefined;
 let mret = undefined;
 
 function isMobile() {
-  {
-    let r = new MobileDetect(navigator.userAgent);
-    let ret = r.mobile();
+  if (mret === undefined) {
+    mdetect = new MobileDetect(navigator.userAgent);
+    let ret = mdetect.mobile();
 
     if (typeof ret === "string") {
       ret = ret.toLowerCase();
@@ -3927,7 +4145,10 @@ class SmartConsoleContext {
       return true;
     }
 
-    if (time_ms() - d.time > this.timeInterval) ;
+    if (time_ms() - d.time > this.timeInterval) {
+      //d.time = time_ms();
+      //return true;
+    }
 
     return false;
   }
@@ -4082,7 +4303,8 @@ function btoa$1(buf) {
   }
 
   return btoa$1(ret);
-}
+};
+
 function formatNumberUI(val, isInt=false, decimals=5) {
   if (val === undefined || val === null) {
     val = "0";
@@ -4153,7 +4375,8 @@ function merge(obja, objb) {
 
   return ret;
   //*/
-}
+};
+
 class cachering extends Array {
   constructor(func, size) {
     super();
@@ -4221,7 +4444,7 @@ class SetIter {
 
 
 * */
-class set {
+class set$1 {
   constructor(input) {
     this.items = [];
     this.keys = {};
@@ -4264,7 +4487,7 @@ class set {
   }
 
   copy() {
-    let ret = new set();
+    let ret = new set$1();
     for (let item of this) {
       ret.add(item);
     }
@@ -4526,13 +4749,18 @@ function get_callstack(err) {
       var lines = err.stack.split('\n');
       var len=lines.length;
       for (var i=0; i<len; i++) {
-        {
+        if (1) {
           lines[i] = lines[i].replace(/@http\:\/\/.*\//, "|");
           var l = lines[i].split("|");
           lines[i] = l[1] + ": " + l[0];
           lines[i] = lines[i].trim();
           callstack.push(lines[i]);
         }
+      }
+
+      //Remove call to printStackTrace()
+      if (err_was_undefined) {
+        //callstack.shift();
       }
       isCallstackPopulated = true;
     }
@@ -4557,6 +4785,8 @@ function get_callstack(err) {
       isCallstackPopulated = true;
     }
    }
+
+    var limit = 24;
     if (!isCallstackPopulated) { //IE and Safari
       var currentFunction = arguments.callee.caller;
       var i = 0;
@@ -4826,7 +5056,8 @@ function test_fasthash() {
   console$1.log(h);
 
   return h;
-}
+};
+
 class ImageReader {
   load_image() {
     let input = document.createElement("input");
@@ -4845,6 +5076,7 @@ class ImageReader {
       if (files.length == 0) return;
 
       var reader = new FileReader();
+      var this2 = this;
 
       reader.onload = (e) => {
         let data = e.target.result;
@@ -4879,7 +5111,7 @@ class ImageReader {
       console$1.log(idata);
     });
   }
-}
+};
 
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -4900,7 +5132,7 @@ var util1 = /*#__PURE__*/Object.freeze({
   merge: merge,
   cachering: cachering,
   SetIter: SetIter,
-  set: set,
+  set: set$1,
   HashIter: HashIter,
   hashtable: hashtable,
   IDGen: IDGen,
@@ -4915,7 +5147,13 @@ var util1 = /*#__PURE__*/Object.freeze({
   ImageReader: ImageReader
 });
 
-var sin=Math.sin, cos=Math.cos, sqrt=Math.sqrt;
+var sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
+    asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,
+    sign=Math.sign, tent=Math.tent, atan2=Math.atan2, atan=Math.atan,
+    pow=Math.pow, sqrt=Math.sqrt, floor=Math.floor, ceil=Math.ceil,
+    min=Math.min, max=Math.max, PI=Math.PI, E=2.718281828459045;
+
+var Class = undefined;
 var M_SQRT2=Math.sqrt(2.0);
 var FLT_EPSILON=2.22e-16;
 var DOT_NORM_SNAP_LIMIT = 0.00000000001;
@@ -4971,6 +5209,9 @@ var $_v3nd_n1_normalizedDot;
 var $_v3nd_n2_normalizedDot;
 var $_v3nd4_n1_normalizedDot4;
 var $_v3nd4_n2_normalizedDot4;
+
+var HasCSSMatrix=false;
+var HasCSSMatrixCopy=false;
 var M_SQRT2=Math.sqrt(2.0);
 var FLT_EPSILON=2.22e-16;
 function internal_matrix() {
@@ -4998,7 +5239,10 @@ var makenormalcache;
 
 class Matrix4 {
   constructor(m) {
-    this.$matrix = new internal_matrix();
+    if (HasCSSMatrix)
+      this.$matrix = new WebKitCSSMatrix;
+    else 
+      this.$matrix = new internal_matrix();
     this.isPersp = false;
     if (typeof m=='object') {
         if ("length" in m&&m.length>=16) {
@@ -5115,6 +5359,11 @@ class Matrix4 {
   }
 
   getAsFloat32Array() {
+    if (HasCSSMatrixCopy) {
+        var array=new Float32Array(16);
+        this.$matrix.copy(array);
+        return array;
+    }
     return new Float32Array(this.getAsArray());
   }
 
@@ -5123,7 +5372,9 @@ class Matrix4 {
         Matrix4.setUniformWebGLArray = new Float32Array(16);
         Matrix4.setUniformArray = new Array(16);
     }
-    {
+    if (HasCSSMatrixCopy)
+      this.$matrix.copy(Matrix4.setUniformWebGLArray);
+    else {
       Matrix4.setUniformArray[0] = this.$matrix.m11;
       Matrix4.setUniformArray[1] = this.$matrix.m12;
       Matrix4.setUniformArray[2] = this.$matrix.m13;
@@ -5189,6 +5440,10 @@ class Matrix4 {
   }
 
   invert() {
+    if (HasCSSMatrix) {
+        this.$matrix = this.$matrix.inverse();
+        return ;
+    }
     var det=this._determinant4x4();
     if (Math.abs(det)<1e-08)
       return null;
@@ -5228,6 +5483,11 @@ class Matrix4 {
         z = 0;
     }
 
+    if (HasCSSMatrix) {
+        this.$matrix = this.$matrix.translate(x, y, z);
+        return ;
+    }
+
     var matrix=new Matrix4();
     matrix.$matrix.m41 = x;
     matrix.$matrix.m42 = y;
@@ -5256,6 +5516,11 @@ class Matrix4 {
       } else if (y===undefined) {
         y = x;
       }
+    }
+
+    if (HasCSSMatrix) {
+        this.$matrix = this.$matrix.scale(x, y, z);
+        return ;
     }
     var matrix=new Matrix4();
     matrix.$matrix.m11 = x;
@@ -5348,6 +5613,10 @@ class Matrix4 {
           this.rotate(y, 0, 0, 1);
           return ;
       }
+    }
+    if (HasCSSMatrix) {
+        this.$matrix = this.$matrix.rotateAxisAngle(x, y, z, angle);
+        return ;
     }
     angle/=2;
     var sinA=Math.sin(angle);
@@ -5480,6 +5749,10 @@ class Matrix4 {
   }
   
   multiply(mat) {
+    if (HasCSSMatrix) {
+        this.$matrix = this.$matrix.multiply(mat.$matrix);
+        return ;
+    }
     
     var m11=(mat.$matrix.m11*this.$matrix.m11+mat.$matrix.m12*this.$matrix.m21+mat.$matrix.m13*this.$matrix.m31+mat.$matrix.m14*this.$matrix.m41);
     var m12=(mat.$matrix.m11*this.$matrix.m12+mat.$matrix.m12*this.$matrix.m22+mat.$matrix.m13*this.$matrix.m32+mat.$matrix.m14*this.$matrix.m42);
@@ -6096,7 +6369,8 @@ class Vector4 extends BaseVector {
     this.load(this.vec);
     delete this.vec;
   }
-}Vector4.STRUCT = `
+};
+Vector4.STRUCT = `
 vec4 {
   vec : array(float) | obj;
 }
@@ -6367,12 +6641,15 @@ class Vector2 extends BaseVector {
     this.load(this.vec);
     delete this.vec;
   }
-}Vector2.STRUCT = `
+};
+Vector2.STRUCT = `
 vec2 {
   vec : array(float) | obj;
 }
 `;
 nstructjs.manager.add_class(Vector2);
+
+let _quat_vs3_temps = cachering.fromConstructor(Vector3, 64);
 
 class Quat extends Vector4 {
   makeUnitQuat() {
@@ -6554,7 +6831,7 @@ class Quat extends Vector4 {
   }
 
   axisAngleToQuat(axis, angle) {
-    var nor=new Vector3(axis);
+    let nor = _quat_vs3_temps.next().load(axis);
     nor.normalize();
 
     if (nor.dot(nor) != 0.0) {
@@ -6623,7 +6900,8 @@ class Quat extends Vector4 {
     this.load(this.vec);
     delete this.vec;
   }
-}Quat.STRUCT = `
+};
+Quat.STRUCT = `
 quat {
   vec : array(float) | obj;
 }
@@ -6923,7 +7201,8 @@ class DegreeUnit extends Unit {
   static buildString(value, decimals=3) {
     return ""+value.toFixed(decimals) + " \u00B0";
   }
-}Unit.register(DegreeUnit);
+};
+Unit.register(DegreeUnit);
 
 class RadianUnit extends Unit {
   static unitDefine() {return {
@@ -6956,8 +7235,16 @@ class RadianUnit extends Unit {
   static buildString(value, decimals=3) {
     return ""+value.toFixed(decimals) + " r";
   }
-}
+};
+
 Unit.register(RadianUnit);
+
+function setBaseUnit(unit) {
+  Unit.baseUnit = unit;
+}
+function setMetric(val) {
+  Unit.isMetric = val;
+}
 
 Unit.isMetric = true;
 Unit.baseUnit = "meter";
@@ -7022,6 +7309,8 @@ function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
+
+"use strict";
 
 let PropTypes = {
   INT : 1,
@@ -7119,7 +7408,8 @@ class StringPropertyIF extends ToolPropertyIF {
 }
 
 class NumPropertyIF extends ToolPropertyIF {
-}
+};
+
 class IntProperty extends ToolPropertyIF {
   constructor() {
     super(PropTypes.INT);
@@ -7321,6 +7611,8 @@ var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
   Curve1DPropertyIF: Curve1DPropertyIF
 });
 
+"use strict";
+
 /*
 Icons are defined in spritesheets that live in
 the iconsheet16/32 dom nodes.  Icons are numbered start from
@@ -7396,7 +7688,10 @@ let exports = {
     areaConstraintSolver : false,
     datapaths : false,
 
+    debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
+
     screenAreaPosSizeAccesses : false,
+    buttonEvents : false,
 
     /*
     customWindowSize: {
@@ -7502,6 +7797,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
         e2.touches = e.touches;
 
         if (e.touches.length > 0) {
+          let dpi = window.devicePixelRatio; //UIBase.getDPI();
           let t = e.touches[0];
 
           e2.pageX = e2.x = t.pageX;// * dpi;
@@ -7578,7 +7874,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
     if (!(k in found)) {
       //console.log("making touch handler for", '"' + k + '"', ret.handlers[k]);
 
-      ret.handlers[k] = make_default_touchhandler(k);
+      ret.handlers[k] = make_default_touchhandler(k, ret);
 
       let settings = ret.handlers[k].settings = {passive : false, capture : true};
       window.addEventListener(k, ret.handlers[k], settings);
@@ -7734,7 +8030,7 @@ class KeyMap extends Array {
   }
 
   handle(ctx, e) {
-    let mods = new set();
+    let mods = new set$1();
     if (e.shiftKey)
       mods.add("shift");
     if (e.altKey)
@@ -7786,6 +8082,8 @@ class KeyMap extends Array {
     super.push(hk);
   }
 }
+
+"use strict";
 
 class EventDispatcher {
   constructor() {
@@ -7891,6 +8189,12 @@ const DomEventTypes = {
   //on_keypress    : 'keypress'
 };
 
+function getDom(dom, eventtype) {
+  if (eventtype.startsWith("key"))
+    return window;
+  return dom;
+}
+
 let modalStack = [];
 function isModalHead(owner) {
   return modalStack.length == 0 || 
@@ -7952,6 +8256,28 @@ class EventHandler {
       this._modalstate = undefined;
     }
     return;
+    console.trace("popModal called");
+    
+    var ok = modalStack[modalStack.length-1] === this;
+    ok = ok && this.modal_pushed;
+    
+    if (!ok) {
+      console.trace("Error: popModal called but pushModal wasn't", this, dom);
+      return;
+    }
+    
+    modalStack.pop();
+    
+    for (var k in DomEventTypes) {
+      if (this["__"+k] === undefined)
+        continue;
+
+      var type = DomEventTypes[k];
+      
+      getDom(dom, type).removeEventListener(type, this["__"+k], true);
+    }
+    
+    this.modal_pushed = false;
   }
 }
 
@@ -8177,6 +8503,13 @@ class EquationCurve extends CurveTypeData {
   }
 
   evaluate(s) {
+    let sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI,
+      e = Math.E, E = Math.E, tan = Math.tan, abs = Math.abs,
+      floor = Math.floor, ceil = Math.ceil, acos = Math.acos,
+      asin = Math.asin, atan = Math.atan, cosh = Math.cos,
+      sinh = Math.sinh, log = Math.log, pow = Math.pow,
+      exp = Math.exp, sqrt = Math.sqrt, cbrt = Math.cbrt,
+      min = Math.min, max = Math.max;
 
     try {
       let x = s;
@@ -8451,6 +8784,8 @@ GuassianCurve.STRUCT = nstructjs$1.inherit(GuassianCurve, CurveTypeData) + `
 nstructjs$1.register(GuassianCurve);
 CurveTypeData.register(GuassianCurve);
 
+"use strict";
+
 var Vector2$1 = Vector2;
 
 let RecalcFlags = {
@@ -8477,6 +8812,11 @@ function mySafeJSONStringify(obj) {
     return v;
   });
 }
+function mySafeJSONParse(buf) {
+  return JSON.parse(buf, (key, val) => {
+
+  });
+};
 
 window.mySafeJSONStringify = mySafeJSONStringify;
 
@@ -8485,6 +8825,26 @@ var bin_cache = {};
 window._bin_cache = bin_cache;
 
 var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
+
+/*
+  I hate these stupid curve widgets.  This horrible one here works by
+  root-finding the x axis on a two dimensional b-spline (which works
+  surprisingly well).
+*/
+
+function bez3(a, b, c, t) {
+  var r1 = a + (b - a)*t;
+  var r2 = b + (c - b)*t;
+
+  return r1 + (r2 - r1)*t;
+}
+
+function bez4(a, b, c, d, t) {
+  var r1 = bez3(a, b, c, t);
+  var r2 = bez3(b, c, d, t);
+
+  return r1 + (r2 - r1)*t;
+}
 
 function binomial(n, i) {
   if (i > n) {
@@ -8559,7 +8919,8 @@ class Curve1DPoint extends Vector2$1 {
     this.rco.load(this);
     this.recalc = RecalcFlags.ALL;
   }
-}Curve1DPoint.STRUCT = `
+};
+Curve1DPoint.STRUCT = `
 Curve1DPoint {
   0       : float;
   1       : float;
@@ -8777,6 +9138,8 @@ class BSplineCurve extends CurveTypeData {
 
     j *= 4;
     return table[j] + (table[j+3] - table[j])*s;
+
+    return bez4(table[j], table[j+1], table[j+2], table[j+3], s);
   }
 
   reset() {
@@ -8878,7 +9241,9 @@ class BSplineCurve extends CurveTypeData {
 
         err += Math.abs(r1);
 
-        if (p === this._ps[0] || p === this._ps[this._ps.length-1]) ;
+        if (p === this._ps[0] || p === this._ps[this._ps.length-1]) {
+        //  continue;
+        }
 
         g.zero();
 
@@ -8971,6 +9336,7 @@ class BSplineCurve extends CurveTypeData {
     }
 
     function bas(s, i, n) {
+      var kp = Math.min(Math.max(i-1, 0), len-1);
       var kn = Math.min(Math.max(i+1, 0), len-1);
       var knn = Math.min(Math.max(i+n, 0), len-1);
       var knn1 = Math.min(Math.max(i+n+1, 0), len-1);
@@ -8999,7 +9365,7 @@ class BSplineCurve extends CurveTypeData {
       }
     }
 
-    var p = this._ps[i].rco;
+    var p = this._ps[i].rco, nk, pk;
     var deg = this.deg;
 
     var b = bas(t, i-deg, deg);
@@ -9423,6 +9789,39 @@ class BSplineCurve extends CurveTypeData {
     let sz = draw_trans[0], pan = draw_trans[1];
     g.lineWidth *= 3.0;
 
+    for (var ssi=0; ssi<2; ssi++) {
+      break; //uncomment to draw basis functions
+      for (var si=0; si<this.points.length; si++) {
+        g.beginPath();
+
+        var f = 0;
+        for (var i=0; i<steps; i++, f += df) {
+          var totbasis = 0;
+
+          for (var j=0; j<this.points.length; j++) {
+            totbasis += this.basis(f, j);
+          }
+
+          var val = this.basis(f, si);
+
+          if (ssi)
+            val /= (totbasis == 0 ? 1 : totbasis);
+
+          (i==0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5, w, w);
+        }
+
+        var color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
+
+        if (ssi) {
+          color = "rgba(105, 25, 5,"+alpha+")";
+        } else {
+          color = "rgba(25, 145, 45,"+alpha+")";
+        }
+        g.strokeStyle = color;
+        g.stroke();
+      }
+    }
+
     g.lineWidth /= 3.0;
 
     let w = 0.03;
@@ -9466,6 +9865,10 @@ BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
 nstructjs$1.register(BSplineCurve);
 CurveTypeData.register(BSplineCurve);
 
+"use strict";
+
+var Vector2$2 = Vector2;
+
 function mySafeJSONStringify$1(obj) {
   return JSON.stringify(obj.toJSON(), function(key) {
     let v = this[key];
@@ -9481,11 +9884,12 @@ function mySafeJSONStringify$1(obj) {
     return v;
   });
 }
-function mySafeJSONParse(buf) {
+function mySafeJSONParse$1(buf) {
   return JSON.parse(buf, (key, val) => {
 
   });
-}
+};
+
 window.mySafeJSONStringify = mySafeJSONStringify$1;
 
 class Curve1D extends EventDispatcher {
@@ -10048,7 +10452,8 @@ class NumProperty extends ToolProperty {
     this.data = 0;
     this.range = [0, 0];
   }
-}
+};
+
 class _NumberPropertyBase extends ToolProperty {
   constructor(type, value, apiname,
               uiname, description, flag, icon) {
@@ -10711,10 +11116,10 @@ class StringSetProperty$1 extends ToolProperty {
 
     let values = [];
 
-    this.value = new set();
+    this.value = new set$1();
 
     let def = definition;
-    if (Array.isArray(def) || def instanceof set || def instanceof Set) {
+    if (Array.isArray(def) || def instanceof set$1 || def instanceof Set) {
       for (let item of def) {
         values.push(item);
       }
@@ -10783,7 +11188,7 @@ class StringSetProperty$1 extends ToolProperty {
     } else {
       let data = [];
 
-      if (Array.isArray(values) || values instanceof set || values instanceof Set) {
+      if (Array.isArray(values) || values instanceof set$1 || values instanceof Set) {
         for (let item of values) {
           data.push(item);
         }
@@ -10916,6 +11321,8 @@ class Curve1DProperty extends ToolPropertyIF {
     return ret;
   }
 }
+
+"use strict";
 
 let ToolClasses = [];
 
@@ -11494,7 +11901,8 @@ const DataFlags = {
 };
 
 class DataPathError extends Error {
-}
+};
+
 class ListIface {
   getStruct(api, list, key) {
 
@@ -11541,7 +11949,8 @@ class ToolOpIface {
     inputs      : {}, //tool properties
     outputs     : {}  //tool properties
   }}
-}
+};
+
 class ModelInterface {
   constructor() {
     this.prefix = "";
@@ -11557,6 +11966,7 @@ class ModelInterface {
 
   get list() {
     throw new Error("implement me");
+    return ListIface;
   }
 
   createTool(path, inputs={}, constructor_argument=undefined) {
@@ -11717,7 +12127,8 @@ class ModelInterface {
       } else if (type & (PropTypes$1.ENUM|PropTypes$1.FLAG)) {
         if (!(subkey in prop.values) && subkey in prop.keys) {
           subkey = prop.keys[subkey];
-        }
+        };
+
         if (prop.descriptions && subkey in prop.descriptions) {
           return prop.descriptions[subkey];
         }
@@ -12093,6 +12504,203 @@ class parser {
   }
 }
 
+function test_parser() {
+  var basic_types = new set([
+    "int",
+    "float",
+    "double",
+    "vec2",
+    "vec3",
+    "vec4",
+    "mat4",
+    "string"]);
+
+  var reserved_tokens = new set([
+    "int",
+    "float",
+    "double",
+    "vec2",
+    "vec3",
+    "vec4",
+    "mat4",
+    "string",
+    "static_string",
+    "array"]);
+
+  function tk(name, re, func) {
+    return new tokdef(name, re, func);
+  }
+  var tokens = [
+    tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
+      if (reserved_tokens.has(t.value)) {
+        t.type = t.value.toUpperCase();
+      }
+
+      return t;
+    }),
+    tk("OPEN", /\{/),
+    tk("CLOSE", /}/),
+    tk("COLON", /:/),
+    tk("JSCRIPT", /\|/, function(t) {
+      var js = "";
+      var lexer = t.lexer;
+      while (lexer.lexpos < lexer.lexdata.length) {
+        var c = lexer.lexdata[lexer.lexpos];
+        if (c == "\n")
+          break;
+
+        js += c;
+        lexer.lexpos++;
+      }
+
+      if (js.endsWith(";")) {
+        js = js.slice(0, js.length-1);
+        lexer.lexpos--;
+      }
+
+      t.value = js;
+      return t;
+    }),
+
+    tk("LPARAM", /\(/),
+    tk("RPARAM", /\)/),
+    tk("COMMA", /,/),
+    tk("NUM", /[0-9]/),
+    tk("SEMI", /;/),
+    tk("NEWLINE", /\n/, function(t) {
+      t.lexer.lineno += 1;
+    }),
+    tk("SPACE", / |\t/, function(t) {
+      //throw out non-newline whitespace tokens
+    })
+  ];
+
+  for (var rt in reserved_tokens) {
+    tokens.push(tk(rt.toUpperCase()));
+  }
+
+  /*var a =
+  Loop {
+    eid : int;
+    flag : int;
+    index : int;
+    type : int;
+
+    co : vec3;
+    no : vec3;
+    loop : int | eid(loop);
+    edges : array(e, int) | e.eid;
+
+    loops : array(Loop);
+  }
+  """;
+  */
+
+  function errfunc(lexer) {
+    return true; //throw error
+  }
+
+  var lex = new lexer(tokens, errfunc);
+  console.log("Testing lexical scanner...");
+
+  lex.input(a);
+
+  var tok;
+  while (tok = lex.next()) {
+    console.log(tok.toString());
+  }
+
+  var parser = new parser(lex);
+  parser.input(a);
+
+  function p_Array(p) {
+    p.expect("ARRAY");
+    p.expect("LPARAM");
+
+    var arraytype = p_Type(p);
+    var itername = "";
+
+    if (p.optional("COMMA")) {
+      itername = arraytype;
+      arraytype = p_Type(p);
+    }
+
+
+    p.expect("RPARAM");
+
+    return {type : "array", data : {type : arraytype, iname : itername}};
+  }
+
+  function p_Type(p) {
+    var tok = p.peek();
+
+    if (tok.type == "ID") {
+      p.next();
+      return {type : "struct", data : "\"" + tok.value + "\""};
+    } else if (basic_types.has(tok.type.toLowerCase())) {
+      p.next();
+      return {type : tok.type.toLowerCase()};
+    } else if (tok.type == "ARRAY") {
+      return p_Array(p);
+    } else {
+      p.error(tok, "invalid type " + tok.type); //(tok.value == "" ? tok.type : tok.value));
+    }
+  }
+
+  function p_Field(p) {
+    var field = {};
+
+    console.log("-----", p.peek().type);
+
+    field.name = p.expect("ID", "struct field name");
+    p.expect("COLON");
+
+    field.type = p_Type(p);
+    field.set = undefined;
+    field.get = undefined;
+
+    var tok = p.peek();
+    if (tok.type == "JSCRIPT") {
+      field.get =  tok.value;
+      p.next();
+    }
+
+    tok = p.peek();
+    if (tok.type == "JSCRIPT") {
+      field.set = tok.value;
+      p.next();
+    }
+
+    p.expect("SEMI");
+
+    return field;
+  }
+
+  function p_Struct(p) {
+    var st = {};
+    st.name = p.expect("ID", "struct name");
+    st.fields = [];
+
+    p.expect("OPEN");
+
+    while (1) {
+      if (p.at_end()) {
+        p.error(undefined);
+      } else if (p.optional("CLOSE")) {
+        break;
+      } else {
+        st.fields.push(p_Field(p));
+      }
+    }
+
+    return st;
+  }
+
+  var ret = p_Struct(parser);
+
+  console.log(JSON.stringify(ret));
+}
+
 var parseutil1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   token: token,
@@ -12214,6 +12822,12 @@ function parseToolPath(str, check_tool_exists=true) {
   };
 }
 
+function testToolParser() {
+  let ret = parseToolPath("view3d.sometool(selectmode=1 str='str' bool=true)", false);
+
+  return ret;
+}
+
 window.parseToolPath = parseToolPath;
 //window._ToolPaths = ToolPaths;
 
@@ -12245,7 +12859,10 @@ class DataPathSetOp extends ToolOp {
 
     if (path.type & (PropTypes.ENUM|PropTypes.FLAG)) {
       let rdef = ctx.api.resolvePath(ctx, path);
-      if (rdef.subkey !== undefined) ;
+      if (rdef.subkey !== undefined) {
+      //  val = rdef.value;
+        //val = !!val;
+      }
     }
 
     prop.setValue(val);
@@ -12314,12 +12931,12 @@ class DataPathSetOp extends ToolOp {
 
     this._undo = {};
 
-    let paths = new set();
+    let paths = new set$1();
 
     if (this.inputs.massSetPath.getValue().trim()) {
       let massSetPath = this.inputs.massSetPath.getValue().trim();
 
-      paths = new set(ctx.api.resolveMassSetPaths(ctx, massSetPath));
+      paths = new set$1(ctx.api.resolveMassSetPaths(ctx, massSetPath));
 
     }
 
@@ -12446,9 +13063,23 @@ let lexer$1 = new lexer(tokens, (t) => {
 });
 
 let pathParser = new parser(lexer$1);
+
+let tool_classes = ToolClasses;
+
+let tool_idgen = 1;
 Symbol.ToolID = Symbol("toolid");
 
+function toolkey(cls) {
+  if (!(Symbol.ToolID in cls)) {
+    cls[Symbol.ToolID] = tool_idgen++;
+  }
+
+  return cls[Symbol.ToolID];
+}
+
 let lt = time_ms();
+let lastmsg = undefined;
+let lcount = 0;
 
 let reportstack = ["api"];
 function pushReportName(name) {
@@ -12668,6 +13299,12 @@ class DataList extends ListIface {
     for (let cb of callbacks) {
       this.cb[cb.name] = cb;
     }
+
+    let check = (key) => {
+      if (!(key in this.cbs)) {
+        throw new DataPathError(`Missing ${key} callback in DataList`);
+      }
+    };
   }
 
   get(api, list, key) {
@@ -13142,6 +13779,7 @@ class DataAPI extends ModelInterface {
 
     if (start < 0 || end < 0) {
       throw new DataPathError("Invalid mass set datapath: " + massSetPath);
+      return;
     }
 
     let prefix = massSetPath.slice(0, start-1);
@@ -13159,12 +13797,13 @@ class DataAPI extends ModelInterface {
     let list = rdef.prop;
 
     function applyFilter(obj) {
+      let $ = obj;
 
       return eval(filter);
     }
 
     for (let obj of list.getIter(this, rdef.value)) {
-      if (!applyFilter()) {
+      if (!applyFilter(obj)) {
         continue;
       }
 
@@ -13513,7 +14152,7 @@ class DataAPI extends ModelInterface {
     let type = "normal";
     let retpath = p;
     let prop;
-    let lastkey = key;
+    let lastkey = key, a;
     let apiname = key;
 
     while (i < p.length - 1) {
@@ -13627,6 +14266,8 @@ class DataAPI extends ModelInterface {
       } else {
         throw new DataPathError("bad path " + path);
       }
+
+      i++;
     }
 
     if (lastkey !== undefined && dstruct !== undefined && dstruct.pathmap[lastkey]) {
@@ -13841,6 +14482,10 @@ class DataAPI extends ModelInterface {
   }
 }
 
+function registerTool$1(cls) {
+  return DataAPI.registerTool(cls);
+}
+
 function initSimpleController() {
   initToolPaths();
 }
@@ -14019,7 +14664,8 @@ class CSSFont {
     if (isMobile()) {
       let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
       if (mul) {
-        return this._size * mul;      }
+        return this._size * mul;;
+      }
     }
 
     return this._size;
@@ -14273,6 +14919,8 @@ const DefaultTheme = {
   }
 };
 
+let _ui_base = undefined;
+
 let Vector4$1 = Vector4;
 
 const EnumProperty$2 = EnumProperty$1;
@@ -14329,7 +14977,8 @@ function getDefault(key, elem) {
 //XXX implement me!
 function IsMobile() {
   return false;
-}
+};
+
 let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
 keys = keys.concat(["padding-block-start", "padding-block-end"]);
 
@@ -14472,10 +15121,12 @@ class IconManager {
 
   getTileSize(sheet=0) {
     return this.iconsheets[sheet].drawsize;
+    return this.findSheet(sheet).drawsize;
   }
 
   getRealSize(sheet=0) {
     return this.iconsheets[sheet].tilesize;
+    return this.findSheet(sheet).tilesize;
     //return this.iconsheets[sheet].tilesize;
   }
   
@@ -14555,7 +15206,8 @@ function makeIconDiv(icon, sheet=0) {
     return icontest;
 }
 
-let Vector2$2 = Vector2;
+let Vector2$3 = Vector2;
+let Matrix4$1 = Matrix4;
 
 let dpistack = [];
 
@@ -14577,6 +15229,24 @@ const PackFlags = {
   STRIP : 512|1024,
   SIMPLE_NUMSLIDERS : 2048,
   FORCE_ROLLER_SLIDER : 4096
+};
+ 
+let first$1 = (iter) => {
+  if (iter === undefined) {
+    return undefined;
+  }
+  
+  if (!(Symbol.iterator in iter)) {
+    for (let item in iter) {
+      return item;
+    }
+    
+    return undefined;
+  }
+  
+  for (let item of iter) {
+    return item;
+  }
 };
 
 class SimpleContext {
@@ -14671,7 +15341,9 @@ class UIBase extends HTMLElement {
       button = button === undefined ? 0 : button;
       let e2 = copyEvent(e);
 
-      if (e.touches.length == 0) ; else {
+      if (e.touches.length == 0) {
+        //hrm, what to do, what to do. . .
+      } else {
         let t = e.touches[0];
 
         e2.pageX = t.pageX;
@@ -14830,8 +15502,8 @@ class UIBase extends HTMLElement {
   getTotalRect() {
     let found = false;
 
-    let min = new Vector2$2([1e17, 1e17]);
-    let max = new Vector2$2([-1e17, -1e17]);
+    let min = new Vector2$3([1e17, 1e17]);
+    let max = new Vector2$3([-1e17, -1e17]);
 
     let doaabb = (n) => {
       let rs = n.getClientRects();
@@ -15311,6 +15983,15 @@ class UIBase extends HTMLElement {
         this._flashcolor = undefined;
         timer = undefined;
         
+        try {
+          //this.remove();
+          //div.parentNode.insertBefore(this, div);
+        } catch (error) {
+          console.log("dom removal error");
+          div.appendChild(this);
+          return;
+        }
+        
         //console.log(div.parentNode);
         div.remove();
         
@@ -15321,6 +16002,14 @@ class UIBase extends HTMLElement {
     }, 20);
 
     let div = document.createElement("div");
+    
+    //this.parentNode.insertBefore(div, this);
+    
+    try {
+      //this.remove();
+    } catch (error) {
+      console.log("this.remove() failure in UIBase.flash()");
+    }        
     
     //div.appendChild(this);
 
@@ -15497,9 +16186,10 @@ class UIBase extends HTMLElement {
   }
 
   isDead() {
-    let p = this;
+    let p = this, lastp = this;
 
     while (p) {
+      lastp = p;
 
       let parent = p.parentWidget;
       if (!parent) {
@@ -15873,6 +16563,9 @@ function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     
     let w = width, h = height;
     
+    let th = Math.PI/4;
+    let th2 = Math.PI*0.75;
+    
     g.beginPath();
 
     g.moveTo(margin, margin+r1);
@@ -15900,7 +16593,8 @@ function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     }
 
     g.restore();
-}
+};
+
 function _getFont_new(elem, size, font="DefaultText", do_dpi=true) {
 
   font = elem.getDefault(font);
@@ -16092,7 +16786,7 @@ function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, 
   }
 }
 
-let PTOT=2;
+let PIDX=0, PSHADOW=1, PTOT=2;
 
 function saveUIData(node, key) {
   if (key === undefined) {
@@ -16195,7 +16889,16 @@ function loadUIData(node, buf) {
   }
 }
 
-let UIBase$1 = UIBase;
+"use strict";
+
+let keymap$1 = keymap;
+
+let EnumProperty$3 = EnumProperty$1,
+  PropTypes$2 = PropTypes;
+
+let UIBase$1 = UIBase,
+  PackFlags$1 = PackFlags,
+  IconSheets$1 = IconSheets;
 
 let parsepx$1 = parsepx;
 
@@ -16230,7 +16933,8 @@ class Button extends UIBase$1 {
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
-      console.log(e.keyCode);
+      if (exports.buttonEvents)
+        console.log(e.keyCode);
 
       switch (e.keyCode) {
         case 27: //escape
@@ -16303,6 +17007,7 @@ class Button extends UIBase$1 {
 
   get boxpad() {
     throw new Error("Button.boxpad is deprecated");
+    return this.getDefault("BoxMargin");
   }
 
   click() {
@@ -16364,11 +17069,13 @@ class Button extends UIBase$1 {
   }
 
   bindEvents() {
+    let press_gen = 0;
 
     let press = (e) => {
       e.stopPropagation();
 
-      console.log("button press", this._pressed);
+      if (exports.buttonEvents)
+        console.log("button press", this._pressed);
 
       if (this.disabled) return;
       if (this._pressed) return;
@@ -16385,7 +17092,8 @@ class Button extends UIBase$1 {
     };
 
     let depress = (e) => {
-      console.log("button depress");
+      if (exports.buttonEvents)
+        console.log("button depress");
 
       if (this._auto_depress) {
         this._pressed = false;
@@ -16394,19 +17102,18 @@ class Button extends UIBase$1 {
         this._redraw();
       }
 
-      console.log("a");
-
       e.preventDefault();
       e.stopPropagation();
 
-      console.warn(e.type, e.button, this.onclick, e);
       if (e.type === "mouseup" && (e.button || e.was_touch)) {
         return;
       }
 
       this._redraw();
 
-      console.log("exec", this.onclick);
+      if (exports.buttonEvents)
+        console.log("button click callback:", this.onclick);
+
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
       }
@@ -16453,7 +17160,9 @@ class Button extends UIBase$1 {
 
       this._repos_canvas();
       this._redraw();
-      console.log("disabled update!", this.disabled, this.style["background-color"]);
+
+      if (exports.buttonEvents)
+        console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }
   }
@@ -16656,11 +17365,31 @@ class Button extends UIBase$1 {
 }
 UIBase$1.register(Button);
 
-let keymap$1 = keymap;
+"use strict";
 
-let PropTypes$2 = PropTypes;
+function myToFixed(s, n) {
+  s = s.toFixed(n);
 
-let UIBase$2 = UIBase;
+  while (s.endsWith('0')) {
+    s = s.slice(0, s.length-1);
+  }
+  if (s.endsWith("\.")) {
+    s = s.slice(0, s.length-1);
+  }
+
+  return s;
+}
+
+let keymap$2 = keymap;
+
+let EnumProperty$4 = EnumProperty$1,
+  PropTypes$3 = PropTypes;
+
+let UIBase$2 = UIBase,
+  PackFlags$2 = PackFlags,
+  IconSheets$2 = IconSheets;
+
+let parsepx$2 = parsepx;
 
 class TextBox extends UIBase$2 {
   constructor() {
@@ -16727,6 +17456,8 @@ class TextBox extends UIBase$2 {
       this._endModal(true);
     }
 
+    let ignore = 0;
+
     let finish = (ok) => {
       this._endModal(ok);
     };
@@ -16735,16 +17466,23 @@ class TextBox extends UIBase$2 {
       e.stopPropagation();
 
       switch (e.keyCode) {
-        case keymap$1.Enter:
+        case keymap$2.Enter:
           finish(true);
           break;
-        case keymap$1.Escape:
+        case keymap$2.Escape:
           finish(false);
           break;
       }
 
       console.log(e.keyCode);
       return;
+      if (ignore) return;
+
+      let e2 = new KeyboardEvent(e.type, e);
+
+      ignore = 1;
+      this.dom.dispatchEvent(e2);
+      ignore = 0;
     };
 
     this._modal = true;
@@ -16836,8 +17574,8 @@ class TextBox extends UIBase$2 {
 
     let text = this.text;
 
-    if (prop !== undefined && (prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
-      let is_int = prop.type == PropTypes$2.INT;
+    if (prop !== undefined && (prop.type == PropTypes$3.INT || prop.type == PropTypes$3.FLOAT)) {
+      let is_int = prop.type == PropTypes$3.INT;
 
       this.radix = prop.radix;
 
@@ -16849,7 +17587,7 @@ class TextBox extends UIBase$2 {
       } else {
         text = buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
       }
-    } else if (prop !== undefined && prop.type === PropTypes$2.STRING) {
+    } else if (prop !== undefined && prop.type === PropTypes$3.STRING) {
       text = val;
     }
 
@@ -16901,7 +17639,7 @@ class TextBox extends UIBase$2 {
   }
 
   _prop_update(prop, text) {
-    if ((prop.type === PropTypes$2.INT || prop.type === PropTypes$2.FLOAT)) {
+    if ((prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT)) {
       let val = parseValue(this.text, this.baseUnit);
 
       if (!isNumber(this.text.trim())) {
@@ -16917,7 +17655,7 @@ class TextBox extends UIBase$2 {
         this._had_error = false;
         this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
       }
-    } else if (prop.type == PropTypes$2.STRING) {
+    } else if (prop.type == PropTypes$3.STRING) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
     }
   }
@@ -16945,7 +17683,7 @@ UIBase$2.register(TextBox);
 
 function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);
-  console.log(elem, x, y);
+  //console.log(elem, x, y);
 
   if (elem && elem.tagName === "TEXTBOX-X") {
     return true;
@@ -16954,11 +17692,31 @@ function checkForTextBox(screen, x, y) {
   return false;
 }
 
-let keymap$2 = keymap;
+"use strict";
 
-let PropTypes$3 = PropTypes;
+function myToFixed$1(s, n) {
+  s = s.toFixed(n);
 
-let UIBase$3 = UIBase; 
+  while (s.endsWith('0')) {
+    s = s.slice(0, s.length-1);
+  }
+  if (s.endsWith("\.")) {
+    s = s.slice(0, s.length-1);
+  }
+
+  return s;
+}
+
+let keymap$3 = keymap;
+
+let EnumProperty$5 = EnumProperty$1,
+    PropTypes$4 = PropTypes;
+
+let UIBase$3 = UIBase, 
+    PackFlags$3 = PackFlags,
+    IconSheets$3 = IconSheets;
+
+let parsepx$3 = parsepx;
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -17548,6 +18306,9 @@ class Check extends UIBase$3 {
     span.style["display"] = "flex";
     span.style["flex-direction"] = "row";
     span.style["margin"] = span.style["padding"] = "0px";
+    //span.style["background"] = ui_base.iconmanager.getCSS(1);
+
+    let sheet = 0;
     let size = iconmanager.getTileSize(0);
 
     let check = this.canvas = document.createElement("canvas");
@@ -17612,7 +18373,7 @@ class Check extends UIBase$3 {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap$2["Escape"]:
+        case keymap$3["Escape"]:
           this._highlight = undefined;
           this._redraw();
           e.preventDefault();
@@ -17620,8 +18381,8 @@ class Check extends UIBase$3 {
 
           this.blur();
           break;
-        case keymap$2["Enter"]:
-        case keymap$2["Space"]:
+        case keymap$3["Enter"]:
+        case keymap$3["Space"]:
           this.checked = !this.checked;
           e.preventDefault();
           e.stopPropagation();
@@ -17912,7 +18673,7 @@ class IconCheck extends Button {
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
-        if (rdef.subkey && (rdef.prop.type == PropTypes$3.FLAG || rdef.prop.type == PropTypes$3.ENUM)) {
+        if (rdef.subkey && (rdef.prop.type == PropTypes$4.FLAG || rdef.prop.type == PropTypes$4.ENUM)) {
           icon = rdef.prop.iconmap[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
 
@@ -18219,14 +18980,34 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
 });
 
 //bind module to global var to get at it in console.
+//
+//note that require has an api for handling circular 
+//module refs, in such cases do not use these vars.
+
+var _ui = undefined;
 
 let PropFlags$2 = PropFlags;
 let PropSubTypes$2 = PropSubTypes$1;
 
-let UIBase$4 = UIBase,
-  PackFlags$1 = PackFlags,
-  PropTypes$4 = PropTypes;
+let EnumProperty$6 = EnumProperty$1;
+
+let Vector2$4 = undefined,
+  UIBase$4 = UIBase,
+  PackFlags$4 = PackFlags,
+  PropTypes$5 = PropTypes;
+
+const SimpleContext$1 = SimpleContext;
 const DataPathError$1 = DataPathError;
+
+var list$2 = function list(iter) {
+  let ret = [];
+
+  for (let item of iter) {
+    ret.push(item);
+  }
+
+  return ret;
+};
 
 class Label extends UIBase {
   constructor() {
@@ -18297,7 +19078,7 @@ class Label extends UIBase {
       return;
     }
     //console.log(path);
-    if (prop !== undefined && prop.type == PropTypes$4.INT) {
+    if (prop !== undefined && prop.type == PropTypes$5.INT) {
       val = val.toString(prop.radix);
 
       if (prop.radix == 2) {
@@ -18305,7 +19086,7 @@ class Label extends UIBase {
       } else if (prop.radix == 16) {
         val += "h";
       }
-    } else if (prop !== undefined && prop.type == PropTypes$4.FLOAT && val !== Math.floor(val)) {
+    } else if (prop !== undefined && prop.type == PropTypes$5.FLOAT && val !== Math.floor(val)) {
       val = val.toFixed(prop.decimalPlaces);
     }
 
@@ -18372,11 +19153,11 @@ class Container extends UIBase {
 
   useIcons(enabled=true) {
     if (enabled) {
-      this.packflag |= PackFlags$1.USE_ICONS;
-      this.inherit_packflag |= PackFlags$1.USE_ICONS;
+      this.packflag |= PackFlags$4.USE_ICONS;
+      this.inherit_packflag |= PackFlags$4.USE_ICONS;
     } else {
-      this.packflag &= ~PackFlags$1.USE_ICONS;
-      this.inherit_packflag &= ~PackFlags$1.USE_ICONS;
+      this.packflag &= ~PackFlags$4.USE_ICONS;
+      this.inherit_packflag &= ~PackFlags$4.USE_ICONS;
     }
   }
 
@@ -18426,7 +19207,7 @@ class Container extends UIBase {
     let horiz = this instanceof RowFrame;
     horiz = horiz || this.style["flex-direction"] === "row";
 
-    let flag = horiz ? PackFlags$1.STRIP_HORIZ : PackFlags$1.STRIP_VERT;
+    let flag = horiz ? PackFlags$4.STRIP_HORIZ : PackFlags$4.STRIP_VERT;
 
     let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
     strip.packflag |= flag;
@@ -18562,6 +19343,13 @@ class Container extends UIBase {
 
   redrawCurves() {
     throw new Error("Implement me (properly!)");
+
+    if (this.closed)
+      return;
+
+    for (let cw of this.curve_widgets) {
+      cw.draw();
+    }
   }
 
   listen() {
@@ -18796,11 +19584,11 @@ class Container extends UIBase {
 
     let ret;
 
-    if (def.icon !== undefined && (packflag & PackFlags$1.USE_ICONS)) {
+    if (def.icon !== undefined && (packflag & PackFlags$4.USE_ICONS)) {
       //console.log("iconbutton!");
       ret = this.iconbutton(def.icon, tooltip, cb);
 
-      if (packflag & PackFlags$1.SMALL_ICON) {
+      if (packflag & PackFlags$4.SMALL_ICON) {
         ret.iconsheet = IconSheets.SMALL;
       } else {
         ret.iconsheet = IconSheets.LARGE;
@@ -18902,7 +19690,7 @@ class Container extends UIBase {
     ret.description = description;
     ret.icon = icon;
 
-    if (packflag & PackFlags$1.SMALL_ICON) {
+    if (packflag & PackFlags$4.SMALL_ICON) {
       ret.iconsheet = IconSheets.SMALL;
     } else {
       ret.iconsheet = IconSheets.LARGE;
@@ -19005,11 +19793,11 @@ class Container extends UIBase {
       return name;
     }
 
-    if (prop.type == PropTypes$4.CURVE) {
+    if (prop.type == PropTypes$5.CURVE) {
       return this.curve1d(path, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$4.INT || prop.type == PropTypes$4.FLOAT) {
+    } else if (prop.type == PropTypes$5.INT || prop.type == PropTypes$5.FLOAT) {
       let ret;
-      if (packflag & PackFlags$1.SIMPLE_NUMSLIDERS) {
+      if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath);
       } else {
         ret = this.slider(inpath);
@@ -19022,9 +19810,9 @@ class Container extends UIBase {
       }
 
       return ret;
-    } else if (prop.type == PropTypes$4.BOOL) {
+    } else if (prop.type == PropTypes$5.BOOL) {
       this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$4.ENUM) {
+    } else if (prop.type == PropTypes$5.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -19041,7 +19829,7 @@ class Container extends UIBase {
 
         return check;
       }
-      if (!(packflag & PackFlags$1.USE_ICONS)) {
+      if (!(packflag & PackFlags$4.USE_ICONS)) {
         let val;
         try {
           val = this.ctx.api.getValue(this.ctx, path);
@@ -19055,9 +19843,9 @@ class Container extends UIBase {
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
-    } else if (prop.type & (PropTypes$4.VEC2|PropTypes$4.VEC3|PropTypes$4.VEC4)) {
+    } else if (prop.type & (PropTypes$5.VEC2|PropTypes$5.VEC3|PropTypes$5.VEC4)) {
       if (rdef.subkey !== undefined) {
-        let ret = (packflag & PackFlags$1.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
+        let ret = (packflag & PackFlags$4.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
         ret.packflag |= packflag;
         return ret;
       } else if (prop.subtype === PropSubTypes$2.COLOR) {
@@ -19078,7 +19866,7 @@ class Container extends UIBase {
 
         return ret;
       }
-    } else if (prop.type == PropTypes$4.FLAG) {
+    } else if (prop.type == PropTypes$5.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -19120,10 +19908,10 @@ class Container extends UIBase {
 
     //let prop = this.ctx.getProp(path);
     let ret;
-    if (packflag & PackFlags$1.USE_ICONS) {
+    if (packflag & PackFlags$4.USE_ICONS) {
       ret = document.createElement("iconcheck-x");
 
-      if (packflag & PackFlags$1.SMALL_ICON) {
+      if (packflag & PackFlags$4.SMALL_ICON) {
         ret.iconsheet = IconSheets.SMALL;
       }
     } else {
@@ -19154,6 +19942,8 @@ class Container extends UIBase {
     packflag |= this.inherit_packflag;
 
     let path = this._joinPrefix(inpath);
+
+    let has_path = path !== undefined;
     let prop;
 
     if (path !== undefined) {
@@ -19171,7 +19961,7 @@ class Container extends UIBase {
 
       let frame;
 
-      if (packflag & PackFlags$1.VERTICAL) {
+      if (packflag & PackFlags$4.VERTICAL) {
         frame = this.col();
       } else {
         frame = this.row();
@@ -19180,7 +19970,7 @@ class Container extends UIBase {
       frame.oneAxisPadding();
       frame.background = this.getDefault("BoxSub2BG");
 
-      if (packflag & PackFlags$1.USE_ICONS) {
+      if (packflag & PackFlags$4.USE_ICONS) {
         for (let key in prop.values) {
           let check = frame.check(inpath + "["+key+"]", "", packflag);
 
@@ -19251,6 +20041,8 @@ class Container extends UIBase {
 
     let path = this._joinPrefix(inpath);
 
+    let has_path = path !== undefined;
+
     if (path !== undefined && prop === undefined) {
       prop = this.ctx.api.resolvePath(this.ctx, path, true);
 
@@ -19273,7 +20065,7 @@ class Container extends UIBase {
       frame.oneAxisPadding();
       frame.background = this.getDefault("BoxSub2BG");
 
-      if (packflag & PackFlags$1.USE_ICONS) {
+      if (packflag & PackFlags$4.USE_ICONS) {
         for (let key in prop.values) {
           let check = frame.check(inpath + " == " + prop.values[key], "", packflag);
 
@@ -19424,11 +20216,11 @@ class Container extends UIBase {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
-      args.packflag = (args.packflag || 0) | PackFlags$1.SIMPLE_NUMSLIDERS;
+      args.packflag = (args.packflag || 0) | PackFlags$4.SIMPLE_NUMSLIDERS;
       return this.slider(inpath, args);
       //new-style api call
     } else {
-      return this.slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag | PackFlags$1.SIMPLE_NUMSLIDERS);
+      return this.slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag | PackFlags$4.SIMPLE_NUMSLIDERS);
     }
   }
 
@@ -19455,14 +20247,14 @@ class Container extends UIBase {
     if (inpath) {
       let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.SIMPLE_SLIDER)) {
-        packflag |= PackFlags$1.SIMPLE_NUMSLIDERS;
+        packflag |= PackFlags$4.SIMPLE_NUMSLIDERS;
       }
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.FORCE_ROLLER_SLIDER)) {
-        packflag |= PackFlags$1.FORCE_ROLLER_SLIDER;
+        packflag |= PackFlags$4.FORCE_ROLLER_SLIDER;
       }
     }
 
-    if (packflag & PackFlags$1.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$1.FORCE_ROLLER_SLIDER)) {
+    if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$4.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
     } else {
       ret = document.createElement("numslider-x");
@@ -19495,7 +20287,7 @@ class Container extends UIBase {
 
         min = min === undefined ? range[0] : min;
         max = max === undefined ? range[1] : max;
-        is_int = is_int === undefined ? prop.type === PropTypes$4.INT : is_int;
+        is_int = is_int === undefined ? prop.type === PropTypes$5.INT : is_int;
         name = name === undefined ? prop.uiname : name;
         step = step === undefined ? prop.step : step;
         step = step === undefined ? (is_int ? 1 : 0.1) : step;
@@ -19613,7 +20405,7 @@ class Container extends UIBase {
 
     let ret = document.createElement("colorpicker-x");
 
-    packflag |= PackFlags$1.SIMPLE_NUMSLIDERS;
+    packflag |= PackFlags$4.SIMPLE_NUMSLIDERS;
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
@@ -19701,7 +20493,8 @@ class Container extends UIBase {
     this._add(ret);
     return ret;
   }
-}
+};
+
 UIBase.register(Container, "div");
 
 
@@ -20058,11 +20851,18 @@ class RichViewer extends UIBase$5 {
 }
 UIBase$5.register(RichViewer);
 
-let keymap$3 = keymap;
+"use strict";
 
-let PropTypes$5 = PropTypes;
+let keymap$4 = keymap;
 
-let UIBase$6 = UIBase;
+let EnumProperty$7 = EnumProperty$1,
+  PropTypes$6 = PropTypes;
+
+let UIBase$6 = UIBase,
+  PackFlags$5 = PackFlags,
+  IconSheets$4 = IconSheets;
+
+let parsepx$4 = parsepx;
 
 class NumSliderSimple extends UIBase$6 {
   constructor() {
@@ -20143,7 +20943,7 @@ class NumSliderSimple extends UIBase$6 {
       if (!prop) {
         return;
       }
-      this.isInt = prop.type === PropTypes$5.INT;
+      this.isInt = prop.type === PropTypes$6.INT;
 
       if (prop.range !== undefined) {
         this.range[0] = prop.range[0];
@@ -20179,6 +20979,8 @@ class NumSliderSimple extends UIBase$6 {
     if (e !== undefined) {
       this._setFromMouse(e);
     }
+    let dom = window;
+    let evtargs = {capture : false};
 
     if (this.modal) {
       console.warn("Double call to _startModal!");
@@ -20219,9 +21021,9 @@ class NumSliderSimple extends UIBase$6 {
 
       keydown : (e) => {
         switch (e.keyCode) {
-          case keymap$3["Enter"]:
-          case keymap$3["Space"]:
-          case keymap$3["Escape"]:
+          case keymap$4["Enter"]:
+          case keymap$4["Space"]:
+          case keymap$4["Escape"]:
             end();
         }
       }
@@ -20256,8 +21058,8 @@ class NumSliderSimple extends UIBase$6 {
       let dt = this.range[1] > this.range[0] ? 1 : -1;
 
       switch (e.keyCode) {
-        case keymap$3["Left"]:
-        case keymap$3["Right"]:
+        case keymap$4["Left"]:
+        case keymap$4["Right"]:
           let fac = this.step;
 
           if (e.shiftKey) {
@@ -20268,7 +21070,7 @@ class NumSliderSimple extends UIBase$6 {
             fac = Math.max(fac, 1);
           }
 
-          this.value += e.keyCode === keymap$3["Left"] ? -dt*fac : dt*fac;
+          this.value += e.keyCode === keymap$4["Left"] ? -dt*fac : dt*fac;
 
           break;
       }
@@ -20288,17 +21090,17 @@ class NumSliderSimple extends UIBase$6 {
     });
 
     this.addEventListener("mousein", (e) => {
-      console.log("mouse in");
+      //console.log("mouse in");
       this.setHighlight(e);
       this._redraw();
     });
     this.addEventListener("mouseout", (e) => {
-      console.log("mouse out");
+      //console.log("mouse out");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("mouseover", (e) => {
-      console.log("mouse over");
+      //console.log("mouse over");
       this.setHighlight(e);
       this._redraw();
     });
@@ -20307,12 +21109,12 @@ class NumSliderSimple extends UIBase$6 {
       this._redraw();
     });
     this.addEventListener("mouseleave", (e) => {
-      console.log("mouse leave");
+      //console.log("mouse leave");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("blur", (e) => {
-      console.log("blur");
+      //console.log("blur");
       this._focus = 0;
       this.highlight = false;
       this._redraw();
@@ -21127,7 +21929,8 @@ class ToolTip extends UIBase$6 {
     tagname : "tool-tip-x",
     style   : "tooltip"
   }}
-}UIBase$6.register(ToolTip);
+};
+UIBase$6.register(ToolTip);
 
 function makeGenEnum() {
   let enumdef = {};
@@ -21372,8 +22175,21 @@ class Curve1DWidget extends ColumnFrame {
 UIBase.register(Curve1DWidget);
 
 //bind module to global var to get at it in console.
+//
+//note that require has an api for handling circular
+//module refs, in such cases do not use these vars.
 
-let UIBase$7 = UIBase;
+var _ui$1 = undefined;
+
+let PropFlags$3 = PropFlags;
+let PropSubTypes$3 = PropSubTypes$1;
+
+let EnumProperty$8 = EnumProperty$1;
+
+let Vector2$5 = undefined,
+  UIBase$7 = UIBase,
+  PackFlags$6 = PackFlags,
+  PropTypes$7 = PropTypes;
 
 class PanelFrame extends ColumnFrame {
   constructor() {
@@ -21510,6 +22326,11 @@ class PanelFrame extends ColumnFrame {
 
     this.contents.hidden = state;
     return;
+    for (let c of this.shadow.childNodes) {
+      if (c !== this.titleframe) {
+        c.hidden = state;
+      }
+    }
   }
 
   _updateClosed() {
@@ -21534,11 +22355,14 @@ class PanelFrame extends ColumnFrame {
 
 UIBase$7.register(PanelFrame);
 
+"use strict";
+
 let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
 
-let Vector2$3 = Vector2,
+let Vector2$6 = Vector2,
   Vector3$1 = Vector3,
-  Vector4$2 = Vector4;
+  Vector4$2 = Vector4,
+  Matrix4$2 = Matrix4;
 
 function rgb_to_hsv (r,g,b) {
   var computedH = 0;
@@ -21548,6 +22372,7 @@ function rgb_to_hsv (r,g,b) {
   if ( r==null || g==null || b==null ||
     isNaN(r) || isNaN(g)|| isNaN(b) ) {
     throw new Error('Please enter numeric RGB values!');
+    return;
   }
   /*
   if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
@@ -21634,7 +22459,9 @@ function hsv_to_rgb(h, s, v) {
   return color;
 }
 
-let UIBase$8 = UIBase;
+let UIBase$8 = UIBase,
+  PackFlags$7 = PackFlags,
+  IconSheets$5 = IconSheets;
 
 let UPW = 1.25, VPW = 0.75;
 
@@ -21673,7 +22500,7 @@ function getHueField(width, height, dpi) {
   let idata = field.data;
 
   for (let i=0; i<width*height; i++) {
-    let ix = i % width;
+    let ix = i % width, iy = ~~(i / width);
     let idx = i*4;
 
     let rgb = hsv_to_rgb(ix/width, 1, 1);
@@ -21781,8 +22608,8 @@ let _update_temp = new Vector4$2();
 
 class SimpleBox {
   constructor(pos=[0, 0], size=[1, 1]) {
-    this.pos = new Vector2$3(pos);
-    this.size = new Vector2$3(size);
+    this.pos = new Vector2$6(pos);
+    this.size = new Vector2$6(size);
     this.r = 0;
   }
 }
@@ -21815,7 +22642,7 @@ class HueField extends UIBase$8 {
       let rect = this.canvas.getClientRects()[0];
       let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
-      setFromXY(x);
+      setFromXY(x, y);
 
       setTimeout(() => {
         this.pushModal({
@@ -21823,7 +22650,7 @@ class HueField extends UIBase$8 {
             let rect = this.canvas.getClientRects()[0];
             let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
-            setFromXY(x);
+            setFromXY(x, y);
           },
           on_mousedown: (e) => {
             this.popModal();
@@ -22777,11 +23604,17 @@ class ColorPickerButton extends UIBase$8 {
   redraw() {
     this._redraw();
   }
-}UIBase$8.register(ColorPickerButton);
+};
+UIBase$8.register(ColorPickerButton);
 
-let UIBase$9 = UIBase; 
+"use strict";
+
+let UIBase$9 = UIBase, 
+    PackFlags$8 = PackFlags,
+    IconSheets$6 = IconSheets;
 
 let tab_idgen = 1;
+let debug = false;
 
 function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -22810,6 +23643,7 @@ class ModalTabMove extends EventHandler {
   }
   
   finish() {
+    if (debug) if (debug) console.log("finish");
     
     this.tbar.tool = undefined;
     this.popModal(this.dom);
@@ -22817,6 +23651,7 @@ class ModalTabMove extends EventHandler {
   }
   
   on_mousedown(e) {
+    if (debug) console.log("yay");
     
     this.finish();
   }
@@ -22834,6 +23669,7 @@ class ModalTabMove extends EventHandler {
   }
   
   on_mousemove(e) {
+    if (debug) console.log("SFSDFSD");
     return this._on_move(e, e.x, e.y);
   }
   
@@ -22873,6 +23709,8 @@ class ModalTabMove extends EventHandler {
       dy = y - this.mpos[1];
     }
     
+    if (debug) console.log(x, y, dx, dy);
+    
     let tab = this.tab, tbar = this.tbar;
     let axis = tbar.horiz ? 0 : 1;
     
@@ -22899,6 +23737,7 @@ class ModalTabMove extends EventHandler {
   }
   
   on_keydown(e) {
+    if (debug) console.log(e.keyCode);
     
     switch (e.keyCode) {
       case 27: //escape
@@ -22974,11 +23813,13 @@ class TabBar extends UIBase$9 {
       mx *= dpi;
       my *= dpi;
       
-      do_element();
+      do_element(e);
     };
     
     let do_touch = (e) => {
       let r = this.canvas.getClientRects()[0];
+      
+      if (debug) console.log(e.touches);
       
       mx = e.touches[0].pageX - r.x;
       my = e.touches[0].pageY - r.y;
@@ -22988,10 +23829,11 @@ class TabBar extends UIBase$9 {
       mx *= dpi;
       my *= dpi;
       
-      do_element();
+      do_element(e);
     };
     
     this.canvas.addEventListener("mousemove", (e) => {
+      if (debug) console.log("yay");
       
       let r = this.canvas.getClientRects()[0];
       do_mouse(e);
@@ -23025,6 +23867,8 @@ class TabBar extends UIBase$9 {
     
     this.canvas.addEventListener("mousedown", (e) => {
       do_mouse(e);
+
+      if (debug) console.log("mdown");
 
       if (e.button !== 0) {
         return;
@@ -23158,6 +24002,7 @@ class TabBar extends UIBase$9 {
       this._last_pos = pos;
       
       this.horiz = pos == "top" || pos == "bottom";
+      if (debug) console.log("tab bar position update", this.horiz);
 
       if (this.horiz) {
         this.style["width"] = "100%";
@@ -23175,6 +24020,7 @@ class TabBar extends UIBase$9 {
     let dpi = this.getDPI();
     
     if (dpi !== this._last_dpi) {
+      if (debug) console.log("DPI update!");
       this._last_dpi = dpi;
       
       this.updateCanvas(true);
@@ -23209,6 +24055,8 @@ class TabBar extends UIBase$9 {
   
   _layout() {
     let g = this.g;
+    
+    if (debug) console.log("tab layout");
     
     let dpi = this.getDPI();
     let tsize = this.getDefault("TabText").size*1;
@@ -23267,6 +24115,8 @@ class TabBar extends UIBase$9 {
   _redraw() {
     let g = this.g;
     let bgcolor = this.getDefault("DefaultPanelBG");
+    
+    if (debug) console.log("tab draw");
     
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
@@ -23340,6 +24190,8 @@ class TabBar extends UIBase$9 {
         g.stroke();
       }
     }
+    
+    let th = tsize;
     
     //draw active tab
     tab = this.tabs.active;
@@ -23422,7 +24274,9 @@ class TabBar extends UIBase$9 {
         g.stroke();
         
 
-        if (!this.horiz) ;
+        if (!this.horiz) {
+          //g.restore();
+        }
       }
     }
   }
@@ -23635,9 +24489,22 @@ UIBase$9.register(TabContainer);
 
 //bind module to global var to get at it in console.
 
-let UIBase$a = UIBase;
+var _ui$2 = undefined;
 
-var list$2 = function list(iter) {
+let PropFlags$4 = PropFlags;
+let PropSubTypes$4 = PropSubTypes$1;
+
+let EnumProperty$9 = EnumProperty$1;
+
+let Vector2$7 = undefined,
+  UIBase$a = UIBase,
+  PackFlags$9 = PackFlags,
+  PropTypes$8 = PropTypes;
+
+const SimpleContext$2 = SimpleContext;
+const DataPathError$2 = DataPathError;
+
+var list$3 = function list(iter) {
   let ret = [];
 
   for (let item of iter) {
@@ -23673,7 +24540,8 @@ class TableRow extends Container {
     this.dom.appendChild(td);
     child.onadd();
   }
-}UIBase$a.register(TableRow);
+};
+UIBase$a.register(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -23772,7 +24640,7 @@ class TableFrame extends Container {
       },
 
       clear : function() {
-        for (let node of list$2(tr.childNodes)) {
+        for (let node of list$3(tr.childNodes)) {
           tr.removeChild(node);
         }
       }
@@ -23852,7 +24720,7 @@ class TableFrame extends Container {
 
   clear() {
     super.clear();
-    for (let child of list$2(this.dom.childNodes)) {
+    for (let child of list$3(this.dom.childNodes)) {
       child.remove();
     }
   }
@@ -23863,7 +24731,18 @@ class TableFrame extends Container {
 }
 UIBase$a.register(TableFrame);
 
-let UIBase$b = UIBase;
+"use strict";
+
+let EnumProperty$a = EnumProperty$1,
+  PropTypes$9 = PropTypes;
+
+let UIBase$b = UIBase,
+  PackFlags$a = PackFlags,
+  IconSheets$7 = IconSheets;
+
+function getpx$1(css) {
+  return parseFloat(css.trim().replace("px", ""))
+}
 
 class ListItem extends RowFrame {
   constructor() {
@@ -24074,8 +24953,18 @@ class ListBox extends Container {
 }
 UIBase$b.register(ListBox);
 
+"use strict";
+
+let EnumProperty$b = EnumProperty$1,
+  PropTypes$a = PropTypes;
+
 let UIBase$c = UIBase,
-  IconSheets$1 = IconSheets;
+  PackFlags$b = PackFlags,
+  IconSheets$8 = IconSheets;
+
+function getpx$2(css) {
+  return parseFloat(css.trim().replace("px", ""))
+}
 
 class Menu extends UIBase$c {
   constructor() {
@@ -24376,8 +25265,17 @@ class Menu extends UIBase$c {
 
     let icon_div;
 
-    { //icon >= 0) {
-      icon_div = makeIconDiv(icon, IconSheets$1.SMALL);
+    if (1) { //icon >= 0) {
+      icon_div = makeIconDiv(icon, IconSheets$8.SMALL);
+    } else {
+      let tilesize = iconmanager.getTileSize(IconSheets$8.SMALL);
+
+      //tilesize *= window.devicePixelRatio;
+
+      icon_div = document.createElement("span");
+      icon_div.style["padding"] = icon_div.style["margin"] = "0px";
+      icon_div.style["width"] = tilesize + "px";
+      icon_div.style["height"] = tilesize + "px";
     }
 
     icon_div.style["display"] = "inline-flex";
@@ -24541,7 +25439,7 @@ class Menu extends UIBase$c {
       };
 
       li.addEventListener("touchend", (e) => {
-        onfocus();
+        onfocus(e);
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           console.log("menu ignore");
@@ -24553,12 +25451,12 @@ class Menu extends UIBase$c {
       });
 
       li.addEventListener("focus", (e) => {
-        onfocus();
+        onfocus(e);
       });
 
       li.addEventListener("touchmove", (e) => {
         //console.log("menu touchmove");
-        onfocus();
+        onfocus(e);
         li.focus();
       });
 
@@ -24805,6 +25703,7 @@ class DropBox extends Button {
 
   _redraw() {
     if (this.getAttribute("simple")) {
+      let color;
 
       if (this._highlight) {
         drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
@@ -25135,7 +26034,7 @@ function getWranglerScreen() {
 }
 
 const LastKey = Symbol("LastToolPanelId");
-let tool_idgen = 0;
+let tool_idgen$1 = 0;
 
 /*
 *
@@ -25267,7 +26166,7 @@ class LastToolPanel extends ColumnFrame {
 
     let tool = ctx.toolstack[ctx.toolstack.cur];
     if (!(LastKey in tool) || tool[LastKey] !== this._tool_id) {
-      tool[LastKey] = tool_idgen++;
+      tool[LastKey] = tool_idgen$1++;
       this._tool_id = tool[LastKey];
 
       this.rebuild();
@@ -25279,6 +26178,8 @@ class LastToolPanel extends ColumnFrame {
   }}
 }
 UIBase.register(LastToolPanel);
+
+"use strict";
 
 function aabb_overlap_area(pos1, size1, pos2, size2) {
   let r1=0.0, r2=0.0;
@@ -25302,16 +26203,213 @@ function aabb_overlap_area(pos1, size1, pos2, size2) {
   return r1*r2;
 }
 
-var Vector2$4 = Vector2, Vector3$2 = Vector3;
-var Vector4$3 = Vector4;
+function aabb_isect_2d(pos1, size1, pos2, size2) {
+  var ret=0;
+  for (var i=0; i<2; i++) {
+    var a=pos1[i];
+    var b=pos1[i]+size1[i];
+    var c=pos2[i];
+    var d=pos2[i]+size2[i];
+    if (b>=c&&a<=d)
+      ret+=1;
+  }
+  return ret==2;
+};
+
+
+//XXX refactor to use es6 classes,
+//    or at last the class system in typesystem.js
+function init_prototype(cls, proto) {
+  for (var k in proto) {
+    cls.prototype[k] = proto[k];
+  }
+  
+  return cls.prototype;
+}
+
+function inherit$1(cls, parent, proto) {
+  cls.prototype = Object.create(parent.prototype);
+  
+  for (var k in proto) {
+    cls.prototype[k] = proto[k];
+  }
+  
+  return cls.prototype;
+}
+
+var Vector2$8 = Vector2, Vector3$2 = Vector3;
+var Vector4$3 = Vector4, Matrix4$3 = Matrix4;
+
+var set$2 = set$1;
+
+//everything below here was compiled from es6 code  
+//variables starting with $ are function static local vars,
+//like in C.  don't use them outside their owning functions.
+//
+//except for $_mh and $_swapt.  they were used with a C macro
+//preprocessor.
+var $_mh, $_swapt;
+
+//XXX destroy me
+const feps = 2.22e-16;
+
+const COLINEAR = 1;
+const LINECROSS = 2;
+const COLINEAR_ISECT = 3;
 
 var _cross_vec1=new Vector3$2();
 var _cross_vec2=new Vector3$2();
+
+const SQRT2 = Math.sqrt(2.0);
+const FEPS_DATA = {
+  F16 : 1.11e-16,
+  F32 : 5.96e-08,
+  F64 : 4.88e-04
+};
+
+/*use 32 bit epsilon by default, since we're often working from
+  32-bit float data.  note that javascript uses 64-bit doubles 
+  internally.*/
+const FEPS = FEPS_DATA.F32;
 const FLOAT_MIN = -1e+21;
 const FLOAT_MAX = 1e+22;
+const Matrix4UI = Matrix4$3;
+
+/*
+var Matrix4UI=exports.Matrix4UI = function(loc, rot, size) {
+  if (rot==undefined) {
+      rot = undefined;
+  }
+  
+  if (size==undefined) {
+      size = undefined;
+  }
+  
+  Object.defineProperty(this, "loc", {get: function() {
+    var t=new Vector3();
+    this.decompose(t);
+    return t;
+  }, set: function(loc) {
+    var l=new Vector3(), r=new Vector3(), s=new Vector3();
+    this.decompose(l, r, s);
+    this.calc(loc, r, s);
+  }});
+  
+  Object.defineProperty(this, "size", {get: function() {
+    var t=new Vector3();
+    this.decompose(undefined, undefined, t);
+    return t;
+  }, set: function(size) {
+    var l=new Vector3(), r=new Vector3(), s=new Vector3();
+    this.decompose(l, r, s);
+    this.calc(l, r, size);
+  }});
+  
+  Object.defineProperty(this, "rot", {get: function() {
+    var t=new Vector3();
+    this.decompose(undefined, t);
+    return t;
+  }, set: function(rot) {
+    var l=new Vector3(), r=new Vector3(), s=new Vector3();
+    this.decompose(l, r, s);
+    this.calc(l, rot, s);
+  }});
+  
+  if (loc instanceof Matrix4) {
+      this.load(loc);
+      return ;
+  }
+  
+  if (rot==undefined)
+    rot = [0, 0, 0];
+  if (size==undefined)
+    size = [1.0, 1.0, 1.0];
+  this.makeIdentity();
+  this.calc(loc, rot, size);
+};
+
+Matrix4UI.prototype = inherit(Matrix4UI, Matrix4, {
+  calc : function(loc, rot, size) {
+    this.rotate(rot[0], rot[1], rot[2]);
+    this.scale(size[0], size[1], size[2]);
+    this.translate(loc[0], loc[1], loc[2]);
+  }
+
+});
+*/
+
+if (FLOAT_MIN!=FLOAT_MIN||FLOAT_MAX!=FLOAT_MAX) {
+    FLOAT_MIN = 1e-05;
+    FLOAT_MAX = 1000000.0;
+    console.log("Floating-point 16-bit system detected!");
+}
 
 var _static_grp_points4=new Array(4);
 var _static_grp_points8=new Array(8);
+function get_rect_points(p, size) {
+  var cs;
+  if (p.length==2) {
+      cs = _static_grp_points4;
+      cs[0] = p;
+      cs[1] = [p[0]+size[0], p[1]];
+      cs[2] = [p[0]+size[0], p[1]+size[1]];
+      cs[3] = [p[0], p[1]+size[1]];
+  }
+  else 
+    if (p.length==3) {
+      cs = _static_grp_points8;
+      cs[0] = p;
+      cs[1] = [p[0]+size[0], p[1], p[2]];
+      cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
+      cs[3] = [p[0], p[1]+size[0], p[2]];
+      cs[4] = [p[0], p[1], p[2]+size[2]];
+      cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
+      cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
+      cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
+  }
+  else {
+    throw "get_rect_points has no implementation for "+p.length+"-dimensional data";
+  }
+  return cs;
+};
+
+function get_rect_lines(p, size) {
+  var ps=get_rect_points(p, size);
+  if (p.length==2) {
+      return [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
+  }
+  else 
+    if (p.length==3) {
+      var l1=[[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
+      var l2=[[ps[4], ps[5]], [ps[5], ps[6]], [ps[6], ps[7]], [ps[7], ps[4]]];
+      l1.concat(l2);
+      l1.push([ps[0], ps[4]]);
+      l1.push([ps[1], ps[5]]);
+      l1.push([ps[2], ps[6]]);
+      l1.push([ps[3], ps[7]]);
+      return l1;
+  }
+  else {
+    throw "get_rect_points has no implementation for "+p.length+"-dimensional data";
+  }
+};
+
+var $vs_simple_tri_aabb_isect=[0, 0, 0];
+function simple_tri_aabb_isect(v1, v2, v3, min, max) {
+  $vs_simple_tri_aabb_isect[0] = v1;
+  $vs_simple_tri_aabb_isect[1] = v2;
+  $vs_simple_tri_aabb_isect[2] = v3;
+  for (var i=0; i<3; i++) {
+      var isect=true;
+      for (var j=0; j<3; j++) {
+          if ($vs_simple_tri_aabb_isect[j][i]<min[i]||$vs_simple_tri_aabb_isect[j][i]>=max[i])
+            isect = false;
+      }
+      if (isect)
+        return true;
+  }
+  return false;
+};
 
 class MinMax {
   constructor(totaxis) {
@@ -25324,7 +26422,7 @@ class MinMax {
         
         switch (totaxis) {
           case 2:
-            cls = Vector2$4;
+            cls = Vector2$8;
             break;
           case 3:
             cls = Vector3$2;
@@ -25443,13 +26541,113 @@ class MinMax {
     reader(ret);
     return ret;
   }
-}MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
-var $smin_aabb_isect_line_2d=new Vector2$4();
-var $ssize_aabb_isect_line_2d=new Vector2$4();
-var $sv1_aabb_isect_line_2d=new Vector2$4();
-var $ps_aabb_isect_line_2d=[new Vector2$4(), new Vector2$4(), new Vector2$4()];
-var $smax_aabb_isect_line_2d=new Vector2$4();
-var $sv2_aabb_isect_line_2d=new Vector2$4();
+};
+MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
+
+function winding(a, b, c, zero_z, tol) {
+  if (tol == undefined) tol = 0.0;
+  
+  for (var i=0; i<a.length; i++) {
+      _cross_vec1[i] = b[i]-a[i];
+      _cross_vec2[i] = c[i]-a[i];
+  }
+  if (a.length==2 || zero_z) {
+      _cross_vec1[2] = 0.0;
+      _cross_vec2[2] = 0.0;
+  }
+  _cross_vec1.cross(_cross_vec2);
+  return _cross_vec1[2]>tol;
+};
+function inrect_2d(p, pos, size) {
+  if (p==undefined||pos==undefined||size==undefined) {
+      console.trace();
+      console.log("Bad paramters to inrect_2d()");
+      console.log("p: ", p, ", pos: ", pos, ", size: ", size);
+      return false;
+  }
+  return p[0]>=pos[0]&&p[0]<=pos[0]+size[0]&&p[1]>=pos[1]&&p[1]<=pos[1]+size[1];
+};
+var $smin_aabb_isect_line_2d=new Vector2$8();
+var $ssize_aabb_isect_line_2d=new Vector2$8();
+var $sv1_aabb_isect_line_2d=new Vector2$8();
+var $ps_aabb_isect_line_2d=[new Vector2$8(), new Vector2$8(), new Vector2$8()];
+var $l1_aabb_isect_line_2d=[0, 0];
+var $smax_aabb_isect_line_2d=new Vector2$8();
+var $sv2_aabb_isect_line_2d=new Vector2$8();
+var $l2_aabb_isect_line_2d=[0, 0];
+function aabb_isect_line_2d(v1, v2, min, max) {
+  for (var i=0; i<2; i++) {
+      $smin_aabb_isect_line_2d[i] = Math.min(min[i], v1[i]);
+      $smax_aabb_isect_line_2d[i] = Math.max(max[i], v2[i]);
+  }
+  $smax_aabb_isect_line_2d.sub($smin_aabb_isect_line_2d);
+  $ssize_aabb_isect_line_2d.load(max).sub(min);
+  if (!aabb_isect_2d($smin_aabb_isect_line_2d, $smax_aabb_isect_line_2d, min, $ssize_aabb_isect_line_2d))
+    return false;
+  for (var i=0; i<4; i++) {
+      if (inrect_2d(v1, min, $ssize_aabb_isect_line_2d))
+        return true;
+      if (inrect_2d(v2, min, $ssize_aabb_isect_line_2d))
+        return true;
+  }
+  $ps_aabb_isect_line_2d[0] = min;
+  $ps_aabb_isect_line_2d[1][0] = min[0];
+  $ps_aabb_isect_line_2d[1][1] = max[1];
+  $ps_aabb_isect_line_2d[2] = max;
+  $ps_aabb_isect_line_2d[3][0] = max[0];
+  $ps_aabb_isect_line_2d[3][1] = min[1];
+  $l1_aabb_isect_line_2d[0] = v1;
+  $l1_aabb_isect_line_2d[1] = v2;
+  for (var i=0; i<4; i++) {
+      var a=$ps_aabb_isect_line_2d[i], b=$ps_aabb_isect_line_2d[(i+1)%4];
+      $l2_aabb_isect_line_2d[0] = a;
+      $l2_aabb_isect_line_2d[1] = b;
+      if (line_line_cross($l1_aabb_isect_line_2d, $l2_aabb_isect_line_2d))
+        return true;
+  }
+  return false;
+};
+
+
+function expand_rect2d(pos, size, margin) {
+  pos[0]-=Math.floor(margin[0]);
+  pos[1]-=Math.floor(margin[1]);
+  size[0]+=Math.floor(margin[0]*2.0);
+  size[1]+=Math.floor(margin[1]*2.0);
+};
+
+function expand_line(l, margin) {
+  var c=new Vector3$2();
+  c.add(l[0]);
+  c.add(l[1]);
+  c.mulScalar(0.5);
+  l[0].sub(c);
+  l[1].sub(c);
+  var l1=l[0].vectorLength();
+  var l2=l[1].vectorLength();
+  l[0].normalize();
+  l[1].normalize();
+  l[0].mulScalar(margin+l1);
+  l[1].mulScalar(margin+l2);
+  l[0].add(c);
+  l[1].add(c);
+  return l;
+};
+
+function colinear(a, b, c) {
+  for (var i=0; i<3; i++) {
+      _cross_vec1[i] = b[i]-a[i];
+      _cross_vec2[i] = c[i]-a[i];
+  }
+  var limit=2.2e-16;
+  if (a.vectorDistance(b)<feps*100&&a.vectorDistance(c)<feps*100) {
+      return true;
+  }
+  if (_cross_vec1.dot(_cross_vec1)<limit||_cross_vec2.dot(_cross_vec2)<limit)
+    return true;
+  _cross_vec1.cross(_cross_vec2);
+  return _cross_vec1.dot(_cross_vec1)<limit;
+};
 
 var _llc_l1=[new Vector3$2(), new Vector3$2()];
 var _llc_l2=[new Vector3$2(), new Vector3$2()];
@@ -25462,6 +26660,136 @@ var _zero_cn = new Vector3$2();
 var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
 var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
 
+//vec1, vec2 should both be normalized
+function corner_normal(vec1, vec2, width) {
+  var ret = _rets_cn.next().zero();
+
+  var vec = _tmps_cn.next().zero();
+  vec.load(vec1).add(vec2).normalize();
+
+  /*
+  ret.load(vec).mulScalar(width);
+  return ret;
+  */
+
+  //handle colinear case
+  if (Math.abs(vec1.normalizedDot(vec2)) > 0.9999) {
+    if (vec1.dot(vec2) > 0.0001) {
+      ret.load(vec1).add(vec2).normalize();
+    } else {
+      ret.load(vec1).normalize();
+    }
+
+    ret.mulScalar(width);
+
+    return ret;
+  } else { //XXX
+    //ret.load(vec).mulScalar(width);
+    //return ret;
+  }
+
+  vec1 = _tmps_cn.next().load(vec1).mulScalar(width);
+  vec2 = _tmps_cn.next().load(vec2).mulScalar(width);
+
+  var p1 = _tmps_cn.next().load(vec1);
+  var p2 = _tmps_cn.next().load(vec2);
+
+  vec1.addFac(vec1, 0.01);
+  vec2.addFac(vec2, 0.01);
+
+  var sc = 1.0;
+
+  p1[0] += vec1[1]*sc;
+  p1[1] += -vec1[0]*sc;
+
+  p2[0] += -vec2[1]*sc;
+  p2[1] += vec2[0]*sc;
+
+  var p = line_line_isect(vec1, p1, vec2, p2, false);
+
+  if (p == undefined || p === COLINEAR_ISECT || p.dot(p) < 0.000001) {
+    ret.load(vec1).add(vec2).normalize().mulScalar(width);
+  } else {
+    ret.load(p);
+
+    if (vec.dot(vec) > 0 && vec.dot(ret) < 0) {
+      ret.load(vec).mulScalar(width);
+    }
+  }
+
+  return ret;
+}
+
+//test_segment is optional, true
+function line_line_isect(v1, v2, v3, v4, test_segment) {
+  test_segment = test_segment === undefined ? true : test_segment;
+
+  if (!line_line_cross(v1, v2, v3, v4)) {
+    return undefined;
+  }
+  
+  /*
+  on factor;
+  off period;
+  
+  xa := xa1 + (xa2 - xa1)*t1;
+  xb := xb1 + (xb2 - xb1)*t2;
+  ya := ya1 + (ya2 - ya1)*t1;
+  yb := yb1 + (yb2 - yb1)*t2;
+  
+  f1 := xa - xb;
+  f2 := ya - yb;
+  
+  f := solve({f1, f2}, {t1, t2});
+  ft1 := part(f, 1, 1, 2);
+  ft2 := part(f, 1, 2, 2);
+  
+  */
+  
+  var xa1 = v1[0], xa2 = v2[0], ya1 = v1[1], ya2 = v2[1];
+  var xb1 = v3[0], xb2 = v4[0], yb1 = v3[1], yb2 = v4[1];
+  
+  var div = ((xa1-xa2)*(yb1-yb2)-(xb1-xb2)*(ya1-ya2));
+  if (div < 0.00000001) { //parallel but intersecting lines.
+    return COLINEAR_ISECT;
+  } else { //intersection exists
+    var t1 = (-((ya1-yb2)*xb1-(yb1-yb2)*xa1-(ya1-yb1)*xb2))/div;
+    
+    return lli_v1.load(v1).interp(v2, t1);
+  }
+}
+
+function line_line_cross(v1, v2, v3, v4) {
+  var l1 = _llc_l3, l2 = _llc_l4;
+  l1[0].load(v1), l1[1].load(v2), l2[0].load(v3), l2[1].load(v4);
+  
+  /*
+  var limit=feps*1000;
+  if (Math.abs(l1[0].vectorDistance(l2[0])+l1[1].vectorDistance(l2[0])-l1[0].vectorDistance(l1[1]))<limit) {
+      return true;
+  }
+  if (Math.abs(l1[0].vectorDistance(l2[1])+l1[1].vectorDistance(l2[1])-l1[0].vectorDistance(l1[1]))<limit) {
+      return true;
+  }
+  if (Math.abs(l2[0].vectorDistance(l1[0])+l2[1].vectorDistance(l1[0])-l2[0].vectorDistance(l2[1]))<limit) {
+      return true;
+  }
+  if (Math.abs(l2[0].vectorDistance(l1[1])+l2[1].vectorDistance(l1[1])-l2[0].vectorDistance(l2[1]))<limit) {
+      return true;
+  }
+  //*/
+  
+  var a=l1[0];
+  var b=l1[1];
+  var c=l2[0];
+  var d=l2[1];
+  var w1=winding(a, b, c);
+  var w2=winding(c, a, d);
+  var w3=winding(a, b, d);
+  var w4=winding(c, b, d);
+  return (w1==w2)&&(w3==w4)&&(w1!=w3);
+};
+
 var _asi_v1 = new Vector3$2();
 var _asi_v2 = new Vector3$2();
 var _asi_v3 = new Vector3$2();
@@ -25469,26 +26797,226 @@ var _asi_v4 = new Vector3$2();
 var _asi_v5 = new Vector3$2();
 var _asi_v6 = new Vector3$2();
 
-var _asi2d_v1 = new Vector2$4();
-var _asi2d_v2 = new Vector2$4();
-var _asi2d_v3 = new Vector2$4();
-var _asi2d_v4 = new Vector2$4();
-var _asi2d_v5 = new Vector2$4();
-var _asi2d_v6 = new Vector2$4();
+function point_in_aabb_2d(p, min, max) {
+  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
+}
+
+var _asi2d_v1 = new Vector2$8();
+var _asi2d_v2 = new Vector2$8();
+var _asi2d_v3 = new Vector2$8();
+var _asi2d_v4 = new Vector2$8();
+var _asi2d_v5 = new Vector2$8();
+var _asi2d_v6 = new Vector2$8();
+function aabb_sphere_isect_2d(p, r, min, max) {
+  var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
+  var v4 = _asi2d_v5;
+  
+  p = _asi2d_v6.load(p);
+  v1.load(p);
+  v2.load(p);
+  
+  min = _asi_v5.load(min);
+  max = _asi_v6.load(max);
+  
+  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
+  
+  v1.sub(mvec);
+  v2.add(mvec);
+  v3.load(p);
+  
+  var ret = point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)
+         || point_in_aabb_2d(v3, min, max);
+  
+  if (ret)
+      return ret;
+  
+  /*
+  v1.load(min).add(max).mulScalar(0.5);
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1.load(min);
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1.load(max);
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1[0] = min[0], v1[1] = max[1];
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1[0] = max[0], v1[1] = min[1];
+  ret = ret || v1.vectorDistance(p) < r;
+  */
+  //*
+  v1.load(min);
+  v2[0] = min[0]; v2[1] = max[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+  
+  v1.load(max);
+  v2[0] = max[0]; v2[1] = max[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+
+  v1.load(max);
+  v2[0] = max[0]; v2[1] = min[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+
+  v1.load(max);
+  v2[0] = min[0]; v2[1] = min[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+  //*/
+  return ret;
+};
+
+function point_in_aabb(p, min, max) {
+  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1]
+         && p[2] >= min[2] && p[2] <= max[2];
+}
+function aabb_sphere_isect(p, r, min, max) {
+  var v1 = _asi_v1, v2 = _asi_v2, v3 = _asi_v3, mvec = _asi_v4;
+  min = _asi_v5.load(min);
+  max = _asi_v6.load(max);
+  
+  if (min.length == 2) {
+    min[2] = max[2] = 0.0;
+  }
+  
+  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
+  v1.sub(mvec);
+  v2.add(mvec);
+  v3.load(p);
+  
+  //prevent NaN on 2d vecs
+  if (p.length == 2) {
+      mvec[2] = v1[2] = v2[2] = v3[2] = 0.0;
+  }
+  
+  return point_in_aabb(v1, min, max) || point_in_aabb(v2, min, max) ||
+         point_in_aabb(v3, min, max);
+};
+
+function point_in_tri(p, v1, v2, v3) {
+  var w1=winding(p, v1, v2);
+  var w2=winding(p, v2, v3);
+  var w3=winding(p, v3, v1);
+  return w1==w2&&w2==w3;
+};
+
+function convex_quad(v1, v2, v3, v4) {
+  return line_line_cross([v1, v3], [v2, v4]);
+};
 
 var $e1_normal_tri=new Vector3$2();
 var $e3_normal_tri=new Vector3$2();
 var $e2_normal_tri=new Vector3$2();
+function normal_tri(v1, v2, v3) {
+  $e1_normal_tri[0] = v2[0]-v1[0];
+  $e1_normal_tri[1] = v2[1]-v1[1];
+  $e1_normal_tri[2] = v2[2]-v1[2];
+  $e2_normal_tri[0] = v3[0]-v1[0];
+  $e2_normal_tri[1] = v3[1]-v1[1];
+  $e2_normal_tri[2] = v3[2]-v1[2];
+  $e3_normal_tri[0] = $e1_normal_tri[1]*$e2_normal_tri[2]-$e1_normal_tri[2]*$e2_normal_tri[1];
+  $e3_normal_tri[1] = $e1_normal_tri[2]*$e2_normal_tri[0]-$e1_normal_tri[0]*$e2_normal_tri[2];
+  $e3_normal_tri[2] = $e1_normal_tri[0]*$e2_normal_tri[1]-$e1_normal_tri[1]*$e2_normal_tri[0];
+  
+  var _len=Math.sqrt(($e3_normal_tri[0]*$e3_normal_tri[0]+$e3_normal_tri[1]*$e3_normal_tri[1]+$e3_normal_tri[2]*$e3_normal_tri[2]));
+  if (_len>1e-05)
+    _len = 1.0/_len;
+  $e3_normal_tri[0]*=_len;
+  $e3_normal_tri[1]*=_len;
+  $e3_normal_tri[2]*=_len;
+  return $e3_normal_tri;
+};
 
 var $n2_normal_quad=new Vector3$2();
+function normal_quad(v1, v2, v3, v4) {
+  var n=normal_tri(v1, v2, v3);
+  $n2_normal_quad[0] = n[0];
+  $n2_normal_quad[1] = n[1];
+  $n2_normal_quad[2] = n[2];
+  n = normal_tri(v1, v3, v4);
+  $n2_normal_quad[0] = $n2_normal_quad[0]+n[0];
+  $n2_normal_quad[1] = $n2_normal_quad[1]+n[1];
+  $n2_normal_quad[2] = $n2_normal_quad[2]+n[2];
+  var _len=Math.sqrt(($n2_normal_quad[0]*$n2_normal_quad[0]+$n2_normal_quad[1]*$n2_normal_quad[1]+$n2_normal_quad[2]*$n2_normal_quad[2]));
+  if (_len>1e-05)
+    _len = 1.0/_len;
+  $n2_normal_quad[0]*=_len;
+  $n2_normal_quad[1]*=_len;
+  $n2_normal_quad[2]*=_len;
+  return $n2_normal_quad;
+};
 
 var _li_vi=new Vector3$2();
 
-var dt2l_v1 = new Vector2$4();
-var dt2l_v2 = new Vector2$4();
-var dt2l_v3 = new Vector2$4();
-var dt2l_v4 = new Vector2$4();
-var dt2l_v5 = new Vector2$4();
+//calc_t is optional, false
+function line_isect(v1, v2, v3, v4, calc_t) {
+  if (calc_t==undefined) {
+      calc_t = false;
+  }
+  var div=(v2[0]-v1[0])*(v4[1]-v3[1])-(v2[1]-v1[1])*(v4[0]-v3[0]);
+  if (div==0.0)
+    return [new Vector3$2(), COLINEAR, 0.0];
+  var vi=_li_vi;
+  vi[0] = 0;
+  vi[1] = 0;
+  vi[2] = 0;
+  vi[0] = ((v3[0]-v4[0])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[0]-v2[0])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
+  vi[1] = ((v3[1]-v4[1])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[1]-v2[1])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
+  if (calc_t||v1.length==3) {
+      var n1=new Vector2$8(v2).sub(v1);
+      var n2=new Vector2$8(vi).sub(v1);
+      var t=n2.vectorLength()/n1.vectorLength();
+      n1.normalize();
+      n2.normalize();
+      if (n1.dot(n2)<0.0) {
+          t = -t;
+      }
+      if (v1.length==3) {
+          vi[2] = v1[2]+(v2[2]-v1[2])*t;
+      }
+      return [vi, LINECROSS, t];
+  }
+  return [vi, LINECROSS];
+};
+
+var dt2l_v1 = new Vector2$8();
+var dt2l_v2 = new Vector2$8();
+var dt2l_v3 = new Vector2$8();
+var dt2l_v4 = new Vector2$8();
+var dt2l_v5 = new Vector2$8();
+
+function dist_to_line_2d(p, v1, v2, clip, closest_co_out=undefined, t_out=undefined) {
+  if (clip == undefined) {
+      clip = true;
+  }
+  
+  v1 = dt2l_v4.load(v1);
+  v2 = dt2l_v5.load(v2);
+  
+  var n = dt2l_v1;
+  var vec = dt2l_v3;
+  
+  n.load(v2).sub(v1).normalize();
+  vec.load(p).sub(v1);
+  
+  var t = vec.dot(n);
+  if (clip) {
+    t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
+  }
+  
+  n.mulScalar(t).add(v1);
+
+  if (closest_co_out) {
+    closest_co_out[0] = n[0];
+    closest_co_out[1] = n[1];
+  }
+
+  if (t_out !== undefined) {
+    t_out = t;
+  }
+
+  return n.vectorDistance(p);
+}
 
 var dt3l_v1 = new Vector3$2();
 var dt3l_v2 = new Vector3$2();
@@ -25496,10 +27024,99 @@ var dt3l_v3 = new Vector3$2();
 var dt3l_v4 = new Vector3$2();
 var dt3l_v5 = new Vector3$2();
 
+function dist_to_line(p, v1, v2, clip) {
+  if (clip == undefined) {
+      clip = true;
+  }
+  
+  v1 = dt3l_v4.load(v1);
+  v2 = dt3l_v5.load(v2);
+  
+  var n = dt3l_v1;
+  var vec = dt3l_v3;
+  
+  n.load(v2).sub(v1).normalize();
+  vec.load(p).sub(v1);
+  
+  var t = vec.dot(n);
+  if (clip) {
+    t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
+  }
+  
+  n.mulScalar(t).add(v1);
+  
+  return n.vectorDistance(p);
+}
+
 //p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
 var _cplw_vs4 = cachering.fromConstructor(Vector4$3, 64);
 var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$4, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2$8, 64);
+
+function wclip(x1, x2, w1, w2, near) {
+  var r1 = near*w1 - x1;
+  var r2 = (w1-w2)*near - (x1-x2);
+
+  if (r2 == 0.0) return 0.0;
+
+  return r1 / r2;
+}
+
+function clip(a, b, znear) {
+  if (a-b == 0.0) return 0.0;
+
+  return (a - znear) / (a - b);
+}
+
+/*clips v1 and v2 to lie within homogenous projection range
+  v1 and v2 are assumed to be projected, pre-division Vector4's
+  returns a positive number (how much the line was scaled) if either _v1 or _v2 are
+  in front of the near clipping plane otherwise, returns 0
+ */
+function clip_line_w(_v1, _v2, znear, zfar) {
+  var v1 = _cplw_vs4.next().load(_v1);
+  var v2 = _cplw_vs4.next().load(_v2);
+
+  //are we fully behind the view plane?
+  if ((v1[2] < 1.0 && v2[2] < 1.0))
+    return false;
+
+  function doclip1(v1, v2, axis) {
+    if (v1[axis]/v1[3] < -1) {
+      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], -1);
+      v1.interp(v2, t);
+    } else if (v1[axis]/v1[3] > 1) {
+      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], 1);
+      v1.interp(v2, t);
+    }
+  }
+
+  function doclip(v1, v2, axis) {
+    doclip1(v1, v2, axis);
+    doclip1(v2, v1, axis);
+  }
+
+  function dozclip(v1, v2) {
+    if (v1[2] < 1) {
+      var t = clip(v1[2], v2[2], 1);
+      v1.interp(v2, t);
+    } else if (v2[2] < 1) {
+      var t = clip(v2[2], v1[2], 1);
+      v2.interp(v1, t);
+    }
+  }
+
+  dozclip(v1, v2, 1);
+  doclip(v1, v2, 0);
+  doclip(v1, v2, 1);
+
+  for (var i=0; i<4; i++) {
+    _v1[i] = v1[i];
+    _v2[i] = v2[i];
+  }
+
+  return !(v1[0]/v1[3] == v2[0]/v2[3] || v1[1]/v2[3] == v2[1]/v2[3]);
+};
 
 //clip is optional, true.  clip point to lie within line segment v1->v2
 var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
@@ -25508,6 +27125,28 @@ var _closest_point_rets = new cachering(function() {
 }, 64);
 
 var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
+function closest_point_on_line(p, v1, v2, clip) {
+  if (clip == undefined)
+    clip = true;
+  var l1 = _closest_tmps[0], l2 = _closest_tmps[1];
+  
+  l1.load(v2).sub(v1).normalize();
+  l2.load(p).sub(v1);
+  
+  var t = l2.dot(l1);
+  if (clip) {
+    t = t*(t<0.0) + t*(t>1.0) + (t>1.0);
+  }
+  
+  var p = _closest_point_on_line_cache.next();
+  p.load(l1).mulScalar(t).add(v1);
+  var ret = _closest_point_rets.next();
+  
+  ret[0] = p;
+  ret[1] = t;
+  
+  return ret;
+};
 
 /*given input line (a,d) and tangent t,
   returns a circle that goes through both
@@ -25520,6 +27159,24 @@ var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
 var _circ_from_line_tan_ret = new cachering(function() {
   return [new Vector3$2(), 0];
 });
+function circ_from_line_tan(a, b, t) {
+  var p1 = _circ_from_line_tan_vs.next();
+  var t2 = _circ_from_line_tan_vs.next();
+  var n1 = _circ_from_line_tan_vs.next();
+  
+  p1.load(a).sub(b);
+  t2.load(t).normalize();
+  n1.load(p1).normalize().cross(t2).cross(t2).normalize();
+  
+  var ax = p1[0], ay = p1[1], az=p1[2], nx = n1[0], ny=n1[1], nz=n1[2];
+  var r = -(ax*ax + ay*ay + az*az) / (2*(ax*nx + ay*ny +az*nz));
+  
+  var ret = _circ_from_line_tan_ret.next();
+  ret[0].load(n1).mulScalar(r).add(a);
+  ret[1] = r;
+  
+  return ret;
+}
 
 var _gtc_e1=new Vector3$2();
 var _gtc_e2=new Vector3$2();
@@ -25532,10 +27189,275 @@ var _gtc_p12=new Vector3$2();
 var _gtc_p22=new Vector3$2();
 var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
 
+function get_tri_circ(a, b, c) {
+  var v1=_gtc_v1;
+  var v2=_gtc_v2;
+  var e1=_gtc_e1;
+  var e2=_gtc_e2;
+  var e3=_gtc_e3;
+  var p1=_gtc_p1;
+  var p2=_gtc_p2;
+  
+  for (var i=0; i<3; i++) {
+      e1[i] = b[i]-a[i];
+      e2[i] = c[i]-b[i];
+      e3[i] = a[i]-c[i];
+  }
+  
+  for (var i=0; i<3; i++) {
+      p1[i] = (a[i]+b[i])*0.5;
+      p2[i] = (c[i]+b[i])*0.5;
+  }
+  
+  e1.normalize();
+  
+  v1[0] = -e1[1];
+  v1[1] = e1[0];
+  v1[2] = e1[2];
+
+  v2[0] = -e2[1];
+  v2[1] = e2[0];
+  v2[2] = e2[2];
+
+  v1.normalize();
+  v2.normalize();
+
+  var cent;
+  var type;
+  for (var i=0; i<3; i++) {
+      _gtc_p12[i] = p1[i]+v1[i];
+      _gtc_p22[i] = p2[i]+v2[i];
+  }
+
+  var ret=line_isect(p1, _gtc_p12, p2, _gtc_p22);
+  cent = ret[0];
+  type = ret[1];
+
+  e1.load(a);
+  e2.load(b);
+  e3.load(c);
+
+  var r=e1.sub(cent).vectorLength();
+  if (r<feps)
+    r = e2.sub(cent).vectorLength();
+  if (r<feps)
+    r = e3.sub(cent).vectorLength();
+  
+  var ret = _get_tri_circ_ret.next();
+  ret[0] = cent;
+  ret[1] = r;
+  
+  return ret;
+};
+
+function gen_circle(m, origin, r, stfeps) {
+  var pi=Math.PI;
+  var f=-pi/2;
+  var df=(pi*2)/stfeps;
+  var verts=new Array();
+  for (var i=0; i<stfeps; i++) {
+      var x=origin[0]+r*Math.sin(f);
+      var y=origin[1]+r*Math.cos(f);
+      var v=m.make_vert(new Vector3$2([x, y, origin[2]]));
+      verts.push(v);
+      f+=df;
+  }
+  for (var i=0; i<verts.length; i++) {
+      var v1=verts[i];
+      var v2=verts[(i+1)%verts.length];
+      m.make_edge(v1, v2);
+  }
+  return verts;
+};
+
+var cos$1 = Math.cos;
+var sin$1 = Math.sin;
+//axis is optional, 0
+function rot2d(v1, A, axis) {
+  var x = v1[0];
+  var y = v1[1];
+  
+  if (axis == 1) {
+    v1[0] = x * cos$1(A) + y*sin$1(A);
+    v1[2] = y * cos$1(A) - x*sin$1(A);
+  } else {
+    v1[0] = x * cos$1(A) - y*sin$1(A);
+    v1[1] = y * cos$1(A) + x*sin$1(A);
+  }
+}
+
+function makeCircleMesh(gl, radius, stfeps) {
+  var mesh=new Mesh();
+  var verts1=gen_circle(mesh, new Vector3$2(), radius, stfeps);
+  var verts2=gen_circle(mesh, new Vector3$2(), radius/1.75, stfeps);
+  mesh.make_face_complex([verts1, verts2]);
+  return mesh;
+};
+function minmax_verts(verts) {
+  var min=new Vector3$2([1000000000000.0, 1000000000000.0, 1000000000000.0]);
+  var max=new Vector3$2([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
+  var __iter_v=__get_iter(verts);
+  var v;
+  while (1) {
+    var __ival_v=__iter_v.next();
+    if (__ival_v.done) {
+        break;
+    }
+    v = __ival_v.value;
+    for (var i=0; i<3; i++) {
+        min[i] = Math.min(min[i], v.co[i]);
+        max[i] = Math.max(max[i], v.co[i]);
+    }
+  }
+  return [min, max];
+};
+
+function unproject(vec, ipers, iview) {
+  var newvec=new Vector3$2(vec);
+  newvec.multVecMatrix(ipers);
+  newvec.multVecMatrix(iview);
+  return newvec;
+};
+
+function project(vec, pers, view) {
+  var newvec=new Vector3$2(vec);
+  newvec.multVecMatrix(pers);
+  newvec.multVecMatrix(view);
+  return newvec;
+};
+
 var _sh_minv=new Vector3$2();
 var _sh_maxv=new Vector3$2();
+var _sh_start=[];
+var _sh_end=[];
 
 var static_cent_gbw = new Vector3$2();
+function get_boundary_winding(points) {
+  var cent=static_cent_gbw.zero();
+  if (points.length==0)
+    return false;
+  for (var i=0; i<points.length; i++) {
+      cent.add(points[i]);
+  }
+  cent.divideScalar(points.length);
+  var w=0, totw=0;
+  for (var i=0; i<points.length; i++) {
+      var v1=points[i];
+      var v2=points[(i+1)%points.length];
+      if (!colinear(v1, v2, cent)) {
+          w+=winding(v1, v2, cent);
+          totw+=1;
+      }
+  }
+  if (totw>0)
+    w/=totw;
+  return Math.round(w)==1;
+};
+
+class PlaneOps {
+  constructor(normal) {
+    var no=normal;
+    this.axis = [0, 0, 0];
+    this.reset_axis(normal);
+  }
+
+  reset_axis(no) {
+    var ax, ay, az;
+    var nx=Math.abs(no[0]), ny=Math.abs(no[1]), nz=Math.abs(no[2]);
+    if (nz>nx&&nz>ny) {
+        ax = 0;
+        ay = 1;
+        az = 2;
+    }
+    else 
+      if (nx>ny&&nx>nz) {
+        ax = 2;
+        ay = 1;
+        az = 0;
+    }
+    else {
+      ax = 0;
+      ay = 2;
+      az = 1;
+    }
+    this.axis = [ax, ay, az];
+  }
+
+  convex_quad(v1, v2, v3, v4) {
+    var ax=this.axis;
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
+    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
+    return convex_quad(v1, v2, v3, v4);
+  }
+
+  line_isect(v1, v2, v3, v4) {
+    var ax=this.axis;
+    var orig1=v1, orig2=v2;
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
+    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
+    var ret=line_isect(v1, v2, v3, v4, true);
+    var vi=ret[0];
+    if (ret[1]==LINECROSS) {
+        ret[0].load(orig2).sub(orig1).mulScalar(ret[2]).add(orig1);
+    }
+    return ret;
+  }
+
+  line_line_cross(l1, l2) {
+    var ax=this.axis;
+    var v1=l1[0], v2=l1[1], v3=l2[0], v4=l2[1];
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
+    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], 0.0]);
+    return line_line_cross([v1, v2], [v3, v4]);
+  }
+
+  winding(v1, v2, v3) {
+    var ax=this.axis;
+    if (v1==undefined)
+      console.trace();
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
+    return winding(v1, v2, v3);
+  }
+
+  colinear(v1, v2, v3) {
+    var ax=this.axis;
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
+    return colinear(v1, v2, v3);
+  }
+
+  get_boundary_winding(points) {
+    var ax=this.axis;
+    var cent=new Vector3$2();
+    if (points.length==0)
+      return false;
+    for (var i=0; i<points.length; i++) {
+        cent.add(points[i]);
+    }
+    cent.divideScalar(points.length);
+    var w=0, totw=0;
+    for (var i=0; i<points.length; i++) {
+        var v1=points[i];
+        var v2=points[(i+1)%points.length];
+        if (!this.colinear(v1, v2, cent)) {
+            w+=this.winding(v1, v2, cent);
+            totw+=1;
+        }
+    }
+    if (totw>0)
+      w/=totw;
+    return Math.round(w)==1;
+  }
+}
 
 /*
 on factor;
@@ -25552,6 +27474,154 @@ off fort;
 
 * */
 var _isrp_ret=new Vector3$2();
+function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
+  let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
+  
+  let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
+
+  if (Math.abs(div) < 0.00001) {
+    return undefined;
+  }
+
+  let t = ((po[1]-ro[1])*pn[1]+(po[2]-ro[2])*pn[2]+(po[0]-ro[0])*pn[0])/div;
+  _isrp_ret.load(ro).addFac(rn, t);
+
+  return _isrp_ret;
+}
+
+function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
+  var p=planeorigin, n=planenormal;
+  var r=rayorigin, v=raynormal;
+
+  var d=p.vectorLength();
+  var t=-(r.dot(n)-p.dot(n))/v.dot(n);
+  _isrp_ret.load(v);
+  _isrp_ret.mulScalar(t);
+  _isrp_ret.add(r);
+  return _isrp_ret;
+};
+
+function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
+  if (verts==undefined)
+    verts = mesh.verts.selected;
+  var vset=new set$2();
+  var eset=new set$2();
+  var __iter_v=__get_iter(verts);
+  var v;
+  while (1) {
+    var __ival_v=__iter_v.next();
+    if (__ival_v.done) {
+        break;
+    }
+    v = __ival_v.value;
+    vset.add(v);
+  }
+  var __iter_v=__get_iter(vset);
+  var v;
+  while (1) {
+    var __ival_v=__iter_v.next();
+    if (__ival_v.done) {
+        break;
+    }
+    v = __ival_v.value;
+    var __iter_e=__get_iter(v.edges);
+    var e;
+    while (1) {
+      var __ival_e=__iter_e.next();
+      if (__ival_e.done) {
+          break;
+      }
+      e = __ival_e.value;
+      if (vset.has(e.other_vert(v))) {
+          eset.add(e);
+      }
+    }
+  }
+  if (eset.length==0) {
+      return new Vector3$2(offvec);
+  }
+  var tanav=new Vector3$2();
+  var evec=new Vector3$2();
+  var tan=new Vector3$2();
+  var co2=new Vector3$2();
+  var __iter_e=__get_iter(eset);
+  var e;
+  while (1) {
+    var __ival_e=__iter_e.next();
+    if (__ival_e.done) {
+        break;
+    }
+    e = __ival_e.value;
+    evec.load(e.v1.co).multVecMatrix(projmat);
+    co2.load(e.v2.co).multVecMatrix(projmat);
+    evec.sub(co2);
+    evec.normalize();
+    tan[0] = evec[1];
+    tan[1] = -evec[0];
+    tan[2] = 0.0;
+    if (tan.dot(offvec)<0.0)
+      tan.mulScalar(-1.0);
+    tanav.add(tan);
+  }
+  tanav.normalize();
+  return tanav;
+};
+
+class Mat4Stack {
+  constructor() {
+    this.stack = [];
+    this.matrix = new Matrix4$3();
+    this.matrix.makeIdentity();
+    this.update_func = undefined;
+  }
+
+  set_internal_matrix(mat, update_func) {
+    this.update_func = update_func;
+    this.matrix = mat;
+  }
+
+  reset(mat) {
+    this.matrix.load(mat);
+    this.stack = [];
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  load(mat) {
+    this.matrix.load(mat);
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  multiply(mat) {
+    this.matrix.multiply(mat);
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  identity() {
+    this.matrix.loadIdentity();
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  push(mat2) {
+    this.stack.push(new Matrix4$3(this.matrix));
+    if (mat2!=undefined) {
+        this.matrix.load(mat2);
+        if (this.update_func!=undefined)
+          this.update_func();
+    }
+  }
+
+  pop() {
+    var mat=this.stack.pop(this.stack.length-1);
+    this.matrix.load(mat);
+    if (this.update_func!=undefined)
+      this.update_func();
+    return mat;
+  }
+}
 
 class Constraint {
   constructor(name, func, klst, params, k=1.0) {
@@ -25667,6 +27737,8 @@ var solver1 = /*#__PURE__*/Object.freeze({
   Solver: Solver
 });
 
+"use strict";
+
 let idgen = 0;
 
 class PackNodeVertex extends Vector2 {
@@ -25758,6 +27830,7 @@ function getCenter(nodes) {
 }
 
 function loadGraph(nodes, copy) {
+  let idmap = {};
 
   for (let i=0; i<nodes.length; i++) {
     nodes[i].pos.load(copy[i].pos);
@@ -25768,7 +27841,7 @@ function loadGraph(nodes, copy) {
 
 function graphGetIslands(nodes) {
   let islands = [];
-  let visit1 = new set();
+  let visit1 = new set$1();
 
   let rec = (n, island) => {
     island.push(n);
@@ -25815,8 +27888,8 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
     }
   }
 
-  let visit = new set();
-  let verts = new set();
+  let visit = new set$1();
+  let verts = new set$1();
   let isect = [];
 
   let disableEdges = false;
@@ -25860,9 +27933,11 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
     let a2 = n2.size[0]*n2.size[1];
 
     return aabb_overlap_area(p1, s1, p2, s2);
+    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
   }
 
   let lasterr, besterr, best;
+  let err;
 
   let islands = graphGetIslands(nodes);
   let fakeVerts = [];
@@ -25876,7 +27951,7 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
     let solver = new Solver();
 
     isect.length = 0;
-    visit = new set();
+    visit = new set$1();
 
     if (fakeVerts.length > 1) {
       for (let i=1; i<fakeVerts.length; i++) {
@@ -26052,8 +28127,24 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   }
 }
 
-let Vector2$5 = Vector2,
-    UndoFlags$1 = UndoFlags;
+"use strict";
+
+/*
+why am I using a toolstack here at all?  time to remove!
+*/
+
+let toolstack_getter = function() {
+  throw new Error("must pass a toolstack getter to registerToolStackGetter, I know it's dumb")
+};
+
+function registerToolStackGetter(func) {
+  toolstack_getter = func;
+}
+
+let Vector2$9 = Vector2,
+    Vector3$3 = Vector3,
+    UndoFlags$1 = UndoFlags,
+    ToolFlags$1 = ToolFlags;
 //import {keymap} from './events';
 
 class ToolBase extends ToolOp {
@@ -26156,7 +28247,7 @@ class AreaResizeTool extends ToolBase {
     
     super(screen);
     
-    this.start_mpos = new Vector2$5(mpos);
+    this.start_mpos = new Vector2$9(mpos);
 
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
@@ -26237,7 +28328,7 @@ class AreaResizeTool extends ToolBase {
     }
   }
   on_mousemove(e) {
-    let mpos = new Vector2$5([e.x, e.y]);
+    let mpos = new Vector2$9([e.x, e.y]);
     
     mpos.sub(this.start_mpos);
     
@@ -26246,6 +28337,8 @@ class AreaResizeTool extends ToolBase {
     //console.log(this.border.horiz);
     
     this.overdraw.clear();
+    
+    let visit = new Set();
     let borders = this.getBorders();
 
     let color = exports.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
@@ -26255,8 +28348,8 @@ class AreaResizeTool extends ToolBase {
     for (let border of borders) {
       bad = bad || !this.screen.isBorderMovable(border);
 
-      border.oldv1 = new Vector2$5(border.v1);
-      border.oldv2 = new Vector2$5(border.v2);
+      border.oldv1 = new Vector2$9(border.v1);
+      border.oldv2 = new Vector2$9(border.v2);
     }
 
     if (bad) {
@@ -26466,7 +28559,7 @@ class AreaDragTool extends ToolBase {
     this.boxes.active = undefined;
 
     this.sarea = sarea;
-    this.start_mpos = new Vector2$5(mpos);
+    this.start_mpos = new Vector2$9(mpos);
     this.screen = screen;
   }
   
@@ -26945,9 +29038,10 @@ class ToolTipViewer extends ToolBase {
   }
 }
 
+"use strict";
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
-let Vector2$6 = Vector2;
+let Vector2$a = Vector2;
 
 class Overdraw extends UIBase {
   constructor() {
@@ -27045,7 +29139,7 @@ class Overdraw extends UIBase {
     let boxes = [];
     let elems = [];
 
-    let cent = new Vector2$6();
+    let cent = new Vector2$a();
 
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
@@ -27090,7 +29184,7 @@ class Overdraw extends UIBase {
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$6([x, y]);
+      box.startpos = new Vector2$a([x, y]);
 
       box.setCSS = function() {
         this.style["padding"] = "0px";
@@ -27113,6 +29207,7 @@ class Overdraw extends UIBase {
     cent.mulScalar(1.0 / boxes.length);
 
     function error() {
+      let p1 = [0, 0], p2 = [0, 0];
       let s1 = [0, 0], s2 = [0, 0];
 
       let ret = 0.0;
@@ -27420,6 +29515,7 @@ class ProgBarNote extends Note {
     bar.style["padding"] = bar.style["margin"] = "0px";
 
     let bar2 = this.bar2 = document.createElement("div");
+    let w = 50.0;
 
     bar2.style["display"] = "flex";
     bar2.style["flex-direction"] = "row";
@@ -27984,7 +30080,15 @@ class ScreenBorder extends UIBase {
 
 UIBase.register(ScreenBorder);
 
+let _ScreenArea = undefined;
+
+let UIBase$e = UIBase;
+let Vector2$b = Vector2;
+let Screen = undefined;
+
+
 function setScreenClass(cls) {
+  Screen = cls;
 }
 
 function getAreaIntName(name) {
@@ -28115,9 +30219,11 @@ class AreaWrangler {
   }
 }
 
-let UIBase$e = UIBase;
-let Vector2$7 = Vector2;
-let Screen = undefined;
+let _ScreenArea$1 = undefined;
+
+let UIBase$f = UIBase;
+let Vector2$c = Vector2;
+let Screen$1 = undefined;
 
 const AreaFlags = {
   HIDDEN          : 1,
@@ -28181,7 +30287,7 @@ class Area extends UIBase {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$e) {
+      if (child instanceof UIBase$f) {
         child.parentWidget = this;
       }
     };
@@ -28190,7 +30296,7 @@ class Area extends UIBase {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$e) {
+      if (child instanceof UIBase$f) {
         child.parentWidget = this;
       }
     };
@@ -28255,6 +30361,7 @@ class Area extends UIBase {
   }
 
   buildDataPath() {
+    let p = this;
     
     let sarea = this.owning_sarea;
     
@@ -28395,6 +30502,7 @@ class Area extends UIBase {
   makeAreaSwitcher(container) {
     let areas = {};
     let icons = {};
+    let i = 0;
 
     for (let k in areaclasses) {
       let cls = areaclasses[k];
@@ -28443,7 +30551,9 @@ class Area extends UIBase {
     row.style["width"] = "100%";
     row.style["margin"] = "0px";
     row.style["padding"] = "0px";
-    let mpos = new Vector2$7();
+
+    let mdown = false;
+    let mpos = new Vector2$c();
     
     let mpre = (e, pageX, pageY) => {
       pageX = pageX === undefined ? e.pageX : pageX;
@@ -28460,8 +30570,12 @@ class Area extends UIBase {
     };
     
     row.addEventListener("mouseout", (e) => {
+      //console.log("mouse leave");
+      mdown = false;
     });
     row.addEventListener("mouseleave", (e) => {
+      //console.log("mouse out");
+      mdown = false;
     });
     
     row.addEventListener("mousedown", (e) => {
@@ -28469,6 +30583,7 @@ class Area extends UIBase {
       
       mpos[0] = e.pageX;
       mpos[1] = e.pageY;
+      mdown = true;
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
@@ -28506,6 +30621,7 @@ class Area extends UIBase {
         if (!this.areaDragToolEnabled) {
           return;
         }
+        mdown = false;
         console.log("area drag tool!", e.type, e);
         screen.areaDragTool(this.owning_sarea);
       }
@@ -28544,6 +30660,8 @@ class Area extends UIBase {
       //*/
     row.addEventListener("mouseup", (e) => {
       if (!mpre(e)) return;
+
+      mdown = false;
     }, false);
 
     row.addEventListener("touchstart", (e) => {
@@ -28556,6 +30674,7 @@ class Area extends UIBase {
       
       mpos[0] = e.touches[0].pageX;
       mpos[1] = e.touches[0].pageY;
+      mdown = true;
     }, false);
     
     row.addEventListener("touchmove", (e) => {
@@ -28569,6 +30688,8 @@ class Area extends UIBase {
       }
       if (e.touches.length == 0)
         return;
+      
+      mdown = false;
     };
     
     row.addEventListener("touchcancel", (e) => {
@@ -28702,8 +30823,8 @@ class ScreenArea extends UIBase {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this._pos = new Vector2$7();
-    this._size = new Vector2$7([512, 512]);
+    this._pos = new Vector2$c();
+    this._size = new Vector2$c([512, 512]);
 
     if (exports.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -28917,8 +31038,8 @@ class ScreenArea extends UIBase {
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$7(obj.pos);
-      area.size = new Vector2$7(obj.size);
+      area.pos = new Vector2$c(obj.pos);
+      area.size = new Vector2$c(obj.size);
       area.ctx = this.ctx;
       
       area.inactive = true;
@@ -28969,7 +31090,7 @@ class ScreenArea extends UIBase {
     let p = this.parentNode;
     let _i = 0;
 
-    while (p && !(p instanceof Screen) && p !== p.parentNode) {
+    while (p && !(p instanceof Screen$1) && p !== p.parentNode) {
       p = this.parentNode;
 
       if (_i++ > 1000) {
@@ -28978,7 +31099,7 @@ class ScreenArea extends UIBase {
       }
     }
     
-    return p && p instanceof Screen ? p : undefined;
+    return p && p instanceof Screen$1 ? p : undefined;
   }
   
   copy(screen) {
@@ -29069,8 +31190,8 @@ class ScreenArea extends UIBase {
       return;
     }
 
-    let min = new Vector2$7([1e17, 1e17]);
-    let max = new Vector2$7([-1e17, -1e17]);
+    let min = new Vector2$c([1e17, 1e17]);
+    let max = new Vector2$c([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -29104,10 +31225,10 @@ class ScreenArea extends UIBase {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$7([p[0],      p[1]]),
-      new Vector2$7([p[0],      p[1]+s[1]]),
-      new Vector2$7([p[0]+s[0], p[1]+s[1]]),
-      new Vector2$7([p[0]+s[0], p[1]])
+      new Vector2$c([p[0],      p[1]]),
+      new Vector2$c([p[0],      p[1]+s[1]]),
+      new Vector2$c([p[0]+s[0], p[1]+s[1]]),
+      new Vector2$c([p[0]+s[0], p[1]])
     ];
 
     for (let i=0; i<vs.length; i++) {
@@ -29213,8 +31334,8 @@ class ScreenArea extends UIBase {
     //var finish = () => {
       if (this.area !== undefined) {
         //break direct pos/size references for old active area
-        this.area.pos = new Vector2$7(this.area.pos);
-        this.area.size = new Vector2$7(this.area.size);
+        this.area.pos = new Vector2$c(this.area.pos);
+        this.area.size = new Vector2$c(this.area.size);
         
         this.area.owning_sarea = undefined;
         this.area.inactive = true;
@@ -29345,8 +31466,8 @@ class ScreenArea extends UIBase {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$7(this.pos);
-    this.size = new Vector2$7(this.size);
+    this.pos = new Vector2$c(this.pos);
+    this.size = new Vector2$c(this.size);
     
     //find active editor
     
@@ -29479,9 +31600,14 @@ var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   AreaWrangler: AreaWrangler
 });
 
+"use strict";
+
 let rgb_to_hsv_rets$1 = new cachering(() => [0, 0, 0], 64);
 
-let Vector4$4 = Vector4;
+let Vector2$d = Vector2,
+    Vector3$4 = Vector3,
+    Vector4$4 = Vector4,
+    Matrix4$4 = Matrix4;
 
 function rgb_to_hsv$1 (r,g,b) {
   var computedH = 0;
@@ -29491,6 +31617,7 @@ function rgb_to_hsv$1 (r,g,b) {
   if ( r==null || g==null || b==null ||
      isNaN(r) || isNaN(g)|| isNaN(b) ) {
    throw new Error('Please enter numeric RGB values!');
+   return;
   }
   /*
   if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
@@ -29577,7 +31704,9 @@ function hsv_to_rgb$1(h, s, v) {
   return color;
 }
 
-let UIBase$f = UIBase; 
+let UIBase$g = UIBase, 
+    PackFlags$c = PackFlags,
+    IconSheets$9 = IconSheets;
 
 let UPW$1 = 1.25, VPW$1 = 0.75;
 
@@ -29629,7 +31758,7 @@ function getFieldImage$1(size, hsva) {
   let idata = image.image.data;
   let dpi = this.getDPI();
   
-  let band =  20;
+  let band = IsMobile() ? 35 : 20;
   
   let r2 = Math.ceil(size*0.5), r1 = r2 - band*dpi;
   
@@ -29766,7 +31895,15 @@ function getFieldImage$1(size, hsva) {
 
 let _update_temp$1 = new Vector4$4();
 
-class ColorField$1 extends UIBase$f {
+class SimpleBox$1 {
+  constructor(pos=[0, 0], size=[1, 1]) {
+    this.pos = new Vector2$d(pos);
+    this.size = new Vector2$d(size);
+    this.r = 0;
+  }
+}
+
+class ColorField$1 extends UIBase$g {
   constructor() {
     super();
     
@@ -30135,7 +32272,7 @@ class ColorField$1 extends UIBase$f {
   };}
 }
 
-UIBase$f.register(ColorField$1);
+UIBase$g.register(ColorField$1);
 
 class ColorPicker$1 extends ColumnFrame {
   constructor() {
@@ -30301,7 +32438,7 @@ class ColorPicker$1 extends ColumnFrame {
   };}
 }
 
-UIBase$f.register(ColorPicker$1);
+UIBase$g.register(ColorPicker$1);
 
 function makePopupArea(area_class, screen, args={}) {
   let sarea = document.createElement("screenarea-x");
@@ -30341,27 +32478,30 @@ function makePopupArea(area_class, screen, args={}) {
   return sarea;
 }
 
+let _FrameManager = undefined;
+
 let Area$1 = Area;
 
 startMenuEventWrangling();
 
 let _events_started = false;
 
-function registerToolStackGetter(func) {
+function registerToolStackGetter$1(func) {
+  registerToolStackGetter(func);
 }
 
 //XXX why!!!
 window._nstructjs = nstructjs;
 
-let Vector2$8 = Vector2,
-  UIBase$g = UIBase;
+let Vector2$e = Vector2,
+  UIBase$h = UIBase;
 
 let update_stack = new Array(8192);
 update_stack.cur = 0;
 
 let screen_idgen = 0;
 
-class Screen$1 extends UIBase {
+class Screen$2 extends UIBase {
   constructor() {
     super();
 
@@ -30383,8 +32523,8 @@ class Screen$1 extends UIBase {
 
     this.keymap = new KeyMap();
 
-    this.size = new Vector2$8([window.innerWidth, window.innerHeight]);
-    this.pos = new Vector2$8();
+    this.size = new Vector2$e([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2$e();
 
     this.idgen = 0;
     this.sareas = [];
@@ -30398,7 +32538,7 @@ class Screen$1 extends UIBase {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$8(), new Vector2$8()];
+    this._aabb = [new Vector2$e(), new Vector2$e()];
 
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
@@ -30578,7 +32718,7 @@ class Screen$1 extends UIBase {
     container.parentWidget = this;
 
     let mm = new MinMax(2);
-    let p = new Vector2$8();
+    let p = new Vector2$e();
 
     let _update = container.update;
     container.update = () => {
@@ -30668,6 +32808,7 @@ class Screen$1 extends UIBase {
       y = y === undefined ? e.y : y;
 
       let elem = this.pickElement(x, y, 2, 2, undefined, [ScreenBorder]);
+      let startelem = elem;
 
       if (elem === undefined) {
         if (closeOnMouseOut) {
@@ -30752,7 +32893,7 @@ class Screen$1 extends UIBase {
       this._aabb[1].load(mm.max);
     }
 
-    return [new Vector2$8(mm.min), new Vector2$8(mm.max)];
+    return [new Vector2$e(mm.min), new Vector2$e(mm.max)];
   }
 
   get borders() {
@@ -30851,6 +32992,9 @@ class Screen$1 extends UIBase {
   }
 
   _ondestroy() {
+    if (getWranglerScreen() === this) {
+      //ui_menu.setWranglerScreen(undefined);
+    }
 
     this.unlisten();
 
@@ -31011,11 +33155,9 @@ class Screen$1 extends UIBase {
   }
 
   execKeyMap(e) {
-    console.log(document.activeElement);
-
     let handled = false;
 
-    console.warn("execKeyMap called");
+    //console.warn("execKeyMap called");
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -31148,6 +33290,15 @@ class Screen$1 extends UIBase {
     if (this._update_gen) {
       let ret;
 
+      /*
+      if (cconst.DEBUG.debugUIUpdatePerf) {
+          for (ret = this._update_gen.next(); !ret.done; ret = this._update_gen.next()) {}
+
+        this._update_gen = this.update_intern();
+        return;
+      }
+      //*/
+
       try {
         ret = this._update_gen.next();
       } catch (error) {
@@ -31174,7 +33325,7 @@ class Screen$1 extends UIBase {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$g) {
+      if (n instanceof UIBase$h) {
         n.ctx = val;
       }
 
@@ -31198,6 +33349,11 @@ class Screen$1 extends UIBase {
     }
   }
 
+  completeUpdate() {
+    for (let step of this.update_intern()) {
+    }
+  }
+
   //XXX race condition warning
   update_intern() {
     let popups = this._popups;
@@ -31218,6 +33374,8 @@ class Screen$1 extends UIBase {
     return (function* () {
       let stack = update_stack;
       stack.cur = 0;
+
+      let lastn = this2;
 
       function push(n) {
         stack[stack.cur++] = n;
@@ -31268,7 +33426,7 @@ class Screen$1 extends UIBase {
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$h) {
           n._ctx = ctx;
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
@@ -31282,7 +33440,7 @@ class Screen$1 extends UIBase {
           n.update();
         }
 
-        if (time_ms() - t > 30) {
+        if (time_ms() - t > 20) {
           yield;
           t = time_ms();
         }
@@ -31299,7 +33457,7 @@ class Screen$1 extends UIBase {
           push(n2);
         }
 
-        if (n instanceof UIBase$g) {
+        if (n instanceof UIBase$h) {
           scopestack.push(n);
           push(SCOPE_POP);
         }
@@ -31391,6 +33549,10 @@ class Screen$1 extends UIBase {
   regenBorders_stage2() {
     for (let b of this.screenborders) {
       b.halfedges = [];
+    }
+
+    function hashHalfEdge(border, sarea) {
+      return border._id + ":" + sarea._id;
     }
 
     function has_he(border, border2, sarea) {
@@ -31671,7 +33833,7 @@ class Screen$1 extends UIBase {
       for (let b of this.screenborders) {
         for (let he of b.halfedges) {
           let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
-          let p = new Vector2$8(b.v1).add(b.v2).mulScalar(0.5);
+          let p = new Vector2$e(b.v1).add(b.v2).mulScalar(0.5);
           let size = 10 * b.halfedges.length;
 
           let wadd = 25+size*0.5;
@@ -31788,7 +33950,7 @@ class Screen$1 extends UIBase {
   }
 
   walkBorderLine(b) {
-    let visit = new set();
+    let visit = new set$1();
     let ret = [b];
     visit.add(b);
 
@@ -31853,7 +34015,7 @@ class Screen$1 extends UIBase {
       return v[axis2] >= min && v[axis2] <= max;
     };
 
-    let vs = new set();
+    let vs = new set$1();
 
     for (let b2 of this.walkBorderLine(b)) {
       if (strict && !test(b2.v1) && !test(b2.v2)) {
@@ -31886,9 +34048,9 @@ class Screen$1 extends UIBase {
 
     let axis = b.horiz & 1;
 
-    let vs = new set();
+    let vs = new set$1();
 
-    let visit = new set();
+    let visit = new set$1();
 
     let axis2 = axis^1;
 
@@ -31901,8 +34063,8 @@ class Screen$1 extends UIBase {
 
     let first = true;
     let found = false;
-    let halfedges = new set();
-    let borders = new set();
+    let halfedges = new set$1();
+    let borders = new set$1();
 
     for (let b2 of this.walkBorderLine(b)) {
       /*
@@ -31967,6 +34129,10 @@ class Screen$1 extends UIBase {
 
     for (let v of vs) {
       let ok = v[axis2] >= min && v[axis2] <= max;
+
+      if (!ok && strict) {
+     //   return false;
+      }
     }
 
     if (!found || !strict) {
@@ -31974,7 +34140,7 @@ class Screen$1 extends UIBase {
         v[axis] += df;
       }
     } else {
-      let borders = new set();
+      let borders = new set$1();
 
       for (let he of halfedges) {
         borders.add(he.border);
@@ -32022,6 +34188,8 @@ class Screen$1 extends UIBase {
     let repeat = false;
     let found = false;
 
+    let time = time_ms();
+
     for (let i=0; i<10; i++) {
       repeat = false;
 
@@ -32047,7 +34215,9 @@ class Screen$1 extends UIBase {
     if (found) {
       this.snapScreenVerts(snapArgument);
       if (exports.DEBUG.areaConstraintSolver) {
-        console.log("enforced area constraint");
+        time = time_ms() - time;
+
+        console.log(`enforced area constraint ${time.toFixed(2)}ms`);
       }
       this._recalcAABB();
       this.setCSS();
@@ -32063,8 +34233,8 @@ class Screen$1 extends UIBase {
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
-      let vec = new Vector2$8(max).sub(min);
-      let sz = new Vector2$8(this.size);
+      let vec = new Vector2$e(max).sub(min);
+      let sz = new Vector2$e(this.size);
 
       sz.div(vec);
 
@@ -32088,7 +34258,7 @@ class Screen$1 extends UIBase {
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
-      let old = new Vector2$8(sarea.size);
+      let old = new Vector2$e(sarea.size);
       sarea.loadFromVerts();
       sarea.on_resize(old);
     }
@@ -32108,6 +34278,8 @@ class Screen$1 extends UIBase {
       v[0] *= ratio[0];
       v[1] *= ratio[1];
     }
+
+    let min = [1e17, 1e17], max = [-1e17, -1e17];
     let olds = [];
 
     for (let sarea of this.sareas) {
@@ -32461,7 +34633,7 @@ class Screen$1 extends UIBase {
     reader(this);
 
     //handle old files that might have saved as simple arrays
-    this.size = new Vector2$8(this.size);
+    this.size = new Vector2$e(this.size);
 
     let sareas = this.sareas;
     this.sareas = [];
@@ -32538,7 +34710,7 @@ class Screen$1 extends UIBase {
   }
 }
 
-Screen$1.STRUCT = `
+Screen$2.STRUCT = `
 pathux.Screen { 
   size  : vec2;
   pos   : vec2;
@@ -32548,8 +34720,10 @@ pathux.Screen {
 }
 `;
 
-nstructjs.manager.add_class(Screen$1);
-UIBase.register(Screen$1);
+nstructjs.manager.add_class(Screen$2);
+UIBase.register(Screen$2);
+
+setScreenClass(Screen$2);
 
 
 let get_screen_cb;
@@ -32591,10 +34765,10 @@ function getImageData(image) {
     if (!image.complete) {
       image.onload = () => {
         console.log("image loaded");
-        accept(render());
+        accept(render(image));
       };
     } else {
-      accept(render());
+      accept(render(image));
     }
   });
 }
@@ -32688,6 +34862,10 @@ class ContextOverlay {
   //base classes override this
   static contextDefine() {
     throw new Error("implement me!");
+    return {
+      name   :   "",
+      flag   :   0
+    }
   }
 
   //don't override this
@@ -32905,7 +35083,7 @@ class Context {
 
     if (state && state.screen) {
       //progbarNote(screen, msg, percent, color, timeout) {
-      return progbarNote(state.screen, msg, perc, "green", timeout);
+      return progbarNote(state.screen, msg, perc, "green", timeout, id);
     }
   }
 
@@ -33239,5 +35417,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
