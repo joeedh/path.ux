@@ -949,8 +949,11 @@ export class Container extends ui_base.UIBase {
 
     ret.packflag |= packflag;
     ret.label = name;
-    ret.setAttribute("datapath", path);
     ret.noMarginsOrPadding();
+
+    if (inpath) {
+      ret.setAttribute("datapath", path);
+    }
 
     if (mass_set_path) {
       ret.setAttribute("mass_set_path", mass_set_path);
@@ -1208,6 +1211,10 @@ export class Container extends ui_base.UIBase {
 
     ret.setAttribute("name", name);
 
+    if (defaultval) {
+      ret.setValue(defaultval);
+    }
+
     ret.onchange = callback;
     ret.onselect = callback;
 
@@ -1297,12 +1304,21 @@ export class Container extends ui_base.UIBase {
       }
     }
 
-    if (name)
+    if (name) {
       ret.setAttribute("name", name);
-    if (min !== undefined)
-      ret.setAttribute("min", min);
-    if (max !== undefined)
-      ret.setAttribute("max", max);
+    }
+
+    if (min !== undefined) {
+      ret.range[0] = min;
+    }
+    if (max !== undefined) {
+      ret.range[1] = max;
+    }
+
+    if (defaultval !== undefined) {
+      ret.setValue(defaultval);
+    }
+
     if (is_int)
       ret.setAttribute("integer", is_int);
     if (decimals !== undefined) {

@@ -484,13 +484,16 @@ export class NumSliderSimple2 extends ColumnFrame {
     }
     `;
 
-
     this.container = this;
 
     this.textbox = document.createElement("textbox-x");
     this.numslider = document.createElement("numslider-simple-base-x");
 
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+  }
+
+  get range() {
+    return this.numslider.range;
   }
 
   init() {

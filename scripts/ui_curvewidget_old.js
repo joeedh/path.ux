@@ -14,7 +14,7 @@ window._bin_cache = bin_cache;
 
 var eval2_rets = util.cachering.fromConstructor(Vector2, 32);
 
-export const CURVE_VERSION = 0.5;
+//export const CURVE_VERSION = 0.5;
 
 /*
   I hate these stupid curve widgets.  This horrible one here works by

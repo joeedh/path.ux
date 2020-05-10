@@ -299,6 +299,7 @@ export class AppState {
 
   clearLocalStorage() {
     delete localStorage[cconst.LOCALSTORAGE_KEY];
+    console.log("cleared local storage");
   }
 
   saveLocalStorage() {
@@ -306,6 +307,7 @@ export class AppState {
     file = util.btoa(file);
 
     localStorage[cconst.LOCALSTORAGE_KEY] = file;
+    console.log("saved to local storage");
   }
 
   loadLocalStorage() {

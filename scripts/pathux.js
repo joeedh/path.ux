@@ -15,6 +15,7 @@ export * from './ui_listbox.js';
 export * from './ui_menu.js';
 export * from './ui_table.js';
 export * from './ui_lasttool.js';
+export * from './ui_textbox.js';
 export * from './graphpack.js';
 import * as solver1 from './solver.js';
 
@@ -44,8 +45,8 @@ export * from './ScreenOverdraw.js';
 export * from './struct.js';
 export * from './simple_events.js';
 export * from './events.js';
-export * from './curve1d.js';
-export * from './curve1d_base.js';
+export * from './curve/curve1d.js';
+export * from './curve/curve1d_base.js';
 
 export * from './context.js';
 import * as parseutil1 from './parseutil.js';

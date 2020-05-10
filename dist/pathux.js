@@ -7433,7 +7433,7 @@ function copyEvent(e) {
   return ret;
 }
 
-function pushModalLight(obj) {
+function pushModalLight(obj, autoStopPropagation=true) {
   if (exports.DEBUG.modalEvents) {
     console.warn("pushModalLight");
   }
@@ -7494,18 +7494,22 @@ function pushModalLight(obj) {
         ret.handlers[type2](e2);
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      if (autoStopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
   }
 
   function make_handler(type, key) {
     return function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
       if (key !== undefined)
         obj[key](e);
+
+      if (autoStopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
   }
 
@@ -7939,74 +7943,26 @@ function pushModal(dom, handlers) {
   return h;
 }
 
-var Vector2$1 = Vector2;
+const CurveConstructors = [];
+const CURVE_VERSION = 1.0;
 
-function mySafeJSONStringify(obj) {
-  return JSON.stringify(obj.toJSON(), function(key) {
-    let v = this[key];
+const CurveFlags = {
+  SELECT : 1
+};
 
-    if (typeof v === "number") {
-      if (v !== Math.floor(v)) {
-        v = parseFloat(v.toFixed(5));
-      } else {
-        v = v;
-      }
-    }
-
-    return v;
-  });
-}
-function mySafeJSONParse(buf) {
-  return JSON.parse(buf, (key, val) => {
-
-  });
-}
-window.mySafeJSONStringify = mySafeJSONStringify;
-
-
-var bin_cache = {};
-window._bin_cache = bin_cache;
-
-var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
-
-const CURVE_VERSION = 0.75;
-
-function binomial(n, i) {
-  if (i > n) {
-    throw new Error("Bad call to binomial(n, i), i was > than n");
-  }
-
-  if (i == 0 || i == n) {
-    return 1;
-  }
-
-  var key = "" + n + "," + i;
-
-  if (key in bin_cache)
-    return bin_cache[key];
-
-  var ret = binomial(n-1, i-1) + bin(n-1, i);
-  bin_cache[key] = ret;
-
-  return ret;
-}
-window.bin = binomial;
 
 const TangentModes = {
   SMOOTH : 1,
   BREAK  : 2
 };
 
-//when in doubt I prefer to make enums bitmasks
-const CurveTypes = {
-  BSPLINE  : 1,
-  CUSTOM   : 2,
-  GUASSIAN : 4
-};
-
 class CurveTypeData {
-  constructor(type) {
-    this.type = type;
+  constructor() {
+    this.type = this.constructor.name;
+  }
+
+  static register(cls) {
+    CurveConstructors.push(cls);
   }
 
   toJSON() {
@@ -8125,22 +8081,408 @@ class CurveTypeData {
     reader(this);
   }
 }
+
 CurveTypeData.STRUCT = `
 CurveTypeData {
-  type : int;
+  type : string;
 }
 `;
 nstructjs$1.register(CurveTypeData);
 
-const CurveFlags = {
-  SELECT : 1
+class EquationCurve extends CurveTypeData {
+  constructor(type) {
+    super();
+
+    this.equation = "x";
+  }
+
+  static define() {return {
+    uiname : "Equation",
+    name   : "equation"
+  }}
+
+  toJSON() {
+    let ret = super.toJSON();
+
+    return Object.assign(ret, {
+      equation : this.equation
+    });
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    if (obj.equation !== undefined) {
+      this.equation = obj.equation;
+    }
+
+    return this;
+  }
+
+  get hasGUI() {
+    return this.uidata !== undefined;
+  }
+
+  makeGUI(container, canvas, drawTransform) {
+    this.uidata = {
+      canvas     : canvas,
+      g          : canvas.g,
+      draw_trans : drawTransform,
+    };
+
+    let text = container.textbox(undefined, this.equation);
+    text.onchange = (val) => {
+      console.log(val);
+      this.equation = val;
+      this.update();
+      this.redraw();
+    };
+  }
+
+  killGUI(dom, gui, canvas, g, draw_transform) {
+    if (this.uidata !== undefined) {
+      this.uidata.textbox.remove();
+    }
+
+    this.uidata = undefined;
+  }
+
+  evaluate(s) {
+
+    try {
+      let x = s;
+      let ret = eval(this.equation);
+
+      this._haserror = false;
+
+      return ret;
+    } catch (error) {
+      this._haserror = true;
+      console.log("ERROR!");
+      return 0.0;
+    }
+  }
+
+  derivative(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.evaluate(s) - this.evaluate(s - df)) / df;
+    } else if (s < df*3) {
+      return (this.evaluate(s+df) - this.evaluate(s)) / df;
+    } else {
+      return (this.evaluate(s+df) - this.evaluate(s-df)) / (2 * df);
+    }
+  }
+
+  derivative2(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.derivative(s) - this.derivative(s - df)) / df;
+    } else if (s < df*3) {
+      return (this.derivative(s+df) - this.derivative(s)) / df;
+    } else {
+      return (this.derivative(s+df) - this.derivative(s-df)) / (2 * df);
+    }
+  }
+
+  inverse(y) {
+    let steps = 9;
+    let ds = 1.0 / steps, s = 0.0;
+    let best = undefined;
+    let ret = undefined;
+
+    for (let i=0; i<steps; i++, s += ds) {
+      let s1 = s, s2 = s+ds;
+
+      let mid;
+
+      for (let j=0; j<11; j++) {
+        let y1 = this.evaluate(s1);
+        let y2 = this.evaluate(s2);
+        mid = (s1+s2)*0.5;
+
+        if (Math.abs(y1-y) < Math.abs(y2-y)) {
+          s2 = mid;
+        } else {
+          s1 = mid;
+        }
+      }
+
+      let ymid = this.evaluate(mid);
+
+      if (best === undefined || Math.abs(y - ymid) < best) {
+        best = Math.abs(y - ymid);
+        ret = mid;
+      }
+    }
+
+    return ret === undefined ? 0.0 : ret;
+  }
+
+  onActive(parent, draw_transform) {
+  }
+
+  onInactive(parent, draw_transform) {
+  }
+
+  reset() {
+    this.equation = "x";
+  }
+
+  destroy() {
+  }
+
+  draw(canvas, g, draw_transform) {
+    g.save();
+    if (this._haserror) {
+
+      g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
+      g.beginPath();
+      g.rect(0, 0, 1, 1);
+      g.fill();
+
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(1, 1);
+      g.moveTo(0, 1);
+      g.lineTo(1, 0);
+
+      g.lineWidth *= 3;
+      g.stroke();
+
+      g.restore();
+      return;
+    }
+
+    g.restore();
+  }
+}
+EquationCurve.STRUCT = nstructjs$1.inherit(EquationCurve, CurveTypeData) + `
+  equation : string;
+}
+`;
+nstructjs$1.register(EquationCurve);
+CurveTypeData.register(EquationCurve);
+
+
+class GuassianCurve extends CurveTypeData {
+  constructor(type) {
+    super();
+
+    this.height = 1.0;
+    this.offset = 1.0;
+    this.deviation = 0.3; //standard deviation
+  }
+
+  static define() {return {
+    uiname : "Guassian",
+    name   : "guassian"
+  }}
+
+  toJSON() {
+    let ret = super.toJSON();
+
+    return Object.assign(ret, {
+      height    : this.height,
+      offset    : this.offset,
+      deviation : this.deviation
+    });
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    this.height = obj.height !== undefined ? obj.height : 1.0;
+    this.offset = obj.offset;
+    this.deviation = obj.deviation;
+
+    return this;
+  }
+
+  get hasGUI() {
+    return this.uidata !== undefined;
+  }
+
+  makeGUI(container, canvas, drawTransform) {
+    this.uidata = {
+      canvas     : canvas,
+      g          : canvas.g,
+      draw_trans : drawTransform,
+    };
+
+    this.uidata.hslider = container.slider(undefined, "Height", this.height, -10, 10, 0.0001);
+    this.uidata.hslider.onchange = () => {
+      this.height = this.uidata.hslider.value;
+      this.redraw();
+      this.update();
+    };
+    this.uidata.oslider = container.slider(undefined, "Offset", this.offset, -10, 10, 0.0001);
+    this.uidata.oslider.onchange = () => {
+      this.offset = this.uidata.oslider.value;
+      this.redraw();
+      this.update();
+    };
+    this.uidata.dslider = container.slider(undefined, "STD Deviation", this.deviation, -10, 10, 0.0001);
+    this.uidata.dslider.onchange = () => {
+      this.deviation = this.uidata.dslider.value;
+      this.redraw();
+      this.update();
+    };
+
+    /*
+    this.uidata.oslider = gui.slider(undefined, "Offset", this.offset,
+      -2.5, 2.5, 0.0001, false, false, (val) => {this.offset = val, this.update(), this.redraw();});
+    this.uidata.dslider = gui.slider(undefined, "STD Deviation", this.deviation,
+      0.0001, 1.25, 0.0001, false, false, (val) => {this.deviation = val, this.update(), this.redraw();});
+    //*/
+  }
+
+  killGUI(dom, gui, canvas, g, draw_transform) {
+    if (this.uidata !== undefined) {
+      this.uidata.hslider.remove();
+      this.uidata.oslider.remove();
+      this.uidata.dslider.remove();
+    }
+
+    this.uidata = undefined;
+  }
+
+  evaluate(s) {
+    let r = this.height * Math.exp(-((s-this.offset)*(s-this.offset)) / (2*this.deviation*this.deviation));
+    return r;
+  }
+
+  derivative(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.evaluate(s) - this.evaluate(s - df)) / df;
+    } else if (s < df*3) {
+      return (this.evaluate(s+df) - this.evaluate(s)) / df;
+    } else {
+      return (this.evaluate(s+df) - this.evaluate(s-df)) / (2 * df);
+    }
+  }
+
+  derivative2(s) {
+    let df = 0.0001;
+
+    if (s > 1.0 - df*3) {
+      return (this.derivative(s) - this.derivative(s - df)) / df;
+    } else if (s < df*3) {
+      return (this.derivative(s+df) - this.derivative(s)) / df;
+    } else {
+      return (this.derivative(s+df) - this.derivative(s-df)) / (2 * df);
+    }
+  }
+
+  inverse(y) {
+    let steps = 9;
+    let ds = 1.0 / steps, s = 0.0;
+    let best = undefined;
+    let ret = undefined;
+
+    for (let i=0; i<steps; i++, s += ds) {
+      let s1 = s, s2 = s+ds;
+
+      let mid;
+
+      for (let j=0; j<11; j++) {
+        let y1 = this.evaluate(s1);
+        let y2 = this.evaluate(s2);
+        mid = (s1+s2)*0.5;
+
+        if (Math.abs(y1-y) < Math.abs(y2-y)) {
+          s2 = mid;
+        } else {
+          s1 = mid;
+        }
+      }
+
+      let ymid = this.evaluate(mid);
+
+      if (best === undefined || Math.abs(y - ymid) < best) {
+        best = Math.abs(y - ymid);
+        ret = mid;
+      }
+    }
+
+    return ret === undefined ? 0.0 : ret;
+  }
+}
+
+GuassianCurve.STRUCT = nstructjs$1.inherit(GuassianCurve, CurveTypeData) + `
+  height    : float;
+  offset    : float;
+  deviation : float;
+}
+`;
+nstructjs$1.register(GuassianCurve);
+CurveTypeData.register(GuassianCurve);
+
+var Vector2$1 = Vector2;
+
+let RecalcFlags = {
+  BASIS : 1,
+  FULL  : 2,
+  ALL   : 3,
+
+  //private flag
+  FULL_BASIS : 4
 };
+
+function mySafeJSONStringify(obj) {
+  return JSON.stringify(obj.toJSON(), function(key) {
+    let v = this[key];
+
+    if (typeof v === "number") {
+      if (v !== Math.floor(v)) {
+        v = parseFloat(v.toFixed(5));
+      } else {
+        v = v;
+      }
+    }
+
+    return v;
+  });
+}
+
+window.mySafeJSONStringify = mySafeJSONStringify;
+
+
+var bin_cache = {};
+window._bin_cache = bin_cache;
+
+var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
+
+function binomial(n, i) {
+  if (i > n) {
+    throw new Error("Bad call to binomial(n, i), i was > than n");
+  }
+
+  if (i == 0 || i == n) {
+    return 1;
+  }
+
+  var key = "" + n + "," + i;
+
+  if (key in bin_cache)
+    return bin_cache[key];
+
+  var ret = binomial(n-1, i-1) + bin(n-1, i);
+  bin_cache[key] = ret;
+
+  return ret;
+}
+window.bin = binomial;
+
 
 class Curve1DPoint extends Vector2$1 {
   constructor(co) {
     super(co);
 
-    this.deg = 3;
     this.rco = new Vector2$1(co);
     this.sco = new Vector2$1(co);
 
@@ -8167,7 +8509,6 @@ class Curve1DPoint extends Vector2$1 {
       1       : this[1],
       eid     : this.eid,
       flag    : this.flag,
-      deg     : this.deg,
       tangent : this.tangent
     };
   }
@@ -8177,44 +8518,9 @@ class Curve1DPoint extends Vector2$1 {
 
     ret.eid = obj.eid;
     ret.flag = obj.flag;
-    ret.deg = obj.deg;
     ret.tangent = obj.tangent;
 
     return ret;
-  }
-
-  basis(t, kprev, knext, is_end, totp, pi) {
-    var wid = (knext-kprev)*0.5;
-    var k = this.rco[0];
-
-    this.deg = 3;
-
-    kprev -= (this.deg)*wid;
-    knext += (this.deg)*wid;
-
-    if (is_end != 1) {
-      kprev = Math.max(kprev, 0.0);
-    }
-    if (is_end != 2) {
-      knext = Math.min(knext, 1.0);
-    }
-
-    var w;
-    if (t > k) {
-      w = 1.0+(k - t) / (knext - k + 0.00001);
-      w = 2.0 - w;
-    } else {
-      w = (t - kprev) / (k - kprev + 0.00001);
-    }
-    w *= 0.5;
-
-    var w = (t - kprev) / (knext - kprev);
-    var n = totp;
-    var v = pi;
-
-    w = Math.min(Math.max(w, 0.0), 1.0);
-    var bernstein = binomial(n, v)*Math.pow(w, v)*Math.pow(1.0-w, n-v);
-    return bernstein;
   }
 
   loadSTRUCT(reader) {
@@ -8222,7 +8528,7 @@ class Curve1DPoint extends Vector2$1 {
 
     this.sco.load(this);
     this.rco.load(this);
-    this.recalc = 1;
+    this.recalc = RecalcFlags.ALL;
   }
 }Curve1DPoint.STRUCT = `
 Curve1DPoint {
@@ -8232,24 +8538,26 @@ Curve1DPoint {
   flag    : int;
   deg     : int;
   tangent : int;
+  rco     : vec2;
 }
 `;
 nstructjs$1.register(Curve1DPoint);
 
 class BSplineCurve extends CurveTypeData {
   constructor() {
-    super(CurveTypes.BSPLINE);
+    super();
 
     this.fastmode = false;
     this.points = [];
     this.length = 0;
+    this.interpolating = false;
 
     this._ps = [];
     this.hermite = [];
     this.fastmode = false;
 
     this.deg = 6;
-    this.recalc = 1;
+    this.recalc = RecalcFlags.ALL;
     this.basis_tables = [];
     this.eidgen = new IDGen();
 
@@ -8282,7 +8590,7 @@ class BSplineCurve extends CurveTypeData {
 
   add(x, y, no_update=false) {
     var p = new Curve1DPoint();
-    this.recalc = 1;
+    this.recalc = RecalcFlags.ALL;
 
     p.eid = this.eidgen.next();
 
@@ -8306,11 +8614,15 @@ class BSplineCurve extends CurveTypeData {
     super.update();
   }
 
-  updateKnots() {
-    this.recalc = 1;
+  updateKnots(recalc=true) {
+    if (recalc) {
+      this.recalc = RecalcFlags.ALL;
+    }
 
-    for (var i=0; i<this.points.length; i++) {
-      this.points[i].rco.load(this.points[i]);
+    if (!this.interpolating) {
+      for (var i = 0; i < this.points.length; i++) {
+        this.points[i].rco.load(this.points[i]);
+      }
     }
 
     this.points.sort(function(a, b) {
@@ -8356,8 +8668,10 @@ class BSplineCurve extends CurveTypeData {
 
     this._ps.push(l1);
 
-    for (var i=0; i<this._ps.length; i++) {
-      this._ps[i].rco.load(this._ps[i]);
+    if (!this.interpolating) {
+      for (var i = 0; i < this._ps.length; i++) {
+        this._ps[i].rco.load(this._ps[i]);
+      }
     }
 
     for (var i=0; i<this.points.length; i++) {
@@ -8371,6 +8685,8 @@ class BSplineCurve extends CurveTypeData {
 
   toJSON() {
     let ret = super.toJSON();
+
+    ret.interpolating = this.interpolating;
 
     var ps = [];
     for (var i=0; i<this.points.length; i++) {
@@ -8389,21 +8705,21 @@ class BSplineCurve extends CurveTypeData {
   loadJSON(obj) {
     super.loadJSON(obj);
 
+    this.interpolating = obj.interpolating;
     this.length = 0;
     this.points = [];
     this._ps = [];
 
     this.hightlight = undefined;
     this.eidgen = IDGen.fromJSON(obj.eidgen);
-    this.recalc = 1;
+    this.recalc = RecalcFlags.ALL;
     this.mpos = [0, 0];
-
-    if (obj.deg != undefined)
-      this.deg = obj.deg;
 
     for (var i=0; i<obj.points.length; i++) {
       this.points.push(Curve1DPoint.fromJSON(obj.points[i]));
     }
+
+    this.deg = obj.deg;
 
     this.updateKnots();
     this.redraw();
@@ -8411,8 +8727,13 @@ class BSplineCurve extends CurveTypeData {
   }
 
   basis(t, i) {
-    if (this.recalc) {
+    if (this.recalc & RecalcFlags.FULL_BASIS) {
+      return this._basis(t, i);
+    }
+
+    if (this.recalc & RecalcFlags.BASIS) {
       this.regen_basis();
+      this.recalc &= ~RecalcFlags.BASIS;
     }
 
     i = Math.min(Math.max(i, 0), this._ps.length-1);
@@ -8437,6 +8758,7 @@ class BSplineCurve extends CurveTypeData {
     this.add(0, 0, true);
     this.add(1, 1, true);
 
+    this.recalc = 1;
     this.updateKnots();
     this.update();
 
@@ -8446,13 +8768,19 @@ class BSplineCurve extends CurveTypeData {
   regen_hermite(steps) {
     //console.log("building spline approx");
 
-    steps = steps == undefined ? 240 : steps;
+    if (steps === undefined) {
+      steps = this.fastmode ? 180 : 340;
+    }
+
+    if (this.interpolating) {
+      steps *= 2;
+    }
 
     this.hermite = new Array(steps);
     var table =this.hermite;
 
     var eps = 0.00001;
-    var dt = (1.0-eps*8)/(steps-1);
+    var dt = (1.0-eps*4.001)/(steps-1);
     var t=eps*4;
     var lastdv1, lastf3;
 
@@ -8480,11 +8808,95 @@ class BSplineCurve extends CurveTypeData {
     }
   }
 
+  solve_interpolating() {
+    //this.recalc |= RecalcFlags.FULL_BASIS;
+
+    for (let p of this._ps) {
+      p.rco.load(p);
+    }
+
+    this._evaluate2(0.5);
+
+    let error1 = (p) => {
+      //return p.vectorDistance(this._evaluate2(p[0]));
+      return this._evaluate(p[0]) - p[1];
+    };
+
+    let error = (p) => {
+      return error1(p);
+
+      /*
+      let err = 0.0;
+      for (let p of this.points) {
+        //err += error1(p)**2;
+        err += Math.abs(error1(p));
+      }
+
+      //return Math.sqrt(err);
+      return err;
+      //*/
+    };
+
+    let err = 0.0;
+    let g = new Vector2$1();
+
+    for (let step=0; step<25; step++) {
+      err = 0.0;
+
+      for (let p of this._ps) {
+        let r1 = error(p);
+        const df = 0.00001;
+
+        err += Math.abs(r1);
+
+        if (p === this._ps[0] || p === this._ps[this._ps.length-1]) ;
+
+        g.zero();
+
+        for (let i = 0; i < 2; i++) {
+          let orig = p.rco[i];
+          p.rco[i] += df;
+          let r2 = error(p);
+          p.rco[i] = orig;
+
+          g[i] = (r2 - r1) / df;
+        }
+
+        let totgs = g.dot(g);
+        //console.log(totgs);
+
+        if (totgs < 0.00000001) {
+          continue;
+        }
+
+        r1 /= totgs;
+        let k = 0.5;
+
+        p.rco[0] += -r1*g[0]*k;
+        p.rco[1] += -r1*g[1]*k;
+      }
+
+      //console.log("ERR", err);
+
+      this.updateKnots(false);
+
+      let th = this.fastmode ? 0.001 : 0.00005;
+      if (err < th) {
+        break;
+      }
+    }
+
+    //this.recalc &= ~RecalcFlags.FULL_BASIS;
+  }
+
   regen_basis() {
     //console.log("building basis functions");
-    this.recalc = 0;
-
+    //var steps = this.fastmode && !this.interpolating ? 64 : 128;
     var steps = this.fastmode ? 64 : 128;
+
+    if (this.interpolating) {
+      steps *= 2;
+    }
 
     this.basis_tables = new Array(this._ps.length);
 
@@ -8519,8 +8931,6 @@ class BSplineCurve extends CurveTypeData {
         lastf3 = f3;
       }
     }
-
-    this.regen_hermite();
   }
 
   _basis(t, i) {
@@ -8581,6 +8991,13 @@ class BSplineCurve extends CurveTypeData {
 
     if (this.recalc) {
       this.regen_basis();
+
+      if (this.interpolating) {
+        this.solve_interpolating();
+      }
+
+      this.regen_hermite();
+      this.recalc = 0;
     }
 
     t *= 0.999999;
@@ -8736,6 +9153,14 @@ class BSplineCurve extends CurveTypeData {
 
     let row = container.row();
 
+    let fullUpdate = () => {
+      this.updateKnots();
+      this.update();
+      this.regen_basis();
+      this.recalc = RecalcFlags.ALL;
+      this.redraw();
+    };
+
     row.iconbutton(Icons.TINY_X, "Delete Point", () => {
       console.log("delete point");
 
@@ -8748,12 +9173,32 @@ class BSplineCurve extends CurveTypeData {
         }
       }
 
-      this.updateKnots();
-      this.update();
-      this.redraw();
+      fullUpdate();
     });
 
-    return;
+    row.button("Reset", () => {
+      this.reset();
+    });
+
+    row.simpleslider(undefined, "Degree", this.deg, 1, 6, 1, true, true, (slider) => {
+      this.deg = Math.floor(slider.value);
+
+      fullUpdate();
+      console.log(this.deg);
+
+    });
+
+    row = container.row();
+    let check = row.check(undefined, "Interpolating");
+    check.checked = this.interpolating;
+
+    check.onchange = () => {
+      this.interpolating = check.value;
+      console.log(check.value);
+      fullUpdate();
+    };
+
+    return this;
   }
 
   killGUI(container, canvas) {
@@ -8860,7 +9305,6 @@ class BSplineCurve extends CurveTypeData {
 
   do_transform(x, y) {
     var off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
-    this.points.recalc = 1;
 
     for (var i=0; i<this.uidata.transpoints.length; i++) {
       var p = this.uidata.transpoints[i];
@@ -8890,8 +9334,6 @@ class BSplineCurve extends CurveTypeData {
   }
 
   on_mousemove(e) {
-    console.log("bspline mmove", e.x, e.y);
-
     if (e.isTouch && this.uidata.transforming) {
       e.preventDefault();
     }
@@ -8901,6 +9343,7 @@ class BSplineCurve extends CurveTypeData {
 
     if (this.uidata.transforming) {
       this.do_transform(x, y);
+      this.evaluate(0.5);
       //this.update();
       //this.doSave();
     } else {
@@ -8909,8 +9352,6 @@ class BSplineCurve extends CurveTypeData {
   }
 
   on_mouseup(e) {
-    console.log("bspline mup");
-
     this.uidata.transforming = false;
     this.fastmode = false;
     this.updateKnots();
@@ -8925,7 +9366,7 @@ class BSplineCurve extends CurveTypeData {
       case 46: //delete
         if (this.points.highlight != undefined) {
           this.points.remove(this.points.highlight);
-          this.recalc = 1;
+          this.recalc = RecalcFlags.ALL;
 
           this.points.highlight = undefined;
           this.updateKnots();
@@ -8982,351 +9423,41 @@ class BSplineCurve extends CurveTypeData {
 
     this.updateKnots();
     this.regen_basis();
-    this.recalc = 1;
+    this.recalc = RecalcFlags.ALL;
   }
 }
 
 BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
-  points : array(Curve1DPoint);
-  deg    : int;
-  eidgen : IDGen;
+  points        : array(Curve1DPoint);
+  deg           : int;
+  eidgen        : IDGen;
+  interpolating : bool;
 }
 `;
 nstructjs$1.register(BSplineCurve);
+CurveTypeData.register(BSplineCurve);
 
-class CustomCurve extends CurveTypeData {
-  constructor(type) {
-    super(CurveTypes.CUSTOM);
+function mySafeJSONStringify$1(obj) {
+  return JSON.stringify(obj.toJSON(), function(key) {
+    let v = this[key];
 
-    this.equation = "x";
-  }
-
-  static define() {return {
-    uiname : "Equation",
-    name   : "equation"
-  }}
-
-  toJSON() {
-    let ret = super.toJSON();
-
-    return Object.assign(ret, {
-      equation : this.equation
-    });
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    if (obj.equation !== undefined) {
-      this.equation = obj.equation;
-    }
-
-    return this;
-  }
-
-  get hasGUI() {
-    return this.uidata !== undefined;
-  }
-
-  makeGUI(container, canvas, drawTransform) {
-    this.uidata = {
-      dom        : dom,
-      gui        : gui,
-      canvas     : canvas,
-      g          : g,
-      draw_trans : draw_transform,
-    };
-
-    let text = document.createElement("input");
-    text.type = "text";
-    text.value = this.equation;
-
-    this.uidata.textbox = text;
-
-    text.addEventListener("change", (e) => {
-      this.equation = text.value;
-      this.update();
-      this.redraw();
-      //this.doSave();
-    });
-
-    dom.appendChild(text);
-  }
-
-  killGUI(dom, gui, canvas, g, draw_transform) {
-    if (this.uidata !== undefined) {
-      this.uidata.textbox.remove();
-    }
-
-    this.uidata = undefined;
-  }
-
-  evaluate(s) {
-
-    try {
-      let x = s;
-      let ret = eval(this.equation);
-
-      this._haserror = false;
-
-      return ret;
-    } catch (error) {
-      this._haserror = true;
-      console.log("ERROR!");
-      return 0.0;
-    }
-  }
-
-  derivative(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df)) / df;
-    } else if (s < df*3) {
-      return (this.evaluate(s+df) - this.evaluate(s)) / df;
-    } else {
-      return (this.evaluate(s+df) - this.evaluate(s-df)) / (2 * df);
-    }
-  }
-
-  derivative2(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df)) / df;
-    } else if (s < df*3) {
-      return (this.derivative(s+df) - this.derivative(s)) / df;
-    } else {
-      return (this.derivative(s+df) - this.derivative(s-df)) / (2 * df);
-    }
-  }
-
-  inverse(y) {
-    let steps = 9;
-    let ds = 1.0 / steps, s = 0.0;
-    let best = undefined;
-    let ret = undefined;
-
-    for (let i=0; i<steps; i++, s += ds) {
-      let s1 = s, s2 = s+ds;
-
-      let mid;
-
-      for (let j=0; j<11; j++) {
-        let y1 = this.evaluate(s1);
-        let y2 = this.evaluate(s2);
-        mid = (s1+s2)*0.5;
-
-        if (Math.abs(y1-y) < Math.abs(y2-y)) {
-          s2 = mid;
-        } else {
-          s1 = mid;
-        }
-      }
-
-      let ymid = this.evaluate(mid);
-
-      if (best === undefined || Math.abs(y - ymid) < best) {
-        best = Math.abs(y - ymid);
-        ret = mid;
+    if (typeof v === "number") {
+      if (v !== Math.floor(v)) {
+        v = parseFloat(v.toFixed(5));
+      } else {
+        v = v;
       }
     }
 
-    return ret === undefined ? 0.0 : ret;
-  }
-
-  onActive(parent, draw_transform) {
-  }
-
-  onInactive(parent, draw_transform) {
-  }
-
-  reset() {
-
-  }
-
-  destroy() {
-  }
-
-  update() {
-
-  }
-
-  draw(canvas, g, draw_transform) {
-    g.save();
-    if (this._haserror) {
-
-      g.fillStyle = g.strokeStyle = "rgba(255, 50, 0, 0.25)";
-      g.beginPath();
-      g.rect(0, 0, 1, 1);
-      g.fill();
-
-      g.beginPath();
-      g.moveTo(0, 0);
-      g.lineTo(1, 1);
-      g.moveTo(0, 1);
-      g.lineTo(1, 0);
-
-      g.lineWidth *= 3;
-      g.stroke();
-
-      g.restore();
-      return;
-    }
-
-    g.restore();
-  }
+    return v;
+  });
 }
-CustomCurve.STRUCT = nstructjs$1.inherit(CustomCurve, CurveTypeData) + `
-  equation : string;
+function mySafeJSONParse(buf) {
+  return JSON.parse(buf, (key, val) => {
+
+  });
 }
-`;
-nstructjs$1.register(CustomCurve);
-
-
-class GuassianCurve extends CurveTypeData {
-  constructor(type) {
-    super(CurveTypes.GUASSIAN);
-
-    this.height = 1.0;
-    this.offset = 1.0;
-    this.deviation = 0.3; //standard deviation
-  }
-
-  static define() {return {
-    uiname : "Guassian",
-    name   : "guassian"
-  }}
-
-  toJSON() {
-    let ret = super.toJSON();
-
-    return Object.assign(ret, {
-      height    : this.height,
-      offset    : this.offset,
-      deviation : this.deviation
-    });
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    this.height = obj.height !== undefined ? obj.height : 1.0;
-    this.offset = obj.offset;
-    this.deviation = obj.deviation;
-
-    return this;
-  }
-
-  get hasGUI() {
-    return this.uidata !== undefined;
-  }
-
-  makeGUI(container, canvas, drawTransform) {
-    this.uidata = {
-      dom        : dom,
-      gui        : gui,
-      canvas     : canvas,
-      g          : g,
-      draw_trans : draw_transform,
-    };
-
-    this.uidata.hslider = gui.slider(undefined, "Height", this.height,
-      -10, 10, 0.0001, false, false, (val) => {this.height = val, this.update(), this.redraw();});
-    this.uidata.oslider = gui.slider(undefined, "Offset", this.offset,
-      -2.5, 2.5, 0.0001, false, false, (val) => {this.offset = val, this.update(), this.redraw();});
-    this.uidata.dslider = gui.slider(undefined, "STD Deviation", this.deviation,
-      0.0001, 1.25, 0.0001, false, false, (val) => {this.deviation = val, this.update(), this.redraw();});
-
-  }
-
-  killGUI(dom, gui, canvas, g, draw_transform) {
-    if (this.uidata !== undefined) {
-      this.uidata.hslider.remove();
-      this.uidata.oslider.remove();
-      this.uidata.dslider.remove();
-    }
-
-    this.uidata = undefined;
-  }
-
-  evaluate(s) {
-    let r = this.height * Math.exp(-((s-this.offset)*(s-this.offset)) / (2*this.deviation*this.deviation));
-    return r;
-  }
-
-  derivative(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.evaluate(s) - this.evaluate(s - df)) / df;
-    } else if (s < df*3) {
-      return (this.evaluate(s+df) - this.evaluate(s)) / df;
-    } else {
-      return (this.evaluate(s+df) - this.evaluate(s-df)) / (2 * df);
-    }
-  }
-
-  derivative2(s) {
-    let df = 0.0001;
-
-    if (s > 1.0 - df*3) {
-      return (this.derivative(s) - this.derivative(s - df)) / df;
-    } else if (s < df*3) {
-      return (this.derivative(s+df) - this.derivative(s)) / df;
-    } else {
-      return (this.derivative(s+df) - this.derivative(s-df)) / (2 * df);
-    }
-  }
-
-  inverse(y) {
-    let steps = 9;
-    let ds = 1.0 / steps, s = 0.0;
-    let best = undefined;
-    let ret = undefined;
-
-    for (let i=0; i<steps; i++, s += ds) {
-      let s1 = s, s2 = s+ds;
-
-      let mid;
-
-      for (let j=0; j<11; j++) {
-        let y1 = this.evaluate(s1);
-        let y2 = this.evaluate(s2);
-        mid = (s1+s2)*0.5;
-
-        if (Math.abs(y1-y) < Math.abs(y2-y)) {
-          s2 = mid;
-        } else {
-          s1 = mid;
-        }
-      }
-
-      let ymid = this.evaluate(mid);
-
-      if (best === undefined || Math.abs(y - ymid) < best) {
-        best = Math.abs(y - ymid);
-        ret = mid;
-      }
-    }
-
-    return ret === undefined ? 0.0 : ret;
-  }
-}
-
-GuassianCurve.STRUCT = nstructjs$1.inherit(GuassianCurve, CurveTypeData) + `
-  height    : float;
-  offset    : float;
-  deviation : float;
-}
-`;
-nstructjs$1.register(GuassianCurve);
-
-const CurveConstructors = {
-  [CurveTypes.BSPLINE]    : BSplineCurve,
-  [CurveTypes.CUSTOM]     : CustomCurve,
-  [CurveTypes.GUASSIAN]   : GuassianCurve
-};
+window.mySafeJSONStringify = mySafeJSONStringify$1;
 
 class Curve1D extends EventDispatcher {
   constructor() {
@@ -9335,8 +9466,9 @@ class Curve1D extends EventDispatcher {
     this.generators = [];
     this.VERSION = CURVE_VERSION;
 
-    for (let k in CurveConstructors) {
-      let gen = new CurveConstructors[k];
+    for (let gen of CurveConstructors) {
+      gen = new gen();
+
       gen.parent = this;
       this.generators.push(gen);
     }
@@ -9345,7 +9477,7 @@ class Curve1D extends EventDispatcher {
   }
 
   get generatorType() {
-    return this.generators.active.type;
+    return this.generators.active ? this.generators.active.type : undefined;
   }
 
   load(b) {
@@ -9353,8 +9485,8 @@ class Curve1D extends EventDispatcher {
       return;
     }
 
-    let buf1 = mySafeJSONStringify(b);
-    let buf2 = mySafeJSONStringify(this);
+    let buf1 = mySafeJSONStringify$1(b);
+    let buf2 = mySafeJSONStringify$1(this);
 
     if (buf1 === buf2) {
       return;
@@ -9369,7 +9501,7 @@ class Curve1D extends EventDispatcher {
 
   copy() {
     let ret = new Curve1D();
-    ret.loadJSON(JSON.parse(mySafeJSONStringify(this)));
+    ret.loadJSON(JSON.parse(mySafeJSONStringify$1(this)));
     return ret;
   }
 
@@ -9383,15 +9515,19 @@ class Curve1D extends EventDispatcher {
 
   setGenerator(type) {
     for (let gen of this.generators) {
-      if (gen.type === type || gen.constructor === CurveConstructors[type]) {
+      if (gen.type === type || gen.constructor.name === type || gen.constructor === type) {
         if (this.generators.active) {
           this.generators.active.onInactive();
         }
 
         this.generators.active = gen;
         gen.onActive();
+
+        return;
       }
     }
+
+    throw new Error("unknown curve type" + type);
   }
 
   get fastmode() {
@@ -9409,7 +9545,7 @@ class Curve1D extends EventDispatcher {
   toJSON() {
     let ret = {
       generators       : [],
-      version          : this.VERSION,
+      VERSION          : this.VERSION,
       active_generator : this.generatorType
     };
 
@@ -9446,7 +9582,18 @@ class Curve1D extends EventDispatcher {
   }
 
   equals(b) {
-    return mySafeJSONStringify(this) === mySafeJSONStringify(b);
+    //console.log(mySafeJSONStringify(this));
+    //console.log(mySafeJSONStringify(b));
+
+    let a = mySafeJSONStringify$1(this).trim();
+    let b2 = mySafeJSONStringify$1(b).trim();
+
+    if (a !== b2) {
+      console.log(a);
+      console.log(b2);
+    }
+
+    return a === b2;
   }
 
   destroy() {
@@ -9454,10 +9601,11 @@ class Curve1D extends EventDispatcher {
   }
 
   loadJSON(obj) {
+    this.VERSION = obj.VERSION;
+
     //this.generators = [];
     for (let gen of obj.generators) {
       let gen2 = this.getGenerator(gen.type);
-      //let gen2 = new CurveConstructors[gen.type]();
       gen2.parent = undefined;
       gen2.reset();
       gen2.loadJSON(gen);
@@ -9560,6 +9708,19 @@ class Curve1D extends EventDispatcher {
     this.generators = [];
     reader(this);
 
+    console.log("VERSION", this.VERSION);
+
+    if (this.VERSION <= 0.75) {
+      this.generators = [];
+      for (let cls of CurveConstructors) {
+        this.generators.push(new cls());
+      }
+
+      this.generators.active = this.getGenerator("BSplineCurve");
+    }
+
+    console.log("ACTIVE", this._active);
+
     for (let gen of this.generators) {
       if (gen.type === this._active) {
         console.log("found active", this._active);
@@ -9574,7 +9735,7 @@ class Curve1D extends EventDispatcher {
 Curve1D.STRUCT = `
 Curve1D {
   generators  : array(abstract(CurveTypeData));
-  _active     : int   | obj.generators.active.type;
+  _active     : string | obj.generators.active.type;
   VERSION     : float;
 }
 `;
@@ -14951,7 +15112,7 @@ class UIBase extends HTMLElement {
 
   }
 
-  pushModal(handlers=this) {
+  pushModal(handlers=this, autoStopPropagation=true) {
     if (this._modaldata !== undefined){
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       //pop modal stack just to be safe
@@ -14959,7 +15120,7 @@ class UIBase extends HTMLElement {
       this._modaldata = undefined;
     }
 
-    this._modaldata = pushModalLight(handlers);
+    this._modaldata = pushModalLight(handlers, autoStopPropagation);
     return this._modaldata;
   }
 
@@ -16383,11 +16544,299 @@ function myToFixed(s, n) {
   return s;
 }
 
-let keymap$1 = keymap;
-
 let PropTypes$2 = PropTypes;
 
-let UIBase$2 = UIBase; 
+let UIBase$2 = UIBase;
+
+class TextBox extends UIBase$2 {
+  constructor() {
+    super();
+
+    this._width = "min-content";
+
+    this.addEventListener("focusin", () => {
+      this._focus = 1;
+      this.dom.focus();
+    });
+
+    this.addEventListener("blur", () => {
+      this._focus = 0;
+    });
+
+    let margin = Math.ceil(3 * this.getDPI());
+
+    this._had_error = false;
+
+    this.decimalPlaces = 4;
+
+    this.dom = document.createElement("input");
+
+    this.dom.tabIndex = 0;
+    this.dom.setAttribute("tabindex", 0);
+    this.dom.setAttribute("tab-index", 0);
+    this.dom.style["margin"] = margin + "px";
+
+    this.dom.setAttribute("type", "textbox");
+    this.dom.onchange = (e) => {
+      this._change(this.dom.value);
+    };
+
+    this.radix = 16;
+
+    this.dom.oninput = (e) => {
+      this._change(this.dom.value);
+    };
+
+    this.shadow.appendChild(this.dom);
+
+    this.dom.addEventListener("focus", (e) => {
+      console.log("Textbox focus");
+      this._startModal();
+    });
+
+    this.dom.addEventListener("blur", (e) => {
+      console.log("Textbox blur");
+      if (this._modal) {
+        this._endModal();
+      }
+    });
+
+  }
+
+  _startModal() {
+    console.log("textbox modal");
+
+    if (this._modal) {
+      this._endModal();
+    }
+
+    let keydown = (e) => {
+      e.stopPropagation();
+      console.log(e.keyCode);
+      return;
+    };
+
+    this._modal = true;
+    this.pushModal({
+      on_mousemove : (e) => {
+        console.log(e.x, e.y);
+      },
+
+      on_keydown : keydown,
+      on_keypress : keydown,
+      on_keyup : keydown,
+
+      on_mousedown : (e) => {
+        console.log("mouse down", e.x, e.y);
+      }
+    }, false);
+  }
+
+  _endModal() {
+    console.log("textbox end modal");
+
+    this._modal = false;
+    this.popModal();
+  }
+
+  get tabIndex() {
+    return this.dom.tabIndex;
+  }
+
+  set tabIndex(val) {
+    this.dom.tabIndex = val;
+  }
+
+  init() {
+    super.init();
+
+    this.style["display"] = "flex";
+    this.style["width"] = this._width;
+
+    this.setCSS();
+  }
+
+  set width(val) {
+    if (typeof val === "number") {
+      val += "px";
+    }
+
+    this._width = val;
+    this.style["width"] = val;
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    if (this.style["font"]) {
+      this.dom.style["font"] = this.style["font"];
+    } else {
+      this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
+    }
+
+    this.dom.style["width"] = this.style["width"];
+    this.dom.style["height"] = this.style["height"];
+  }
+
+  updateDataPath() {
+    if (!this.ctx || !this.hasAttribute("datapath")) {
+      return;
+    }
+    if (this._focus || this._flashtimer !== undefined || (this._had_error && this._focus)) {
+      return;
+    }
+
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    if (val === undefined || val === null) {
+      this.disabled = true;
+      return;
+    } else {
+      this.disabled = false;
+    }
+
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+    let text = this.text;
+
+    if (prop !== undefined && (prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
+      let is_int = prop.type == PropTypes$2.INT;
+
+      if (is_int) {
+        this.radix = prop.radix;
+        text = val.toString(this.radix);
+
+        if (this.radix == 2) {
+          text = "0b" + text;
+        } else if (this.radix == 16) {
+          text += "h";
+        }
+      } else {
+        text = myToFixed(val, this.decimalPlaces);
+      }
+    } else if (prop !== undefined && prop.type == PropTypes$2.STRING) {
+      text = val;
+    }
+
+    if (this.text != text) {
+      this.text = text;
+    }
+  }
+
+  update() {
+    super.update();
+
+    if (this.dom.style["width"] !== this.style["width"]) {
+      this.dom.style["width"] = this.style["width"];
+    }
+    if (this.dom.style["height"] !== this.style["height"]) {
+      this.dom.style["height"] = this.style["height"];
+    }
+
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+
+    this.setCSS();
+  }
+
+  select() {
+    this.dom.select();
+    //return this.dom.select.apply(this, arguments);
+  }
+
+  focus() {
+    return this.dom.focus();
+  }
+
+  blur() {
+    return this.dom.blur();
+  }
+
+  static define() {return {
+    tagname : "textbox-x"
+  };}
+
+  get text() {
+    return this.dom.value;
+  }
+
+  set text(value) {
+    this.dom.value = value;
+  }
+
+  _prop_update(prop, text) {
+    if ((prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
+      let val = parseFloat(this.text);
+
+      if (!isNumber(this.text.trim())) {
+        this.flash(ErrorColors.ERROR, this.dom);
+        this.focus();
+        this.dom.focus();
+        this._had_error = true;
+      } else {
+        if (this._had_error) {
+          this.flash(ErrorColors.OK, this.dom);
+        }
+
+        this._had_error = false;
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
+      }
+    } else if (prop.type == PropTypes$2.STRING) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
+    }
+  }
+
+
+  _change(text) {
+    //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
+    //console.log("onchange", this._focus);
+
+    if (this.hasAttribute("datapath") && this.ctx !== undefined) {
+      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      //console.log(prop);
+      if (prop) {
+        this._prop_update(prop, text);
+      }
+    }
+
+    if (this.onchange) {
+      this.onchange(text);
+    }
+  }
+}
+
+UIBase$2.register(TextBox);
+
+function checkForTextBox(screen, x, y) {
+  let elem = screen.pickElement(x, y);
+  console.log(elem, x, y);
+
+  if (elem && elem.tagName === "TEXTBOX-X") {
+    return true;
+  }
+
+  return false;
+}
+
+function myToFixed$1(s, n) {
+  s = s.toFixed(n);
+
+  while (s.endsWith('0')) {
+    s = s.slice(0, s.length-1);
+  }
+  if (s.endsWith("\.")) {
+    s = s.slice(0, s.length-1);
+  }
+
+  return s;
+}
+
+let keymap$1 = keymap;
+
+let PropTypes$3 = PropTypes;
+
+let UIBase$3 = UIBase; 
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -16453,6 +16902,7 @@ class NumSlider extends ValueButtonBase {
     this.decimalPlaces = 4;
     this.radix = 4;
 
+    this.range = [-1e17, 1e17];
     this.isInt = false;
 
     this._redraw();
@@ -16490,7 +16940,7 @@ class NumSlider extends ValueButtonBase {
 
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
-    tbox.text = myToFixed(this.value, this.decimalPlaces);
+    tbox.text = myToFixed$1(this.value, this.decimalPlaces);
     tbox.select();
     
     this.parentNode.insertBefore(tbox, this);
@@ -16614,14 +17064,13 @@ class NumSlider extends ValueButtonBase {
   
   doRange() {
     if (this.hasAttribute("min")) {
-      let min = parseFloat(this.getAttribute("min"));
-      this._value = Math.max(this._value, min);
+      this.range[0] = parseFloat(this.getAttribute("min"));
     }
-    
     if (this.hasAttribute("max")) {
-      let max = parseFloat(this.getAttribute("max"));
-      this._value = Math.min(this._value, max);
+      this.range[1] = parseFloat(this.getAttribute("max"));
     }
+
+    this._value = Math.min(Math.max(this._value, this.range[0]), this.range[1]);
   }
 
   get value() {
@@ -16872,7 +17321,7 @@ class NumSlider extends ValueButtonBase {
       text = "error";
     } else {
       val = val === undefined ? 0.0 : val;
-      val = myToFixed(val, this.decimalPlaces);
+      val = myToFixed$1(val, this.decimalPlaces);
 
       text = val;
       if (this._name) {
@@ -16932,16 +17381,16 @@ class NumSlider extends ValueButtonBase {
   }
 
   _getArrowSize() {
-    return UIBase$2.getDPI()*10;
+    return UIBase$3.getDPI()*10;
   }
   static define() {return {
     tagname : "numslider-x",
     style : "numslider"
   };}
 }
-UIBase$2.register(NumSlider);
+UIBase$3.register(NumSlider);
 
-class Check extends UIBase$2 {
+class Check extends UIBase$3 {
   constructor() {
     super();
     
@@ -17086,6 +17535,14 @@ class Check extends UIBase$2 {
     this._redraw();
   }
 
+  get value() {
+    return this.checked;
+  }
+
+  set value(v) {
+    this.checked = v;
+  }
+
   setCSS() {
     this._label.style["font"] = this.getDefault("DefaultText").genCSS();
     this._label.style["color"] = this.getDefault("DefaultText").color;
@@ -17094,7 +17551,7 @@ class Check extends UIBase$2 {
   }
 
   updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
+    if (!this.getAttribute("datapath")) {
       return;
     }
 
@@ -17132,7 +17589,7 @@ class Check extends UIBase$2 {
       return;
 
     let canvas = this.canvas, g = this.g;
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$3.getDPI();
     let tilesize = iconmanager.getTileSize(0);
     let pad = this.getDefault("BoxMargin");
 
@@ -17198,7 +17655,7 @@ class Check extends UIBase$2 {
   }
 
   updateDPI() {
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$3.getDPI();
 
     if (dpi !== this._last_dpi) {
       this._last_dpi = dpi;
@@ -17237,7 +17694,7 @@ class Check extends UIBase$2 {
     style   : "checkbox"
   };}
 }
-UIBase$2.register(Check);
+UIBase$3.register(Check);
 
 class IconCheck extends Button {
   constructor() {
@@ -17315,7 +17772,7 @@ class IconCheck extends Button {
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
-        if (rdef.subkey && (rdef.prop.type == PropTypes$2.FLAG || rdef.prop.type == PropTypes$2.ENUM)) {
+        if (rdef.subkey && (rdef.prop.type == PropTypes$3.FLAG || rdef.prop.type == PropTypes$3.ENUM)) {
           icon = rdef.prop.iconmap[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
 
@@ -17443,7 +17900,7 @@ class IconCheck extends Button {
   };}
 }
 
-UIBase$2.register(IconCheck);
+UIBase$3.register(IconCheck);
 
 class IconButton extends Button {
   constructor() {
@@ -17509,7 +17966,7 @@ class IconButton extends Button {
     let tsize = iconmanager.getTileSize(this.iconsheet);
     let size = this._getsize();
 
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$3.getDPI();
     let off = size > tsize ? (size - tsize)*0.5*dpi : 0.0;
 
     this.g.save();
@@ -17524,7 +17981,7 @@ class IconButton extends Button {
   };}
 }
 
-UIBase$2.register(IconButton);
+UIBase$3.register(IconButton);
 
 class Check1 extends Button {
   constructor() {
@@ -17562,229 +18019,7 @@ class Check1 extends Button {
   };}
 }
 
-UIBase$2.register(Check1);
-
-class TextBox extends UIBase$2 {
-  constructor() {
-    super();
-
-    this._width = "min-content";
-
-    this.addEventListener("focusin", () => {
-      this._focus = 1;
-      this.dom.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      this._focus = 0;
-    });
-    
-    let margin = Math.ceil(3 * this.getDPI());
-    
-    this._had_error = false;
-    
-    this.decimalPlaces = 4;
-
-    this.dom = document.createElement("input");
-
-    this.dom.tabIndex = 0;
-    this.dom.setAttribute("tabindex", 0);
-    this.dom.setAttribute("tab-index", 0);
-    this.dom.style["margin"] = margin + "px";
-
-    this.dom.setAttribute("type", "textbox");
-    this.dom.onchange = (e) => {
-      this._change(this.dom.value);
-    };
-
-    this.radix = 16;
-
-    this.dom.oninput = (e) => {
-      this._change(this.dom.value);
-    };
-    
-    this.shadow.appendChild(this.dom);
-  }
-
-  get tabIndex() {
-    return this.dom.tabIndex;
-  }
-
-  set tabIndex(val) {
-    this.dom.tabIndex = val;
-  }
-
-  init() {
-    super.init();
-
-    this.style["display"] = "flex";
-    this.style["width"] = this._width;
-
-    this.setCSS();
-  }
-
-  set width(val) {
-    if (typeof val === "number") {
-      val += "px";
-    }
-
-    this._width = val;
-    this.style["width"] = val;
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    if (this.style["font"]) {
-      this.dom.style["font"] = this.style["font"];
-    } else {
-      this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
-    }
-
-    this.dom.style["width"] = this.style["width"];
-    this.dom.style["height"] = this.style["height"];
-  }
-
-  updateDataPath() {
-    if (!this.ctx || !this.hasAttribute("datapath")) {
-      return;
-    }
-    if (this._focus || this._flashtimer !== undefined || (this._had_error && this._focus)) {
-      return;
-    }
-    
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (val === undefined || val === null) {
-      this.disabled = true;
-      return;
-    } else {
-      this.disabled = false;
-    }
-
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    
-    let text = this.text;
-
-    if (prop !== undefined && (prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
-      let is_int = prop.type == PropTypes$2.INT;
-      
-      if (is_int) {
-        this.radix = prop.radix;
-        text = val.toString(this.radix);
-        
-        if (this.radix == 2) {
-          text = "0b" + text;
-        } else if (this.radix == 16) {
-          text += "h";
-        }
-      } else {
-        text = myToFixed(val, this.decimalPlaces);
-      }
-    } else if (prop !== undefined && prop.type == PropTypes$2.STRING) {
-      text = val;
-    }
-    
-    if (this.text != text) {
-      this.text = text;
-    }
-  }
-  
-  update() {
-    super.update();
-
-    if (this.dom.style["width"] !== this.style["width"]) {
-      this.dom.style["width"] = this.style["width"];
-    }
-    if (this.dom.style["height"] !== this.style["height"]) {
-      this.dom.style["height"] = this.style["height"];
-    }
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
-
-    this.setCSS();
-  }
-  
-  select() {
-    this.dom.select();
-    //return this.dom.select.apply(this, arguments);
-  }
-  
-  focus() {
-    return this.dom.focus();
-  }
-  
-  blur() {
-    return this.dom.blur();
-  }
-  
-  static define() {return {
-    tagname : "textbox-x"
-  };}
-  
-  get text() {
-    return this.dom.value;
-  }
-  
-  set text(value) {
-    this.dom.value = value;
-  }
-  
-  _prop_update(prop, text) {
-    if ((prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
-      let val = parseFloat(this.text);
-      
-      if (!isNumber(this.text.trim())) {
-        this.flash(ErrorColors.ERROR, this.dom);
-        this.focus();
-        this.dom.focus();
-        this._had_error = true;
-      } else {
-        if (this._had_error) {
-          this.flash(ErrorColors.OK, this.dom);
-        }
-        
-        this._had_error = false;
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
-      }
-    } else if (prop.type == PropTypes$2.STRING) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
-    }
-  }
-
-   
-  _change(text) {
-    //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
-    //console.log("onchange", this._focus);
-    
-    if (this.hasAttribute("datapath") && this.ctx !== undefined) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-      //console.log(prop);
-      if (prop) {
-        this._prop_update(prop, text);
-      }
-    }
-    
-    if (this.onchange) {
-      this.onchange(text);
-    }
-  }
-}
-
-UIBase$2.register(TextBox);
-
-function checkForTextBox(screen, x, y) {
-  let elem = screen.pickElement(x, y);
-  console.log(elem, x, y);
-
-  if (elem && elem.tagName === "TEXTBOX-X") {
-    return true;
-  }
-
-  return false;
-}
+UIBase$3.register(Check1);
 
 function saveFile(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
   let blob = new Blob([data], {type : mime});
@@ -17848,9 +18083,9 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
 let PropFlags$2 = PropFlags;
 let PropSubTypes$2 = PropSubTypes$1;
 
-let UIBase$3 = UIBase,
+let UIBase$4 = UIBase,
   PackFlags$1 = PackFlags,
-  PropTypes$3 = PropTypes;
+  PropTypes$4 = PropTypes;
 const DataPathError$1 = DataPathError;
 
 class Label extends UIBase {
@@ -17922,7 +18157,7 @@ class Label extends UIBase {
       return;
     }
     //console.log(path);
-    if (prop !== undefined && prop.type == PropTypes$3.INT) {
+    if (prop !== undefined && prop.type == PropTypes$4.INT) {
       val = val.toString(prop.radix);
 
       if (prop.radix == 2) {
@@ -17930,7 +18165,7 @@ class Label extends UIBase {
       } else if (prop.radix == 16) {
         val += "h";
       }
-    } else if (prop !== undefined && prop.type == PropTypes$3.FLOAT && val !== Math.floor(val)) {
+    } else if (prop !== undefined && prop.type == PropTypes$4.FLOAT && val !== Math.floor(val)) {
       val = val.toFixed(prop.decimalPlaces);
     }
 
@@ -18630,9 +18865,9 @@ class Container extends UIBase {
       return name;
     }
 
-    if (prop.type == PropTypes$3.CURVE) {
+    if (prop.type == PropTypes$4.CURVE) {
       return this.curve1d(path, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$3.INT || prop.type == PropTypes$3.FLOAT) {
+    } else if (prop.type == PropTypes$4.INT || prop.type == PropTypes$4.FLOAT) {
       let ret;
       if (packflag & PackFlags$1.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath);
@@ -18647,9 +18882,9 @@ class Container extends UIBase {
       }
 
       return ret;
-    } else if (prop.type == PropTypes$3.BOOL) {
+    } else if (prop.type == PropTypes$4.BOOL) {
       this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$3.ENUM) {
+    } else if (prop.type == PropTypes$4.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -18680,7 +18915,7 @@ class Container extends UIBase {
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
-    } else if (prop.type & (PropTypes$3.VEC2|PropTypes$3.VEC3|PropTypes$3.VEC4)) {
+    } else if (prop.type & (PropTypes$4.VEC2|PropTypes$4.VEC3|PropTypes$4.VEC4)) {
       if (rdef.subkey !== undefined) {
         let ret = (packflag & PackFlags$1.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
         ret.packflag |= packflag;
@@ -18703,7 +18938,7 @@ class Container extends UIBase {
 
         return ret;
       }
-    } else if (prop.type == PropTypes$3.FLAG) {
+    } else if (prop.type == PropTypes$4.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -18757,8 +18992,11 @@ class Container extends UIBase {
 
     ret.packflag |= packflag;
     ret.label = name;
-    ret.setAttribute("datapath", path);
     ret.noMarginsOrPadding();
+
+    if (inpath) {
+      ret.setAttribute("datapath", path);
+    }
 
     if (mass_set_path) {
       ret.setAttribute("mass_set_path", mass_set_path);
@@ -19012,6 +19250,10 @@ class Container extends UIBase {
 
     ret.setAttribute("name", name);
 
+    if (defaultval) {
+      ret.setValue(defaultval);
+    }
+
     ret.onchange = callback;
     ret.onselect = callback;
 
@@ -19091,7 +19333,7 @@ class Container extends UIBase {
 
         min = min === undefined ? range[0] : min;
         max = max === undefined ? range[1] : max;
-        is_int = is_int === undefined ? prop.type === PropTypes$3.INT : is_int;
+        is_int = is_int === undefined ? prop.type === PropTypes$4.INT : is_int;
         name = name === undefined ? prop.uiname : name;
         step = step === undefined ? prop.step : step;
         step = step === undefined ? (is_int ? 1 : 0.1) : step;
@@ -19101,12 +19343,21 @@ class Container extends UIBase {
       }
     }
 
-    if (name)
+    if (name) {
       ret.setAttribute("name", name);
-    if (min !== undefined)
-      ret.setAttribute("min", min);
-    if (max !== undefined)
-      ret.setAttribute("max", max);
+    }
+
+    if (min !== undefined) {
+      ret.range[0] = min;
+    }
+    if (max !== undefined) {
+      ret.range[1] = max;
+    }
+
+    if (defaultval !== undefined) {
+      ret.setValue(defaultval);
+    }
+
     if (is_int)
       ret.setAttribute("integer", is_int);
     if (decimals !== undefined) {
@@ -19343,7 +19594,7 @@ class RowFrame extends Container {
   }
 }
 
-UIBase$3.register(RowFrame);
+UIBase$4.register(RowFrame);
 
 class ColumnFrame extends Container {
   constructor() {
@@ -19368,11 +19619,11 @@ class ColumnFrame extends Container {
   }
 }
 
-UIBase$3.register(ColumnFrame);
+UIBase$4.register(ColumnFrame);
 
-let UIBase$4 = UIBase;
+let UIBase$5 = UIBase;
 
-class RichEditor extends UIBase$4 {
+class RichEditor extends UIBase$5 {
   constructor() {
     super();
 
@@ -19571,9 +19822,9 @@ class RichEditor extends UIBase$4 {
     style   : "richtext"
   }}
 }
-UIBase$4.register(RichEditor);
+UIBase$5.register(RichEditor);
 
-class RichViewer extends UIBase$4 {
+class RichViewer extends UIBase$5 {
   constructor() {
     super();
 
@@ -19643,15 +19894,15 @@ class RichViewer extends UIBase$4 {
     style   : "html_viewer"
   }}
 }
-UIBase$4.register(RichViewer);
+UIBase$5.register(RichViewer);
 
 let keymap$2 = keymap;
 
-let PropTypes$4 = PropTypes;
+let PropTypes$5 = PropTypes;
 
-let UIBase$5 = UIBase;
+let UIBase$6 = UIBase;
 
-class NumSliderSimple extends UIBase$5 {
+class NumSliderSimple extends UIBase$6 {
   constructor() {
     super();
 
@@ -19729,7 +19980,7 @@ class NumSliderSimple extends UIBase$5 {
       if (!prop) {
         return;
       }
-      this.isInt = prop.type === PropTypes$4.INT;
+      this.isInt = prop.type === PropTypes$5.INT;
 
       if (prop.range !== undefined) {
         this.range[0] = prop.range[0];
@@ -19754,7 +20005,7 @@ class NumSliderSimple extends UIBase$5 {
     }
 
     let x = e.x - rect.left;
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$6.getDPI();
     let co = this._getButtonPos();
 
     let val = this._invertButtonX(x*dpi);
@@ -19914,7 +20165,7 @@ class NumSliderSimple extends UIBase$5 {
   _redraw() {
     let g = this.g, canvas = this.canvas;
     let w = canvas.width, h = canvas.height;
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$6.getDPI();
 
     let color = this.getDefault("BoxBG");
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
@@ -19989,7 +20240,7 @@ class NumSliderSimple extends UIBase$5 {
 
     let co = this._getButtonPos();
 
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$6.getDPI();
     let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
     let dis = dv.vectorLength();
 
@@ -19999,7 +20250,7 @@ class NumSliderSimple extends UIBase$5 {
 
   _invertButtonX(x) {
     let w = this.canvas.width;
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$6.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
@@ -20012,7 +20263,7 @@ class NumSliderSimple extends UIBase$5 {
 
   _getButtonPos() {
     let w = this.canvas.width;
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$6.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let x = this._value;
     x = (x - this.range[0]) / (this.range[1] - this.range[0]);
@@ -20045,7 +20296,7 @@ class NumSliderSimple extends UIBase$5 {
       return;
     }
 
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$6.getDPI();
     let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
     let canvas = this.canvas;
 
@@ -20082,7 +20333,7 @@ class NumSliderSimple extends UIBase$5 {
     style : "numslider_simple"
   }}
 }
-UIBase$5.register(NumSliderSimple);
+UIBase$6.register(NumSliderSimple);
 
 class NumSliderSimple2 extends ColumnFrame {
   constructor() {
@@ -20106,13 +20357,16 @@ class NumSliderSimple2 extends ColumnFrame {
     }
     `;
 
-
     this.container = this;
 
     this.textbox = document.createElement("textbox-x");
     this.numslider = document.createElement("numslider-simple-base-x");
 
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+  }
+
+  get range() {
+    return this.numslider.range;
   }
 
   init() {
@@ -20341,7 +20595,7 @@ class NumSliderSimple2 extends ColumnFrame {
     style : "numslider_simple"
   }}
 }
-UIBase$5.register(NumSliderSimple2);
+UIBase$6.register(NumSliderSimple2);
 
 class VectorPanel extends ColumnFrame {
   constructor() {
@@ -20494,9 +20748,9 @@ class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase$5.register(VectorPanel);
+UIBase$6.register(VectorPanel);
 
-class ToolTip extends UIBase$5 {
+class ToolTip extends UIBase$6 {
   constructor() {
     super();
 
@@ -20570,21 +20824,20 @@ class ToolTip extends UIBase$5 {
     tagname : "tool-tip-x",
     style   : "tooltip"
   }}
-}UIBase$5.register(ToolTip);
+}UIBase$6.register(ToolTip);
 
 function makeGenEnum() {
   let enumdef = {};
   let uinames = {};
   let icons = {};
 
-  for (let k in CurveConstructors) {
-    let cls = CurveConstructors[k];
+  for (let cls of CurveConstructors) {
     let def = cls.define();
 
     let uiname = def.uiname;
     uiname = uiname === undefined ? def.name : uiname;
 
-    enumdef[def.name] = k;
+    enumdef[def.name] = cls.name;
     uinames[def.name] = uiname;
     icons[def.name] = def.icon !== undefined ? def.icon : -1;
   }
@@ -20673,14 +20926,14 @@ class Curve1DWidget extends ColumnFrame {
     let prop = makeGenEnum();
 
     prop.setValue(this.value.generatorType);
-    let ret = row.listenum(undefined, "Type", prop, this.value.generatorType, (id) => {
-      console.log("SELECT", id, prop.keys[id]);
-      this.value.setGenerator(id);
-    });
-    ret._init();
 
-    ret.setValue(this.value.generatorType);
-    ret._name = "sdfdsf";
+    this.dropbox = row.listenum(undefined, "Type", prop, this.value.generatorType, (id) => {
+      console.warn("SELECT", id, prop.keys[id]);
+
+      this.value.setGenerator(id);
+      this.value._on_change("curve type change");
+    });
+    this.dropbox._init();
 
     this.container = this.col();
   }
@@ -20755,6 +21008,11 @@ class Curve1DWidget extends ColumnFrame {
       this._lastGen.killGUI(col, this.canvas);
     }
 
+    let onchange = this.dropbox.onchange;
+    this.dropbox.onchange = undefined;
+    this.dropbox.setValue(this.value.generatorType);
+    this.dropbox.onchange = onchange;
+
     console.log("new curve type", this.value.generatorType, this._gen_type);
     col.clear();
 
@@ -20781,7 +21039,6 @@ class Curve1DWidget extends ColumnFrame {
     if (val && !val.equals(this._value) && time_ms() - this._lastu > 200) {
       this._lastu = time_ms();
 
-      console.log("curve change detected", mySafeJSONStringify(val), mySafeJSONStringify(this._value));
       this._value.load(val);
       this.update();
       this._redraw();
@@ -20789,8 +21046,7 @@ class Curve1DWidget extends ColumnFrame {
   }
 
   updateGenUI() {
-    let bad = (this._gen_type !== this.value.generatorType);
-    bad = bad || this._lastGen !== this.value.generators.active;
+    let bad = this._lastGen !== this.value.generators.active;
     
     if (bad) {
       this.rebuild();
@@ -20814,7 +21070,7 @@ UIBase.register(Curve1DWidget);
 
 //bind module to global var to get at it in console.
 
-let UIBase$6 = UIBase;
+let UIBase$7 = UIBase;
 
 class PanelFrame extends ColumnFrame {
   constructor() {
@@ -20973,7 +21229,7 @@ class PanelFrame extends ColumnFrame {
   }
 }
 
-UIBase$6.register(PanelFrame);
+UIBase$7.register(PanelFrame);
 
 let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
 
@@ -21075,7 +21331,7 @@ function hsv_to_rgb(h, s, v) {
   return color;
 }
 
-let UIBase$7 = UIBase;
+let UIBase$8 = UIBase;
 
 let UPW = 1.25, VPW = 0.75;
 
@@ -21228,7 +21484,7 @@ class SimpleBox {
   }
 }
 
-class HueField extends UIBase$7 {
+class HueField extends UIBase$8 {
   constructor() {
     super();
 
@@ -21338,9 +21594,9 @@ class HueField extends UIBase$7 {
   };}
 }
 
-UIBase$7.register(HueField);
+UIBase$8.register(HueField);
 
-class SatValField extends UIBase$7 {
+class SatValField extends UIBase$8 {
   constructor() {
     super();
 
@@ -21559,7 +21815,7 @@ class SatValField extends UIBase$7 {
   };}
 }
 
-UIBase$7.register(SatValField);
+UIBase$8.register(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
@@ -21710,7 +21966,7 @@ class ColorField extends ColumnFrame {
     this.huefield._redraw();
   }
 }
-UIBase$7.register(ColorField);
+UIBase$8.register(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -21949,10 +22205,10 @@ class ColorPicker extends ColumnFrame {
   };}
 }
 
-UIBase$7.register(ColorPicker);
+UIBase$8.register(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$7 {
+class ColorPickerButton extends UIBase$8 {
   constructor() {
     super();
 
@@ -22218,9 +22474,9 @@ class ColorPickerButton extends UIBase$7 {
   redraw() {
     this._redraw();
   }
-}UIBase$7.register(ColorPickerButton);
+}UIBase$8.register(ColorPickerButton);
 
-let UIBase$8 = UIBase; 
+let UIBase$9 = UIBase; 
 
 let tab_idgen = 1;
 
@@ -22290,7 +22546,7 @@ class ModalTabMove extends EventHandler {
   
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$8.getDPI();
+    let dpi = UIBase$9.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -22352,7 +22608,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$8 {
+class TabBar extends UIBase$9 {
   constructor() {
     super();
     
@@ -22889,9 +23145,9 @@ class TabBar extends UIBase$8 {
     tagname : "tabbar-x"
   };}
 }
-UIBase$8.register(TabBar);
+UIBase$9.register(TabBar);
 
-class TabContainer extends UIBase$8 {
+class TabContainer extends UIBase$9 {
   constructor() {
     super();
 
@@ -23072,11 +23328,11 @@ class TabContainer extends UIBase$8 {
   };}
 }
 
-UIBase$8.register(TabContainer);
+UIBase$9.register(TabContainer);
 
 //bind module to global var to get at it in console.
 
-let UIBase$9 = UIBase;
+let UIBase$a = UIBase;
 
 var list$2 = function list(iter) {
   let ret = [];
@@ -23114,7 +23370,7 @@ class TableRow extends Container {
     this.dom.appendChild(td);
     child.onadd();
   }
-}UIBase$9.register(TableRow);
+}UIBase$a.register(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -23302,9 +23558,9 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$9.register(TableFrame);
+UIBase$a.register(TableFrame);
 
-let UIBase$a = UIBase;
+let UIBase$b = UIBase;
 
 class ListItem extends RowFrame {
   constructor() {
@@ -23371,7 +23627,7 @@ class ListItem extends RowFrame {
     style : "listbox"
   }}
 }
-UIBase$a.register(ListItem);
+UIBase$b.register(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -23513,12 +23769,12 @@ class ListBox extends Container {
     style : "listbox"
   }}
 }
-UIBase$a.register(ListBox);
+UIBase$b.register(ListBox);
 
-let UIBase$b = UIBase,
+let UIBase$c = UIBase,
   IconSheets$1 = IconSheets;
 
-class Menu extends UIBase$b {
+class Menu extends UIBase$c {
   constructor() {
     super();
 
@@ -24039,7 +24295,7 @@ class Menu extends UIBase$b {
 }
 
 Menu.SEP = Symbol("menu seperator");
-UIBase$b.register(Menu);
+UIBase$c.register(Menu);
 
 class DropBox extends Button {
   constructor() {
@@ -24349,7 +24605,7 @@ class DropBox extends Button {
   };}
 }
 
-UIBase$b.register(DropBox);
+UIBase$c.register(DropBox);
 
 class MenuWrangler {
   constructor() {
@@ -26751,7 +27007,7 @@ class Overdraw extends UIBase {
 
 UIBase.register(Overdraw);
 
-let UIBase$c = UIBase;
+let UIBase$d = UIBase;
 
 class Note extends UIBase {
   constructor() {
@@ -26841,7 +27097,7 @@ class Note extends UIBase {
     tagname : "note-x"
   }}
 }
-UIBase$c.register(Note);
+UIBase$d.register(Note);
 
 class ProgBarNote extends Note {
   constructor() {
@@ -26899,7 +27155,7 @@ class ProgBarNote extends Note {
     tagname : "note-progress-x"
   }}
 }
-UIBase$c.register(ProgBarNote);
+UIBase$d.register(ProgBarNote);
 
 class NoteFrame extends RowFrame {
   constructor() {
@@ -27010,7 +27266,7 @@ class NoteFrame extends RowFrame {
     tagname : "noteframe-x"
   }}
 }
-UIBase$c.register(NoteFrame);
+UIBase$d.register(NoteFrame);
 
 function getNoteFrames(screen) {
   let ret = [];
@@ -27556,7 +27812,7 @@ class AreaWrangler {
   }
 }
 
-let UIBase$d = UIBase;
+let UIBase$e = UIBase;
 let Vector2$7 = Vector2;
 let Screen = undefined;
 
@@ -27622,7 +27878,7 @@ class Area extends UIBase {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$d) {
+      if (child instanceof UIBase$e) {
         child.parentWidget = this;
       }
     };
@@ -27631,7 +27887,7 @@ class Area extends UIBase {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$d) {
+      if (child instanceof UIBase$e) {
         child.parentWidget = this;
       }
     };
@@ -29003,7 +29259,7 @@ function hsv_to_rgb$1(h, s, v) {
   return color;
 }
 
-let UIBase$e = UIBase; 
+let UIBase$f = UIBase; 
 
 let UPW$1 = 1.25, VPW$1 = 0.75;
 
@@ -29192,7 +29448,7 @@ function getFieldImage$1(size, hsva) {
 
 let _update_temp$1 = new Vector4$4();
 
-class ColorField$1 extends UIBase$e {
+class ColorField$1 extends UIBase$f {
   constructor() {
     super();
     
@@ -29561,7 +29817,7 @@ class ColorField$1 extends UIBase$e {
   };}
 }
 
-UIBase$e.register(ColorField$1);
+UIBase$f.register(ColorField$1);
 
 class ColorPicker$1 extends ColumnFrame {
   constructor() {
@@ -29727,7 +29983,7 @@ class ColorPicker$1 extends ColumnFrame {
   };}
 }
 
-UIBase$e.register(ColorPicker$1);
+UIBase$f.register(ColorPicker$1);
 
 function makePopupArea(area_class, screen, args={}) {
   let sarea = document.createElement("screenarea-x");
@@ -29780,7 +30036,7 @@ function registerToolStackGetter(func) {
 window._nstructjs = nstructjs;
 
 let Vector2$8 = Vector2,
-  UIBase$f = UIBase;
+  UIBase$g = UIBase;
 
 let update_stack = new Array(8192);
 update_stack.cur = 0;
@@ -30435,6 +30691,8 @@ class Screen$1 extends UIBase {
   }
 
   execKeyMap(e) {
+    console.log(document.activeElement);
+
     let handled = false;
 
     console.warn("execKeyMap called");
@@ -30582,7 +30840,7 @@ class Screen$1 extends UIBase {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$f) {
+      if (n instanceof UIBase$g) {
         n.ctx = val;
       }
 
@@ -30676,7 +30934,7 @@ class Screen$1 extends UIBase {
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$f) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
           n._ctx = ctx;
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
@@ -30707,7 +30965,7 @@ class Screen$1 extends UIBase {
           push(n2);
         }
 
-        if (n instanceof UIBase$f) {
+        if (n instanceof UIBase$g) {
           scopestack.push(n);
           push(SCOPE_POP);
         }
@@ -32647,5 +32905,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypes, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, binomial, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeGenEnum, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

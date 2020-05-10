@@ -3,8 +3,8 @@ import {UIBase} from './ui_base.js';
 import {ColumnFrame, RowFrame} from "./ui.js";
 import * as util from './util.js';
 import {Vector2, Vector3} from "./vectormath.js";
-import {Curve1D,  mySafeJSONStringify} from "./curve1d.js";
-import {makeGenEnum} from './curve1d_base.js';
+import {Curve1D,  mySafeJSONStringify} from "./curve/curve1d.js";
+import {makeGenEnum} from './curve/curve1d_utils.js';
 
 export class Curve1DWidget extends ColumnFrame {
   constructor() {
@@ -86,14 +86,14 @@ export class Curve1DWidget extends ColumnFrame {
     let prop = makeGenEnum();
 
     prop.setValue(this.value.generatorType);
-    let ret = row.listenum(undefined, "Type", prop, this.value.generatorType, (id) => {
-      console.log("SELECT", id, prop.keys[id]);
-      this.value.setGenerator(id);
-    });
-    ret._init();
 
-    ret.setValue(this.value.generatorType);
-    ret._name = "sdfdsf";
+    this.dropbox = row.listenum(undefined, "Type", prop, this.value.generatorType, (id) => {
+      console.warn("SELECT", id, prop.keys[id]);
+
+      this.value.setGenerator(id);
+      this.value._on_change("curve type change");
+    });
+    this.dropbox._init();
 
     this.container = this.col();
   }
@@ -168,6 +168,11 @@ export class Curve1DWidget extends ColumnFrame {
       this._lastGen.killGUI(col, this.canvas);
     }
 
+    let onchange = this.dropbox.onchange;
+    this.dropbox.onchange = undefined
+    this.dropbox.setValue(this.value.generatorType);
+    this.dropbox.onchange = onchange;
+
     console.log("new curve type", this.value.generatorType, this._gen_type);
     col.clear();
 
@@ -194,7 +199,6 @@ export class Curve1DWidget extends ColumnFrame {
     if (val && !val.equals(this._value) && util.time_ms() - this._lastu > 200) {
       this._lastu = util.time_ms();
 
-      console.log("curve change detected", mySafeJSONStringify(val), mySafeJSONStringify(this._value));
       this._value.load(val);
       this.update();
       this._redraw();
@@ -202,8 +206,7 @@ export class Curve1DWidget extends ColumnFrame {
   }
 
   updateGenUI() {
-    let bad = (this._gen_type !== this.value.generatorType);
-    bad = bad || this._lastGen !== this.value.generators.active;
+    let bad = this._lastGen !== this.value.generators.active;
     
     if (bad) {
       this.rebuild();

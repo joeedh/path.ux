@@ -709,6 +709,8 @@ export class Screen extends ui_base.UIBase {
   }
 
   execKeyMap(e) {
+    console.log(document.activeElement);
+
     let handled = false;
 
     console.warn("execKeyMap called");

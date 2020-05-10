@@ -1097,7 +1097,7 @@ export class StringSetProperty extends ToolProperty {
 
 _addClass(StringSetProperty);
 
-import {Curve1D} from './curve1d.js';
+import {Curve1D} from './curve/curve1d.js';
 
 export class Curve1DProperty extends ToolPropertyIF {
   constructor(curve, apiname, uiname, description, flag, icon) {

@@ -45,7 +45,7 @@ export function copyEvent(e) {
   return ret;
 }
 
-export function pushModalLight(obj) {
+export function pushModalLight(obj, autoStopPropagation=true) {
   if (cconst.DEBUG.modalEvents) {
     console.warn("pushModalLight");
   }
@@ -107,18 +107,22 @@ export function pushModalLight(obj) {
         ret.handlers[type2](e2);
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      if (autoStopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
   }
 
   function make_handler(type, key) {
     return function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
       if (key !== undefined)
         obj[key](e);
+
+      if (autoStopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
   }
 

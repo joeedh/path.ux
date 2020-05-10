@@ -934,7 +934,7 @@ export class UIBase extends HTMLElement {
 
   }
 
-  pushModal(handlers=this) {
+  pushModal(handlers=this, autoStopPropagation=true) {
     if (this._modaldata !== undefined){
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       //pop modal stack just to be safe
@@ -942,7 +942,7 @@ export class UIBase extends HTMLElement {
       this._modaldata = undefined;
     }
 
-    this._modaldata = pushModalLight(handlers);
+    this._modaldata = pushModalLight(handlers, autoStopPropagation);
     return this._modaldata;
   }
 

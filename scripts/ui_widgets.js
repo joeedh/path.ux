@@ -103,6 +103,7 @@ export class NumSlider extends ValueButtonBase {
     this.decimalPlaces = 4;
     this.radix = 4;
 
+    this.range = [-1e17, 1e17];
     this.isInt = false;
 
     this._redraw();
@@ -264,14 +265,13 @@ export class NumSlider extends ValueButtonBase {
   
   doRange() {
     if (this.hasAttribute("min")) {
-      let min = parseFloat(this.getAttribute("min"));
-      this._value = Math.max(this._value, min);
+      this.range[0] = parseFloat(this.getAttribute("min"));
     }
-    
     if (this.hasAttribute("max")) {
-      let max = parseFloat(this.getAttribute("max"));
-      this._value = Math.min(this._value, max);
+      this.range[1] = parseFloat(this.getAttribute("max"));
     }
+
+    this._value = Math.min(Math.max(this._value, this.range[0]), this.range[1]);
   }
 
   get value() {
@@ -739,6 +739,14 @@ export class Check extends UIBase {
     this._redraw();
   }
 
+  get value() {
+    return this.checked;
+  }
+
+  set value(v) {
+    this.checked = v;
+  }
+
   setCSS() {
     this._label.style["font"] = this.getDefault("DefaultText").genCSS();
     this._label.style["color"] = this.getDefault("DefaultText").color;
@@ -747,7 +755,7 @@ export class Check extends UIBase {
   }
 
   updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
+    if (!this.getAttribute("datapath")) {
       return;
     }
 
@@ -1217,224 +1225,4 @@ export class Check1 extends Button {
 
 UIBase.register(Check1);
 
-export class TextBox extends UIBase {
-  constructor() {
-    super();
-
-    this._width = "min-content";
-
-    this.addEventListener("focusin", () => {
-      this._focus = 1;
-      this.dom.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      this._focus = 0;
-    });
-    
-    let margin = Math.ceil(3 * this.getDPI());
-    
-    this._had_error = false;
-    
-    this.decimalPlaces = 4;
-
-    this.dom = document.createElement("input");
-
-    this.dom.tabIndex = 0;
-    this.dom.setAttribute("tabindex", 0);
-    this.dom.setAttribute("tab-index", 0);
-    this.dom.style["margin"] = margin + "px";
-
-    this.dom.setAttribute("type", "textbox");
-    this.dom.onchange = (e) => {
-      this._change(this.dom.value);
-    }
-
-    this.radix = 16;
-
-    this.dom.oninput = (e) => {
-      this._change(this.dom.value);
-    }
-    
-    this.shadow.appendChild(this.dom);
-  }
-
-  get tabIndex() {
-    return this.dom.tabIndex;
-  }
-
-  set tabIndex(val) {
-    this.dom.tabIndex = val;
-  }
-
-  init() {
-    super.init();
-
-    this.style["display"] = "flex";
-    this.style["width"] = this._width;
-
-    this.setCSS();
-  }
-
-  set width(val) {
-    if (typeof val === "number") {
-      val += "px";
-    }
-
-    this._width = val;
-    this.style["width"] = val;
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    if (this.style["font"]) {
-      this.dom.style["font"] = this.style["font"];
-    } else {
-      this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
-    }
-
-    this.dom.style["width"] = this.style["width"];
-    this.dom.style["height"] = this.style["height"];
-  }
-
-  updateDataPath() {
-    if (!this.ctx || !this.hasAttribute("datapath")) {
-      return;
-    }
-    if (this._focus || this._flashtimer !== undefined || (this._had_error && this._focus)) {
-      return;
-    }
-    
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-    if (val === undefined || val === null) {
-      this.disabled = true;
-      return;
-    } else {
-      this.disabled = false;
-    }
-
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    
-    let text = this.text;
-
-    if (prop !== undefined && (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
-      let is_int = prop.type == PropTypes.INT;
-      
-      if (is_int) {
-        this.radix = prop.radix;
-        text = val.toString(this.radix);
-        
-        if (this.radix == 2) {
-          text = "0b" + text;
-        } else if (this.radix == 16) {
-          text += "h";
-        }
-      } else {
-        text = myToFixed(val, this.decimalPlaces);
-      }
-    } else if (prop !== undefined && prop.type == PropTypes.STRING) {
-      text = val;
-    }
-    
-    if (this.text != text) {
-      this.text = text;
-    }
-  }
-  
-  update() {
-    super.update();
-
-    if (this.dom.style["width"] !== this.style["width"]) {
-      this.dom.style["width"] = this.style["width"];
-    }
-    if (this.dom.style["height"] !== this.style["height"]) {
-      this.dom.style["height"] = this.style["height"];
-    }
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
-
-    this.setCSS();
-  }
-  
-  select() {
-    this.dom.select();
-    //return this.dom.select.apply(this, arguments);
-  }
-  
-  focus() {
-    return this.dom.focus();
-  }
-  
-  blur() {
-    return this.dom.blur();
-  }
-  
-  static define() {return {
-    tagname : "textbox-x"
-  };}
-  
-  get text() {
-    return this.dom.value;
-  }
-  
-  set text(value) {
-    this.dom.value = value;
-  }
-  
-  _prop_update(prop, text) {
-    if ((prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
-      let val = parseFloat(this.text);
-      
-      if (!toolprop.isNumber(this.text.trim())) {
-        this.flash(ui_base.ErrorColors.ERROR, this.dom);
-        this.focus();
-        this.dom.focus();
-        this._had_error = true;
-      } else {
-        if (this._had_error) {
-          this.flash(ui_base.ErrorColors.OK, this.dom);
-        }
-        
-        this._had_error = false;
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
-      }
-    } else if (prop.type == PropTypes.STRING) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
-    }
-  }
-
-   
-  _change(text) {
-    //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
-    //console.log("onchange", this._focus);
-    
-    if (this.hasAttribute("datapath") && this.ctx !== undefined) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-      //console.log(prop);
-      if (prop) {
-        this._prop_update(prop, text);
-      }
-    }
-    
-    if (this.onchange) {
-      this.onchange(text);
-    }
-  }
-}
-
-UIBase.register(TextBox);
-
-export function checkForTextBox(screen, x, y) {
-  let elem = screen.pickElement(x, y);
-  console.log(elem, x, y);
-
-  if (elem && elem.tagName === "TEXTBOX-X") {
-    return true;
-  }
-
-  return false;
-}
+export {checkForTextBox} from './ui_textbox.js';
