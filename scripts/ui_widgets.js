@@ -9,6 +9,7 @@ import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
 import {isNumber} from "./toolprop.js";
+import * as units from './units.js';
 
 import cconst from './const.js';
 
@@ -101,7 +102,7 @@ export class NumSlider extends ValueButtonBase {
     this._value = 0.0;
     this._expRate = 1.333;
     this.decimalPlaces = 4;
-    this.radix = 4;
+    this.radix = 10;
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
@@ -115,19 +116,29 @@ export class NumSlider extends ValueButtonBase {
     }
 
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    if (!prop)
+      return;
 
-    if (prop && prop.expRate) {
+    if (prop.expRate) {
       this._expRate = prop.expRate;
     }
-    if (prop && prop.radix !== undefined) {
+    if (prop.radix !== undefined) {
       this.radix = prop.radix;
     }
 
-    if (prop && prop.step) {
+    if (prop.step) {
       this._step = prop.step;
     }
-    if (prop && prop.decimalPlaces !== undefined) {
+    if (prop.decimalPlaces !== undefined) {
       this.decimalPlaces = prop.decimalPlaces;
+    }
+
+    if (prop.baseUnit !== undefined) {
+      this.baseUnit = prop.baseUnit;
+    }
+
+    if (prop.displayUnit !== undefined) {
+      this.displayUnit = prop.displayUnit;
     }
 
     super.updateDataPath();
@@ -141,7 +152,18 @@ export class NumSlider extends ValueButtonBase {
 
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
-    tbox.text = myToFixed(this.value, this.decimalPlaces);
+
+    if (this.isInt && this.radix != 10) {
+      let text = this.value.toString(this.radix);
+      if (this.radix === 2)
+        text = "0b" + text;
+      else if (this.radix === 16)
+        text += "h";
+
+      tbox.text = text;
+    } else {
+      tbox.text = units.buildString(this.value, this.baseUnit, this.decimalPlaces, this.displayUnit);
+    }
 
     this.parentNode.insertBefore(tbox, this);
     //this.remove();
@@ -153,8 +175,14 @@ export class NumSlider extends ValueButtonBase {
       this.hidden = false;
       
       if (ok) {
-        let val = parseFloat(tbox.text);
-        
+        let val = tbox.text.trim();
+
+        if (this.isInt && this.radix !== 10) {
+          val = parseInt(val);
+        } else {
+          val = units.parseValue(val, this.baseUnit);
+        }
+
         if (isNaN(val)) {
           console.log("EEK!");
           this.flash(ui_base.ErrorColors.ERROR);
@@ -511,7 +539,9 @@ export class NumSlider extends ValueButtonBase {
       text = "error";
     } else {
       val = val === undefined ? 0.0 : val;
-      val = myToFixed(val, this.decimalPlaces);
+
+      val = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
+      //val = myToFixed(val, this.decimalPlaces);
 
       text = val;
       if (this._name) {

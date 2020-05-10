@@ -7,6 +7,7 @@ import * as toolprop from './toolprop.js';
 import * as controller from './controller.js';
 import {pushModalLight, popModalLight, copyEvent} from './simple_events.js';
 import {getDataPathToolOp} from './simple_controller.js';
+import * as units from './units.js';
 
 export * from './ui_theme.js';
 
@@ -646,6 +647,62 @@ export class UIBase extends HTMLElement {
     }
   }
 
+  parseNumber(value, args={}) {
+    value = (""+value).trim().toLowerCase();
+
+    let baseUnit = args.baseUnit || this.baseUnit;
+    let isInt = args.isInt || this.isInt;
+
+    let sign = 1.0;
+
+    if (value.startsWith("-")) {
+      value = value.slice(1, value.length).trim();
+      sign = -1;
+    }
+
+    let hexre = /-?[0-9a-f]+h$/;
+
+    if (value.startsWith("0b")) {
+      value = value.slice(2, value.length).trim();
+      value = parseInt(value, 2);
+    } else if (value.startsWith("0x")) {
+      value = value.slice(2, value.length).trim();
+      value = parseInt(value, 16);
+    } else if (value.search(hexre) === 0) {
+      value = value.slice(0, value.length-1).trim();
+      value = parseInt(value, 16);
+    } else {
+      value = units.parseValue(value, baseUnit);
+    }
+
+    if (isInt) {
+      value = ~~value;
+    }
+
+    return value*sign;
+  }
+
+  formatNumber(value, args={}) {
+    let baseUnit = args.baseUnit || this.baseUnit;
+    let displayUnit = args.displayUnit || this.displayUnit;
+    let isInt = args.isInt || this.isInt;
+    let radix = args.radix || this.radix || 10;
+    let decimalPlaces = args.decimalPlaces || this.decimalPlaces;
+
+    //console.log(this.baseUnit, this.displayUnit);
+
+    if (isInt && radix !== 10) {
+      let ret = Math.floor(value).toString(radix);
+
+      if (radix === 2)
+        return "0b" + ret;
+      else if (radix === 16)
+        return ret + "h";
+    }
+
+    return units.buildString(value, baseUnit, decimalPlaces, displayUnit);
+  }
+
   setCSS() {
     let zoom = this.getZoom();
     this.style["transform"] = `scale(${zoom},${zoom})`;
@@ -778,6 +835,26 @@ export class UIBase extends HTMLElement {
     return window.innerHeight;
   }
 
+  calcZ() {
+    let p = this;
+    let n = this;
+
+    while (n) {
+      if (n.style && n.style["z-index"]) {
+        let z = parseFloat(n.style["z-index"]);
+        return z;
+      }
+
+      n = n.parentNode;
+
+      if (!n) {
+        n = p = p.parentWidget;
+      }
+    }
+
+    return 0;
+  }
+
   pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
     let ret = undefined;
 
@@ -785,7 +862,7 @@ export class UIBase extends HTMLElement {
 
     let testwidget = (n) => {
       if (n instanceof nodeclass) {
-        let ok;
+        let ok=true;
         ok = n.visibleToPick;
         ok = ok && !n.hidden;
         ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
@@ -795,7 +872,6 @@ export class UIBase extends HTMLElement {
     };
 
     let rec = (n, widget, widget_zindex, zindex, depth=0) => {
-
       if (n.style && n.style["z-index"]) {
         if (!(n instanceof UIBase) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
@@ -839,13 +915,19 @@ export class UIBase extends HTMLElement {
 
       if (!isleaf) {
         if (n.shadow !== undefined) {
-          for (let i=n.shadow.childNodes.length-1; i>=0; i--) {
-            let n2 = n.shadow.childNodes[i];
+          for (let i=0; i<n.shadow.childNodes.length; i++) {
+            let i2 = i;
+            //i2 = n.shadow.childNodes.length - 1 - i;
+
+            let n2 = n.shadow.childNodes[i2];
             rec(n2, widget, widget_zindex, zindex, depth+1);
           }
         }
-        for (let i=n.childNodes.length-1; i>=0; i--) {
-          let n2 = n.childNodes[i];
+        for (let i=0; i<n.childNodes.length; i++) {
+          let i2 = i;
+          //i2 = n.childNodes.length - 1 - i;
+
+          let n2 = n.childNodes[i2];
           rec(n2, widget, widget_zindex, zindex, depth+1);
         }
       }

@@ -20,6 +20,8 @@ export class Unit {
         return cls;
       }
     }
+
+    throw new Error("Unknown unit " + name);
   }
 
   static register(cls) {
@@ -71,7 +73,7 @@ export class MeterUnit extends Unit {
     uiname  : "Meter",
     type    : "distance",
     icon    : -1,
-    pattern : /\d+(\.\d*)?m/
+    pattern : /-?\d+(\.\d*)?m$/
   }}
 
   static parse(string) {
@@ -106,11 +108,18 @@ export class InchUnit extends Unit {
     uiname  : "Inch",
     type    : "distance",
     icon    : -1,
-    pattern : /\d+(\.\d*)?in/
+    pattern : /-?\d+(\.\d*)?(in|inch)$/
   }}
 
   static parse(string) {
+    string = string.toLowerCase();
+    let i = string.indexOf("i");
 
+    if (i >= 0) {
+      string = string.slice(0, i);
+    }
+
+    return parseInt(string);
   }
 
   //convert to internal units,
@@ -129,7 +138,7 @@ export class InchUnit extends Unit {
 }
 Unit.register(InchUnit);
 
-let foot_re = /((\d+(\.\d*)?ft)(\d+(\.\d*)?in)?)|(\d+(\.\d*)?in)/
+let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/
 
 export class FootUnit extends Unit {
   static unitDefine() {return {
@@ -199,7 +208,7 @@ export class MileUnit extends Unit {
     uiname  : "Mile",
     type    : "distance",
     icon    : -1,
-    pattern : /\d+(\.\d+)?miles/
+    pattern : /-?\d+(\.\d+)?miles$/
   }}
 
   static parse(string) {
@@ -230,7 +239,7 @@ export class DegreeUnit extends Unit {
     uiname  : "Degrees",
     type    : "angle",
     icon    : -1,
-    pattern : /\d+(\.\d+)?(\u00B0|deg|d|degree|degrees)?/
+    pattern : /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)?$/
   }}
 
   static parse(string) {
@@ -251,7 +260,7 @@ export class DegreeUnit extends Unit {
   }
 
   static fromInternal(value) {
-    return value*180.0*Math.PI;
+    return value*180.0/Math.PI;
   }
 
   static buildString(value, decimals=3) {
@@ -266,13 +275,13 @@ export class RadianUnit extends Unit {
     uiname  : "Radians",
     type    : "angle",
     icon    : -1,
-    pattern : /\d+(\.\d+)?(r|rad|radian|radians)/
+    pattern : /-?\d+(\.\d+)?(r|rad|radian|radians)$/
   }}
 
   static parse(string) {
     string = normString(string);
     if (string.search("r") >= 0) {
-      string = string.slice(0, string.search("d")).trim();
+      string = string.slice(0, string.search("r")).trim();
     }
 
     return parseFloat(string);
@@ -322,17 +331,23 @@ export function parseValue(string, baseUnit=undefined) {
     let def = unit.unitDefine();
 
     if (unit.validate(string)) {
+      console.log(unit);
       let value = unit.parse(string);
 
       value = unit.toInternal(value);
       return base.fromInternal(value);
     }
   }
+
+  return NaN;
 }
 
 export function convert(value, unita, unitb) {
-  unita = Unit.getUnit(unita);
-  unitb = Unit.getUnit(unitb);
+  if (typeof unita === "string")
+    unita = Unit.getUnit(unita);
+
+  if (typeof unitb === "string")
+    unitb = Unit.getUnit(unitb);
 
   return unitb.fromInternal(unita.toInternal(value));
 }
@@ -343,12 +358,19 @@ export function convert(value, unita, unitb) {
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
-export function buildString(value, unit=Unit.baseUnit, decimalPlaces=3) {
-  if (typeof unit === "string") {
-    unit = Unit.getUnit(unit);
+export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {
+  if (typeof baseUnit === "string") {
+    baseUnit = Unit.getUnit(baseUnit);
+  }
+  if (typeof displayUnit === "string") {
+    displayUnit = Unit.getUnit(displayUnit);
   }
 
-  return unit.buildString(value, decimalPlaces);
+  if (displayUnit !== baseUnit) {
+    value = convert(value, baseUnit, displayUnit);
+  }
+
+  return displayUnit.buildString(value, decimalPlaces);
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;

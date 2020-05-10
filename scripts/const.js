@@ -8,7 +8,10 @@ let exports = {
     areaConstraintSolver : false,
     datapaths : false,
 
+    debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
+
     screenAreaPosSizeAccesses : false,
+    buttonEvents : false,
 
     /*
     customWindowSize: {

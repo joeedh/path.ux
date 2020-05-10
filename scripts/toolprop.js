@@ -661,15 +661,17 @@ export class FlagProperty extends EnumProperty {
 }
 _addClass(FlagProperty);
 
-export class Vec2Property extends ToolProperty {
+export class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.VEC2, undefined, apiname, uiname, description);
+    super(undefined, apiname, uiname, description);
+
+    this.type = PropTypes.VEC2;
     this.data = new Vector2(data);
   }
 
   setValue(v) {
     this.data.load(v);
-    super.setValue(v);
+    ToolProperty.prototype.setValue.call(this, v);
     return this;
   }
 
@@ -678,7 +680,10 @@ export class Vec2Property extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
 
@@ -690,15 +695,17 @@ export class Vec2Property extends ToolProperty {
 }
 _addClass(Vec2Property);
 
-export class Vec3Property extends ToolProperty {
+export class Vec3Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.VEC3, undefined, apiname, uiname, description);
+    super(undefined, apiname, uiname, description);
+
+    this.type = PropTypes.VEC3;
     this.data = new Vector3(data);
   }
 
   setValue(v) {
     this.data.load(v);
-    super.setValue(v);
+    ToolProperty.prototype.setValue.call(this, v);
     return this;
   }
 
@@ -707,7 +714,10 @@ export class Vec3Property extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
 
@@ -719,15 +729,17 @@ export class Vec3Property extends ToolProperty {
 }
 _addClass(Vec3Property);
 
-export class Vec4Property extends ToolProperty {
+export class Vec4Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.VEC4, undefined, apiname, uiname, description);
+    super(undefined, apiname, uiname, description);
+
+    this.type = PropTypes.VEC4;
     this.data = new Vector4(data);
   }
 
   setValue(v) {
     this.data.load(v);
-    super.setValue(v);
+    ToolProperty.prototype.setValue.call(this, v);
     return this;
   }
 
@@ -736,7 +748,10 @@ export class Vec4Property extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
 

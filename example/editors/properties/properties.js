@@ -26,7 +26,38 @@ export class PropsEditor extends Editor {
     this.buildMassSetExample(tab1);
     this.buildFill(tabs.tab("Fill"));
 
-    tabs.tab("Settings");
+    let tab2 = tabs.tab("Settings");
+
+    let strip = tab2.row().strip();
+
+    strip.prop("data.angle1");
+    strip.label("is internally: ");
+    strip.pathlabel("data.angle1");
+
+    strip = tab2.row().strip();
+    strip.prop("data.angle2");
+    strip.label("is internally: ");
+    strip.pathlabel("data.angle2");
+
+    strip = tab2.row().strip();
+    strip.simpleslider("data.angle1");
+    strip.label("is internally: ");
+    strip.pathlabel("data.angle1");
+
+    strip = tab2.row().strip();
+    strip.simpleslider("data.angle2");
+    strip.label("is internally: ");
+    strip.pathlabel("data.angle2");
+
+    strip = tab2.row().strip();
+    strip.prop("data.vector_test");
+
+    let col = tab2.col();
+    col.pathlabel("data.vector_test[0]");
+    col.pathlabel("data.vector_test[1]");
+    col.pathlabel("data.vector_test[2]");
+    col.pathlabel("data.vector_test[3]");
+
     tabs.setActive(tab1);
 
     this.buildCurve(tabs.tab("Curve Mapping"));

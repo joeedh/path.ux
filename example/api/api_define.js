@@ -102,5 +102,12 @@ export function defineAPI() {
   let dstruct = cstruct.struct("data", "data", "Data")  ;
   dstruct.curve1d("curvemap", "curvemap", "curvemap");
 
+  dstruct.float("angle1", "angle1", "angle1").baseUnit("radian").displayUnit("degree").range(-Math.PI, Math.PI);
+  dstruct.float("angle2", "angle2", "angle2").baseUnit("degree").displayUnit("radian").range(-180, 180);
+
+  dstruct.vec3("vector_test", "vector_test", "vector_test").baseUnit("degree").displayUnit("radian").range(-180, 180);
+
+  //.simpleSlider();
+
   return api;
 }

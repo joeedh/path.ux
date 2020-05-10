@@ -23,9 +23,9 @@ let mdetect = undefined;
 let mret = undefined;
 
 export function isMobile() {
-  if (mdetect === undefined) {
-    let r = new MobileDetect(navigator.userAgent);
-    let ret = r.mobile();
+  if (mret === undefined) {
+    mdetect = new MobileDetect(navigator.userAgent);
+    let ret = mdetect.mobile();
 
     if (typeof ret === "string") {
       ret = ret.toLowerCase();

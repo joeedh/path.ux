@@ -32,6 +32,7 @@ export class NumSliderSimple extends UIBase {
     super();
 
     this.baseUnit = undefined;
+    this.displayUnit = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -252,17 +253,17 @@ export class NumSliderSimple extends UIBase {
     });
 
     this.addEventListener("mousein", (e) => {
-      console.log("mouse in");
+      //console.log("mouse in");
       this.setHighlight(e);
       this._redraw();
     });
     this.addEventListener("mouseout", (e) => {
-      console.log("mouse out");
+      //console.log("mouse out");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("mouseover", (e) => {
-      console.log("mouse over");
+      //console.log("mouse over");
       this.setHighlight(e);
       this._redraw();
     });
@@ -271,12 +272,12 @@ export class NumSliderSimple extends UIBase {
       this._redraw();
     });
     this.addEventListener("mouseleave", (e) => {
-      console.log("mouse leave");
+      //console.log("mouse leave");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("blur", (e) => {
-      console.log("blur");
+      //console.log("blur");
       this._focus = 0;
       this.highlight = false;
       this._redraw();
@@ -472,7 +473,6 @@ export class NumSliderSimple2 extends ColumnFrame {
     this.isInt = false;
     this._lock_textbox = false;
     this.labelOnTop = undefined;
-    this.baseUnit = undefined;
 
     this._last_label_on_top = undefined;
 
@@ -489,11 +489,42 @@ export class NumSliderSimple2 extends ColumnFrame {
     this.textbox = document.createElement("textbox-x");
     this.numslider = document.createElement("numslider-simple-base-x");
 
+    this.textbox.range = this.numslider.range;
+
     this.textbox.setAttribute("class", "numslider_simple_textbox");
   }
 
   get range() {
     return this.numslider.range;
+  }
+
+  get displayUnit() {
+    return this.textbox.displayUnit;
+  }
+
+  set displayUnit(val) {
+    let update = val !== this.displayUnit;
+
+    //console.warn("setting display unit", val);
+    this.slider.displayUnit = this.textbox.displayUnit = val;
+
+    if (update) {
+      this.updateTextBox();
+    }
+  }
+
+  get baseUnit() {
+    return this.textbox.baseUnit;
+  }
+  set baseUnit(val) {
+    let update = val !== this.baseUnit;
+
+    //console.warn("setting base unit", val);
+    this.slider.baseUnit = this.textbox.baseUnit = val;
+
+    if (update) {
+      this.updateTextBox();
+    }
   }
 
   init() {
@@ -568,7 +599,7 @@ export class NumSliderSimple2 extends ColumnFrame {
         this.setValue(f);
         this._lock_textbox = 0;
       }
-    }
+    };
 
     textbox.ctx = this.ctx;
     textbox.packflag |= this.inherit_packflag;
@@ -614,7 +645,8 @@ export class NumSliderSimple2 extends ColumnFrame {
       return;
 
     //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
-    this.textbox.text = units.buildString(this._value, this.baseUnit, this.decimalPlaces);
+
+    this.textbox.text = this.formatNumber(this._value);
     this.textbox.update();
   }
 
@@ -681,7 +713,10 @@ export class NumSliderSimple2 extends ColumnFrame {
 
     if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
       this.baseUnit = prop.baseUnit;
-      this.slider.baseUnit = prop.baseUnit;
+    }
+
+    if (prop !== undefined && !this.displayUnit && prop.displayUnit) {
+      this.displayUnit = prop.displayUnit;
     }
   }
 
@@ -690,6 +725,18 @@ export class NumSliderSimple2 extends ColumnFrame {
     super.update();
 
     this.updateDataPath();
+
+    if (this.hasAttribute("min")) {
+      this.range[0] = parseFloat(this.getAttribute("min"));
+      this.setCSS();
+      this._redraw();
+    }
+
+    if (this.hasAttribute("max")) {
+      this.range[1] = parseFloat(this.getAttribute("max"));
+      this.setCSS();
+      this._redraw();
+    }
 
     if (this.hasAttribute("integer")) {
       this.isInt = true;
@@ -732,10 +779,43 @@ export class VectorPanel extends ColumnFrame {
 
     this.name = "";
 
-    this.isInt = false;
     this.axes = "XYZW";
     this.value = new Vector3();
     this.sliders = [];
+
+    let makeParam = (key) => {
+      Object.defineProperty(this, key, {
+        get : function() {
+          return this._getNumParam(key);
+        },
+
+        set : function(val) {
+          this._setNumParam(key, val);
+        }
+      });
+    };
+
+    this.__range = [-1e17, 1e17];
+    this._range = new Array(2);
+
+    Object.defineProperty(this._range, 0, {
+      get : () => this.__range[0],
+      set : (val) => this.__range[0] = val
+    });
+    Object.defineProperty(this._range, 1, {
+      get : () => this.__range[1],
+      set : (val) => this.__range[1] = val
+    });
+
+    makeParam("isInt");
+    makeParam("radix");
+    makeParam("decimalPlaces");
+    makeParam("baseUnit");
+    makeParam("displayUnit");
+    makeParam("step");
+    makeParam("expRate");
+
+    window.vp = this;
   }
 
   init() {
@@ -747,10 +827,29 @@ export class VectorPanel extends ColumnFrame {
     this.style["padding"] = "5px";
   }
 
+  _getNumParam(key) {
+    return this["_"+key];
+  }
+
+  _setNumParam(key, val) {
+    if (key === "range") {
+      this.__range[0] = val[0];
+      this.__range[1] = val[1];
+
+      return;
+    }
+
+    this["_"+key] = val;
+
+    for (let slider of this.sliders) {
+      slider[key] = val;
+    }
+  }
+
   rebuild() {
     this.clear();
 
-    console.log("rebuilding");
+    console.warn("rebuilding");
 
     if (this.name) {
       this.label(this.name);
@@ -764,6 +863,13 @@ export class VectorPanel extends ColumnFrame {
       let slider = this.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
+
+      slider.baseUnit = this.baseUnit;
+      slider.displayUnit = this.displayUnit;
+      slider.isInt = this.isInt;
+      slider.range = this.__range;
+      slider.radix = this.radix;
+      slider.step = this.step;
 
       slider.onchange = function(e) {
         this2.value[this.axis] = this.value;
@@ -789,16 +895,18 @@ export class VectorPanel extends ColumnFrame {
     }
 
     if (value.length !== this.value.length) {
-      switch (value) {
+      switch (value.length) {
         case 2:
           this.value = new Vector2(value);
           break;
         case 3:
           this.value = new Vector3(value);
           break;
-        default:
+        case 4:
           this.value = new Vector4(value);
           break;
+        default:
+          throw new Error("invalid vector size " + value.length);
       }
 
       this.rebuild();
@@ -839,16 +947,49 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
+    let loadNumParam = (k) => {
+      if (meta && meta[k] !== undefined && this[k] === undefined) {
+        this[k] = meta[k];
+      }
+    }
+
+    loadNumParam("baseUnit");
+    loadNumParam("displayUnit");
+    loadNumParam("decimalPlaces");
+    loadNumParam("isInt");
+    loadNumParam("radix");
+    loadNumParam("step");
+    loadNumParam("expRate");
+
+    if (meta && meta.range) {
+      this.range[0] = meta.range[0];
+      this.range[1] = meta.range[1];
+    }
+
     this.disabled = false;
 
-    if (val.length !== this.value.length) {
-      //we do this to avoid copying a subclass.
-      //this.value should always be of a base Vector type.
-      if (meta === undefined) {
-        console.log("eek", meta);
-      } else {
-        this.value = meta.getValue().copy().load(val);
+    let length = val.length;
+
+    if (meta)
+      length = meta.getValue().length;
+    
+    if (this.value.length !== length) {
+      switch (length) {
+        case 2:
+          val = new Vector2(val);
+          break;
+        case 3:
+          val = new Vector3(val);
+          break;
+        case 4:
+          val = new Vector4(val);
+          break;
+        default:
+          val = meta.getValue().copy().load(val);
+          break;
       }
+
+      this.value = val;
       this.rebuild();
 
       for (let i=0; i<this.value.length; i++) {

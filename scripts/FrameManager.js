@@ -99,6 +99,8 @@ export class Screen extends ui_base.UIBase {
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea.ScreenArea);
 
+      //console.log(this.pickElement(e.x, e.y));
+
       if (elem !== undefined) {
         if (elem.area) {
           //make sure context area stacks are up to date
@@ -709,11 +711,9 @@ export class Screen extends ui_base.UIBase {
   }
 
   execKeyMap(e) {
-    console.log(document.activeElement);
-
     let handled = false;
 
-    console.warn("execKeyMap called");
+    //console.warn("execKeyMap called");
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -808,6 +808,20 @@ export class Screen extends ui_base.UIBase {
   }
 
   update() {
+    let move = [];
+    for (let child of this.childNodes) {
+      if (child instanceof ScreenArea) {
+        move.push(child);
+      }
+    }
+
+    for (let child of move) {
+      console.warn("moved screen area to shadow");
+
+      HTMLElement.prototype.remove.call(child);
+      this.shadow.appendChild(child);
+    }
+
     if (this._do_updateSize) {
       this.updateSize();
     }
@@ -831,6 +845,15 @@ export class Screen extends ui_base.UIBase {
 
     if (this._update_gen) {
       let ret;
+
+      /*
+      if (cconst.DEBUG.debugUIUpdatePerf) {
+          for (ret = this._update_gen.next(); !ret.done; ret = this._update_gen.next()) {}
+
+        this._update_gen = this.update_intern();
+        return;
+      }
+      //*/
 
       try {
         ret = this._update_gen.next();
@@ -879,6 +902,11 @@ export class Screen extends ui_base.UIBase {
 
     for (let n of this.shadow.childNodes) {
       rec(n);
+    }
+  }
+
+  completeUpdate() {
+    for (let step of this.update_intern()) {
     }
   }
 
@@ -968,7 +996,7 @@ export class Screen extends ui_base.UIBase {
           n.update();
         }
 
-        if (util.time_ms() - t > 30) {
+        if (util.time_ms() - t > 20) {
           yield;
           t = util.time_ms();
         }
@@ -1716,6 +1744,8 @@ export class Screen extends ui_base.UIBase {
     let repeat = false;
     let found = false;
 
+    let time = util.time_ms();
+
     for (let i=0; i<10; i++) {
       repeat = false;
 
@@ -1741,7 +1771,9 @@ export class Screen extends ui_base.UIBase {
     if (found) {
       this.snapScreenVerts(snapArgument);
       if (cconst.DEBUG.areaConstraintSolver) {
-        console.log("enforced area constraint");
+        time = util.time_ms() - time;
+
+        console.log(`enforced area constraint ${time.toFixed(2)}ms`);
       }
       this._recalcAABB();
       this.setCSS();

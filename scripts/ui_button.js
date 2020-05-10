@@ -8,6 +8,7 @@ import * as simple_toolsys from './simple_toolsys.js';
 import * as toolprop from './toolprop.js';
 import {DataPathError} from './simple_controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from './vectormath.js';
+import cconst from './const.js';
 
 let keymap = events.keymap;
 
@@ -51,7 +52,8 @@ export class Button extends UIBase {
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
-      console.log(e.keyCode);
+      if (cconst.buttonEvents)
+        console.log(e.keyCode);
 
       switch (e.keyCode) {
         case 27: //escape
@@ -191,7 +193,8 @@ export class Button extends UIBase {
     let press = (e) => {
       e.stopPropagation();
 
-      console.log("button press", this._pressed);
+      if (cconst.buttonEvents)
+        console.log("button press", this._pressed);
 
       if (this.disabled) return;
       if (this._pressed) return;
@@ -208,7 +211,8 @@ export class Button extends UIBase {
     };
 
     let depress = (e) => {
-      console.log("button depress");
+      if (cconst.buttonEvents)
+        console.log("button depress");
 
       if (this._auto_depress) {
         this._pressed = false;
@@ -217,19 +221,18 @@ export class Button extends UIBase {
         this._redraw();
       }
 
-      console.log("a");
-
       e.preventDefault();
       e.stopPropagation();
 
-      console.warn(e.type, e.button, this.onclick, e);
       if (e.type === "mouseup" && (e.button || e.was_touch)) {
         return;
       }
 
       this._redraw();
 
-      console.log("exec", this.onclick);
+      if (cconst.buttonEvents)
+        console.log("button click callback:", this.onclick);
+
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
       }
@@ -276,7 +279,9 @@ export class Button extends UIBase {
 
       this._repos_canvas();
       this._redraw();
-      console.log("disabled update!", this.disabled, this.style["background-color"]);
+
+      if (cconst.buttonEvents)
+        console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }
   }

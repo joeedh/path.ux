@@ -1242,12 +1242,34 @@ export class Container extends ui_base.UIBase {
   }
 
   simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
-    return this.slider(inpath, name, defaultval, min,
-      max, step, is_int, do_redraw,
-      callback, packflag | PackFlags.SIMPLE_NUMSLIDERS);
+    if (arguments.length === 2 || typeof name === "object") {
+      let args = Object.assign({}, name);
+
+      args.packflag = (args.packflag || 0) | PackFlags.SIMPLE_NUMSLIDERS;
+      return this.slider(inpath, args);
+      //new-style api call
+    } else {
+      return this.slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag | PackFlags.SIMPLE_NUMSLIDERS);
+    }
   }
 
   slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+    if (arguments.length === 2 || typeof name === "object") {
+      //new-style api call
+
+      let args = name;
+
+      name = args.name;
+      defaultval = args.defaultval;
+      min = args.min;
+      max = args.max;
+      step = args.step;
+      is_int = args.is_int;
+      do_redraw = args.do_redraw;
+      callback = args.callback;
+      packflag = args.packflag || 0;
+    }
+
     packflag |= this.inherit_packflag;
     let ret;
 

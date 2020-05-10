@@ -6677,6 +6677,8 @@ class Unit {
         return cls;
       }
     }
+
+    throw new Error("Unknown unit " + name);
   }
 
   static register(cls) {
@@ -6728,7 +6730,7 @@ class MeterUnit extends Unit {
     uiname  : "Meter",
     type    : "distance",
     icon    : -1,
-    pattern : /\d+(\.\d*)?m/
+    pattern : /-?\d+(\.\d*)?m$/
   }}
 
   static parse(string) {
@@ -6763,11 +6765,18 @@ class InchUnit extends Unit {
     uiname  : "Inch",
     type    : "distance",
     icon    : -1,
-    pattern : /\d+(\.\d*)?in/
+    pattern : /-?\d+(\.\d*)?(in|inch)$/
   }}
 
   static parse(string) {
+    string = string.toLowerCase();
+    let i = string.indexOf("i");
 
+    if (i >= 0) {
+      string = string.slice(0, i);
+    }
+
+    return parseInt(string);
   }
 
   //convert to internal units,
@@ -6786,7 +6795,7 @@ class InchUnit extends Unit {
 }
 Unit.register(InchUnit);
 
-let foot_re = /((\d+(\.\d*)?ft)(\d+(\.\d*)?in)?)|(\d+(\.\d*)?in)/;
+let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
 
 class FootUnit extends Unit {
   static unitDefine() {return {
@@ -6856,7 +6865,7 @@ class MileUnit extends Unit {
     uiname  : "Mile",
     type    : "distance",
     icon    : -1,
-    pattern : /\d+(\.\d+)?miles/
+    pattern : /-?\d+(\.\d+)?miles$/
   }}
 
   static parse(string) {
@@ -6887,7 +6896,7 @@ class DegreeUnit extends Unit {
     uiname  : "Degrees",
     type    : "angle",
     icon    : -1,
-    pattern : /\d+(\.\d+)?(\u00B0|deg|d|degree|degrees)?/
+    pattern : /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)?$/
   }}
 
   static parse(string) {
@@ -6908,7 +6917,7 @@ class DegreeUnit extends Unit {
   }
 
   static fromInternal(value) {
-    return value*180.0*Math.PI;
+    return value*180.0/Math.PI;
   }
 
   static buildString(value, decimals=3) {
@@ -6922,13 +6931,13 @@ class RadianUnit extends Unit {
     uiname  : "Radians",
     type    : "angle",
     icon    : -1,
-    pattern : /\d+(\.\d+)?(r|rad|radian|radians)/
+    pattern : /-?\d+(\.\d+)?(r|rad|radian|radians)$/
   }}
 
   static parse(string) {
     string = normString(string);
     if (string.search("r") >= 0) {
-      string = string.slice(0, string.search("d")).trim();
+      string = string.slice(0, string.search("r")).trim();
     }
 
     return parseFloat(string);
@@ -6970,12 +6979,25 @@ function parseValue(string, baseUnit=undefined) {
     let def = unit.unitDefine();
 
     if (unit.validate(string)) {
+      console.log(unit);
       let value = unit.parse(string);
 
       value = unit.toInternal(value);
       return base.fromInternal(value);
     }
   }
+
+  return NaN;
+}
+
+function convert(value, unita, unitb) {
+  if (typeof unita === "string")
+    unita = Unit.getUnit(unita);
+
+  if (typeof unitb === "string")
+    unitb = Unit.getUnit(unitb);
+
+  return unitb.fromInternal(unita.toInternal(value));
 }
 
 /**
@@ -6984,12 +7006,19 @@ function parseValue(string, baseUnit=undefined) {
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
-function buildString(value, unit=Unit.baseUnit, decimalPlaces=3) {
-  if (typeof unit === "string") {
-    unit = Unit.getUnit(unit);
+function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {
+  if (typeof baseUnit === "string") {
+    baseUnit = Unit.getUnit(baseUnit);
+  }
+  if (typeof displayUnit === "string") {
+    displayUnit = Unit.getUnit(displayUnit);
   }
 
-  return unit.buildString(value, decimalPlaces);
+  if (displayUnit !== baseUnit) {
+    value = convert(value, baseUnit, displayUnit);
+  }
+
+  return displayUnit.buildString(value, decimalPlaces);
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
@@ -10397,15 +10426,17 @@ class FlagProperty extends EnumProperty$1 {
 }
 _addClass(FlagProperty);
 
-class Vec2Property$1 extends ToolProperty {
+class Vec2Property$1 extends FloatProperty$1 {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.VEC2, undefined, apiname, uiname, description);
+    super(undefined, apiname, uiname, description);
+
+    this.type = PropTypes.VEC2;
     this.data = new Vector2(data);
   }
 
   setValue(v) {
     this.data.load(v);
-    super.setValue(v);
+    ToolProperty.prototype.setValue.call(this, v);
     return this;
   }
 
@@ -10414,7 +10445,10 @@ class Vec2Property$1 extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
 
@@ -10426,15 +10460,17 @@ class Vec2Property$1 extends ToolProperty {
 }
 _addClass(Vec2Property$1);
 
-class Vec3Property$1 extends ToolProperty {
+class Vec3Property$1 extends FloatProperty$1 {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.VEC3, undefined, apiname, uiname, description);
+    super(undefined, apiname, uiname, description);
+
+    this.type = PropTypes.VEC3;
     this.data = new Vector3(data);
   }
 
   setValue(v) {
     this.data.load(v);
-    super.setValue(v);
+    ToolProperty.prototype.setValue.call(this, v);
     return this;
   }
 
@@ -10443,7 +10479,10 @@ class Vec3Property$1 extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
 
@@ -10455,15 +10494,17 @@ class Vec3Property$1 extends ToolProperty {
 }
 _addClass(Vec3Property$1);
 
-class Vec4Property$1 extends ToolProperty {
+class Vec4Property$1 extends FloatProperty$1 {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.VEC4, undefined, apiname, uiname, description);
+    super(undefined, apiname, uiname, description);
+
+    this.type = PropTypes.VEC4;
     this.data = new Vector4(data);
   }
 
   setValue(v) {
     this.data.load(v);
-    super.setValue(v);
+    ToolProperty.prototype.setValue.call(this, v);
     return this;
   }
 
@@ -10472,7 +10513,10 @@ class Vec4Property$1 extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
 
@@ -14824,6 +14868,62 @@ class UIBase extends HTMLElement {
     }
   }
 
+  parseNumber(value, args={}) {
+    value = (""+value).trim().toLowerCase();
+
+    let baseUnit = args.baseUnit || this.baseUnit;
+    let isInt = args.isInt || this.isInt;
+
+    let sign = 1.0;
+
+    if (value.startsWith("-")) {
+      value = value.slice(1, value.length).trim();
+      sign = -1;
+    }
+
+    let hexre = /-?[0-9a-f]+h$/;
+
+    if (value.startsWith("0b")) {
+      value = value.slice(2, value.length).trim();
+      value = parseInt(value, 2);
+    } else if (value.startsWith("0x")) {
+      value = value.slice(2, value.length).trim();
+      value = parseInt(value, 16);
+    } else if (value.search(hexre) === 0) {
+      value = value.slice(0, value.length-1).trim();
+      value = parseInt(value, 16);
+    } else {
+      value = parseValue(value, baseUnit);
+    }
+
+    if (isInt) {
+      value = ~~value;
+    }
+
+    return value*sign;
+  }
+
+  formatNumber(value, args={}) {
+    let baseUnit = args.baseUnit || this.baseUnit;
+    let displayUnit = args.displayUnit || this.displayUnit;
+    let isInt = args.isInt || this.isInt;
+    let radix = args.radix || this.radix || 10;
+    let decimalPlaces = args.decimalPlaces || this.decimalPlaces;
+
+    //console.log(this.baseUnit, this.displayUnit);
+
+    if (isInt && radix !== 10) {
+      let ret = Math.floor(value).toString(radix);
+
+      if (radix === 2)
+        return "0b" + ret;
+      else if (radix === 16)
+        return ret + "h";
+    }
+
+    return buildString(value, baseUnit, decimalPlaces, displayUnit);
+  }
+
   setCSS() {
     let zoom = this.getZoom();
     this.style["transform"] = `scale(${zoom},${zoom})`;
@@ -14956,6 +15056,26 @@ class UIBase extends HTMLElement {
     return window.innerHeight;
   }
 
+  calcZ() {
+    let p = this;
+    let n = this;
+
+    while (n) {
+      if (n.style && n.style["z-index"]) {
+        let z = parseFloat(n.style["z-index"]);
+        return z;
+      }
+
+      n = n.parentNode;
+
+      if (!n) {
+        n = p = p.parentWidget;
+      }
+    }
+
+    return 0;
+  }
+
   pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
     let ret = undefined;
 
@@ -14963,7 +15083,7 @@ class UIBase extends HTMLElement {
 
     let testwidget = (n) => {
       if (n instanceof nodeclass) {
-        let ok;
+        let ok=true;
         ok = n.visibleToPick;
         ok = ok && !n.hidden;
         ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
@@ -14973,7 +15093,6 @@ class UIBase extends HTMLElement {
     };
 
     let rec = (n, widget, widget_zindex, zindex, depth=0) => {
-
       if (n.style && n.style["z-index"]) {
         if (!(n instanceof UIBase) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
@@ -15017,13 +15136,19 @@ class UIBase extends HTMLElement {
 
       if (!isleaf) {
         if (n.shadow !== undefined) {
-          for (let i=n.shadow.childNodes.length-1; i>=0; i--) {
-            let n2 = n.shadow.childNodes[i];
+          for (let i=0; i<n.shadow.childNodes.length; i++) {
+            let i2 = i;
+            //i2 = n.shadow.childNodes.length - 1 - i;
+
+            let n2 = n.shadow.childNodes[i2];
             rec(n2, widget, widget_zindex, zindex, depth+1);
           }
         }
-        for (let i=n.childNodes.length-1; i>=0; i--) {
-          let n2 = n.childNodes[i];
+        for (let i=0; i<n.childNodes.length; i++) {
+          let i2 = i;
+          //i2 = n.childNodes.length - 1 - i;
+
+          let n2 = n.childNodes[i2];
           rec(n2, widget, widget_zindex, zindex, depth+1);
         }
       }
@@ -16531,19 +16656,6 @@ class Button extends UIBase$1 {
 }
 UIBase$1.register(Button);
 
-function myToFixed(s, n) {
-  s = s.toFixed(n);
-
-  while (s.endsWith('0')) {
-    s = s.slice(0, s.length-1);
-  }
-  if (s.endsWith("\.")) {
-    s = s.slice(0, s.length-1);
-  }
-
-  return s;
-}
-
 let keymap$1 = keymap;
 
 let PropTypes$2 = PropTypes;
@@ -16570,6 +16682,9 @@ class TextBox extends UIBase$2 {
     this._had_error = false;
 
     this.decimalPlaces = 4;
+
+    this.baseUnit = undefined; //will automatically use defaults
+    this.displayUnit = undefined; //will automatically use defaults
 
     this.dom = document.createElement("input");
 
@@ -16636,6 +16751,7 @@ class TextBox extends UIBase$2 {
     this.pushModal({
       on_mousemove : (e) => {
         console.log(e.x, e.y);
+        e.stopPropagation();
       },
 
       on_keydown : keydown,
@@ -16643,6 +16759,7 @@ class TextBox extends UIBase$2 {
       on_keyup : keydown,
 
       on_mousedown : (e) => {
+        e.stopPropagation();
         console.log("mouse down", e.x, e.y);
       }
     }, false);
@@ -16722,19 +16839,17 @@ class TextBox extends UIBase$2 {
     if (prop !== undefined && (prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
       let is_int = prop.type == PropTypes$2.INT;
 
-      if (is_int) {
-        this.radix = prop.radix;
-        text = val.toString(this.radix);
+      this.radix = prop.radix;
 
-        if (this.radix == 2) {
-          text = "0b" + text;
-        } else if (this.radix == 16) {
-          text += "h";
-        }
+      if (is_int && this.radix === 2) {
+        text = val.toString(this.radix);
+        text = "0b" + text;
+      } else if (is_int && this.radix === 16) {
+        text += "h";
       } else {
-        text = myToFixed(val, this.decimalPlaces);
+        text = buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
       }
-    } else if (prop !== undefined && prop.type == PropTypes$2.STRING) {
+    } else if (prop !== undefined && prop.type === PropTypes$2.STRING) {
       text = val;
     }
 
@@ -16786,8 +16901,8 @@ class TextBox extends UIBase$2 {
   }
 
   _prop_update(prop, text) {
-    if ((prop.type == PropTypes$2.INT || prop.type == PropTypes$2.FLOAT)) {
-      let val = parseFloat(this.text);
+    if ((prop.type === PropTypes$2.INT || prop.type === PropTypes$2.FLOAT)) {
+      let val = parseValue(this.text, this.baseUnit);
 
       if (!isNumber(this.text.trim())) {
         this.flash(ErrorColors.ERROR, this.dom);
@@ -16837,19 +16952,6 @@ function checkForTextBox(screen, x, y) {
   }
 
   return false;
-}
-
-function myToFixed$1(s, n) {
-  s = s.toFixed(n);
-
-  while (s.endsWith('0')) {
-    s = s.slice(0, s.length-1);
-  }
-  if (s.endsWith("\.")) {
-    s = s.slice(0, s.length-1);
-  }
-
-  return s;
 }
 
 let keymap$2 = keymap;
@@ -16920,7 +17022,7 @@ class NumSlider extends ValueButtonBase {
     this._value = 0.0;
     this._expRate = 1.333;
     this.decimalPlaces = 4;
-    this.radix = 4;
+    this.radix = 10;
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
@@ -16934,19 +17036,29 @@ class NumSlider extends ValueButtonBase {
     }
 
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    if (!prop)
+      return;
 
-    if (prop && prop.expRate) {
+    if (prop.expRate) {
       this._expRate = prop.expRate;
     }
-    if (prop && prop.radix !== undefined) {
+    if (prop.radix !== undefined) {
       this.radix = prop.radix;
     }
 
-    if (prop && prop.step) {
+    if (prop.step) {
       this._step = prop.step;
     }
-    if (prop && prop.decimalPlaces !== undefined) {
+    if (prop.decimalPlaces !== undefined) {
       this.decimalPlaces = prop.decimalPlaces;
+    }
+
+    if (prop.baseUnit !== undefined) {
+      this.baseUnit = prop.baseUnit;
+    }
+
+    if (prop.displayUnit !== undefined) {
+      this.displayUnit = prop.displayUnit;
     }
 
     super.updateDataPath();
@@ -16960,7 +17072,18 @@ class NumSlider extends ValueButtonBase {
 
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
-    tbox.text = myToFixed$1(this.value, this.decimalPlaces);
+
+    if (this.isInt && this.radix != 10) {
+      let text = this.value.toString(this.radix);
+      if (this.radix === 2)
+        text = "0b" + text;
+      else if (this.radix === 16)
+        text += "h";
+
+      tbox.text = text;
+    } else {
+      tbox.text = buildString(this.value, this.baseUnit, this.decimalPlaces, this.displayUnit);
+    }
 
     this.parentNode.insertBefore(tbox, this);
     //this.remove();
@@ -16972,8 +17095,14 @@ class NumSlider extends ValueButtonBase {
       this.hidden = false;
       
       if (ok) {
-        let val = parseFloat(tbox.text);
-        
+        let val = tbox.text.trim();
+
+        if (this.isInt && this.radix !== 10) {
+          val = parseInt(val);
+        } else {
+          val = parseValue(val, this.baseUnit);
+        }
+
         if (isNaN(val)) {
           console.log("EEK!");
           this.flash(ErrorColors.ERROR);
@@ -17330,7 +17459,9 @@ class NumSlider extends ValueButtonBase {
       text = "error";
     } else {
       val = val === undefined ? 0.0 : val;
-      val = myToFixed$1(val, this.decimalPlaces);
+
+      val = buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
+      //val = myToFixed(val, this.decimalPlaces);
 
       text = val;
       if (this._name) {
@@ -19290,12 +19421,34 @@ class Container extends UIBase {
   }
 
   simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
-    return this.slider(inpath, name, defaultval, min,
-      max, step, is_int, do_redraw,
-      callback, packflag | PackFlags$1.SIMPLE_NUMSLIDERS);
+    if (arguments.length === 2 || typeof name === "object") {
+      let args = Object.assign({}, name);
+
+      args.packflag = (args.packflag || 0) | PackFlags$1.SIMPLE_NUMSLIDERS;
+      return this.slider(inpath, args);
+      //new-style api call
+    } else {
+      return this.slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag | PackFlags$1.SIMPLE_NUMSLIDERS);
+    }
   }
 
   slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+    if (arguments.length === 2 || typeof name === "object") {
+      //new-style api call
+
+      let args = name;
+
+      name = args.name;
+      defaultval = args.defaultval;
+      min = args.min;
+      max = args.max;
+      step = args.step;
+      is_int = args.is_int;
+      do_redraw = args.do_redraw;
+      callback = args.callback;
+      packflag = args.packflag || 0;
+    }
+
     packflag |= this.inherit_packflag;
     let ret;
 
@@ -19916,6 +20069,7 @@ class NumSliderSimple extends UIBase$6 {
     super();
 
     this.baseUnit = undefined;
+    this.displayUnit = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -20354,7 +20508,6 @@ class NumSliderSimple2 extends ColumnFrame {
     this.isInt = false;
     this._lock_textbox = false;
     this.labelOnTop = undefined;
-    this.baseUnit = undefined;
 
     this._last_label_on_top = undefined;
 
@@ -20371,11 +20524,42 @@ class NumSliderSimple2 extends ColumnFrame {
     this.textbox = document.createElement("textbox-x");
     this.numslider = document.createElement("numslider-simple-base-x");
 
+    this.textbox.range = this.numslider.range;
+
     this.textbox.setAttribute("class", "numslider_simple_textbox");
   }
 
   get range() {
     return this.numslider.range;
+  }
+
+  get displayUnit() {
+    return this.textbox.displayUnit;
+  }
+
+  set displayUnit(val) {
+    let update = val !== this.displayUnit;
+
+    //console.warn("setting display unit", val);
+    this.slider.displayUnit = this.textbox.displayUnit = val;
+
+    if (update) {
+      this.updateTextBox();
+    }
+  }
+
+  get baseUnit() {
+    return this.textbox.baseUnit;
+  }
+  set baseUnit(val) {
+    let update = val !== this.baseUnit;
+
+    //console.warn("setting base unit", val);
+    this.slider.baseUnit = this.textbox.baseUnit = val;
+
+    if (update) {
+      this.updateTextBox();
+    }
   }
 
   init() {
@@ -20496,7 +20680,8 @@ class NumSliderSimple2 extends ColumnFrame {
       return;
 
     //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
-    this.textbox.text = buildString(this._value, this.baseUnit, this.decimalPlaces);
+
+    this.textbox.text = this.formatNumber(this._value);
     this.textbox.update();
   }
 
@@ -20563,7 +20748,10 @@ class NumSliderSimple2 extends ColumnFrame {
 
     if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
       this.baseUnit = prop.baseUnit;
-      this.slider.baseUnit = prop.baseUnit;
+    }
+
+    if (prop !== undefined && !this.displayUnit && prop.displayUnit) {
+      this.displayUnit = prop.displayUnit;
     }
   }
 
@@ -20572,6 +20760,18 @@ class NumSliderSimple2 extends ColumnFrame {
     super.update();
 
     this.updateDataPath();
+
+    if (this.hasAttribute("min")) {
+      this.range[0] = parseFloat(this.getAttribute("min"));
+      this.setCSS();
+      this._redraw();
+    }
+
+    if (this.hasAttribute("max")) {
+      this.range[1] = parseFloat(this.getAttribute("max"));
+      this.setCSS();
+      this._redraw();
+    }
 
     if (this.hasAttribute("integer")) {
       this.isInt = true;
@@ -20614,10 +20814,43 @@ class VectorPanel extends ColumnFrame {
 
     this.name = "";
 
-    this.isInt = false;
     this.axes = "XYZW";
     this.value = new Vector3();
     this.sliders = [];
+
+    let makeParam = (key) => {
+      Object.defineProperty(this, key, {
+        get : function() {
+          return this._getNumParam(key);
+        },
+
+        set : function(val) {
+          this._setNumParam(key, val);
+        }
+      });
+    };
+
+    this.__range = [-1e17, 1e17];
+    this._range = new Array(2);
+
+    Object.defineProperty(this._range, 0, {
+      get : () => this.__range[0],
+      set : (val) => this.__range[0] = val
+    });
+    Object.defineProperty(this._range, 1, {
+      get : () => this.__range[1],
+      set : (val) => this.__range[1] = val
+    });
+
+    makeParam("isInt");
+    makeParam("radix");
+    makeParam("decimalPlaces");
+    makeParam("baseUnit");
+    makeParam("displayUnit");
+    makeParam("step");
+    makeParam("expRate");
+
+    window.vp = this;
   }
 
   init() {
@@ -20629,10 +20862,29 @@ class VectorPanel extends ColumnFrame {
     this.style["padding"] = "5px";
   }
 
+  _getNumParam(key) {
+    return this["_"+key];
+  }
+
+  _setNumParam(key, val) {
+    if (key === "range") {
+      this.__range[0] = val[0];
+      this.__range[1] = val[1];
+
+      return;
+    }
+
+    this["_"+key] = val;
+
+    for (let slider of this.sliders) {
+      slider[key] = val;
+    }
+  }
+
   rebuild() {
     this.clear();
 
-    console.log("rebuilding");
+    console.warn("rebuilding");
 
     if (this.name) {
       this.label(this.name);
@@ -20646,6 +20898,13 @@ class VectorPanel extends ColumnFrame {
       let slider = this.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
+
+      slider.baseUnit = this.baseUnit;
+      slider.displayUnit = this.displayUnit;
+      slider.isInt = this.isInt;
+      slider.range = this.__range;
+      slider.radix = this.radix;
+      slider.step = this.step;
 
       slider.onchange = function(e) {
         this2.value[this.axis] = this.value;
@@ -20671,16 +20930,18 @@ class VectorPanel extends ColumnFrame {
     }
 
     if (value.length !== this.value.length) {
-      switch (value) {
+      switch (value.length) {
         case 2:
           this.value = new Vector2(value);
           break;
         case 3:
           this.value = new Vector3(value);
           break;
-        default:
+        case 4:
           this.value = new Vector4(value);
           break;
+        default:
+          throw new Error("invalid vector size " + value.length);
       }
 
       this.rebuild();
@@ -20721,16 +20982,49 @@ class VectorPanel extends ColumnFrame {
       return;
     }
 
+    let loadNumParam = (k) => {
+      if (meta && meta[k] !== undefined && this[k] === undefined) {
+        this[k] = meta[k];
+      }
+    };
+
+    loadNumParam("baseUnit");
+    loadNumParam("displayUnit");
+    loadNumParam("decimalPlaces");
+    loadNumParam("isInt");
+    loadNumParam("radix");
+    loadNumParam("step");
+    loadNumParam("expRate");
+
+    if (meta && meta.range) {
+      this.range[0] = meta.range[0];
+      this.range[1] = meta.range[1];
+    }
+
     this.disabled = false;
 
-    if (val.length !== this.value.length) {
-      //we do this to avoid copying a subclass.
-      //this.value should always be of a base Vector type.
-      if (meta === undefined) {
-        console.log("eek", meta);
-      } else {
-        this.value = meta.getValue().copy().load(val);
+    let length = val.length;
+
+    if (meta)
+      length = meta.getValue().length;
+    
+    if (this.value.length !== length) {
+      switch (length) {
+        case 2:
+          val = new Vector2(val);
+          break;
+        case 3:
+          val = new Vector3(val);
+          break;
+        case 4:
+          val = new Vector4(val);
+          break;
+        default:
+          val = meta.getValue().copy().load(val);
+          break;
       }
+
+      this.value = val;
       this.rebuild();
 
       for (let i=0; i<this.value.length; i++) {
@@ -29170,6 +29464,21 @@ pathux.ScreenArea {
 nstructjs.manager.add_class(ScreenArea);  
 UIBase.register(ScreenArea);
 
+var ScreenArea$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  AreaFlags: AreaFlags,
+  BorderMask: BorderMask,
+  BorderSides: BorderSides,
+  Area: Area,
+  ScreenArea: ScreenArea,
+  setScreenClass: setScreenClass,
+  getAreaIntName: getAreaIntName,
+  AreaTypes: AreaTypes,
+  setAreaTypes: setAreaTypes,
+  areaclasses: areaclasses,
+  AreaWrangler: AreaWrangler
+});
+
 let rgb_to_hsv_rets$1 = new cachering(() => [0, 0, 0], 64);
 
 let Vector4$4 = Vector4;
@@ -30094,6 +30403,8 @@ class Screen$1 extends UIBase {
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
 
+      //console.log(this.pickElement(e.x, e.y));
+
       if (elem !== undefined) {
         if (elem.area) {
           //make sure context area stacks are up to date
@@ -30799,6 +31110,20 @@ class Screen$1 extends UIBase {
   }
 
   update() {
+    let move = [];
+    for (let child of this.childNodes) {
+      if (child instanceof ScreenArea$1) {
+        move.push(child);
+      }
+    }
+
+    for (let child of move) {
+      console.warn("moved screen area to shadow");
+
+      HTMLElement.prototype.remove.call(child);
+      this.shadow.appendChild(child);
+    }
+
     if (this._do_updateSize) {
       this.updateSize();
     }

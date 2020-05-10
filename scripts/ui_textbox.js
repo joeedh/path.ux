@@ -1,5 +1,6 @@
 "use strict";
 
+import * as units from './units.js';
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from './ui_base.js';
@@ -58,6 +59,9 @@ export class TextBox extends UIBase {
     this._had_error = false;
 
     this.decimalPlaces = 4;
+
+    this.baseUnit = undefined; //will automatically use defaults
+    this.displayUnit = undefined; //will automatically use defaults
 
     this.dom = document.createElement("input");
 
@@ -133,6 +137,7 @@ export class TextBox extends UIBase {
     this.pushModal({
       on_mousemove : (e) => {
         console.log(e.x, e.y);
+        e.stopPropagation();
       },
 
       on_keydown : keydown,
@@ -140,6 +145,7 @@ export class TextBox extends UIBase {
       on_keyup : keydown,
 
       on_mousedown : (e) => {
+        e.stopPropagation();
         console.log("mouse down", e.x, e.y);
       }
     }, false)
@@ -219,19 +225,17 @@ export class TextBox extends UIBase {
     if (prop !== undefined && (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
       let is_int = prop.type == PropTypes.INT;
 
-      if (is_int) {
-        this.radix = prop.radix;
-        text = val.toString(this.radix);
+      this.radix = prop.radix;
 
-        if (this.radix == 2) {
-          text = "0b" + text;
-        } else if (this.radix == 16) {
-          text += "h";
-        }
+      if (is_int && this.radix === 2) {
+        text = val.toString(this.radix);
+        text = "0b" + text;
+      } else if (is_int && this.radix === 16) {
+        text += "h";
       } else {
-        text = myToFixed(val, this.decimalPlaces);
+        text = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
       }
-    } else if (prop !== undefined && prop.type == PropTypes.STRING) {
+    } else if (prop !== undefined && prop.type === PropTypes.STRING) {
       text = val;
     }
 
@@ -283,8 +287,8 @@ export class TextBox extends UIBase {
   }
 
   _prop_update(prop, text) {
-    if ((prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
-      let val = parseFloat(this.text);
+    if ((prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT)) {
+      let val = units.parseValue(this.text, this.baseUnit);
 
       if (!toolprop.isNumber(this.text.trim())) {
         this.flash(ui_base.ErrorColors.ERROR, this.dom);
@@ -327,7 +331,7 @@ UIBase.register(TextBox);
 
 export function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);
-  console.log(elem, x, y);
+  //console.log(elem, x, y);
 
   if (elem && elem.tagName === "TEXTBOX-X") {
     return true;
