@@ -142,8 +142,7 @@ export class NumSlider extends ValueButtonBase {
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
     tbox.text = myToFixed(this.value, this.decimalPlaces);
-    tbox.select();
-    
+
     this.parentNode.insertBefore(tbox, this);
     //this.remove();
     this.hidden = true;
@@ -168,21 +167,11 @@ export class NumSlider extends ValueButtonBase {
         }
       }
     }
-    
-    tbox.addEventListener("keydown", (e) => {
-      console.log(e.keyCode);
-      switch (e.keyCode) {
-        case 27: //escape
-          finish(false);
-          break;
-        case 13: //enter
-          finish(true);
-          break;
-      }
-    });
-    
+
+    tbox.onend = finish;
     tbox.focus();
-    
+    tbox.select();
+
     //this.shadow.appendChild(tbox);
     return;
   }

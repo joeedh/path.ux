@@ -87,7 +87,7 @@ export class TextBox extends UIBase {
     this.dom.addEventListener("blur", (e) => {
       console.log("Textbox blur");
       if (this._modal) {
-        this._endModal();
+        this._endModal(true);
       }
     });
 
@@ -97,13 +97,27 @@ export class TextBox extends UIBase {
     console.log("textbox modal");
 
     if (this._modal) {
-      this._endModal();
+      this._endModal(true);
     }
 
     let ignore = 0;
 
+    let finish = (ok) => {
+      this._endModal(ok);
+    }
+
     let keydown = (e) => {
       e.stopPropagation();
+
+      switch (e.keyCode) {
+        case keymap.Enter:
+          finish(true);
+          break;
+        case keymap.Escape:
+          finish(false);
+          break;
+      }
+
       console.log(e.keyCode);
       return;
       if (ignore) return;
@@ -131,11 +145,15 @@ export class TextBox extends UIBase {
     }, false)
   }
 
-  _endModal() {
+  _endModal(ok) {
     console.log("textbox end modal");
 
     this._modal = false;
     this.popModal();
+
+    if (this.onend) {
+      this.onend(ok);
+    }
   }
 
   get tabIndex() {

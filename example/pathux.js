@@ -16544,6 +16544,8 @@ function myToFixed(s, n) {
   return s;
 }
 
+let keymap$1 = keymap;
+
 let PropTypes$2 = PropTypes;
 
 let UIBase$2 = UIBase;
@@ -16597,7 +16599,7 @@ class TextBox extends UIBase$2 {
     this.dom.addEventListener("blur", (e) => {
       console.log("Textbox blur");
       if (this._modal) {
-        this._endModal();
+        this._endModal(true);
       }
     });
 
@@ -16607,11 +16609,25 @@ class TextBox extends UIBase$2 {
     console.log("textbox modal");
 
     if (this._modal) {
-      this._endModal();
+      this._endModal(true);
     }
+
+    let finish = (ok) => {
+      this._endModal(ok);
+    };
 
     let keydown = (e) => {
       e.stopPropagation();
+
+      switch (e.keyCode) {
+        case keymap$1.Enter:
+          finish(true);
+          break;
+        case keymap$1.Escape:
+          finish(false);
+          break;
+      }
+
       console.log(e.keyCode);
       return;
     };
@@ -16632,11 +16648,15 @@ class TextBox extends UIBase$2 {
     }, false);
   }
 
-  _endModal() {
+  _endModal(ok) {
     console.log("textbox end modal");
 
     this._modal = false;
     this.popModal();
+
+    if (this.onend) {
+      this.onend(ok);
+    }
   }
 
   get tabIndex() {
@@ -16832,7 +16852,7 @@ function myToFixed$1(s, n) {
   return s;
 }
 
-let keymap$1 = keymap;
+let keymap$2 = keymap;
 
 let PropTypes$3 = PropTypes;
 
@@ -16941,8 +16961,7 @@ class NumSlider extends ValueButtonBase {
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
     tbox.text = myToFixed$1(this.value, this.decimalPlaces);
-    tbox.select();
-    
+
     this.parentNode.insertBefore(tbox, this);
     //this.remove();
     this.hidden = true;
@@ -16967,21 +16986,11 @@ class NumSlider extends ValueButtonBase {
         }
       }
     };
-    
-    tbox.addEventListener("keydown", (e) => {
-      console.log(e.keyCode);
-      switch (e.keyCode) {
-        case 27: //escape
-          finish(false);
-          break;
-        case 13: //enter
-          finish(true);
-          break;
-      }
-    });
-    
+
+    tbox.onend = finish;
     tbox.focus();
-    
+    tbox.select();
+
     //this.shadow.appendChild(tbox);
     return;
   }
@@ -17472,7 +17481,7 @@ class Check extends UIBase$3 {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap$1["Escape"]:
+        case keymap$2["Escape"]:
           this._highlight = undefined;
           this._redraw();
           e.preventDefault();
@@ -17480,8 +17489,8 @@ class Check extends UIBase$3 {
 
           this.blur();
           break;
-        case keymap$1["Enter"]:
-        case keymap$1["Space"]:
+        case keymap$2["Enter"]:
+        case keymap$2["Space"]:
           this.checked = !this.checked;
           e.preventDefault();
           e.stopPropagation();
@@ -19896,7 +19905,7 @@ class RichViewer extends UIBase$5 {
 }
 UIBase$5.register(RichViewer);
 
-let keymap$2 = keymap;
+let keymap$3 = keymap;
 
 let PropTypes$5 = PropTypes;
 
@@ -20056,9 +20065,9 @@ class NumSliderSimple extends UIBase$6 {
 
       keydown : (e) => {
         switch (e.keyCode) {
-          case keymap$2["Enter"]:
-          case keymap$2["Space"]:
-          case keymap$2["Escape"]:
+          case keymap$3["Enter"]:
+          case keymap$3["Space"]:
+          case keymap$3["Escape"]:
             end();
         }
       }
@@ -20093,8 +20102,8 @@ class NumSliderSimple extends UIBase$6 {
       let dt = this.range[1] > this.range[0] ? 1 : -1;
 
       switch (e.keyCode) {
-        case keymap$2["Left"]:
-        case keymap$2["Right"]:
+        case keymap$3["Left"]:
+        case keymap$3["Right"]:
           let fac = this.step;
 
           if (e.shiftKey) {
@@ -20105,7 +20114,7 @@ class NumSliderSimple extends UIBase$6 {
             fac = Math.max(fac, 1);
           }
 
-          this.value += e.keyCode === keymap$2["Left"] ? -dt*fac : dt*fac;
+          this.value += e.keyCode === keymap$3["Left"] ? -dt*fac : dt*fac;
 
           break;
       }
