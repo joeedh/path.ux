@@ -178,6 +178,8 @@ export class DataPath {
 
   rollerSlider() {
     this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
+    this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
+
     return this;
   }
 

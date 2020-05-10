@@ -281,11 +281,11 @@ export class RadianUnit extends Unit {
   //convert to internal units,
   //e.g. meters for distance
   static toInternal(value) {
-    return value/180.0*Math.PI;
+    return value;
   }
 
   static fromInternal(value) {
-    return value*180.0*Math.PI;
+    return value;
   }
 
   static buildString(value, decimals=3) {

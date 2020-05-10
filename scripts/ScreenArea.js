@@ -601,6 +601,7 @@ export class Area extends ui_base.UIBase {
 
 Area.STRUCT = `
 pathux.Area { 
+  flag : int;
   saved_uidata : string | obj._getSavedUIData();
 }
 `
@@ -618,8 +619,28 @@ export class ScreenArea extends ui_base.UIBase {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this.pos = new Vector2();
-    this.size = new Vector2();
+    this._pos = new Vector2();
+    this._size = new Vector2([512, 512]);
+
+    if (cconst.DEBUG.screenAreaPosSizeAccesses) {
+      let wrapVector = (name, axis) => {
+        Object.defineProperty(this[name], axis, {
+          get: function () {
+            return this["_" + axis];
+          },
+
+          set: function (val) {
+            console.warn(`ScreenArea.${name}[${axis}] set:`, val);
+            this["_" + axis] = val;
+          }
+        });
+      };
+
+      wrapVector("size", 0);
+      wrapVector("size", 1);
+      wrapVector("pos", 0);
+      wrapVector("pos", 1);
+    }
 
     this.area = undefined;
     this.editors = [];
@@ -713,6 +734,8 @@ export class ScreenArea extends ui_base.UIBase {
     let screen = this.getScreen();
 
     this.remove(false);
+    screen.sareas.remove(this);
+
     screen.appendChild(this);
 
     let zindex = 0;
@@ -959,6 +982,10 @@ export class ScreenArea extends ui_base.UIBase {
    * Sets pos/size from screen verts
    * */
   loadFromVerts() {
+    if (this._verts.length == 0) {
+      return;
+    }
+
     let min = new Vector2([1e17, 1e17]);
     let max = new Vector2([-1e17, -1e17]);
 
@@ -1210,6 +1237,28 @@ export class ScreenArea extends ui_base.UIBase {
     }
   }
 
+  get pos() {
+    return this._pos;
+  }
+
+  set pos(val) {
+    if (cconst.DEBUG.screenAreaPosSizeAccesses) {
+      console.log("ScreenArea set pos", val);
+    }
+    this._pos.load(val);
+  }
+
+  get size() {
+    return this._size;
+  }
+
+  set size(val) {
+    if (cconst.DEBUG.screenAreaPosSizeAccesses) {
+      console.log("ScreenArea set size", val);
+    }
+    this._size.load(val);
+  }
+
   loadSTRUCT(reader) {
     reader(this);
 
@@ -1320,10 +1369,10 @@ export class ScreenArea extends ui_base.UIBase {
 
 ScreenArea.STRUCT = `
 pathux.ScreenArea { 
-  pos      : array(float);
-  size     : array(float);
+  pos      : vec2;
+  size     : vec2;
   type     : string;
-  floating : int; 
+  hidden   : bool;
   editors  : array(abstract(pathux.Area));
   area     : string | obj.area.constructor.define().areaname;
 }

@@ -1429,8 +1429,9 @@ export class TextBox extends UIBase {
 UIBase.register(TextBox);
 
 export function checkForTextBox(screen, x, y) {
-  let elem = screen.pickElement(x, y, undefined, undefined, TextBox);
-  //console.log(elem);
+  let elem = screen.pickElement(x, y);
+  console.log(elem, x, y);
+
   if (elem && elem.tagName === "TEXTBOX-X") {
     return true;
   }

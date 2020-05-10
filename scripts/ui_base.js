@@ -329,7 +329,8 @@ export const PackFlags = {
   STRIP_HORIZ : 512,
   STRIP_VERT : 1024,
   STRIP : 512|1024,
-  SIMPLE_NUMSLIDERS : 2048
+  SIMPLE_NUMSLIDERS : 2048,
+  FORCE_ROLLER_SLIDER : 4096
 };
  
 let first = (iter) => {

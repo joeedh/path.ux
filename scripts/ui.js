@@ -1249,9 +1249,12 @@ export class Container extends ui_base.UIBase {
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags.SIMPLE_SLIDER)) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
       }
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags.FORCE_ROLLER_SLIDER)) {
+        packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+      }
     }
 
-    if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
+    if (packflag & PackFlags.SIMPLE_NUMSLIDERS && !(packflag & PackFlags.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x")
     } else {
       ret = document.createElement("numslider-x")

@@ -542,13 +542,15 @@ export class EnumProperty extends ToolProperty {
     }
     
     for (var k in this.values) {
-      let uin = k.replace(/\[_-]/g, " ").trim();
+      let uin = k.replace(/[_-]/g, " ").trim();
       uin = uin.split(" ")
       let uiname = "";
 
       for (let word of uin) {
-        uiname += word[0].toUpperCase() + word.slice(1, word.length).toLowerCase();
+        uiname += word[0].toUpperCase() + word.slice(1, word.length).toLowerCase() + " ";
       }
+
+      uiname = uiname.trim();
 
       this.ui_value_names[k] = uiname;
       this.descriptions[k] = uiname;

@@ -8,6 +8,8 @@ let exports = {
     areaConstraintSolver : false,
     datapaths : false,
 
+    screenAreaPosSizeAccesses : false,
+
     /*
     customWindowSize: {
       width: 512, height: 512

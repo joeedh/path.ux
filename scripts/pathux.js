@@ -28,7 +28,10 @@ export let vectormath = vectormath1;
 export * from './vectormath.js';
 
 export * from './toolprop.js';
-export * from './toolprop_abstract.js';
+
+import * as toolprop_abstract1 from './toolprop_abstract.js';
+export let toolprop_abstract = toolprop_abstract1;
+
 export * from './simple_toolsys.js';
 export * from './controller.js';
 export * from './controller_ops.js';
