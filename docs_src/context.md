@@ -3,7 +3,14 @@
 Context is a simplified API to access the application model.  Contexts are passed around
 to ToolOps and used by path.ux.
 
-# Context Overlay:
+## Required fields
+Call contexts are required to have the following fields:
+
+* screen -- the active FrameManager.Screen (or a subclass of it)
+* api -- the data path controller, (controller.ModelInterface)
+* toolstack -- The tool operator stack (simple_toolsys.ToolStack)
+ 
+## Context Overlay:
 A context overlay is a class that overrides context fields.  It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.
 
@@ -65,7 +72,7 @@ Example of a context overlay:
       }
     }
 
-# Locked contexts
+## Locked contexts
 
 Locked contexts are contexts whose properties are "saved", but not as direct references.
 Instead, each property is (ideally) saved as some sort of ID or datapath to look up

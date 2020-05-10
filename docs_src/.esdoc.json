@@ -3,7 +3,9 @@
   "destination": "../docs",
   "index": "../docs/index.html",
   "outputAST" : false,
-  "plugins": [{
+  "plugins": [
+    {"name": "esdoc-ecmascript-proposal-plugin", "option": {"all": true}},
+    {
     "name": "esdoc-standard-plugin",
     "option": {
       "coverage": {"enable": true},

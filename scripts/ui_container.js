@@ -125,7 +125,7 @@ export class BuilderContainer extends Container {
 
 
   static define() {return {
-    tagname "container-builder-x"
+    tagname : "container-builder-x"
   }}
 
   _args(args={}) {

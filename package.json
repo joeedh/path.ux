@@ -11,6 +11,7 @@
     "esdoc-standard-plugin": "^1.0.0"
   },
   "devDependencies": {
+    "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "rollup": "^2.7.6"
   },
   "scripts": {

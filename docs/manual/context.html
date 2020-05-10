@@ -33,7 +33,6 @@
       
     <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#introduction" data-ice="link">Introduction</a></li>
 <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#context" data-ice="link">Context</a></li>
-<li data-ice="manualNav" class="indent-h2" data-link="manual/architecture.html"><a href="manual/architecture.html#tool-contexts" data-ice="link">Tool Contexts</a></li>
 <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#history" data-ice="link">History</a></li>
 </ul>
   </div>
@@ -58,7 +57,8 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    <li data-ice="manualNav" class="indent-h1" data-link="manual/controller.html"><a href="manual/controller.html" data-ice="link">Object Wrapping Example</a></li>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/controller.html"><a href="manual/controller.html#type-in-place-api" data-ice="link">Type-In-Place API</a></li>
+<li data-ice="manualNav" class="indent-h1" data-link="manual/controller.html"><a href="manual/controller.html#object-wrapping-example" data-ice="link">Object Wrapping Example</a></li>
 </ul>
   </div>
 <div data-ice="manual">
@@ -79,9 +79,11 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    <li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#context-design-" data-ice="link">Context design:</a></li>
-<li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#context-overlay-" data-ice="link">Context Overlay:</a></li>
-<li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#locked-contexts" data-ice="link">Locked contexts</a></li>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html" data-ice="link">Context design:</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#required-fields" data-ice="link">Required fields</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#context-overlay-" data-ice="link">Context Overlay:</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#locked-contexts" data-ice="link">Locked contexts</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#tool-contexts" data-ice="link">Tool Contexts</a></li>
 </ul>
   </div>
 </div>
@@ -89,11 +91,19 @@
 
 <div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><h1 id="context-design-">Context design:</h1><p>Context is a simplified API to access the application model.  Contexts are passed around
 to ToolOps and used by path.ux.</p>
-<h1 id="context-overlay-">Context Overlay:</h1><p>A context overlay is a class that overrides context fields.  It has a validate()
+<h2 id="required-fields">Required fields</h2><p>Call contexts are required to have the following fields:</p>
+<ul>
+<li>screen -- the active FrameManager.Screen (or a subclass of it)</li>
+<li>api -- the data path controller, (controller.ModelInterface)</li>
+<li>toolstack -- The tool operator stack (simple_toolsys.ToolStack)</li>
+</ul>
+<h2 id="context-overlay-">Context Overlay:</h2><p>A context overlay is a class that overrides context fields.  It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.</p>
 <p>Contexts can be &quot;frozen&quot; with .lock.  When frozen they should <em>have no direct object 
-references at all</em>, other then .state, .datalib and .api.<br>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside
-of the overlay classes.</p>
+references at all</em>, other then .state, .datalib and .api.  </p>
+<p>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside
+of the overlay classes, as well as overriding saveProperty and loadProperty
+inside of Context subclasses.</p>
 <p>Example of a context overlay:</p>
 <pre><code><code class="source-code prettyprint">class ContextOverlay {
   validate() {
@@ -133,21 +143,20 @@ of the overlay classes.</p>
     return ret;
   }
 
-  selectedObjects_load(data) {
+  selectedObjects_load(ctx, data) {
     let ret = [];
 
     for (let id of data) {
-        ret.push([lookup object from data])
+        ret.push([lookup object from data using (possible new) context ctx])
     }
 
     return ret;
   }
 }</code>
-</code></pre><h1 id="locked-contexts">Locked contexts</h1><p>Locked contexts are contexts whose properties are &quot;saved&quot;, but not as direct references.
+</code></pre><h2 id="locked-contexts">Locked contexts</h2><p>Locked contexts are contexts whose properties are &quot;saved&quot;, but not as direct references.
 Instead, each property is (ideally) saved as some sort of ID or datapath to look up
 the true value on property access.</p>
-<p>We suggest you subclass Context and implement a defaultPropertyWrapper function which
-will generate id/datapath wrappers.  The laternative is to use _save and _load methods:</p>
+<p>We suggest you subclass Context and implement saveProperty and loadProperty methods.</p>
 <pre><code><code class="source-code prettyprint">class Overlay extends ContextOverlay {
   get something() {
     return something;
@@ -157,10 +166,44 @@ will generate id/datapath wrappers.  The laternative is to use _save and _load m
     return this.state.something.id;
   }
 
-  something_load(id) {
+  something_load(ctx, id) {
     return [lookup id somewhere to get something];
   }
 }</code>
+</code></pre><h2 id="tool-contexts">Tool Contexts</h2><p>We encourage you to put Context properties related to the view inside
+a separate ContextOverlay.  That way you can keep ToolOps from accessing
+the view by feeding them a special context that lacks that overlay
+(but note that tools in modal mode should always get a full context). </p>
+<pre><code><code class="source-code prettyprint">class ToolOverlay extends ContextOverlay {
+    static contextDefine() {return {
+        name : &quot;tool&quot;
+    }}
+
+    get mesh() {
+        return this.state.mesh;
+    }
+
+    get material() {
+        return this.state.material;
+    }
+}
+Context.register(ToolOverlay);
+
+class ViewOverlay extends ContextOverlay {
+    static contextDefine() {return {
+        name : &quot;view&quot;,
+        flag : ContextFlags.IS_VIEW
+    }}
+
+    get screen() {
+        return this.state.screen;
+    }
+
+    get textEditor() {
+        return 
+    }
+}
+Context.register(ToolOverlay);</code>
 </code></pre></div>
 </div>
 

@@ -33,7 +33,6 @@
       
     <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#introduction" data-ice="link">Introduction</a></li>
 <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#context" data-ice="link">Context</a></li>
-<li data-ice="manualNav" class="indent-h2" data-link="manual/architecture.html"><a href="manual/architecture.html#tool-contexts" data-ice="link">Tool Contexts</a></li>
 <li data-ice="manualNav" class="indent-h1" data-link="manual/architecture.html"><a href="manual/architecture.html#history" data-ice="link">History</a></li>
 </ul>
   </div>
@@ -58,7 +57,8 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    <li data-ice="manualNav" class="indent-h1" data-link="manual/controller.html"><a href="manual/controller.html" data-ice="link">Object Wrapping Example</a></li>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/controller.html"><a href="manual/controller.html#type-in-place-api" data-ice="link">Type-In-Place API</a></li>
+<li data-ice="manualNav" class="indent-h1" data-link="manual/controller.html"><a href="manual/controller.html#object-wrapping-example" data-ice="link">Object Wrapping Example</a></li>
 </ul>
   </div>
 <div data-ice="manual">
@@ -79,52 +79,61 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    <li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#context-design-" data-ice="link">Context design:</a></li>
-<li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#context-overlay-" data-ice="link">Context Overlay:</a></li>
-<li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html#locked-contexts" data-ice="link">Locked contexts</a></li>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/context.html"><a href="manual/context.html" data-ice="link">Context design:</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#required-fields" data-ice="link">Required fields</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#context-overlay-" data-ice="link">Context Overlay:</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#locked-contexts" data-ice="link">Locked contexts</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/context.html"><a href="manual/context.html#tool-contexts" data-ice="link">Tool Contexts</a></li>
 </ul>
   </div>
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><p>The controller is the glue by which the UI queries the model (application state).  By design, UI code isn&apos;t allowed to hold direct references to model objects; instead it stores special object paths.</p>
-<p>These arn&apos;t direct paths to real objects though, they operate via a special wrapper API, and in fact the object model the controller presents need not match the real underlying data structures.</p>
-<p>Note that path.ux allows plugging in different controller implementations; shown here is the one shipped with the code.</p>
-<h1 id="object-wrapping-example">Object Wrapping Example</h1><pre><code><code class="source-code prettyprint">//our test class we want to wrap
-class Thing {
-  constructor(name, id, location, opacity) {
-    this.name = name; //str
-    this.id = id; //int
-    this.location = location; //enumeration
-    this.opacity = opacity; //float
-  }
-}
+<div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><p>The controller is the glue by which the UI queries the model (application state), and is loosely based on 
+Blender&apos;s RNA system.  UI code doesn&apos;t hold references to model objects; instead it holds special
+special &quot;data paths&quot;.  Objects in the model are wrapped in a special 
+API that describes all the type information a UI needs (e.g. property types, icon, tooltips, 
+numeric ranges, etc).  Simple paths are used to lookup data in the model 
+(e.g. <code>obj.property.something[bleh]</code>).</p>
+<p>Blender&apos;s RNA was originally created to provide one wrapper API that could power Blender&apos;s UI, 
+scripting, and animation systems.  </p>
+<h1 id="type-in-place-api">Type-In-Place API</h1><p>Originally path.ux was designed to strictly separate the code that wraps model object from
+the code that builds UIs.  A new API that does both is in the works.</p>
+<h1 id="object-wrapping-example">Object Wrapping Example</h1><pre><code><code class="source-code prettyprint">    //our test class we want to wrap
+    class Thing {
+      constructor(name, id, location, opacity) {
+        this.name = name; //str
+        this.id = id; //int
+        this.location = location; //enumeration
+        this.opacity = opacity; //float
+      }
+    }
 
-//enumeration for .location member
-const LocationEnum = {
-  LIVING_ROOM : 0,
-  BEDROOM : 1,
-  DRIVEWAY : 2
-};
+    //enumeration for .location member
+    const LocationEnum = {
+      LIVING_ROOM : 0,
+      BEDROOM : 1,
+      DRIVEWAY : 2
+    };
 
-import {DataAPI} from &apos;controller.js&apos;;
+    import {DataAPI} from &apos;controller.js&apos;;
 
-export api = new DataAPI();
+    export api = new DataAPI();
 
-//create a structure mapping to Thing
-let st = api.mapStruct(Thing);
+    //create a structure mapping to Thing
+    let st = api.mapStruct(Thing);
 
-//define properties and their types
-//these all have the prototype (membername, apiname, ui_name, description)
+    //define properties and their types
+    //these all have the prototype (membername, apiname, ui_name, description)
 
-st.string(&quot;name&quot;, &quot;name&quot;, &quot;Name&quot;, &quot;Name of thing&quot;);
-st.int(&quot;id&quot;, &quot;id&quot;, &quot;ID&quot;, &quot;Unique ID of thing&quot;);
-st.enum(&quot;location&quot;, &quot;location&quot;, &quot;Location&quot;, &quot;Location of thing&quot;).icons({
-  LIVING_ROOM : [some icon id],
-  BEDROOM : [some icon id],
-  DRIVEWAY : [some icon id],
-});
-st.float(&quot;opacity&quot;, &quot;opacity&quot;, &quot;Opacity&quot;, &quot;Transparency of thing&quot;).range(0, 1);
+    st.string(&quot;name&quot;, &quot;name&quot;, &quot;Name&quot;, &quot;Name of thing&quot;);
+    st.int(&quot;id&quot;, &quot;id&quot;, &quot;ID&quot;, &quot;Unique ID of thing&quot;);
+    st.enum(&quot;location&quot;, &quot;location&quot;, &quot;Location&quot;, &quot;Location of thing&quot;).icons({
+      LIVING_ROOM : [some icon id],
+      BEDROOM : [some icon id],
+      DRIVEWAY : [some icon id],
+    });
+    st.float(&quot;opacity&quot;, &quot;opacity&quot;, &quot;Opacity&quot;, &quot;Transparency of thing&quot;).range(0, 1);
 </code>
 </code></pre></div>
 </div>

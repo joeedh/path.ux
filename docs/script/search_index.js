@@ -18,16 +18,28 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/screenarea.js~areaflags",
+    "variable/index.html#static-variable-AreaFlags",
+    "<span>AreaFlags</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/framemanager_ops.js~arearesizetool",
     "class/scripts/FrameManager_ops.js~AreaResizeTool.html",
     "<span>AreaResizeTool</span> <span class=\"search-result-import-path\">./scripts/FrameManager_ops.js</span>",
     "class"
   ],
   [
-    "./scripts/screenarea.js~areatypes",
+    "./scripts/area_wrangler.js~areatypes",
     "variable/index.html#static-variable-AreaTypes",
-    "<span>AreaTypes</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "<span>AreaTypes</span> <span class=\"search-result-import-path\">./scripts/area_wrangler.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/area_wrangler.js~areawrangler",
+    "class/scripts/area_wrangler.js~AreaWrangler.html",
+    "<span>AreaWrangler</span> <span class=\"search-result-import-path\">./scripts/area_wrangler.js</span>",
+    "class"
   ],
   [
     "./scripts/vectormath.js~basevector",
@@ -54,9 +66,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/ui_widgets.js~button",
-    "class/scripts/ui_widgets.js~Button.html",
-    "<span>Button</span> <span class=\"search-result-import-path\">./scripts/ui_widgets.js</span>",
+    "./scripts/ui_button.js~button",
+    "class/scripts/ui_button.js~Button.html",
+    "<span>Button</span> <span class=\"search-result-import-path\">./scripts/ui_button.js</span>",
     "class"
   ],
   [
@@ -78,9 +90,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/ui_curvewidget.js~curve_version",
+    "./scripts/curve/curve1d_base.js~curve_version",
     "variable/index.html#static-variable-CURVE_VERSION",
-    "<span>CURVE_VERSION</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "<span>CURVE_VERSION</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
@@ -138,9 +150,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/config.js~config",
-    "class/scripts/config.js~Config.html",
-    "<span>Config</span> <span class=\"search-result-import-path\">./scripts/config.js</span>",
+    "./scripts/solver.js~constraint",
+    "class/scripts/solver.js~Constraint.html",
+    "<span>Constraint</span> <span class=\"search-result-import-path\">./scripts/solver.js</span>",
     "class"
   ],
   [
@@ -156,12 +168,6 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/simple_toolsys.js~contextexample",
-    "class/scripts/simple_toolsys.js~ContextExample.html",
-    "<span>ContextExample</span> <span class=\"search-result-import-path\">./scripts/simple_toolsys.js</span>",
-    "class"
-  ],
-  [
     "./scripts/context.js~contextflags",
     "variable/index.html#static-variable-ContextFlags",
     "<span>ContextFlags</span> <span class=\"search-result-import-path\">./scripts/context.js</span>",
@@ -174,46 +180,88 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/ui_curvewidget.js~curve",
-    "class/scripts/ui_curvewidget.js~Curve.html",
-    "<span>Curve</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "./scripts/curve/curve1d.js~curve1d",
+    "class/scripts/curve/curve1d.js~Curve1D.html",
+    "<span>Curve1D</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d.js</span>",
     "class"
   ],
   [
-    "./scripts/ui_curvewidget.js~curveconstructors",
+    "./scripts/curve/curve1d_bspline.js~curve1dpoint",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html",
+    "<span>Curve1DPoint</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/toolprop.js~curve1dproperty",
+    "class/scripts/toolprop.js~Curve1DProperty.html",
+    "<span>Curve1DProperty</span> <span class=\"search-result-import-path\">./scripts/toolprop.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/toolprop_abstract.js~curve1dpropertyif",
+    "class/scripts/toolprop_abstract.js~Curve1DPropertyIF.html",
+    "<span>Curve1DPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolprop_abstract.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_curvewidget.js~curve1dwidget",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html",
+    "<span>Curve1DWidget</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_curvewidget_old.js~curve",
+    "class/scripts/ui_curvewidget_old.js~Curve.html",
+    "<span>Curve</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/curve/curve1d_base.js~curveconstructors",
     "variable/index.html#static-variable-CurveConstructors",
-    "<span>CurveConstructors</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "<span>CurveConstructors</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
-    "./scripts/ui_curvewidget.js~curveflags",
+    "./scripts/ui_curvewidget_old.js~curveconstructors",
+    "variable/index.html#static-variable-CurveConstructors",
+    "<span>CurveConstructors</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/curve/curve1d_base.js~curveflags",
     "variable/index.html#static-variable-CurveFlags",
-    "<span>CurveFlags</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "<span>CurveFlags</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
-    "./scripts/ui_curvewidget.js~curvepoint",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html",
-    "<span>CurvePoint</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "./scripts/ui_curvewidget_old.js~curveflags",
+    "variable/index.html#static-variable-CurveFlags",
+    "<span>CurveFlags</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/ui_curvewidget_old.js~curvepoint",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html",
+    "<span>CurvePoint</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
     "class"
   ],
   [
-    "./scripts/ui_curvewidget.js~curvetypes",
+    "./scripts/curve/curve1d_base.js~curvetypedata",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html",
+    "<span>CurveTypeData</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_curvewidget_old.js~curvetypes",
     "variable/index.html#static-variable-CurveTypes",
-    "<span>CurveTypes</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "<span>CurveTypes</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
     "variable"
   ],
   [
-    "./scripts/ui_curvewidget.js~curvewidget",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html",
-    "<span>CurveWidget</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "./scripts/ui_curvewidget_old.js~curvewidget",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html",
+    "<span>CurveWidget</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
     "class"
-  ],
-  [
-    "./scripts/const.js~debug",
-    "variable/index.html#static-variable-DEBUG",
-    "<span>DEBUG</span> <span class=\"search-result-import-path\">./scripts/const.js</span>",
-    "variable"
   ],
   [
     "./scripts/simple_controller.js~dataapi",
@@ -258,9 +306,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/simple_controller.js~datapathtoolop",
-    "class/scripts/simple_controller.js~DataPathToolOp.html",
-    "<span>DataPathToolOp</span> <span class=\"search-result-import-path\">./scripts/simple_controller.js</span>",
+    "./scripts/controller_ops.js~datapathsetop",
+    "class/scripts/controller_ops.js~DataPathSetOp.html",
+    "<span>DataPathSetOp</span> <span class=\"search-result-import-path\">./scripts/controller_ops.js</span>",
     "class"
   ],
   [
@@ -280,6 +328,12 @@ window.esdocSearchIndex = [
     "variable/index.html#static-variable-DefaultTheme",
     "<span>DefaultTheme</span> <span class=\"search-result-import-path\">./scripts/theme.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/units.js~degreeunit",
+    "class/scripts/units.js~DegreeUnit.html",
+    "<span>DegreeUnit</span> <span class=\"search-result-import-path\">./scripts/units.js</span>",
+    "class"
   ],
   [
     "./scripts/events.js~domeventtypes",
@@ -316,6 +370,12 @@ window.esdocSearchIndex = [
     "variable/index.html#static-variable-ErrorColors",
     "<span>ErrorColors</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/events.js~eventdispatcher",
+    "class/scripts/events.js~EventDispatcher.html",
+    "<span>EventDispatcher</span> <span class=\"search-result-import-path\">./scripts/events.js</span>",
+    "class"
   ],
   [
     "./scripts/events.js~eventhandler",
@@ -438,12 +498,6 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/ui_base.js~icons",
-    "variable/index.html#static-variable-Icons",
-    "<span>Icons</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
-    "variable"
-  ],
-  [
     "./scripts/util.js~imagereader",
     "class/scripts/util.js~ImageReader.html",
     "<span>ImageReader</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
@@ -489,6 +543,12 @@ window.esdocSearchIndex = [
     "./scripts/ui.js~label",
     "class/scripts/ui.js~Label.html",
     "<span>Label</span> <span class=\"search-result-import-path\">./scripts/ui.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_lasttool.js~lasttoolpanel",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html",
+    "<span>LastToolPanel</span> <span class=\"search-result-import-path\">./scripts/ui_lasttool.js</span>",
     "class"
   ],
   [
@@ -654,9 +714,21 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/ui.js~panelframe",
-    "class/scripts/ui.js~PanelFrame.html",
-    "<span>PanelFrame</span> <span class=\"search-result-import-path\">./scripts/ui.js</span>",
+    "./scripts/graphpack.js~packnode",
+    "class/scripts/graphpack.js~PackNode.html",
+    "<span>PackNode</span> <span class=\"search-result-import-path\">./scripts/graphpack.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/graphpack.js~packnodevertex",
+    "class/scripts/graphpack.js~PackNodeVertex.html",
+    "<span>PackNodeVertex</span> <span class=\"search-result-import-path\">./scripts/graphpack.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_panel.js~panelframe",
+    "class/scripts/ui_panel.js~PanelFrame.html",
+    "<span>PanelFrame</span> <span class=\"search-result-import-path\">./scripts/ui_panel.js</span>",
     "class"
   ],
   [
@@ -720,6 +792,24 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/units.js~radianunit",
+    "class/scripts/units.js~RadianUnit.html",
+    "<span>RadianUnit</span> <span class=\"search-result-import-path\">./scripts/units.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_richedit.js~richeditor",
+    "class/scripts/ui_richedit.js~RichEditor.html",
+    "<span>RichEditor</span> <span class=\"search-result-import-path\">./scripts/ui_richedit.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/ui_richedit.js~richviewer",
+    "class/scripts/ui_richedit.js~RichViewer.html",
+    "<span>RichViewer</span> <span class=\"search-result-import-path\">./scripts/ui_richedit.js</span>",
+    "class"
+  ],
+  [
     "./scripts/ui.js~rowframe",
     "class/scripts/ui.js~RowFrame.html",
     "<span>RowFrame</span> <span class=\"search-result-import-path\">./scripts/ui.js</span>",
@@ -729,6 +819,12 @@ window.esdocSearchIndex = [
     "./scripts/math.js~sqrt2",
     "variable/index.html#static-variable-SQRT2",
     "<span>SQRT2</span> <span class=\"search-result-import-path\">./scripts/math.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/struct.js~struct",
+    "variable/index.html#static-variable-STRUCT",
+    "<span>STRUCT</span> <span class=\"search-result-import-path\">./scripts/struct.js</span>",
     "variable"
   ],
   [
@@ -750,15 +846,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/framemanager.js~screenborder",
-    "class/scripts/FrameManager.js~ScreenBorder.html",
-    "<span>ScreenBorder</span> <span class=\"search-result-import-path\">./scripts/FrameManager.js</span>",
+    "./scripts/framemanager_mesh.js~screenborder",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html",
+    "<span>ScreenBorder</span> <span class=\"search-result-import-path\">./scripts/FrameManager_mesh.js</span>",
     "class"
   ],
   [
-    "./scripts/framemanager.js~screenvert",
-    "class/scripts/FrameManager.js~ScreenVert.html",
-    "<span>ScreenVert</span> <span class=\"search-result-import-path\">./scripts/FrameManager.js</span>",
+    "./scripts/framemanager_mesh.js~screenhalfedge",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html",
+    "<span>ScreenHalfEdge</span> <span class=\"search-result-import-path\">./scripts/FrameManager_mesh.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/framemanager_mesh.js~screenvert",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html",
+    "<span>ScreenVert</span> <span class=\"search-result-import-path\">./scripts/FrameManager_mesh.js</span>",
     "class"
   ],
   [
@@ -798,16 +900,34 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/util.js~smartconsole",
+    "class/scripts/util.js~SmartConsole.html",
+    "<span>SmartConsole</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/util.js~smartconsolecontext",
+    "class/scripts/util.js~SmartConsoleContext.html",
+    "<span>SmartConsoleContext</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/framemanager_mesh.js~snaplimit",
+    "variable/index.html#static-variable-SnapLimit",
+    "<span>SnapLimit</span> <span class=\"search-result-import-path\">./scripts/FrameManager_mesh.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/solver.js~solver",
+    "class/scripts/solver.js~Solver.html",
+    "<span>Solver</span> <span class=\"search-result-import-path\">./scripts/solver.js</span>",
+    "class"
+  ],
+  [
     "./scripts/framemanager_ops.js~splittool",
     "class/scripts/FrameManager_ops.js~SplitTool.html",
     "<span>SplitTool</span> <span class=\"search-result-import-path\">./scripts/FrameManager_ops.js</span>",
     "class"
-  ],
-  [
-    "./scripts/simple_controller.js~standardlistfilters",
-    "variable/index.html#static-variable-StandardListFilters",
-    "<span>StandardListFilters</span> <span class=\"search-result-import-path\">./scripts/simple_controller.js</span>",
-    "variable"
   ],
   [
     "./scripts/toolprop.js~stringproperty",
@@ -870,15 +990,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/ui_curvewidget.js~tangentmodes",
+    "./scripts/curve/curve1d_base.js~tangentmodes",
     "variable/index.html#static-variable-TangentModes",
-    "<span>TangentModes</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "<span>TangentModes</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
-    "./scripts/ui_widgets.js~textbox",
-    "class/scripts/ui_widgets.js~TextBox.html",
-    "<span>TextBox</span> <span class=\"search-result-import-path\">./scripts/ui_widgets.js</span>",
+    "./scripts/ui_curvewidget_old.js~tangentmodes",
+    "variable/index.html#static-variable-TangentModes",
+    "<span>TangentModes</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/ui_textbox.js~textbox",
+    "class/scripts/ui_textbox.js~TextBox.html",
+    "<span>TextBox</span> <span class=\"search-result-import-path\">./scripts/ui_textbox.js</span>",
     "class"
   ],
   [
@@ -940,6 +1066,24 @@ window.esdocSearchIndex = [
     "class/scripts/simple_toolsys.js~ToolStack.html",
     "<span>ToolStack</span> <span class=\"search-result-import-path\">./scripts/simple_toolsys.js</span>",
     "class"
+  ],
+  [
+    "./scripts/ui_widgets2.js~tooltip",
+    "class/scripts/ui_widgets2.js~ToolTip.html",
+    "<span>ToolTip</span> <span class=\"search-result-import-path\">./scripts/ui_widgets2.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/framemanager_ops.js~tooltipviewer",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html",
+    "<span>ToolTipViewer</span> <span class=\"search-result-import-path\">./scripts/FrameManager_ops.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/screenarea.js~uibase",
+    "variable/index.html#static-variable-UIBase",
+    "<span>UIBase</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "variable"
   ],
   [
     "./scripts/ui_base.js~uibase",
@@ -1050,6 +1194,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/toolprop.js~_numberpropertybase",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html",
+    "<span>_NumberPropertyBase</span> <span class=\"search-result-import-path\">./scripts/toolprop.js</span>",
+    "class"
+  ],
+  [
     "./scripts/ui_base.js~_ensurefont",
     "function/index.html#static-function-_ensureFont",
     "<span>_ensureFont</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
@@ -1104,9 +1254,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/screenarea.js~areaclasses",
+    "./scripts/area_wrangler.js~areaclasses",
     "variable/index.html#static-variable-areaclasses",
-    "<span>areaclasses</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "<span>areaclasses</span> <span class=\"search-result-import-path\">./scripts/area_wrangler.js</span>",
     "variable"
   ],
   [
@@ -1116,9 +1266,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/ui_curvewidget.js~binomial",
+    "./scripts/curve/curve1d_bspline.js~binomial",
     "function/index.html#static-function-binomial",
-    "<span>binomial</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget.js</span>",
+    "<span>binomial</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/ui_curvewidget_old.js~binomial",
+    "function/index.html#static-function-binomial",
+    "<span>binomial</span> <span class=\"search-result-import-path\">./scripts/ui_curvewidget_old.js</span>",
     "function"
   ],
   [
@@ -1146,9 +1302,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/ui_widgets.js~checkfortextbox",
+    "./scripts/pathux.js~cconst",
+    "variable/index.html#static-variable-cconst",
+    "<span>cconst</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/ui_textbox.js~checkfortextbox",
     "function/index.html#static-function-checkForTextBox",
-    "<span>checkForTextBox</span> <span class=\"search-result-import-path\">./scripts/ui_widgets.js</span>",
+    "<span>checkForTextBox</span> <span class=\"search-result-import-path\">./scripts/ui_textbox.js</span>",
     "function"
   ],
   [
@@ -1188,9 +1350,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/config.js~config",
-    "variable/index.html#static-variable-config",
-    "<span>config</span> <span class=\"search-result-import-path\">./scripts/config.js</span>",
+    "./scripts/ui_theme.js~color2web",
+    "function/index.html#static-function-color2web",
+    "<span>color2web</span> <span class=\"search-result-import-path\">./scripts/ui_theme.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/util.js~console",
+    "variable/index.html#static-variable-console",
+    "<span>console</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
     "variable"
   ],
   [
@@ -1254,6 +1422,12 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/ui_base.js~drawroundbox2",
+    "function/index.html#static-function-drawRoundBox2",
+    "<span>drawRoundBox2</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
+    "function"
+  ],
+  [
     "./scripts/ui_base.js~drawroundbox",
     "function/index.html#static-function-drawRoundBox",
     "<span>drawRoundBox</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
@@ -1296,6 +1470,12 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/const.js~exports",
+    "variable/index.html#static-variable-exports",
+    "<span>exports</span> <span class=\"search-result-import-path\">./scripts/const.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/math.js~feps",
     "variable/index.html#static-variable-feps",
     "<span>feps</span> <span class=\"search-result-import-path\">./scripts/math.js</span>",
@@ -1305,6 +1485,12 @@ window.esdocSearchIndex = [
     "./scripts/util.js~fetch_file",
     "function/index.html#static-function-fetch_file",
     "<span>fetch_file</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/util.js~formatnumberui",
+    "function/index.html#static-function-formatNumberUI",
+    "<span>formatNumberUI</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
     "function"
   ],
   [
@@ -1320,9 +1506,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/screenarea.js~getareaintname",
+    "./scripts/area_wrangler.js~getareaintname",
     "function/index.html#static-function-getAreaIntName",
-    "<span>getAreaIntName</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "<span>getAreaIntName</span> <span class=\"search-result-import-path\">./scripts/area_wrangler.js</span>",
     "function"
   ],
   [
@@ -1410,6 +1596,18 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/graphpack.js~graphgetislands",
+    "function/index.html#static-function-graphGetIslands",
+    "<span>graphGetIslands</span> <span class=\"search-result-import-path\">./scripts/graphpack.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/graphpack.js~graphpack",
+    "function/index.html#static-function-graphPack",
+    "<span>graphPack</span> <span class=\"search-result-import-path\">./scripts/graphpack.js</span>",
+    "function"
+  ],
+  [
     "./scripts/util.js~hashtable",
     "class/scripts/util.js~hashtable.html",
     "<span>hashtable</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
@@ -1434,9 +1632,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/pathux.js~html5_fileapi",
+    "variable/index.html#static-variable-html5_fileapi",
+    "<span>html5_fileapi</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/ui_base.js~iconmanager",
     "variable/index.html#static-variable-iconmanager",
     "<span>iconmanager</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/struct.js~inherit",
+    "variable/index.html#static-variable-inherit",
+    "<span>inherit</span> <span class=\"search-result-import-path\">./scripts/struct.js</span>",
     "variable"
   ],
   [
@@ -1470,6 +1680,12 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/util.js~ismobile",
+    "function/index.html#static-function-isMobile",
+    "<span>isMobile</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "function"
+  ],
+  [
     "./scripts/events.js~ismodalhead",
     "function/index.html#static-function-isModalHead",
     "<span>isModalHead</span> <span class=\"search-result-import-path\">./scripts/events.js</span>",
@@ -1494,21 +1710,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/events.js~keymap",
-    "variable/index.html#static-variable-keymap",
-    "<span>keymap</span> <span class=\"search-result-import-path\">./scripts/events.js</span>",
-    "variable"
-  ],
-  [
     "./scripts/simple_events.js~keymap",
     "variable/index.html#static-variable-keymap",
     "<span>keymap</span> <span class=\"search-result-import-path\">./scripts/simple_events.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/events.js~keymap_latin_1",
-    "variable/index.html#static-variable-keymap_latin_1",
-    "<span>keymap_latin_1</span> <span class=\"search-result-import-path\">./scripts/events.js</span>",
     "variable"
   ],
   [
@@ -1572,10 +1776,28 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/curve/curve1d_utils.js~makegenenum",
+    "function/index.html#static-function-makeGenEnum",
+    "<span>makeGenEnum</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_utils.js</span>",
+    "function"
+  ],
+  [
     "./scripts/ui_base.js~makeicondiv",
     "function/index.html#static-function-makeIconDiv",
     "<span>makeIconDiv</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
     "function"
+  ],
+  [
+    "./scripts/ui_dialog.js~makepopuparea",
+    "function/index.html#static-function-makePopupArea",
+    "<span>makePopupArea</span> <span class=\"search-result-import-path\">./scripts/ui_dialog.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/struct.js~manager",
+    "variable/index.html#static-variable-manager",
+    "<span>manager</span> <span class=\"search-result-import-path\">./scripts/struct.js</span>",
+    "variable"
   ],
   [
     "./scripts/ui_base.js~marginpaddingcsskeys",
@@ -1638,6 +1860,30 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/curve/curve1d.js~mysafejsonparse",
+    "function/index.html#static-function-mySafeJSONParse",
+    "<span>mySafeJSONParse</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/curve/curve1d_bspline.js~mysafejsonparse",
+    "function/index.html#static-function-mySafeJSONParse",
+    "<span>mySafeJSONParse</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/curve/curve1d.js~mysafejsonstringify",
+    "function/index.html#static-function-mySafeJSONStringify",
+    "<span>mySafeJSONStringify</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/curve/curve1d_bspline.js~mysafejsonstringify",
+    "function/index.html#static-function-mySafeJSONStringify",
+    "<span>mySafeJSONStringify</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "function"
+  ],
+  [
     "./scripts/math.js~normal_quad",
     "function/index.html#static-function-normal_quad",
     "<span>normal_quad</span> <span class=\"search-result-import-path\">./scripts/math.js</span>",
@@ -1653,6 +1899,12 @@ window.esdocSearchIndex = [
     "./scripts/ui_noteframe.js~noteframes",
     "variable/index.html#static-variable-noteframes",
     "<span>noteframes</span> <span class=\"search-result-import-path\">./scripts/ui_noteframe.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/struct.js~nstructjs",
+    "variable/index.html#static-variable-nstructjs",
+    "<span>nstructjs</span> <span class=\"search-result-import-path\">./scripts/struct.js</span>",
     "variable"
   ],
   [
@@ -1680,6 +1932,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/pathux.js~parseutil",
+    "variable/index.html#static-variable-parseutil",
+    "<span>parseutil</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/simple_controller.js~pathparser",
     "variable/index.html#static-variable-pathParser",
     "<span>pathParser</span> <span class=\"search-result-import-path\">./scripts/simple_controller.js</span>",
@@ -1704,9 +1962,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/util.js~polltimer",
+    "function/index.html#static-function-pollTimer",
+    "<span>pollTimer</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "function"
+  ],
+  [
     "./scripts/simple_events.js~popmodallight",
     "function/index.html#static-function-popModalLight",
     "<span>popModalLight</span> <span class=\"search-result-import-path\">./scripts/simple_events.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/simple_controller.js~popreportname",
+    "function/index.html#static-function-popReportName",
+    "<span>popReportName</span> <span class=\"search-result-import-path\">./scripts/simple_controller.js</span>",
     "function"
   ],
   [
@@ -1740,9 +2010,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/simple_controller.js~pushreportname",
+    "function/index.html#static-function-pushReportName",
+    "<span>pushReportName</span> <span class=\"search-result-import-path\">./scripts/simple_controller.js</span>",
+    "function"
+  ],
+  [
     "./scripts/util.js~random",
     "function/index.html#static-function-random",
     "<span>random</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/struct.js~register",
+    "function/index.html#static-function-register",
+    "<span>register</span> <span class=\"search-result-import-path\">./scripts/struct.js</span>",
     "function"
   ],
   [
@@ -1774,12 +2056,6 @@ window.esdocSearchIndex = [
     "function/index.html#static-function-report",
     "<span>report</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
     "function"
-  ],
-  [
-    "./scripts/events.js~reverse_keymap",
-    "variable/index.html#static-variable-reverse_keymap",
-    "<span>reverse_keymap</span> <span class=\"search-result-import-path\">./scripts/events.js</span>",
-    "variable"
   ],
   [
     "./scripts/simple_events.js~reverse_keymap",
@@ -1848,9 +2124,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/screenarea.js~setareatypes",
+    "./scripts/area_wrangler.js~setareatypes",
     "function/index.html#static-function-setAreaTypes",
-    "<span>setAreaTypes</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "<span>setAreaTypes</span> <span class=\"search-result-import-path\">./scripts/area_wrangler.js</span>",
     "function"
   ],
   [
@@ -1878,9 +2154,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/ui_base.js~seticonmap",
+    "./scripts/icon_enum.js~seticonmap",
     "function/index.html#static-function-setIconMap",
-    "<span>setIconMap</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
+    "<span>setIconMap</span> <span class=\"search-result-import-path\">./scripts/icon_enum.js</span>",
     "function"
   ],
   [
@@ -1902,9 +2178,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/screenarea.js~setscreenclass",
+    "./scripts/area_wrangler.js~setscreenclass",
     "function/index.html#static-function-setScreenClass",
-    "<span>setScreenClass</span> <span class=\"search-result-import-path\">./scripts/ScreenArea.js</span>",
+    "<span>setScreenClass</span> <span class=\"search-result-import-path\">./scripts/area_wrangler.js</span>",
     "function"
   ],
   [
@@ -1926,9 +2202,33 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/framemanager_mesh.js~snap",
+    "function/index.html#static-function-snap",
+    "<span>snap</span> <span class=\"search-result-import-path\">./scripts/FrameManager_mesh.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/framemanager_mesh.js~snapi",
+    "function/index.html#static-function-snapi",
+    "<span>snapi</span> <span class=\"search-result-import-path\">./scripts/FrameManager_mesh.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/pathux.js~solver",
+    "variable/index.html#static-variable-solver",
+    "<span>solver</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/app.js~start",
     "function/index.html#static-function-start",
     "<span>start</span> <span class=\"search-result-import-path\">./scripts/app.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/framemanager.js~startevents",
+    "function/index.html#static-function-startEvents",
+    "<span>startEvents</span> <span class=\"search-result-import-path\">./scripts/FrameManager.js</span>",
     "function"
   ],
   [
@@ -1968,9 +2268,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/ui_base.js~theme",
+    "./scripts/ui_theme.js~theme",
     "variable/index.html#static-variable-theme",
-    "<span>theme</span> <span class=\"search-result-import-path\">./scripts/ui_base.js</span>",
+    "<span>theme</span> <span class=\"search-result-import-path\">./scripts/ui_theme.js</span>",
     "variable"
   ],
   [
@@ -1978,6 +2278,12 @@ window.esdocSearchIndex = [
     "function/index.html#static-function-time_ms",
     "<span>time_ms</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
     "function"
+  ],
+  [
+    "./scripts/util.js~timers",
+    "variable/index.html#static-variable-timers",
+    "<span>timers</span> <span class=\"search-result-import-path\">./scripts/util.js</span>",
+    "variable"
   ],
   [
     "./scripts/parseutil.js~tokdef",
@@ -1992,10 +2298,34 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/pathux.js~toolprop_abstract",
+    "variable/index.html#static-variable-toolprop_abstract",
+    "<span>toolprop_abstract</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/math.js~unproject",
     "function/index.html#static-function-unproject",
     "<span>unproject</span> <span class=\"search-result-import-path\">./scripts/math.js</span>",
     "function"
+  ],
+  [
+    "./scripts/pathux.js~util",
+    "variable/index.html#static-variable-util",
+    "<span>util</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/ui_theme.js~validatewebcolor",
+    "function/index.html#static-function-validateWebColor",
+    "<span>validateWebColor</span> <span class=\"search-result-import-path\">./scripts/ui_theme.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/pathux.js~vectormath",
+    "variable/index.html#static-variable-vectormath",
+    "<span>vectormath</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
   ],
   [
     "./scripts/ui_noteframe.js~warning",
@@ -2004,10 +2334,22 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/ui_theme.js~web2color",
+    "function/index.html#static-function-web2color",
+    "<span>web2color</span> <span class=\"search-result-import-path\">./scripts/ui_theme.js</span>",
+    "function"
+  ],
+  [
     "./scripts/math.js~winding",
     "function/index.html#static-function-winding",
     "<span>winding</span> <span class=\"search-result-import-path\">./scripts/math.js</span>",
     "function"
+  ],
+  [
+    "./scripts/struct.js~write_scripts",
+    "variable/index.html#static-variable-write_scripts",
+    "<span>write_scripts</span> <span class=\"search-result-import-path\">./scripts/struct.js</span>",
+    "variable"
   ],
   [
     "scripts/.external-ecmascript.js~array",
@@ -2304,9 +2646,27 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/framemanager.js~screen#_allareas",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-_allAreas",
+    "scripts/FrameManager.js~Screen#_allAreas",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#_ctx",
     "class/scripts/FrameManager.js~Screen.html#instance-member-_ctx",
     "scripts/FrameManager.js~Screen#_ctx",
+    "member"
+  ],
+  [
+    "scripts/framemanager.js~screen#_debug_overlay",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-_debug_overlay",
+    "scripts/FrameManager.js~Screen#_debug_overlay",
+    "member"
+  ],
+  [
+    "scripts/framemanager.js~screen#_do_updatesize",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-_do_updateSize",
+    "scripts/FrameManager.js~Screen#_do_updateSize",
     "member"
   ],
   [
@@ -2314,6 +2674,24 @@ window.esdocSearchIndex = [
     "class/scripts/FrameManager.js~Screen.html#instance-member-_edgemap",
     "scripts/FrameManager.js~Screen#_edgemap",
     "member"
+  ],
+  [
+    "scripts/framemanager.js~screen#_enterpopupsafe",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-_enterPopupSafe",
+    "scripts/FrameManager.js~Screen#_enterPopupSafe",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#_exitpopupsafe",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-_exitPopupSafe",
+    "scripts/FrameManager.js~Screen#_exitPopupSafe",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#_get_debug_overlay",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-_get_debug_overlay",
+    "scripts/FrameManager.js~Screen#_get_debug_overlay",
+    "method"
   ],
   [
     "scripts/framemanager.js~screen#_idmap",
@@ -2332,6 +2710,12 @@ window.esdocSearchIndex = [
     "class/scripts/FrameManager.js~Screen.html#instance-method-_ondestroy",
     "scripts/FrameManager.js~Screen#_ondestroy",
     "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#_popup_safe",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-_popup_safe",
+    "scripts/FrameManager.js~Screen#_popup_safe",
+    "member"
   ],
   [
     "scripts/framemanager.js~screen#_popups",
@@ -2376,10 +2760,22 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/framemanager.js~screen#add",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-add",
+    "scripts/FrameManager.js~Screen#add",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#afterstruct",
     "class/scripts/FrameManager.js~Screen.html#instance-method-afterSTRUCT",
     "scripts/FrameManager.js~Screen#afterSTRUCT",
     "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#allbordersmovable",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-allBordersMovable",
+    "scripts/FrameManager.js~Screen#allBordersMovable",
+    "member"
   ],
   [
     "scripts/framemanager.js~screen#appendchild",
@@ -2412,9 +2808,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#checkareaconstraint",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-checkAreaConstraint",
+    "scripts/FrameManager.js~Screen#checkAreaConstraint",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#clear",
     "class/scripts/FrameManager.js~Screen.html#instance-method-clear",
     "scripts/FrameManager.js~Screen#clear",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#completeupdate",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-completeUpdate",
+    "scripts/FrameManager.js~Screen#completeUpdate",
     "method"
   ],
   [
@@ -2466,6 +2874,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#findscreenarea",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-findScreenArea",
+    "scripts/FrameManager.js~Screen#findScreenArea",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#freeborder",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-freeBorder",
+    "scripts/FrameManager.js~Screen#freeBorder",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#gethotkey",
     "class/scripts/FrameManager.js~Screen.html#instance-method-getHotKey",
     "scripts/FrameManager.js~Screen#getHotKey",
@@ -2481,6 +2901,18 @@ window.esdocSearchIndex = [
     "scripts/framemanager.js~screen#getscreenvert",
     "class/scripts/FrameManager.js~Screen.html#instance-method-getScreenVert",
     "scripts/FrameManager.js~Screen#getScreenVert",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#hasborder",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-hasBorder",
+    "scripts/FrameManager.js~Screen#hasBorder",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#hintpickertool",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-hintPickerTool",
+    "scripts/FrameManager.js~Screen#hintPickerTool",
     "method"
   ],
   [
@@ -2506,6 +2938,18 @@ window.esdocSearchIndex = [
     "class/scripts/FrameManager.js~Screen.html#instance-member-keymap",
     "scripts/FrameManager.js~Screen#keymap",
     "member"
+  ],
+  [
+    "scripts/framemanager.js~screen#killborder",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-killBorder",
+    "scripts/FrameManager.js~Screen#killBorder",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#killscreenvertex",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-killScreenVertex",
+    "scripts/FrameManager.js~Screen#killScreenVertex",
+    "method"
   ],
   [
     "scripts/framemanager.js~screen#listen",
@@ -2562,9 +3006,39 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#moveborder",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-moveBorder",
+    "scripts/FrameManager.js~Screen#moveBorder",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#movebordersimple",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-moveBorderSimple",
+    "scripts/FrameManager.js~Screen#moveBorderSimple",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#moveborderunused",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-moveBorderUnused",
+    "scripts/FrameManager.js~Screen#moveBorderUnused",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#moveborderwithoutverts",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-moveBorderWithoutVerts",
+    "scripts/FrameManager.js~Screen#moveBorderWithoutVerts",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#mpos",
     "class/scripts/FrameManager.js~Screen.html#instance-member-mpos",
     "scripts/FrameManager.js~Screen#mpos",
+    "member"
+  ],
+  [
+    "scripts/framemanager.js~screen#needsborderregen",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-needsBorderRegen",
+    "scripts/FrameManager.js~Screen#needsBorderRegen",
     "member"
   ],
   [
@@ -2572,6 +3046,12 @@ window.esdocSearchIndex = [
     "class/scripts/FrameManager.js~Screen.html#instance-member-needsTabRecalc",
     "scripts/FrameManager.js~Screen#needsTabRecalc",
     "member"
+  ],
+  [
+    "scripts/framemanager.js~screen#newscreenarea",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-newScreenArea",
+    "scripts/FrameManager.js~Screen#newScreenArea",
+    "method"
   ],
   [
     "scripts/framemanager.js~screen#on_keydown",
@@ -2610,9 +3090,27 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#popuparea",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-popupArea",
+    "scripts/FrameManager.js~Screen#popupArea",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#pos",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-pos",
+    "scripts/FrameManager.js~Screen#pos",
+    "member"
+  ],
+  [
     "scripts/framemanager.js~screen#regenborders",
     "class/scripts/FrameManager.js~Screen.html#instance-method-regenBorders",
     "scripts/FrameManager.js~Screen#regenBorders",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#regenborders_stage2",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-regenBorders_stage2",
+    "scripts/FrameManager.js~Screen#regenBorders_stage2",
     "method"
   ],
   [
@@ -2658,6 +3156,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#screenborders",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-screenborders",
+    "scripts/FrameManager.js~Screen#screenborders",
+    "member"
+  ],
+  [
     "scripts/framemanager.js~screen#screenverts",
     "class/scripts/FrameManager.js~Screen.html#instance-member-screenverts",
     "scripts/FrameManager.js~Screen#screenverts",
@@ -2682,6 +3186,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#solveareaconstraints",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-solveAreaConstraints",
+    "scripts/FrameManager.js~Screen#solveAreaConstraints",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#splitarea",
     "class/scripts/FrameManager.js~Screen.html#instance-method-splitArea",
     "scripts/FrameManager.js~Screen#splitArea",
@@ -2692,6 +3202,12 @@ window.esdocSearchIndex = [
     "class/scripts/FrameManager.js~Screen.html#instance-method-splitTool",
     "scripts/FrameManager.js~Screen#splitTool",
     "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#testallkeymaps",
+    "class/scripts/FrameManager.js~Screen.html#instance-member-testAllKeyMaps",
+    "scripts/FrameManager.js~Screen#testAllKeyMaps",
+    "member"
   ],
   [
     "scripts/framemanager.js~screen#test_struct",
@@ -2724,9 +3240,27 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager.js~screen#updatedebugboxes",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-updateDebugBoxes",
+    "scripts/FrameManager.js~Screen#updateDebugBoxes",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#updatesize",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-updateSize",
+    "scripts/FrameManager.js~Screen#updateSize",
+    "method"
+  ],
+  [
     "scripts/framemanager.js~screen#update_intern",
     "class/scripts/FrameManager.js~Screen.html#instance-method-update_intern",
     "scripts/FrameManager.js~Screen#update_intern",
+    "method"
+  ],
+  [
+    "scripts/framemanager.js~screen#walkborderline",
+    "class/scripts/FrameManager.js~Screen.html#instance-method-walkBorderLine",
+    "scripts/FrameManager.js~Screen#walkBorderLine",
     "method"
   ],
   [
@@ -2748,165 +3282,243 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/framemanager.js~screenborder#[symbol.keystr]",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-method-[Symbol.keystr]",
-    "scripts/FrameManager.js~ScreenBorder#[Symbol.keystr]",
+    "scripts/framemanager_mesh.js",
+    "file/scripts/FrameManager_mesh.js.html",
+    "scripts/FrameManager_mesh.js",
+    "file"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenborder#[symbol.keystr]",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-method-[Symbol.keystr]",
+    "scripts/FrameManager_mesh.js~ScreenBorder#[Symbol.keystr]",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenborder#_id",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-_id",
-    "scripts/FrameManager.js~ScreenBorder#_id",
+    "scripts/framemanager_mesh.js~screenborder#_id",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-_id",
+    "scripts/FrameManager_mesh.js~ScreenBorder#_id",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#_innerstyle",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-_innerstyle",
-    "scripts/FrameManager.js~ScreenBorder#_innerstyle",
+    "scripts/framemanager_mesh.js~screenborder#_innerstyle",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-_innerstyle",
+    "scripts/FrameManager_mesh.js~ScreenBorder#_innerstyle",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#_style",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-_style",
-    "scripts/FrameManager.js~ScreenBorder#_style",
+    "scripts/framemanager_mesh.js~screenborder#_style",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-_style",
+    "scripts/FrameManager_mesh.js~ScreenBorder#_style",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#constructor",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-constructor-constructor",
-    "scripts/FrameManager.js~ScreenBorder#constructor",
+    "scripts/framemanager_mesh.js~screenborder#constructor",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-constructor-constructor",
+    "scripts/FrameManager_mesh.js~ScreenBorder#constructor",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenborder#horiz",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-get-horiz",
-    "scripts/FrameManager.js~ScreenBorder#horiz",
+    "scripts/framemanager_mesh.js~screenborder#dead",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-get-dead",
+    "scripts/FrameManager_mesh.js~ScreenBorder#dead",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#inner",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-inner",
-    "scripts/FrameManager.js~ScreenBorder#inner",
+    "scripts/framemanager_mesh.js~screenborder#halfedges",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-halfedges",
+    "scripts/FrameManager_mesh.js~ScreenBorder#halfedges",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#othervert",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-method-otherVert",
-    "scripts/FrameManager.js~ScreenBorder#otherVert",
+    "scripts/framemanager_mesh.js~screenborder#horiz",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-get-horiz",
+    "scripts/FrameManager_mesh.js~ScreenBorder#horiz",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenborder#inner",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-inner",
+    "scripts/FrameManager_mesh.js~ScreenBorder#inner",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenborder#othervertex",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-method-otherVertex",
+    "scripts/FrameManager_mesh.js~ScreenBorder#otherVertex",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenborder#sareas",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-sareas",
-    "scripts/FrameManager.js~ScreenBorder#sareas",
+    "scripts/framemanager_mesh.js~screenborder#outer",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-outer",
+    "scripts/FrameManager_mesh.js~ScreenBorder#outer",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#screen",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-screen",
-    "scripts/FrameManager.js~ScreenBorder#screen",
+    "scripts/framemanager_mesh.js~screenborder#sareas",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-sareas",
+    "scripts/FrameManager_mesh.js~ScreenBorder#sareas",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#setcss",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-method-setCSS",
-    "scripts/FrameManager.js~ScreenBorder#setCSS",
+    "scripts/framemanager_mesh.js~screenborder#screen",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-screen",
+    "scripts/FrameManager_mesh.js~ScreenBorder#screen",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenborder#setcss",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-method-setCSS",
+    "scripts/FrameManager_mesh.js~ScreenBorder#setCSS",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenborder#side",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-side",
-    "scripts/FrameManager.js~ScreenBorder#side",
+    "scripts/framemanager_mesh.js~screenborder#side",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-get-side",
+    "scripts/FrameManager_mesh.js~ScreenBorder#side",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#v1",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-v1",
-    "scripts/FrameManager.js~ScreenBorder#v1",
+    "scripts/framemanager_mesh.js~screenborder#side",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-set-side",
+    "scripts/FrameManager_mesh.js~ScreenBorder#side",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#v2",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-member-v2",
-    "scripts/FrameManager.js~ScreenBorder#v2",
+    "scripts/framemanager_mesh.js~screenborder#v1",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-v1",
+    "scripts/FrameManager_mesh.js~ScreenBorder#v1",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#valence",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-get-valence",
-    "scripts/FrameManager.js~ScreenBorder#valence",
+    "scripts/framemanager_mesh.js~screenborder#v2",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-v2",
+    "scripts/FrameManager_mesh.js~ScreenBorder#v2",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenborder#valueof",
-    "class/scripts/FrameManager.js~ScreenBorder.html#instance-method-valueOf",
-    "scripts/FrameManager.js~ScreenBorder#valueOf",
+    "scripts/framemanager_mesh.js~screenborder#valence",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-get-valence",
+    "scripts/FrameManager_mesh.js~ScreenBorder#valence",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenborder#valueof",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-method-valueOf",
+    "scripts/FrameManager_mesh.js~ScreenBorder#valueOf",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenborder.define",
-    "class/scripts/FrameManager.js~ScreenBorder.html#static-method-define",
-    "scripts/FrameManager.js~ScreenBorder.define",
-    "method"
-  ],
-  [
-    "scripts/framemanager.js~screenborder.hash",
-    "class/scripts/FrameManager.js~ScreenBorder.html#static-method-hash",
-    "scripts/FrameManager.js~ScreenBorder.hash",
-    "method"
-  ],
-  [
-    "scripts/framemanager.js~screenvert#[symbol.keystr]",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-method-[Symbol.keystr]",
-    "scripts/FrameManager.js~ScreenVert#[Symbol.keystr]",
-    "method"
-  ],
-  [
-    "scripts/framemanager.js~screenvert#_id",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-member-_id",
-    "scripts/FrameManager.js~ScreenVert#_id",
+    "scripts/framemanager_mesh.js~screenborder#visibletopick",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#instance-member-visibleToPick",
+    "scripts/FrameManager_mesh.js~ScreenBorder#visibleToPick",
     "member"
   ],
   [
-    "scripts/framemanager.js~screenvert#borders",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-member-borders",
-    "scripts/FrameManager.js~ScreenVert#borders",
-    "member"
-  ],
-  [
-    "scripts/framemanager.js~screenvert#constructor",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-constructor-constructor",
-    "scripts/FrameManager.js~ScreenVert#constructor",
+    "scripts/framemanager_mesh.js~screenborder.define",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#static-method-define",
+    "scripts/FrameManager_mesh.js~ScreenBorder.define",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenvert#loadstruct",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-method-loadSTRUCT",
-    "scripts/FrameManager.js~ScreenVert#loadSTRUCT",
+    "scripts/framemanager_mesh.js~screenborder.hash",
+    "class/scripts/FrameManager_mesh.js~ScreenBorder.html#static-method-hash",
+    "scripts/FrameManager_mesh.js~ScreenBorder.hash",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenvert#sareas",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-member-sareas",
-    "scripts/FrameManager.js~ScreenVert#sareas",
-    "member"
-  ],
-  [
-    "scripts/framemanager.js~screenvert#side",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-member-side",
-    "scripts/FrameManager.js~ScreenVert#side",
-    "member"
-  ],
-  [
-    "scripts/framemanager.js~screenvert#valueof",
-    "class/scripts/FrameManager.js~ScreenVert.html#instance-method-valueOf",
-    "scripts/FrameManager.js~ScreenVert#valueOf",
+    "scripts/framemanager_mesh.js~screenhalfedge#[symbol.keystr]",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-method-[Symbol.keystr]",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#[Symbol.keystr]",
     "method"
   ],
   [
-    "scripts/framemanager.js~screenvert.hash",
-    "class/scripts/FrameManager.js~ScreenVert.html#static-method-hash",
-    "scripts/FrameManager.js~ScreenVert.hash",
+    "scripts/framemanager_mesh.js~screenhalfedge#border",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-member-border",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#border",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenhalfedge#constructor",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-constructor-constructor",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#constructor",
+    "method"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenhalfedge#sarea",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-member-sarea",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#sarea",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenhalfedge#side",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-member-side",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#side",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenhalfedge#v1",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-get-v1",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#v1",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenhalfedge#v2",
+    "class/scripts/FrameManager_mesh.js~ScreenHalfEdge.html#instance-get-v2",
+    "scripts/FrameManager_mesh.js~ScreenHalfEdge#v2",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#[symbol.keystr]",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-method-[Symbol.keystr]",
+    "scripts/FrameManager_mesh.js~ScreenVert#[Symbol.keystr]",
+    "method"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#_id",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-member-_id",
+    "scripts/FrameManager_mesh.js~ScreenVert#_id",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#added_id",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-member-added_id",
+    "scripts/FrameManager_mesh.js~ScreenVert#added_id",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#borders",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-member-borders",
+    "scripts/FrameManager_mesh.js~ScreenVert#borders",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#constructor",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-constructor-constructor",
+    "scripts/FrameManager_mesh.js~ScreenVert#constructor",
+    "method"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#loadstruct",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-method-loadSTRUCT",
+    "scripts/FrameManager_mesh.js~ScreenVert#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#sareas",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-member-sareas",
+    "scripts/FrameManager_mesh.js~ScreenVert#sareas",
+    "member"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert#valueof",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#instance-method-valueOf",
+    "scripts/FrameManager_mesh.js~ScreenVert#valueOf",
+    "method"
+  ],
+  [
+    "scripts/framemanager_mesh.js~screenvert.hash",
+    "class/scripts/FrameManager_mesh.js~ScreenVert.html#static-method-hash",
+    "scripts/FrameManager_mesh.js~ScreenVert.hash",
     "method"
   ],
   [
@@ -2982,6 +3594,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager_ops.js~areadragtool#on_drag",
+    "class/scripts/FrameManager_ops.js~AreaDragTool.html#instance-method-on_drag",
+    "scripts/FrameManager_ops.js~AreaDragTool#on_drag",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~areadragtool#on_dragend",
+    "class/scripts/FrameManager_ops.js~AreaDragTool.html#instance-method-on_dragend",
+    "scripts/FrameManager_ops.js~AreaDragTool#on_dragend",
+    "method"
+  ],
+  [
     "scripts/framemanager_ops.js~areadragtool#on_mousemove",
     "class/scripts/FrameManager_ops.js~AreaDragTool.html#instance-method-on_mousemove",
     "scripts/FrameManager_ops.js~AreaDragTool#on_mousemove",
@@ -3019,7 +3643,7 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/framemanager_ops.js~arearesizetool#border",
-    "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-member-border",
+    "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-get-border",
     "scripts/FrameManager_ops.js~AreaResizeTool#border",
     "member"
   ],
@@ -3027,6 +3651,12 @@ window.esdocSearchIndex = [
     "scripts/framemanager_ops.js~arearesizetool#constructor",
     "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-constructor-constructor",
     "scripts/FrameManager_ops.js~AreaResizeTool#constructor",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~arearesizetool#finish",
+    "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-method-finish",
+    "scripts/FrameManager_ops.js~AreaResizeTool#finish",
     "method"
   ],
   [
@@ -3054,9 +3684,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager_ops.js~arearesizetool#sarea",
+    "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-member-sarea",
+    "scripts/FrameManager_ops.js~AreaResizeTool#sarea",
+    "member"
+  ],
+  [
     "scripts/framemanager_ops.js~arearesizetool#screen",
     "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-member-screen",
     "scripts/FrameManager_ops.js~AreaResizeTool#screen",
+    "member"
+  ],
+  [
+    "scripts/framemanager_ops.js~arearesizetool#side",
+    "class/scripts/FrameManager_ops.js~AreaResizeTool.html#instance-member-side",
+    "scripts/FrameManager_ops.js~AreaResizeTool#side",
     "member"
   ],
   [
@@ -3150,9 +3792,9 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/framemanager_ops.js~splittool#start",
-    "class/scripts/FrameManager_ops.js~SplitTool.html#instance-member-start",
-    "scripts/FrameManager_ops.js~SplitTool#start",
+    "scripts/framemanager_ops.js~splittool#started",
+    "class/scripts/FrameManager_ops.js~SplitTool.html#instance-member-started",
+    "scripts/FrameManager_ops.js~SplitTool#started",
     "member"
   ],
   [
@@ -3252,6 +3894,66 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/framemanager_ops.js~tooltipviewer#constructor",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-constructor-constructor",
+    "scripts/FrameManager_ops.js~ToolTipViewer#constructor",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#element",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-member-element",
+    "scripts/FrameManager_ops.js~ToolTipViewer#element",
+    "member"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#finish",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-method-finish",
+    "scripts/FrameManager_ops.js~ToolTipViewer#finish",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#on_keydown",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-method-on_keydown",
+    "scripts/FrameManager_ops.js~ToolTipViewer#on_keydown",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#on_mousedown",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-method-on_mousedown",
+    "scripts/FrameManager_ops.js~ToolTipViewer#on_mousedown",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#on_mousemove",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-method-on_mousemove",
+    "scripts/FrameManager_ops.js~ToolTipViewer#on_mousemove",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#on_mouseup",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-method-on_mouseup",
+    "scripts/FrameManager_ops.js~ToolTipViewer#on_mouseup",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#pick",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-method-pick",
+    "scripts/FrameManager_ops.js~ToolTipViewer#pick",
+    "method"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer#tooltip",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#instance-member-tooltip",
+    "scripts/FrameManager_ops.js~ToolTipViewer#tooltip",
+    "member"
+  ],
+  [
+    "scripts/framemanager_ops.js~tooltipviewer.tooldef",
+    "class/scripts/FrameManager_ops.js~ToolTipViewer.html#static-method-tooldef",
+    "scripts/FrameManager_ops.js~ToolTipViewer.tooldef",
+    "method"
+  ],
+  [
     "scripts/screenarea.js",
     "file/scripts/ScreenArea.js.html",
     "scripts/ScreenArea.js",
@@ -3270,10 +3972,28 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screenarea.js~area#_get_v_suffix",
+    "class/scripts/ScreenArea.js~Area.html#instance-method-_get_v_suffix",
+    "scripts/ScreenArea.js~Area#_get_v_suffix",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~area#_isdead",
+    "class/scripts/ScreenArea.js~Area.html#instance-method-_isDead",
+    "scripts/ScreenArea.js~Area#_isDead",
+    "method"
+  ],
+  [
     "scripts/screenarea.js~area#afterstruct",
     "class/scripts/ScreenArea.js~Area.html#instance-method-afterSTRUCT",
     "scripts/ScreenArea.js~Area#afterSTRUCT",
     "method"
+  ],
+  [
+    "scripts/screenarea.js~area#areadragtoolenabled",
+    "class/scripts/ScreenArea.js~Area.html#instance-member-areaDragToolEnabled",
+    "scripts/ScreenArea.js~Area#areaDragToolEnabled",
+    "member"
   ],
   [
     "scripts/screenarea.js~area#borderlock",
@@ -3306,10 +4026,22 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/screenarea.js~area#getactivearea",
-    "class/scripts/ScreenArea.js~Area.html#instance-method-getActiveArea",
-    "scripts/ScreenArea.js~Area#getActiveArea",
-    "method"
+    "scripts/screenarea.js~area#flag",
+    "class/scripts/ScreenArea.js~Area.html#instance-member-flag",
+    "scripts/ScreenArea.js~Area#flag",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~area#floating",
+    "class/scripts/ScreenArea.js~Area.html#instance-set-floating",
+    "scripts/ScreenArea.js~Area#floating",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~area#floating",
+    "class/scripts/ScreenArea.js~Area.html#instance-get-floating",
+    "scripts/ScreenArea.js~Area#floating",
+    "member"
   ],
   [
     "scripts/screenarea.js~area#getbarheight",
@@ -3336,10 +4068,22 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/screenarea.js~area#helppicker",
+    "class/scripts/ScreenArea.js~Area.html#instance-member-helppicker",
+    "scripts/ScreenArea.js~Area#helppicker",
+    "member"
+  ],
+  [
     "scripts/screenarea.js~area#inactive",
     "class/scripts/ScreenArea.js~Area.html#instance-member-inactive",
     "scripts/ScreenArea.js~Area#inactive",
     "member"
+  ],
+  [
+    "scripts/screenarea.js~area#init",
+    "class/scripts/ScreenArea.js~Area.html#instance-method-init",
+    "scripts/ScreenArea.js~Area#init",
+    "method"
   ],
   [
     "scripts/screenarea.js~area#loaddata",
@@ -3360,6 +4104,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screenarea.js~area#loadstruct",
+    "class/scripts/ScreenArea.js~Area.html#instance-method-loadSTRUCT",
+    "scripts/ScreenArea.js~Area#loadSTRUCT",
+    "method"
+  ],
+  [
     "scripts/screenarea.js~area#makeareaswitcher",
     "class/scripts/ScreenArea.js~Area.html#instance-method-makeAreaSwitcher",
     "scripts/ScreenArea.js~Area#makeAreaSwitcher",
@@ -3370,6 +4120,18 @@ window.esdocSearchIndex = [
     "class/scripts/ScreenArea.js~Area.html#instance-method-makeHeader",
     "scripts/ScreenArea.js~Area#makeHeader",
     "method"
+  ],
+  [
+    "scripts/screenarea.js~area#maxsize",
+    "class/scripts/ScreenArea.js~Area.html#instance-member-maxSize",
+    "scripts/ScreenArea.js~Area#maxSize",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~area#minsize",
+    "class/scripts/ScreenArea.js~Area.html#instance-member-minSize",
+    "scripts/ScreenArea.js~Area#minSize",
+    "member"
   ],
   [
     "scripts/screenarea.js~area#on_area_active",
@@ -3393,6 +4155,12 @@ window.esdocSearchIndex = [
     "scripts/screenarea.js~area#on_area_inactive",
     "class/scripts/ScreenArea.js~Area.html#instance-method-on_area_inactive",
     "scripts/ScreenArea.js~Area#on_area_inactive",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~area#on_fileload",
+    "class/scripts/ScreenArea.js~Area.html#instance-method-on_fileload",
+    "scripts/ScreenArea.js~Area#on_fileload",
     "method"
   ],
   [
@@ -3474,6 +4242,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screenarea.js~area.getactivearea",
+    "class/scripts/ScreenArea.js~Area.html#static-method-getActiveArea",
+    "scripts/ScreenArea.js~Area.getActiveArea",
+    "method"
+  ],
+  [
     "scripts/screenarea.js~area.newstruct",
     "class/scripts/ScreenArea.js~Area.html#static-method-newSTRUCT",
     "scripts/ScreenArea.js~Area.newSTRUCT",
@@ -3486,10 +4260,34 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screenarea.js~screenarea#[\"_\" + axis]",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-[\"_\" + axis]",
+    "scripts/ScreenArea.js~ScreenArea#[\"_\" + axis]",
+    "member"
+  ],
+  [
     "scripts/screenarea.js~screenarea#_borders",
     "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-_borders",
     "scripts/ScreenArea.js~ScreenArea#_borders",
     "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#_checkwrangler",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-_checkWrangler",
+    "scripts/ScreenArea.js~ScreenArea#_checkWrangler",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#_get_v_suffix",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-_get_v_suffix",
+    "scripts/ScreenArea.js~ScreenArea#_get_v_suffix",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#_isdead",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-_isDead",
+    "scripts/ScreenArea.js~ScreenArea#_isDead",
+    "method"
   ],
   [
     "scripts/screenarea.js~screenarea#_ondestroy",
@@ -3498,9 +4296,33 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screenarea.js~screenarea#_pos",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-_pos",
+    "scripts/ScreenArea.js~ScreenArea#_pos",
+    "member"
+  ],
+  [
     "scripts/screenarea.js~screenarea#_sarea_id",
     "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-_sarea_id",
     "scripts/ScreenArea.js~ScreenArea#_sarea_id",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#_side",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-_side",
+    "scripts/ScreenArea.js~ScreenArea#_side",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#_size",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-_size",
+    "scripts/ScreenArea.js~ScreenArea#_size",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#_verts",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-_verts",
+    "scripts/ScreenArea.js~ScreenArea#_verts",
     "member"
   ],
   [
@@ -3528,6 +4350,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/screenarea.js~screenarea#bringtofront",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-bringToFront",
+    "scripts/ScreenArea.js~ScreenArea#bringToFront",
+    "method"
+  ],
+  [
     "scripts/screenarea.js~screenarea#constructor",
     "class/scripts/ScreenArea.js~ScreenArea.html#instance-constructor-constructor",
     "scripts/ScreenArea.js~ScreenArea#constructor",
@@ -3538,6 +4366,12 @@ window.esdocSearchIndex = [
     "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-copy",
     "scripts/ScreenArea.js~ScreenArea#copy",
     "method"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#dead",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-dead",
+    "scripts/ScreenArea.js~ScreenArea#dead",
+    "member"
   ],
   [
     "scripts/screenarea.js~screenarea#draw",
@@ -3558,8 +4392,20 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/screenarea.js~screenarea#flag",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-get-flag",
+    "scripts/ScreenArea.js~ScreenArea#flag",
+    "member"
+  ],
+  [
     "scripts/screenarea.js~screenarea#floating",
-    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-floating",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-get-floating",
+    "scripts/ScreenArea.js~ScreenArea#floating",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#floating",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-set-floating",
     "scripts/ScreenArea.js~ScreenArea#floating",
     "member"
   ],
@@ -3567,6 +4413,18 @@ window.esdocSearchIndex = [
     "scripts/screenarea.js~screenarea#getscreen",
     "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-getScreen",
     "scripts/ScreenArea.js~ScreenArea#getScreen",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#init",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-init",
+    "scripts/ScreenArea.js~ScreenArea#init",
+    "method"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#loadfrompossize",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-loadFromPosSize",
+    "scripts/ScreenArea.js~ScreenArea#loadFromPosSize",
     "method"
   ],
   [
@@ -3594,6 +4452,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screenarea.js~screenarea#maxsize",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-get-maxSize",
+    "scripts/ScreenArea.js~ScreenArea#maxSize",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#minsize",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-get-minSize",
+    "scripts/ScreenArea.js~ScreenArea#minSize",
+    "member"
+  ],
+  [
     "scripts/screenarea.js~screenarea#on_keydown",
     "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-on_keydown",
     "scripts/ScreenArea.js~ScreenArea#on_keydown",
@@ -3607,7 +4477,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/screenarea.js~screenarea#pos",
-    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-pos",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-get-pos",
+    "scripts/ScreenArea.js~ScreenArea#pos",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#pos",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-set-pos",
     "scripts/ScreenArea.js~ScreenArea#pos",
     "member"
   ],
@@ -3619,9 +4495,21 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/screenarea.js~screenarea#size",
-    "class/scripts/ScreenArea.js~ScreenArea.html#instance-member-size",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-get-size",
     "scripts/ScreenArea.js~ScreenArea#size",
     "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#size",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-set-size",
+    "scripts/ScreenArea.js~ScreenArea#size",
+    "member"
+  ],
+  [
+    "scripts/screenarea.js~screenarea#switcheditor",
+    "class/scripts/ScreenArea.js~ScreenArea.html#instance-method-switchEditor",
+    "scripts/ScreenArea.js~ScreenArea#switchEditor",
+    "method"
   ],
   [
     "scripts/screenarea.js~screenarea#switch_editor",
@@ -4044,58 +4932,88 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/area_wrangler.js",
+    "file/scripts/area_wrangler.js.html",
+    "scripts/area_wrangler.js",
+    "file"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#_checkwrangler",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-method-_checkWrangler",
+    "scripts/area_wrangler.js~AreaWrangler#_checkWrangler",
+    "method"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#_last_screen_id",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-member-_last_screen_id",
+    "scripts/area_wrangler.js~AreaWrangler#_last_screen_id",
+    "member"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#constructor",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-constructor-constructor",
+    "scripts/area_wrangler.js~AreaWrangler#constructor",
+    "method"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#getlastarea",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-method-getLastArea",
+    "scripts/area_wrangler.js~AreaWrangler#getLastArea",
+    "method"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#idgen",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-member-idgen",
+    "scripts/area_wrangler.js~AreaWrangler#idgen",
+    "member"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#lastarea",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-member-lastArea",
+    "scripts/area_wrangler.js~AreaWrangler#lastArea",
+    "member"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#lasts",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-member-lasts",
+    "scripts/area_wrangler.js~AreaWrangler#lasts",
+    "member"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#pop",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-method-pop",
+    "scripts/area_wrangler.js~AreaWrangler#pop",
+    "method"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#push",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-method-push",
+    "scripts/area_wrangler.js~AreaWrangler#push",
+    "method"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#reset",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-method-reset",
+    "scripts/area_wrangler.js~AreaWrangler#reset",
+    "method"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#stack",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-member-stack",
+    "scripts/area_wrangler.js~AreaWrangler#stack",
+    "member"
+  ],
+  [
+    "scripts/area_wrangler.js~areawrangler#stacks",
+    "class/scripts/area_wrangler.js~AreaWrangler.html#instance-member-stacks",
+    "scripts/area_wrangler.js~AreaWrangler#stacks",
+    "member"
+  ],
+  [
     "scripts/config.js",
     "file/scripts/config.js.html",
     "scripts/config.js",
     "file"
-  ],
-  [
-    "scripts/config.js~config#example_enum",
-    "class/scripts/config.js~Config.html#instance-member-EXAMPLE_ENUM",
-    "scripts/config.js~Config#EXAMPLE_ENUM",
-    "member"
-  ],
-  [
-    "scripts/config.js~config#example_option",
-    "class/scripts/config.js~Config.html#instance-member-EXAMPLE_OPTION",
-    "scripts/config.js~Config#EXAMPLE_OPTION",
-    "member"
-  ],
-  [
-    "scripts/config.js~config#example_param",
-    "class/scripts/config.js~Config.html#instance-member-EXAMPLE_PARAM",
-    "scripts/config.js~Config#EXAMPLE_PARAM",
-    "member"
-  ],
-  [
-    "scripts/config.js~config#[k]",
-    "class/scripts/config.js~Config.html#instance-member-[k]",
-    "scripts/config.js~Config#[k]",
-    "member"
-  ],
-  [
-    "scripts/config.js~config#constructor",
-    "class/scripts/config.js~Config.html#instance-constructor-constructor",
-    "scripts/config.js~Config#constructor",
-    "method"
-  ],
-  [
-    "scripts/config.js~config#copy",
-    "class/scripts/config.js~Config.html#instance-method-copy",
-    "scripts/config.js~Config#copy",
-    "method"
-  ],
-  [
-    "scripts/config.js~config#loadjson",
-    "class/scripts/config.js~Config.html#instance-method-loadJSON",
-    "scripts/config.js~Config#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/config.js~config#tojson",
-    "class/scripts/config.js~Config.html#instance-method-toJSON",
-    "scripts/config.js~Config#toJSON",
-    "method"
   ],
   [
     "scripts/const.js",
@@ -4108,6 +5026,18 @@ window.esdocSearchIndex = [
     "file/scripts/context.js.html",
     "scripts/context.js",
     "file"
+  ],
+  [
+    "scripts/context.js~context#_inside_map",
+    "class/scripts/context.js~Context.html#instance-member-_inside_map",
+    "scripts/context.js~Context#_inside_map",
+    "member"
+  ],
+  [
+    "scripts/context.js~context#_props",
+    "class/scripts/context.js~Context.html#instance-member-_props",
+    "scripts/context.js~Context#_props",
+    "member"
   ],
   [
     "scripts/context.js~context#_stack",
@@ -4140,6 +5070,42 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/context.js~context#error",
+    "class/scripts/context.js~Context.html#instance-method-error",
+    "scripts/context.js~Context#error",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#getoverlay",
+    "class/scripts/context.js~Context.html#instance-method-getOverlay",
+    "scripts/context.js~Context#getOverlay",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#getowningoverlay",
+    "class/scripts/context.js~Context.html#instance-method-getOwningOverlay",
+    "scripts/context.js~Context#getOwningOverlay",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#hasoverlay",
+    "class/scripts/context.js~Context.html#instance-method-hasOverlay",
+    "scripts/context.js~Context#hasOverlay",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#loadproperty",
+    "class/scripts/context.js~Context.html#instance-method-loadProperty",
+    "scripts/context.js~Context#loadProperty",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#message",
+    "class/scripts/context.js~Context.html#instance-method-message",
+    "scripts/context.js~Context#message",
+    "method"
+  ],
+  [
     "scripts/context.js~context#override",
     "class/scripts/context.js~Context.html#instance-method-override",
     "scripts/context.js~Context#override",
@@ -4149,6 +5115,12 @@ window.esdocSearchIndex = [
     "scripts/context.js~context#popoverlay",
     "class/scripts/context.js~Context.html#instance-method-popOverlay",
     "scripts/context.js~Context#popOverlay",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#progbar",
+    "class/scripts/context.js~Context.html#instance-method-progbar",
+    "scripts/context.js~Context#progbar",
     "method"
   ],
   [
@@ -4170,9 +5142,33 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/context.js~context#saveproperty",
+    "class/scripts/context.js~Context.html#instance-method-saveProperty",
+    "scripts/context.js~Context#saveProperty",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#state",
+    "class/scripts/context.js~Context.html#instance-member-state",
+    "scripts/context.js~Context#state",
+    "member"
+  ],
+  [
     "scripts/context.js~context#tolocked",
     "class/scripts/context.js~Context.html#instance-method-toLocked",
     "scripts/context.js~Context#toLocked",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#validateoverlays",
+    "class/scripts/context.js~Context.html#instance-method-validateOverlays",
+    "scripts/context.js~Context#validateOverlays",
+    "method"
+  ],
+  [
+    "scripts/context.js~context#warning",
+    "class/scripts/context.js~Context.html#instance-method-warning",
+    "scripts/context.js~Context#warning",
     "method"
   ],
   [
@@ -4248,9 +5244,27 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/context.js~lockedcontext#api",
+    "class/scripts/context.js~LockedContext.html#instance-member-api",
+    "scripts/context.js~LockedContext#api",
+    "member"
+  ],
+  [
     "scripts/context.js~lockedcontext#constructor",
     "class/scripts/context.js~LockedContext.html#instance-constructor-constructor",
     "scripts/context.js~LockedContext#constructor",
+    "method"
+  ],
+  [
+    "scripts/context.js~lockedcontext#ctx",
+    "class/scripts/context.js~LockedContext.html#instance-member-ctx",
+    "scripts/context.js~LockedContext#ctx",
+    "member"
+  ],
+  [
+    "scripts/context.js~lockedcontext#error",
+    "class/scripts/context.js~LockedContext.html#instance-method-error",
+    "scripts/context.js~LockedContext#error",
     "method"
   ],
   [
@@ -4260,10 +5274,52 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/context.js~lockedcontext#message",
+    "class/scripts/context.js~LockedContext.html#instance-method-message",
+    "scripts/context.js~LockedContext#message",
+    "method"
+  ],
+  [
+    "scripts/context.js~lockedcontext#progbar",
+    "class/scripts/context.js~LockedContext.html#instance-method-progbar",
+    "scripts/context.js~LockedContext#progbar",
+    "method"
+  ],
+  [
     "scripts/context.js~lockedcontext#props",
     "class/scripts/context.js~LockedContext.html#instance-member-props",
     "scripts/context.js~LockedContext#props",
     "member"
+  ],
+  [
+    "scripts/context.js~lockedcontext#setcontext",
+    "class/scripts/context.js~LockedContext.html#instance-method-setContext",
+    "scripts/context.js~LockedContext#setContext",
+    "method"
+  ],
+  [
+    "scripts/context.js~lockedcontext#state",
+    "class/scripts/context.js~LockedContext.html#instance-member-state",
+    "scripts/context.js~LockedContext#state",
+    "member"
+  ],
+  [
+    "scripts/context.js~lockedcontext#tolocked",
+    "class/scripts/context.js~LockedContext.html#instance-method-toLocked",
+    "scripts/context.js~LockedContext#toLocked",
+    "method"
+  ],
+  [
+    "scripts/context.js~lockedcontext#toolstack",
+    "class/scripts/context.js~LockedContext.html#instance-member-toolstack",
+    "scripts/context.js~LockedContext#toolstack",
+    "member"
+  ],
+  [
+    "scripts/context.js~lockedcontext#warning",
+    "class/scripts/context.js~LockedContext.html#instance-method-warning",
+    "scripts/context.js~LockedContext#warning",
+    "method"
   ],
   [
     "scripts/controller.js",
@@ -4338,6 +5394,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/controller.js~modelinterface#getdescription",
+    "class/scripts/controller.js~ModelInterface.html#instance-method-getDescription",
+    "scripts/controller.js~ModelInterface#getDescription",
+    "method"
+  ],
+  [
     "scripts/controller.js~modelinterface#gettooldef",
     "class/scripts/controller.js~ModelInterface.html#instance-method-getToolDef",
     "scripts/controller.js~ModelInterface#getToolDef",
@@ -4374,10 +5436,28 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/controller.js~modelinterface#popreportcontext",
+    "class/scripts/controller.js~ModelInterface.html#instance-method-popReportContext",
+    "scripts/controller.js~ModelInterface#popReportContext",
+    "method"
+  ],
+  [
     "scripts/controller.js~modelinterface#prefix",
     "class/scripts/controller.js~ModelInterface.html#instance-member-prefix",
     "scripts/controller.js~ModelInterface#prefix",
     "member"
+  ],
+  [
+    "scripts/controller.js~modelinterface#pushreportcontext",
+    "class/scripts/controller.js~ModelInterface.html#instance-method-pushReportContext",
+    "scripts/controller.js~ModelInterface#pushReportContext",
+    "method"
+  ],
+  [
+    "scripts/controller.js~modelinterface#resolvemasssetpaths",
+    "class/scripts/controller.js~ModelInterface.html#instance-method-resolveMassSetPaths",
+    "scripts/controller.js~ModelInterface#resolveMassSetPaths",
+    "method"
   ],
   [
     "scripts/controller.js~modelinterface#resolvepath",
@@ -4416,10 +5496,502 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/controller_ops.js",
+    "file/scripts/controller_ops.js.html",
+    "scripts/controller_ops.js",
+    "file"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#__ctx",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-member-__ctx",
+    "scripts/controller_ops.js~DataPathSetOp#__ctx",
+    "member"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#_undo",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-member-_undo",
+    "scripts/controller_ops.js~DataPathSetOp#_undo",
+    "member"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#constructor",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-constructor-constructor",
+    "scripts/controller_ops.js~DataPathSetOp#constructor",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#exec",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-exec",
+    "scripts/controller_ops.js~DataPathSetOp#exec",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#hash",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-hash",
+    "scripts/controller_ops.js~DataPathSetOp#hash",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#hashthis",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-hashThis",
+    "scripts/controller_ops.js~DataPathSetOp#hashThis",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#modalstart",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-modalStart",
+    "scripts/controller_ops.js~DataPathSetOp#modalStart",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#proptype",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-member-propType",
+    "scripts/controller_ops.js~DataPathSetOp#propType",
+    "member"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#setvalue",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-setValue",
+    "scripts/controller_ops.js~DataPathSetOp#setValue",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#undo",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-undo",
+    "scripts/controller_ops.js~DataPathSetOp#undo",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop#undopre",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#instance-method-undoPre",
+    "scripts/controller_ops.js~DataPathSetOp#undoPre",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop.create",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#static-method-create",
+    "scripts/controller_ops.js~DataPathSetOp.create",
+    "method"
+  ],
+  [
+    "scripts/controller_ops.js~datapathsetop.tooldef",
+    "class/scripts/controller_ops.js~DataPathSetOp.html#static-method-tooldef",
+    "scripts/controller_ops.js~DataPathSetOp.tooldef",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js",
+    "file/scripts/curve/curve1d.js.html",
+    "scripts/curve/curve1d.js",
+    "file"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#version",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-VERSION",
+    "scripts/curve/curve1d.js~Curve1D#VERSION",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#_fastmode",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-_fastmode",
+    "scripts/curve/curve1d.js~Curve1D#_fastmode",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#_on_change",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-_on_change",
+    "scripts/curve/curve1d.js~Curve1D#_on_change",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#constructor",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-constructor-constructor",
+    "scripts/curve/curve1d.js~Curve1D#constructor",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#copy",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-copy",
+    "scripts/curve/curve1d.js~Curve1D#copy",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#derivative",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-derivative",
+    "scripts/curve/curve1d.js~Curve1D#derivative",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#derivative2",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-derivative2",
+    "scripts/curve/curve1d.js~Curve1D#derivative2",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#destroy",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-destroy",
+    "scripts/curve/curve1d.js~Curve1D#destroy",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#draw",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-draw",
+    "scripts/curve/curve1d.js~Curve1D#draw",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#equals",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-equals",
+    "scripts/curve/curve1d.js~Curve1D#equals",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#evaluate",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-evaluate",
+    "scripts/curve/curve1d.js~Curve1D#evaluate",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#fastmode",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-get-fastmode",
+    "scripts/curve/curve1d.js~Curve1D#fastmode",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#fastmode",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-set-fastmode",
+    "scripts/curve/curve1d.js~Curve1D#fastmode",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#generatortype",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-get-generatorType",
+    "scripts/curve/curve1d.js~Curve1D#generatorType",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#generators",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-generators",
+    "scripts/curve/curve1d.js~Curve1D#generators",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#getgenerator",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-getGenerator",
+    "scripts/curve/curve1d.js~Curve1D#getGenerator",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#inverse",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-inverse",
+    "scripts/curve/curve1d.js~Curve1D#inverse",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#load",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-load",
+    "scripts/curve/curve1d.js~Curve1D#load",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#loadjson",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-loadJSON",
+    "scripts/curve/curve1d.js~Curve1D#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#loadstruct",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-loadSTRUCT",
+    "scripts/curve/curve1d.js~Curve1D#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#redraw",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-redraw",
+    "scripts/curve/curve1d.js~Curve1D#redraw",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#reset",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-reset",
+    "scripts/curve/curve1d.js~Curve1D#reset",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#setgenerator",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-setGenerator",
+    "scripts/curve/curve1d.js~Curve1D#setGenerator",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#switchgenerator",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-switchGenerator",
+    "scripts/curve/curve1d.js~Curve1D#switchGenerator",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#tojson",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-toJSON",
+    "scripts/curve/curve1d.js~Curve1D#toJSON",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d.js~curve1d#update",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-update",
+    "scripts/curve/curve1d.js~Curve1D#update",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js",
+    "file/scripts/curve/curve1d_base.js.html",
+    "scripts/curve/curve1d_base.js",
+    "file"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#constructor",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-constructor-constructor",
+    "scripts/curve/curve1d_base.js~CurveTypeData#constructor",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#derivative",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-derivative",
+    "scripts/curve/curve1d_base.js~CurveTypeData#derivative",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#derivative2",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-derivative2",
+    "scripts/curve/curve1d_base.js~CurveTypeData#derivative2",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#destroy",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-destroy",
+    "scripts/curve/curve1d_base.js~CurveTypeData#destroy",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#draw",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-draw",
+    "scripts/curve/curve1d_base.js~CurveTypeData#draw",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#evaluate",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-evaluate",
+    "scripts/curve/curve1d_base.js~CurveTypeData#evaluate",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#hasgui",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-get-hasGUI",
+    "scripts/curve/curve1d_base.js~CurveTypeData#hasGUI",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#inverse",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-inverse",
+    "scripts/curve/curve1d_base.js~CurveTypeData#inverse",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#killgui",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-killGUI",
+    "scripts/curve/curve1d_base.js~CurveTypeData#killGUI",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#loadjson",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-loadJSON",
+    "scripts/curve/curve1d_base.js~CurveTypeData#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#loadstruct",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-loadSTRUCT",
+    "scripts/curve/curve1d_base.js~CurveTypeData#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#makegui",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-makeGUI",
+    "scripts/curve/curve1d_base.js~CurveTypeData#makeGUI",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#onactive",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-onActive",
+    "scripts/curve/curve1d_base.js~CurveTypeData#onActive",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#oninactive",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-onInactive",
+    "scripts/curve/curve1d_base.js~CurveTypeData#onInactive",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#redraw",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-redraw",
+    "scripts/curve/curve1d_base.js~CurveTypeData#redraw",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#reset",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-reset",
+    "scripts/curve/curve1d_base.js~CurveTypeData#reset",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#tojson",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-toJSON",
+    "scripts/curve/curve1d_base.js~CurveTypeData#toJSON",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#type",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-member-type",
+    "scripts/curve/curve1d_base.js~CurveTypeData#type",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#update",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-update",
+    "scripts/curve/curve1d_base.js~CurveTypeData#update",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata.register",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#static-method-register",
+    "scripts/curve/curve1d_base.js~CurveTypeData.register",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_basic.js",
+    "file/scripts/curve/curve1d_basic.js.html",
+    "scripts/curve/curve1d_basic.js",
+    "file"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js",
+    "file/scripts/curve/curve1d_bspline.js.html",
+    "scripts/curve/curve1d_bspline.js",
+    "file"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#constructor",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-constructor-constructor",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#constructor",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#copy",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-copy",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#copy",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#eid",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-eid",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#eid",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#flag",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-flag",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#flag",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#loadstruct",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-loadSTRUCT",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#rco",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-rco",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#rco",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#recalc",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-recalc",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#recalc",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#sco",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-sco",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#sco",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#startco",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-startco",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#startco",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#tangent",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-tangent",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#tangent",
+    "member"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint#tojson",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-toJSON",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint#toJSON",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_bspline.js~curve1dpoint.fromjson",
+    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#static-method-fromJSON",
+    "scripts/curve/curve1d_bspline.js~Curve1DPoint.fromJSON",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_utils.js",
+    "file/scripts/curve/curve1d_utils.js.html",
+    "scripts/curve/curve1d_utils.js",
+    "file"
+  ],
+  [
     "scripts/events.js",
     "file/scripts/events.js.html",
     "scripts/events.js",
     "file"
+  ],
+  [
+    "scripts/events.js~eventdispatcher#_cbs",
+    "class/scripts/events.js~EventDispatcher.html#instance-member-_cbs",
+    "scripts/events.js~EventDispatcher#_cbs",
+    "member"
+  ],
+  [
+    "scripts/events.js~eventdispatcher#_fireevent",
+    "class/scripts/events.js~EventDispatcher.html#instance-method-_fireEvent",
+    "scripts/events.js~EventDispatcher#_fireEvent",
+    "method"
+  ],
+  [
+    "scripts/events.js~eventdispatcher#constructor",
+    "class/scripts/events.js~EventDispatcher.html#instance-constructor-constructor",
+    "scripts/events.js~EventDispatcher#constructor",
+    "method"
+  ],
+  [
+    "scripts/events.js~eventdispatcher#off",
+    "class/scripts/events.js~EventDispatcher.html#instance-method-off",
+    "scripts/events.js~EventDispatcher#off",
+    "method"
+  ],
+  [
+    "scripts/events.js~eventdispatcher#on",
+    "class/scripts/events.js~EventDispatcher.html#instance-method-on",
+    "scripts/events.js~EventDispatcher#on",
+    "method"
   ],
   [
     "scripts/events.js~eventhandler#_modalstate",
@@ -4450,6 +6022,102 @@ window.esdocSearchIndex = [
     "file/scripts/gen_vectormath.js.html",
     "scripts/gen_vectormath.js",
     "file"
+  ],
+  [
+    "scripts/graphpack.js",
+    "file/scripts/graphpack.js.html",
+    "scripts/graphpack.js",
+    "file"
+  ],
+  [
+    "scripts/graphpack.js~packnode#[symbol.keystr]",
+    "class/scripts/graphpack.js~PackNode.html#instance-method-[Symbol.keystr]",
+    "scripts/graphpack.js~PackNode#[Symbol.keystr]",
+    "method"
+  ],
+  [
+    "scripts/graphpack.js~packnode#_id",
+    "class/scripts/graphpack.js~PackNode.html#instance-member-_id",
+    "scripts/graphpack.js~PackNode#_id",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnode#constructor",
+    "class/scripts/graphpack.js~PackNode.html#instance-constructor-constructor",
+    "scripts/graphpack.js~PackNode#constructor",
+    "method"
+  ],
+  [
+    "scripts/graphpack.js~packnode#oldpos",
+    "class/scripts/graphpack.js~PackNode.html#instance-member-oldpos",
+    "scripts/graphpack.js~PackNode#oldpos",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnode#pos",
+    "class/scripts/graphpack.js~PackNode.html#instance-member-pos",
+    "scripts/graphpack.js~PackNode#pos",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnode#size",
+    "class/scripts/graphpack.js~PackNode.html#instance-member-size",
+    "scripts/graphpack.js~PackNode#size",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnode#vel",
+    "class/scripts/graphpack.js~PackNode.html#instance-member-vel",
+    "scripts/graphpack.js~PackNode#vel",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnode#verts",
+    "class/scripts/graphpack.js~PackNode.html#instance-member-verts",
+    "scripts/graphpack.js~PackNode#verts",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#[symbol.keystr]",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-method-[Symbol.keystr]",
+    "scripts/graphpack.js~PackNodeVertex#[Symbol.keystr]",
+    "method"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#_abspos",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-member-_absPos",
+    "scripts/graphpack.js~PackNodeVertex#_absPos",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#_id",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-member-_id",
+    "scripts/graphpack.js~PackNodeVertex#_id",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#abspos",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-get-absPos",
+    "scripts/graphpack.js~PackNodeVertex#absPos",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#constructor",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-constructor-constructor",
+    "scripts/graphpack.js~PackNodeVertex#constructor",
+    "method"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#edges",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-member-edges",
+    "scripts/graphpack.js~PackNodeVertex#edges",
+    "member"
+  ],
+  [
+    "scripts/graphpack.js~packnodevertex#node",
+    "class/scripts/graphpack.js~PackNodeVertex.html#instance-member-node",
+    "scripts/graphpack.js~PackNodeVertex#node",
+    "member"
   ],
   [
     "scripts/html5_fileapi.js",
@@ -4684,6 +6352,18 @@ window.esdocSearchIndex = [
     "class/scripts/math.js~PlaneOps.html#instance-method-winding",
     "scripts/math.js~PlaneOps#winding",
     "method"
+  ],
+  [
+    "scripts/mobile-detect.js",
+    "file/scripts/mobile-detect.js.html",
+    "scripts/mobile-detect.js",
+    "file"
+  ],
+  [
+    "scripts/nstructjs.js",
+    "file/scripts/nstructjs.js.html",
+    "scripts/nstructjs.js",
+    "file"
   ],
   [
     "scripts/parseutil.js",
@@ -4986,6 +6666,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/pathux.js",
+    "file/scripts/pathux.js.html",
+    "scripts/pathux.js",
+    "file"
+  ],
+  [
     "scripts/polyfill.js",
     "file/scripts/polyfill.js.html",
     "scripts/polyfill.js",
@@ -5046,6 +6732,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/simple_controller.js~dataapi#hasstruct",
+    "class/scripts/simple_controller.js~DataAPI.html#instance-method-hasStruct",
+    "scripts/simple_controller.js~DataAPI#hasStruct",
+    "method"
+  ],
+  [
     "scripts/simple_controller.js~dataapi#inheritstruct",
     "class/scripts/simple_controller.js~DataAPI.html#instance-method-inheritStruct",
     "scripts/simple_controller.js~DataAPI#inheritStruct",
@@ -5064,6 +6756,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/simple_controller.js~dataapi#masssetprop",
+    "class/scripts/simple_controller.js~DataAPI.html#instance-method-massSetProp",
+    "scripts/simple_controller.js~DataAPI#massSetProp",
+    "method"
+  ],
+  [
     "scripts/simple_controller.js~dataapi#mergestructs",
     "class/scripts/simple_controller.js~DataAPI.html#instance-method-mergeStructs",
     "scripts/simple_controller.js~DataAPI#mergeStructs",
@@ -5079,6 +6777,24 @@ window.esdocSearchIndex = [
     "scripts/simple_controller.js~dataapi#parsetoolpath",
     "class/scripts/simple_controller.js~DataAPI.html#instance-method-parseToolPath",
     "scripts/simple_controller.js~DataAPI#parseToolPath",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~dataapi#popreportcontext",
+    "class/scripts/simple_controller.js~DataAPI.html#instance-method-popReportContext",
+    "scripts/simple_controller.js~DataAPI#popReportContext",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~dataapi#pushreportcontext",
+    "class/scripts/simple_controller.js~DataAPI.html#instance-method-pushReportContext",
+    "scripts/simple_controller.js~DataAPI#pushReportContext",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~dataapi#resolvemasssetpaths",
+    "class/scripts/simple_controller.js~DataAPI.html#instance-method-resolveMassSetPaths",
+    "scripts/simple_controller.js~DataAPI#resolveMassSetPaths",
     "method"
   ],
   [
@@ -5214,6 +6930,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/simple_controller.js~datapath#baseunit",
+    "class/scripts/simple_controller.js~DataPath.html#instance-method-baseUnit",
+    "scripts/simple_controller.js~DataPath#baseUnit",
+    "method"
+  ],
+  [
     "scripts/simple_controller.js~datapath#constructor",
     "class/scripts/simple_controller.js~DataPath.html#instance-constructor-constructor",
     "scripts/simple_controller.js~DataPath#constructor",
@@ -5253,6 +6975,18 @@ window.esdocSearchIndex = [
     "scripts/simple_controller.js~datapath#descriptions",
     "class/scripts/simple_controller.js~DataPath.html#instance-method-descriptions",
     "scripts/simple_controller.js~DataPath#descriptions",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~datapath#displayunit",
+    "class/scripts/simple_controller.js~DataPath.html#instance-method-displayUnit",
+    "scripts/simple_controller.js~DataPath#displayUnit",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~datapath#exprate",
+    "class/scripts/simple_controller.js~DataPath.html#instance-method-expRate",
+    "scripts/simple_controller.js~DataPath#expRate",
     "method"
   ],
   [
@@ -5310,9 +7044,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/simple_controller.js~datapath#rollerslider",
+    "class/scripts/simple_controller.js~DataPath.html#instance-method-rollerSlider",
+    "scripts/simple_controller.js~DataPath#rollerSlider",
+    "method"
+  ],
+  [
     "scripts/simple_controller.js~datapath#setprop",
     "class/scripts/simple_controller.js~DataPath.html#instance-method-setProp",
     "scripts/simple_controller.js~DataPath#setProp",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~datapath#simpleslider",
+    "class/scripts/simple_controller.js~DataPath.html#instance-method-simpleSlider",
+    "scripts/simple_controller.js~DataPath#simpleSlider",
     "method"
   ],
   [
@@ -5334,33 +7080,9 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/simple_controller.js~datapathtoolop#constructor",
-    "class/scripts/simple_controller.js~DataPathToolOp.html#instance-constructor-constructor",
-    "scripts/simple_controller.js~DataPathToolOp#constructor",
-    "method"
-  ],
-  [
-    "scripts/simple_controller.js~datapathtoolop#exec",
-    "class/scripts/simple_controller.js~DataPathToolOp.html#instance-method-exec",
-    "scripts/simple_controller.js~DataPathToolOp#exec",
-    "method"
-  ],
-  [
-    "scripts/simple_controller.js~datapathtoolop#undo",
-    "class/scripts/simple_controller.js~DataPathToolOp.html#instance-method-undo",
-    "scripts/simple_controller.js~DataPathToolOp#undo",
-    "method"
-  ],
-  [
-    "scripts/simple_controller.js~datapathtoolop#undopre",
-    "class/scripts/simple_controller.js~DataPathToolOp.html#instance-method-undoPre",
-    "scripts/simple_controller.js~DataPathToolOp#undoPre",
-    "method"
-  ],
-  [
-    "scripts/simple_controller.js~datapathtoolop.tooldef",
-    "class/scripts/simple_controller.js~DataPathToolOp.html#static-method-tooldef",
-    "scripts/simple_controller.js~DataPathToolOp.tooldef",
+    "scripts/simple_controller.js~datapath#uirange",
+    "class/scripts/simple_controller.js~DataPath.html#instance-method-uiRange",
+    "scripts/simple_controller.js~DataPath#uiRange",
     "method"
   ],
   [
@@ -5373,6 +7095,12 @@ window.esdocSearchIndex = [
     "scripts/simple_controller.js~datastruct#arraylist",
     "class/scripts/simple_controller.js~DataStruct.html#instance-method-arrayList",
     "scripts/simple_controller.js~DataStruct#arrayList",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~datastruct#bool",
+    "class/scripts/simple_controller.js~DataStruct.html#instance-method-bool",
+    "scripts/simple_controller.js~DataStruct#bool",
     "method"
   ],
   [
@@ -5397,6 +7125,12 @@ window.esdocSearchIndex = [
     "scripts/simple_controller.js~datastruct#copy",
     "class/scripts/simple_controller.js~DataStruct.html#instance-method-copy",
     "scripts/simple_controller.js~DataStruct#copy",
+    "method"
+  ],
+  [
+    "scripts/simple_controller.js~datastruct#curve1d",
+    "class/scripts/simple_controller.js~DataStruct.html#instance-method-curve1d",
+    "scripts/simple_controller.js~DataStruct#curve1d",
     "method"
   ],
   [
@@ -5568,48 +7302,6 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/simple_toolsys.js~contextexample#api",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-get-api",
-    "scripts/simple_toolsys.js~ContextExample#api",
-    "member"
-  ],
-  [
-    "scripts/simple_toolsys.js~contextexample#constructor",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-constructor-constructor",
-    "scripts/simple_toolsys.js~ContextExample#constructor",
-    "method"
-  ],
-  [
-    "scripts/simple_toolsys.js~contextexample#editor",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-get-editor",
-    "scripts/simple_toolsys.js~ContextExample#editor",
-    "member"
-  ],
-  [
-    "scripts/simple_toolsys.js~contextexample#exectool",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-method-execTool",
-    "scripts/simple_toolsys.js~ContextExample#execTool",
-    "method"
-  ],
-  [
-    "scripts/simple_toolsys.js~contextexample#save",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-method-save",
-    "scripts/simple_toolsys.js~ContextExample#save",
-    "method"
-  ],
-  [
-    "scripts/simple_toolsys.js~contextexample#screen",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-get-screen",
-    "scripts/simple_toolsys.js~ContextExample#screen",
-    "member"
-  ],
-  [
-    "scripts/simple_toolsys.js~contextexample#state",
-    "class/scripts/simple_toolsys.js~ContextExample.html#instance-get-state",
-    "scripts/simple_toolsys.js~ContextExample#state",
-    "member"
-  ],
-  [
     "scripts/simple_toolsys.js~toolmacro#_accept",
     "class/scripts/simple_toolsys.js~ToolMacro.html#instance-member-_accept",
     "scripts/simple_toolsys.js~ToolMacro#_accept",
@@ -5760,18 +7452,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/simple_toolsys.js~toolop#canrun",
-    "class/scripts/simple_toolsys.js~ToolOp.html#instance-method-canRun",
-    "scripts/simple_toolsys.js~ToolOp#canRun",
-    "method"
-  ],
-  [
-    "scripts/simple_toolsys.js~toolop#can_call",
-    "class/scripts/simple_toolsys.js~ToolOp.html#instance-method-can_call",
-    "scripts/simple_toolsys.js~ToolOp#can_call",
-    "method"
-  ],
-  [
     "scripts/simple_toolsys.js~toolop#constructor",
     "class/scripts/simple_toolsys.js~ToolOp.html#instance-constructor-constructor",
     "scripts/simple_toolsys.js~ToolOp#constructor",
@@ -5818,6 +7498,12 @@ window.esdocSearchIndex = [
     "class/scripts/simple_toolsys.js~ToolOp.html#instance-member-flag",
     "scripts/simple_toolsys.js~ToolOp#flag",
     "member"
+  ],
+  [
+    "scripts/simple_toolsys.js~toolop#gentoolstring",
+    "class/scripts/simple_toolsys.js~ToolOp.html#instance-method-genToolString",
+    "scripts/simple_toolsys.js~ToolOp#genToolString",
+    "method"
   ],
   [
     "scripts/simple_toolsys.js~toolop#getoverdraw",
@@ -6000,9 +7686,123 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/simple_toolsys.js~toolstack#setrestrictedtoolcontext",
+    "class/scripts/simple_toolsys.js~ToolStack.html#instance-method-setRestrictedToolContext",
+    "scripts/simple_toolsys.js~ToolStack#setRestrictedToolContext",
+    "method"
+  ],
+  [
+    "scripts/simple_toolsys.js~toolstack#toolctx",
+    "class/scripts/simple_toolsys.js~ToolStack.html#instance-member-toolctx",
+    "scripts/simple_toolsys.js~ToolStack#toolctx",
+    "member"
+  ],
+  [
     "scripts/simple_toolsys.js~toolstack#undo",
     "class/scripts/simple_toolsys.js~ToolStack.html#instance-method-undo",
     "scripts/simple_toolsys.js~ToolStack#undo",
+    "method"
+  ],
+  [
+    "scripts/solver.js",
+    "file/scripts/solver.js.html",
+    "scripts/solver.js",
+    "file"
+  ],
+  [
+    "scripts/solver.js~constraint#constructor",
+    "class/scripts/solver.js~Constraint.html#instance-constructor-constructor",
+    "scripts/solver.js~Constraint#constructor",
+    "method"
+  ],
+  [
+    "scripts/solver.js~constraint#df",
+    "class/scripts/solver.js~Constraint.html#instance-member-df",
+    "scripts/solver.js~Constraint#df",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#evaluate",
+    "class/scripts/solver.js~Constraint.html#instance-method-evaluate",
+    "scripts/solver.js~Constraint#evaluate",
+    "method"
+  ],
+  [
+    "scripts/solver.js~constraint#func",
+    "class/scripts/solver.js~Constraint.html#instance-member-func",
+    "scripts/solver.js~Constraint#func",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#glst",
+    "class/scripts/solver.js~Constraint.html#instance-member-glst",
+    "scripts/solver.js~Constraint#glst",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#k",
+    "class/scripts/solver.js~Constraint.html#instance-member-k",
+    "scripts/solver.js~Constraint#k",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#klst",
+    "class/scripts/solver.js~Constraint.html#instance-member-klst",
+    "scripts/solver.js~Constraint#klst",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#name",
+    "class/scripts/solver.js~Constraint.html#instance-member-name",
+    "scripts/solver.js~Constraint#name",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#params",
+    "class/scripts/solver.js~Constraint.html#instance-member-params",
+    "scripts/solver.js~Constraint#params",
+    "member"
+  ],
+  [
+    "scripts/solver.js~constraint#threshold",
+    "class/scripts/solver.js~Constraint.html#instance-member-threshold",
+    "scripts/solver.js~Constraint#threshold",
+    "member"
+  ],
+  [
+    "scripts/solver.js~solver#add",
+    "class/scripts/solver.js~Solver.html#instance-method-add",
+    "scripts/solver.js~Solver#add",
+    "method"
+  ],
+  [
+    "scripts/solver.js~solver#constraints",
+    "class/scripts/solver.js~Solver.html#instance-member-constraints",
+    "scripts/solver.js~Solver#constraints",
+    "member"
+  ],
+  [
+    "scripts/solver.js~solver#constructor",
+    "class/scripts/solver.js~Solver.html#instance-constructor-constructor",
+    "scripts/solver.js~Solver#constructor",
+    "method"
+  ],
+  [
+    "scripts/solver.js~solver#gk",
+    "class/scripts/solver.js~Solver.html#instance-member-gk",
+    "scripts/solver.js~Solver#gk",
+    "member"
+  ],
+  [
+    "scripts/solver.js~solver#solve",
+    "class/scripts/solver.js~Solver.html#instance-method-solve",
+    "scripts/solver.js~Solver#solve",
+    "method"
+  ],
+  [
+    "scripts/solver.js~solver#solvestep",
+    "class/scripts/solver.js~Solver.html#instance-method-solveStep",
+    "scripts/solver.js~Solver#solveStep",
     "method"
   ],
   [
@@ -6075,6 +7875,48 @@ window.esdocSearchIndex = [
     "scripts/toolprop.js~boolproperty#tojson",
     "class/scripts/toolprop.js~BoolProperty.html#instance-method-toJSON",
     "scripts/toolprop.js~BoolProperty#toJSON",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#constructor",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-constructor-constructor",
+    "scripts/toolprop.js~Curve1DProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#copy",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-method-copy",
+    "scripts/toolprop.js~Curve1DProperty#copy",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#copyto",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-method-copyTo",
+    "scripts/toolprop.js~Curve1DProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#data",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-member-data",
+    "scripts/toolprop.js~Curve1DProperty#data",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#evaluate",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-method-evaluate",
+    "scripts/toolprop.js~Curve1DProperty#evaluate",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#getvalue",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-method-getValue",
+    "scripts/toolprop.js~Curve1DProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~curve1dproperty#setvalue",
+    "class/scripts/toolprop.js~Curve1DProperty.html#instance-method-setValue",
+    "scripts/toolprop.js~Curve1DProperty#setValue",
     "method"
   ],
   [
@@ -6222,12 +8064,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/toolprop.js~floatproperty#range",
-    "class/scripts/toolprop.js~FloatProperty.html#instance-member-range",
-    "scripts/toolprop.js~FloatProperty#range",
-    "member"
-  ],
-  [
     "scripts/toolprop.js~floatproperty#setdecimalplaces",
     "class/scripts/toolprop.js~FloatProperty.html#instance-method-setDecimalPlaces",
     "scripts/toolprop.js~FloatProperty#setDecimalPlaces",
@@ -6252,12 +8088,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/toolprop.js~intproperty#copyto",
-    "class/scripts/toolprop.js~IntProperty.html#instance-method-copyTo",
-    "scripts/toolprop.js~IntProperty#copyTo",
-    "method"
-  ],
-  [
     "scripts/toolprop.js~intproperty#data",
     "class/scripts/toolprop.js~IntProperty.html#instance-member-data",
     "scripts/toolprop.js~IntProperty#data",
@@ -6276,27 +8106,9 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/toolprop.js~intproperty#range",
-    "class/scripts/toolprop.js~IntProperty.html#instance-member-range",
-    "scripts/toolprop.js~IntProperty#range",
-    "member"
-  ],
-  [
     "scripts/toolprop.js~intproperty#setradix",
     "class/scripts/toolprop.js~IntProperty.html#instance-method-setRadix",
     "scripts/toolprop.js~IntProperty#setRadix",
-    "method"
-  ],
-  [
-    "scripts/toolprop.js~intproperty#setrange",
-    "class/scripts/toolprop.js~IntProperty.html#instance-method-setRange",
-    "scripts/toolprop.js~IntProperty#setRange",
-    "method"
-  ],
-  [
-    "scripts/toolprop.js~intproperty#setstep",
-    "class/scripts/toolprop.js~IntProperty.html#instance-method-setStep",
-    "scripts/toolprop.js~IntProperty#setStep",
     "method"
   ],
   [
@@ -6600,6 +8412,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolprop.js~toolproperty#baseunit",
+    "class/scripts/toolprop.js~ToolProperty.html#instance-member-baseUnit",
+    "scripts/toolprop.js~ToolProperty#baseUnit",
+    "member"
+  ],
+  [
     "scripts/toolprop.js~toolproperty#callbacks",
     "class/scripts/toolprop.js~ToolProperty.html#instance-member-callbacks",
     "scripts/toolprop.js~ToolProperty#callbacks",
@@ -6633,6 +8451,12 @@ window.esdocSearchIndex = [
     "scripts/toolprop.js~toolproperty#description",
     "class/scripts/toolprop.js~ToolProperty.html#instance-member-description",
     "scripts/toolprop.js~ToolProperty#description",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~toolproperty#displayunit",
+    "class/scripts/toolprop.js~ToolProperty.html#instance-member-displayUnit",
+    "scripts/toolprop.js~ToolProperty#displayUnit",
     "member"
   ],
   [
@@ -6684,6 +8508,18 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolprop.js~toolproperty#setbaseunit",
+    "class/scripts/toolprop.js~ToolProperty.html#instance-method-setBaseUnit",
+    "scripts/toolprop.js~ToolProperty#setBaseUnit",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~toolproperty#setdisplayunit",
+    "class/scripts/toolprop.js~ToolProperty.html#instance-method-setDisplayUnit",
+    "scripts/toolprop.js~ToolProperty#setDisplayUnit",
+    "method"
+  ],
+  [
     "scripts/toolprop.js~toolproperty#seticon",
     "class/scripts/toolprop.js~ToolProperty.html#instance-method-setIcon",
     "scripts/toolprop.js~ToolProperty#setIcon",
@@ -6699,6 +8535,12 @@ window.esdocSearchIndex = [
     "scripts/toolprop.js~toolproperty#setstep",
     "class/scripts/toolprop.js~ToolProperty.html#instance-method-setStep",
     "scripts/toolprop.js~ToolProperty#setStep",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~toolproperty#setuirange",
+    "class/scripts/toolprop.js~ToolProperty.html#instance-method-setUIRange",
+    "scripts/toolprop.js~ToolProperty#setUIRange",
     "method"
   ],
   [
@@ -6729,6 +8571,12 @@ window.esdocSearchIndex = [
     "scripts/toolprop.js~toolproperty#type",
     "class/scripts/toolprop.js~ToolProperty.html#instance-member-type",
     "scripts/toolprop.js~ToolProperty#type",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~toolproperty#uirange",
+    "class/scripts/toolprop.js~ToolProperty.html#instance-member-uiRange",
+    "scripts/toolprop.js~ToolProperty#uiRange",
     "member"
   ],
   [
@@ -6786,6 +8634,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolprop.js~vec2property#type",
+    "class/scripts/toolprop.js~Vec2Property.html#instance-member-type",
+    "scripts/toolprop.js~Vec2Property#type",
+    "member"
+  ],
+  [
     "scripts/toolprop.js~vec3property#constructor",
     "class/scripts/toolprop.js~Vec3Property.html#instance-constructor-constructor",
     "scripts/toolprop.js~Vec3Property#constructor",
@@ -6820,6 +8674,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolprop.js~Vec3Property.html#instance-method-setValue",
     "scripts/toolprop.js~Vec3Property#setValue",
     "method"
+  ],
+  [
+    "scripts/toolprop.js~vec3property#type",
+    "class/scripts/toolprop.js~Vec3Property.html#instance-member-type",
+    "scripts/toolprop.js~Vec3Property#type",
+    "member"
   ],
   [
     "scripts/toolprop.js~vec4property#constructor",
@@ -6858,10 +8718,136 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolprop.js~vec4property#type",
+    "class/scripts/toolprop.js~Vec4Property.html#instance-member-type",
+    "scripts/toolprop.js~Vec4Property#type",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#[key]",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-member-[key]",
+    "scripts/toolprop.js~_NumberPropertyBase#[key]",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#constructor",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-constructor-constructor",
+    "scripts/toolprop.js~_NumberPropertyBase#constructor",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#copyto",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-method-copyTo",
+    "scripts/toolprop.js~_NumberPropertyBase#copyTo",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#data",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-member-data",
+    "scripts/toolprop.js~_NumberPropertyBase#data",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#exprate",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-member-expRate",
+    "scripts/toolprop.js~_NumberPropertyBase#expRate",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#loadjson",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-method-loadJSON",
+    "scripts/toolprop.js~_NumberPropertyBase#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#loadjson",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-method-loadJSON",
+    "scripts/toolprop.js~_NumberPropertyBase#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#range",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-member-range",
+    "scripts/toolprop.js~_NumberPropertyBase#range",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#setexprate",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-method-setExpRate",
+    "scripts/toolprop.js~_NumberPropertyBase#setExpRate",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#setvalue",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-method-setValue",
+    "scripts/toolprop.js~_NumberPropertyBase#setValue",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#step",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-member-step",
+    "scripts/toolprop.js~_NumberPropertyBase#step",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#tojson",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-method-toJSON",
+    "scripts/toolprop.js~_NumberPropertyBase#toJSON",
+    "method"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#uirange",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-member-uiRange",
+    "scripts/toolprop.js~_NumberPropertyBase#uiRange",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#ui_range",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-get-ui_range",
+    "scripts/toolprop.js~_NumberPropertyBase#ui_range",
+    "member"
+  ],
+  [
+    "scripts/toolprop.js~_numberpropertybase#ui_range",
+    "class/scripts/toolprop.js~_NumberPropertyBase.html#instance-set-ui_range",
+    "scripts/toolprop.js~_NumberPropertyBase#ui_range",
+    "member"
+  ],
+  [
     "scripts/toolprop_abstract.js",
     "file/scripts/toolprop_abstract.js.html",
     "scripts/toolprop_abstract.js",
     "file"
+  ],
+  [
+    "scripts/toolprop_abstract.js~curve1dpropertyif#constructor",
+    "class/scripts/toolprop_abstract.js~Curve1DPropertyIF.html#instance-constructor-constructor",
+    "scripts/toolprop_abstract.js~Curve1DPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/toolprop_abstract.js~curve1dpropertyif#copyto",
+    "class/scripts/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-copyTo",
+    "scripts/toolprop_abstract.js~Curve1DPropertyIF#copyTo",
+    "method"
+  ],
+  [
+    "scripts/toolprop_abstract.js~curve1dpropertyif#data",
+    "class/scripts/toolprop_abstract.js~Curve1DPropertyIF.html#instance-member-data",
+    "scripts/toolprop_abstract.js~Curve1DPropertyIF#data",
+    "member"
+  ],
+  [
+    "scripts/toolprop_abstract.js~curve1dpropertyif#getvalue",
+    "class/scripts/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-getValue",
+    "scripts/toolprop_abstract.js~Curve1DPropertyIF#getValue",
+    "method"
+  ],
+  [
+    "scripts/toolprop_abstract.js~curve1dpropertyif#setvalue",
+    "class/scripts/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-setValue",
+    "scripts/toolprop_abstract.js~Curve1DPropertyIF#setValue",
+    "method"
   ],
   [
     "scripts/toolprop_abstract.js~enumproperty#addicons",
@@ -7134,6 +9120,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolprop_abstract.js~toolpropertyif#setunit",
+    "class/scripts/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setUnit",
+    "scripts/toolprop_abstract.js~ToolPropertyIF#setUnit",
+    "method"
+  ],
+  [
     "scripts/toolprop_abstract.js~toolpropertyif#setvalue",
     "class/scripts/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setValue",
     "scripts/toolprop_abstract.js~ToolPropertyIF#setValue",
@@ -7320,6 +9312,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui.js~container#curve1d",
+    "class/scripts/ui.js~Container.html#instance-method-curve1d",
+    "scripts/ui.js~Container#curve1d",
+    "method"
+  ],
+  [
     "scripts/ui.js~container#dataprefix",
     "class/scripts/ui.js~Container.html#instance-member-dataPrefix",
     "scripts/ui.js~Container#dataPrefix",
@@ -7329,6 +9327,12 @@ window.esdocSearchIndex = [
     "scripts/ui.js~container#getroot",
     "class/scripts/ui.js~Container.html#instance-method-getroot",
     "scripts/ui.js~Container#getroot",
+    "method"
+  ],
+  [
+    "scripts/ui.js~container#helppicker",
+    "class/scripts/ui.js~Container.html#instance-method-helppicker",
+    "scripts/ui.js~Container#helppicker",
     "method"
   ],
   [
@@ -7458,6 +9462,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui.js~container#removechild",
+    "class/scripts/ui.js~Container.html#instance-method-removeChild",
+    "scripts/ui.js~Container#removeChild",
+    "method"
+  ],
+  [
     "scripts/ui.js~container#row",
     "class/scripts/ui.js~Container.html#instance-method-row",
     "scripts/ui.js~Container#row",
@@ -7530,6 +9540,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui.js~container#textarea",
+    "class/scripts/ui.js~Container.html#instance-method-textarea",
+    "scripts/ui.js~Container#textarea",
+    "method"
+  ],
+  [
     "scripts/ui.js~container#textbox",
     "class/scripts/ui.js~Container.html#instance-method-textbox",
     "scripts/ui.js~Container#textbox",
@@ -7560,6 +9576,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui.js~container#viewer",
+    "class/scripts/ui.js~Container.html#instance-method-viewer",
+    "scripts/ui.js~Container#viewer",
+    "method"
+  ],
+  [
     "scripts/ui.js~container#wrap",
     "class/scripts/ui.js~Container.html#instance-method-wrap",
     "scripts/ui.js~Container#wrap",
@@ -7582,6 +9604,12 @@ window.esdocSearchIndex = [
     "class/scripts/ui.js~Label.html#instance-member-_label",
     "scripts/ui.js~Label#_label",
     "member"
+  ],
+  [
+    "scripts/ui.js~label#_updatefont",
+    "class/scripts/ui.js~Label.html#instance-method-_updateFont",
+    "scripts/ui.js~Label#_updateFont",
+    "method"
   ],
   [
     "scripts/ui.js~label#constructor",
@@ -7641,96 +9669,6 @@ window.esdocSearchIndex = [
     "scripts/ui.js~label.define",
     "class/scripts/ui.js~Label.html#static-method-define",
     "scripts/ui.js~Label.define",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#_closed",
-    "class/scripts/ui.js~PanelFrame.html#instance-member-_closed",
-    "scripts/ui.js~PanelFrame#_closed",
-    "member"
-  ],
-  [
-    "scripts/ui.js~panelframe#_setvisible",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-_setVisible",
-    "scripts/ui.js~PanelFrame#_setVisible",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#_updateclosed",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-_updateClosed",
-    "scripts/ui.js~PanelFrame#_updateClosed",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#background",
-    "class/scripts/ui.js~PanelFrame.html#instance-member-background",
-    "scripts/ui.js~PanelFrame#background",
-    "member"
-  ],
-  [
-    "scripts/ui.js~panelframe#clear",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-clear",
-    "scripts/ui.js~PanelFrame#clear",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#closed",
-    "class/scripts/ui.js~PanelFrame.html#instance-get-closed",
-    "scripts/ui.js~PanelFrame#closed",
-    "member"
-  ],
-  [
-    "scripts/ui.js~panelframe#closed",
-    "class/scripts/ui.js~PanelFrame.html#instance-set-closed",
-    "scripts/ui.js~PanelFrame#closed",
-    "member"
-  ],
-  [
-    "scripts/ui.js~panelframe#constructor",
-    "class/scripts/ui.js~PanelFrame.html#instance-constructor-constructor",
-    "scripts/ui.js~PanelFrame#constructor",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#contents",
-    "class/scripts/ui.js~PanelFrame.html#instance-member-contents",
-    "scripts/ui.js~PanelFrame#contents",
-    "member"
-  ],
-  [
-    "scripts/ui.js~panelframe#iconcheck",
-    "class/scripts/ui.js~PanelFrame.html#instance-member-iconcheck",
-    "scripts/ui.js~PanelFrame#iconcheck",
-    "member"
-  ],
-  [
-    "scripts/ui.js~panelframe#init",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-init",
-    "scripts/ui.js~PanelFrame#init",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#loaddata",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-loadData",
-    "scripts/ui.js~PanelFrame#loadData",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#savedata",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-saveData",
-    "scripts/ui.js~PanelFrame#saveData",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe#update",
-    "class/scripts/ui.js~PanelFrame.html#instance-method-update",
-    "scripts/ui.js~PanelFrame#update",
-    "method"
-  ],
-  [
-    "scripts/ui.js~panelframe.define",
-    "class/scripts/ui.js~PanelFrame.html#static-method-define",
-    "scripts/ui.js~PanelFrame.define",
     "method"
   ],
   [
@@ -7884,6 +9822,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_base.js~uibase#_description",
+    "class/scripts/ui_base.js~UIBase.html#instance-member-_description",
+    "scripts/ui_base.js~UIBase#_description",
+    "member"
+  ],
+  [
     "scripts/ui_base.js~uibase#_disabled",
     "class/scripts/ui_base.js~UIBase.html#instance-member-_disabled",
     "scripts/ui_base.js~UIBase#_disabled",
@@ -7894,6 +9838,12 @@ window.esdocSearchIndex = [
     "class/scripts/ui_base.js~UIBase.html#instance-member-_disdata",
     "scripts/ui_base.js~UIBase#_disdata",
     "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#_domobiledefault",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-_doMobileDefault",
+    "scripts/ui_base.js~UIBase#_doMobileDefault",
+    "method"
   ],
   [
     "scripts/ui_base.js~uibase#_ensurechildrenctx",
@@ -7938,6 +9888,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_base.js~uibase#_last_description",
+    "class/scripts/ui_base.js~UIBase.html#instance-member-_last_description",
+    "scripts/ui_base.js~UIBase#_last_description",
+    "member"
+  ],
+  [
     "scripts/ui_base.js~uibase#_modaldata",
     "class/scripts/ui_base.js~UIBase.html#instance-member-_modaldata",
     "scripts/ui_base.js~UIBase#_modaldata",
@@ -7956,9 +9912,27 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/ui_base.js~uibase#_usedatapathtoolop",
-    "class/scripts/ui_base.js~UIBase.html#instance-member-_useDataPathToolOp",
-    "scripts/ui_base.js~UIBase#_useDataPathToolOp",
+    "scripts/ui_base.js~uibase#_parentwidget",
+    "class/scripts/ui_base.js~UIBase.html#instance-member-_parentWidget",
+    "scripts/ui_base.js~UIBase#_parentWidget",
+    "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#_reportctxname",
+    "class/scripts/ui_base.js~UIBase.html#instance-get-_reportCtxName",
+    "scripts/ui_base.js~UIBase#_reportCtxName",
+    "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#_usedatapathundo",
+    "class/scripts/ui_base.js~UIBase.html#instance-member-_useDataPathUndo",
+    "scripts/ui_base.js~UIBase#_useDataPathUndo",
+    "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#_wasaddedtonodeatsometime",
+    "class/scripts/ui_base.js~UIBase.html#instance-member-_wasAddedToNodeAtSomeTime",
+    "scripts/ui_base.js~UIBase#_wasAddedToNodeAtSomeTime",
     "member"
   ],
   [
@@ -7978,6 +9952,12 @@ window.esdocSearchIndex = [
     "class/scripts/ui_base.js~UIBase.html#instance-set-background",
     "scripts/ui_base.js~UIBase#background",
     "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#calcz",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-calcZ",
+    "scripts/ui_base.js~UIBase#calcZ",
+    "method"
   ],
   [
     "scripts/ui_base.js~uibase#class_default_overrides",
@@ -8017,7 +9997,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/ui_base.js~uibase#description",
-    "class/scripts/ui_base.js~UIBase.html#instance-member-description",
+    "class/scripts/ui_base.js~UIBase.html#instance-get-description",
+    "scripts/ui_base.js~UIBase#description",
+    "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#description",
+    "class/scripts/ui_base.js~UIBase.html#instance-set-description",
     "scripts/ui_base.js~UIBase#description",
     "member"
   ],
@@ -8058,6 +10044,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_base.js~uibase#formatnumber",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-formatNumber",
+    "scripts/ui_base.js~UIBase#formatNumber",
+    "method"
+  ],
+  [
     "scripts/ui_base.js~uibase#getclassdefault",
     "class/scripts/ui_base.js~UIBase.html#instance-method-getClassDefault",
     "scripts/ui_base.js~UIBase#getClassDefault",
@@ -8073,6 +10065,12 @@ window.esdocSearchIndex = [
     "scripts/ui_base.js~uibase#getdefault",
     "class/scripts/ui_base.js~UIBase.html#instance-method-getDefault",
     "scripts/ui_base.js~UIBase#getDefault",
+    "method"
+  ],
+  [
+    "scripts/ui_base.js~uibase#getpathdescription",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-getPathDescription",
+    "scripts/ui_base.js~UIBase#getPathDescription",
     "method"
   ],
   [
@@ -8136,6 +10134,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_base.js~uibase#isdead",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-isDead",
+    "scripts/ui_base.js~UIBase#isDead",
+    "method"
+  ],
+  [
     "scripts/ui_base.js~uibase#loaddata",
     "class/scripts/ui_base.js~UIBase.html#instance-method-loadData",
     "scripts/ui_base.js~UIBase#loadData",
@@ -8178,6 +10182,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_base.js~uibase#on_remove",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-on_remove",
+    "scripts/ui_base.js~UIBase#on_remove",
+    "method"
+  ],
+  [
     "scripts/ui_base.js~uibase#on_resize",
     "class/scripts/ui_base.js~UIBase.html#instance-method-on_resize",
     "scripts/ui_base.js~UIBase#on_resize",
@@ -8215,20 +10225,26 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/ui_base.js~uibase#parentwidget",
-    "class/scripts/ui_base.js~UIBase.html#instance-member-parentWidget",
+    "class/scripts/ui_base.js~UIBase.html#instance-get-parentWidget",
     "scripts/ui_base.js~UIBase#parentWidget",
     "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#parentwidget",
+    "class/scripts/ui_base.js~UIBase.html#instance-set-parentWidget",
+    "scripts/ui_base.js~UIBase#parentWidget",
+    "member"
+  ],
+  [
+    "scripts/ui_base.js~uibase#parsenumber",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-parseNumber",
+    "scripts/ui_base.js~UIBase#parseNumber",
+    "method"
   ],
   [
     "scripts/ui_base.js~uibase#pickelement",
     "class/scripts/ui_base.js~UIBase.html#instance-method-pickElement",
     "scripts/ui_base.js~UIBase#pickElement",
-    "method"
-  ],
-  [
-    "scripts/ui_base.js~uibase#pickelement3",
-    "class/scripts/ui_base.js~UIBase.html#instance-method-pickElement3",
-    "scripts/ui_base.js~UIBase#pickElement3",
     "method"
   ],
   [
@@ -8280,6 +10296,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_base.js~uibase#setpathvalueundo",
+    "class/scripts/ui_base.js~UIBase.html#instance-method-setPathValueUndo",
+    "scripts/ui_base.js~UIBase#setPathValueUndo",
+    "method"
+  ],
+  [
     "scripts/ui_base.js~uibase#shadow",
     "class/scripts/ui_base.js~UIBase.html#instance-member-shadow",
     "scripts/ui_base.js~UIBase#shadow",
@@ -8304,15 +10326,15 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/ui_base.js~uibase#usedatapathtoolop",
-    "class/scripts/ui_base.js~UIBase.html#instance-set-useDataPathToolOp",
-    "scripts/ui_base.js~UIBase#useDataPathToolOp",
+    "scripts/ui_base.js~uibase#usedatapathundo",
+    "class/scripts/ui_base.js~UIBase.html#instance-set-useDataPathUndo",
+    "scripts/ui_base.js~UIBase#useDataPathUndo",
     "member"
   ],
   [
-    "scripts/ui_base.js~uibase#usedatapathtoolop",
-    "class/scripts/ui_base.js~UIBase.html#instance-get-useDataPathToolOp",
-    "scripts/ui_base.js~UIBase#useDataPathToolOp",
+    "scripts/ui_base.js~uibase#usedatapathundo",
+    "class/scripts/ui_base.js~UIBase.html#instance-get-useDataPathUndo",
+    "scripts/ui_base.js~UIBase#useDataPathUndo",
     "member"
   ],
   [
@@ -8343,6 +10365,258 @@ window.esdocSearchIndex = [
     "scripts/ui_base.js~uibase.setdefault",
     "class/scripts/ui_base.js~UIBase.html#static-method-setDefault",
     "scripts/ui_base.js~UIBase.setDefault",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js",
+    "file/scripts/ui_button.js.html",
+    "scripts/ui_button.js",
+    "file"
+  ],
+  [
+    "scripts/ui_button.js~button#_auto_depress",
+    "class/scripts/ui_button.js~Button.html#instance-member-_auto_depress",
+    "scripts/ui_button.js~Button#_auto_depress",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_calcupdatekey",
+    "class/scripts/ui_button.js~Button.html#instance-method-_calcUpdateKey",
+    "scripts/ui_button.js~Button#_calcUpdateKey",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#_draw_text",
+    "class/scripts/ui_button.js~Button.html#instance-method-_draw_text",
+    "scripts/ui_button.js~Button#_draw_text",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#_focus",
+    "class/scripts/ui_button.js~Button.html#instance-member-_focus",
+    "scripts/ui_button.js~Button#_focus",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_genlabel",
+    "class/scripts/ui_button.js~Button.html#instance-method-_genLabel",
+    "scripts/ui_button.js~Button#_genLabel",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#_highlight",
+    "class/scripts/ui_button.js~Button.html#instance-member-_highlight",
+    "scripts/ui_button.js~Button#_highlight",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_last_bg",
+    "class/scripts/ui_button.js~Button.html#instance-member-_last_bg",
+    "scripts/ui_button.js~Button#_last_bg",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_last_disabled",
+    "class/scripts/ui_button.js~Button.html#instance-member-_last_disabled",
+    "scripts/ui_button.js~Button#_last_disabled",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_last_dpi",
+    "class/scripts/ui_button.js~Button.html#instance-member-_last_dpi",
+    "scripts/ui_button.js~Button#_last_dpi",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_last_h",
+    "class/scripts/ui_button.js~Button.html#instance-member-_last_h",
+    "scripts/ui_button.js~Button#_last_h",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_last_update_key",
+    "class/scripts/ui_button.js~Button.html#instance-member-_last_update_key",
+    "scripts/ui_button.js~Button#_last_update_key",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_last_w",
+    "class/scripts/ui_button.js~Button.html#instance-member-_last_w",
+    "scripts/ui_button.js~Button#_last_w",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_lasth",
+    "class/scripts/ui_button.js~Button.html#instance-member-_lasth",
+    "scripts/ui_button.js~Button#_lasth",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_lastw",
+    "class/scripts/ui_button.js~Button.html#instance-member-_lastw",
+    "scripts/ui_button.js~Button#_lastw",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_name",
+    "class/scripts/ui_button.js~Button.html#instance-member-_name",
+    "scripts/ui_button.js~Button#_name",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_namepad",
+    "class/scripts/ui_button.js~Button.html#instance-member-_namePad",
+    "scripts/ui_button.js~Button#_namePad",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_pressed",
+    "class/scripts/ui_button.js~Button.html#instance-member-_pressed",
+    "scripts/ui_button.js~Button#_pressed",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#_redraw",
+    "class/scripts/ui_button.js~Button.html#instance-method-_redraw",
+    "scripts/ui_button.js~Button#_redraw",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#_repos_canvas",
+    "class/scripts/ui_button.js~Button.html#instance-method-_repos_canvas",
+    "scripts/ui_button.js~Button#_repos_canvas",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#bindevents",
+    "class/scripts/ui_button.js~Button.html#instance-method-bindEvents",
+    "scripts/ui_button.js~Button#bindEvents",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#boxpad",
+    "class/scripts/ui_button.js~Button.html#instance-get-boxpad",
+    "scripts/ui_button.js~Button#boxpad",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#boxpad",
+    "class/scripts/ui_button.js~Button.html#instance-set-boxpad",
+    "scripts/ui_button.js~Button#boxpad",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#click",
+    "class/scripts/ui_button.js~Button.html#instance-method-click",
+    "scripts/ui_button.js~Button#click",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#constructor",
+    "class/scripts/ui_button.js~Button.html#instance-constructor-constructor",
+    "scripts/ui_button.js~Button#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#dom",
+    "class/scripts/ui_button.js~Button.html#instance-member-dom",
+    "scripts/ui_button.js~Button#dom",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#g",
+    "class/scripts/ui_button.js~Button.html#instance-member-g",
+    "scripts/ui_button.js~Button#g",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#init",
+    "class/scripts/ui_button.js~Button.html#instance-method-init",
+    "scripts/ui_button.js~Button#init",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#r",
+    "class/scripts/ui_button.js~Button.html#instance-get-r",
+    "scripts/ui_button.js~Button#r",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#r",
+    "class/scripts/ui_button.js~Button.html#instance-set-r",
+    "scripts/ui_button.js~Button#r",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#setattribute",
+    "class/scripts/ui_button.js~Button.html#instance-method-setAttribute",
+    "scripts/ui_button.js~Button#setAttribute",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#setcss",
+    "class/scripts/ui_button.js~Button.html#instance-method-setCSS",
+    "scripts/ui_button.js~Button#setCSS",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#tabindex",
+    "class/scripts/ui_button.js~Button.html#instance-get-tabIndex",
+    "scripts/ui_button.js~Button#tabIndex",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#tabindex",
+    "class/scripts/ui_button.js~Button.html#instance-set-tabIndex",
+    "scripts/ui_button.js~Button#tabIndex",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#title",
+    "class/scripts/ui_button.js~Button.html#instance-member-title",
+    "scripts/ui_button.js~Button#title",
+    "member"
+  ],
+  [
+    "scripts/ui_button.js~button#update",
+    "class/scripts/ui_button.js~Button.html#instance-method-update",
+    "scripts/ui_button.js~Button#update",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#updatedpi",
+    "class/scripts/ui_button.js~Button.html#instance-method-updateDPI",
+    "scripts/ui_button.js~Button#updateDPI",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#updatedefaultsize",
+    "class/scripts/ui_button.js~Button.html#instance-method-updateDefaultSize",
+    "scripts/ui_button.js~Button#updateDefaultSize",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#updatedisabled",
+    "class/scripts/ui_button.js~Button.html#instance-method-updateDisabled",
+    "scripts/ui_button.js~Button#updateDisabled",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#updatename",
+    "class/scripts/ui_button.js~Button.html#instance-method-updateName",
+    "scripts/ui_button.js~Button#updateName",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button#updatewidth",
+    "class/scripts/ui_button.js~Button.html#instance-method-updateWidth",
+    "scripts/ui_button.js~Button#updateWidth",
+    "method"
+  ],
+  [
+    "scripts/ui_button.js~button.define",
+    "class/scripts/ui_button.js~Button.html#static-method-define",
+    "scripts/ui_button.js~Button.define",
     "method"
   ],
   [
@@ -9018,364 +11292,574 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#_fastmode",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-member-_fastmode",
-    "scripts/ui_curvewidget.js~Curve#_fastmode",
+    "scripts/ui_curvewidget.js~curve1dwidget#_gen_type",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-_gen_type",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_gen_type",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#_redraw_hook",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-member-_redraw_hook",
-    "scripts/ui_curvewidget.js~Curve#_redraw_hook",
+    "scripts/ui_curvewidget.js~curve1dwidget#_lastgen",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-_lastGen",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_lastGen",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#_save_hook",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-member-_save_hook",
-    "scripts/ui_curvewidget.js~Curve#_save_hook",
+    "scripts/ui_curvewidget.js~curve1dwidget#_last_dpi",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-_last_dpi",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_last_dpi",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#constructor",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-constructor-constructor",
-    "scripts/ui_curvewidget.js~Curve#constructor",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#derivative",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-derivative",
-    "scripts/ui_curvewidget.js~Curve#derivative",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#derivative2",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-derivative2",
-    "scripts/ui_curvewidget.js~Curve#derivative2",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#destroy",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-destroy",
-    "scripts/ui_curvewidget.js~Curve#destroy",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#destroy_all_settings",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-destroy_all_settings",
-    "scripts/ui_curvewidget.js~Curve#destroy_all_settings",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#dosave",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-doSave",
-    "scripts/ui_curvewidget.js~Curve#doSave",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#draw",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-draw",
-    "scripts/ui_curvewidget.js~Curve#draw",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#evaluate",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-evaluate",
-    "scripts/ui_curvewidget.js~Curve#evaluate",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#fastmode",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-get-fastmode",
-    "scripts/ui_curvewidget.js~Curve#fastmode",
+    "scripts/ui_curvewidget.js~curve1dwidget#_lastu",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-_lastu",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_lastu",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#fastmode",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-set-fastmode",
-    "scripts/ui_curvewidget.js~Curve#fastmode",
+    "scripts/ui_curvewidget.js~curve1dwidget#_on_change",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-_on_change",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_on_change",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget.js~curve1dwidget#_on_draw",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-_on_draw",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_on_draw",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget.js~curve1dwidget#_redraw",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-_redraw",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_redraw",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget.js~curve1dwidget#_value",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-_value",
+    "scripts/ui_curvewidget.js~Curve1DWidget#_value",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#generators",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-member-generators",
-    "scripts/ui_curvewidget.js~Curve#generators",
+    "scripts/ui_curvewidget.js~curve1dwidget#canvas",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-canvas",
+    "scripts/ui_curvewidget.js~Curve1DWidget#canvas",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#getgenerator",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-getGenerator",
-    "scripts/ui_curvewidget.js~Curve#getGenerator",
+    "scripts/ui_curvewidget.js~curve1dwidget#constructor",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-constructor-constructor",
+    "scripts/ui_curvewidget.js~Curve1DWidget#constructor",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#hasgui",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-get-hasGUI",
-    "scripts/ui_curvewidget.js~Curve#hasGUI",
+    "scripts/ui_curvewidget.js~curve1dwidget#container",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-container",
+    "scripts/ui_curvewidget.js~Curve1DWidget#container",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#inverse",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-inverse",
-    "scripts/ui_curvewidget.js~Curve#inverse",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#killgui",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-killGUI",
-    "scripts/ui_curvewidget.js~Curve#killGUI",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#loadjson",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-loadJSON",
-    "scripts/ui_curvewidget.js~Curve#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#makegui",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-makeGUI",
-    "scripts/ui_curvewidget.js~Curve#makeGUI",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#redraw",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-redraw",
-    "scripts/ui_curvewidget.js~Curve#redraw",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#reset",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-reset",
-    "scripts/ui_curvewidget.js~Curve#reset",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#setredrawhook",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-setRedrawHook",
-    "scripts/ui_curvewidget.js~Curve#setRedrawHook",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#setsavehook",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-setSaveHook",
-    "scripts/ui_curvewidget.js~Curve#setSaveHook",
-    "method"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#setting_id",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-member-setting_id",
-    "scripts/ui_curvewidget.js~Curve#setting_id",
+    "scripts/ui_curvewidget.js~curve1dwidget#drawtransform",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-drawTransform",
+    "scripts/ui_curvewidget.js~Curve1DWidget#drawTransform",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#switchgenerator",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-switchGenerator",
-    "scripts/ui_curvewidget.js~Curve#switchGenerator",
+    "scripts/ui_curvewidget.js~curve1dwidget#dropbox",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-dropbox",
+    "scripts/ui_curvewidget.js~Curve1DWidget#dropbox",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget.js~curve1dwidget#g",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-g",
+    "scripts/ui_curvewidget.js~Curve1DWidget#g",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget.js~curve1dwidget#init",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-init",
+    "scripts/ui_curvewidget.js~Curve1DWidget#init",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#tojson",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-toJSON",
-    "scripts/ui_curvewidget.js~Curve#toJSON",
+    "scripts/ui_curvewidget.js~curve1dwidget#rebuild",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-rebuild",
+    "scripts/ui_curvewidget.js~Curve1DWidget#rebuild",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curve#uidata",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-member-uidata",
-    "scripts/ui_curvewidget.js~Curve#uidata",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curve#update",
-    "class/scripts/ui_curvewidget.js~Curve.html#instance-method-update",
-    "scripts/ui_curvewidget.js~Curve#update",
+    "scripts/ui_curvewidget.js~curve1dwidget#setcss",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-setCSS",
+    "scripts/ui_curvewidget.js~Curve1DWidget#setCSS",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#basis",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-method-basis",
-    "scripts/ui_curvewidget.js~CurvePoint#basis",
+    "scripts/ui_curvewidget.js~curve1dwidget#update",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-update",
+    "scripts/ui_curvewidget.js~Curve1DWidget#update",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#constructor",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-constructor-constructor",
-    "scripts/ui_curvewidget.js~CurvePoint#constructor",
+    "scripts/ui_curvewidget.js~curve1dwidget#updatedatapath",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-updateDataPath",
+    "scripts/ui_curvewidget.js~Curve1DWidget#updateDataPath",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#copy",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-method-copy",
-    "scripts/ui_curvewidget.js~CurvePoint#copy",
+    "scripts/ui_curvewidget.js~curve1dwidget#updategenui",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-updateGenUI",
+    "scripts/ui_curvewidget.js~Curve1DWidget#updateGenUI",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#deg",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-deg",
-    "scripts/ui_curvewidget.js~CurvePoint#deg",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvepoint#eid",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-eid",
-    "scripts/ui_curvewidget.js~CurvePoint#eid",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvepoint#flag",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-flag",
-    "scripts/ui_curvewidget.js~CurvePoint#flag",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvepoint#loadstruct",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-method-loadSTRUCT",
-    "scripts/ui_curvewidget.js~CurvePoint#loadSTRUCT",
+    "scripts/ui_curvewidget.js~curve1dwidget#updatesize",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-method-updateSize",
+    "scripts/ui_curvewidget.js~Curve1DWidget#updateSize",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#rco",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-rco",
-    "scripts/ui_curvewidget.js~CurvePoint#rco",
+    "scripts/ui_curvewidget.js~curve1dwidget#usedatapathundo",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-member-useDataPathUndo",
+    "scripts/ui_curvewidget.js~Curve1DWidget#useDataPathUndo",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#sco",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-sco",
-    "scripts/ui_curvewidget.js~CurvePoint#sco",
+    "scripts/ui_curvewidget.js~curve1dwidget#value",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-get-value",
+    "scripts/ui_curvewidget.js~Curve1DWidget#value",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#startco",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-startco",
-    "scripts/ui_curvewidget.js~CurvePoint#startco",
+    "scripts/ui_curvewidget.js~curve1dwidget#value",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#instance-set-value",
+    "scripts/ui_curvewidget.js~Curve1DWidget#value",
     "member"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint#tangent",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-member-tangent",
-    "scripts/ui_curvewidget.js~CurvePoint#tangent",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvepoint#tojson",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#instance-method-toJSON",
-    "scripts/ui_curvewidget.js~CurvePoint#toJSON",
+    "scripts/ui_curvewidget.js~curve1dwidget.define",
+    "class/scripts/ui_curvewidget.js~Curve1DWidget.html#static-method-define",
+    "scripts/ui_curvewidget.js~Curve1DWidget.define",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvepoint.fromjson",
-    "class/scripts/ui_curvewidget.js~CurvePoint.html#static-method-fromJSON",
-    "scripts/ui_curvewidget.js~CurvePoint.fromJSON",
+    "scripts/ui_curvewidget_old.js",
+    "file/scripts/ui_curvewidget_old.js.html",
+    "scripts/ui_curvewidget_old.js",
+    "file"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#_fastmode",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-member-_fastmode",
+    "scripts/ui_curvewidget_old.js~Curve#_fastmode",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#_redraw_hook",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-member-_redraw_hook",
+    "scripts/ui_curvewidget_old.js~Curve#_redraw_hook",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#_save_hook",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-member-_save_hook",
+    "scripts/ui_curvewidget_old.js~Curve#_save_hook",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#constructor",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-constructor-constructor",
+    "scripts/ui_curvewidget_old.js~Curve#constructor",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#_closed",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-_closed",
-    "scripts/ui_curvewidget.js~CurveWidget#_closed",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#bind",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-method-bind",
-    "scripts/ui_curvewidget.js~CurveWidget#bind",
+    "scripts/ui_curvewidget_old.js~curve#derivative",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-derivative",
+    "scripts/ui_curvewidget_old.js~Curve#derivative",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#canvas",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-canvas",
-    "scripts/ui_curvewidget.js~CurveWidget#canvas",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#closed",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-get-closed",
-    "scripts/ui_curvewidget.js~CurveWidget#closed",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#closed",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-set-closed",
-    "scripts/ui_curvewidget.js~CurveWidget#closed",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#constructor",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-constructor-constructor",
-    "scripts/ui_curvewidget.js~CurveWidget#constructor",
+    "scripts/ui_curvewidget_old.js~curve#derivative2",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-derivative2",
+    "scripts/ui_curvewidget_old.js~Curve#derivative2",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#curve",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-curve",
-    "scripts/ui_curvewidget.js~CurveWidget#curve",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#domparent",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-domparent",
-    "scripts/ui_curvewidget.js~CurveWidget#domparent",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#draw",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-method-draw",
-    "scripts/ui_curvewidget.js~CurveWidget#draw",
+    "scripts/ui_curvewidget_old.js~curve#destroy",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-destroy",
+    "scripts/ui_curvewidget_old.js~Curve#destroy",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#draw_transform",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-method-draw_transform",
-    "scripts/ui_curvewidget.js~CurveWidget#draw_transform",
+    "scripts/ui_curvewidget_old.js~curve#destroy_all_settings",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-destroy_all_settings",
+    "scripts/ui_curvewidget_old.js~Curve#destroy_all_settings",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#g",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-g",
-    "scripts/ui_curvewidget.js~CurveWidget#g",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#gui",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-gui",
-    "scripts/ui_curvewidget.js~CurveWidget#gui",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#load",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-method-load",
-    "scripts/ui_curvewidget.js~CurveWidget#load",
+    "scripts/ui_curvewidget_old.js~curve#dosave",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-doSave",
+    "scripts/ui_curvewidget_old.js~Curve#doSave",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#mpos",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-mpos",
-    "scripts/ui_curvewidget.js~CurveWidget#mpos",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#overlay_curvefunc",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-overlay_curvefunc",
-    "scripts/ui_curvewidget.js~CurveWidget#overlay_curvefunc",
-    "member"
-  ],
-  [
-    "scripts/ui_curvewidget.js~curvewidget#redraw",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-method-redraw",
-    "scripts/ui_curvewidget.js~CurveWidget#redraw",
+    "scripts/ui_curvewidget_old.js~curve#draw",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-draw",
+    "scripts/ui_curvewidget_old.js~Curve#draw",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#save",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-method-save",
-    "scripts/ui_curvewidget.js~CurveWidget#save",
+    "scripts/ui_curvewidget_old.js~curve#evaluate",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-evaluate",
+    "scripts/ui_curvewidget_old.js~Curve#evaluate",
     "method"
   ],
   [
-    "scripts/ui_curvewidget.js~curvewidget#setting_id",
-    "class/scripts/ui_curvewidget.js~CurveWidget.html#instance-member-setting_id",
-    "scripts/ui_curvewidget.js~CurveWidget#setting_id",
+    "scripts/ui_curvewidget_old.js~curve#fastmode",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-get-fastmode",
+    "scripts/ui_curvewidget_old.js~Curve#fastmode",
     "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#fastmode",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-set-fastmode",
+    "scripts/ui_curvewidget_old.js~Curve#fastmode",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#generators",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-member-generators",
+    "scripts/ui_curvewidget_old.js~Curve#generators",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#getgenerator",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-getGenerator",
+    "scripts/ui_curvewidget_old.js~Curve#getGenerator",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#hasgui",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-get-hasGUI",
+    "scripts/ui_curvewidget_old.js~Curve#hasGUI",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#inverse",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-inverse",
+    "scripts/ui_curvewidget_old.js~Curve#inverse",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#killgui",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-killGUI",
+    "scripts/ui_curvewidget_old.js~Curve#killGUI",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#loadjson",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-loadJSON",
+    "scripts/ui_curvewidget_old.js~Curve#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#makegui",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-makeGUI",
+    "scripts/ui_curvewidget_old.js~Curve#makeGUI",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#redraw",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-redraw",
+    "scripts/ui_curvewidget_old.js~Curve#redraw",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#reset",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-reset",
+    "scripts/ui_curvewidget_old.js~Curve#reset",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#setredrawhook",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-setRedrawHook",
+    "scripts/ui_curvewidget_old.js~Curve#setRedrawHook",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#setsavehook",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-setSaveHook",
+    "scripts/ui_curvewidget_old.js~Curve#setSaveHook",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#setting_id",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-member-setting_id",
+    "scripts/ui_curvewidget_old.js~Curve#setting_id",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#switchgenerator",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-switchGenerator",
+    "scripts/ui_curvewidget_old.js~Curve#switchGenerator",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#tojson",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-toJSON",
+    "scripts/ui_curvewidget_old.js~Curve#toJSON",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#uidata",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-member-uidata",
+    "scripts/ui_curvewidget_old.js~Curve#uidata",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curve#update",
+    "class/scripts/ui_curvewidget_old.js~Curve.html#instance-method-update",
+    "scripts/ui_curvewidget_old.js~Curve#update",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#basis",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-method-basis",
+    "scripts/ui_curvewidget_old.js~CurvePoint#basis",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#constructor",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-constructor-constructor",
+    "scripts/ui_curvewidget_old.js~CurvePoint#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#copy",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-method-copy",
+    "scripts/ui_curvewidget_old.js~CurvePoint#copy",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#deg",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-deg",
+    "scripts/ui_curvewidget_old.js~CurvePoint#deg",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#eid",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-eid",
+    "scripts/ui_curvewidget_old.js~CurvePoint#eid",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#flag",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-flag",
+    "scripts/ui_curvewidget_old.js~CurvePoint#flag",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#loadstruct",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-method-loadSTRUCT",
+    "scripts/ui_curvewidget_old.js~CurvePoint#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#rco",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-rco",
+    "scripts/ui_curvewidget_old.js~CurvePoint#rco",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#sco",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-sco",
+    "scripts/ui_curvewidget_old.js~CurvePoint#sco",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#startco",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-startco",
+    "scripts/ui_curvewidget_old.js~CurvePoint#startco",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#tangent",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-member-tangent",
+    "scripts/ui_curvewidget_old.js~CurvePoint#tangent",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint#tojson",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#instance-method-toJSON",
+    "scripts/ui_curvewidget_old.js~CurvePoint#toJSON",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvepoint.fromjson",
+    "class/scripts/ui_curvewidget_old.js~CurvePoint.html#static-method-fromJSON",
+    "scripts/ui_curvewidget_old.js~CurvePoint.fromJSON",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#_closed",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-_closed",
+    "scripts/ui_curvewidget_old.js~CurveWidget#_closed",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#bind",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-method-bind",
+    "scripts/ui_curvewidget_old.js~CurveWidget#bind",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#canvas",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-canvas",
+    "scripts/ui_curvewidget_old.js~CurveWidget#canvas",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#closed",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-get-closed",
+    "scripts/ui_curvewidget_old.js~CurveWidget#closed",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#closed",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-set-closed",
+    "scripts/ui_curvewidget_old.js~CurveWidget#closed",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#constructor",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-constructor-constructor",
+    "scripts/ui_curvewidget_old.js~CurveWidget#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#curve",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-curve",
+    "scripts/ui_curvewidget_old.js~CurveWidget#curve",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#domparent",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-domparent",
+    "scripts/ui_curvewidget_old.js~CurveWidget#domparent",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#draw",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-method-draw",
+    "scripts/ui_curvewidget_old.js~CurveWidget#draw",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#draw_transform",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-method-draw_transform",
+    "scripts/ui_curvewidget_old.js~CurveWidget#draw_transform",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#g",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-g",
+    "scripts/ui_curvewidget_old.js~CurveWidget#g",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#gui",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-gui",
+    "scripts/ui_curvewidget_old.js~CurveWidget#gui",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#load",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-method-load",
+    "scripts/ui_curvewidget_old.js~CurveWidget#load",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#mpos",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-mpos",
+    "scripts/ui_curvewidget_old.js~CurveWidget#mpos",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#overlay_curvefunc",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-overlay_curvefunc",
+    "scripts/ui_curvewidget_old.js~CurveWidget#overlay_curvefunc",
+    "member"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#redraw",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-method-redraw",
+    "scripts/ui_curvewidget_old.js~CurveWidget#redraw",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#save",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-method-save",
+    "scripts/ui_curvewidget_old.js~CurveWidget#save",
+    "method"
+  ],
+  [
+    "scripts/ui_curvewidget_old.js~curvewidget#setting_id",
+    "class/scripts/ui_curvewidget_old.js~CurveWidget.html#instance-member-setting_id",
+    "scripts/ui_curvewidget_old.js~CurveWidget#setting_id",
+    "member"
+  ],
+  [
+    "scripts/ui_dialog.js",
+    "file/scripts/ui_dialog.js.html",
+    "scripts/ui_dialog.js",
+    "file"
+  ],
+  [
+    "scripts/ui_lasttool.js",
+    "file/scripts/ui_lasttool.js.html",
+    "scripts/ui_lasttool.js",
+    "file"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel#_tool_id",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#instance-member-_tool_id",
+    "scripts/ui_lasttool.js~LastToolPanel#_tool_id",
+    "member"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel#constructor",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#instance-constructor-constructor",
+    "scripts/ui_lasttool.js~LastToolPanel#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel#init",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#instance-method-init",
+    "scripts/ui_lasttool.js~LastToolPanel#init",
+    "method"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel#rebuild",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#instance-method-rebuild",
+    "scripts/ui_lasttool.js~LastToolPanel#rebuild",
+    "method"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel#update",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#instance-method-update",
+    "scripts/ui_lasttool.js~LastToolPanel#update",
+    "method"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel#usedatapathundo",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#instance-member-useDataPathUndo",
+    "scripts/ui_lasttool.js~LastToolPanel#useDataPathUndo",
+    "member"
+  ],
+  [
+    "scripts/ui_lasttool.js~lasttoolpanel.define",
+    "class/scripts/ui_lasttool.js~LastToolPanel.html#static-method-define",
+    "scripts/ui_lasttool.js~LastToolPanel.define",
+    "method"
   ],
   [
     "scripts/ui_listbox.js",
@@ -9486,6 +11970,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_menu.js~dropbox#setvalue",
+    "class/scripts/ui_menu.js~DropBox.html#instance-method-setValue",
+    "scripts/ui_menu.js~DropBox#setValue",
+    "method"
+  ],
+  [
     "scripts/ui_menu.js~dropbox#update",
     "class/scripts/ui_menu.js~DropBox.html#instance-method-update",
     "scripts/ui_menu.js~DropBox#update",
@@ -9520,6 +12010,12 @@ window.esdocSearchIndex = [
     "class/scripts/ui_menu.js~Menu.html#instance-method-_ondestroy",
     "scripts/ui_menu.js~Menu#_ondestroy",
     "method"
+  ],
+  [
+    "scripts/ui_menu.js~menu#_popup",
+    "class/scripts/ui_menu.js~Menu.html#instance-member-_popup",
+    "scripts/ui_menu.js~Menu#_popup",
+    "member"
   ],
   [
     "scripts/ui_menu.js~menu#activeitem",
@@ -9642,6 +12138,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_menu.js~menuwrangler#closeonmouseup",
+    "class/scripts/ui_menu.js~MenuWrangler.html#instance-member-closeOnMouseUp",
+    "scripts/ui_menu.js~MenuWrangler#closeOnMouseUp",
+    "member"
+  ],
+  [
+    "scripts/ui_menu.js~menuwrangler#closetimer",
+    "class/scripts/ui_menu.js~MenuWrangler.html#instance-member-closetimer",
+    "scripts/ui_menu.js~MenuWrangler#closetimer",
+    "member"
+  ],
+  [
     "scripts/ui_menu.js~menuwrangler#constructor",
     "class/scripts/ui_menu.js~MenuWrangler.html#instance-constructor-constructor",
     "scripts/ui_menu.js~MenuWrangler#constructor",
@@ -9672,9 +12180,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_menu.js~menuwrangler#on_mousedown",
+    "class/scripts/ui_menu.js~MenuWrangler.html#instance-method-on_mousedown",
+    "scripts/ui_menu.js~MenuWrangler#on_mousedown",
+    "method"
+  ],
+  [
     "scripts/ui_menu.js~menuwrangler#on_mousemove",
     "class/scripts/ui_menu.js~MenuWrangler.html#instance-method-on_mousemove",
     "scripts/ui_menu.js~MenuWrangler#on_mousemove",
+    "method"
+  ],
+  [
+    "scripts/ui_menu.js~menuwrangler#on_mouseup",
+    "class/scripts/ui_menu.js~MenuWrangler.html#instance-method-on_mouseup",
+    "scripts/ui_menu.js~MenuWrangler#on_mouseup",
     "method"
   ],
   [
@@ -9861,6 +12381,306 @@ window.esdocSearchIndex = [
     "scripts/ui_noteframe.js~progbarnote.define",
     "class/scripts/ui_noteframe.js~ProgBarNote.html#static-method-define",
     "scripts/ui_noteframe.js~ProgBarNote.define",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js",
+    "file/scripts/ui_panel.js.html",
+    "scripts/ui_panel.js",
+    "file"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#_closed",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-member-_closed",
+    "scripts/ui_panel.js~PanelFrame#_closed",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#_setvisible",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-_setVisible",
+    "scripts/ui_panel.js~PanelFrame#_setVisible",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#_updateclosed",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-_updateClosed",
+    "scripts/ui_panel.js~PanelFrame#_updateClosed",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#background",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-member-background",
+    "scripts/ui_panel.js~PanelFrame#background",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#clear",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-clear",
+    "scripts/ui_panel.js~PanelFrame#clear",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#closed",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-get-closed",
+    "scripts/ui_panel.js~PanelFrame#closed",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#closed",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-set-closed",
+    "scripts/ui_panel.js~PanelFrame#closed",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#constructor",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-constructor-constructor",
+    "scripts/ui_panel.js~PanelFrame#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#contents",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-member-contents",
+    "scripts/ui_panel.js~PanelFrame#contents",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#iconcheck",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-member-iconcheck",
+    "scripts/ui_panel.js~PanelFrame#iconcheck",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#inherit_packflag",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-get-inherit_packflag",
+    "scripts/ui_panel.js~PanelFrame#inherit_packflag",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#inherit_packflag",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-set-inherit_packflag",
+    "scripts/ui_panel.js~PanelFrame#inherit_packflag",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#init",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-init",
+    "scripts/ui_panel.js~PanelFrame#init",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#loaddata",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-loadData",
+    "scripts/ui_panel.js~PanelFrame#loadData",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#packflag",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-get-packflag",
+    "scripts/ui_panel.js~PanelFrame#packflag",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#packflag",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-set-packflag",
+    "scripts/ui_panel.js~PanelFrame#packflag",
+    "member"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#savedata",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-saveData",
+    "scripts/ui_panel.js~PanelFrame#saveData",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe#update",
+    "class/scripts/ui_panel.js~PanelFrame.html#instance-method-update",
+    "scripts/ui_panel.js~PanelFrame#update",
+    "method"
+  ],
+  [
+    "scripts/ui_panel.js~panelframe.define",
+    "class/scripts/ui_panel.js~PanelFrame.html#static-method-define",
+    "scripts/ui_panel.js~PanelFrame.define",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js",
+    "file/scripts/ui_richedit.js.html",
+    "scripts/ui_richedit.js",
+    "file"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#_disabled",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-member-_disabled",
+    "scripts/ui_richedit.js~RichEditor#_disabled",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#_value",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-member-_value",
+    "scripts/ui_richedit.js~RichEditor#_value",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#constructor",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-constructor-constructor",
+    "scripts/ui_richedit.js~RichEditor#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#disabled",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-get-disabled",
+    "scripts/ui_richedit.js~RichEditor#disabled",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#disabled",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-set-disabled",
+    "scripts/ui_richedit.js~RichEditor#disabled",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#formatend",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-formatEnd",
+    "scripts/ui_richedit.js~RichEditor#formatEnd",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#formatline",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-formatLine",
+    "scripts/ui_richedit.js~RichEditor#formatLine",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#formatstart",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-formatStart",
+    "scripts/ui_richedit.js~RichEditor#formatStart",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#init",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-init",
+    "scripts/ui_richedit.js~RichEditor#init",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#setcss",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-setCSS",
+    "scripts/ui_richedit.js~RichEditor#setCSS",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#textonlymode",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-member-textOnlyMode",
+    "scripts/ui_richedit.js~RichEditor#textOnlyMode",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#textarea",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-member-textarea",
+    "scripts/ui_richedit.js~RichEditor#textarea",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#update",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-update",
+    "scripts/ui_richedit.js~RichEditor#update",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#updatedatapath",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-method-updateDataPath",
+    "scripts/ui_richedit.js~RichEditor#updateDataPath",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#value",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-set-value",
+    "scripts/ui_richedit.js~RichEditor#value",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor#value",
+    "class/scripts/ui_richedit.js~RichEditor.html#instance-get-value",
+    "scripts/ui_richedit.js~RichEditor#value",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richeditor.define",
+    "class/scripts/ui_richedit.js~RichEditor.html#static-method-define",
+    "scripts/ui_richedit.js~RichEditor.define",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#_value",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-member-_value",
+    "scripts/ui_richedit.js~RichViewer#_value",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#constructor",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-constructor-constructor",
+    "scripts/ui_richedit.js~RichViewer#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#contents",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-member-contents",
+    "scripts/ui_richedit.js~RichViewer#contents",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#disabled",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-member-disabled",
+    "scripts/ui_richedit.js~RichViewer#disabled",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#hidescrollbars",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-method-hideScrollBars",
+    "scripts/ui_richedit.js~RichViewer#hideScrollBars",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#showscrollbars",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-method-showScrollBars",
+    "scripts/ui_richedit.js~RichViewer#showScrollBars",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#texttransform",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-method-textTransform",
+    "scripts/ui_richedit.js~RichViewer#textTransform",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#update",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-method-update",
+    "scripts/ui_richedit.js~RichViewer#update",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#updatedatapath",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-method-updateDataPath",
+    "scripts/ui_richedit.js~RichViewer#updateDataPath",
+    "method"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#value",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-set-value",
+    "scripts/ui_richedit.js~RichViewer#value",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer#value",
+    "class/scripts/ui_richedit.js~RichViewer.html#instance-get-value",
+    "scripts/ui_richedit.js~RichViewer#value",
+    "member"
+  ],
+  [
+    "scripts/ui_richedit.js~richviewer.define",
+    "class/scripts/ui_richedit.js~RichViewer.html#static-method-define",
+    "scripts/ui_richedit.js~RichViewer.define",
     "method"
   ],
   [
@@ -10242,10 +13062,22 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_tabs.js~tabcontainer#inherit_packflag",
+    "class/scripts/ui_tabs.js~TabContainer.html#instance-member-inherit_packflag",
+    "scripts/ui_tabs.js~TabContainer#inherit_packflag",
+    "member"
+  ],
+  [
     "scripts/ui_tabs.js~tabcontainer#init",
     "class/scripts/ui_tabs.js~TabContainer.html#instance-method-init",
     "scripts/ui_tabs.js~TabContainer#init",
     "method"
+  ],
+  [
+    "scripts/ui_tabs.js~tabcontainer#packflag",
+    "class/scripts/ui_tabs.js~TabContainer.html#instance-member-packflag",
+    "scripts/ui_tabs.js~TabContainer#packflag",
+    "member"
   ],
   [
     "scripts/ui_tabs.js~tabcontainer#setactive",
@@ -10338,10 +13170,190 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_textbox.js",
+    "file/scripts/ui_textbox.js.html",
+    "scripts/ui_textbox.js",
+    "file"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_change",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-_change",
+    "scripts/ui_textbox.js~TextBox#_change",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_endmodal",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-_endModal",
+    "scripts/ui_textbox.js~TextBox#_endModal",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_focus",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-_focus",
+    "scripts/ui_textbox.js~TextBox#_focus",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_had_error",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-_had_error",
+    "scripts/ui_textbox.js~TextBox#_had_error",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_modal",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-_modal",
+    "scripts/ui_textbox.js~TextBox#_modal",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_prop_update",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-_prop_update",
+    "scripts/ui_textbox.js~TextBox#_prop_update",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_startmodal",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-_startModal",
+    "scripts/ui_textbox.js~TextBox#_startModal",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#_width",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-_width",
+    "scripts/ui_textbox.js~TextBox#_width",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#baseunit",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-baseUnit",
+    "scripts/ui_textbox.js~TextBox#baseUnit",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#blur",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-blur",
+    "scripts/ui_textbox.js~TextBox#blur",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#constructor",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-constructor-constructor",
+    "scripts/ui_textbox.js~TextBox#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#decimalplaces",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-decimalPlaces",
+    "scripts/ui_textbox.js~TextBox#decimalPlaces",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#disabled",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-disabled",
+    "scripts/ui_textbox.js~TextBox#disabled",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#displayunit",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-displayUnit",
+    "scripts/ui_textbox.js~TextBox#displayUnit",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#dom",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-dom",
+    "scripts/ui_textbox.js~TextBox#dom",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#focus",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-focus",
+    "scripts/ui_textbox.js~TextBox#focus",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#init",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-init",
+    "scripts/ui_textbox.js~TextBox#init",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#radix",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-member-radix",
+    "scripts/ui_textbox.js~TextBox#radix",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#select",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-select",
+    "scripts/ui_textbox.js~TextBox#select",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#setcss",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-setCSS",
+    "scripts/ui_textbox.js~TextBox#setCSS",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#tabindex",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-get-tabIndex",
+    "scripts/ui_textbox.js~TextBox#tabIndex",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#tabindex",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-set-tabIndex",
+    "scripts/ui_textbox.js~TextBox#tabIndex",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#text",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-get-text",
+    "scripts/ui_textbox.js~TextBox#text",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#text",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-set-text",
+    "scripts/ui_textbox.js~TextBox#text",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#update",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-update",
+    "scripts/ui_textbox.js~TextBox#update",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#updatedatapath",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-method-updateDataPath",
+    "scripts/ui_textbox.js~TextBox#updateDataPath",
+    "method"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox#width",
+    "class/scripts/ui_textbox.js~TextBox.html#instance-set-width",
+    "scripts/ui_textbox.js~TextBox#width",
+    "member"
+  ],
+  [
+    "scripts/ui_textbox.js~textbox.define",
+    "class/scripts/ui_textbox.js~TextBox.html#static-method-define",
+    "scripts/ui_textbox.js~TextBox.define",
+    "method"
+  ],
+  [
     "scripts/ui_theme.js",
     "file/scripts/ui_theme.js.html",
     "scripts/ui_theme.js",
     "file"
+  ],
+  [
+    "scripts/ui_theme.js~cssfont#_size",
+    "class/scripts/ui_theme.js~CSSFont.html#instance-member-_size",
+    "scripts/ui_theme.js~CSSFont#_size",
+    "member"
   ],
   [
     "scripts/ui_theme.js~cssfont#color",
@@ -10387,7 +13399,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/ui_theme.js~cssfont#size",
-    "class/scripts/ui_theme.js~CSSFont.html#instance-member-size",
+    "class/scripts/ui_theme.js~CSSFont.html#instance-set-size",
+    "scripts/ui_theme.js~CSSFont#size",
+    "member"
+  ],
+  [
+    "scripts/ui_theme.js~cssfont#size",
+    "class/scripts/ui_theme.js~CSSFont.html#instance-get-size",
     "scripts/ui_theme.js~CSSFont#size",
     "member"
   ],
@@ -10414,252 +13432,6 @@ window.esdocSearchIndex = [
     "file/scripts/ui_widgets.js.html",
     "scripts/ui_widgets.js",
     "file"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_auto_depress",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_auto_depress",
-    "scripts/ui_widgets.js~Button#_auto_depress",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_calcupdatekey",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-_calcUpdateKey",
-    "scripts/ui_widgets.js~Button#_calcUpdateKey",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_draw_text",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-_draw_text",
-    "scripts/ui_widgets.js~Button#_draw_text",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_focus",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_focus",
-    "scripts/ui_widgets.js~Button#_focus",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_genlabel",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-_genLabel",
-    "scripts/ui_widgets.js~Button#_genLabel",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_highlight",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_highlight",
-    "scripts/ui_widgets.js~Button#_highlight",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_last_bg",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_last_bg",
-    "scripts/ui_widgets.js~Button#_last_bg",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_last_disabled",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_last_disabled",
-    "scripts/ui_widgets.js~Button#_last_disabled",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_last_dpi",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_last_dpi",
-    "scripts/ui_widgets.js~Button#_last_dpi",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_last_h",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_last_h",
-    "scripts/ui_widgets.js~Button#_last_h",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_last_update_key",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_last_update_key",
-    "scripts/ui_widgets.js~Button#_last_update_key",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_last_w",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_last_w",
-    "scripts/ui_widgets.js~Button#_last_w",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_lasth",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_lasth",
-    "scripts/ui_widgets.js~Button#_lasth",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_lastw",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_lastw",
-    "scripts/ui_widgets.js~Button#_lastw",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_name",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_name",
-    "scripts/ui_widgets.js~Button#_name",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_namepad",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_namePad",
-    "scripts/ui_widgets.js~Button#_namePad",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_pressed",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-_pressed",
-    "scripts/ui_widgets.js~Button#_pressed",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_redraw",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-_redraw",
-    "scripts/ui_widgets.js~Button#_redraw",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#_repos_canvas",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-_repos_canvas",
-    "scripts/ui_widgets.js~Button#_repos_canvas",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#bindevents",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-bindEvents",
-    "scripts/ui_widgets.js~Button#bindEvents",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#boxpad",
-    "class/scripts/ui_widgets.js~Button.html#instance-get-boxpad",
-    "scripts/ui_widgets.js~Button#boxpad",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#boxpad",
-    "class/scripts/ui_widgets.js~Button.html#instance-set-boxpad",
-    "scripts/ui_widgets.js~Button#boxpad",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#click",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-click",
-    "scripts/ui_widgets.js~Button#click",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#constructor",
-    "class/scripts/ui_widgets.js~Button.html#instance-constructor-constructor",
-    "scripts/ui_widgets.js~Button#constructor",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#dom",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-dom",
-    "scripts/ui_widgets.js~Button#dom",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#g",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-g",
-    "scripts/ui_widgets.js~Button#g",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#init",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-init",
-    "scripts/ui_widgets.js~Button#init",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#r",
-    "class/scripts/ui_widgets.js~Button.html#instance-get-r",
-    "scripts/ui_widgets.js~Button#r",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#r",
-    "class/scripts/ui_widgets.js~Button.html#instance-set-r",
-    "scripts/ui_widgets.js~Button#r",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#setattribute",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-setAttribute",
-    "scripts/ui_widgets.js~Button#setAttribute",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#setcss",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-setCSS",
-    "scripts/ui_widgets.js~Button#setCSS",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#tabindex",
-    "class/scripts/ui_widgets.js~Button.html#instance-get-tabIndex",
-    "scripts/ui_widgets.js~Button#tabIndex",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#tabindex",
-    "class/scripts/ui_widgets.js~Button.html#instance-set-tabIndex",
-    "scripts/ui_widgets.js~Button#tabIndex",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#title",
-    "class/scripts/ui_widgets.js~Button.html#instance-member-title",
-    "scripts/ui_widgets.js~Button#title",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~button#update",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-update",
-    "scripts/ui_widgets.js~Button#update",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#updatedpi",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-updateDPI",
-    "scripts/ui_widgets.js~Button#updateDPI",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#updatedefaultsize",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-updateDefaultSize",
-    "scripts/ui_widgets.js~Button#updateDefaultSize",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#updatedisabled",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-updateDisabled",
-    "scripts/ui_widgets.js~Button#updateDisabled",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#updatename",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-updateName",
-    "scripts/ui_widgets.js~Button#updateName",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button#updatewidth",
-    "class/scripts/ui_widgets.js~Button.html#instance-method-updateWidth",
-    "scripts/ui_widgets.js~Button#updateWidth",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~button.define",
-    "class/scripts/ui_widgets.js~Button.html#static-method-define",
-    "scripts/ui_widgets.js~Button.define",
-    "method"
   ],
   [
     "scripts/ui_widgets.js~check#_checked",
@@ -10798,6 +13570,18 @@ window.esdocSearchIndex = [
     "class/scripts/ui_widgets.js~Check.html#instance-method-updateDataPath",
     "scripts/ui_widgets.js~Check#updateDataPath",
     "method"
+  ],
+  [
+    "scripts/ui_widgets.js~check#value",
+    "class/scripts/ui_widgets.js~Check.html#instance-get-value",
+    "scripts/ui_widgets.js~Check#value",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets.js~check#value",
+    "class/scripts/ui_widgets.js~Check.html#instance-set-value",
+    "scripts/ui_widgets.js~Check#value",
+    "member"
   ],
   [
     "scripts/ui_widgets.js~check.define",
@@ -11088,10 +13872,28 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_widgets.js~numslider#_exprate",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-_expRate",
+    "scripts/ui_widgets.js~NumSlider#_expRate",
+    "member"
+  ],
+  [
     "scripts/ui_widgets.js~numslider#_genlabel",
     "class/scripts/ui_widgets.js~NumSlider.html#instance-method-_genLabel",
     "scripts/ui_widgets.js~NumSlider#_genLabel",
     "method"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#_getarrowsize",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-method-_getArrowSize",
+    "scripts/ui_widgets.js~NumSlider#_getArrowSize",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#_last_label",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-_last_label",
+    "scripts/ui_widgets.js~NumSlider#_last_label",
+    "member"
   ],
   [
     "scripts/ui_widgets.js~numslider#_name",
@@ -11118,6 +13920,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_widgets.js~numslider#baseunit",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-baseUnit",
+    "scripts/ui_widgets.js~NumSlider#baseUnit",
+    "member"
+  ],
+  [
     "scripts/ui_widgets.js~numslider#bindevents",
     "class/scripts/ui_widgets.js~NumSlider.html#instance-method-bindEvents",
     "scripts/ui_widgets.js~NumSlider#bindEvents",
@@ -11128,6 +13936,18 @@ window.esdocSearchIndex = [
     "class/scripts/ui_widgets.js~NumSlider.html#instance-constructor-constructor",
     "scripts/ui_widgets.js~NumSlider#constructor",
     "method"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#decimalplaces",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-decimalPlaces",
+    "scripts/ui_widgets.js~NumSlider#decimalPlaces",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#displayunit",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-displayUnit",
+    "scripts/ui_widgets.js~NumSlider#displayUnit",
+    "member"
   ],
   [
     "scripts/ui_widgets.js~numslider#dorange",
@@ -11148,6 +13968,30 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_widgets.js~numslider#isint",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-isInt",
+    "scripts/ui_widgets.js~NumSlider#isInt",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#radix",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-radix",
+    "scripts/ui_widgets.js~NumSlider#radix",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#range",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-range",
+    "scripts/ui_widgets.js~NumSlider#range",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#setcss",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-method-setCSS",
+    "scripts/ui_widgets.js~NumSlider#setCSS",
+    "method"
+  ],
+  [
     "scripts/ui_widgets.js~numslider#setvalue",
     "class/scripts/ui_widgets.js~NumSlider.html#instance-method-setValue",
     "scripts/ui_widgets.js~NumSlider#setValue",
@@ -11160,6 +14004,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_widgets.js~numslider#updatedatapath",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-method-updateDataPath",
+    "scripts/ui_widgets.js~NumSlider#updateDataPath",
+    "method"
+  ],
+  [
     "scripts/ui_widgets.js~numslider#updatename",
     "class/scripts/ui_widgets.js~NumSlider.html#instance-method-updateName",
     "scripts/ui_widgets.js~NumSlider#updateName",
@@ -11167,7 +14017,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/ui_widgets.js~numslider#value",
-    "class/scripts/ui_widgets.js~NumSlider.html#instance-member-value",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-get-value",
+    "scripts/ui_widgets.js~NumSlider#value",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets.js~numslider#value",
+    "class/scripts/ui_widgets.js~NumSlider.html#instance-set-value",
     "scripts/ui_widgets.js~NumSlider#value",
     "member"
   ],
@@ -11175,132 +14031,6 @@ window.esdocSearchIndex = [
     "scripts/ui_widgets.js~numslider.define",
     "class/scripts/ui_widgets.js~NumSlider.html#static-method-define",
     "scripts/ui_widgets.js~NumSlider.define",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#_change",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-_change",
-    "scripts/ui_widgets.js~TextBox#_change",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#_focus",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-member-_focus",
-    "scripts/ui_widgets.js~TextBox#_focus",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#_had_error",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-member-_had_error",
-    "scripts/ui_widgets.js~TextBox#_had_error",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#_prop_update",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-_prop_update",
-    "scripts/ui_widgets.js~TextBox#_prop_update",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#blur",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-blur",
-    "scripts/ui_widgets.js~TextBox#blur",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#constructor",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-constructor-constructor",
-    "scripts/ui_widgets.js~TextBox#constructor",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#decimalplaces",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-member-decimalPlaces",
-    "scripts/ui_widgets.js~TextBox#decimalPlaces",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#disabled",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-member-disabled",
-    "scripts/ui_widgets.js~TextBox#disabled",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#dom",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-member-dom",
-    "scripts/ui_widgets.js~TextBox#dom",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#focus",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-focus",
-    "scripts/ui_widgets.js~TextBox#focus",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#init",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-init",
-    "scripts/ui_widgets.js~TextBox#init",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#radix",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-member-radix",
-    "scripts/ui_widgets.js~TextBox#radix",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#select",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-select",
-    "scripts/ui_widgets.js~TextBox#select",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#setcss",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-setCSS",
-    "scripts/ui_widgets.js~TextBox#setCSS",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#tabindex",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-get-tabIndex",
-    "scripts/ui_widgets.js~TextBox#tabIndex",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#tabindex",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-set-tabIndex",
-    "scripts/ui_widgets.js~TextBox#tabIndex",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#text",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-get-text",
-    "scripts/ui_widgets.js~TextBox#text",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#text",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-set-text",
-    "scripts/ui_widgets.js~TextBox#text",
-    "member"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#update",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-update",
-    "scripts/ui_widgets.js~TextBox#update",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox#updatedatapath",
-    "class/scripts/ui_widgets.js~TextBox.html#instance-method-updateDataPath",
-    "scripts/ui_widgets.js~TextBox#updateDataPath",
-    "method"
-  ],
-  [
-    "scripts/ui_widgets.js~textbox.define",
-    "class/scripts/ui_widgets.js~TextBox.html#static-method-define",
-    "scripts/ui_widgets.js~TextBox.define",
     "method"
   ],
   [
@@ -11376,6 +14106,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple#_ondestroy",
+    "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-method-_ondestroy",
+    "scripts/ui_widgets2.js~NumSliderSimple#_ondestroy",
+    "method"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple#_redraw",
     "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-method-_redraw",
     "scripts/ui_widgets2.js~NumSliderSimple#_redraw",
@@ -11400,6 +14136,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple#baseunit",
+    "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-member-baseUnit",
+    "scripts/ui_widgets2.js~NumSliderSimple#baseUnit",
+    "member"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple#canvas",
     "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-member-canvas",
     "scripts/ui_widgets2.js~NumSliderSimple#canvas",
@@ -11410,6 +14152,12 @@ window.esdocSearchIndex = [
     "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-constructor-constructor",
     "scripts/ui_widgets2.js~NumSliderSimple#constructor",
     "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple#displayunit",
+    "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-member-displayUnit",
+    "scripts/ui_widgets2.js~NumSliderSimple#displayUnit",
+    "member"
   ],
   [
     "scripts/ui_widgets2.js~numslidersimple#g",
@@ -11466,6 +14214,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple#setvalue",
+    "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-method-setValue",
+    "scripts/ui_widgets2.js~NumSliderSimple#setValue",
+    "method"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple#step",
     "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-member-step",
     "scripts/ui_widgets2.js~NumSliderSimple#step",
@@ -11475,6 +14229,12 @@ window.esdocSearchIndex = [
     "scripts/ui_widgets2.js~numslidersimple#tabindex",
     "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-member-tabIndex",
     "scripts/ui_widgets2.js~NumSliderSimple#tabIndex",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple#uirange",
+    "class/scripts/ui_widgets2.js~NumSliderSimple.html#instance-member-uiRange",
+    "scripts/ui_widgets2.js~NumSliderSimple#uiRange",
     "member"
   ],
   [
@@ -11514,6 +14274,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple2#_last_label_on_top",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-_last_label_on_top",
+    "scripts/ui_widgets2.js~NumSliderSimple2#_last_label_on_top",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#_lock_textbox",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-_lock_textbox",
+    "scripts/ui_widgets2.js~NumSliderSimple2#_lock_textbox",
+    "member"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple2#_name",
     "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-_name",
     "scripts/ui_widgets2.js~NumSliderSimple2#_name",
@@ -11526,10 +14298,46 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple2#baseunit",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-get-baseUnit",
+    "scripts/ui_widgets2.js~NumSliderSimple2#baseUnit",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#baseunit",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-set-baseUnit",
+    "scripts/ui_widgets2.js~NumSliderSimple2#baseUnit",
+    "member"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple2#constructor",
     "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-constructor-constructor",
     "scripts/ui_widgets2.js~NumSliderSimple2#constructor",
     "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#container",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-container",
+    "scripts/ui_widgets2.js~NumSliderSimple2#container",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#decimalplaces",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-decimalPlaces",
+    "scripts/ui_widgets2.js~NumSliderSimple2#decimalPlaces",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#displayunit",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-get-displayUnit",
+    "scripts/ui_widgets2.js~NumSliderSimple2#displayUnit",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#displayunit",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-set-displayUnit",
+    "scripts/ui_widgets2.js~NumSliderSimple2#displayUnit",
+    "member"
   ],
   [
     "scripts/ui_widgets2.js~numslidersimple2#init",
@@ -11538,10 +14346,46 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple2#isint",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-isInt",
+    "scripts/ui_widgets2.js~NumSliderSimple2#isInt",
+    "member"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple2#l",
     "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-l",
     "scripts/ui_widgets2.js~NumSliderSimple2#l",
     "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#labelontop",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-labelOnTop",
+    "scripts/ui_widgets2.js~NumSliderSimple2#labelOnTop",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#linktextbox",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-linkTextBox",
+    "scripts/ui_widgets2.js~NumSliderSimple2#linkTextBox",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#numslider",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-numslider",
+    "scripts/ui_widgets2.js~NumSliderSimple2#numslider",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#range",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-get-range",
+    "scripts/ui_widgets2.js~NumSliderSimple2#range",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#rebuild",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-rebuild",
+    "scripts/ui_widgets2.js~NumSliderSimple2#rebuild",
+    "method"
   ],
   [
     "scripts/ui_widgets2.js~numslidersimple2#setcss",
@@ -11550,10 +14394,10 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/ui_widgets2.js~numslidersimple2#slider",
-    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-member-slider",
-    "scripts/ui_widgets2.js~NumSliderSimple2#slider",
-    "member"
+    "scripts/ui_widgets2.js~numslidersimple2#setvalue",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-setValue",
+    "scripts/ui_widgets2.js~NumSliderSimple2#setValue",
+    "method"
   ],
   [
     "scripts/ui_widgets2.js~numslidersimple2#textbox",
@@ -11568,15 +14412,153 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple2#updatedatapath",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-updateDataPath",
+    "scripts/ui_widgets2.js~NumSliderSimple2#updateDataPath",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#updatelabelontop",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-updateLabelOnTop",
+    "scripts/ui_widgets2.js~NumSliderSimple2#updateLabelOnTop",
+    "method"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple2#updatename",
     "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-updateName",
     "scripts/ui_widgets2.js~NumSliderSimple2#updateName",
     "method"
   ],
   [
+    "scripts/ui_widgets2.js~numslidersimple2#updatetextbox",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-method-updateTextBox",
+    "scripts/ui_widgets2.js~NumSliderSimple2#updateTextBox",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#value",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-get-value",
+    "scripts/ui_widgets2.js~NumSliderSimple2#value",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~numslidersimple2#value",
+    "class/scripts/ui_widgets2.js~NumSliderSimple2.html#instance-set-value",
+    "scripts/ui_widgets2.js~NumSliderSimple2#value",
+    "member"
+  ],
+  [
     "scripts/ui_widgets2.js~numslidersimple2.define",
     "class/scripts/ui_widgets2.js~NumSliderSimple2.html#static-method-define",
     "scripts/ui_widgets2.js~NumSliderSimple2.define",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#_estimatesize",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-method-_estimateSize",
+    "scripts/ui_widgets2.js~ToolTip#_estimateSize",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#constructor",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-constructor-constructor",
+    "scripts/ui_widgets2.js~ToolTip#constructor",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#div",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-member-div",
+    "scripts/ui_widgets2.js~ToolTip#div",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#end",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-method-end",
+    "scripts/ui_widgets2.js~ToolTip#end",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#init",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-method-init",
+    "scripts/ui_widgets2.js~ToolTip#init",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#setcss",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-method-setCSS",
+    "scripts/ui_widgets2.js~ToolTip#setCSS",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#styletag",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-member-styletag",
+    "scripts/ui_widgets2.js~ToolTip#styletag",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#text",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-set-text",
+    "scripts/ui_widgets2.js~ToolTip#text",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#text",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-get-text",
+    "scripts/ui_widgets2.js~ToolTip#text",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip#visibletopick",
+    "class/scripts/ui_widgets2.js~ToolTip.html#instance-member-visibleToPick",
+    "scripts/ui_widgets2.js~ToolTip#visibleToPick",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip.define",
+    "class/scripts/ui_widgets2.js~ToolTip.html#static-method-define",
+    "scripts/ui_widgets2.js~ToolTip.define",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~tooltip.show",
+    "class/scripts/ui_widgets2.js~ToolTip.html#static-method-show",
+    "scripts/ui_widgets2.js~ToolTip.show",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~vectorpanel#[\"_\" + key]",
+    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-member-[\"_\" + key]",
+    "scripts/ui_widgets2.js~VectorPanel#[\"_\" + key]",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~vectorpanel#[k]",
+    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-member-[k]",
+    "scripts/ui_widgets2.js~VectorPanel#[k]",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~vectorpanel#__range",
+    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-member-__range",
+    "scripts/ui_widgets2.js~VectorPanel#__range",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~vectorpanel#_getnumparam",
+    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-method-_getNumParam",
+    "scripts/ui_widgets2.js~VectorPanel#_getNumParam",
+    "method"
+  ],
+  [
+    "scripts/ui_widgets2.js~vectorpanel#_range",
+    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-member-_range",
+    "scripts/ui_widgets2.js~VectorPanel#_range",
+    "member"
+  ],
+  [
+    "scripts/ui_widgets2.js~vectorpanel#_setnumparam",
+    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-method-_setNumParam",
+    "scripts/ui_widgets2.js~VectorPanel#_setNumParam",
     "method"
   ],
   [
@@ -11608,12 +14590,6 @@ window.esdocSearchIndex = [
     "class/scripts/ui_widgets2.js~VectorPanel.html#instance-method-init",
     "scripts/ui_widgets2.js~VectorPanel#init",
     "method"
-  ],
-  [
-    "scripts/ui_widgets2.js~vectorpanel#isint",
-    "class/scripts/ui_widgets2.js~VectorPanel.html#instance-member-isInt",
-    "scripts/ui_widgets2.js~VectorPanel#isInt",
-    "member"
   ],
   [
     "scripts/ui_widgets2.js~vectorpanel#name",
@@ -11674,6 +14650,36 @@ window.esdocSearchIndex = [
     "file/scripts/units.js.html",
     "scripts/units.js",
     "file"
+  ],
+  [
+    "scripts/units.js~degreeunit.buildstring",
+    "class/scripts/units.js~DegreeUnit.html#static-method-buildString",
+    "scripts/units.js~DegreeUnit.buildString",
+    "method"
+  ],
+  [
+    "scripts/units.js~degreeunit.frominternal",
+    "class/scripts/units.js~DegreeUnit.html#static-method-fromInternal",
+    "scripts/units.js~DegreeUnit.fromInternal",
+    "method"
+  ],
+  [
+    "scripts/units.js~degreeunit.parse",
+    "class/scripts/units.js~DegreeUnit.html#static-method-parse",
+    "scripts/units.js~DegreeUnit.parse",
+    "method"
+  ],
+  [
+    "scripts/units.js~degreeunit.tointernal",
+    "class/scripts/units.js~DegreeUnit.html#static-method-toInternal",
+    "scripts/units.js~DegreeUnit.toInternal",
+    "method"
+  ],
+  [
+    "scripts/units.js~degreeunit.unitdefine",
+    "class/scripts/units.js~DegreeUnit.html#static-method-unitDefine",
+    "scripts/units.js~DegreeUnit.unitDefine",
+    "method"
   ],
   [
     "scripts/units.js~footunit.buildstring",
@@ -11793,6 +14799,36 @@ window.esdocSearchIndex = [
     "scripts/units.js~mileunit.unitdefine",
     "class/scripts/units.js~MileUnit.html#static-method-unitDefine",
     "scripts/units.js~MileUnit.unitDefine",
+    "method"
+  ],
+  [
+    "scripts/units.js~radianunit.buildstring",
+    "class/scripts/units.js~RadianUnit.html#static-method-buildString",
+    "scripts/units.js~RadianUnit.buildString",
+    "method"
+  ],
+  [
+    "scripts/units.js~radianunit.frominternal",
+    "class/scripts/units.js~RadianUnit.html#static-method-fromInternal",
+    "scripts/units.js~RadianUnit.fromInternal",
+    "method"
+  ],
+  [
+    "scripts/units.js~radianunit.parse",
+    "class/scripts/units.js~RadianUnit.html#static-method-parse",
+    "scripts/units.js~RadianUnit.parse",
+    "method"
+  ],
+  [
+    "scripts/units.js~radianunit.tointernal",
+    "class/scripts/units.js~RadianUnit.html#static-method-toInternal",
+    "scripts/units.js~RadianUnit.toInternal",
+    "method"
+  ],
+  [
+    "scripts/units.js~radianunit.unitdefine",
+    "class/scripts/units.js~RadianUnit.html#static-method-unitDefine",
+    "scripts/units.js~RadianUnit.unitDefine",
     "method"
   ],
   [
@@ -12082,6 +15118,150 @@ window.esdocSearchIndex = [
     "class/scripts/util.js~SetIter.html#instance-member-set",
     "scripts/util.js~SetIter#set",
     "member"
+  ],
+  [
+    "scripts/util.js~smartconsole#constructor",
+    "class/scripts/util.js~SmartConsole.html#instance-constructor-constructor",
+    "scripts/util.js~SmartConsole#constructor",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsole#context",
+    "class/scripts/util.js~SmartConsole.html#instance-method-context",
+    "scripts/util.js~SmartConsole#context",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsole#contexts",
+    "class/scripts/util.js~SmartConsole.html#instance-member-contexts",
+    "scripts/util.js~SmartConsole#contexts",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsole#error",
+    "class/scripts/util.js~SmartConsole.html#instance-method-error",
+    "scripts/util.js~SmartConsole#error",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsole#log",
+    "class/scripts/util.js~SmartConsole.html#instance-method-log",
+    "scripts/util.js~SmartConsole#log",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsole#trace",
+    "class/scripts/util.js~SmartConsole.html#instance-method-trace",
+    "scripts/util.js~SmartConsole#trace",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsole#warn",
+    "class/scripts/util.js~SmartConsole.html#instance-method-warn",
+    "scripts/util.js~SmartConsole#warn",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#__console",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-__console",
+    "scripts/util.js~SmartConsoleContext#__console",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#_check",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-_check",
+    "scripts/util.js~SmartConsoleContext#_check",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#_data",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-_data",
+    "scripts/util.js~SmartConsoleContext#_data",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#_data_length",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-_data_length",
+    "scripts/util.js~SmartConsoleContext#_data_length",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#_getdata",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-_getData",
+    "scripts/util.js~SmartConsoleContext#_getData",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#_last",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-_last",
+    "scripts/util.js~SmartConsoleContext#_last",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#clearcache",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-clearCache",
+    "scripts/util.js~SmartConsoleContext#clearCache",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#color",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-color",
+    "scripts/util.js~SmartConsoleContext#color",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#constructor",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-constructor-constructor",
+    "scripts/util.js~SmartConsoleContext#constructor",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#hash",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-hash",
+    "scripts/util.js~SmartConsoleContext#hash",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#last",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-last",
+    "scripts/util.js~SmartConsoleContext#last",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#log",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-log",
+    "scripts/util.js~SmartConsoleContext#log",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#maxcache",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-maxCache",
+    "scripts/util.js~SmartConsoleContext#maxCache",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#name",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-name",
+    "scripts/util.js~SmartConsoleContext#name",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#timeinterval",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-member-timeInterval",
+    "scripts/util.js~SmartConsoleContext#timeInterval",
+    "member"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#trace",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-trace",
+    "scripts/util.js~SmartConsoleContext#trace",
+    "method"
+  ],
+  [
+    "scripts/util.js~smartconsolecontext#warn",
+    "class/scripts/util.js~SmartConsoleContext.html#instance-method-warn",
+    "scripts/util.js~SmartConsoleContext#warn",
+    "method"
   ],
   [
     "scripts/util.js~cachering#constructor",

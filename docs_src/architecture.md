@@ -11,10 +11,11 @@ on the first.
 For example, you might see code like this:
 
 ```
-function makePanel(layout) {
-  layout.prop("view3d.selectmode", PackFlags.USE_ICONS);
-  layout.tool("view3d.select_all()", PackFlags.USE_ICONS);
-}
+    function makePanel(layout) {
+      layout.useIcons();
+      layout.prop("view3d.selectmode");
+      layout.tool("view3d.select_all()");
+    }
 ```
 
 "View3d.selectmode" is a data path.  It's akin to an object path or Angle's data bindings.
