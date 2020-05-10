@@ -6937,11 +6937,11 @@ class RadianUnit extends Unit {
   //convert to internal units,
   //e.g. meters for distance
   static toInternal(value) {
-    return value/180.0*Math.PI;
+    return value;
   }
 
   static fromInternal(value) {
-    return value*180.0*Math.PI;
+    return value;
   }
 
   static buildString(value, decimals=3) {
@@ -7012,6 +7012,10 @@ let PropTypes = {
   //ITER : 8192<<1
 };
 
+const PropSubTypes = {
+  COLOR : 1
+};
+
 //flags
 const PropFlags = {
   SELECT            : 1,
@@ -7021,7 +7025,8 @@ const PropFlags = {
   USE_CUSTOM_GETSET : 128, //used by controller.js interface
   SAVE_LAST_VALUE   : 256,
   READ_ONLY         : 512,
-  SIMPLE_SLIDER     : 1024
+  SIMPLE_SLIDER     : 1024,
+  FORCE_ROLLER_SLIDER : 2048
 };
 
 class ToolPropertyIF {
@@ -7086,6 +7091,25 @@ class StringPropertyIF extends ToolPropertyIF {
 
 class NumPropertyIF extends ToolPropertyIF {
 }
+class IntProperty extends ToolPropertyIF {
+  constructor() {
+    super(PropTypes.INT);
+  }
+
+  setRadix(radix) {
+    throw new Error("implement me");
+  }
+}
+
+class FloatProperty extends ToolPropertyIF {
+  constructor() {
+    super(PropTypes.FLOAT);
+  }
+
+  setDecimalPlaces(n) {
+  }
+}
+
 class EnumProperty extends ToolPropertyIF {
   constructor(value, valid_values) {
     super(PropTypes.ENUM);
@@ -7151,6 +7175,78 @@ class Vec4Property extends ToolPropertyIF {
   }
 }
 
+/**
+ * List of other tool props (all of one type)
+ */
+class ListProperty extends ToolPropertyIF {
+  /*
+  * Prop must be a ToolProperty subclass instance
+  * */
+  constructor(prop) {
+    super(PropTypes.PROPLIST);
+
+    this.prop = prop;
+  }
+
+  copyTo(b) {
+  }
+
+  copy() {
+  }
+
+  /**
+   * clear list
+   * */
+  clear() {
+
+  }
+
+  push(item=this.prop.copy()) {
+  }
+
+  [Symbol.iterator]() {
+  }
+
+  get length() {
+  }
+
+  set length(val) {
+  }
+}
+
+//like FlagsProperty but uses strings
+class StringSetProperty extends ToolPropertyIF {
+  constructor(value=undefined, definition=[]) {
+    super(PropTypes.STRSET);
+  }
+
+  /*
+  * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+  * If destructive is true, then existing set will be cleared.
+  * */
+  setValue(values, destructive=true, soft_fail=true) {
+  }
+
+  getValue() {
+  }
+
+  addIcons(iconmap) {
+  }
+
+
+  addUINames(map) {
+  }
+
+  addDescriptions(map) {
+  }
+
+  copyTo(b) {
+  }
+
+  copy() {
+  }
+}
+
 class Curve1DPropertyIF extends ToolPropertyIF {
   constructor(curve, uiname) {
     super(PropTypes.CURVE);
@@ -7175,6 +7271,26 @@ class Curve1DPropertyIF extends ToolPropertyIF {
     b.setValue(this.data);
   }
 }
+
+var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  PropTypes: PropTypes,
+  PropSubTypes: PropSubTypes,
+  PropFlags: PropFlags,
+  ToolPropertyIF: ToolPropertyIF,
+  StringPropertyIF: StringPropertyIF,
+  NumPropertyIF: NumPropertyIF,
+  IntProperty: IntProperty,
+  FloatProperty: FloatProperty,
+  EnumProperty: EnumProperty,
+  FlagPropertyIF: FlagPropertyIF,
+  Vec2Property: Vec2Property,
+  Vec3Property: Vec3Property,
+  Vec4Property: Vec4Property,
+  ListProperty: ListProperty,
+  StringSetProperty: StringSetProperty,
+  Curve1DPropertyIF: Curve1DPropertyIF
+});
 
 /*
 Icons are defined in spritesheets that live in
@@ -7249,6 +7365,10 @@ let exports = {
     doOnce: false,
     modalEvents : true,
     areaConstraintSolver : false,
+    datapaths : false,
+
+    screenAreaPosSizeAccesses : false,
+
     /*
     customWindowSize: {
       width: 512, height: 512
@@ -9485,7 +9605,7 @@ function setPropTypes(types) {
   }
 }
 
-const PropSubTypes = {
+const PropSubTypes$1 = {
   COLOR : 1
 };
 
@@ -9830,7 +9950,7 @@ class _NumberPropertyBase extends ToolProperty {
   }
 }
 
-class IntProperty extends _NumberPropertyBase {
+class IntProperty$1 extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
@@ -9867,7 +9987,7 @@ class IntProperty extends _NumberPropertyBase {
   }
 
 }
-_addClass(IntProperty);
+_addClass(IntProperty$1);
 
 class BoolProperty extends ToolProperty {
   constructor(value, apiname,
@@ -9916,7 +10036,7 @@ class BoolProperty extends ToolProperty {
 _addClass(BoolProperty);
 
 
-class FloatProperty extends _NumberPropertyBase {
+class FloatProperty$1 extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
@@ -9963,7 +10083,7 @@ class FloatProperty extends _NumberPropertyBase {
     return this;
   }
 }
-_addClass(FloatProperty);
+_addClass(FloatProperty$1);
 
 class EnumProperty$1 extends ToolProperty {
   constructor(string, valid_values, apiname, 
@@ -9997,13 +10117,15 @@ class EnumProperty$1 extends ToolProperty {
     }
     
     for (var k in this.values) {
-      let uin = k.replace(/\[_-]/g, " ").trim();
+      let uin = k.replace(/[_-]/g, " ").trim();
       uin = uin.split(" ");
       let uiname = "";
 
       for (let word of uin) {
-        uiname += word[0].toUpperCase() + word.slice(1, word.length).toLowerCase();
+        uiname += word[0].toUpperCase() + word.slice(1, word.length).toLowerCase() + " ";
       }
+
+      uiname = uiname.trim();
 
       this.ui_value_names[k] = uiname;
       this.descriptions[k] = uiname;
@@ -10263,7 +10385,7 @@ _addClass(Mat4Property);
 /**
  * List of other tool props (all of one type)
  */
-class ListProperty extends ToolProperty {
+class ListProperty$1 extends ToolProperty {
   /*
   * Prop must be a ToolProperty subclass instance
   * */
@@ -10308,7 +10430,7 @@ class ListProperty extends ToolProperty {
   }
 
   copy() {
-    let ret = new ListProperty(this.prop.copy());
+    let ret = new ListProperty$1(this.prop.copy());
     this.copyTo(ret);
     return ret;
   }
@@ -10375,10 +10497,10 @@ class ListProperty extends ToolProperty {
   }
 }
 
-_addClass(ListProperty);
+_addClass(ListProperty$1);
 
 //like FlagsProperty but uses strings
-class StringSetProperty extends ToolProperty {
+class StringSetProperty$1 extends ToolProperty {
   constructor(value=undefined, definition=[]) {
     super(PropTypes.STRSET);
 
@@ -10542,13 +10664,13 @@ class StringSetProperty extends ToolProperty {
   }
 
   copy() {
-    let ret = new StringSetProperty(undefined, {});
+    let ret = new StringSetProperty$1(undefined, {});
     this.copyTo(ret);
     return ret;
   }
 }
 
-_addClass(StringSetProperty);
+_addClass(StringSetProperty$1);
 
 class Curve1DProperty extends ToolPropertyIF {
   constructor(curve, apiname, uiname, description, flag, icon) {
@@ -11942,9 +12064,9 @@ class DataPathSetOp extends ToolOp {
 
     if (rdef.subkey !== undefined && (prop.type & mask)) {
       if (prop.type & (PropTypes.ENUM|PropTypes.FLAG))
-        tool.inputs.prop = new IntProperty();
+        tool.inputs.prop = new IntProperty$1();
       else
-        tool.inputs.prop = new FloatProperty();
+        tool.inputs.prop = new FloatProperty$1();
 
       //value = rdef.obj[rdef.key];
       //console.log("rdef.value", value);
@@ -12232,6 +12354,8 @@ class DataPath {
 
   rollerSlider() {
     this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
+    this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
+
     return this;
   }
 
@@ -12473,7 +12597,7 @@ class DataStruct {
   color3(path, apiname, uiname, description) {
     let ret = this.vec3(path, apiname, uiname, description);
 
-    ret.data.subtype = PropSubTypes.COLOR;
+    ret.data.subtype = PropSubTypes$1.COLOR;
     ret.simpleSlider();
 
     return ret;
@@ -12482,7 +12606,7 @@ class DataStruct {
   color4(path, apiname, uiname, description) {
     let ret = this.vec4(path, apiname, uiname, description);
 
-    ret.data.subtype = PropSubTypes.COLOR;
+    ret.data.subtype = PropSubTypes$1.COLOR;
     ret.simpleSlider();
 
     return ret;
@@ -12610,7 +12734,7 @@ class DataStruct {
   }
 
   float(path, apiname, uiname, description) {
-    let prop = new FloatProperty(0, apiname, uiname, description);
+    let prop = new FloatProperty$1(0, apiname, uiname, description);
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -12627,7 +12751,7 @@ class DataStruct {
 
   int(path, apiname, uiname, description, prop=undefined) {
     if (!prop) {
-      prop = new IntProperty(0, apiname, uiname, description);
+      prop = new IntProperty$1(0, apiname, uiname, description);
     }
 
     let dpath = new DataPath(path, apiname, prop);
@@ -12702,7 +12826,7 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 
 let _dummypath = new DataPath();
 
-let DummyIntProperty = new IntProperty();
+let DummyIntProperty = new IntProperty$1();
 const CLS_API_KEY = "__dp_map_id";
 
 class DataAPI extends ModelInterface {
@@ -12854,6 +12978,10 @@ class DataAPI extends ModelInterface {
     } catch (error) {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
+        print_stack$1(error);
+      }
+
+      if (exports.DEBUG.datapaths) {
         print_stack$1(error);
       }
 
@@ -14242,7 +14370,8 @@ const PackFlags = {
   STRIP_HORIZ : 512,
   STRIP_VERT : 1024,
   STRIP : 512|1024,
-  SIMPLE_NUMSLIDERS : 2048
+  SIMPLE_NUMSLIDERS : 2048,
+  FORCE_ROLLER_SLIDER : 4096
 };
 
 class SimpleContext {
@@ -17647,8 +17776,9 @@ class TextBox extends UIBase$2 {
 UIBase$2.register(TextBox);
 
 function checkForTextBox(screen, x, y) {
-  let elem = screen.pickElement(x, y, undefined, undefined, TextBox);
-  //console.log(elem);
+  let elem = screen.pickElement(x, y);
+  console.log(elem, x, y);
+
   if (elem && elem.tagName === "TEXTBOX-X") {
     return true;
   }
@@ -17716,7 +17846,7 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
 //bind module to global var to get at it in console.
 
 let PropFlags$2 = PropFlags;
-let PropSubTypes$1 = PropSubTypes;
+let PropSubTypes$2 = PropSubTypes$1;
 
 let UIBase$3 = UIBase,
   PackFlags$1 = PackFlags,
@@ -18486,7 +18616,7 @@ class Container extends UIBase {
     let rdef = this.ctx.api.resolvePath(this.ctx, path, true);
 
     if (rdef === undefined || rdef.prop === undefined) {
-      console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path));
+      console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path, true));
       return;
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
@@ -18555,7 +18685,7 @@ class Container extends UIBase {
         let ret = (packflag & PackFlags$1.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
         ret.packflag |= packflag;
         return ret;
-      } else if (prop.subtype === PropSubTypes$1.COLOR) {
+      } else if (prop.subtype === PropSubTypes$2.COLOR) {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
@@ -18649,7 +18779,7 @@ class Container extends UIBase {
     let prop;
 
     if (path !== undefined) {
-      prop = this.ctx.api.resolvePath(this.ctx, path);
+      prop = this.ctx.api.resolvePath(this.ctx, path, true);
 
       if (prop !== undefined)
         prop = prop.prop;
@@ -18744,7 +18874,7 @@ class Container extends UIBase {
     let path = this._joinPrefix(inpath);
 
     if (path !== undefined && prop === undefined) {
-      prop = this.ctx.api.resolvePath(this.ctx, path);
+      prop = this.ctx.api.resolvePath(this.ctx, path, true);
 
       if (prop !== undefined)
         prop = prop.prop;
@@ -18867,7 +18997,7 @@ class Container extends UIBase {
         ret.prop.addIcons(iconmap);
       }
     } else {
-      let res = this.ctx.api.resolvePath(this.ctx, path);
+      let res = this.ctx.api.resolvePath(this.ctx, path, true);
 
       if (res !== undefined) {
         ret.prop = res.prop;
@@ -18919,13 +19049,16 @@ class Container extends UIBase {
     let ret;
 
     if (inpath) {
-      let rdef = this.ctx.api.resolvePath(this.ctx, inpath);
+      let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.SIMPLE_SLIDER)) {
         packflag |= PackFlags$1.SIMPLE_NUMSLIDERS;
       }
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.FORCE_ROLLER_SLIDER)) {
+        packflag |= PackFlags$1.FORCE_ROLLER_SLIDER;
+      }
     }
 
-    if (packflag & PackFlags$1.SIMPLE_NUMSLIDERS) {
+    if (packflag & PackFlags$1.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$1.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
     } else {
       ret = document.createElement("numslider-x");
@@ -24977,7 +25110,7 @@ var solver1 = /*#__PURE__*/Object.freeze({
 
 let idgen = 0;
 
-class NodeVertex extends Vector2 {
+class PackNodeVertex extends Vector2 {
   constructor(node, co) {
     super(co);
 
@@ -24997,7 +25130,7 @@ class NodeVertex extends Vector2 {
   }
 }
 
-class Node {
+class PackNode {
   constructor() {
     this.pos = new Vector2();
     this.vel = new Vector2();
@@ -25017,7 +25150,7 @@ function copyGraph(nodes) {
   let idmap = {};
 
   for (let n of nodes) {
-    let n2 = new Node();
+    let n2 = new PackNode();
     n2._id = n._id;
     n2.pos.load(n.pos);
     n2.vel.load(n.vel);
@@ -25027,7 +25160,7 @@ function copyGraph(nodes) {
     idmap[n2._id] = n2;
 
     for (let v of n.verts) {
-      let v2 = new NodeVertex(n2, v);
+      let v2 = new PackNodeVertex(n2, v);
       v2._id = v._id;
       idmap[v2._id] = v2;
 
@@ -25110,8 +25243,8 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   nodes = copyGraph(nodes);
 
   for (let n of nodes) {
-    n.pos[0] += (Math.random()-0.5)*1.0;
-    n.pos[1] += (Math.random()-0.5)*1.0;
+    n.pos[0] += (Math.random()-0.5)*5.0;
+    n.pos[1] += (Math.random()-0.5)*5.0;
   }
 
   let nodemap = {};
@@ -25176,7 +25309,7 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   let fakeVerts = [];
   for (let island of islands) {
     let n = island[0];
-    let fv = new NodeVertex(n);
+    let fv = new PackNodeVertex(n);
     fakeVerts.push(fv);
   }
 
@@ -25321,6 +25454,8 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
     solveStep();
   }
 
+  loadGraph(orignodes, best ? best : nodes);
+
   if (updateCb) {
     if (nodes._timer !== undefined) {
       window.clearInterval(nodes._timer);
@@ -25356,8 +25491,6 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
       }
     }
   }
-
-  loadGraph(orignodes, best ? best : nodes);
 }
 
 let Vector2$5 = Vector2,
@@ -27992,6 +28125,7 @@ class Area extends UIBase {
 
 Area.STRUCT = `
 pathux.Area { 
+  flag : int;
   saved_uidata : string | obj._getSavedUIData();
 }
 `;
@@ -28009,8 +28143,28 @@ class ScreenArea extends UIBase {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this.pos = new Vector2$7();
-    this.size = new Vector2$7();
+    this._pos = new Vector2$7();
+    this._size = new Vector2$7([512, 512]);
+
+    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+      let wrapVector = (name, axis) => {
+        Object.defineProperty(this[name], axis, {
+          get: function () {
+            return this["_" + axis];
+          },
+
+          set: function (val) {
+            console.warn(`ScreenArea.${name}[${axis}] set:`, val);
+            this["_" + axis] = val;
+          }
+        });
+      };
+
+      wrapVector("size", 0);
+      wrapVector("size", 1);
+      wrapVector("pos", 0);
+      wrapVector("pos", 1);
+    }
 
     this.area = undefined;
     this.editors = [];
@@ -28104,6 +28258,8 @@ class ScreenArea extends UIBase {
     let screen = this.getScreen();
 
     this.remove(false);
+    screen.sareas.remove(this);
+
     screen.appendChild(this);
 
     let zindex = 0;
@@ -28350,6 +28506,10 @@ class ScreenArea extends UIBase {
    * Sets pos/size from screen verts
    * */
   loadFromVerts() {
+    if (this._verts.length == 0) {
+      return;
+    }
+
     let min = new Vector2$7([1e17, 1e17]);
     let max = new Vector2$7([-1e17, -1e17]);
 
@@ -28601,6 +28761,28 @@ class ScreenArea extends UIBase {
     }
   }
 
+  get pos() {
+    return this._pos;
+  }
+
+  set pos(val) {
+    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+      console.log("ScreenArea set pos", val);
+    }
+    this._pos.load(val);
+  }
+
+  get size() {
+    return this._size;
+  }
+
+  set size(val) {
+    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+      console.log("ScreenArea set size", val);
+    }
+    this._size.load(val);
+  }
+
   loadSTRUCT(reader) {
     reader(this);
 
@@ -28711,10 +28893,10 @@ class ScreenArea extends UIBase {
 
 ScreenArea.STRUCT = `
 pathux.ScreenArea { 
-  pos      : array(float);
-  size     : array(float);
+  pos      : vec2;
+  size     : vec2;
   type     : string;
-  floating : int; 
+  hidden   : bool;
   editors  : array(abstract(pathux.Area));
   area     : string | obj.area.constructor.define().areaname;
 }
@@ -32460,9 +32642,10 @@ if (!test()) {
 let solver = solver1;
 let util = util1;
 let vectormath = vectormath1;
+let toolprop_abstract = toolprop_abstract1;
 let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DPropertyIF, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypes, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FlagPropertyIF, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Node, NodeVertex, NumProperty, NumPropertyIF, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PanelFrame, PropClasses, PropFlags, PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringPropertyIF, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolPropertyIF, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, binomial, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeGenEnum, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DPoint, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypes, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$2 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$1 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, binomial, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeGenEnum, makeIconDiv, manager, marginPaddingCSSKeys, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse, mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
