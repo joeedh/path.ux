@@ -1,6 +1,6 @@
-import {nstructjs} from "../struct.js";
+import {nstructjs} from "../util/struct.js";
 import {CurveFlags, TangentModes, CurveTypeData} from './curve1d_base.js';
-import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../vectormath.js';
+import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
 
 class EquationCurve extends CurveTypeData {
   constructor(type) {

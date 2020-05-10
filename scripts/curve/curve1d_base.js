@@ -1,4 +1,4 @@
-import {nstructjs} from "../struct.js";
+import {nstructjs} from "../util/struct.js";
 
 export const CurveConstructors = [];
 export const CURVE_VERSION = 1.0;

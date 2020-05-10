@@ -1,13 +1,13 @@
 "use strict";
 
 /*FIXME: not sure this works anymore*/
-import {nstructjs} from "../struct.js";
+import {nstructjs} from "../util/struct.js";
 import {Icons} from "../icon_enum.js";
 
-import * as util from '../util.js';
+import * as util from '../util/util.js';
 //import * as ui_base from './ui_base.js';
-import * as vectormath from '../vectormath.js';
-import {EventDispatcher} from "../events.js";
+import * as vectormath from '../util/vectormath.js';
+import {EventDispatcher} from "../util/events.js";
 
 var Vector2 = vectormath.Vector2;
 
