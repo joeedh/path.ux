@@ -1,5 +1,5 @@
 import {UIBase, saveUIData, loadUIData} from '../core/ui_base.js';
-import {nstrutjs, util, cconst} from '../pathux.js';
+import {nstructjs, util, cconst} from '../pathux.js';
 import {RowFrame, Container} from "../pathux.js";
 import {Area} from "./ScreenArea.js";
 import {Icons} from "../core/ui_base.js";
