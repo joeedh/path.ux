@@ -27,6 +27,8 @@ export class Menu extends UIBase {
 
     this.items = [];
 
+    this.closeOnMouseUp = true;
+
     this.itemindex = 0;
     this.closed = false;
     this.started = false;
@@ -878,7 +880,7 @@ export class MenuWrangler {
   }
 
   pushMenu(menu) {
-    if (this.menustack.length === 0) {
+    if (this.menustack.length === 0 && menu.closeOnMouseUp) {
       this.closeOnMouseUp = true;
     }
 

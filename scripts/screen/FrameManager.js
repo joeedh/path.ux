@@ -19,6 +19,8 @@ import '../util/struct.js';
 import {KeyMap, HotKey} from '../util/simple_events.js';
 import {keymap} from "../util/simple_events.js";
 
+import {AreaDocker} from './AreaDocker.js';
+
 import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
 export {ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
 
@@ -56,6 +58,8 @@ let screen_idgen = 0;
 export class Screen extends ui_base.UIBase {
   constructor() {
     super();
+
+    this._resize_callbacks = [];
 
     this.allBordersMovable = cconst.DEBUG.allBordersMovable;
     this.needsBorderRegen = true;
@@ -226,6 +230,15 @@ export class Screen extends ui_base.UIBase {
   _exitPopupSafe() {
     this._popup_safe = Math.max(this._popup_safe-1, 0);
   }
+
+  popupMenu(menu, x, y) {
+    let popup = this.popup(undefined, x, y, false);
+    popup.add(menu);
+
+    menu.start();
+    return menu;
+  }
+
   /** makes a popup at x,y and returns a new container-x for it */
   popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
@@ -707,6 +720,23 @@ export class Screen extends ui_base.UIBase {
     }
 
     return undefined;
+  }
+
+  addEventListener(type, cb, options) {
+    if (type === "resize") {
+      this._resize_callbacks.push(cb);
+    } else {
+      return super.addEventListener(type, cb, options);
+    }
+  }
+
+  removeEventListener(type, cb, options) {
+    if (type === "resize") {
+      if (this._resize_callbacks.indexOf(cb) >= 0)
+        this._resize_callbacks.remove(cb);
+    } else {
+      return super.removeEventListener(type, cb, options);
+    }
   }
 
   execKeyMap(e) {
@@ -1862,6 +1892,13 @@ export class Screen extends ui_base.UIBase {
     this.setCSS();
     this.calcTabOrder();
 
+    this._fireResizeCB(oldsize);
+  }
+
+  _fireResizeCB(oldsize=this.size) {
+    for (let cb of this._resize_callbacks) {
+      cb(oldsize);
+    }
   }
 
   getScreenVert(pos, added_id="") {

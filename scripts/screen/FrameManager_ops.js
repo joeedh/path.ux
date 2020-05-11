@@ -297,6 +297,7 @@ export class AreaResizeTool extends ToolBase {
     this.screen.solveAreaConstraints(snapMode);
     this.screen.setCSS();
     this.screen.updateDebugBoxes();
+    this.screen._fireResizeCB();
   }
 }
 

@@ -1828,24 +1828,11 @@ export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
 }
 
 export function _ensureFont(elem, canvas, g, size) {
-  let dpi = elem.getDPI();
-  //size *= dpi;
-
-  if (g.font) {
-    return;
-  }
-
-  if (size !== undefined) {
-    g.font = ""+Math.ceil(size) + "px sans-serif";
-  } else if (!canvas.font) {
-    let size = elem.getDefault("DefaultText").size;
-
-    let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
-    
-    //size += 4;
-    g.font = ""+Math.floor(size) + "." + add + "px sans-serif";
-  } else {
+  if (canvas.font) {
     g.font = canvas.font;
+  } else {
+    let font = elem.getDefault("DefaultText");
+    g.font = font.genCSS(size);
   }
 }
 
@@ -1939,7 +1926,11 @@ export function measureText(elem, text, canvas=undefined,
   return ret;
 }
 
-export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+//export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+export function drawText(elem, x, y, text, args={}) {
+  let canvas = args.canvas, g = args.g, color = args.color, font = args.font;
+  let size = args.size;
+
   if (size === undefined) {
     if (font !== undefined && font instanceof CSSFont) {
       size = font.size;

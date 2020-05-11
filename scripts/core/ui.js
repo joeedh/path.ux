@@ -1175,8 +1175,19 @@ export class Container extends ui_base.UIBase {
 
     defaultval cannot be undefined
   */
-  listenum(inpath, name, enummap, defaultval, callback, iconmap, packflag = 0) {
+  listenum(inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
     packflag |= this.inherit_packflag;
+
+    if (name && typeof name === "object") {
+      let args = name;
+
+      name = args.name;
+      enumDef = args.enumDef;
+      defaultval = args.defaultval;
+      callback = args.callback;
+      iconmap = args.iconmap;
+      packflag = args.packflag || 0;
+    }
 
     let path;
 
@@ -1185,11 +1196,11 @@ export class Container extends ui_base.UIBase {
     }
 
     let ret = document.createElement("dropbox-x")
-    if (enummap !== undefined) {
-      if (enummap instanceof toolprop.EnumProperty) {
-        ret.prop = enummap;
+    if (enumDef !== undefined) {
+      if (enumDef instanceof toolprop.EnumProperty) {
+        ret.prop = enumDef;
       } else {
-        ret.prop = new toolprop.EnumProperty(defaultval, enummap, path, name);
+        ret.prop = new toolprop.EnumProperty(defaultval, enumDef, path, name);
       }
 
       if (iconmap !== undefined) {

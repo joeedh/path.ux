@@ -43,7 +43,7 @@ class EquationCurve extends CurveTypeData {
       draw_trans : drawTransform,
     };
 
-    let text = container.textbox(undefined, this.equation);
+    let text = this.uidata.textbox = container.textbox(undefined, this.equation);
     text.onchange = (val) => {
       console.log(val);
       this.equation = val;

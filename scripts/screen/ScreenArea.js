@@ -12,6 +12,9 @@ import cconst from '../config/const.js';
 import '../util/struct.js';
 
 let UIBase = ui_base.UIBase;
+
+import {EnumProperty} from "../toolsys/toolprop.js";
+
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
@@ -295,7 +298,7 @@ export class Area extends ui_base.UIBase {
     return this.header.getClientRects()[0].height;
   }
 
-  makeAreaSwitcher(container) {
+  static makeAreasEnum() {
     let areas = {};
     let icons = {};
     let i = 0;
@@ -318,11 +321,29 @@ export class Area extends ui_base.UIBase {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
+    let prop = new EnumProperty(undefined, areas);
+    prop.addIcons(icons);
 
-    return container.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
-      let cls = areaclasses[id];
-      this.owning_sarea.switch_editor(cls);
-    }, icons);
+    return prop;
+  }
+
+  makeAreaSwitcher(container) {
+    if (cconst.useAreaTabSwitcher) {
+      let ret = document.createElement("area-docker-x");
+      container.add(ret);
+      return ret;
+    }
+
+    let prop = Area.makeAreasEnum();
+
+    return container.listenum(undefined, {
+      name : this.constructor.define().uiname,
+      enumDef : prop,
+      callback : (id) => {
+        let cls = areaclasses[id];
+        this.owning_sarea.switch_editor(cls);
+      }
+    });
 
     //return areas;
   }

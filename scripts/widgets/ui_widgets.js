@@ -570,7 +570,7 @@ export class NumSlider extends ValueButtonBase {
       r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
 
     r *= dpi;
-    let pad = this.getDefault("BoxMargin") * dpi;
+    let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
     
     //if (this.value !== undefined) {
@@ -579,8 +579,15 @@ export class NumSlider extends ValueButtonBase {
     let tw = ui_base.measureText(this, text, this.dom, this.g).width;
     let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
     let cy = this.dom.height/2;
-    
-    ui_base.drawText(this, cx, cy + ts/2, text, this.dom, this.g);
+
+    this.dom.font = undefined;
+
+    ui_base.drawText(this, cx, cy + ts/2, text, {
+      canvas : this.dom,
+      g      : this.g,
+      size   : ts
+    });
+
     //}
     
     g.fillStyle = "rgba(0,0,0,0.1)";
@@ -1216,25 +1223,27 @@ export class Check1 extends Button {
   
   _redraw() {
     //console.log("button draw");
-    
+
     let dpi = this.getDPI();
-    
+
     let box = 40;
     ui_base.drawRoundBox(this, this.dom, this.g, box);
 
     let r = this.getDefault("BoxRadius") * dpi;
     let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultText").size;
-    
+
     let text = this._genLabel();
-    
+
     //console.log(text, "text", this._name);
-    
+
     let tw = ui_base.measureText(this, text, this.dom, this.g).width;
-    let cx = this.dom.width/2 - tw/2;
-    let cy = this.dom.height/2;
-    
-    ui_base.drawText(this, box, cy + ts/2, text, this.dom, this.g);
+    let cx = this.dom.width / 2 - tw / 2;
+    let cy = this.dom.height / 2;
+
+    ui_base.drawText(this, box, cy + ts / 2, text, {
+      canvas: this.dom, g: this.g
+    });
   }
 
   static define() {return {

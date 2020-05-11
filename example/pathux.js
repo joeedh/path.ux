@@ -7704,6 +7704,7 @@ let exports = {
     */
   },
 
+  useAreaTabSwitcher: true,
   autoSizeUpdate : true,
   showPathsInToolTips: true,
 
@@ -8573,7 +8574,7 @@ class EquationCurve extends CurveTypeData {
       draw_trans : drawTransform,
     };
 
-    let text = container.textbox(undefined, this.equation);
+    let text = this.uidata.textbox = container.textbox(undefined, this.equation);
     text.onchange = (val) => {
       console.log(val);
       this.equation = val;
@@ -16809,24 +16810,11 @@ function _getFont(elem, size, font="DefaultText", do_dpi=true) {
 }
 
 function _ensureFont(elem, canvas, g, size) {
-  let dpi = elem.getDPI();
-  //size *= dpi;
-
-  if (g.font) {
-    return;
-  }
-
-  if (size !== undefined) {
-    g.font = ""+Math.ceil(size) + "px sans-serif";
-  } else if (!canvas.font) {
-    let size = elem.getDefault("DefaultText").size;
-
-    let add = "0"; //Math.ceil(Math.fract((0.5 / dpi))*100);
-    
-    //size += 4;
-    g.font = ""+Math.floor(size) + "." + add + "px sans-serif";
-  } else {
+  if (canvas.font) {
     g.font = canvas.font;
+  } else {
+    let font = elem.getDefault("DefaultText");
+    g.font = font.genCSS(size);
   }
 }
 
@@ -16920,7 +16908,11 @@ function measureText(elem, text, canvas=undefined,
   return ret;
 }
 
-function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+//export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
+function drawText(elem, x, y, text, args={}) {
+  let canvas = args.canvas, g = args.g, color = args.color, font = args.font;
+  let size = args.size;
+
   if (size === undefined) {
     if (font !== undefined && font instanceof CSSFont) {
       size = font.size;
@@ -17527,7 +17519,12 @@ class Button extends UIBase$1 {
     let cy = h*0.5 + ts*0.5;
 
     let g = this.g;
-    drawText(this, ~~cx, ~~cy, text, this.dom, g, undefined, ts, font);
+    drawText(this, ~~cx, ~~cy, text, {
+      canvas : this.dom,
+      g : this.g,
+      size : ts,
+      font : font
+    });
   }
 
   static define() {return {
@@ -18420,7 +18417,7 @@ class NumSlider extends ValueButtonBase {
       r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
 
     r *= dpi;
-    let pad = this.getDefault("BoxMargin") * dpi;
+    let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
     
     //if (this.value !== undefined) {
@@ -18429,8 +18426,15 @@ class NumSlider extends ValueButtonBase {
     let tw = measureText(this, text, this.dom, this.g).width;
     let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
     let cy = this.dom.height/2;
-    
-    drawText(this, cx, cy + ts/2, text, this.dom, this.g);
+
+    this.dom.font = undefined;
+
+    drawText(this, cx, cy + ts/2, text, {
+      canvas : this.dom,
+      g      : this.g,
+      size   : ts
+    });
+
     //}
     
     g.fillStyle = "rgba(0,0,0,0.1)";
@@ -19066,25 +19070,27 @@ class Check1 extends Button {
   
   _redraw() {
     //console.log("button draw");
-    
+
     let dpi = this.getDPI();
-    
+
     let box = 40;
     drawRoundBox(this, this.dom, this.g, box);
 
     let r = this.getDefault("BoxRadius") * dpi;
     let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultText").size;
-    
+
     let text = this._genLabel();
-    
+
     //console.log(text, "text", this._name);
-    
+
     let tw = measureText(this, text, this.dom, this.g).width;
-    let cx = this.dom.width/2 - tw/2;
-    let cy = this.dom.height/2;
-    
-    drawText(this, box, cy + ts/2, text, this.dom, this.g);
+    let cx = this.dom.width / 2 - tw / 2;
+    let cy = this.dom.height / 2;
+
+    drawText(this, box, cy + ts / 2, text, {
+      canvas: this.dom, g: this.g
+    });
   }
 
   static define() {return {
@@ -20318,8 +20324,19 @@ class Container extends UIBase {
 
     defaultval cannot be undefined
   */
-  listenum(inpath, name, enummap, defaultval, callback, iconmap, packflag = 0) {
+  listenum(inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
     packflag |= this.inherit_packflag;
+
+    if (name && typeof name === "object") {
+      let args = name;
+
+      name = args.name;
+      enumDef = args.enumDef;
+      defaultval = args.defaultval;
+      callback = args.callback;
+      iconmap = args.iconmap;
+      packflag = args.packflag || 0;
+    }
 
     let path;
 
@@ -20328,11 +20345,11 @@ class Container extends UIBase {
     }
 
     let ret = document.createElement("dropbox-x");
-    if (enummap !== undefined) {
-      if (enummap instanceof EnumProperty$1) {
-        ret.prop = enummap;
+    if (enumDef !== undefined) {
+      if (enumDef instanceof EnumProperty$1) {
+        ret.prop = enumDef;
       } else {
-        ret.prop = new EnumProperty$1(defaultval, enummap, path, name);
+        ret.prop = new EnumProperty$1(defaultval, enumDef, path, name);
       }
 
       if (iconmap !== undefined) {
@@ -23783,23 +23800,54 @@ UIBase$8.register(ColorPickerButton);
 
 let UIBase$9 = UIBase, 
     PackFlags$8 = PackFlags,
-    IconSheets$6 = IconSheets;
+    IconSheets$6 = IconSheets,
+  iconmanager$1 = iconmanager;
 
 let tab_idgen = 1;
 let debug = false;
+let Vector2$7 = Vector2;
 
 function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
 class TabItem {
-  constructor(name, id, tooltip="") {
+  constructor(name, id, tooltip="", tbar) {
     this.name = name;
+    this.icon = undefined;
     this.id = id;
     this.tooltip = tooltip;
+    this.movable = true;
+    this.tbar = tbar;
+
+    this.dom = undefined;
+    this.extra = undefined;
+    this.extraSize = undefined;
     
-    this.size = [0, 0];
-    this.pos = [0, 0];
+    this.size = new Vector2$7();
+    this.pos = new Vector2$7();
+
+    this.abssize = new Vector2$7();
+    this.abspos = new Vector2$7();
+  }
+
+  getClientRects() {
+    let r = this.tbar.getClientRects()[0];
+
+    let s = this.abssize, p = this.abspos;
+
+    s.load(this.size);
+    p.load(this.pos);
+
+    if (r) {
+      p[0] += r.x;
+      p[1] += r.y;
+    }
+
+    return [{
+      x: p[0], y: p[1], width: s[0], height: s[1], left: p[0],
+      top: p[1], right: p[0] + s[0], bottom: p[1] + s[1]
+    }];
   }
 }
 
@@ -23928,7 +23976,9 @@ class TabBar extends UIBase$9 {
     
     let style = document.createElement("style");
     let canvas = document.createElement("canvas");
-    
+
+    this.iconsheet = 0;
+
     this.tabs = [];
     this.tabs.active = undefined;
     this.tabs.highlight = undefined;
@@ -24067,15 +24117,28 @@ class TabBar extends UIBase$9 {
     }, false);
   }
   
-  getTab(name) {
+  getTab(name_or_id) {
     for (let tab of this.tabs) {
-      if (tab.name === name)
+      if (tab.id === name_or_id || tab.name === name_or_id)
         return tab;
     }
     
     return undefined;
   }
-  
+
+  clear() {
+    for (let t of this.tabs) {
+      if (t.dom) {
+        t.dom.remove();
+        t.dom = undefined;
+      }
+    }
+
+    this.tabs = [];
+    this.setCSS();
+    this._redraw();
+  }
+
   saveData() {
     let taborder = [];
     
@@ -24142,7 +24205,7 @@ class TabBar extends UIBase$9 {
     
     return e;
   }
-  
+
   swapTabs(a, b) {
     let tabs = this.tabs;
     
@@ -24154,9 +24217,18 @@ class TabBar extends UIBase$9 {
     
     this.update(true);
   }
-  
-  addTab(name, id, tooltip="") {
-    let tab = new TabItem(name, id, tooltip);
+
+  addIconTab(icon, id, tooltip, movable=true) {
+   let tab = this.addTab("", id, tooltip, movable);
+   tab.icon = icon;
+
+   return tab;
+  }
+
+  addTab(name, id, tooltip="", movable) {
+    let tab = new TabItem(name, id, tooltip, this);
+    tab.movable = movable;
+
     this.tabs.push(tab);
     this.update(true);
     
@@ -24226,8 +24298,12 @@ class TabBar extends UIBase$9 {
   }
   
   _layout() {
+    if ((!this.ctx || !this.ctx.screen) && !this.isDead()) {
+      this.doOnce(this._layout);
+    }
+
     let g = this.g;
-    
+
     if (debug) console.log("tab layout");
     
     let dpi = this.getDPI();
@@ -24242,10 +24318,127 @@ class TabBar extends UIBase$9 {
     let y = 0;
     
     let h = tsize*dpi + Math.ceil(tsize*dpi*0.5);
-    
+    let iconsize=iconmanager$1.getTileSize(this.iconsheet);
+    let have_icons=false;
+
     for (let tab of this.tabs) {
-      let w = g.measureText(tab.name).width;//*dpi;
-      
+      if (tab.icon !== undefined) {
+        have_icons = true;
+        h = Math.max(h, iconsize + 4);
+        break;
+      }
+    }
+
+    let r1 = this.parentWidget ? this.parentWidget.getClientRects()[0] : undefined;
+    let r2 = this.canvas.getClientRects()[0];
+
+    let rx=0, ry=0;
+    if (r1 && r2) {
+      rx = r2.x;//r2.x - r1.x;
+      ry = r2.y; //r2.y - r1.y;
+    }
+
+    let ti=-1;
+
+    let makeTabWatcher = (tab) => {
+      if (tab.watcher) {
+        clearInterval(tab.watcher.timer);
+      }
+
+      let watcher = () => {
+        let dead = this.tabs.indexOf(tab) < 0;
+        dead = dead || this.isDead();
+
+        if (dead) {
+          if (tab.dom)
+            tab.dom.remove();
+          tab.dom = undefined;
+
+          if (tab.watcher.timer)
+            clearInterval(tab.watcher.timer);
+        }
+      };
+
+      tab.watcher = watcher;
+      tab.watcher.timer = window.setInterval(watcher, 750);
+
+      return tab.watcher.timer;
+    };
+
+    let haveTabDom = false;
+    for (let tab of this.tabs) {
+      if (tab.extra) {
+        haveTabDom = true;
+      }
+    }
+
+    if (haveTabDom && this.ctx && this.ctx.screen && !this._size_cb) {
+      this._size_cb = () => {
+        if (this.isDead()) {
+          this.ctx.screen.removeEventListener("resize", this._size_cb);
+          this._size_cb = undefined;
+          return;
+        }
+        if (!this.ctx) return;
+
+        this._layout();
+        this._redraw();
+      };
+
+      this.ctx.screen.addEventListener("resize", this._size_cb);
+    }
+
+    for (let tab of this.tabs) {
+      ti++;
+
+      if (tab.extra && !tab.dom) {
+
+        tab.dom = document.createElement("div");
+        tab.dom.style["margin"] = tab.dom.style["padding"] = "0px";
+
+        let z = this.calcZ();
+        tab.dom.style["z-index"] = z+1+ti;
+
+        document.body.appendChild(tab.dom);
+        tab.dom.style["position"] = "fixed";
+        tab.dom.style["display"] = "flex";
+        tab.dom.style["flex-direction"] = this.horiz ? "row" : "column";
+
+        tab.dom.style["pointer-events"] = "none";
+
+        if (!this.horiz) {
+          tab.dom.style["width"] = (tab.size[0] / dpi) + "px";
+          tab.dom.style["height"] = (tab.size[1] / dpi) + "px";
+          tab.dom.style["left"] = (rx+tab.pos[0]/dpi) + "px";
+          tab.dom.style["top"]  = (ry+tab.pos[1]/dpi) + "px";
+        } else {
+          tab.dom.style["width"] = (tab.size[0] / dpi) + "px";
+          tab.dom.style["height"] = (tab.size[1] / dpi) + "px";
+          tab.dom.style["left"] = (rx+tab.pos[0]/dpi) + "px";
+          tab.dom.style["top"]  = (ry+tab.pos[1]/dpi) + "px";
+        }
+
+        tab.dom.style["font"] = this.getDefault("TabText").genCSS();
+        tab.dom.style["color"] = this.getDefault("TabText").color;
+
+        tab.dom.appendChild(tab.extra);
+
+        //tab.dom.style["background-color"] = "red";
+
+        makeTabWatcher(tab);
+      }
+
+      let w = g.measureText(tab.name).width;
+
+      if (tab.extra) {
+        w += tab.extraSize || tab.extra.getClientRects()[0].width;
+
+      }
+
+      if (tab.icon !== undefined) {
+        w += iconsize;
+      }
+
       //don't interfere with tab dragging
       let bad = this.tool !== undefined && tab === this.tabs.active;
       
@@ -24257,7 +24450,7 @@ class TabBar extends UIBase$9 {
       //tab.size = [0, 0];
       tab.size[axis] = w+pad*2;
       tab.size[axis^1] = h;
-      
+
       x += w + pad*2;
     }
     
@@ -24300,6 +24493,7 @@ class TabBar extends UIBase$9 {
     let dpi = this.getDPI();
     let font = this.getDefault("TabText");
     let tsize = font.size;
+    let iconsize=iconmanager$1.getTileSize(this.iconsheet);
 
     tsize *= dpi;
     g.font = font.genCSS(tsize*dpi);
@@ -24347,7 +24541,12 @@ class TabBar extends UIBase$9 {
         g.rotate(Math.PI/2);
         g.translate(x3-tsize, -y3-tsize*0.5);
       }
-      
+
+      if (tab.icon !== undefined) {
+        iconmanager$1.canvasDraw(this, this.canvas, g, tab.icon, x, y, this.iconsheet);
+        x2 += iconsize + 4;
+      }
+
       g.fillText(tab.name, x2, y2);
       
       if (!this.horiz) {
@@ -24462,6 +24661,16 @@ class TabBar extends UIBase$9 {
   }
 
   update(force_update=false) {
+    let rect = this.getClientRects()[0];
+    if (rect) {
+      let key = Math.floor(rect.x*4.0) + ":" + Math.floor(rect.y*4.0);
+      if (key !== this._last_p_key) {
+        this._last_p_key = key;
+
+        console.log("tab bar autobuild");
+        this._layout();
+      }
+    }
     super.update();
 
     this.updateStyle();
@@ -24483,15 +24692,12 @@ class TabContainer extends UIBase$9 {
     this.inherit_packflag = 0;
     this.packflag = 0;
 
-    this.dom = document.createElement("ul");
-    this.dom.setAttribute("class", `_tab_ul_${this._id}`);
-    
     this.tbar = document.createElement("tabbar-x");
+    this.tbar.parentWidget = this;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
     this.tbar.constructor.setDefault(this.tbar);
     
     this._remakeStyle();
-    this.shadow.appendChild(this.dom);
 
     this.tabs = {};
     
@@ -24499,10 +24705,10 @@ class TabContainer extends UIBase$9 {
     this._last_bar_pos = undefined;
     this._tab = undefined;
 
-    let li = document.createElement("li");
-    li.setAttribute("class", `_tab_li_${this._id}`);
-    li.appendChild(this.tbar);
-    this.dom.appendChild(li);
+    let div = document.createElement("div");
+    div.setAttribute("class", `_tab_${this._id}`);
+    div.appendChild(this.tbar);
+    this.shadow.appendChild(div);
 
     this.tbar.parentWidget = this;
 
@@ -24518,19 +24724,30 @@ class TabContainer extends UIBase$9 {
       this._tab.parentWidget = this;
       this._tab.update();
 
-      let li = document.createElement("li");
-      li.style["background-color"] = this.getDefault("DefaultPanelBG");
-      li.setAttribute("class", `_tab_li_${this._id}`);
-      li.appendChild(this._tab);
+      let div = document.createElement("div");
+
+      div.style["background-color"] = this.getDefault("DefaultPanelBG");
+      div.setAttribute("class", `_tab_${this._id}`);
+      div.appendChild(this._tab);
       
       //XXX why is this necassary?
       //this._tab.style["margin-left"] = "40px";
-      this.dom.appendChild(li);
+      this.shadow.appendChild(div);
 
       if (this.onchange) {
         this.onchange(tab);
       }
     };
+  }
+
+  clear() {
+    this.tbar.clear();
+    if (this._tab !== undefined) {
+      HTMLElement.prototype.remove.call(this._tab);
+      this._tab = undefined;
+    }
+
+    this.tabs = {};
   }
 
   init() {
@@ -24553,16 +24770,7 @@ class TabContainer extends UIBase$9 {
     //display = "inline" //XXX
     let style = document.createElement("style");
     style.textContent = `
-      ._tab_ul_${this._id} {
-        list-style-type : none;
-        display : ${display};
-        flex-direction : ${flexDir};
-        margin : 0px;
-        padding : 0px;
-        ${!horiz ? "vertical-align : top;" : ""}
-      }
-      
-      ._tab_li_${this._id} {
+      ._tab_${this._id} {
         display : ${display};
         flex-direction : ${flexDir};
         margin : 0px;
@@ -24587,7 +24795,14 @@ class TabContainer extends UIBase$9 {
     this.shadow.prepend(style);
   }
 
-  tab(name, id=undefined, tooltip=undefined) {
+  icontab(icon, id, tooltip) {
+    let t = this.tab("", id, tooltip);
+    t._tab.icon = icon;
+
+    return t;
+  }
+
+  tab(name, id=undefined, tooltip=undefined, movable=true) {
     if (id === undefined) {
       id = tab_idgen++;
     }
@@ -24597,7 +24812,7 @@ class TabContainer extends UIBase$9 {
     this.tabs[id] = col;
 
     col.ctx = this.ctx;
-    col._tab = this.tbar.addTab(name, id, tooltip);
+    col._tab = this.tbar.addTab(name, id, tooltip, movable);
 
     col.inherit_packflag |= this.inherit_packflag;
     col.packflag |= this.packflag;
@@ -24615,7 +24830,44 @@ class TabContainer extends UIBase$9 {
   }
 
   setActive(tab) {
-    this.tbar.setActive(tab._tab);
+    if (typeof tab === "string") {
+      tab = this.getTab(tab);
+    }
+
+    if (tab._tab !== this.tbar.tabs.active) {
+      this.tbar.setActive(tab._tab);
+    }
+  }
+
+  getTabCount() {
+    return this.tbar.tabs.length;
+  }
+
+  moveTab(tab, i) {
+    tab = tab._tab;
+
+    let tab2 = this.tbar.tabs[i];
+
+    if (tab !== tab2) {
+      this.tbar.swapTabs(tab, tab2);
+    }
+
+    this.tbar.setCSS();
+    this.tbar._layout();
+    this.tbar._redraw();
+  }
+  getTab(name_or_id) {
+    if (name_or_id in this.tabs) {
+      return this.tabs[name_or_id];
+    }
+
+    for (let k in this.tabs) {
+      let t = this.tabs[k];
+
+      if (t.name === name_or_id) {
+        return t;
+      }
+    }
   }
 
   updateBarPos() {
@@ -24646,7 +24898,10 @@ class TabContainer extends UIBase$9 {
     if (this._tab !== undefined) {
       this._tab.update();
     }
-    
+
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = !this.horiz ? "row" : "column";
+
     this.updateHoriz();
     this.updateBarPos();
     this.tbar.update();
@@ -24668,7 +24923,7 @@ let PropSubTypes$4 = PropSubTypes$1;
 
 let EnumProperty$9 = EnumProperty$1;
 
-let Vector2$7 = undefined,
+let Vector2$8 = undefined,
   UIBase$a = UIBase,
   PackFlags$9 = PackFlags,
   PropTypes$8 = PropTypes;
@@ -25143,6 +25398,8 @@ class Menu extends UIBase$c {
     super();
 
     this.items = [];
+
+    this.closeOnMouseUp = true;
 
     this.itemindex = 0;
     this.closed = false;
@@ -25995,7 +26252,7 @@ class MenuWrangler {
   }
 
   pushMenu(menu) {
-    if (this.menustack.length === 0) {
+    if (this.menustack.length === 0 && menu.closeOnMouseUp) {
       this.closeOnMouseUp = true;
     }
 
@@ -26409,7 +26666,7 @@ function inherit$1(cls, parent, proto) {
   return cls.prototype;
 }
 
-var Vector2$8 = Vector2, Vector3$2 = Vector3;
+var Vector2$9 = Vector2, Vector3$2 = Vector3;
 var Vector4$3 = Vector4, Matrix4$3 = Matrix4;
 
 var set$2 = set$1;
@@ -26594,7 +26851,7 @@ class MinMax {
         
         switch (totaxis) {
           case 2:
-            cls = Vector2$8;
+            cls = Vector2$9;
             break;
           case 3:
             cls = Vector3$2;
@@ -26739,13 +26996,13 @@ function inrect_2d(p, pos, size) {
   }
   return p[0]>=pos[0]&&p[0]<=pos[0]+size[0]&&p[1]>=pos[1]&&p[1]<=pos[1]+size[1];
 };
-var $smin_aabb_isect_line_2d=new Vector2$8();
-var $ssize_aabb_isect_line_2d=new Vector2$8();
-var $sv1_aabb_isect_line_2d=new Vector2$8();
-var $ps_aabb_isect_line_2d=[new Vector2$8(), new Vector2$8(), new Vector2$8()];
+var $smin_aabb_isect_line_2d=new Vector2$9();
+var $ssize_aabb_isect_line_2d=new Vector2$9();
+var $sv1_aabb_isect_line_2d=new Vector2$9();
+var $ps_aabb_isect_line_2d=[new Vector2$9(), new Vector2$9(), new Vector2$9()];
 var $l1_aabb_isect_line_2d=[0, 0];
-var $smax_aabb_isect_line_2d=new Vector2$8();
-var $sv2_aabb_isect_line_2d=new Vector2$8();
+var $smax_aabb_isect_line_2d=new Vector2$9();
+var $sv2_aabb_isect_line_2d=new Vector2$9();
 var $l2_aabb_isect_line_2d=[0, 0];
 function aabb_isect_line_2d(v1, v2, min, max) {
   for (var i=0; i<2; i++) {
@@ -26973,12 +27230,12 @@ function point_in_aabb_2d(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
 }
 
-var _asi2d_v1 = new Vector2$8();
-var _asi2d_v2 = new Vector2$8();
-var _asi2d_v3 = new Vector2$8();
-var _asi2d_v4 = new Vector2$8();
-var _asi2d_v5 = new Vector2$8();
-var _asi2d_v6 = new Vector2$8();
+var _asi2d_v1 = new Vector2$9();
+var _asi2d_v2 = new Vector2$9();
+var _asi2d_v3 = new Vector2$9();
+var _asi2d_v4 = new Vector2$9();
+var _asi2d_v5 = new Vector2$9();
+var _asi2d_v6 = new Vector2$9();
 function aabb_sphere_isect_2d(p, r, min, max) {
   var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
   var v4 = _asi2d_v5;
@@ -27135,8 +27392,8 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   vi[0] = ((v3[0]-v4[0])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[0]-v2[0])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
   vi[1] = ((v3[1]-v4[1])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[1]-v2[1])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
   if (calc_t||v1.length==3) {
-      var n1=new Vector2$8(v2).sub(v1);
-      var n2=new Vector2$8(vi).sub(v1);
+      var n1=new Vector2$9(v2).sub(v1);
+      var n2=new Vector2$9(vi).sub(v1);
       var t=n2.vectorLength()/n1.vectorLength();
       n1.normalize();
       n2.normalize();
@@ -27151,11 +27408,11 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   return [vi, LINECROSS];
 };
 
-var dt2l_v1 = new Vector2$8();
-var dt2l_v2 = new Vector2$8();
-var dt2l_v3 = new Vector2$8();
-var dt2l_v4 = new Vector2$8();
-var dt2l_v5 = new Vector2$8();
+var dt2l_v1 = new Vector2$9();
+var dt2l_v2 = new Vector2$9();
+var dt2l_v3 = new Vector2$9();
+var dt2l_v4 = new Vector2$9();
+var dt2l_v5 = new Vector2$9();
 
 function dist_to_line_2d(p, v1, v2, clip, closest_co_out=undefined, t_out=undefined) {
   if (clip == undefined) {
@@ -27223,7 +27480,7 @@ function dist_to_line(p, v1, v2, clip) {
 //p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
 var _cplw_vs4 = cachering.fromConstructor(Vector4$3, 64);
 var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$8, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2$9, 64);
 
 function wclip(x1, x2, w1, w2, near) {
   var r1 = near*w1 - x1;
@@ -28369,7 +28626,7 @@ function registerToolStackGetter(func) {
   toolstack_getter = func;
 }
 
-let Vector2$9 = Vector2,
+let Vector2$a = Vector2,
     Vector3$3 = Vector3,
     UndoFlags$1 = UndoFlags,
     ToolFlags$1 = ToolFlags;
@@ -28475,7 +28732,7 @@ class AreaResizeTool extends ToolBase {
     
     super(screen);
     
-    this.start_mpos = new Vector2$9(mpos);
+    this.start_mpos = new Vector2$a(mpos);
 
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
@@ -28556,7 +28813,7 @@ class AreaResizeTool extends ToolBase {
     }
   }
   on_mousemove(e) {
-    let mpos = new Vector2$9([e.x, e.y]);
+    let mpos = new Vector2$a([e.x, e.y]);
     
     mpos.sub(this.start_mpos);
     
@@ -28576,8 +28833,8 @@ class AreaResizeTool extends ToolBase {
     for (let border of borders) {
       bad = bad || !this.screen.isBorderMovable(border);
 
-      border.oldv1 = new Vector2$9(border.v1);
-      border.oldv2 = new Vector2$9(border.v2);
+      border.oldv1 = new Vector2$a(border.v1);
+      border.oldv2 = new Vector2$a(border.v2);
     }
 
     if (bad) {
@@ -28638,6 +28895,7 @@ class AreaResizeTool extends ToolBase {
     this.screen.solveAreaConstraints(snapMode);
     this.screen.setCSS();
     this.screen.updateDebugBoxes();
+    this.screen._fireResizeCB();
   }
 }
 
@@ -28787,7 +29045,7 @@ class AreaDragTool extends ToolBase {
     this.boxes.active = undefined;
 
     this.sarea = sarea;
-    this.start_mpos = new Vector2$9(mpos);
+    this.start_mpos = new Vector2$a(mpos);
     this.screen = screen;
   }
   
@@ -29269,7 +29527,7 @@ class ToolTipViewer extends ToolBase {
 "use strict";
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
-let Vector2$a = Vector2;
+let Vector2$b = Vector2;
 
 class Overdraw extends UIBase {
   constructor() {
@@ -29367,7 +29625,7 @@ class Overdraw extends UIBase {
     let boxes = [];
     let elems = [];
 
-    let cent = new Vector2$a();
+    let cent = new Vector2$b();
 
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
@@ -29412,7 +29670,7 @@ class Overdraw extends UIBase {
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$a([x, y]);
+      box.startpos = new Vector2$b([x, y]);
 
       box.setCSS = function() {
         this.style["padding"] = "0px";
@@ -30311,7 +30569,7 @@ UIBase.register(ScreenBorder);
 let _ScreenArea = undefined;
 
 let UIBase$e = UIBase;
-let Vector2$b = Vector2;
+let Vector2$c = Vector2;
 let Screen$1 = undefined;
 
 
@@ -30450,7 +30708,8 @@ class AreaWrangler {
 let _ScreenArea$1 = undefined;
 
 let UIBase$f = UIBase;
-let Vector2$c = Vector2;
+
+let Vector2$d = Vector2;
 let Screen$2 = undefined;
 
 const AreaFlags = {
@@ -30727,7 +30986,7 @@ class Area$1 extends UIBase {
     return this.header.getClientRects()[0].height;
   }
 
-  makeAreaSwitcher(container) {
+  static makeAreasEnum() {
     let areas = {};
     let icons = {};
     let i = 0;
@@ -30750,11 +31009,29 @@ class Area$1 extends UIBase {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
+    let prop = new EnumProperty$1(undefined, areas);
+    prop.addIcons(icons);
 
-    return container.listenum(undefined, this.constructor.define().uiname, areas, undefined, (id) => {
-      let cls = areaclasses[id];
-      this.owning_sarea.switch_editor(cls);
-    }, icons);
+    return prop;
+  }
+
+  makeAreaSwitcher(container) {
+    if (exports.useAreaTabSwitcher) {
+      let ret = document.createElement("area-docker-x");
+      container.add(ret);
+      return ret;
+    }
+
+    let prop = Area$1.makeAreasEnum();
+
+    return container.listenum(undefined, {
+      name : this.constructor.define().uiname,
+      enumDef : prop,
+      callback : (id) => {
+        let cls = areaclasses[id];
+        this.owning_sarea.switch_editor(cls);
+      }
+    });
 
     //return areas;
   }
@@ -30781,7 +31058,7 @@ class Area$1 extends UIBase {
     row.style["padding"] = "0px";
 
     let mdown = false;
-    let mpos = new Vector2$c();
+    let mpos = new Vector2$d();
     
     let mpre = (e, pageX, pageY) => {
       pageX = pageX === undefined ? e.pageX : pageX;
@@ -31051,8 +31328,8 @@ class ScreenArea extends UIBase {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this._pos = new Vector2$c();
-    this._size = new Vector2$c([512, 512]);
+    this._pos = new Vector2$d();
+    this._size = new Vector2$d([512, 512]);
 
     if (exports.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -31266,8 +31543,8 @@ class ScreenArea extends UIBase {
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$c(obj.pos);
-      area.size = new Vector2$c(obj.size);
+      area.pos = new Vector2$d(obj.pos);
+      area.size = new Vector2$d(obj.size);
       area.ctx = this.ctx;
       
       area.inactive = true;
@@ -31419,8 +31696,8 @@ class ScreenArea extends UIBase {
       return;
     }
 
-    let min = new Vector2$c([1e17, 1e17]);
-    let max = new Vector2$c([-1e17, -1e17]);
+    let min = new Vector2$d([1e17, 1e17]);
+    let max = new Vector2$d([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -31454,10 +31731,10 @@ class ScreenArea extends UIBase {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$c([p[0],      p[1]]),
-      new Vector2$c([p[0],      p[1]+s[1]]),
-      new Vector2$c([p[0]+s[0], p[1]+s[1]]),
-      new Vector2$c([p[0]+s[0], p[1]])
+      new Vector2$d([p[0],      p[1]]),
+      new Vector2$d([p[0],      p[1]+s[1]]),
+      new Vector2$d([p[0]+s[0], p[1]+s[1]]),
+      new Vector2$d([p[0]+s[0], p[1]])
     ];
 
     for (let i=0; i<vs.length; i++) {
@@ -31564,8 +31841,8 @@ class ScreenArea extends UIBase {
     //var finish = () => {
       if (this.area !== undefined) {
         //break direct pos/size references for old active area
-        this.area.pos = new Vector2$c(this.area.pos);
-        this.area.size = new Vector2$c(this.area.size);
+        this.area.pos = new Vector2$d(this.area.pos);
+        this.area.size = new Vector2$d(this.area.size);
         
         this.area.owning_sarea = undefined;
         this.area.inactive = true;
@@ -31696,8 +31973,8 @@ class ScreenArea extends UIBase {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$c(this.pos);
-    this.size = new Vector2$c(this.size);
+    this.pos = new Vector2$d(this.pos);
+    this.size = new Vector2$d(this.size);
     
     //find active editor
     
@@ -31832,6 +32109,227 @@ var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   AreaWrangler: AreaWrangler
 });
 
+let ignore = 0;
+
+class AreaDocker extends Container {
+  constructor() {
+    super();
+
+    this.tbar = this.tabs();
+
+    this.tbar.onchange = (tab) => {
+      if (ignore) {
+        return;
+      }
+
+      if (!tab || !this.getArea() || ! this.getArea().owning_sarea) {
+        return;
+      }
+
+      if (tab.id === "add") {
+        this.addTabMenu(tab);
+        return;
+      }
+
+      console.warn("CHANGE AREA", tab.id);
+
+      let sarea = this.getArea().owning_sarea;
+
+      for (let area of sarea.editors) {
+        if (area._id === tab.id && area !== sarea.area) {
+          let ud = saveUIData(this.tbar, "tabs");
+
+          sarea.switch_editor(area.constructor);
+
+          //load tabs order
+          if (area.switcher) {
+            ignore++;
+            area.switcher.update();
+            try {
+              loadUIData(sarea.area.switcher.tbar, ud);
+            } finally {
+              ignore = Math.max(ignore - 1, 0);
+            }
+
+            area.switcher.rebuild();
+          }
+        }
+      }
+    };
+  }
+
+  addTabMenu(tab) {
+    console.log("Add Tab!");
+
+    let rect = tab.getClientRects()[0];
+    let mpos = this.ctx.screen.mpos;
+
+    let menu = document.createElement("menu-x");
+
+    menu.closeOnMouseUp = false;
+    menu.ctx = this.ctx;
+    menu._init();
+
+    let prop = Area$1.makeAreasEnum();
+    let sarea = this.getArea().owning_sarea;
+
+    if (!sarea) {
+      return;
+    }
+
+    for (let k in Object.assign({}, prop.values)) {
+      let ok = true;
+      for (let area of sarea.editors) {
+        if (area.constructor.define().uiname === k) {
+          ok = false;
+        }
+      }
+
+      if (!ok) {
+        continue;
+      }
+
+      let icon = prop.iconmap[k];
+      menu.addItemExtra(k, prop.values[k], undefined, icon);
+    }
+
+    console.log(mpos[0], mpos[1], rect.x, rect.y);
+
+    menu.onselect = (val) => {
+      console.log("menu select", val, this.getArea().owning_sarea);
+
+      let sarea = this.getArea().owning_sarea;
+      if (sarea) {
+        let cls = areaclasses[val];
+
+        ignore++;
+        let area, ud;
+
+        try {
+          ud = saveUIData(this.tbar, "tab");
+          sarea.switchEditor(cls);
+
+          console.log("switching", cls);
+          area = sarea.area;
+          area._init();
+        } catch (error) {
+          util.print_stack(error);
+          throw error;
+        } finally {
+          ignore = Math.max(ignore - 1, 0);
+        }
+
+        console.log("AREA", area.switcher, area);
+
+        if (area.switcher) {
+          ignore++;
+
+          try {
+            area.owning_sarea = sarea;
+            area.switcher._init();
+            area.switcher.update();
+
+            console.log("loading data", ud);
+            loadUIData(area.switcher.tbar, ud);
+            area.switcher.rebuild(); //make sure plus tab is at end
+          } catch (error) {
+            throw error;
+          } finally {
+            ignore = Math.max(ignore - 1, 0);
+          }
+        }
+      }
+    };
+
+    this.ctx.screen.popupMenu(menu, rect.x, rect.y);
+  }
+
+  getArea() {
+    let p = this;
+
+    while (p && !(p instanceof Area$1)) {
+      p = p.parentWidget;
+    }
+
+    return p;
+  }
+
+  _hash() {
+    let area = this.getArea();
+    if (!area) return;
+
+    let sarea = area.owning_sarea;
+
+    if (!sarea) {
+      return;
+    }
+
+    let hash = "";
+    for (let area2 of sarea.editors) {
+      hash += area2.tagName + ":";
+    }
+
+    return hash + (sarea.area ? sarea.area.tagName : "");
+  }
+
+  rebuild() {
+    console.log("rebuild");
+
+    ignore++;
+
+    //save tab order
+    let ud = saveUIData(this.tbar, "tbar");
+
+    this.tbar.clear();
+    let sarea = this.getArea().owning_sarea;
+
+    for (let area of sarea.editors) {
+      let uiname = area.constructor.define().uiname;
+
+      let tab = this.tbar.tab(uiname, area._id);
+    }
+
+    let tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false);
+
+    //load tab order
+    loadUIData(this.tbar, ud);
+
+    //move add tab to end
+    let tc = this.tbar.getTabCount();
+    this.tbar.moveTab(tab, tc-1);
+
+    ignore = Math.max(ignore-1, 0);
+  }
+
+  update() {
+    super.update();
+
+    if (!this.ctx) return;
+    let area = this.getArea();
+    if (!area) return;
+    let sarea = area.owning_sarea;
+    if (!sarea) return;
+
+    let hash = this._hash();
+
+    if (hash !== this._last_hash) {
+      this._last_hash = hash;
+      this.rebuild();
+    }
+
+    this.tbar.setActive(this.getArea()._id);
+  }
+
+  init() {
+    super.init();
+  }
+
+  static define() {return {
+    tagname : "area-docker-x"
+  }}
+}
+UIBase.register(AreaDocker);
+
 function makePopupArea(area_class, screen, args={}) {
   let sarea = document.createElement("screenarea-x");
 
@@ -31885,7 +32383,7 @@ function registerToolStackGetter$1(func) {
 //XXX why!!!
 window._nstructjs = nstructjs;
 
-let Vector2$d = Vector2,
+let Vector2$e = Vector2,
   UIBase$g = UIBase;
 
 let update_stack = new Array(8192);
@@ -31896,6 +32394,8 @@ let screen_idgen = 0;
 class Screen$3 extends UIBase {
   constructor() {
     super();
+
+    this._resize_callbacks = [];
 
     this.allBordersMovable = exports.DEBUG.allBordersMovable;
     this.needsBorderRegen = true;
@@ -31915,8 +32415,8 @@ class Screen$3 extends UIBase {
 
     this.keymap = new KeyMap();
 
-    this.size = new Vector2$d([window.innerWidth, window.innerHeight]);
-    this.pos = new Vector2$d();
+    this.size = new Vector2$e([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2$e();
 
     this.idgen = 0;
     this.sareas = [];
@@ -31930,7 +32430,7 @@ class Screen$3 extends UIBase {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$d(), new Vector2$d()];
+    this._aabb = [new Vector2$e(), new Vector2$e()];
 
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
@@ -32066,6 +32566,15 @@ class Screen$3 extends UIBase {
   _exitPopupSafe() {
     this._popup_safe = Math.max(this._popup_safe-1, 0);
   }
+
+  popupMenu(menu, x, y) {
+    let popup = this.popup(undefined, x, y, false);
+    popup.add(menu);
+
+    menu.start();
+    return menu;
+  }
+
   /** makes a popup at x,y and returns a new container-x for it */
   popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
@@ -32113,7 +32622,7 @@ class Screen$3 extends UIBase {
     container.parentWidget = this;
 
     let mm = new MinMax(2);
-    let p = new Vector2$d();
+    let p = new Vector2$e();
 
     let _update = container.update;
     container.update = () => {
@@ -32288,7 +32797,7 @@ class Screen$3 extends UIBase {
       this._aabb[1].load(mm.max);
     }
 
-    return [new Vector2$d(mm.min), new Vector2$d(mm.max)];
+    return [new Vector2$e(mm.min), new Vector2$e(mm.max)];
   }
 
   get borders() {
@@ -32547,6 +33056,23 @@ class Screen$3 extends UIBase {
     }
 
     return undefined;
+  }
+
+  addEventListener(type, cb, options) {
+    if (type === "resize") {
+      this._resize_callbacks.push(cb);
+    } else {
+      return super.addEventListener(type, cb, options);
+    }
+  }
+
+  removeEventListener(type, cb, options) {
+    if (type === "resize") {
+      if (this._resize_callbacks.indexOf(cb) >= 0)
+        this._resize_callbacks.remove(cb);
+    } else {
+      return super.removeEventListener(type, cb, options);
+    }
   }
 
   execKeyMap(e) {
@@ -33228,7 +33754,7 @@ class Screen$3 extends UIBase {
       for (let b of this.screenborders) {
         for (let he of b.halfedges) {
           let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
-          let p = new Vector2$d(b.v1).add(b.v2).mulScalar(0.5);
+          let p = new Vector2$e(b.v1).add(b.v2).mulScalar(0.5);
           let size = 10 * b.halfedges.length;
 
           let wadd = 25+size*0.5;
@@ -33628,8 +34154,8 @@ class Screen$3 extends UIBase {
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
-      let vec = new Vector2$d(max).sub(min);
-      let sz = new Vector2$d(this.size);
+      let vec = new Vector2$e(max).sub(min);
+      let sz = new Vector2$e(this.size);
 
       sz.div(vec);
 
@@ -33653,7 +34179,7 @@ class Screen$3 extends UIBase {
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
-      let old = new Vector2$d(sarea.size);
+      let old = new Vector2$e(sarea.size);
       sarea.loadFromVerts();
       sarea.on_resize(old);
     }
@@ -33702,6 +34228,13 @@ class Screen$3 extends UIBase {
     this.setCSS();
     this.calcTabOrder();
 
+    this._fireResizeCB(oldsize);
+  }
+
+  _fireResizeCB(oldsize=this.size) {
+    for (let cb of this._resize_callbacks) {
+      cb(oldsize);
+    }
   }
 
   getScreenVert(pos, added_id="") {
@@ -34028,7 +34561,7 @@ class Screen$3 extends UIBase {
     reader(this);
 
     //handle old files that might have saved as simple arrays
-    this.size = new Vector2$d(this.size);
+    this.size = new Vector2$e(this.size);
 
     let sareas = this.sareas;
     this.sareas = [];
