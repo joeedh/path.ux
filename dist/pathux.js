@@ -7682,11 +7682,15 @@ let exports = {
   menu_close_time : 500,
   DEBUG : {
     screenborders: false,
+    areaContextPushes: false,
     allBordersMovable: false,
     doOnce: false,
     modalEvents : true,
     areaConstraintSolver : false,
     datapaths : false,
+
+    domEvents : false,
+    domEventAddRemove : false,
 
     debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
 
@@ -7715,6 +7719,20 @@ let exports = {
 
 let modalstack = [];
 
+function pathDebugEvent(e, extra) {
+  e.__prevdef = e.preventDefault;
+  e.__stopprop = e.stopPropagation;
+
+  e.preventDefault = function() {
+    console.warn("preventDefault", extra);
+    return this.__prevdef();
+  };
+
+  e.stopPropagation = function() {
+    console.warn("stopPropagation", extra);
+    return this.__stopprop();
+  };
+}
 /*
 stupid DOM event system.  I hate it.
 */
@@ -7757,6 +7775,32 @@ function copyEvent(e) {
   return ret;
 }
 
+let Screen;
+function _setScreenClass(cls) {
+  Screen = cls;
+}
+
+function findScreen() {
+  let rec = (n) => {
+    for (let n2 of n.childNodes) {
+      if (n2 && typeof n2 === "object" && n2 instanceof Screen) {
+        return n2;
+      }
+    }
+
+    for (let n2 of n.childNodes) {
+      let ret = rec(n2);
+      if (ret) {
+        return ret;
+      }
+    }
+  };
+
+  return rec(document.body);
+}
+
+window._findScreen = findScreen;
+
 function pushModalLight(obj, autoStopPropagation=true) {
   if (exports.DEBUG.modalEvents) {
     console.warn("pushModalLight");
@@ -7782,9 +7826,32 @@ function pushModalLight(obj, autoStopPropagation=true) {
     "touchcancel" : "mouseup"
   };
 
+  let mpos = [0, 0];
+
+  let screen = findScreen();
+  if (screen) {
+    mpos[0] = screen.mpos[0];
+    mpos[1] = screen.mpos[1];
+    screen = undefined;
+  }
+
+  function handleAreaContext() {
+    let screen = findScreen();
+    if (screen) {
+      let sarea = screen.findScreenArea(mpos[0], mpos[1]);
+      if (sarea && sarea.area) {
+        sarea.area.push_ctx_active();
+        sarea.area.pop_ctx_active();
+      }
+    }
+  }
+
   function make_default_touchhandler(type, state) {
     return function(e) {
       //console.warn("touch event!", type, touchmap[type], e.touches.length);
+      if (exports.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
 
       if (touchmap[type] in ret.handlers) {
         let type2 = touchmap[type];
@@ -7799,6 +7866,9 @@ function pushModalLight(obj, autoStopPropagation=true) {
         if (e.touches.length > 0) {
           let dpi = window.devicePixelRatio; //UIBase.getDPI();
           let t = e.touches[0];
+
+          mpos[0] = t.pageX;
+          mpos[1] = t.pageY;
 
           e2.pageX = e2.x = t.pageX;// * dpi;
           e2.pageY = e2.y = t.pageY;// * dpi;
@@ -7815,6 +7885,8 @@ function pushModalLight(obj, autoStopPropagation=true) {
         }
 
         e2.was_touch = true;
+
+        handleAreaContext();
         //console.log(e2.x, e2.y);
         ret.handlers[type2](e2);
       }
@@ -7828,6 +7900,22 @@ function pushModalLight(obj, autoStopPropagation=true) {
 
   function make_handler(type, key) {
     return function(e) {
+      if (exports.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
+
+      if (typeof key !== "string") {
+        console.warn("key was undefined", key);
+        return;
+      }
+
+      if (key.startsWith("mouse")) {
+        mpos[0] = e.pageX;
+        mpos[1] = e.pageY;
+      }
+
+      handleAreaContext();
+
       if (key !== undefined)
         obj[key](e);
 
@@ -14925,6 +15013,11 @@ let Vector4$1 = Vector4;
 
 const EnumProperty$2 = EnumProperty$1;
 
+let Area;
+let _setAreaClass = (cls) => {
+  Area = cls;
+};
+
 const ErrorColors = {
   WARNING : "yellow",
   ERROR : "red",
@@ -15275,6 +15368,21 @@ class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this.shadow = this.attachShadow({mode : 'open'});
+    
+    this.shadow._appendChild = this.shadow.appendChild;
+
+    ///*
+    let appendChild = this.shadow.appendChild;
+    this.shadow.appendChild = (child) => {
+      if (child && typeof child === "object" && child instanceof UIBase) {
+        child.parentWidget = this;
+      }
+
+      return this.shadow._appendChild(child, ...arguments);
+    };
+    //*/
+
     this._wasAddedToNodeAtSomeTime = false;
 
     this.visibleToPick = true;
@@ -15322,7 +15430,6 @@ class UIBase extends HTMLElement {
     this.packflag = this.getDefault("BasePackFlag");
     this._disabled = false;
     this._disdata = undefined;
-    this.shadow = this.attachShadow({mode : 'open'});
     this._ctx = undefined;
     
     this._description = undefined;
@@ -15416,6 +15523,61 @@ class UIBase extends HTMLElement {
     }
 
     return false;
+  }
+
+  findArea() {
+    let p = this;
+
+    while (p) {
+      if (p instanceof Area) {
+        return p;
+      }
+
+      p = p.parentWidget;
+    }
+  }
+
+  addEventListener(type, cb, options) {
+    if (exports.DEBUG.domEventAddRemove) {
+      console.log("addEventListener", type, this._id, options);
+    }
+
+    let cb2 = (e) => {
+      if (exports.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
+      
+      let area = this.findArea();
+
+      if (area) {
+        area.push_ctx_active();
+        try {
+          let ret = cb(e);
+          area.pop_ctx_active();
+          return ret;
+        } catch (error) {
+          area.pop_ctx_active();
+          throw error;
+        }
+      } else {
+        if (exports.DEBUG.areaContextPushes) {
+          console.warn("Element is not part of an area?", element);
+        }
+
+        return cb(e);
+      }
+    };
+
+    cb._cb = cb2;
+
+    return super.addEventListener(type, cb2, options);
+  }
+
+  removeEventListener(type, cb, options) {
+    if (exports.DEBUG.domEventAddRemove) {
+      console.log("removeEventListener", type, this._id, options);
+    }
+    return super.removeEventListener(type, cb._cb, options);
   }
 
   connectedCallback() {
@@ -15728,6 +15890,8 @@ class UIBase extends HTMLElement {
     return window.innerHeight;
   }
 
+
+
   calcZ() {
     let p = this;
     let n = this;
@@ -15806,6 +15970,10 @@ class UIBase extends HTMLElement {
         isleaf = isleaf && (n.shadow.childNodes.length === 0);
       }
 
+      if (typeof n === "object" && n instanceof UIBase && !n.visibleToPick) {
+        return;
+      }
+
       if (!isleaf) {
         if (n.shadow !== undefined) {
           for (let i=0; i<n.shadow.childNodes.length; i++) {
@@ -15813,7 +15981,9 @@ class UIBase extends HTMLElement {
             //i2 = n.shadow.childNodes.length - 1 - i;
 
             let n2 = n.shadow.childNodes[i2];
-            rec(n2, widget, widget_zindex, zindex, depth+1);
+            if (n2.childNodes && n2.style) {
+              rec(n2, widget, widget_zindex, zindex, depth + 1);
+            }
           }
         }
         for (let i=0; i<n.childNodes.length; i++) {
@@ -15821,7 +15991,9 @@ class UIBase extends HTMLElement {
           //i2 = n.childNodes.length - 1 - i;
 
           let n2 = n.childNodes[i2];
-          rec(n2, widget, widget_zindex, zindex, depth+1);
+          if (n2.childNodes && n2.style) {
+            rec(n2, widget, widget_zindex, zindex, depth + 1);
+          }
         }
       }
     };
@@ -20157,10 +20329,10 @@ class Container extends UIBase {
 
     let ret = document.createElement("dropbox-x");
     if (enummap !== undefined) {
-      if (enummap instanceof undefined) {
+      if (enummap instanceof EnumProperty$1) {
         ret.prop = enummap;
       } else {
-        ret.prop = new undefined(defaultval, enummap, path, name);
+        ret.prop = new EnumProperty$1(defaultval, enummap, path, name);
       }
 
       if (iconmap !== undefined) {
@@ -30140,11 +30312,11 @@ let _ScreenArea = undefined;
 
 let UIBase$e = UIBase;
 let Vector2$b = Vector2;
-let Screen = undefined;
+let Screen$1 = undefined;
 
 
 function setScreenClass(cls) {
-  Screen = cls;
+  Screen$1 = cls;
 }
 
 function getAreaIntName(name) {
@@ -30279,7 +30451,7 @@ let _ScreenArea$1 = undefined;
 
 let UIBase$f = UIBase;
 let Vector2$c = Vector2;
-let Screen$1 = undefined;
+let Screen$2 = undefined;
 
 const AreaFlags = {
   HIDDEN          : 1,
@@ -30309,7 +30481,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-class Area extends UIBase {
+class Area$1 extends UIBase {
   constructor() {
     super();
 
@@ -30859,14 +31031,14 @@ class Area extends UIBase {
   }
 }
 
-Area.STRUCT = `
+Area$1.STRUCT = `
 pathux.Area { 
   flag : int;
   saved_uidata : string | obj._getSavedUIData();
 }
 `;
 
-nstructjs.manager.add_class(Area);  
+nstructjs.manager.add_class(Area$1);  
 //ui_base.UIBase.register(Area);
 
 class ScreenArea extends UIBase {
@@ -31112,6 +31284,7 @@ class ScreenArea extends UIBase {
       this.area.style["width"] = "100%";
       this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
+      this.area.parentWidget = this;
       
       this.area.pos = this.pos;
       this.area.size = this.size;
@@ -31146,7 +31319,7 @@ class ScreenArea extends UIBase {
     let p = this.parentNode;
     let _i = 0;
 
-    while (p && !(p instanceof Screen$1) && p !== p.parentNode) {
+    while (p && !(p instanceof Screen$2) && p !== p.parentNode) {
       p = this.parentNode;
 
       if (_i++ > 1000) {
@@ -31155,7 +31328,7 @@ class ScreenArea extends UIBase {
       }
     }
     
-    return p && p instanceof Screen$1 ? p : undefined;
+    return p && p instanceof Screen$2 ? p : undefined;
   }
   
   copy(screen) {
@@ -31349,7 +31522,7 @@ class ScreenArea extends UIBase {
   }
   
   appendChild(child) {
-    if (child instanceof Area) {
+    if (child instanceof Area$1) {
       child.ctx = this.ctx;
       child.pos = this.pos;
       child.size = this.size;
@@ -31364,6 +31537,7 @@ class ScreenArea extends UIBase {
     super.appendChild(child);
     
     if (child instanceof UIBase) {
+      child.parentWidget = this;
       child.onadd();
     }
   }
@@ -31641,12 +31815,14 @@ pathux.ScreenArea {
 nstructjs.manager.add_class(ScreenArea);  
 UIBase.register(ScreenArea);
 
+_setAreaClass(Area$1);
+
 var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   AreaFlags: AreaFlags,
   BorderMask: BorderMask,
   BorderSides: BorderSides,
-  Area: Area,
+  Area: Area$1,
   ScreenArea: ScreenArea,
   setScreenClass: setScreenClass,
   getAreaIntName: getAreaIntName,
@@ -31696,7 +31872,7 @@ function makePopupArea(area_class, screen, args={}) {
 
 let _FrameManager = undefined;
 
-let Area$1 = Area;
+let Area$2 = Area$1;
 
 startMenuEventWrangling();
 
@@ -31717,7 +31893,7 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
-class Screen$2 extends UIBase {
+class Screen$3 extends UIBase {
   constructor() {
     super();
 
@@ -31759,7 +31935,10 @@ class Screen$2 extends UIBase {
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
 
-      //console.log(this.pickElement(e.x, e.y));
+      if (0) {
+        let elem2 = this.pickElement(e.x, e.y);
+        console.log(elem2 ? elem2.tagName : undefined);
+      }
 
       if (elem !== undefined) {
         if (elem.area) {
@@ -32635,7 +32814,7 @@ class Screen$2 extends UIBase {
           continue;
         }
 
-        if (n instanceof Area$1) {
+        if (n instanceof Area$2) {
           //console.log("PUSH", n.constructor.name);
           areastack.push(n);
           n.push_ctx_active(ctx, true);
@@ -33926,7 +34105,7 @@ class Screen$2 extends UIBase {
   }
 }
 
-Screen$2.STRUCT = `
+Screen$3.STRUCT = `
 pathux.Screen { 
   size  : vec2;
   pos   : vec2;
@@ -33936,10 +34115,10 @@ pathux.Screen {
 }
 `;
 
-nstructjs.manager.add_class(Screen$2);
-UIBase.register(Screen$2);
+nstructjs.manager.add_class(Screen$3);
+UIBase.register(Screen$3);
 
-setScreenClass(Screen$2);
+setScreenClass(Screen$3);
 
 
 let get_screen_cb;
@@ -33957,6 +34136,7 @@ function startEvents(getScreenFunc) {
     return screen.on_keydown(e);
   });
 }
+_setScreenClass(Screen$3);
 
 function getImageData(image) {
   if (typeof image == "string") {
@@ -34634,5 +34814,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

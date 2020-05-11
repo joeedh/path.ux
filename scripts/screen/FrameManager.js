@@ -6,7 +6,7 @@ import '../widgets/ui_panel.js';
 
 import '../util/ScreenOverdraw.js';
 import cconst from '../config/const.js';
-import {haveModal, pushModalLight, popModalLight} from '../util/simple_events.js';
+import {haveModal, pushModalLight, popModalLight, _setScreenClass} from '../util/simple_events.js';
 import * as util from '../util/util.js';
 import '../widgets/ui_curvewidget.js';
 import * as vectormath from '../util/vectormath.js';
@@ -95,7 +95,10 @@ export class Screen extends ui_base.UIBase {
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea.ScreenArea);
 
-      //console.log(this.pickElement(e.x, e.y));
+      if (0) {
+        let elem2 = this.pickElement(e.x, e.y);
+        console.log(elem2 ? elem2.tagName : undefined);
+      }
 
       if (elem !== undefined) {
         if (elem.area) {
@@ -2293,3 +2296,4 @@ export function startEvents(getScreenFunc) {
     return screen.on_keydown(e);
   });
 }
+_setScreenClass(Screen);

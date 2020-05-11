@@ -852,6 +852,7 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.style["width"] = "100%";
       this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
+      this.area.parentWidget = this;
       
       this.area.pos = this.pos;
       this.area.size = this.size;
@@ -1104,6 +1105,7 @@ export class ScreenArea extends ui_base.UIBase {
     super.appendChild(child);
     
     if (child instanceof ui_base.UIBase) {
+      child.parentWidget = this;
       child.onadd();
     }
   }
@@ -1380,3 +1382,5 @@ pathux.ScreenArea {
 
 nstructjs.manager.add_class(ScreenArea);  
 ui_base.UIBase.register(ScreenArea);
+
+ui_base._setAreaClass(Area);

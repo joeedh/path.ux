@@ -5,7 +5,7 @@ import * as util from '../util/util.js';
 import * as vectormath from '../util/vectormath.js';
 import * as toolprop from '../toolsys/toolprop.js';
 import * as controller from '../controller/controller.js';
-import {pushModalLight, popModalLight, copyEvent} from '../util/simple_events.js';
+import {pushModalLight, popModalLight, copyEvent, pathDebugEvent} from '../util/simple_events.js';
 import {getDataPathToolOp} from '../controller/simple_controller.js';
 import * as units from './units.js';
 
@@ -27,6 +27,11 @@ export {setIconMap} from '../icon_enum.js';
 import {setIconMap} from '../icon_enum.js';
 
 const EnumProperty = toolprop.EnumProperty;
+
+let Area;
+export let _setAreaClass = (cls) => {
+  Area = cls;
+}
 
 export const ErrorColors = {
   WARNING : "yellow",
@@ -382,6 +387,21 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this.shadow = this.attachShadow({mode : 'open'});
+    
+    this.shadow._appendChild = this.shadow.appendChild;
+
+    ///*
+    let appendChild = this.shadow.appendChild;
+    this.shadow.appendChild = (child) => {
+      if (child && typeof child === "object" && child instanceof UIBase) {
+        child.parentWidget = this;
+      }
+
+      return this.shadow._appendChild(child, ...arguments);
+    };
+    //*/
+
     this._wasAddedToNodeAtSomeTime = false;
 
     this.visibleToPick = true;
@@ -429,7 +449,6 @@ export class UIBase extends HTMLElement {
     this.packflag = this.getDefault("BasePackFlag");
     this._disabled = false;
     this._disdata = undefined;
-    this.shadow = this.attachShadow({mode : 'open'});
     this._ctx = undefined;
     
     this._description = undefined;
@@ -523,6 +542,61 @@ export class UIBase extends HTMLElement {
     }
 
     return false;
+  }
+
+  findArea() {
+    let p = this;
+
+    while (p) {
+      if (p instanceof Area) {
+        return p;
+      }
+
+      p = p.parentWidget;
+    }
+  }
+
+  addEventListener(type, cb, options) {
+    if (cconst.DEBUG.domEventAddRemove) {
+      console.log("addEventListener", type, this._id, options);
+    }
+
+    let cb2 = (e) => {
+      if (cconst.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
+      
+      let area = this.findArea();
+
+      if (area) {
+        area.push_ctx_active();
+        try {
+          let ret = cb(e);
+          area.pop_ctx_active();
+          return ret;
+        } catch (error) {
+          area.pop_ctx_active();
+          throw error;
+        }
+      } else {
+        if (cconst.DEBUG.areaContextPushes) {
+          console.warn("Element is not part of an area?", element);
+        }
+
+        return cb(e);
+      }
+    };
+
+    cb._cb = cb2;
+
+    return super.addEventListener(type, cb2, options);
+  }
+
+  removeEventListener(type, cb, options) {
+    if (cconst.DEBUG.domEventAddRemove) {
+      console.log("removeEventListener", type, this._id, options);
+    }
+    return super.removeEventListener(type, cb._cb, options);
   }
 
   connectedCallback() {
@@ -835,6 +909,8 @@ export class UIBase extends HTMLElement {
     return window.innerHeight;
   }
 
+
+
   calcZ() {
     let p = this;
     let n = this;
@@ -913,6 +989,10 @@ export class UIBase extends HTMLElement {
         isleaf = isleaf && (n.shadow.childNodes.length === 0);
       }
 
+      if (typeof n === "object" && n instanceof UIBase && !n.visibleToPick) {
+        return;
+      }
+
       if (!isleaf) {
         if (n.shadow !== undefined) {
           for (let i=0; i<n.shadow.childNodes.length; i++) {
@@ -920,7 +1000,9 @@ export class UIBase extends HTMLElement {
             //i2 = n.shadow.childNodes.length - 1 - i;
 
             let n2 = n.shadow.childNodes[i2];
-            rec(n2, widget, widget_zindex, zindex, depth+1);
+            if (n2.childNodes && n2.style) {
+              rec(n2, widget, widget_zindex, zindex, depth + 1);
+            }
           }
         }
         for (let i=0; i<n.childNodes.length; i++) {
@@ -928,7 +1010,9 @@ export class UIBase extends HTMLElement {
           //i2 = n.childNodes.length - 1 - i;
 
           let n2 = n.childNodes[i2];
-          rec(n2, widget, widget_zindex, zindex, depth+1);
+          if (n2.childNodes && n2.style) {
+            rec(n2, widget, widget_zindex, zindex, depth + 1);
+          }
         }
       }
     };

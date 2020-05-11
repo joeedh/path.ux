@@ -1186,10 +1186,10 @@ export class Container extends ui_base.UIBase {
 
     let ret = document.createElement("dropbox-x")
     if (enummap !== undefined) {
-      if (enummap instanceof ui_base.EnumProperty) {
+      if (enummap instanceof toolprop.EnumProperty) {
         ret.prop = enummap;
       } else {
-        ret.prop = new ui_base.EnumProperty(defaultval, enummap, path, name);
+        ret.prop = new toolprop.EnumProperty(defaultval, enummap, path, name);
       }
 
       if (iconmap !== undefined) {

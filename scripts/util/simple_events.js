@@ -3,6 +3,20 @@ import cconst from '../config/const.js';
 
 export let modalstack = [];
 
+export function pathDebugEvent(e, extra) {
+  e.__prevdef = e.preventDefault;
+  e.__stopprop = e.stopPropagation;
+
+  e.preventDefault = function() {
+    console.warn("preventDefault", extra);
+    return this.__prevdef();
+  };
+
+  e.stopPropagation = function() {
+    console.warn("stopPropagation", extra);
+    return this.__stopprop();
+  }
+}
 /*
 stupid DOM event system.  I hate it.
 */
@@ -45,6 +59,32 @@ export function copyEvent(e) {
   return ret;
 }
 
+let Screen;
+export function _setScreenClass(cls) {
+  Screen = cls;
+}
+
+function findScreen() {
+  let rec = (n) => {
+    for (let n2 of n.childNodes) {
+      if (n2 && typeof n2 === "object" && n2 instanceof Screen) {
+        return n2;
+      }
+    }
+
+    for (let n2 of n.childNodes) {
+      let ret = rec(n2);
+      if (ret) {
+        return ret;
+      }
+    }
+  };
+
+  return rec(document.body);
+}
+
+window._findScreen = findScreen;
+
 export function pushModalLight(obj, autoStopPropagation=true) {
   if (cconst.DEBUG.modalEvents) {
     console.warn("pushModalLight");
@@ -70,9 +110,32 @@ export function pushModalLight(obj, autoStopPropagation=true) {
     "touchcancel" : "mouseup"
   };
 
+  let mpos = [0, 0];
+
+  let screen = findScreen();
+  if (screen) {
+    mpos[0] = screen.mpos[0];
+    mpos[1] = screen.mpos[1];
+    screen = undefined;
+  }
+
+  function handleAreaContext() {
+    let screen = findScreen();
+    if (screen) {
+      let sarea = screen.findScreenArea(mpos[0], mpos[1]);
+      if (sarea && sarea.area) {
+        sarea.area.push_ctx_active();
+        sarea.area.pop_ctx_active();
+      }
+    }
+  }
+
   function make_default_touchhandler(type, state) {
     return function(e) {
       //console.warn("touch event!", type, touchmap[type], e.touches.length);
+      if (cconst.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
 
       if (touchmap[type] in ret.handlers) {
         let type2 = touchmap[type];
@@ -87,6 +150,9 @@ export function pushModalLight(obj, autoStopPropagation=true) {
         if (e.touches.length > 0) {
           let dpi = window.devicePixelRatio; //UIBase.getDPI();
           let t = e.touches[0];
+
+          mpos[0] = t.pageX;
+          mpos[1] = t.pageY;
 
           e2.pageX = e2.x = t.pageX;// * dpi;
           e2.pageY = e2.y = t.pageY;// * dpi;
@@ -103,6 +169,8 @@ export function pushModalLight(obj, autoStopPropagation=true) {
         }
 
         e2.was_touch = true;
+
+        handleAreaContext();
         //console.log(e2.x, e2.y);
         ret.handlers[type2](e2);
       }
@@ -116,6 +184,22 @@ export function pushModalLight(obj, autoStopPropagation=true) {
 
   function make_handler(type, key) {
     return function(e) {
+      if (cconst.DEBUG.domEvents) {
+        pathDebugEvent(e);
+      }
+
+      if (typeof key !== "string") {
+        console.warn("key was undefined", key);
+        return;
+      }
+
+      if (key.startsWith("mouse")) {
+        mpos[0] = e.pageX;
+        mpos[1] = e.pageY;
+      }
+
+      handleAreaContext();
+
       if (key !== undefined)
         obj[key](e);
 

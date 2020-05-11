@@ -2,11 +2,15 @@ let exports = {
   menu_close_time : 500,
   DEBUG : {
     screenborders: false,
+    areaContextPushes: false,
     allBordersMovable: false,
     doOnce: false,
     modalEvents : true,
     areaConstraintSolver : false,
     datapaths : false,
+
+    domEvents : false,
+    domEventAddRemove : false,
 
     debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
 
