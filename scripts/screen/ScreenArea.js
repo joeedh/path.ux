@@ -1223,7 +1223,7 @@ export class ScreenArea extends ui_base.UIBase {
       //*
       if (moved) {
         if (cconst.DEBUG.areaConstraintSolver) {
-          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area.tagName, this.size);
         }
 
         screen.solveAreaConstraints();
