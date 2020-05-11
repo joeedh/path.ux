@@ -26,7 +26,7 @@ import {Icons} from '../icon_enum.js';
 export {setIconMap} from '../icon_enum.js';
 import {setIconMap} from '../icon_enum.js';
 
-export const EnumProperty = toolprop.EnumProperty;
+const EnumProperty = toolprop.EnumProperty;
 
 export const ErrorColors = {
   WARNING : "yellow",

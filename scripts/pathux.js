@@ -21,6 +21,9 @@ import * as solver1 from './util/solver.js';
 
 export let solver = solver1;
 
+import * as math1 from "./util/math.js";
+export const math = math1;
+
 export * from './screen/FrameManager.js';
 import * as util1 from './util/util.js';
 import * as vectormath1 from './util/vectormath.js';
