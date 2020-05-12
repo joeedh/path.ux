@@ -24,6 +24,8 @@ let exports = {
     */
   },
 
+  addHelpPickers : true,
+
   useAreaTabSwitcher: true,
   autoSizeUpdate : true,
   showPathsInToolTips: true,

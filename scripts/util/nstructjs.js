@@ -1820,6 +1820,35 @@ define('struct_intern',[
     var packer_debug_end=function() {};
   }
   
+  exports.setDebugMode = (t) => {
+    debug_struct = t;
+    
+    if (debug_struct) {
+        packer_debug=function(msg) {
+          if (msg!=undefined) {
+              var t=gen_tabstr(packdebug_tablevel);
+              console.log(t+msg);
+          } else {
+            console.log("Warning: undefined msg");
+          }
+        };
+        packer_debug_start=function(funcname) {
+          packer_debug("Start "+funcname);
+          packdebug_tablevel++;
+        };
+        
+        packer_debug_end=function(funcname) {
+          packdebug_tablevel--;
+          packer_debug("Leave "+funcname);
+        };
+    }
+    else {
+      packer_debug=function() {};
+      packer_debug_start=function() {};
+      packer_debug_end=function() {};
+    }
+  }
+  
   var _ws_env=[[undefined, undefined]];
   
   var pack_callbacks=[
@@ -2210,26 +2239,40 @@ define('struct_intern',[
         parent.prototype.loadSTRUCT.call(obj, reader2);
       }
     }),
-    
+
     /** deprecated.  used with old fromSTRUCT interface. */
     Class.static_method(function chain_fromSTRUCT(cls, reader) {
+      console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
+      
       var proto=cls.prototype;
       var parent=cls.prototype.prototype.constructor;
       
       var obj=parent.fromSTRUCT(reader);
-      var keys=Object.keys(proto);
+      let obj2 = new cls();
+      
+      let keys = Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
+      //var keys=Object.keys(proto);
       
       for (var i=0; i<keys.length; i++) {
-          var k=keys[i];
-          if (k=="__proto__")
-            continue;
-          obj[k] = proto[k];
+        let k = keys[i];
+        
+        try {
+          obj2[k] = obj[k];
+        } catch (error) {
+          console.warn("  failed to set property", k);
+        }
+          //var k=keys[i];
+          //if (k=="__proto__")
+           // continue;
+          //obj[k] = proto[k];
       }
       
-      if (proto.toString!=Object.prototype.toString)
-        obj.toString = proto.toString;
-        
-      return obj;
+      /*
+      if (proto.toString !== Object.prototype.toString)
+        obj2.toString = proto.toString;
+      //*/
+      
+      return obj2;
     }),
 
     Class.static_method(function fmt_struct(stt, internal_only, no_helper_js) {
@@ -2382,7 +2425,8 @@ define('struct_intern',[
       
       if (uctx==undefined) {
         uctx = new struct_binpack.unpack_context();
-        packer_debug("\n\n=Begin reading=");
+        
+        packer_debug("\n\n=Begin reading " + cls.structName + "=");
       }
       var thestruct=this;
       
@@ -2390,19 +2434,19 @@ define('struct_intern',[
         function t_int(type) { //int
           var ret=struct_binpack.unpack_int(data, uctx);
           
-          packer_debug("-int "+ret);
+          packer_debug("-int " + (debug_struct>1 ? ret : ""));
           
           return ret;
         }, function t_float(type) {
           var ret=struct_binpack.unpack_float(data, uctx);
           
-          packer_debug("-float "+ret);
+          packer_debug("-float " + (debug_struct>1 ? ret : ""));
           
           return ret;
         }, function t_double(type) {
           var ret=struct_binpack.unpack_double(data, uctx);
           
-          packer_debug("-double "+ret);
+          packer_debug("-double " + (debug_struct>1 ? ret : ""));
           
           return ret;
         }, 0, 0, 0, 0, 
@@ -2837,6 +2881,8 @@ define('structjs',[
   exports.inherit = function() {
     return exports.STRUCT.inherit(...arguments);
   }
+  
+  exports.setDebugMode = struct_intern.setDebugMode;
   
   //export other modules
   exports.binpack = struct_binpack;

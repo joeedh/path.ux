@@ -59,6 +59,7 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
+    this._do_updateSize = true;
     this._resize_callbacks = [];
 
     this.allBordersMovable = cconst.DEBUG.allBordersMovable;

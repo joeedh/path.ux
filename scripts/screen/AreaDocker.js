@@ -1,6 +1,10 @@
 import {UIBase, saveUIData, loadUIData} from '../core/ui_base.js';
-import {nstructjs, util, cconst} from '../pathux.js';
-import {RowFrame, Container} from "../pathux.js";
+
+import * as util from "../util/util.js"
+import cconst from "../config/const.js";
+import * as nstructjs from "../util/struct.js";
+
+import {Container} from "../core/ui.js";
 import {Area} from "./ScreenArea.js";
 import {Icons} from "../core/ui_base.js";
 

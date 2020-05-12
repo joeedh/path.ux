@@ -23,6 +23,10 @@ let mdetect = undefined;
 let mret = undefined;
 
 export function isMobile() {
+  if (!window.MobileDetect) {
+    return;
+  }
+
   if (mret === undefined) {
     mdetect = new MobileDetect(navigator.userAgent);
     let ret = mdetect.mobile();

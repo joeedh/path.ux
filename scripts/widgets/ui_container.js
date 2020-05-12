@@ -1,4 +1,4 @@
-import {Container} from './ui_container.js';
+import {Container} from '../core/ui.js';
 import {UIBase} from '../core/ui_base.js';
 import {DataAPI} from "../controller/simple_controller.js";
 
@@ -165,8 +165,8 @@ export class BuilderContainer extends Container {
       expRate : (p) => dpath.expRate(p),
       radix : (p) => dpath.radix(p),
       step : (p) => dpath.step(p),
-      icon : (icon) => dpath,icon(icon),
-      icons : (iconmap) => dpath,icons(iconmap),
+      icon : (icon) => dpath.icon(icon),
+      icons : (iconmap) => dpath.icons(iconmap),
       descriptions : (ds) => dpath.descriptions(ds),
       customGetSet : () => dpath.customGetSet.apply(...arguments)
     }
@@ -270,7 +270,7 @@ export class BuilderRow extends BuilderContainer {
   }
 
   static define() {return {
-    tagname "row-builder-x"
+    tagname : "row-builder-x"
   }}
 }
 UIBase.register(BuilderRow);

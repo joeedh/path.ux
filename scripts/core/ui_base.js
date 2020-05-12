@@ -976,6 +976,10 @@ export class UIBase extends HTMLElement {
           ok =  ok && x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
           ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
 
+          if (n.visibleToPick !== undefined) {
+            ok = ok && n.visibleToPick;
+          }
+
           if (ok) {
             ret = widget;
             retzindex = zindex;

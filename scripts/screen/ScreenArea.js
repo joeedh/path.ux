@@ -23,7 +23,8 @@ import {snap, snapi} from './FrameManager_mesh.js';
 export const AreaFlags = {
   HIDDEN          : 1,
   FLOATING        : 2,
-  INDEPENDENT     : 4 //area is indpendent of the screen mesh
+  INDEPENDENT     : 4, //area is indpendent of the screen mesh
+  NO_SWITCHER     : 8
 };
 
 
@@ -128,13 +129,13 @@ export class Area extends ui_base.UIBase {
     };
 
     //*
-    this.addEventListener("mouseover", onover, {passive : true});
-    this.addEventListener("mousemove", onover, {passive : true});
-    this.addEventListener("mousein", onover, {passive : true});
-    this.addEventListener("mouseenter", onover, {passive : true});
-    this.addEventListener("touchstart", onover, {passive : true});
-    this.addEventListener("focusin", onover, {passive : true});
-    this.addEventListener("focus", onover, {passive : true});
+    super.addEventListener("mouseover", onover, {passive : true});
+    super.addEventListener("mousemove", onover, {passive : true});
+    super.addEventListener("mousein", onover, {passive : true});
+    super.addEventListener("mouseenter", onover, {passive : true});
+    super.addEventListener("touchstart", onover, {passive : true});
+    super.addEventListener("focusin", onover, {passive : true});
+    super.addEventListener("focus", onover, {passive : true});
     //*/
   }
 
@@ -146,6 +147,48 @@ export class Area extends ui_base.UIBase {
     }
   }
 
+  /*
+  addEventListener(type, cb, options) {
+    let cb2 = (e) => {
+      let x, y;
+      let screen = this.getScreen();
+
+      if (!screen) {
+        console.warn("no screen!");
+        return cb(elem);
+      }
+
+      if (type.startsWith("mouse")) {
+        x = e.x; y = e.y;
+      } else if (type.startsWith("touch") && e.touches && e.touches.length > 0) {
+        x = e.touches[0].pageX; y = e.touches[0].pageY;
+      } else if (type.startsWith("pointer")) {
+        x = e.x; y = e.y;
+      } else {
+        if (screen) {
+          x = screen.mpos[0];
+          y = screen.mpos[1];
+        } else {
+          x = y = -100;
+        }
+      }
+
+      let elem = screen.pickElement(x, y);
+      console.log(elem ? elem.tagName : undefined);
+
+      if (elem === this || elem === this.owning_sarea) {
+        return cb(elem);
+      }
+    };
+
+    cb.__cb2 = cb2;
+    return super.addEventListener(type, cb2, options);
+  }
+
+  removeEventListener(type, cb, options) {
+    super.removeEventListener(type, cb.__cb2, options);
+  }
+  //*/
 
   /**
    * Return a list of keymaps used by this editor
@@ -516,9 +559,11 @@ export class Area extends ui_base.UIBase {
       touchend(e);        
     }, false);
 
-    this.switcher = this.makeAreaSwitcher(row);
+    if (!(this.flag & AreaFlags.NO_SWITCHER)) {
+      this.switcher = this.makeAreaSwitcher(row);
+    }
 
-    if (util.isMobile()||1) {
+    if (util.isMobile()||cconst.addHelpPickers) {
       this.helppicker = row.helppicker();
     }
 
