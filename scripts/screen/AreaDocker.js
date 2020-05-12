@@ -17,13 +17,48 @@ export class AreaDocker extends Container {
     super();
 
     this.tbar = this.tabs();
+    this.tbar.enableDrag();
+    this.tbar.addEventListener("dragstart", (e) => {
+      console.log("drag start", e);
+      let name = this.tbar.tbar.tabs.active.name;
+
+      e.dataTransfer.setData("area", name + "|" + this._id);
+      e.preventDefault();
+    });
+
+    this.tbar.addEventListener("dragover", (e) => {
+      console.log("drag over");
+      console.log(e.dataTransfer.getData("area"));
+
+
+      let data = e.dataTransfer.getData("area");
+      let [name, id] = data.split("|");
+
+      if (this.tbar.__fake) {
+        this.tbar.removeTab(this.tbar.__fake)
+        this.tbar.__fake = undefined;
+      }
+
+      this.tbar.__fake = this.tbar.tab(name, id);
+    });
+
+    this.tbar.addEventListener("dragexit", (e) => {
+      console.log("drag exit");
+      console.log(e.dataTransfer.getData("area"));
+
+
+      if (this.tbar.__fake) {
+        this.tbar.removeTab(this.tbar.__fake);
+        this.tbar.__fake = undefined;
+      }
+    });
 
     this.tbar.onchange = (tab) => {
       if (ignore) {
         return;
       }
 
-      if (!tab || !this.getArea() || ! this.getArea().owning_sarea) {
+      if (!tab || !this.getArea() || ! this.getArea().parentWidget) {
         return;
       }
 
@@ -34,7 +69,10 @@ export class AreaDocker extends Container {
 
       console.warn("CHANGE AREA", tab.id);
 
-      let sarea = this.getArea().owning_sarea;
+      let sarea = this.getArea().parentWidget;
+      if (!sarea) {
+        return;
+      }
 
       for (let area of sarea.editors) {
         if (area._id === tab.id && area !== sarea.area) {
@@ -72,7 +110,7 @@ export class AreaDocker extends Container {
     menu._init();
 
     let prop = Area.makeAreasEnum();
-    let sarea = this.getArea().owning_sarea;
+    let sarea = this.getArea().parentWidget;
 
     if (!sarea) {
       return;
@@ -97,9 +135,9 @@ export class AreaDocker extends Container {
     console.log(mpos[0], mpos[1], rect.x, rect.y);
 
     menu.onselect = (val) => {
-      console.log("menu select", val, this.getArea().owning_sarea);
+      console.log("menu select", val, this.getArea().parentWidget);
 
-      let sarea = this.getArea().owning_sarea;
+      let sarea = this.getArea().parentWidget;
       if (sarea) {
         let cls = areaclasses[val];
 
@@ -126,7 +164,10 @@ export class AreaDocker extends Container {
           ignore++;
 
           try {
+            area.parentWidget = sarea;
             area.owning_sarea = sarea;
+            area.switcher.parentWidget = area;
+            area.switcher.ctx = area.ctx;
             area.switcher._init();
             area.switcher.update();
 
@@ -159,7 +200,7 @@ export class AreaDocker extends Container {
     let area = this.getArea();
     if (!area) return;
 
-    let sarea = area.owning_sarea;
+    let sarea = area.parentWidget;
 
     if (!sarea) {
       return;
@@ -176,13 +217,19 @@ export class AreaDocker extends Container {
   rebuild() {
     console.log("rebuild");
 
+    if (!this.getArea() || !this.getArea().parentWidget) {
+      this._last_hash = undefined;
+      this.tbar.clear();
+      return;
+    }
+
     ignore++;
 
     //save tab order
     let ud = saveUIData(this.tbar, "tbar");
 
     this.tbar.clear();
-    let sarea = this.getArea().owning_sarea;
+    let sarea = this.getArea().parentWidget;
 
     for (let area of sarea.editors) {
       let uiname = area.constructor.define().uiname;
@@ -208,7 +255,7 @@ export class AreaDocker extends Container {
     if (!this.ctx) return;
     let area = this.getArea();
     if (!area) return;
-    let sarea = area.owning_sarea;
+    let sarea = area.parentWidget;
     if (!sarea) return;
 
     let hash = this._hash();
@@ -218,7 +265,9 @@ export class AreaDocker extends Container {
       this.rebuild();
     }
 
-    this.tbar.setActive(this.getArea()._id);
+    if (this._last_hash) {
+      this.tbar.setActive(this.getArea()._id);
+    }
   }
 
   init() {

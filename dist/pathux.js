@@ -1985,6 +1985,35 @@ define('struct_intern',[
     var packer_debug_end=function() {};
   }
   
+  exports.setDebugMode = (t) => {
+    debug_struct = t;
+    
+    if (debug_struct) {
+        packer_debug=function(msg) {
+          if (msg!=undefined) {
+              var t=gen_tabstr(packdebug_tablevel);
+              console.log(t+msg);
+          } else {
+            console.log("Warning: undefined msg");
+          }
+        };
+        packer_debug_start=function(funcname) {
+          packer_debug("Start "+funcname);
+          packdebug_tablevel++;
+        };
+        
+        packer_debug_end=function(funcname) {
+          packdebug_tablevel--;
+          packer_debug("Leave "+funcname);
+        };
+    }
+    else {
+      packer_debug=function() {};
+      packer_debug_start=function() {};
+      packer_debug_end=function() {};
+    }
+  };
+  
   var _ws_env=[[undefined, undefined]];
   
   var pack_callbacks=[
@@ -2375,26 +2404,40 @@ define('struct_intern',[
         parent.prototype.loadSTRUCT.call(obj, reader2);
       }
     }),
-    
+
     /** deprecated.  used with old fromSTRUCT interface. */
     Class.static_method(function chain_fromSTRUCT(cls, reader) {
+      console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
+      
       var proto=cls.prototype;
       var parent=cls.prototype.prototype.constructor;
       
       var obj=parent.fromSTRUCT(reader);
-      var keys=Object.keys(proto);
+      let obj2 = new cls();
+      
+      let keys = Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
+      //var keys=Object.keys(proto);
       
       for (var i=0; i<keys.length; i++) {
-          var k=keys[i];
-          if (k=="__proto__")
-            continue;
-          obj[k] = proto[k];
+        let k = keys[i];
+        
+        try {
+          obj2[k] = obj[k];
+        } catch (error) {
+          console.warn("  failed to set property", k);
+        }
+          //var k=keys[i];
+          //if (k=="__proto__")
+           // continue;
+          //obj[k] = proto[k];
       }
       
-      if (proto.toString!=Object.prototype.toString)
-        obj.toString = proto.toString;
-        
-      return obj;
+      /*
+      if (proto.toString !== Object.prototype.toString)
+        obj2.toString = proto.toString;
+      //*/
+      
+      return obj2;
     }),
 
     Class.static_method(function fmt_struct(stt, internal_only, no_helper_js) {
@@ -2547,7 +2590,8 @@ define('struct_intern',[
       
       if (uctx==undefined) {
         uctx = new struct_binpack.unpack_context();
-        packer_debug("\n\n=Begin reading=");
+        
+        packer_debug("\n\n=Begin reading " + cls.structName + "=");
       }
       var thestruct=this;
       
@@ -2555,19 +2599,19 @@ define('struct_intern',[
         function t_int(type) { //int
           var ret=struct_binpack.unpack_int(data, uctx);
           
-          packer_debug("-int "+ret);
+          packer_debug("-int " + (debug_struct>1 ? ret : ""));
           
           return ret;
         }, function t_float(type) {
           var ret=struct_binpack.unpack_float(data, uctx);
           
-          packer_debug("-float "+ret);
+          packer_debug("-float " + (debug_struct>1 ? ret : ""));
           
           return ret;
         }, function t_double(type) {
           var ret=struct_binpack.unpack_double(data, uctx);
           
-          packer_debug("-double "+ret);
+          packer_debug("-double " + (debug_struct>1 ? ret : ""));
           
           return ret;
         }, 0, 0, 0, 0, 
@@ -3003,6 +3047,8 @@ define('structjs',[
     return exports.STRUCT.inherit(...arguments);
   };
   
+  exports.setDebugMode = struct_intern.setDebugMode;
+  
   //export other modules
   exports.binpack = struct_binpack;
   exports.util = struct_util;
@@ -3029,6 +3075,7 @@ const STRUCT = nstructjs$1.STRUCT;
 const manager = nstructjs$1.manager;
 const write_scripts = nstructjs$1.write_scripts;
 const inherit = nstructjs$1.inherit;
+const setDebugMode = nstructjs$1.setDebugMode;
 
 function register(cls) {
   manager.add_class(cls);
@@ -4059,6 +4106,10 @@ let mdetect = undefined;
 let mret = undefined;
 
 function isMobile() {
+  if (!window.MobileDetect) {
+    return;
+  }
+
   if (mret === undefined) {
     mdetect = new MobileDetect(navigator.userAgent);
     let ret = mdetect.mobile();
@@ -7703,6 +7754,8 @@ let exports = {
     },
     */
   },
+
+  addHelpPickers : true,
 
   useAreaTabSwitcher: true,
   autoSizeUpdate : true,
@@ -13529,6 +13582,7 @@ class DataStruct {
     let ret = this.vec3(path, apiname, uiname, description);
 
     ret.data.subtype = PropSubTypes$1.COLOR;
+    ret.range(0, 1);
     ret.simpleSlider();
 
     return ret;
@@ -13538,6 +13592,7 @@ class DataStruct {
     let ret = this.vec4(path, apiname, uiname, description);
 
     ret.data.subtype = PropSubTypes$1.COLOR;
+    ret.range(0, 1);
     ret.simpleSlider();
 
     return ret;
@@ -14819,7 +14874,7 @@ const DefaultTheme = {
     }),
 
     "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-    "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
+    "TabStrokeStyle2" : "rgba(255, 255, 255, 1.0)",
     "TabInactive" : "rgba(150, 150, 150, 1.0)",
     "TabHighlight" : "rgba(50, 50, 50, 0.2)",
 
@@ -15957,6 +16012,10 @@ class UIBase extends HTMLElement {
 
           ok =  ok && x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
           ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
+
+          if (n.visibleToPick !== undefined) {
+            ok = ok && n.visibleToPick;
+          }
 
           if (ok) {
             ret = widget;
@@ -23811,6 +23870,8 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
+let FAKE_TAB_ID = Symbol("fake_tab_id");
+
 class TabItem {
   constructor(name, id, tooltip="", tbar) {
     this.name = name;
@@ -23854,25 +23915,38 @@ class TabItem {
 class ModalTabMove extends EventHandler {
   constructor(tab, tbar, dom) {
     super();
-    
+
     this.dom = dom;
     this.tab = tab;
     this.tbar = tbar;
-    
+    this.first = true;
+
+    this.droptarget = undefined;
+    this.start_mpos = new Vector2$7();
     this.mpos = undefined;
+
+    this.dragtab = undefined;
+    this.dragstate = false;
   }
   
   finish() {
     if (debug) if (debug) console.log("finish");
-    
+
     this.tbar.tool = undefined;
     this.popModal(this.dom);
     this.tbar.update(true);
   }
-  
+
+  popModal() {
+    if (this.dragcanvas !== undefined) {
+      this.dragcanvas.remove();
+    }
+    return super.popModal(...arguments);
+  }
+
   on_mousedown(e) {
     if (debug) console.log("yay");
-    
+
     this.finish();
   }
   
@@ -23889,7 +23963,6 @@ class ModalTabMove extends EventHandler {
   }
   
   on_mousemove(e) {
-    if (debug) console.log("SFSDFSD");
     return this._on_move(e, e.x, e.y);
   }
   
@@ -23902,7 +23975,29 @@ class ModalTabMove extends EventHandler {
     
     return this._on_move(e, x, y);
   }
-  
+
+  _dragstate(e, x, y) {
+    this.dragcanvas.style["left"] = x + "px";
+    this.dragcanvas.style["top"] = y + "px";
+
+    let ctx = this.tbar.ctx;
+    let screen = ctx.screen;
+    let elem = screen.pickElement(x, y);
+
+    let e2 = new DragEvent("dragenter", this.dragevent);
+    if (elem !== this.droptarget) {
+      let e2 = new DragEvent("dragexit", this.dragevent);
+      if (this.droptarget) {
+        this.droptarget.dispatchEvent(e2);
+      }
+
+      e2 = new DragEvent("dragover", this.dragevent);
+      this.droptarget = elem;
+      elem.dispatchEvent(e2);
+    }
+    //console.log(elem);
+  }
+
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
     let dpi = UIBase$9.getDPI();
@@ -23913,6 +24008,11 @@ class ModalTabMove extends EventHandler {
       return;
     }
 
+    if (this.dragstate) {
+      this._dragstate(e, x, y);
+      return;
+    }
+
     x -= r.x;
     y -= r.y;
     
@@ -23920,7 +24020,12 @@ class ModalTabMove extends EventHandler {
     
     x *= dpi;
     y *= dpi;
-    
+
+    if (this.first) {
+      this.first = false;
+      this.start_mpos[0] = x;
+      this.start_mpos[1] = y;
+    }
     if (this.mpos === undefined) {
       this.mpos = [0, 0];
       dx = dy = 0;
@@ -23933,13 +24038,55 @@ class ModalTabMove extends EventHandler {
     
     let tab = this.tab, tbar = this.tbar;
     let axis = tbar.horiz ? 0 : 1;
-    
+    let distx, disty;
+
     if (tbar.horiz) {
       tab.pos[0] += dx;
+      disty = Math.abs(y - this.start_mpos[1]);
     } else {
       tab.pos[1] += dy;
+      disty = Math.abs(x - this.start_mpos[0]);
     }
-    
+
+    let limit = 50;
+    let csize = tbar.horiz ? this.tbar.canvas.width : this.tbar.canvas.height;
+
+    let dragok = tab.pos[axis] + tab.size[axis] < -limit || tab.pos[axis] >= csize + limit;
+    dragok = dragok || disty > limit*1.5;
+    dragok = dragok && (this.tbar.draggable || this.tbar.getAttribute("draggable"));
+
+    console.log(dragok, disty, this.tbar.draggable);
+
+    if (dragok) {
+      this.dragstate = true;
+      this.dragevent = new DragEvent("dragstart", {
+        dataTransfer : new DataTransfer()
+      });
+
+      this.dragtab = tab;
+      let g = this.tbar.g;
+      this.dragimg = g.getImageData(~~tab.pos[0], ~~tab.pos[1], ~~tab.size[0], ~~tab.size[1]);
+      this.dragcanvas = document.createElement("canvas");
+      let g2 = this.drag_g = this.dragcanvas.getContext("2d");
+
+      this.dragcanvas.visibleToPick = false;
+      this.dragcanvas.width = ~~tab.size[0];
+      this.dragcanvas.height = ~~tab.size[1];
+      this.dragcanvas.style["width"] = (tab.size[0]/dpi) + "px";
+      this.dragcanvas.style["height"] = (tab.size[1]/dpi) + "px";
+      this.dragcanvas.style["position"] = "absolute";
+      this.dragcanvas.style["left"] = e.x + "px";
+      this.dragcanvas.style["top"] = e.y + "px";
+      this.dragcanvas.style["z-index"] = "500";
+      document.body.appendChild(this.dragcanvas);
+      g2.putImageData(this.dragimg, 0, 0);
+
+
+      this.tbar.dispatchEvent(this.dragevent);
+
+      return;
+    }
+
     let ti = tbar.tabs.indexOf(tab);
     let next = ti < tbar.tabs.length-1 ? tbar.tabs[ti+1] : undefined;
     let prev = ti > 0 ? tbar.tabs[ti-1] : undefined;
@@ -23988,7 +24135,7 @@ class TabBar extends UIBase$9 {
     canvas.style["width"] = "145px";
     canvas.style["height"] = "45px";
     
-    this.r = 5;
+    this.r = 8;
     
     this.canvas = canvas;
     this.g = canvas.getContext("2d");
@@ -24307,17 +24454,17 @@ class TabBar extends UIBase$9 {
     if (debug) console.log("tab layout");
     
     let dpi = this.getDPI();
-    let tsize = this.getDefault("TabText").size*1;
+    let tsize = this.getDefault("TabText").size*dpi;
     
     g.font = getFont(this, tsize, "TabText");
     
     let axis = this.horiz ? 0 : 1;
     
-    let pad = 4*dpi + Math.ceil(tsize*dpi*0.25);
+    let pad = 4*dpi + Math.ceil(tsize*0.25);
     let x = pad;
     let y = 0;
     
-    let h = tsize*dpi + Math.ceil(tsize*dpi*0.5);
+    let h = tsize + Math.ceil(tsize*0.5);
     let iconsize=iconmanager$1.getTileSize(this.iconsheet);
     let have_icons=false;
 
@@ -24479,15 +24626,17 @@ class TabBar extends UIBase$9 {
   
   _redraw() {
     let g = this.g;
+
     let bgcolor = this.getDefault("DefaultPanelBG");
-    
+    let inactive = this.getDefault("TabInactive");
+
     if (debug) console.log("tab draw");
     
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     g.beginPath();
     g.rect(0, 0, this.canvas.width, this.canvas.height);
-    g.fillStyle = bgcolor;
+    g.fillStyle = inactive;
     g.fill();
     
     let dpi = this.getDPI();
@@ -24496,16 +24645,19 @@ class TabBar extends UIBase$9 {
     let iconsize=iconmanager$1.getTileSize(this.iconsheet);
 
     tsize *= dpi;
-    g.font = font.genCSS(tsize*dpi);
+    g.font = font.genCSS(tsize);
 
     g.lineWidth = 2;
     g.strokeStyle = this.getDefault("TabStrokeStyle1");
       
-    let r = this.r;
+    let r = this.r*dpi;
     this._layout();
     let tab;
 
+    let ti = -1;
     for (tab of this.tabs) {
+      ti++;
+
       if (tab === this.tabs.active)
         continue;
 
@@ -24516,12 +24668,7 @@ class TabBar extends UIBase$9 {
       
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
       let y2 = y + tsize*1.0;
-      
-      g.beginPath();
-      g.rect(x, y, w, h);
-      g.fillStyle = this.getDefault("TabInactive");
-      g.fill();
-        
+
       if (tab === this.tabs.highlight) {
         let p = 2;
         
@@ -24552,12 +24699,20 @@ class TabBar extends UIBase$9 {
       if (!this.horiz) {
         g.restore();
       }
-      
-      if (tab !== this.tabs[this.tabs.length-1]) {
+
+      let prev = this.tabs[Math.max(ti-1+this.tabs.length, 0)];
+      let next = this.tabs[Math.min(ti+1, this.tabs.length-1)];
+
+      if (tab !== this.tabs[this.tabs.length-1] && prev !== this.tabs.active && next !== this.tabs.active) {
         g.beginPath();
-        g.moveTo(x+w, h-5);
-        g.lineTo(x+w, 5);
-        g.strokeStyle = this.getDefault("TabStrokeStyle2");
+        if (this.horiz) {
+          g.moveTo(x+w, h-5);
+          g.lineTo(x+w, 5);
+        } else {
+          g.moveTo(w-5, y+h);
+          g.lineTo(5, y+h);
+        }
+        g.strokeStyle = this.getDefault("TabStrokeStyle1");
         g.stroke();
       }
     }
@@ -24566,40 +24721,28 @@ class TabBar extends UIBase$9 {
     
     //draw active tab
     tab = this.tabs.active;
-    if (tab === undefined) {
-      return;
-    } else {
+    if (tab) {
       let x = tab.pos[0], y = tab.pos[1];
       let w = tab.size[0], h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
       let tw = measureText(this, tab.name, this.canvas, g, tsize).width;
-      
+
+      if (this.horiz) {
+        h += 2;
+      } else {
+        w += 2;
+      }
+
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
       let y2 = y + tsize;
 
+      //*
       g.beginPath();
       g.rect(x, y, w, h);
-      g.fillStyle = bgcolor;
-      g.fill();
-      
-      if (!this.horiz) {
-        let x3 = 0, y3 = y2;
-        
-        g.save();
-        g.translate(x3, y3);
-        g.rotate(Math.PI/2);
-        g.translate(-x3-tsize, -y3-tsize*0.5);
-      }
-      
-      g.fillStyle = this.getDefault("TabText").color;
+      g.fillStyle = "black";
+      //g.fill();
+      //*/
 
-      //y2 += tsize*0.3;
-      g.fillText(tab.name, x2, y2);
-
-      if (!this.horiz) {
-        g.restore();
-      }
-      
       if (tab === this.tabs.active) {
         /*
         let x = !this.horiz ? tab.y : tab.x;
@@ -24615,41 +24758,87 @@ class TabBar extends UIBase$9 {
         }//*/
         
         g.beginPath();
+        //g.lineWidth *= 5;
+        let ypad = 2;
+
+        g.strokeStyle = this.getDefault("TabStrokeStyle2");
+        g.fillStyle = bgcolor;
+        let r2 = r*1.5;
+
         if (this.horiz) {
-          g.moveTo(0, h);
-          g.lineTo(x-r, h);
-          g.lineTo(x, h-r);
-          g.lineTo(x, r);
-          g.lineTo(x+r, 0);
-          g.lineTo(x+w-r, 0);
-          g.lineTo(x+w, r);
-          g.lineTo(x+w, h-r);
-          g.lineTo(x+w+r, h);
-          g.lineTo(this.canvas.width, h);
+          g.moveTo(x-r, h);
+          g.quadraticCurveTo(x, h, x, h-r);
+          g.lineTo(x, r2);
+          g.quadraticCurveTo(x, ypad, x+r2, ypad);
+          g.lineTo(x+w-r2, ypad);
+          g.quadraticCurveTo(x+w, 0, x+w, r2);
+          g.lineTo(x+w, h-r2);
+          g.quadraticCurveTo(x+w, h, x+w+r, h);
+
+          g.stroke();
+          //
+          g.closePath();
         } else {
-          g.moveTo(w, 0);
-          g.lineTo(w, y-r);
-          g.lineTo(w-r, y);
-          g.lineTo(r, y);
-          g.lineTo(0, y+r);
-          g.lineTo(0, y+h-r);
-          g.lineTo(r, y+h);
-          g.lineTo(w-r, y+h);
-          g.lineTo(w, y+h+r);
-          
-          g.lineTo(w, this.canvas.height);
+          g.moveTo(w, y-r);
+          g.quadraticCurveTo(w, y, w-r, y);
+          ///*
+          g.lineTo(r2, y);
+          g.quadraticCurveTo(ypad, y, ypad, y+r2);
+          g.lineTo(ypad, y+h-r2);
+          g.quadraticCurveTo(0, y+h, r2, y+h);
+          g.lineTo(w-r2, y+h);
+          g.quadraticCurveTo(w, y+h, w, y+h+r);
+          //*/
+          g.stroke();
+          //
+          g.closePath();
         }
         
         let cw = this.horiz ? this.canvas.width : this.canvas.height;
-        
-        g.stroke();
-        
+
+        let worig = g.lineWidth;
+
+        g.lineWidth *= 0.5;
+
+        g.fill();
+        //g.stroke();
+
+        g.lineWidth = worig;
+
+        if (!this.horiz) {
+          let x3 = 0, y3 = y2;
+
+          g.save();
+          g.translate(x3, y3);
+          g.rotate(Math.PI/2);
+          g.translate(-x3-tsize, -y3-tsize*0.5);
+        }
+
+        g.fillStyle = this.getDefault("TabText").color;
+
+        //y2 += tsize*0.3;
+        g.fillText(tab.name, x2, y2);
+
+        if (!this.horiz) {
+          g.restore();
+        }
 
         if (!this.horiz) {
           //g.restore();
         }
       }
     }
+  }
+
+  removeTab(tab) {
+    this.tabs.remove(tab);
+    if (tab === this.tabs.active) {
+      this.tabs.active = this.tabs[0];
+    }
+
+    this._layout();
+    this._redraw();
+    this.setCSS();
   }
 
   updateStyle() {
@@ -24740,6 +24929,33 @@ class TabContainer extends UIBase$9 {
     };
   }
 
+  enableDrag() {
+    this.tbar.draggable = this.draggable = true;
+    this.tbar.addEventListener("dragstart", (e) => {
+      this.dispatchEvent(new DragEvent("dragstart", e));
+    });
+    this.tbar.addEventListener("dragover", (e) => {
+      this.dispatchEvent(new DragEvent("dragover", e));
+    });
+    this.tbar.addEventListener("dragexit", (e) => {
+      this.dispatchEvent(new DragEvent("dragexit", e));
+    });
+    /*
+    let doms = [this, this.tbar, this.tbar.canvas];
+    for (let dom of doms) {
+      dom.setAttribute("draggable", "true");
+      dom.draggable = true;
+
+      dom.addEventListener("dragstart", (e) => {
+        console.log("drag start", e);
+      });
+
+      dom.addEventListener("drag", (e) => {
+        console.log("drag", e);
+      });
+    }*/
+  }
+
   clear() {
     this.tbar.clear();
     if (this._tab !== undefined) {
@@ -24757,10 +24973,10 @@ class TabContainer extends UIBase$9 {
 
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
-    
+
     return e;
   }
-  
+
   _remakeStyle() {
     let horiz = this.tbar.horiz;
     let display = "flex";
@@ -24787,11 +25003,11 @@ class TabContainer extends UIBase$9 {
         ${!horiz ? "vertical-align : top;" : ""}
       }
     `;
-    
+
     if (this._style)
       this._style.remove();
     this._style = style;
-    
+
     this.shadow.prepend(style);
   }
 
@@ -24802,11 +25018,17 @@ class TabContainer extends UIBase$9 {
     return t;
   }
 
+  removeTab(tab) {
+    let tab2 = tab._tab;
+    this.tbar.removeTab(tab2);
+    tab.remove();
+  }
+
   tab(name, id=undefined, tooltip=undefined, movable=true) {
     if (id === undefined) {
       id = tab_idgen++;
     }
-    
+
     let col = document.createElement("colframe-x");
 
     this.tabs[id] = col;
@@ -24856,6 +25078,7 @@ class TabContainer extends UIBase$9 {
     this.tbar._layout();
     this.tbar._redraw();
   }
+
   getTab(name_or_id) {
     if (name_or_id in this.tabs) {
       return this.tabs[name_or_id];
@@ -24872,29 +25095,29 @@ class TabContainer extends UIBase$9 {
 
   updateBarPos() {
     let barpos = this.getAttribute("bar_pos");
-    
+
     if (barpos !== this._last_bar_pos) {
       this.horiz = barpos == "top" || barpos == "bottom";
       this._last_bar_pos = barpos;
-      
+
       this.tbar.setAttribute("bar_pos", barpos);
       this.tbar.update(true);
       this.update();
     }
   }
-  
+
   updateHoriz() {
     let horiz = this.tbar.horiz;
-    
+
     if (this._last_horiz !== horiz) {
       this._last_horiz = horiz;
       this._remakeStyle();
     }
   }
-  
+
   update() {
     super.update();
-    
+
     if (this._tab !== undefined) {
       this._tab.update();
     }
@@ -24906,7 +25129,7 @@ class TabContainer extends UIBase$9 {
     this.updateBarPos();
     this.tbar.update();
   }
-  
+
   static define() {return {
     tagname : "tabcontainer-x"
   };}
@@ -30715,7 +30938,8 @@ let Screen$2 = undefined;
 const AreaFlags = {
   HIDDEN          : 1,
   FLOATING        : 2,
-  INDEPENDENT     : 4 //area is indpendent of the screen mesh
+  INDEPENDENT     : 4, //area is indpendent of the screen mesh
+  NO_SWITCHER     : 8
 };
 
 let contextWrangler = new AreaWrangler();
@@ -30816,13 +31040,13 @@ class Area$1 extends UIBase {
     };
 
     //*
-    this.addEventListener("mouseover", onover, {passive : true});
-    this.addEventListener("mousemove", onover, {passive : true});
-    this.addEventListener("mousein", onover, {passive : true});
-    this.addEventListener("mouseenter", onover, {passive : true});
-    this.addEventListener("touchstart", onover, {passive : true});
-    this.addEventListener("focusin", onover, {passive : true});
-    this.addEventListener("focus", onover, {passive : true});
+    super.addEventListener("mouseover", onover, {passive : true});
+    super.addEventListener("mousemove", onover, {passive : true});
+    super.addEventListener("mousein", onover, {passive : true});
+    super.addEventListener("mouseenter", onover, {passive : true});
+    super.addEventListener("touchstart", onover, {passive : true});
+    super.addEventListener("focusin", onover, {passive : true});
+    super.addEventListener("focus", onover, {passive : true});
     //*/
   }
 
@@ -30834,6 +31058,48 @@ class Area$1 extends UIBase {
     }
   }
 
+  /*
+  addEventListener(type, cb, options) {
+    let cb2 = (e) => {
+      let x, y;
+      let screen = this.getScreen();
+
+      if (!screen) {
+        console.warn("no screen!");
+        return cb(elem);
+      }
+
+      if (type.startsWith("mouse")) {
+        x = e.x; y = e.y;
+      } else if (type.startsWith("touch") && e.touches && e.touches.length > 0) {
+        x = e.touches[0].pageX; y = e.touches[0].pageY;
+      } else if (type.startsWith("pointer")) {
+        x = e.x; y = e.y;
+      } else {
+        if (screen) {
+          x = screen.mpos[0];
+          y = screen.mpos[1];
+        } else {
+          x = y = -100;
+        }
+      }
+
+      let elem = screen.pickElement(x, y);
+      console.log(elem ? elem.tagName : undefined);
+
+      if (elem === this || elem === this.owning_sarea) {
+        return cb(elem);
+      }
+    };
+
+    cb.__cb2 = cb2;
+    return super.addEventListener(type, cb2, options);
+  }
+
+  removeEventListener(type, cb, options) {
+    super.removeEventListener(type, cb.__cb2, options);
+  }
+  //*/
 
   /**
    * Return a list of keymaps used by this editor
@@ -31204,9 +31470,11 @@ class Area$1 extends UIBase {
       touchend(e);        
     }, false);
 
-    this.switcher = this.makeAreaSwitcher(row);
+    if (!(this.flag & AreaFlags.NO_SWITCHER)) {
+      this.switcher = this.makeAreaSwitcher(row);
+    }
 
-    if (isMobile()||1) {
+    if (isMobile()||exports.addHelpPickers) {
       this.helppicker = row.helppicker();
     }
 
@@ -31911,7 +32179,7 @@ class ScreenArea extends UIBase {
       //*
       if (moved) {
         if (exports.DEBUG.areaConstraintSolver) {
-          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area, this.size);
+          console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area.tagName, this.size);
         }
 
         screen.solveAreaConstraints();
@@ -32116,13 +32384,48 @@ class AreaDocker extends Container {
     super();
 
     this.tbar = this.tabs();
+    this.tbar.enableDrag();
+    this.tbar.addEventListener("dragstart", (e) => {
+      console.log("drag start", e);
+      let name = this.tbar.tbar.tabs.active.name;
+
+      e.dataTransfer.setData("area", name + "|" + this._id);
+      e.preventDefault();
+    });
+
+    this.tbar.addEventListener("dragover", (e) => {
+      console.log("drag over");
+      console.log(e.dataTransfer.getData("area"));
+
+
+      let data = e.dataTransfer.getData("area");
+      let [name, id] = data.split("|");
+
+      if (this.tbar.__fake) {
+        this.tbar.removeTab(this.tbar.__fake);
+        this.tbar.__fake = undefined;
+      }
+
+      this.tbar.__fake = this.tbar.tab(name, id);
+    });
+
+    this.tbar.addEventListener("dragexit", (e) => {
+      console.log("drag exit");
+      console.log(e.dataTransfer.getData("area"));
+
+
+      if (this.tbar.__fake) {
+        this.tbar.removeTab(this.tbar.__fake);
+        this.tbar.__fake = undefined;
+      }
+    });
 
     this.tbar.onchange = (tab) => {
       if (ignore) {
         return;
       }
 
-      if (!tab || !this.getArea() || ! this.getArea().owning_sarea) {
+      if (!tab || !this.getArea() || ! this.getArea().parentWidget) {
         return;
       }
 
@@ -32133,7 +32436,10 @@ class AreaDocker extends Container {
 
       console.warn("CHANGE AREA", tab.id);
 
-      let sarea = this.getArea().owning_sarea;
+      let sarea = this.getArea().parentWidget;
+      if (!sarea) {
+        return;
+      }
 
       for (let area of sarea.editors) {
         if (area._id === tab.id && area !== sarea.area) {
@@ -32171,7 +32477,7 @@ class AreaDocker extends Container {
     menu._init();
 
     let prop = Area$1.makeAreasEnum();
-    let sarea = this.getArea().owning_sarea;
+    let sarea = this.getArea().parentWidget;
 
     if (!sarea) {
       return;
@@ -32196,9 +32502,9 @@ class AreaDocker extends Container {
     console.log(mpos[0], mpos[1], rect.x, rect.y);
 
     menu.onselect = (val) => {
-      console.log("menu select", val, this.getArea().owning_sarea);
+      console.log("menu select", val, this.getArea().parentWidget);
 
-      let sarea = this.getArea().owning_sarea;
+      let sarea = this.getArea().parentWidget;
       if (sarea) {
         let cls = areaclasses[val];
 
@@ -32213,7 +32519,7 @@ class AreaDocker extends Container {
           area = sarea.area;
           area._init();
         } catch (error) {
-          util.print_stack(error);
+          print_stack$1(error);
           throw error;
         } finally {
           ignore = Math.max(ignore - 1, 0);
@@ -32225,7 +32531,10 @@ class AreaDocker extends Container {
           ignore++;
 
           try {
+            area.parentWidget = sarea;
             area.owning_sarea = sarea;
+            area.switcher.parentWidget = area;
+            area.switcher.ctx = area.ctx;
             area.switcher._init();
             area.switcher.update();
 
@@ -32258,7 +32567,7 @@ class AreaDocker extends Container {
     let area = this.getArea();
     if (!area) return;
 
-    let sarea = area.owning_sarea;
+    let sarea = area.parentWidget;
 
     if (!sarea) {
       return;
@@ -32275,13 +32584,19 @@ class AreaDocker extends Container {
   rebuild() {
     console.log("rebuild");
 
+    if (!this.getArea() || !this.getArea().parentWidget) {
+      this._last_hash = undefined;
+      this.tbar.clear();
+      return;
+    }
+
     ignore++;
 
     //save tab order
     let ud = saveUIData(this.tbar, "tbar");
 
     this.tbar.clear();
-    let sarea = this.getArea().owning_sarea;
+    let sarea = this.getArea().parentWidget;
 
     for (let area of sarea.editors) {
       let uiname = area.constructor.define().uiname;
@@ -32307,7 +32622,7 @@ class AreaDocker extends Container {
     if (!this.ctx) return;
     let area = this.getArea();
     if (!area) return;
-    let sarea = area.owning_sarea;
+    let sarea = area.parentWidget;
     if (!sarea) return;
 
     let hash = this._hash();
@@ -32317,7 +32632,9 @@ class AreaDocker extends Container {
       this.rebuild();
     }
 
-    this.tbar.setActive(this.getArea()._id);
+    if (this._last_hash) {
+      this.tbar.setActive(this.getArea()._id);
+    }
   }
 
   init() {
@@ -32395,6 +32712,7 @@ class Screen$3 extends UIBase {
   constructor() {
     super();
 
+    this._do_updateSize = true;
     this._resize_callbacks = [];
 
     this.allBordersMovable = exports.DEBUG.allBordersMovable;
@@ -35347,5 +35665,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

@@ -36,7 +36,7 @@ export const DefaultTheme = {
     }),
 
     "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-    "TabStrokeStyle2" : "rgba(225, 225, 225, 1.0)",
+    "TabStrokeStyle2" : "rgba(255, 255, 255, 1.0)",
     "TabInactive" : "rgba(150, 150, 150, 1.0)",
     "TabHighlight" : "rgba(50, 50, 50, 0.2)",
 

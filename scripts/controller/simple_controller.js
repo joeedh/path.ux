@@ -428,6 +428,7 @@ export class DataStruct {
     let ret = this.vec3(path, apiname, uiname, description);
 
     ret.data.subtype = toolprop.PropSubTypes.COLOR;
+    ret.range(0, 1);
     ret.simpleSlider();
 
     return ret;
@@ -437,6 +438,7 @@ export class DataStruct {
     let ret = this.vec4(path, apiname, uiname, description);
 
     ret.data.subtype = toolprop.PropSubTypes.COLOR;
+    ret.range(0, 1);
     ret.simpleSlider();
 
     return ret;

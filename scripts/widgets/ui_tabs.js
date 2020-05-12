@@ -19,6 +19,8 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
+let FAKE_TAB_ID = Symbol("fake_tab_id");
+
 export class TabItem {
   constructor(name, id, tooltip="", tbar) {
     this.name = name;
@@ -62,25 +64,38 @@ export class TabItem {
 export class ModalTabMove extends events.EventHandler {
   constructor(tab, tbar, dom) {
     super();
-    
+
     this.dom = dom;
     this.tab = tab;
     this.tbar = tbar;
-    
+    this.first = true;
+
+    this.droptarget = undefined;
+    this.start_mpos = new Vector2();
     this.mpos = undefined;
+
+    this.dragtab = undefined;
+    this.dragstate = false;
   }
   
   finish() {
     if (debug) if (debug) console.log("finish");
-    
+
     this.tbar.tool = undefined;
     this.popModal(this.dom);
     this.tbar.update(true);
   }
-  
+
+  popModal() {
+    if (this.dragcanvas !== undefined) {
+      this.dragcanvas.remove();
+    }
+    return super.popModal(...arguments);
+  }
+
   on_mousedown(e) {
     if (debug) console.log("yay");
-    
+
     this.finish();
   }
   
@@ -97,7 +112,6 @@ export class ModalTabMove extends events.EventHandler {
   }
   
   on_mousemove(e) {
-    if (debug) console.log("SFSDFSD");
     return this._on_move(e, e.x, e.y);
   }
   
@@ -110,7 +124,29 @@ export class ModalTabMove extends events.EventHandler {
     
     return this._on_move(e, x, y);
   }
-  
+
+  _dragstate(e, x, y) {
+    this.dragcanvas.style["left"] = x + "px";
+    this.dragcanvas.style["top"] = y + "px";
+
+    let ctx = this.tbar.ctx;
+    let screen = ctx.screen;
+    let elem = screen.pickElement(x, y);
+
+    let e2 = new DragEvent("dragenter", this.dragevent);
+    if (elem !== this.droptarget) {
+      let e2 = new DragEvent("dragexit", this.dragevent);
+      if (this.droptarget) {
+        this.droptarget.dispatchEvent(e2);
+      }
+
+      e2 = new DragEvent("dragover", this.dragevent);
+      this.droptarget = elem;
+      elem.dispatchEvent(e2);
+    }
+    //console.log(elem);
+  }
+
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
     let dpi = UIBase.getDPI();
@@ -121,6 +157,11 @@ export class ModalTabMove extends events.EventHandler {
       return;
     }
 
+    if (this.dragstate) {
+      this._dragstate(e, x, y);
+      return;
+    }
+
     x -= r.x;
     y -= r.y;
     
@@ -128,7 +169,12 @@ export class ModalTabMove extends events.EventHandler {
     
     x *= dpi;
     y *= dpi;
-    
+
+    if (this.first) {
+      this.first = false;
+      this.start_mpos[0] = x;
+      this.start_mpos[1] = y;
+    }
     if (this.mpos === undefined) {
       this.mpos = [0, 0];
       dx = dy = 0;
@@ -141,13 +187,55 @@ export class ModalTabMove extends events.EventHandler {
     
     let tab = this.tab, tbar = this.tbar;
     let axis = tbar.horiz ? 0 : 1;
-    
+    let distx, disty;
+
     if (tbar.horiz) {
       tab.pos[0] += dx;
+      disty = Math.abs(y - this.start_mpos[1]);
     } else {
       tab.pos[1] += dy;
+      disty = Math.abs(x - this.start_mpos[0]);
     }
-    
+
+    let limit = 50;
+    let csize = tbar.horiz ? this.tbar.canvas.width : this.tbar.canvas.height;
+
+    let dragok = tab.pos[axis] + tab.size[axis] < -limit || tab.pos[axis] >= csize + limit;
+    dragok = dragok || disty > limit*1.5;
+    dragok = dragok && (this.tbar.draggable || this.tbar.getAttribute("draggable"));
+
+    console.log(dragok, disty, this.tbar.draggable);
+
+    if (dragok) {
+      this.dragstate = true;
+      this.dragevent = new DragEvent("dragstart", {
+        dataTransfer : new DataTransfer()
+      });
+
+      this.dragtab = tab;
+      let g = this.tbar.g;
+      this.dragimg = g.getImageData(~~tab.pos[0], ~~tab.pos[1], ~~tab.size[0], ~~tab.size[1]);
+      this.dragcanvas = document.createElement("canvas");
+      let g2 = this.drag_g = this.dragcanvas.getContext("2d");
+
+      this.dragcanvas.visibleToPick = false;
+      this.dragcanvas.width = ~~tab.size[0];
+      this.dragcanvas.height = ~~tab.size[1];
+      this.dragcanvas.style["width"] = (tab.size[0]/dpi) + "px";
+      this.dragcanvas.style["height"] = (tab.size[1]/dpi) + "px";
+      this.dragcanvas.style["position"] = "absolute";
+      this.dragcanvas.style["left"] = e.x + "px";
+      this.dragcanvas.style["top"] = e.y + "px";
+      this.dragcanvas.style["z-index"] = "500";
+      document.body.appendChild(this.dragcanvas);
+      g2.putImageData(this.dragimg, 0, 0);
+
+
+      this.tbar.dispatchEvent(this.dragevent);
+
+      return;
+    }
+
     let ti = tbar.tabs.indexOf(tab);
     let next = ti < tbar.tabs.length-1 ? tbar.tabs[ti+1] : undefined;
     let prev = ti > 0 ? tbar.tabs[ti-1] : undefined;
@@ -196,7 +284,7 @@ export class TabBar extends UIBase {
     canvas.style["width"] = "145px";
     canvas.style["height"] = "45px";
     
-    this.r = 5;
+    this.r = 8;
     
     this.canvas = canvas;
     this.g = canvas.getContext("2d");
@@ -515,17 +603,17 @@ export class TabBar extends UIBase {
     if (debug) console.log("tab layout");
     
     let dpi = this.getDPI();
-    let tsize = this.getDefault("TabText").size*1;
+    let tsize = this.getDefault("TabText").size*dpi;
     
     g.font = ui_base.getFont(this, tsize, "TabText");
     
     let axis = this.horiz ? 0 : 1;
     
-    let pad = 4*dpi + Math.ceil(tsize*dpi*0.25);
+    let pad = 4*dpi + Math.ceil(tsize*0.25);
     let x = pad;
     let y = 0;
     
-    let h = tsize*dpi + Math.ceil(tsize*dpi*0.5);
+    let h = tsize + Math.ceil(tsize*0.5);
     let iconsize=iconmanager.getTileSize(this.iconsheet);
     let have_icons=false;
 
@@ -687,15 +775,17 @@ export class TabBar extends UIBase {
   
   _redraw() {
     let g = this.g;
+
     let bgcolor = this.getDefault("DefaultPanelBG");
-    
+    let inactive = this.getDefault("TabInactive");
+
     if (debug) console.log("tab draw");
     
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     g.beginPath();
     g.rect(0, 0, this.canvas.width, this.canvas.height);
-    g.fillStyle = bgcolor;
+    g.fillStyle = inactive;
     g.fill();
     
     let dpi = this.getDPI();
@@ -704,16 +794,19 @@ export class TabBar extends UIBase {
     let iconsize=iconmanager.getTileSize(this.iconsheet);
 
     tsize *= dpi;
-    g.font = font.genCSS(tsize*dpi);
+    g.font = font.genCSS(tsize);
 
     g.lineWidth = 2;
     g.strokeStyle = this.getDefault("TabStrokeStyle1");
       
-    let r = this.r;
+    let r = this.r*dpi;
     this._layout();
     let tab;
 
+    let ti = -1;
     for (tab of this.tabs) {
+      ti++;
+
       if (tab === this.tabs.active)
         continue;
 
@@ -724,12 +817,7 @@ export class TabBar extends UIBase {
       
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
       let y2 = y + tsize*1.0;
-      
-      g.beginPath();
-      g.rect(x, y, w, h);
-      g.fillStyle = this.getDefault("TabInactive");
-      g.fill();
-        
+
       if (tab === this.tabs.highlight) {
         let p = 2;
         
@@ -760,12 +848,20 @@ export class TabBar extends UIBase {
       if (!this.horiz) {
         g.restore();
       }
-      
-      if (tab !== this.tabs[this.tabs.length-1]) {
+
+      let prev = this.tabs[Math.max(ti-1+this.tabs.length, 0)];
+      let next = this.tabs[Math.min(ti+1, this.tabs.length-1)];
+
+      if (tab !== this.tabs[this.tabs.length-1] && prev !== this.tabs.active && next !== this.tabs.active) {
         g.beginPath();
-        g.moveTo(x+w, h-5);
-        g.lineTo(x+w, 5);
-        g.strokeStyle = this.getDefault("TabStrokeStyle2");
+        if (this.horiz) {
+          g.moveTo(x+w, h-5);
+          g.lineTo(x+w, 5);
+        } else {
+          g.moveTo(w-5, y+h);
+          g.lineTo(5, y+h);
+        }
+        g.strokeStyle = this.getDefault("TabStrokeStyle1");
         g.stroke();
       }
     }
@@ -774,40 +870,28 @@ export class TabBar extends UIBase {
     
     //draw active tab
     tab = this.tabs.active;
-    if (tab === undefined) {
-      return;
-    } else {
+    if (tab) {
       let x = tab.pos[0], y = tab.pos[1];
       let w = tab.size[0], h = tab.size[1];
       //let tw = g.measureText(tab.name).width;
       let tw = ui_base.measureText(this, tab.name, this.canvas, g, tsize).width;
-      
+
+      if (this.horiz) {
+        h += 2;
+      } else {
+        w += 2;
+      }
+
       let x2 = x + (tab.size[this.horiz^1]-tw)*0.5;
       let y2 = y + tsize;
 
+      //*
       g.beginPath();
       g.rect(x, y, w, h);
-      g.fillStyle = bgcolor;
-      g.fill();
-      
-      if (!this.horiz) {
-        let x3 = 0, y3 = y2;
-        
-        g.save();
-        g.translate(x3, y3);
-        g.rotate(Math.PI/2);
-        g.translate(-x3-tsize, -y3-tsize*0.5);
-      }
-      
-      g.fillStyle = this.getDefault("TabText").color;
+      g.fillStyle = "black";
+      //g.fill();
+      //*/
 
-      //y2 += tsize*0.3;
-      g.fillText(tab.name, x2, y2);
-
-      if (!this.horiz) {
-        g.restore();
-      }
-      
       if (tab === this.tabs.active) {
         /*
         let x = !this.horiz ? tab.y : tab.x;
@@ -823,41 +907,87 @@ export class TabBar extends UIBase {
         }//*/
         
         g.beginPath();
+        //g.lineWidth *= 5;
+        let ypad = 2;
+
+        g.strokeStyle = this.getDefault("TabStrokeStyle2");
+        g.fillStyle = bgcolor;
+        let r2 = r*1.5;
+
         if (this.horiz) {
-          g.moveTo(0, h);
-          g.lineTo(x-r, h);
-          g.lineTo(x, h-r);
-          g.lineTo(x, r);
-          g.lineTo(x+r, 0);
-          g.lineTo(x+w-r, 0);
-          g.lineTo(x+w, r);
-          g.lineTo(x+w, h-r);
-          g.lineTo(x+w+r, h);
-          g.lineTo(this.canvas.width, h);
+          g.moveTo(x-r, h);
+          g.quadraticCurveTo(x, h, x, h-r);
+          g.lineTo(x, r2);
+          g.quadraticCurveTo(x, ypad, x+r2, ypad)
+          g.lineTo(x+w-r2, ypad);
+          g.quadraticCurveTo(x+w, 0, x+w, r2);
+          g.lineTo(x+w, h-r2);
+          g.quadraticCurveTo(x+w, h, x+w+r, h);
+
+          g.stroke()
+          //
+          g.closePath()
         } else {
-          g.moveTo(w, 0);
-          g.lineTo(w, y-r);
-          g.lineTo(w-r, y);
-          g.lineTo(r, y);
-          g.lineTo(0, y+r);
-          g.lineTo(0, y+h-r);
-          g.lineTo(r, y+h);
-          g.lineTo(w-r, y+h);
-          g.lineTo(w, y+h+r);
-          
-          g.lineTo(w, this.canvas.height);
+          g.moveTo(w, y-r);
+          g.quadraticCurveTo(w, y, w-r, y);
+          ///*
+          g.lineTo(r2, y);
+          g.quadraticCurveTo(ypad, y, ypad, y+r2);
+          g.lineTo(ypad, y+h-r2);
+          g.quadraticCurveTo(0, y+h, r2, y+h);
+          g.lineTo(w-r2, y+h);
+          g.quadraticCurveTo(w, y+h, w, y+h+r);
+          //*/
+          g.stroke()
+          //
+          g.closePath()
         }
         
         let cw = this.horiz ? this.canvas.width : this.canvas.height;
-        
-        g.stroke();
-        
+
+        let worig = g.lineWidth;
+
+        g.lineWidth *= 0.5;
+
+        g.fill();
+        //g.stroke();
+
+        g.lineWidth = worig;
+
+        if (!this.horiz) {
+          let x3 = 0, y3 = y2;
+
+          g.save();
+          g.translate(x3, y3);
+          g.rotate(Math.PI/2);
+          g.translate(-x3-tsize, -y3-tsize*0.5);
+        }
+
+        g.fillStyle = this.getDefault("TabText").color;
+
+        //y2 += tsize*0.3;
+        g.fillText(tab.name, x2, y2);
+
+        if (!this.horiz) {
+          g.restore();
+        }
 
         if (!this.horiz) {
           //g.restore();
         }
       }
     }
+  }
+
+  removeTab(tab) {
+    this.tabs.remove(tab);
+    if (tab === this.tabs.active) {
+      this.tabs.active = this.tabs[0];
+    }
+
+    this._layout();
+    this._redraw();
+    this.setCSS();
   }
 
   updateStyle() {
@@ -948,6 +1078,33 @@ export class TabContainer extends UIBase {
     }
   }
 
+  enableDrag() {
+    this.tbar.draggable = this.draggable = true;
+    this.tbar.addEventListener("dragstart", (e) => {
+      this.dispatchEvent(new DragEvent("dragstart", e));
+    });
+    this.tbar.addEventListener("dragover", (e) => {
+      this.dispatchEvent(new DragEvent("dragover", e));
+    });
+    this.tbar.addEventListener("dragexit", (e) => {
+      this.dispatchEvent(new DragEvent("dragexit", e));
+    });
+    /*
+    let doms = [this, this.tbar, this.tbar.canvas];
+    for (let dom of doms) {
+      dom.setAttribute("draggable", "true");
+      dom.draggable = true;
+
+      dom.addEventListener("dragstart", (e) => {
+        console.log("drag start", e);
+      });
+
+      dom.addEventListener("drag", (e) => {
+        console.log("drag", e);
+      });
+    }*/
+  }
+
   clear() {
     this.tbar.clear();
     if (this._tab !== undefined) {
@@ -965,10 +1122,10 @@ export class TabContainer extends UIBase {
 
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
-    
+
     return e;
   }
-  
+
   _remakeStyle() {
     let horiz = this.tbar.horiz;
     let display = "flex";
@@ -995,11 +1152,11 @@ export class TabContainer extends UIBase {
         ${!horiz ? "vertical-align : top;" : ""}
       }
     `;
-    
+
     if (this._style)
       this._style.remove();
     this._style = style;
-    
+
     this.shadow.prepend(style);
   }
 
@@ -1010,11 +1167,17 @@ export class TabContainer extends UIBase {
     return t;
   }
 
+  removeTab(tab) {
+    let tab2 = tab._tab;
+    this.tbar.removeTab(tab2);
+    tab.remove();
+  }
+
   tab(name, id=undefined, tooltip=undefined, movable=true) {
     if (id === undefined) {
       id = tab_idgen++;
     }
-    
+
     let col = document.createElement("colframe-x");
 
     this.tabs[id] = col;
@@ -1064,6 +1227,7 @@ export class TabContainer extends UIBase {
     this.tbar._layout();
     this.tbar._redraw();
   }
+
   getTab(name_or_id) {
     if (name_or_id in this.tabs) {
       return this.tabs[name_or_id];
@@ -1080,29 +1244,29 @@ export class TabContainer extends UIBase {
 
   updateBarPos() {
     let barpos = this.getAttribute("bar_pos");
-    
+
     if (barpos !== this._last_bar_pos) {
       this.horiz = barpos == "top" || barpos == "bottom";
       this._last_bar_pos = barpos;
-      
+
       this.tbar.setAttribute("bar_pos", barpos);
       this.tbar.update(true);
       this.update();
     }
   }
-  
+
   updateHoriz() {
     let horiz = this.tbar.horiz;
-    
+
     if (this._last_horiz !== horiz) {
       this._last_horiz = horiz;
       this._remakeStyle();
     }
   }
-  
+
   update() {
     super.update();
-    
+
     if (this._tab !== undefined) {
       this._tab.update();
     }
@@ -1114,7 +1278,7 @@ export class TabContainer extends UIBase {
     this.updateBarPos();
     this.tbar.update();
   }
-  
+
   static define() {return {
     tagname : "tabcontainer-x"
   };}
