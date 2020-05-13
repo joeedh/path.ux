@@ -3,6 +3,20 @@ import cconst from '../config/const.js';
 
 export let modalstack = [];
 
+export function isMouseDown(e) {
+  let mdown = 0;
+
+  if (e.touches !== undefined) {
+    mdown = !!(e.touches.length > 0);
+  } else {
+    mdown = e.buttons;
+  }
+
+  mdown = mdown & 1;
+
+  return mdown;
+}
+
 export function pathDebugEvent(e, extra) {
   e.__prevdef = e.preventDefault;
   e.__stopprop = e.stopPropagation;

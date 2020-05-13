@@ -2,6 +2,35 @@ import './polyfill.js';
 import './struct.js';
 import './mobile-detect.js';
 
+export class MovingAvg extends Array {
+  constructor(size=64) {
+    super();
+
+    this.length = size;
+    this.cur = 0;
+    this.used = 0;
+    this.sum = 0;
+  }
+
+  add(val) {
+    if (this.used < this.length) {
+      this[this.cur] = val;
+      this.used++;
+    } else {
+      this.sum -= this[this.cur];
+      this[this.cur] = val;
+    }
+
+    this.sum += val;
+    this.cur = (this.cur + 1) % this.length;
+
+    return this.sample();
+  }
+
+  sample() {
+    return this.used ? this.sum / this.used : 0.0;
+  }
+}
 
 export let timers = {};
 

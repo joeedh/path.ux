@@ -415,6 +415,8 @@ export class Context {
           console.log("getting value");
         }
 
+        //Chrome's console messes this up
+
         inside_map[ikey] = 1;
 
         try {
