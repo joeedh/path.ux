@@ -11,6 +11,17 @@ function normString(s) {
   return s.toLowerCase();
 }
 
+function myToFixed(f, decimals) {
+  f = f.toFixed(decimals);
+  while (f.endsWith("0") || f.endsWith(".")) {
+    f = f.slice(0, f.length-1);
+  }
+
+  if (f.length == 0)
+    f = "0";
+
+  return f.trim();
+}
 export const Units = [];
 
 export class Unit {
@@ -96,7 +107,7 @@ export class MeterUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    return "" + value + " m";
+    return "" + myToFixed(value, decimals) + " m";
   }
 }
 
@@ -133,7 +144,7 @@ export class InchUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    return "" + value.toFixed(decimals) + "in";
+    return "" + myToFixed(value, decimals) + "in";
   }
 }
 Unit.register(InchUnit);
@@ -188,12 +199,12 @@ export class FootUnit extends Unit {
     let vin = value % 12;
 
     if (vft === 0.0) {
-      return vin.toFixed(decimals) + " in";
+      return myToFixed(value, decimals) + " in";
     }
 
     let s = "" + vft + " ft";
     if (vin !== 0.0) {
-      s += " " + vin.toFixed(decimals) + " in";
+      s += " " + myToFixed(value, decimals) + " in";
     }
 
     return s;
@@ -228,7 +239,7 @@ export class MileUnit extends Unit {
   }
 
   static buildString(value, decimals=3) {
-    return ""+value.toFixed(decimals) + " miles";
+    return "" + myToFixed(value, decimals) + " miles";
   }
 }
 Unit.register(MileUnit);
@@ -264,7 +275,7 @@ export class DegreeUnit extends Unit {
   }
 
   static buildString(value, decimals=3) {
-    return ""+value.toFixed(decimals) + " \u00B0";
+    return "" + myToFixed(value, decimals) + " \u00B0";
   }
 };
 Unit.register(DegreeUnit);
@@ -298,7 +309,7 @@ export class RadianUnit extends Unit {
   }
 
   static buildString(value, decimals=3) {
-    return ""+value.toFixed(decimals) + " r";
+    return "" + myToFixed(value, decimals) + " r";
   }
 };
 
@@ -314,8 +325,31 @@ export function setMetric(val) {
 Unit.isMetric = true;
 Unit.baseUnit = "meter";
 
+let numre = /[+\-]?[0-9]+(\.[0-9]*)?$/
+let hexre1 = /[+\-]?[0-9a-fA-F]+h$/
+let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/
+let binre = /[+\-]?0b[01]+$/
+let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/
+
+function isNumber(s) {
+  s = (""+s).trim();
+  function test(re) {
+    return s.search(re) == 0;
+  }
+
+  return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
+}
+
 export function parseValue(string, baseUnit=undefined) {
   let base;
+
+  //unannotated string?
+  if (isNumber(string)) {
+    //assume base unit
+    let f = parseFloat(string);
+    
+    return f;
+  }  
 
   if (baseUnit) {
     base = Unit.getUnit(baseUnit);
