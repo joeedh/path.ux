@@ -94,6 +94,8 @@ export function parseToolPath(str, check_tool_exists=true) {
     initToolPaths();
   }
 
+  let startstr = str;
+
   let i1 = str.search(/\(/);
   let i2 = str.search(/\)/);
   let args = "";
@@ -107,7 +109,14 @@ export function parseToolPath(str, check_tool_exists=true) {
     throw new DataPathError("unknown tool " + str);
   }
 
-  let ret = Parser.parse(args);
+  let ret;
+
+  try {
+    ret = Parser.parse(args);
+  } catch (error) {
+    console.log(error);
+    throw new DataPathError(`"${startstr}"\n  ${error.message}`);
+  }
 
   return {
     toolclass : ToolPaths[str],

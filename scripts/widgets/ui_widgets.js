@@ -951,6 +951,10 @@ export class IconCheck extends Button {
   }
 
   set drawCheck(val) {
+    if (val && (this.packflag & PackFlags.HIDE_CHECK_MARKS)) {
+      this.packflag &= ~PackFlags.HIDE_CHECK_MARKS;
+    }
+
     this._drawCheck = val;
     this._redraw();
   }
@@ -1040,6 +1044,10 @@ export class IconCheck extends Button {
   }
   
   update() {
+    if (this.packflag & PackFlags.HIDE_CHECK_MARKS) {
+      this.drawCheck = false;
+    }
+
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
     }

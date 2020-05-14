@@ -82,7 +82,6 @@ export class AppState {
     let t = 300 / window.innerWidth;
 
     let wsarea = screen.splitArea(sarea, 0.1, true);
-
     sarea.switchEditor(MenuBarEditor);
 
     let sarea2 = screen.splitArea(wsarea, 0.7, false);
