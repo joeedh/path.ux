@@ -553,6 +553,36 @@ export class Matrix4 {
     this.multiply(mat);
   }
 
+  normalize() {
+    let m = this.$matrix;
+
+    let v1 = new Vector4([m.m11, m.m12, m.m13, m.m14]);
+    let v2 = new Vector4([m.m21, m.m22, m.m23, m.m24]);
+    let v3 = new Vector4([m.m31, m.m32, m.m33, m.m34]);
+    let v4 = new Vector4([m.m41, m.m42, m.m43, m.m44]);
+
+    v1.normalize();
+    v2.normalize();
+    v3.normalize();
+
+    let flat = new Array().concat(v1).concat(v2).concat(v3).concat(v4);
+    this.load(flat);
+
+    return this;
+  }
+
+  clearTranslation(set_w_to_one=false) {
+    let m = this.$matrix;
+
+    m.m41 = m.m42 = m.m43 = 0.0;
+
+    if (set_w_to_one) {
+      m.m44 = 1.0;
+    }
+
+    return this;
+  }
+
   //this is really like the lookAt method, isn't it.
   makeNormalMatrix(normal, up=undefined) {
     let n = makenormalcache.next().load(normal).normalize();
@@ -600,6 +630,8 @@ export class Matrix4 {
     tmp.multiply(this);
     
     this.load(tmp);
+
+    return this;
   }
   
   multiply(mat) {
@@ -888,6 +920,10 @@ export class Matrix4 {
 
   _determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3) {
     return a1*this._determinant2x2(b2, b3, c2, c3)-b1*this._determinant2x2(a2, a3, c2, c3)+c1*this._determinant2x2(a2, a3, b2, b3);
+  }
+
+  determinant() {
+    return this._determinant4x4();
   }
 
   _determinant4x4() {

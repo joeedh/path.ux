@@ -1301,7 +1301,7 @@ export function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) 
   
   let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
 
-  if (Math.abs(div) < 0.00001) {
+  if (Math.abs(div) < 0.000001) {
     return undefined;
   }
 

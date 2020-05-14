@@ -216,6 +216,9 @@ export class ToolProperty extends ToolPropertyIF {
 export class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
+
+    if (value)
+      this.setValue(value);
   }
   
   copyTo(b) {

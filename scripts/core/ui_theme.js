@@ -1,5 +1,6 @@
 import * as util from "../util/util.js";
 import {Vector3, Vector4} from '../util/vectormath.js';
+import * as nstructjs from "../util/struct.js";
 
 export function parsepx(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -188,3 +189,14 @@ export class CSSFont {
     return this.genCSS + ":" + this.size + ":" + this.color;
   }
 }
+CSSFont.STRUCT = `
+CSSFont {
+  size     : float | obj._size;
+  font     : string | obj.font || "";
+  style    : string | obj.font || "";
+  color    : string | ""+obj.color;
+  variant  : string | obj.variant || "";
+  weight   : string | ""+obj.weight;
+}
+`;
+nstructjs.register(CSSFont);

@@ -84,7 +84,8 @@ export function getDefault(key, elem) {
 
 //XXX implement me!
 export function IsMobile() {
-  return false;
+  console.warn("ui_base.IsMobile is deprecated; use util.isMobile instead")
+  return util.isMobile();
 };
 
 let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];

@@ -1,13 +1,228 @@
 import * as util from "./util.js";
 import cconst from '../config/const.js';
+import {Vector2} from './vectormath.js';
 
 export let modalstack = [];
+let singleMouseCBs = {};
+
+function singletonMouseEvents() {
+  let keys = ["mousedown", "mouseup", "mousemove"];
+  for (let k of keys) {
+    singleMouseCBs[k] = new Set();
+  }
+
+  let ddd = -1.0;
+  window.testSingleMouseUpEvent = (type = "mousedown") => {
+    let id = ddd++;
+    singleMouseEvent(() => {
+      console.log("mouse event", id);
+    }, type)
+  };
+
+  let _mpos = new Vector2();
+
+  function doSingleCbs(e, type) {
+    let list = singleMouseCBs[type];
+    singleMouseCBs[type] = new Set();
+
+    if (e.type !== "touchend" && e.type !== "touchcancel") {
+      _mpos[0] = e.touches && e.touches.length > 0 ? e.touches[0].pageX : e.x;
+      _mpos[1] = e.touches && e.touches.length > 0 ? e.touches[0].pageY : e.y;
+    }
+
+    if (e.touches) {
+      e = copyEvent(e);
+
+      e.type = type;
+      if (e.touches.length > 0) {
+        e.x = e.pageX = e.touches[0].pageX;
+        e.y = e.pageY = e.touches[0].pageY;
+      } else {
+        e.x = _mpos[0];
+        e.y = _mpos[1];
+      }
+    }
+
+    for (let cb of list) {
+      try {
+        cb(e);
+      } catch (error) {
+        util.print_stack(error);
+        console.warn("Error in event callback");
+      }
+    }
+  }
+
+  window.addEventListener("mouseup", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+  window.addEventListener("touchcancel", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+  document.addEventListener("touchend", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+
+  document.addEventListener("mousedown", (e) => {
+    doSingleCbs(e, "mousedown");
+  }, {capture: true});
+  document.addEventListener("touchstart", (e) => {
+    doSingleCbs(e, "mousedown");
+  }, {capture: true});
+
+  document.addEventListener("mousemove", (e) => {
+    doSingleCbs(e, "mousemove");
+  }, {capture: true});
+  document.addEventListener("touchmove", (e) => {
+    doSingleCbs(e, "mousemove");
+  }, {capture: true});
+
+  return {
+    singleMouseEvent(cb, type) {
+      if (!(type in singleMouseCBs)) {
+        throw new Error("not a mouse event");
+      }
+
+      singleMouseCBs[type].add(cb);
+    }
+  };
+};
+
+singletonMouseEvents = singletonMouseEvents();
+
+/**
+ * adds a mouse event callback that only gets called once
+ * */
+export function singleMouseEvent(cb, type) {
+  return singletonMouseEvents.singleMouseEvent(cb, type);
+}
+
+
+/*tests if either the left mouse button is down,
+* or a touch event has happened and e.touches.length == 1*/
+export function isLeftClick(e) {
+  if (e.touches !== undefined) {
+    return e.touches.length === 1;
+  }
+
+  return e.button === 0;
+}
+
+export class DoubleClickHandler {
+  constructor() {
+    this.down = 0;
+    this.last = 0;
+    this.dblEvent = undefined;
+
+    this.start_mpos = new Vector2();
+
+    this._on_mouseup = this._on_mouseup.bind(this);
+    this._on_mousemove = this._on_mousemove.bind(this);
+  }
+
+  _on_mouseup(e) {
+    //console.log("mup", e);
+    this.mdown = false;
+  }
+
+  _on_mousemove(e) {
+    let mpos = new Vector2();
+    mpos[0] = e.x; mpos[1] = e.y;
+
+    let dist = mpos.vectorDistance(this.start_mpos) * devicePixelRatio;
+
+    if (dist > 11) {
+      //console.log("cancel", dist);
+      this.mdown = false;
+    }
+
+    if (this.mdown) {
+      singleMouseEvent(this._on_mousemove, "mousemove");
+    }
+
+    this.update();
+  }
+
+  mousedown(e) {
+    //console.log("mdown", e.x, e.y);
+
+    if (!this.last) {
+      this.last = 0;
+    }
+    if (!this.down) {
+      this.down = 0;
+    }
+    if (!this.up) {
+      this.up = 0;
+    }
+
+    if (isMouseDown(e)) {
+      this.mdown = true;
+
+      let cpy = Object.assign({}, e);
+
+      this.start_mpos[0] = e.x;
+      this.start_mpos[1] = e.y;
+
+      singleMouseEvent(this._on_mousemove, "mousemove");
+
+      if (e.type.search("touch") >= 0 && e.touches.length > 0) {
+        cpy.x = cpy.pageX = e.touches[0].pageX;
+        cpy.y = cpy.pageY = e.touches[1].pageY;
+      } else {
+        cpy.x = cpy.pageX = e.x;
+        cpy.y = cpy.pageY = e.y;
+      }
+
+      //stupid real MouseEvent class zeros .x/.y
+      //continue using hackish copyEvent for now...
+
+      this.dblEvent = copyEvent(e);
+      this.dblEvent.type = "dblclick";
+
+      this.last = this.down;
+      this.down = util.time_ms();
+
+      if (this.down - this.last < cconst.doubleClickTime) {
+        this.mdown = false;
+        this.ondblclick(this.dblEvent);
+
+        this.down = this.last = 0.0;
+      } else {
+        singleMouseEvent(this._on_mouseup, "mouseup");
+      }
+    } else {
+      this.mdown = false;
+    }
+  }
+
+  //you may override this
+  ondblclick(e) {
+
+  }
+
+  update() {
+    if (modalstack.length > 0) {
+      //cancel double click requests
+      this.mdown = false;
+    }
+
+    if (this.mdown && util.time_ms() - this.down > cconst.doubleClickHoldTime) {
+      this.mdown = false;
+      this.ondblclick(this.dblEvent);
+    }
+  }
+  
+  abort() {
+    this.last = this.down = 0;
+  }
+}
 
 export function isMouseDown(e) {
   let mdown = 0;
 
   if (e.touches !== undefined) {
-    mdown = !!(e.touches.length > 0);
+    mdown = e.touches.length > 0;
   } else {
     mdown = e.buttons;
   }
@@ -69,6 +284,8 @@ export function copyEvent(e) {
       ret[k] = v;
     }
   }
+
+  ret.original = e;
 
   return ret;
 }

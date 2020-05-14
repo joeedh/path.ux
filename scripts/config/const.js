@@ -1,5 +1,8 @@
 let exports = {
   menu_close_time : 500,
+  doubleClickTime : 500,
+  //timeout for press-and-hold (touch) version of double clicking
+  doubleClickHoldTime : 750,
   DEBUG : {
     screenborders: false,
     areaContextPushes: false,

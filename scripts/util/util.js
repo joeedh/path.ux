@@ -72,6 +72,9 @@ export function isMobile() {
 
 //window._isMobile = isMobile;
 
+let SmartConsoleTag = Symbol("SmartConsoleTag");
+let tagid = 0;
+
 export class SmartConsoleContext {
   constructor(name, console) {
     this.name = name;
@@ -97,12 +100,66 @@ export class SmartConsoleContext {
 
 
   hash(args) {
-    let args2 = [];
-    for (let i=0; i<args.length; i++) {
-      args2.push(args[i]);
+    let sum = 0;
+    let mul = (1<<19)-1, off = (1<<27)-1;
+    let i = 0;
+
+    function dohash(h) {
+      h = (h*mul + off + i*mul*0.25) & mul;
+
+      i++;
+      sum = sum ^ h;
     }
 
-    return JSON.stringify(args2);
+    let visit = new Set();
+
+    let recurse = (n) => {
+      if (typeof n === "string") {
+        dohash(strhash(n));
+      } else if (typeof n === "undefined" || n === null) {
+        dohash(0);
+      } else if (typeof n === "object") {
+        if (n[SmartConsoleTag] === undefined) {
+          n[SmartConsoleTag] = tagid++;
+        }
+
+        if (visit.has(n[SmartConsoleTag])) {
+          return;
+        }
+
+        visit.add(n[SmartConsoleTag]);
+
+        let keys = getAllKeys(n);
+
+        for (let k of keys) {
+          let v;
+
+          if (typeof k !== "string") {
+            continue;
+          }
+
+          try {
+            v = n[k];
+          } catch (error) {
+            continue;
+          }
+
+          recurse(v);
+        }
+      } else if (typeof n === "function") {
+        dohash(strhash(""+n.name));
+      }
+    };
+
+    //let str = "";
+
+    for (let i=0; i<args.length; i++) {
+      recurse(args[i]);
+      //str += args[i] + " ";
+    }
+
+    //window.console.log("HASH", sum, str);
+    return sum;
   }
 
   clearCache() {

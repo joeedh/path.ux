@@ -32,6 +32,8 @@ class InheritFlag {
   }
 }
 
+let modalstack = [];
+
 export class ToolOp extends events.EventHandler {
   static tooldef() {return {
     uiname   : "!untitled tool",
@@ -205,6 +207,16 @@ export class ToolOp extends events.EventHandler {
     this.drawlines = [];
   }
 
+  static onTick() {
+    for (let toolop of modalstack) {
+      toolop.on_tick();
+    }
+  }
+
+  on_tick() {
+
+  }
+
   //default on_keydown implementation for modal tools,
   //no need to call super() to execute this if you don't want to
   on_keydown(e) {
@@ -273,7 +285,15 @@ export class ToolOp extends events.EventHandler {
     this.drawlines.push(line);
     return line;
   }
-  
+
+  pushModal(node) {
+    throw new Error("cannot call this; use modalStart")
+  }
+
+  popModal() {
+    throw new Error("cannot call this; use modalEnd");
+  }
+
   //returns promise to be executed on modalEnd
   modalStart(ctx) {
     if (this.modalRunning) {
@@ -290,7 +310,8 @@ export class ToolOp extends events.EventHandler {
       this._accept = accept;
       this._reject = reject;
 
-      this.pushModal(ctx.screen);
+      modalstack.push(this);
+      super.pushModal(ctx.screen);
     });
 
     return this._promise;
@@ -306,6 +327,10 @@ export class ToolOp extends events.EventHandler {
   }
   
   modalEnd(was_cancelled) {
+    if (this._modalstate) {
+      modalstack.pop();
+    }
+
     if (this._overdraw !== undefined) {
       this._overdraw.end();
       this._overdraw = undefined;
@@ -326,7 +351,7 @@ export class ToolOp extends events.EventHandler {
     this.modalRunning = false;
     this.is_modal = false;
     
-    this.popModal(_appstate._modal_dom_root);
+    super.popModal(_appstate._modal_dom_root);
     
     this._promise = undefined;
     this._accept(ctx, false); //Context, was_cancelled
