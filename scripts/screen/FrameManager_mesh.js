@@ -299,8 +299,10 @@ export class ScreenBorder extends ui_base.UIBase {
     `;
 
     let ok = this.movable;
-    for (let sarea of this.sareas) {
-      ok = ok || sarea.floating;
+    if (!this.outer) {
+      for (let sarea of this.sareas) {
+        ok = ok || sarea.floating;
+      }
     }
 
     if (ok) {

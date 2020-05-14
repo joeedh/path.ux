@@ -1546,9 +1546,9 @@ export class UIBase extends HTMLElement {
     //if (dpistack.length > 0) {
     //  return dpistack[this.dpistack.length-1];
     //} else {
-    if (util.isMobile()) {
-      return window.devicePixelRatio * visualViewport.scale;
-    }
+    //if (util.isMobile()) {
+      return window.devicePixelRatio; // * visualViewport.scale;
+    //}
 
     return window.devicePixelRatio;
     //}

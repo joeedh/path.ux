@@ -523,17 +523,61 @@ export class Screen extends ui_base.UIBase {
       height *= dpi;
       width = ~~width;
       height = ~~height;
+    } else {
+      //width /= visualViewport.scale;
+      //height /= visualViewport.scale;
     }
 
     if (cconst.DEBUG.customWindowSize) {
       let s = cconst.DEBUG.customWindowSize;
       width = s.width;
-      height = s.height; 
+      height = s.height;
     }
-    
-    if (width !== this.size[0] || height !== this.size[1]) {
-      console.log("resizing", width, height, this.size[0], this.size[1]);
+
+    let ox = visualViewport.offsetLeft;
+    let oy = visualViewport.offsetTop;
+    let scale = visualViewport.scale;
+
+    let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
+
+    let scale2 = 1.0/scale;
+    let r = document.body.getBoundingClientRect();
+    //ox -= r.x/scale
+    //oy -= r.y/scale;
+
+    scale2 = 1.0/scale;
+    //oy *= scale2;
+    //ox *= scale2;
+
+    //document.body.style["position"] = "fixed";
+    //document.body.style["left"] = ox+"px";
+    //document.body.style["top"] = oy+"0px";
+
+    document.body.style["transform-origin"] = "top left";
+    document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
+
+    //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
+
+    if (key !== this._last_ckey1) {
+      console.log("resizing", key, this._last_ckey1);
+      this._last_ckey1 = key;
+
       this.on_resize(this.size, [width, height]);
+      this.on_resize(this.size, this.size);
+
+      let scale = visualViewport.scale;
+
+      //for (let sarea of this.sareas) {
+      //  sarea.style["transform"] = `translate(${ox}px, ${oy}px)`;// scale(${1.0 / scale})`;
+      //  console.log(sarea.style["transform"]);
+      //}
+
+      this.regenBorders();
+      //this.pos[0] = visualViewport.offsetLeft * visualViewport.scale;
+      //this.pos[1] = visualViewport.offsetTop * visualViewport.scale;
+
+      this.setCSS();
+      this.completeUpdate();
     }
   }
 
@@ -1825,7 +1869,7 @@ export class Screen extends ui_base.UIBase {
       sz.div(vec);
 
       for (let v of this.screenverts) {
-        snap(v.sub(min).mul(sz)).add(this.pos);
+        snap(v.sub(min).mul(sz));//.add(this.pos);
       }
     } else {
       for (let v of this.screenverts) {
@@ -1940,8 +1984,8 @@ export class Screen extends ui_base.UIBase {
       //check if border is on screen limits
       let axis = border.horiz ? 1 : 0;
 
-      ret = Math.abs(border.v1[axis] - this.pos[axis]) < 2;
-      ret = ret || Math.abs(border.v1[axis] - this.pos[axis] - this.size[axis]) < 2;
+      ret = Math.abs(border.v1[axis] - this.pos[axis]) < 4;
+      ret = ret || Math.abs(border.v1[axis] - this.pos[axis] - this.size[axis]) < 4;
     }
 
     border.outer = ret;
@@ -2335,3 +2379,27 @@ export function startEvents(getScreenFunc) {
   });
 }
 _setScreenClass(Screen);
+
+/*
+document.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("scroll", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("resize", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("pointerstart", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("pointermove", (e) => {
+  e.preventDefault();
+}, {capture : true});
+*/
