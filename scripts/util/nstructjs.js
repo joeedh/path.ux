@@ -2031,7 +2031,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       func = this.compiled_code[fullcode];
     }
     try {
-      return func.call(obj, env);
+      return func.call(obj, obj, env);
     }
     catch (err) {
       _module_exports_$1.print_stack(err);
