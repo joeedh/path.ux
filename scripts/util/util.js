@@ -294,7 +294,7 @@ export function list(iterable) {
 export function getAllKeys(obj) {
   let keys = new Set();
 
-  if (typeof obj !== "object") {
+  if (typeof obj !== "object" && typeof obj !== "function") {
     throw new Error("must pass an object ot getAllKeys; object was: " + obj);
   }
 

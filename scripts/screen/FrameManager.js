@@ -1334,16 +1334,17 @@ export class Screen extends ui_base.UIBase {
 
   //XXX rename to regenScreenMesh
   regenBorders() {
-    for (let k in this._edgemap) {
-      let b = this._edgemap[k];
 
+    for (let b of this.screenborders) {
       b.remove();
+      HTMLElement.prototype.remove.call(b);
     }
 
+    this._idmap = {};
     this.screenborders = [];
     this._edgemap = {};
     this._vertmap = {};
-    this.screenverts.length = 0;
+    this.screenverts = []
 
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;

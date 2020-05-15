@@ -4,6 +4,7 @@ let exports = {
   //timeout for press-and-hold (touch) version of double clicking
   doubleClickHoldTime : 750,
   DEBUG : {
+    paranoidEvents: false,
     screenborders: false,
     areaContextPushes: false,
     allBordersMovable: false,

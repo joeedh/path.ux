@@ -390,7 +390,10 @@ export class UIBase extends HTMLElement {
     super();
 
     this.shadow = this.attachShadow({mode : 'open'});
-    
+    if (cconst.DEBUG.paranoidEvents) {
+      this.__cbs = [];
+    }
+
     this.shadow._appendChild = this.shadow.appendChild;
 
     ///*
@@ -564,6 +567,13 @@ export class UIBase extends HTMLElement {
     }
 
     let cb2 = (e) => {
+      if (cconst.DEBUG.paranoidEvents) {
+        if (this.isDead()) {
+          this.removeEventListener(type, cb, options);
+          return;
+        }
+      }
+
       if (cconst.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
@@ -591,14 +601,34 @@ export class UIBase extends HTMLElement {
 
     cb._cb = cb2;
 
-    return super.addEventListener(type, cb2, options);
+    if (cconst.DEBUG.paranoidEvents) {
+      this.__cbs.push([type, cb2, options]);
+    }
+
+
+    return super.addEventListener(type, cb, options);
   }
 
-  removeEventListener(type, cb, options) {
+  removeEventListener(type, cb, options)
+  {
+    if (cconst.DEBUG.paranoidEvents) {
+      for (let item of this.__cbs) {
+        if (item[0] == type && item[1] === cb._cb2 && ("" + item[2]) === ("" + options)) {
+          this.__cbs.remove(item);
+          break;
+        }
+      }
+    }
+
     if (cconst.DEBUG.domEventAddRemove) {
       console.log("removeEventListener", type, this._id, options);
     }
-    return super.removeEventListener(type, cb._cb, options);
+
+    if (!cb._cb) {
+      return super.removeEventListener(type, cb, options);
+    } else {
+      return super.removeEventListener(type, cb._cb, options);
+    }
   }
 
   connectedCallback() {
@@ -807,6 +837,15 @@ export class UIBase extends HTMLElement {
     if (this.tabIndex >= 0) {
       this.regenTabOrder();
     }
+
+    if (cconst.DEBUG.paranoidEvents) {
+      for (let item of this.__cbs) {
+        this.removeEventListener(item[0], item[1], item[2]);
+      }
+
+      this.__cbs = [];
+    }
+
 
     if (this.ondestroy !== undefined) {
       this.ondestroy();
@@ -1385,6 +1424,14 @@ export class UIBase extends HTMLElement {
   isDead() {
     let p = this, lastp = this;
 
+    function find(c, n) {
+      for (let n2 of c) {
+        if (n2 === n) {
+          return true;
+        }
+      }
+    }
+
     while (p) {
       lastp = p;
 
@@ -1393,6 +1440,11 @@ export class UIBase extends HTMLElement {
         parent = p.parentElement ? p.parentElement : p.parentNode;
       }
 
+      if (parent && p && !find(parent.childNodes, p)) {
+        if (parent.shadow !== undefined && !find(parent.shadow.childNodes)) {
+          return true;
+        }
+      }
       p = parent;
 
       if (p === document.body) {
