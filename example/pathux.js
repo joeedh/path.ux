@@ -163,1564 +163,1215 @@ Number.prototype[Symbol.keystr] = Boolean.prototype[Symbol.keystr] = function() 
   return ""+this;
 };
 
-(function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        //Allow using this built library as an AMD module
-        //in another project. That other project will only
-        //see this AMD call, not the internal modules in
-        //the closure below.
-        define([], factory);
-    } else {
-      function getGlobal() {
-        return this;
-      }
-      
-      //Browser globals case. Just assign the
-      //result to a property on the global.
-      
-      if (typeof window === "object") {
-        window.nstructjs = factory();
-      } else if (typeof self === "object") { //browser worker
-        self.nstructjs = factory();
-      } else if (typeof module === "object") { //node.js
-        module.exports = factory();
-      }
-    }
-}(undefined, function () {
-    //almond, and your modules will be inlined here
-/**
- * @license almond 0.3.3 Copyright jQuery Foundation and other contributors.
- * Released under MIT license, http://github.com/requirejs/almond/LICENSE
- */
-//Going sloppy to avoid 'use strict' string cost, but strict practices should
-//be followed.
-/*global setTimeout: false */
+(function () {
+  if (typeof window === "undefined" && typeof global != "undefined") {
+    global._nGlobal = global;
+  } else if (typeof self !== "undefined") {
+    self._nGlobal = self;
+  } else {
+    window._nGlobal = window;
+  }
+  
+  let module = {};
+  let exports = _nGlobal.nstructjs = {};
+'use strict';
 
-var requirejs, require, define;
-(function (undef) {
-    var main, req, makeMap, handlers,
-        defined = {},
-        waiting = {},
-        config = {},
-        defining = {},
-        hasOwn = Object.prototype.hasOwnProperty,
-        aps = [].slice,
-        jsSuffixRegExp = /\.js$/;
-
-    function hasProp(obj, prop) {
-        return hasOwn.call(obj, prop);
-    }
-
-    /**
-     * Given a relative module name, like ./something, normalize it to
-     * a real name that can be mapped to a path.
-     * @param {String} name the relative name
-     * @param {String} baseName a real name that the name arg is relative
-     * to.
-     * @returns {String} normalized name
-     */
-    function normalize(name, baseName) {
-        var nameParts, nameSegment, mapValue, foundMap, lastIndex,
-            foundI, foundStarMap, starI, i, j, part, normalizedBaseParts,
-            baseParts = baseName && baseName.split("/"),
-            map = config.map,
-            starMap = (map && map['*']) || {};
-
-        //Adjust any relative paths.
-        if (name) {
-            name = name.split('/');
-            lastIndex = name.length - 1;
-
-            // If wanting node ID compatibility, strip .js from end
-            // of IDs. Have to do this here, and not in nameToUrl
-            // because node allows either .js or non .js to map
-            // to same file.
-            if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
-                name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
-            }
-
-            // Starts with a '.' so need the baseName
-            if (name[0].charAt(0) === '.' && baseParts) {
-                //Convert baseName to array, and lop off the last part,
-                //so that . matches that 'directory' and not name of the baseName's
-                //module. For instance, baseName of 'one/two/three', maps to
-                //'one/two/three.js', but we want the directory, 'one/two' for
-                //this normalization.
-                normalizedBaseParts = baseParts.slice(0, baseParts.length - 1);
-                name = normalizedBaseParts.concat(name);
-            }
-
-            //start trimDots
-            for (i = 0; i < name.length; i++) {
-                part = name[i];
-                if (part === '.') {
-                    name.splice(i, 1);
-                    i -= 1;
-                } else if (part === '..') {
-                    // If at the start, or previous value is still ..,
-                    // keep them so that when converted to a path it may
-                    // still work when converted to a path, even though
-                    // as an ID it is less than ideal. In larger point
-                    // releases, may be better to just kick out an error.
-                    if (i === 0 || (i === 1 && name[2] === '..') || name[i - 1] === '..') {
-                        continue;
-                    } else if (i > 0) {
-                        name.splice(i - 1, 2);
-                        i -= 2;
-                    }
-                }
-            }
-            //end trimDots
-
-            name = name.join('/');
-        }
-
-        //Apply map config if available.
-        if ((baseParts || starMap) && map) {
-            nameParts = name.split('/');
-
-            for (i = nameParts.length; i > 0; i -= 1) {
-                nameSegment = nameParts.slice(0, i).join("/");
-
-                if (baseParts) {
-                    //Find the longest baseName segment match in the config.
-                    //So, do joins on the biggest to smallest lengths of baseParts.
-                    for (j = baseParts.length; j > 0; j -= 1) {
-                        mapValue = map[baseParts.slice(0, j).join('/')];
-
-                        //baseName segment has  config, find if it has one for
-                        //this name.
-                        if (mapValue) {
-                            mapValue = mapValue[nameSegment];
-                            if (mapValue) {
-                                //Match, update name to the new value.
-                                foundMap = mapValue;
-                                foundI = i;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (foundMap) {
-                    break;
-                }
-
-                //Check for a star map match, but just hold on to it,
-                //if there is a shorter segment match later in a matching
-                //config, then favor over this star map.
-                if (!foundStarMap && starMap && starMap[nameSegment]) {
-                    foundStarMap = starMap[nameSegment];
-                    starI = i;
-                }
-            }
-
-            if (!foundMap && foundStarMap) {
-                foundMap = foundStarMap;
-                foundI = starI;
-            }
-
-            if (foundMap) {
-                nameParts.splice(0, foundI, foundMap);
-                name = nameParts.join('/');
-            }
-        }
-
-        return name;
-    }
-
-    function makeRequire(relName, forceSync) {
-        return function () {
-            //A version of a require function that passes a moduleName
-            //value for items that may need to
-            //look up paths relative to the moduleName
-            var args = aps.call(arguments, 0);
-
-            //If first arg is not require('string'), and there is only
-            //one arg, it is the array form without a callback. Insert
-            //a null so that the following concat is correct.
-            if (typeof args[0] !== 'string' && args.length === 1) {
-                args.push(null);
-            }
-            return req.apply(undef, args.concat([relName, forceSync]));
-        };
-    }
-
-    function makeNormalize(relName) {
-        return function (name) {
-            return normalize(name, relName);
-        };
-    }
-
-    function makeLoad(depName) {
-        return function (value) {
-            defined[depName] = value;
-        };
-    }
-
-    function callDep(name) {
-        if (hasProp(waiting, name)) {
-            var args = waiting[name];
-            delete waiting[name];
-            defining[name] = true;
-            main.apply(undef, args);
-        }
-
-        if (!hasProp(defined, name) && !hasProp(defining, name)) {
-            throw new Error('No ' + name);
-        }
-        return defined[name];
-    }
-
-    //Turns a plugin!resource to [plugin, resource]
-    //with the plugin being undefined if the name
-    //did not have a plugin prefix.
-    function splitPrefix(name) {
-        var prefix,
-            index = name ? name.indexOf('!') : -1;
-        if (index > -1) {
-            prefix = name.substring(0, index);
-            name = name.substring(index + 1, name.length);
-        }
-        return [prefix, name];
-    }
-
-    //Creates a parts array for a relName where first part is plugin ID,
-    //second part is resource ID. Assumes relName has already been normalized.
-    function makeRelParts(relName) {
-        return relName ? splitPrefix(relName) : [];
-    }
-
-    /**
-     * Makes a name map, normalizing the name, and using a plugin
-     * for normalization if necessary. Grabs a ref to plugin
-     * too, as an optimization.
-     */
-    makeMap = function (name, relParts) {
-        var plugin,
-            parts = splitPrefix(name),
-            prefix = parts[0],
-            relResourceName = relParts[1];
-
-        name = parts[1];
-
-        if (prefix) {
-            prefix = normalize(prefix, relResourceName);
-            plugin = callDep(prefix);
-        }
-
-        //Normalize according
-        if (prefix) {
-            if (plugin && plugin.normalize) {
-                name = plugin.normalize(name, makeNormalize(relResourceName));
-            } else {
-                name = normalize(name, relResourceName);
-            }
-        } else {
-            name = normalize(name, relResourceName);
-            parts = splitPrefix(name);
-            prefix = parts[0];
-            name = parts[1];
-            if (prefix) {
-                plugin = callDep(prefix);
-            }
-        }
-
-        //Using ridiculous property names for space reasons
-        return {
-            f: prefix ? prefix + '!' + name : name, //fullName
-            n: name,
-            pr: prefix,
-            p: plugin
-        };
-    };
-
-    function makeConfig(name) {
-        return function () {
-            return (config && config.config && config.config[name]) || {};
-        };
-    }
-
-    handlers = {
-        require: function (name) {
-            return makeRequire(name);
-        },
-        exports: function (name) {
-            var e = defined[name];
-            if (typeof e !== 'undefined') {
-                return e;
-            } else {
-                return (defined[name] = {});
-            }
-        },
-        module: function (name) {
-            return {
-                id: name,
-                uri: '',
-                exports: defined[name],
-                config: makeConfig(name)
-            };
-        }
-    };
-
-    main = function (name, deps, callback, relName) {
-        var cjsModule, depName, ret, map, i, relParts,
-            args = [],
-            callbackType = typeof callback,
-            usingExports;
-
-        //Use name if no relName
-        relName = relName || name;
-        relParts = makeRelParts(relName);
-
-        //Call the callback to define the module, if necessary.
-        if (callbackType === 'undefined' || callbackType === 'function') {
-            //Pull out the defined dependencies and pass the ordered
-            //values to the callback.
-            //Default to [require, exports, module] if no deps
-            deps = !deps.length && callback.length ? ['require', 'exports', 'module'] : deps;
-            for (i = 0; i < deps.length; i += 1) {
-                map = makeMap(deps[i], relParts);
-                depName = map.f;
-
-                //Fast path CommonJS standard dependencies.
-                if (depName === "require") {
-                    args[i] = handlers.require(name);
-                } else if (depName === "exports") {
-                    //CommonJS module spec 1.1
-                    args[i] = handlers.exports(name);
-                    usingExports = true;
-                } else if (depName === "module") {
-                    //CommonJS module spec 1.1
-                    cjsModule = args[i] = handlers.module(name);
-                } else if (hasProp(defined, depName) ||
-                           hasProp(waiting, depName) ||
-                           hasProp(defining, depName)) {
-                    args[i] = callDep(depName);
-                } else if (map.p) {
-                    map.p.load(map.n, makeRequire(relName, true), makeLoad(depName), {});
-                    args[i] = defined[depName];
-                } else {
-                    throw new Error(name + ' missing ' + depName);
-                }
-            }
-
-            ret = callback ? callback.apply(defined[name], args) : undefined;
-
-            if (name) {
-                //If setting exports via "module" is in play,
-                //favor that over return value and exports. After that,
-                //favor a non-undefined return value over exports use.
-                if (cjsModule && cjsModule.exports !== undef &&
-                        cjsModule.exports !== defined[name]) {
-                    defined[name] = cjsModule.exports;
-                } else if (ret !== undef || !usingExports) {
-                    //Use the return value from the function.
-                    defined[name] = ret;
-                }
-            }
-        } else if (name) {
-            //May just be an object definition for the module. Only
-            //worry about defining if have a module name.
-            defined[name] = callback;
-        }
-    };
-
-    requirejs = require = req = function (deps, callback, relName, forceSync, alt) {
-        if (typeof deps === "string") {
-            if (handlers[deps]) {
-                //callback in this case is really relName
-                return handlers[deps](callback);
-            }
-            //Just return the module wanted. In this scenario, the
-            //deps arg is the module name, and second arg (if passed)
-            //is just the relName.
-            //Normalize module name, if it contains . or ..
-            return callDep(makeMap(deps, makeRelParts(callback)).f);
-        } else if (!deps.splice) {
-            //deps is a config object, not an array.
-            config = deps;
-            if (config.deps) {
-                req(config.deps, config.callback);
-            }
-            if (!callback) {
-                return;
-            }
-
-            if (callback.splice) {
-                //callback is an array, which means it is a dependency list.
-                //Adjust args if there are dependencies
-                deps = callback;
-                callback = relName;
-                relName = null;
-            } else {
-                deps = undef;
-            }
-        }
-
-        //Support require(['a'])
-        callback = callback || function () {};
-
-        //If relName is a function, it is an errback handler,
-        //so remove it.
-        if (typeof relName === 'function') {
-            relName = forceSync;
-            forceSync = alt;
-        }
-
-        //Simulate async callback;
-        if (forceSync) {
-            main(undef, deps, callback, relName);
-        } else {
-            //Using a non-zero value because of concern for what old browsers
-            //do, and latest browsers "upgrade" to 4 if lower value is used:
-            //http://www.whatwg.org/specs/web-apps/current-work/multipage/timers.html#dom-windowtimers-settimeout:
-            //If want a value immediately, use require('id') instead -- something
-            //that works in almond on the global level, but not guaranteed and
-            //unlikely to work in other AMD implementations.
-            setTimeout(function () {
-                main(undef, deps, callback, relName);
-            }, 4);
-        }
-
-        return req;
-    };
-
-    /**
-     * Just drops the config on the floor, but returns req in case
-     * the config return value is used.
-     */
-    req.config = function (cfg) {
-        return req(cfg);
-    };
-
-    /**
-     * Expose module registry for debugging and tooling
-     */
-    requirejs._defined = defined;
-
-    define = function (name, deps, callback) {
-        if (typeof name !== 'string') {
-            throw new Error('See almond README: incorrect module build, no module name');
-        }
-
-        //This module may not have dependencies
-        if (!deps.splice) {
-            //deps is not an array, so probably means
-            //an object literal or factory function for
-            //the value. Adjust args.
-            callback = deps;
-            deps = [];
-        }
-
-        if (!hasProp(defined, name) && !hasProp(waiting, name)) {
-            waiting[name] = [name, deps, callback];
-        }
-    };
-
-    define.amd = {
-        jQuery: true
-    };
-}());
-
-define("../node_modules/almond/almond", function(){});
+"use strict";
 
 //zebra-style class system, see zebkit.org
-define('struct_typesystem',[],function() {
-  "use strict";
-  
-  var exports = {};
-  
-  function ClassGetter(func) {
-    this.func = func;
-  }
-  function ClassSetter(func) {
-    this.func = func;
-  }
-  
-  var prototype_idgen = 1;
-  var defined_classes = exports.defined_classes = [];
 
-  var StaticMethod = function StaticMethod(func) {
-    this.func = func;
-  };
-  
-  //parent is optional
-  var handle_statics = function(cls, methods, parent) {
-    for (var i=0; i<methods.length; i++) {
-      var m = methods[i];
-      
-      if (m instanceof StaticMethod) {
-        cls[m.func.name] = m.func;
-      }
-    }
-    
-    //inherit from parent too.
-    //only inherit static methods added to parent with this module, though
-    if (parent != undefined) {
-      for (var k in parent) {
-        var v = parent[k];
-        
-        if ((typeof v == "object"|| typeof v == "function")
-             && "_is_static_method" in v && !(k in cls)) 
-        {
-          cls[k] = v;
-        }
-      }
-    }
-  };
+function ClassGetter(func) {
+  this.func = func;
+}
 
-  var Class = exports.Class = function Class(methods) {
-    var construct = undefined;
-    var parent = undefined;
-    
-    if (arguments.length > 1) {
-      //a parent was passed in
-      
-      parent = methods;
-      methods = arguments[1];
+function ClassSetter(func) {
+  this.func = func;
+}
+
+var prototype_idgen = 1;
+const _module_exports_ = {};
+var defined_classes = _module_exports_.defined_classes = [];
+
+var StaticMethod = function StaticMethod(func) {
+  this.func = func;
+};
+
+//parent is optional
+var handle_statics = function (cls, methods, parent) {
+  for (var i = 0; i < methods.length; i++) {
+    var m = methods[i];
+
+    if (m instanceof StaticMethod) {
+      cls[m.func.name] = m.func;
     }
-    
-    for (var i=0; i<methods.length; i++) {
-      var f = methods[i];
-      
-      if (f.name == "constructor") {
-        construct = f;
-        break;
+  }
+
+  //inherit from parent too.
+  //only inherit static methods added to parent with this module, though
+  if (parent != undefined) {
+    for (var k in parent) {
+      var v = parent[k];
+
+      if ((typeof v == "object" || typeof v == "function")
+        && "_is_static_method" in v && !(k in cls)) {
+        cls[k] = v;
       }
     }
-    
-    if (construct == undefined) {
-      console.trace("Warning, constructor was not defined", methods);
-      
-      if (parent != undefined) {
-        construct = function() {
-          parent.apply(this, arguments);
-        };
-      } else {
-        construct = function() {
-        };
-      }
+  }
+};
+
+var Class = _module_exports_.Class = function Class(methods) {
+  var construct = undefined;
+  var parent = undefined;
+
+  if (arguments.length > 1) {
+    //a parent was passed in
+
+    parent = methods;
+    methods = arguments[1];
+  }
+
+  for (var i = 0; i < methods.length; i++) {
+    var f = methods[i];
+
+    if (f.name == "constructor") {
+      construct = f;
+      break;
     }
-    
+  }
+
+  if (construct == undefined) {
+    console.trace("Warning, constructor was not defined", methods);
+
     if (parent != undefined) {
-      construct.prototype = Object.create(parent.prototype);
-    }
-    
-    construct.prototype.__prototypeid__ = prototype_idgen++;
-    construct.__keystr__ = function() {
-      return this.prototype.__prototypeid__;
-    };
-    
-    construct.__parent__ = parent;
-    construct.__statics__ = [];
-    
-    var getters = {};
-    var setters = {};
-    var getset = {};
-    
-    //handle getters/setters
-    for (var i=0; i<methods.length; i++) {
-      var f = methods[i];
-      if (f instanceof ClassSetter) {
-        setters[f.func.name] = f.func;
-        getset[f.func.name] = 1;
-      } else if (f instanceof ClassGetter) {
-        getters[f.func.name] = f.func;
-        getset[f.func.name] = 1;
-      }
-    }
-    
-    for (var k in getset) {
-      var def = {
-        enumerable   : true,
-        configurable : true,
-        get : getters[k],
-        set : setters[k]
+      construct = function () {
+        parent.apply(this, arguments);
       };
-      
-      Object.defineProperty(construct.prototype, k, def);
+    } else {
+      construct = function () {
+      };
     }
-    
-    handle_statics(construct, methods, parent);
-    
-    if (parent != undefined)
-      construct.__parent__ = parent;
-    
-    for (var i=0; i<methods.length; i++) {
-      var f = methods[i];
-      
-      if (f instanceof StaticMethod || f instanceof ClassGetter || f instanceof ClassSetter)
+  }
+
+  if (parent != undefined) {
+    construct.prototype = Object.create(parent.prototype);
+  }
+
+  construct.prototype.__prototypeid__ = prototype_idgen++;
+  construct.__keystr__ = function () {
+    return this.prototype.__prototypeid__;
+  };
+
+  construct.__parent__ = parent;
+  construct.__statics__ = [];
+
+  var getters = {};
+  var setters = {};
+  var getset = {};
+
+  //handle getters/setters
+  for (var i = 0; i < methods.length; i++) {
+    var f = methods[i];
+    if (f instanceof ClassSetter) {
+      setters[f.func.name] = f.func;
+      getset[f.func.name] = 1;
+    } else if (f instanceof ClassGetter) {
+      getters[f.func.name] = f.func;
+      getset[f.func.name] = 1;
+    }
+  }
+
+  for (var k in getset) {
+    var def = {
+      enumerable: true,
+      configurable: true,
+      get: getters[k],
+      set: setters[k]
+    };
+
+    Object.defineProperty(construct.prototype, k, def);
+  }
+
+  handle_statics(construct, methods, parent);
+
+  if (parent != undefined)
+    construct.__parent__ = parent;
+
+  for (var i = 0; i < methods.length; i++) {
+    var f = methods[i];
+
+    if (f instanceof StaticMethod || f instanceof ClassGetter || f instanceof ClassSetter)
+      continue;
+
+    construct.prototype[f.name] = f;
+  }
+
+  return construct;
+};
+
+Class.getter = function (func) {
+  return new ClassGetter(func);
+};
+Class.setter = function (func) {
+  return new ClassSetter(func);
+};
+
+Class.static_method = function (func) {
+  func._is_static_method = true;
+
+  return new StaticMethod(func);
+};
+
+var EmptySlot = {};
+
+var set$1 = _module_exports_.set = Class([
+  function constructor(input) {
+    this.items = [];
+    this.keys = {};
+    this.freelist = [];
+
+    this.length = 0;
+
+    if (input != undefined) {
+      input.forEach(function (item) {
+        this.add(item);
+      }, this);
+    }
+  },
+
+  function add(item) {
+    var key = item.__keystr__();
+
+    if (key in this.keys) return;
+
+    if (this.freelist.length > 0) {
+      var i = this.freelist.pop();
+
+      this.keys[key] = i;
+      items[i] = i;
+    } else {
+      var i = this.items.length;
+
+      this.keys[key] = i;
+      this.items.push(item);
+    }
+
+    this.length++;
+  },
+
+  function remove(item) {
+    var key = item.__keystr__();
+
+    if (!(key in this.keys)) {
+      console.trace("Warning, item", item, "is not in set");
+      return;
+    }
+
+    var i = this.keys[key];
+    this.freelist.push(i);
+    this.items[i] = EmptySlot;
+
+    delete this.items[i];
+    this.length--;
+  },
+
+  function has(item) {
+    return item.__keystr__() in this.keys;
+  },
+
+  function forEach(func, thisvar) {
+    for (var i = 0; i < this.items.length; i++) {
+      var item = this.items[i];
+
+      if (item === EmptySlot)
         continue;
 
-      construct.prototype[f.name] = f;
+      thisvar != undefined ? func.call(thisvar, time) : func(item);
     }
-    
-    return construct;
-  };
-  
-  Class.getter = function(func) {
-    return new ClassGetter(func);
-  };
-  Class.setter = function(func) {
-    return new ClassSetter(func);
-  };
-  
-  Class.static_method = function(func) {
-    func._is_static_method = true;
-    
-    return new StaticMethod(func);
-  };
-  
-  var EmptySlot = {};
-  
-  var set = exports.set = Class([
-    function constructor(input) {
-      this.items = [];
-      this.keys = {};
-      this.freelist = [];
-      
-      this.length = 0;
-      
-      if (input != undefined) {
-        input.forEach(function(item) {
-          this.add(item);
-        }, this);
-      }
-    },
-    
-    function add(item) {
-      var key = item.__keystr__();
-      
-      if (key in this.keys) return;
-      
-      if (this.freelist.length > 0) {
-        var i = this.freelist.pop();
-        
-        this.keys[key] = i;
-        items[i] = i;
-      } else {
-        var i = this.items.length;
-        
-        this.keys[key] = i;
-        this.items.push(item);
-      }
-      
-      this.length++;
-    },
-    
-    function remove(item) {
-      var key = item.__keystr__();
-      
-      if (!(key in this.keys)) {
-        console.trace("Warning, item", item, "is not in set");
-        return;
-      }
-      
-      var i = this.keys[key];
-      this.freelist.push(i);
-      this.items[i] = EmptySlot;
-      
-      delete this.items[i];
-      this.length--;
-    },
-    
-    function has(item) {
-      return item.__keystr__() in this.keys;
-    },
-    
-    function forEach(func, thisvar) {
-      for (var i=0; i<this.items.length; i++) {
-        var item = this.items[i];
-        
-        if (item === EmptySlot) 
-          continue;
-          
-        thisvar != undefined ? func.call(thisvar, time) : func(item);
-      }
-    }
-  ]);
+  }
+]);
 
-  return exports;
-});
+var Class$1 = _module_exports_.Class;
+var _o_basic_types = {"String": 0, "Number": 0, "Array": 0, "Function": 0};
 
-define('struct_util',[
-  "struct_typesystem"
-], function(struct_typesystem) {
-  "use strict";
-  
-  var Class = struct_typesystem.Class;
-  
-  var exports = {};
-  var _o_basic_types = {"String" : 0, "Number" : 0, "Array" : 0, "Function" : 0};
-  
-  function is_obj_lit(obj) {
-    if (obj.constructor.name in _o_basic_types)
-      return false;
-      
-    if (obj.constructor.name == "Object")
-      return true;
-    if (obj.prototype == undefined)
-      return true;
-    
+function isNodeJS() {
+  ret = typeof process !== "undefined";
+  ret = ret && process.release;
+  ret = ret && process.release.name === "node";
+  ret = ret && process.version;
+
+  return !!ret;
+}
+
+const _module_exports_$1 = {};
+let is_obj_lit = _module_exports_$1.is_obj_lit = function is_obj_lit(obj) {
+  if (typeof obj !== "object") {
     return false;
   }
   
-  function set_getkey(obj) {
-    if (typeof obj == "number" || typeof obj == "boolean")
-      return ""+obj;
-    else if (typeof obj == "string")
-      return obj;
-    else
-      return obj.__keystr__();
+  let good = obj.__proto__ && obj.__proto__.constructor && obj.__proto__.constructor === Object;
+
+  if (good) {
+    return true;
   }
-  
-  var set = exports.set = Class([
-    function constructor(input) {
-      this.items = [];
-      this.keys = {};
-      this.freelist = [];
-      
-      this.length = 0;
-      
-      if (input != undefined && input instanceof Array) {
-        for (var i=0; i<input.length; i++) {
-          this.add(input[i]);
+
+  let bad = typeof obj !== "object";
+  bad = bad || obj.constructor.name in _o_basic_types;
+  bad = bad || obj instanceof String;
+  bad = bad || obj instanceof Number;
+  bad = bad || obj instanceof Boolean;
+  bad = bad || obj instanceof Function;
+  bad = bad || obj instanceof Array;
+  bad = bad || obj instanceof Set;
+  bad = bad || (obj.__proto__.constructor && obj.__proto__.constructor !== Object);
+
+  return !bad;
+};
+_nGlobal.is_obj_lit = is_obj_lit;
+
+function set_getkey(obj) {
+  if (typeof obj == "number" || typeof obj == "boolean")
+    return "" + obj;
+  else if (typeof obj == "string")
+    return obj;
+  else
+    return obj.__keystr__();
+}
+
+_module_exports_$1.get_callstack = function get_callstack(err) {
+  var callstack = [];
+  var isCallstackPopulated = false;
+
+  var err_was_undefined = err == undefined;
+
+  if (err == undefined) {
+    try {
+      _idontexist.idontexist += 0; //doesn't exist- that's the point
+    } catch (err1) {
+      err = err1;
+    }
+  }
+
+  if (err != undefined) {
+    if (err.stack) { //Firefox
+      var lines = err.stack.split('\n');
+      var len = lines.length;
+      for (var i = 0; i < len; i++) {
+        if (1) {
+          lines[i] = lines[i].replace(/@http\:\/\/.*\//, "|");
+          var l = lines[i].split("|");
+          lines[i] = l[1] + ": " + l[0];
+          lines[i] = lines[i].trim();
+          callstack.push(lines[i]);
         }
-      } else if (input != undefined && input.forEach != undefined) {
-        input.forEach(function(item) {
-          this.add(input[i]);
-        }, this);
       }
+
+      //Remove call to printStackTrace()
+      if (err_was_undefined) {
+        //callstack.shift();
+      }
+      isCallstackPopulated = true;
+    }
+    else if (window.opera && e.message) { //Opera
+      var lines = err.message.split('\n');
+      var len = lines.length;
+      for (var i = 0; i < len; i++) {
+        if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+          var entry = lines[i];
+          //Append next line also since it has the file info
+          if (lines[i + 1]) {
+            entry += ' at ' + lines[i + 1];
+            i++;
+          }
+          callstack.push(entry);
+        }
+      }
+      //Remove call to printStackTrace()
+      if (err_was_undefined) {
+        callstack.shift();
+      }
+      isCallstackPopulated = true;
+    }
+  }
+
+  var limit = 24;
+  if (!isCallstackPopulated) { //IE and Safari
+    var currentFunction = arguments.callee.caller;
+    var i = 0;
+    while (currentFunction && i < 24) {
+      var fn = currentFunction.toString();
+      var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
+      callstack.push(fname);
+      currentFunction = currentFunction.caller;
+
+      i++;
+    }
+  }
+
+  return callstack;
+};
+
+_module_exports_$1.print_stack = function print_stack(err) {
+  try {
+    var cs = _module_exports_$1.get_callstack(err);
+  } catch (err2) {
+    console.log("Could not fetch call stack.");
+    return;
+  }
+
+  console.log("Callstack:");
+  for (var i = 0; i < cs.length; i++) {
+    console.log(cs[i]);
+  }
+};
+
+var set$2 = _module_exports_$1.set = Class$1([
+  function constructor(input) {
+    this.items = [];
+    this.keys = {};
+    this.freelist = [];
+
+    this.length = 0;
+
+    if (input != undefined && input instanceof Array) {
+      for (var i = 0; i < input.length; i++) {
+        this.add(input[i]);
+      }
+    } else if (input != undefined && input.forEach != undefined) {
+      input.forEach(function (item) {
+        this.add(input[i]);
+      }, this);
+    }
   },
   function add(obj) {
-      var key = set_getkey(obj);
-      if (key in this.keys) return;
-      
-      if (this.freelist.length > 0) {
-          var i = this.freelist.pop();
-          this.keys[key] = i;
-          this.items[i] = obj;
-      } else {
-        this.keys[key] = this.items.length;
-        this.items.push(obj);
-      }
-      
-      this.length++;
-    },
-    function remove(obj, raise_error) {
-      var key = set_getkey(obj);
-      
-      if (!(keystr in this.keys)) {
-        if (raise_error)
-          throw new Error("Object not in set");
-        else
-          console.trace("Object not in set", obj);
-        return;
-      }
-      
-      var i = this.keys[keystr];
-      
-      this.freelist.push(i);
-      this.items[i] = undefined;
-      
-      delete this.keys[keystr];
-      this.length--;
-    },
-    
-    function has(obj) {
-      return set_getkey(obj) in this.keys;
-    },
-    
-    function forEach(func, thisvar) {
-      for (var i=0; i<this.items.length; i++) {
-        var item = this.items[i];
-        
-        if (item == undefined) continue;
-        
-        if (thisvar != undefined)
-          func.call(thisvar, item);
-        else
-          func(item);
-      }
-    }
-  ]);
-  
-  var IDGen = exports.IDGen = Class([
-    function constructor() {
-      this.cur_id = 1;
-    },
-    
-    function gen_id() {
-      return this.cur_id++;
-    },
-    
-    Class.static_method(function fromSTRUCT(reader) {
-      var ret = new IDGen();
-      reader(ret);
-      return ret;
-    })
-  ]);
-  
-  IDGen.STRUCT = [
-    "struct_util.IDGen {",
-    "  cur_id : int;",
-    "}"
-  ].join("\n");
-  
-  return exports;
-});
+    var key = set_getkey(obj);
+    if (key in this.keys) return;
 
-define('struct_binpack',[
-  "struct_typesystem", "struct_util"
-], function(struct_typesystem, struct_util) {
-  var exports = {};
-  
-  window.STRUCT_ENDIAN = true; //little endian
-  
-  var Class = struct_typesystem.Class;
-  
-  var temp_dataview = new DataView(new ArrayBuffer(16));
-  var uint8_view = new Uint8Array(temp_dataview.buffer);
+    if (this.freelist.length > 0) {
+      var i = this.freelist.pop();
+      this.keys[key] = i;
+      this.items[i] = obj;
+    } else {
+      this.keys[key] = this.items.length;
+      this.items.push(obj);
+    }
 
-  var unpack_context = exports.unpack_context = Class([
-    function constructor() {
-      this.i = 0;
-    }
-  ]);
-  
-  var pack_byte = exports.pack_byte = function(array, val) {
-    array.push(val);
-  };
-  
-  var pack_bytes = exports.pack_bytes = function(array, bytes) {
-    for (var i=0; i<bytes.length; i++) {
-      array.push(bytes[i]);
-    }
-  };
-  
-  var pack_int = exports.pack_int = function(array, val) {
-    temp_dataview.setInt32(0, val, STRUCT_ENDIAN);
-    
-    array.push(uint8_view[0]);
-    array.push(uint8_view[1]);
-    array.push(uint8_view[2]);
-    array.push(uint8_view[3]);
-  };
-  
-  exports.pack_float = function(array, val) {
-    temp_dataview.setFloat32(0, val, STRUCT_ENDIAN);
-    
-    array.push(uint8_view[0]);
-    array.push(uint8_view[1]);
-    array.push(uint8_view[2]);
-    array.push(uint8_view[3]);
-  };
-  
-  exports.pack_double = function(array, val) {
-    temp_dataview.setFloat64(0, val, STRUCT_ENDIAN);
-    
-    array.push(uint8_view[0]);
-    array.push(uint8_view[1]);
-    array.push(uint8_view[2]);
-    array.push(uint8_view[3]);
-    array.push(uint8_view[4]);
-    array.push(uint8_view[5]);
-    array.push(uint8_view[6]);
-    array.push(uint8_view[7]);
-  };
-  
-  exports.pack_short = function(array, val) {
-    temp_dataview.setInt16(0, val, STRUCT_ENDIAN);
-    
-    array.push(uint8_view[0]);
-    array.push(uint8_view[1]);
-  };
+    this.length++;
+  },
+  function remove(obj, raise_error) {
+    var key = set_getkey(obj);
 
-  var encode_utf8 = exports.encode_utf8 = function encode_utf8(arr, str) {
-    for (var i=0; i<str.length; i++) {
-      var c = str.charCodeAt(i);
-      
-      while (c != 0) {
-        var uc = c & 127;
-        c = c>>7;
-        
-        if (c != 0)
-          uc |= 128;
-        
-        arr.push(uc);
-      }
+    if (!(keystr in this.keys)) {
+      if (raise_error)
+        throw new Error("Object not in set");
+      else
+        console.trace("Object not in set", obj);
+      return;
     }
-  };
 
-  var decode_utf8 = exports.decode_utf8 = function decode_utf8(arr) {
-    var str = "";
-    var i = 0;
-    
-    while (i < arr.length) {
-      var c = arr[i];
-      var sum = c & 127;
-      var j = 0;
-      var lasti = i;
-      
-      while (i < arr.length && (c & 128)) {
-        j += 7;
-        i++;
-        c = arr[i];
-        
-        c = (c&127)<<j;
-        sum |= c;
-      }
-      
-      if (sum == 0) break;
-      
-      str += String.fromCharCode(sum);
-      i++;
-    }
-    
-    return str;
-  };
+    var i = this.keys[keystr];
 
-  var test_utf8 = exports.test_utf8 = function test_utf8()
-  {
-    var s = "a" + String.fromCharCode(8800) + "b";
-    var arr = [];
-    
-    encode_utf8(arr, s);
-    var s2 = decode_utf8(arr);
-    
-    if (s != s2) {
-      throw new Error("UTF-8 encoding/decoding test failed");
-    }
-    
-    return true;
-  };
+    this.freelist.push(i);
+    this.items[i] = undefined;
 
-  function truncate_utf8(arr, maxlen)
-  {
-    var len = Math.min(arr.length, maxlen);
-    
-    var last_codepoint = 0;
-    var last2 = 0;
-    
-    var incode = false;
-    var i = 0;
-    var code = 0;
-    while (i < len) {
-      incode = arr[i] & 128;
-      
-      if (!incode) {
-        last2 = last_codepoint+1;
-        last_codepoint = i+1;
-      }
-      
-      i++;
+    delete this.keys[keystr];
+    this.length--;
+  },
+
+  function has(obj) {
+    return set_getkey(obj) in this.keys;
+  },
+
+  function forEach(func, thisvar) {
+    for (var i = 0; i < this.items.length; i++) {
+      var item = this.items[i];
+
+      if (item == undefined) continue;
+
+      if (thisvar != undefined)
+        func.call(thisvar, item);
+      else
+        func(item);
     }
-    
-    if (last_codepoint < maxlen)
-      arr.length = last_codepoint;
-    else
-      arr.length = last2;
-      
-    return arr;
   }
-  
-  var _static_sbuf_ss = new Array(2048);
-  var pack_static_string = exports.pack_static_string = function pack_static_string(data, str, length)
-  {
-    if (length == undefined)
-     throw new Error("'length' paremter is not optional for pack_static_string()");
-    
-    var arr = length < 2048 ? _static_sbuf_ss : new Array();
-    arr.length = 0;
-    
-    encode_utf8(arr, str);
-    truncate_utf8(arr, length);
-    
-    for (var i=0; i<length; i++) {
-      if (i >= arr.length) {
-        data.push(0);
-      } else {
-        data.push(arr[i]);
-      }
-    }
-  };
+]);
 
-  var _static_sbuf = new Array(32);
-  
-  /*strings are packed as 32-bit unicode codepoints*/
-  var pack_string = exports.pack_string = function pack_string(data, str)
-  {
-    _static_sbuf.length = 0;
-    encode_utf8(_static_sbuf, str);
-    
-    pack_int(data, _static_sbuf.length);
-    
-    for (var i=0; i<_static_sbuf.length; i++) {
-      data.push(_static_sbuf[i]);
-    }
-  };
-  
-  var unpack_bytes = exports.unpack_bytes = function unpack_bytes(dview, uctx, len)
-  {
-    var ret = new DataView(dview.buffer.slice(uctx.i, uctx.i+len));
-    uctx.i += len;
-    
+var IDGen = _module_exports_$1.IDGen = Class$1([
+  function constructor() {
+    this.cur_id = 1;
+  },
+
+  function gen_id() {
+    return this.cur_id++;
+  },
+
+  Class$1.static_method(function fromSTRUCT(reader) {
+    var ret = new IDGen();
+    reader(ret);
     return ret;
-  };
-  
-  var unpack_byte = exports.unpack_byte = function(dview, uctx) {
-    return dview.getUint8(uctx.i++);
-  };
-  
-  var unpack_int = exports.unpack_int = function(dview, uctx) {
-    uctx.i += 4;
-    return dview.getInt32(uctx.i-4, STRUCT_ENDIAN);
-  };
-  
-  exports.unpack_float = function(dview, uctx) {
-    uctx.i += 4;
-    return dview.getFloat32(uctx.i-4, STRUCT_ENDIAN);
-  };
-  
-  exports.unpack_double = function(dview, uctx) {
-    uctx.i += 8;
-    return dview.getFloat64(uctx.i-8, STRUCT_ENDIAN);
-  };
-  
-  exports.unpack_short = function(dview, uctx) {
-    uctx.i += 2;
-    return dview.getInt16(uctx.i-2, STRUCT_ENDIAN);
-  };
+  })
+]);
 
-  var _static_arr_us = new Array(32);
-  exports.unpack_string = function(data, uctx) {
-    var str = "";
-    
-    var slen = unpack_int(data, uctx);
-    var arr = slen < 2048 ? _static_arr_us : new Array(slen);
-    
-    arr.length = slen;
-    for (var i=0; i<slen; i++) {
-      arr[i] = unpack_byte(data, uctx);
+IDGen.STRUCT = [
+  "struct_util.IDGen {",
+  "  cur_id : int;",
+  "}"
+].join("\n");
+
+const _module_exports_$2 = {};
+_module_exports_$2.STRUCT_ENDIAN = true; //little endian
+
+var Class$2 = _module_exports_.Class;
+
+var temp_dataview = new DataView(new ArrayBuffer(16));
+var uint8_view = new Uint8Array(temp_dataview.buffer);
+
+var unpack_context = _module_exports_$2.unpack_context = Class$2([
+  function constructor() {
+    this.i = 0;
+  }
+]);
+
+var pack_byte = _module_exports_$2.pack_byte = function (array, val) {
+  array.push(val);
+};
+
+var pack_bytes = _module_exports_$2.pack_bytes = function (array, bytes) {
+  for (var i = 0; i < bytes.length; i++) {
+    array.push(bytes[i]);
+  }
+};
+
+var pack_int = _module_exports_$2.pack_int = function (array, val) {
+  temp_dataview.setInt32(0, val, _module_exports_$2.STRUCT_ENDIAN);
+
+  array.push(uint8_view[0]);
+  array.push(uint8_view[1]);
+  array.push(uint8_view[2]);
+  array.push(uint8_view[3]);
+};
+
+_module_exports_$2.pack_float = function (array, val) {
+  temp_dataview.setFloat32(0, val, _module_exports_$2.STRUCT_ENDIAN);
+
+  array.push(uint8_view[0]);
+  array.push(uint8_view[1]);
+  array.push(uint8_view[2]);
+  array.push(uint8_view[3]);
+};
+
+_module_exports_$2.pack_double = function (array, val) {
+  temp_dataview.setFloat64(0, val, _module_exports_$2.STRUCT_ENDIAN);
+
+  array.push(uint8_view[0]);
+  array.push(uint8_view[1]);
+  array.push(uint8_view[2]);
+  array.push(uint8_view[3]);
+  array.push(uint8_view[4]);
+  array.push(uint8_view[5]);
+  array.push(uint8_view[6]);
+  array.push(uint8_view[7]);
+};
+
+_module_exports_$2.pack_short = function (array, val) {
+  temp_dataview.setInt16(0, val, _module_exports_$2.STRUCT_ENDIAN);
+
+  array.push(uint8_view[0]);
+  array.push(uint8_view[1]);
+};
+
+var encode_utf8 = _module_exports_$2.encode_utf8 = function encode_utf8(arr, str) {
+  for (var i = 0; i < str.length; i++) {
+    var c = str.charCodeAt(i);
+
+    while (c != 0) {
+      var uc = c & 127;
+      c = c >> 7;
+
+      if (c != 0)
+        uc |= 128;
+
+      arr.push(uc);
     }
-    
-    return decode_utf8(arr);
-  };
-  
-  var _static_arr_uss = new Array(2048);
-  exports.unpack_static_string = function unpack_static_string(data, uctx, length) {
-    var str = "";
-    
-    if (length == undefined)
-      throw new Error("'length' cannot be undefined in unpack_static_string()");
-    
-    var arr = length < 2048 ? _static_arr_uss : new Array(length);
-    arr.length = 0;
+  }
+};
 
-    var done = false;
-    for (var i=0; i<length; i++) {
-      var c = unpack_byte(data, uctx);
-      
-      if (c == 0) {
-        done = true;
-      }
-      
-      if (!done && c != 0) {
-        arr.push(c);
-        //arr.length++;
-      }
+var decode_utf8 = _module_exports_$2.decode_utf8 = function decode_utf8(arr) {
+  var str = "";
+  var i = 0;
+
+  while (i < arr.length) {
+    var c = arr[i];
+    var sum = c & 127;
+    var j = 0;
+    var lasti = i;
+
+    while (i < arr.length && (c & 128)) {
+      j += 7;
+      i++;
+      c = arr[i];
+
+      c = (c & 127) << j;
+      sum |= c;
     }
-    
-    truncate_utf8(arr, length);
-    return decode_utf8(arr);
-  };
 
-  return exports;
-});
+    if (sum == 0) break;
 
-/*
-The lexical scanner in this module was inspired by PyPLY
+    str += String.fromCharCode(sum);
+    i++;
+  }
 
-http://www.dabeaz.com/ply/ply.html
-*/
+  return str;
+};
 
-define('struct_parseutil',[
-  "struct_typesystem", "struct_util"
-], function(struct_typesystem, struct_util) {
-  "use strict";
-  var t;
-  
-  var Class = struct_typesystem.Class;
-  
-  var exports = {};
-  exports.token = Class([
-    function constructor(type, val, lexpos, lineno, lexer, parser) {
-      this.type = type;
-      this.value = val;
-      this.lexpos = lexpos;
-      this.lineno = lineno;
-      this.lexer = lexer;
-      this.parser = parser;
-    },
-    function toString() {
-      if (this.value!=undefined)
-        return "token(type="+this.type+", value='"+this.value+"')";
-      else 
-        return "token(type="+this.type+")";
+var test_utf8 = _module_exports_$2.test_utf8 = function test_utf8() {
+  var s = "a" + String.fromCharCode(8800) + "b";
+  var arr = [];
+
+  encode_utf8(arr, s);
+  var s2 = decode_utf8(arr);
+
+  if (s != s2) {
+    throw new Error("UTF-8 encoding/decoding test failed");
+  }
+
+  return true;
+};
+
+function truncate_utf8(arr, maxlen) {
+  var len = Math.min(arr.length, maxlen);
+
+  var last_codepoint = 0;
+  var last2 = 0;
+
+  var incode = false;
+  var i = 0;
+  var code = 0;
+  while (i < len) {
+    incode = arr[i] & 128;
+
+    if (!incode) {
+      last2 = last_codepoint + 1;
+      last_codepoint = i + 1;
     }
-  ]);
-  
-  exports.tokdef = Class([
-    function constructor(name, regexpr, func) {
-      this.name = name;
-      this.re = regexpr;
-      this.func = func;
-    }
-  ]);
-  
-  var PUTIL_ParseError = exports.PUTIL_ParseError = Class(Error, [
-    function constructor(msg) {
-      Error.call(this);
-    }
-  ]);
-  
-  exports.lexer = Class([
-    function constructor(tokdef, errfunc) {
-      this.tokdef = tokdef;
-      this.tokens = new Array();
-      this.lexpos = 0;
-      this.lexdata = "";
-      this.lineno = 0;
-      this.errfunc = errfunc;
-      this.tokints = {};
-      for (var i=0; i<tokdef.length; i++) {
-          this.tokints[tokdef[i].name] = i;
-      }
-      this.statestack = [["__main__", 0]];
-      this.states = {"__main__": [tokdef, errfunc]};
-      this.statedata = 0;
-    },
-    function add_state(name, tokdef, errfunc) {
-      if (errfunc==undefined) {
-          errfunc = function(lexer) {
-            return true;
-          };
-      }
-      this.states[name] = [tokdef, errfunc];
-    },
-    function tok_int(name) {
-    },
-    function push_state(state, statedata) {
-      this.statestack.push([state, statedata]);
-      state = this.states[state];
-      this.statedata = statedata;
-      this.tokdef = state[0];
-      this.errfunc = state[1];
-    },
-    function pop_state() {
-      var item=this.statestack[this.statestack.length-1];
-      var state=this.states[item[0]];
-      this.tokdef = state[0];
-      this.errfunc = state[1];
-      this.statedata = item[1];
-    },
-    function input(str) {
-      while (this.statestack.length>1) {
-        this.pop_state();
-      }
-      this.lexdata = str;
-      this.lexpos = 0;
-      this.lineno = 0;
-      this.tokens = new Array();
-      this.peeked_tokens = [];
-    },
-    function error() {
-      if (this.errfunc != undefined && !this.errfunc(this))
-        return;
-        
-      console.log("Syntax error near line "+this.lineno);
 
-      var next=Math.min(this.lexpos+8, this.lexdata.length);
-      console.log("  "+this.lexdata.slice(this.lexpos, next));
+    i++;
+  }
 
-      throw new PUTIL_ParseError("Parse error");
-    },
-    function peek() {
-      var tok=this.next(true);
-      if (tok==undefined)
-        return undefined;
-      this.peeked_tokens.push(tok);
+  if (last_codepoint < maxlen)
+    arr.length = last_codepoint;
+  else
+    arr.length = last2;
+
+  return arr;
+}
+
+var _static_sbuf_ss = new Array(2048);
+var pack_static_string = _module_exports_$2.pack_static_string = function pack_static_string(data, str, length) {
+  if (length == undefined)
+    throw new Error("'length' paremter is not optional for pack_static_string()");
+
+  var arr = length < 2048 ? _static_sbuf_ss : new Array();
+  arr.length = 0;
+
+  encode_utf8(arr, str);
+  truncate_utf8(arr, length);
+
+  for (var i = 0; i < length; i++) {
+    if (i >= arr.length) {
+      data.push(0);
+    } else {
+      data.push(arr[i]);
+    }
+  }
+};
+
+var _static_sbuf = new Array(32);
+
+/*strings are packed as 32-bit unicode codepoints*/
+var pack_string = _module_exports_$2.pack_string = function pack_string(data, str) {
+  _static_sbuf.length = 0;
+  encode_utf8(_static_sbuf, str);
+
+  pack_int(data, _static_sbuf.length);
+
+  for (var i = 0; i < _static_sbuf.length; i++) {
+    data.push(_static_sbuf[i]);
+  }
+};
+
+var unpack_bytes = _module_exports_$2.unpack_bytes = function unpack_bytes(dview, uctx, len) {
+  var ret = new DataView(dview.buffer.slice(uctx.i, uctx.i + len));
+  uctx.i += len;
+
+  return ret;
+};
+
+var unpack_byte = _module_exports_$2.unpack_byte = function (dview, uctx) {
+  return dview.getUint8(uctx.i++);
+};
+
+var unpack_int = _module_exports_$2.unpack_int = function (dview, uctx) {
+  uctx.i += 4;
+  return dview.getInt32(uctx.i - 4, _module_exports_$2.STRUCT_ENDIAN);
+};
+
+_module_exports_$2.unpack_float = function (dview, uctx) {
+  uctx.i += 4;
+  return dview.getFloat32(uctx.i - 4, _module_exports_$2.STRUCT_ENDIAN);
+};
+
+_module_exports_$2.unpack_double = function (dview, uctx) {
+  uctx.i += 8;
+  return dview.getFloat64(uctx.i - 8, _module_exports_$2.STRUCT_ENDIAN);
+};
+
+_module_exports_$2.unpack_short = function (dview, uctx) {
+  uctx.i += 2;
+  return dview.getInt16(uctx.i - 2, _module_exports_$2.STRUCT_ENDIAN);
+};
+
+var _static_arr_us = new Array(32);
+_module_exports_$2.unpack_string = function (data, uctx) {
+  var str = "";
+
+  var slen = unpack_int(data, uctx);
+  var arr = slen < 2048 ? _static_arr_us : new Array(slen);
+
+  arr.length = slen;
+  for (var i = 0; i < slen; i++) {
+    arr[i] = unpack_byte(data, uctx);
+  }
+
+  return decode_utf8(arr);
+};
+
+var _static_arr_uss = new Array(2048);
+_module_exports_$2.unpack_static_string = function unpack_static_string(data, uctx, length) {
+  var str = "";
+
+  if (length == undefined)
+    throw new Error("'length' cannot be undefined in unpack_static_string()");
+
+  var arr = length < 2048 ? _static_arr_uss : new Array(length);
+  arr.length = 0;
+
+  var done = false;
+  for (var i = 0; i < length; i++) {
+    var c = unpack_byte(data, uctx);
+
+    if (c == 0) {
+      done = true;
+    }
+
+    if (!done && c != 0) {
+      arr.push(c);
+      //arr.length++;
+    }
+  }
+
+  truncate_utf8(arr, length);
+  return decode_utf8(arr);
+};
+
+"use strict";
+
+var t;
+
+var Class$3 = _module_exports_.Class;
+
+const _module_exports_$3 = {};
+_module_exports_$3.token = class token {
+  constructor(type, val, lexpos, lineno, lexer, parser) {
+    this.type = type;
+    this.value = val;
+    this.lexpos = lexpos;
+    this.lineno = lineno;
+    this.lexer = lexer;
+    this.parser = parser;
+  }
+
+  toString() {
+    if (this.value != undefined)
+      return "token(type=" + this.type + ", value='" + this.value + "')";
+    else
+      return "token(type=" + this.type + ")";
+  }
+};
+
+_module_exports_$3.tokdef = class tokdef {
+  constructor(name, regexpr, func) {
+    this.name = name;
+    this.re = regexpr;
+    this.func = func;
+  }
+};
+
+var PUTIL_ParseError = _module_exports_$3.PUTIL_ParseError = class PUTIL_ParseError extends Error {
+  constructor(msg) {
+    Error.call(this);
+  }
+};
+
+_module_exports_$3.lexer = class lexer {
+  constructor(tokdef, errfunc) {
+    this.tokdef = tokdef;
+    this.tokens = new Array();
+    this.lexpos = 0;
+    this.lexdata = "";
+    this.lineno = 0;
+    this.errfunc = errfunc;
+    this.tokints = {};
+    for (var i = 0; i < tokdef.length; i++) {
+      this.tokints[tokdef[i].name] = i;
+    }
+    this.statestack = [["__main__", 0]];
+    this.states = {"__main__": [tokdef, errfunc]};
+    this.statedata = 0;
+  }
+
+  add_state(name, tokdef, errfunc) {
+    if (errfunc == undefined) {
+      errfunc = function (lexer) {
+        return true;
+      };
+    }
+    this.states[name] = [tokdef, errfunc];
+  }
+
+  tok_int(name) {
+  }
+
+  push_state(state, statedata) {
+    this.statestack.push([state, statedata]);
+    state = this.states[state];
+    this.statedata = statedata;
+    this.tokdef = state[0];
+    this.errfunc = state[1];
+  }
+
+  pop_state() {
+    var item = this.statestack[this.statestack.length - 1];
+    var state = this.states[item[0]];
+    this.tokdef = state[0];
+    this.errfunc = state[1];
+    this.statedata = item[1];
+  }
+
+  input(str) {
+    while (this.statestack.length > 1) {
+      this.pop_state();
+    }
+    this.lexdata = str;
+    this.lexpos = 0;
+    this.lineno = 0;
+    this.tokens = new Array();
+    this.peeked_tokens = [];
+  }
+
+  error() {
+    if (this.errfunc != undefined && !this.errfunc(this))
+      return;
+
+    console.log("Syntax error near line " + this.lineno);
+
+    var next = Math.min(this.lexpos + 8, this.lexdata.length);
+    console.log("  " + this.lexdata.slice(this.lexpos, next));
+
+    throw new PUTIL_ParseError("Parse error");
+  }
+
+  peek() {
+    var tok = this.next(true);
+    if (tok == undefined)
+      return undefined;
+    this.peeked_tokens.push(tok);
+    return tok;
+  }
+
+  peeknext() {
+    if (this.peeked_tokens.length > 0) {
+      return this.peeked_tokens[0];
+    }
+
+    return this.peek();
+  }
+
+  at_end() {
+    return this.lexpos >= this.lexdata.length && this.peeked_tokens.length == 0;
+  }
+
+  //ignore_peek is optional, false
+  next(ignore_peek) {
+    if (!ignore_peek && this.peeked_tokens.length > 0) {
+      var tok = this.peeked_tokens[0];
+      this.peeked_tokens.shift();
       return tok;
-    },
-    
-    function peeknext() {
-      if (this.peeked_tokens.length > 0) {
-        return this.peeked_tokens[0];
-      }
-      
-      return this.peek();
-    },
-    function at_end() {
-      return this.lexpos>=this.lexdata.length&&this.peeked_tokens.length==0;
-    },
-    
-    //ignore_peek is optional, false
-    function next(ignore_peek) {
-      if (!ignore_peek && this.peeked_tokens.length>0) {
-          var tok=this.peeked_tokens[0];
-          this.peeked_tokens.shift();
-          return tok;
-      }
-      
-      if (this.lexpos>=this.lexdata.length)
-        return undefined;
-        
-      var ts=this.tokdef;
-      var tlen=ts.length;
-      var lexdata=this.lexdata.slice(this.lexpos, this.lexdata.length);
-      var results=[];
-      
-      for (var i=0; i<tlen; i++) {
-          var t=ts[i];
-          if (t.re==undefined)
-            continue;
-          var res=t.re.exec(lexdata);
-          if (res!=null&&res!=undefined&&res.index==0) {
-              results.push([t, res]);
-          }
-      }
-      
-      var max_res=0;
-      var theres=undefined;
-      for (var i=0; i<results.length; i++) {
-          var res=results[i];
-          if (res[1][0].length>max_res) {
-              theres = res;
-              max_res = res[1][0].length;
-          }
-      }
-      
-      if (theres==undefined) {
-          this.error();
-          return ;
-      }
-      
-      var def=theres[0];
-      var token=new exports.token(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
-      this.lexpos+=token.value.length;
-      
-      if (def.func) {
-          token = def.func(token);
-          if (token==undefined) {
-              return this.next();
-          }
-      }
-      
-      return token;
     }
-  ]);
-  
-  exports.parser = Class([
-    function constructor(lexer, errfunc) {
-      this.lexer = lexer;
-      this.errfunc = errfunc;
-      this.start = undefined;
-    },
-    function parse(data, err_on_unconsumed) {
-      if (err_on_unconsumed==undefined)
-        err_on_unconsumed = true;
-        
-      if (data!=undefined)
-        this.lexer.input(data);
-        
-      var ret=this.start(this);
-      
-      if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() != undefined) {
-          this.error(undefined, "parser did not consume entire input");
+
+    if (this.lexpos >= this.lexdata.length)
+      return undefined;
+
+    var ts = this.tokdef;
+    var tlen = ts.length;
+    var lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
+    var results = [];
+
+    for (var i = 0; i < tlen; i++) {
+      var t = ts[i];
+      if (t.re == undefined)
+        continue;
+      var res = t.re.exec(lexdata);
+      if (res != null && res != undefined && res.index == 0) {
+        results.push([t, res]);
       }
-      return ret;
-    },
-      
-    function input(data) {
+    }
+
+    var max_res = 0;
+    var theres = undefined;
+    for (var i = 0; i < results.length; i++) {
+      var res = results[i];
+      if (res[1][0].length > max_res) {
+        theres = res;
+        max_res = res[1][0].length;
+      }
+    }
+
+    if (theres == undefined) {
+      this.error();
+      return;
+    }
+
+    var def = theres[0];
+    var token = new _module_exports_$3.token(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
+    this.lexpos += token.value.length;
+
+    if (def.func) {
+      token = def.func(token);
+      if (token == undefined) {
+        return this.next();
+      }
+    }
+
+    return token;
+  }
+};
+
+const parser = _module_exports_$3.parser = class parser {
+  constructor(lexer, errfunc) {
+    this.lexer = lexer;
+    this.errfunc = errfunc;
+    this.start = undefined;
+  }
+
+  parse(data, err_on_unconsumed) {
+    if (err_on_unconsumed == undefined)
+      err_on_unconsumed = true;
+
+    if (data != undefined)
       this.lexer.input(data);
-    },
-    
-    function error(token, msg) {
-      if (msg==undefined)
-        msg = "";
-      if (token==undefined)
-        var estr="Parse error at end of input: "+msg;
-      else 
-        estr = "Parse error at line "+(token.lineno+1)+": "+msg;
-      var buf="1| ";
-      var ld=this.lexer.lexdata;
-      var l=1;
-      for (var i=0; i<ld.length; i++) {
-          var c=ld[i];
-          if (c=='\n') {
-              l++;
-              buf+="\n"+l+"| ";
-          }
-          else {
-            buf+=c;
-          }
-      }
-      console.log("------------------");
-      console.log(buf);
-      console.log("==================");
-      console.log(estr);
-      if (this.errfunc&&!this.errfunc(token)) {
-          return ;
-      }
-      throw new PUTIL_ParseError(estr);
-    },
-    function peek() {
-      var tok=this.lexer.peek();
-      if (tok!=undefined)
-        tok.parser = this;
-      return tok;
-    },
-    function peeknext() {
-      var tok=this.lexer.peeknext();
-      if (tok!=undefined)
-        tok.parser = this;
-      return tok;
-    },
-    function next() {
-      var tok=this.lexer.next();
-      if (tok!=undefined)
-        tok.parser = this;
-      return tok;
-    },
-    function optional(type) {
-      var tok=this.peek();
-      if (tok==undefined)
-        return false;
-      if (tok.type==type) {
-          this.next();
-          return true;
-      }
-      return false;
-    },
-    function at_end() {
-      return this.lexer.at_end();
-    },
-    function expect(type, msg) {
-      var tok=this.next();
-      if (msg==undefined)
-        msg = type;
-      if (tok==undefined||tok.type!=type) {
-          this.error(tok, "Expected "+msg);
-      }
-      return tok.value;
+
+    var ret = this.start(this);
+
+    if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() != undefined) {
+      this.error(undefined, "parser did not consume entire input");
     }
-  ]);
-  function test_parser() {
-    var basic_types=new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
-    var reserved_tokens=new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
-    function tk(name, re, func) {
-      return new exports.tokdef(name, re, func);
-    }
-    var tokens=[tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
-      if (reserved_tokens.has(t.value)) {
-          t.type = t.value.toUpperCase();
-      }
-      return t;
-    }), tk("OPEN", /\{/), tk("CLOSE", /}/), tk("COLON", /:/), tk("JSCRIPT", /\|/, function(t) {
-      var js="";
-      var lexer=t.lexer;
-      while (lexer.lexpos<lexer.lexdata.length) {
-        var c=lexer.lexdata[lexer.lexpos];
-        if (c=="\n")
-          break;
-        js+=c;
-        lexer.lexpos++;
-      }
-      if (js.endsWith(";")) {
-          js = js.slice(0, js.length-1);
-          lexer.lexpos--;
-      }
-      t.value = js;
-      return t;
-    }), tk("LPARAM", /\(/), tk("RPARAM", /\)/), tk("COMMA", /,/), tk("NUM", /[0-9]/), tk("SEMI", /;/), tk("NEWLINE", /\n/, function(t) {
-      t.lexer.lineno+=1;
-    }), tk("SPACE", / |\t/, function(t) {
-    })];
-    var __iter_rt=__get_iter(reserved_tokens);
-    var rt;
-    while (1) {
-      var __ival_rt=__iter_rt.next();
-      if (__ival_rt.done) {
-          break;
-      }
-      rt = __ival_rt.value;
-      tokens.push(tk(rt.toUpperCase()));
-    }
-    var a="\n  Loop {\n    eid : int;\n    flag : int;\n    index : int;\n    type : int;\n\n    co : vec3;\n    no : vec3;\n    loop : int | eid(loop);\n    edges : array(e, int) | e.eid;\n\n    loops : array(Loop);\n  }\n  ";
-    function errfunc(lexer) {
-      return true;
-    }
-    var lex=new exports.lexer(tokens, errfunc);
-    console.log("Testing lexical scanner...");
-    lex.input(a);
-    var token;
-    while (token = lex.next()) {
-      console.log(token.toString());
-    }
-    var parser=new exports.parser(lex);
-    parser.input(a);
-    function p_Array(p) {
-      p.expect("ARRAY");
-      p.expect("LPARAM");
-      var arraytype=p_Type(p);
-      var itername="";
-      if (p.optional("COMMA")) {
-          itername = arraytype;
-          arraytype = p_Type(p);
-      }
-      p.expect("RPARAM");
-      return {type: "array", data: {type: arraytype, iname: itername}}
-    }
-    function p_Type(p) {
-      var tok=p.peek();
-      if (tok.type=="ID") {
-          p.next();
-          return {type: "struct", data: "\""+tok.value+"\""}
-      }
-      else 
-        if (basic_types.has(tok.type.toLowerCase())) {
-          p.next();
-          return {type: tok.type.toLowerCase()}
-      }
-      else 
-        if (tok.type=="ARRAY") {
-          return p_Array(p);
+    return ret;
+  }
+
+  input(data) {
+    this.lexer.input(data);
+  }
+
+  error(token, msg) {
+    if (msg == undefined)
+      msg = "";
+    if (token == undefined)
+      var estr = "Parse error at end of input: " + msg;
+    else
+      estr = "Parse error at line " + (token.lineno + 1) + ": " + msg;
+    var buf = "1| ";
+    var ld = this.lexer.lexdata;
+    var l = 1;
+    for (var i = 0; i < ld.length; i++) {
+      var c = ld[i];
+      if (c == '\n') {
+        l++;
+        buf += "\n" + l + "| ";
       }
       else {
-        p.error(tok, "invalid type "+tok.type);
+        buf += c;
       }
     }
-    function p_Field(p) {
-      var field={};
-      console.log("-----", p.peek().type);
-      field.name = p.expect("ID", "struct field name");
-      p.expect("COLON");
-      field.type = p_Type(p);
-      field.set = undefined;
-      field.get = undefined;
-      var tok=p.peek();
-      if (tok.type=="JSCRIPT") {
-          field.get = tok.value;
-          p.next();
-      }
-      tok = p.peek();
-      if (tok.type=="JSCRIPT") {
-          field.set = tok.value;
-          p.next();
-      }
-      p.expect("SEMI");
-      return field;
+    console.log("------------------");
+    console.log(buf);
+    console.log("==================");
+    console.log(estr);
+    if (this.errfunc && !this.errfunc(token)) {
+      return;
     }
-    function p_Struct(p) {
-      var st={};
-      st.name = p.expect("ID", "struct name");
-      st.fields = [];
-      p.expect("OPEN");
-      while (1) {
-        if (p.at_end()) {
-            p.error(undefined);
-        }
-        else 
-          if (p.optional("CLOSE")) {
-            break;
-        }
-        else {
-          st.fields.push(p_Field(p));
-        }
-      }
-      return st;
-    }
-    var ret=p_Struct(parser);
-    console.log(JSON.stringify(ret));
-  }
-  
-  return exports;
-});
-define('struct_parser',[
-  "struct_parseutil", "struct_util"
-], function(struct_parseutil, struct_util) {
-  "use strict";
-  
-  var exports = {};
-  
-  //the discontinuous id's are to make sure
-  //the version I originally wrote (which had a few application-specific types)
-  //and this one do not become totally incompatible.
-  var StructEnum = exports.StructEnum = {
-    T_INT    : 0,
-    T_FLOAT  : 1,
-    T_DOUBLE : 2,
-    T_STRING : 7,
-    T_STATIC_STRING : 8,
-    T_STRUCT : 9, 
-    T_TSTRUCT : 10,
-    T_ARRAY   : 11,
-    T_ITER    : 12,
-    T_SHORT   : 13,
-    T_BYTE    : 14,
-    T_BOOL    : 15
-  };
-  
-  var StructTypes = exports.StructTypes = {
-    "int": StructEnum.T_INT, 
-    "float": StructEnum.T_FLOAT, 
-    "double": StructEnum.T_DOUBLE, 
-    "string": StructEnum.T_STRING,
-    "static_string": StructEnum.T_STATIC_STRING, 
-    "struct": StructEnum.T_STRUCT, 
-    "abstract": StructEnum.T_TSTRUCT, 
-    "array": StructEnum.T_ARRAY, 
-    "iter": StructEnum.T_ITER,
-    "short": StructEnum.T_SHORT,
-    "byte": StructEnum.T_BYTE,
-    "bool": StructEnum.T_BOOL
-  };
-  
-  var StructTypeMap = exports.StructTypeMap = {};
-  
-  for (var k in StructTypes) {
-    StructTypeMap[StructTypes[k]] = k;
+    throw new PUTIL_ParseError(estr);
   }
 
-  function gen_tabstr(t) {
-    var s="";
-    for (var i=0; i<t; i++) {
-        s+="  ";
+  peek() {
+    var tok = this.lexer.peek();
+    if (tok != undefined)
+      tok.parser = this;
+    return tok;
+  }
+
+  peeknext() {
+    var tok = this.lexer.peeknext();
+    if (tok != undefined)
+      tok.parser = this;
+    return tok;
+  }
+
+  next() {
+    var tok = this.lexer.next();
+    if (tok != undefined)
+      tok.parser = this;
+    return tok;
+  }
+
+  optional(type) {
+    var tok = this.peek();
+    if (tok == undefined)
+      return false;
+    if (tok.type == type) {
+      this.next();
+      return true;
     }
-    return s;
+    return false;
+  }
+
+  at_end() {
+    return this.lexer.at_end();
+  }
+
+  expect(type, msg) {
+    var tok = this.next();
+    if (msg == undefined)
+      msg = type;
+    if (tok == undefined || tok.type != type) {
+      this.error(tok, "Expected " + msg);
+    }
+    return tok.value;
+  }
+};
+
+function test_parser() {
+  var basic_types = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
+  var reserved_tokens = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
+
+  function tk(name, re, func) {
+    return new _module_exports_$3.tokdef(name, re, func);
+  }
+
+  var tokens = [tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function (t) {
+    if (reserved_tokens.has(t.value)) {
+      t.type = t.value.toUpperCase();
+    }
+    return t;
+  }), tk("OPEN", /\{/), tk("CLOSE", /}/), tk("COLON", /:/), tk("JSCRIPT", /\|/, function (t) {
+    var js = "";
+    var lexer = t.lexer;
+    while (lexer.lexpos < lexer.lexdata.length) {
+      var c = lexer.lexdata[lexer.lexpos];
+      if (c == "\n")
+        break;
+      js += c;
+      lexer.lexpos++;
+    }
+    if (js.endsWith(";")) {
+      js = js.slice(0, js.length - 1);
+      lexer.lexpos--;
+    }
+    t.value = js;
+    return t;
+  }), tk("LPARAM", /\(/), tk("RPARAM", /\)/), tk("COMMA", /,/), tk("NUM", /[0-9]/), tk("SEMI", /;/), tk("NEWLINE", /\n/, function (t) {
+    t.lexer.lineno += 1;
+  }), tk("SPACE", / |\t/, function (t) {
+  })];
+  var __iter_rt = __get_iter(reserved_tokens);
+  var rt;
+  while (1) {
+    var __ival_rt = __iter_rt.next();
+    if (__ival_rt.done) {
+      break;
+    }
+    rt = __ival_rt.value;
+    tokens.push(tk(rt.toUpperCase()));
+  }
+  var a = "\n  Loop {\n    eid : int;\n    flag : int;\n    index : int;\n    type : int;\n\n    co : vec3;\n    no : vec3;\n    loop : int | eid(loop);\n    edges : array(e, int) | e.eid;\n\n    loops : array(Loop);\n  }\n  ";
+
+  function errfunc(lexer) {
+    return true;
+  }
+
+  var lex = new _module_exports_$3.lexer(tokens, errfunc);
+  console.log("Testing lexical scanner...");
+  lex.input(a);
+  var token;
+  while (token = lex.next()) {
+    console.log(token.toString());
+  }
+  var parser = new _module_exports_$3.parser(lex);
+  parser.input(a);
+
+  function p_Array(p) {
+    p.expect("ARRAY");
+    p.expect("LPARAM");
+    var arraytype = p_Type(p);
+    var itername = "";
+    if (p.optional("COMMA")) {
+      itername = arraytype;
+      arraytype = p_Type(p);
+    }
+    p.expect("RPARAM");
+    return {type: "array", data: {type: arraytype, iname: itername}}
+  }
+
+  function p_Type(p) {
+    var tok = p.peek();
+    if (tok.type == "ID") {
+      p.next();
+      return {type: "struct", data: "\"" + tok.value + "\""}
+    }
+    else if (basic_types.has(tok.type.toLowerCase())) {
+      p.next();
+      return {type: tok.type.toLowerCase()}
+    }
+    else if (tok.type == "ARRAY") {
+      return p_Array(p);
+    }
+    else {
+      p.error(tok, "invalid type " + tok.type);
+    }
+  }
+
+  function p_Field(p) {
+    var field = {};
+    console.log("-----", p.peek().type);
+    field.name = p.expect("ID", "struct field name");
+    p.expect("COLON");
+    field.type = p_Type(p);
+    field.set = undefined;
+    field.get = undefined;
+    var tok = p.peek();
+    if (tok.type == "JSCRIPT") {
+      field.get = tok.value;
+      p.next();
+    }
+    tok = p.peek();
+    if (tok.type == "JSCRIPT") {
+      field.set = tok.value;
+      p.next();
+    }
+    p.expect("SEMI");
+    return field;
+  }
+
+  function p_Struct(p) {
+    var st = {};
+    st.name = p.expect("ID", "struct name");
+    st.fields = [];
+    p.expect("OPEN");
+    while (1) {
+      if (p.at_end()) {
+        p.error(undefined);
+      }
+      else if (p.optional("CLOSE")) {
+        break;
+      }
+      else {
+        st.fields.push(p_Field(p));
+      }
+    }
+    return st;
+  }
+
+  var ret = p_Struct(parser);
+  console.log(JSON.stringify(ret));
+}
+
+"use strict";
+
+//the discontinuous id's are to make sure
+//the version I originally wrote (which had a few application-specific types)
+//and this one do not become totally incompatible.
+const _module_exports_$4 = {};
+var StructEnum = _module_exports_$4.StructEnum = {
+  T_INT    : 0,
+  T_FLOAT  : 1,
+  T_DOUBLE : 2,
+  T_STRING : 7,
+  T_STATIC_STRING : 8, //fixed-length string
+  T_STRUCT : 9, 
+  T_TSTRUCT : 10,
+  T_ARRAY   : 11,
+  T_ITER    : 12,
+  T_SHORT   : 13,
+  T_BYTE    : 14,
+  T_BOOL    : 15
+};
+
+var StructTypes = _module_exports_$4.StructTypes = {
+  "int": StructEnum.T_INT, 
+  "float": StructEnum.T_FLOAT, 
+  "double": StructEnum.T_DOUBLE, 
+  "string": StructEnum.T_STRING,
+  "static_string": StructEnum.T_STATIC_STRING, 
+  "struct": StructEnum.T_STRUCT, 
+  "abstract": StructEnum.T_TSTRUCT, 
+  "array": StructEnum.T_ARRAY, 
+  "iter": StructEnum.T_ITER,
+  "short": StructEnum.T_SHORT,
+  "byte": StructEnum.T_BYTE,
+  "bool": StructEnum.T_BOOL
+};
+
+var StructTypeMap = _module_exports_$4.StructTypeMap = {};
+
+for (var k in StructTypes) {
+  StructTypeMap[StructTypes[k]] = k;
+}
+
+function gen_tabstr(t) {
+  var s="";
+  for (var i=0; i<t; i++) {
+      s+="  ";
+  }
+  return s;
+}
+
+function StructParser() {
+  var basic_types=new _module_exports_$1.set([
+    "int", "float", "double", "string", "short", "byte", "bool"
+  ]);
+  
+  var reserved_tokens=new _module_exports_$1.set([
+    "int", "float", "double", "string", "static_string", "array", 
+    "iter", "abstract", "short", "byte", "bool"
+  ]);
+
+  function tk(name, re, func) {
+    return new _module_exports_$3.tokdef(name, re, func);
   }
   
-  function StructParser() {
-    var basic_types=new struct_util.set([
-      "int", "float", "double", "string", "short", "byte", "bool"
-    ]);
-    
-    var reserved_tokens=new struct_util.set([
-      "int", "float", "double", "string", "static_string", "array", 
-      "iter", "abstract", "short", "byte", "bool"
-    ]);
-  
-    function tk(name, re, func) {
-      return new struct_parseutil.tokdef(name, re, func);
-    }
-    
-    var tokens=[tk("ID", /[a-zA-Z_]+[a-zA-Z0-9_\.]*/, function(t) {
+  var tokens=[
+    tk("ID", /[a-zA-Z_]+[a-zA-Z0-9_\.]*/, function(t) {
       if (reserved_tokens.has(t.value)) {
           t.type = t.value.toUpperCase();
       }
       return t;
-    }), tk("OPEN", /\{/), tk("EQUALS", /=/), tk("CLOSE", /}/), tk("COLON", /:/), tk("SOPEN", /\[/), tk("SCLOSE", /\]/), tk("JSCRIPT", /\|/, function(t) {
+    }), tk("OPEN", /\{/), 
+    tk("EQUALS", /=/), 
+    tk("CLOSE", /}/), 
+    tk("COLON", /:/), 
+    tk("SOPEN", /\[/), 
+    tk("SCLOSE", /\]/), 
+    tk("JSCRIPT", /\|/, function(t) {
       var js="";
       var lexer=t.lexer;
       while (lexer.lexpos<lexer.lexdata.length) {
@@ -1734,1340 +1385,1359 @@ define('struct_parser',[
           js = js.slice(0, js.length-1);
           lexer.lexpos--;
       }
-      t.value = js;
+      t.value = js.trim();
       return t;
-    }), tk("LPARAM", /\(/), tk("RPARAM", /\)/), tk("COMMA", /,/), tk("NUM", /[0-9]+/), tk("SEMI", /;/), tk("NEWLINE", /\n/, function(t) {
+    }), 
+    tk("LPARAM", /\(/), 
+    tk("RPARAM", /\)/), 
+    tk("COMMA", /,/), 
+    tk("NUM", /[0-9]+/), 
+    tk("SEMI", /;/), 
+    tk("NEWLINE", /\n/, function(t) {
       t.lexer.lineno+=1;
-    }), tk("SPACE", / |\t/, function(t) {
+    }),
+    tk("SPACE", / |\t/, function(t) {
     })
-    ];
+  ];
+  
+  reserved_tokens.forEach(function(rt) {
+    tokens.push(tk(rt.toUpperCase()));
+  });
+  
+  function errfunc(lexer) {
+    return true;
+  }
+  
+  var lex=new _module_exports_$3.lexer(tokens, errfunc);
+  var parser=new _module_exports_$3.parser(lex);
+  
+  function p_Static_String(p) {
+    p.expect("STATIC_STRING");
+    p.expect("SOPEN");
+    var num=p.expect("NUM");
+    p.expect("SCLOSE");
+    return {type: StructEnum.T_STATIC_STRING, data: {maxlength: num}}
+  }
+  
+  function p_DataRef(p) {
+    p.expect("DATAREF");
+    p.expect("LPARAM");
+    var tname=p.expect("ID");
+    p.expect("RPARAM");
+    return {type: StructEnum.T_DATAREF, data: tname}
+  }
+  
+  function p_Array(p) {
+    p.expect("ARRAY");
+    p.expect("LPARAM");
+    var arraytype=p_Type(p);
     
-    reserved_tokens.forEach(function(rt) {
-      tokens.push(tk(rt.toUpperCase()));
-    });
-    
-    function errfunc(lexer) {
-      return true;
+    var itername="";
+    if (p.optional("COMMA")) {
+        itername = arraytype.data.replace(/"/g, "");
+        arraytype = p_Type(p);
     }
     
-    var lex=new struct_parseutil.lexer(tokens, errfunc);
-    var parser=new struct_parseutil.parser(lex);
+    p.expect("RPARAM");
+    return {type: StructEnum.T_ARRAY, data: {type: arraytype, iname: itername}}
+  }
+  
+  function p_Iter(p) {
+    p.expect("ITER");
+    p.expect("LPARAM");
+    var arraytype=p_Type(p);
+    var itername="";
     
-    function p_Static_String(p) {
-      p.expect("STATIC_STRING");
-      p.expect("SOPEN");
-      var num=p.expect("NUM");
-      p.expect("SCLOSE");
-      return {type: StructEnum.T_STATIC_STRING, data: {maxlength: num}}
+    if (p.optional("COMMA")) {
+        itername = arraytype.data.replace(/"/g, "");
+        arraytype = p_Type(p);
     }
     
-    function p_DataRef(p) {
-      p.expect("DATAREF");
-      p.expect("LPARAM");
-      var tname=p.expect("ID");
-      p.expect("RPARAM");
-      return {type: StructEnum.T_DATAREF, data: tname}
-    }
+    p.expect("RPARAM");
+    return {type: StructEnum.T_ITER, data: {type: arraytype, iname: itername}}
+  }
+  
+  function p_Abstract(p) {
+    p.expect("ABSTRACT");
+    p.expect("LPARAM");
+    var type=p.expect("ID");
+    p.expect("RPARAM");
+    return {type: StructEnum.T_TSTRUCT, data: type}
+  }
+  
+  function p_Type(p) {
+    var tok=p.peek();
     
-    function p_Array(p) {
-      p.expect("ARRAY");
-      p.expect("LPARAM");
-      var arraytype=p_Type(p);
-      
-      var itername="";
-      if (p.optional("COMMA")) {
-          itername = arraytype.data.replace(/"/g, "");
-          arraytype = p_Type(p);
-      }
-      
-      p.expect("RPARAM");
-      return {type: StructEnum.T_ARRAY, data: {type: arraytype, iname: itername}}
-    }
-    
-    function p_Iter(p) {
-      p.expect("ITER");
-      p.expect("LPARAM");
-      var arraytype=p_Type(p);
-      var itername="";
-      
-      if (p.optional("COMMA")) {
-          itername = arraytype.data.replace(/"/g, "");
-          arraytype = p_Type(p);
-      }
-      
-      p.expect("RPARAM");
-      return {type: StructEnum.T_ITER, data: {type: arraytype, iname: itername}}
-    }
-    
-    function p_Abstract(p) {
-      p.expect("ABSTRACT");
-      p.expect("LPARAM");
-      var type=p.expect("ID");
-      p.expect("RPARAM");
-      return {type: StructEnum.T_TSTRUCT, data: type}
-    }
-    
-    function p_Type(p) {
-      var tok=p.peek();
-      
-      if (tok.type=="ID") {
-          p.next();
-          return {type: StructEnum.T_STRUCT, data: tok.value}
-      } else if (basic_types.has(tok.type.toLowerCase())) {
-          p.next();
-          return {type: StructTypes[tok.type.toLowerCase()]}
-      } else if (tok.type=="ARRAY") {
-          return p_Array(p);
-      } else if (tok.type=="ITER") {
-          return p_Iter(p);
-      } else if (tok.type=="STATIC_STRING") {
-          return p_Static_String(p);
-      } else if (tok.type=="ABSTRACT") {
-          return p_Abstract(p);
-      } else if (tok.type=="DATAREF") {
-          return p_DataRef(p);
-      } else {
-        p.error(tok, "invalid type "+tok.type);
-      }
-    }
-    
-    function p_ID_or_num(p) {
-      let t = p.peeknext();
-
-      if (t.type == "NUM") {
+    if (tok.type=="ID") {
         p.next();
-        return t.value;
-      } else {
-        return p.expect("ID", "struct field name");
-      }
+        return {type: StructEnum.T_STRUCT, data: tok.value}
+    } else if (basic_types.has(tok.type.toLowerCase())) {
+        p.next();
+        return {type: StructTypes[tok.type.toLowerCase()]}
+    } else if (tok.type=="ARRAY") {
+        return p_Array(p);
+    } else if (tok.type=="ITER") {
+        return p_Iter(p);
+    } else if (tok.type=="STATIC_STRING") {
+        return p_Static_String(p);
+    } else if (tok.type=="ABSTRACT") {
+        return p_Abstract(p);
+    } else if (tok.type=="DATAREF") {
+        return p_DataRef(p);
+    } else {
+      p.error(tok, "invalid type "+tok.type);
     }
-    
-    function p_Field(p) {
-      var field={};
-      
-      field.name = p_ID_or_num(p);
-      p.expect("COLON");
-      
-      field.type = p_Type(p);
-      field.set = undefined;
-      field.get = undefined;
-      
-      var tok=p.peek();
-      if (tok.type=="JSCRIPT") {
-          field.get = tok.value;
-          p.next();
-      }
-      
-      tok = p.peek();
-      if (tok.type=="JSCRIPT") {
-          field.set = tok.value;
-          p.next();
-      }
-      
-      p.expect("SEMI");
-      return field;
-    }
-    
-    function p_Struct(p) {
-      var st={};
-      
-      st.name = p.expect("ID", "struct name");
-      
-      st.fields = [];
-      st.id = -1;
-      var tok=p.peek();
-      var id=-1;
-      if (tok.type=="ID"&&tok.value=="id") {
-          p.next();
-          p.expect("EQUALS");
-          st.id = p.expect("NUM");
-      }
-      
-      p.expect("OPEN");
-      while (1) {
-        if (p.at_end()) {
-            p.error(undefined);
-        }
-        else 
-          if (p.optional("CLOSE")) {
-            break;
-        }
-        else {
-          st.fields.push(p_Field(p));
-        }
-      }
-      return st;
-    }
-    parser.start = p_Struct;
-    return parser;
   }
   
-  exports.struct_parse = StructParser();
-   
-  return exports;
-});
+  function p_ID_or_num(p) {
+    let t = p.peeknext();
 
-define('struct_intern',[
-  "struct_util", "struct_binpack", "struct_parseutil", "struct_typesystem", "struct_parser"
-], function(struct_util, struct_binpack, struct_parseutil, struct_typesystem, struct_parser) {
-  "use strict";
+    if (t.type == "NUM") {
+      p.next();
+      return t.value;
+    } else {
+      return p.expect("ID", "struct field name");
+    }
+  }
+  
+  function p_Field(p) {
+    var field={};
+    
+    field.name = p_ID_or_num(p);
+    p.expect("COLON");
+    
+    field.type = p_Type(p);
+    field.set = undefined;
+    field.get = undefined;
+    
+    var tok=p.peek();
+    if (tok.type=="JSCRIPT") {
+        field.get = tok.value;
+        p.next();
+    }
+    
+    tok = p.peek();
+    if (tok.type=="JSCRIPT") {
+        field.set = tok.value;
+        p.next();
+    }
+    
+    p.expect("SEMI");
+    return field;
+  }
+  
+  function p_Struct(p) {
+    var st={};
+    
+    st.name = p.expect("ID", "struct name");
+    
+    st.fields = [];
+    st.id = -1;
+    var tok=p.peek();
+    var id=-1;
+    if (tok.type=="ID"&&tok.value=="id") {
+        p.next();
+        p.expect("EQUALS");
+        st.id = p.expect("NUM");
+    }
+    
+    p.expect("OPEN");
+    while (1) {
+      if (p.at_end()) {
+          p.error(undefined);
+      }
+      else 
+        if (p.optional("CLOSE")) {
+          break;
+      }
+      else {
+        st.fields.push(p_Field(p));
+      }
+    }
+    return st;
+  }
+  parser.start = p_Struct;
+  return parser;
+}
 
-  var exports = {};
-  
-  /*
-  
-  class SomeClass {
-    static newSTRUCT() {
-      //returns a new, empty instance of SomeClass
-    }
-    
-    loadSTRUCT(reader) {
-      reader(this); //reads data into this instance
-    }
-    
-    //the old api, that both creates and reads
-    static fromSTRUCT(reader) {
-      let ret = new SomeClass();
-      reader(ret);
-      return ret;
-    }
+_module_exports_$4.struct_parse = StructParser();
+
+"use strict";
+
+/*
+
+class SomeClass {
+  static newSTRUCT() {
+    //returns a new, empty instance of SomeClass
   }
-  SomeClass.STRUCT = `
-  SomeClass {
+  
+  loadSTRUCT(reader) {
+    reader(this); //reads data into this instance
   }
-  `
-  nstructjs.manager.add_class(SomeClass);
   
-  */
-  var StructTypeMap = struct_parser.StructTypeMap;
-  var StructTypes = struct_parser.StructTypes;
-  var Class = struct_typesystem.Class;
-  
-  var struct_parse = struct_parser.struct_parse;
-  var StructEnum = struct_parser.StructEnum;
-  
-  var _static_envcode_null="";
-  var debug_struct=0;
-  var packdebug_tablevel=0;
-  
-  function gen_tabstr(tot) {
-    var ret = "";
-    
-    for (var i=0; i<tot; i++) {
-      ret += " ";
-    }
-    
+  //the old api, that both creates and reads
+  static fromSTRUCT(reader) {
+    let ret = new SomeClass();
+    reader(ret);
     return ret;
   }
-  
-  if (debug_struct) {
-      var packer_debug=function(msg) {
-        if (msg!=undefined) {
-            var t=gen_tabstr(packdebug_tablevel);
-            console.log(t+msg);
-        } else {
-          console.log("Warning: undefined msg");
-        }
-      };
-      var packer_debug_start=function(funcname) {
-        packer_debug("Start "+funcname);
-        packdebug_tablevel++;
-      };
-      
-      var packer_debug_end=function(funcname) {
-        packdebug_tablevel--;
-        packer_debug("Leave "+funcname);
-      };
+}
+SomeClass.STRUCT = `
+SomeClass {
+}
+`
+nstructjs.manager.add_class(SomeClass);
+
+*/
+var StructTypeMap$1 = _module_exports_$4.StructTypeMap;
+var StructTypes$1 = _module_exports_$4.StructTypes;
+var Class$4 = _module_exports_.Class;
+
+var struct_parse = _module_exports_$4.struct_parse;
+var StructEnum$1 = _module_exports_$4.StructEnum;
+
+var _static_envcode_null = "";
+var debug_struct = 0;
+var packdebug_tablevel = 0;
+
+function gen_tabstr$1(tot) {
+  var ret = "";
+
+  for (var i = 0; i < tot; i++) {
+    ret += " ";
   }
-  else {
-    var packer_debug=function() {};
-    var packer_debug_start=function() {};
-    var packer_debug_end=function() {};
-  }
-  
-  exports.setDebugMode = (t) => {
-    debug_struct = t;
-    
-    if (debug_struct) {
-        packer_debug=function(msg) {
-          if (msg!=undefined) {
-              var t=gen_tabstr(packdebug_tablevel);
-              console.log(t+msg);
-          } else {
-            console.log("Warning: undefined msg");
-          }
-        };
-        packer_debug_start=function(funcname) {
-          packer_debug("Start "+funcname);
-          packdebug_tablevel++;
-        };
-        
-        packer_debug_end=function(funcname) {
-          packdebug_tablevel--;
-          packer_debug("Leave "+funcname);
-        };
-    }
-    else {
-      packer_debug=function() {};
-      packer_debug_start=function() {};
-      packer_debug_end=function() {};
+
+  return ret;
+}
+
+let packer_debug, packer_debug_start, packer_debug_end;
+
+if (debug_struct) {
+  packer_debug = function (msg) {
+    if (msg !== undefined) {
+      var t = gen_tabstr$1(packdebug_tablevel);
+      console.log(t + msg);
+    } else {
+      console.log("Warning: undefined msg");
     }
   };
-  
-  var _ws_env=[[undefined, undefined]];
-  
-  var pack_callbacks=[
+  packer_debug_start = function (funcname) {
+    packer_debug("Start " + funcname);
+    packdebug_tablevel++;
+  };
+
+  packer_debug_end = function (funcname) {
+    packdebug_tablevel--;
+    packer_debug("Leave " + funcname);
+  };
+}
+else {
+  packer_debug = function () {
+  };
+  packer_debug_start = function () {
+  };
+  packer_debug_end = function () {
+  };
+}
+
+const _module_exports_$5 = {};
+_module_exports_$5.setDebugMode = (t) => {
+  debug_struct = t;
+
+  if (debug_struct) {
+    packer_debug = function (msg) {
+      if (msg != undefined) {
+        var t = gen_tabstr$1(packdebug_tablevel);
+        console.log(t + msg);
+      } else {
+        console.log("Warning: undefined msg");
+      }
+    };
+    packer_debug_start = function (funcname) {
+      packer_debug("Start " + funcname);
+      packdebug_tablevel++;
+    };
+
+    packer_debug_end = function (funcname) {
+      packdebug_tablevel--;
+      packer_debug("Leave " + funcname);
+    };
+  }
+  else {
+    packer_debug = function () {
+    };
+    packer_debug_start = function () {
+    };
+    packer_debug_end = function () {
+    };
+  }
+};
+
+var _ws_env = [[undefined, undefined]];
+var pack_callbacks = [
   function pack_int(data, val) {
-    packer_debug("int "+val);
-    
-    struct_binpack.pack_int(data, val);
+    packer_debug("int " + val);
+
+    _module_exports_$2.pack_int(data, val);
   }, function pack_float(data, val) {
-    packer_debug("float "+val);
-    
-    struct_binpack.pack_float(data, val);
+    packer_debug("float " + val);
+
+    _module_exports_$2.pack_float(data, val);
   }, function pack_double(data, val) {
-    packer_debug("double "+val);
-    
-    struct_binpack.pack_double(data, val);
+    packer_debug("double " + val);
+
+    _module_exports_$2.pack_double(data, val);
   }, 0, 0, 0, 0,
   function pack_string(data, val) {
-    if (val==undefined)
+    if (val == undefined)
       val = "";
-    packer_debug("string: "+val);
-    packer_debug("int "+val.length);
-    
-    struct_binpack.pack_string(data, val);
+    packer_debug("string: " + val);
+    packer_debug("int " + val.length);
+
+    _module_exports_$2.pack_string(data, val);
   }, function pack_static_string(data, val, obj, thestruct, field, type) {
-    if (val==undefined)
+    if (val == undefined)
       val = "";
-    packer_debug("static_string: '"+val+"' length="+type.data.maxlength);
-    
-    struct_binpack.pack_static_string(data, val, type.data.maxlength);
+    packer_debug("static_string: '" + val + "' length=" + type.data.maxlength);
+
+    _module_exports_$2.pack_static_string(data, val, type.data.maxlength);
   }, function pack_struct(data, val, obj, thestruct, field, type) {
-    packer_debug_start("struct "+type.data);
-    
+    packer_debug_start("struct " + type.data);
+
     thestruct.write_struct(data, val, thestruct.get_struct(type.data));
-    
+
     packer_debug_end("struct");
   }, function pack_tstruct(data, val, obj, thestruct, field, type) {
-    var cls=thestruct.get_struct_cls(type.data);
-    var stt=thestruct.get_struct(type.data);
-    
+    var cls = thestruct.get_struct_cls(type.data);
+    var stt = thestruct.get_struct(type.data);
+
     //make sure inheritance is correct
-    if (val.constructor.structName!=type.data && (val instanceof cls)) {
-        //if (DEBUG.Struct) {
-        //    console.log(val.constructor.structName+" inherits from "+cls.structName);
-        //}
-        stt = thestruct.get_struct(val.constructor.structName);
-    } else if (val.constructor.structName==type.data) {
-        stt = thestruct.get_struct(type.data);
+    if (val.constructor.structName != type.data && (val instanceof cls)) {
+      //if (DEBUG.Struct) {
+      //    console.log(val.constructor.structName+" inherits from "+cls.structName);
+      //}
+      stt = thestruct.get_struct(val.constructor.structName);
+    } else if (val.constructor.structName == type.data) {
+      stt = thestruct.get_struct(type.data);
     } else {
       console.trace();
-      throw new Error("Bad struct "+val.constructor.structName+" passed to write_struct");
+      throw new Error("Bad struct " + val.constructor.structName + " passed to write_struct");
     }
-    
-    if (stt.id==0) {
+
+    if (stt.id == 0) {
     }
-    
-    packer_debug_start("tstruct '"+stt.name+"'");
-    packer_debug("int "+stt.id);
-    
-    struct_binpack.pack_int(data, stt.id);
+
+    packer_debug_start("tstruct '" + stt.name + "'");
+    packer_debug("int " + stt.id);
+
+    _module_exports_$2.pack_int(data, stt.id);
     thestruct.write_struct(data, val, stt);
-    
+
     packer_debug_end("tstruct");
   }, function pack_array(data, val, obj, thestruct, field, type) {
     packer_debug_start("array");
-    
-    if (val==undefined) {
-        console.trace();
-        console.log("Undefined array fed to struct struct packer!");
-        console.log("Field: ", field);
-        console.log("Type: ", type);
-        console.log("");
-        packer_debug("int 0");
-        struct_binpack.pack_int(data, 0);
-        return ;
+
+    if (val == undefined) {
+      console.trace();
+      console.log("Undefined array fed to struct struct packer!");
+      console.log("Field: ", field);
+      console.log("Type: ", type);
+      console.log("");
+      packer_debug("int 0");
+      _module_exports_$2.pack_int(data, 0);
+      return;
     }
-    
-    packer_debug("int "+val.length);
-    struct_binpack.pack_int(data, val.length);
-    
-    var d=type.data;
-    
+
+    packer_debug("int " + val.length);
+    _module_exports_$2.pack_int(data, val.length);
+
+    var d = type.data;
+
     var itername = d.iname;
     var type2 = d.type;
-    
-    var env=_ws_env;
-    for (var i=0; i<val.length; i++) {
-        var val2=val[i];
-        if (itername!=""&&itername!=undefined&&field.get) {
-            env[0][0] = itername;
-            env[0][1] = val2;
-            val2 = thestruct._env_call(field.get, obj, env);
-        }
-        var f2={type: type2, get: undefined, set: undefined};
-        do_pack(data, val2, obj, thestruct, f2, type2);
+
+    var env = _ws_env;
+    for (var i = 0; i < val.length; i++) {
+      var val2 = val[i];
+      if (itername != "" && itername != undefined && field.get) {
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = thestruct._env_call(field.get, obj, env);
+      }
+      var f2 = {type: type2, get: undefined, set: undefined};
+      do_pack(data, val2, obj, thestruct, f2, type2);
     }
     packer_debug_end("array");
   }, function pack_iter(data, val, obj, thestruct, field, type) {
     //this was originally implemented to use ES6 iterators.
-    
+
     packer_debug_start("iter");
-    
-    if (val==undefined || val.forEach == undefined) {
-        console.trace();
-        console.log("Undefined iterable list fed to struct struct packer!", val);
-        console.log("Field: ", field);
-        console.log("Type: ", type);
-        console.log("");
-        packer_debug("int 0");
-        struct_binpack.pack_int(data, 0);
-        return ;
+
+    if (val == undefined || val.forEach == undefined) {
+      console.trace();
+      console.log("Undefined iterable list fed to struct struct packer!", val);
+      console.log("Field: ", field);
+      console.log("Type: ", type);
+      console.log("");
+      packer_debug("int 0");
+      _module_exports_$2.pack_int(data, 0);
+      return;
     }
-    
-    var len  = 0.0;
-    val.forEach(function(val2) {
+
+    var len = 0.0;
+    val.forEach(function (val2) {
       len++;
     }, this);
-    
-    packer_debug("int "+len);
-    struct_binpack.pack_int(data, len);
-    
-    var d=type.data, itername=d.iname, type2=d.type;
-    var env=_ws_env;
-    
+
+    packer_debug("int " + len);
+    _module_exports_$2.pack_int(data, len);
+
+    var d = type.data, itername = d.iname, type2 = d.type;
+    var env = _ws_env;
+
     var i = 0;
-    val.forEach(function(val2) {
+    val.forEach(function (val2) {
       if (i >= len) {
         console.trace("Warning: iterator returned different length of list!", val, i);
         return;
       }
-      
-      if (itername!=""&&itername!=undefined&&field.get) {
-          env[0][0] = itername;
-          env[0][1] = val2;
-          val2 = thestruct._env_call(field.get, obj, env);
+
+      if (itername != "" && itername != undefined && field.get) {
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = thestruct._env_call(field.get, obj, env);
       }
-      
-      var f2={type: type2, get: undefined, set: undefined};
+
+      var f2 = {type: type2, get: undefined, set: undefined};
       do_pack(data, val2, obj, thestruct, f2, type2);
-      
+
       i++;
     }, this);
-    
+
     packer_debug_end("iter");
   }, function pack_short(data, val) {
-    packer_debug("short "+val);
-    
-    struct_binpack.pack_short(data, Math.floor(val));
+    packer_debug("short " + val);
+
+    _module_exports_$2.pack_short(data, Math.floor(val));
   }, function pack_byte(data, val) {
-    packer_debug("byte "+val);
-    
-    struct_binpack.pack_byte(data, Math.floor(val));
+    packer_debug("byte " + val);
+
+    _module_exports_$2.pack_byte(data, Math.floor(val));
   }, function pack_bool(data, val) {
-    packer_debug("bool "+val);
-    
-    struct_binpack.pack_byte(data, !!val);
+    packer_debug("bool " + val);
+
+    _module_exports_$2.pack_byte(data, !!val);
   }];
-  
-  function do_pack(data, val, obj, thestruct, field, type) {
-    pack_callbacks[field.type.type](data, val, obj, thestruct, field, type);
-  
-  }
-  
-  function define_empty_class(name) {
-    var cls = function() {
-    };
-    
-    cls.prototype = Object.create(Object.prototype);
-    cls.constructor = cls.prototype.constructor = cls;
-    
-    cls.STRUCT = name+" {\n  }\n";
-    cls.structName = name;
-    
-    cls.prototype.loadSTRUCT = function (reader) {
-      reader(this);
-    };
-    
-    cls.newSTRUCT = function() {
-      return new this();
-    };
-    
-    return cls;
-  }
-      
-  var STRUCT=exports.STRUCT = Class([
-    function constructor() {
-      this.idgen = new struct_util.IDGen();
 
-      this.structs = {};
-      this.struct_cls = {};
-      this.struct_ids = {};
+function do_pack(data, val, obj, thestruct, field, type) {
+  pack_callbacks[field.type.type](data, val, obj, thestruct, field, type);
 
-      this.compiled_code = {};
-      this.null_natives = {};
-    
-      function define_null_native(name, cls) {
-        var obj = define_empty_class(name);
-        
-        var stt=struct_parse.parse(obj.STRUCT);
-        
-        stt.id = this.idgen.gen_id();
-        
-        this.structs[name] = stt;
-        this.struct_cls[name] = cls;
-        this.struct_ids[stt.id] = stt;
-        
-        this.null_natives[name] = 1;
-      }
-      
-      define_null_native.call(this, "Object", Object);
-    }, 
-    
-    function forEach(func, thisvar) {
-      for (var k in this.structs) {
-        var stt = this.structs[k];
-        
-        if (thisvar != undefined)
-          func.call(thisvar, stt);
-        else
-          func(stt);
-      }
-    },
-    
-    //defined_classes is an array of class constructors
-    //with STRUCT scripts, *OR* another STRUCT instance
-    //
-    //defaults to structjs.manager
-    function parse_structs(buf, defined_classes) {
-      if (defined_classes === undefined) {
-        defined_classes = exports.manager;
-      }
-      
-      if (defined_classes instanceof STRUCT) {
-        var struct2 = defined_classes;
-        defined_classes = [];
-        
-        for (var k in struct2.struct_cls) {
-          defined_classes.push(struct2.struct_cls[k]);
-        }
-      }
-      
-      if (defined_classes == undefined) {
-        defined_classes = [];
-        for (var k in exports.manager.struct_cls) {
-          defined_classes.push(exports.manager.struct_cls[k]);
-        }
-      }
-      
-      var clsmap={};
-      
-      for (var i=0; i<defined_classes.length; i++) {
-        var cls = defined_classes[i];
-        
-        if (cls.structName == undefined && cls.STRUCT != undefined) {
-          var stt=struct_parse.parse(cls.STRUCT.trim());
-          cls.structName = stt.name;
-        } else if (cls.structName == undefined && cls.name != "Object") {
-          console.log("Warning, bad class in registered class list", cls.name, cls);
-          continue;
-        }
-        
-        clsmap[cls.structName] = defined_classes[i];
-      }
-      
-      struct_parse.input(buf);
-      
-      while (!struct_parse.at_end()) {
-        var stt=struct_parse.parse(undefined, false);
-        
-        if (!(stt.name in clsmap)) {
-            if (!(stt.name in this.null_natives))
-              console.log("WARNING: struct "+stt.name+" is missing from class list.");
+}
 
-            var dummy = define_empty_class(stt.name);
-            
-            dummy.STRUCT = STRUCT.fmt_struct(stt);
-            dummy.structName = stt.name;
-            
-            dummy.prototype.structName = dummy.name;
-            
-            this.struct_cls[dummy.structName] = dummy;
-            this.structs[dummy.structName] = stt;
-            
-            if (stt.id!=-1)
-              this.struct_ids[stt.id] = stt;
-        } else {
-          this.struct_cls[stt.name] = clsmap[stt.name];
-          this.structs[stt.name] = stt;
-          
-          if (stt.id!=-1)
-            this.struct_ids[stt.id] = stt;
-        }
-        
-        var tok=struct_parse.peek();
-        while (tok!=undefined&&(tok.value=="\n" || tok.value=="\r" || tok.value=="\t" || tok.value==" ")) {
-          tok = struct_parse.peek();
-        }
-      }
-    },
+function define_empty_class(name) {
+  var cls = function () {
+  };
 
-    function register(cls, structName) {
-      return this.add_class(cls, structName);
-    },
-    
-    function add_class(cls, structName) {
-      if (!cls.STRUCT) {
-        throw new Error("class " + cls.name + " has no STRUCT script");
-      }
-      
-      var stt=struct_parse.parse(cls.STRUCT);
-      
-      cls.structName = stt.name;
-      
-      //create default newSTRUCT
-      if (cls.newSTRUCT === undefined) {
-        cls.newSTRUCT = function() {
-          return new this();
-        };
-      }
-      
-      if (structName !== undefined) {
-        stt.name = cls.structName = structName;
-      } else if (cls.structName === undefined) {
-        cls.structName = stt.name;
-      } else if (cls.structName !== undefined) {
-        stt.name = cls.structName;
-      } else {
-        throw new Error("Missing structName parameter");
-      }
-      
-      if (stt.id==-1)
-        stt.id = this.idgen.gen_id();
-        
-      this.structs[cls.structName] = stt;
-      this.struct_cls[cls.structName] = cls;
+  cls.prototype = Object.create(Object.prototype);
+  cls.constructor = cls.prototype.constructor = cls;
+
+  cls.STRUCT = name + " {\n  }\n";
+  cls.structName = name;
+
+  cls.prototype.loadSTRUCT = function (reader) {
+    reader(this);
+  };
+
+  cls.newSTRUCT = function () {
+    return new this();
+  };
+
+  return cls;
+}
+
+var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
+  constructor() {
+    this.idgen = new _module_exports_$1.IDGen();
+
+    this.structs = {};
+    this.struct_cls = {};
+    this.struct_ids = {};
+
+    this.compiled_code = {};
+    this.null_natives = {};
+
+    function define_null_native(name, cls) {
+      var obj = define_empty_class(name);
+
+      var stt = struct_parse.parse(obj.STRUCT);
+
+      stt.id = this.idgen.gen_id();
+
+      this.structs[name] = stt;
+      this.struct_cls[name] = cls;
       this.struct_ids[stt.id] = stt;
-    },
 
-    function get_struct_id(id) {
-      return this.struct_ids[id];
-    },
+      this.null_natives[name] = 1;
+    }
 
-    function get_struct(name) {
-      if (!(name in this.structs)) {
-          console.trace();
-          throw new Error("Unknown struct "+name);
-      }
-      return this.structs[name];
-    },
+    define_null_native.call(this, "Object", Object);
+  }
 
-    function get_struct_cls(name) {
-      if (!(name in this.struct_cls)) {
-          console.trace();
-          throw new Error("Unknown struct "+name);
-      }
-      return this.struct_cls[name];
-    },
+  forEach(func, thisvar) {
+    for (var k in this.structs) {
+      var stt = this.structs[k];
 
-    Class.static_method(function inherit(child, parent, structName=child.name) {
-      if (!parent.STRUCT) {
-        return structName+"{\n";
-      }
-      
-      var stt=struct_parse.parse(parent.STRUCT);
-      var code=structName+"{\n";
-      code+=STRUCT.fmt_struct(stt, true);
-      return code;
-    }),
-    
-    /** invoke loadSTRUCT methods on parent objects.  note that 
-      reader() is only called once.  it is called however.*/
-    Class.static_method(function Super(obj, reader) {
-      reader(obj);
-      
-      function reader2(obj) {
-      }
-      
-      let cls = obj.constructor;
-      let bad = cls === undefined || cls.prototype === undefined || cls.prototype.__proto__ === undefined;
-      
-      if (bad) {
-        return;
-      }
-      
-      let parent = cls.prototype.__proto__.constructor;
-      bad = bad || parent === undefined;
-      
-      if (!bad && parent.prototype.loadSTRUCT && parent.prototype.loadSTRUCT !== obj.loadSTRUCT) { //parent.prototype.hasOwnProperty("loadSTRUCT")) {
-        parent.prototype.loadSTRUCT.call(obj, reader2);
-      }
-    }),
+      if (thisvar != undefined)
+        func.call(thisvar, stt);
+      else
+        func(stt);
+    }
+  }
 
-    /** deprecated.  used with old fromSTRUCT interface. */
-    Class.static_method(function chain_fromSTRUCT(cls, reader) {
-      console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
-      
-      var proto=cls.prototype;
-      var parent=cls.prototype.prototype.constructor;
-      
-      var obj=parent.fromSTRUCT(reader);
-      let obj2 = new cls();
-      
-      let keys = Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
-      //var keys=Object.keys(proto);
-      
-      for (var i=0; i<keys.length; i++) {
-        let k = keys[i];
-        
-        try {
-          obj2[k] = obj[k];
-        } catch (error) {
-          console.warn("  failed to set property", k);
-        }
-          //var k=keys[i];
-          //if (k=="__proto__")
-           // continue;
-          //obj[k] = proto[k];
-      }
-      
-      /*
-      if (proto.toString !== Object.prototype.toString)
-        obj2.toString = proto.toString;
-      //*/
-      
-      return obj2;
-    }),
+  //defined_classes is an array of class constructors
+  //with STRUCT scripts, *OR* another STRUCT instance
+  //
+  //defaults to structjs.manager
+  parse_structs(buf, defined_classes) {
+    if (defined_classes === undefined) {
+      defined_classes = _module_exports_$5.manager;
+    }
 
-    Class.static_method(function fmt_struct(stt, internal_only, no_helper_js) {
-      if (internal_only==undefined)
-        internal_only = false;
-      if (no_helper_js==undefined)
-        no_helper_js = false;
-        
-      var s="";
-      if (!internal_only) {
-          s+=stt.name;
-          if (stt.id!=-1)
-            s+=" id="+stt.id;
-          s+=" {\n";
-      }
-      var tab="  ";
-      function fmt_type(type) {
-        if (type.type==StructEnum.T_ARRAY||type.type==StructEnum.T_ITER) {
-            if (type.data.iname!=""&&type.data.iname!=undefined) {
-                return "array("+type.data.iname+", "+fmt_type(type.data.type)+")";
-            }
-            else {
-              return "array("+fmt_type(type.data.type)+")";
-            }
-        } else  if (type.type==StructEnum.T_STATIC_STRING) {
-            return "static_string["+type.data.maxlength+"]";
-        } else if (type.type==StructEnum.T_STRUCT) {
-            return type.data;
-        } else if (type.type==StructEnum.T_TSTRUCT) {
-            return "abstract("+type.data+")";
-        } else {
-          return StructTypeMap[type.type];
-        }
-      }
-      
-      var fields=stt.fields;
-      for (var i=0; i<fields.length; i++) {
-          var f=fields[i];
-          s += tab + f.name+" : "+fmt_type(f.type);
-          if (!no_helper_js&&f.get!=undefined) {
-              s += " | "+f.get.trim();
-          }
-          s+=";\n";
-      }
-      if (!internal_only)
-        s+="}";
-      return s;
-    }),
+    if (defined_classes instanceof STRUCT) {
+      var struct2 = defined_classes;
+      defined_classes = [];
 
-    function _env_call(code, obj, env) {
-      var envcode=_static_envcode_null;
-      if (env!=undefined) {
-          envcode = "";
-          for (var i=0; i<env.length; i++) {
-              envcode = "var "+env[i][0]+" = env["+i.toString()+"][1];\n"+envcode;
-          }
-      }
-      var fullcode="";
-      if (envcode!==_static_envcode_null)
-        fullcode = envcode+code;
-      else 
-        fullcode = code;
-      var func;
-      if (!(fullcode in this.compiled_code)) {
-          var code2="func = function(obj, env) { "+envcode+"return "+code+"}";
-          try {
-            eval(code2);
-          }
-          catch (err) {
-              console.log(code2);
-              console.log(" ");
-              print_stack(err);
-              throw err;
-          }
-          this.compiled_code[fullcode] = func;
-      }
-      else {
-        func = this.compiled_code[fullcode];
-      }
-      try {
-        return func(obj, env);
-      }
-      catch (err) {
-          var code2="func = function(obj, env) { "+envcode+"return "+code+"}";
-          console.log(code2);
-          console.log(" ");
-          print_stack(err);
-          throw err;
-      }
-    },
-    
-    function write_struct(data, obj, stt) {
-      function use_helper_js(field) {
-        if (field.type.type==StructEnum.T_ARRAY||field.type.type==StructEnum.T_ITER) {
-            return field.type.data.iname==undefined||field.type.data.iname=="";
-        }
-        return true;
-      }
-      
-      var fields=stt.fields;
-      var thestruct=this;
-      for (var i=0; i<fields.length; i++) {
-          var f=fields[i];
-          var t1=f.type;
-          var t2=t1.type;
-          
-          if (use_helper_js(f)) {
-              var val;
-              var type=t2;
-              if (f.get!=undefined) {
-                  val = thestruct._env_call(f.get, obj);
-              }
-              else {
-                val = obj[f.name];
-              }
-              do_pack(data, val, obj, thestruct, f, t1);
-          }
-          else {
-            var val=obj[f.name];
-            do_pack(data, val, obj, thestruct, f, t1);
-          }
-      }
-    },
-
-   function write_object(data, obj) {
-      var cls=obj.constructor.structName;
-      var stt=this.get_struct(cls);
-      
-      this.write_struct(data, obj, stt);
-    },
-
-    function read_object(data, cls_or_struct_id, uctx) {
-      var cls, stt;
-      
-      if (data instanceof Array) {
-        data = new DataView(new Uint8Array(data).buffer);
-      }
-      
-      if (typeof cls_or_struct_id == "number") {
-        cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
-      } else {
-        cls = cls_or_struct_id;
-      }
-      
-      if (cls === undefined) {
-        throw new Error("bad cls_or_struct_id " + cls_or_struct_id);
-      }
-      
-      stt=this.structs[cls.structName];
-      
-      if (uctx==undefined) {
-        uctx = new struct_binpack.unpack_context();
-        
-        packer_debug("\n\n=Begin reading " + cls.structName + "=");
-      }
-      var thestruct=this;
-      
-      var unpack_funcs=[
-        function t_int(type) { //int
-          var ret=struct_binpack.unpack_int(data, uctx);
-          
-          packer_debug("-int " + (debug_struct>1 ? ret : ""));
-          
-          return ret;
-        }, function t_float(type) {
-          var ret=struct_binpack.unpack_float(data, uctx);
-          
-          packer_debug("-float " + (debug_struct>1 ? ret : ""));
-          
-          return ret;
-        }, function t_double(type) {
-          var ret=struct_binpack.unpack_double(data, uctx);
-          
-          packer_debug("-double " + (debug_struct>1 ? ret : ""));
-          
-          return ret;
-        }, 0, 0, 0, 0, 
-        function t_string(type) {
-          packer_debug_start("string");
-          
-          var s=struct_binpack.unpack_string(data, uctx);
-          
-          packer_debug("data: '"+s+"'");
-          packer_debug_end("string");
-          return s;
-        }, function t_static_string(type) {
-          packer_debug_start("static_string");
-          
-          var s=struct_binpack.unpack_static_string(data, uctx, type.data.maxlength);
-          
-          packer_debug("data: '"+s+"'");
-          packer_debug_end("static_string");
-          
-          return s;
-        }, function t_struct(type) {
-          packer_debug_start("struct "+type.data);
-          
-          var cls2=thestruct.get_struct_cls(type.data);
-          var ret=thestruct.read_object(data, cls2, uctx);
-          
-          packer_debug_end("struct");
-          return ret;
-        }, function t_tstruct(type) {
-          packer_debug_start("tstruct");
-          
-          var id=struct_binpack.unpack_int(data, uctx);
-          
-          packer_debug("-int "+id);
-          if (!(id in thestruct.struct_ids)) {
-              packer_debug("struct id: "+id);
-              console.trace();
-              console.log(id);
-              console.log(thestruct.struct_ids);
-              packer_debug_end("tstruct");
-              throw new Error("Unknown struct type "+id+".");
-          }
-          
-          var cls2=thestruct.get_struct_id(id);
-          
-          packer_debug("struct name: "+cls2.name);
-          cls2 = thestruct.struct_cls[cls2.name];
-          
-          var ret=thestruct.read_object(data, cls2, uctx);
-          
-          packer_debug_end("tstruct");
-          return ret;
-        }, function t_array(type) {
-          packer_debug_start("array");
-          
-          var len=struct_binpack.unpack_int(data, uctx);
-          packer_debug("-int "+len);
-          
-          var arr=new Array(len);
-          for (var i=0; i<len; i++) {
-              arr[i] = unpack_field(type.data.type);
-          }
-          
-          packer_debug_end("array");
-          return arr;
-        }, function t_iter(type) {
-          packer_debug_start("iter");
-          
-          var len=struct_binpack.unpack_int(data, uctx);
-          packer_debug("-int "+len);
-          
-          var arr=new Array(len);
-          for (var i=0; i<len; i++) {
-              arr[i] = unpack_field(type.data.type);
-          }
-          
-          packer_debug_end("iter");
-          return arr;
-        }, function t_short(type) { //int
-          var ret=struct_binpack.unpack_short(data, uctx);
-          
-          packer_debug("-short "+ret);
-          
-          return ret;
-        }, function t_byte(type) {
-          var ret=struct_binpack.unpack_byte(data, uctx);
-          
-          packer_debug("-byte "+ret);
-          
-          return ret;
-        }, function t_bool(type) {
-          var ret=struct_binpack.unpack_byte(data, uctx);
-          
-          packer_debug("-bool "+ret);
-          
-          return !!ret;
-        }          
-      ];
-      
-      function unpack_field(type) {
-        return unpack_funcs[type.type](type);
-      }
-      
-      let was_run = false;
-      function load(obj) {
-        if (was_run) {
-          return;
-        }
-        
-        was_run = true;
-        
-        var fields=stt.fields;
-        var flen=fields.length;
-        for (var i=0; i<flen; i++) {
-            var f=fields[i];
-            var val=unpack_field(f.type);
-            obj[f.name] = val;
-        }
-      }
-      
-      if (cls.prototype.loadSTRUCT !== undefined) {
-        let obj;
-        
-        if (cls.newSTRUCT !== undefined) {
-          obj = cls.newSTRUCT();
-        } else {
-          obj = new cls();
-        }
-        
-        obj.loadSTRUCT(load);
-        return obj;
-      } else if (cls.fromSTRUCT !== undefined) {
-        console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
-        return cls.fromSTRUCT(load);
-      } else { //default case, make new instance and then call load() on it
-        let obj;
-        if (cls.newSTRUCT !== undefined) {
-          obj = cls.newSTRUCT();
-        } else {
-          obj = new cls();
-        }
-        
-        load(obj);
-        
-        return obj;
+      for (var k in struct2.struct_cls) {
+        defined_classes.push(struct2.struct_cls[k]);
       }
     }
-  ]);
-  
-  //main struct script manager
-  var manager = exports.manager = new STRUCT();
-  
-  //manager defaults to structjs.manager
-  var write_scripts = exports.write_scripts = function write_scripts(manager) {
-    if (manager === undefined)
-      manager = exports.manager;
-    
-    var buf="";
-    
-    manager.forEach(function(stt) {
-      buf+=STRUCT.fmt_struct(stt, false, true)+"\n";
-    });
-    
-    var buf2=buf;
-    buf = "";
-    
-    for (var i=0; i<buf2.length; i++) {
-        var c=buf2[i];
-        if (c=="\n") {
-            buf+="\n";
-            var i2=i;
-            while (i<buf2.length&&(buf2[i]==" "||buf2[i]=="\t"||buf2[i]=="\n")) {
-              i++;
-            }
-            if (i!=i2)
-              i--;
+
+    if (defined_classes == undefined) {
+      defined_classes = [];
+      for (var k in _module_exports_$5.manager.struct_cls) {
+        defined_classes.push(_module_exports_$5.manager.struct_cls[k]);
+      }
+    }
+
+    var clsmap = {};
+
+    for (var i = 0; i < defined_classes.length; i++) {
+      var cls = defined_classes[i];
+
+      if (cls.structName == undefined && cls.STRUCT != undefined) {
+        var stt = struct_parse.parse(cls.STRUCT.trim());
+        cls.structName = stt.name;
+      } else if (cls.structName == undefined && cls.name != "Object") {
+        console.log("Warning, bad class in registered class list", cls.name, cls);
+        continue;
+      }
+
+      clsmap[cls.structName] = defined_classes[i];
+    }
+
+    struct_parse.input(buf);
+
+    while (!struct_parse.at_end()) {
+      var stt = struct_parse.parse(undefined, false);
+
+      if (!(stt.name in clsmap)) {
+        if (!(stt.name in this.null_natives))
+          console.log("WARNING: struct " + stt.name + " is missing from class list.");
+
+        var dummy = define_empty_class(stt.name);
+
+        dummy.STRUCT = STRUCT.fmt_struct(stt);
+        dummy.structName = stt.name;
+
+        dummy.prototype.structName = dummy.name;
+
+        this.struct_cls[dummy.structName] = dummy;
+        this.structs[dummy.structName] = stt;
+
+        if (stt.id != -1)
+          this.struct_ids[stt.id] = stt;
+      } else {
+        this.struct_cls[stt.name] = clsmap[stt.name];
+        this.structs[stt.name] = stt;
+
+        if (stt.id != -1)
+          this.struct_ids[stt.id] = stt;
+      }
+
+      var tok = struct_parse.peek();
+      while (tok != undefined && (tok.value == "\n" || tok.value == "\r" || tok.value == "\t" || tok.value == " ")) {
+        tok = struct_parse.peek();
+      }
+    }
+  }
+
+  register(cls, structName) {
+    return this.add_class(cls, structName);
+  }
+
+  add_class(cls, structName) {
+    if (!cls.STRUCT) {
+      throw new Error("class " + cls.name + " has no STRUCT script");
+    }
+
+    var stt = struct_parse.parse(cls.STRUCT);
+
+    cls.structName = stt.name;
+
+    //create default newSTRUCT
+    if (cls.newSTRUCT === undefined) {
+      cls.newSTRUCT = function () {
+        return new this();
+      };
+    }
+
+    if (structName !== undefined) {
+      stt.name = cls.structName = structName;
+    } else if (cls.structName === undefined) {
+      cls.structName = stt.name;
+    } else if (cls.structName !== undefined) {
+      stt.name = cls.structName;
+    } else {
+      throw new Error("Missing structName parameter");
+    }
+
+    if (stt.id == -1)
+      stt.id = this.idgen.gen_id();
+
+    this.structs[cls.structName] = stt;
+    this.struct_cls[cls.structName] = cls;
+    this.struct_ids[stt.id] = stt;
+  }
+
+  get_struct_id(id) {
+    return this.struct_ids[id];
+  }
+
+  get_struct(name) {
+    if (!(name in this.structs)) {
+      console.trace();
+      throw new Error("Unknown struct " + name);
+    }
+    return this.structs[name];
+  }
+
+  get_struct_cls(name) {
+    if (!(name in this.struct_cls)) {
+      console.trace();
+      throw new Error("Unknown struct " + name);
+    }
+    return this.struct_cls[name];
+  }
+
+  static inherit(child, parent, structName = child.name) {
+    if (!parent.STRUCT) {
+      return structName + "{\n";
+    }
+
+    var stt = struct_parse.parse(parent.STRUCT);
+    var code = structName + "{\n";
+    code += STRUCT.fmt_struct(stt, true);
+    return code;
+  }
+
+  /** invoke loadSTRUCT methods on parent objects.  note that
+   reader() is only called once.  it is called however.*/
+  static Super(obj, reader) {
+    console.warn("deprecated");
+
+    reader(obj);
+
+    function reader2(obj) {
+    }
+
+    let cls = obj.constructor;
+    let bad = cls === undefined || cls.prototype === undefined || cls.prototype.__proto__ === undefined;
+
+    if (bad) {
+      return;
+    }
+
+    let parent = cls.prototype.__proto__.constructor;
+    bad = bad || parent === undefined;
+
+    if (!bad && parent.prototype.loadSTRUCT && parent.prototype.loadSTRUCT !== obj.loadSTRUCT) { //parent.prototype.hasOwnProperty("loadSTRUCT")) {
+      parent.prototype.loadSTRUCT.call(obj, reader2);
+    }
+  }
+
+  /** deprecated.  used with old fromSTRUCT interface. */
+  static chain_fromSTRUCT(cls, reader) {
+    console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
+
+    var proto = cls.prototype;
+    var parent = cls.prototype.prototype.constructor;
+
+    var obj = parent.fromSTRUCT(reader);
+    let obj2 = new cls();
+
+    let keys = Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
+    //var keys=Object.keys(proto);
+
+    for (var i = 0; i < keys.length; i++) {
+      let k = keys[i];
+
+      try {
+        obj2[k] = obj[k];
+      } catch (error) {
+        console.warn("  failed to set property", k);
+      }
+      //var k=keys[i];
+      //if (k=="__proto__")
+      // continue;
+      //obj[k] = proto[k];
+    }
+
+    /*
+    if (proto.toString !== Object.prototype.toString)
+      obj2.toString = proto.toString;
+    //*/
+
+    return obj2;
+  }
+
+  static formatStruct(stt, internal_only, no_helper_js) {
+    return this.fmt_struct(stt, internal_only, no_helper_js);
+  }
+
+  static fmt_struct(stt, internal_only, no_helper_js) {
+    if (internal_only == undefined)
+      internal_only = false;
+    if (no_helper_js == undefined)
+      no_helper_js = false;
+
+    var s = "";
+    if (!internal_only) {
+      s += stt.name;
+      if (stt.id != -1)
+        s += " id=" + stt.id;
+      s += " {\n";
+    }
+    var tab = "  ";
+
+    function fmt_type(type) {
+      if (type.type == StructEnum$1.T_ARRAY || type.type == StructEnum$1.T_ITER) {
+        if (type.data.iname != "" && type.data.iname != undefined) {
+          return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
         }
         else {
-          buf+=c;
+          return "array(" + fmt_type(type.data.type) + ")";
         }
+      } else if (type.type == StructEnum$1.T_STATIC_STRING) {
+        return "static_string[" + type.data.maxlength + "]";
+      } else if (type.type == StructEnum$1.T_STRUCT) {
+        return type.data;
+      } else if (type.type == StructEnum$1.T_TSTRUCT) {
+        return "abstract(" + type.data + ")";
+      } else {
+        return StructTypeMap$1[type.type];
+      }
     }
-    
-    return buf;
-  };
-  
-  return exports;
-});
+
+    var fields = stt.fields;
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      s += tab + f.name + " : " + fmt_type(f.type);
+      if (!no_helper_js && f.get != undefined) {
+        s += " | " + f.get.trim();
+      }
+      s += ";\n";
+    }
+    if (!internal_only)
+      s += "}";
+    return s;
+  }
+
+  _env_call(code, obj, env) {
+    var envcode = _static_envcode_null;
+    if (env != undefined) {
+      envcode = "";
+      for (var i = 0; i < env.length; i++) {
+        envcode = "var " + env[i][0] + " = env[" + i.toString() + "][1];\n" + envcode;
+      }
+    }
+    var fullcode = "";
+    if (envcode !== _static_envcode_null)
+      fullcode = envcode + code;
+    else
+      fullcode = code;
+    var func;
+
+    //fullcode = fullcode.replace(/\bthis\b/, "obj");
+
+    if (!(fullcode in this.compiled_code)) {
+      var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
+      try {
+        eval(code2);
+      }
+      catch (err) {
+        _module_exports_$1.print_stack(err);
+
+        console.log(code2);
+        console.log(" ");
+        throw err;
+      }
+      this.compiled_code[fullcode] = func;
+    }
+    else {
+      func = this.compiled_code[fullcode];
+    }
+    try {
+      return func.call(obj, env);
+    }
+    catch (err) {
+      _module_exports_$1.print_stack(err);
+
+      var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
+      console.log(code2);
+      console.log(" ");
+      throw err;
+    }
+  }
+
+  write_struct(data, obj, stt) {
+    function use_helper_js(field) {
+      if (field.type.type == StructEnum$1.T_ARRAY || field.type.type == StructEnum$1.T_ITER) {
+        return field.type.data.iname == undefined || field.type.data.iname == "";
+      }
+      return true;
+    }
+
+    var fields = stt.fields;
+    var thestruct = this;
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      var t1 = f.type;
+      var t2 = t1.type;
+
+      if (use_helper_js(f)) {
+        var val;
+        var type = t2;
+        if (f.get != undefined) {
+          val = thestruct._env_call(f.get, obj);
+        }
+        else {
+          val = obj[f.name];
+        }
+        do_pack(data, val, obj, thestruct, f, t1);
+      }
+      else {
+        var val = obj[f.name];
+        do_pack(data, val, obj, thestruct, f, t1);
+      }
+    }
+  }
+
+  write_object(data, obj) {
+    var cls = obj.constructor.structName;
+    var stt = this.get_struct(cls);
+
+    if (data === undefined) {
+      data = [];
+    }
+
+    this.write_struct(data, obj, stt);
+    return data;
+  }
+
+  read_object(data, cls_or_struct_id, uctx) {
+    var cls, stt;
+
+    if (data instanceof Array) {
+      data = new DataView(new Uint8Array(data).buffer);
+    }
+
+    if (typeof cls_or_struct_id == "number") {
+      cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
+    } else {
+      cls = cls_or_struct_id;
+    }
+
+    if (cls === undefined) {
+      throw new Error("bad cls_or_struct_id " + cls_or_struct_id);
+    }
+
+    stt = this.structs[cls.structName];
+
+    if (uctx == undefined) {
+      uctx = new _module_exports_$2.unpack_context();
+
+      packer_debug("\n\n=Begin reading " + cls.structName + "=");
+    }
+    var thestruct = this;
+
+    var unpack_funcs = [
+      function t_int(type) { //int
+        var ret = _module_exports_$2.unpack_int(data, uctx);
+
+        packer_debug("-int " + (debug_struct > 1 ? ret : ""));
+
+        return ret;
+      }, function t_float(type) {
+        var ret = _module_exports_$2.unpack_float(data, uctx);
+
+        packer_debug("-float " + (debug_struct > 1 ? ret : ""));
+
+        return ret;
+      }, function t_double(type) {
+        var ret = _module_exports_$2.unpack_double(data, uctx);
+
+        packer_debug("-double " + (debug_struct > 1 ? ret : ""));
+
+        return ret;
+      }, 0, 0, 0, 0,
+      function t_string(type) {
+        packer_debug_start("string");
+
+        var s = _module_exports_$2.unpack_string(data, uctx);
+
+        packer_debug("data: '" + s + "'");
+        packer_debug_end("string");
+        return s;
+      }, function t_static_string(type) {
+        packer_debug_start("static_string");
+
+        var s = _module_exports_$2.unpack_static_string(data, uctx, type.data.maxlength);
+
+        packer_debug("data: '" + s + "'");
+        packer_debug_end("static_string");
+
+        return s;
+      }, function t_struct(type) {
+        packer_debug_start("struct " + type.data);
+
+        var cls2 = thestruct.get_struct_cls(type.data);
+        var ret = thestruct.read_object(data, cls2, uctx);
+
+        packer_debug_end("struct");
+        return ret;
+      }, function t_tstruct(type) {
+        packer_debug_start("tstruct");
+
+        var id = _module_exports_$2.unpack_int(data, uctx);
+
+        packer_debug("-int " + id);
+        if (!(id in thestruct.struct_ids)) {
+          packer_debug("struct id: " + id);
+          console.trace();
+          console.log(id);
+          console.log(thestruct.struct_ids);
+          packer_debug_end("tstruct");
+          throw new Error("Unknown struct type " + id + ".");
+        }
+
+        var cls2 = thestruct.get_struct_id(id);
+
+        packer_debug("struct name: " + cls2.name);
+        cls2 = thestruct.struct_cls[cls2.name];
+
+        var ret = thestruct.read_object(data, cls2, uctx);
+
+        packer_debug_end("tstruct");
+        return ret;
+      }, function t_array(type) {
+        packer_debug_start("array");
+
+        var len = _module_exports_$2.unpack_int(data, uctx);
+        packer_debug("-int " + len);
+
+        var arr = new Array(len);
+        for (var i = 0; i < len; i++) {
+          arr[i] = unpack_field(type.data.type);
+        }
+
+        packer_debug_end("array");
+        return arr;
+      }, function t_iter(type) {
+        packer_debug_start("iter");
+
+        var len = _module_exports_$2.unpack_int(data, uctx);
+        packer_debug("-int " + len);
+
+        var arr = new Array(len);
+        for (var i = 0; i < len; i++) {
+          arr[i] = unpack_field(type.data.type);
+        }
+
+        packer_debug_end("iter");
+        return arr;
+      }, function t_short(type) { //int
+        var ret = _module_exports_$2.unpack_short(data, uctx);
+
+        packer_debug("-short " + ret);
+
+        return ret;
+      }, function t_byte(type) {
+        var ret = _module_exports_$2.unpack_byte(data, uctx);
+
+        packer_debug("-byte " + ret);
+
+        return ret;
+      }, function t_bool(type) {
+        var ret = _module_exports_$2.unpack_byte(data, uctx);
+
+        packer_debug("-bool " + ret);
+
+        return !!ret;
+      }
+    ];
+
+    function unpack_field(type) {
+      return unpack_funcs[type.type](type);
+    }
+
+    let was_run = false;
+
+    function load(obj) {
+      if (was_run) {
+        return;
+      }
+
+      was_run = true;
+
+      var fields = stt.fields;
+      var flen = fields.length;
+      for (var i = 0; i < flen; i++) {
+        var f = fields[i];
+        var val = unpack_field(f.type);
+        obj[f.name] = val;
+      }
+    }
+
+    if (cls.prototype.loadSTRUCT !== undefined) {
+      let obj;
+
+      if (cls.newSTRUCT !== undefined) {
+        obj = cls.newSTRUCT();
+      } else {
+        obj = new cls();
+      }
+
+      obj.loadSTRUCT(load);
+      return obj;
+    } else if (cls.fromSTRUCT !== undefined) {
+      console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
+      return cls.fromSTRUCT(load);
+    } else { //default case, make new instance and then call load() on it
+      let obj;
+      if (cls.newSTRUCT !== undefined) {
+        obj = cls.newSTRUCT();
+      } else {
+        obj = new cls();
+      }
+
+      load(obj);
+
+      return obj;
+    }
+  }
+};
+
+//main struct script manager
+var manager = _module_exports_$5.manager = new STRUCT();
+
+//manager defaults to structjs.manager
+var write_scripts = _module_exports_$5.write_scripts = function write_scripts(manager, include_code = false) {
+  if (manager === undefined)
+    manager = _module_exports_$5.manager;
+
+  var buf = "";
+
+  manager.forEach(function (stt) {
+    buf += STRUCT.fmt_struct(stt, false, !include_code) + "\n";
+  });
+
+  var buf2 = buf;
+  buf = "";
+
+  for (var i = 0; i < buf2.length; i++) {
+    var c = buf2[i];
+    if (c === "\n") {
+      buf += "\n";
+      var i2 = i;
+      while (i < buf2.length && (buf2[i] === " " || buf2[i] === "\t" || buf2[i] === "\n")) {
+        i++;
+      }
+      if (i !== i2)
+        i--;
+    }
+    else {
+      buf += c;
+    }
+  }
+
+  return buf;
+};
+
+"use strict";
 
 if (typeof btoa == "undefined") {
-  btoa = function btoa(str) {
-    var buffer = new Buffer(""+str, 'binary');
+  _nGlobal.btoa = function btoa(str) {
+    var buffer = new Buffer("" + str, 'binary');
     return buffer.toString('base64');
   };
-  
-  atob = function atob(str) {
+
+  _nGlobal.atob = function atob(str) {
     return new Buffer(str, 'base64').toString('binary');
   };
 }
 
-define('struct_filehelper',[
-  "struct_intern", "struct_util", "struct_binpack", "struct_parseutil",
-  "struct_typesystem", "struct_parser"
-], function(structjs, struct_util, struct_binpack, struct_parseutil, 
-            struct_typesystem, struct_parser) 
-{
-  'use strict';
-  
-  var exports = {};
-  var Class = struct_typesystem.Class;
-  
-  /*
-  file format:
-    magic signature              : 4 bytes
-    file version major           : 2 bytes
-    file version minor           : 1 bytes
-    file version micro           : 1 bytes
-    length of struct scripts     : 4 bytes
-    struct scripts for this file : ...
-    
-    block:
-      magic signature for block              : 4 bytes
-      length of data  (not including header) : 4 bytes
-      id of struct type                      : 4 bytes
-      
-      data                                   : ...
-  */
-  
-  var FileParams = exports.FileParams = class FileParams {
-    constructor() {
-      this.magic = "STRT";
-      this.ext = ".bin";
-      this.blocktypes = ["DATA"];
-      
-      this.version = {
-        major : 0,
-        minor : 0,
-        micro : 1
-      };
-    }
-  };
-  
-  //used to define blocks
-  var Block = exports.Block = Class([
-    function constructor(type_magic, data) {
-      this.type = type_magic;
-      this.data = data;
-    }
-  ]);
-  
-  var FileError = exports.FileError = class FileError {
-  };
-    
-  var FileHelper = exports.FileHelper = Class([
-    //params can be FileParams instance, or object literal
-    //(it will convert to FileParams)
-    function constructor(params) {
-      if (params === undefined) {
-        params = new FileParams();
-      } else {
-        var fp = new FileParams();
-        
-        for (var k in params) {
-          fp[k] = params[k];
-        }
-        params = fp;
-      }
-      
-      this.version = params.version;
-      this.blocktypes = params.blocktypes;
-      this.magic = params.magic;
-      this.ext = params.ext;
-      this.struct = undefined;
-      this.unpack_ctx = undefined;
-    },
-    
-    function read(dataview) {
-      this.unpack_ctx = new struct_binpack.unpack_context();
-      
-      var magic = struct_binpack.unpack_static_string(dataview, this.unpack_ctx, 4);
-      
-      if (magic !== this.magic) {
-        throw new FileError("corrupted file");
-      }
-      
-      this.version = {};
-      this.version.major = struct_binpack.unpack_short(dataview, this.unpack_ctx);
-      this.version.minor = struct_binpack.unpack_byte(dataview, this.unpack_ctx);
-      this.version.micro = struct_binpack.unpack_byte(dataview, this.unpack_ctx);
-      
-      var struct = this.struct = new structjs.STRUCT();
-      
-      var scripts = struct_binpack.unpack_string(dataview, this.unpack_ctx);
-      this.struct.parse_structs(scripts, structjs.manager);
-      
-      var blocks = [];
-      var dviewlen = dataview.buffer.byteLength;
-      
-      while (this.unpack_ctx.i < dviewlen) {
-        //console.log("reading block. . .", this.unpack_ctx.i, dviewlen);
-        
-        var type = struct_binpack.unpack_static_string(dataview, this.unpack_ctx, 4);
-        var datalen = struct_binpack.unpack_int(dataview, this.unpack_ctx);
-        var bstruct = struct_binpack.unpack_int(dataview, this.unpack_ctx);
-        var bdata;
-        
-        //console.log(type, datalen, bstruct);
-        
-        if (bstruct == -2) { //string data, e.g. JSON
-          bdata = struct_binpack.unpack_static_string(dataview, this.unpack_ctx, datalen);
-        } else {
-          bdata = struct_binpack.unpack_bytes(dataview, this.unpack_ctx, datalen);
-          bdata = struct.read_object(bdata, bstruct, new struct_binpack.unpack_context());
-        }
-        
-        var block = new Block();
-        block.type = type;
-        block.data =  bdata;
-        
-        blocks.push(block);
-      }
-      
-      this.blocks = blocks;
-      return blocks;
-    },
-    
-    function write(blocks) {
-      this.struct = structjs.manager;
-      this.blocks = blocks;
-      
-      var data = [];
-      
-      struct_binpack.pack_static_string(data, this.magic, 4);
-      struct_binpack.pack_short(data, this.version.major);
-      struct_binpack.pack_byte(data, this.version.minor & 255);
-      struct_binpack.pack_byte(data, this.version.micro & 255);
-      
-      var scripts = structjs.write_scripts();
-      struct_binpack.pack_string(data, scripts);
-      
-      var struct = this.struct;
-      
-      for (var block of blocks) {
-        if (typeof block.data == "string") { //string data, e.g. JSON
-          struct_binpack.pack_static_string(data, block.type, 4);
-          struct_binpack.pack_int(data, block.data.length);
-          struct_binpack.pack_int(data, -2); //flag as string data
-          struct_binpack.pack_static_string(data, block.data, block.data.length);
-          continue;
-        } 
-        
-        var structName = block.data.constructor.structName;
-        if (structName===undefined || !(structName in struct.structs)) {
-          throw new Error("Non-STRUCTable object " + block.data);
-        }
-        
-        var data2 = [];
-        var stt = struct.structs[structName];
-        
-        struct.write_object(data2, block.data);
-        
-        struct_binpack.pack_static_string(data, block.type, 4);
-        struct_binpack.pack_int(data, data2.length);
-        struct_binpack.pack_int(data, stt.id);
-        
-        struct_binpack.pack_bytes(data, data2);
-      }
-      
-      return new DataView(new Uint8Array(data).buffer);
-    },
-    
-    function writeBase64(blocks) {
-      var dataview = this.write(blocks);
-      
-      var str = "";
-      var bytes = new Uint8Array(dataview.buffer);
-      
-      for (var i=0; i<bytes.length; i++) {
-        str += String.fromCharCode(bytes[i]);
-      }
-      
-      return btoa(str);
-    },
-    
-    function makeBlock(type, data) {
-      return new Block(type, data);
-    },
-    
-    function readBase64(base64) {
-      var data = atob(base64);
-      var data2 = new Uint8Array(data.length);
-      
-      for (var i=0; i<data.length; i++) {
-        data2[i] = data.charCodeAt(i);
-      }
-      
-      return this.read(new DataView(data2.buffer));
-    }
-  ]);
-  /*
-    //get type data from structjs.manager
-    var classes = {};
-    structjs.manager.forEach(function(stt) {
-      classes[stt] 
-    }, this);
-  */
-  
-  return exports;
-});
+var Class$5 = _module_exports_.Class;
 
-define('structjs',[
-  "struct_intern", "struct_filehelper", "struct_util", "struct_binpack", 
-  "struct_parseutil", "struct_typesystem", "struct_parser"
-], function(struct_intern, struct_filehelper, struct_util, struct_binpack, 
-            struct_parseutil, struct_typesystem, struct_parser)
-{
-  "use strict";
+/*
+file format:
+  magic signature              : 4 bytes
+  file version major           : 2 bytes
+  file version minor           : 1 bytes
+  file version micro           : 1 bytes
+  length of struct scripts     : 4 bytes
+  struct scripts for this file : ...
+  
+  block:
+    magic signature for block              : 4 bytes
+    length of data  (not including header) : 4 bytes
+    id of struct type                      : 4 bytes
+    
+    data                                   : ...
+*/
 
-  var exports = {};
-  
-  var StructTypeMap = struct_parser.StructTypeMap;
-  var StructTypes = struct_parser.StructTypes;
-  var Class = struct_typesystem.Class;
-  
-  //forward struct_intern's exports
-  for (var k in struct_intern) {
-    exports[k] = struct_intern[k];
+const _module_exports_$6 = {};
+var FileParams = _module_exports_$6.FileParams = class FileParams {
+  constructor() {
+    this.magic = "STRT";
+    this.ext = ".bin";
+    this.blocktypes = ["DATA"];
+
+    this.version = {
+      major: 0,
+      minor: 0,
+      micro: 1
+    };
   }
-  
-  exports.register = function register(cls, name) {
-    return exports.manager.register(cls, name);
-  };
-  exports.inherit = function() {
-    return exports.STRUCT.inherit(...arguments);
-  };
-  
-  exports.setDebugMode = struct_intern.setDebugMode;
-  
-  //export other modules
-  exports.binpack = struct_binpack;
-  exports.util = struct_util;
-  exports.typesystem = struct_typesystem;
-  exports.parseutil = struct_parseutil;
-  exports.parser = struct_parser;
-  exports.filehelper = struct_filehelper;
-  
-  return exports;
+};
+
+//used to define blocks
+var Block = _module_exports_$6.Block = class Block {
+  constructor(type_magic, data) {
+    this.type = type_magic;
+    this.data = data;
+  }
+};
+
+var FileError = _module_exports_$6.FileError = class FileeError extends Error {
+};
+
+var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
+  //params can be FileParams instance, or object literal
+  //(it will convert to FileParams)
+  constructor(params) {
+    if (params === undefined) {
+      params = new FileParams();
+    } else {
+      var fp = new FileParams();
+
+      for (var k in params) {
+        fp[k] = params[k];
+      }
+      params = fp;
+    }
+
+    this.version = params.version;
+    this.blocktypes = params.blocktypes;
+    this.magic = params.magic;
+    this.ext = params.ext;
+    this.struct = undefined;
+    this.unpack_ctx = undefined;
+  }
+
+  read(dataview) {
+    this.unpack_ctx = new _module_exports_$2.unpack_context();
+
+    var magic = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, 4);
+
+    if (magic !== this.magic) {
+      throw new FileError("corrupted file");
+    }
+
+    this.version = {};
+    this.version.major = _module_exports_$2.unpack_short(dataview, this.unpack_ctx);
+    this.version.minor = _module_exports_$2.unpack_byte(dataview, this.unpack_ctx);
+    this.version.micro = _module_exports_$2.unpack_byte(dataview, this.unpack_ctx);
+
+    var struct = this.struct = new structjs.STRUCT();
+
+    var scripts = _module_exports_$2.unpack_string(dataview, this.unpack_ctx);
+    this.struct.parse_structs(scripts, structjs.manager);
+
+    var blocks = [];
+    var dviewlen = dataview.buffer.byteLength;
+
+    while (this.unpack_ctx.i < dviewlen) {
+      //console.log("reading block. . .", this.unpack_ctx.i, dviewlen);
+
+      var type = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, 4);
+      var datalen = _module_exports_$2.unpack_int(dataview, this.unpack_ctx);
+      var bstruct = _module_exports_$2.unpack_int(dataview, this.unpack_ctx);
+      var bdata;
+
+      //console.log(type, datalen, bstruct);
+
+      if (bstruct == -2) { //string data, e.g. JSON
+        bdata = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, datalen);
+      } else {
+        bdata = _module_exports_$2.unpack_bytes(dataview, this.unpack_ctx, datalen);
+        bdata = struct.read_object(bdata, bstruct, new _module_exports_$2.unpack_context());
+      }
+
+      var block = new Block();
+      block.type = type;
+      block.data = bdata;
+
+      blocks.push(block);
+    }
+
+    this.blocks = blocks;
+    return blocks;
+  }
+
+  write(blocks) {
+    this.struct = structjs.manager;
+    this.blocks = blocks;
+
+    var data = [];
+
+    _module_exports_$2.pack_static_string(data, this.magic, 4);
+    _module_exports_$2.pack_short(data, this.version.major);
+    _module_exports_$2.pack_byte(data, this.version.minor & 255);
+    _module_exports_$2.pack_byte(data, this.version.micro & 255);
+
+    var scripts = structjs.write_scripts();
+    _module_exports_$2.pack_string(data, scripts);
+
+    var struct = this.struct;
+
+    for (var block of blocks) {
+      if (typeof block.data == "string") { //string data, e.g. JSON
+        _module_exports_$2.pack_static_string(data, block.type, 4);
+        _module_exports_$2.pack_int(data, block.data.length);
+        _module_exports_$2.pack_int(data, -2); //flag as string data
+        _module_exports_$2.pack_static_string(data, block.data, block.data.length);
+        continue;
+      }
+
+      var structName = block.data.constructor.structName;
+      if (structName === undefined || !(structName in struct.structs)) {
+        throw new Error("Non-STRUCTable object " + block.data);
+      }
+
+      var data2 = [];
+      var stt = struct.structs[structName];
+
+      struct.write_object(data2, block.data);
+
+      _module_exports_$2.pack_static_string(data, block.type, 4);
+      _module_exports_$2.pack_int(data, data2.length);
+      _module_exports_$2.pack_int(data, stt.id);
+
+      _module_exports_$2.pack_bytes(data, data2);
+    }
+
+    return new DataView(new Uint8Array(data).buffer);
+  }
+
+  writeBase64(blocks) {
+    var dataview = this.write(blocks);
+
+    var str = "";
+    var bytes = new Uint8Array(dataview.buffer);
+
+    for (var i = 0; i < bytes.length; i++) {
+      str += String.fromCharCode(bytes[i]);
+    }
+
+    return btoa(str);
+  }
+
+  makeBlock(type, data) {
+    return new Block(type, data);
+  }
+
+  readBase64(base64) {
+    var data = atob(base64);
+    var data2 = new Uint8Array(data.length);
+
+    for (var i = 0; i < data.length; i++) {
+      data2[i] = data.charCodeAt(i);
+    }
+
+    return this.read(new DataView(data2.buffer));
+  }
+};
+/*
+  //get type data from structjs.manager
+  var classes = {};
+  structjs.manager.forEach(function(stt) {
+    classes[stt] 
+  }, this);
+*/
+
+if (typeof window !== "undefined") {
+  window._nGlobal = window;
+} else if (typeof self !== "undefined") {
+  self._nGlobal = self;
+} else {
+  global._nGlobal = global;
+}
+
+const _module_exports_$7 = {};
+Object.defineProperty(_module_exports_$7, "STRUCT_ENDIAN", {
+  get: function () {
+    return _module_exports_$2.STRUCT_ENDIAN;
+  },
+  set: function (val) {
+    _module_exports_$2.STRUCT_ENDIAN = val;
+  }
 });
 
+for (let k in _module_exports_$5) {
+  _module_exports_$7[k] = _module_exports_$5[k];
+}
 
-require(["structjs"]);
-    //The modules for your project will be inlined above
-    //this snippet. Ask almond to synchronously require the
-    //module value for 'main' here and return it as the
-    //value to use for the public API for the built file.
-    return require('structjs');
-}));
+var StructTypeMap$2 = _module_exports_$4.StructTypeMap;
+var StructTypes$2 = _module_exports_$4.StructTypes;
+var Class$6 = _module_exports_.Class;
+
+//forward struct_intern's exports
+for (var k$1 in _module_exports_$5) {
+  _module_exports_$7[k$1] = _module_exports_$5[k$1];
+}
+
+/** Register a class with nstructjs **/
+_module_exports_$7.register = function register(cls, name) {
+  return _module_exports_$7.manager.register(cls, name);
+};
+_module_exports_$7.inherit = function () {
+  return _module_exports_$7.STRUCT.inherit(...arguments);
+};
+
+_module_exports_$7.setDebugMode = _module_exports_$5.setDebugMode;
+
+//export other modules
+_module_exports_$7.binpack = _module_exports_$2;
+_module_exports_$7.util = _module_exports_$1;
+_module_exports_$7.typesystem = _module_exports_;
+_module_exports_$7.parseutil = _module_exports_$3;
+_module_exports_$7.parser = _module_exports_$4;
+_module_exports_$7.filehelper = _module_exports_$6;
+
+module.exports = _module_exports_$7;
+  _nGlobal.nstructjs = module.exports;
+  return exports;
+})();
 
 let nstructjs$1 = window.nstructjs;
 
@@ -4086,6 +3756,36 @@ define(function () {
     }
 })());
 
+class MovingAvg extends Array {
+  constructor(size=64) {
+    super();
+
+    this.length = size;
+    this.cur = 0;
+    this.used = 0;
+    this.sum = 0;
+  }
+
+  add(val) {
+    if (this.used < this.length) {
+      this[this.cur] = val;
+      this.used++;
+    } else {
+      this.sum -= this[this.cur];
+      this[this.cur] = val;
+    }
+
+    this.sum += val;
+    this.cur = (this.cur + 1) % this.length;
+
+    return this.sample();
+  }
+
+  sample() {
+    return this.used ? this.sum / this.used : 0.0;
+  }
+}
+
 let timers = {};
 
 function pollTimer(id, interval) {
@@ -4126,6 +3826,9 @@ function isMobile() {
 
 //window._isMobile = isMobile;
 
+let SmartConsoleTag = Symbol("SmartConsoleTag");
+let tagid = 0;
+
 class SmartConsoleContext {
   constructor(name, console) {
     this.name = name;
@@ -4151,12 +3854,66 @@ class SmartConsoleContext {
 
 
   hash(args) {
-    let args2 = [];
-    for (let i=0; i<args.length; i++) {
-      args2.push(args[i]);
+    let sum = 0;
+    let mul = (1<<19)-1, off = (1<<27)-1;
+    let i = 0;
+
+    function dohash(h) {
+      h = (h*mul + off + i*mul*0.25) & mul;
+
+      i++;
+      sum = sum ^ h;
     }
 
-    return JSON.stringify(args2);
+    let visit = new Set();
+
+    let recurse = (n) => {
+      if (typeof n === "string") {
+        dohash(strhash(n));
+      } else if (typeof n === "undefined" || n === null) {
+        dohash(0);
+      } else if (typeof n === "object") {
+        if (n[SmartConsoleTag] === undefined) {
+          n[SmartConsoleTag] = tagid++;
+        }
+
+        if (visit.has(n[SmartConsoleTag])) {
+          return;
+        }
+
+        visit.add(n[SmartConsoleTag]);
+
+        let keys = getAllKeys(n);
+
+        for (let k of keys) {
+          let v;
+
+          if (typeof k !== "string") {
+            continue;
+          }
+
+          try {
+            v = n[k];
+          } catch (error) {
+            continue;
+          }
+
+          recurse(v);
+        }
+      } else if (typeof n === "function") {
+        dohash(strhash(""+n.name));
+      }
+    };
+
+    //let str = "";
+
+    for (let i=0; i<args.length; i++) {
+      recurse(args[i]);
+      //str += args[i] + " ";
+    }
+
+    //window.console.log("HASH", sum, str);
+    return sum;
   }
 
   clearCache() {
@@ -5166,6 +4923,7 @@ class ImageReader {
 
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  MovingAvg: MovingAvg,
   timers: timers,
   pollTimer: pollTimer,
   isMobile: isMobile,
@@ -5750,6 +5508,36 @@ class Matrix4 {
     this.multiply(mat);
   }
 
+  normalize() {
+    let m = this.$matrix;
+
+    let v1 = new Vector4([m.m11, m.m12, m.m13, m.m14]);
+    let v2 = new Vector4([m.m21, m.m22, m.m23, m.m24]);
+    let v3 = new Vector4([m.m31, m.m32, m.m33, m.m34]);
+    let v4 = new Vector4([m.m41, m.m42, m.m43, m.m44]);
+
+    v1.normalize();
+    v2.normalize();
+    v3.normalize();
+
+    let flat = new Array().concat(v1).concat(v2).concat(v3).concat(v4);
+    this.load(flat);
+
+    return this;
+  }
+
+  clearTranslation(set_w_to_one=false) {
+    let m = this.$matrix;
+
+    m.m41 = m.m42 = m.m43 = 0.0;
+
+    if (set_w_to_one) {
+      m.m44 = 1.0;
+    }
+
+    return this;
+  }
+
   //this is really like the lookAt method, isn't it.
   makeNormalMatrix(normal, up=undefined) {
     let n = makenormalcache.next().load(normal).normalize();
@@ -5797,6 +5585,8 @@ class Matrix4 {
     tmp.multiply(this);
     
     this.load(tmp);
+
+    return this;
   }
   
   multiply(mat) {
@@ -6085,6 +5875,10 @@ class Matrix4 {
 
   _determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3) {
     return a1*this._determinant2x2(b2, b3, c2, c3)-b1*this._determinant2x2(a2, a3, c2, c3)+c1*this._determinant2x2(a2, a3, b2, b3);
+  }
+
+  determinant() {
+    return this._determinant4x4();
   }
 
   _determinant4x4() {
@@ -6997,6 +6791,17 @@ function normString(s) {
   return s.toLowerCase();
 }
 
+function myToFixed(f, decimals) {
+  f = f.toFixed(decimals);
+  while (f.endsWith("0") || f.endsWith(".")) {
+    f = f.slice(0, f.length-1);
+  }
+
+  if (f.length == 0)
+    f = "0";
+
+  return f.trim();
+}
 const Units = [];
 
 class Unit {
@@ -7082,7 +6887,7 @@ class MeterUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    return "" + value + " m";
+    return "" + myToFixed(value, decimals) + " m";
   }
 }
 
@@ -7119,7 +6924,7 @@ class InchUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    return "" + value.toFixed(decimals) + "in";
+    return "" + myToFixed(value, decimals) + "in";
   }
 }
 Unit.register(InchUnit);
@@ -7174,12 +6979,12 @@ class FootUnit extends Unit {
     let vin = value % 12;
 
     if (vft === 0.0) {
-      return vin.toFixed(decimals) + " in";
+      return myToFixed(value, decimals) + " in";
     }
 
     let s = "" + vft + " ft";
     if (vin !== 0.0) {
-      s += " " + vin.toFixed(decimals) + " in";
+      s += " " + myToFixed(value, decimals) + " in";
     }
 
     return s;
@@ -7214,7 +7019,7 @@ class MileUnit extends Unit {
   }
 
   static buildString(value, decimals=3) {
-    return ""+value.toFixed(decimals) + " miles";
+    return "" + myToFixed(value, decimals) + " miles";
   }
 }
 Unit.register(MileUnit);
@@ -7250,7 +7055,7 @@ class DegreeUnit extends Unit {
   }
 
   static buildString(value, decimals=3) {
-    return ""+value.toFixed(decimals) + " \u00B0";
+    return "" + myToFixed(value, decimals) + " \u00B0";
   }
 };
 Unit.register(DegreeUnit);
@@ -7284,7 +7089,7 @@ class RadianUnit extends Unit {
   }
 
   static buildString(value, decimals=3) {
-    return ""+value.toFixed(decimals) + " r";
+    return "" + myToFixed(value, decimals) + " r";
   }
 };
 
@@ -7300,8 +7105,31 @@ function setMetric(val) {
 Unit.isMetric = true;
 Unit.baseUnit = "meter";
 
+let numre = /[+\-]?[0-9]+(\.[0-9]*)?$/;
+let hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
+let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
+let binre = /[+\-]?0b[01]+$/;
+let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
+
+function isNumber(s) {
+  s = (""+s).trim();
+  function test(re) {
+    return s.search(re) == 0;
+  }
+
+  return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
+}
+
 function parseValue(string, baseUnit=undefined) {
   let base;
+
+  //unannotated string?
+  if (isNumber(string)) {
+    //assume base unit
+    let f = parseFloat(string);
+    
+    return f;
+  }  
 
   if (baseUnit) {
     base = Unit.getUnit(baseUnit);
@@ -7731,6 +7559,9 @@ let Icons = {
 
 let exports = {
   menu_close_time : 500,
+  doubleClickTime : 500,
+  //timeout for press-and-hold (touch) version of double clicking
+  doubleClickHoldTime : 750,
   DEBUG : {
     screenborders: false,
     areaContextPushes: false,
@@ -7772,6 +7603,234 @@ let exports = {
 };
 
 let modalstack = [];
+let singleMouseCBs = {};
+
+function singletonMouseEvents() {
+  let keys = ["mousedown", "mouseup", "mousemove"];
+  for (let k of keys) {
+    singleMouseCBs[k] = new Set();
+  }
+
+  let ddd = -1.0;
+  window.testSingleMouseUpEvent = (type = "mousedown") => {
+    let id = ddd++;
+    singleMouseEvent(() => {
+      console.log("mouse event", id);
+    }, type);
+  };
+
+  let _mpos = new Vector2();
+
+  function doSingleCbs(e, type) {
+    let list = singleMouseCBs[type];
+    singleMouseCBs[type] = new Set();
+
+    if (e.type !== "touchend" && e.type !== "touchcancel") {
+      _mpos[0] = e.touches && e.touches.length > 0 ? e.touches[0].pageX : e.x;
+      _mpos[1] = e.touches && e.touches.length > 0 ? e.touches[0].pageY : e.y;
+    }
+
+    if (e.touches) {
+      e = copyEvent(e);
+
+      e.type = type;
+      if (e.touches.length > 0) {
+        e.x = e.pageX = e.touches[0].pageX;
+        e.y = e.pageY = e.touches[0].pageY;
+      } else {
+        e.x = _mpos[0];
+        e.y = _mpos[1];
+      }
+    }
+
+    for (let cb of list) {
+      try {
+        cb(e);
+      } catch (error) {
+        print_stack$1(error);
+        console.warn("Error in event callback");
+      }
+    }
+  }
+
+  window.addEventListener("mouseup", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+  window.addEventListener("touchcancel", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+  document.addEventListener("touchend", (e) => {
+    doSingleCbs(e, "mouseup");
+  }, {capture: true});
+
+  document.addEventListener("mousedown", (e) => {
+    doSingleCbs(e, "mousedown");
+  }, {capture: true});
+  document.addEventListener("touchstart", (e) => {
+    doSingleCbs(e, "mousedown");
+  }, {capture: true});
+
+  document.addEventListener("mousemove", (e) => {
+    doSingleCbs(e, "mousemove");
+  }, {capture: true});
+  document.addEventListener("touchmove", (e) => {
+    doSingleCbs(e, "mousemove");
+  }, {capture: true});
+
+  return {
+    singleMouseEvent(cb, type) {
+      if (!(type in singleMouseCBs)) {
+        throw new Error("not a mouse event");
+      }
+
+      singleMouseCBs[type].add(cb);
+    }
+  };
+};
+
+singletonMouseEvents = singletonMouseEvents();
+
+/**
+ * adds a mouse event callback that only gets called once
+ * */
+function singleMouseEvent(cb, type) {
+  return singletonMouseEvents.singleMouseEvent(cb, type);
+}
+
+
+/*tests if either the left mouse button is down,
+* or a touch event has happened and e.touches.length == 1*/
+function isLeftClick(e) {
+  if (e.touches !== undefined) {
+    return e.touches.length === 1;
+  }
+
+  return e.button === 0;
+}
+
+class DoubleClickHandler {
+  constructor() {
+    this.down = 0;
+    this.last = 0;
+    this.dblEvent = undefined;
+
+    this.start_mpos = new Vector2();
+
+    this._on_mouseup = this._on_mouseup.bind(this);
+    this._on_mousemove = this._on_mousemove.bind(this);
+  }
+
+  _on_mouseup(e) {
+    //console.log("mup", e);
+    this.mdown = false;
+  }
+
+  _on_mousemove(e) {
+    let mpos = new Vector2();
+    mpos[0] = e.x; mpos[1] = e.y;
+
+    let dist = mpos.vectorDistance(this.start_mpos) * devicePixelRatio;
+
+    if (dist > 11) {
+      //console.log("cancel", dist);
+      this.mdown = false;
+    }
+
+    if (this.mdown) {
+      singleMouseEvent(this._on_mousemove, "mousemove");
+    }
+
+    this.update();
+  }
+
+  mousedown(e) {
+    //console.log("mdown", e.x, e.y);
+
+    if (!this.last) {
+      this.last = 0;
+    }
+    if (!this.down) {
+      this.down = 0;
+    }
+    if (!this.up) {
+      this.up = 0;
+    }
+
+    if (isMouseDown(e)) {
+      this.mdown = true;
+
+      let cpy = Object.assign({}, e);
+
+      this.start_mpos[0] = e.x;
+      this.start_mpos[1] = e.y;
+
+      singleMouseEvent(this._on_mousemove, "mousemove");
+
+      if (e.type.search("touch") >= 0 && e.touches.length > 0) {
+        cpy.x = cpy.pageX = e.touches[0].pageX;
+        cpy.y = cpy.pageY = e.touches[1].pageY;
+      } else {
+        cpy.x = cpy.pageX = e.x;
+        cpy.y = cpy.pageY = e.y;
+      }
+
+      //stupid real MouseEvent class zeros .x/.y
+      //continue using hackish copyEvent for now...
+
+      this.dblEvent = copyEvent(e);
+      this.dblEvent.type = "dblclick";
+
+      this.last = this.down;
+      this.down = time_ms();
+
+      if (this.down - this.last < exports.doubleClickTime) {
+        this.mdown = false;
+        this.ondblclick(this.dblEvent);
+
+        this.down = this.last = 0.0;
+      } else {
+        singleMouseEvent(this._on_mouseup, "mouseup");
+      }
+    } else {
+      this.mdown = false;
+    }
+  }
+
+  //you may override this
+  ondblclick(e) {
+
+  }
+
+  update() {
+    if (modalstack.length > 0) {
+      //cancel double click requests
+      this.mdown = false;
+    }
+
+    if (this.mdown && time_ms() - this.down > exports.doubleClickHoldTime) {
+      this.mdown = false;
+      this.ondblclick(this.dblEvent);
+    }
+  }
+  
+  abort() {
+    this.last = this.down = 0;
+  }
+}
+
+function isMouseDown(e) {
+  let mdown = 0;
+
+  if (e.touches !== undefined) {
+    mdown = e.touches.length > 0;
+  } else {
+    mdown = e.buttons;
+  }
+
+  mdown = mdown & 1;
+
+  return mdown;
+}
 
 function pathDebugEvent(e, extra) {
   e.__prevdef = e.preventDefault;
@@ -7825,6 +7884,8 @@ function copyEvent(e) {
       ret[k] = v;
     }
   }
+
+  ret.original = e;
 
   return ret;
 }
@@ -10528,6 +10589,9 @@ class ToolProperty extends ToolPropertyIF {
 class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
+
+    if (value)
+      this.setValue(value);
   }
   
   copyTo(b) {
@@ -10558,7 +10622,7 @@ let num_res =[
 ];
 //num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
 
-function isNumber(f) {
+function isNumber$1(f) {
   if (f == "NaN" || (typeof f == "number" && isNaN(f))) {
     return false;
   }
@@ -10584,7 +10648,7 @@ function isNumber(f) {
 }
 _addClass(StringProperty);
 
-window.isNumber = isNumber;
+window.isNumber = isNumber$1;
 
 class NumProperty extends ToolProperty {
   constructor(type, value, apiname, 
@@ -11490,6 +11554,8 @@ class InheritFlag {
   }
 }
 
+let modalstack$1 = [];
+
 class ToolOp extends EventHandler {
   static tooldef() {return {
     uiname   : "!untitled tool",
@@ -11663,6 +11729,16 @@ class ToolOp extends EventHandler {
     this.drawlines = [];
   }
 
+  static onTick() {
+    for (let toolop of modalstack$1) {
+      toolop.on_tick();
+    }
+  }
+
+  on_tick() {
+
+  }
+
   //default on_keydown implementation for modal tools,
   //no need to call super() to execute this if you don't want to
   on_keydown(e) {
@@ -11731,7 +11807,15 @@ class ToolOp extends EventHandler {
     this.drawlines.push(line);
     return line;
   }
-  
+
+  pushModal(node) {
+    throw new Error("cannot call this; use modalStart")
+  }
+
+  popModal() {
+    throw new Error("cannot call this; use modalEnd");
+  }
+
   //returns promise to be executed on modalEnd
   modalStart(ctx) {
     if (this.modalRunning) {
@@ -11748,7 +11832,8 @@ class ToolOp extends EventHandler {
       this._accept = accept;
       this._reject = reject;
 
-      this.pushModal(ctx.screen);
+      modalstack$1.push(this);
+      super.pushModal(ctx.screen);
     });
 
     return this._promise;
@@ -11764,6 +11849,10 @@ class ToolOp extends EventHandler {
   }
   
   modalEnd(was_cancelled) {
+    if (this._modalstate) {
+      modalstack$1.pop();
+    }
+
     if (this._overdraw !== undefined) {
       this._overdraw.end();
       this._overdraw = undefined;
@@ -11784,7 +11873,7 @@ class ToolOp extends EventHandler {
     this.modalRunning = false;
     this.is_modal = false;
     
-    this.popModal(_appstate._modal_dom_root);
+    super.popModal(_appstate._modal_dom_root);
     
     this._promise = undefined;
     this._accept(ctx, false); //Context, was_cancelled
@@ -12943,6 +13032,8 @@ function parseToolPath(str, check_tool_exists=true) {
     initToolPaths();
   }
 
+  let startstr = str;
+
   let i1 = str.search(/\(/);
   let i2 = str.search(/\)/);
   let args = "";
@@ -12956,7 +13047,14 @@ function parseToolPath(str, check_tool_exists=true) {
     throw new DataPathError("unknown tool " + str);
   }
 
-  let ret = Parser.parse(args);
+  let ret;
+
+  try {
+    ret = Parser.parse(args);
+  } catch (error) {
+    console.log(error);
+    throw new DataPathError(`"${startstr}"\n  ${error.message}`);
+  }
 
   return {
     toolclass : ToolPaths[str],
@@ -14838,6 +14936,17 @@ class CSSFont {
     return this.genCSS + ":" + this.size + ":" + this.color;
   }
 }
+CSSFont.STRUCT = `
+CSSFont {
+  size     : float | obj._size;
+  font     : string | obj.font || "";
+  style    : string | obj.font || "";
+  color    : string | ""+obj.color;
+  variant  : string | obj.variant || "";
+  weight   : string | ""+obj.weight;
+}
+`;
+register(CSSFont);
 
 const DefaultTheme = {
   base : {
@@ -15125,7 +15234,8 @@ function getDefault(key, elem) {
 
 //XXX implement me!
 function IsMobile() {
-  return false;
+  console.warn("ui_base.IsMobile is deprecated; use util.isMobile instead");
+  return isMobile();
 };
 
 let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
@@ -15377,7 +15487,8 @@ const PackFlags = {
   STRIP_VERT : 1024,
   STRIP : 512|1024,
   SIMPLE_NUMSLIDERS : 2048,
-  FORCE_ROLLER_SLIDER : 4096
+  FORCE_ROLLER_SLIDER : 4096,
+  HIDE_CHECK_MARKS : (1<<13)
 };
  
 let first$1 = (iter) => {
@@ -16582,9 +16693,9 @@ class UIBase extends HTMLElement {
     //if (dpistack.length > 0) {
     //  return dpistack[this.dpistack.length-1];
     //} else {
-    if (isMobile()) {
-      return window.devicePixelRatio * visualViewport.scale;
-    }
+    //if (util.isMobile()) {
+      return window.devicePixelRatio; // * visualViewport.scale;
+    //}
 
     return window.devicePixelRatio;
     //}
@@ -17595,7 +17706,7 @@ UIBase$1.register(Button);
 
 "use strict";
 
-function myToFixed(s, n) {
+function myToFixed$1(s, n) {
   s = s.toFixed(n);
 
   while (s.endsWith('0')) {
@@ -17870,7 +17981,7 @@ class TextBox extends UIBase$2 {
     if ((prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT)) {
       let val = parseValue(this.text, this.baseUnit);
 
-      if (!isNumber(this.text.trim())) {
+      if (!isNumber$1(this.text.trim())) {
         this.flash(ErrorColors.ERROR, this.dom);
         this.focus();
         this.dom.focus();
@@ -17922,7 +18033,7 @@ function checkForTextBox(screen, x, y) {
 
 "use strict";
 
-function myToFixed$1(s, n) {
+function myToFixed$2(s, n) {
   s = s.toFixed(n);
 
   while (s.endsWith('0')) {
@@ -18857,6 +18968,10 @@ class IconCheck extends Button {
   }
 
   set drawCheck(val) {
+    if (val && (this.packflag & PackFlags$3.HIDE_CHECK_MARKS)) {
+      this.packflag &= ~PackFlags$3.HIDE_CHECK_MARKS;
+    }
+
     this._drawCheck = val;
     this._redraw();
   }
@@ -18946,6 +19061,10 @@ class IconCheck extends Button {
   }
   
   update() {
+    if (this.packflag & PackFlags$3.HIDE_CHECK_MARKS) {
+      this.drawCheck = false;
+    }
+
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
     }
@@ -21663,7 +21782,7 @@ class NumSliderSimple2 extends ColumnFrame {
     textbox.onchange = () => {
       let text = textbox.text;
 
-      if (!isNumber(text)) {
+      if (!isNumber$1(text)) {
         textbox.flash("red");
         return;
       } else {
@@ -28131,7 +28250,7 @@ function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   
   let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
 
-  if (Math.abs(div) < 0.00001) {
+  if (Math.abs(div) < 0.000001) {
     return undefined;
   }
 
@@ -30742,8 +30861,10 @@ class ScreenBorder extends UIBase {
     `;
 
     let ok = this.movable;
-    for (let sarea of this.sareas) {
-      ok = ok || sarea.floating;
+    if (!this.outer) {
+      for (let sarea of this.sareas) {
+        ok = ok || sarea.floating;
+      }
     }
 
     if (ok) {
@@ -33176,17 +33297,61 @@ class Screen$3 extends UIBase {
       height *= dpi;
       width = ~~width;
       height = ~~height;
+    } else {
+      //width /= visualViewport.scale;
+      //height /= visualViewport.scale;
     }
 
     if (exports.DEBUG.customWindowSize) {
       let s = exports.DEBUG.customWindowSize;
       width = s.width;
-      height = s.height; 
+      height = s.height;
     }
-    
-    if (width !== this.size[0] || height !== this.size[1]) {
-      console.log("resizing", width, height, this.size[0], this.size[1]);
+
+    let ox = visualViewport.offsetLeft;
+    let oy = visualViewport.offsetTop;
+    let scale = visualViewport.scale;
+
+    let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
+
+    let scale2 = 1.0/scale;
+    let r = document.body.getBoundingClientRect();
+    //ox -= r.x/scale
+    //oy -= r.y/scale;
+
+    scale2 = 1.0/scale;
+    //oy *= scale2;
+    //ox *= scale2;
+
+    //document.body.style["position"] = "fixed";
+    //document.body.style["left"] = ox+"px";
+    //document.body.style["top"] = oy+"0px";
+
+    document.body.style["transform-origin"] = "top left";
+    document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
+
+    //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
+
+    if (key !== this._last_ckey1) {
+      console.log("resizing", key, this._last_ckey1);
+      this._last_ckey1 = key;
+
       this.on_resize(this.size, [width, height]);
+      this.on_resize(this.size, this.size);
+
+      let scale = visualViewport.scale;
+
+      //for (let sarea of this.sareas) {
+      //  sarea.style["transform"] = `translate(${ox}px, ${oy}px)`;// scale(${1.0 / scale})`;
+      //  console.log(sarea.style["transform"]);
+      //}
+
+      this.regenBorders();
+      //this.pos[0] = visualViewport.offsetLeft * visualViewport.scale;
+      //this.pos[1] = visualViewport.offsetTop * visualViewport.scale;
+
+      this.setCSS();
+      this.completeUpdate();
     }
   }
 
@@ -34478,7 +34643,7 @@ class Screen$3 extends UIBase {
       sz.div(vec);
 
       for (let v of this.screenverts) {
-        snap(v.sub(min).mul(sz)).add(this.pos);
+        snap(v.sub(min).mul(sz));//.add(this.pos);
       }
     } else {
       for (let v of this.screenverts) {
@@ -34593,8 +34758,8 @@ class Screen$3 extends UIBase {
       //check if border is on screen limits
       let axis = border.horiz ? 1 : 0;
 
-      ret = Math.abs(border.v1[axis] - this.pos[axis]) < 2;
-      ret = ret || Math.abs(border.v1[axis] - this.pos[axis] - this.size[axis]) < 2;
+      ret = Math.abs(border.v1[axis] - this.pos[axis]) < 4;
+      ret = ret || Math.abs(border.v1[axis] - this.pos[axis] - this.size[axis]) < 4;
     }
 
     border.outer = ret;
@@ -34988,6 +35153,30 @@ function startEvents(getScreenFunc) {
   });
 }
 _setScreenClass(Screen$3);
+
+/*
+document.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("scroll", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("resize", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("pointerstart", (e) => {
+  e.preventDefault();
+}, {capture : true});
+document.addEventListener("pointermove", (e) => {
+  e.preventDefault();
+}, {capture : true});
+*/
 
 function getImageData(image) {
   if (typeof image == "string") {
@@ -35469,6 +35658,8 @@ class Context {
           console.log("getting value");
         }
 
+        //Chrome's console messes this up
+
         inside_map[ikey] = 1;
 
         try {
@@ -35665,5 +35856,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isModalHead, isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
