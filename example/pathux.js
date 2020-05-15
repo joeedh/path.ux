@@ -172,8 +172,17 @@ Number.prototype[Symbol.keystr] = Boolean.prototype[Symbol.keystr] = function() 
     window._nGlobal = window;
   }
   
-  let module = {};
-  let exports = _nGlobal.nstructjs = {};
+  let exports;
+  
+  //nodejs?
+  if (typeof window === "undefined" && typeof global !== "undefined") {
+    console.log("Nodejs!");
+  } else {
+    exports = {};
+    _nGlobal.module = {};
+  }
+  
+  
 'use strict';
 
 "use strict";
@@ -2735,7 +2744,12 @@ _module_exports_$7.parser = _module_exports_$4;
 _module_exports_$7.filehelper = _module_exports_$6;
 
 module.exports = _module_exports_$7;
-  _nGlobal.nstructjs = module.exports;
+  if (!(typeof window === "undefined" && typeof global !== "undefined")) {
+    //not nodejs?
+    _nGlobal.nstructjs = module.exports;    
+    _nGlobal.module = undefined;
+  }
+  
   return exports;
 })();
 
