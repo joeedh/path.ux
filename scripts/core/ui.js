@@ -997,7 +997,7 @@ export class Container extends ui_base.UIBase {
       }
 
       frame.oneAxisPadding();
-      frame.background = this.getDefault("BoxSub2BG");
+      frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {
@@ -1092,7 +1092,7 @@ export class Container extends ui_base.UIBase {
       let frame = this.panel(name, name, packflag);
 
       frame.oneAxisPadding();
-      frame.background = this.getDefault("BoxSub2BG");
+      frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {

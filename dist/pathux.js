@@ -2196,7 +2196,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       func = this.compiled_code[fullcode];
     }
     try {
-      return func.call(obj, env);
+      return func.call(obj, obj, env);
     }
     catch (err) {
       _module_exports_$1.print_stack(err);
@@ -4062,7 +4062,7 @@ function list$1(iterable) {
 function getAllKeys(obj) {
   let keys = new Set();
 
-  if (typeof obj !== "object") {
+  if (typeof obj !== "object" && typeof obj !== "function") {
     throw new Error("must pass an object ot getAllKeys; object was: " + obj);
   }
 
@@ -7572,11 +7572,14 @@ let Icons = {
 };
 
 let exports = {
+  colorSchemeType : "light",
+
   menu_close_time : 500,
   doubleClickTime : 500,
   //timeout for press-and-hold (touch) version of double clicking
   doubleClickHoldTime : 750,
   DEBUG : {
+    paranoidEvents: false,
     screenborders: false,
     areaContextPushes: false,
     allBordersMovable: false,
@@ -14763,6 +14766,11 @@ function setDataPathToolOp(cls) {
 
 setImplementationClass(DataAPI);
 
+let ColorSchemeTypes = {
+  LIGHT : "light",
+  DARK  : "dark"
+};
+
 function parsepx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
@@ -14900,6 +14908,63 @@ function validateWebColor(str) {
 
 let theme = {};
 
+function invertTheme() {
+  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+
+  function inverted(color) {
+    if (Array.isArray(color)) {
+      for (let i = 0; i < 3; i++) {
+        color[i] = 1.0 - color[i];
+      }
+
+      return color;
+    }
+
+    color = css2color$1(color);
+    return color2css$2(inverted(color));
+  }
+
+  let bg = document.body.style["background-color"];
+  //if (!bg) {
+    bg = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  //} else {
+  //  bg = inverted(bg);
+  //}
+
+  document.body.style["background-color"] = bg;
+
+  for (let style in theme) {
+    style = theme[style];
+
+    for (let k in style) {
+      let v = style[k];
+
+      if (v instanceof CSSFont) {
+        v.color = inverted(v.color);
+      } else if (typeof v === "string") {
+        v = v.trim().toLowerCase();
+
+        let iscolor = v.search("rgb") >= 0;
+        iscolor = iscolor || v in cmap;
+        iscolor = iscolor || validateWebColor(v);
+
+        if (iscolor) {
+          style[k] = inverted(v);
+        }
+      }
+    }
+  }
+}
+
+window.invertTheme = invertTheme;
+
+function setColorSchemeType(mode) {
+  if (!!mode !== exports.colorSchemeType) {
+    invertTheme();
+    exports.colorSchemeType = mode;
+  }
+
+}
 window.validateWebColor = validateWebColor;
 
 class CSSFont {
@@ -15259,6 +15324,7 @@ keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"
 keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
 const marginPaddingCSSKeys = keys;
 
+
 class _IconManager {
   constructor(image, tilesize, number_of_horizontal_tiles, drawsize) {
     this.tilex = number_of_horizontal_tiles;
@@ -15367,6 +15433,25 @@ class IconManager {
     sheet.canvasDraw(elem, canvas, g, icon, x, y);
     sheet.drawsize = ds;
   }
+
+  findClosestSheet(size) {
+    let sheets = this.iconsheets.concat([]);
+
+    sheets.sort((a, b) => a.drawsize - b.drawsize);
+    let sheet;
+
+    for (let i=0; i<sheets.length; i++) {
+      if (sheets[i].drawsize <= size) {
+        sheet = sheets[i];
+        break;
+      }
+    }
+
+    if (!sheet)
+      sheet = sheets[sheets.length-1];
+
+    return this.iconsheets.indexOf(sheet);
+  }
   
   findSheet(sheet) {
     if (sheet === undefined) {
@@ -15449,6 +15534,10 @@ let IconSheets = {
   LARGE  : 1,
   XLARGE : 2
 };
+
+function getIconManager() {
+  return iconmanager;
+}
 
 function setIconManager(manager, IconSheetsOverride) {
   iconmanager.load(manager);
@@ -15545,12 +15634,94 @@ let _mobile_theme_patterns = [
 
 let _idgen = 0;
 
+class AfterAspect {
+  constructor(owner, key) {
+    this.owner = owner;
+    this.key = key;
+
+    this.chain = [[owner[key], false]];
+    this.chain2 = [[owner[key], false]];
+
+    let this2 = this;
+
+    owner[key] = function() {
+      let chain = this2.chain;
+      let chain2 = this2.chain2;
+
+      chain2.length = chain.length;
+
+      for (let i=0; i<chain.length; i++) {
+        chain2[i] = chain[i];
+      }
+
+      for (let i=0; i<chain2.length; i++) {
+        let [cb, node, once] = chain2[i];
+
+        if (node) {
+          let isDead = !node.isConnected;
+
+          if (node instanceof UIBase) {
+            isDead = isDead || node.isDead();
+          }
+
+          if (isDead) {
+            console.warn("pruning dead AfterAspect callback", node);
+            chain.remove(chain2[i]);
+            continue;
+          }
+        }
+
+        if (once && chain.indexOf(chain2[i]) >= 0) {
+          chain.remove(chain2[i]);
+        }
+
+        cb.apply(this, arguments);
+      }
+    };
+
+    owner[key].after = this.after.bind(this);
+    owner[key].once = this.once.bind(this);
+    owner[key].remove = this.remove.bind(this);
+  }
+
+  static bind(owner, key) {
+    return new AfterAspect(owner, key);
+  }
+
+  remove(cb) {
+    for (item of this.chain) {
+      if (item[0] === cb) {
+        this.chain.remove(item);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  once(cb, node) {
+    return this.after(cb, node, true);
+  }
+
+  after(cb, node, once=false) {
+    if (cb === undefined) {
+      console.warn("invalid call to .after(); cb was undefined");
+    }
+    this.chain.push([cb, node, once]);
+  }
+}
+
 class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    AfterAspect.bind(this, "setCSS");
+
     this.shadow = this.attachShadow({mode : 'open'});
-    
+    if (exports.DEBUG.paranoidEvents) {
+      this.__cbs = [];
+    }
+
     this.shadow._appendChild = this.shadow.appendChild;
 
     ///*
@@ -15724,6 +15895,13 @@ class UIBase extends HTMLElement {
     }
 
     let cb2 = (e) => {
+      if (exports.DEBUG.paranoidEvents) {
+        if (this.isDead()) {
+          this.removeEventListener(type, cb, options);
+          return;
+        }
+      }
+
       if (exports.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
@@ -15751,14 +15929,34 @@ class UIBase extends HTMLElement {
 
     cb._cb = cb2;
 
-    return super.addEventListener(type, cb2, options);
+    if (exports.DEBUG.paranoidEvents) {
+      this.__cbs.push([type, cb2, options]);
+    }
+
+
+    return super.addEventListener(type, cb, options);
   }
 
-  removeEventListener(type, cb, options) {
+  removeEventListener(type, cb, options)
+  {
+    if (exports.DEBUG.paranoidEvents) {
+      for (let item of this.__cbs) {
+        if (item[0] == type && item[1] === cb._cb2 && ("" + item[2]) === ("" + options)) {
+          this.__cbs.remove(item);
+          break;
+        }
+      }
+    }
+
     if (exports.DEBUG.domEventAddRemove) {
       console.log("removeEventListener", type, this._id, options);
     }
-    return super.removeEventListener(type, cb._cb, options);
+
+    if (!cb._cb) {
+      return super.removeEventListener(type, cb, options);
+    } else {
+      return super.removeEventListener(type, cb._cb, options);
+    }
   }
 
   connectedCallback() {
@@ -15839,6 +16037,8 @@ class UIBase extends HTMLElement {
 
   set background(bg) {
     this.__background = bg;
+
+    this.overrideDefault("background-color", bg);
     this.style["background-color"] = bg;
   }
 
@@ -15940,8 +16140,63 @@ class UIBase extends HTMLElement {
   }
 
   setCSS() {
+    let bg = this.getDefault("background-color");
+    if (bg) {
+      this.style["background-color"] = bg;
+    }
+
     let zoom = this.getZoom();
     this.style["transform"] = `scale(${zoom},${zoom})`;
+  }
+
+  traverse(type_or_set) {
+    let this2 = this;
+
+    let classes = type_or_set;
+
+    let is_set = type_or_set instanceof Set;
+    is_set = is_set || type_or_set instanceof set$1;
+    is_set = is_set || Array.isArray(type_or_set);
+
+    if (!is_set) {
+      classes = [type_or_set];
+    }
+
+    let visit = new Set();
+
+    return (function*() {
+      let stack = [this2];
+
+      while (stack.length > 0) {
+        let n = stack.pop();
+
+        visit.add(n);
+
+        if (!n || !n.childNodes) {
+          continue;
+        }
+
+        for (let cls of classes) {
+          if (n instanceof cls) {
+            yield n;
+          }
+        }
+
+        for (let c of n.childNodes) {
+          if (!visit.has(c)) {
+            stack.push(c);
+          }
+        }
+
+        if (n.shadow) {
+          for (let c of n.shadow.childNodes) {
+            if (!visit.has(c)) {
+              stack.push(c);
+            }
+          }
+        }
+      }
+    })();
   }
 
   appendChild(child) {
@@ -15967,6 +16222,15 @@ class UIBase extends HTMLElement {
     if (this.tabIndex >= 0) {
       this.regenTabOrder();
     }
+
+    if (exports.DEBUG.paranoidEvents) {
+      for (let item of this.__cbs) {
+        this.removeEventListener(item[0], item[1], item[2]);
+      }
+
+      this.__cbs = [];
+    }
+
 
     if (this.ondestroy !== undefined) {
       this.ondestroy();
@@ -16545,6 +16809,14 @@ class UIBase extends HTMLElement {
   isDead() {
     let p = this, lastp = this;
 
+    function find(c, n) {
+      for (let n2 of c) {
+        if (n2 === n) {
+          return true;
+        }
+      }
+    }
+
     while (p) {
       lastp = p;
 
@@ -16553,6 +16825,11 @@ class UIBase extends HTMLElement {
         parent = p.parentElement ? p.parentElement : p.parentNode;
       }
 
+      if (parent && p && !find(parent.childNodes, p)) {
+        if (parent.shadow !== undefined && !find(parent.shadow.childNodes)) {
+          return true;
+        }
+      }
       p = parent;
 
       if (p === document.body) {
@@ -20338,7 +20615,7 @@ class Container extends UIBase {
       }
 
       frame.oneAxisPadding();
-      frame.background = this.getDefault("BoxSub2BG");
+      frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
       if (packflag & PackFlags$4.USE_ICONS) {
         for (let key in prop.values) {
@@ -20433,7 +20710,7 @@ class Container extends UIBase {
       let frame = this.panel(name, name, packflag);
 
       frame.oneAxisPadding();
-      frame.background = this.getDefault("BoxSub2BG");
+      frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
       if (packflag & PackFlags$4.USE_ICONS) {
         for (let key in prop.values) {
@@ -24989,7 +25266,7 @@ class TabBar extends UIBase$9 {
       if (key !== this._last_p_key) {
         this._last_p_key = key;
 
-        console.log("tab bar autobuild");
+        //console.log("tab bar autobuild");
         this._layout();
       }
     }
@@ -25048,7 +25325,8 @@ class TabContainer extends UIBase$9 {
 
       let div = document.createElement("div");
 
-      div.style["background-color"] = this.getDefault("DefaultPanelBG");
+      this.tbar.setCSS.once(() => div.style["background-color"] = this.getDefault("DefaultPanelBG"), div);
+
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
       
@@ -25101,7 +25379,15 @@ class TabContainer extends UIBase$9 {
 
   init() {
     super.init();
+
     this.background = this.getDefault("DefaultPanelBG");
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.background = this.getDefault("DefaultPanelBG");
+    this._remakeStyle();
   }
 
   static setDefault(e) {
@@ -26048,6 +26334,9 @@ class Menu extends UIBase$c {
 
     dom.style["display"] = "inline-flex";
 
+    dom.hotkey = hotkey;
+    dom.icon = icon;
+
     let icon_div;
 
     if (1) { //icon >= 0) {
@@ -26087,6 +26376,7 @@ class Menu extends UIBase$c {
     let twid = Math.ceil(g.measureText(text).width);
     let hwid;
     if (hotkey) {
+      dom.hotkey = hotkey;
       g.font = getFont(this, undefined, "HotkeyText");
       hwid = Math.ceil(g.measureText(hotkey).width);
       twid += hwid + 8;
@@ -26135,18 +26425,27 @@ class Menu extends UIBase$c {
       dom.appendChild(hotkey_span);
     }
 
-    return this.addItem(dom, id, add);
+    let ret = this.addItem(dom, id, add);
+
+    ret.hotkey = hotkey;
+    ret.icon = icon;
+    ret.label = text ? text : ret.innerText;
+
+    return ret;
   }
 
   //item can be menu or text
   addItem(item, id, add=true) {
     id = id === undefined ? item : id;
+    let text = item;
 
-    if (typeof item == "string" || item instanceof String) {
+    if (typeof item === "string" || item instanceof String) {
       let dom = document.createElement("dom");
       dom.textContent = item;
       item = dom;
       //return this.addItemExtra(item, id);
+    } else {
+      text = item.textContent;
     }
 
     let li = document.createElement("li");
@@ -26180,6 +26479,8 @@ class Menu extends UIBase$c {
 
     this.items.push(li);
 
+    li.label = text ? text : li.innerText.trim();
+
     if (add) {
       li.addEventListener("click", (e) => {
         //console.log("menu click!");
@@ -26187,7 +26488,7 @@ class Menu extends UIBase$c {
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           //console.log("menu ignore");
           //ignore
-          return;
+          return n;
         }
 
         this.click();
@@ -26474,10 +26775,27 @@ class DropBox extends Button {
     let dpi = this.getDPI();
 
     let x = e.x, y = e.y;
-    let rects = this.dom.getClientRects();
+    let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
-    x = rects[0].x;
-    y = rects[0].y + Math.ceil(rects[0].height);
+    x = rects.x;
+    y = rects.y + rects.height; // + rects[0].height; // visualViewport.scale;
+
+    if (!window.haveElectron) {
+      y -= 8;
+    }
+
+    /*
+    let w = document.createElement("div");
+    w.style["width"] = w.style["height"] = "15px";
+    w.style["background-color"] = "red";
+    w.style["z-index"] = "5000";
+    w.style["position"] = "absolute";
+    w.style["pointer-events"] = "none";
+    w.style["left"] = x + "px";
+    w.style["top"] = y + "px";
+
+    document.body.appendChild(w);
+    //*/
 
     let con = this._popup = menu._popup = screen.popup(this, x, y, false);
     con.noMarginsOrPadding();
@@ -31443,7 +31761,8 @@ class Area$1 extends UIBase {
     row.remove();
     container._prepend(row);
 
-    row.background = this.getDefault("AreaHeaderBG");
+    row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
+
 
     let rh = ~~(16*this.getDPI());
 
@@ -33071,6 +33390,7 @@ class Screen$3 extends UIBase {
     container.style["z-index"] = 205;
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
+    container.style["margin"] = "0px";
 
     container.parentWidget = this;
 
@@ -33078,6 +33398,7 @@ class Screen$3 extends UIBase {
     let p = new Vector2$e();
 
     let _update = container.update;
+    /*causes weird bugs
     container.update = () => {
       _update.call(container);
 
@@ -33101,7 +33422,7 @@ class Screen$3 extends UIBase {
 
       container.style["left"] = x + "px";
       container.style["top"] = y + "px";
-    };
+    }//*/
 
     document.body.appendChild(container);
     //this.shadow.appendChild(container);
@@ -33322,25 +33643,19 @@ class Screen$3 extends UIBase {
       height = s.height;
     }
 
+    let ratio = window.outerHeight / window.innerHeight;
+    let scale = visualViewport.scale;
+
+    let pad = 10;// * scale / devicePixelRatio;
+    width = visualViewport.width * scale - pad;
+    height = visualViewport.height * scale - pad;
+
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
-    let scale = visualViewport.scale;
 
     let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
 
-    let scale2 = 1.0/scale;
-    let r = document.body.getBoundingClientRect();
-    //ox -= r.x/scale
-    //oy -= r.y/scale;
-
-    scale2 = 1.0/scale;
-    //oy *= scale2;
-    //ox *= scale2;
-
-    //document.body.style["position"] = "fixed";
-    //document.body.style["left"] = ox+"px";
-    //document.body.style["top"] = oy+"0px";
-
+    document.body.style["touch-action"] = "none";
     document.body.style["transform-origin"] = "top left";
     document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
 
@@ -33767,6 +34082,18 @@ class Screen$3 extends UIBase {
     }
   }
 
+  completeSetCSS() {
+    let rec = (n) => {
+      n.setCSS();
+
+      n._forEachChildWidget((c) => {
+        rec(c);
+      });
+    };
+
+    rec(this);
+  }
+
   completeUpdate() {
     for (let step of this.update_intern()) {
     }
@@ -34122,16 +34449,17 @@ class Screen$3 extends UIBase {
 
   //XXX rename to regenScreenMesh
   regenBorders() {
-    for (let k in this._edgemap) {
-      let b = this._edgemap[k];
 
+    for (let b of this.screenborders) {
       b.remove();
+      HTMLElement.prototype.remove.call(b);
     }
 
+    this._idmap = {};
     this.screenborders = [];
     this._edgemap = {};
     this._vertmap = {};
-    this.screenverts.length = 0;
+    this.screenverts = [];
 
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
@@ -35870,5 +36198,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

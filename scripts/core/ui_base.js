@@ -95,6 +95,7 @@ keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"
 keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
 export const marginPaddingCSSKeys = keys;
 
+
 class _IconManager {
   constructor(image, tilesize, number_of_horizontal_tiles, drawsize) {
     this.tilex = number_of_horizontal_tiles;
@@ -203,6 +204,25 @@ export class IconManager {
     sheet.canvasDraw(elem, canvas, g, icon, x, y);
     sheet.drawsize = ds;
   }
+
+  findClosestSheet(size) {
+    let sheets = this.iconsheets.concat([]);
+
+    sheets.sort((a, b) => a.drawsize - b.drawsize);
+    let sheet;
+
+    for (let i=0; i<sheets.length; i++) {
+      if (sheets[i].drawsize <= size) {
+        sheet = sheets[i];
+        break;
+      }
+    }
+
+    if (!sheet)
+      sheet = sheets[sheets.length-1];
+
+    return this.iconsheets.indexOf(sheet);
+  }
   
   findSheet(sheet) {
     if (sheet === undefined) {
@@ -285,6 +305,10 @@ export let IconSheets = {
   LARGE  : 1,
   XLARGE : 2
 };
+
+export function getIconManager() {
+  return iconmanager;
+}
 
 export function setIconManager(manager, IconSheetsOverride) {
   iconmanager.load(manager);
@@ -385,9 +409,88 @@ let _mobile_theme_patterns = [
 
 let _idgen = 0;
 
+export class AfterAspect {
+  constructor(owner, key) {
+    this.owner = owner;
+    this.key = key;
+
+    this.chain = [[owner[key], false]];
+    this.chain2 = [[owner[key], false]];
+
+    let this2 = this;
+
+    owner[key] = function() {
+      let chain = this2.chain;
+      let chain2 = this2.chain2;
+
+      chain2.length = chain.length;
+
+      for (let i=0; i<chain.length; i++) {
+        chain2[i] = chain[i];
+      }
+
+      for (let i=0; i<chain2.length; i++) {
+        let [cb, node, once] = chain2[i];
+
+        if (node) {
+          let isDead = !node.isConnected;
+
+          if (node instanceof UIBase) {
+            isDead = isDead || node.isDead();
+          }
+
+          if (isDead) {
+            console.warn("pruning dead AfterAspect callback", node);
+            chain.remove(chain2[i]);
+            continue;
+          }
+        }
+
+        if (once && chain.indexOf(chain2[i]) >= 0) {
+          chain.remove(chain2[i]);
+        }
+
+        cb.apply(this, arguments);
+      }
+    };
+
+    owner[key].after = this.after.bind(this);
+    owner[key].once = this.once.bind(this);
+    owner[key].remove = this.remove.bind(this);
+  }
+
+  static bind(owner, key) {
+    return new AfterAspect(owner, key);
+  }
+
+  remove(cb) {
+    for (item of this.chain) {
+      if (item[0] === cb) {
+        this.chain.remove(item);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  once(cb, node) {
+    return this.after(cb, node, true);
+  }
+
+  after(cb, node, once=false) {
+    if (cb === undefined) {
+      console.warn("invalid call to .after(); cb was undefined");
+    }
+    this.chain.push([cb, node, once]);
+  }
+}
+
 export class UIBase extends HTMLElement {
   constructor() {
     super();
+
+    AfterAspect.bind(this, "setCSS");
 
     this.shadow = this.attachShadow({mode : 'open'});
     if (cconst.DEBUG.paranoidEvents) {
@@ -709,6 +812,8 @@ export class UIBase extends HTMLElement {
 
   set background(bg) {
     this.__background = bg;
+
+    this.overrideDefault("background-color", bg);
     this.style["background-color"] = bg;
   }
 
@@ -810,8 +915,63 @@ export class UIBase extends HTMLElement {
   }
 
   setCSS() {
+    let bg = this.getDefault("background-color");
+    if (bg) {
+      this.style["background-color"] = bg;
+    }
+
     let zoom = this.getZoom();
     this.style["transform"] = `scale(${zoom},${zoom})`;
+  }
+
+  traverse(type_or_set) {
+    let this2 = this;
+
+    let classes = type_or_set;
+
+    let is_set = type_or_set instanceof Set;
+    is_set = is_set || type_or_set instanceof util.set;
+    is_set = is_set || Array.isArray(type_or_set);
+
+    if (!is_set) {
+      classes = [type_or_set];
+    }
+
+    let visit = new Set();
+
+    return (function*() {
+      let stack = [this2];
+
+      while (stack.length > 0) {
+        let n = stack.pop();
+
+        visit.add(n);
+
+        if (!n || !n.childNodes) {
+          continue;
+        }
+
+        for (let cls of classes) {
+          if (n instanceof cls) {
+            yield n;
+          }
+        }
+
+        for (let c of n.childNodes) {
+          if (!visit.has(c)) {
+            stack.push(c);
+          }
+        }
+
+        if (n.shadow) {
+          for (let c of n.shadow.childNodes) {
+            if (!visit.has(c)) {
+              stack.push(c);
+            }
+          }
+        }
+      }
+    })();
   }
 
   appendChild(child) {

@@ -283,6 +283,7 @@ export class Screen extends ui_base.UIBase {
     container.style["z-index"] = 205;
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
+    container.style["margin"] = "0px";
 
     container.parentWidget = this;
 
@@ -290,6 +291,7 @@ export class Screen extends ui_base.UIBase {
     let p = new Vector2();
 
     let _update = container.update;
+    /*causes weird bugs
     container.update = () => {
       _update.call(container);
 
@@ -313,7 +315,7 @@ export class Screen extends ui_base.UIBase {
 
       container.style["left"] = x + "px";
       container.style["top"] = y + "px";
-    }
+    }//*/
 
     document.body.appendChild(container);
     //this.shadow.appendChild(container);
@@ -534,25 +536,19 @@ export class Screen extends ui_base.UIBase {
       height = s.height;
     }
 
+    let ratio = window.outerHeight / window.innerHeight;
+    let scale = visualViewport.scale;
+
+    let pad = 10;// * scale / devicePixelRatio;
+    width = visualViewport.width * scale - pad;
+    height = visualViewport.height * scale - pad;
+
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
-    let scale = visualViewport.scale;
 
     let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
 
-    let scale2 = 1.0/scale;
-    let r = document.body.getBoundingClientRect();
-    //ox -= r.x/scale
-    //oy -= r.y/scale;
-
-    scale2 = 1.0/scale;
-    //oy *= scale2;
-    //ox *= scale2;
-
-    //document.body.style["position"] = "fixed";
-    //document.body.style["left"] = ox+"px";
-    //document.body.style["top"] = oy+"0px";
-
+    document.body.style["touch-action"] = "none";
     document.body.style["transform-origin"] = "top left";
     document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
 
@@ -977,6 +973,18 @@ export class Screen extends ui_base.UIBase {
     for (let n of this.shadow.childNodes) {
       rec(n);
     }
+  }
+
+  completeSetCSS() {
+    let rec = (n) => {
+      n.setCSS();
+
+      n._forEachChildWidget((c) => {
+        rec(c);
+      })
+    }
+
+    rec(this);
   }
 
   completeUpdate() {

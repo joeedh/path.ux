@@ -1005,7 +1005,7 @@ export class TabBar extends UIBase {
       if (key !== this._last_p_key) {
         this._last_p_key = key;
 
-        console.log("tab bar autobuild");
+        //console.log("tab bar autobuild");
         this._layout();
       }
     }
@@ -1064,7 +1064,8 @@ export class TabContainer extends UIBase {
 
       let div = document.createElement("div");
 
-      div.style["background-color"] = this.getDefault("DefaultPanelBG");
+      this.tbar.setCSS.once(() => div.style["background-color"] = this.getDefault("DefaultPanelBG"), div);
+
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
       
@@ -1117,7 +1118,15 @@ export class TabContainer extends UIBase {
 
   init() {
     super.init();
+
     this.background = this.getDefault("DefaultPanelBG");
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.background = this.getDefault("DefaultPanelBG");
+    this._remakeStyle();
   }
 
   static setDefault(e) {

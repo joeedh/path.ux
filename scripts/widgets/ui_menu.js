@@ -320,6 +320,9 @@ export class Menu extends UIBase {
 
     dom.style["display"] = "inline-flex";
 
+    dom.hotkey = hotkey;
+    dom.icon = icon;
+
     let icon_div;
 
     if (1) { //icon >= 0) {
@@ -359,6 +362,7 @@ export class Menu extends UIBase {
     let twid = Math.ceil(g.measureText(text).width);
     let hwid;
     if (hotkey) {
+      dom.hotkey = hotkey;
       g.font = ui_base.getFont(this, undefined, "HotkeyText");
       hwid = Math.ceil(g.measureText(hotkey).width);
       twid += hwid + 8;
@@ -407,18 +411,27 @@ export class Menu extends UIBase {
       dom.appendChild(hotkey_span);
     }
 
-    return this.addItem(dom, id, add);
+    let ret = this.addItem(dom, id, add);
+
+    ret.hotkey = hotkey;
+    ret.icon = icon;
+    ret.label = text ? text : ret.innerText;
+
+    return ret;
   }
 
   //item can be menu or text
   addItem(item, id, add=true) {
     id = id === undefined ? item : id;
+    let text = item;
 
-    if (typeof item == "string" || item instanceof String) {
+    if (typeof item === "string" || item instanceof String) {
       let dom = document.createElement("dom");
       dom.textContent = item;
       item = dom;
       //return this.addItemExtra(item, id);
+    } else {
+      text = item.textContent;
     }
 
     let li = document.createElement("li");
@@ -452,6 +465,8 @@ export class Menu extends UIBase {
 
     this.items.push(li);
 
+    li.label = text ? text : li.innerText.trim();
+
     if (add) {
       li.addEventListener("click", (e) => {
         //console.log("menu click!");
@@ -459,7 +474,7 @@ export class Menu extends UIBase {
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           //console.log("menu ignore");
           //ignore
-          return;
+          return n;
         }
 
         this.click();
@@ -746,10 +761,27 @@ export class DropBox extends Button {
     let dpi = this.getDPI();
 
     let x = e.x, y = e.y;
-    let rects = this.dom.getClientRects();
+    let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
-    x = rects[0].x;
-    y = rects[0].y + Math.ceil(rects[0].height);
+    x = rects.x;
+    y = rects.y + rects.height; // + rects[0].height; // visualViewport.scale;
+
+    if (!window.haveElectron) {
+      y -= 8;
+    }
+
+    /*
+    let w = document.createElement("div");
+    w.style["width"] = w.style["height"] = "15px";
+    w.style["background-color"] = "red";
+    w.style["z-index"] = "5000";
+    w.style["position"] = "absolute";
+    w.style["pointer-events"] = "none";
+    w.style["left"] = x + "px";
+    w.style["top"] = y + "px";
+
+    document.body.appendChild(w);
+    //*/
 
     let con = this._popup = menu._popup = screen.popup(this, x, y, false);
     con.noMarginsOrPadding();

@@ -397,7 +397,8 @@ export class Area extends ui_base.UIBase {
     row.remove();
     container._prepend(row);
 
-    row.background = this.getDefault("AreaHeaderBG");
+    row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
+
 
     let rh = ~~(16*this.getDPI());
 

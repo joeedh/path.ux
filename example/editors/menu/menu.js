@@ -1,6 +1,8 @@
 import {Editor} from "../editor_base.js";
 import {UIBase, PackFlags, Icons, KeyMap, HotKey, nstructjs, Menu, AreaFlags, util} from '../../pathux.js';
 
+import * as electron_api from '../../electron_api.js';
+
 export class MenuBarEditor extends Editor {
   constructor() {
     super();
@@ -46,8 +48,8 @@ export class MenuBarEditor extends Editor {
     ]);
 
     span.menu("Edit", [
-      ["Undo", () => this.ctx.toolstack.undo(), "CTRL-Z"],
-      ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z"]
+      ["Undo", () => this.ctx.toolstack.undo(), "CTRL-Z", Icons.UNDO],
+      ["Redo", () => this.ctx.toolstack.redo(), "CTRL-SHIFT-Z", Icons.REDO]
     ]);
 
     span.menu("Session", [
@@ -61,6 +63,12 @@ export class MenuBarEditor extends Editor {
   updateHeight() {
     if (!this.header)
       return;
+
+    if (window.haveElectron) {
+      this.maxSize[1] = this.minSize[1] = 1;
+      electron_api.initMenuBar(this);
+      return;
+    }
 
     let rect = this.header.getClientRects()[0];
     if (rect) {

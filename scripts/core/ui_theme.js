@@ -1,6 +1,12 @@
 import * as util from "../util/util.js";
 import {Vector3, Vector4} from '../util/vectormath.js';
 import * as nstructjs from "../util/struct.js";
+import cconst from '../config/const.js';
+
+export let ColorSchemeTypes = {
+  LIGHT : "light",
+  DARK  : "dark"
+};
 
 export function parsepx(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -139,6 +145,63 @@ export function validateWebColor(str) {
 
 export let theme = {};
 
+export function invertTheme() {
+  cconst.colorSchemeType = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+
+  function inverted(color) {
+    if (Array.isArray(color)) {
+      for (let i = 0; i < 3; i++) {
+        color[i] = 1.0 - color[i];
+      }
+
+      return color;
+    }
+
+    color = css2color(color);
+    return color2css(inverted(color));
+  }
+
+  let bg = document.body.style["background-color"];
+  //if (!bg) {
+    bg = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  //} else {
+  //  bg = inverted(bg);
+  //}
+
+  document.body.style["background-color"] = bg;
+
+  for (let style in theme) {
+    style = theme[style];
+
+    for (let k in style) {
+      let v = style[k];
+
+      if (v instanceof CSSFont) {
+        v.color = inverted(v.color);
+      } else if (typeof v === "string") {
+        v = v.trim().toLowerCase();
+
+        let iscolor = v.search("rgb") >= 0;
+        iscolor = iscolor || v in cmap;
+        iscolor = iscolor || validateWebColor(v);
+
+        if (iscolor) {
+          style[k] = inverted(v);
+        }
+      }
+    }
+  }
+}
+
+window.invertTheme = invertTheme;
+
+export function setColorSchemeType(mode) {
+  if (!!mode !== cconst.colorSchemeType) {
+    invertTheme();
+    cconst.colorSchemeType = mode;
+  }
+
+}
 window.validateWebColor = validateWebColor;
 
 export class CSSFont {
