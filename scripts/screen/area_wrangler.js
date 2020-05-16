@@ -12,13 +12,13 @@ import '../util/struct.js';
 
 let UIBase = ui_base.UIBase;
 let Vector2 = vectormath.Vector2;
-let Screen = undefined;
+let ScreenClass = undefined;
 
 import {snap, snapi} from './FrameManager_mesh.js';
 
 
 export function setScreenClass(cls) {
-  Screen = cls;
+  ScreenClass = cls;
 }
 
 export function getAreaIntName(name) {

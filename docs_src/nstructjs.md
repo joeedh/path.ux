@@ -36,7 +36,7 @@ nstructjs.manager.add_class(SomeClass);
 `;
 ```
 
-## Controller How Fields Are Saved
+## Control How Fields Are Saved
 
 Note that you can specify little code snippets to control how fields are saved.
 For example, if you want to save an integer ID instead of a reference for an 

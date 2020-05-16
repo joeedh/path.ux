@@ -11,7 +11,7 @@ Call contexts are required to have the following fields:
 * toolstack -- The tool operator stack (simple_toolsys.ToolStack)
  
 ## Context Overlay:
-A context overlay is a class that overrides context fields.  It has a validate()
+A [context overlay](@ContextOverlay) is a class that overrides context fields.  It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.
 
 Contexts can be "frozen" with .lock.  When frozen they should *have no direct object 

@@ -1,8 +1,10 @@
 # Tool System
 
-Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and in generate are foundational to path.ux and it's associated projects.  
+Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and 
+in general are foundational to path.ux and it's associated projects.  
 
-Tools all inherit from ToolOp, which roughly looks like this (see Context section for an explanation for what the "ctx" parameters are):
+Tools all inherit from [ToolOp](@ToolOp), which roughly looks like this (see Context section for an 
+explanation for what the "ctx" parameters are):
 
 ```
 class SomeTool extends ToolOp {
