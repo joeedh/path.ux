@@ -1,42 +1,42 @@
 [
   {
     "name": "DataAPI#_addClass",
-    "filePath": "scripts/simple_controller.js",
+    "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 703,
+        "lineNumber": 705,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 704,
+        "lineNumber": 706,
         "line": "   * Look up struct definition for a class.\r"
       },
       {
-        "lineNumber": 705,
+        "lineNumber": 707,
         "line": "   *\r"
       },
       {
-        "lineNumber": 706,
+        "lineNumber": 708,
         "line": "   * @param cls: the class\r"
       },
       {
-        "lineNumber": 707,
+        "lineNumber": 709,
         "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
       },
       {
-        "lineNumber": 708,
+        "lineNumber": 710,
         "line": "   * @returns {IterableIterator<*>}\r"
       },
       {
-        "lineNumber": 709,
+        "lineNumber": 711,
         "line": "   */\r"
       },
       {
-        "lineNumber": 710,
+        "lineNumber": 712,
         "line": "\r"
       },
       {
-        "lineNumber": 711,
+        "lineNumber": 713,
         "line": "  _addClass(cls, dstruct) {\r"
       }
     ],
@@ -51,34 +51,34 @@
   },
   {
     "name": "DataAPI#resolvePath_intern",
-    "filePath": "scripts/simple_controller.js",
+    "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 824,
+        "lineNumber": 826,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 825,
+        "lineNumber": 827,
         "line": "   get meta information for a datapath.\r"
       },
       {
-        "lineNumber": 826,
+        "lineNumber": 828,
         "line": "\r"
       },
       {
-        "lineNumber": 827,
+        "lineNumber": 829,
         "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
       },
       {
-        "lineNumber": 828,
+        "lineNumber": 830,
         "line": "   just want meta information\r"
       },
       {
-        "lineNumber": 829,
+        "lineNumber": 831,
         "line": "   */\r"
       },
       {
-        "lineNumber": 830,
+        "lineNumber": 832,
         "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false) {\r"
       }
     ],
@@ -93,7 +93,7 @@
   },
   {
     "name": "Container#wrap",
-    "filePath": "scripts/ui.js",
+    "filePath": "scripts/core/ui.js",
     "lines": [
       {
         "lineNumber": 192,
@@ -128,8 +128,52 @@
     ]
   },
   {
+    "name": "buildString",
+    "filePath": "scripts/core/units.js",
+    "lines": [
+      {
+        "lineNumber": 388,
+        "line": "/**\r"
+      },
+      {
+        "lineNumber": 389,
+        "line": " *\r"
+      },
+      {
+        "lineNumber": 390,
+        "line": " * @param value Note: is not converted to internal unit\r"
+      },
+      {
+        "lineNumber": 391,
+        "line": " * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name\r"
+      },
+      {
+        "lineNumber": 392,
+        "line": " * @returns {*}\r"
+      },
+      {
+        "lineNumber": 393,
+        "line": " */\r"
+      },
+      {
+        "lineNumber": 394,
+        "line": "export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {\r"
+      }
+    ],
+    "codeParams": [
+      "value",
+      "baseUnit",
+      "decimalPlaces",
+      "displayUnit"
+    ],
+    "docParams": [
+      "value",
+      "unit:"
+    ]
+  },
+  {
     "name": "RichEditor#formatLine",
-    "filePath": "scripts/ui_richedit.js",
+    "filePath": "scripts/widgets/ui_richedit.js",
     "lines": [
       {
         "lineNumber": 98,
@@ -166,50 +210,6 @@
     ],
     "docParams": [
       "line"
-    ]
-  },
-  {
-    "name": "buildString",
-    "filePath": "scripts/units.js",
-    "lines": [
-      {
-        "lineNumber": 354,
-        "line": "/**\r"
-      },
-      {
-        "lineNumber": 355,
-        "line": " *\r"
-      },
-      {
-        "lineNumber": 356,
-        "line": " * @param value Note: is not converted to internal unit\r"
-      },
-      {
-        "lineNumber": 357,
-        "line": " * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name\r"
-      },
-      {
-        "lineNumber": 358,
-        "line": " * @returns {*}\r"
-      },
-      {
-        "lineNumber": 359,
-        "line": " */\r"
-      },
-      {
-        "lineNumber": 360,
-        "line": "export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {\r"
-      }
-    ],
-    "codeParams": [
-      "value",
-      "baseUnit",
-      "decimalPlaces",
-      "displayUnit"
-    ],
-    "docParams": [
-      "value",
-      "unit:"
     ]
   }
 ]
