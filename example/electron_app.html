@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+        body {
+            overflow : hidden;
+        }
+    </style>
+    <script type="module">
+      window.haveElectron = true;
+      
+      import * as app from './core/app.js'
+      window.init = function() {
+        console.log("init");
+        app.start();
+      }
+    </script>
+</head>
+<body onload='init()'>
+<img id="iconsheet16" style="display:none" src="./iconsheet16.png"></img>
+<img id="iconsheet32" style="display:none" src="./iconsheet32.png"></img>
+<img id="iconsheet48" style="display:none" src="./iconsheet48.png"></img>
+</body>
+</html>
