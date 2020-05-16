@@ -35,24 +35,39 @@ class InheritFlag {
 let modalstack = [];
 
 export class ToolOp extends events.EventHandler {
-  static tooldef() {return {
-    uiname   : "!untitled tool",
-    toolpath : "logical_module.tool", //logical_module need not match up to real module name
-    icon     : -1,
-    description : undefined,
-    is_modal : false,
-    hotkey : undefined,
-    undoflag : 0,
-    flag     : 0,
-    inputs   : {}, //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes
-    outputs  : {}  //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes
-  }}
+  static tooldef() {
+    if (this === ToolOp) {
+      throw new Error("Tools must implemented static tooldef() methods!");
+    }
+  }
 
+  /*
+  ToolOp definition.
+
+  An example:
+  <pre>
+  static tooldef() {return {
+    uiname   : "Tool Name",
+    toolpath : "logical_module.tool", //logical_module need not match up to a real module
+    icon     : -1, //tool's icon, or -1 if there is none
+    description : "tooltip",
+    is_modal : false, //tool is interactive and takes control of events
+    hotkey : undefined,
+    undoflag : 0, //see UndoFlags
+    flag     : 0,
+    inputs   : ToolOp.inherit({
+      f32val : new Float32Property(1.0),
+      path   : new StringProperty("./path");
+    }),
+    outputs  : {}
+  }}
+  </pre>
+  */
   static inherit(slots) {
     return new InheritFlag(slots);
   }
   
-  //creates a new instance from args
+  /*creates a new instance of this toolop from args*/
   static invoke(ctx, args) {
     let tool = new this();
 
@@ -104,6 +119,7 @@ export class ToolOp extends events.EventHandler {
     path +=")";
     return path;
   }
+  
   static register(cls) {
     if (ToolClasses.indexOf(cls) >= 0) {
       console.warn("Tried to register same ToolOp class twice:", cls.name, cls);

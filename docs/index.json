@@ -20558,7 +20558,7 @@
     "__docId__": 950,
     "kind": "file",
     "name": "scripts/screen/area_wrangler.js",
-    "content": "let _ScreenArea = undefined;\r\n\r\nimport * as util from '../util/util.js';\r\nimport * as vectormath from '../util/vectormath.js';\r\nimport * as ui_base from '../core/ui_base.js';\r\nimport * as ui from '../core/ui.js';\r\nimport * as ui_noteframe from '../widgets/ui_noteframe.js';\r\n//import * as nstructjs from './struct.js';\r\nimport {haveModal} from '../util/simple_events.js';\r\n\r\nimport '../util/struct.js';\r\n\r\nlet UIBase = ui_base.UIBase;\r\nlet Vector2 = vectormath.Vector2;\r\nlet Screen = undefined;\r\n\r\nimport {snap, snapi} from './FrameManager_mesh.js';\r\n\r\n\r\nexport function setScreenClass(cls) {\r\n  Screen = cls;\r\n}\r\n\r\nexport function getAreaIntName(name) {\r\n  let hash = 0;\r\n\r\n  for (let i=0; i<name.length; i++) {\r\n    let c = name.charCodeAt(i);\r\n\r\n    if (i % 2 == 0) {\r\n      hash += c<<8;\r\n      hash *= 13;\r\n      hash = hash & ((1<<15)-1);\r\n    } else {\r\n      hash += c;\r\n    }\r\n  }\r\n\r\n  return hash;\r\n}\r\n//XXX get rid of me\r\nwindow.getAreaIntName = getAreaIntName;\r\n\r\n//XXX get rid of me\r\nexport var AreaTypes = {\r\n  TEST_CANVAS_EDITOR : 0\r\n};\r\n\r\nexport function setAreaTypes(def) {\r\n  for (let k in AreaTypes) {\r\n    delete AreaTypes[k];\r\n  }\r\n\r\n  for (let k in def) {\r\n    AreaTypes[k] = def[k];\r\n  }\r\n}\r\n\r\nexport let areaclasses = {};\r\nexport class AreaWrangler {\r\n  constructor() {\r\n    this.stacks = {};\r\n    this.lasts = {};\r\n    this.lastArea = undefined;\r\n    this.stack = [];\r\n    this.idgen = 0;\r\n    this._last_screen_id = undefined;\r\n  }\r\n\r\n  _checkWrangler(ctx) {\r\n    if (ctx === undefined) {\r\n      return true;\r\n    }\r\n\r\n    if (this._last_screen_id === undefined) {\r\n      this._last_screen_id = ctx.screen._id;\r\n      return true;\r\n    }\r\n\r\n    if (ctx.screen._id !== this._last_screen_id) {\r\n      this.reset();\r\n\r\n      this._last_screen_id = ctx.screen._id;\r\n      console.warn(\"contextWrangler detected a new screen; new file?\");\r\n      return false;\r\n    }\r\n\r\n    return true;\r\n  }\r\n\r\n  reset() {\r\n    this.stacks = {};\r\n    this.lasts = {};\r\n    this.lastArea = undefined;\r\n    this.stack = [];\r\n    this._last_screen_id = undefined;\r\n\r\n    return this;\r\n  }\r\n\r\n  push(type, area, pushLastRef=true) {\r\n    if (pushLastRef || this.lasts[type.name] === undefined) {\r\n      this.lasts[type.name] = area;\r\n      this.lastArea = area;\r\n    }\r\n\r\n    if (!(type.name in this.stacks)) {\r\n      this.stacks[type.name] = [];\r\n    }\r\n\r\n    this.stacks[type.name].push(area);\r\n    this.stack.push(area);\r\n  }\r\n\r\n  pop(type, area) {\r\n    if (!(type.name in this.stacks)) {\r\n      console.warn(\"pop_ctx_area called in error\");\r\n      //throw new Error(\"pop_ctx_area called in error\");\r\n      return;\r\n    }\r\n\r\n    if (this.stacks[type.name].length > 0) {\r\n      this.stacks[type.name].pop();\r\n    }\r\n\r\n    if (this.stack.length > 0) {\r\n      this.stack.pop();\r\n    }\r\n  }\r\n\r\n  getLastArea(type) {\r\n    if (type === undefined) {\r\n      if (this.stack.length > 0) {\r\n        return this.stack[this.stack.length-1];\r\n      } else {\r\n        return this.lastArea;\r\n      }\r\n    } else {\r\n      if (type.name in this.stacks) {\r\n        let stack = this.stacks[type.name];\r\n\r\n        if (stack.length > 0) {\r\n          return stack[stack.length-1];\r\n        }\r\n      }\r\n\r\n      return this.lasts[type.name];\r\n    }\r\n  }\r\n}\r\n",
+    "content": "let _ScreenArea = undefined;\r\n\r\nimport * as util from '../util/util.js';\r\nimport * as vectormath from '../util/vectormath.js';\r\nimport * as ui_base from '../core/ui_base.js';\r\nimport * as ui from '../core/ui.js';\r\nimport * as ui_noteframe from '../widgets/ui_noteframe.js';\r\n//import * as nstructjs from './struct.js';\r\nimport {haveModal} from '../util/simple_events.js';\r\n\r\nimport '../util/struct.js';\r\n\r\nlet UIBase = ui_base.UIBase;\r\nlet Vector2 = vectormath.Vector2;\r\nlet ScreenClass = undefined;\r\n\r\nimport {snap, snapi} from './FrameManager_mesh.js';\r\n\r\n\r\nexport function setScreenClass(cls) {\r\n  ScreenClass = cls;\r\n}\r\n\r\nexport function getAreaIntName(name) {\r\n  let hash = 0;\r\n\r\n  for (let i=0; i<name.length; i++) {\r\n    let c = name.charCodeAt(i);\r\n\r\n    if (i % 2 == 0) {\r\n      hash += c<<8;\r\n      hash *= 13;\r\n      hash = hash & ((1<<15)-1);\r\n    } else {\r\n      hash += c;\r\n    }\r\n  }\r\n\r\n  return hash;\r\n}\r\n//XXX get rid of me\r\nwindow.getAreaIntName = getAreaIntName;\r\n\r\n//XXX get rid of me\r\nexport var AreaTypes = {\r\n  TEST_CANVAS_EDITOR : 0\r\n};\r\n\r\nexport function setAreaTypes(def) {\r\n  for (let k in AreaTypes) {\r\n    delete AreaTypes[k];\r\n  }\r\n\r\n  for (let k in def) {\r\n    AreaTypes[k] = def[k];\r\n  }\r\n}\r\n\r\nexport let areaclasses = {};\r\nexport class AreaWrangler {\r\n  constructor() {\r\n    this.stacks = {};\r\n    this.lasts = {};\r\n    this.lastArea = undefined;\r\n    this.stack = [];\r\n    this.idgen = 0;\r\n    this._last_screen_id = undefined;\r\n  }\r\n\r\n  _checkWrangler(ctx) {\r\n    if (ctx === undefined) {\r\n      return true;\r\n    }\r\n\r\n    if (this._last_screen_id === undefined) {\r\n      this._last_screen_id = ctx.screen._id;\r\n      return true;\r\n    }\r\n\r\n    if (ctx.screen._id !== this._last_screen_id) {\r\n      this.reset();\r\n\r\n      this._last_screen_id = ctx.screen._id;\r\n      console.warn(\"contextWrangler detected a new screen; new file?\");\r\n      return false;\r\n    }\r\n\r\n    return true;\r\n  }\r\n\r\n  reset() {\r\n    this.stacks = {};\r\n    this.lasts = {};\r\n    this.lastArea = undefined;\r\n    this.stack = [];\r\n    this._last_screen_id = undefined;\r\n\r\n    return this;\r\n  }\r\n\r\n  push(type, area, pushLastRef=true) {\r\n    if (pushLastRef || this.lasts[type.name] === undefined) {\r\n      this.lasts[type.name] = area;\r\n      this.lastArea = area;\r\n    }\r\n\r\n    if (!(type.name in this.stacks)) {\r\n      this.stacks[type.name] = [];\r\n    }\r\n\r\n    this.stacks[type.name].push(area);\r\n    this.stack.push(area);\r\n  }\r\n\r\n  pop(type, area) {\r\n    if (!(type.name in this.stacks)) {\r\n      console.warn(\"pop_ctx_area called in error\");\r\n      //throw new Error(\"pop_ctx_area called in error\");\r\n      return;\r\n    }\r\n\r\n    if (this.stacks[type.name].length > 0) {\r\n      this.stacks[type.name].pop();\r\n    }\r\n\r\n    if (this.stack.length > 0) {\r\n      this.stack.pop();\r\n    }\r\n  }\r\n\r\n  getLastArea(type) {\r\n    if (type === undefined) {\r\n      if (this.stack.length > 0) {\r\n        return this.stack[this.stack.length-1];\r\n      } else {\r\n        return this.lastArea;\r\n      }\r\n    } else {\r\n      if (type.name in this.stacks) {\r\n        let stack = this.stacks[type.name];\r\n\r\n        if (stack.length > 0) {\r\n          return stack[stack.length-1];\r\n        }\r\n      }\r\n\r\n      return this.lasts[type.name];\r\n    }\r\n  }\r\n}\r\n",
     "static": true,
     "longname": "C:/dev/path.ux/scripts/screen/area_wrangler.js",
     "access": "public",
@@ -20631,10 +20631,10 @@
   {
     "__docId__": 954,
     "kind": "variable",
-    "name": "Screen",
+    "name": "ScreenClass",
     "memberof": "scripts/screen/area_wrangler.js",
     "static": true,
-    "longname": "scripts/screen/area_wrangler.js~Screen",
+    "longname": "scripts/screen/area_wrangler.js~ScreenClass",
     "access": "public",
     "export": false,
     "importPath": "./scripts/screen/area_wrangler.js",
@@ -28442,7 +28442,7 @@
     "__docId__": 1380,
     "kind": "file",
     "name": "scripts/toolsys/simple_toolsys.js",
-    "content": "\"use strict\";\r\n/*\r\na basic, simple tool system implementation\r\n*/\r\n\r\nimport * as util from '../util/util.js';\r\nimport * as events from '../util/events.js';\r\nimport {keymap} from '../util/simple_events.js';\r\nimport {PropTypes} from './toolprop.js';\r\n\r\nexport let ToolClasses = [];\r\n\r\nexport function setContextClass(cls) {\r\n  console.warn(\"setContextClass is deprecated\");\r\n}\r\n\r\nexport const ToolFlags = {\r\n  PRIVATE : 1\r\n};\r\n\r\n\r\nexport const UndoFlags = {\r\n  NO_UNDO       : 2,\r\n  IS_UNDO_ROOT  : 4,\r\n  UNDO_BARRIER  :  8,\r\n  HAS_UNDO_DATA : 16\r\n};\r\n\r\nclass InheritFlag {\r\n  constructor(slots={}) {\r\n    this.slots = slots;\r\n  }\r\n}\r\n\r\nlet modalstack = [];\r\n\r\nexport class ToolOp extends events.EventHandler {\r\n  static tooldef() {return {\r\n    uiname   : \"!untitled tool\",\r\n    toolpath : \"logical_module.tool\", //logical_module need not match up to real module name\r\n    icon     : -1,\r\n    description : undefined,\r\n    is_modal : false,\r\n    hotkey : undefined,\r\n    undoflag : 0,\r\n    flag     : 0,\r\n    inputs   : {}, //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes\r\n    outputs  : {}  //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes\r\n  }}\r\n\r\n  static inherit(slots) {\r\n    return new InheritFlag(slots);\r\n  }\r\n  \r\n  //creates a new instance from args\r\n  static invoke(ctx, args) {\r\n    let tool = new this();\r\n\r\n    for (let k in args) {\r\n      if (!(k in tool.inputs)) {\r\n        console.warn(\"Unknown tool argument \" + k);\r\n        continue;\r\n      }\r\n\r\n      let prop = tool.inputs[k];\r\n      let val = args[k];\r\n\r\n      if ((typeof val === \"string\") && prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {\r\n        if (val in prop.values) {\r\n          val = prop.values[val];\r\n        } else {\r\n          console.warn(\"Possible invalid enum/flag:\", val);\r\n          continue;\r\n        }\r\n      }\r\n\r\n      tool.inputs[k].setValue(val);\r\n    }\r\n\r\n    return tool;\r\n  }\r\n\r\n  genToolString() {\r\n    let def = this.constructor.tooldef();\r\n    let path = def.toolpath + \"(\";\r\n\r\n    for (let k in this.inputs) {\r\n      let prop = this.inputs[k];\r\n\r\n      path += k + \"=\";\r\n      if (prop.type === PropTypes.STRING)\r\n        path += \"'\";\r\n\r\n      if (prop.type === PropTypes.FLOAT) {\r\n        path += prop.getValue().toFixed(3);\r\n      } else {\r\n        path += prop.getValue();\r\n      }\r\n      \r\n      if (prop.type === PropTypes.STRING)\r\n        path += \"'\";\r\n      path += \" \";\r\n    }\r\n    path +=\")\";\r\n    return path;\r\n  }\r\n  static register(cls) {\r\n    if (ToolClasses.indexOf(cls) >= 0) {\r\n      console.warn(\"Tried to register same ToolOp class twice:\", cls.name, cls);\r\n      return;\r\n    }\r\n\r\n    ToolClasses.push(cls);\r\n  }\r\n\r\n  static isRegistered(cls) {\r\n    return ToolClasses.indexOf(cls) >= 0;\r\n  }\r\n\r\n  static unregister(cls) {\r\n    if (ToolClasses.indexOf(cls) >= 0) {\r\n      ToolClasses.remove(cls);\r\n    }\r\n  }\r\n\r\n  constructor() {\r\n    super();\r\n\r\n    this._overdraw = undefined;\r\n\r\n    var def = this.constructor.tooldef();\r\n\r\n    if (def.undoflag !== undefined) {\r\n      this.undoflag = def.undoflag;\r\n    }\r\n\r\n    if (def.flag !== undefined) {\r\n      this.flag = def.flag;\r\n    }\r\n\r\n    this._accept = this._reject = undefined;\r\n    this._promise = undefined;\r\n    \r\n    for (var k in def) {\r\n      this[k] = def[k];\r\n    }\r\n\r\n    let getSlots = (slots, key) => {\r\n      if (slots === undefined)\r\n        return {};\r\n\r\n      if (!(slots instanceof InheritFlag)) {\r\n        return slots;\r\n      }\r\n\r\n      slots = {};\r\n      let p = this.constructor;\r\n\r\n      while (p !== undefined && p !== Object && p !== ToolOp) {\r\n        if (p.tooldef) {\r\n          let def = p.tooldef();\r\n\r\n          if (def[key] !== undefined) {\r\n            let slots2 = def[key];\r\n            let stop = !(slots2 instanceof InheritFlag);\r\n\r\n            if (slots2 instanceof InheritFlag) {\r\n              slots2 = slots2.slots;\r\n            }\r\n\r\n            for (let k in slots2) {\r\n              if (!(k in slots)) {\r\n                slots[k] = slots2[k];\r\n              }\r\n            }\r\n\r\n            if (stop) {\r\n              break;\r\n            }\r\n          }\r\n\r\n        }\r\n        p = p.prototype.__proto__.constructor;\r\n      }\r\n\r\n      return slots;\r\n    };\r\n\r\n    let dinputs = getSlots(def.inputs, \"inputs\");\r\n    let doutputs = getSlots(def.outputs, \"outputs\");\r\n\r\n    this.inputs = {};\r\n    this.outputs = {};\r\n    \r\n    if (dinputs) {\r\n      for (let k in dinputs) {\r\n        this.inputs[k] = dinputs[k].copy();\r\n      }\r\n    }\r\n    \r\n    if (doutputs) {\r\n      for (let k in doutputs) {\r\n        this.outputs[k] = doutputs[k].copy();\r\n      }\r\n    }\r\n\r\n    this.drawlines = [];\r\n  }\r\n\r\n  static onTick() {\r\n    for (let toolop of modalstack) {\r\n      toolop.on_tick();\r\n    }\r\n  }\r\n\r\n  on_tick() {\r\n\r\n  }\r\n\r\n  //default on_keydown implementation for modal tools,\r\n  //no need to call super() to execute this if you don't want to\r\n  on_keydown(e) {\r\n    switch (e.keyCode) {\r\n      case keymap[\"Enter\"]:\r\n      case keymap[\"Space\"]:\r\n        this.modalEnd(false);\r\n        break;\r\n      case keymap[\"Escape\"]:\r\n        this.modalEnd(true);\r\n        break;\r\n    }\r\n  }\r\n\r\n  static canRun(ctx) {\r\n    return true;\r\n  }\r\n\r\n  undoPre(ctx) {\r\n    this._undo = _appstate.genUndoFile();\r\n  }\r\n  \r\n  undo(ctx) {\r\n    _appstate.loadUndoFile(this._undo);\r\n  }\r\n\r\n  //for compatibility with fairmotion\r\n  exec_pre(ctx) {\r\n    this.execPre(ctx);\r\n  }\r\n\r\n  execPre(ctx) {\r\n  }\r\n  exec(ctx) {\r\n  }\r\n  execPost(ctx) {\r\n\r\n  }\r\n\r\n  //for use in modal mode only\r\n  resetDrawLines() {\r\n    var ctx = this.modal_ctx;\r\n    \r\n    for (var dl of this.drawlines) {\r\n      dl.remove();\r\n    }\r\n    \r\n    this.drawlines.length = 0;\r\n  }\r\n  \r\n  error(msg) {\r\n    console.warn(msg);\r\n  }\r\n\r\n  getOverdraw() {\r\n    if (this._overdraw === undefined) {\r\n      this._overdraw = document.createElement(\"overdraw-x\");\r\n      this._overdraw.start(this.modal_ctx.screen);\r\n    }\r\n\r\n    return this._overdraw;\r\n  }\r\n  //for use in modal mode only\r\n  addDrawLine(v1, v2, style) {\r\n    let line = this.getOverdraw().line(v1, v2, style);\r\n    this.drawlines.push(line);\r\n    return line;\r\n  }\r\n\r\n  pushModal(node) {\r\n    throw new Error(\"cannot call this; use modalStart\")\r\n  }\r\n\r\n  popModal() {\r\n    throw new Error(\"cannot call this; use modalEnd\");\r\n  }\r\n\r\n  //returns promise to be executed on modalEnd\r\n  modalStart(ctx) {\r\n    if (this.modalRunning) {\r\n      console.warn(\"Warning, tool is already in modal mode consuming events\");\r\n      return this._promise;\r\n    }\r\n    \r\n    //console.warn(\"tool modal start\");\r\n    \r\n    this.modal_ctx = ctx;\r\n    this.modalRunning = true\r\n\r\n    this._promise = new Promise((accept, reject) => {\r\n      this._accept = accept;\r\n      this._reject = reject;\r\n\r\n      modalstack.push(this);\r\n      super.pushModal(ctx.screen);\r\n    });\r\n\r\n    return this._promise;\r\n  }\r\n\r\n  /*eek, I've not been using this.\r\n    guess it's a non-enforced contract, I've been naming\r\n    cancel methods 'cancel' all this time.\r\n\r\n    XXX fix\r\n  */\r\n  toolCancel() {\r\n  }\r\n  \r\n  modalEnd(was_cancelled) {\r\n    if (this._modalstate) {\r\n      modalstack.pop();\r\n    }\r\n\r\n    if (this._overdraw !== undefined) {\r\n      this._overdraw.end();\r\n      this._overdraw = undefined;\r\n    }\r\n\r\n    //console.log(\"tool modal end\");\r\n    \r\n    if (was_cancelled && this._on_cancel !== undefined) {\r\n      this._accept(this.modal_ctx, true);\r\n      this._on_cancel(this);\r\n    }\r\n    \r\n    this.resetDrawLines();\r\n    \r\n    var ctx = this.modal_ctx;\r\n    \r\n    this.modal_ctx = undefined;\r\n    this.modalRunning = false;\r\n    this.is_modal = false;\r\n    \r\n    super.popModal(_appstate._modal_dom_root);\r\n    \r\n    this._promise = undefined;\r\n    this._accept(ctx, false); //Context, was_cancelled\r\n    this._accept = this._reject = undefined;\r\n  }\r\n}\r\n\r\nexport class ToolMacro extends ToolOp {\r\n  static tooldef() {return {\r\n    uiname : \"Tool Macro\"\r\n  }}\r\n  \r\n  constructor() {\r\n    super();\r\n    \r\n    this.tools = [];\r\n    this.curtool = 0;\r\n    this.has_modal = false;\r\n    this.connects = [];\r\n  }\r\n  \r\n  connect(srctool, dsttool, callback, thisvar) {\r\n    this.connects.push({\r\n      srctool  : srctool,\r\n      dsttool  : dsttool,\r\n      callback : callback,\r\n      thisvar  : thisvar\r\n    });\r\n    \r\n    return this;\r\n  }\r\n  \r\n  add(tool) {\r\n    if (tool.is_modal) {\r\n      this.is_modal = true;\r\n    }\r\n    \r\n    this.tools.push(tool);\r\n    \r\n    return this;\r\n  }\r\n  \r\n  _do_connections(tool) {\r\n    for (var c of this.connects) {\r\n      if (c.srctool === tool) {\r\n        c.callback.call(c.thisvar, c.srctool, c.dsttool);\r\n      }\r\n    }\r\n  }\r\n\r\n  static canRun(ctx) {\r\n    return true;\r\n  }\r\n\r\n  /*\r\n  canRun(ctx) {\r\n    if (this.tools.length == 0)\r\n      return false;\r\n    \r\n    //poll first tool only in list\r\n    return this.tools[0].constructor.canRun(ctx);\r\n  }//*/\r\n  \r\n  modalStart(ctx) {\r\n    this._promise = new Promise((function(accept, reject) {\r\n      this._accept = accept;\r\n      this._reject = reject;\r\n    }).bind(this));\r\n    \r\n    this.curtool = 0;\r\n\r\n    let i;\r\n\r\n    for (i=0; i<this.tools.length; i++) {\r\n      if (this.tools[i].is_modal)\r\n        break;\r\n      \r\n      this.tools[i].undoPre(ctx);\r\n      this.tools[i].execPre(ctx);\r\n      this.tools[i].exec(ctx);\r\n      this.tools[i].execPost(ctx);\r\n      this._do_connections(this.tools[i]);\r\n    }\r\n    \r\n    var on_modal_end = (function on_modal_end() {\r\n        this._do_connections(this.tools[this.curtool]);\r\n        this.curtool++;\r\n        \r\n        while (this.curtool < this.tools.length && \r\n               !this.tools[this.curtool].is_modal) \r\n        {\r\n            this.tools[this.curtool].undoPre(ctx);\r\n            this.tools[this.curtool].execPre(ctx);\r\n            this.tools[this.curtool].exec(ctx);\r\n            this.tools[this.curtool].execPost(ctx);\r\n            this._do_connections(this.tools[this.curtool]);\r\n            \r\n            this.curtool++;\r\n        }\r\n        \r\n        if (this.curtool < this.tools.length) {\r\n          this.tools[this.curtool].undoPre(ctx);\r\n          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);\r\n        } else {\r\n          this._accept(this, false);\r\n        }\r\n    }).bind(this);\r\n    \r\n    if (i < this.tools.length) {\r\n      this.curtool = i;\r\n      this.tools[this.curtool].undoPre(ctx);\r\n      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);\r\n    }\r\n    \r\n    return this._promise;\r\n  }\r\n  \r\n  exec(ctx) {\r\n    for (var i=0; i<this.tools.length; i++) {\r\n      this.tools[i].undoPre(ctx);\r\n      this.tools[i].execPre(ctx);\r\n      this.tools[i].exec(ctx);\r\n      this.tools[i].execPost(ctx);\r\n      this._do_connections(this.tools[i]);\r\n    }\r\n  }\r\n  \r\n  undoPre() {\r\n    return; //undoPre is handled in exec() or modalStart()\r\n  }\r\n  \r\n  undo(ctx) {\r\n    for (var i=this.tools.length-1; i >= 0; i--) {\r\n      this.tools[i].undo(ctx);\r\n    }\r\n  }\r\n}\r\n\r\nexport class ToolStack extends Array {\r\n  constructor(ctx) {\r\n    super();\r\n\r\n    this.cur = -1;\r\n    this.ctx = ctx;\r\n    this.modalRunning = 0;\r\n  }\r\n\r\n  setRestrictedToolContext(ctx) {\r\n    this.toolctx = ctx;\r\n  }\r\n\r\n  reset(ctx) {\r\n    if (ctx !== undefined) {\r\n      this.ctx = ctx;\r\n    }\r\n\r\n    this.modalRunning = 0;\r\n    this.cur = -1;\r\n    this.length = 0;\r\n  }\r\n\r\n  execTool(ctx, toolop) {\r\n    if (this.ctx === undefined) {\r\n      this.ctx = ctx;\r\n    }\r\n\r\n    if (!toolop.constructor.canRun(ctx)) {\r\n      console.log(\"toolop.constructor.canRun returned false\");\r\n      return;\r\n    }\r\n\r\n    let tctx = this.toolctx !== undefined ? this.toolctx : ctx;\r\n    tctx = tctx.toLocked();\r\n\r\n    toolop._execCtx = tctx;\r\n\r\n    if (!(toolop.undoflag & UndoFlags.NO_UNDO)) {\r\n      this.cur++;\r\n\r\n      //truncate\r\n      this.length = this.cur+1;\r\n      \r\n      this[this.cur] = toolop;\r\n      //let undoPre use full context\r\n      //needed by DataPathSetOp\r\n      toolop.undoPre(ctx.toLocked());\r\n    }\r\n    \r\n    if (toolop.is_modal) {\r\n      this.modalRunning = true;\r\n      \r\n      toolop._on_cancel = (function(toolop) {\r\n        this.pop_i(this.cur);\r\n        this.cur--;\r\n      }).bind(this);\r\n      \r\n      //will handle calling .exec itself\r\n      toolop.modalStart(ctx.toLocked());\r\n    } else {\r\n      toolop.execPre(tctx);\r\n      toolop.exec(tctx);\r\n      toolop.execPost(tctx);\r\n    }\r\n  }\r\n  \r\n  undo() {\r\n    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {\r\n      let tool = this[this.cur];\r\n      tool.undo(tool._execCtx);\r\n      this.cur--;\r\n    }\r\n  }\r\n  \r\n  redo() {\r\n    if (this.cur >= -1 && this.cur+1 < this.length) {\r\n      this.cur++;\r\n\r\n      let tool = this[this.cur];\r\n      let ctx = tool._execCtx;\r\n      //ctx = this.ctx;\r\n\r\n      tool.undoPre(ctx);\r\n      tool.execPre(ctx);\r\n      tool.exec(ctx);\r\n      tool.execPost(ctx);\r\n    }\r\n  }\r\n}\r\n",
+    "content": "\"use strict\";\r\n/*\r\na basic, simple tool system implementation\r\n*/\r\n\r\nimport * as util from '../util/util.js';\r\nimport * as events from '../util/events.js';\r\nimport {keymap} from '../util/simple_events.js';\r\nimport {PropTypes} from './toolprop.js';\r\n\r\nexport let ToolClasses = [];\r\n\r\nexport function setContextClass(cls) {\r\n  console.warn(\"setContextClass is deprecated\");\r\n}\r\n\r\nexport const ToolFlags = {\r\n  PRIVATE : 1\r\n};\r\n\r\n\r\nexport const UndoFlags = {\r\n  NO_UNDO       : 2,\r\n  IS_UNDO_ROOT  : 4,\r\n  UNDO_BARRIER  :  8,\r\n  HAS_UNDO_DATA : 16\r\n};\r\n\r\nclass InheritFlag {\r\n  constructor(slots={}) {\r\n    this.slots = slots;\r\n  }\r\n}\r\n\r\nlet modalstack = [];\r\n\r\nexport class ToolOp extends events.EventHandler {\r\n  static tooldef() {\r\n    if (this === ToolOp) {\r\n      throw new Error(\"Tools must implemented static tooldef() methods!\");\r\n    }\r\n  }\r\n\r\n  /*\r\n  ToolOp definition.\r\n\r\n  An example:\r\n  <pre>\r\n  static tooldef() {return {\r\n    uiname   : \"Tool Name\",\r\n    toolpath : \"logical_module.tool\", //logical_module need not match up to a real module\r\n    icon     : -1, //tool's icon, or -1 if there is none\r\n    description : \"tooltip\",\r\n    is_modal : false, //tool is interactive and takes control of events\r\n    hotkey : undefined,\r\n    undoflag : 0, //see UndoFlags\r\n    flag     : 0,\r\n    inputs   : ToolOp.inherit({\r\n      f32val : new Float32Property(1.0),\r\n      path   : new StringProperty(\"./path\");\r\n    }),\r\n    outputs  : {}\r\n  }}\r\n  </pre>\r\n  */\r\n  static inherit(slots) {\r\n    return new InheritFlag(slots);\r\n  }\r\n  \r\n  /*creates a new instance of this toolop from args*/\r\n  static invoke(ctx, args) {\r\n    let tool = new this();\r\n\r\n    for (let k in args) {\r\n      if (!(k in tool.inputs)) {\r\n        console.warn(\"Unknown tool argument \" + k);\r\n        continue;\r\n      }\r\n\r\n      let prop = tool.inputs[k];\r\n      let val = args[k];\r\n\r\n      if ((typeof val === \"string\") && prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {\r\n        if (val in prop.values) {\r\n          val = prop.values[val];\r\n        } else {\r\n          console.warn(\"Possible invalid enum/flag:\", val);\r\n          continue;\r\n        }\r\n      }\r\n\r\n      tool.inputs[k].setValue(val);\r\n    }\r\n\r\n    return tool;\r\n  }\r\n\r\n  genToolString() {\r\n    let def = this.constructor.tooldef();\r\n    let path = def.toolpath + \"(\";\r\n\r\n    for (let k in this.inputs) {\r\n      let prop = this.inputs[k];\r\n\r\n      path += k + \"=\";\r\n      if (prop.type === PropTypes.STRING)\r\n        path += \"'\";\r\n\r\n      if (prop.type === PropTypes.FLOAT) {\r\n        path += prop.getValue().toFixed(3);\r\n      } else {\r\n        path += prop.getValue();\r\n      }\r\n      \r\n      if (prop.type === PropTypes.STRING)\r\n        path += \"'\";\r\n      path += \" \";\r\n    }\r\n    path +=\")\";\r\n    return path;\r\n  }\r\n  \r\n  static register(cls) {\r\n    if (ToolClasses.indexOf(cls) >= 0) {\r\n      console.warn(\"Tried to register same ToolOp class twice:\", cls.name, cls);\r\n      return;\r\n    }\r\n\r\n    ToolClasses.push(cls);\r\n  }\r\n\r\n  static isRegistered(cls) {\r\n    return ToolClasses.indexOf(cls) >= 0;\r\n  }\r\n\r\n  static unregister(cls) {\r\n    if (ToolClasses.indexOf(cls) >= 0) {\r\n      ToolClasses.remove(cls);\r\n    }\r\n  }\r\n\r\n  constructor() {\r\n    super();\r\n\r\n    this._overdraw = undefined;\r\n\r\n    var def = this.constructor.tooldef();\r\n\r\n    if (def.undoflag !== undefined) {\r\n      this.undoflag = def.undoflag;\r\n    }\r\n\r\n    if (def.flag !== undefined) {\r\n      this.flag = def.flag;\r\n    }\r\n\r\n    this._accept = this._reject = undefined;\r\n    this._promise = undefined;\r\n    \r\n    for (var k in def) {\r\n      this[k] = def[k];\r\n    }\r\n\r\n    let getSlots = (slots, key) => {\r\n      if (slots === undefined)\r\n        return {};\r\n\r\n      if (!(slots instanceof InheritFlag)) {\r\n        return slots;\r\n      }\r\n\r\n      slots = {};\r\n      let p = this.constructor;\r\n\r\n      while (p !== undefined && p !== Object && p !== ToolOp) {\r\n        if (p.tooldef) {\r\n          let def = p.tooldef();\r\n\r\n          if (def[key] !== undefined) {\r\n            let slots2 = def[key];\r\n            let stop = !(slots2 instanceof InheritFlag);\r\n\r\n            if (slots2 instanceof InheritFlag) {\r\n              slots2 = slots2.slots;\r\n            }\r\n\r\n            for (let k in slots2) {\r\n              if (!(k in slots)) {\r\n                slots[k] = slots2[k];\r\n              }\r\n            }\r\n\r\n            if (stop) {\r\n              break;\r\n            }\r\n          }\r\n\r\n        }\r\n        p = p.prototype.__proto__.constructor;\r\n      }\r\n\r\n      return slots;\r\n    };\r\n\r\n    let dinputs = getSlots(def.inputs, \"inputs\");\r\n    let doutputs = getSlots(def.outputs, \"outputs\");\r\n\r\n    this.inputs = {};\r\n    this.outputs = {};\r\n    \r\n    if (dinputs) {\r\n      for (let k in dinputs) {\r\n        this.inputs[k] = dinputs[k].copy();\r\n      }\r\n    }\r\n    \r\n    if (doutputs) {\r\n      for (let k in doutputs) {\r\n        this.outputs[k] = doutputs[k].copy();\r\n      }\r\n    }\r\n\r\n    this.drawlines = [];\r\n  }\r\n\r\n  static onTick() {\r\n    for (let toolop of modalstack) {\r\n      toolop.on_tick();\r\n    }\r\n  }\r\n\r\n  on_tick() {\r\n\r\n  }\r\n\r\n  //default on_keydown implementation for modal tools,\r\n  //no need to call super() to execute this if you don't want to\r\n  on_keydown(e) {\r\n    switch (e.keyCode) {\r\n      case keymap[\"Enter\"]:\r\n      case keymap[\"Space\"]:\r\n        this.modalEnd(false);\r\n        break;\r\n      case keymap[\"Escape\"]:\r\n        this.modalEnd(true);\r\n        break;\r\n    }\r\n  }\r\n\r\n  static canRun(ctx) {\r\n    return true;\r\n  }\r\n\r\n  undoPre(ctx) {\r\n    this._undo = _appstate.genUndoFile();\r\n  }\r\n  \r\n  undo(ctx) {\r\n    _appstate.loadUndoFile(this._undo);\r\n  }\r\n\r\n  //for compatibility with fairmotion\r\n  exec_pre(ctx) {\r\n    this.execPre(ctx);\r\n  }\r\n\r\n  execPre(ctx) {\r\n  }\r\n  exec(ctx) {\r\n  }\r\n  execPost(ctx) {\r\n\r\n  }\r\n\r\n  //for use in modal mode only\r\n  resetDrawLines() {\r\n    var ctx = this.modal_ctx;\r\n    \r\n    for (var dl of this.drawlines) {\r\n      dl.remove();\r\n    }\r\n    \r\n    this.drawlines.length = 0;\r\n  }\r\n  \r\n  error(msg) {\r\n    console.warn(msg);\r\n  }\r\n\r\n  getOverdraw() {\r\n    if (this._overdraw === undefined) {\r\n      this._overdraw = document.createElement(\"overdraw-x\");\r\n      this._overdraw.start(this.modal_ctx.screen);\r\n    }\r\n\r\n    return this._overdraw;\r\n  }\r\n  //for use in modal mode only\r\n  addDrawLine(v1, v2, style) {\r\n    let line = this.getOverdraw().line(v1, v2, style);\r\n    this.drawlines.push(line);\r\n    return line;\r\n  }\r\n\r\n  pushModal(node) {\r\n    throw new Error(\"cannot call this; use modalStart\")\r\n  }\r\n\r\n  popModal() {\r\n    throw new Error(\"cannot call this; use modalEnd\");\r\n  }\r\n\r\n  //returns promise to be executed on modalEnd\r\n  modalStart(ctx) {\r\n    if (this.modalRunning) {\r\n      console.warn(\"Warning, tool is already in modal mode consuming events\");\r\n      return this._promise;\r\n    }\r\n    \r\n    //console.warn(\"tool modal start\");\r\n    \r\n    this.modal_ctx = ctx;\r\n    this.modalRunning = true\r\n\r\n    this._promise = new Promise((accept, reject) => {\r\n      this._accept = accept;\r\n      this._reject = reject;\r\n\r\n      modalstack.push(this);\r\n      super.pushModal(ctx.screen);\r\n    });\r\n\r\n    return this._promise;\r\n  }\r\n\r\n  /*eek, I've not been using this.\r\n    guess it's a non-enforced contract, I've been naming\r\n    cancel methods 'cancel' all this time.\r\n\r\n    XXX fix\r\n  */\r\n  toolCancel() {\r\n  }\r\n  \r\n  modalEnd(was_cancelled) {\r\n    if (this._modalstate) {\r\n      modalstack.pop();\r\n    }\r\n\r\n    if (this._overdraw !== undefined) {\r\n      this._overdraw.end();\r\n      this._overdraw = undefined;\r\n    }\r\n\r\n    //console.log(\"tool modal end\");\r\n    \r\n    if (was_cancelled && this._on_cancel !== undefined) {\r\n      this._accept(this.modal_ctx, true);\r\n      this._on_cancel(this);\r\n    }\r\n    \r\n    this.resetDrawLines();\r\n    \r\n    var ctx = this.modal_ctx;\r\n    \r\n    this.modal_ctx = undefined;\r\n    this.modalRunning = false;\r\n    this.is_modal = false;\r\n    \r\n    super.popModal(_appstate._modal_dom_root);\r\n    \r\n    this._promise = undefined;\r\n    this._accept(ctx, false); //Context, was_cancelled\r\n    this._accept = this._reject = undefined;\r\n  }\r\n}\r\n\r\nexport class ToolMacro extends ToolOp {\r\n  static tooldef() {return {\r\n    uiname : \"Tool Macro\"\r\n  }}\r\n  \r\n  constructor() {\r\n    super();\r\n    \r\n    this.tools = [];\r\n    this.curtool = 0;\r\n    this.has_modal = false;\r\n    this.connects = [];\r\n  }\r\n  \r\n  connect(srctool, dsttool, callback, thisvar) {\r\n    this.connects.push({\r\n      srctool  : srctool,\r\n      dsttool  : dsttool,\r\n      callback : callback,\r\n      thisvar  : thisvar\r\n    });\r\n    \r\n    return this;\r\n  }\r\n  \r\n  add(tool) {\r\n    if (tool.is_modal) {\r\n      this.is_modal = true;\r\n    }\r\n    \r\n    this.tools.push(tool);\r\n    \r\n    return this;\r\n  }\r\n  \r\n  _do_connections(tool) {\r\n    for (var c of this.connects) {\r\n      if (c.srctool === tool) {\r\n        c.callback.call(c.thisvar, c.srctool, c.dsttool);\r\n      }\r\n    }\r\n  }\r\n\r\n  static canRun(ctx) {\r\n    return true;\r\n  }\r\n\r\n  /*\r\n  canRun(ctx) {\r\n    if (this.tools.length == 0)\r\n      return false;\r\n    \r\n    //poll first tool only in list\r\n    return this.tools[0].constructor.canRun(ctx);\r\n  }//*/\r\n  \r\n  modalStart(ctx) {\r\n    this._promise = new Promise((function(accept, reject) {\r\n      this._accept = accept;\r\n      this._reject = reject;\r\n    }).bind(this));\r\n    \r\n    this.curtool = 0;\r\n\r\n    let i;\r\n\r\n    for (i=0; i<this.tools.length; i++) {\r\n      if (this.tools[i].is_modal)\r\n        break;\r\n      \r\n      this.tools[i].undoPre(ctx);\r\n      this.tools[i].execPre(ctx);\r\n      this.tools[i].exec(ctx);\r\n      this.tools[i].execPost(ctx);\r\n      this._do_connections(this.tools[i]);\r\n    }\r\n    \r\n    var on_modal_end = (function on_modal_end() {\r\n        this._do_connections(this.tools[this.curtool]);\r\n        this.curtool++;\r\n        \r\n        while (this.curtool < this.tools.length && \r\n               !this.tools[this.curtool].is_modal) \r\n        {\r\n            this.tools[this.curtool].undoPre(ctx);\r\n            this.tools[this.curtool].execPre(ctx);\r\n            this.tools[this.curtool].exec(ctx);\r\n            this.tools[this.curtool].execPost(ctx);\r\n            this._do_connections(this.tools[this.curtool]);\r\n            \r\n            this.curtool++;\r\n        }\r\n        \r\n        if (this.curtool < this.tools.length) {\r\n          this.tools[this.curtool].undoPre(ctx);\r\n          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);\r\n        } else {\r\n          this._accept(this, false);\r\n        }\r\n    }).bind(this);\r\n    \r\n    if (i < this.tools.length) {\r\n      this.curtool = i;\r\n      this.tools[this.curtool].undoPre(ctx);\r\n      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);\r\n    }\r\n    \r\n    return this._promise;\r\n  }\r\n  \r\n  exec(ctx) {\r\n    for (var i=0; i<this.tools.length; i++) {\r\n      this.tools[i].undoPre(ctx);\r\n      this.tools[i].execPre(ctx);\r\n      this.tools[i].exec(ctx);\r\n      this.tools[i].execPost(ctx);\r\n      this._do_connections(this.tools[i]);\r\n    }\r\n  }\r\n  \r\n  undoPre() {\r\n    return; //undoPre is handled in exec() or modalStart()\r\n  }\r\n  \r\n  undo(ctx) {\r\n    for (var i=this.tools.length-1; i >= 0; i--) {\r\n      this.tools[i].undo(ctx);\r\n    }\r\n  }\r\n}\r\n\r\nexport class ToolStack extends Array {\r\n  constructor(ctx) {\r\n    super();\r\n\r\n    this.cur = -1;\r\n    this.ctx = ctx;\r\n    this.modalRunning = 0;\r\n  }\r\n\r\n  setRestrictedToolContext(ctx) {\r\n    this.toolctx = ctx;\r\n  }\r\n\r\n  reset(ctx) {\r\n    if (ctx !== undefined) {\r\n      this.ctx = ctx;\r\n    }\r\n\r\n    this.modalRunning = 0;\r\n    this.cur = -1;\r\n    this.length = 0;\r\n  }\r\n\r\n  execTool(ctx, toolop) {\r\n    if (this.ctx === undefined) {\r\n      this.ctx = ctx;\r\n    }\r\n\r\n    if (!toolop.constructor.canRun(ctx)) {\r\n      console.log(\"toolop.constructor.canRun returned false\");\r\n      return;\r\n    }\r\n\r\n    let tctx = this.toolctx !== undefined ? this.toolctx : ctx;\r\n    tctx = tctx.toLocked();\r\n\r\n    toolop._execCtx = tctx;\r\n\r\n    if (!(toolop.undoflag & UndoFlags.NO_UNDO)) {\r\n      this.cur++;\r\n\r\n      //truncate\r\n      this.length = this.cur+1;\r\n      \r\n      this[this.cur] = toolop;\r\n      //let undoPre use full context\r\n      //needed by DataPathSetOp\r\n      toolop.undoPre(ctx.toLocked());\r\n    }\r\n    \r\n    if (toolop.is_modal) {\r\n      this.modalRunning = true;\r\n      \r\n      toolop._on_cancel = (function(toolop) {\r\n        this.pop_i(this.cur);\r\n        this.cur--;\r\n      }).bind(this);\r\n      \r\n      //will handle calling .exec itself\r\n      toolop.modalStart(ctx.toLocked());\r\n    } else {\r\n      toolop.execPre(tctx);\r\n      toolop.exec(tctx);\r\n      toolop.execPost(tctx);\r\n    }\r\n  }\r\n  \r\n  undo() {\r\n    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {\r\n      let tool = this[this.cur];\r\n      tool.undo(tool._execCtx);\r\n      this.cur--;\r\n    }\r\n  }\r\n  \r\n  redo() {\r\n    if (this.cur >= -1 && this.cur+1 < this.length) {\r\n      this.cur++;\r\n\r\n      let tool = this[this.cur];\r\n      let ctx = tool._execCtx;\r\n      //ctx = this.ctx;\r\n\r\n      tool.undoPre(ctx);\r\n      tool.execPre(ctx);\r\n      tool.exec(ctx);\r\n      tool.execPost(ctx);\r\n    }\r\n  }\r\n}\r\n",
     "static": true,
     "longname": "C:/dev/path.ux/scripts/toolsys/simple_toolsys.js",
     "access": "public",
@@ -28637,11 +28637,7 @@
     "lineNumber": 38,
     "undocument": true,
     "params": [],
-    "return": {
-      "types": [
-        "{\"uiname\": string, \"toolpath\": string, \"icon\": *, \"description\": *, \"is_modal\": *, \"hotkey\": *, \"undoflag\": *, \"flag\": *, \"inputs\": *, \"outputs\": *}"
-      ]
-    }
+    "return": null
   },
   {
     "__docId__": 1391,
@@ -28654,7 +28650,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.inherit",
     "access": "public",
     "description": null,
-    "lineNumber": 51,
+    "lineNumber": 66,
     "undocument": true,
     "params": [
       {
@@ -28681,7 +28677,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.invoke",
     "access": "public",
     "description": null,
-    "lineNumber": 56,
+    "lineNumber": 71,
     "undocument": true,
     "params": [
       {
@@ -28714,7 +28710,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#genToolString",
     "access": "public",
     "description": null,
-    "lineNumber": 83,
+    "lineNumber": 98,
     "undocument": true,
     "params": [],
     "return": {
@@ -28734,7 +28730,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.register",
     "access": "public",
     "description": null,
-    "lineNumber": 107,
+    "lineNumber": 123,
     "undocument": true,
     "params": [
       {
@@ -28757,7 +28753,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.isRegistered",
     "access": "public",
     "description": null,
-    "lineNumber": 116,
+    "lineNumber": 132,
     "undocument": true,
     "params": [
       {
@@ -28784,7 +28780,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.unregister",
     "access": "public",
     "description": null,
-    "lineNumber": 120,
+    "lineNumber": 136,
     "undocument": true,
     "params": [
       {
@@ -28807,7 +28803,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#constructor",
     "access": "public",
     "description": null,
-    "lineNumber": 126,
+    "lineNumber": 142,
     "undocument": true
   },
   {
@@ -28819,7 +28815,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#_overdraw",
     "access": "private",
     "description": null,
-    "lineNumber": 129,
+    "lineNumber": 145,
     "undocument": true,
     "type": {
       "types": [
@@ -28836,7 +28832,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#undoflag",
     "access": "public",
     "description": null,
-    "lineNumber": 134,
+    "lineNumber": 150,
     "undocument": true,
     "type": {
       "types": [
@@ -28853,7 +28849,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#flag",
     "access": "public",
     "description": null,
-    "lineNumber": 138,
+    "lineNumber": 154,
     "undocument": true,
     "type": {
       "types": [
@@ -28870,7 +28866,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#_accept",
     "access": "private",
     "description": null,
-    "lineNumber": 141,
+    "lineNumber": 157,
     "undocument": true,
     "type": {
       "types": [
@@ -28887,7 +28883,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#_promise",
     "access": "private",
     "description": null,
-    "lineNumber": 142,
+    "lineNumber": 158,
     "undocument": true,
     "type": {
       "types": [
@@ -28904,7 +28900,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#[k]",
     "access": "public",
     "description": null,
-    "lineNumber": 145,
+    "lineNumber": 161,
     "undocument": true,
     "type": {
       "types": [
@@ -28921,7 +28917,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#inputs",
     "access": "public",
     "description": null,
-    "lineNumber": 192,
+    "lineNumber": 208,
     "undocument": true,
     "type": {
       "types": [
@@ -28938,7 +28934,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#outputs",
     "access": "public",
     "description": null,
-    "lineNumber": 193,
+    "lineNumber": 209,
     "undocument": true,
     "type": {
       "types": [
@@ -28955,7 +28951,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#drawlines",
     "access": "public",
     "description": null,
-    "lineNumber": 207,
+    "lineNumber": 223,
     "undocument": true,
     "type": {
       "types": [
@@ -28974,7 +28970,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.onTick",
     "access": "public",
     "description": null,
-    "lineNumber": 210,
+    "lineNumber": 226,
     "undocument": true,
     "params": [],
     "return": null
@@ -28990,7 +28986,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#on_tick",
     "access": "public",
     "description": null,
-    "lineNumber": 216,
+    "lineNumber": 232,
     "undocument": true,
     "params": [],
     "return": null
@@ -29006,7 +29002,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#on_keydown",
     "access": "public",
     "description": null,
-    "lineNumber": 222,
+    "lineNumber": 238,
     "undocument": true,
     "params": [
       {
@@ -29029,7 +29025,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp.canRun",
     "access": "public",
     "description": null,
-    "lineNumber": 234,
+    "lineNumber": 250,
     "undocument": true,
     "params": [
       {
@@ -29056,7 +29052,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#undoPre",
     "access": "public",
     "description": null,
-    "lineNumber": 238,
+    "lineNumber": 254,
     "undocument": true,
     "params": [
       {
@@ -29077,7 +29073,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#_undo",
     "access": "private",
     "description": null,
-    "lineNumber": 239,
+    "lineNumber": 255,
     "undocument": true,
     "type": {
       "types": [
@@ -29096,7 +29092,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#undo",
     "access": "public",
     "description": null,
-    "lineNumber": 242,
+    "lineNumber": 258,
     "undocument": true,
     "params": [
       {
@@ -29119,7 +29115,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#exec_pre",
     "access": "public",
     "description": null,
-    "lineNumber": 247,
+    "lineNumber": 263,
     "undocument": true,
     "params": [
       {
@@ -29142,7 +29138,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#execPre",
     "access": "public",
     "description": null,
-    "lineNumber": 251,
+    "lineNumber": 267,
     "undocument": true,
     "params": [
       {
@@ -29165,7 +29161,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#exec",
     "access": "public",
     "description": null,
-    "lineNumber": 253,
+    "lineNumber": 269,
     "undocument": true,
     "params": [
       {
@@ -29188,7 +29184,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#execPost",
     "access": "public",
     "description": null,
-    "lineNumber": 255,
+    "lineNumber": 271,
     "undocument": true,
     "params": [
       {
@@ -29211,7 +29207,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#resetDrawLines",
     "access": "public",
     "description": null,
-    "lineNumber": 260,
+    "lineNumber": 276,
     "undocument": true,
     "params": [],
     "return": null
@@ -29227,7 +29223,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#error",
     "access": "public",
     "description": null,
-    "lineNumber": 270,
+    "lineNumber": 286,
     "undocument": true,
     "params": [
       {
@@ -29250,7 +29246,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#getOverdraw",
     "access": "public",
     "description": null,
-    "lineNumber": 274,
+    "lineNumber": 290,
     "undocument": true,
     "params": [],
     "return": {
@@ -29270,7 +29266,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#addDrawLine",
     "access": "public",
     "description": null,
-    "lineNumber": 283,
+    "lineNumber": 299,
     "undocument": true,
     "params": [
       {
@@ -29309,7 +29305,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#pushModal",
     "access": "public",
     "description": null,
-    "lineNumber": 289,
+    "lineNumber": 305,
     "undocument": true,
     "params": [
       {
@@ -29332,7 +29328,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#popModal",
     "access": "public",
     "description": null,
-    "lineNumber": 293,
+    "lineNumber": 309,
     "undocument": true,
     "params": [],
     "return": null
@@ -29348,7 +29344,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#modalStart",
     "access": "public",
     "description": null,
-    "lineNumber": 298,
+    "lineNumber": 314,
     "undocument": true,
     "params": [
       {
@@ -29373,7 +29369,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#modal_ctx",
     "access": "public",
     "description": null,
-    "lineNumber": 306,
+    "lineNumber": 322,
     "undocument": true,
     "type": {
       "types": [
@@ -29390,7 +29386,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#modalRunning",
     "access": "public",
     "description": null,
-    "lineNumber": 307,
+    "lineNumber": 323,
     "undocument": true,
     "type": {
       "types": [
@@ -29407,7 +29403,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#_reject",
     "access": "private",
     "description": null,
-    "lineNumber": 311,
+    "lineNumber": 327,
     "undocument": true,
     "type": {
       "types": [
@@ -29426,7 +29422,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#toolCancel",
     "access": "public",
     "description": null,
-    "lineNumber": 326,
+    "lineNumber": 342,
     "undocument": true,
     "params": [],
     "return": null
@@ -29442,7 +29438,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#modalEnd",
     "access": "public",
     "description": null,
-    "lineNumber": 329,
+    "lineNumber": 345,
     "undocument": true,
     "params": [
       {
@@ -29463,7 +29459,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolOp#is_modal",
     "access": "public",
     "description": null,
-    "lineNumber": 352,
+    "lineNumber": 368,
     "undocument": true,
     "type": {
       "types": [
@@ -29483,7 +29479,7 @@
     "importPath": "./scripts/toolsys/simple_toolsys.js",
     "importStyle": "{ToolMacro}",
     "description": null,
-    "lineNumber": 362,
+    "lineNumber": 378,
     "undocument": true,
     "interface": false,
     "extends": [
@@ -29501,7 +29497,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro.tooldef",
     "access": "public",
     "description": null,
-    "lineNumber": 363,
+    "lineNumber": 379,
     "undocument": true,
     "params": [],
     "return": {
@@ -29521,7 +29517,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#constructor",
     "access": "public",
     "description": null,
-    "lineNumber": 367,
+    "lineNumber": 383,
     "undocument": true
   },
   {
@@ -29533,7 +29529,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#tools",
     "access": "public",
     "description": null,
-    "lineNumber": 370,
+    "lineNumber": 386,
     "undocument": true,
     "type": {
       "types": [
@@ -29550,7 +29546,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#curtool",
     "access": "public",
     "description": null,
-    "lineNumber": 371,
+    "lineNumber": 387,
     "undocument": true,
     "type": {
       "types": [
@@ -29567,7 +29563,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#has_modal",
     "access": "public",
     "description": null,
-    "lineNumber": 372,
+    "lineNumber": 388,
     "undocument": true,
     "type": {
       "types": [
@@ -29584,7 +29580,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#connects",
     "access": "public",
     "description": null,
-    "lineNumber": 373,
+    "lineNumber": 389,
     "undocument": true,
     "type": {
       "types": [
@@ -29603,7 +29599,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#connect",
     "access": "public",
     "description": null,
-    "lineNumber": 376,
+    "lineNumber": 392,
     "undocument": true,
     "params": [
       {
@@ -29648,7 +29644,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#add",
     "access": "public",
     "description": null,
-    "lineNumber": 387,
+    "lineNumber": 403,
     "undocument": true,
     "params": [
       {
@@ -29673,7 +29669,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#is_modal",
     "access": "public",
     "description": null,
-    "lineNumber": 389,
+    "lineNumber": 405,
     "undocument": true,
     "type": {
       "types": [
@@ -29692,7 +29688,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#_do_connections",
     "access": "private",
     "description": null,
-    "lineNumber": 397,
+    "lineNumber": 413,
     "undocument": true,
     "params": [
       {
@@ -29715,7 +29711,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro.canRun",
     "access": "public",
     "description": null,
-    "lineNumber": 405,
+    "lineNumber": 421,
     "undocument": true,
     "params": [
       {
@@ -29742,7 +29738,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#modalStart",
     "access": "public",
     "description": null,
-    "lineNumber": 418,
+    "lineNumber": 434,
     "undocument": true,
     "params": [
       {
@@ -29767,7 +29763,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#_promise",
     "access": "private",
     "description": null,
-    "lineNumber": 419,
+    "lineNumber": 435,
     "undocument": true,
     "type": {
       "types": [
@@ -29784,7 +29780,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#_accept",
     "access": "private",
     "description": null,
-    "lineNumber": 420,
+    "lineNumber": 436,
     "undocument": true,
     "type": {
       "types": [
@@ -29801,7 +29797,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#_reject",
     "access": "private",
     "description": null,
-    "lineNumber": 421,
+    "lineNumber": 437,
     "undocument": true,
     "type": {
       "types": [
@@ -29820,7 +29816,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#exec",
     "access": "public",
     "description": null,
-    "lineNumber": 472,
+    "lineNumber": 488,
     "undocument": true,
     "params": [
       {
@@ -29843,7 +29839,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#undoPre",
     "access": "public",
     "description": null,
-    "lineNumber": 482,
+    "lineNumber": 498,
     "undocument": true,
     "params": [],
     "return": null
@@ -29859,7 +29855,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolMacro#undo",
     "access": "public",
     "description": null,
-    "lineNumber": 486,
+    "lineNumber": 502,
     "undocument": true,
     "params": [
       {
@@ -29883,7 +29879,7 @@
     "importPath": "./scripts/toolsys/simple_toolsys.js",
     "importStyle": "{ToolStack}",
     "description": null,
-    "lineNumber": 493,
+    "lineNumber": 509,
     "undocument": true,
     "interface": false,
     "extends": [
@@ -29901,7 +29897,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#constructor",
     "access": "public",
     "description": null,
-    "lineNumber": 494,
+    "lineNumber": 510,
     "undocument": true
   },
   {
@@ -29913,7 +29909,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#cur",
     "access": "public",
     "description": null,
-    "lineNumber": 497,
+    "lineNumber": 513,
     "undocument": true,
     "type": {
       "types": [
@@ -29930,7 +29926,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#ctx",
     "access": "public",
     "description": null,
-    "lineNumber": 498,
+    "lineNumber": 514,
     "undocument": true,
     "type": {
       "types": [
@@ -29947,7 +29943,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#modalRunning",
     "access": "public",
     "description": null,
-    "lineNumber": 499,
+    "lineNumber": 515,
     "undocument": true,
     "type": {
       "types": [
@@ -29966,7 +29962,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#setRestrictedToolContext",
     "access": "public",
     "description": null,
-    "lineNumber": 502,
+    "lineNumber": 518,
     "undocument": true,
     "params": [
       {
@@ -29987,7 +29983,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#toolctx",
     "access": "public",
     "description": null,
-    "lineNumber": 503,
+    "lineNumber": 519,
     "undocument": true,
     "type": {
       "types": [
@@ -30006,7 +30002,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#reset",
     "access": "public",
     "description": null,
-    "lineNumber": 506,
+    "lineNumber": 522,
     "undocument": true,
     "params": [
       {
@@ -30027,7 +30023,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#length",
     "access": "public",
     "description": null,
-    "lineNumber": 513,
+    "lineNumber": 529,
     "undocument": true,
     "type": {
       "types": [
@@ -30046,7 +30042,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#execTool",
     "access": "public",
     "description": null,
-    "lineNumber": 516,
+    "lineNumber": 532,
     "undocument": true,
     "params": [
       {
@@ -30073,7 +30069,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#[.cur]",
     "access": "public",
     "description": null,
-    "lineNumber": 537,
+    "lineNumber": 553,
     "undocument": true,
     "type": {
       "types": [
@@ -30092,7 +30088,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#undo",
     "access": "public",
     "description": null,
-    "lineNumber": 560,
+    "lineNumber": 576,
     "undocument": true,
     "params": [],
     "return": null
@@ -30108,7 +30104,7 @@
     "longname": "scripts/toolsys/simple_toolsys.js~ToolStack#redo",
     "access": "public",
     "description": null,
-    "lineNumber": 568,
+    "lineNumber": 584,
     "undocument": true,
     "params": [],
     "return": null
@@ -72904,7 +72900,7 @@
   },
   {
     "kind": "index",
-    "content": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <base data-ice=\"baseUrl\" href=\"./\">\n  <title data-ice=\"title\">Manual | path.ux</title>\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"css/style.css\">\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"css/prettify-tomorrow.css\">\n  <script src=\"script/prettify/prettify.js\"></script>\n  <script src=\"script/manual.js\"></script>\n<meta name=\"description\" content=\"this is awesome library\"><meta property=\"twitter:card\" content=\"summary\"><meta property=\"twitter:title\" content=\"path.ux\"><meta property=\"twitter:description\" content=\"this is awesome library\"></head>\n<body class=\"layout-container manual-root manual-index\" data-ice=\"rootContainer\">\n\n<header>\n  <a href=\"./\">Home</a>\n  \n  <a href=\"identifiers.html\">Reference</a>\n  <a href=\"source.html\">Source</a>\n  \n  <div class=\"search-box\">\n  <span>\n    <img src=\"./image/search.png\">\n    <span class=\"search-input-edge\"></span><input class=\"search-input\"><span class=\"search-input-edge\"></span>\n  </span>\n    <ul class=\"search-result\"></ul>\n  </div>\n<a style=\"position:relative; top:3px;\" href=\"https://github.com/joeedh/path.ux.git\"><img width=\"20px\" src=\"./image/github.png\"></a></header>\n\n<nav class=\"navigation\" data-ice=\"nav\"><div class=\"manual-toc-root\">\n  \n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#introduction\" data-ice=\"link\">Introduction</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#context\" data-ice=\"link\">Context</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#history\" data-ice=\"link\">History</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html\" data-ice=\"link\">NStructJS</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html#controller-how-fields-are-saved\" data-ice=\"link\">Controller How Fields Are Saved</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html#versioning\" data-ice=\"link\">Versioning</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html\" data-ice=\"link\">Tool System</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#context\" data-ice=\"link\">Context</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#undo\" data-ice=\"link\">Undo</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#tooldef--\" data-ice=\"link\">tooldef()</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#tool-properties\" data-ice=\"link\">Tool Properties</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#type-in-place-api\" data-ice=\"link\">Type-In-Place API</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#object-wrapping-example\" data-ice=\"link\">Object Wrapping Example</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/context.html\"><a href=\"manual/context.html\" data-ice=\"link\">Context design:</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#required-fields\" data-ice=\"link\">Required fields</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#context-overlay-\" data-ice=\"link\">Context Overlay:</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#locked-contexts\" data-ice=\"link\">Locked contexts</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#tool-contexts\" data-ice=\"link\">Tool Contexts</a></li>\n</ul>\n  </div>\n</div>\n</nav>\n\n<div class=\"content\" data-ice=\"content\"><div class=\"github-markdown\">\n  <div class=\"manual-user-index\" data-ice=\"manualUserIndex\"><h1 id=\"introduction\">Introduction</h1><p>Path.ux is a small app framework inspired by the architecture of \nBlender, a 3D animation/modeling/visualization app.  </p>\n<h1 id=\"architecture\">Architecture</h1><ul>\n<li><a href=\"manual/architecture.html\">Overview</a></li>\n<li><a href=\"manual/context.html\">Context</a></li>\n<li><a href=\"manual/controller.html\">Controller</a></li>\n<li><a href=\"manual/toolprop.html\">Tool Properties</a></li>\n<li><a href=\"manual/toolsystem.html\">Tool System</a></li>\n<li><a href=\"manual/nstructjs.html\">STRUCT</a></li>\n<li><a href=\"manual/FrameManager.html\">FrameManager</a></li>\n</ul>\n</div>\n\n  \n\n  <div class=\"manual-cards\">\n    \n  <div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>History</h1><p>Path.ux is roughly based on <a href=\"http://www.blender.org\">Blender&apos;s</a> architecture.</p><p><a href=\"./manual/manual/controller.html\">Main page</a></p><p>The Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.</p><p>The controller is called &quot;RNA&quot; and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. &quot;object.subobject.some_property&quot;.  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).</p><p>Internally the controller has a special wrapper API for blender&apos;s c-struct-based pseudo-objects.  This works extremely well as it keeps type information that&apos;s only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.</p><p>Since the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:</p><pre><code><code class=\"source-code prettyprint\">def panel(layout, context):\n    row = layout.row\n    row.prop(context.object, &quot;some_object_property&quot;)\n    row.tool(&quot;mesh.subdivide&quot;)</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/architecture.html#history\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>NStructJS</h1><p>NStructJS is a little library for saving/loading highly structured JS objects as binary data\n(for more info, see the <a href=\"https://github.com/joeedh/STRUCT/wiki\">official documentation</a> ).\nIt is not suited for unstructed data (use JSON for that).<br>NStructJS arose out of the following shortcomings of JSON:</p><ul>\n<li>JSON allocates objects twice.</li>\n<li>JSON is slow compared to what you can get with a structured binary format</li>\n</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that \nclass&apos;s data and how it is saved.  For example:</p><pre><code><code class=\"source-code prettyprint\">class SomeClass {\n  constructor() {\n    this.data1 = 0;\n    this.data2 = [1, 2, 3];\n  }\n\n  //reader &quot;fills in&quot; fields in a newly created object with loaded data\n  static fromSTRUCT(reader) {\n    let ret = new SomeClass();\n\n    reader(ret);\n\n    return ret;\n  }\n}\nSomeClass.STRUCT = `\nmy_module.SomeClass {\n  data1 : int;\n  data2 : array;\n}\nnstructjs.manager.add_class(SomeClass);\n`;</code>\n</code></pre><h2>Controller How Fields Are Saved</h2><p>Note that you can specify little code snippets to control how fields are saved.\nFor example, if you want to save an integer ID instead of a reference for an \nobject property, you might do this:</p><pre><code><code class=\"source-code prettyprint\">my_module.AnotherClass {\n  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;\n}</code>\n</code></pre><p>Here, everything after &apos;|&apos; until &apos;;&apos; defines how someclass is saved.  For various dumb reasons\n&apos;this&apos; is bound to &apos;obj&apos;; as you can see, the basic idea is to check if this.someclass exists,\nif so use this.someclass.id, else use -1.</p><h2>Versioning</h2><p>To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a\ncopy of your struct scripts with each file, that way each file knows how to load itself.</p><p>For more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.\nThey&apos;re used when the automatic versioning from nstructjs isn&apos;t enough.</p></div>\n        <a data-ice=\"link\" href=\"manual/nstructjs.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and in generate are foundational to path.ux and it&apos;s associated projects.  </p><p>Tools all inherit from ToolOp, which roughly looks like this (see Context section for an explanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code class=\"source-code prettyprint\">class SomeTool extends ToolOp {\n  static tooldef() {return {\n    uiname   : &quot;Tool&quot;,\n    path     : &quot;module.tool&quot;\n    inputs   : ToolOp.inherit({}), //inherit properties from base class\n    outputs  : {}\n  }}\n  static invoke(ctx, args) {\n    /*create a new tool instance.\n      args is simple key:val mapping\n      where val is either a string, a number\n      or a boolean.*/\n    return new ToolOp()\n  }\n  undoPre(ctx) {\n    //create undo data\n  }\n  undo(ctx) {\n    //execute undo with data made in previous call to this.undoPre\n  }\n  exec(ctx) {\n    //execute tool\n  }\n  modalStart(ctx) {\n    //start interactice mode\n  }\n  modalEnd(ctx) {\n    //end interactive mode\n  }\n  on_[mousedown/mousemove/mouseup/keydown](ctx) {\n    //interactive mode event\n  }\n\n  ToolOp.register(SomeTool);\n}</code>\n</code></pre><h2>Context</h2><p>The foundation of the tool system is a special Context struct that&apos;s provided by client code.  Think of it as defining &quot;arguments&quot; for tools.  Path.ux can use any context struct, but requires the following properties be defined:</p><pre><code><code class=\"source-code prettyprint\">class Context {\n  get api() {\n    //return reference to a controller.ModelInterface\n  }\n\n  get appstate() {\n    //return reference to main appstate global\n  }\n\n  get screen() {\n    //return reference to main FrameManager.screen\n  }\n}</code>\n</code></pre><p>In addition, path.ux has hooks to provide UI context, specifically which are is currently active.  To do this,\neither override the following methods in ScreenArea.Area.prototype, or subclass Area:</p><pre><code><code class=\"source-code prettyprint\">  //called when area should be considered &quot;active&quot;\n  push_ctx_active() {\n  }\n\n  //called when area should be considered &quot;inactive&quot;\n  pop_ctx_active() {\n  }</code>\n</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the \nentire application and then reloading it on undo).  Additionally to save on speed and memory subclasses \ncan override undoPre and undo with their own implementation.</p><h2>tooldef()</h2><p>Tools have a special tooldef() static function that &quot;defines&quot; the tool.  It returns things like\nwhat properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties, \nvarious linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code\nmay provide it&apos;s own property classes.</p></div>\n        <a data-ice=\"link\" href=\"manual/toolsystem.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Object Wrapping Example</h1><pre><code><code class=\"source-code prettyprint\">    //our test class we want to wrap\n    class Thing {\n      constructor(name, id, location, opacity) {\n        this.name = name; //str\n        this.id = id; //int\n        this.location = location; //enumeration\n        this.opacity = opacity; //float\n      }\n    }\n\n    //enumeration for .location member\n    const LocationEnum = {\n      LIVING_ROOM : 0,\n      BEDROOM : 1,\n      DRIVEWAY : 2\n    };\n\n    import {DataAPI} from &apos;controller.js&apos;;\n\n    export api = new DataAPI();\n\n    //create a structure mapping to Thing\n    let st = api.mapStruct(Thing);\n\n    //define properties and their types\n    //these all have the prototype (membername, apiname, ui_name, description)\n\n    st.string(&quot;name&quot;, &quot;name&quot;, &quot;Name&quot;, &quot;Name of thing&quot;);\n    st.int(&quot;id&quot;, &quot;id&quot;, &quot;ID&quot;, &quot;Unique ID of thing&quot;);\n    st.enum(&quot;location&quot;, &quot;location&quot;, &quot;Location&quot;, &quot;Location of thing&quot;).icons({\n      LIVING_ROOM : [some icon id],\n      BEDROOM : [some icon id],\n      DRIVEWAY : [some icon id],\n    });\n    st.float(&quot;opacity&quot;, &quot;opacity&quot;, &quot;Opacity&quot;, &quot;Transparency of thing&quot;).range(0, 1);\n</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/controller.html#object-wrapping-example\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Context design:</h1><p>Context is a simplified API to access the application model.  Contexts are passed around\nto ToolOps and used by path.ux.</p><h2>Required fields</h2><p>Call contexts are required to have the following fields:</p><ul>\n<li>screen -- the active FrameManager.Screen (or a subclass of it)</li>\n<li>api -- the data path controller, (controller.ModelInterface)</li>\n<li>toolstack -- The tool operator stack (simple_toolsys.ToolStack)</li>\n</ul><h2>Context Overlay:</h2><p>A context overlay is a class that overrides context fields.  It has a validate()\nmethod that is polled regularly; if it returns false the overlay is removed.</p><p>Contexts can be &quot;frozen&quot; with .lock.  When frozen they should <em>have no direct object \nreferences at all</em>, other then .state, .datalib and .api.  </p><p>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside\nof the overlay classes, as well as overriding saveProperty and loadProperty\ninside of Context subclasses.</p><p>Example of a context overlay:</p><pre><code><code class=\"source-code prettyprint\">class ContextOverlay {\n  validate() {\n    //check if this overlay is still valid or needs to be removed\n  }\n\n  static contextDefine() {return {\n    flag    :   0 //see ContextFlags\n\n    //an example of inheritance.  inheritance is automatic for fields\n    //that are missing from contextDefine().\n    flag    :   Context.inherit([a bitmask to or with parent])\n  }}\n\n  get selectedObjects() {\n    /*\n      if you want to get a property from below the stack in the ctx\n      use this.ctx or return Context.super\n    */\n    if (some_reason) {\n        //tell ctx to \n        return Context.super();\n    } else {\n        //this will also work\n        return this.ctx.selectedObjects;\n    }\n\n    return this.ctx.scene.objects.selected.editable;\n  }\n\n  selectedObjects_save() {\n    let ret = [];\n    for (let ob of this.selectedObjects) {\n        ret.push(ob.id);        \n    }\n\n    return ret;\n  }\n\n  selectedObjects_load(ctx, data) {\n    let ret = [];\n\n    for (let id of data) {\n        ret.push([lookup object from data using (possible new) context ctx])\n    }\n\n    return ret;\n  }\n}</code>\n</code></pre><h2>Locked contexts</h2><p>Locked contexts are contexts whose properties are &quot;saved&quot;, but not as direct references.\nInstead, each property is (ideally) saved as some sort of ID or datapath to look up\nthe true value on property access.</p><p>We suggest you subclass Context and implement saveProperty and loadProperty methods.</p><pre><code><code class=\"source-code prettyprint\">class Overlay extends ContextOverlay {\n  get something() {\n    return something;\n  }\n\n  something_save() {\n    return this.state.something.id;\n  }\n\n  something_load(ctx, id) {\n    return [lookup id somewhere to get something];\n  }\n}</code>\n</code></pre><h2>Tool Contexts</h2><p>We encourage you to put Context properties related to the view inside\na separate ContextOverlay.  That way you can keep ToolOps from accessing\nthe view by feeding them a special context that lacks that overlay\n(but note that tools in modal mode should always get a full context). </p><pre><code><code class=\"source-code prettyprint\">class ToolOverlay extends ContextOverlay {\n    static contextDefine() {return {\n        name : &quot;tool&quot;\n    }}\n\n    get mesh() {\n        return this.state.mesh;\n    }\n\n    get material() {\n        return this.state.material;\n    }\n}\nContext.register(ToolOverlay);\n\nclass ViewOverlay extends ContextOverlay {\n    static contextDefine() {return {\n        name : &quot;view&quot;,\n        flag : ContextFlags.IS_VIEW\n    }}\n\n    get screen() {\n        return this.state.screen;\n    }\n\n    get textEditor() {\n        return \n    }\n}\nContext.register(ToolOverlay);</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/context.html\"></a>\n      </div>\n    </div>\n</div>\n</div>\n</div>\n\n<footer class=\"footer\">\n  Generated by <a href=\"https://esdoc.org\">ESDoc<span data-ice=\"esdocVersion\">(1.1.0)</span><img src=\"./image/esdoc-logo-mini-black.png\"></a>\n</footer>\n\n<script src=\"script/search_index.js\"></script>\n<script src=\"script/search.js\"></script>\n<script src=\"script/pretty-print.js\"></script>\n<script src=\"script/inherited-summary.js\"></script>\n<script src=\"script/test-summary.js\"></script>\n<script src=\"script/inner-link.js\"></script>\n<script src=\"script/patch-for-local.js\"></script>\n</body>\n</html>\n",
+    "content": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <base data-ice=\"baseUrl\" href=\"./\">\n  <title data-ice=\"title\">Manual | path.ux</title>\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"css/style.css\">\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"css/prettify-tomorrow.css\">\n  <script src=\"script/prettify/prettify.js\"></script>\n  <script src=\"script/manual.js\"></script>\n<meta name=\"description\" content=\"this is awesome library\"><meta property=\"twitter:card\" content=\"summary\"><meta property=\"twitter:title\" content=\"path.ux\"><meta property=\"twitter:description\" content=\"this is awesome library\"></head>\n<body class=\"layout-container manual-root manual-index\" data-ice=\"rootContainer\">\n\n<header>\n  <a href=\"./\">Home</a>\n  \n  <a href=\"identifiers.html\">Reference</a>\n  <a href=\"source.html\">Source</a>\n  \n  <div class=\"search-box\">\n  <span>\n    <img src=\"./image/search.png\">\n    <span class=\"search-input-edge\"></span><input class=\"search-input\"><span class=\"search-input-edge\"></span>\n  </span>\n    <ul class=\"search-result\"></ul>\n  </div>\n<a style=\"position:relative; top:3px;\" href=\"https://github.com/joeedh/path.ux.git\"><img width=\"20px\" src=\"./image/github.png\"></a></header>\n\n<nav class=\"navigation\" data-ice=\"nav\"><div class=\"manual-toc-root\">\n  \n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#introduction\" data-ice=\"link\">Introduction</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#context\" data-ice=\"link\">Context</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#history\" data-ice=\"link\">History</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html\" data-ice=\"link\">NStructJS</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html#controller-how-fields-are-saved\" data-ice=\"link\">Controller How Fields Are Saved</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html#versioning\" data-ice=\"link\">Versioning</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html\" data-ice=\"link\">Tool System</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#context\" data-ice=\"link\">Context</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#undo\" data-ice=\"link\">Undo</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#tooldef--\" data-ice=\"link\">tooldef()</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#tool-properties\" data-ice=\"link\">Tool Properties</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#simple-controller-js\" data-ice=\"link\">simple_controller.js</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#type-in-place-api\" data-ice=\"link\">Type-In-Place API</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#object-wrapping-example\" data-ice=\"link\">Object Wrapping Example</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/context.html\"><a href=\"manual/context.html\" data-ice=\"link\">Context design:</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#required-fields\" data-ice=\"link\">Required fields</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#context-overlay-\" data-ice=\"link\">Context Overlay:</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#locked-contexts\" data-ice=\"link\">Locked contexts</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#tool-contexts\" data-ice=\"link\">Tool Contexts</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#introduction\" data-ice=\"link\">Introduction</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#context\" data-ice=\"link\">Context</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/architecture.html\"><a href=\"manual/architecture.html#history\" data-ice=\"link\">History</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/context.html\"><a href=\"manual/context.html\" data-ice=\"link\">Context design:</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#required-fields\" data-ice=\"link\">Required fields</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#context-overlay-\" data-ice=\"link\">Context Overlay:</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#locked-contexts\" data-ice=\"link\">Locked contexts</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/context.html\"><a href=\"manual/context.html#tool-contexts\" data-ice=\"link\">Tool Contexts</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#simple-controller-js\" data-ice=\"link\">simple_controller.js</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#type-in-place-api\" data-ice=\"link\">Type-In-Place API</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/controller.html\"><a href=\"manual/controller.html#object-wrapping-example\" data-ice=\"link\">Object Wrapping Example</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/FrameManager.html\"><a href=\"manual/FrameManager.html\" data-ice=\"link\">FrameManager Module</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/index.html\"><a href=\"manual/index.html#introduction\" data-ice=\"link\">Introduction</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/index.html\"><a href=\"manual/index.html#architecture\" data-ice=\"link\">Architecture</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html\" data-ice=\"link\">NStructJS</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html#controller-how-fields-are-saved\" data-ice=\"link\">Controller How Fields Are Saved</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/nstructjs.html\"><a href=\"manual/nstructjs.html#versioning\" data-ice=\"link\">Versioning</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    <li data-ice=\"manualNav\" class=\"indent-h1\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html\" data-ice=\"link\">Tool System</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#context\" data-ice=\"link\">Context</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#undo\" data-ice=\"link\">Undo</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#tooldef--\" data-ice=\"link\">tooldef()</a></li>\n<li data-ice=\"manualNav\" class=\"indent-h2\" data-link=\"manual/toolsystem.html\"><a href=\"manual/toolsystem.html#tool-properties\" data-ice=\"link\">Tool Properties</a></li>\n</ul>\n  </div>\n<div data-ice=\"manual\">\n    <ul class=\"manual-toc\">\n      \n    </ul>\n  </div>\n</div>\n</nav>\n\n<div class=\"content\" data-ice=\"content\"><div class=\"github-markdown\">\n  <div class=\"manual-user-index\" data-ice=\"manualUserIndex\"><h1 id=\"introduction\">Introduction</h1><p>Path.ux is a small app framework inspired by the architecture of \nBlender, a 3D animation/modeling/visualization app.  </p>\n<h1 id=\"architecture\">Architecture</h1><ul>\n<li><a href=\"manual/architecture.html\">Overview</a></li>\n<li><a href=\"manual/context.html\">Context</a></li>\n<li><a href=\"manual/controller.html\">Controller</a></li>\n<li><a href=\"manual/toolprop.html\">Tool Properties</a></li>\n<li><a href=\"manual/toolsystem.html\">Tool System</a></li>\n<li><a href=\"manual/nstructjs.html\">STRUCT</a></li>\n<li><a href=\"manual/FrameManager.html\">FrameManager</a></li>\n</ul>\n</div>\n\n  \n\n  <div class=\"manual-cards\">\n    \n  <div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>History</h1><p>Path.ux is roughly based on <a href=\"http://www.blender.org\">Blender&apos;s</a> architecture.</p><p><a href=\"./manual/manual/controller.html\">Main page</a></p><p>The Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.</p><p>The controller is called &quot;RNA&quot; and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. &quot;object.subobject.some_property&quot;.  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).</p><p>Internally the controller has a special wrapper API for blender&apos;s c-struct-based pseudo-objects.  This works extremely well as it keeps type information that&apos;s only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.</p><p>Since the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:</p><pre><code><code class=\"source-code prettyprint\">def panel(layout, context):\n    row = layout.row\n    row.prop(context.object, &quot;some_object_property&quot;)\n    row.tool(&quot;mesh.subdivide&quot;)</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/architecture.html#history\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>NStructJS</h1><p>NStructJS is a little library for saving/loading highly structured JS objects as binary data\n(for more info, see the <a href=\"https://github.com/joeedh/STRUCT/wiki\">official documentation</a> ).\nIt is not suited for unstructed data (use JSON for that).<br>NStructJS arose out of the following shortcomings of JSON:</p><ul>\n<li>JSON allocates objects twice.</li>\n<li>JSON is slow compared to what you can get with a structured binary format</li>\n</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that \nclass&apos;s data and how it is saved.  For example:</p><pre><code><code class=\"source-code prettyprint\">class SomeClass {\n  constructor() {\n    this.data1 = 0;\n    this.data2 = [1, 2, 3];\n  }\n\n  //reader &quot;fills in&quot; fields in a newly created object with loaded data\n  static fromSTRUCT(reader) {\n    let ret = new SomeClass();\n\n    reader(ret);\n\n    return ret;\n  }\n}\nSomeClass.STRUCT = `\nmy_module.SomeClass {\n  data1 : int;\n  data2 : array;\n}\nnstructjs.manager.add_class(SomeClass);\n`;</code>\n</code></pre><h2>Controller How Fields Are Saved</h2><p>Note that you can specify little code snippets to control how fields are saved.\nFor example, if you want to save an integer ID instead of a reference for an \nobject property, you might do this:</p><pre><code><code class=\"source-code prettyprint\">my_module.AnotherClass {\n  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;\n}</code>\n</code></pre><p>Here, everything after &apos;|&apos; until &apos;;&apos; defines how someclass is saved.  For various dumb reasons\n&apos;this&apos; is bound to &apos;obj&apos;; as you can see, the basic idea is to check if this.someclass exists,\nif so use this.someclass.id, else use -1.</p><h2>Versioning</h2><p>To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a\ncopy of your struct scripts with each file, that way each file knows how to load itself.</p><p>For more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.\nThey&apos;re used when the automatic versioning from nstructjs isn&apos;t enough.</p></div>\n        <a data-ice=\"link\" href=\"manual/nstructjs.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and \nin general are foundational to path.ux and it&apos;s associated projects.  </p><p>Tools all inherit from <a href=\"./manual/../class/scripts/toolsys/simple_toolsys.js~ToolOp.html\">ToolOp</a>, which roughly looks like this (see Context section for an \nexplanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code class=\"source-code prettyprint\">class SomeTool extends ToolOp {\n  static tooldef() {return {\n    uiname   : &quot;Tool&quot;,\n    path     : &quot;module.tool&quot;\n    inputs   : ToolOp.inherit({}), //inherit properties from base class\n    outputs  : {}\n  }}\n  static invoke(ctx, args) {\n    /*create a new tool instance.\n      args is simple key:val mapping\n      where val is either a string, a number\n      or a boolean.*/\n    return new ToolOp()\n  }\n  undoPre(ctx) {\n    //create undo data\n  }\n  undo(ctx) {\n    //execute undo with data made in previous call to this.undoPre\n  }\n  exec(ctx) {\n    //execute tool\n  }\n  modalStart(ctx) {\n    //start interactice mode\n  }\n  modalEnd(ctx) {\n    //end interactive mode\n  }\n  on_[mousedown/mousemove/mouseup/keydown](ctx) {\n    //interactive mode event\n  }\n\n  ToolOp.register(SomeTool);\n}</code>\n</code></pre><h2>Context</h2><p>The foundation of the tool system is a special Context struct that&apos;s provided by client code.  Think of it as defining &quot;arguments&quot; for tools.  Path.ux can use any context struct, but requires the following properties be defined:</p><pre><code><code class=\"source-code prettyprint\">class Context {\n  get api() {\n    //return reference to a controller.ModelInterface\n  }\n\n  get appstate() {\n    //return reference to main appstate global\n  }\n\n  get screen() {\n    //return reference to main FrameManager.screen\n  }\n}</code>\n</code></pre><p>In addition, path.ux has hooks to provide UI context, specifically which are is currently active.  To do this,\neither override the following methods in ScreenArea.Area.prototype, or subclass Area:</p><pre><code><code class=\"source-code prettyprint\">  //called when area should be considered &quot;active&quot;\n  push_ctx_active() {\n  }\n\n  //called when area should be considered &quot;inactive&quot;\n  pop_ctx_active() {\n  }</code>\n</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the \nentire application and then reloading it on undo).  Additionally to save on speed and memory subclasses \ncan override undoPre and undo with their own implementation.</p><h2>tooldef()</h2><p>Tools have a special tooldef() static function that &quot;defines&quot; the tool.  It returns things like\nwhat properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties, \nvarious linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code\nmay provide it&apos;s own property classes.</p></div>\n        <a data-ice=\"link\" href=\"manual/toolsystem.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Context design:</h1><p>Context is a simplified API to access the application model.  Contexts are passed around\nto ToolOps and used by path.ux.</p><h2>Required fields</h2><p>Call contexts are required to have the following fields:</p><ul>\n<li>screen -- the active FrameManager.Screen (or a subclass of it)</li>\n<li>api -- the data path controller, (controller.ModelInterface)</li>\n<li>toolstack -- The tool operator stack (simple_toolsys.ToolStack)</li>\n</ul><h2>Context Overlay:</h2><p>A <a href=\"./manual/../class/scripts/controller/context.js~ContextOverlay.html\">context overlay</a> is a class that overrides context fields.  It has a validate()\nmethod that is polled regularly; if it returns false the overlay is removed.</p><p>Contexts can be &quot;frozen&quot; with .lock.  When frozen they should <em>have no direct object \nreferences at all</em>, other then .state, .datalib and .api.  </p><p>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside\nof the overlay classes, as well as overriding saveProperty and loadProperty\ninside of Context subclasses.</p><p>Example of a context overlay:</p><pre><code><code class=\"source-code prettyprint\">class ContextOverlay {\n  validate() {\n    //check if this overlay is still valid or needs to be removed\n  }\n\n  static contextDefine() {return {\n    flag    :   0 //see ContextFlags\n\n    //an example of inheritance.  inheritance is automatic for fields\n    //that are missing from contextDefine().\n    flag    :   Context.inherit([a bitmask to or with parent])\n  }}\n\n  get selectedObjects() {\n    /*\n      if you want to get a property from below the stack in the ctx\n      use this.ctx or return Context.super\n    */\n    if (some_reason) {\n        //tell ctx to \n        return Context.super();\n    } else {\n        //this will also work\n        return this.ctx.selectedObjects;\n    }\n\n    return this.ctx.scene.objects.selected.editable;\n  }\n\n  selectedObjects_save() {\n    let ret = [];\n    for (let ob of this.selectedObjects) {\n        ret.push(ob.id);        \n    }\n\n    return ret;\n  }\n\n  selectedObjects_load(ctx, data) {\n    let ret = [];\n\n    for (let id of data) {\n        ret.push([lookup object from data using (possible new) context ctx])\n    }\n\n    return ret;\n  }\n}</code>\n</code></pre><h2>Locked contexts</h2><p>Locked contexts are contexts whose properties are &quot;saved&quot;, but not as direct references.\nInstead, each property is (ideally) saved as some sort of ID or datapath to look up\nthe true value on property access.</p><p>We suggest you subclass Context and implement saveProperty and loadProperty methods.</p><pre><code><code class=\"source-code prettyprint\">class Overlay extends ContextOverlay {\n  get something() {\n    return something;\n  }\n\n  something_save() {\n    return this.state.something.id;\n  }\n\n  something_load(ctx, id) {\n    return [lookup id somewhere to get something];\n  }\n}</code>\n</code></pre><h2>Tool Contexts</h2><p>We encourage you to put Context properties related to the view inside\na separate ContextOverlay.  That way you can keep ToolOps from accessing\nthe view by feeding them a special context that lacks that overlay\n(but note that tools in modal mode should always get a full context). </p><pre><code><code class=\"source-code prettyprint\">class ToolOverlay extends ContextOverlay {\n    static contextDefine() {return {\n        name : &quot;tool&quot;\n    }}\n\n    get mesh() {\n        return this.state.mesh;\n    }\n\n    get material() {\n        return this.state.material;\n    }\n}\nContext.register(ToolOverlay);\n\nclass ViewOverlay extends ContextOverlay {\n    static contextDefine() {return {\n        name : &quot;view&quot;,\n        flag : ContextFlags.IS_VIEW\n    }}\n\n    get screen() {\n        return this.state.screen;\n    }\n\n    get textEditor() {\n        return \n    }\n}\nContext.register(ToolOverlay);</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/context.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>History</h1><p>Path.ux is roughly based on <a href=\"http://www.blender.org\">Blender&apos;s</a> architecture.</p><p><a href=\"./manual/manual/controller.html\">Main page</a></p><p>The Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.</p><p>The controller is called &quot;RNA&quot; and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. &quot;object.subobject.some_property&quot;.  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).</p><p>Internally the controller has a special wrapper API for blender&apos;s c-struct-based pseudo-objects.  This works extremely well as it keeps type information that&apos;s only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.</p><p>Since the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:</p><pre><code><code class=\"source-code prettyprint\">def panel(layout, context):\n    row = layout.row\n    row.prop(context.object, &quot;some_object_property&quot;)\n    row.tool(&quot;mesh.subdivide&quot;)</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/architecture.html#history\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Context design:</h1><p>Context is a simplified API to access the application model.  Contexts are passed around\nto ToolOps and used by path.ux.</p><h2>Required fields</h2><p>Call contexts are required to have the following fields:</p><ul>\n<li>screen -- the active FrameManager.Screen (or a subclass of it)</li>\n<li>api -- the data path controller, (controller.ModelInterface)</li>\n<li>toolstack -- The tool operator stack (simple_toolsys.ToolStack)</li>\n</ul><h2>Context Overlay:</h2><p>A <a href=\"./manual/../class/scripts/controller/context.js~ContextOverlay.html\">context overlay</a> is a class that overrides context fields.  It has a validate()\nmethod that is polled regularly; if it returns false the overlay is removed.</p><p>Contexts can be &quot;frozen&quot; with .lock.  When frozen they should <em>have no direct object \nreferences at all</em>, other then .state, .datalib and .api.  </p><p>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside\nof the overlay classes, as well as overriding saveProperty and loadProperty\ninside of Context subclasses.</p><p>Example of a context overlay:</p><pre><code><code class=\"source-code prettyprint\">class ContextOverlay {\n  validate() {\n    //check if this overlay is still valid or needs to be removed\n  }\n\n  static contextDefine() {return {\n    flag    :   0 //see ContextFlags\n\n    //an example of inheritance.  inheritance is automatic for fields\n    //that are missing from contextDefine().\n    flag    :   Context.inherit([a bitmask to or with parent])\n  }}\n\n  get selectedObjects() {\n    /*\n      if you want to get a property from below the stack in the ctx\n      use this.ctx or return Context.super\n    */\n    if (some_reason) {\n        //tell ctx to \n        return Context.super();\n    } else {\n        //this will also work\n        return this.ctx.selectedObjects;\n    }\n\n    return this.ctx.scene.objects.selected.editable;\n  }\n\n  selectedObjects_save() {\n    let ret = [];\n    for (let ob of this.selectedObjects) {\n        ret.push(ob.id);        \n    }\n\n    return ret;\n  }\n\n  selectedObjects_load(ctx, data) {\n    let ret = [];\n\n    for (let id of data) {\n        ret.push([lookup object from data using (possible new) context ctx])\n    }\n\n    return ret;\n  }\n}</code>\n</code></pre><h2>Locked contexts</h2><p>Locked contexts are contexts whose properties are &quot;saved&quot;, but not as direct references.\nInstead, each property is (ideally) saved as some sort of ID or datapath to look up\nthe true value on property access.</p><p>We suggest you subclass Context and implement saveProperty and loadProperty methods.</p><pre><code><code class=\"source-code prettyprint\">class Overlay extends ContextOverlay {\n  get something() {\n    return something;\n  }\n\n  something_save() {\n    return this.state.something.id;\n  }\n\n  something_load(ctx, id) {\n    return [lookup id somewhere to get something];\n  }\n}</code>\n</code></pre><h2>Tool Contexts</h2><p>We encourage you to put Context properties related to the view inside\na separate ContextOverlay.  That way you can keep ToolOps from accessing\nthe view by feeding them a special context that lacks that overlay\n(but note that tools in modal mode should always get a full context). </p><pre><code><code class=\"source-code prettyprint\">class ToolOverlay extends ContextOverlay {\n    static contextDefine() {return {\n        name : &quot;tool&quot;\n    }}\n\n    get mesh() {\n        return this.state.mesh;\n    }\n\n    get material() {\n        return this.state.material;\n    }\n}\nContext.register(ToolOverlay);\n\nclass ViewOverlay extends ContextOverlay {\n    static contextDefine() {return {\n        name : &quot;view&quot;,\n        flag : ContextFlags.IS_VIEW\n    }}\n\n    get screen() {\n        return this.state.screen;\n    }\n\n    get textEditor() {\n        return \n    }\n}\nContext.register(ToolOverlay);</code>\n</code></pre></div>\n        <a data-ice=\"link\" href=\"manual/context.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>FrameManager Module</h1><p>The FrameManager module has two core classes: <a href=\"./manual/../class/scripts/screen/FrameManager.js~Screen.html\">Screen</a>, and <a href=\"./manual/../class/scripts/screen/ScreenArea.js~Area.html\">Area</a>.</p></div>\n        <a data-ice=\"link\" href=\"manual/FrameManager.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Architecture</h1><ul>\n<li><a href=\"./manual/manual/architecture.html\">Overview</a></li>\n<li><a href=\"./manual/manual/context.html\">Context</a></li>\n<li><a href=\"./manual/manual/controller.html\">Controller</a></li>\n<li><a href=\"./manual/manual/toolprop.html\">Tool Properties</a></li>\n<li><a href=\"./manual/manual/toolsystem.html\">Tool System</a></li>\n<li><a href=\"./manual/manual/nstructjs.html\">STRUCT</a></li>\n<li><a href=\"./manual/manual/FrameManager.html\">FrameManager</a></li>\n</ul></div>\n        <a data-ice=\"link\" href=\"manual/index.html#architecture\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>NStructJS</h1><p>NStructJS is a little library for saving/loading highly structured JS objects as binary data\n(for more info, see the <a href=\"https://github.com/joeedh/STRUCT/wiki\">official documentation</a> ).\nIt is not suited for unstructed data (use JSON for that).<br>NStructJS arose out of the following shortcomings of JSON:</p><ul>\n<li>JSON allocates objects twice.</li>\n<li>JSON is slow compared to what you can get with a structured binary format</li>\n</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that \nclass&apos;s data and how it is saved.  For example:</p><pre><code><code class=\"source-code prettyprint\">class SomeClass {\n  constructor() {\n    this.data1 = 0;\n    this.data2 = [1, 2, 3];\n  }\n\n  //reader &quot;fills in&quot; fields in a newly created object with loaded data\n  static fromSTRUCT(reader) {\n    let ret = new SomeClass();\n\n    reader(ret);\n\n    return ret;\n  }\n}\nSomeClass.STRUCT = `\nmy_module.SomeClass {\n  data1 : int;\n  data2 : array;\n}\nnstructjs.manager.add_class(SomeClass);\n`;</code>\n</code></pre><h2>Controller How Fields Are Saved</h2><p>Note that you can specify little code snippets to control how fields are saved.\nFor example, if you want to save an integer ID instead of a reference for an \nobject property, you might do this:</p><pre><code><code class=\"source-code prettyprint\">my_module.AnotherClass {\n  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;\n}</code>\n</code></pre><p>Here, everything after &apos;|&apos; until &apos;;&apos; defines how someclass is saved.  For various dumb reasons\n&apos;this&apos; is bound to &apos;obj&apos;; as you can see, the basic idea is to check if this.someclass exists,\nif so use this.someclass.id, else use -1.</p><h2>Versioning</h2><p>To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a\ncopy of your struct scripts with each file, that way each file knows how to load itself.</p><p>For more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.\nThey&apos;re used when the automatic versioning from nstructjs isn&apos;t enough.</p></div>\n        <a data-ice=\"link\" href=\"manual/nstructjs.html\"></a>\n      </div>\n    </div>\n<div class=\"manual-card-wrap\" data-ice=\"cards\">\n      <div class=\"manual-card\">\n        <div data-ice=\"card\"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and \nin general are foundational to path.ux and it&apos;s associated projects.  </p><p>Tools all inherit from <a href=\"./manual/../class/scripts/toolsys/simple_toolsys.js~ToolOp.html\">ToolOp</a>, which roughly looks like this (see Context section for an \nexplanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code class=\"source-code prettyprint\">class SomeTool extends ToolOp {\n  static tooldef() {return {\n    uiname   : &quot;Tool&quot;,\n    path     : &quot;module.tool&quot;\n    inputs   : ToolOp.inherit({}), //inherit properties from base class\n    outputs  : {}\n  }}\n  static invoke(ctx, args) {\n    /*create a new tool instance.\n      args is simple key:val mapping\n      where val is either a string, a number\n      or a boolean.*/\n    return new ToolOp()\n  }\n  undoPre(ctx) {\n    //create undo data\n  }\n  undo(ctx) {\n    //execute undo with data made in previous call to this.undoPre\n  }\n  exec(ctx) {\n    //execute tool\n  }\n  modalStart(ctx) {\n    //start interactice mode\n  }\n  modalEnd(ctx) {\n    //end interactive mode\n  }\n  on_[mousedown/mousemove/mouseup/keydown](ctx) {\n    //interactive mode event\n  }\n\n  ToolOp.register(SomeTool);\n}</code>\n</code></pre><h2>Context</h2><p>The foundation of the tool system is a special Context struct that&apos;s provided by client code.  Think of it as defining &quot;arguments&quot; for tools.  Path.ux can use any context struct, but requires the following properties be defined:</p><pre><code><code class=\"source-code prettyprint\">class Context {\n  get api() {\n    //return reference to a controller.ModelInterface\n  }\n\n  get appstate() {\n    //return reference to main appstate global\n  }\n\n  get screen() {\n    //return reference to main FrameManager.screen\n  }\n}</code>\n</code></pre><p>In addition, path.ux has hooks to provide UI context, specifically which are is currently active.  To do this,\neither override the following methods in ScreenArea.Area.prototype, or subclass Area:</p><pre><code><code class=\"source-code prettyprint\">  //called when area should be considered &quot;active&quot;\n  push_ctx_active() {\n  }\n\n  //called when area should be considered &quot;inactive&quot;\n  pop_ctx_active() {\n  }</code>\n</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the \nentire application and then reloading it on undo).  Additionally to save on speed and memory subclasses \ncan override undoPre and undo with their own implementation.</p><h2>tooldef()</h2><p>Tools have a special tooldef() static function that &quot;defines&quot; the tool.  It returns things like\nwhat properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties, \nvarious linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code\nmay provide it&apos;s own property classes.</p></div>\n        <a data-ice=\"link\" href=\"manual/toolsystem.html\"></a>\n      </div>\n    </div>\n</div>\n</div>\n</div>\n\n<footer class=\"footer\">\n  Generated by <a href=\"https://esdoc.org\">ESDoc<span data-ice=\"esdocVersion\">(1.1.0)</span><img src=\"./image/esdoc-logo-mini-black.png\"></a>\n</footer>\n\n<script src=\"script/search_index.js\"></script>\n<script src=\"script/search.js\"></script>\n<script src=\"script/pretty-print.js\"></script>\n<script src=\"script/inherited-summary.js\"></script>\n<script src=\"script/test-summary.js\"></script>\n<script src=\"script/inner-link.js\"></script>\n<script src=\"script/patch-for-local.js\"></script>\n</body>\n</html>\n",
     "longname": "C:\\dev\\path.ux\\docs\\index.html",
     "name": "../docs/index.html",
     "static": true,
@@ -72931,7 +72927,7 @@
     "kind": "manual",
     "longname": "C:\\dev\\path.ux\\docs_src\\architecture.md",
     "name": "architecture.md",
-    "content": "# Introduction\r\n\r\nPath.ux follows a strict model/view/controller paradigm.  The application \r\nstate is the model, path.ux is the (or a) view, and the controller is \r\nthe means by which path.ux queries the model.  In addition, there are two\r\nlayers of controllers: the first, [Context](manual/context.html), is a simple\r\n(and application-defined) API to access the application state, while the\r\nsecond is small scripting language akin to Angle's data bindings and builds\r\non the first.\r\n  \r\nFor example, you might see code like this:\r\n\r\n```\r\n    function makePanel(layout) {\r\n      layout.useIcons();\r\n      layout.prop(\"view3d.selectmode\");\r\n      layout.tool(\"view3d.select_all()\");\r\n    }\r\n```\r\n\r\n\"View3d.selectmode\" is a data path.  It's akin to an object path or Angle's data bindings.\r\n\"View3d.select_all()\" is a tool path, which is a bit different.  \r\n\r\nNote that path.ux mostly makes use of the data path controller.  It does pass\r\naround a (client-provided) Context instance, which is required to have the \r\nfollowing properties:\r\n\r\n- api       : a ModelInterface class (typically a simple_controller.js:DataAPI instance)\r\n- screen    : The current screen, a FrameManager.js:Screen instance (or subclass of)\r\n- toolstack : The tool stack, see simple_toolsys.js:ToolStack\r\n \r\nPath.ux allows different controller implementations (though they must all pass type information via the \r\nclasses in toolprop.js).  The included implementation can be found in \r\n\"simple_controller.js\", and the abstract interface in \"controller.js\".\r\n\r\n# Context\r\n\r\n\r\n# History\r\n\r\nPath.ux is roughly based on [Blender's](http://www.blender.org) architecture.\r\n\r\n[Main page](manual/controller.html)\r\n\r\nThe Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.\r\n\r\nThe controller is called \"RNA\" and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. \"object.subobject.some_property\".  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).\r\n\r\nInternally the controller has a special wrapper API for blender's c-struct-based pseudo-objects.  This works extremely well as it keeps type information that's only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.\r\n\r\nSince the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:\r\n\r\n    def panel(layout, context):\r\n        row = layout.row\r\n        row.prop(context.object, \"some_object_property\")\r\n        row.tool(\"mesh.subdivide\")\r\n\r\n\r\n\r\n",
+    "content": "# Introduction \r\nPath.ux follows a strict model/view/controller paradigm.  The application \r\nstate is the model, path.ux is the (or a) view, and the controller is \r\nthe means by which path.ux queries the model.  In addition, there are two\r\nlayers of controllers: the first, [Context](context), is a simple\r\n(and application-defined) API to access the application state, while the\r\nsecond is small scripting language akin to Angle's data bindings and builds\r\non the first.\r\n  \r\nFor example, you might see code like this:\r\n\r\n```\r\n    function makePanel(layout) {\r\n      layout.useIcons();\r\n      layout.prop(\"view3d.selectmode\");\r\n      layout.tool(\"view3d.select_all()\");\r\n    }\r\n```\r\n\r\n\"View3d.selectmode\" is a data path.  It's akin to an object path or Angle's data bindings.\r\n\"View3d.select_all()\" is a tool path, which is a bit different.  \r\n\r\nNote that path.ux mostly makes use of the data path controller.  It does pass\r\naround a (client-provided) Context instance, which is required to have the \r\nfollowing properties:\r\n\r\n- api       : a [ModelInterface](@ModelInterface) class (typically a [DataAPI](@DataAPI) instance)\r\n- screen    : The current screen, a [Screen](@Screen) instance (or subclass of)\r\n- toolstack : The tool stack, see [ToolStack](@ToolStack)\r\n \r\nPath.ux allows different controller implementations (though they must all pass type information via the \r\nclasses in toolprop.js).  The included implementation can be found in \r\n\"simple_controller.js\", and the abstract interface in \"controller.js\".\r\n\r\n# Context\r\n\r\n\r\n# History\r\n\r\nPath.ux is roughly based on [Blender's](http://www.blender.org) architecture.\r\n\r\n[Main page](manual/controller.html)\r\n\r\nThe Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.\r\n\r\nThe controller is called \"RNA\" and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. \"object.subobject.some_property\".  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).\r\n\r\nInternally the controller has a special wrapper API for blender's c-struct-based pseudo-objects.  This works extremely well as it keeps type information that's only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.\r\n\r\nSince the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:\r\n\r\n    def panel(layout, context):\r\n        row = layout.row\r\n        row.prop(context.object, \"some_object_property\")\r\n        row.tool(\"mesh.subdivide\")\r\n\r\n\r\n\r\n",
     "static": true,
     "access": "public"
   },
@@ -72939,7 +72935,7 @@
     "kind": "manual",
     "longname": "C:\\dev\\path.ux\\docs_src\\nstructjs.md",
     "name": "nstructjs.md",
-    "content": "# NStructJS\r\n\r\nNStructJS is a little library for saving/loading highly structured JS objects as binary data\r\n(for more info, see the [official documentation](https://github.com/joeedh/STRUCT/wiki) ).\r\nIt is not suited for unstructed data (use JSON for that).  \r\nNStructJS arose out of the following shortcomings of JSON:\r\n\r\n- JSON allocates objects twice.\r\n- JSON is slow compared to what you can get with a structured binary format\r\n\r\nThe idea of NStructJS is to attach little scripts to your classes that define that \r\nclass's data and how it is saved.  For example:\r\n\r\n```\r\nclass SomeClass {\r\n  constructor() {\r\n    this.data1 = 0;\r\n    this.data2 = [1, 2, 3];\r\n  }\r\n  \r\n  //reader \"fills in\" fields in a newly created object with loaded data\r\n  static fromSTRUCT(reader) {\r\n    let ret = new SomeClass();\r\n    \r\n    reader(ret);\r\n    \r\n    return ret;\r\n  }\r\n}\r\nSomeClass.STRUCT = `\r\nmy_module.SomeClass {\r\n  data1 : int;\r\n  data2 : array;\r\n}\r\nnstructjs.manager.add_class(SomeClass);\r\n`;\r\n```\r\n\r\n## Controller How Fields Are Saved\r\n\r\nNote that you can specify little code snippets to control how fields are saved.\r\nFor example, if you want to save an integer ID instead of a reference for an \r\nobject property, you might do this:\r\n\r\n```\r\nmy_module.AnotherClass {\r\n  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;\r\n}\r\n```\r\n\r\nHere, everything after '|' until ';' defines how someclass is saved.  For various dumb reasons\r\n'this' is bound to 'obj'; as you can see, the basic idea is to check if this.someclass exists,\r\nif so use this.someclass.id, else use -1.\r\n\r\n## Versioning\r\n\r\nTo a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a\r\ncopy of your struct scripts with each file, that way each file knows how to load itself.\r\n\r\nFor more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.\r\nThey're used when the automatic versioning from nstructjs isn't enough.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+    "content": "# NStructJS\r\n\r\nNStructJS is a little library for saving/loading highly structured JS objects as binary data\r\n(for more info, see the [official documentation](https://github.com/joeedh/STRUCT/wiki) ).\r\nIt is not suited for unstructed data (use JSON for that).  \r\nNStructJS arose out of the following shortcomings of JSON:\r\n\r\n- JSON allocates objects twice.\r\n- JSON is slow compared to what you can get with a structured binary format\r\n\r\nThe idea of NStructJS is to attach little scripts to your classes that define that \r\nclass's data and how it is saved.  For example:\r\n\r\n```\r\nclass SomeClass {\r\n  constructor() {\r\n    this.data1 = 0;\r\n    this.data2 = [1, 2, 3];\r\n  }\r\n  \r\n  //reader \"fills in\" fields in a newly created object with loaded data\r\n  static fromSTRUCT(reader) {\r\n    let ret = new SomeClass();\r\n    \r\n    reader(ret);\r\n    \r\n    return ret;\r\n  }\r\n}\r\nSomeClass.STRUCT = `\r\nmy_module.SomeClass {\r\n  data1 : int;\r\n  data2 : array;\r\n}\r\nnstructjs.manager.add_class(SomeClass);\r\n`;\r\n```\r\n\r\n## Control How Fields Are Saved\r\n\r\nNote that you can specify little code snippets to control how fields are saved.\r\nFor example, if you want to save an integer ID instead of a reference for an \r\nobject property, you might do this:\r\n\r\n```\r\nmy_module.AnotherClass {\r\n  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;\r\n}\r\n```\r\n\r\nHere, everything after '|' until ';' defines how someclass is saved.  For various dumb reasons\r\n'this' is bound to 'obj'; as you can see, the basic idea is to check if this.someclass exists,\r\nif so use this.someclass.id, else use -1.\r\n\r\n## Versioning\r\n\r\nTo a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a\r\ncopy of your struct scripts with each file, that way each file knows how to load itself.\r\n\r\nFor more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.\r\nThey're used when the automatic versioning from nstructjs isn't enough.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
     "static": true,
     "access": "public"
   },
@@ -72947,7 +72943,7 @@
     "kind": "manual",
     "longname": "C:\\dev\\path.ux\\docs_src\\toolsystem.md",
     "name": "toolsystem.md",
-    "content": "# Tool System\r\n\r\nTools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and in generate are foundational to path.ux and it's associated projects.  \r\n\r\nTools all inherit from ToolOp, which roughly looks like this (see Context section for an explanation for what the \"ctx\" parameters are):\r\n\r\n```\r\nclass SomeTool extends ToolOp {\r\n  static tooldef() {return {\r\n    uiname   : \"Tool\",\r\n    path     : \"module.tool\"\r\n    inputs   : ToolOp.inherit({}), //inherit properties from base class\r\n    outputs  : {}\r\n  }}\r\n  static invoke(ctx, args) {\r\n    /*create a new tool instance.\r\n      args is simple key:val mapping\r\n      where val is either a string, a number\r\n      or a boolean.*/\r\n    return new ToolOp()\r\n  }\r\n  undoPre(ctx) {\r\n    //create undo data\r\n  }\r\n  undo(ctx) {\r\n    //execute undo with data made in previous call to this.undoPre\r\n  }\r\n  exec(ctx) {\r\n    //execute tool\r\n  }\r\n  modalStart(ctx) {\r\n    //start interactice mode\r\n  }\r\n  modalEnd(ctx) {\r\n    //end interactive mode\r\n  }\r\n  on_[mousedown/mousemove/mouseup/keydown](ctx) {\r\n    //interactive mode event\r\n  }\r\n  \r\n  ToolOp.register(SomeTool);\r\n}\r\n```\r\n\r\n## Context\r\nThe foundation of the tool system is a special Context struct that's provided by client code.  Think of it as defining \"arguments\" for tools.  Path.ux can use any context struct, but requires the following properties be defined:\r\n\r\n```\r\nclass Context {\r\n  get api() {\r\n    //return reference to a controller.ModelInterface\r\n  }\r\n  \r\n  get appstate() {\r\n    //return reference to main appstate global\r\n  }\r\n  \r\n  get screen() {\r\n    //return reference to main FrameManager.screen\r\n  }\r\n}\r\n```\r\n\r\nIn addition, path.ux has hooks to provide UI context, specifically which are is currently active.  To do this,\r\neither override the following methods in ScreenArea.Area.prototype, or subclass Area:\r\n\r\n```\r\n  //called when area should be considered \"active\"\r\n  push_ctx_active() {\r\n  }\r\n  \r\n  //called when area should be considered \"inactive\"\r\n  pop_ctx_active() {\r\n  }\r\n```\r\n\r\n## Undo\r\nTypically tools will inherit from a base class with a general, brute-force undo (i.e. saving the \r\nentire application and then reloading it on undo).  Additionally to save on speed and memory subclasses \r\ncan override undoPre and undo with their own implementation.\r\n\r\n\r\n## tooldef()\r\nTools have a special tooldef() static function that \"defines\" the tool.  It returns things like\r\nwhat properties the tool has, it's name, it's path in the data path system, etc.\r\n\r\n## Tool Properties\r\nTools have input and output slots.  See toolprop.js.  There are integer properties, float properties, \r\nvarious linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code\r\nmay provide it's own property classes.\r\n\r\n\r\n",
+    "content": "# Tool System\r\n\r\nTools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and \r\nin general are foundational to path.ux and it's associated projects.  \r\n\r\nTools all inherit from [ToolOp](@ToolOp), which roughly looks like this (see Context section for an \r\nexplanation for what the \"ctx\" parameters are):\r\n\r\n```\r\nclass SomeTool extends ToolOp {\r\n  static tooldef() {return {\r\n    uiname   : \"Tool\",\r\n    path     : \"module.tool\"\r\n    inputs   : ToolOp.inherit({}), //inherit properties from base class\r\n    outputs  : {}\r\n  }}\r\n  static invoke(ctx, args) {\r\n    /*create a new tool instance.\r\n      args is simple key:val mapping\r\n      where val is either a string, a number\r\n      or a boolean.*/\r\n    return new ToolOp()\r\n  }\r\n  undoPre(ctx) {\r\n    //create undo data\r\n  }\r\n  undo(ctx) {\r\n    //execute undo with data made in previous call to this.undoPre\r\n  }\r\n  exec(ctx) {\r\n    //execute tool\r\n  }\r\n  modalStart(ctx) {\r\n    //start interactice mode\r\n  }\r\n  modalEnd(ctx) {\r\n    //end interactive mode\r\n  }\r\n  on_[mousedown/mousemove/mouseup/keydown](ctx) {\r\n    //interactive mode event\r\n  }\r\n  \r\n  ToolOp.register(SomeTool);\r\n}\r\n```\r\n\r\n## Context\r\nThe foundation of the tool system is a special Context struct that's provided by client code.  Think of it as defining \"arguments\" for tools.  Path.ux can use any context struct, but requires the following properties be defined:\r\n\r\n```\r\nclass Context {\r\n  get api() {\r\n    //return reference to a controller.ModelInterface\r\n  }\r\n  \r\n  get appstate() {\r\n    //return reference to main appstate global\r\n  }\r\n  \r\n  get screen() {\r\n    //return reference to main FrameManager.screen\r\n  }\r\n}\r\n```\r\n\r\nIn addition, path.ux has hooks to provide UI context, specifically which are is currently active.  To do this,\r\neither override the following methods in ScreenArea.Area.prototype, or subclass Area:\r\n\r\n```\r\n  //called when area should be considered \"active\"\r\n  push_ctx_active() {\r\n  }\r\n  \r\n  //called when area should be considered \"inactive\"\r\n  pop_ctx_active() {\r\n  }\r\n```\r\n\r\n## Undo\r\nTypically tools will inherit from a base class with a general, brute-force undo (i.e. saving the \r\nentire application and then reloading it on undo).  Additionally to save on speed and memory subclasses \r\ncan override undoPre and undo with their own implementation.\r\n\r\n\r\n## tooldef()\r\nTools have a special tooldef() static function that \"defines\" the tool.  It returns things like\r\nwhat properties the tool has, it's name, it's path in the data path system, etc.\r\n\r\n## Tool Properties\r\nTools have input and output slots.  See toolprop.js.  There are integer properties, float properties, \r\nvarious linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code\r\nmay provide it's own property classes.\r\n\r\n\r\n",
     "static": true,
     "access": "public"
   },
@@ -72955,7 +72951,7 @@
     "kind": "manual",
     "longname": "C:\\dev\\path.ux\\docs_src\\controller.md",
     "name": "controller.md",
-    "content": "The controller is the glue by which the UI queries the model (application state), and is loosely based on \r\nBlender's RNA system.  UI code doesn't hold references to model objects; instead it holds special\r\nspecial \"data paths\".  Objects in the model are wrapped in a special \r\nAPI that describes all the type information a UI needs (e.g. property types, icon, tooltips, \r\nnumeric ranges, etc).  Simple paths are used to lookup data in the model \r\n(e.g. ```obj.property.something[bleh]```).\r\n\r\nBlender's RNA was originally created to provide one wrapper API that could power Blender's UI, \r\nscripting, and animation systems.  \r\n\r\n# Type-In-Place API\r\nOriginally path.ux was designed to strictly separate the code that wraps model object from\r\nthe code that builds UIs.  A new API that does both is in the works.\r\n\r\n# Object Wrapping Example\r\n\r\n```\r\n    //our test class we want to wrap\r\n    class Thing {\r\n      constructor(name, id, location, opacity) {\r\n        this.name = name; //str\r\n        this.id = id; //int\r\n        this.location = location; //enumeration\r\n        this.opacity = opacity; //float\r\n      }\r\n    }\r\n    \r\n    //enumeration for .location member\r\n    const LocationEnum = {\r\n      LIVING_ROOM : 0,\r\n      BEDROOM : 1,\r\n      DRIVEWAY : 2\r\n    };\r\n    \r\n    import {DataAPI} from 'controller.js';\r\n    \r\n    export api = new DataAPI();\r\n    \r\n    //create a structure mapping to Thing\r\n    let st = api.mapStruct(Thing);\r\n    \r\n    //define properties and their types\r\n    //these all have the prototype (membername, apiname, ui_name, description)\r\n    \r\n    st.string(\"name\", \"name\", \"Name\", \"Name of thing\");\r\n    st.int(\"id\", \"id\", \"ID\", \"Unique ID of thing\");\r\n    st.enum(\"location\", \"location\", \"Location\", \"Location of thing\").icons({\r\n      LIVING_ROOM : [some icon id],\r\n      BEDROOM : [some icon id],\r\n      DRIVEWAY : [some icon id],\r\n    });\r\n    st.float(\"opacity\", \"opacity\", \"Opacity\", \"Transparency of thing\").range(0, 1);\r\n\r\n```\r\n",
+    "content": "#Datapath Controller \r\nThe controller is the glue by which the view (or UI) queries the model (application state), \r\nand is loosely based on Blender's RNA system.  UI code doesn't hold references to model \r\nobjects; instead it holds special special \"data paths\".  Objects in the model are wrapped \r\nin a special API that describes all the type information a UI needs (e.g. property types, \r\nicon, tooltips, numeric ranges, etc).  Simple paths are used to lookup data in the model \r\n(e.g. ```obj.property.something[bleh]```).\r\n\r\nBlender's RNA was originally created to provide one wrapper API that could power Blender's UI, \r\nscripting, and animation systems.  \r\n\r\n## simple_controller.js\r\n\r\nSee [DataAPI](@DataAPI). \r\n\r\n## Type-In-Place API\r\nOriginally path.ux was designed to strictly separate the code that wraps model object from\r\nthe code that builds UIs.  A new API that does both is in the works.\r\n\r\n## Object Wrapping Example\r\n\r\n```\r\n    //our test class we want to wrap\r\n    class Thing {\r\n      constructor(name, id, location, opacity) {\r\n        this.name = name; //str\r\n        this.id = id; //int\r\n        this.location = location; //enumeration\r\n        this.opacity = opacity; //float\r\n      }\r\n    }\r\n    \r\n    //enumeration for .location member\r\n    const LocationEnum = {\r\n      LIVING_ROOM : 0,\r\n      BEDROOM : 1,\r\n      DRIVEWAY : 2\r\n    };\r\n    \r\n    import {DataAPI} from 'simple_controller.js';\r\n    \r\n    export api = new DataAPI();\r\n    \r\n    //create a structure mapping to Thing\r\n    let st = api.mapStruct(Thing);\r\n    \r\n    //define properties and their types\r\n    //these all have the prototype (membername, apiname, ui_name, description)\r\n    \r\n    st.string(\"name\", \"name\", \"Name\", \"Name of thing\");\r\n    st.int(\"id\", \"id\", \"ID\", \"Unique ID of thing\");\r\n    st.enum(\"location\", \"location\", \"Location\", \"Location of thing\").icons({\r\n      LIVING_ROOM : [some icon id],\r\n      BEDROOM : [some icon id],\r\n      DRIVEWAY : [some icon id],\r\n    });\r\n    st.float(\"opacity\", \"opacity\", \"Opacity\", \"Transparency of thing\").range(0, 1);\r\n\r\n```\r\n",
     "static": true,
     "access": "public"
   },
@@ -72987,7 +72983,87 @@
     "kind": "manual",
     "longname": "C:\\dev\\path.ux\\docs_src\\context.md",
     "name": "context.md",
-    "content": "# Context design:\r\n\r\nContext is a simplified API to access the application model.  Contexts are passed around\r\nto ToolOps and used by path.ux.\r\n\r\n## Required fields\r\nCall contexts are required to have the following fields:\r\n\r\n* screen -- the active FrameManager.Screen (or a subclass of it)\r\n* api -- the data path controller, (controller.ModelInterface)\r\n* toolstack -- The tool operator stack (simple_toolsys.ToolStack)\r\n \r\n## Context Overlay:\r\nA context overlay is a class that overrides context fields.  It has a validate()\r\nmethod that is polled regularly; if it returns false the overlay is removed.\r\n\r\nContexts can be \"frozen\" with .lock.  When frozen they should *have no direct object \r\nreferences at all*, other then .state, .datalib and .api.  \r\n\r\nProperties can control this with \"_save\" and \"_load\" methods inside\r\nof the overlay classes, as well as overriding saveProperty and loadProperty\r\ninside of Context subclasses.\r\n\r\nExample of a context overlay:\r\n\r\n    class ContextOverlay {\r\n      validate() {\r\n        //check if this overlay is still valid or needs to be removed\r\n      }\r\n    \r\n      static contextDefine() {return {\r\n        flag    :   0 //see ContextFlags\r\n    \r\n        //an example of inheritance.  inheritance is automatic for fields\r\n        //that are missing from contextDefine().\r\n        flag    :   Context.inherit([a bitmask to or with parent])\r\n      }}\r\n        \r\n      get selectedObjects() {\r\n        /*\r\n          if you want to get a property from below the stack in the ctx\r\n          use this.ctx or return Context.super\r\n        */\r\n        if (some_reason) {\r\n            //tell ctx to \r\n            return Context.super();\r\n        } else {\r\n            //this will also work\r\n            return this.ctx.selectedObjects;\r\n        }\r\n        \r\n        return this.ctx.scene.objects.selected.editable;\r\n      }\r\n    \r\n      selectedObjects_save() {\r\n        let ret = [];\r\n        for (let ob of this.selectedObjects) {\r\n            ret.push(ob.id);        \r\n        }\r\n        \r\n        return ret;\r\n      }\r\n    \r\n      selectedObjects_load(ctx, data) {\r\n        let ret = [];\r\n        \r\n        for (let id of data) {\r\n            ret.push([lookup object from data using (possible new) context ctx])\r\n        }\r\n        \r\n        return ret;\r\n      }\r\n    }\r\n\r\n## Locked contexts\r\n\r\nLocked contexts are contexts whose properties are \"saved\", but not as direct references.\r\nInstead, each property is (ideally) saved as some sort of ID or datapath to look up\r\nthe true value on property access.\r\n\r\nWe suggest you subclass Context and implement saveProperty and loadProperty methods.\r\n\r\n    class Overlay extends ContextOverlay {\r\n      get something() {\r\n        return something;\r\n      }\r\n    \r\n      something_save() {\r\n        return this.state.something.id;\r\n      }\r\n    \r\n      something_load(ctx, id) {\r\n        return [lookup id somewhere to get something];\r\n      }\r\n    }\r\n\r\n## Tool Contexts\r\n\r\nWe encourage you to put Context properties related to the view inside\r\na separate ContextOverlay.  That way you can keep ToolOps from accessing\r\nthe view by feeding them a special context that lacks that overlay\r\n(but note that tools in modal mode should always get a full context). \r\n\r\n```\r\nclass ToolOverlay extends ContextOverlay {\r\n    static contextDefine() {return {\r\n        name : \"tool\"\r\n    }}\r\n    \r\n    get mesh() {\r\n        return this.state.mesh;\r\n    }\r\n    \r\n    get material() {\r\n        return this.state.material;\r\n    }\r\n}\r\nContext.register(ToolOverlay);\r\n\r\nclass ViewOverlay extends ContextOverlay {\r\n    static contextDefine() {return {\r\n        name : \"view\",\r\n        flag : ContextFlags.IS_VIEW\r\n    }}\r\n    \r\n    get screen() {\r\n        return this.state.screen;\r\n    }\r\n    \r\n    get textEditor() {\r\n        return \r\n    }\r\n}\r\nContext.register(ToolOverlay);\r\n```\r\n\r\n\r\n",
+    "content": "# Context design:\r\n\r\nContext is a simplified API to access the application model.  Contexts are passed around\r\nto ToolOps and used by path.ux.\r\n\r\n## Required fields\r\nCall contexts are required to have the following fields:\r\n\r\n* screen -- the active FrameManager.Screen (or a subclass of it)\r\n* api -- the data path controller, (controller.ModelInterface)\r\n* toolstack -- The tool operator stack (simple_toolsys.ToolStack)\r\n \r\n## Context Overlay:\r\nA [context overlay](@ContextOverlay) is a class that overrides context fields.  It has a validate()\r\nmethod that is polled regularly; if it returns false the overlay is removed.\r\n\r\nContexts can be \"frozen\" with .lock.  When frozen they should *have no direct object \r\nreferences at all*, other then .state, .datalib and .api.  \r\n\r\nProperties can control this with \"_save\" and \"_load\" methods inside\r\nof the overlay classes, as well as overriding saveProperty and loadProperty\r\ninside of Context subclasses.\r\n\r\nExample of a context overlay:\r\n\r\n    class ContextOverlay {\r\n      validate() {\r\n        //check if this overlay is still valid or needs to be removed\r\n      }\r\n    \r\n      static contextDefine() {return {\r\n        flag    :   0 //see ContextFlags\r\n    \r\n        //an example of inheritance.  inheritance is automatic for fields\r\n        //that are missing from contextDefine().\r\n        flag    :   Context.inherit([a bitmask to or with parent])\r\n      }}\r\n        \r\n      get selectedObjects() {\r\n        /*\r\n          if you want to get a property from below the stack in the ctx\r\n          use this.ctx or return Context.super\r\n        */\r\n        if (some_reason) {\r\n            //tell ctx to \r\n            return Context.super();\r\n        } else {\r\n            //this will also work\r\n            return this.ctx.selectedObjects;\r\n        }\r\n        \r\n        return this.ctx.scene.objects.selected.editable;\r\n      }\r\n    \r\n      selectedObjects_save() {\r\n        let ret = [];\r\n        for (let ob of this.selectedObjects) {\r\n            ret.push(ob.id);        \r\n        }\r\n        \r\n        return ret;\r\n      }\r\n    \r\n      selectedObjects_load(ctx, data) {\r\n        let ret = [];\r\n        \r\n        for (let id of data) {\r\n            ret.push([lookup object from data using (possible new) context ctx])\r\n        }\r\n        \r\n        return ret;\r\n      }\r\n    }\r\n\r\n## Locked contexts\r\n\r\nLocked contexts are contexts whose properties are \"saved\", but not as direct references.\r\nInstead, each property is (ideally) saved as some sort of ID or datapath to look up\r\nthe true value on property access.\r\n\r\nWe suggest you subclass Context and implement saveProperty and loadProperty methods.\r\n\r\n    class Overlay extends ContextOverlay {\r\n      get something() {\r\n        return something;\r\n      }\r\n    \r\n      something_save() {\r\n        return this.state.something.id;\r\n      }\r\n    \r\n      something_load(ctx, id) {\r\n        return [lookup id somewhere to get something];\r\n      }\r\n    }\r\n\r\n## Tool Contexts\r\n\r\nWe encourage you to put Context properties related to the view inside\r\na separate ContextOverlay.  That way you can keep ToolOps from accessing\r\nthe view by feeding them a special context that lacks that overlay\r\n(but note that tools in modal mode should always get a full context). \r\n\r\n```\r\nclass ToolOverlay extends ContextOverlay {\r\n    static contextDefine() {return {\r\n        name : \"tool\"\r\n    }}\r\n    \r\n    get mesh() {\r\n        return this.state.mesh;\r\n    }\r\n    \r\n    get material() {\r\n        return this.state.material;\r\n    }\r\n}\r\nContext.register(ToolOverlay);\r\n\r\nclass ViewOverlay extends ContextOverlay {\r\n    static contextDefine() {return {\r\n        name : \"view\",\r\n        flag : ContextFlags.IS_VIEW\r\n    }}\r\n    \r\n    get screen() {\r\n        return this.state.screen;\r\n    }\r\n    \r\n    get textEditor() {\r\n        return \r\n    }\r\n}\r\nContext.register(ToolOverlay);\r\n```\r\n\r\n\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\architecture.md",
+    "name": ".//architecture.md",
+    "content": "# Introduction \r\nPath.ux follows a strict model/view/controller paradigm.  The application \r\nstate is the model, path.ux is the (or a) view, and the controller is \r\nthe means by which path.ux queries the model.  In addition, there are two\r\nlayers of controllers: the first, [Context](context), is a simple\r\n(and application-defined) API to access the application state, while the\r\nsecond is small scripting language akin to Angle's data bindings and builds\r\non the first.\r\n  \r\nFor example, you might see code like this:\r\n\r\n```\r\n    function makePanel(layout) {\r\n      layout.useIcons();\r\n      layout.prop(\"view3d.selectmode\");\r\n      layout.tool(\"view3d.select_all()\");\r\n    }\r\n```\r\n\r\n\"View3d.selectmode\" is a data path.  It's akin to an object path or Angle's data bindings.\r\n\"View3d.select_all()\" is a tool path, which is a bit different.  \r\n\r\nNote that path.ux mostly makes use of the data path controller.  It does pass\r\naround a (client-provided) Context instance, which is required to have the \r\nfollowing properties:\r\n\r\n- api       : a [ModelInterface](@ModelInterface) class (typically a [DataAPI](@DataAPI) instance)\r\n- screen    : The current screen, a [Screen](@Screen) instance (or subclass of)\r\n- toolstack : The tool stack, see [ToolStack](@ToolStack)\r\n \r\nPath.ux allows different controller implementations (though they must all pass type information via the \r\nclasses in toolprop.js).  The included implementation can be found in \r\n\"simple_controller.js\", and the abstract interface in \"controller.js\".\r\n\r\n# Context\r\n\r\n\r\n# History\r\n\r\nPath.ux is roughly based on [Blender's](http://www.blender.org) architecture.\r\n\r\n[Main page](manual/controller.html)\r\n\r\nThe Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.\r\n\r\nThe controller is called \"RNA\" and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. \"object.subobject.some_property\".  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).\r\n\r\nInternally the controller has a special wrapper API for blender's c-struct-based pseudo-objects.  This works extremely well as it keeps type information that's only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.\r\n\r\nSince the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:\r\n\r\n    def panel(layout, context):\r\n        row = layout.row\r\n        row.prop(context.object, \"some_object_property\")\r\n        row.tool(\"mesh.subdivide\")\r\n\r\n\r\n\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\context.md",
+    "name": ".//context.md",
+    "content": "# Context design:\r\n\r\nContext is a simplified API to access the application model.  Contexts are passed around\r\nto ToolOps and used by path.ux.\r\n\r\n## Required fields\r\nCall contexts are required to have the following fields:\r\n\r\n* screen -- the active FrameManager.Screen (or a subclass of it)\r\n* api -- the data path controller, (controller.ModelInterface)\r\n* toolstack -- The tool operator stack (simple_toolsys.ToolStack)\r\n \r\n## Context Overlay:\r\nA [context overlay](@ContextOverlay) is a class that overrides context fields.  It has a validate()\r\nmethod that is polled regularly; if it returns false the overlay is removed.\r\n\r\nContexts can be \"frozen\" with .lock.  When frozen they should *have no direct object \r\nreferences at all*, other then .state, .datalib and .api.  \r\n\r\nProperties can control this with \"_save\" and \"_load\" methods inside\r\nof the overlay classes, as well as overriding saveProperty and loadProperty\r\ninside of Context subclasses.\r\n\r\nExample of a context overlay:\r\n\r\n    class ContextOverlay {\r\n      validate() {\r\n        //check if this overlay is still valid or needs to be removed\r\n      }\r\n    \r\n      static contextDefine() {return {\r\n        flag    :   0 //see ContextFlags\r\n    \r\n        //an example of inheritance.  inheritance is automatic for fields\r\n        //that are missing from contextDefine().\r\n        flag    :   Context.inherit([a bitmask to or with parent])\r\n      }}\r\n        \r\n      get selectedObjects() {\r\n        /*\r\n          if you want to get a property from below the stack in the ctx\r\n          use this.ctx or return Context.super\r\n        */\r\n        if (some_reason) {\r\n            //tell ctx to \r\n            return Context.super();\r\n        } else {\r\n            //this will also work\r\n            return this.ctx.selectedObjects;\r\n        }\r\n        \r\n        return this.ctx.scene.objects.selected.editable;\r\n      }\r\n    \r\n      selectedObjects_save() {\r\n        let ret = [];\r\n        for (let ob of this.selectedObjects) {\r\n            ret.push(ob.id);        \r\n        }\r\n        \r\n        return ret;\r\n      }\r\n    \r\n      selectedObjects_load(ctx, data) {\r\n        let ret = [];\r\n        \r\n        for (let id of data) {\r\n            ret.push([lookup object from data using (possible new) context ctx])\r\n        }\r\n        \r\n        return ret;\r\n      }\r\n    }\r\n\r\n## Locked contexts\r\n\r\nLocked contexts are contexts whose properties are \"saved\", but not as direct references.\r\nInstead, each property is (ideally) saved as some sort of ID or datapath to look up\r\nthe true value on property access.\r\n\r\nWe suggest you subclass Context and implement saveProperty and loadProperty methods.\r\n\r\n    class Overlay extends ContextOverlay {\r\n      get something() {\r\n        return something;\r\n      }\r\n    \r\n      something_save() {\r\n        return this.state.something.id;\r\n      }\r\n    \r\n      something_load(ctx, id) {\r\n        return [lookup id somewhere to get something];\r\n      }\r\n    }\r\n\r\n## Tool Contexts\r\n\r\nWe encourage you to put Context properties related to the view inside\r\na separate ContextOverlay.  That way you can keep ToolOps from accessing\r\nthe view by feeding them a special context that lacks that overlay\r\n(but note that tools in modal mode should always get a full context). \r\n\r\n```\r\nclass ToolOverlay extends ContextOverlay {\r\n    static contextDefine() {return {\r\n        name : \"tool\"\r\n    }}\r\n    \r\n    get mesh() {\r\n        return this.state.mesh;\r\n    }\r\n    \r\n    get material() {\r\n        return this.state.material;\r\n    }\r\n}\r\nContext.register(ToolOverlay);\r\n\r\nclass ViewOverlay extends ContextOverlay {\r\n    static contextDefine() {return {\r\n        name : \"view\",\r\n        flag : ContextFlags.IS_VIEW\r\n    }}\r\n    \r\n    get screen() {\r\n        return this.state.screen;\r\n    }\r\n    \r\n    get textEditor() {\r\n        return \r\n    }\r\n}\r\nContext.register(ToolOverlay);\r\n```\r\n\r\n\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\controller.md",
+    "name": ".//controller.md",
+    "content": "#Datapath Controller \r\nThe controller is the glue by which the view (or UI) queries the model (application state), \r\nand is loosely based on Blender's RNA system.  UI code doesn't hold references to model \r\nobjects; instead it holds special special \"data paths\".  Objects in the model are wrapped \r\nin a special API that describes all the type information a UI needs (e.g. property types, \r\nicon, tooltips, numeric ranges, etc).  Simple paths are used to lookup data in the model \r\n(e.g. ```obj.property.something[bleh]```).\r\n\r\nBlender's RNA was originally created to provide one wrapper API that could power Blender's UI, \r\nscripting, and animation systems.  \r\n\r\n## simple_controller.js\r\n\r\nSee [DataAPI](@DataAPI). \r\n\r\n## Type-In-Place API\r\nOriginally path.ux was designed to strictly separate the code that wraps model object from\r\nthe code that builds UIs.  A new API that does both is in the works.\r\n\r\n## Object Wrapping Example\r\n\r\n```\r\n    //our test class we want to wrap\r\n    class Thing {\r\n      constructor(name, id, location, opacity) {\r\n        this.name = name; //str\r\n        this.id = id; //int\r\n        this.location = location; //enumeration\r\n        this.opacity = opacity; //float\r\n      }\r\n    }\r\n    \r\n    //enumeration for .location member\r\n    const LocationEnum = {\r\n      LIVING_ROOM : 0,\r\n      BEDROOM : 1,\r\n      DRIVEWAY : 2\r\n    };\r\n    \r\n    import {DataAPI} from 'simple_controller.js';\r\n    \r\n    export api = new DataAPI();\r\n    \r\n    //create a structure mapping to Thing\r\n    let st = api.mapStruct(Thing);\r\n    \r\n    //define properties and their types\r\n    //these all have the prototype (membername, apiname, ui_name, description)\r\n    \r\n    st.string(\"name\", \"name\", \"Name\", \"Name of thing\");\r\n    st.int(\"id\", \"id\", \"ID\", \"Unique ID of thing\");\r\n    st.enum(\"location\", \"location\", \"Location\", \"Location of thing\").icons({\r\n      LIVING_ROOM : [some icon id],\r\n      BEDROOM : [some icon id],\r\n      DRIVEWAY : [some icon id],\r\n    });\r\n    st.float(\"opacity\", \"opacity\", \"Opacity\", \"Transparency of thing\").range(0, 1);\r\n\r\n```\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\FrameManager.md",
+    "name": ".//FrameManager.md",
+    "content": "# FrameManager Module\r\n\r\nThe FrameManager module has two core classes: [Screen](@Screen), and [Area](@Area).\r\n\r\n\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\index.md",
+    "name": ".//index.md",
+    "content": "# Introduction\r\n\r\nPath.ux is a small app framework inspired by the architecture of \r\nBlender, a 3D animation/modeling/visualization app.  \r\n\r\n# Architecture\r\n\r\n- [Overview](manual/architecture.html)\r\n- [Context](manual/context.html)\r\n- [Controller](manual/controller.html)\r\n- [Tool Properties](manual/toolprop.html)\r\n- [Tool System](manual/toolsystem.html)\r\n- [STRUCT](manual/nstructjs.html)\r\n- [FrameManager](manual/FrameManager.html)\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\libblock.md",
+    "name": ".//libblock.md",
+    "content": "",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\nstructjs.md",
+    "name": ".//nstructjs.md",
+    "content": "# NStructJS\r\n\r\nNStructJS is a little library for saving/loading highly structured JS objects as binary data\r\n(for more info, see the [official documentation](https://github.com/joeedh/STRUCT/wiki) ).\r\nIt is not suited for unstructed data (use JSON for that).  \r\nNStructJS arose out of the following shortcomings of JSON:\r\n\r\n- JSON allocates objects twice.\r\n- JSON is slow compared to what you can get with a structured binary format\r\n\r\nThe idea of NStructJS is to attach little scripts to your classes that define that \r\nclass's data and how it is saved.  For example:\r\n\r\n```\r\nclass SomeClass {\r\n  constructor() {\r\n    this.data1 = 0;\r\n    this.data2 = [1, 2, 3];\r\n  }\r\n  \r\n  //reader \"fills in\" fields in a newly created object with loaded data\r\n  static fromSTRUCT(reader) {\r\n    let ret = new SomeClass();\r\n    \r\n    reader(ret);\r\n    \r\n    return ret;\r\n  }\r\n}\r\nSomeClass.STRUCT = `\r\nmy_module.SomeClass {\r\n  data1 : int;\r\n  data2 : array;\r\n}\r\nnstructjs.manager.add_class(SomeClass);\r\n`;\r\n```\r\n\r\n## Control How Fields Are Saved\r\n\r\nNote that you can specify little code snippets to control how fields are saved.\r\nFor example, if you want to save an integer ID instead of a reference for an \r\nobject property, you might do this:\r\n\r\n```\r\nmy_module.AnotherClass {\r\n  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;\r\n}\r\n```\r\n\r\nHere, everything after '|' until ';' defines how someclass is saved.  For various dumb reasons\r\n'this' is bound to 'obj'; as you can see, the basic idea is to check if this.someclass exists,\r\nif so use this.someclass.id, else use -1.\r\n\r\n## Versioning\r\n\r\nTo a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a\r\ncopy of your struct scripts with each file, that way each file knows how to load itself.\r\n\r\nFor more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.\r\nThey're used when the automatic versioning from nstructjs isn't enough.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\toolprop.md",
+    "name": ".//toolprop.md",
+    "content": "",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\toolsystem.md",
+    "name": ".//toolsystem.md",
+    "content": "# Tool System\r\n\r\nTools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and \r\nin general are foundational to path.ux and it's associated projects.  \r\n\r\nTools all inherit from [ToolOp](@ToolOp), which roughly looks like this (see Context section for an \r\nexplanation for what the \"ctx\" parameters are):\r\n\r\n```\r\nclass SomeTool extends ToolOp {\r\n  static tooldef() {return {\r\n    uiname   : \"Tool\",\r\n    path     : \"module.tool\"\r\n    inputs   : ToolOp.inherit({}), //inherit properties from base class\r\n    outputs  : {}\r\n  }}\r\n  static invoke(ctx, args) {\r\n    /*create a new tool instance.\r\n      args is simple key:val mapping\r\n      where val is either a string, a number\r\n      or a boolean.*/\r\n    return new ToolOp()\r\n  }\r\n  undoPre(ctx) {\r\n    //create undo data\r\n  }\r\n  undo(ctx) {\r\n    //execute undo with data made in previous call to this.undoPre\r\n  }\r\n  exec(ctx) {\r\n    //execute tool\r\n  }\r\n  modalStart(ctx) {\r\n    //start interactice mode\r\n  }\r\n  modalEnd(ctx) {\r\n    //end interactive mode\r\n  }\r\n  on_[mousedown/mousemove/mouseup/keydown](ctx) {\r\n    //interactive mode event\r\n  }\r\n  \r\n  ToolOp.register(SomeTool);\r\n}\r\n```\r\n\r\n## Context\r\nThe foundation of the tool system is a special Context struct that's provided by client code.  Think of it as defining \"arguments\" for tools.  Path.ux can use any context struct, but requires the following properties be defined:\r\n\r\n```\r\nclass Context {\r\n  get api() {\r\n    //return reference to a controller.ModelInterface\r\n  }\r\n  \r\n  get appstate() {\r\n    //return reference to main appstate global\r\n  }\r\n  \r\n  get screen() {\r\n    //return reference to main FrameManager.screen\r\n  }\r\n}\r\n```\r\n\r\nIn addition, path.ux has hooks to provide UI context, specifically which are is currently active.  To do this,\r\neither override the following methods in ScreenArea.Area.prototype, or subclass Area:\r\n\r\n```\r\n  //called when area should be considered \"active\"\r\n  push_ctx_active() {\r\n  }\r\n  \r\n  //called when area should be considered \"inactive\"\r\n  pop_ctx_active() {\r\n  }\r\n```\r\n\r\n## Undo\r\nTypically tools will inherit from a base class with a general, brute-force undo (i.e. saving the \r\nentire application and then reloading it on undo).  Additionally to save on speed and memory subclasses \r\ncan override undoPre and undo with their own implementation.\r\n\r\n\r\n## tooldef()\r\nTools have a special tooldef() static function that \"defines\" the tool.  It returns things like\r\nwhat properties the tool has, it's name, it's path in the data path system, etc.\r\n\r\n## Tool Properties\r\nTools have input and output slots.  See toolprop.js.  There are integer properties, float properties, \r\nvarious linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code\r\nmay provide it's own property classes.\r\n\r\n\r\n",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "manual",
+    "longname": "C:\\dev\\path.ux\\docs_src\\tutorial.md",
+    "name": ".//tutorial.md",
+    "content": "",
     "static": true,
     "access": "public"
   }

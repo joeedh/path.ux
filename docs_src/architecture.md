@@ -1,9 +1,8 @@
-# Introduction
-
+# Introduction 
 Path.ux follows a strict model/view/controller paradigm.  The application 
 state is the model, path.ux is the (or a) view, and the controller is 
 the means by which path.ux queries the model.  In addition, there are two
-layers of controllers: the first, [Context](manual/context.html), is a simple
+layers of controllers: the first, [Context](context), is a simple
 (and application-defined) API to access the application state, while the
 second is small scripting language akin to Angle's data bindings and builds
 on the first.
@@ -25,9 +24,9 @@ Note that path.ux mostly makes use of the data path controller.  It does pass
 around a (client-provided) Context instance, which is required to have the 
 following properties:
 
-- api       : a ModelInterface class (typically a simple_controller.js:DataAPI instance)
-- screen    : The current screen, a FrameManager.js:Screen instance (or subclass of)
-- toolstack : The tool stack, see simple_toolsys.js:ToolStack
+- api       : a [ModelInterface](@ModelInterface) class (typically a [DataAPI](@DataAPI) instance)
+- screen    : The current screen, a [Screen](@Screen) instance (or subclass of)
+- toolstack : The tool stack, see [ToolStack](@ToolStack)
  
 Path.ux allows different controller implementations (though they must all pass type information via the 
 classes in toolprop.js).  The included implementation can be found in 
