@@ -8,11 +8,11 @@ numeric ranges, etc).  Simple paths are used to lookup data in the model
 Blender's RNA was originally created to provide one wrapper API that could power Blender's UI, 
 scripting, and animation systems.  
 
-# Type-In-Place API
+## Type-In-Place API
 Originally path.ux was designed to strictly separate the code that wraps model object from
 the code that builds UIs.  A new API that does both is in the works.
 
-# Object Wrapping Example
+## Object Wrapping Example
 
 ```
     //our test class we want to wrap

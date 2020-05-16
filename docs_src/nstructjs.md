@@ -16,61 +16,40 @@ class SomeClass {
   constructor() {
     this.data1 = 0;
     this.data2 = [1, 2, 3];
+    this.obj = [some object];
   }
   
   //reader "fills in" fields in a newly created object with loaded data
-  static fromSTRUCT(reader) {
-    let ret = new SomeClass();
-    
-    reader(ret);
-    
-    return ret;
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
   }
 }
 SomeClass.STRUCT = `
 my_module.SomeClass {
   data1 : int;
   data2 : array;
+  obj   : int | this.obj.id;
 }
 nstructjs.manager.add_class(SomeClass);
 `;
 ```
 
-## Controller How Fields Are Saved
+## Control How Fields Are Saved
 
-Note that you can specify little code snippets to control how fields are saved.
+You can use little code snippets to control how fields are saved.
 For example, if you want to save an integer ID instead of a reference for an 
 object property, you might do this:
 
 ```
 my_module.AnotherClass {
-  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;
+  someclass : int | this.someclass !== undefined ? this.someclass.id : -1;
 }
 ```
-
-Here, everything after '|' until ';' defines how someclass is saved.  For various dumb reasons
-'this' is bound to 'obj'; as you can see, the basic idea is to check if this.someclass exists,
-if so use this.someclass.id, else use -1.
 
 ## Versioning
 
 To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a
 copy of your struct scripts with each file, that way each file knows how to load itself.
-
-For more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.
-They're used when the automatic versioning from nstructjs isn't enough.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
