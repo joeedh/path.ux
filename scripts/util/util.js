@@ -979,10 +979,9 @@ export function strhash(str) {
   for (var i=0; i<str.length; i++) {
     var ch = str.charCodeAt(i);
 
-    hash = (hash ^ ch);
     hash = hash < 0 ? -hash : hash;
 
-    hash = (hash*232344 + 4323543) & ((1<<19)-1);
+    hash ^= (ch*524287 + 4323543) & ((1<<19)-1);
   }
 
   return hash;

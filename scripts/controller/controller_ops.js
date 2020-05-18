@@ -14,7 +14,7 @@ export class DataPathSetOp extends ToolOp {
     this._undo = undefined;
   }
 
-  setValue(ctx, val) {
+  setValue(ctx, val, object) {
     let prop = this.inputs.prop;
     let path = this.inputs.dataPath.getValue();
 
@@ -26,6 +26,7 @@ export class DataPathSetOp extends ToolOp {
       }
     }
 
+    prop.dataref = object;
     prop.setValue(val);
   }
 
@@ -67,7 +68,7 @@ export class DataPathSetOp extends ToolOp {
 
     tool.id = id;
 
-    tool.setValue(ctx, value);
+    tool.setValue(ctx, value, rdef.obj);
 
     return tool;
   }
@@ -124,6 +125,7 @@ export class DataPathSetOp extends ToolOp {
         }
       } else {
         let prop2 = prop.copy();
+        prop2.dataref = rdef.obj;
         prop2.setValue(value);
 
         this._undo[path] = prop2.getValue();

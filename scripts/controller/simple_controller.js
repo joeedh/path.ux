@@ -573,6 +573,15 @@ export class DataStruct {
     return dpath;
   }
 
+  textblock(path, apiname, uiname, description) {
+    let prop = new toolprop.StringProperty(undefined, apiname, uiname, description);
+    prop.multiLine = true;
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
+  }
+
   string(path, apiname, uiname, description) {
     let prop = new toolprop.StringProperty(undefined, apiname, uiname, description);
 

@@ -450,7 +450,9 @@ export class AfterAspect {
           chain.remove(chain2[i]);
         }
 
-        cb.apply(this, arguments);
+        if (cb && cb.apply) {
+          cb.apply(this, arguments);
+        }
       }
     };
 
@@ -1493,7 +1495,7 @@ export class UIBase extends HTMLElement {
 
     if (!bad) {
       toolstack.undo();
-      head.setValue(ctx, val);
+      head.setValue(ctx, val, rdef.obj);
       toolstack.redo();
     } else {
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);

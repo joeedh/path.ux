@@ -10607,6 +10607,8 @@ class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
 
+
+
     if (value)
       this.setValue(value);
   }
@@ -13843,6 +13845,14 @@ class DataStruct {
   }
 
   string(path, apiname, uiname, description) {
+    let prop = new StringProperty(undefined, apiname, uiname, description);
+
+    let dpath = new DataPath(path, apiname, prop);
+    this.add(dpath);
+    return dpath;
+  }
+
+  textblock(path, apiname, uiname, description) {
     let prop = new StringProperty(undefined, apiname, uiname, description);
 
     let dpath = new DataPath(path, apiname, prop);

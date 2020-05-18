@@ -822,9 +822,23 @@ export class Container extends ui_base.UIBase {
       return name;
     }
 
-    if (prop.type == PropTypes.CURVE) {
+    if (prop.type === PropTypes.STRING) {
+      let ret;
+      if (prop.multiLine) {
+        ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
+      } else {
+        ret = this.textbox(inpath);
+
+        if (mass_set_path) {
+          ret.setAttribute("mass_set_path", mass_set_path);
+        }
+      }
+
+      ret.packflag |= packflag;
+      return ret;
+    } else if (prop.type === PropTypes.CURVE) {
       return this.curve1d(path, packflag, mass_set_path);
-    } else if (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT) {
+    } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
       let ret;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath);

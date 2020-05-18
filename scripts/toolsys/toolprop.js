@@ -217,6 +217,8 @@ export class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
 
+    this.multiLine = false;
+
     if (value)
       this.setValue(value);
   }
@@ -224,10 +226,12 @@ export class StringProperty extends ToolProperty {
   copyTo(b) {
     super.copyTo(b);
     b.data = this.data;
-    
+    b.multiLine = this.multiLine;
+
     return this;
   }
-  
+
+
   copy() {
     let ret = new StringProperty();
     this.copyTo(ret);
