@@ -21,4 +21,8 @@ export const Icons = {
   RIGHT_ARROW    : 17,
   UI_EXPAND      : 18, //triangle
   UI_COLLAPSE    : 19, //triangle
+  BOLD           : 20,
+  ITALIC         : 21,
+  UNDERLINE      : 22,
+  STRIKETHRU     : 23
 };

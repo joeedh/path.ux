@@ -62,6 +62,10 @@ export let Icons = {
   ENUM_UNCHECKED : 36,
   ENUM_CHECKED   : 37,
   APPEND_VERTEX  : 38,
-  LARGE_CHECK    : 39
+  LARGE_CHECK    : 39,
+  BOLD           : 40,
+  ITALIC         : 41,
+  UNDERLINE      : 42,
+  STRIKETHRU     : 43
 };
 

@@ -7892,6 +7892,7 @@ stupid DOM event system.  I hate it.
 function eventWasTouch(e) {
   let ret = e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents;
   ret = ret || e.was_touch;
+  ret = ret || e.touches !== undefined;
 
   return ret;
 }
@@ -9027,6 +9028,7 @@ nstructjs$1.register(GuassianCurve);
 CurveTypeData.register(GuassianCurve);
 
 "use strict";
+//import {EventDispatcher} from "../util/events.js";
 
 var Vector2$1 = Vector2;
 
@@ -9958,7 +9960,7 @@ class BSplineCurve extends CurveTypeData {
 
   transform_mpos(x, y){
     var r = this.uidata.canvas.getClientRects()[0];
-    let dpi = UIBase.getDPI();
+    let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
 
     x -= parseInt(r.left);
     y -= parseInt(r.top);

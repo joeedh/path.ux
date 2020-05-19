@@ -11,7 +11,7 @@ cd _package
 cp ../pathux.tar .
 tar -xf pathux.tar
 
-cp -r scripts *.png *.js *.json docs dist example index.html *.pem *.MD watch.py ../package
+cp -r scripts *.png *.js *.json docs dist example index.html *.pem *.MD watch.py render_icons.py ../package
 
 cd ..
 rm -rf _package
