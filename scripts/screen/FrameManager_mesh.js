@@ -212,6 +212,8 @@ export class ScreenBorder extends ui_base.UIBase {
   }
 
   setCSS() {
+    this.style["pointer-events"] = this.movable ? "auto" : "none";
+    
     if (this._style === undefined) {
       this._style = document.createElement("style");
       this.appendChild(this._style);

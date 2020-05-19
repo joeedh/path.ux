@@ -6,7 +6,6 @@ const http2 = require('http2');
 const fs = require('fs');
 const pathmod = require('path');
 
-
 let colormap = {
   black   : 30,
   red     : 31,

@@ -1027,6 +1027,28 @@ export class ScreenArea extends ui_base.UIBase {
     return ret;
   }
 
+  snapToScreenSize() {
+    let screen = this.getScreen();
+    let co = new Vector2();
+    let changed = 0;
+
+    for (let v of this._verts) {
+      co.load(v);
+
+      v[0] = Math.min(Math.max(v[0], 0), screen.size[0]);
+      v[1] = Math.min(Math.max(v[1], 0), screen.size[1]);
+
+      if (co.vectorDistance(v) > 0.1) {
+        changed = 1;
+      }
+    }
+
+    if (changed) {
+      this.loadFromVerts();
+    }
+  }
+
+
   /**
    *
    * Sets screen verts from pos/size

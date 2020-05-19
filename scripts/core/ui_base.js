@@ -387,15 +387,6 @@ let first = (iter) => {
 import {DataPathError} from '../controller/controller.js';
 export {DataPathError} from '../controller/controller.js';
 
-export class SimpleContext {
-  constructor(stateobj, api) {
-    if (api === undefined) {
-      throw new Error("api cannot be undefined, see controller.js");
-    }
-    this.state = stateobj;
-    this.api = api;
-  }
-}
 
 let _mobile_theme_patterns = [
   /.*width.*/,
@@ -488,9 +479,49 @@ export class AfterAspect {
   }
 }
 
+export function styleScrollBars(color="inherit", width="inherit", selector="*") {
+  let style = document.getElementById("pathuxScrollStyle");
+
+  if (!style) {
+    style = document.createElement("style");
+    style.setAttribute("id", "pathuxScrollStyle");
+    document.body.prepend(style);
+  }
+  
+  style.textContents = style.textContent = `
+
+  ${selector} {
+  scrollbar-width : ${width}px;
+  scrollbar-color : ${color};
+}
+
+${selector}::-webkit-scrollbar {
+  width : ${width}px;
+  background-color : ${color};
+  color : ${color};
+}
+
+${selector}::-webkit-scrollbar-track {
+  background-color : ${color};
+  color : ${color};
+}
+
+${selector}::-webkit-scrollbar-thumb {
+  background-color : ${color};
+  color : ${color};
+}
+    `;
+}
+
+window.styleScrollBars = styleScrollBars;
+
 export class UIBase extends HTMLElement {
   constructor() {
     super();
+
+    //ref to Link element referencing Screen style node
+    //Screen.update_intern creates this
+    this._screenStyleLink = undefined;
 
     AfterAspect.bind(this, "setCSS");
     AfterAspect.bind(this, "update");

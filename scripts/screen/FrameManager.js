@@ -59,6 +59,12 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
+    //all widget shadow DOMs reference this style tag
+    //via link tags
+    this.globalStyleTag = document.createElement("style");
+    this.shadow.appendChild(this.globalStyleTag);
+    
+
     this._do_updateSize = true;
     this._resize_callbacks = [];
 
@@ -530,12 +536,6 @@ export class Screen extends ui_base.UIBase {
       //height /= visualViewport.scale;
     }
 
-    if (cconst.DEBUG.customWindowSize) {
-      let s = cconst.DEBUG.customWindowSize;
-      width = s.width;
-      height = s.height;
-    }
-
     let ratio = window.outerHeight / window.innerHeight;
     let scale = visualViewport.scale;
 
@@ -546,7 +546,16 @@ export class Screen extends ui_base.UIBase {
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
 
-    let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
+    if (cconst.DEBUG.customWindowSize) {
+      let s = cconst.DEBUG.customWindowSize;
+      width = s.width;
+      height = s.height;
+      ox = 0;
+      oy = 0;
+      window._DEBUG = cconst.DEBUG;
+    }
+
+    let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
     document.body.style["touch-action"] = "none";
     document.body.style["transform-origin"] = "top left";
@@ -558,8 +567,8 @@ export class Screen extends ui_base.UIBase {
       console.log("resizing", key, this._last_ckey1);
       this._last_ckey1 = key;
 
-      this.on_resize(this.size, [width, height]);
-      this.on_resize(this.size, this.size);
+      this.on_resize(this.size, [width, height], false);
+      this.on_resize(this.size, this.size, false);
 
       let scale = visualViewport.scale;
 
@@ -598,6 +607,19 @@ export class Screen extends ui_base.UIBase {
       
       this.update();
     }, 150);
+  }
+
+  _calcSizeKey(w, h, x, y, dpi, scale) {
+    if (arguments.length !== 6) {
+      throw new Error("eek");
+    }
+
+    let s = "";
+    for (let i=0; i<arguments.length; i++) {
+      s += arguments[i].toFixed(0)+":";
+    }
+
+    return s;
   }
 
   _ondestroy() {
@@ -1906,8 +1928,12 @@ export class Screen extends ui_base.UIBase {
     this.setCSS();
   }
 
-  on_resize(oldsize, newsize=this.size) {
+  on_resize(oldsize, newsize=this.size, _set_key=true) {
     console.warn("resizing");
+
+    if (_set_key) {
+      this._last_ckey1 = this._calcSizeKey(newsize[0], newsize[1], this.pos[0], this.pos[1], devicePixelRatio, visualViewport.scale);
+    }
 
     let ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
 
