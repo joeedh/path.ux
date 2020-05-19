@@ -162,6 +162,14 @@ export const DefaultTheme = {
 
   },
 
+  scrollbars : {
+    color : undefined,
+    color2: undefined, //if undefined, will be derived from .color shaded with .contrast
+    width : undefined,
+    border : undefined,
+    contrast : undefined,
+  },
+
   numslider : {
     DefaultText : new CSSFont({
       font   : "sans-serif",

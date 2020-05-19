@@ -481,54 +481,49 @@ export class AfterAspect {
 }
 
 window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
-  let buf = styleScrollBars(color, contrast, width, border, "*");
-  CTX.screen.mergeGlobalCSS(buf); document.body.style["overflow"] = "scroll";
+  let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
+  CTX.screen.mergeGlobalCSS(buf);
 
+  //document.body.style["overflow"] = "scroll";
+
+  /*
   if (!window._tsttag) {
     window._tsttag = document.createElement("style");
     document.body.prepend(_tsttag);
   }
 
   _tsttag.textContent = buf;
+  //*/
 
   return buf;
 };
 
-export function styleScrollBars(color="grey", contrast=0.5, width=15, border="groove", selector="*") {
-  
-  let c = css2color(color);
-  let a = c.length > 3 ? c[3] : 1.0;
+export function styleScrollBars(color="grey", color2=undefined, contrast=0.5, width=15, border="1px groove black", selector="*") {
 
-  c = rgb_to_hsv(c[0], c[1], c[2]);
-  let inv =  c.slice(0, c.length);
+  if (!color2) {
+    let c = css2color(color);
+    let a = c.length > 3 ? c[3] : 1.0;
 
-  inv[2] = 1.0 - inv[2];
-  inv[2] += (c[2] - inv[2])*(1.0 - contrast);
+    c = rgb_to_hsv(c[0], c[1], c[2]);
+    let inv = c.slice(0, c.length);
 
-  let inv2 = inv.slice(0, inv.length);
-  inv2[2] = Math.sqrt(inv2[2]);
+    inv[2] = 1.0 - inv[2];
+    inv[2] += (c[2] - inv[2]) * (1.0 - contrast);
 
-  inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
-  inv2 = hsv_to_rgb(inv2[0], inv2[1], inv2[2]);
+    inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
 
-  inv.length = 4;
-  inv2.length = 4;
-  inv[3] = a;
-  inv2[3] = a;
+    inv.length = 4;
+    inv[3] = a;
 
-  inv = color2css(inv);
-  inv2 = color2css(inv2);
-  c = hsv_to_rgb(c[0], c[1], c[2]);
-  c = color2css(c);
+    inv = color2css(inv);
+    color2 = inv;
+  }
 
-  let bw = 2.0 / devicePixelRatio;
-  let br = 9.0 / devicePixelRatio;
-  
   let buf = `
 
 ${selector} {
   scrollbar-width : ${width <= 16 ? 'thin' : 'auto'};
-  scrollbar-color : ${inv} ${c};
+  scrollbar-color : ${color2} ${color};
 }
 
 ${selector}::-webkit-scrollbar {
@@ -538,14 +533,12 @@ ${selector}::-webkit-scrollbar {
 
 ${selector}::-webkit-scrollbar-track {
   background-color : ${color};
-  border : ${bw}px groove ${inv2};
-  border-radius : ${br}px;
+  border : ${border};
 }
 
 ${selector}::-webkit-scrollbar-thumb {
-  background-color : ${inv};
-  border : ${bw}px groove ${inv2};
-  border-radius : ${br}px;
+  background-color : ${color2};
+  border : ${border};
 }
     `;
 

@@ -23,7 +23,7 @@ import {AreaDocker} from './AreaDocker.js';
 
 import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
 export {ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
-
+import {theme} from '../core/ui_base.js';
 import * as FrameManager_mesh from './FrameManager_mesh.js';
 import {makePopupArea} from "../widgets/ui_dialog.js";
 
@@ -58,7 +58,8 @@ export function registerToolStackGetter(func) {
 window._nstructjs = nstructjs;
 
 let Vector2 = vectormath.Vector2,
-  UIBase = ui_base.UIBase;
+  UIBase = ui_base.UIBase,
+  styleScrollBars = ui_base.styleScrollBars;
 
 let update_stack = new Array(8192);
 update_stack.cur = 0;
@@ -1129,8 +1130,25 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
+  updateScrollStyling() {
+    let s = theme.scrollbars;
+    if (!s) return;
+
+    let key = "" + s.color + ":" + s.color2 + ":" + s.border + ":" + s.contrast + ":" + s.width;
+
+    if (key !== this._last_scrollstyle_key) {
+      this._last_scrollstyle_key = key;
+
+      console.log("updating scrollbar styling");
+
+      this.mergeGlobalCSS(styleScrollBars(s.color, s.color2, s.contrast, s.width, s.border, "*"));
+    }
+  }
+
   //XXX race condition warning
   update_intern() {
+    this.updateScrollStyling();
+
     let popups = this._popups;
 
     let cssText = "";
@@ -1216,7 +1234,7 @@ export class Screen extends ui_base.UIBase {
           n._ctx = ctx;
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
-            n._screenStyleTag = cssText;
+            n._screenStyleTag.textContent = cssText;
             n._screenStyleUpdateHash = cssTextHash;
           }
 
