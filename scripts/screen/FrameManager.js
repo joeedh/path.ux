@@ -59,12 +59,9 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
-    //all widget shadow DOMs reference this style tag
-    //via link tags
     this.globalStyleTag = document.createElement("style");
     this.shadow.appendChild(this.globalStyleTag);
     
-
     this._do_updateSize = true;
     this._resize_callbacks = [];
 
