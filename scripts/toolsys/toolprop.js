@@ -362,7 +362,7 @@ export class _NumberPropertyBase extends ToolProperty {
     b.expRate = this.expRate;
     b.step = this.step;
     b.range = this.range;
-    b.ui_range = this.ui_range;
+    b.uiRange = this.uiRange;
   }
 
 

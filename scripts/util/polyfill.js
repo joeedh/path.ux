@@ -1,3 +1,227 @@
+
+(function() {
+  let visitgen = 0;
+
+  window.destroyAllCSS = function() {
+    visitgen++;
+
+    let visit = (n) => {
+      if (n.__visit === visitgen) {
+        return;
+      }
+
+      n.__visit = visitgen;
+      if (n.tagName === "STYLE") {
+        n.textContents = '';
+      }
+
+      if (n.style) {
+        for (let k in n.style) {
+          try {
+            n.style[k] = "";
+          } catch (error) {
+            
+          }
+        }
+      }
+
+      if (!n.childNodes) {
+        return;
+      }
+
+      for (let c of n.childNodes) {
+        visit(c);
+      }
+    }
+
+    visit(document.head);
+    visit(document.body);
+
+    for (let sheet of document.styleSheets) {
+      for (let i=0; i<sheet.rules.length; i++) {
+        sheet.removeRule(sheet.rules[0]);
+      }
+    }
+  }
+})();
+
+window.eventDebugModule =   (function() {
+  "use strict";
+
+  return {
+    start() {
+      window.debugEventLists = {
+      }
+      window.debugEventList = [];
+
+      this._addEventListener = EventTarget.prototype.addEventListener;
+      this._removeEventListener = EventTarget.prototype.removeEventListener;
+      this._dispatchEvent = EventTarget.prototype.dispatchEvent;
+      
+      EventTarget.prototype.addEventListener = this.onadd;
+      EventTarget.prototype.removeEventListener = this.onrem;
+      EventTarget.prototype.dispatchEvent = this.ondispatch;
+    },
+
+    add(type, data) {
+      if (!(type in debugEventLists)) {
+        debugEventLists[type] = [];
+      }
+
+      debugEventLists[type].push(data);
+    },
+
+    ondispatch() {
+      let a = arguments;
+      
+      eventDebugModule.add("Dispatch", {
+        event : a[0],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, "/"),
+        filepath : location.origin + a[6].replace(/\\/g, "/") + ":" + a[5],
+        ownerpath : a[7]
+      });
+
+      return eventDebugModule._dispatchEvent.apply(this, arguments);
+    },
+
+    onadd() {
+      let a = arguments;
+      
+      eventDebugModule.add("Add", {
+        type : a[0],
+        cb : a[1],
+        args : a[2],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, "/"),
+        filepath : location.origin + a[6].replace(/\\/g, "/") + ":" + a[5],
+        ownerpath : a[7]
+      });
+      
+
+      return eventDebugModule._addEventListener.apply(this, arguments);
+    },
+
+    pruneConnected() {
+      for (let k in debugEventLists) {
+        let list = debugEventLists[k];
+
+        for (let i=0; i<list.length; i++) {
+          let e = list[i];
+
+          if (!e.thisvar || !(e.thisvar instanceof Node)) {
+            continue;
+          }
+
+          if (!e.thisvar.isConnected) {
+            list[i] = list[list.length-1];
+            list[list.length-1] = undefined;
+            list.length--;
+            i--;
+          }
+        }
+      }
+    },
+    
+
+    onrem() {
+      let a = arguments;
+      
+      eventDebugModule.add("Rem", {
+        type : a[0],
+        cb : a[1],
+        args : a[2],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, "/"),
+        filepath : location.origin + a[6].replace(/\\/g, "/") + ":" + a[5],
+        ownerpath : a[7]
+      });
+      
+
+      return eventDebugModule._removeEventListener.apply(this, arguments);
+    }
+  }
+})();
+
+if (typeof _debug_event_listeners !== "undefined" && _debug_event_listeners) {
+  eventDebugModule.start();
+}
+
+/*
+if (navigator.userAgent.toLowerCase().search("chrome") >= 0) {
+  console.warn("Patching Google Chrome scrollbar bug");
+
+  let cb = (e) => {
+    if (e.touches.length == 1) {
+      let e2 = Object.create(e);
+      e2.pageX = e.touches[0].pageX;
+      e2.pageY = e.touches[0].pageY;
+      e2.x = e2.screenX = e2.pageX;
+      e2.y = e2.screenY = e2.pageY;
+      e2.button = 0;
+      e2.buttons = 1;
+
+      let type;
+      if (e.type === "touchstart")
+        type = "mousedown";
+      else 
+        type = "mousemove";
+
+      console.log(e2);
+        //console.log(e.target);
+      e2 = new MouseEvent(type, e);
+      e.target.dispatchEvent(e2);
+    }
+  };
+
+  window.addEventListener("touchstart", (e) => cb(e));
+  window.addEventListener("touchmove", (e) => cb(e));
+
+  document.addEventListener("touchstart", (e) => cb(e));
+  document.addEventListener("touchmove", (e) => cb(e));
+}
+//*/
+
+if (window._disable_all_listeners) {
+  console.warn("Disabling all event listeners");
+  EventTarget.prototype.addEventListener = () => {};
+  EventSource.prototype.addEventListener = () => {};
+}
+
+if (typeof visualViewport === "undefined") {
+  (function() {
+    class MyVisualViewport {
+      get width() {
+        return window.innerWidth;
+      }
+      get height() {
+        return window.innerHeight;
+      }
+
+      get offsetLeft() {
+        return 0;
+      }
+      get offsetTop() {
+        return 0;
+      }
+      get pageLeft() {
+        return 0;
+      }
+      get pageTop() {
+        return 0;
+      }
+      get scale() {
+        return 1.0;
+      }
+    }
+
+    window.visualViewport = new MyVisualViewport();
+  })();
+}
+
 if (Array.prototype.set === undefined) {
     Array.prototype.set = function set(array, src, dst, count) {
         src = src === undefined ? 0 : src;

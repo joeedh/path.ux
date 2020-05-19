@@ -4,8 +4,9 @@ export default {
     allBordersMovable: false,
     /*
     customWindowSize: {
-      width: 512, height: 512
-    }*/
+      width: 2048, height: 2048
+    },
+    //*/
   },
   autoSizeUpdate : true,
   VERSION : 0.0,

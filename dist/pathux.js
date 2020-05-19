@@ -1,3 +1,226 @@
+(function() {
+  let visitgen = 0;
+
+  window.destroyAllCSS = function() {
+    visitgen++;
+
+    let visit = (n) => {
+      if (n.__visit === visitgen) {
+        return;
+      }
+
+      n.__visit = visitgen;
+      if (n.tagName === "STYLE") {
+        n.textContents = '';
+      }
+
+      if (n.style) {
+        for (let k in n.style) {
+          try {
+            n.style[k] = "";
+          } catch (error) {
+            
+          }
+        }
+      }
+
+      if (!n.childNodes) {
+        return;
+      }
+
+      for (let c of n.childNodes) {
+        visit(c);
+      }
+    };
+
+    visit(document.head);
+    visit(document.body);
+
+    for (let sheet of document.styleSheets) {
+      for (let i=0; i<sheet.rules.length; i++) {
+        sheet.removeRule(sheet.rules[0]);
+      }
+    }
+  };
+})();
+
+window.eventDebugModule =   (function() {
+  "use strict";
+
+  return {
+    start() {
+      window.debugEventLists = {
+      };
+      window.debugEventList = [];
+
+      this._addEventListener = EventTarget.prototype.addEventListener;
+      this._removeEventListener = EventTarget.prototype.removeEventListener;
+      this._dispatchEvent = EventTarget.prototype.dispatchEvent;
+      
+      EventTarget.prototype.addEventListener = this.onadd;
+      EventTarget.prototype.removeEventListener = this.onrem;
+      EventTarget.prototype.dispatchEvent = this.ondispatch;
+    },
+
+    add(type, data) {
+      if (!(type in debugEventLists)) {
+        debugEventLists[type] = [];
+      }
+
+      debugEventLists[type].push(data);
+    },
+
+    ondispatch() {
+      let a = arguments;
+      
+      eventDebugModule.add("Dispatch", {
+        event : a[0],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, "/"),
+        filepath : location.origin + a[6].replace(/\\/g, "/") + ":" + a[5],
+        ownerpath : a[7]
+      });
+
+      return eventDebugModule._dispatchEvent.apply(this, arguments);
+    },
+
+    onadd() {
+      let a = arguments;
+      
+      eventDebugModule.add("Add", {
+        type : a[0],
+        cb : a[1],
+        args : a[2],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, "/"),
+        filepath : location.origin + a[6].replace(/\\/g, "/") + ":" + a[5],
+        ownerpath : a[7]
+      });
+      
+
+      return eventDebugModule._addEventListener.apply(this, arguments);
+    },
+
+    pruneConnected() {
+      for (let k in debugEventLists) {
+        let list = debugEventLists[k];
+
+        for (let i=0; i<list.length; i++) {
+          let e = list[i];
+
+          if (!e.thisvar || !(e.thisvar instanceof Node)) {
+            continue;
+          }
+
+          if (!e.thisvar.isConnected) {
+            list[i] = list[list.length-1];
+            list[list.length-1] = undefined;
+            list.length--;
+            i--;
+          }
+        }
+      }
+    },
+    
+
+    onrem() {
+      let a = arguments;
+      
+      eventDebugModule.add("Rem", {
+        type : a[0],
+        cb : a[1],
+        args : a[2],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, "/"),
+        filepath : location.origin + a[6].replace(/\\/g, "/") + ":" + a[5],
+        ownerpath : a[7]
+      });
+      
+
+      return eventDebugModule._removeEventListener.apply(this, arguments);
+    }
+  }
+})();
+
+if (typeof _debug_event_listeners !== "undefined" && _debug_event_listeners) {
+  eventDebugModule.start();
+}
+
+/*
+if (navigator.userAgent.toLowerCase().search("chrome") >= 0) {
+  console.warn("Patching Google Chrome scrollbar bug");
+
+  let cb = (e) => {
+    if (e.touches.length == 1) {
+      let e2 = Object.create(e);
+      e2.pageX = e.touches[0].pageX;
+      e2.pageY = e.touches[0].pageY;
+      e2.x = e2.screenX = e2.pageX;
+      e2.y = e2.screenY = e2.pageY;
+      e2.button = 0;
+      e2.buttons = 1;
+
+      let type;
+      if (e.type === "touchstart")
+        type = "mousedown";
+      else 
+        type = "mousemove";
+
+      console.log(e2);
+        //console.log(e.target);
+      e2 = new MouseEvent(type, e);
+      e.target.dispatchEvent(e2);
+    }
+  };
+
+  window.addEventListener("touchstart", (e) => cb(e));
+  window.addEventListener("touchmove", (e) => cb(e));
+
+  document.addEventListener("touchstart", (e) => cb(e));
+  document.addEventListener("touchmove", (e) => cb(e));
+}
+//*/
+
+if (window._disable_all_listeners) {
+  console.warn("Disabling all event listeners");
+  EventTarget.prototype.addEventListener = () => {};
+  EventSource.prototype.addEventListener = () => {};
+}
+
+if (typeof visualViewport === "undefined") {
+  (function() {
+    class MyVisualViewport {
+      get width() {
+        return window.innerWidth;
+      }
+      get height() {
+        return window.innerHeight;
+      }
+
+      get offsetLeft() {
+        return 0;
+      }
+      get offsetTop() {
+        return 0;
+      }
+      get pageLeft() {
+        return 0;
+      }
+      get pageTop() {
+        return 0;
+      }
+      get scale() {
+        return 1.0;
+      }
+    }
+
+    window.visualViewport = new MyVisualViewport();
+  })();
+}
+
 if (Array.prototype.set === undefined) {
     Array.prototype.set = function set(array, src, dst, count) {
         src = src === undefined ? 0 : src;
@@ -7590,7 +7813,11 @@ let Icons = {
   ENUM_UNCHECKED : 36,
   ENUM_CHECKED   : 37,
   APPEND_VERTEX  : 38,
-  LARGE_CHECK    : 39
+  LARGE_CHECK    : 39,
+  BOLD           : 40,
+  ITALIC         : 41,
+  UNDERLINE      : 42,
+  STRIKETHRU     : 43
 };
 
 let exports = {
@@ -7620,9 +7847,9 @@ let exports = {
 
     /*
     customWindowSize: {
-      width: 512, height: 512
+      width: 2048, height: 2048
     },
-    */
+    //*/
   },
 
   addHelpPickers : true,
@@ -7640,6 +7867,7 @@ let exports = {
     }
   }
 };
+window.DEBUG = exports.DEBUG;
 
 let modalstack = [];
 let singleMouseCBs = {};
@@ -10780,7 +11008,7 @@ class _NumberPropertyBase extends ToolProperty {
     b.expRate = this.expRate;
     b.step = this.step;
     b.range = this.range;
-    b.ui_range = this.ui_range;
+    b.uiRange = this.uiRange;
   }
 
 
@@ -14855,6 +15083,103 @@ function setDataPathToolOp(cls) {
 
 setImplementationClass(DataAPI);
 
+let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
+
+function rgb_to_hsv (r,g,b) {
+    var computedH = 0;
+    var computedS = 0;
+    var computedV = 0;
+  
+    if ( r==null || g==null || b==null ||
+      isNaN(r) || isNaN(g)|| isNaN(b) ) {
+      throw new Error(`Please enter numeric RGB values! r: ${r} g: ${g} b: ${b}`);
+      return;
+    }
+    /*
+    if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
+     throw new Error('RGB values must be in the range 0 to 1.0');
+     return;
+    }//*/
+  
+    var minRGB = Math.min(r,Math.min(g,b));
+    var maxRGB = Math.max(r,Math.max(g,b));
+  
+    // Black-gray-white
+    if (minRGB==maxRGB) {
+      computedV = minRGB;
+  
+      let ret = rgb_to_hsv_rets.next();
+      ret[0] = 0, ret[1] = 0, ret[2] = computedV;
+      return ret;
+    }
+  
+    // Colors other than black-gray-white:
+    var d = (r==minRGB) ? g-b : ((b==minRGB) ? r-g : b-r);
+    var h = (r==minRGB) ? 3 : ((b==minRGB) ? 1 : 5);
+  
+    computedH = (60*(h - d/(maxRGB - minRGB))) / 360.0;
+    computedS = (maxRGB - minRGB)/maxRGB;
+    computedV = maxRGB;
+  
+    let ret = rgb_to_hsv_rets.next();
+    ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
+    return ret;
+  }
+  
+  let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
+  
+  function hsv_to_rgb(h, s, v) {
+    let c=0, m=0, x=0;
+    let ret = hsv_to_rgb_rets.next();
+  
+    ret[0] = ret[1] = ret[2] = 0.0;
+    h *= 360.0;
+  
+    c = v * s;
+    x = c * (1.0 - Math.abs(((h / 60.0) % 2) - 1.0));
+    m = v - c;
+    let color;
+  
+    function RgbF_Create(r, g, b) {
+      ret[0] = r;
+      ret[1] = g;
+      ret[2] = b;
+  
+      return ret;
+    }
+  
+    if (h >= 0.0 && h < 60.0)
+    {
+      color = RgbF_Create(c + m, x + m, m);
+    }
+    else if (h >= 60.0 && h < 120.0)
+    {
+      color = RgbF_Create(x + m, c + m, m);
+    }
+    else if (h >= 120.0 && h < 180.0)
+    {
+      color = RgbF_Create(m, c + m, x + m);
+    }
+    else if (h >= 180.0 && h < 240.0)
+    {
+      color = RgbF_Create(m, x + m, c + m);
+    }
+    else if (h >= 240.0 && h < 300.0)
+    {
+      color = RgbF_Create(x + m, m, c + m);
+    }
+    else if (h >= 300.0)
+    {
+      color = RgbF_Create(c + m, m, x + m);
+    }
+    else
+    {
+      color = RgbF_Create(m, m, m);
+    }
+  
+    return color;
+  }
+
 let ColorSchemeTypes = {
   LIGHT : "light",
   DARK  : "dark"
@@ -15705,15 +16030,6 @@ let first$1 = (iter) => {
   }
 };
 
-class SimpleContext {
-  constructor(stateobj, api) {
-    if (api === undefined) {
-      throw new Error("api cannot be undefined, see controller.js");
-    }
-    this.state = stateobj;
-    this.api = api;
-  }
-}
 
 let _mobile_theme_patterns = [
   /.*width.*/,
@@ -15806,9 +16122,89 @@ class AfterAspect {
   }
 }
 
+window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
+  let buf = styleScrollBars(color, contrast, width, border, "*");
+  CTX.screen.mergeGlobalCSS(buf); document.body.style["overflow"] = "scroll";
+
+  if (!window._tsttag) {
+    window._tsttag = document.createElement("style");
+    document.body.prepend(_tsttag);
+  }
+
+  _tsttag.textContent = buf;
+
+  return buf;
+};
+
+function styleScrollBars(color="grey", contrast=0.5, width=15, border="groove", selector="*") {
+  
+  let c = css2color(color);
+  let a = c.length > 3 ? c[3] : 1.0;
+
+  c = rgb_to_hsv(c[0], c[1], c[2]);
+  let inv =  c.slice(0, c.length);
+
+  inv[2] = 1.0 - inv[2];
+  inv[2] += (c[2] - inv[2])*(1.0 - contrast);
+
+  let inv2 = inv.slice(0, inv.length);
+  inv2[2] = Math.sqrt(inv2[2]);
+
+  inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
+  inv2 = hsv_to_rgb(inv2[0], inv2[1], inv2[2]);
+
+  inv.length = 4;
+  inv2.length = 4;
+  inv[3] = a;
+  inv2[3] = a;
+
+  inv = color2css(inv);
+  inv2 = color2css(inv2);
+  c = hsv_to_rgb(c[0], c[1], c[2]);
+  c = color2css(c);
+
+  let bw = 2.0 / devicePixelRatio;
+  let br = 9.0 / devicePixelRatio;
+  
+  let buf = `
+
+${selector} {
+  scrollbar-width : ${width <= 16 ? 'thin' : 'auto'};
+  scrollbar-color : ${inv} ${c};
+}
+
+${selector}::-webkit-scrollbar {
+  width : ${width}px;
+  background-color : ${color};
+}
+
+${selector}::-webkit-scrollbar-track {
+  background-color : ${color};
+  border : ${bw}px groove ${inv2};
+  border-radius : ${br}px;
+}
+
+${selector}::-webkit-scrollbar-thumb {
+  background-color : ${inv};
+  border : ${bw}px groove ${inv2};
+  border-radius : ${br}px;
+}
+    `;
+
+  console.log(buf);
+  return buf;
+}
+
+window.styleScrollBars = styleScrollBars;
+
 class UIBase extends HTMLElement {
   constructor() {
     super();
+
+    //ref to Link element referencing Screen style node
+    //Screen.update_intern sets the contents of this
+    this._screenStyleTag = document.createElement("style");
+    this._screenStyleUpdateHash = 0;
 
     AfterAspect.bind(this, "setCSS");
     AfterAspect.bind(this, "update");
@@ -15818,6 +16214,7 @@ class UIBase extends HTMLElement {
       this.__cbs = [];
     }
 
+    this.shadow.appendChild(this._screenStyleTag);
     this.shadow._appendChild = this.shadow.appendChild;
 
     ///*
@@ -17610,6 +18007,54 @@ function loadUIData(node, buf) {
   }
 }
 
+var ui_base = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  _setAreaClass: _setAreaClass,
+  ErrorColors: ErrorColors,
+  setTheme: setTheme,
+  report: report$1,
+  getDefault: getDefault,
+  IsMobile: IsMobile,
+  marginPaddingCSSKeys: marginPaddingCSSKeys,
+  IconManager: IconManager,
+  iconmanager: iconmanager,
+  IconSheets: IconSheets,
+  getIconManager: getIconManager,
+  setIconManager: setIconManager,
+  makeIconDiv: makeIconDiv,
+  dpistack: dpistack,
+  UIFlags: UIFlags,
+  PackFlags: PackFlags,
+  AfterAspect: AfterAspect,
+  styleScrollBars: styleScrollBars,
+  UIBase: UIBase,
+  drawRoundBox2: drawRoundBox2,
+  drawRoundBox: drawRoundBox,
+  _getFont_new: _getFont_new,
+  getFont: getFont,
+  _getFont: _getFont,
+  _ensureFont: _ensureFont,
+  measureTextBlock: measureTextBlock,
+  measureText: measureText,
+  drawText: drawText,
+  saveUIData: saveUIData,
+  loadUIData: loadUIData,
+  theme: theme,
+  Icons: Icons,
+  setIconMap: setIconMap,
+  DataPathError: DataPathError,
+  ColorSchemeTypes: ColorSchemeTypes,
+  parsepx: parsepx,
+  color2css: color2css$2,
+  color2web: color2web,
+  css2color: css2color$1,
+  web2color: web2color,
+  validateWebColor: validateWebColor,
+  invertTheme: invertTheme,
+  setColorSchemeType: setColorSchemeType,
+  CSSFont: CSSFont
+});
+
 "use strict";
 
 let keymap$2 = keymap$1;
@@ -19226,7 +19671,7 @@ let Vector2$4 = undefined,
   PackFlags$4 = PackFlags,
   PropTypes$5 = PropTypes;
 
-const SimpleContext$1 = SimpleContext;
+const SimpleContext = undefined;
 const DataPathError$1 = DataPathError;
 
 var list$2 = function list(iter) {
@@ -21968,107 +22413,10 @@ UIBase$7.register(PanelFrame);
 
 "use strict";
 
-let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
-
 let Vector2$6 = Vector2,
   Vector3$1 = Vector3,
   Vector4$2 = Vector4,
   Matrix4$2 = Matrix4;
-
-function rgb_to_hsv (r,g,b) {
-  var computedH = 0;
-  var computedS = 0;
-  var computedV = 0;
-
-  if ( r==null || g==null || b==null ||
-    isNaN(r) || isNaN(g)|| isNaN(b) ) {
-    throw new Error('Please enter numeric RGB values!');
-    return;
-  }
-  /*
-  if (r<0 || g<0 || b<0 || r>1.0 || g>1.0 || b>1.0) {
-   throw new Error('RGB values must be in the range 0 to 1.0');
-   return;
-  }//*/
-
-  var minRGB = Math.min(r,Math.min(g,b));
-  var maxRGB = Math.max(r,Math.max(g,b));
-
-  // Black-gray-white
-  if (minRGB==maxRGB) {
-    computedV = minRGB;
-
-    let ret = rgb_to_hsv_rets.next();
-    ret[0] = 0, ret[1] = 0, ret[2] = computedV;
-    return ret;
-  }
-
-  // Colors other than black-gray-white:
-  var d = (r==minRGB) ? g-b : ((b==minRGB) ? r-g : b-r);
-  var h = (r==minRGB) ? 3 : ((b==minRGB) ? 1 : 5);
-
-  computedH = (60*(h - d/(maxRGB - minRGB))) / 360.0;
-  computedS = (maxRGB - minRGB)/maxRGB;
-  computedV = maxRGB;
-
-  let ret = rgb_to_hsv_rets.next();
-  ret[0] = computedH, ret[1] = computedS, ret[2] = computedV;
-  return ret;
-}
-
-let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
-
-function hsv_to_rgb(h, s, v) {
-  let c=0, m=0, x=0;
-  let ret = hsv_to_rgb_rets.next();
-
-  ret[0] = ret[1] = ret[2] = 0.0;
-  h *= 360.0;
-
-  c = v * s;
-  x = c * (1.0 - Math.abs(((h / 60.0) % 2) - 1.0));
-  m = v - c;
-  let color;
-
-  function RgbF_Create(r, g, b) {
-    ret[0] = r;
-    ret[1] = g;
-    ret[2] = b;
-
-    return ret;
-  }
-
-  if (h >= 0.0 && h < 60.0)
-  {
-    color = RgbF_Create(c + m, x + m, m);
-  }
-  else if (h >= 60.0 && h < 120.0)
-  {
-    color = RgbF_Create(x + m, c + m, m);
-  }
-  else if (h >= 120.0 && h < 180.0)
-  {
-    color = RgbF_Create(m, c + m, x + m);
-  }
-  else if (h >= 180.0 && h < 240.0)
-  {
-    color = RgbF_Create(m, x + m, c + m);
-  }
-  else if (h >= 240.0 && h < 300.0)
-  {
-    color = RgbF_Create(x + m, m, c + m);
-  }
-  else if (h >= 300.0)
-  {
-    color = RgbF_Create(c + m, m, x + m);
-  }
-  else
-  {
-    color = RgbF_Create(m, m, m);
-  }
-
-  return color;
-}
 
 let UIBase$8 = UIBase,
   PackFlags$7 = PackFlags,
@@ -24523,7 +24871,7 @@ let Vector2$8 = undefined,
   PackFlags$9 = PackFlags,
   PropTypes$8 = PropTypes;
 
-const SimpleContext$2 = SimpleContext;
+const SimpleContext$1 = undefined;
 const DataPathError$2 = DataPathError;
 
 var list$3 = function list(iter) {
@@ -31354,6 +31702,8 @@ class ScreenBorder extends UIBase {
   }
 
   setCSS() {
+    this.style["pointer-events"] = this.movable ? "auto" : "none";
+    
     if (this._style === undefined) {
       this._style = document.createElement("style");
       this.appendChild(this._style);
@@ -32639,6 +32989,28 @@ class ScreenArea extends UIBase {
     return ret;
   }
 
+  snapToScreenSize() {
+    let screen = this.getScreen();
+    let co = new Vector2$d();
+    let changed = 0;
+
+    for (let v of this._verts) {
+      co.load(v);
+
+      v[0] = Math.min(Math.max(v[0], 0), screen.size[0]);
+      v[1] = Math.min(Math.max(v[1], 0), screen.size[1]);
+
+      if (co.vectorDistance(v) > 0.1) {
+        changed = 1;
+      }
+    }
+
+    if (changed) {
+      this.loadFromVerts();
+    }
+  }
+
+
   /**
    *
    * Sets screen verts from pos/size
@@ -33391,6 +33763,16 @@ let _FrameManager = undefined;
 
 let Area$2 = Area$1;
 
+function list$4(iter) {
+  let ret = [];
+  
+  for (let item of iter) {
+    ret.push(item);
+  }
+
+  return ret;
+}
+
 startMenuEventWrangling();
 
 let _events_started = false;
@@ -33413,6 +33795,11 @@ let screen_idgen = 0;
 class Screen$2 extends UIBase {
   constructor() {
     super();
+
+    //all widget shadow DOMs reference this style tag,
+    //or rather they copy it
+    this.globalCSS = document.createElement("style");
+    this.shadow.prepend(this.globalCSS);
 
     this._do_updateSize = true;
     this._resize_callbacks = [];
@@ -33479,6 +33866,112 @@ class Screen$2 extends UIBase {
       this.mpos[1] = e.touches[0].pageY;
     });
 
+  }
+  
+  /**
+   * 
+   * @param {*} style May be a string, a CSSStyleSheet instance, or a style tag
+   * @returns Promise fulfilled when style has been merged
+   */
+  mergeGlobalCSS(style) {
+    return new Promise((accept, reject) => {
+      let sheet;
+
+      let finish = () => {
+        console.warn(sheet, "sheet");
+        
+        let sheet2 = this.globalCSS.sheet;
+        let map = {};
+        for (let rule of sheet2.rules) {
+          map[rule.selectorText] = rule;
+        }
+
+        for (let rule of sheet.rules) {
+          let k = rule.selectorText;
+          if (k in map) {
+            let rule2 = map[k];
+
+            if (!rule.styleMap) { //handle firefox
+              for (let k in rule.style) {
+                let desc = Object.getOwnPropertyDescriptor(rule.style, k);
+                
+                if (!desc || !desc.writable) {
+                  continue;
+                }
+                let v = rule.style[k];
+
+                if (v) {
+                  rule2.style[k] = rule.style[k];
+                }
+              }
+              continue;
+            }
+            for (let [key, val] of list$4(rule.styleMap.entries())) {
+              console.log(rule2.styleMap.has(key));
+
+              if (1||rule2.styleMap.has(key)) {
+                //rule2.styleMap.delete(key);
+                let sval = "";
+
+                if (Array.isArray(val)) {
+                  for (let item of val) {
+                    sval += " " + val;
+                  }
+                  sval = sval.trim();
+                } else {
+                  sval = ("" + val).trim();
+                }
+
+                rule2.style[key] = sval;
+                rule2.styleMap.set(key, val);
+              } else {
+                rule2.styleMap.append(key, val);
+              }
+            }
+          } else {
+            sheet2.insertRule(rule.cssText);
+          }
+        }
+      };
+
+      console.log("style", style);
+
+      if (typeof style === "string") {
+        try { //stupid firefox
+          sheet = new CSSStyleSheet();
+        } catch (error) {
+          sheet = undefined;
+        }
+
+        if (sheet && sheet.replaceSync) {
+          sheet.replaceSync(style);
+          finish();
+        } else {
+          let tag = document.createElement("style");
+          tag.textContent = style;
+          document.body.appendChild(tag);
+          
+          let cb = () => {
+            if (!tag.sheet) {
+              this.doOnce(cb);
+              return;
+            }
+
+            sheet = tag.sheet;
+            finish();
+            tag.remove();
+          };
+
+          this.doOnce(cb);
+        }
+      } else if (!(style instanceof CSSStyleSheet)) {
+        sheet = style.sheet;
+        finish();
+      } else {
+        sheet = style;
+        finish();
+      }
+    });
   }
 
   newScreenArea() {
@@ -33885,12 +34378,6 @@ class Screen$2 extends UIBase {
       //height /= visualViewport.scale;
     }
 
-    if (exports.DEBUG.customWindowSize) {
-      let s = exports.DEBUG.customWindowSize;
-      width = s.width;
-      height = s.height;
-    }
-
     let ratio = window.outerHeight / window.innerHeight;
     let scale = visualViewport.scale;
 
@@ -33901,7 +34388,16 @@ class Screen$2 extends UIBase {
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
 
-    let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
+    if (exports.DEBUG.customWindowSize) {
+      let s = exports.DEBUG.customWindowSize;
+      width = s.width;
+      height = s.height;
+      ox = 0;
+      oy = 0;
+      window._DEBUG = exports.DEBUG;
+    }
+
+    let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
     document.body.style["touch-action"] = "none";
     document.body.style["transform-origin"] = "top left";
@@ -33913,8 +34409,8 @@ class Screen$2 extends UIBase {
       console.log("resizing", key, this._last_ckey1);
       this._last_ckey1 = key;
 
-      this.on_resize(this.size, [width, height]);
-      this.on_resize(this.size, this.size);
+      this.on_resize(this.size, [width, height], false);
+      this.on_resize(this.size, this.size, false);
 
       let scale = visualViewport.scale;
 
@@ -33953,6 +34449,19 @@ class Screen$2 extends UIBase {
       
       this.update();
     }, 150);
+  }
+
+  _calcSizeKey(w, h, x, y, dpi, scale) {
+    if (arguments.length !== 6) {
+      throw new Error("eek");
+    }
+
+    let s = "";
+    for (let i=0; i<arguments.length; i++) {
+      s += arguments[i].toFixed(0)+":";
+    }
+
+    return s;
   }
 
   _ondestroy() {
@@ -34015,10 +34524,10 @@ class Screen$2 extends UIBase {
     this.sareas = [];
     this.sareas.active = undefined;
 
-    for (let child of list(this.childNodes)) {
+    for (let child of list$4(this.childNodes)) {
       child.remove();
     }
-    for (let child of list(this.shadow.childNodes)) {
+    for (let child of list$4(this.shadow.childNodes)) {
       child.remove();
     }
   }
@@ -34351,6 +34860,17 @@ class Screen$2 extends UIBase {
   update_intern() {
     let popups = this._popups;
 
+    let cssText = "";
+    let sheet = this.globalCSS.sheet;
+    if (sheet) {
+      for (let rule of sheet.rules) {
+        cssText += rule.cssText + "\n";
+      }
+
+      window.cssText = cssText;
+    }
+    let cssTextHash = strhash(cssText);
+
     if (this.needsBorderRegen) {
       this.needsBorderRegen = false;
       this.regenBorders();
@@ -34421,6 +34941,11 @@ class Screen$2 extends UIBase {
 
         if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
           n._ctx = ctx;
+
+          if (n._screenStyleUpdateHash !== cssTextHash) {
+            n._screenStyleTag = cssText;
+            n._screenStyleUpdateHash = cssTextHash;
+          }
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
             n.parentWidget = scopestack[scopestack.length - 1];
@@ -35261,8 +35786,12 @@ class Screen$2 extends UIBase {
     this.setCSS();
   }
 
-  on_resize(oldsize, newsize=this.size) {
+  on_resize(oldsize, newsize=this.size, _set_key=true) {
     console.warn("resizing");
+
+    if (_set_key) {
+      this._last_ckey1 = this._calcSizeKey(newsize[0], newsize[1], this.pos[0], this.pos[1], devicePixelRatio, visualViewport.scale);
+    }
 
     let ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
 
@@ -36446,5 +36975,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap$1 as keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap$1 as keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
