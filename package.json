@@ -3,20 +3,22 @@
   "version": "0.0.2",
   "description": "html5 based UI library with blender-rna-style data binding",
   "main": "scripts/pathux.js",
+  "browser": "true",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "bash build.sh",
+    "build-docs": "bash build_docs.sh"
+  },
   "directories": {
     "doc": "docs"
   },
-  "dependencies": {
-    "electron": "^8.3.0",
-  },
+  "dependencies": {},
   "devDependencies": {
+    "electron": "^8.3.0",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "rollup": "^2.7.6",
     "esdoc": "^1.1.0",
     "esdoc-standard-plugin": "^1.0.0"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
