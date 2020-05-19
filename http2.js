@@ -1,4 +1,4 @@
-const PORT = 5005;
+const PORT = 5002;
 const INDEX = "example/index.html";
 const SERVER_ROOT = ".";
 

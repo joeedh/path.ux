@@ -2,6 +2,10 @@ const url = require('url');
 const PORT = 5002;
 const HOST = "localhost"
 
+const debug_prevent_default = false;
+const debug_disable_all_listeners = false;
+const debug_listeners = false; //parse code with babel and activates functionaltiy in scripts/util/polyfill.js
+
 const net = require('net');
 const fs = require('fs');
 const http = require('http');
@@ -19,6 +23,16 @@ let mimemap = {
   ".css" : "text/css"
 };
 
+let textmap = new Set([
+  "application/javascript",
+  "text/json",
+  "text/html",
+  "text/plain",
+  "text/css",
+  "text/glsl",
+  "text/xml"
+]);
+
 let getMime = (p) => {
   p = p.toLowerCase().trim();
   
@@ -29,6 +43,27 @@ let getMime = (p) => {
   }
   
   return "text/plain";
+}
+
+function disablePreventDefault(buf) {
+  let lines = buf.split("\n");
+  let out = "";
+
+  for (let i=0; i<lines.length; i++) {
+    let l = lines[i];
+
+    if (l.search("preventDefault") >= 0 && l.search("{") < 0) {
+      l = "//" + l;
+    }
+    if (l.search("stopPropagation") >= 0 && l.search("{") < 0) {
+      l = "//" + l;
+    }
+
+    lines[i] = l;
+    out += l + "\n";
+  }
+
+  return out;
 }
 
 exports.ServerResponse = class ServerResponse extends http.ServerResponse {
@@ -71,6 +106,8 @@ const serv = http.createServer({
     p += INDEX
   }
   
+  let relpath = p;
+  
   p = path.normalize(basedir + p);
   if (p.search(/\.\./) >= 0 || !p.startsWith(basedir)) {
     //normalize failed
@@ -92,8 +129,26 @@ const serv = http.createServer({
   
   let mime = getMime(p);
   
-  let buf = fs.readFileSync(p);
-  
+  let encoding = textmap.has(mime) ? "utf8" : undefined;
+
+  let buf = fs.readFileSync(p, encoding);
+
+  if (mime === "application/javascript") {
+    if (debug_prevent_default) {
+      buf = disablePreventDefault(buf);
+    }
+
+    if (debug_disable_all_listeners) {
+      buf = "window._disable_all_listeners = true;\n" + buf;
+    }
+
+    if (debug_listeners) {
+      buf = "window._debug_event_listeners = true;\n" + buf;
+      let et = require("./eventtrace.js");
+      buf = et.parse(buf, relpath, HOST, PORT);
+    }  
+  }
+
   res.statusCode = 200;
   res.setHeader('Content-Type', mime);
   res._addHeaders();

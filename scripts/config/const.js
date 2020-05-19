@@ -25,9 +25,9 @@ let exports = {
 
     /*
     customWindowSize: {
-      width: 512, height: 512
+      width: 2048, height: 2048
     },
-    */
+    //*/
   },
 
   addHelpPickers : true,
@@ -47,3 +47,4 @@ let exports = {
 };
 
 export default exports;
+window.DEBUG = exports.DEBUG;

@@ -8,6 +8,7 @@ import * as controller from '../controller/controller.js';
 import {pushModalLight, popModalLight, copyEvent, pathDebugEvent} from '../util/simple_events.js';
 import {getDataPathToolOp} from '../controller/simple_controller.js';
 import * as units from './units.js';
+import {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
 
 export * from './ui_theme.js';
 
@@ -479,38 +480,77 @@ export class AfterAspect {
   }
 }
 
-export function styleScrollBars(color="inherit", width="inherit", selector="*") {
-  let style = document.getElementById("pathuxScrollStyle");
+window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
+  let buf = styleScrollBars(color, contrast, width, border, "*");
+  CTX.screen.mergeGlobalCSS(buf); document.body.style["overflow"] = "scroll";
 
-  if (!style) {
-    style = document.createElement("style");
-    style.setAttribute("id", "pathuxScrollStyle");
-    document.body.prepend(style);
+  if (!window._tsttag) {
+    window._tsttag = document.createElement("style");
+    document.body.prepend(_tsttag);
   }
-  
-  style.textContents = style.textContent = `
 
-  ${selector} {
-  scrollbar-width : ${width}px;
-  scrollbar-color : ${color};
+  _tsttag.textContent = buf;
+
+  return buf;
+};
+
+export function styleScrollBars(color="grey", contrast=0.5, width=15, border="groove", selector="*") {
+  
+  let c = css2color(color);
+  let a = c.length > 3 ? c[3] : 1.0;
+
+  c = rgb_to_hsv(c[0], c[1], c[2]);
+  let inv =  c.slice(0, c.length);
+
+  inv[2] = 1.0 - inv[2];
+  inv[2] += (c[2] - inv[2])*(1.0 - contrast);
+
+  let inv2 = inv.slice(0, inv.length);
+  inv2[2] = Math.sqrt(inv2[2]);
+
+  inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
+  inv2 = hsv_to_rgb(inv2[0], inv2[1], inv2[2]);
+
+  inv.length = 4;
+  inv2.length = 4;
+  inv[3] = a;
+  inv2[3] = a;
+
+  inv = color2css(inv);
+  inv2 = color2css(inv2);
+  c = hsv_to_rgb(c[0], c[1], c[2]);
+  c = color2css(c);
+
+  let bw = 2.0 / devicePixelRatio;
+  let br = 9.0 / devicePixelRatio;
+  
+  let buf = `
+
+${selector} {
+  scrollbar-width : ${width <= 16 ? 'thin' : 'auto'};
+  scrollbar-color : ${inv} ${c};
 }
 
 ${selector}::-webkit-scrollbar {
   width : ${width}px;
   background-color : ${color};
-  color : ${color};
 }
 
 ${selector}::-webkit-scrollbar-track {
   background-color : ${color};
-  color : ${color};
+  border : ${bw}px groove ${inv2};
+  border-radius : ${br}px;
 }
 
 ${selector}::-webkit-scrollbar-thumb {
-  background-color : ${color};
-  color : ${color};
+  background-color : ${inv};
+  border : ${bw}px groove ${inv2};
+  border-radius : ${br}px;
 }
     `;
+
+  console.log(buf);
+  return buf;
 }
 
 window.styleScrollBars = styleScrollBars;
@@ -520,8 +560,9 @@ export class UIBase extends HTMLElement {
     super();
 
     //ref to Link element referencing Screen style node
-    //Screen.update_intern creates this
-    this._screenStyleLink = undefined;
+    //Screen.update_intern sets the contents of this
+    this._screenStyleTag = document.createElement("style");
+    this._screenStyleUpdateHash = 0;
 
     AfterAspect.bind(this, "setCSS");
     AfterAspect.bind(this, "update");
@@ -531,6 +572,7 @@ export class UIBase extends HTMLElement {
       this.__cbs = [];
     }
 
+    this.shadow.appendChild(this._screenStyleTag);
     this.shadow._appendChild = this.shadow.appendChild;
 
     ///*

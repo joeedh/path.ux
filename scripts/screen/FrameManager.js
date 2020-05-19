@@ -36,6 +36,16 @@ import '../widgets/ui_noteframe.js';
 import '../widgets/ui_listbox.js';
 import '../widgets/ui_table.js';
 
+function list(iter) {
+  let ret = [];
+  
+  for (let item of iter) {
+    ret.push(item);
+  }
+
+  return ret;
+}
+
 ui_menu.startMenuEventWrangling();
 
 let _events_started = false;
@@ -59,9 +69,11 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
-    this.globalStyleTag = document.createElement("style");
-    this.shadow.appendChild(this.globalStyleTag);
-    
+    //all widget shadow DOMs reference this style tag,
+    //or rather they copy it
+    this.globalCSS = document.createElement("style");
+    this.shadow.prepend(this.globalCSS);
+
     this._do_updateSize = true;
     this._resize_callbacks = [];
 
@@ -127,6 +139,112 @@ export class Screen extends ui_base.UIBase {
       this.mpos[1] = e.touches[0].pageY;
     });
 
+  }
+  
+  /**
+   * 
+   * @param {*} style May be a string, a CSSStyleSheet instance, or a style tag
+   * @returns Promise fulfilled when style has been merged
+   */
+  mergeGlobalCSS(style) {
+    return new Promise((accept, reject) => {
+      let sheet;
+
+      let finish = () => {
+        console.warn(sheet, "sheet");
+        
+        let sheet2 = this.globalCSS.sheet;
+        let map = {};
+        for (let rule of sheet2.rules) {
+          map[rule.selectorText] = rule;
+        }
+
+        for (let rule of sheet.rules) {
+          let k = rule.selectorText;
+          if (k in map) {
+            let rule2 = map[k];
+
+            if (!rule.styleMap) { //handle firefox
+              for (let k in rule.style) {
+                let desc = Object.getOwnPropertyDescriptor(rule.style, k);
+                
+                if (!desc || !desc.writable) {
+                  continue;
+                }
+                let v = rule.style[k];
+
+                if (v) {
+                  rule2.style[k] = rule.style[k];
+                }
+              }
+              continue;
+            }
+            for (let [key, val] of list(rule.styleMap.entries())) {
+              console.log(rule2.styleMap.has(key));
+
+              if (1||rule2.styleMap.has(key)) {
+                //rule2.styleMap.delete(key);
+                let sval = "";
+
+                if (Array.isArray(val)) {
+                  for (let item of val) {
+                    sval += " " + val;
+                  }
+                  sval = sval.trim();
+                } else {
+                  sval = ("" + val).trim();
+                }
+
+                rule2.style[key] = sval;
+                rule2.styleMap.set(key, val);
+              } else {
+                rule2.styleMap.append(key, val);
+              }
+            }
+          } else {
+            sheet2.insertRule(rule.cssText);
+          }
+        }
+      }
+
+      console.log("style", style);
+
+      if (typeof style === "string") {
+        try { //stupid firefox
+          sheet = new CSSStyleSheet();
+        } catch (error) {
+          sheet = undefined;
+        }
+
+        if (sheet && sheet.replaceSync) {
+          sheet.replaceSync(style);
+          finish();
+        } else {
+          let tag = document.createElement("style");
+          tag.textContent = style;
+          document.body.appendChild(tag);
+          
+          let cb = () => {
+            if (!tag.sheet) {
+              this.doOnce(cb);
+              return;
+            }
+
+            sheet = tag.sheet;
+            finish();
+            tag.remove();
+          };
+
+          this.doOnce(cb)
+        }
+      } else if (!(style instanceof CSSStyleSheet)) {
+        sheet = style.sheet;
+        finish();
+      } else {
+        sheet = style;
+        finish();
+      }
+    });
   }
 
   newScreenArea() {
@@ -1015,6 +1133,17 @@ export class Screen extends ui_base.UIBase {
   update_intern() {
     let popups = this._popups;
 
+    let cssText = "";
+    let sheet = this.globalCSS.sheet;
+    if (sheet) {
+      for (let rule of sheet.rules) {
+        cssText += rule.cssText + "\n";
+      }
+
+      window.cssText = cssText
+    }
+    let cssTextHash = util.strhash(cssText);
+
     if (this.needsBorderRegen) {
       this.needsBorderRegen = false;
       this.regenBorders();
@@ -1085,6 +1214,11 @@ export class Screen extends ui_base.UIBase {
 
         if (!n.hidden && n !== this2 && n instanceof UIBase) {
           n._ctx = ctx;
+
+          if (n._screenStyleUpdateHash !== cssTextHash) {
+            n._screenStyleTag = cssText;
+            n._screenStyleUpdateHash = cssTextHash;
+          }
 
           if (scopestack.length > 0 && scopestack[scopestack.length - 1]) {
             n.parentWidget = scopestack[scopestack.length - 1];
