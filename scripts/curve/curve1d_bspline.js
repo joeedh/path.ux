@@ -9,6 +9,8 @@ import * as util from '../util/util.js';
 import * as vectormath from '../util/vectormath.js';
 import {EventDispatcher} from "../util/events.js";
 
+import {UIBase} from "../core/ui_base.js";
+
 var Vector2 = vectormath.Vector2;
 
 let RecalcFlags = {
@@ -941,10 +943,14 @@ class BSplineCurve extends CurveTypeData {
 
   transform_mpos(x, y){
     var r = this.uidata.canvas.getClientRects()[0];
+    let dpi = UIBase.getDPI();
 
     x -= parseInt(r.left);
     y -= parseInt(r.top);
 
+    x *= dpi;
+    y *= dpi;
+    
     var trans = this.uidata.draw_trans;
 
     x = x/trans[0] - trans[1][0];

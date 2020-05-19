@@ -7,6 +7,7 @@ import {ColumnFrame} from "../core/ui.js";
 import * as util from "../util/util.js";
 import {PropTypes, PropSubTypes, PropFlags} from "../toolsys/toolprop.js";
 import {pushModalLight, popModalLight} from "../util/simple_events.js";
+import {KeyMap} from "../util/simple_events.js";
 
 //use .setAttribute("linear") to disable nonlinear sliding
 export class NumSlider extends ValueButtonBase {

@@ -3770,6 +3770,28 @@ define(function () {
     }
 })());
 
+let colormap = {
+  black   : 30,
+  red     : 31,
+  green   : 32,
+  yellow  : 33,
+  blue    : 34,
+  magenta : 35,
+  cyan    : 36,
+  white   : 37,
+  reset   : 0
+};
+
+function termColor(s, color = colormap.reset) {
+  if (typeof color === "string") {
+    color = colormap[color] || colormap.reset;
+  }
+
+  return `\u001b[${color}m${s}\u001b[0m`;
+}
+
+window.termColor = termColor;
+
 class MovingAvg extends Array {
   constructor(size=64) {
     super();
@@ -4747,10 +4769,9 @@ function strhash(str) {
   for (var i=0; i<str.length; i++) {
     var ch = str.charCodeAt(i);
 
-    hash = (hash ^ ch);
     hash = hash < 0 ? -hash : hash;
 
-    hash = (hash*232344 + 4323543) & ((1<<19)-1);
+    hash ^= (ch*524287 + 4323543) & ((1<<19)-1);
   }
 
   return hash;
@@ -4937,6 +4958,7 @@ class ImageReader {
 
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  termColor: termColor,
   MovingAvg: MovingAvg,
   timers: timers,
   pollTimer: pollTimer,
@@ -7125,7 +7147,7 @@ let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
 let binre = /[+\-]?0b[01]+$/;
 let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
 
-function isNumber(s) {
+function isNumber$1(s) {
   s = (""+s).trim();
   function test(re) {
     return s.search(re) == 0;
@@ -7138,7 +7160,7 @@ function parseValue(string, baseUnit=undefined) {
   let base;
 
   //unannotated string?
-  if (isNumber(string)) {
+  if (isNumber$1(string)) {
     //assume base unit
     let f = parseFloat(string);
     
@@ -8200,7 +8222,7 @@ for (var k in keymap_latin_1) {
   keymap_latin_1_rev[keymap_latin_1[k]] = k;
 }
 
-var keymap = keymap_latin_1;
+var keymap$1 = keymap_latin_1;
 var reverse_keymap = keymap_latin_1_rev;
 
 class HotKey {
@@ -8208,7 +8230,7 @@ class HotKey {
   constructor(key, modifiers, action) {
     this.action = action;
     this.mods = modifiers;
-    this.key = keymap[key];
+    this.key = keymap$1[key];
   }
 
   exec(ctx) {
@@ -8287,7 +8309,7 @@ class KeyMap extends Array {
           hk.exec(ctx);
         } catch (error) {
           print_stack$1(error);
-          console.log("failed to execute a hotkey", keymap[e.keyCode]);
+          console.log("failed to execute a hotkey", keymap$1[e.keyCode]);
         }
         return true;
       }
@@ -9936,10 +9958,14 @@ class BSplineCurve extends CurveTypeData {
 
   transform_mpos(x, y){
     var r = this.uidata.canvas.getClientRects()[0];
+    let dpi = UIBase.getDPI();
 
     x -= parseInt(r.left);
     y -= parseInt(r.top);
 
+    x *= dpi;
+    y *= dpi;
+    
     var trans = this.uidata.draw_trans;
 
     x = x/trans[0] - trans[1][0];
@@ -10454,9 +10480,9 @@ class ToolProperty extends ToolPropertyIF {
     this.description = description;
     this.flag = flag;
     this.icon = icon;
-    
+
     this.callbacks = {};
-  } 
+  }
 
   static register(cls) {
     cls.PROP_TYPE_ID = (1<<customPropTypeBase);
@@ -10513,7 +10539,7 @@ class ToolProperty extends ToolPropertyIF {
       step        : this.step
     };
   }
-  
+
   loadJSON(obj) {
     this.type = obj.type;
     this.subtype = obj.subtype;
@@ -10523,14 +10549,14 @@ class ToolProperty extends ToolPropertyIF {
     this.flag = obj.flag;
     this.icon = obj.icon;
     this.data = obj.data;
-    
+
     return this;
   }
-  
+
   getValue() {
     return this.data;
-  }  
-  
+  }
+
   setValue(val) {
     if (this.constructor === ToolProperty) {
       throw new Error("implement me!");
@@ -10540,7 +10566,7 @@ class ToolProperty extends ToolPropertyIF {
 
     this._fire("change", val);
   }
-  
+
   copyTo(b) {
     b.apiname = this.apiname;
     b.uiname = this.uiname;
@@ -10555,26 +10581,47 @@ class ToolProperty extends ToolPropertyIF {
       b.callbacks[k] = this.callbacks[k];
     }
   }
-  
+
   copy() { //default copy method
     let ret = new this.constructor();
-    
+
     this.copyTo(ret);
     ret.data = this.data;
-    
+
     return ret;
   }
-  
+
   setStep(step) {
     this.step = step;
     return this;
   }
-  
+
+  static calcRelativeStep(step, value, logBase=1.5) {
+    value = Math.log(Math.abs(value) + 1.0) / Math.log(logBase);
+    value = Math.max(value, step);
+
+    console.log(termColor("STEP", "red"), value);
+    return value;
+  }
+
+  getStep(value=1.0) {
+    if (this.stepIsRelative) {
+      return ToolProperty.calcRelativeStep(this.step, value);
+    } else {
+      return this.step;
+    }
+  }
+
+  setRelativeStep(step) {
+    this.step = step;
+    this.stepIsRelative = true;
+  }
+
   setRange(min, max) {
     if (min === undefined || max === undefined) {
       throw new Error("min and/or max cannot be undefined");
     }
-    
+
     this.range = [min, max];
     return this;
   }
@@ -10598,7 +10645,7 @@ class ToolProperty extends ToolPropertyIF {
 
   setIcon(icon) {
     this.icon = icon;
-    
+
     return this;
   }
 }
@@ -10607,7 +10654,7 @@ class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
 
-
+    this.multiLine = false;
 
     if (value)
       this.setValue(value);
@@ -10616,10 +10663,12 @@ class StringProperty extends ToolProperty {
   copyTo(b) {
     super.copyTo(b);
     b.data = this.data;
-    
+    b.multiLine = this.multiLine;
+
     return this;
   }
-  
+
+
   copy() {
     let ret = new StringProperty();
     this.copyTo(ret);
@@ -10641,7 +10690,7 @@ let num_res =[
 ];
 //num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
 
-function isNumber$1(f) {
+function isNumber$2(f) {
   if (f == "NaN" || (typeof f == "number" && isNaN(f))) {
     return false;
   }
@@ -10667,7 +10716,7 @@ function isNumber$1(f) {
 }
 _addClass(StringProperty);
 
-window.isNumber = isNumber$1;
+window.isNumber = isNumber$2;
 
 class NumProperty extends ToolProperty {
   constructor(type, value, apiname, 
@@ -10726,6 +10775,10 @@ class _NumberPropertyBase extends ToolProperty {
 
   copyTo(b) {
     b.data = this.data;
+    b.expRate = this.expRate;
+    b.step = this.step;
+    b.range = this.range;
+    b.ui_range = this.ui_range;
   }
 
 
@@ -11576,24 +11629,39 @@ class InheritFlag {
 let modalstack$1 = [];
 
 class ToolOp extends EventHandler {
-  static tooldef() {return {
-    uiname   : "!untitled tool",
-    toolpath : "logical_module.tool", //logical_module need not match up to real module name
-    icon     : -1,
-    description : undefined,
-    is_modal : false,
-    hotkey : undefined,
-    undoflag : 0,
-    flag     : 0,
-    inputs   : {}, //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes
-    outputs  : {}  //tool properties, enclose in ToolOp.inherit({}) to inherit from parent classes
-  }}
+  static tooldef() {
+    if (this === ToolOp) {
+      throw new Error("Tools must implemented static tooldef() methods!");
+    }
+  }
 
+  /*
+  ToolOp definition.
+
+  An example:
+  <pre>
+  static tooldef() {return {
+    uiname   : "Tool Name",
+    toolpath : "logical_module.tool", //logical_module need not match up to a real module
+    icon     : -1, //tool's icon, or -1 if there is none
+    description : "tooltip",
+    is_modal : false, //tool is interactive and takes control of events
+    hotkey : undefined,
+    undoflag : 0, //see UndoFlags
+    flag     : 0,
+    inputs   : ToolOp.inherit({
+      f32val : new Float32Property(1.0),
+      path   : new StringProperty("./path");
+    }),
+    outputs  : {}
+  }}
+  </pre>
+  */
   static inherit(slots) {
     return new InheritFlag(slots);
   }
   
-  //creates a new instance from args
+  /*creates a new instance of this toolop from args*/
   static invoke(ctx, args) {
     let tool = new this();
 
@@ -11645,6 +11713,7 @@ class ToolOp extends EventHandler {
     path +=")";
     return path;
   }
+  
   static register(cls) {
     if (ToolClasses.indexOf(cls) >= 0) {
       console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
@@ -11762,11 +11831,11 @@ class ToolOp extends EventHandler {
   //no need to call super() to execute this if you don't want to
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap["Enter"]:
-      case keymap["Space"]:
+      case keymap$1["Enter"]:
+      case keymap$1["Space"]:
         this.modalEnd(false);
         break;
-      case keymap["Escape"]:
+      case keymap$1["Escape"]:
         this.modalEnd(true);
         break;
     }
@@ -13112,7 +13181,7 @@ class DataPathSetOp extends ToolOp {
     this._undo = undefined;
   }
 
-  setValue(ctx, val) {
+  setValue(ctx, val, object) {
     let prop = this.inputs.prop;
     let path = this.inputs.dataPath.getValue();
 
@@ -13124,6 +13193,7 @@ class DataPathSetOp extends ToolOp {
       }
     }
 
+    prop.dataref = object;
     prop.setValue(val);
   }
 
@@ -13165,7 +13235,7 @@ class DataPathSetOp extends ToolOp {
 
     tool.id = id;
 
-    tool.setValue(ctx, value);
+    tool.setValue(ctx, value, rdef.obj);
 
     return tool;
   }
@@ -13222,6 +13292,7 @@ class DataPathSetOp extends ToolOp {
         }
       } else {
         let prop2 = prop.copy();
+        prop2.dataref = rdef.obj;
         prop2.setValue(value);
 
         this._undo[path] = prop2.getValue();
@@ -13486,6 +13557,11 @@ class DataPath {
 
   radix(r) {
     this.data.setRadix(r);
+    return this;
+  }
+
+  relativeStep(s) {
+    this.data.setRelativeStep(s);
     return this;
   }
 
@@ -13844,15 +13920,16 @@ class DataStruct {
     return dpath;
   }
 
-  string(path, apiname, uiname, description) {
+  textblock(path, apiname, uiname, description) {
     let prop = new StringProperty(undefined, apiname, uiname, description);
+    prop.multiLine = true;
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
     return dpath;
   }
 
-  textblock(path, apiname, uiname, description) {
+  string(path, apiname, uiname, description) {
     let prop = new StringProperty(undefined, apiname, uiname, description);
 
     let dpath = new DataPath(path, apiname, prop);
@@ -15166,8 +15243,12 @@ const DefaultTheme = {
     "BoxBorder" : "rgb(145, 145, 145, 1.0)"
   },
 
+  textbox : {
+    "background-color" : "rgb(245, 245, 245, 0.95)",
+  },
+
   richtext : {
-    "background-color" : "rgb(200, 200, 200)",
+    "background-color" : "rgb(245, 245, 245)",
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
       size  : 16,
@@ -15685,7 +15766,9 @@ class AfterAspect {
           chain.remove(chain2[i]);
         }
 
-        cb.apply(this, arguments);
+        if (cb && cb.apply) {
+          cb.apply(this, arguments);
+        }
       }
     };
 
@@ -15726,6 +15809,7 @@ class UIBase extends HTMLElement {
     super();
 
     AfterAspect.bind(this, "setCSS");
+    AfterAspect.bind(this, "update");
 
     this.shadow = this.attachShadow({mode : 'open'});
     if (exports.DEBUG.paranoidEvents) {
@@ -16728,7 +16812,7 @@ class UIBase extends HTMLElement {
 
     if (!bad) {
       toolstack.undo();
-      head.setValue(ctx, val);
+      head.setValue(ctx, val, rdef.obj);
       toolstack.redo();
     } else {
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
@@ -17526,7 +17610,7 @@ function loadUIData(node, buf) {
 
 "use strict";
 
-let keymap$1 = keymap;
+let keymap$2 = keymap$1;
 
 let EnumProperty$3 = EnumProperty$1,
   PropTypes$2 = PropTypes;
@@ -18020,7 +18104,7 @@ function myToFixed$1(s, n) {
   return s;
 }
 
-let keymap$2 = keymap;
+let keymap$3 = keymap$1;
 
 let EnumProperty$4 = EnumProperty$1,
   PropTypes$3 = PropTypes;
@@ -18031,20 +18115,17 @@ let UIBase$2 = UIBase,
 
 let parsepx$2 = parsepx;
 
-class TextBox extends UIBase$2 {
+class TextBoxBase extends UIBase$2 {
+  static define() {return {
+
+  }}
+}
+
+class TextBox extends TextBoxBase {
   constructor() {
     super();
 
     this._width = "min-content";
-
-    this.addEventListener("focusin", () => {
-      this._focus = 1;
-      this.dom.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      this._focus = 0;
-    });
 
     let margin = Math.ceil(3 * this.getDPI());
 
@@ -18078,12 +18159,16 @@ class TextBox extends UIBase$2 {
     this.dom.addEventListener("focus", (e) => {
       console.log("Textbox focus");
       this._startModal();
+      this._focus = 1;
+      this.setCSS();
     });
 
     this.dom.addEventListener("blur", (e) => {
       console.log("Textbox blur");
       if (this._modal) {
         this._endModal(true);
+        this._focus = 0;
+        this.setCSS();
       }
     });
 
@@ -18106,10 +18191,10 @@ class TextBox extends UIBase$2 {
       e.stopPropagation();
 
       switch (e.keyCode) {
-        case keymap$2.Enter:
+        case keymap$3.Enter:
           finish(true);
           break;
-        case keymap$2.Escape:
+        case keymap$3.Escape:
           finish(false);
           break;
       }
@@ -18182,6 +18267,14 @@ class TextBox extends UIBase$2 {
 
   setCSS() {
     super.setCSS();
+
+    this.dom.style["background-color"] = this.getDefault("background-color");
+
+    if (this._focus) {
+      this.dom.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
+    } else {
+      this.dom.style["border"] = "none";
+    }
 
     if (this.style["font"]) {
       this.dom.style["font"] = this.style["font"];
@@ -18267,7 +18360,8 @@ class TextBox extends UIBase$2 {
   }
 
   static define() {return {
-    tagname : "textbox-x"
+    tagname : "textbox-x",
+    style   : "textbox"
   };}
 
   get text() {
@@ -18282,7 +18376,7 @@ class TextBox extends UIBase$2 {
     if ((prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT)) {
       let val = parseValue(this.text, this.baseUnit);
 
-      if (!isNumber$1(this.text.trim())) {
+      if (!isNumber$2(this.text.trim())) {
         this.flash(ErrorColors.ERROR, this.dom);
         this.focus();
         this.dom.focus();
@@ -18325,7 +18419,7 @@ function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);
   //console.log(elem, x, y);
 
-  if (elem && elem.tagName === "TEXTBOX-X") {
+  if (elem && elem instanceof TextBoxBase) {
     return true;
   }
 
@@ -18347,7 +18441,7 @@ function myToFixed$2(s, n) {
   return s;
 }
 
-let keymap$3 = keymap;
+let keymap$4 = keymap$1;
 
 let EnumProperty$5 = EnumProperty$1,
     PropTypes$4 = PropTypes;
@@ -18382,14 +18476,18 @@ class ValueButtonBase extends Button {
     let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
+      let redraw = !this.disabled;
+
       this.disabled = true;
+
+      if (redraw) this._redraw();
+
       return;
     } else {
-      if (this.disabled) {
-        this._redraw();
-      }
+      let redraw = this.disabled;
 
       this.disabled = false;
+      if (redraw) this._redraw();
     }
 
     if (val !== this._value) {
@@ -18407,533 +18505,6 @@ class ValueButtonBase extends Button {
     super.update();
   }
 }
-
-//use .setAttribute("linear") to disable nonlinear sliding
-class NumSlider extends ValueButtonBase {
-  constructor() {
-    super();
-
-    this._last_label = undefined;
-
-    this._name = "";
-    this._step = 0.1;
-    this._value = 0.0;
-    this._expRate = 1.333;
-    this.decimalPlaces = 4;
-    this.radix = 10;
-
-    this.range = [-1e17, 1e17];
-    this.isInt = false;
-
-    this._redraw();
-  }
-
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    if (!prop)
-      return;
-
-    if (prop.expRate) {
-      this._expRate = prop.expRate;
-    }
-    if (prop.radix !== undefined) {
-      this.radix = prop.radix;
-    }
-
-    if (prop.step) {
-      this._step = prop.step;
-    }
-    if (prop.decimalPlaces !== undefined) {
-      this.decimalPlaces = prop.decimalPlaces;
-    }
-
-    if (prop.baseUnit !== undefined) {
-      this.baseUnit = prop.baseUnit;
-    }
-
-    if (prop.displayUnit !== undefined) {
-      this.displayUnit = prop.displayUnit;
-    }
-
-    super.updateDataPath();
-  }
-
-  swapWithTextbox() {
-    let tbox = document.createElement("textbox-x");
-
-    tbox.ctx = this.ctx;
-    tbox._init();
-
-    tbox.decimalPlaces = this.decimalPlaces;
-    tbox.isInt = this.isInt;
-
-    if (this.isInt && this.radix != 10) {
-      let text = this.value.toString(this.radix);
-      if (this.radix === 2)
-        text = "0b" + text;
-      else if (this.radix === 16)
-        text += "h";
-
-      tbox.text = text;
-    } else {
-      tbox.text = buildString(this.value, this.baseUnit, this.decimalPlaces, this.displayUnit);
-    }
-
-    this.parentNode.insertBefore(tbox, this);
-    //this.remove();
-    this.hidden = true;
-    //this.dom.hidden = true;
-    
-    let finish = (ok) => {
-      tbox.remove();
-      this.hidden = false;
-      
-      if (ok) {
-        let val = tbox.text.trim();
-
-        if (this.isInt && this.radix !== 10) {
-          val = parseInt(val);
-        } else {
-          val = parseValue(val, this.baseUnit);
-        }
-
-        if (isNaN(val)) {
-          console.log("EEK!");
-          this.flash(ErrorColors.ERROR);
-        } else {
-          this.setValue(val);
-          
-          if (this.onchange) {
-            this.onchange(this);
-          }
-        }
-      }
-    };
-
-    tbox.onend = finish;
-    tbox.focus();
-    tbox.select();
-
-    //this.shadow.appendChild(tbox);
-    return;
-  }
-  
-  bindEvents() {
-    let onmousedown = (e) => {
-      if (this.disabled) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        return;
-      }
-      
-      if (e.button == 0 && e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        this.swapWithTextbox();
-      } else if (e.button == 0) {
-        this.dragStart(e);
-        
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-    
-    this.addEventListener("dblclick", (e) => {
-      if (this.disabled) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        return;
-      }
-      
-      e.preventDefault();
-      e.stopPropagation();
-      this.swapWithTextbox();
-    });
-    
-    this.addEventListener("mousedown", (e) => {
-      if (this.disabled) return;
-      onmousedown(e);
-    });
-    
-    this.addEventListener("touchstart", (e) => {
-      if (this.disabled) return;
-      console.log(e);
-      
-      e.x = e.touches[0].screenX;
-      e.y = e.touches[0].screenY;
-      
-      this.dragStart(e);
-      
-      e.preventDefault();
-      e.stopPropagation();
-    }, {passive : false});
-    
-    //this.addEventListener("touchstart", (e) => {
-    //  console.log(e);
-    //});
-    
-    this.addEventListener("mouseover", (e) => {
-      if (this.disabled) return;
-      
-      this.dom._background = this.getDefault("BoxHighlight");
-      this._repos_canvas();
-      this._redraw();
-      //console.log("mouse enter");
-    });
-    
-    this.addEventListener("mouseout", (e) => {
-      if (this.disabled) return;
-
-      this.dom._background = this.getDefault("BoxBG");
-      this._repos_canvas();
-      this._redraw();
-      //console.log("mouse leave!");
-    });
-  }
-  
-  doRange() {
-    if (this.hasAttribute("min")) {
-      this.range[0] = parseFloat(this.getAttribute("min"));
-    }
-    if (this.hasAttribute("max")) {
-      this.range[1] = parseFloat(this.getAttribute("max"));
-    }
-
-    this._value = Math.min(Math.max(this._value, this.range[0]), this.range[1]);
-  }
-
-  get value() {
-    return this._value;
-  }
-
-  set value(val) {
-    this.setValue(val, true, false);
-  }
-
-  setValue(value, fire_onchange=true) {
-    this._value = value;
-
-    if (this.hasAttribute("integer")) {
-      this.isInt = true;
-    }
-
-    if (this.isInt) {
-      this._value = Math.floor(this._value);
-    }
-
-    this.doRange();
-
-    if (this.ctx && this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
-    }
-
-    if (fire_onchange && this.onchange) {
-      this.onchange(this.value);
-    }
-    
-    this._redraw();
-  }
-  
-  dragStart(e) {
-    if (this.disabled) return;
-
-    let last_background = this.dom._background;
-    let cancel;
-    
-    let startvalue = this.value;
-    let value = startvalue;
-    
-    let startx = e.x, starty = e.y;
-    
-    this.dom._background = this.getDefault("BoxDepressed");
-    let fire = () => {
-      if (this.onchange) {
-        this.onchange(this);
-      }
-    };
-
-
-    let handlers = {
-      on_keydown: (e) => {
-        switch (e.keyCode) {
-          case 27: //escape key
-            cancel(true);
-          case 13: //enter key
-            cancel(false);
-            break;
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-      },
-
-      on_mousemove: (e) => {
-        if (this.disabled) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        let dx = e.x - startx;
-        startx = e.x;
-
-        if (e.shiftKey) {
-          dx *= 0.1;
-        }
-
-        value += dx * this._step * 0.1;
-
-        let dvalue = value - startvalue;
-        let dsign = Math.sign(dvalue);
-
-        if (!this.hasAttribute("linear")) {
-          dvalue = Math.pow(Math.abs(dvalue), this._expRate) * dsign;
-        }
-
-        this.value = startvalue + dvalue;
-        this.doRange();
-
-        /*
-        if (e.shiftKey) {
-          dx *= 0.1;
-          this.value = startvalue2 + dx*0.1*this._step;
-          startvalue3 = this.value;
-        } else {
-          startvalue2 = this.value;
-          this.value = startvalue3 + dx*0.1*this._step;
-        }*/
-
-        this.updateWidth();
-        this._redraw();
-        fire();
-      },
-
-      on_mouseup: (e) => {
-        cancel(false);
-        e.preventDefault();
-        e.stopPropagation();
-      },
-
-      on_mouseout: (e) => {
-        //console.log("leave");
-        last_background = this.getDefault("BoxBG");
-
-        e.preventDefault();
-        e.stopPropagation();
-      },
-
-      on_mouseover: (e) => {
-        //console.log("over");
-        last_background = this.getDefault("BoxHighlight");
-
-        e.preventDefault();
-        e.stopPropagation();
-      },
-
-      on_mousedown : (e) => {
-        this.popModal();
-      },
-    };
-    
-    //events.pushModal(this.getScreen(), handlers);
-    this.pushModal(handlers);
-
-    cancel = (restore_value) => {
-      if (restore_value) {
-        this.value = startvalue;
-        this.updateWidth();
-        fire();
-      }
-      
-      this.dom._background = last_background; //ui_base.getDefault("BoxBG");
-      this._redraw();
-      
-      console.trace("end");
-      
-      this.popModal();
-    };
-    
-    /*
-    cancel = (restore_value) => {
-      if (restore_value) {
-        this.value = startvalue;
-        this.updateWidth();
-        fire();
-      }
-      
-      this.dom._background = last_background; //ui_base.getDefault("BoxBG");
-      this._redraw();
-      
-      console.trace("end");
-      
-      window.removeEventListener("keydown", keydown, true);
-      window.removeEventListener("mousemove", mousemove, {captured : true, passive : false});
-      
-      window.removeEventListener("touchend", touchend, true);
-      window.removeEventListener("touchmove", touchmove, {captured : true, passive : false});
-      window.removeEventListener("touchcancel", touchcancel, true);
-      window.removeEventListener("mouseup", mouseup, true);
-      
-      this.removeEventListener("mouseover", mouseover, true);
-      this.removeEventListener("mouseout", mouseout, true);
-    }
-    
-    window.addEventListener("keydown", keydown, true);
-    window.addEventListener("mousemove", mousemove, true);
-    window.addEventListener("touchend", touchend, true);
-    window.addEventListener("touchmove", touchmove, {captured : true, passive : false});
-    window.addEventListener("touchcancel", touchcancel, true);
-    window.addEventListener("mouseup", mouseup, true);
-
-    this.addEventListener("mouseover", mouseover, true);
-    this.addEventListener("mouseout", mouseout, true);
-    //*/
-  }
-
-  setCSS() {
-    //do not call parent class implementation
-    let dpi = this.getDPI();
-
-    let ts = this.getDefault("DefaultText").size;
-
-    let dd = this.isInt ? 5 : this.decimalPlaces + 8;
-
-    let label = this._name;
-    if (this.isInt) {
-      label += ": 0";
-      for (let i=0; i<this.radix; i++) {
-        label += "0";
-      }
-    } else {
-      label += ": 0.";
-      for (let i=0; i<this.decimalPlaces+1; i++) {
-        label += "0";
-      }
-    }
-
-    let tw = measureText(this, label, undefined, undefined,
-                                 ts, this.getDefault("DefaultText")).width ;
-
-    tw += this._getArrowSize()*2.0 + ts;
-    tw = ~~tw;
-
-    let defw = this.getDefault("numslider_width");
-
-    //tw = Math.max(tw, w);
-
-    this.style["width"] = tw+"px";
-    this.dom.style["width"] = tw+"px";
-
-    this._repos_canvas();
-    this._redraw();
-  }
-
-  updateName(force) {
-    let name = this.getAttribute("name");
-
-    if (force || name !== this._name) {
-      this._name = name;
-      this.setCSS();
-    }
-
-    let label = this._genLabel();
-    if (label !== this._last_label) {
-      this._last_label = label;
-      this.setCSS();
-    }
-  }
-  
-  _genLabel() {
-    let val = this.value;
-    let text;
-
-    if (val === undefined) {
-      text = "error";
-    } else {
-      val = val === undefined ? 0.0 : val;
-
-      val = buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
-      //val = myToFixed(val, this.decimalPlaces);
-
-      text = val;
-      if (this._name) {
-        text = this._name + ": " + text;
-      }
-    }
-
-    return text;
-  }
-  
-  _redraw() {
-    let g = this.g;
-    let canvas = this.dom;
-
-    //console.log("numslider draw");
-    
-    let dpi = this.getDPI();
-    let disabled = this.disabled; //this.hasAttribute("disabled");
-
-    let r = this.getDefault("BoxRadius");
-    if (this.isInt) {
-      r *= 0.25;
-    }
-
-    drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
-
-    r *= dpi;
-    let pad = this.getDefault("BoxMargin");
-    let ts = this.getDefault("DefaultText").size;
-    
-    //if (this.value !== undefined) {
-    let text = this._genLabel();
-
-    let tw = measureText(this, text, this.dom, this.g).width;
-    let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
-    let cy = this.dom.height/2;
-
-    this.dom.font = undefined;
-
-    drawText(this, cx, cy + ts/2, text, {
-      canvas : this.dom,
-      g      : this.g,
-      size   : ts
-    });
-
-    //}
-    
-    g.fillStyle = "rgba(0,0,0,0.1)";
-    
-    let d = 7, w=canvas.width, h=canvas.height;
-    let sz = this._getArrowSize();
-    
-    g.beginPath();
-    g.moveTo(d, h*0.5);
-    g.lineTo(d+sz, h*0.5 + sz*0.5);
-    g.lineTo(d+sz, h*0.5 - sz*0.5);
-    
-    g.moveTo(w-d, h*0.5);
-    g.lineTo(w-sz-d, h*0.5 + sz*0.5);
-    g.lineTo(w-sz-d, h*0.5 - sz*0.5);
-    
-    g.fill();
-  }
-
-  _getArrowSize() {
-    return UIBase$3.getDPI()*10;
-  }
-  static define() {return {
-    tagname : "numslider-x",
-    style : "numslider"
-  };}
-}
-UIBase$3.register(NumSlider);
 
 class Check extends UIBase$3 {
   constructor() {
@@ -19020,7 +18591,7 @@ class Check extends UIBase$3 {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap$3["Escape"]:
+        case keymap$4["Escape"]:
           this._highlight = undefined;
           this._redraw();
           e.preventDefault();
@@ -19028,8 +18599,8 @@ class Check extends UIBase$3 {
 
           this.blur();
           break;
-        case keymap$3["Enter"]:
-        case keymap$3["Space"]:
+        case keymap$4["Enter"]:
+        case keymap$4["Space"]:
           this.checked = !this.checked;
           e.preventDefault();
           e.stopPropagation();
@@ -20450,9 +20021,23 @@ class Container extends UIBase {
       return name;
     }
 
-    if (prop.type == PropTypes$5.CURVE) {
+    if (prop.type === PropTypes$5.STRING) {
+      let ret;
+      if (prop.multiLine) {
+        ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
+      } else {
+        ret = this.textbox(inpath);
+
+        if (mass_set_path) {
+          ret.setAttribute("mass_set_path", mass_set_path);
+        }
+      }
+
+      ret.packflag |= packflag;
+      return ret;
+    } else if (prop.type === PropTypes$5.CURVE) {
       return this.curve1d(path, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$5.INT || prop.type == PropTypes$5.FLOAT) {
+    } else if (prop.type === PropTypes$5.INT || prop.type === PropTypes$5.FLOAT) {
       let ret;
       if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath);
@@ -21244,9 +20829,9 @@ class ColumnFrame extends Container {
 
 UIBase$4.register(ColumnFrame);
 
-let UIBase$5 = UIBase;
+let UIBase$5 = UIBase, Icons$1 = Icons;
 
-class RichEditor extends UIBase$5 {
+class RichEditor extends TextBoxBase {
   constructor() {
     super();
 
@@ -21255,19 +20840,78 @@ class RichEditor extends UIBase$5 {
 
     this.textOnlyMode = false;
 
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      div.rich-text-editor-x {
+        width        :   100%;
+        height       :   100%;
+        min-height   :   150px;
+        overflow     :   scroll;
+        padding      :   5px;
+        white-space  :   pre-wrap;
+      }
+      
+      rich-text-editor-x {
+        display        : flex;
+        flex-direction : column;
+      }
+    `;
+
+    this.shadow.appendChild(this.styletag);
+
+    let controls = this.controls = document.createElement("rowframe-x");
+
+
+    let makeicon = (icon, description, cb) => {
+      icon = controls.iconbutton(icon, description, cb);
+      icon.iconsheet = 1; //use second smallest icon size
+      icon.overrideDefault("BoxMargin", 3);
+
+      return icon;
+    };
+
+    makeicon(Icons$1.BOLD, "Bold", () => {
+      document.execCommand("bold");
+    });
+    makeicon(Icons$1.ITALIC, "Italic", () => {
+      document.execCommand("italic");
+    });
+    makeicon(Icons$1.UNDERLINE, "Underline", () => {
+      document.execCommand("underline");
+    });
+    makeicon(Icons$1.STRIKETHRU, "Strikethrough", () => {
+      document.execCommand("strikeThrough");
+    });
+
+    controls.background = this.getDefault("DefaultPanelBG");
+
+    this.shadow.appendChild(controls);
+
     this.textarea = document.createElement("div");
     this.textarea.contentEditable = true;
-    this.textarea.style["width"] = "100%";
-    this.textarea.style["height"] = "100%";
-    this.textarea.setAttribute("class", "rich-text-editor");
+    this.textarea.setAttribute("class", "rich-text-editor-x");
 
-    this.textarea.style["overflow"] = "scroll";
-
-    this.textarea.style["padding"] = "5px";
     this.textarea.style["font"] = this.getDefault("DefaultText").genCSS();
     this.textarea.style["background-color"] = this.getDefault("background-color");
-    this.textarea.style["white-space"] = "pre-wrap";
     this.textarea.setAttribute("white-space", "pre-wrap");
+
+    this.textarea.addEventListener("keydown", (e) => {
+      if (e.keyCode === keymap$1["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
+        this.toggleStrikeThru();
+
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    this.textarea.addEventListener("focus", (e) => {
+      this._focus = 1;
+      this.setCSS();
+    });
+    this.textarea.addEventListener("blur", (e) => {
+      this._focus = 0;
+      this.setCSS();
+    });
 
     document.execCommand("styleWithCSS", true);
 
@@ -21302,10 +20946,10 @@ class RichEditor extends UIBase$5 {
         return;
       }
 
-      console.log("text changed", ...arguments);
+      //console.log("text changed", ...arguments);
       let sel = document.getSelection();
       let range = sel.getRangeAt(0);
-      console.log(range.startOffset, range.endOffset, range.startContainer);
+      //console.log(range.startOffset, range.endOffset, range.startContainer);
 
       let node = sel.anchorNode;
       let off = sel.anchorOffset;
@@ -21349,6 +20993,10 @@ class RichEditor extends UIBase$5 {
     return line;
   }
 
+  toggleStrikeThru() {
+    console.log("strike thru!");
+    document.execCommand("strikeThrough");
+  }
   /**
    * Only available in textOnlyMode.  Called when starting text formatting
    */
@@ -21357,6 +21005,8 @@ class RichEditor extends UIBase$5 {
 
   init() {
     super.init();
+
+    window.rc = this;
 
     document.execCommand("defaultParagraphSeparator", false, "div");
 
@@ -21402,7 +21052,27 @@ class RichEditor extends UIBase$5 {
   setCSS() {
     super.setCSS();
 
-    this.textarea.style["font"] = this.getDefault("DefaultText").genCSS();
+    this.controls.background = this.getDefault("DefaultPanelBG");
+
+    if (this._focus) {
+      this.textarea.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
+    } else {
+      this.textarea.style["border"] = "none";
+    }
+
+    if (this.style["font"]) {
+      this.textarea.style["font"] = this.style["font"];
+    } else {
+      this.textarea.style["font"] = this.getDefault("DefaultText").genCSS();
+    }
+
+    if (this.style["color"]) {
+      this.textarea.style["color"] = this.style["color"];
+    }  else {
+      this.textarea.style["color"] = this.getDefault("DefaultText").color;
+    }
+
+
     if (this.disabled) {
       this.textarea.style["background-color"] = this.getDefault("DisabledBG");
     } else {
@@ -21521,7 +21191,7 @@ UIBase$5.register(RichViewer);
 
 "use strict";
 
-let keymap$4 = keymap;
+let keymap$5 = keymap$1;
 
 let EnumProperty$7 = EnumProperty$1,
   PropTypes$6 = PropTypes;
@@ -21531,750 +21201,6 @@ let UIBase$6 = UIBase,
   IconSheets$4 = IconSheets;
 
 let parsepx$4 = parsepx;
-
-class NumSliderSimple extends UIBase$6 {
-  constructor() {
-    super();
-
-    this.baseUnit = undefined;
-    this.displayUnit = undefined;
-
-    this.canvas = document.createElement("canvas");
-    this.g = this.canvas.getContext("2d");
-
-    this.canvas.style["width"] = this.getDefault("DefaultWidth") + "px";
-    this.canvas.style["height"] = this.getDefault("DefaultHeight") + "px";
-    this.canvas.style["pointer-events"] = "none";
-
-    this.highlight = false;
-    this.isInt = false;
-
-    this.shadow.appendChild(this.canvas);
-    this.range = [0, 1];
-
-    this.step = 0.1;
-    this._value = 0.5;
-    this._focus = false;
-
-    this.modal = undefined;
-  }
-
-  setValue(val, ignore_events=false) {
-    val = Math.min(Math.max(val, this.range[0]), this.range[1]);
-
-    if (this.isInt) {
-      val = Math.floor(val);
-    }
-
-    if (this._value !== val) {
-      this._value = val;
-      this._redraw();
-
-      if (this.onchange && !ignore_events) {
-        this.onchange(val);
-      }
-
-      if (this.getAttribute("datapath")) {
-        let path = this.getAttribute("datapath");
-        this.setPathValue(this.ctx, path, this._value);
-      }
-    }
-  }
-
-  get value() {
-    return this._value;
-  }
-
-  set value(val) {
-    this.setValue(val);
-  }
-
-  updateDataPath() {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
-    let path = this.getAttribute("datapath");
-
-    if (!path || path === "null" || path === "undefined") {
-      return;
-    }
-
-    let val = this.getPathValue(this.ctx, path);
-
-    if (this.isInt) {
-      val = Math.floor(val);
-    }
-
-    if (val !== this._value) {
-      let prop = this.getPathMeta(this.ctx, path);
-      if (!prop) {
-        return;
-      }
-      this.isInt = prop.type === PropTypes$6.INT;
-
-      if (prop.range !== undefined) {
-        this.range[0] = prop.range[0];
-        this.range[1] = prop.range[1];
-      }
-      if (prop.uiRange !== undefined) {
-        this.uiRange = new Array(2);
-        this.uiRange[0] = prop.uiRange[0];
-        this.uiRange[1] = prop.uiRange[1];
-      }
-
-
-      //console.log("updating numsplider simple value", val);
-      this.value = val;
-    }
-  }
-
-  _setFromMouse(e) {
-    let rect = this.getClientRects()[0];
-    if (rect === undefined) {
-      return;
-    }
-
-    let x = e.x - rect.left;
-    let dpi = UIBase$6.getDPI();
-    let co = this._getButtonPos();
-
-    let val = this._invertButtonX(x*dpi);
-    this.value = val;
-  }
-
-  _startModal(e) {
-    if (e !== undefined) {
-      this._setFromMouse(e);
-    }
-    let dom = window;
-    let evtargs = {capture : false};
-
-    if (this.modal) {
-      console.warn("Double call to _startModal!");
-      return;
-    }
-
-    console.log("start simple numslider modal");
-
-    let end = () => {
-      console.log("end simple numslider modal");
-
-      if (this._modal === undefined) {
-        console.warn("end called twiced");
-        return;
-      }
-
-      popModalLight(this._modal);
-
-      this._modal = undefined;
-      this.modal = undefined;
-    };
-
-    this.modal = {
-      mousemove : (e) => {
-        this._setFromMouse(e);
-      },
-
-      mouseover : (e) => {},
-      mouseout : (e) => {},
-      mouseleave : (e) => {},
-      mouseenter : (e) => {},
-      blur : (e) => {},
-      focus : (e) => {},
-
-      mouseup: (e) => {
-        end();
-      },
-
-      keydown : (e) => {
-        switch (e.keyCode) {
-          case keymap$4["Enter"]:
-          case keymap$4["Space"]:
-          case keymap$4["Escape"]:
-            end();
-        }
-      }
-    };
-
-    function makefunc(f) {
-      return (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-
-        return f(e);
-      }
-    }
-
-    for (let k in this.modal) {
-      this.modal[k] = makefunc(this.modal[k]);
-    }
-    this._modal = pushModalLight(this.modal);
-  }
-
-  init() {
-    super.init();
-
-    if (!this.hasAttribute("tab-index")) {
-      this.setAttribute("tab-index", 0);
-    }
-
-    this.updateSize();
-
-    this.addEventListener("keydown", (e) => {
-      console.log("yay keydown", e.keyCode);
-      let dt = this.range[1] > this.range[0] ? 1 : -1;
-
-      switch (e.keyCode) {
-        case keymap$4["Left"]:
-        case keymap$4["Right"]:
-          let fac = this.step;
-
-          if (e.shiftKey) {
-            fac *= 0.1;
-          }
-
-          if (this.isInt) {
-            fac = Math.max(fac, 1);
-          }
-
-          this.value += e.keyCode === keymap$4["Left"] ? -dt*fac : dt*fac;
-
-          break;
-      }
-    });
-
-    this.addEventListener("focusin", () => {
-      if (this.disabled) return;
-
-      this._focus = 1;
-      this._redraw();
-      this.focus();
-      //console.log("focus2");
-    });
-
-    this.addEventListener("mousedown", (e) => {
-      this._startModal(e);
-    });
-
-    this.addEventListener("mousein", (e) => {
-      //console.log("mouse in");
-      this.setHighlight(e);
-      this._redraw();
-    });
-    this.addEventListener("mouseout", (e) => {
-      //console.log("mouse out");
-      this.highlight = false;
-      this._redraw();
-    });
-    this.addEventListener("mouseover", (e) => {
-      //console.log("mouse over");
-      this.setHighlight(e);
-      this._redraw();
-    });
-    this.addEventListener("mousemove", (e) => {
-      this.setHighlight(e);
-      this._redraw();
-    });
-    this.addEventListener("mouseleave", (e) => {
-      //console.log("mouse leave");
-      this.highlight = false;
-      this._redraw();
-    });
-    this.addEventListener("blur", (e) => {
-      //console.log("blur");
-      this._focus = 0;
-      this.highlight = false;
-      this._redraw();
-    });
-
-    this.setCSS();
-  }
-
-  setHighlight(e) {
-    this.highlight =  this.isOverButton(e) ? 2 : 1;
-  }
-
-  _redraw() {
-    let g = this.g, canvas = this.canvas;
-    let w = canvas.width, h = canvas.height;
-    let dpi = UIBase$6.getDPI();
-
-    let color = this.getDefault("BoxBG");
-    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
-
-    g.clearRect(0, 0, canvas.width, canvas.height);
-
-    //console.log(color)
-    g.fillStyle = color;
-
-    let y = (h - sh)*0.5;
-
-    //export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
-    //                             op="fill", color=undefined, margin=undefined, no_clear=false) {
-
-    let r = this.getDefault("BoxRadius");
-    r = 3;
-
-    g.translate(0, y);
-    drawRoundBox(this, this.canvas, g, w, sh, r, "fill", color, undefined, true);
-    g.translate(0, -y);
-
-    //g.beginPath();
-    //g.rect(0, y, w, sh);
-    //g.fill();
-
-    if (this.highlight === 1) {
-      color = this.getDefault("BoxHighlight");
-    } else {
-      color = this.getDefault("BoxBorder");
-    }
-    g.strokeStyle = color;
-    g.stroke();
-
-    let co = this._getButtonPos();
-
-    g.beginPath();
-
-    if (this.highlight === 2) {
-      color = this.getDefault("BoxHighlight");
-    } else {
-      color = this.getDefault("BoxBorder");
-    }
-
-    g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
-    g.fill();
-
-    g.strokeStyle = color;
-    g.stroke();
-
-    g.beginPath();
-    g.setLineDash([4, 4]);
-
-    if (this._focus) {
-      g.strokeStyle = this.getDefault("BoxHighlight");
-      g.arc(co[0], co[1], co[2] - 4, -Math.PI, Math.PI);
-      g.stroke();
-    }
-
-    g.setLineDash([]);
-  }
-
-  isOverButton(e) {
-    let x = e.x, y = e.y;
-    let rect = this.getClientRects()[0];
-
-    if (!rect) {
-      return false;
-    }
-
-    x -= rect.left;
-    y -= rect.top;
-
-    let co = this._getButtonPos();
-
-    let dpi = UIBase$6.getDPI();
-    let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
-    let dis = dv.vectorLength();
-
-    //console.log("dis", dis.toFixed(3));
-    return dis < co[2]/dpi;
-  }
-
-  _invertButtonX(x) {
-    let w = this.canvas.width;
-    let dpi = UIBase$6.getDPI();
-    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
-    let boxw = this.canvas.height - 4;
-    let w2 = w - boxw;
-
-    x = (x - boxw*0.5) / w2;
-    x = x*(this.range[1] - this.range[0]) + this.range[0];
-
-    return x;
-  }
-
-  _getButtonPos() {
-    let w = this.canvas.width;
-    let dpi = UIBase$6.getDPI();
-    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
-    let x = this._value;
-    x = (x - this.range[0]) / (this.range[1] - this.range[0]);
-    let boxw = this.canvas.height - 4;
-    let w2 = w - boxw;
-
-    //console.log(x, this.range);
-
-    x = x*w2 + boxw*0.5;
-
-    return [x, boxw*0.5, boxw*0.5];
-  }
-  setCSS() {
-    super.setCSS();
-
-    this.canvas.style["width"] = "min-contents";
-    this.canvas.style["min-width"] = this.getDefault("DefaultWidth") + "px";
-    this.style["min-width"] = this.getDefault("DefaultWidth") + "px";
-    this._redraw();
-  }
-
-  updateSize() {
-    if (this.canvas === undefined) {
-      return;
-    }
-
-    let rect = this.getClientRects()[0];
-
-    if (rect === undefined) {
-      return;
-    }
-
-    let dpi = UIBase$6.getDPI();
-    let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
-    let canvas = this.canvas;
-
-    if (w !== canvas.width || h !== canvas.height) {
-      //console.log("canvas size update", w, h);
-      this.canvas.width = w;
-      this.canvas.height = h;
-
-      this.setCSS();
-      this._redraw();
-    }
-  }
-
-  _ondestroy() {
-    if (this._modal) {
-      popModalLight(this._modal);
-      this._modal = undefined;
-    }
-  }
-
-  update() {
-    super.update();
-
-    if (this.getAttribute("tab-index") !== this.tabIndex) {
-      this.tabIndex = this.getAttribute("tab-index");
-    }
-
-    this.updateSize();
-    this.updateDataPath();
-  }
-
-  static define() {return {
-    tagname : "numslider-simple-base-x",
-    style : "numslider_simple"
-  }}
-}
-UIBase$6.register(NumSliderSimple);
-
-class NumSliderSimple2 extends ColumnFrame {
-  constructor() {
-    super();
-
-    this._value = 0;
-    this._name = undefined;
-    this.decimalPlaces = 4;
-    this.isInt = false;
-    this._lock_textbox = false;
-    this.labelOnTop = undefined;
-
-    this._last_label_on_top = undefined;
-
-    this.styletag.textContent = `
-    .numslider_simple_textbox {
-      padding : 0px;
-      margin  : 0px;
-      height  : 15px;
-    }
-    `;
-
-    this.container = this;
-
-    this.textbox = document.createElement("textbox-x");
-    this.numslider = document.createElement("numslider-simple-base-x");
-
-    this.textbox.range = this.numslider.range;
-
-    this.textbox.setAttribute("class", "numslider_simple_textbox");
-  }
-
-  get range() {
-    return this.numslider.range;
-  }
-
-  get displayUnit() {
-    return this.textbox.displayUnit;
-  }
-
-  set displayUnit(val) {
-    let update = val !== this.displayUnit;
-
-    //console.warn("setting display unit", val);
-    this.slider.displayUnit = this.textbox.displayUnit = val;
-
-    if (update) {
-      this.updateTextBox();
-    }
-  }
-
-  get baseUnit() {
-    return this.textbox.baseUnit;
-  }
-  set baseUnit(val) {
-    let update = val !== this.baseUnit;
-
-    //console.warn("setting base unit", val);
-    this.slider.baseUnit = this.textbox.baseUnit = val;
-
-    if (update) {
-      this.updateTextBox();
-    }
-  }
-
-  init() {
-    super.init();
-
-    if (this.hasAttribute("labelOnTop")) {
-      this.labelOnTop = this.getAttribute("labelOnTop");
-    } else {
-      this.labelOnTop = this.getDefault("labelOnTop");
-    }
-
-    this.rebuild();
-  }
-
-  rebuild() {
-    this._last_label_on_top = this.labelOnTop;
-
-    this.container.clear();
-
-    if (this.labelOnTop) {
-      this.container = this.row();
-    } else {
-      this.container = this;
-    }
-
-    if (this.hasAttribute("name")) {
-      this._name = this.hasAttribute("name");
-    } else {
-      this._name = "slider";
-    }
-
-
-    this.l = this.container.label(this._name);
-    this.l.font = "TitleText";
-    this.l.overrideClass("numslider_simple");
-    this.l.style["display"] = "float";
-    this.l.style["position"] = "relative";
-    
-    if (!this.labelOnTop) {
-      this.l.style["left"] = "8px";
-      this.l.style["top"] = "5px";
-    }
-
-    let strip = this.container.row();
-    strip.add(this.numslider);
-
-    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
-
-    let textbox = this.textbox;
-
-    textbox.onchange = () => {
-      let text = textbox.text;
-
-      if (!isNumber$1(text)) {
-        textbox.flash("red");
-        return;
-      } else {
-        textbox.flash("green");
-
-        let f = parseValue(text, this.baseUnit);
-
-        if (isNaN(f)) {
-          this.flash("red");
-          return;
-        }
-
-        if (this.isInt) {
-          f = Math.floor(f);
-        }
-
-        this._lock_textbox = 1;
-        this.setValue(f);
-        this._lock_textbox = 0;
-      }
-    };
-
-    textbox.ctx = this.ctx;
-    textbox.packflag |= this.inherit_packflag;
-    textbox._width = this.getDefault("TextBoxWidth")+"px";
-    textbox.style["height"] = (this.getDefault("DefaultHeight")-2) + "px";
-    textbox._init();
-
-    strip.add(textbox);
-
-    this.linkTextBox();
-
-    let in_onchange = 0;
-
-    this.numslider.onchange = (val) => {
-      this._value = this.numslider.value;
-      this.updateTextBox();
-
-      if (in_onchange) {
-        return;
-      }
-
-      if (this.onchange !== undefined) {
-        in_onchange++;
-        try {
-          if (this.onchange) {
-            this.onchange(this);
-          }
-        } catch (error) {
-          print_stack$1(error);
-        }
-      }
-
-      in_onchange--;
-    };
-  }
-
-  updateTextBox() {
-    if (!this._init_done) {
-      return;
-    }
-
-    if (this._lock_textbox > 0)
-      return;
-
-    //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
-
-    this.textbox.text = this.formatNumber(this._value);
-    this.textbox.update();
-  }
-
-  linkTextBox() {
-    this.updateTextBox();
-
-    let onchange = this.numslider.onchange;
-    this.numslider.onchange = (e) => {
-      this._value = e.value;
-      this.updateTextBox();
-
-      onchange(e);
-    };
-  }
-
-  setValue(val) {
-    this._value = val;
-    this.numslider.setValue(val);
-    this.updateTextBox();
-  }
-
-  get value() {
-    return this._value;
-  }
-
-  set value(val) {
-    this.setValue(val);
-  }
-
-  updateName() {
-    let name = this.getAttribute("name");
-
-    if (!name && this.hasAttribute("datapath")) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-
-      if (prop) {
-        name = prop.uiname;
-      }
-    }
-
-    if (!name) {
-      name = "[error]";
-    }
-
-    if (name !== this._name) {
-      this._name = name;
-      this.l.text = name;
-    }
-  }
-
-  updateLabelOnTop() {
-    if (this.labelOnTop !== this._last_label_on_top) {
-      this._last_label_on_top = this.labelOnTop;
-      this.rebuild();
-    }
-  }
-
-  updateDataPath() {
-    if (!this.ctx || !this.getAttribute("datapath")) {
-      return;
-    }
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-
-    if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
-      this.baseUnit = prop.baseUnit;
-    }
-
-    if (prop !== undefined && !this.displayUnit && prop.displayUnit) {
-      this.displayUnit = prop.displayUnit;
-    }
-  }
-
-  update() {
-    this.updateLabelOnTop();
-    super.update();
-
-    this.updateDataPath();
-
-    if (this.hasAttribute("min")) {
-      this.range[0] = parseFloat(this.getAttribute("min"));
-      this.setCSS();
-      this._redraw();
-    }
-
-    if (this.hasAttribute("max")) {
-      this.range[1] = parseFloat(this.getAttribute("max"));
-      this.setCSS();
-      this._redraw();
-    }
-
-    if (this.hasAttribute("integer")) {
-      this.isInt = true;
-      this.numslider.isInt = true;
-    }
-
-    this.updateName();
-
-    this.numslider.description = this.description;
-    this.textbox.description = this.title; //get full, transformed toolip
-
-    if (this.hasAttribute("datapath")) {
-      this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
-    }
-
-    if (this.hasAttribute("mass_set_path")) {
-      this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
-    }
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    //textbox.style["margin"] = "5px";
-
-  }
-
-  static define() {return {
-    tagname : "numslider-simple-x",
-    style : "numslider_simple"
-  }}
-}
-UIBase$6.register(NumSliderSimple2);
 
 class VectorPanel extends ColumnFrame {
   constructor() {
@@ -22319,6 +21245,7 @@ class VectorPanel extends ColumnFrame {
     makeParam("displayUnit");
     makeParam("step");
     makeParam("expRate");
+    makeParam("stepIsRelative");
 
     window.vp = this;
   }
@@ -22375,6 +21302,12 @@ class VectorPanel extends ColumnFrame {
       slider.range = this.__range;
       slider.radix = this.radix;
       slider.step = this.step;
+      slider.expRate = this.expRate;
+      slider.stepIsRelative= this.stepIsRelative;
+
+      if (this.stepIsRelative) {
+        slider.step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+      }
 
       slider.onchange = function(e) {
         this2.value[this.axis] = this.value;
@@ -22465,6 +21398,7 @@ class VectorPanel extends ColumnFrame {
     loadNumParam("radix");
     loadNumParam("step");
     loadNumParam("expRate");
+    loadNumParam("stepIsRelative");
 
     if (meta && meta.range) {
       this.range[0] = meta.range[0];
@@ -22514,7 +21448,14 @@ class VectorPanel extends ColumnFrame {
   }
   update() {
     super.update();
+
     this.updateDataPath();
+    
+    if (this.stepIsRelative) {
+      for (let i = 0; i < this.sliders.length; i++) {
+        this.sliders[i].step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+      }
+    }
   }
 
   static define() {return {
@@ -23327,7 +22268,7 @@ class HueField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
               this.popModal();
             }
           }
@@ -23448,7 +22389,7 @@ class SatValField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
               this.popModal();
             }
           }
@@ -23498,7 +22439,7 @@ class SatValField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
               this.popModal();
             }
           }
@@ -25914,8 +24855,8 @@ class ListBox extends Container {
       console.log("yay", e.keyCode);
 
       switch (e.keyCode) {
-        case keymap["Up"]:
-        case keymap["Down"]:
+        case keymap$1["Up"]:
+        case keymap$1["Down"]:
           if (this.items.length == 0)
             return;
 
@@ -25925,7 +24866,7 @@ class ListBox extends Container {
           }
 
           let i = this.items.indexOf(this.items.active);
-          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
+          let dir = e.keyCode == keymap$1["Up"] ? -1 : 1;
 
           i = Math.max(Math.min(i+dir, this.items.length-1), 0);
           this.setActive(this.items[i]);
@@ -27145,6 +26086,1301 @@ function setWranglerScreen(screen) {
 function getWranglerScreen() {
   return menuWrangler.screen;
 }
+
+//use .setAttribute("linear") to disable nonlinear sliding
+class NumSlider extends ValueButtonBase {
+  constructor() {
+    super();
+
+    this._last_label = undefined;
+
+    this._name = "";
+    this._step = 0.1;
+    this._value = 0.0;
+    this._expRate = 1.333;
+    this.decimalPlaces = 4;
+    this.radix = 10;
+
+    this.range = [-1e17, 1e17];
+    this.isInt = false;
+
+    this._redraw();
+  }
+
+  get step() {
+    return this._step;
+  }
+
+  set step(v) {
+    this._step = v;
+  }
+
+  get expRate() {
+    return this._expRate;
+  }
+
+  set expRate(v) {
+    this._expRate = v;
+  }
+
+  updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+    let prop = rdef ? rdef.prop : undefined;
+
+    if (!prop)
+      return;
+
+    if (prop.expRate) {
+      this._expRate = prop.expRate;
+    }
+    if (prop.radix !== undefined) {
+      this.radix = prop.radix;
+    }
+
+    if (prop.step) {
+      this._step = prop.getStep(rdef.value);
+    }
+    if (prop.decimalPlaces !== undefined) {
+      this.decimalPlaces = prop.decimalPlaces;
+    }
+
+    if (prop.baseUnit !== undefined) {
+      this.baseUnit = prop.baseUnit;
+    }
+
+    if (prop.displayUnit !== undefined) {
+      this.displayUnit = prop.displayUnit;
+    }
+
+    super.updateDataPath();
+  }
+
+  update() {
+    super.update();
+    this.updateDataPath();
+  }
+
+  swapWithTextbox() {
+    let tbox = document.createElement("textbox-x");
+
+    tbox.ctx = this.ctx;
+    tbox._init();
+
+    tbox.decimalPlaces = this.decimalPlaces;
+    tbox.isInt = this.isInt;
+
+    if (this.isInt && this.radix != 10) {
+      let text = this.value.toString(this.radix);
+      if (this.radix === 2)
+        text = "0b" + text;
+      else if (this.radix === 16)
+        text += "h";
+
+      tbox.text = text;
+    } else {
+      tbox.text = buildString(this.value, this.baseUnit, this.decimalPlaces, this.displayUnit);
+    }
+
+    this.parentNode.insertBefore(tbox, this);
+    //this.remove();
+    this.hidden = true;
+    //this.dom.hidden = true;
+
+    let finish = (ok) => {
+      tbox.remove();
+      this.hidden = false;
+
+      if (ok) {
+        let val = tbox.text.trim();
+
+        if (this.isInt && this.radix !== 10) {
+          val = parseInt(val);
+        } else {
+          val = parseValue(val, this.baseUnit);
+        }
+
+        if (isNaN(val)) {
+          console.log("EEK!");
+          this.flash(ErrorColors.ERROR);
+        } else {
+          this.setValue(val);
+
+          if (this.onchange) {
+            this.onchange(this);
+          }
+        }
+      }
+    };
+
+    tbox.onend = finish;
+    tbox.focus();
+    tbox.select();
+
+    //this.shadow.appendChild(tbox);
+    return;
+  }
+
+  bindEvents() {
+    let onmousedown = (e) => {
+      if (this.disabled) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return;
+      }
+
+      if (e.button == 0 && e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.swapWithTextbox();
+      } else if (e.button == 0) {
+        this.dragStart(e);
+
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    this.addEventListener("dblclick", (e) => {
+      if (this.disabled) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+      this.swapWithTextbox();
+    });
+
+    this.addEventListener("mousedown", (e) => {
+      if (this.disabled) return;
+      onmousedown(e);
+    });
+
+    this.addEventListener("touchstart", (e) => {
+      if (this.disabled) return;
+      console.log(e);
+
+      e.x = e.touches[0].screenX;
+      e.y = e.touches[0].screenY;
+
+      this.dragStart(e);
+
+      e.preventDefault();
+      e.stopPropagation();
+    }, {passive : false});
+
+    //this.addEventListener("touchstart", (e) => {
+    //  console.log(e);
+    //});
+
+    this.addEventListener("mouseover", (e) => {
+      if (this.disabled) return;
+
+      this.dom._background = this.getDefault("BoxHighlight");
+      this._repos_canvas();
+      this._redraw();
+      //console.log("mouse enter");
+    });
+
+    this.addEventListener("mouseout", (e) => {
+      if (this.disabled) return;
+
+      this.dom._background = this.getDefault("BoxBG");
+      this._repos_canvas();
+      this._redraw();
+      //console.log("mouse leave!");
+    });
+  }
+
+  doRange() {
+    if (this.hasAttribute("min")) {
+      this.range[0] = parseFloat(this.getAttribute("min"));
+    }
+    if (this.hasAttribute("max")) {
+      this.range[1] = parseFloat(this.getAttribute("max"));
+    }
+
+    this._value = Math.min(Math.max(this._value, this.range[0]), this.range[1]);
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(val) {
+    this.setValue(val, true, false);
+  }
+
+  setValue(value, fire_onchange=true) {
+    this._value = value;
+
+    if (this.hasAttribute("integer")) {
+      this.isInt = true;
+    }
+
+    if (this.isInt) {
+      this._value = Math.floor(this._value);
+    }
+
+    this.doRange();
+
+    if (this.ctx && this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
+    }
+
+    if (fire_onchange && this.onchange) {
+      this.onchange(this.value);
+    }
+
+    this._redraw();
+  }
+
+  dragStart(e) {
+    if (this.disabled) return;
+
+    let last_background = this.dom._background;
+    let cancel;
+
+    let startvalue = this.value;
+    let value = startvalue;
+
+    let startx = e.x, starty = e.y;
+
+    this.dom._background = this.getDefault("BoxDepressed");
+    let fire = () => {
+      if (this.onchange) {
+        this.onchange(this);
+      }
+    };
+
+
+    let handlers = {
+      on_keydown: (e) => {
+        switch (e.keyCode) {
+          case 27: //escape key
+            cancel(true);
+          case 13: //enter key
+            cancel(false);
+            break;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mousemove: (e) => {
+        if (this.disabled) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        let dx = e.x - startx;
+        startx = e.x;
+
+        if (e.shiftKey) {
+          dx *= 0.1;
+        }
+
+        value += dx * this._step * 0.1;
+
+        let dvalue = value - startvalue;
+        let dsign = Math.sign(dvalue);
+
+        if (!this.hasAttribute("linear")) {
+          dvalue = Math.pow(Math.abs(dvalue), this._expRate) * dsign;
+        }
+
+        this.value = startvalue + dvalue;
+        this.doRange();
+
+        /*
+        if (e.shiftKey) {
+          dx *= 0.1;
+          this.value = startvalue2 + dx*0.1*this._step;
+          startvalue3 = this.value;
+        } else {
+          startvalue2 = this.value;
+          this.value = startvalue3 + dx*0.1*this._step;
+        }*/
+
+        this.updateWidth();
+        this._redraw();
+        fire();
+      },
+
+      on_mouseup: (e) => {
+        cancel(false);
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mouseout: (e) => {
+        //console.log("leave");
+        last_background = this.getDefault("BoxBG");
+
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mouseover: (e) => {
+        //console.log("over");
+        last_background = this.getDefault("BoxHighlight");
+
+        e.preventDefault();
+        e.stopPropagation();
+      },
+
+      on_mousedown : (e) => {
+        this.popModal();
+      },
+    };
+
+    //events.pushModal(this.getScreen(), handlers);
+    this.pushModal(handlers);
+
+    cancel = (restore_value) => {
+      if (restore_value) {
+        this.value = startvalue;
+        this.updateWidth();
+        fire();
+      }
+
+      this.dom._background = last_background; //ui_base.getDefault("BoxBG");
+      this._redraw();
+
+      console.trace("end");
+
+      this.popModal();
+    };
+
+    /*
+    cancel = (restore_value) => {
+      if (restore_value) {
+        this.value = startvalue;
+        this.updateWidth();
+        fire();
+      }
+
+      this.dom._background = last_background; //ui_base.getDefault("BoxBG");
+      this._redraw();
+
+      console.trace("end");
+
+      window.removeEventListener("keydown", keydown, true);
+      window.removeEventListener("mousemove", mousemove, {captured : true, passive : false});
+
+      window.removeEventListener("touchend", touchend, true);
+      window.removeEventListener("touchmove", touchmove, {captured : true, passive : false});
+      window.removeEventListener("touchcancel", touchcancel, true);
+      window.removeEventListener("mouseup", mouseup, true);
+
+      this.removeEventListener("mouseover", mouseover, true);
+      this.removeEventListener("mouseout", mouseout, true);
+    }
+
+    window.addEventListener("keydown", keydown, true);
+    window.addEventListener("mousemove", mousemove, true);
+    window.addEventListener("touchend", touchend, true);
+    window.addEventListener("touchmove", touchmove, {captured : true, passive : false});
+    window.addEventListener("touchcancel", touchcancel, true);
+    window.addEventListener("mouseup", mouseup, true);
+
+    this.addEventListener("mouseover", mouseover, true);
+    this.addEventListener("mouseout", mouseout, true);
+    //*/
+  }
+
+  setCSS() {
+    //do not call parent class implementation
+    let dpi = this.getDPI();
+
+    let ts = this.getDefault("DefaultText").size;
+
+    let dd = this.isInt ? 5 : this.decimalPlaces + 8;
+
+    let label = this._name;
+    if (this.isInt) {
+      label += ": 0";
+      for (let i=0; i<this.radix; i++) {
+        label += "0";
+      }
+    } else {
+      label += ": 0.";
+      for (let i=0; i<this.decimalPlaces+1; i++) {
+        label += "0";
+      }
+    }
+
+    let tw = measureText(this, label, undefined, undefined,
+      ts, this.getDefault("DefaultText")).width ;
+
+    tw += this._getArrowSize()*2.0 + ts;
+    tw = ~~tw;
+
+    let defw = this.getDefault("numslider_width");
+
+    //tw = Math.max(tw, w);
+
+    this.style["width"] = tw+"px";
+    this.dom.style["width"] = tw+"px";
+
+    this._repos_canvas();
+    this._redraw();
+  }
+
+  updateName(force) {
+    let name = this.getAttribute("name");
+
+    if (force || name !== this._name) {
+      this._name = name;
+      this.setCSS();
+    }
+
+    let label = this._genLabel();
+    if (label !== this._last_label) {
+      this._last_label = label;
+      this.setCSS();
+    }
+  }
+
+  _genLabel() {
+    let val = this.value;
+    let text;
+
+    if (val === undefined) {
+      text = "error";
+    } else {
+      val = val === undefined ? 0.0 : val;
+
+      val = buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
+      //val = myToFixed(val, this.decimalPlaces);
+
+      text = val;
+      if (this._name) {
+        text = this._name + ": " + text;
+      }
+    }
+
+    return text;
+  }
+
+  _redraw() {
+    let g = this.g;
+    let canvas = this.dom;
+
+    //console.log("numslider draw");
+
+    let dpi = this.getDPI();
+    let disabled = this.disabled; //this.hasAttribute("disabled");
+
+    let r = this.getDefault("BoxRadius");
+    if (this.isInt) {
+      r *= 0.25;
+    }
+
+    drawRoundBox(this, this.dom, this.g, undefined, undefined,
+      r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
+
+    r *= dpi;
+    let pad = this.getDefault("BoxMargin");
+    let ts = this.getDefault("DefaultText").size;
+
+    //if (this.value !== undefined) {
+    let text = this._genLabel();
+
+    let tw = measureText(this, text, this.dom, this.g).width;
+    let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
+    let cy = this.dom.height/2;
+
+    this.dom.font = undefined;
+
+    drawText(this, cx, cy + ts/2, text, {
+      canvas : this.dom,
+      g      : this.g,
+      size   : ts
+    });
+
+    //}
+
+    g.fillStyle = "rgba(0,0,0,0.1)";
+
+    let d = 7, w=canvas.width, h=canvas.height;
+    let sz = this._getArrowSize();
+
+    g.beginPath();
+    g.moveTo(d, h*0.5);
+    g.lineTo(d+sz, h*0.5 + sz*0.5);
+    g.lineTo(d+sz, h*0.5 - sz*0.5);
+
+    g.moveTo(w-d, h*0.5);
+    g.lineTo(w-sz-d, h*0.5 + sz*0.5);
+    g.lineTo(w-sz-d, h*0.5 - sz*0.5);
+
+    g.fill();
+  }
+
+  _getArrowSize() {
+    return UIBase.getDPI()*10;
+  }
+  static define() {return {
+    tagname : "numslider-x",
+    style : "numslider"
+  };}
+}
+UIBase.register(NumSlider);
+
+
+class NumSliderSimpleBase extends UIBase {
+  constructor() {
+    super();
+
+    this.baseUnit = undefined;
+    this.displayUnit = undefined;
+
+    this.canvas = document.createElement("canvas");
+    this.g = this.canvas.getContext("2d");
+
+    this.canvas.style["width"] = this.getDefault("DefaultWidth") + "px";
+    this.canvas.style["height"] = this.getDefault("DefaultHeight") + "px";
+    this.canvas.style["pointer-events"] = "none";
+
+    this.highlight = false;
+    this.isInt = false;
+
+    this.shadow.appendChild(this.canvas);
+    this.range = [0, 1];
+
+    this.step = 0.1;
+    this._value = 0.5;
+    this._focus = false;
+
+    this.modal = undefined;
+  }
+
+  setValue(val, ignore_events=false) {
+    val = Math.min(Math.max(val, this.range[0]), this.range[1]);
+
+    if (this.isInt) {
+      val = Math.floor(val);
+    }
+
+    if (this._value !== val) {
+      this._value = val;
+      this._redraw();
+
+      if (this.onchange && !ignore_events) {
+        this.onchange(val);
+      }
+
+      if (this.getAttribute("datapath")) {
+        let path = this.getAttribute("datapath");
+        this.setPathValue(this.ctx, path, this._value);
+      }
+    }
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(val) {
+    this.setValue(val);
+  }
+
+  updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let path = this.getAttribute("datapath");
+
+    if (!path || path === "null" || path === "undefined") {
+      return;
+    }
+
+    let val = this.getPathValue(this.ctx, path);
+
+    if (this.isInt) {
+      val = Math.floor(val);
+    }
+
+    if (val !== this._value) {
+      let prop = this.getPathMeta(this.ctx, path);
+      if (!prop) {
+        return;
+      }
+      this.isInt = prop.type === PropTypes.INT;
+
+      if (prop.range !== undefined) {
+        this.range[0] = prop.range[0];
+        this.range[1] = prop.range[1];
+      }
+      if (prop.uiRange !== undefined) {
+        this.uiRange = new Array(2);
+        this.uiRange[0] = prop.uiRange[0];
+        this.uiRange[1] = prop.uiRange[1];
+      }
+
+
+      //console.log("updating numsplider simple value", val);
+      this.value = val;
+    }
+  }
+
+  _setFromMouse(e) {
+    let rect = this.getClientRects()[0];
+    if (rect === undefined) {
+      return;
+    }
+
+    let x = e.x - rect.left;
+    let dpi = UIBase.getDPI();
+    let co = this._getButtonPos();
+
+    let val = this._invertButtonX(x*dpi);
+    this.value = val;
+  }
+
+  _startModal(e) {
+    if (e !== undefined) {
+      this._setFromMouse(e);
+    }
+    let dom = window;
+    let evtargs = {capture : false};
+
+    if (this.modal) {
+      console.warn("Double call to _startModal!");
+      return;
+    }
+
+    console.log("start simple numslider modal");
+
+    let end = () => {
+      console.log("end simple numslider modal");
+
+      if (this._modal === undefined) {
+        console.warn("end called twiced");
+        return;
+      }
+
+      popModalLight(this._modal);
+
+      this._modal = undefined;
+      this.modal = undefined;
+    };
+
+    this.modal = {
+      mousemove : (e) => {
+        this._setFromMouse(e);
+      },
+
+      mouseover : (e) => {},
+      mouseout : (e) => {},
+      mouseleave : (e) => {},
+      mouseenter : (e) => {},
+      blur : (e) => {},
+      focus : (e) => {},
+
+      mouseup: (e) => {
+        end();
+      },
+
+      keydown : (e) => {
+        switch (e.keyCode) {
+          case keymap["Enter"]:
+          case keymap["Space"]:
+          case keymap["Escape"]:
+            end();
+        }
+      }
+    };
+
+    function makefunc(f) {
+      return (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        return f(e);
+      }
+    }
+
+    for (let k in this.modal) {
+      this.modal[k] = makefunc(this.modal[k]);
+    }
+    this._modal = pushModalLight(this.modal);
+  }
+
+  init() {
+    super.init();
+
+    if (!this.hasAttribute("tab-index")) {
+      this.setAttribute("tab-index", 0);
+    }
+
+    this.updateSize();
+
+    this.addEventListener("keydown", (e) => {
+      console.log("yay keydown", e.keyCode);
+      let dt = this.range[1] > this.range[0] ? 1 : -1;
+
+      switch (e.keyCode) {
+        case keymap["Left"]:
+        case keymap["Right"]:
+          let fac = this.step;
+
+          if (e.shiftKey) {
+            fac *= 0.1;
+          }
+
+          if (this.isInt) {
+            fac = Math.max(fac, 1);
+          }
+
+          this.value += e.keyCode === keymap["Left"] ? -dt*fac : dt*fac;
+
+          break;
+      }
+    });
+
+    this.addEventListener("focusin", () => {
+      if (this.disabled) return;
+
+      this._focus = 1;
+      this._redraw();
+      this.focus();
+      //console.log("focus2");
+    });
+
+    this.addEventListener("mousedown", (e) => {
+      this._startModal(e);
+    });
+
+    this.addEventListener("mousein", (e) => {
+      //console.log("mouse in");
+      this.setHighlight(e);
+      this._redraw();
+    });
+    this.addEventListener("mouseout", (e) => {
+      //console.log("mouse out");
+      this.highlight = false;
+      this._redraw();
+    });
+    this.addEventListener("mouseover", (e) => {
+      //console.log("mouse over");
+      this.setHighlight(e);
+      this._redraw();
+    });
+    this.addEventListener("mousemove", (e) => {
+      this.setHighlight(e);
+      this._redraw();
+    });
+    this.addEventListener("mouseleave", (e) => {
+      //console.log("mouse leave");
+      this.highlight = false;
+      this._redraw();
+    });
+    this.addEventListener("blur", (e) => {
+      //console.log("blur");
+      this._focus = 0;
+      this.highlight = false;
+      this._redraw();
+    });
+
+    this.setCSS();
+  }
+
+  setHighlight(e) {
+    this.highlight =  this.isOverButton(e) ? 2 : 1;
+  }
+
+  _redraw() {
+    let g = this.g, canvas = this.canvas;
+    let w = canvas.width, h = canvas.height;
+    let dpi = UIBase.getDPI();
+
+    let color = this.getDefault("BoxBG");
+    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
+
+    g.clearRect(0, 0, canvas.width, canvas.height);
+
+    //console.log(color)
+    g.fillStyle = color;
+
+    let y = (h - sh)*0.5;
+
+    //export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
+    //                             op="fill", color=undefined, margin=undefined, no_clear=false) {
+
+    let r = this.getDefault("BoxRadius");
+    r = 3;
+
+    g.translate(0, y);
+    drawRoundBox(this, this.canvas, g, w, sh, r, "fill", color, undefined, true);
+    g.translate(0, -y);
+
+    //g.beginPath();
+    //g.rect(0, y, w, sh);
+    //g.fill();
+
+    if (this.highlight === 1) {
+      color = this.getDefault("BoxHighlight");
+    } else {
+      color = this.getDefault("BoxBorder");
+    }
+    g.strokeStyle = color;
+    g.stroke();
+
+    let co = this._getButtonPos();
+
+    g.beginPath();
+
+    if (this.highlight === 2) {
+      color = this.getDefault("BoxHighlight");
+    } else {
+      color = this.getDefault("BoxBorder");
+    }
+
+    g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
+    g.fill();
+
+    g.strokeStyle = color;
+    g.stroke();
+
+    g.beginPath();
+    g.setLineDash([4, 4]);
+
+    if (this._focus) {
+      g.strokeStyle = this.getDefault("BoxHighlight");
+      g.arc(co[0], co[1], co[2] - 4, -Math.PI, Math.PI);
+      g.stroke();
+    }
+
+    g.setLineDash([]);
+  }
+
+  isOverButton(e) {
+    let x = e.x, y = e.y;
+    let rect = this.getClientRects()[0];
+
+    if (!rect) {
+      return false;
+    }
+
+    x -= rect.left;
+    y -= rect.top;
+
+    let co = this._getButtonPos();
+
+    let dpi = UIBase.getDPI();
+    let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
+    let dis = dv.vectorLength();
+
+    //console.log("dis", dis.toFixed(3));
+    return dis < co[2]/dpi;
+  }
+
+  _invertButtonX(x) {
+    let w = this.canvas.width;
+    let dpi = UIBase.getDPI();
+    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
+    let boxw = this.canvas.height - 4;
+    let w2 = w - boxw;
+
+    x = (x - boxw*0.5) / w2;
+    x = x*(this.range[1] - this.range[0]) + this.range[0];
+
+    return x;
+  }
+
+  _getButtonPos() {
+    let w = this.canvas.width;
+    let dpi = UIBase.getDPI();
+    let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
+    let x = this._value;
+    x = (x - this.range[0]) / (this.range[1] - this.range[0]);
+    let boxw = this.canvas.height - 4;
+    let w2 = w - boxw;
+
+    //console.log(x, this.range);
+
+    x = x*w2 + boxw*0.5;
+
+    return [x, boxw*0.5, boxw*0.5];
+  }
+  setCSS() {
+    super.setCSS();
+
+    this.canvas.style["width"] = "min-contents";
+    this.canvas.style["min-width"] = this.getDefault("DefaultWidth") + "px";
+    this.style["min-width"] = this.getDefault("DefaultWidth") + "px";
+    this._redraw();
+  }
+
+  updateSize() {
+    if (this.canvas === undefined) {
+      return;
+    }
+
+    let rect = this.getClientRects()[0];
+
+    if (rect === undefined) {
+      return;
+    }
+
+    let dpi = UIBase.getDPI();
+    let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
+    let canvas = this.canvas;
+
+    if (w !== canvas.width || h !== canvas.height) {
+      //console.log("canvas size update", w, h);
+      this.canvas.width = w;
+      this.canvas.height = h;
+
+      this.setCSS();
+      this._redraw();
+    }
+  }
+
+  _ondestroy() {
+    if (this._modal) {
+      popModalLight(this._modal);
+      this._modal = undefined;
+    }
+  }
+
+  update() {
+    super.update();
+
+    if (this.getAttribute("tab-index") !== this.tabIndex) {
+      this.tabIndex = this.getAttribute("tab-index");
+    }
+
+    this.updateSize();
+    this.updateDataPath();
+  }
+
+  static define() {return {
+    tagname : "numslider-simple-base-x",
+    style : "numslider_simple"
+  }}
+}
+UIBase.register(NumSliderSimpleBase);
+
+class NumSliderSimple extends ColumnFrame {
+  constructor() {
+    super();
+
+    this._value = 0;
+    this._name = undefined;
+    this.decimalPlaces = 4;
+    this.isInt = false;
+    this._lock_textbox = false;
+    this.labelOnTop = undefined;
+
+    this._last_label_on_top = undefined;
+
+    this.styletag.textContent = `
+    .numslider_simple_textbox {
+      padding : 0px;
+      margin  : 0px;
+      height  : 15px;
+    }
+    `;
+
+    this.container = this;
+
+    this.textbox = document.createElement("textbox-x");
+    this.numslider = document.createElement("numslider-simple-base-x");
+
+    this.textbox.range = this.numslider.range;
+
+    this.textbox.setAttribute("class", "numslider_simple_textbox");
+  }
+
+  get range() {
+    return this.numslider.range;
+  }
+
+  get displayUnit() {
+    return this.textbox.displayUnit;
+  }
+
+  set displayUnit(val) {
+    let update = val !== this.displayUnit;
+
+    //console.warn("setting display unit", val);
+    this.slider.displayUnit = this.textbox.displayUnit = val;
+
+    if (update) {
+      this.updateTextBox();
+    }
+  }
+
+  get baseUnit() {
+    return this.textbox.baseUnit;
+  }
+  set baseUnit(val) {
+    let update = val !== this.baseUnit;
+
+    //console.warn("setting base unit", val);
+    this.slider.baseUnit = this.textbox.baseUnit = val;
+
+    if (update) {
+      this.updateTextBox();
+    }
+  }
+
+  init() {
+    super.init();
+
+    if (this.hasAttribute("labelOnTop")) {
+      this.labelOnTop = this.getAttribute("labelOnTop");
+    } else {
+      this.labelOnTop = this.getDefault("labelOnTop");
+    }
+
+    this.rebuild();
+  }
+
+  rebuild() {
+    this._last_label_on_top = this.labelOnTop;
+
+    this.container.clear();
+
+    if (this.labelOnTop) {
+      this.container = this.row();
+    } else {
+      this.container = this;
+    }
+
+    if (this.hasAttribute("name")) {
+      this._name = this.hasAttribute("name");
+    } else {
+      this._name = "slider";
+    }
+
+
+    this.l = this.container.label(this._name);
+    this.l.font = "TitleText";
+    this.l.overrideClass("numslider_simple");
+    this.l.style["display"] = "float";
+    this.l.style["position"] = "relative";
+
+    if (!this.labelOnTop) {
+      this.l.style["left"] = "8px";
+      this.l.style["top"] = "5px";
+    }
+
+    let strip = this.container.row();
+    strip.add(this.numslider);
+
+    let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
+
+    let textbox = this.textbox;
+
+    textbox.onchange = () => {
+      let text = textbox.text;
+
+      if (!isNumber(text)) {
+        textbox.flash("red");
+        return;
+      } else {
+        textbox.flash("green");
+
+        let f = parseValue(text, this.baseUnit);
+
+        if (isNaN(f)) {
+          this.flash("red");
+          return;
+        }
+
+        if (this.isInt) {
+          f = Math.floor(f);
+        }
+
+        this._lock_textbox = 1;
+        this.setValue(f);
+        this._lock_textbox = 0;
+      }
+    };
+
+    textbox.ctx = this.ctx;
+    textbox.packflag |= this.inherit_packflag;
+    textbox._width = this.getDefault("TextBoxWidth")+"px";
+    textbox.style["height"] = (this.getDefault("DefaultHeight")-2) + "px";
+    textbox._init();
+
+    strip.add(textbox);
+
+    this.linkTextBox();
+
+    let in_onchange = 0;
+
+    this.numslider.onchange = (val) => {
+      this._value = this.numslider.value;
+      this.updateTextBox();
+
+      if (in_onchange) {
+        return;
+      }
+
+      if (this.onchange !== undefined) {
+        in_onchange++;
+        try {
+          if (this.onchange) {
+            this.onchange(this);
+          }
+        } catch (error) {
+          print_stack$1(error);
+        }
+      }
+
+      in_onchange--;
+    };
+  }
+
+  updateTextBox() {
+    if (!this._init_done) {
+      return;
+    }
+
+    if (this._lock_textbox > 0)
+      return;
+
+    //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
+
+    this.textbox.text = this.formatNumber(this._value);
+    this.textbox.update();
+  }
+
+  linkTextBox() {
+    this.updateTextBox();
+
+    let onchange = this.numslider.onchange;
+    this.numslider.onchange = (e) => {
+      this._value = e.value;
+      this.updateTextBox();
+
+      onchange(e);
+    };
+  }
+
+  setValue(val) {
+    this._value = val;
+    this.numslider.setValue(val);
+    this.updateTextBox();
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(val) {
+    this.setValue(val);
+  }
+
+  updateName() {
+    let name = this.getAttribute("name");
+
+    if (!name && this.hasAttribute("datapath")) {
+      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+      if (prop) {
+        name = prop.uiname;
+      }
+    }
+
+    if (!name) {
+      name = "[error]";
+    }
+
+    if (name !== this._name) {
+      this._name = name;
+      this.l.text = name;
+    }
+  }
+
+  updateLabelOnTop() {
+    if (this.labelOnTop !== this._last_label_on_top) {
+      this._last_label_on_top = this.labelOnTop;
+      this.rebuild();
+    }
+  }
+
+  updateDataPath() {
+    if (!this.ctx || !this.getAttribute("datapath")) {
+      return;
+    }
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+
+    if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
+      this.baseUnit = prop.baseUnit;
+    }
+
+    if (prop !== undefined && !this.displayUnit && prop.displayUnit) {
+      this.displayUnit = prop.displayUnit;
+    }
+  }
+
+  update() {
+    this.updateLabelOnTop();
+    super.update();
+
+    this.updateDataPath();
+
+    if (this.hasAttribute("min")) {
+      this.range[0] = parseFloat(this.getAttribute("min"));
+      this.setCSS();
+      this._redraw();
+    }
+
+    if (this.hasAttribute("max")) {
+      this.range[1] = parseFloat(this.getAttribute("max"));
+      this.setCSS();
+      this._redraw();
+    }
+
+    if (this.hasAttribute("integer")) {
+      this.isInt = true;
+      this.numslider.isInt = true;
+    }
+
+    this.updateName();
+
+    this.numslider.description = this.description;
+    this.textbox.description = this.title; //get full, transformed toolip
+
+    if (this.hasAttribute("datapath")) {
+      this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
+    }
+
+    if (this.hasAttribute("mass_set_path")) {
+      this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
+    }
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    //textbox.style["margin"] = "5px";
+
+  }
+
+  static define() {return {
+    tagname : "numslider-simple-x",
+    style : "numslider_simple"
+  }}
+}
+UIBase.register(NumSliderSimple);
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen$1 = 0;
@@ -29399,11 +29635,11 @@ class ToolBase extends ToolOp {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap$1.Escape: //esc
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap$1.Space: //space
+      case keymap$1.Enter: //return
         this.finish();
         break;
     }
@@ -29489,9 +29725,9 @@ class AreaResizeTool extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap["Escape"]:
-      case keymap["Enter"]:
-      case keymap["Space"]:
+      case keymap$1["Escape"]:
+      case keymap$1["Enter"]:
+      case keymap$1["Space"]:
         this.finish();
         break;
     }
@@ -29704,11 +29940,11 @@ class SplitTool extends ToolBase {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap$1.Escape: //esc
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap$1.Space: //space
+      case keymap$1.Enter: //return
         this.finish();
         break;
     }
@@ -30177,8 +30413,8 @@ class ToolTipViewer extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap.Escape:
-      case keymap.Enter:
+      case keymap$1.Escape:
+      case keymap$1.Enter:
       case Keymap.Space:
         if (this.tooltip) {
           this.tooltip.end();
@@ -31256,11 +31492,11 @@ let _ScreenArea = undefined;
 
 let UIBase$e = UIBase;
 let Vector2$c = Vector2;
-let Screen$1 = undefined;
+let ScreenClass = undefined;
 
 
 function setScreenClass(cls) {
-  Screen$1 = cls;
+  ScreenClass = cls;
 }
 
 function getAreaIntName(name) {
@@ -31396,7 +31632,7 @@ let _ScreenArea$1 = undefined;
 let UIBase$f = UIBase;
 
 let Vector2$d = Vector2;
-let Screen$2 = undefined;
+let Screen$1 = undefined;
 
 const AreaFlags = {
   HIDDEN          : 1,
@@ -32328,7 +32564,7 @@ class ScreenArea extends UIBase {
     let p = this.parentNode;
     let _i = 0;
 
-    while (p && !(p instanceof Screen$2) && p !== p.parentNode) {
+    while (p && !(p instanceof Screen$1) && p !== p.parentNode) {
       p = this.parentNode;
 
       if (_i++ > 1000) {
@@ -32337,7 +32573,7 @@ class ScreenArea extends UIBase {
       }
     }
     
-    return p && p instanceof Screen$2 ? p : undefined;
+    return p && p instanceof Screen$1 ? p : undefined;
   }
   
   copy(screen) {
@@ -33138,7 +33374,7 @@ function makePopupArea(area_class, screen, args={}) {
 
   if (addEscapeKeyHandler) {
     sarea.on_keydown = (e) => {
-      if (e.keyCode === keymap.Escape) {
+      if (e.keyCode === keymap$1.Escape) {
         screen.removeArea(sarea);
       }
     };
@@ -33172,7 +33408,7 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
-class Screen$3 extends UIBase {
+class Screen$2 extends UIBase {
   constructor() {
     super();
 
@@ -33538,7 +33774,7 @@ class Screen$3 extends UIBase {
       console.log(e.keyCode);
 
       switch (e.keyCode) {
-        case keymap["Escape"]:
+        case keymap$1["Escape"]:
           end();
           break;
       }
@@ -33900,7 +34136,7 @@ class Screen$3 extends UIBase {
   execKeyMap(e) {
     let handled = false;
 
-    //console.warn("execKeyMap called");
+    console.warn("execKeyMap called", document.activeElement.tagName);
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -35473,7 +35709,7 @@ class Screen$3 extends UIBase {
   }
 }
 
-Screen$3.STRUCT = `
+Screen$2.STRUCT = `
 pathux.Screen { 
   size  : vec2;
   pos   : vec2;
@@ -35483,10 +35719,10 @@ pathux.Screen {
 }
 `;
 
-nstructjs.manager.add_class(Screen$3);
-UIBase.register(Screen$3);
+nstructjs.manager.add_class(Screen$2);
+UIBase.register(Screen$2);
 
-setScreenClass(Screen$3);
+setScreenClass(Screen$2);
 
 
 let get_screen_cb;
@@ -35504,7 +35740,7 @@ function startEvents(getScreenFunc) {
     return screen.on_keydown(e);
   });
 }
-_setScreenClass(Screen$3);
+_setScreenClass(Screen$2);
 
 /*
 document.addEventListener("touchstart", (e) => {
@@ -36208,5 +36444,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimple2, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$3 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap$1 as keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
