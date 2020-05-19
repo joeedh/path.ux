@@ -64,9 +64,9 @@ export class ToolProperty extends ToolPropertyIF {
     this.description = description;
     this.flag = flag;
     this.icon = icon;
-    
+
     this.callbacks = {};
-  } 
+  }
 
   static register(cls) {
     cls.PROP_TYPE_ID = (1<<customPropTypeBase);
@@ -123,7 +123,7 @@ export class ToolProperty extends ToolPropertyIF {
       step        : this.step
     };
   }
-  
+
   loadJSON(obj) {
     this.type = obj.type;
     this.subtype = obj.subtype;
@@ -133,14 +133,14 @@ export class ToolProperty extends ToolPropertyIF {
     this.flag = obj.flag;
     this.icon = obj.icon;
     this.data = obj.data;
-    
+
     return this;
   }
-  
+
   getValue() {
     return this.data;
-  }  
-  
+  }
+
   setValue(val) {
     if (this.constructor === ToolProperty) {
       throw new Error("implement me!");
@@ -150,7 +150,7 @@ export class ToolProperty extends ToolPropertyIF {
 
     this._fire("change", val);
   }
-  
+
   copyTo(b) {
     b.apiname = this.apiname;
     b.uiname = this.uiname;
@@ -165,26 +165,47 @@ export class ToolProperty extends ToolPropertyIF {
       b.callbacks[k] = this.callbacks[k];
     }
   }
-  
+
   copy() { //default copy method
     let ret = new this.constructor();
-    
+
     this.copyTo(ret);
     ret.data = this.data;
-    
+
     return ret;
   }
-  
+
   setStep(step) {
     this.step = step;
     return this;
   }
-  
+
+  static calcRelativeStep(step, value, logBase=1.5) {
+    value = Math.log(Math.abs(value) + 1.0) / Math.log(logBase);
+    value = Math.max(value, step);
+
+    console.log(util.termColor("STEP", "red"), value);
+    return value;
+  }
+
+  getStep(value=1.0) {
+    if (this.stepIsRelative) {
+      return ToolProperty.calcRelativeStep(this.step, value);
+    } else {
+      return this.step;
+    }
+  }
+
+  setRelativeStep(step) {
+    this.step = step;
+    this.stepIsRelative = true;
+  }
+
   setRange(min, max) {
     if (min === undefined || max === undefined) {
       throw new Error("min and/or max cannot be undefined");
     }
-    
+
     this.range = [min, max];
     return this;
   }
@@ -208,7 +229,7 @@ export class ToolProperty extends ToolPropertyIF {
 
   setIcon(icon) {
     this.icon = icon;
-    
+
     return this;
   }
 }
@@ -338,6 +359,10 @@ export class _NumberPropertyBase extends ToolProperty {
 
   copyTo(b) {
     b.data = this.data;
+    b.expRate = this.expRate;
+    b.step = this.step;
+    b.range = this.range;
+    b.ui_range = this.ui_range;
   }
 
 

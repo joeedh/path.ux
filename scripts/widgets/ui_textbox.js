@@ -39,20 +39,17 @@ let parsepx = ui_base.parsepx;
 
 import {Button} from './ui_button.js';
 
-export class TextBox extends UIBase {
+export class TextBoxBase extends UIBase {
+  static define() {return {
+
+  }}
+}
+
+export class TextBox extends TextBoxBase {
   constructor() {
     super();
 
     this._width = "min-content";
-
-    this.addEventListener("focusin", () => {
-      this._focus = 1;
-      this.dom.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      this._focus = 0;
-    });
 
     let margin = Math.ceil(3 * this.getDPI());
 
@@ -86,12 +83,16 @@ export class TextBox extends UIBase {
     this.dom.addEventListener("focus", (e) => {
       console.log("Textbox focus");
       this._startModal();
+      this._focus = 1;
+      this.setCSS();
     });
 
     this.dom.addEventListener("blur", (e) => {
       console.log("Textbox blur");
       if (this._modal) {
         this._endModal(true);
+        this._focus = 0;
+        this.setCSS();
       }
     });
 
@@ -191,6 +192,14 @@ export class TextBox extends UIBase {
   setCSS() {
     super.setCSS();
 
+    this.dom.style["background-color"] = this.getDefault("background-color");
+
+    if (this._focus) {
+      this.dom.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
+    } else {
+      this.dom.style["border"] = "none";
+    }
+
     if (this.style["font"]) {
       this.dom.style["font"] = this.style["font"];
     } else {
@@ -275,7 +284,8 @@ export class TextBox extends UIBase {
   }
 
   static define() {return {
-    tagname : "textbox-x"
+    tagname : "textbox-x",
+    style   : "textbox"
   };}
 
   get text() {
@@ -333,7 +343,7 @@ export function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);
   //console.log(elem, x, y);
 
-  if (elem && elem.tagName === "TEXTBOX-X") {
+  if (elem && elem instanceof TextBoxBase) {
     return true;
   }
 

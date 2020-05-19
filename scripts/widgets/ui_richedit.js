@@ -1,9 +1,11 @@
 import * as ui_base from '../core/ui_base.js'
 import * as util from '../util/util.js';
 import {ColumnFrame, RowFrame, Container} from "../core/ui.js";
-let UIBase = ui_base.UIBase;
+let UIBase = ui_base.UIBase, Icons = ui_base.Icons;
+import {TextBoxBase} from './ui_textbox.js';
+import {keymap} from "../util/simple_events.js";
 
-export class RichEditor extends UIBase {
+export class RichEditor extends TextBoxBase {
   constructor() {
     super();
 
@@ -12,19 +14,78 @@ export class RichEditor extends UIBase {
 
     this.textOnlyMode = false;
 
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      div.rich-text-editor-x {
+        width        :   100%;
+        height       :   100%;
+        min-height   :   150px;
+        overflow     :   scroll;
+        padding      :   5px;
+        white-space  :   pre-wrap;
+      }
+      
+      rich-text-editor-x {
+        display        : flex;
+        flex-direction : column;
+      }
+    `;
+
+    this.shadow.appendChild(this.styletag);
+
+    let controls = this.controls = document.createElement("rowframe-x");
+
+
+    let makeicon = (icon, description, cb) => {
+      icon = controls.iconbutton(icon, description, cb);
+      icon.iconsheet = 1; //use second smallest icon size
+      icon.overrideDefault("BoxMargin", 3);
+
+      return icon;
+    };
+
+    makeicon(Icons.BOLD, "Bold", () => {
+      document.execCommand("bold");
+    });
+    makeicon(Icons.ITALIC, "Italic", () => {
+      document.execCommand("italic");
+    });
+    makeicon(Icons.UNDERLINE, "Underline", () => {
+      document.execCommand("underline");
+    });
+    makeicon(Icons.STRIKETHRU, "Strikethrough", () => {
+      document.execCommand("strikeThrough");
+    });
+
+    controls.background = this.getDefault("DefaultPanelBG");
+
+    this.shadow.appendChild(controls);
+
     this.textarea = document.createElement("div");
     this.textarea.contentEditable = true;
-    this.textarea.style["width"] = "100%";
-    this.textarea.style["height"] = "100%";
-    this.textarea.setAttribute("class", "rich-text-editor");
+    this.textarea.setAttribute("class", "rich-text-editor-x");
 
-    this.textarea.style["overflow"] = "scroll";
-
-    this.textarea.style["padding"] = "5px";
     this.textarea.style["font"] = this.getDefault("DefaultText").genCSS();
     this.textarea.style["background-color"] = this.getDefault("background-color");
-    this.textarea.style["white-space"] = "pre-wrap";
     this.textarea.setAttribute("white-space", "pre-wrap");
+
+    this.textarea.addEventListener("keydown", (e) => {
+      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
+        this.toggleStrikeThru();
+
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    this.textarea.addEventListener("focus", (e) => {
+      this._focus = 1;
+      this.setCSS();
+    });
+    this.textarea.addEventListener("blur", (e) => {
+      this._focus = 0;
+      this.setCSS();
+    });
 
     document.execCommand("styleWithCSS", true);
 
@@ -59,10 +120,10 @@ export class RichEditor extends UIBase {
         return;
       }
 
-      console.log("text changed", ...arguments);
+      //console.log("text changed", ...arguments);
       let sel = document.getSelection();
       let range = sel.getRangeAt(0);
-      console.log(range.startOffset, range.endOffset, range.startContainer);
+      //console.log(range.startOffset, range.endOffset, range.startContainer);
 
       let node = sel.anchorNode;
       let off = sel.anchorOffset;
@@ -106,6 +167,10 @@ export class RichEditor extends UIBase {
     return line;
   }
 
+  toggleStrikeThru() {
+    console.log("strike thru!");
+    document.execCommand("strikeThrough");
+  }
   /**
    * Only available in textOnlyMode.  Called when starting text formatting
    */
@@ -114,6 +179,8 @@ export class RichEditor extends UIBase {
 
   init() {
     super.init();
+
+    window.rc = this;
 
     document.execCommand("defaultParagraphSeparator", false, "div");
 
@@ -159,7 +226,27 @@ export class RichEditor extends UIBase {
   setCSS() {
     super.setCSS();
 
-    this.textarea.style["font"] = this.getDefault("DefaultText").genCSS();
+    this.controls.background = this.getDefault("DefaultPanelBG");
+
+    if (this._focus) {
+      this.textarea.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
+    } else {
+      this.textarea.style["border"] = "none";
+    }
+
+    if (this.style["font"]) {
+      this.textarea.style["font"] = this.style["font"];
+    } else {
+      this.textarea.style["font"] = this.getDefault("DefaultText").genCSS();
+    }
+
+    if (this.style["color"]) {
+      this.textarea.style["color"] = this.style["color"];
+    }  else {
+      this.textarea.style["color"] = this.getDefault("DefaultText").color;
+    }
+
+
     if (this.disabled) {
       this.textarea.style["background-color"] = this.getDefault("DisabledBG");
     } else {

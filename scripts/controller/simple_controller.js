@@ -218,6 +218,11 @@ export class DataPath {
     return this;
   }
 
+  relativeStep(s) {
+    this.data.setRelativeStep(s);
+    return this;
+  }
+
   step(s) {
     this.data.setStep(s);
     return this;

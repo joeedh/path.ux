@@ -14,6 +14,7 @@ export * from './widgets/ui_tabs.js';
 export * from './widgets/ui_listbox.js';
 export * from './widgets/ui_menu.js';
 export * from './widgets/ui_table.js';
+export * from './widgets/ui_numsliders.js';
 export * from './widgets/ui_lasttool.js';
 export * from './widgets/ui_textbox.js';
 export * from './util/graphpack.js';

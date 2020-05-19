@@ -130,8 +130,12 @@ export const DefaultTheme = {
     "BoxBorder" : "rgb(145, 145, 145, 1.0)"
   },
 
+  textbox : {
+    "background-color" : "rgb(245, 245, 245, 0.95)",
+  },
+
   richtext : {
-    "background-color" : "rgb(200, 200, 200)",
+    "background-color" : "rgb(245, 245, 245)",
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
       size  : 16,

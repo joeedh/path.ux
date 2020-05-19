@@ -493,6 +493,7 @@ export class UIBase extends HTMLElement {
     super();
 
     AfterAspect.bind(this, "setCSS");
+    AfterAspect.bind(this, "update");
 
     this.shadow = this.attachShadow({mode : 'open'});
     if (cconst.DEBUG.paranoidEvents) {

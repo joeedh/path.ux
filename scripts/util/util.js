@@ -2,6 +2,29 @@ import './polyfill.js';
 import './struct.js';
 import './mobile-detect.js';
 
+
+let colormap = {
+  black   : 30,
+  red     : 31,
+  green   : 32,
+  yellow  : 33,
+  blue    : 34,
+  magenta : 35,
+  cyan    : 36,
+  white   : 37,
+  reset   : 0
+};
+
+export function termColor(s, color = colormap.reset) {
+  if (typeof color === "string") {
+    color = colormap[color] || colormap.reset;
+  }
+
+  return `\u001b[${color}m${s}\u001b[0m`;
+}
+
+window.termColor = termColor;
+
 export class MovingAvg extends Array {
   constructor(size=64) {
     super();
