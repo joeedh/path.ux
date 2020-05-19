@@ -2,7 +2,6 @@ import './polyfill.js';
 import './struct.js';
 import './mobile-detect.js';
 
-
 let colormap = {
   black   : 30,
   red     : 31,

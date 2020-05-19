@@ -918,7 +918,7 @@ class BSplineCurve extends CurveTypeData {
       }
     }
 
-    if (this.points.highlight != minp) {
+    if (this.points.highlight !== minp) {
       this.points.highlight = minp;
       this.redraw()
     }
@@ -950,7 +950,7 @@ class BSplineCurve extends CurveTypeData {
 
     x *= dpi;
     y *= dpi;
-    
+
     var trans = this.uidata.draw_trans;
 
     x = x/trans[0] - trans[1][0];
