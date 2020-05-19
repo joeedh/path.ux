@@ -7,9 +7,7 @@ import {Icons} from "../icon_enum.js";
 import * as util from '../util/util.js';
 //import * as ui_base from './ui_base.js';
 import * as vectormath from '../util/vectormath.js';
-import {EventDispatcher} from "../util/events.js";
-
-import {UIBase} from "../core/ui_base.js";
+//import {EventDispatcher} from "../util/events.js";
 
 var Vector2 = vectormath.Vector2;
 
@@ -943,7 +941,7 @@ class BSplineCurve extends CurveTypeData {
 
   transform_mpos(x, y){
     var r = this.uidata.canvas.getClientRects()[0];
-    let dpi = UIBase.getDPI();
+    let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
 
     x -= parseInt(r.left);
     y -= parseInt(r.top);

@@ -1,5 +1,5 @@
-const PORT = 5002
-const INDEX = "/example/index.html";
+const PORT = 5005;
+const INDEX = "example/index.html";
 const SERVER_ROOT = ".";
 
 const http2 = require('http2');
@@ -54,14 +54,24 @@ function walkDir(path, cb) {
   dir.closeSync();
 }
 
+let scriptFilesCache = "scriptpaths.cache";
+function saveScriptFiles() {
+  let list = [];
+  for (let item of scriptfiles) {
+    list.push(item);
+  }
+
+  list = JSON.stringify(list, undefined, 2);
+  fs.writeFileSync(scriptFilesCache, list, "utf8");
+}
+
 let scriptfiles = new Set();
 
-walkDir("example/", (root, dirs, files) => {
-  for (let f of files) {
-    f = root + "/" + f;
-    scriptfiles.add(f);
-  }
-});
+if (fs.existsSync(scriptFilesCache)) {
+  let buf = fs.readFileSync(scriptFilesCache, "utf8");
+  let json = JSON.parse(buf);
+  scriptfiles = new Set(json);
+}
 
 const server = http2.createSecureServer({
   key: fs.readFileSync('localhost-privkey.pem'),
@@ -120,7 +130,7 @@ server.on('stream', (stream, headers) => {
   function sendError(code, msg) {
     stream.respond({
       'content-type': 'text/html',
-      ':status': msg
+      ':status': code
     });
     stream.end(`<h1>Error ${code}</h1>${msg}`);
   }
@@ -134,6 +144,21 @@ server.on('stream', (stream, headers) => {
   }
 
   let isIndex = path === INDEX;
+
+  if (!isIndex && (path.endsWith(".js"))) {//} || path.endsWith(".bin"))) {
+    let path2 = path;
+    while (path2.startsWith("/")) {
+      path2 = path2.slice(1, path2.length).trim();
+      //console.log("yay");
+    }
+
+    let save = scriptfiles.has(path2);
+    scriptfiles.add(path2);
+
+    if (save) {
+      saveScriptFiles();
+    }
+  }
 
   console.log(termColor(headers[":method"], "green") + " " + path);
 
@@ -153,16 +178,82 @@ server.on('stream', (stream, headers) => {
   let encoding = textmap.has(mime) ? "utf8" : undefined;
   let buf = fs.readFileSync(path, encoding);
 
+  stream.on('error', (e) => {
+    console.log(e);
+  });
+
   if (isIndex && stream.pushAllowed) {
     console.log("push stream!");
 
+    let max = 16;
+    let i = 0;
+    let visit = new Set();
+
     scriptfiles.forEach((f) => {
-      stream.pushStream({':path': "/" + f}, (err, pushStream, headers) => {
+      if (visit.has(f)) {
+        return;
+      }
+
+      if (i++ > max) {
+        return;
+      }
+
+      visit.add(f);
+      /*
+      let pushcb = (err, pushStream, headers) => {
+        pushStream.on("error", (e) => {
+          pushStream.end();
+          console.log(e)
+        });
+
         pushStream.respond({'content-type': getMime(f)});
         let encoding = textmap.has(f) ? "utf8" : undefined;
         pushStream.end(fs.readFileSync(f, encoding));
+      };//*/
+
+      let pushcb = (err, pushStream, headers) => {
+        pushStream.on("error", (e) => {
+          pushStream.end();
+          /*
+          try {
+            stream.pushStream({':path': "/" + f}, pushcb);
+          } catch (error) {
+            console.log("push disabled");
+          }//*/
+          //console.log(e)
+        });
+
+        pushStream.respond({'content-type': getMime(f)});
+        let encoding = textmap.has(f) ? "utf8" : undefined;
+        pushStream.end(fs.readFileSync(f, encoding));
+
+        //setTimeout(() => {
+          f = undefined;
+
+          for (let f2 of scriptfiles) {
+            if (!visit.has(f2)) {
+              visit.add(f2);
+              f = f2;
+              break;
+            }
+          }
+
+          if (!f) {
+            return;
+          }
+
+          //console.log("::", f)
+          try {
+            stream.pushStream({':path': "/" + f}, pushcb);
+          } catch (error) {
+            console.log("push stream failed", f);
+          }
+        //}, 0.01);
+
         //console.log(headers);
-      });
+      };
+
+      stream.pushStream({':path': "/" + f}, pushcb);
     });
   }
 

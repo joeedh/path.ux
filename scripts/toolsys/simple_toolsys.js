@@ -3,7 +3,6 @@
 a basic, simple tool system implementation
 */
 
-import * as util from '../util/util.js';
 import * as events from '../util/events.js';
 import {keymap} from '../util/simple_events.js';
 import {PropTypes} from './toolprop.js';

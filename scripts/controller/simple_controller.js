@@ -7,7 +7,6 @@ import * as toolprop_abstract from '../toolsys/toolprop_abstract.js';
 import * as util from '../util/util.js';
 import cconst from '../config/const.js';
 
-
 let PUTLParseError = parseutil.PUTLParseError;
 
 let tk = (name, re, func) => new parseutil.tokdef(name, re, func);

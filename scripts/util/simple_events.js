@@ -253,6 +253,7 @@ stupid DOM event system.  I hate it.
 export function eventWasTouch(e) {
   let ret = e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents;
   ret = ret || e.was_touch;
+  ret = ret || e.touches !== undefined;
 
   return ret;
 }
