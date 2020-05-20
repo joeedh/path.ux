@@ -15495,9 +15495,6 @@ const DefaultTheme = {
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
 
-    "MenuBG" : "rgba(250, 250, 250, 1.0)",
-    "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-
     //fonts
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
@@ -15545,6 +15542,9 @@ const DefaultTheme = {
   },
 
   menu : {
+    MenuBG : "rgba(250, 250, 250, 1.0)",
+    MenuHighlight : "rgba(155, 220, 255, 1.0)",
+
     MenuText : new CSSFont({
       size     : 12,
       color    : "rgba(25, 25, 25, 1.0)",
@@ -15600,6 +15600,14 @@ const DefaultTheme = {
 
   iconbutton : {
 
+  },
+
+  scrollbars : {
+    color : undefined,
+    color2: undefined, //if undefined, will be derived from .color shaded with .contrast
+    width : undefined,
+    border : undefined,
+    contrast : undefined,
   },
 
   numslider : {
@@ -16123,54 +16131,49 @@ class AfterAspect {
 }
 
 window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
-  let buf = styleScrollBars(color, contrast, width, border, "*");
-  CTX.screen.mergeGlobalCSS(buf); document.body.style["overflow"] = "scroll";
+  let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
+  CTX.screen.mergeGlobalCSS(buf);
 
+  //document.body.style["overflow"] = "scroll";
+
+  /*
   if (!window._tsttag) {
     window._tsttag = document.createElement("style");
     document.body.prepend(_tsttag);
   }
 
   _tsttag.textContent = buf;
+  //*/
 
   return buf;
 };
 
-function styleScrollBars(color="grey", contrast=0.5, width=15, border="groove", selector="*") {
-  
-  let c = css2color(color);
-  let a = c.length > 3 ? c[3] : 1.0;
+function styleScrollBars(color="grey", color2=undefined, contrast=0.5, width=15, border="1px groove black", selector="*") {
 
-  c = rgb_to_hsv(c[0], c[1], c[2]);
-  let inv =  c.slice(0, c.length);
+  if (!color2) {
+    let c = css2color(color);
+    let a = c.length > 3 ? c[3] : 1.0;
 
-  inv[2] = 1.0 - inv[2];
-  inv[2] += (c[2] - inv[2])*(1.0 - contrast);
+    c = rgb_to_hsv(c[0], c[1], c[2]);
+    let inv = c.slice(0, c.length);
 
-  let inv2 = inv.slice(0, inv.length);
-  inv2[2] = Math.sqrt(inv2[2]);
+    inv[2] = 1.0 - inv[2];
+    inv[2] += (c[2] - inv[2]) * (1.0 - contrast);
 
-  inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
-  inv2 = hsv_to_rgb(inv2[0], inv2[1], inv2[2]);
+    inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
 
-  inv.length = 4;
-  inv2.length = 4;
-  inv[3] = a;
-  inv2[3] = a;
+    inv.length = 4;
+    inv[3] = a;
 
-  inv = color2css(inv);
-  inv2 = color2css(inv2);
-  c = hsv_to_rgb(c[0], c[1], c[2]);
-  c = color2css(c);
+    inv = color2css(inv);
+    color2 = inv;
+  }
 
-  let bw = 2.0 / devicePixelRatio;
-  let br = 9.0 / devicePixelRatio;
-  
   let buf = `
 
 ${selector} {
   scrollbar-width : ${width <= 16 ? 'thin' : 'auto'};
-  scrollbar-color : ${inv} ${c};
+  scrollbar-color : ${color2} ${color};
 }
 
 ${selector}::-webkit-scrollbar {
@@ -16180,14 +16183,12 @@ ${selector}::-webkit-scrollbar {
 
 ${selector}::-webkit-scrollbar-track {
   background-color : ${color};
-  border : ${bw}px groove ${inv2};
-  border-radius : ${br}px;
+  border : ${border};
 }
 
 ${selector}::-webkit-scrollbar-thumb {
-  background-color : ${inv};
-  border : ${bw}px groove ${inv2};
-  border-radius : ${br}px;
+  background-color : ${color2};
+  border : ${border};
 }
     `;
 
@@ -18400,6 +18401,7 @@ class Button extends UIBase$1 {
 
     let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
+    
     let tw = measureText(this, this._genLabel()).width/dpi + 8 + pad;
 
     if (this._namePad !== undefined) {
@@ -18431,8 +18433,20 @@ class Button extends UIBase$1 {
   _repos_canvas() {
     let dpi = this.getDPI();
 
-    this.dom.width = Math.floor(0.5+parsepx$1(this.dom.style["width"])*dpi);
-    this.dom.height = Math.floor(0.5+parsepx$1(this.dom.style["height"])*dpi);
+    let w = parsepx$1(this.dom.style["width"]);
+    let h = parsepx$1(this.dom.style["height"]);
+
+    let w2 = ~~(w*dpi);
+    let h2 = ~~(h*dpi);
+
+    w = w2/dpi;
+    h = h2/dpi;
+
+    this.dom.width = w2;
+    this.dom.style["width"] = w + "px";
+
+    this.dom.height = h2;
+    this.dom.style["height"] = h + "px";
   }
 
   updateDPI() {
@@ -19401,12 +19415,17 @@ class IconCheck extends Button {
   }
   
   _repos_canvas() {
-    this.dom.style["width"] = this._getsize() + "px";
-    this.dom.style["height"] = this._getsize() + "px";
+    let dpi = UIBase$3.getDPI();
+
+    let w = (~~(this._getsize()*dpi))/dpi;
+    let h = (~~(this._getsize()*dpi))/dpi;
+
+    this.dom.style["width"] = w + "px";
+    this.dom.style["height"] = h + "px";
 
     if (this._div !== undefined) {
-      this._div.style["width"] = this._getsize() + "px";
-      this._div.style["height"] = this._getsize() + "px";
+      this._div.style["width"] = w + "px";
+      this._div.style["height"] = h + "px";
     }
 
     super._repos_canvas();
@@ -19518,8 +19537,18 @@ class IconButton extends Button {
   }
   
   _repos_canvas() {
-    this.dom.style["height"] = this._getsize() + "px";
-    this.dom.style["width"] = this._getsize() + "px";
+    let dpi = UIBase$3.getDPI();
+
+    let w = (~~(this._getsize()*dpi))/dpi;
+    let h = (~~(this._getsize()*dpi))/dpi;
+
+    this.dom.style["width"] = w + "px";
+    this.dom.style["height"] = h + "px";
+
+    if (this._div !== undefined) {
+      this._div.style["width"] = w + "px";
+      this._div.style["height"] = h + "px";
+    }
 
     super._repos_canvas();
   }
@@ -25354,6 +25383,7 @@ class Menu extends UIBase$c {
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
     this.container.style["display"] = "flex";
+    this.container.style["color"] = this.getDefault("MenuText").color;
 
     //this.container.style["background-color"] = "red";
     this.container.setAttribute("class", "menucon");
@@ -25416,11 +25446,22 @@ class Menu extends UIBase$c {
         }
         
         .menuitem:focus {
+          border : none;
+          outline : none;
+          
           background-color: ${this.getDefault("MenuHighlight")};
           -moz-user-focus: normal;
         }
       `;
 
+    /*
+
+        .menuitem:focus {
+        }
+
+
+
+    */
     this.dom.setAttribute("tabindex", -1);
 
     //let's have the menu wrangler handle key events
@@ -25858,6 +25899,13 @@ class Menu extends UIBase$c {
     return li;
   }
 
+  setCSS() {
+    super.setCSS();
+
+    this.container.style["color"] = this.getDefault("MenuText").color;
+    this.style["color"] = this.getDefault("MenuText").color;
+  }
+
   seperator() {
     let bar = document.createElement("div");
     bar.setAttribute("class", "menuseparator");
@@ -25911,7 +25959,8 @@ class DropBox extends Button {
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultText").size;
-    let tw = measureText(this, this._genLabel(), undefined, undefined, ts).width/dpi + 8;
+    let tw = this.g.measureText(this._genLabel()).width/dpi;
+    //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
 
     tw += 15;
@@ -25920,7 +25969,7 @@ class DropBox extends Button {
       tw += 35;
     }
 
-    if (tw != this._last_w) {
+    if (tw !== this._last_w) {
       this._last_w = tw;
       this.dom.style["width"] = tw + "px";
       this.style["width"] = tw + "px";
@@ -26079,10 +26128,10 @@ class DropBox extends Button {
     let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
     x = rects.x;
-    y = rects.y + rects.height; // + rects[0].height; // visualViewport.scale;
+    y = rects.y + rects.height - window.scrollY; // + rects[0].height; // visualViewport.scale;
 
     if (!window.haveElectron) {
-      y -= 8;
+      //y -= 8;
     }
 
     /*
@@ -33785,7 +33834,8 @@ function registerToolStackGetter$1(func) {
 window._nstructjs = nstructjs;
 
 let Vector2$e = Vector2,
-  UIBase$g = UIBase;
+  UIBase$g = UIBase,
+  styleScrollBars$1 = styleScrollBars;
 
 let update_stack = new Array(8192);
 update_stack.cur = 0;
@@ -34856,8 +34906,25 @@ class Screen$2 extends UIBase {
     }
   }
 
+  updateScrollStyling() {
+    let s = theme.scrollbars;
+    if (!s) return;
+
+    let key = "" + s.color + ":" + s.color2 + ":" + s.border + ":" + s.contrast + ":" + s.width;
+
+    if (key !== this._last_scrollstyle_key) {
+      this._last_scrollstyle_key = key;
+
+      console.log("updating scrollbar styling");
+
+      this.mergeGlobalCSS(styleScrollBars$1(s.color, s.color2, s.contrast, s.width, s.border, "*"));
+    }
+  }
+
   //XXX race condition warning
   update_intern() {
+    this.updateScrollStyling();
+
     let popups = this._popups;
 
     let cssText = "";
@@ -34943,7 +35010,7 @@ class Screen$2 extends UIBase {
           n._ctx = ctx;
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
-            n._screenStyleTag = cssText;
+            n._screenStyleTag.textContent = cssText;
             n._screenStyleUpdateHash = cssTextHash;
           }
 

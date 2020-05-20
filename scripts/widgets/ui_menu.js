@@ -783,8 +783,8 @@ export class DropBox extends Button {
     let x = e.x, y = e.y;
     let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
-    x = rects.x;
-    y = rects.y + rects.height; // + rects[0].height; // visualViewport.scale;
+    x = rects.x - window.scrollX;
+    y = rects.y + rects.height - window.scrollY; // + rects[0].height; // visualViewport.scale;
 
     if (!window.haveElectron) {
       //y -= 8;

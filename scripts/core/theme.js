@@ -55,9 +55,6 @@ export const DefaultTheme = {
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
 
-    "MenuBG" : "rgba(250, 250, 250, 1.0)",
-    "MenuHighlight" : "rgba(155, 220, 255, 1.0)",
-
     //fonts
     "DefaultText" : new CSSFont({
       font  : "sans-serif",
@@ -105,6 +102,9 @@ export const DefaultTheme = {
   },
 
   menu : {
+    MenuBG : "rgba(250, 250, 250, 1.0)",
+    MenuHighlight : "rgba(155, 220, 255, 1.0)",
+
     MenuText : new CSSFont({
       size     : 12,
       color    : "rgba(25, 25, 25, 1.0)",
