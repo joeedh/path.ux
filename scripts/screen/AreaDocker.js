@@ -12,6 +12,23 @@ import {getAreaIntName, setAreaTypes, AreaWrangler, areaclasses} from './area_wr
 
 let ignore = 0;
 
+window.testSnapScreenVerts = function(arg) {
+  let screen = CTX.screen;
+
+  screen.unlisten();
+  screen.on_resize([screen.size[0]-75, screen.size[1]], screen.size);
+  screen.on_resize = screen.updateSize = () => {};
+
+  let p = CTX.propsbar;
+  p.pos[0] += 50;
+  p.owning_sarea.loadFromPosSize();
+  screen.regenBorders();
+
+  screen.size[0] = window.innerWidth-5;
+
+  screen.snapScreenVerts(arg);
+}
+
 export class AreaDocker extends Container {
   constructor() {
     super();

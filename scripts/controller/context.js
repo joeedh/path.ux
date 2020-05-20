@@ -114,7 +114,7 @@ export class ContextOverlay {
   }
 }
 
-export const excludedKeys = new Set(["onRemove", "reset", "toString",
+export const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
   "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
   "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
   "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
@@ -238,6 +238,11 @@ export class Context {
 
     this._props = new Set();
     this._stack = [];
+    this._inside_map = {};
+  }
+
+  //chrome's debug console is weirdly messing with this
+  _fix() {
     this._inside_map = {};
   }
 

@@ -4,7 +4,7 @@ import {PropTypes, BoolProperty, IntProperty, FloatProperty, FlagProperty,
         QuatProperty, Mat4Property} from "../toolsys/toolprop.js";
 
 import * as util from '../util/util.js';
-import {isVecProperty} from "./controller.js";
+import {isVecProperty, getVecClass} from "./controller.js";
 
 export class DataPathSetOp extends ToolOp {
   constructor() {
@@ -121,7 +121,8 @@ export class DataPathSetOp extends ToolOp {
         if (rdef.subkey) {
           this._undo[path] = rdef.value;
         } else {
-          this._undo[path] = rdef.value.copy();
+          let cls = getVecClass(prop.type);
+          this._undo[path] = new cls(rdef.value);
         }
       } else {
         let prop2 = prop.copy();

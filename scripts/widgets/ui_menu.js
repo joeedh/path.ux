@@ -593,6 +593,8 @@ export class DropBox extends Button {
   constructor() {
     super();
 
+    this.searchMenuMode = false;
+
     this.r = 5;
     this._menu = undefined;
     this._auto_depress = false;
@@ -659,7 +661,14 @@ export class DropBox extends Button {
       prop = this.prop;
     }
 
-    let name = prop.ui_value_names[prop.keys[val]];
+    let name = this.getAttribute("name");
+
+    if (prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
+      name = prop.ui_value_names[prop.keys[val]];
+    } else {
+      name = ""+val;
+    }
+
     if (name != this.getAttribute("name")) {
       this.setAttribute("name", name);
       this.updateName();
@@ -807,7 +816,11 @@ export class DropBox extends Button {
     con.noMarginsOrPadding();
 
     con.add(menu);
-    menu.start();
+    if (this.searchMenuMode) {
+      menu.startFancy();
+    } else {
+      menu.start();
+    }
   }
 
   _redraw() {

@@ -368,6 +368,10 @@ export class Button extends UIBase {
   }
 
   updateName() {
+    if (!this.hasAttribute("name")) {
+      return;
+    }
+
     let name = this.getAttribute("name");
 
     if (name !== this._name) {
