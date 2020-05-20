@@ -384,8 +384,20 @@ export class Button extends UIBase {
   _repos_canvas() {
     let dpi = this.getDPI();
 
-    this.dom.width = Math.floor(0.5+parsepx(this.dom.style["width"])*dpi);
-    this.dom.height = Math.floor(0.5+parsepx(this.dom.style["height"])*dpi);
+    let w = parsepx(this.dom.style["width"]);
+    let h = parsepx(this.dom.style["height"]);
+
+    let w2 = ~~(w*dpi);
+    let h2 = ~~(h*dpi);
+
+    w = w2/dpi;
+    h = h2/dpi;
+
+    this.dom.width = w2;
+    this.dom.style["width"] = w + "px";
+
+    this.dom.height = h2;
+    this.dom.style["height"] = h + "px";
   }
 
   updateDPI() {
