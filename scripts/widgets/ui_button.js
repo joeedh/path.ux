@@ -353,6 +353,7 @@ export class Button extends UIBase {
 
     let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
+    
     let tw = ui_base.measureText(this, this._genLabel()).width/dpi + 8 + pad;
 
     if (this._namePad !== undefined) {

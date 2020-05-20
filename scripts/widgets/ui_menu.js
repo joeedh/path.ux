@@ -39,6 +39,7 @@ export class Menu extends UIBase {
     //we have to make a container for any submenus to
     this.container = document.createElement("span");
     this.container.style["display"] = "flex";
+    this.container.style["color"] = this.getDefault("MenuText").color;
 
     //this.container.style["background-color"] = "red";
     this.container.setAttribute("class", "menucon");
@@ -101,11 +102,22 @@ export class Menu extends UIBase {
         }
         
         .menuitem:focus {
+          border : none;
+          outline : none;
+          
           background-color: ${this.getDefault("MenuHighlight")};
           -moz-user-focus: normal;
         }
       `;
 
+    /*
+
+        .menuitem:focus {
+        }
+
+
+
+    */
     this.dom.setAttribute("tabindex", -1);
 
     //let's have the menu wrangler handle key events
@@ -543,6 +555,13 @@ export class Menu extends UIBase {
     return li;
   }
 
+  setCSS() {
+    super.setCSS();
+
+    this.container.style["color"] = this.getDefault("MenuText").color;
+    this.style["color"] = this.getDefault("MenuText").color;
+  }
+
   seperator() {
     let bar = document.createElement("div");
     bar.setAttribute("class", "menuseparator");
@@ -596,7 +615,8 @@ export class DropBox extends Button {
     let dpi = this.getDPI();
 
     let ts = this.getDefault("DefaultText").size;
-    let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width/dpi + 8;
+    let tw = this.g.measureText(this._genLabel()).width/dpi;
+    //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
     tw = ~~tw;
 
     tw += 15;
@@ -605,7 +625,7 @@ export class DropBox extends Button {
       tw += 35;
     }
 
-    if (tw != this._last_w) {
+    if (tw !== this._last_w) {
       this._last_w = tw;
       this.dom.style["width"] = tw + "px";
       this.style["width"] = tw + "px";
@@ -767,7 +787,7 @@ export class DropBox extends Button {
     y = rects.y + rects.height; // + rects[0].height; // visualViewport.scale;
 
     if (!window.haveElectron) {
-      y -= 8;
+      //y -= 8;
     }
 
     /*

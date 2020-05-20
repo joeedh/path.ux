@@ -542,12 +542,17 @@ export class IconCheck extends Button {
   }
   
   _repos_canvas() {
-    this.dom.style["width"] = this._getsize() + "px";
-    this.dom.style["height"] = this._getsize() + "px";
+    let dpi = UIBase.getDPI();
+
+    let w = (~~(this._getsize()*dpi))/dpi;
+    let h = (~~(this._getsize()*dpi))/dpi;
+
+    this.dom.style["width"] = w + "px";
+    this.dom.style["height"] = h + "px";
 
     if (this._div !== undefined) {
-      this._div.style["width"] = this._getsize() + "px";
-      this._div.style["height"] = this._getsize() + "px";
+      this._div.style["width"] = w + "px";
+      this._div.style["height"] = h + "px";
     }
 
     super._repos_canvas();
@@ -659,8 +664,18 @@ export class IconButton extends Button {
   }
   
   _repos_canvas() {
-    this.dom.style["height"] = this._getsize() + "px";
-    this.dom.style["width"] = this._getsize() + "px";
+    let dpi = UIBase.getDPI();
+
+    let w = (~~(this._getsize()*dpi))/dpi;
+    let h = (~~(this._getsize()*dpi))/dpi;
+
+    this.dom.style["width"] = w + "px";
+    this.dom.style["height"] = h + "px";
+
+    if (this._div !== undefined) {
+      this._div.style["width"] = w + "px";
+      this._div.style["height"] = h + "px";
+    }
 
     super._repos_canvas();
   }
