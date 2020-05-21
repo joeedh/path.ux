@@ -1308,37 +1308,48 @@ export class UIBase extends HTMLElement {
       return;
 
     if (val && !this._disdata) {
-      this._disdata = {
-        background : this.background,
-        bgcolor : this.style["background-color"],
-        DefaultPanelBG : this.default_overrides.DefaultPanelBG,
-        BoxBG : this.default_overrides.BoxBG
+      let style = this.getDefault("Disabled") || {
+        "background-color" : "black"
       };
 
-      let bg = this.getDefault("DisabledBG");
+      this._disdata = {
+        style : {},
+        defaults : {}
+      };
+      
+      for (let k in style) {
+        this._disdata.style[k] = this.style[k];
+        this._disdata.defaults[k] = this.default_overrides[k];
 
-      this.background = bg;
-      this.default_overrides.DefaultPanelBG = bg;
-      this.default_overrides.BoxBG = bg;
-      this.style["background-color"] = bg;
+        let v = style[k];
+
+        if (typeof v === "object" && v instanceof CSSFont) {
+          this.style[k] = style[k].genCSS();
+          this.default_overrides[k] = style[k];
+        } else {
+          this.style[k] = style[k];
+          this.default_overrides[k] = style[k];
+        }
+      }
 
       this._disabled = val;
       this.on_disabled();
     } else if (!val && this._disdata) {
-      if (this._disdata.DefaultPanelBG) {
-        this.default_overrides.DefaultPanelBG = this._disdata.DefaultPanelBG;
-      } else {
-        delete this.default_overrides.DefaultPanelBG;
+      for (let k in this._disdata.style) {
+        this.style[k] = this._disdata.style[k];
       }
 
-      if (this.boxBG) {
-        this.default_overrides.BoxBG = this._disdata.BoxBG;
-      } else {
-        delete this.default_overrides.BoxBG;
+      for (let k in this._disdata.defaults) {
+        let v = this._disdata.defaults[k];
+
+        if (v === undefined) {
+          delete this.default_overrides[k];
+        } else {
+          this.default_overrides[k] = v;
+        }
       }
 
-      this.background = this._disdata.background;
-      this.style["background-color"] = this._disdata.bgcolor;
+      this.background = this.style["background-color"];
       this._disdata = undefined;
 
       this._disabled = val;
@@ -1349,7 +1360,14 @@ export class UIBase extends HTMLElement {
 
     let rec = (n) => {
       if (n instanceof UIBase) {
+        let changed = !!n.disabled != !!val;
+
         n.disabled = val;
+
+        if (changed) {
+          n.update();
+          n.setCSS();
+        }
       }
 
       for (let c of n.childNodes) {
@@ -2232,15 +2250,14 @@ export function drawText(elem, x, y, text, args={}) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
     font = font.genCSS(size);
-  }
-
-  if (font) {
+  } else if (font) {
     g.font = font;
   }
 
   if (color === undefined) {
     color = elem.getDefault("DefaultText").color;
   }
+  
   if (typeof color === "object") {
     color = color2css(color);
   }

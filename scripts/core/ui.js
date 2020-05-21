@@ -85,6 +85,19 @@ export class Label extends ui_base.UIBase {
 
     this._updateFont();
   }
+  
+  on_disabled() {
+    super.on_disabled();
+    this._enabled_font = this.font;
+    this.font = "DefaultText";
+    this._updateFont();
+  }
+
+  on_enabled() {
+    super.on_enabled();
+    this.font = this._enabled_font;
+    this._updateFont();
+  }
 
   _updateFont() {
     let font = this._font;
@@ -125,6 +138,11 @@ export class Label extends ui_base.UIBase {
   }
 
   update() {
+    if (this.font !== this._last_font) {
+      this._last_font = this.font;
+      this._updateFont();
+    }
+    
     this.dom.style["pointer-events"] = this.style["pointer-events"];
 
     if (this.hasAttribute("datapath")) {

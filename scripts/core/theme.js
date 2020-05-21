@@ -35,11 +35,6 @@ export const DefaultTheme = {
       weight : "bold"
     }),
 
-    "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-    "TabStrokeStyle2" : "rgba(255, 255, 255, 1.0)",
-    "TabInactive" : "rgba(150, 150, 150, 1.0)",
-    "TabHighlight" : "rgba(50, 50, 50, 0.2)",
-
     "DefaultPanelBG" : "rgba(225, 225, 225, 1.0)",
     "InnerPanelBG" : "rgba(195, 195, 195, 1.0)",
     "AreaHeaderBG" : "rgba(205, 205, 205, 1.0)",
@@ -50,7 +45,40 @@ export const DefaultTheme = {
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
     "BoxBG" : "rgba(170, 170, 170, 1.0)",
-    "DisabledBG" : "rgba(110, 110, 110, 1.0)",
+    /*
+    "Disabled": { //https://leaverou.github.io/css3patterns/#zig-zag
+      background: "linear-gradient(135deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
+        "linear-gradient(225deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
+        "linear-gradient(315deg, rgb(100,0,0) 25%, transparent 25%),"+
+        "linear-gradient(45deg, rgb(100,0,0) 25%, transparent 25%)",
+      "background-size": "5px 3px",
+      "background-color": "rgb(50, 50, 50, 1.0)",
+      "border-radius" : "15px"
+    },//*/
+    /*
+    "Disabled": { //https://leaverou.github.io/css3patterns/#waves
+      "background" : "radial-gradient(circle at 100% 50%, transparent 20%, rgba(255,75,75,.8) 21%," +
+                     "rgba(255,75,75,.8) 34%, transparent 35%, transparent),radial-gradient(circle at" +
+                     " 0% 50%, transparent 20%, rgba(255,75,75,.8) 21%, rgba(255,75,75,.8) 34%, "+
+                     "transparent 35%, transparent) 0 -50px",
+
+      "background-color": "rgb(50, 50, 50, 0.0)",
+      "background-size": "15px 20px",
+      "border-radius" : "15px",
+    },//*/
+
+    Disabled : { //keys here are treated as both css and theme keys
+      "background-size": "5px 3px",
+      "background-color": "rgb(72, 72, 72)",
+      "border-radius" : "15px",
+      BoxBG : "rgb(50, 50, 50)",
+      BoxSubBG : "rgb(50, 50, 50)",
+      BoxSub2BG : "rgb(50, 50, 50)",
+      AreaHeaderBG  : "rgb(72, 72, 72)",
+      DefaultPanelBG : "rgb(72, 72, 72)",
+      InnerPanelBG:  "rgb(72, 72, 72)"
+    },
+
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
@@ -68,15 +96,6 @@ export const DefaultTheme = {
       size  : 12,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
-    }),
-
-
-
-    "TabText" : new CSSFont({
-      size     : 18,
-      color    : "rgba(35, 35, 35, 1.0)",
-      font     : "sans-serif",
-      //weight   : "bold"
     }),
 
     "LabelText" : new CSSFont({
@@ -201,6 +220,19 @@ export const DefaultTheme = {
     TextBoxWidth : 45
   },
 
+  tabs : {
+    TabStrokeStyle1 : "rgba(200, 200, 200, 1.0)",
+    TabStrokeStyle2 : "rgba(255, 255, 255, 1.0)",
+    TabInactive : "rgba(150, 150, 150, 1.0)",
+    TabHighlight : "rgba(50, 50, 50, 0.2)",
+    TabText : new CSSFont({
+      size     : 18,
+      color    : "rgba(35, 35, 35, 1.0)",
+      font     : "sans-serif",
+      //weight   : "bold"
+    }),
+  },
+
   colorfield : {
     fieldsize : 32,
     defaultWidth : 200,
@@ -208,7 +240,7 @@ export const DefaultTheme = {
     hueheight : 24,
     colorBoxHeight : 24,
     circleSize : 4,
-    DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
+    //DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
   },
 
   listbox : {

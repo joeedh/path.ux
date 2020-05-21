@@ -532,7 +532,11 @@ export class NumSlider extends ValueButtonBase {
 
     //}
 
-    g.fillStyle = "rgba(0,0,0,0.1)";
+    let c = css2color(this.getDefault("BoxBG"));
+    let f = 1.0 - (c[0]+c[1]+c[2])*0.33;
+    f = ~~(f*255);
+
+    g.fillStyle = `rgba(${f},${f},${f},0.95)`;
 
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();

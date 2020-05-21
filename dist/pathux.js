@@ -15503,11 +15503,6 @@ const DefaultTheme = {
       weight : "bold"
     }),
 
-    "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-    "TabStrokeStyle2" : "rgba(255, 255, 255, 1.0)",
-    "TabInactive" : "rgba(150, 150, 150, 1.0)",
-    "TabHighlight" : "rgba(50, 50, 50, 0.2)",
-
     "DefaultPanelBG" : "rgba(225, 225, 225, 1.0)",
     "InnerPanelBG" : "rgba(195, 195, 195, 1.0)",
     "AreaHeaderBG" : "rgba(205, 205, 205, 1.0)",
@@ -15518,7 +15513,40 @@ const DefaultTheme = {
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
     "BoxBG" : "rgba(170, 170, 170, 1.0)",
-    "DisabledBG" : "rgba(110, 110, 110, 1.0)",
+    /*
+    "Disabled": { //https://leaverou.github.io/css3patterns/#zig-zag
+      background: "linear-gradient(135deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
+        "linear-gradient(225deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
+        "linear-gradient(315deg, rgb(100,0,0) 25%, transparent 25%),"+
+        "linear-gradient(45deg, rgb(100,0,0) 25%, transparent 25%)",
+      "background-size": "5px 3px",
+      "background-color": "rgb(50, 50, 50, 1.0)",
+      "border-radius" : "15px"
+    },//*/
+    /*
+    "Disabled": { //https://leaverou.github.io/css3patterns/#waves
+      "background" : "radial-gradient(circle at 100% 50%, transparent 20%, rgba(255,75,75,.8) 21%," +
+                     "rgba(255,75,75,.8) 34%, transparent 35%, transparent),radial-gradient(circle at" +
+                     " 0% 50%, transparent 20%, rgba(255,75,75,.8) 21%, rgba(255,75,75,.8) 34%, "+
+                     "transparent 35%, transparent) 0 -50px",
+
+      "background-color": "rgb(50, 50, 50, 0.0)",
+      "background-size": "15px 20px",
+      "border-radius" : "15px",
+    },//*/
+
+    Disabled : { //keys here are treated as both css and theme keys
+      "background-size": "5px 3px",
+      "background-color": "rgb(72, 72, 72)",
+      "border-radius" : "15px",
+      BoxBG : "rgb(50, 50, 50)",
+      BoxSubBG : "rgb(50, 50, 50)",
+      BoxSub2BG : "rgb(50, 50, 50)",
+      AreaHeaderBG  : "rgb(72, 72, 72)",
+      DefaultPanelBG : "rgb(72, 72, 72)",
+      InnerPanelBG:  "rgb(72, 72, 72)"
+    },
+
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
@@ -15536,15 +15564,6 @@ const DefaultTheme = {
       size  : 12,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
-    }),
-
-
-
-    "TabText" : new CSSFont({
-      size     : 18,
-      color    : "rgba(35, 35, 35, 1.0)",
-      font     : "sans-serif",
-      //weight   : "bold"
     }),
 
     "LabelText" : new CSSFont({
@@ -15669,6 +15688,19 @@ const DefaultTheme = {
     TextBoxWidth : 45
   },
 
+  tabs : {
+    TabStrokeStyle1 : "rgba(200, 200, 200, 1.0)",
+    TabStrokeStyle2 : "rgba(255, 255, 255, 1.0)",
+    TabInactive : "rgba(150, 150, 150, 1.0)",
+    TabHighlight : "rgba(50, 50, 50, 0.2)",
+    TabText : new CSSFont({
+      size     : 18,
+      color    : "rgba(35, 35, 35, 1.0)",
+      font     : "sans-serif",
+      //weight   : "bold"
+    }),
+  },
+
   colorfield : {
     fieldsize : 32,
     defaultWidth : 200,
@@ -15676,7 +15708,7 @@ const DefaultTheme = {
     hueheight : 24,
     colorBoxHeight : 24,
     circleSize : 4,
-    DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
+    //DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
   },
 
   listbox : {
@@ -16986,37 +17018,48 @@ class UIBase extends HTMLElement {
       return;
 
     if (val && !this._disdata) {
-      this._disdata = {
-        background : this.background,
-        bgcolor : this.style["background-color"],
-        DefaultPanelBG : this.default_overrides.DefaultPanelBG,
-        BoxBG : this.default_overrides.BoxBG
+      let style = this.getDefault("Disabled") || {
+        "background-color" : "black"
       };
 
-      let bg = this.getDefault("DisabledBG");
+      this._disdata = {
+        style : {},
+        defaults : {}
+      };
+      
+      for (let k in style) {
+        this._disdata.style[k] = this.style[k];
+        this._disdata.defaults[k] = this.default_overrides[k];
 
-      this.background = bg;
-      this.default_overrides.DefaultPanelBG = bg;
-      this.default_overrides.BoxBG = bg;
-      this.style["background-color"] = bg;
+        let v = style[k];
+
+        if (typeof v === "object" && v instanceof CSSFont) {
+          this.style[k] = style[k].genCSS();
+          this.default_overrides[k] = style[k];
+        } else {
+          this.style[k] = style[k];
+          this.default_overrides[k] = style[k];
+        }
+      }
 
       this._disabled = val;
       this.on_disabled();
     } else if (!val && this._disdata) {
-      if (this._disdata.DefaultPanelBG) {
-        this.default_overrides.DefaultPanelBG = this._disdata.DefaultPanelBG;
-      } else {
-        delete this.default_overrides.DefaultPanelBG;
+      for (let k in this._disdata.style) {
+        this.style[k] = this._disdata.style[k];
       }
 
-      if (this.boxBG) {
-        this.default_overrides.BoxBG = this._disdata.BoxBG;
-      } else {
-        delete this.default_overrides.BoxBG;
+      for (let k in this._disdata.defaults) {
+        let v = this._disdata.defaults[k];
+
+        if (v === undefined) {
+          delete this.default_overrides[k];
+        } else {
+          this.default_overrides[k] = v;
+        }
       }
 
-      this.background = this._disdata.background;
-      this.style["background-color"] = this._disdata.bgcolor;
+      this.background = this.style["background-color"];
       this._disdata = undefined;
 
       this._disabled = val;
@@ -17027,7 +17070,14 @@ class UIBase extends HTMLElement {
 
     let rec = (n) => {
       if (n instanceof UIBase) {
+        let changed = !!n.disabled != !!val;
+
         n.disabled = val;
+
+        if (changed) {
+          n.update();
+          n.setCSS();
+        }
       }
 
       for (let c of n.childNodes) {
@@ -17910,15 +17960,14 @@ function drawText(elem, x, y, text, args={}) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
     font = font.genCSS(size);
-  }
-
-  if (font) {
+  } else if (font) {
     g.font = font;
   }
 
   if (color === undefined) {
     color = elem.getDefault("DefaultText").color;
   }
+  
   if (typeof color === "object") {
     color = color2css(color);
   }
@@ -19792,6 +19841,19 @@ class Label extends UIBase {
 
     this._updateFont();
   }
+  
+  on_disabled() {
+    super.on_disabled();
+    this._enabled_font = this.font;
+    this.font = "DefaultText";
+    this._updateFont();
+  }
+
+  on_enabled() {
+    super.on_enabled();
+    this.font = this._enabled_font;
+    this._updateFont();
+  }
 
   _updateFont() {
     let font = this._font;
@@ -19832,6 +19894,11 @@ class Label extends UIBase {
   }
 
   update() {
+    if (this.font !== this._last_font) {
+      this._last_font = this.font;
+      this._updateFont();
+    }
+    
     this.dom.style["pointer-events"] = this.style["pointer-events"];
 
     if (this.hasAttribute("datapath")) {
@@ -22401,10 +22468,10 @@ class PanelFrame extends ColumnFrame {
       iconcheck.checked = !iconcheck.checked;
     };
 
-    let label = row.label(this.getAttribute("title"));
+    let label = this.label = row.label(this.getAttribute("title"));
 
-    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
-    label.overrideDefault("DefaultText", this.getDefault("TitleText").copy());
+    this.label.font = "TitleText";
+    label._updateFont();
 
     label.noMarginsOrPadding();
     label.addEventListener("mousedown", onclick);
@@ -22422,6 +22489,21 @@ class PanelFrame extends ColumnFrame {
 
     this.contents.ctx = this.ctx;
     this.add(this.contents);
+  }
+
+  on_disabled() {
+    super.on_disabled();
+
+    this.label._updateFont();
+    this.setCSS();
+  }
+
+  on_enabled() {
+    super.on_enabled();
+    
+    this.label.setCSS();
+    this.label.style["color"] = this.style["color"];
+    this.setCSS();
   }
 
   static define() {
@@ -23203,7 +23285,7 @@ class ColorPicker extends ColumnFrame {
       node._no_update_textbox = false;
     };
 
-    tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
+    //tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
 
     let tab = tabs.tab("HSV");
 
@@ -23433,6 +23515,10 @@ class ColorPickerButton extends UIBase$8 {
 
     widget.style["padding"] = "20px";
     widget.onchange = onchange;
+
+    colorpicker.style["background-color"] = widget.getDefault("DefaultPanelBG");
+    colorpicker.style["border-radius"] = "25px";
+    colorpicker.style["border"] = widget.getDefault("border");
   }
 
   get font() {
@@ -23445,6 +23531,11 @@ class ColorPickerButton extends UIBase$8 {
     this.setCSS();
   }
 
+  on_disabled() {
+    this.setCSS();
+    this._redraw();
+  }
+  
   _redraw() {
     let canvas = this.dom, g = this.g;
 
@@ -23457,7 +23548,7 @@ class ColorPickerButton extends UIBase$8 {
 
       drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
       drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-      let steps = 10;
+      let steps = 5;
       let dt = canvas.width / steps, t = 0;
 
       g.beginPath();
@@ -24398,7 +24489,7 @@ class TabBar extends UIBase$9 {
   
   _redraw() {
     let g = this.g;
-
+    
     let bgcolor = this.getDefault("DefaultPanelBG");
     let inactive = this.getDefault("TabInactive");
 
@@ -24641,7 +24732,8 @@ class TabBar extends UIBase$9 {
   }
   
   static define() {return {
-    tagname : "tabbar-x"
+    tagname : "tabbar-x",
+    style   : "tabs"
   };}
 }
 UIBase$9.register(TabBar);
@@ -24912,7 +25004,8 @@ class TabContainer extends UIBase$9 {
   }
 
   static define() {return {
-    tagname : "tabcontainer-x"
+    tagname : "tabcontainer-x",
+    style   : "tabs"
   };}
 }
 
@@ -27055,7 +27148,11 @@ class NumSlider extends ValueButtonBase {
 
     //}
 
-    g.fillStyle = "rgba(0,0,0,0.1)";
+    let c = css2color(this.getDefault("BoxBG"));
+    let f = 1.0 - (c[0]+c[1]+c[2])*0.33;
+    f = ~~(f*255);
+
+    g.fillStyle = `rgba(${f},${f},${f},0.95)`;
 
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();
@@ -34213,17 +34310,17 @@ class Screen$2 extends UIBase {
 
     ret.style["z-index"] = "-10";
 
-    window.setTimeout(() => {
+    let cb = () => {
       let rect = ret.getClientRects()[0];
       let size = this.size;
 
-      console.log("rect", rect);
-
       if (!rect) {
-        ret.style["z-index"] = z;
+        this.doOnce(cb);
         return;
       }
 
+      console.log("rect", rect);
+      
       if (rect.bottom > size[1]) {
         ret.style["top"] = (size[1] - rect.height - 10) + "px";
       } else if (rect.top < 0) {
@@ -34237,7 +34334,9 @@ class Screen$2 extends UIBase {
 
 
       ret.style["z-index"] = z;
-    }, 150);
+    };
+    
+    this.doOnce(cb);
 
     return ret;
   }

@@ -375,17 +375,17 @@ export class Screen extends ui_base.UIBase {
 
     ret.style["z-index"] = "-10";
 
-    window.setTimeout(() => {
+    let cb = () => {
       let rect = ret.getClientRects()[0];
       let size = this.size;
 
-      console.log("rect", rect);
-
       if (!rect) {
-        ret.style["z-index"] = z;
+        this.doOnce(cb);
         return;
       }
 
+      console.log("rect", rect);
+      
       if (rect.bottom > size[1]) {
         ret.style["top"] = (size[1] - rect.height - 10) + "px";
       } else if (rect.top < 0) {
@@ -399,7 +399,9 @@ export class Screen extends ui_base.UIBase {
 
 
       ret.style["z-index"] = z;
-    }, 150);
+    }
+    
+    this.doOnce(cb);
 
     return ret;
   }
