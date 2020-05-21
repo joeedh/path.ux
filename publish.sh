@@ -12,3 +12,4 @@ cd package && \
 npm publish
 
 git tag -a $VERSION -m "Release $VERSION"
+git push
