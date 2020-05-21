@@ -314,7 +314,7 @@ export class Button extends UIBase {
 
   update() {
     super.update();
-    
+
     this.style["user-select"] = "none";
     this.dom.style["user-select"] = "none";
 
@@ -497,7 +497,7 @@ export class Button extends UIBase {
     ui_base.drawText(this, ~~cx, ~~cy, text, {
       canvas : this.dom,
       g : this.g,
-      size : ts,
+      size : ts / dpi,
       font : font
     });
   }

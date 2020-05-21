@@ -2236,7 +2236,7 @@ export function drawText(elem, x, y, text, args={}) {
   if (font === undefined) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
-    font = font.genCSS(size);
+    g.font = font = font.genCSS(size);
   } else if (font) {
     g.font = font;
   }
