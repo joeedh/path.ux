@@ -44,7 +44,7 @@
   };
 })();
 
-window.eventDebugModule =   (function() {
+window.eventDebugModule = (function() {
   "use strict";
 
   return {
@@ -317,24 +317,19 @@ ArrayIter.prototype.next = function() {
 //  return new ArrayIter(this);
 //}
 
-if (Math.fract == undefined) {
+if (Math.fract === undefined) {
   Math.fract = function fract(f) {
-    var sn = (f>=0)*2.0-1.0;
-    f = f*sn - Math.floor(f*sn);
-    
-    sn = sn<0.0;
-    
-    return f*(1-sn) + (1.0-f)*sn;
+    return f - Math.floor(f);
   };
 }
 
-if (Math.tent == undefined) {
+if (Math.tent === undefined) {
   Math.tent = function tent(f) {
     return 1.0 - Math.abs(Math.fract(f)-0.5)*2.0;
   };
 }
 
-if (Math.sign == undefined) {
+if (Math.sign === undefined) {
   Math.sign = function sign(f) {
     return (f>0.0)*2.0-1.0;
   };
@@ -355,7 +350,7 @@ if (Array.prototype.pop_i == undefined) {
   };
 }
 
-if (Array.prototype.remove == undefined) {
+if (Array.prototype.remove === undefined) {
   Array.prototype.remove = function(item, suppress_error) {
     var i = this.indexOf(item);
     
@@ -384,6 +379,15 @@ String.prototype[Symbol.keystr] = function() {
 
 Number.prototype[Symbol.keystr] = Boolean.prototype[Symbol.keystr] = function() {
   return ""+this;
+};
+
+Array.prototype[Symbol.keystr] = function() {
+  let key = "";
+  for (let item of this) {
+    key += item[Symbol.keystr]() + ":";
+  }
+
+  return key;
 };
 
 (function () {
@@ -10716,6 +10720,10 @@ class ToolProperty extends ToolPropertyIF {
     this.flag = flag;
     this.icon = icon;
 
+    this.decimalPlaces = 4;
+    this.radix = 10;
+    this.step = 0.05;
+
     this.callbacks = {};
   }
 
@@ -10725,6 +10733,8 @@ class ToolProperty extends ToolPropertyIF {
 
     customPropTypeBase++;
     customPropertyTypes.push(cls);
+
+    PropClasses[new cls().type] = cls;
 
     return cls.PROP_TYPE_ID;
   }
@@ -10883,7 +10893,30 @@ class ToolProperty extends ToolPropertyIF {
 
     return this;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
 }
+ToolProperty.STRUCT = `
+ToolProperty { 
+  type           : int;
+  flag           : int;
+  subtype        : int;
+  icon           : int;
+  baseUnit       : string | ""+this.baseUnit;
+  displayUnit    : string | ""+this.displayUnit;
+  range          : array(float) | this.range ? this.range : [-1e17, 1e17];
+  uiRange        : array(float) | this.range ? this.range : [-1e17, 1e17];
+  description    : string;
+  stepIsRelative : bool;
+  step           : float;
+  expRate        : float;
+  radix          : float;
+  decimalPlaces  : int;
+}
+`;
+register(ToolProperty);
 
 class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
@@ -10918,7 +10951,12 @@ class StringProperty extends ToolProperty {
     this.data = val;
   }
 }  
-  
+StringProperty.STRUCT = inherit(StringProperty, ToolProperty) + `
+  data : string;
+}
+`;  
+register(StringProperty);
+
 let num_res =[
   /([0-9]+)/,
   /((0x)?[0-9a-fA-F]+(h?))/,
@@ -15744,6 +15782,8 @@ const DefaultTheme = {
 
 let _ui_base = undefined;
 
+window.__cconst = exports;
+
 let Vector4$1 = Vector4;
 
 const EnumProperty$2 = EnumProperty$1;
@@ -17371,6 +17411,7 @@ class UIBase extends HTMLElement {
   }
 
   isDead() {
+    return !this.isConnected;
     let p = this, lastp = this;
 
     function find(c, n) {
@@ -17951,7 +17992,7 @@ function drawText(elem, x, y, text, args={}) {
   if (font === undefined) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
-    font = font.genCSS(size);
+    g.font = font = font.genCSS(size);
   } else if (font) {
     g.font = font;
   }
@@ -18169,7 +18210,7 @@ class Button extends UIBase$1 {
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
-      if (exports.buttonEvents)
+      if (exports.DEBUG.buttonEvents)
         console.log(e.keyCode);
 
       switch (e.keyCode) {
@@ -18310,11 +18351,10 @@ class Button extends UIBase$1 {
     let press = (e) => {
       e.stopPropagation();
 
-      if (exports.buttonEvents)
+      if (exports.DEBUG.buttonEvents)
         console.log("button press", this._pressed);
 
       if (this.disabled) return;
-      if (this._pressed) return;
 
       this._pressed = true;
 
@@ -18328,13 +18368,14 @@ class Button extends UIBase$1 {
     };
 
     let depress = (e) => {
-      if (exports.buttonEvents)
-        console.log("button depress");
+      if (exports.DEBUG.buttonEvents)
+        console.log("button depress", e.button, e.was_touch);
 
       if (this._auto_depress) {
         this._pressed = false;
 
         if (this.disabled) return;
+
         this._redraw();
       }
 
@@ -18347,8 +18388,8 @@ class Button extends UIBase$1 {
 
       this._redraw();
 
-      if (exports.buttonEvents)
-        console.log("button click callback:", this.onclick);
+      if (exports.DEBUG.buttonEvents)
+        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
@@ -18397,7 +18438,7 @@ class Button extends UIBase$1 {
       this._repos_canvas();
       this._redraw();
 
-      if (exports.buttonEvents)
+      if (exports.DEBUG.buttonEvents)
         console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }
@@ -18431,13 +18472,9 @@ class Button extends UIBase$1 {
 
   update() {
     super.update();
-    
+
     this.style["user-select"] = "none";
     this.dom.style["user-select"] = "none";
-
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
-    }
 
     this.updateDefaultSize();
     this.updateWidth();
@@ -18614,7 +18651,7 @@ class Button extends UIBase$1 {
     drawText(this, ~~cx, ~~cy, text, {
       canvas : this.dom,
       g : this.g,
-      size : ts,
+      size : ts / dpi,
       font : font
     });
   }
@@ -19329,7 +19366,6 @@ class Check extends UIBase$3 {
   update() {
     super.update();
 
-    this.title = this.description;
     this.updateDPI();
 
     if (this.hasAttribute("datapath")) {
@@ -19481,10 +19517,6 @@ class IconCheck extends Button {
       this.drawCheck = false;
     }
 
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
-    }
-    
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
@@ -19606,10 +19638,6 @@ class IconButton extends Button {
   }
   
   update() {
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
-    }
-
     super.update();
   }
 
@@ -20593,6 +20621,12 @@ class Container extends UIBase {
     //console.log(prop, PropTypes, PropSubTypes);
 
     function makeUIName(name) {
+      if (typeof name === "number" && isNaN(name)) {
+        console.warn("Subkey error in data api", inpath);
+        return ""+name;
+      }
+      
+      name = ""+name;
       name = name[0].toUpperCase() + name.slice(1, name.length).toLowerCase();
       name = name.replace(/_/g, " ");
       return name;
@@ -34536,6 +34570,7 @@ class Screen$2 extends UIBase {
       }
 
       let ok = false;
+      let elem2 = elem;
 
       while (elem) {
         if (elem === container) {
@@ -34546,8 +34581,6 @@ class Screen$2 extends UIBase {
       }
 
       if (!ok) {
-        e.stopPropagation();
-
         do_timeout = !do_timeout || (time_ms() - bad_time > 100);
 
         if (closeOnMouseOut && do_timeout) {
