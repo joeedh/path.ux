@@ -4,10 +4,25 @@ import {print_stack} from '../util/util.js';
 import * as toolprop_abstract from "../toolsys/toolprop_abstract.js";
 import {ToolProperty} from "../toolsys/toolprop.js";
 import * as util from '../util/util.js';
+import {Vector2, Vector3, Vector4, Quat} from '../util/vectormath.js';
 
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
 
+export function getVecClass(proptype) {
+  switch (proptype) {
+    case PropTypes.VEC2:
+      return Vector2;
+    case PropTypes.VEC3:
+      return Vector3;
+    case PropTypes.VEC4:
+      return Vector4;
+    case PropTypes.QUAT:
+      return Quat;
+    default:
+      throw new Error("bad prop type " + proptype);
+  }
+}
 export function isVecProperty(prop) {
   if (!prop)
     return false;

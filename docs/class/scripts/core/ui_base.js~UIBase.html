@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -443,13 +446,13 @@
 </nav>
 
 <div class="content" data-ice="content"><div class="header-notice">
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {UIBase} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber489">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {UIBase} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber551">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   <span data-ice="access">public</span>
   <span data-ice="kind">class</span>
   
   
   
-  <span data-ice="source">| <span><a href="file/scripts/core/ui_base.js.html#lineNumber489">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/scripts/core/ui_base.js.html#lineNumber551">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
@@ -460,8 +463,8 @@
   
   
   <div class="flat-list" data-ice="extendsChain"><h4>Extends:</h4><div><span>HTMLElement</span> &#x2192; UIBase</div></div>
-  <div class="flat-list" data-ice="directSubclass"><h4>Direct Subclass:</h4><div><span><a href="class/scripts/widgets/ui_button.js~Button.html">Button</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker.js~ColorField.html">ColorField</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html">ColorPickerButton</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker2.js~HueField.html">HueField</a></span>, <span><a href="class/scripts/widgets/ui_menu.js~Menu.html">Menu</a></span>, <span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span>, <span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span>, <span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker2.js~SatValField.html">SatValField</a></span>, <span><a href="class/scripts/widgets/ui_tabs.js~TabBar.html">TabBar</a></span>, <span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span>, <span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span>, <span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></div></div>
-  <div class="flat-list" data-ice="indirectSubclass"><h4>Indirect Subclass:</h4><div><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></div></div>
+  <div class="flat-list" data-ice="directSubclass"><h4>Direct Subclass:</h4><div><span><a href="class/scripts/widgets/ui_button.js~Button.html">Button</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker.js~ColorField.html">ColorField</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html">ColorPickerButton</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker2.js~HueField.html">HueField</a></span>, <span><a href="class/scripts/widgets/ui_menu.js~Menu.html">Menu</a></span>, <span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span>, <span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span>, <span><a href="class/scripts/widgets/ui_colorpicker2.js~SatValField.html">SatValField</a></span>, <span><a href="class/scripts/widgets/ui_tabs.js~TabBar.html">TabBar</a></span>, <span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span>, <span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span>, <span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></div></div>
+  <div class="flat-list" data-ice="indirectSubclass"><h4>Indirect Subclass:</h4><div><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span>, <span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span>, <span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span>, <span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span>, <span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></div></div>
   
   
   
@@ -1561,6 +1564,62 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
           
           
           <span class="code" data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html#instance-get-_reportCtxName">_reportCtxName</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">private</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html#instance-member-_screenStyleTag">_screenStyleTag</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">private</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html#instance-member-_screenStyleUpdateHash">_screenStyleUpdateHash</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span></span>
         </p>
       </div>
       <div>
@@ -3296,7 +3355,7 @@ of normal DOM nodes.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1920">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1989">source</a></span></span>
     </span>
   </h3>
 
@@ -3351,7 +3410,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1758">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1827">source</a></span></span>
     </span>
   </h3>
 
@@ -3408,7 +3467,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1796">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1865">source</a></span></span>
     </span>
   </h3>
 
@@ -3467,7 +3526,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1101">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1170">source</a></span></span>
     </span>
   </h3>
 
@@ -3541,7 +3600,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber490">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber552">source</a></span></span>
     </span>
   </h3>
 
@@ -3587,7 +3646,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber809">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber878">source</a></span></span>
     </span>
   </h3>
 
@@ -3630,7 +3689,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber813">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber882">source</a></span></span>
     </span>
   </h3>
 
@@ -3673,7 +3732,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber542">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber611">source</a></span></span>
     </span>
   </h3>
 
@@ -3716,7 +3775,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1445">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1514">source</a></span></span>
     </span>
   </h3>
 
@@ -3759,7 +3818,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1666">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1735">source</a></span></span>
     </span>
   </h3>
 
@@ -3802,7 +3861,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber541">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber610">source</a></span></span>
     </span>
   </h3>
 
@@ -3845,7 +3904,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber741">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber810">source</a></span></span>
     </span>
   </h3>
 
@@ -3888,7 +3947,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber746">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber815">source</a></span></span>
     </span>
   </h3>
 
@@ -3931,7 +3990,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1237">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1306">source</a></span></span>
     </span>
   </h3>
 
@@ -3974,7 +4033,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1330">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1399">source</a></span></span>
     </span>
   </h3>
 
@@ -4017,7 +4076,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber557">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber626">source</a></span></span>
     </span>
   </h3>
 
@@ -4060,7 +4119,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber629">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber698">source</a></span></span>
     </span>
   </h3>
 
@@ -4103,7 +4162,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber633">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber702">source</a></span></span>
     </span>
   </h3>
 
@@ -4146,7 +4205,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber495">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber563">source</a></span></span>
     </span>
   </h3>
 
@@ -4189,7 +4248,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber763">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber832">source</a></span></span>
     </span>
   </h3>
 
@@ -4232,7 +4291,7 @@ static define() {return {
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber625">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber694">source</a></span></span>
     </span>
   </h3>
 
@@ -4278,7 +4337,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber641">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber710">source</a></span></span>
     </span>
   </h3>
 
@@ -4321,7 +4380,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber515">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber584">source</a></span></span>
     </span>
   </h3>
 
@@ -4366,7 +4425,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber814">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber883">source</a></span></span>
     </span>
   </h3>
 
@@ -4409,7 +4468,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber497">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber565">source</a></span></span>
     </span>
   </h3>
 
@@ -4452,7 +4511,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber560">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber629">source</a></span></span>
     </span>
   </h3>
 
@@ -4495,7 +4554,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber562">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber631">source</a></span></span>
     </span>
   </h3>
 
@@ -4538,7 +4597,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber558">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber627">source</a></span></span>
     </span>
   </h3>
 
@@ -4581,7 +4640,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber559">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber628">source</a></span></span>
     </span>
   </h3>
 
@@ -4624,7 +4683,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1379">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1448">source</a></span></span>
     </span>
   </h3>
 
@@ -4667,7 +4726,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1367">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1436">source</a></span></span>
     </span>
   </h3>
 
@@ -4710,7 +4769,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber539">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber608">source</a></span></span>
     </span>
   </h3>
 
@@ -4753,7 +4812,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber571">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber640">source</a></span></span>
     </span>
   </h3>
 
@@ -4796,7 +4855,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber544">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber613">source</a></span></span>
     </span>
   </h3>
 
@@ -4839,7 +4898,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber556">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber625">source</a></span></span>
     </span>
   </h3>
 
@@ -4882,7 +4941,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber517">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber586">source</a></span></span>
     </span>
   </h3>
 
@@ -4925,7 +4984,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber638">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber707">source</a></span></span>
     </span>
   </h3>
 
@@ -4968,7 +5027,93 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1546">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1615">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-_screenStyleTag">
+    <span class="access" data-ice="access">private</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">_screenStyleTag</span><span class="code" data-ice="signature">: <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber557">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-_screenStyleUpdateHash">
+    <span class="access" data-ice="access">private</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">_screenStyleUpdateHash</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber558">source</a></span></span>
     </span>
   </h3>
 
@@ -5011,7 +5156,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber536">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber605">source</a></span></span>
     </span>
   </h3>
 
@@ -5054,7 +5199,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber513">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber582">source</a></span></span>
     </span>
   </h3>
 
@@ -5100,7 +5245,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber667">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber736">source</a></span></span>
     </span>
   </h3>
 
@@ -5183,7 +5328,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber977">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1046">source</a></span></span>
     </span>
   </h3>
 
@@ -5254,7 +5399,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1115">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1184">source</a></span></span>
     </span>
   </h3>
 
@@ -5309,7 +5454,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber737">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber806">source</a></span></span>
     </span>
   </h3>
 
@@ -5352,7 +5497,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1439">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1508">source</a></span></span>
     </span>
   </h3>
 
@@ -5395,7 +5540,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1625">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1694">source</a></span></span>
     </span>
   </h3>
 
@@ -5461,7 +5606,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber655">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber724">source</a></span></span>
     </span>
   </h3>
 
@@ -5516,7 +5661,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1334">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1403">source</a></span></span>
     </span>
   </h3>
 
@@ -5588,7 +5733,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1674">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1743">source</a></span></span>
     </span>
   </h3>
 
@@ -5674,7 +5819,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber896">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber965">source</a></span></span>
     </span>
   </h3>
 
@@ -5752,7 +5897,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1880">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1949">source</a></span></span>
     </span>
   </h3>
 
@@ -5830,7 +5975,7 @@ toolpath app.datapath_set(path=&quot;&quot; newValueJSON=&quot;&quot;)</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1746">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1815">source</a></span></span>
     </span>
   </h3>
 
@@ -5888,7 +6033,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1841">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1910">source</a></span></span>
     </span>
   </h3>
 
@@ -5966,7 +6111,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1558">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1627">source</a></span></span>
     </span>
   </h3>
 
@@ -6043,7 +6188,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1550">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1619">source</a></span></span>
     </span>
   </h3>
 
@@ -6120,7 +6265,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1465">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1534">source</a></span></span>
     </span>
   </h3>
 
@@ -6197,7 +6342,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1579">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1648">source</a></span></span>
     </span>
   </h3>
 
@@ -6252,7 +6397,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1905">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1974">source</a></span></span>
     </span>
   </h3>
 
@@ -6307,7 +6452,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1857">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1926">source</a></span></span>
     </span>
   </h3>
 
@@ -6362,7 +6507,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber820">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber889">source</a></span></span>
     </span>
   </h3>
 
@@ -6417,7 +6562,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1109">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1178">source</a></span></span>
     </span>
   </h3>
 
@@ -6472,7 +6617,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1105">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1174">source</a></span></span>
     </span>
   </h3>
 
@@ -6527,7 +6672,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1733">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1802">source</a></span></span>
     </span>
   </h3>
 
@@ -6582,7 +6727,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber989">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1058">source</a></span></span>
     </span>
   </h3>
 
@@ -6625,7 +6770,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1584">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1653">source</a></span></span>
     </span>
   </h3>
 
@@ -6680,7 +6825,7 @@ for zoom ratio use getZoom()</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1791">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1860">source</a></span></span>
     </span>
   </h3>
 
@@ -6757,7 +6902,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1459">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1528">source</a></span></span>
     </span>
   </h3>
 
@@ -6816,7 +6961,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber797">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber866">source</a></span></span>
     </span>
   </h3>
 
@@ -6871,7 +7016,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber770">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber839">source</a></span></span>
     </span>
   </h3>
 
@@ -6926,7 +7071,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber803">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber872">source</a></span></span>
     </span>
   </h3>
 
@@ -6981,7 +7126,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1300">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1369">source</a></span></span>
     </span>
   </h3>
 
@@ -7024,7 +7169,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1304">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1373">source</a></span></span>
     </span>
   </h3>
 
@@ -7067,7 +7212,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1039">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1108">source</a></span></span>
     </span>
   </h3>
 
@@ -7110,7 +7255,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1442">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1511">source</a></span></span>
     </span>
   </h3>
 
@@ -7169,7 +7314,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1719">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1788">source</a></span></span>
     </span>
   </h3>
 
@@ -7212,7 +7357,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1808">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1877">source</a></span></span>
     </span>
   </h3>
 
@@ -7271,7 +7416,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1812">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1881">source</a></span></span>
     </span>
   </h3>
 
@@ -7342,7 +7487,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1804">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1873">source</a></span></span>
     </span>
   </h3>
 
@@ -7407,7 +7552,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber861">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber930">source</a></span></span>
     </span>
   </h3>
 
@@ -7485,7 +7630,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1135">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1204">source</a></span></span>
     </span>
   </h3>
 
@@ -7590,7 +7735,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1320">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1389">source</a></span></span>
     </span>
   </h3>
 
@@ -7633,7 +7778,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1308">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1377">source</a></span></span>
     </span>
   </h3>
 
@@ -7711,7 +7856,7 @@ the toJSON/loadJSON or STRUCT interfaces.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber788">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber857">source</a></span></span>
     </span>
   </h3>
 
@@ -7768,7 +7913,7 @@ the global tab order</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1015">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1084">source</a></span></span>
     </span>
   </h3>
 
@@ -7828,7 +7973,7 @@ the global tab order</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1043">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1112">source</a></span></span>
     </span>
   </h3>
 
@@ -7894,7 +8039,7 @@ the global tab order</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber715">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber784">source</a></span></span>
     </span>
   </h3>
 
@@ -7977,7 +8122,7 @@ the global tab order</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1776">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1845">source</a></span></span>
     </span>
   </h3>
 
@@ -8035,7 +8180,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber917">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber986">source</a></span></span>
     </span>
   </h3>
 
@@ -8078,7 +8223,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1504">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1573">source</a></span></span>
     </span>
   </h3>
 
@@ -8149,7 +8294,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1474">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1543">source</a></span></span>
     </span>
   </h3>
 
@@ -8220,7 +8365,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1449">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1518">source</a></span></span>
     </span>
   </h3>
 
@@ -8275,7 +8420,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber927">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber996">source</a></span></span>
     </span>
   </h3>
 
@@ -8346,7 +8491,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1705">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1774">source</a></span></span>
     </span>
   </h3>
 
@@ -8391,7 +8536,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1820">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1889">source</a></span></span>
     </span>
   </h3>
 
@@ -8468,7 +8613,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1687">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1756">source</a></span></span>
     </span>
   </h3>
 
@@ -8511,7 +8656,7 @@ see saveUIData() export</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1062">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1131">source</a></span></span>
     </span>
   </h3>
 
@@ -8582,7 +8727,7 @@ descended from ui_base.UIBase</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1092">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1161">source</a></span></span>
     </span>
   </h3>
 
@@ -8625,7 +8770,7 @@ descended from ui_base.UIBase</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber996">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1065">source</a></span></span>
     </span>
   </h3>
 

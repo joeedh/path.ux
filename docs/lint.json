@@ -4,39 +4,39 @@
     "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 705,
+        "lineNumber": 718,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 706,
+        "lineNumber": 719,
         "line": "   * Look up struct definition for a class.\r"
       },
       {
-        "lineNumber": 707,
+        "lineNumber": 720,
         "line": "   *\r"
       },
       {
-        "lineNumber": 708,
+        "lineNumber": 721,
         "line": "   * @param cls: the class\r"
       },
       {
-        "lineNumber": 709,
+        "lineNumber": 722,
         "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
       },
       {
-        "lineNumber": 710,
+        "lineNumber": 723,
         "line": "   * @returns {IterableIterator<*>}\r"
       },
       {
-        "lineNumber": 711,
+        "lineNumber": 724,
         "line": "   */\r"
       },
       {
-        "lineNumber": 712,
+        "lineNumber": 725,
         "line": "\r"
       },
       {
-        "lineNumber": 713,
+        "lineNumber": 726,
         "line": "  _addClass(cls, dstruct) {\r"
       }
     ],
@@ -54,31 +54,31 @@
     "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 826,
+        "lineNumber": 839,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 827,
+        "lineNumber": 840,
         "line": "   get meta information for a datapath.\r"
       },
       {
-        "lineNumber": 828,
+        "lineNumber": 841,
         "line": "\r"
       },
       {
-        "lineNumber": 829,
+        "lineNumber": 842,
         "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
       },
       {
-        "lineNumber": 830,
+        "lineNumber": 843,
         "line": "   just want meta information\r"
       },
       {
-        "lineNumber": 831,
+        "lineNumber": 844,
         "line": "   */\r"
       },
       {
-        "lineNumber": 832,
+        "lineNumber": 845,
         "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false) {\r"
       }
     ],
@@ -176,31 +176,31 @@
     "filePath": "scripts/widgets/ui_richedit.js",
     "lines": [
       {
-        "lineNumber": 98,
+        "lineNumber": 159,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 99,
+        "lineNumber": 160,
         "line": "  * Only available in textOnlyMode.  Formats html-formated line.\r"
       },
       {
-        "lineNumber": 100,
+        "lineNumber": 161,
         "line": "   *\r"
       },
       {
-        "lineNumber": 101,
+        "lineNumber": 162,
         "line": "   * @param line : line to format\r"
       },
       {
-        "lineNumber": 102,
+        "lineNumber": 163,
         "line": "   * @parem text : whole text\r"
       },
       {
-        "lineNumber": 103,
+        "lineNumber": 164,
         "line": "  * */\r"
       },
       {
-        "lineNumber": 104,
+        "lineNumber": 165,
         "line": "  formatLine(line, text) {\r"
       }
     ],

@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -446,9 +449,11 @@
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import * as ui_base from &apos;../core/ui_base.js&apos;
 import * as util from &apos;../util/util.js&apos;;
 import {ColumnFrame, RowFrame, Container} from &quot;../core/ui.js&quot;;
-let UIBase = ui_base.UIBase;
+let UIBase = ui_base.UIBase, Icons = ui_base.Icons;
+import {TextBoxBase} from &apos;./ui_textbox.js&apos;;
+import {keymap} from &quot;../util/simple_events.js&quot;;
 
-export class RichEditor extends UIBase {
+export class RichEditor extends TextBoxBase {
   constructor() {
     super();
 
@@ -457,19 +462,78 @@ export class RichEditor extends UIBase {
 
     this.textOnlyMode = false;
 
+    this.styletag = document.createElement(&quot;style&quot;);
+    this.styletag.textContent = `
+      div.rich-text-editor-x {
+        width        :   100%;
+        height       :   100%;
+        min-height   :   150px;
+        overflow     :   scroll;
+        padding      :   5px;
+        white-space  :   pre-wrap;
+      }
+      
+      rich-text-editor-x {
+        display        : flex;
+        flex-direction : column;
+      }
+    `;
+
+    this.shadow.appendChild(this.styletag);
+
+    let controls = this.controls = document.createElement(&quot;rowframe-x&quot;);
+
+
+    let makeicon = (icon, description, cb) =&gt; {
+      icon = controls.iconbutton(icon, description, cb);
+      icon.iconsheet = 1; //use second smallest icon size
+      icon.overrideDefault(&quot;BoxMargin&quot;, 3);
+
+      return icon;
+    };
+
+    makeicon(Icons.BOLD, &quot;Bold&quot;, () =&gt; {
+      document.execCommand(&quot;bold&quot;);
+    });
+    makeicon(Icons.ITALIC, &quot;Italic&quot;, () =&gt; {
+      document.execCommand(&quot;italic&quot;);
+    });
+    makeicon(Icons.UNDERLINE, &quot;Underline&quot;, () =&gt; {
+      document.execCommand(&quot;underline&quot;);
+    });
+    makeicon(Icons.STRIKETHRU, &quot;Strikethrough&quot;, () =&gt; {
+      document.execCommand(&quot;strikeThrough&quot;);
+    });
+
+    controls.background = this.getDefault(&quot;DefaultPanelBG&quot;);
+
+    this.shadow.appendChild(controls);
+
     this.textarea = document.createElement(&quot;div&quot;);
     this.textarea.contentEditable = true;
-    this.textarea.style[&quot;width&quot;] = &quot;100%&quot;;
-    this.textarea.style[&quot;height&quot;] = &quot;100%&quot;;
-    this.textarea.setAttribute(&quot;class&quot;, &quot;rich-text-editor&quot;);
+    this.textarea.setAttribute(&quot;class&quot;, &quot;rich-text-editor-x&quot;);
 
-    this.textarea.style[&quot;overflow&quot;] = &quot;scroll&quot;;
-
-    this.textarea.style[&quot;padding&quot;] = &quot;5px&quot;;
     this.textarea.style[&quot;font&quot;] = this.getDefault(&quot;DefaultText&quot;).genCSS();
     this.textarea.style[&quot;background-color&quot;] = this.getDefault(&quot;background-color&quot;);
-    this.textarea.style[&quot;white-space&quot;] = &quot;pre-wrap&quot;;
     this.textarea.setAttribute(&quot;white-space&quot;, &quot;pre-wrap&quot;);
+
+    this.textarea.addEventListener(&quot;keydown&quot;, (e) =&gt; {
+      if (e.keyCode === keymap[&quot;S&quot;] &amp;&amp; e.shiftKey &amp;&amp; (e.ctrlKey || e.commandKey)) {
+        this.toggleStrikeThru();
+
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
+    this.textarea.addEventListener(&quot;focus&quot;, (e) =&gt; {
+      this._focus = 1;
+      this.setCSS();
+    });
+    this.textarea.addEventListener(&quot;blur&quot;, (e) =&gt; {
+      this._focus = 0;
+      this.setCSS();
+    });
 
     document.execCommand(&quot;styleWithCSS&quot;, true);
 
@@ -504,10 +568,10 @@ export class RichEditor extends UIBase {
         return;
       }
 
-      console.log(&quot;text changed&quot;, ...arguments);
+      //console.log(&quot;text changed&quot;, ...arguments);
       let sel = document.getSelection();
       let range = sel.getRangeAt(0);
-      console.log(range.startOffset, range.endOffset, range.startContainer);
+      //console.log(range.startOffset, range.endOffset, range.startContainer);
 
       let node = sel.anchorNode;
       let off = sel.anchorOffset;
@@ -551,6 +615,10 @@ export class RichEditor extends UIBase {
     return line;
   }
 
+  toggleStrikeThru() {
+    console.log(&quot;strike thru!&quot;);
+    document.execCommand(&quot;strikeThrough&quot;);
+  }
   /**
    * Only available in textOnlyMode.  Called when starting text formatting
    */
@@ -559,6 +627,8 @@ export class RichEditor extends UIBase {
 
   init() {
     super.init();
+
+    window.rc = this;
 
     document.execCommand(&quot;defaultParagraphSeparator&quot;, false, &quot;div&quot;);
 
@@ -604,7 +674,27 @@ export class RichEditor extends UIBase {
   setCSS() {
     super.setCSS();
 
-    this.textarea.style[&quot;font&quot;] = this.getDefault(&quot;DefaultText&quot;).genCSS();
+    this.controls.background = this.getDefault(&quot;DefaultPanelBG&quot;);
+
+    if (this._focus) {
+      this.textarea.style[&quot;border&quot;] = `2px dashed ${this.getDefault(&apos;FocusOutline&apos;)}`;
+    } else {
+      this.textarea.style[&quot;border&quot;] = &quot;none&quot;;
+    }
+
+    if (this.style[&quot;font&quot;]) {
+      this.textarea.style[&quot;font&quot;] = this.style[&quot;font&quot;];
+    } else {
+      this.textarea.style[&quot;font&quot;] = this.getDefault(&quot;DefaultText&quot;).genCSS();
+    }
+
+    if (this.style[&quot;color&quot;]) {
+      this.textarea.style[&quot;color&quot;] = this.style[&quot;color&quot;];
+    }  else {
+      this.textarea.style[&quot;color&quot;] = this.getDefault(&quot;DefaultText&quot;).color;
+    }
+
+
     if (this.disabled) {
       this.textarea.style[&quot;background-color&quot;] = this.getDefault(&quot;DisabledBG&quot;);
     } else {

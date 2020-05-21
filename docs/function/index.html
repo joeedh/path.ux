@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -1837,6 +1840,34 @@ and be usable for more use cases.</p>
           
           
           <span class="code" data-ice="name"><span><a href="function/index.html#static-function-getNoteFrames">getNoteFrames</a></span></span><span class="code" data-ice="signature">(screen: <span>*</span>): <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span><span class="code" data-ice="signature">(proptype: <span>*</span>): <span>*</span></span>
         </p>
       </div>
       <div>
@@ -4637,6 +4668,62 @@ and be usable for more use cases.</p>
           
           
           
+          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span><span class="code" data-ice="signature">(color: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span>, color2: <span>*</span>, contrast: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, width: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, border: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span>, selector: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span>): <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span><span class="code" data-ice="signature">(s: <span>*</span>, color: <span>*</span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
           <span class="code" data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span><span class="code" data-ice="signature">(): <span>*</span></span>
         </p>
       </div>
@@ -5066,11 +5153,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber86">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber87">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {IsMobile} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber86">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {IsMobile} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber87">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -5566,11 +5653,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber382">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber404">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {atob} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber382">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {atob} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber404">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -5791,11 +5878,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber345">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber367">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {btoa} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber345">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {btoa} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber367">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -5996,11 +6083,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_textbox.js.html#lineNumber332">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_textbox.js.html#lineNumber342">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {checkForTextBox} from &apos;<span><a href="file/scripts/widgets/ui_textbox.js.html#lineNumber332">./scripts/widgets/ui_textbox.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {checkForTextBox} from &apos;<span><a href="file/scripts/widgets/ui_textbox.js.html#lineNumber342">./scripts/widgets/ui_textbox.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -6500,11 +6587,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber400">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber422">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {color2css} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber400">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {color2css} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber422">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -6814,11 +6901,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber260">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber261">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {copyEvent} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber260">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {copyEvent} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber261">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -7302,11 +7389,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1932">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2001">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {drawRoundBox} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber1932">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {drawRoundBox} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2001">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>okay, I need to refactor this function,
@@ -7423,11 +7510,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1925">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber1994">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {drawRoundBox2} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber1925">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {drawRoundBox2} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber1994">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -7489,11 +7576,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2148">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2217">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {drawText} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2148">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {drawText} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2217">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -7876,11 +7963,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber877">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber899">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {fetch_file} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber877">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {fetch_file} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber899">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -7947,11 +8034,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber362">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber384">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {formatNumberUI} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber362">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {formatNumberUI} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber384">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8121,11 +8208,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber294">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber316">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getAllKeys} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber294">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getAllKeys} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber316">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8263,11 +8350,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber268">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber290">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getClassParent} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber268">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getClassParent} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber290">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8334,11 +8421,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1486">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1499">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getDataPathToolOp} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1486">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getDataPathToolOp} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1499">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8389,11 +8476,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber75">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber76">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getDefault} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber75">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getDefault} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber76">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8543,11 +8630,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber181">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber87">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getFieldImage} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber181">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getFieldImage} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber87">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8632,11 +8719,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2014">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2083">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getFont} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2014">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getFont} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2083">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8723,11 +8810,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber145">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber51">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getHueField} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber145">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getHueField} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber51">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8806,11 +8893,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber309">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber310">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getIconManager} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber309">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getIconManager} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber310">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -8992,6 +9079,77 @@ and be usable for more use cases.</p>
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="static-function-getVecClass">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">getVecClass</span><span class="code" data-ice="signature">(proptype: <span>*</span>): <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber12">source</a></span></span>
+    </span>
+  </h3>
+
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getVecClass} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber12">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
+  
+  
+  
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">proptype</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>*</span></td>
+          
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="static-function-getWranglerScreen">
     <span class="access" data-ice="access">public</span>
     
@@ -9003,11 +9161,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1121">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1155">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getWranglerScreen} from &apos;<span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1121">./scripts/widgets/ui_menu.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {getWranglerScreen} from &apos;<span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1155">./scripts/widgets/ui_menu.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -9529,11 +9687,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber520">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber521">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {haveModal} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber520">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {haveModal} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber521">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -9541,6 +9699,89 @@ and be usable for more use cases.</p>
   
 
   <div data-ice="properties">
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>*</span></td>
+          
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="static-function-hsv_to_rgb">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">hsv_to_rgb</span><span class="code" data-ice="signature">(h: <span>*</span>, s: <span>*</span>, v: <span>*</span>): <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/util/colorutils.js.html#lineNumber50">source</a></span></span>
+    </span>
+  </h3>
+
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {hsv_to_rgb} from &apos;<span><a href="file/scripts/util/colorutils.js.html#lineNumber50">./scripts/util/colorutils.js</a></span>&apos;</code></pre></div>
+  
+  
+  
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">h</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">s</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">v</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+</tbody>
+  </table>
+</div>
 </div>
 
   <div class="return-params" data-ice="returnParams">
@@ -9656,89 +9897,6 @@ and be usable for more use cases.</p>
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="static-function-hsv_to_rgb">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">hsv_to_rgb</span><span class="code" data-ice="signature">(h: <span>*</span>, s: <span>*</span>, v: <span>*</span>): <span>*</span></span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber63">source</a></span></span>
-    </span>
-  </h3>
-
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {hsv_to_rgb} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber63">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
-  
-  
-  
-
-  
-
-  <div data-ice="properties"><div data-ice="properties">
-  <h4 data-ice="title">Params:</h4>
-  <table class="params">
-    <thead>
-    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-    
-    <tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">h</td>
-      <td data-ice="type" class="code"><span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
-    </tr>
-<tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">s</td>
-      <td data-ice="type" class="code"><span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
-    </tr>
-<tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">v</td>
-      <td data-ice="type" class="code"><span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
-    </tr>
-</tbody>
-  </table>
-</div>
-</div>
-
-  <div class="return-params" data-ice="returnParams">
-    <h4>Return:</h4>
-    <table>
-      <tbody>
-        <tr>
-          <td class="return-type code" data-ice="returnType"><span>*</span></td>
-          
-        </tr>
-      </tbody>
-    </table>
-    <div data-ice="returnProperties">
-</div>
-  </div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
-<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="static-function-initSimpleController">
     <span class="access" data-ice="access">public</span>
     
@@ -9750,11 +9908,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1479">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1492">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {initSimpleController} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1479">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {initSimpleController} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1492">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -9996,11 +10154,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber123">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber29">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {inv_sample} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber123">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {inv_sample} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber29">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -10187,11 +10345,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber54">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber76">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {isMobile} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber54">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {isMobile} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber76">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -10384,11 +10542,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/toolsys/toolprop.js.html#lineNumber252">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/toolsys/toolprop.js.html#lineNumber279">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {isNumber} from &apos;<span><a href="file/scripts/toolsys/toolprop.js.html#lineNumber252">./scripts/toolsys/toolprop.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {isNumber} from &apos;<span><a href="file/scripts/toolsys/toolprop.js.html#lineNumber279">./scripts/toolsys/toolprop.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -10455,11 +10613,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber11">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber26">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {isVecProperty} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber11">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {isVecProperty} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber26">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -10894,11 +11052,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber280">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber302">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {list} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber280">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {list} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber302">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -11099,11 +11257,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2245">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2314">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {loadUIData} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2245">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {loadUIData} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2314">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -11302,11 +11460,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber323">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber324">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {makeIconDiv} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber323">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {makeIconDiv} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber324">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -11464,11 +11622,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2102">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2171">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {measureText} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2102">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {measureText} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2171">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -11569,11 +11727,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2071">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2140">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {measureTextBlock} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2071">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {measureTextBlock} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2140">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -11674,11 +11832,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber417">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber439">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {merge} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber417">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {merge} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber439">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13004,11 +13162,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber37">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber59">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {pollTimer} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber37">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {pollTimer} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber59">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13081,11 +13239,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber492">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber493">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {popModalLight} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber492">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {popModalLight} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber493">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13140,11 +13298,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber89">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber88">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {popReportName} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber89">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {popReportName} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber88">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13183,11 +13341,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber860">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber882">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {print_stack} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber860">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {print_stack} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber882">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13485,11 +13643,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber319">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber320">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {pushModalLight} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber319">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {pushModalLight} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber320">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13563,11 +13721,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber73">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber72">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {pushReportName} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber73">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {pushReportName} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber72">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13622,11 +13780,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber967">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber989">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {random} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber967">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {random} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber989">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13736,11 +13894,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber305">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber320">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {registerTool} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber305">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {registerTool} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber320">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13807,11 +13965,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1475">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1488">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {registerTool} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1475">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {registerTool} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1488">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13878,11 +14036,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber43">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber54">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {registerToolStackGetter} from &apos;<span><a href="file/scripts/screen/FrameManager.js.html#lineNumber43">./scripts/screen/FrameManager.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {registerToolStackGetter} from &apos;<span><a href="file/scripts/screen/FrameManager.js.html#lineNumber54">./scripts/screen/FrameManager.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -13996,11 +14154,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber67">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber68">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {report} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber67">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {report} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber68">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14055,11 +14213,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker.js.html#lineNumber19">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/colorutils.js.html#lineNumber7">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {rgb_to_hsv} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker.js.html#lineNumber19">./scripts/widgets/ui_colorpicker.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {rgb_to_hsv} from &apos;<span><a href="file/scripts/util/colorutils.js.html#lineNumber7">./scripts/util/colorutils.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14138,11 +14296,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber20">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker.js.html#lineNumber19">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {rgb_to_hsv} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber20">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {rgb_to_hsv} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker.js.html#lineNumber19">./scripts/widgets/ui_colorpicker.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14369,11 +14527,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber132">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber38">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {sample} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber132">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {sample} from &apos;<span><a href="file/scripts/widgets/ui_colorpicker2.js.html#lineNumber38">./scripts/widgets/ui_colorpicker2.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14526,11 +14684,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2191">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2260">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {saveUIData} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2191">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {saveUIData} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2260">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14603,11 +14761,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber971">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber993">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {seed} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber971">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {seed} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber993">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14917,11 +15075,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/toolsys/simple_toolsys.js.html#lineNumber13">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/toolsys/simple_toolsys.js.html#lineNumber12">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setContextClass} from &apos;<span><a href="file/scripts/toolsys/simple_toolsys.js.html#lineNumber13">./scripts/toolsys/simple_toolsys.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setContextClass} from &apos;<span><a href="file/scripts/toolsys/simple_toolsys.js.html#lineNumber12">./scripts/toolsys/simple_toolsys.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -14976,11 +15134,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1490">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1503">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setDataPathToolOp} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1490">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setDataPathToolOp} from &apos;<span><a href="file/scripts/controller/simple_controller.js.html#lineNumber1503">./scripts/controller/simple_controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -15035,11 +15193,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber313">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber314">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setIconManager} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber313">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setIconManager} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber314">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -15159,11 +15317,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber301">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/controller.js.html#lineNumber316">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setImplementationClass} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber301">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setImplementationClass} from &apos;<span><a href="file/scripts/controller/controller.js.html#lineNumber316">./scripts/controller/controller.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -15466,11 +15624,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber44">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber45">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setTheme} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber44">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setTheme} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber45">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -15525,11 +15683,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1117">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1151">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setWranglerScreen} from &apos;<span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1117">./scripts/widgets/ui_menu.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {setWranglerScreen} from &apos;<span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1151">./scripts/widgets/ui_menu.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -15913,11 +16071,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2376">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2625">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {startEvents} from &apos;<span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2376">./scripts/screen/FrameManager.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {startEvents} from &apos;<span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2625">./scripts/screen/FrameManager.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -15972,11 +16130,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1095">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1129">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {startMenuEventWrangling} from &apos;<span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1095">./scripts/widgets/ui_menu.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {startMenuEventWrangling} from &apos;<span><a href="file/scripts/widgets/ui_menu.js.html#lineNumber1129">./scripts/widgets/ui_menu.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16031,11 +16189,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber976">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber998">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {strhash} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber976">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {strhash} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber998">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16091,6 +16249,190 @@ and be usable for more use cases.</p>
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="static-function-styleScrollBars">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">styleScrollBars</span><span class="code" data-ice="signature">(color: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span>, color2: <span>*</span>, contrast: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, width: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span>, border: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span>, selector: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span>): <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber501">source</a></span></span>
+    </span>
+  </h3>
+
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {styleScrollBars} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber501">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  
+  
+  
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">color</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: grey</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">color2</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: undefined</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">contrast</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: 0.5</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">width</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: 15</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">border</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: 1px groove black</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">selector</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: *</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>*</span></td>
+          
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="static-function-termColor">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">termColor</span><span class="code" data-ice="signature">(s: <span>*</span>, color: <span>*</span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber17">source</a></span></span>
+    </span>
+  </h3>
+
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {termColor} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber17">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  
+  
+  
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">s</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">color</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"><ul><li>optional</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></td>
+          
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="static-function-test">
     <span class="access" data-ice="access">public</span>
     
@@ -16102,11 +16444,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/controller/context.js.html#lineNumber555">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/controller/context.js.html#lineNumber560">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {test} from &apos;<span><a href="file/scripts/controller/context.js.html#lineNumber555">./scripts/controller/context.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {test} from &apos;<span><a href="file/scripts/controller/context.js.html#lineNumber560">./scripts/controller/context.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16212,11 +16554,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber1102">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber1123">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {test_fasthash} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber1102">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {test_fasthash} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber1123">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16267,11 +16609,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber393">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/util.js.html#lineNumber415">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {time_ms} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber393">./scripts/util/util.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {time_ms} from &apos;<span><a href="file/scripts/util/util.js.html#lineNumber415">./scripts/util/util.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16728,11 +17070,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2048">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2117">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_ensureFont} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2048">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_ensureFont} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2117">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16805,11 +17147,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2019">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2088">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_getFont} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2019">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_getFont} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2088">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -16896,11 +17238,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2007">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber2076">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_getFont_new} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2007">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_getFont_new} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber2076">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -17076,11 +17418,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber32">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/core/ui_base.js.html#lineNumber33">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_setAreaClass} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber32">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_setAreaClass} from &apos;<span><a href="file/scripts/core/ui_base.js.html#lineNumber33">./scripts/core/ui_base.js</a></span>&apos;</code></pre></div>
   
   
   
@@ -17135,11 +17477,11 @@ and be usable for more use cases.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber294">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/util/simple_events.js.html#lineNumber295">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_setScreenClass} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber294">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {_setScreenClass} from &apos;<span><a href="file/scripts/util/simple_events.js.html#lineNumber295">./scripts/util/simple_events.js</a></span>&apos;</code></pre></div>
   
   
   

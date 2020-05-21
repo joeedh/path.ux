@@ -116,10 +116,10 @@ export class PanelFrame extends ColumnFrame {
       iconcheck.checked = !iconcheck.checked;
     };
 
-    let label = row.label(this.getAttribute("title"));
+    let label = this.label = row.label(this.getAttribute("title"));
 
-    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
-    label.overrideDefault("DefaultText", this.getDefault("TitleText").copy());
+    this.label.font = "TitleText";
+    label._updateFont();
 
     label.noMarginsOrPadding();
     label.addEventListener("mousedown", onclick);
@@ -137,6 +137,21 @@ export class PanelFrame extends ColumnFrame {
 
     this.contents.ctx = this.ctx;
     this.add(this.contents);
+  }
+
+  on_disabled() {
+    super.on_disabled();
+
+    this.label._updateFont();
+    this.setCSS();
+  }
+
+  on_enabled() {
+    super.on_enabled();
+    
+    this.label.setCSS();
+    this.label.style["color"] = this.style["color"];
+    this.setCSS();
   }
 
   static define() {

@@ -7823,6 +7823,11 @@ let Icons = {
 let exports = {
   colorSchemeType : "light",
 
+  //add textboxes to rollar sliders,
+  //note that  users can also double click them to
+  //enter text as well
+  useNumSliderTextboxes : true,
+
   menu_close_time : 500,
   doubleClickTime : 500,
   //timeout for press-and-hold (touch) version of double clicking
@@ -8451,7 +8456,7 @@ for (var k in keymap_latin_1) {
   keymap_latin_1_rev[keymap_latin_1[k]] = k;
 }
 
-var keymap$1 = keymap_latin_1;
+var keymap = keymap_latin_1;
 var reverse_keymap = keymap_latin_1_rev;
 
 class HotKey {
@@ -8459,7 +8464,7 @@ class HotKey {
   constructor(key, modifiers, action) {
     this.action = action;
     this.mods = modifiers;
-    this.key = keymap$1[key];
+    this.key = keymap[key];
   }
 
   exec(ctx) {
@@ -8538,7 +8543,7 @@ class KeyMap extends Array {
           hk.exec(ctx);
         } catch (error) {
           print_stack$1(error);
-          console.log("failed to execute a hotkey", keymap$1[e.keyCode]);
+          console.log("failed to execute a hotkey", keymap[e.keyCode]);
         }
         return true;
       }
@@ -10693,7 +10698,7 @@ class ToolProperty extends ToolPropertyIF {
     super();
 
     this.data = undefined;
-
+    
     if (type === undefined) {
       type = this.constructor.PROP_TYPE_ID;
     }
@@ -10888,6 +10893,8 @@ class StringProperty extends ToolProperty {
 
     if (value)
       this.setValue(value);
+
+    this.wasSet = false;
   }
   
   copyTo(b) {
@@ -10972,6 +10979,7 @@ class _NumberPropertyBase extends ToolProperty {
 
     if (value !== undefined && value !== null) {
       this.setValue(value);
+      this.wasSet = false;
     }
   }
 
@@ -11235,6 +11243,7 @@ class EnumProperty$1 extends ToolProperty {
     }
     
     this.iconmap = {};
+    this.wasSet = false;
   }
 
   addUINames(map) {
@@ -11319,6 +11328,7 @@ class FlagProperty extends EnumProperty$1 {
           uiname, description, flag, icon);
 
     this.type = PropTypes.FLAG;
+    this.wasSet = false;
   }
 
   setValue(bitmask) {
@@ -11533,6 +11543,8 @@ class ListProperty$1 extends ToolProperty {
     for (let val of list) {
       this.push(val);
     }
+
+    this.wasSet = false;
   }
 
   copyTo(b) {
@@ -11656,6 +11668,8 @@ class StringSetProperty$1 extends ToolProperty {
     if (value !== undefined) {
       this.setValue(value);
     }
+
+    this.wasSet = false;
   }
 
   /*
@@ -11799,6 +11813,8 @@ class Curve1DProperty extends ToolPropertyIF {
     if (curve !== undefined) {
       this.setValue(curve);
     }
+
+    this.wasSet = false;
   }
 
   getValue() {
@@ -11863,6 +11879,8 @@ class ToolOp extends EventHandler {
     if (this === ToolOp) {
       throw new Error("Tools must implemented static tooldef() methods!");
     }
+    
+    return {};
   }
 
   /*
@@ -12061,11 +12079,11 @@ class ToolOp extends EventHandler {
   //no need to call super() to execute this if you don't want to
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap$1["Enter"]:
-      case keymap$1["Space"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
         this.modalEnd(false);
         break;
-      case keymap$1["Escape"]:
+      case keymap["Escape"]:
         this.modalEnd(true);
         break;
     }
@@ -12424,6 +12442,20 @@ class ToolStack extends Array {
 let PropFlags$1 = PropFlags,
     PropTypes$1 = PropTypes;
 
+function getVecClass(proptype) {
+  switch (proptype) {
+    case PropTypes$1.VEC2:
+      return Vector2;
+    case PropTypes$1.VEC3:
+      return Vector3;
+    case PropTypes$1.VEC4:
+      return Vector4;
+    case PropTypes$1.QUAT:
+      return Quat;
+    default:
+      throw new Error("bad prop type " + proptype);
+  }
+}
 function isVecProperty(prop) {
   if (!prop)
     return false;
@@ -13518,7 +13550,8 @@ class DataPathSetOp extends ToolOp {
         if (rdef.subkey) {
           this._undo[path] = rdef.value;
         } else {
-          this._undo[path] = rdef.value.copy();
+          let cls = getVecClass(prop.type);
+          this._undo[path] = new cls(rdef.value);
         }
       } else {
         let prop2 = prop.copy();
@@ -15475,11 +15508,6 @@ const DefaultTheme = {
       weight : "bold"
     }),
 
-    "TabStrokeStyle1" : "rgba(200, 200, 200, 1.0)",
-    "TabStrokeStyle2" : "rgba(255, 255, 255, 1.0)",
-    "TabInactive" : "rgba(150, 150, 150, 1.0)",
-    "TabHighlight" : "rgba(50, 50, 50, 0.2)",
-
     "DefaultPanelBG" : "rgba(225, 225, 225, 1.0)",
     "InnerPanelBG" : "rgba(195, 195, 195, 1.0)",
     "AreaHeaderBG" : "rgba(205, 205, 205, 1.0)",
@@ -15490,7 +15518,40 @@ const DefaultTheme = {
     "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
     "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
     "BoxBG" : "rgba(170, 170, 170, 1.0)",
-    "DisabledBG" : "rgba(110, 110, 110, 1.0)",
+    /*
+    "Disabled": { //https://leaverou.github.io/css3patterns/#zig-zag
+      background: "linear-gradient(135deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
+        "linear-gradient(225deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
+        "linear-gradient(315deg, rgb(100,0,0) 25%, transparent 25%),"+
+        "linear-gradient(45deg, rgb(100,0,0) 25%, transparent 25%)",
+      "background-size": "5px 3px",
+      "background-color": "rgb(50, 50, 50, 1.0)",
+      "border-radius" : "15px"
+    },//*/
+    /*
+    "Disabled": { //https://leaverou.github.io/css3patterns/#waves
+      "background" : "radial-gradient(circle at 100% 50%, transparent 20%, rgba(255,75,75,.8) 21%," +
+                     "rgba(255,75,75,.8) 34%, transparent 35%, transparent),radial-gradient(circle at" +
+                     " 0% 50%, transparent 20%, rgba(255,75,75,.8) 21%, rgba(255,75,75,.8) 34%, "+
+                     "transparent 35%, transparent) 0 -50px",
+
+      "background-color": "rgb(50, 50, 50, 0.0)",
+      "background-size": "15px 20px",
+      "border-radius" : "15px",
+    },//*/
+
+    Disabled : { //keys here are treated as both css and theme keys
+      "background-size": "5px 3px",
+      "background-color": "rgb(72, 72, 72)",
+      "border-radius" : "15px",
+      BoxBG : "rgb(50, 50, 50)",
+      BoxSubBG : "rgb(50, 50, 50)",
+      BoxSub2BG : "rgb(50, 50, 50)",
+      AreaHeaderBG  : "rgb(72, 72, 72)",
+      DefaultPanelBG : "rgb(72, 72, 72)",
+      InnerPanelBG:  "rgb(72, 72, 72)"
+    },
+
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
     "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
@@ -15508,15 +15569,6 @@ const DefaultTheme = {
       size  : 12,
       color :  "rgba(35, 35, 35, 1.0)",
       weight : "bold"
-    }),
-
-
-
-    "TabText" : new CSSFont({
-      size     : 18,
-      color    : "rgba(35, 35, 35, 1.0)",
-      font     : "sans-serif",
-      //weight   : "bold"
     }),
 
     "LabelText" : new CSSFont({
@@ -15571,7 +15623,7 @@ const DefaultTheme = {
   },
 
   textbox : {
-    "background-color" : "rgb(245, 245, 245, 0.95)",
+    "background-color" : "rgb(255, 255, 255, 1.0)",
   },
 
   richtext : {
@@ -15641,6 +15693,19 @@ const DefaultTheme = {
     TextBoxWidth : 45
   },
 
+  tabs : {
+    TabStrokeStyle1 : "rgba(200, 200, 200, 1.0)",
+    TabStrokeStyle2 : "rgba(255, 255, 255, 1.0)",
+    TabInactive : "rgba(150, 150, 150, 1.0)",
+    TabHighlight : "rgba(50, 50, 50, 0.2)",
+    TabText : new CSSFont({
+      size     : 18,
+      color    : "rgba(35, 35, 35, 1.0)",
+      font     : "sans-serif",
+      //weight   : "bold"
+    }),
+  },
+
   colorfield : {
     fieldsize : 32,
     defaultWidth : 200,
@@ -15648,7 +15713,7 @@ const DefaultTheme = {
     hueheight : 24,
     colorBoxHeight : 24,
     circleSize : 4,
-    DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
+    //DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
   },
 
   listbox : {
@@ -16958,37 +17023,48 @@ class UIBase extends HTMLElement {
       return;
 
     if (val && !this._disdata) {
-      this._disdata = {
-        background : this.background,
-        bgcolor : this.style["background-color"],
-        DefaultPanelBG : this.default_overrides.DefaultPanelBG,
-        BoxBG : this.default_overrides.BoxBG
+      let style = this.getDefault("Disabled") || {
+        "background-color" : "black"
       };
 
-      let bg = this.getDefault("DisabledBG");
+      this._disdata = {
+        style : {},
+        defaults : {}
+      };
+      
+      for (let k in style) {
+        this._disdata.style[k] = this.style[k];
+        this._disdata.defaults[k] = this.default_overrides[k];
 
-      this.background = bg;
-      this.default_overrides.DefaultPanelBG = bg;
-      this.default_overrides.BoxBG = bg;
-      this.style["background-color"] = bg;
+        let v = style[k];
+
+        if (typeof v === "object" && v instanceof CSSFont) {
+          this.style[k] = style[k].genCSS();
+          this.default_overrides[k] = style[k];
+        } else {
+          this.style[k] = style[k];
+          this.default_overrides[k] = style[k];
+        }
+      }
 
       this._disabled = val;
       this.on_disabled();
     } else if (!val && this._disdata) {
-      if (this._disdata.DefaultPanelBG) {
-        this.default_overrides.DefaultPanelBG = this._disdata.DefaultPanelBG;
-      } else {
-        delete this.default_overrides.DefaultPanelBG;
+      for (let k in this._disdata.style) {
+        this.style[k] = this._disdata.style[k];
       }
 
-      if (this.boxBG) {
-        this.default_overrides.BoxBG = this._disdata.BoxBG;
-      } else {
-        delete this.default_overrides.BoxBG;
+      for (let k in this._disdata.defaults) {
+        let v = this._disdata.defaults[k];
+
+        if (v === undefined) {
+          delete this.default_overrides[k];
+        } else {
+          this.default_overrides[k] = v;
+        }
       }
 
-      this.background = this._disdata.background;
-      this.style["background-color"] = this._disdata.bgcolor;
+      this.background = this.style["background-color"];
       this._disdata = undefined;
 
       this._disabled = val;
@@ -16999,7 +17075,14 @@ class UIBase extends HTMLElement {
 
     let rec = (n) => {
       if (n instanceof UIBase) {
+        let changed = !!n.disabled != !!val;
+
         n.disabled = val;
+
+        if (changed) {
+          n.update();
+          n.setCSS();
+        }
       }
 
       for (let c of n.childNodes) {
@@ -17072,7 +17155,9 @@ class UIBase extends HTMLElement {
       return;
     }
     
-    let rect = rect_element.getClientRects()[0];
+    //let rect = rect_element.getClientRects()[0];
+    let rect = rect_element.getBoundingClientRect();
+
     if (rect === undefined) {
       return;
     }
@@ -17083,7 +17168,9 @@ class UIBase extends HTMLElement {
     let tick = 0;
     let max = ~~(timems/20);
 
-    this._flashtimer = timer = window.setInterval((e) => {
+    let x = rect.x, y = rect.y;
+
+    let cb = (e) => {
       if (timer === undefined) {
         return
       }
@@ -17098,43 +17185,26 @@ class UIBase extends HTMLElement {
         this._flashcolor = undefined;
         timer = undefined;
         
-        try {
-          //this.remove();
-          //div.parentNode.insertBefore(this, div);
-        } catch (error) {
-          console.log("dom removal error");
-          div.appendChild(this);
-          return;
-        }
-        
-        //console.log(div.parentNode);
         div.remove();
-        
         this.focus();
       }
-      
+
       tick++;
-    }, 20);
+    };
+
+    setTimeout(cb, 5);
+    this._flashtimer = timer = window.setInterval(cb, 20);
 
     let div = document.createElement("div");
-    
-    //this.parentNode.insertBefore(div, this);
-    
-    try {
-      //this.remove();
-    } catch (error) {
-      console.log("this.remove() failure in UIBase.flash()");
-    }        
-    
-    //div.appendChild(this);
 
     div.style["pointer-events"] = "none";
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
     div.style["position"] = "absolute";
-    div.style["left"] = rect.x + "px";
-    div.style["top"] = rect.y + "px";
+    div.style["margin"] = "0px";
+    div.style["left"] = x + "px";
+    div.style["top"] = y + "px";
 
     div.style["background-color"] = color2css(color, 0.5);
     div.style["width"] = rect.width + "px";
@@ -17882,15 +17952,14 @@ function drawText(elem, x, y, text, args={}) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
     font = font.genCSS(size);
-  }
-
-  if (font) {
+  } else if (font) {
     g.font = font;
   }
 
   if (color === undefined) {
     color = elem.getDefault("DefaultText").color;
   }
+
   if (typeof color === "object") {
     color = color2css(color);
   }
@@ -18058,7 +18127,7 @@ var ui_base = /*#__PURE__*/Object.freeze({
 
 "use strict";
 
-let keymap$2 = keymap$1;
+let keymap$1 = keymap;
 
 let EnumProperty$3 = EnumProperty$1,
   PropTypes$2 = PropTypes;
@@ -18362,6 +18431,9 @@ class Button extends UIBase$1 {
 
   update() {
     super.update();
+    
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
 
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
@@ -18416,6 +18488,10 @@ class Button extends UIBase$1 {
   }
 
   updateName() {
+    if (!this.hasAttribute("name")) {
+      return;
+    }
+
     let name = this.getAttribute("name");
 
     if (name !== this._name) {
@@ -18565,7 +18641,7 @@ function myToFixed$1(s, n) {
   return s;
 }
 
-let keymap$3 = keymap$1;
+let keymap$2 = keymap;
 
 let EnumProperty$4 = EnumProperty$1,
   PropTypes$3 = PropTypes;
@@ -18652,10 +18728,10 @@ class TextBox extends TextBoxBase {
       e.stopPropagation();
 
       switch (e.keyCode) {
-        case keymap$3.Enter:
+        case keymap$2.Enter:
           finish(true);
           break;
-        case keymap$3.Escape:
+        case keymap$2.Escape:
           finish(false);
           break;
       }
@@ -18729,8 +18805,15 @@ class TextBox extends TextBoxBase {
   setCSS() {
     super.setCSS();
 
-    this.dom.style["background-color"] = this.getDefault("background-color");
-
+    this.overrideDefault("BoxBG", this.getDefault("background-color"));
+    
+    this.background = this.getDefault("background-color");
+    this.dom.style["margin"] = this.dom.style["padding"] = "0px";
+    
+    if (this.getDefault("background-color")) {
+      this.dom.style["background-color"] = this.getDefault("background-color");
+    }
+    
     if (this._focus) {
       this.dom.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
     } else {
@@ -18902,7 +18985,7 @@ function myToFixed$2(s, n) {
   return s;
 }
 
-let keymap$4 = keymap$1;
+let keymap$3 = keymap;
 
 let EnumProperty$5 = EnumProperty$1,
     PropTypes$4 = PropTypes;
@@ -19052,7 +19135,7 @@ class Check extends UIBase$3 {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap$4["Escape"]:
+        case keymap$3["Escape"]:
           this._highlight = undefined;
           this._redraw();
           e.preventDefault();
@@ -19060,8 +19143,8 @@ class Check extends UIBase$3 {
 
           this.blur();
           break;
-        case keymap$4["Enter"]:
-        case keymap$4["Space"]:
+        case keymap$3["Enter"]:
+        case keymap$3["Space"]:
           this.checked = !this.checked;
           e.preventDefault();
           e.stopPropagation();
@@ -19760,6 +19843,19 @@ class Label extends UIBase {
 
     this._updateFont();
   }
+  
+  on_disabled() {
+    super.on_disabled();
+    this._enabled_font = this.font;
+    this.font = "DefaultText";
+    this._updateFont();
+  }
+
+  on_enabled() {
+    super.on_enabled();
+    this.font = this._enabled_font;
+    this._updateFont();
+  }
 
   _updateFont() {
     let font = this._font;
@@ -19800,6 +19896,11 @@ class Label extends UIBase {
   }
 
   update() {
+    if (this.font !== this._last_font) {
+      this._last_font = this.font;
+      this._updateFont();
+    }
+    
     this.dom.style["pointer-events"] = this.style["pointer-events"];
 
     if (this.hasAttribute("datapath")) {
@@ -20985,9 +21086,12 @@ class Container extends UIBase {
 
     if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$4.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
+    } else if (exports.useNumSliderTextboxes) {
+      ret = document.createElement("numslider-textbox-x");
     } else {
       ret = document.createElement("numslider-x");
     }
+    
     ret.packflag |= packflag;
 
     let decimals;
@@ -21372,7 +21476,7 @@ class RichEditor extends TextBoxBase {
     this.textarea.setAttribute("white-space", "pre-wrap");
 
     this.textarea.addEventListener("keydown", (e) => {
-      if (e.keyCode === keymap$1["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
+      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
         this.toggleStrikeThru();
 
         e.preventDefault();
@@ -21667,7 +21771,7 @@ UIBase$5.register(RichViewer);
 
 "use strict";
 
-let keymap$5 = keymap$1;
+let keymap$4 = keymap;
 
 let EnumProperty$7 = EnumProperty$1,
   PropTypes$6 = PropTypes;
@@ -22369,10 +22473,10 @@ class PanelFrame extends ColumnFrame {
       iconcheck.checked = !iconcheck.checked;
     };
 
-    let label = row.label(this.getAttribute("title"));
+    let label = this.label = row.label(this.getAttribute("title"));
 
-    label.overrideDefault("LabelText", this.getDefault("TitleText").copy());
-    label.overrideDefault("DefaultText", this.getDefault("TitleText").copy());
+    this.label.font = "TitleText";
+    label._updateFont();
 
     label.noMarginsOrPadding();
     label.addEventListener("mousedown", onclick);
@@ -22390,6 +22494,21 @@ class PanelFrame extends ColumnFrame {
 
     this.contents.ctx = this.ctx;
     this.add(this.contents);
+  }
+
+  on_disabled() {
+    super.on_disabled();
+
+    this.label._updateFont();
+    this.setCSS();
+  }
+
+  on_enabled() {
+    super.on_enabled();
+    
+    this.label.setCSS();
+    this.label.style["color"] = this.style["color"];
+    this.setCSS();
   }
 
   static define() {
@@ -22647,7 +22766,7 @@ class HueField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
           }
@@ -22768,7 +22887,7 @@ class SatValField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
           }
@@ -22818,7 +22937,7 @@ class SatValField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
           }
@@ -23171,7 +23290,7 @@ class ColorPicker extends ColumnFrame {
       node._no_update_textbox = false;
     };
 
-    tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
+    //tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
 
     let tab = tabs.tab("HSV");
 
@@ -23401,6 +23520,10 @@ class ColorPickerButton extends UIBase$8 {
 
     widget.style["padding"] = "20px";
     widget.onchange = onchange;
+
+    colorpicker.style["background-color"] = widget.getDefault("DefaultPanelBG");
+    colorpicker.style["border-radius"] = "25px";
+    colorpicker.style["border"] = widget.getDefault("border");
   }
 
   get font() {
@@ -23413,6 +23536,11 @@ class ColorPickerButton extends UIBase$8 {
     this.setCSS();
   }
 
+  on_disabled() {
+    this.setCSS();
+    this._redraw();
+  }
+  
   _redraw() {
     let canvas = this.dom, g = this.g;
 
@@ -23425,7 +23553,7 @@ class ColorPickerButton extends UIBase$8 {
 
       drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
       drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-      let steps = 10;
+      let steps = 5;
       let dt = canvas.width / steps, t = 0;
 
       g.beginPath();
@@ -24366,7 +24494,7 @@ class TabBar extends UIBase$9 {
   
   _redraw() {
     let g = this.g;
-
+    
     let bgcolor = this.getDefault("DefaultPanelBG");
     let inactive = this.getDefault("TabInactive");
 
@@ -24609,7 +24737,8 @@ class TabBar extends UIBase$9 {
   }
   
   static define() {return {
-    tagname : "tabbar-x"
+    tagname : "tabbar-x",
+    style   : "tabs"
   };}
 }
 UIBase$9.register(TabBar);
@@ -24880,7 +25009,8 @@ class TabContainer extends UIBase$9 {
   }
 
   static define() {return {
-    tagname : "tabcontainer-x"
+    tagname : "tabcontainer-x",
+    style   : "tabs"
   };}
 }
 
@@ -25234,8 +25364,8 @@ class ListBox extends Container {
       console.log("yay", e.keyCode);
 
       switch (e.keyCode) {
-        case keymap$1["Up"]:
-        case keymap$1["Down"]:
+        case keymap["Up"]:
+        case keymap["Down"]:
           if (this.items.length == 0)
             return;
 
@@ -25245,7 +25375,7 @@ class ListBox extends Container {
           }
 
           let i = this.items.indexOf(this.items.active);
-          let dir = e.keyCode == keymap$1["Up"] ? -1 : 1;
+          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
 
           i = Math.max(Math.min(i+dir, this.items.length-1), 0);
           this.setActive(this.items[i]);
@@ -25937,6 +26067,8 @@ class DropBox extends Button {
   constructor() {
     super();
 
+    this.searchMenuMode = false;
+
     this.r = 5;
     this._menu = undefined;
     this._auto_depress = false;
@@ -25952,6 +26084,8 @@ class DropBox extends Button {
 
   setCSS() {
     //do not call parent classes's setCSS here
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
   }
 
   updateWidth() {
@@ -26003,7 +26137,14 @@ class DropBox extends Button {
       prop = this.prop;
     }
 
-    let name = prop.ui_value_names[prop.keys[val]];
+    let name = this.getAttribute("name");
+
+    if (prop.type & (PropTypes$a.ENUM|PropTypes$a.FLAG)) {
+      name = prop.ui_value_names[prop.keys[val]];
+    } else {
+      name = ""+val;
+    }
+
     if (name != this.getAttribute("name")) {
       this.setAttribute("name", name);
       this.updateName();
@@ -26061,6 +26202,8 @@ class DropBox extends Button {
     }
 
     menu.onselect = (id) => {
+      this._pressed = false;
+
       //console.log("dropbox select");
       this._pressed = false;
       this._redraw();
@@ -26083,8 +26226,10 @@ class DropBox extends Button {
 
   _onpress(e) {
     if (this._menu !== undefined) {
-      this._menu.close();
+      this._pressed = false;
+      let menu = this._menu;
       this._menu = undefined;
+      menu.close();
       return;
     }
 
@@ -26127,7 +26272,7 @@ class DropBox extends Button {
     let x = e.x, y = e.y;
     let rects = this.dom.getBoundingClientRect(); //getClientRects();
 
-    x = rects.x;
+    x = rects.x - window.scrollX;
     y = rects.y + rects.height - window.scrollY; // + rects[0].height; // visualViewport.scale;
 
     if (!window.haveElectron) {
@@ -26151,7 +26296,11 @@ class DropBox extends Button {
     con.noMarginsOrPadding();
 
     con.add(menu);
-    menu.start();
+    if (this.searchMenuMode) {
+      menu.startFancy();
+    } else {
+      menu.start();
+    }
   }
 
   _redraw() {
@@ -27009,7 +27158,11 @@ class NumSlider extends ValueButtonBase {
 
     //}
 
-    g.fillStyle = "rgba(0,0,0,0.1)";
+    let c = css2color(this.getDefault("BoxBG"));
+    let f = 1.0 - (c[0]+c[1]+c[2])*0.33;
+    f = ~~(f*255);
+
+    g.fillStyle = `rgba(${f},${f},${f},0.95)`;
 
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();
@@ -27473,7 +27626,7 @@ class NumSliderSimpleBase extends UIBase {
 }
 UIBase.register(NumSliderSimpleBase);
 
-class NumSliderSimple extends ColumnFrame {
+class SliderWithTextbox extends ColumnFrame {
   constructor() {
     super();
 
@@ -27497,11 +27650,25 @@ class NumSliderSimple extends ColumnFrame {
     this.container = this;
 
     this.textbox = document.createElement("textbox-x");
-    this.numslider = document.createElement("numslider-simple-base-x");
-
-    this.textbox.range = this.numslider.range;
+    this.textbox.width = 55;
+    this._numslider = undefined;
 
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+  }
+
+
+  get numslider() {
+    return this._numslider;
+  }
+
+  //child classes set this in their constructors
+  set numslider(v) {
+    this._numslider = v;
+    this.textbox.range = this._numslider.range;
+  }
+
+  set range(v) {
+    this.numslider.range = v;
   }
 
   get range() {
@@ -27619,6 +27786,7 @@ class NumSliderSimple extends ColumnFrame {
 
     strip.add(textbox);
 
+    textbox.setCSS();
     this.linkTextBox();
 
     let in_onchange = 0;
@@ -27769,17 +27937,39 @@ class NumSliderSimple extends ColumnFrame {
 
   setCSS() {
     super.setCSS();
-
+    this.textbox.setCSS();
     //textbox.style["margin"] = "5px";
 
   }
+}
 
+class NumSliderSimple extends SliderWithTextbox {
+  constructor() {
+    super();
+
+    this.numslider = document.createElement("numslider-simple-base-x");
+
+  }
   static define() {return {
     tagname : "numslider-simple-x",
     style : "numslider_simple"
   }}
 }
 UIBase.register(NumSliderSimple);
+
+class NumSliderWithTextBox extends SliderWithTextbox {
+  constructor() {
+    super();
+
+    this.numslider = document.createElement("numslider-x");
+
+  }
+  static define() {return {
+    tagname : "numslider-textbox-x",
+    style : "numslider-textbox-x"
+  }}
+}
+UIBase.register(NumSliderWithTextBox);
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen$1 = 0;
@@ -30034,11 +30224,11 @@ class ToolBase extends ToolOp {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case keymap$1.Escape: //esc
+      case keymap.Escape: //esc
         this.cancel();
         break;
-      case keymap$1.Space: //space
-      case keymap$1.Enter: //return
+      case keymap.Space: //space
+      case keymap.Enter: //return
         this.finish();
         break;
     }
@@ -30124,9 +30314,9 @@ class AreaResizeTool extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap$1["Escape"]:
-      case keymap$1["Enter"]:
-      case keymap$1["Space"]:
+      case keymap["Escape"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
         this.finish();
         break;
     }
@@ -30339,11 +30529,11 @@ class SplitTool extends ToolBase {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case keymap$1.Escape: //esc
+      case keymap.Escape: //esc
         this.cancel();
         break;
-      case keymap$1.Space: //space
-      case keymap$1.Enter: //return
+      case keymap.Space: //space
+      case keymap.Enter: //return
         this.finish();
         break;
     }
@@ -30812,8 +31002,8 @@ class ToolTipViewer extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap$1.Escape:
-      case keymap$1.Enter:
+      case keymap.Escape:
+      case keymap.Enter:
       case Keymap.Space:
         if (this.tooltip) {
           this.tooltip.end();
@@ -33502,6 +33692,23 @@ var ScreenArea$1 = /*#__PURE__*/Object.freeze({
 
 let ignore = 0;
 
+window.testSnapScreenVerts = function(arg) {
+  let screen = CTX.screen;
+
+  screen.unlisten();
+  screen.on_resize([screen.size[0]-75, screen.size[1]], screen.size);
+  screen.on_resize = screen.updateSize = () => {};
+
+  let p = CTX.propsbar;
+  p.pos[0] += 50;
+  p.owning_sarea.loadFromPosSize();
+  screen.regenBorders();
+
+  screen.size[0] = window.innerWidth-5;
+
+  screen.snapScreenVerts(arg);
+};
+
 class AreaDocker extends Container {
   constructor() {
     super();
@@ -33797,7 +34004,7 @@ function makePopupArea(area_class, screen, args={}) {
 
   if (addEscapeKeyHandler) {
     sarea.on_keydown = (e) => {
-      if (e.keyCode === keymap$1.Escape) {
+      if (e.keyCode === keymap.Escape) {
         screen.removeArea(sarea);
       }
     };
@@ -33931,6 +34138,11 @@ class Screen$2 extends UIBase {
         console.warn(sheet, "sheet");
         
         let sheet2 = this.globalCSS.sheet;
+        if (!sheet2) {
+          this.doOnce(finish);
+          return;
+        }
+
         let map = {};
         for (let rule of sheet2.rules) {
           map[rule.selectorText] = rule;
@@ -34138,8 +34350,45 @@ class Screen$2 extends UIBase {
     return menu;
   }
 
-  /** makes a popup at x,y and returns a new container-x for it */
   popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
+    let ret = this._popup(...arguments);
+
+    let z = ret.style["z-index"];
+
+    ret.style["z-index"] = "-10";
+
+    let cb = () => {
+      let rect = ret.getClientRects()[0];
+      let size = this.size;
+
+      if (!rect) {
+        this.doOnce(cb);
+        return;
+      }
+
+      console.log("rect", rect);
+      
+      if (rect.bottom > size[1]) {
+        ret.style["top"] = (size[1] - rect.height - 10) + "px";
+      } else if (rect.top < 0) {
+        ret.style["top"] = "10px";
+      }
+      if (rect.right > size[0]) {
+        ret.style["left"] = (size[0] - rect.width - 10) + "px";
+      } else if (rect.left < 0) {
+        ret.style["left"] = "10px";
+      }
+
+
+      ret.style["z-index"] = z;
+    };
+
+    this.doOnce(cb);
+
+    return ret;
+  }
+  /** makes a popup at x,y and returns a new container-x for it */
+  _popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
 
     let sarea = this.sareas.active;
@@ -34319,7 +34568,7 @@ class Screen$2 extends UIBase {
       console.log(e.keyCode);
 
       switch (e.keyCode) {
-        case keymap$1["Escape"]:
+        case keymap["Escape"]:
           end();
           break;
       }
@@ -34449,7 +34698,8 @@ class Screen$2 extends UIBase {
 
     let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
-    document.body.style["touch-action"] = "none";
+    /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
+    document.body.style.margin = document.body.style.padding = "0px";
     document.body.style["transform-origin"] = "top left";
     document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
 
@@ -34749,7 +34999,8 @@ class Screen$2 extends UIBase {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-
+      bad = bad || !(n instanceof UIBase$g);
+      
       if (n._id in visit || n.hidden) {
         return;
       }
@@ -35811,11 +36062,32 @@ class Screen$2 extends UIBase {
   }
 
   snapScreenVerts(fitToSize=true) {
-    let mm = this._recalcAABB();
-    let min = mm[0], max = mm[1];
+    let this2 = this;
+    function* screenverts() {
+      for (let v of this2.screenverts) {
+        let ok = 0;
 
-    snap(min);
-    snapi(max);
+        for (let sarea of v.sareas) {
+          if (!(sarea.flag & AreaFlags.INDEPENDENT)) {
+            ok  = 1;
+          }
+        }
+
+        if (ok) {
+          yield v;
+        }
+      }
+    }
+
+    let mm = new MinMax(2);
+    for (let v of screenverts()) {
+      mm.minmax(v);
+    }
+
+    let min = mm.min, max = mm.max;
+
+    //snap(min);
+    //snapi(max);
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
@@ -35824,33 +36096,45 @@ class Screen$2 extends UIBase {
 
       sz.div(vec);
 
-      for (let v of this.screenverts) {
-        snap(v.sub(min).mul(sz));//.add(this.pos);
+      for (let v of screenverts()) {
+        v.sub(min).mul(sz);
+        //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
     } else {
-      for (let v of this.screenverts) {
-        snap(v);
+      for (let v of screenverts()) {
+        //snap(v);
       }
 
       [min, max] = this._recalcAABB();
-      snap(min);
-      snapi(max);
+
+      //snap(min);
+      //snapi(max);
 
       this.size.load(max).sub(min);
       this.pos.load(min);
     }
 
+    let found = 1;
 
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
       let old = new Vector2$e(sarea.size);
+      let oldpos = new Vector2$e(sarea.pos);
+
       sarea.loadFromVerts();
+
+      found = found || old.vectorDistance(sarea.size) > 1;
+      found = found || oldpos.vectorDistance(sarea.pos) > 1;
+
       sarea.on_resize(old);
     }
 
-    this._recalcAABB();
-    this.setCSS();
+    if (found) {
+      //this.regenBorders();
+      this._recalcAABB();
+      this.setCSS();
+    }
   }
 
   on_resize(oldsize, newsize=this.size, _set_key=true) {
@@ -36543,7 +36827,7 @@ class ContextOverlay {
   }
 }
 
-const excludedKeys = new Set(["onRemove", "reset", "toString",
+const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
   "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
   "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
   "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
@@ -36667,6 +36951,11 @@ class Context {
 
     this._props = new Set();
     this._stack = [];
+    this._inside_map = {};
+  }
+
+  //chrome's debug console is weirdly messing with this
+  _fix() {
     this._inside_map = {};
   }
 
@@ -37042,5 +37331,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap$1 as keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

@@ -7,7 +7,7 @@ import {ColumnFrame} from "../core/ui.js";
 import * as util from "../util/util.js";
 import {PropTypes, PropSubTypes, PropFlags} from "../toolsys/toolprop.js";
 import {pushModalLight, popModalLight} from "../util/simple_events.js";
-import {KeyMap} from "../util/simple_events.js";
+import {KeyMap, keymap} from "../util/simple_events.js";
 
 //use .setAttribute("linear") to disable nonlinear sliding
 export class NumSlider extends ValueButtonBase {
@@ -532,7 +532,11 @@ export class NumSlider extends ValueButtonBase {
 
     //}
 
-    g.fillStyle = "rgba(0,0,0,0.1)";
+    let c = css2color(this.getDefault("BoxBG"));
+    let f = 1.0 - (c[0]+c[1]+c[2])*0.33;
+    f = ~~(f*255);
+
+    g.fillStyle = `rgba(${f},${f},${f},0.95)`;
 
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();
@@ -996,7 +1000,7 @@ export class NumSliderSimpleBase extends UIBase {
 }
 UIBase.register(NumSliderSimpleBase);
 
-export class NumSliderSimple extends ColumnFrame {
+export class SliderWithTextbox extends ColumnFrame {
   constructor() {
     super();
 
@@ -1020,11 +1024,25 @@ export class NumSliderSimple extends ColumnFrame {
     this.container = this;
 
     this.textbox = document.createElement("textbox-x");
-    this.numslider = document.createElement("numslider-simple-base-x");
-
-    this.textbox.range = this.numslider.range;
+    this.textbox.width = 55;
+    this._numslider = undefined;
 
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+  }
+
+
+  get numslider() {
+    return this._numslider;
+  }
+
+  //child classes set this in their constructors
+  set numslider(v) {
+    this._numslider = v;
+    this.textbox.range = this._numslider.range;
+  }
+
+  set range(v) {
+    this.numslider.range = v;
   }
 
   get range() {
@@ -1142,6 +1160,7 @@ export class NumSliderSimple extends ColumnFrame {
 
     strip.add(textbox);
 
+    textbox.setCSS();
     this.linkTextBox();
 
     let in_onchange = 0;
@@ -1292,14 +1311,37 @@ export class NumSliderSimple extends ColumnFrame {
 
   setCSS() {
     super.setCSS();
-
+    this.textbox.setCSS();
     //textbox.style["margin"] = "5px";
 
   }
+}
 
+export class NumSliderSimple extends SliderWithTextbox {
+  constructor() {
+    super();
+
+    this.numslider = document.createElement("numslider-simple-base-x");
+
+  }
   static define() {return {
     tagname : "numslider-simple-x",
     style : "numslider_simple"
   }}
 }
 UIBase.register(NumSliderSimple);
+
+export class NumSliderWithTextBox extends SliderWithTextbox {
+  constructor() {
+    super();
+
+    this.numslider = document.createElement("numslider-x");
+
+  }
+  static define() {return {
+    tagname : "numslider-textbox-x",
+    style : "numslider-textbox-x"
+  }}
+}
+UIBase.register(NumSliderWithTextBox);
+

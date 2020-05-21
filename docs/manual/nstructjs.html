@@ -175,37 +175,31 @@ class&apos;s data and how it is saved.  For example:</p>
   constructor() {
     this.data1 = 0;
     this.data2 = [1, 2, 3];
+    this.obj = [some object];
   }
 
   //reader &quot;fills in&quot; fields in a newly created object with loaded data
-  static fromSTRUCT(reader) {
-    let ret = new SomeClass();
-
-    reader(ret);
-
-    return ret;
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
   }
 }
 SomeClass.STRUCT = `
 my_module.SomeClass {
   data1 : int;
   data2 : array;
+  obj   : int | this.obj.id;
 }
 nstructjs.manager.add_class(SomeClass);
 `;</code>
-</code></pre><h2 id="control-how-fields-are-saved">Control How Fields Are Saved</h2><p>Note that you can specify little code snippets to control how fields are saved.
+</code></pre><h2 id="control-how-fields-are-saved">Control How Fields Are Saved</h2><p>You can use little code snippets to control how fields are saved.
 For example, if you want to save an integer ID instead of a reference for an 
 object property, you might do this:</p>
 <pre><code><code class="source-code prettyprint">my_module.AnotherClass {
-  someclass : int | obj.someclass !== undefined ? obj.someclass.id : -1;
+  someclass : int | this.someclass !== undefined ? this.someclass.id : -1;
 }</code>
-</code></pre><p>Here, everything after &apos;|&apos; until &apos;;&apos; defines how someclass is saved.  For various dumb reasons
-&apos;this&apos; is bound to &apos;obj&apos;; as you can see, the basic idea is to check if this.someclass exists,
-if so use this.someclass.id, else use -1.</p>
-<h2 id="versioning">Versioning</h2><p>To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a
+</code></pre><h2 id="versioning">Versioning</h2><p>To a certain extend nstructjs will gracefully handle version changes.  The basic idea is to save a
 copy of your struct scripts with each file, that way each file knows how to load itself.</p>
-<p>For more advanced versioning, see AppState.prototype.do_versions and AppState.prototype.do_versions_post.
-They&apos;re used when the automatic versioning from nstructjs isn&apos;t enough.</p>
 </div>
 </div>
 

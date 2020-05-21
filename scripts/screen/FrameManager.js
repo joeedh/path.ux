@@ -35,6 +35,7 @@ import '../widgets/ui_colorpicker2.js';
 import '../widgets/ui_noteframe.js';
 import '../widgets/ui_listbox.js';
 import '../widgets/ui_table.js';
+import {AreaFlags} from "./ScreenArea.js";
 
 function list(iter) {
   let ret = [];
@@ -155,6 +156,11 @@ export class Screen extends ui_base.UIBase {
         console.warn(sheet, "sheet");
         
         let sheet2 = this.globalCSS.sheet;
+        if (!sheet2) {
+          this.doOnce(finish);
+          return;
+        }
+
         let map = {};
         for (let rule of sheet2.rules) {
           map[rule.selectorText] = rule;
@@ -362,8 +368,45 @@ export class Screen extends ui_base.UIBase {
     return menu;
   }
 
-  /** makes a popup at x,y and returns a new container-x for it */
   popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
+    let ret = this._popup(...arguments);
+
+    let z = ret.style["z-index"];
+
+    ret.style["z-index"] = "-10";
+
+    let cb = () => {
+      let rect = ret.getClientRects()[0];
+      let size = this.size;
+
+      if (!rect) {
+        this.doOnce(cb);
+        return;
+      }
+
+      console.log("rect", rect);
+      
+      if (rect.bottom > size[1]) {
+        ret.style["top"] = (size[1] - rect.height - 10) + "px";
+      } else if (rect.top < 0) {
+        ret.style["top"] = "10px";
+      }
+      if (rect.right > size[0]) {
+        ret.style["left"] = (size[0] - rect.width - 10) + "px";
+      } else if (rect.left < 0) {
+        ret.style["left"] = "10px";
+      }
+
+
+      ret.style["z-index"] = z;
+    }
+
+    this.doOnce(cb);
+
+    return ret;
+  }
+  /** makes a popup at x,y and returns a new container-x for it */
+  _popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
 
     let sarea = this.sareas.active;
@@ -673,7 +716,8 @@ export class Screen extends ui_base.UIBase {
 
     let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
-    document.body.style["touch-action"] = "none";
+    /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
+    document.body.style.margin = document.body.style.padding = "0px";
     document.body.style["transform-origin"] = "top left";
     document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
 
@@ -973,7 +1017,8 @@ export class Screen extends ui_base.UIBase {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-
+      bad = bad || !(n instanceof UIBase);
+      
       if (n._id in visit || n.hidden) {
         return;
       }
@@ -2035,11 +2080,32 @@ export class Screen extends ui_base.UIBase {
   }
 
   snapScreenVerts(fitToSize=true) {
-    let mm = this._recalcAABB();
-    let min = mm[0], max = mm[1];
+    let this2 = this;
+    function* screenverts() {
+      for (let v of this2.screenverts) {
+        let ok = 0;
 
-    snap(min);
-    snapi(max);
+        for (let sarea of v.sareas) {
+          if (!(sarea.flag & AreaFlags.INDEPENDENT)) {
+            ok  = 1;
+          }
+        }
+
+        if (ok) {
+          yield v;
+        }
+      }
+    }
+
+    let mm = new math.MinMax(2);
+    for (let v of screenverts()) {
+      mm.minmax(v);
+    }
+
+    let min = mm.min, max = mm.max;
+
+    //snap(min);
+    //snapi(max);
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
@@ -2048,33 +2114,45 @@ export class Screen extends ui_base.UIBase {
 
       sz.div(vec);
 
-      for (let v of this.screenverts) {
-        snap(v.sub(min).mul(sz));//.add(this.pos);
+      for (let v of screenverts()) {
+        v.sub(min).mul(sz);
+        //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
     } else {
-      for (let v of this.screenverts) {
-        snap(v);
+      for (let v of screenverts()) {
+        //snap(v);
       }
 
       [min, max] = this._recalcAABB();
-      snap(min);
-      snapi(max);
+
+      //snap(min);
+      //snapi(max);
 
       this.size.load(max).sub(min);
       this.pos.load(min);
     }
 
+    let found = 1;
 
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
       let old = new Vector2(sarea.size);
+      let oldpos = new Vector2(sarea.pos);
+
       sarea.loadFromVerts();
+
+      found = found || old.vectorDistance(sarea.size) > 1;
+      found = found || oldpos.vectorDistance(sarea.pos) > 1;
+
       sarea.on_resize(old);
     }
 
-    this._recalcAABB();
-    this.setCSS();
+    if (found) {
+      //this.regenBorders();
+      this._recalcAABB();
+      this.setCSS();
+    }
   }
 
   on_resize(oldsize, newsize=this.size, _set_key=true) {

@@ -775,7 +775,7 @@ export class TabBar extends UIBase {
   
   _redraw() {
     let g = this.g;
-
+    
     let bgcolor = this.getDefault("DefaultPanelBG");
     let inactive = this.getDefault("TabInactive");
 
@@ -1018,7 +1018,8 @@ export class TabBar extends UIBase {
   }
   
   static define() {return {
-    tagname : "tabbar-x"
+    tagname : "tabbar-x",
+    style   : "tabs"
   };}
 }
 UIBase.register(TabBar);
@@ -1289,7 +1290,8 @@ export class TabContainer extends UIBase {
   }
 
   static define() {return {
-    tagname : "tabcontainer-x"
+    tagname : "tabcontainer-x",
+    style   : "tabs"
   };}
 }
 

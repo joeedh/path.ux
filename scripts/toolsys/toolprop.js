@@ -48,7 +48,7 @@ export class ToolProperty extends ToolPropertyIF {
     super();
 
     this.data = undefined;
-
+    
     if (type === undefined) {
       type = this.constructor.PROP_TYPE_ID;
     }
@@ -272,6 +272,8 @@ export class StringProperty extends ToolProperty {
 
     if (value)
       this.setValue(value);
+
+    this.wasSet = false;
   }
   
   copyTo(b) {
@@ -361,6 +363,7 @@ export class _NumberPropertyBase extends ToolProperty {
 
     if (value !== undefined && value !== null) {
       this.setValue(value);
+      this.wasSet = false;
     }
   }
 
@@ -624,6 +627,7 @@ export class EnumProperty extends ToolProperty {
     }
     
     this.iconmap = {};
+    this.wasSet = false;
   }
 
   addUINames(map) {
@@ -708,6 +712,7 @@ export class FlagProperty extends EnumProperty {
           uiname, description, flag, icon);
 
     this.type = PropTypes.FLAG;
+    this.wasSet = false;
   }
 
   setValue(bitmask) {
@@ -922,6 +927,8 @@ export class ListProperty extends ToolProperty {
     for (let val of list) {
       this.push(val);
     }
+
+    this.wasSet = false;
   }
 
   copyTo(b) {
@@ -1045,6 +1052,8 @@ export class StringSetProperty extends ToolProperty {
     if (value !== undefined) {
       this.setValue(value);
     }
+
+    this.wasSet = false;
   }
 
   /*
@@ -1190,6 +1199,8 @@ export class Curve1DProperty extends ToolPropertyIF {
     if (curve !== undefined) {
       this.setValue(curve);
     }
+
+    this.wasSet = false;
   }
 
   getValue() {

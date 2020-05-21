@@ -315,6 +315,9 @@ export class Button extends UIBase {
   update() {
     super.update();
 
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
+
     this.updateDefaultSize();
     this.updateWidth();
     this.updateDPI();
@@ -364,6 +367,10 @@ export class Button extends UIBase {
   }
 
   updateName() {
+    if (!this.hasAttribute("name")) {
+      return;
+    }
+
     let name = this.getAttribute("name");
 
     if (name !== this._name) {
@@ -486,7 +493,7 @@ export class Button extends UIBase {
     ui_base.drawText(this, ~~cx, ~~cy, text, {
       canvas : this.dom,
       g : this.g,
-      size : ts,
+      size : ts / dpi,
       font : font
     });
   }

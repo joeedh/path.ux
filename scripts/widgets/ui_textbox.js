@@ -192,8 +192,15 @@ export class TextBox extends TextBoxBase {
   setCSS() {
     super.setCSS();
 
-    this.dom.style["background-color"] = this.getDefault("background-color");
-
+    this.overrideDefault("BoxBG", this.getDefault("background-color"));
+    
+    this.background = this.getDefault("background-color");
+    this.dom.style["margin"] = this.dom.style["padding"] = "0px";
+    
+    if (this.getDefault("background-color")) {
+      this.dom.style["background-color"] = this.getDefault("background-color");
+    }
+    
     if (this._focus) {
       this.dom.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
     } else {

@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -471,750 +474,7 @@ let UIBase = ui_base.UIBase,
 let parsepx = ui_base.parsepx;
 
 import * as units from &apos;../core/units.js&apos;;
-
-export class NumSliderSimple extends UIBase {
-  constructor() {
-    super();
-
-    this.baseUnit = undefined;
-    this.displayUnit = undefined;
-
-    this.canvas = document.createElement(&quot;canvas&quot;);
-    this.g = this.canvas.getContext(&quot;2d&quot;);
-
-    this.canvas.style[&quot;width&quot;] = this.getDefault(&quot;DefaultWidth&quot;) + &quot;px&quot;;
-    this.canvas.style[&quot;height&quot;] = this.getDefault(&quot;DefaultHeight&quot;) + &quot;px&quot;;
-    this.canvas.style[&quot;pointer-events&quot;] = &quot;none&quot;;
-
-    this.highlight = false;
-    this.isInt = false;
-
-    this.shadow.appendChild(this.canvas);
-    this.range = [0, 1];
-
-    this.step = 0.1;
-    this._value = 0.5;
-    this._focus = false;
-
-    this.modal = undefined;
-  }
-
-  setValue(val, ignore_events=false) {
-    val = Math.min(Math.max(val, this.range[0]), this.range[1]);
-
-    if (this.isInt) {
-      val = Math.floor(val);
-    }
-
-    if (this._value !== val) {
-      this._value = val;
-      this._redraw();
-
-      if (this.onchange &amp;&amp; !ignore_events) {
-        this.onchange(val);
-      }
-
-      if (this.getAttribute(&quot;datapath&quot;)) {
-        let path = this.getAttribute(&quot;datapath&quot;);
-        this.setPathValue(this.ctx, path, this._value);
-      }
-    }
-  }
-
-  get value() {
-    return this._value;
-  }
-
-  set value(val) {
-    this.setValue(val);
-  }
-
-  updateDataPath() {
-    if (!this.hasAttribute(&quot;datapath&quot;)) {
-      return;
-    }
-
-    let path = this.getAttribute(&quot;datapath&quot;);
-
-    if (!path || path === &quot;null&quot; || path === &quot;undefined&quot;) {
-      return;
-    }
-
-    let val = this.getPathValue(this.ctx, path);
-
-    if (this.isInt) {
-      val = Math.floor(val);
-    }
-
-    if (val !== this._value) {
-      let prop = this.getPathMeta(this.ctx, path);
-      if (!prop) {
-        return;
-      }
-      this.isInt = prop.type === PropTypes.INT;
-
-      if (prop.range !== undefined) {
-        this.range[0] = prop.range[0];
-        this.range[1] = prop.range[1];
-      }
-      if (prop.uiRange !== undefined) {
-        this.uiRange = new Array(2);
-        this.uiRange[0] = prop.uiRange[0];
-        this.uiRange[1] = prop.uiRange[1];
-      }
-
-
-      //console.log(&quot;updating numsplider simple value&quot;, val);
-      this.value = val;
-    }
-  }
-
-  _setFromMouse(e) {
-    let rect = this.getClientRects()[0];
-    if (rect === undefined) {
-      return;
-    }
-
-    let x = e.x - rect.left;
-    let dpi = UIBase.getDPI();
-    let co = this._getButtonPos();
-
-    let val = this._invertButtonX(x*dpi);
-    this.value = val;
-  }
-
-  _startModal(e) {
-    if (e !== undefined) {
-      this._setFromMouse(e);
-    }
-    let dom = window;
-    let evtargs = {capture : false};
-
-    if (this.modal) {
-      console.warn(&quot;Double call to _startModal!&quot;);
-      return;
-    }
-
-    console.log(&quot;start simple numslider modal&quot;);
-
-    let end = () =&gt; {
-      console.log(&quot;end simple numslider modal&quot;);
-
-      if (this._modal === undefined) {
-        console.warn(&quot;end called twiced&quot;);
-        return;
-      }
-
-      popModalLight(this._modal);
-
-      this._modal = undefined;
-      this.modal = undefined;
-    };
-
-    this.modal = {
-      mousemove : (e) =&gt; {
-        this._setFromMouse(e);
-      },
-
-      mouseover : (e) =&gt; {},
-      mouseout : (e) =&gt; {},
-      mouseleave : (e) =&gt; {},
-      mouseenter : (e) =&gt; {},
-      blur : (e) =&gt; {},
-      focus : (e) =&gt; {},
-
-      mouseup: (e) =&gt; {
-        end();
-      },
-
-      keydown : (e) =&gt; {
-        switch (e.keyCode) {
-          case keymap[&quot;Enter&quot;]:
-          case keymap[&quot;Space&quot;]:
-          case keymap[&quot;Escape&quot;]:
-            end();
-        }
-      }
-    };
-
-    function makefunc(f) {
-      return (e) =&gt; {
-        e.stopPropagation();
-        e.preventDefault();
-
-        return f(e);
-      }
-    }
-
-    for (let k in this.modal) {
-      this.modal[k] = makefunc(this.modal[k]);
-    }
-    this._modal = pushModalLight(this.modal);
-  }
-
-  init() {
-    super.init();
-
-    if (!this.hasAttribute(&quot;tab-index&quot;)) {
-      this.setAttribute(&quot;tab-index&quot;, 0);
-    }
-
-    this.updateSize();
-
-    this.addEventListener(&quot;keydown&quot;, (e) =&gt; {
-      console.log(&quot;yay keydown&quot;, e.keyCode);
-      let dt = this.range[1] &gt; this.range[0] ? 1 : -1;
-
-      switch (e.keyCode) {
-        case keymap[&quot;Left&quot;]:
-        case keymap[&quot;Right&quot;]:
-          let fac = this.step;
-
-          if (e.shiftKey) {
-            fac *= 0.1;
-          }
-
-          if (this.isInt) {
-            fac = Math.max(fac, 1);
-          }
-
-          this.value += e.keyCode === keymap[&quot;Left&quot;] ? -dt*fac : dt*fac;
-
-          break;
-      }
-    });
-
-    this.addEventListener(&quot;focusin&quot;, () =&gt; {
-      if (this.disabled) return;
-
-      this._focus = 1;
-      this._redraw();
-      this.focus();
-      //console.log(&quot;focus2&quot;);
-    });
-
-    this.addEventListener(&quot;mousedown&quot;, (e) =&gt; {
-      this._startModal(e);
-    });
-
-    this.addEventListener(&quot;mousein&quot;, (e) =&gt; {
-      //console.log(&quot;mouse in&quot;);
-      this.setHighlight(e);
-      this._redraw();
-    });
-    this.addEventListener(&quot;mouseout&quot;, (e) =&gt; {
-      //console.log(&quot;mouse out&quot;);
-      this.highlight = false;
-      this._redraw();
-    });
-    this.addEventListener(&quot;mouseover&quot;, (e) =&gt; {
-      //console.log(&quot;mouse over&quot;);
-      this.setHighlight(e);
-      this._redraw();
-    });
-    this.addEventListener(&quot;mousemove&quot;, (e) =&gt; {
-      this.setHighlight(e);
-      this._redraw();
-    });
-    this.addEventListener(&quot;mouseleave&quot;, (e) =&gt; {
-      //console.log(&quot;mouse leave&quot;);
-      this.highlight = false;
-      this._redraw();
-    });
-    this.addEventListener(&quot;blur&quot;, (e) =&gt; {
-      //console.log(&quot;blur&quot;);
-      this._focus = 0;
-      this.highlight = false;
-      this._redraw();
-    });
-
-    this.setCSS();
-  }
-
-  setHighlight(e) {
-    this.highlight =  this.isOverButton(e) ? 2 : 1;
-  }
-
-  _redraw() {
-    let g = this.g, canvas = this.canvas;
-    let w = canvas.width, h = canvas.height;
-    let dpi = UIBase.getDPI();
-
-    let color = this.getDefault(&quot;BoxBG&quot;);
-    let sh = ~~(this.getDefault(&quot;SlideHeight&quot;)*dpi + 0.5);
-
-    g.clearRect(0, 0, canvas.width, canvas.height);
-
-    //console.log(color)
-    g.fillStyle = color;
-
-    let y = (h - sh)*0.5;
-
-    //export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
-    //                             op=&quot;fill&quot;, color=undefined, margin=undefined, no_clear=false) {
-
-    let r = this.getDefault(&quot;BoxRadius&quot;);
-    r = 3;
-
-    g.translate(0, y);
-    ui_base.drawRoundBox(this, this.canvas, g, w, sh, r, &quot;fill&quot;, color, undefined, true);
-    g.translate(0, -y);
-
-    //g.beginPath();
-    //g.rect(0, y, w, sh);
-    //g.fill();
-
-    if (this.highlight === 1) {
-      color = this.getDefault(&quot;BoxHighlight&quot;);
-    } else {
-      color = this.getDefault(&quot;BoxBorder&quot;);
-    }
-    g.strokeStyle = color;
-    g.stroke();
-
-    let co = this._getButtonPos();
-
-    g.beginPath();
-
-    if (this.highlight === 2) {
-      color = this.getDefault(&quot;BoxHighlight&quot;);
-    } else {
-      color = this.getDefault(&quot;BoxBorder&quot;);
-    }
-
-    g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
-    g.fill();
-
-    g.strokeStyle = color;
-    g.stroke();
-
-    g.beginPath();
-    g.setLineDash([4, 4]);
-
-    if (this._focus) {
-      g.strokeStyle = this.getDefault(&quot;BoxHighlight&quot;);
-      g.arc(co[0], co[1], co[2] - 4, -Math.PI, Math.PI);
-      g.stroke();
-    }
-
-    g.setLineDash([]);
-  }
-
-  isOverButton(e) {
-    let x = e.x, y = e.y;
-    let rect = this.getClientRects()[0];
-
-    if (!rect) {
-      return false;
-    }
-
-    x -= rect.left;
-    y -= rect.top;
-
-    let co = this._getButtonPos();
-
-    let dpi = UIBase.getDPI();
-    let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
-    let dis = dv.vectorLength();
-
-    //console.log(&quot;dis&quot;, dis.toFixed(3));
-    return dis &lt; co[2]/dpi;
-  }
-
-  _invertButtonX(x) {
-    let w = this.canvas.width;
-    let dpi = UIBase.getDPI();
-    let sh = ~~(this.getDefault(&quot;SlideHeight&quot;)*dpi + 0.5);
-    let boxw = this.canvas.height - 4;
-    let w2 = w - boxw;
-
-    x = (x - boxw*0.5) / w2;
-    x = x*(this.range[1] - this.range[0]) + this.range[0];
-
-    return x;
-  }
-
-  _getButtonPos() {
-    let w = this.canvas.width;
-    let dpi = UIBase.getDPI();
-    let sh = ~~(this.getDefault(&quot;SlideHeight&quot;)*dpi + 0.5);
-    let x = this._value;
-    x = (x - this.range[0]) / (this.range[1] - this.range[0]);
-    let boxw = this.canvas.height - 4;
-    let w2 = w - boxw;
-
-    //console.log(x, this.range);
-
-    x = x*w2 + boxw*0.5;
-
-    return [x, boxw*0.5, boxw*0.5];
-  }
-  setCSS() {
-    super.setCSS();
-
-    this.canvas.style[&quot;width&quot;] = &quot;min-contents&quot;;
-    this.canvas.style[&quot;min-width&quot;] = this.getDefault(&quot;DefaultWidth&quot;) + &quot;px&quot;;
-    this.style[&quot;min-width&quot;] = this.getDefault(&quot;DefaultWidth&quot;) + &quot;px&quot;;
-    this._redraw();
-  }
-
-  updateSize() {
-    if (this.canvas === undefined) {
-      return;
-    }
-
-    let rect = this.getClientRects()[0];
-
-    if (rect === undefined) {
-      return;
-    }
-
-    let dpi = UIBase.getDPI();
-    let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
-    let canvas = this.canvas;
-
-    if (w !== canvas.width || h !== canvas.height) {
-      //console.log(&quot;canvas size update&quot;, w, h);
-      this.canvas.width = w;
-      this.canvas.height = h;
-
-      this.setCSS();
-      this._redraw();
-    }
-  }
-
-  _ondestroy() {
-    if (this._modal) {
-      popModalLight(this._modal);
-      this._modal = undefined;
-    }
-  }
-
-  update() {
-    super.update();
-
-    if (this.getAttribute(&quot;tab-index&quot;) !== this.tabIndex) {
-      this.tabIndex = this.getAttribute(&quot;tab-index&quot;);
-    }
-
-    this.updateSize();
-    this.updateDataPath();
-  }
-
-  static define() {return {
-    tagname : &quot;numslider-simple-base-x&quot;,
-    style : &quot;numslider_simple&quot;
-  }}
-}
-UIBase.register(NumSliderSimple);
-
-export class NumSliderSimple2 extends ColumnFrame {
-  constructor() {
-    super();
-
-    this._value = 0;
-    this._name = undefined;
-    this.decimalPlaces = 4;
-    this.isInt = false;
-    this._lock_textbox = false;
-    this.labelOnTop = undefined;
-
-    this._last_label_on_top = undefined;
-
-    this.styletag.textContent = `
-    .numslider_simple_textbox {
-      padding : 0px;
-      margin  : 0px;
-      height  : 15px;
-    }
-    `;
-
-    this.container = this;
-
-    this.textbox = document.createElement(&quot;textbox-x&quot;);
-    this.numslider = document.createElement(&quot;numslider-simple-base-x&quot;);
-
-    this.textbox.range = this.numslider.range;
-
-    this.textbox.setAttribute(&quot;class&quot;, &quot;numslider_simple_textbox&quot;);
-  }
-
-  get range() {
-    return this.numslider.range;
-  }
-
-  get displayUnit() {
-    return this.textbox.displayUnit;
-  }
-
-  set displayUnit(val) {
-    let update = val !== this.displayUnit;
-
-    //console.warn(&quot;setting display unit&quot;, val);
-    this.slider.displayUnit = this.textbox.displayUnit = val;
-
-    if (update) {
-      this.updateTextBox();
-    }
-  }
-
-  get baseUnit() {
-    return this.textbox.baseUnit;
-  }
-  set baseUnit(val) {
-    let update = val !== this.baseUnit;
-
-    //console.warn(&quot;setting base unit&quot;, val);
-    this.slider.baseUnit = this.textbox.baseUnit = val;
-
-    if (update) {
-      this.updateTextBox();
-    }
-  }
-
-  init() {
-    super.init();
-
-    if (this.hasAttribute(&quot;labelOnTop&quot;)) {
-      this.labelOnTop = this.getAttribute(&quot;labelOnTop&quot;);
-    } else {
-      this.labelOnTop = this.getDefault(&quot;labelOnTop&quot;);
-    }
-
-    this.rebuild();
-  }
-
-  rebuild() {
-    this._last_label_on_top = this.labelOnTop;
-
-    this.container.clear();
-
-    if (this.labelOnTop) {
-      this.container = this.row();
-    } else {
-      this.container = this;
-    }
-
-    if (this.hasAttribute(&quot;name&quot;)) {
-      this._name = this.hasAttribute(&quot;name&quot;);
-    } else {
-      this._name = &quot;slider&quot;;
-    }
-
-
-    this.l = this.container.label(this._name);
-    this.l.font = &quot;TitleText&quot;;
-    this.l.overrideClass(&quot;numslider_simple&quot;);
-    this.l.style[&quot;display&quot;] = &quot;float&quot;;
-    this.l.style[&quot;position&quot;] = &quot;relative&quot;;
-    
-    if (!this.labelOnTop) {
-      this.l.style[&quot;left&quot;] = &quot;8px&quot;;
-      this.l.style[&quot;top&quot;] = &quot;5px&quot;;
-    }
-
-    let strip = this.container.row();
-    strip.add(this.numslider);
-
-    let path = this.hasAttribute(&quot;datapath&quot;) ? this.getAttribute(&quot;datapath&quot;) : undefined;
-
-    let textbox = this.textbox;
-
-    textbox.onchange = () =&gt; {
-      let text = textbox.text;
-
-      if (!isNumber(text)) {
-        textbox.flash(&quot;red&quot;);
-        return;
-      } else {
-        textbox.flash(&quot;green&quot;);
-
-        let f = units.parseValue(text, this.baseUnit);
-
-        if (isNaN(f)) {
-          this.flash(&quot;red&quot;);
-          return;
-        }
-
-        if (this.isInt) {
-          f = Math.floor(f);
-        }
-
-        this._lock_textbox = 1;
-        this.setValue(f);
-        this._lock_textbox = 0;
-      }
-    };
-
-    textbox.ctx = this.ctx;
-    textbox.packflag |= this.inherit_packflag;
-    textbox._width = this.getDefault(&quot;TextBoxWidth&quot;)+&quot;px&quot;;
-    textbox.style[&quot;height&quot;] = (this.getDefault(&quot;DefaultHeight&quot;)-2) + &quot;px&quot;;
-    textbox._init();
-
-    strip.add(textbox);
-
-    this.linkTextBox();
-
-    let in_onchange = 0;
-
-    this.numslider.onchange = (val) =&gt; {
-      this._value = this.numslider.value;
-      this.updateTextBox();
-
-      if (in_onchange) {
-        return;
-      }
-
-      if (this.onchange !== undefined) {
-        in_onchange++;
-        try {
-          if (this.onchange) {
-            this.onchange(this);
-          }
-        } catch (error) {
-          util.print_stack(error);
-        }
-      }
-
-      in_onchange--;
-    }
-  }
-
-  updateTextBox() {
-    if (!this._init_done) {
-      return;
-    }
-
-    if (this._lock_textbox &gt; 0)
-      return;
-
-    //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
-
-    this.textbox.text = this.formatNumber(this._value);
-    this.textbox.update();
-  }
-
-  linkTextBox() {
-    this.updateTextBox();
-
-    let onchange = this.numslider.onchange;
-    this.numslider.onchange = (e) =&gt; {
-      this._value = e.value;
-      this.updateTextBox();
-
-      onchange(e);
-    }
-  }
-
-  setValue(val) {
-    this._value = val;
-    this.numslider.setValue(val);
-    this.updateTextBox();
-  }
-
-  get value() {
-    return this._value;
-  }
-
-  set value(val) {
-    this.setValue(val);
-  }
-
-  updateName() {
-    let name = this.getAttribute(&quot;name&quot;);
-
-    if (!name &amp;&amp; this.hasAttribute(&quot;datapath&quot;)) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute(&quot;datapath&quot;));
-
-      if (prop) {
-        name = prop.uiname;
-      }
-    }
-
-    if (!name) {
-      name = &quot;[error]&quot;;
-    }
-
-    if (name !== this._name) {
-      this._name = name;
-      this.l.text = name;
-    }
-  }
-
-  updateLabelOnTop() {
-    if (this.labelOnTop !== this._last_label_on_top) {
-      this._last_label_on_top = this.labelOnTop;
-      this.rebuild();
-    }
-  }
-
-  updateDataPath() {
-    if (!this.ctx || !this.getAttribute(&quot;datapath&quot;)) {
-      return;
-    }
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute(&quot;datapath&quot;))
-
-    if (prop !== undefined &amp;&amp; !this.baseUnit &amp;&amp; prop.baseUnit) {
-      this.baseUnit = prop.baseUnit;
-    }
-
-    if (prop !== undefined &amp;&amp; !this.displayUnit &amp;&amp; prop.displayUnit) {
-      this.displayUnit = prop.displayUnit;
-    }
-  }
-
-  update() {
-    this.updateLabelOnTop();
-    super.update();
-
-    this.updateDataPath();
-
-    if (this.hasAttribute(&quot;min&quot;)) {
-      this.range[0] = parseFloat(this.getAttribute(&quot;min&quot;));
-      this.setCSS();
-      this._redraw();
-    }
-
-    if (this.hasAttribute(&quot;max&quot;)) {
-      this.range[1] = parseFloat(this.getAttribute(&quot;max&quot;));
-      this.setCSS();
-      this._redraw();
-    }
-
-    if (this.hasAttribute(&quot;integer&quot;)) {
-      this.isInt = true;
-      this.numslider.isInt = true;
-    }
-
-    this.updateName();
-
-    this.numslider.description = this.description;
-    this.textbox.description = this.title; //get full, transformed toolip
-
-    if (this.hasAttribute(&quot;datapath&quot;)) {
-      this.numslider.setAttribute(&quot;datapath&quot;, this.getAttribute(&quot;datapath&quot;));
-    }
-
-    if (this.hasAttribute(&quot;mass_set_path&quot;)) {
-      this.numslider.setAttribute(&quot;mass_set_path&quot;, this.getAttribute(&quot;mass_set_path&quot;))
-    }
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    //textbox.style[&quot;margin&quot;] = &quot;5px&quot;;
-
-  }
-
-  static define() {return {
-    tagname : &quot;numslider-simple-x&quot;,
-    style : &quot;numslider_simple&quot;
-  }}
-}
-UIBase.register(NumSliderSimple2);
+import {ToolProperty} from &quot;../toolsys/toolprop.js&quot;;
 
 export class VectorPanel extends ColumnFrame {
   constructor() {
@@ -1259,6 +519,7 @@ export class VectorPanel extends ColumnFrame {
     makeParam(&quot;displayUnit&quot;);
     makeParam(&quot;step&quot;);
     makeParam(&quot;expRate&quot;);
+    makeParam(&quot;stepIsRelative&quot;);
 
     window.vp = this;
   }
@@ -1315,6 +576,12 @@ export class VectorPanel extends ColumnFrame {
       slider.range = this.__range;
       slider.radix = this.radix;
       slider.step = this.step;
+      slider.expRate = this.expRate;
+      slider.stepIsRelative= this.stepIsRelative;
+
+      if (this.stepIsRelative) {
+        slider.step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+      }
 
       slider.onchange = function(e) {
         this2.value[this.axis] = this.value;
@@ -1405,6 +672,7 @@ export class VectorPanel extends ColumnFrame {
     loadNumParam(&quot;radix&quot;);
     loadNumParam(&quot;step&quot;);
     loadNumParam(&quot;expRate&quot;);
+    loadNumParam(&quot;stepIsRelative&quot;);
 
     if (meta &amp;&amp; meta.range) {
       this.range[0] = meta.range[0];
@@ -1454,7 +722,14 @@ export class VectorPanel extends ColumnFrame {
   }
   update() {
     super.update();
+
     this.updateDataPath();
+    
+    if (this.stepIsRelative) {
+      for (let i = 0; i &lt; this.sliders.length; i++) {
+        this.sliders[i].step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+      }
+    }
   }
 
   static define() {return {

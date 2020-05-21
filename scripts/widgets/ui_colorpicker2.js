@@ -742,7 +742,7 @@ export class ColorPicker extends ui.ColumnFrame {
       node._no_update_textbox = false;
     };
 
-    tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
+    //tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
 
     let tab = tabs.tab("HSV");
 
@@ -972,6 +972,10 @@ export class ColorPickerButton extends UIBase {
 
     widget.style["padding"] = "20px";
     widget.onchange = onchange;
+
+    colorpicker.style["background-color"] = widget.getDefault("DefaultPanelBG");
+    colorpicker.style["border-radius"] = "25px";
+    colorpicker.style["border"] = widget.getDefault("border");
   }
 
   get font() {
@@ -984,6 +988,11 @@ export class ColorPickerButton extends UIBase {
     this.setCSS();
   }
 
+  on_disabled() {
+    this.setCSS();
+    this._redraw();
+  }
+  
   _redraw() {
     let canvas = this.dom, g = this.g;
 
@@ -996,7 +1005,7 @@ export class ColorPickerButton extends UIBase {
 
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
-      let steps = 10;
+      let steps = 5;
       let dt = canvas.width / steps, t = 0;
 
       g.beginPath();
