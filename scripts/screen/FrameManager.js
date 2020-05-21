@@ -156,6 +156,11 @@ export class Screen extends ui_base.UIBase {
         console.warn(sheet, "sheet");
         
         let sheet2 = this.globalCSS.sheet;
+        if (!sheet2) {
+          this.doOnce(finish);
+          return;
+        }
+
         let map = {};
         for (let rule of sheet2.rules) {
           map[rule.selectorText] = rule;

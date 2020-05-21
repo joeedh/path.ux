@@ -64,6 +64,10 @@ function patchDropBox() {
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
 
+    console.log(x, y);
+    x = ~~x;
+    y = ~~y;
+    
     emenu.popup({
       x: x,
       y: y,

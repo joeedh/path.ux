@@ -26124,8 +26124,9 @@ class DropBox extends Button {
 
   _onpress(e) {
     if (this._menu !== undefined) {
-      this._menu.close();
+      let menu = this._menu;
       this._menu = undefined;
+      menu.close();
       return;
     }
 
@@ -33993,6 +33994,11 @@ class Screen$2 extends UIBase {
         console.warn(sheet, "sheet");
         
         let sheet2 = this.globalCSS.sheet;
+        if (!sheet2) {
+          this.doOnce(finish);
+          return;
+        }
+
         let map = {};
         for (let rule of sheet2.rules) {
           map[rule.selectorText] = rule;
