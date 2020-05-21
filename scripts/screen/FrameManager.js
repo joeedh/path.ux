@@ -554,6 +554,7 @@ export class Screen extends ui_base.UIBase {
       }
 
       let ok = false;
+      let elem2 = elem;
 
       while (elem) {
         if (elem === container) {
@@ -564,8 +565,6 @@ export class Screen extends ui_base.UIBase {
       }
 
       if (!ok) {
-        e.stopPropagation();
-
         do_timeout = !do_timeout || (util.time_ms() - bad_time > 100);
 
         if (closeOnMouseOut && do_timeout) {

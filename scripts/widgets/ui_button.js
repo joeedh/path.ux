@@ -52,7 +52,7 @@ export class Button extends UIBase {
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
-      if (cconst.buttonEvents)
+      if (cconst.DEBUG.buttonEvents)
         console.log(e.keyCode);
 
       switch (e.keyCode) {
@@ -193,11 +193,10 @@ export class Button extends UIBase {
     let press = (e) => {
       e.stopPropagation();
 
-      if (cconst.buttonEvents)
+      if (cconst.DEBUG.buttonEvents)
         console.log("button press", this._pressed);
 
       if (this.disabled) return;
-      if (this._pressed) return;
 
       this._pressed = true;
 
@@ -211,13 +210,14 @@ export class Button extends UIBase {
     };
 
     let depress = (e) => {
-      if (cconst.buttonEvents)
-        console.log("button depress");
+      if (cconst.DEBUG.buttonEvents)
+        console.log("button depress", e.button, e.was_touch);
 
       if (this._auto_depress) {
         this._pressed = false;
 
         if (this.disabled) return;
+
         this._redraw();
       }
 
@@ -230,8 +230,8 @@ export class Button extends UIBase {
 
       this._redraw();
 
-      if (cconst.buttonEvents)
-        console.log("button click callback:", this.onclick);
+      if (cconst.DEBUG.buttonEvents)
+        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
@@ -280,7 +280,7 @@ export class Button extends UIBase {
       this._repos_canvas();
       this._redraw();
 
-      if (cconst.buttonEvents)
+      if (cconst.DEBUG.buttonEvents)
         console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }

@@ -1658,6 +1658,7 @@ export class UIBase extends HTMLElement {
   }
 
   isDead() {
+    return !this.isConnected;
     let p = this, lastp = this;
 
     function find(c, n) {
