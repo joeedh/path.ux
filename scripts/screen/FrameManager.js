@@ -2123,8 +2123,6 @@ export class Screen extends ui_base.UIBase {
       this.pos.load(min);
     }
 
-    console.log(min, max);
-
     let found = 1;
 
     for (let sarea of this.sareas) {

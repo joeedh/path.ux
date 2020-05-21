@@ -38,6 +38,8 @@ export class ToolOp extends events.EventHandler {
     if (this === ToolOp) {
       throw new Error("Tools must implemented static tooldef() methods!");
     }
+    
+    return {};
   }
 
   /*
