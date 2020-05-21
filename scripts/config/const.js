@@ -1,6 +1,11 @@
 let exports = {
   colorSchemeType : "light",
 
+  //add textboxes to rollar sliders,
+  //note that  users can also double click them to
+  //enter text as well
+  useNumSliderTextboxes : true,
+
   menu_close_time : 500,
   doubleClickTime : 500,
   //timeout for press-and-hold (touch) version of double clicking

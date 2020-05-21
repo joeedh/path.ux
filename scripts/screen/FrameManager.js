@@ -400,7 +400,7 @@ export class Screen extends ui_base.UIBase {
 
       ret.style["z-index"] = z;
     }
-    
+
     this.doOnce(cb);
 
     return ret;
@@ -716,7 +716,8 @@ export class Screen extends ui_base.UIBase {
 
     let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
-    document.body.style["touch-action"] = "none";
+    /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
+    document.body.style.margin = document.body.style.padding = "0px";
     document.body.style["transform-origin"] = "top left";
     document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
 
@@ -1016,7 +1017,8 @@ export class Screen extends ui_base.UIBase {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-
+      bad = bad || !(n instanceof UIBase);
+      
       if (n._id in visit || n.hidden) {
         return;
       }

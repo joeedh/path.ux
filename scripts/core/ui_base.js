@@ -12,7 +12,7 @@ import {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
 
 export * from './ui_theme.js';
 
-import {CSSFont, theme} from "./ui_theme.js";
+import {CSSFont, theme, parsepx} from "./ui_theme.js";
 
 import {DefaultTheme} from './theme.js';
 export {theme} from "./ui_theme.js";
@@ -1440,7 +1440,9 @@ export class UIBase extends HTMLElement {
       return;
     }
     
-    let rect = rect_element.getClientRects()[0];
+    //let rect = rect_element.getClientRects()[0];
+    let rect = rect_element.getBoundingClientRect();
+
     if (rect === undefined) {
       return;
     }
@@ -1451,7 +1453,9 @@ export class UIBase extends HTMLElement {
     let tick = 0;
     let max = ~~(timems/20);
 
-    this._flashtimer = timer = window.setInterval((e) => {
+    let x = rect.x, y = rect.y;
+
+    let cb = (e) => {
       if (timer === undefined) {
         return
       }
@@ -1466,43 +1470,26 @@ export class UIBase extends HTMLElement {
         this._flashcolor = undefined;
         timer = undefined;
         
-        try {
-          //this.remove();
-          //div.parentNode.insertBefore(this, div);
-        } catch (error) {
-          console.log("dom removal error");
-          div.appendChild(this);
-          return;
-        }
-        
-        //console.log(div.parentNode);
         div.remove();
-        
         this.focus();
       }
-      
+
       tick++;
-    }, 20);
+    };
+
+    setTimeout(cb, 5);
+    this._flashtimer = timer = window.setInterval(cb, 20);
 
     let div = document.createElement("div");
-    
-    //this.parentNode.insertBefore(div, this);
-    
-    try {
-      //this.remove();
-    } catch (error) {
-      console.log("this.remove() failure in UIBase.flash()");
-    }        
-    
-    //div.appendChild(this);
 
     div.style["pointer-events"] = "none";
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
     div.style["position"] = "absolute";
-    div.style["left"] = rect.x + "px";
-    div.style["top"] = rect.y + "px";
+    div.style["margin"] = "0px";
+    div.style["left"] = x + "px";
+    div.style["top"] = y + "px";
 
     div.style["background-color"] = color2css(color, 0.5);
     div.style["width"] = rect.width + "px";
@@ -2257,7 +2244,7 @@ export function drawText(elem, x, y, text, args={}) {
   if (color === undefined) {
     color = elem.getDefault("DefaultText").color;
   }
-  
+
   if (typeof color === "object") {
     color = color2css(color);
   }

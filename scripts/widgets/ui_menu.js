@@ -610,6 +610,8 @@ export class DropBox extends Button {
 
   setCSS() {
     //do not call parent classes's setCSS here
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
   }
 
   updateWidth() {
@@ -726,6 +728,8 @@ export class DropBox extends Button {
     }
 
     menu.onselect = (id) => {
+      this._pressed = false;
+
       //console.log("dropbox select");
       this._pressed = false;
       this._redraw();
@@ -748,6 +752,7 @@ export class DropBox extends Button {
 
   _onpress(e) {
     if (this._menu !== undefined) {
+      this._pressed = false;
       let menu = this._menu;
       this._menu = undefined;
       menu.close();

@@ -314,6 +314,9 @@ export class Button extends UIBase {
 
   update() {
     super.update();
+    
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
 
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;

@@ -7823,6 +7823,11 @@ let Icons = {
 let exports = {
   colorSchemeType : "light",
 
+  //add textboxes to rollar sliders,
+  //note that  users can also double click them to
+  //enter text as well
+  useNumSliderTextboxes : true,
+
   menu_close_time : 500,
   doubleClickTime : 500,
   //timeout for press-and-hold (touch) version of double clicking
@@ -8451,7 +8456,7 @@ for (var k in keymap_latin_1) {
   keymap_latin_1_rev[keymap_latin_1[k]] = k;
 }
 
-var keymap$1 = keymap_latin_1;
+var keymap = keymap_latin_1;
 var reverse_keymap = keymap_latin_1_rev;
 
 class HotKey {
@@ -8459,7 +8464,7 @@ class HotKey {
   constructor(key, modifiers, action) {
     this.action = action;
     this.mods = modifiers;
-    this.key = keymap$1[key];
+    this.key = keymap[key];
   }
 
   exec(ctx) {
@@ -8538,7 +8543,7 @@ class KeyMap extends Array {
           hk.exec(ctx);
         } catch (error) {
           print_stack$1(error);
-          console.log("failed to execute a hotkey", keymap$1[e.keyCode]);
+          console.log("failed to execute a hotkey", keymap[e.keyCode]);
         }
         return true;
       }
@@ -12074,11 +12079,11 @@ class ToolOp extends EventHandler {
   //no need to call super() to execute this if you don't want to
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap$1["Enter"]:
-      case keymap$1["Space"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
         this.modalEnd(false);
         break;
-      case keymap$1["Escape"]:
+      case keymap["Escape"]:
         this.modalEnd(true);
         break;
     }
@@ -15618,7 +15623,7 @@ const DefaultTheme = {
   },
 
   textbox : {
-    "background-color" : "rgb(245, 245, 245, 0.95)",
+    "background-color" : "rgb(255, 255, 255, 1.0)",
   },
 
   richtext : {
@@ -17150,7 +17155,9 @@ class UIBase extends HTMLElement {
       return;
     }
     
-    let rect = rect_element.getClientRects()[0];
+    //let rect = rect_element.getClientRects()[0];
+    let rect = rect_element.getBoundingClientRect();
+
     if (rect === undefined) {
       return;
     }
@@ -17161,7 +17168,9 @@ class UIBase extends HTMLElement {
     let tick = 0;
     let max = ~~(timems/20);
 
-    this._flashtimer = timer = window.setInterval((e) => {
+    let x = rect.x, y = rect.y;
+
+    let cb = (e) => {
       if (timer === undefined) {
         return
       }
@@ -17176,43 +17185,26 @@ class UIBase extends HTMLElement {
         this._flashcolor = undefined;
         timer = undefined;
         
-        try {
-          //this.remove();
-          //div.parentNode.insertBefore(this, div);
-        } catch (error) {
-          console.log("dom removal error");
-          div.appendChild(this);
-          return;
-        }
-        
-        //console.log(div.parentNode);
         div.remove();
-        
         this.focus();
       }
-      
+
       tick++;
-    }, 20);
+    };
+
+    setTimeout(cb, 5);
+    this._flashtimer = timer = window.setInterval(cb, 20);
 
     let div = document.createElement("div");
-    
-    //this.parentNode.insertBefore(div, this);
-    
-    try {
-      //this.remove();
-    } catch (error) {
-      console.log("this.remove() failure in UIBase.flash()");
-    }        
-    
-    //div.appendChild(this);
 
     div.style["pointer-events"] = "none";
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
     div.style["position"] = "absolute";
-    div.style["left"] = rect.x + "px";
-    div.style["top"] = rect.y + "px";
+    div.style["margin"] = "0px";
+    div.style["left"] = x + "px";
+    div.style["top"] = y + "px";
 
     div.style["background-color"] = color2css(color, 0.5);
     div.style["width"] = rect.width + "px";
@@ -17967,7 +17959,7 @@ function drawText(elem, x, y, text, args={}) {
   if (color === undefined) {
     color = elem.getDefault("DefaultText").color;
   }
-  
+
   if (typeof color === "object") {
     color = color2css(color);
   }
@@ -18135,7 +18127,7 @@ var ui_base = /*#__PURE__*/Object.freeze({
 
 "use strict";
 
-let keymap$2 = keymap$1;
+let keymap$1 = keymap;
 
 let EnumProperty$3 = EnumProperty$1,
   PropTypes$2 = PropTypes;
@@ -18439,6 +18431,9 @@ class Button extends UIBase$1 {
 
   update() {
     super.update();
+    
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
 
     if (this.description !== undefined && this.title != this.description) {
       this.title = this.description;
@@ -18646,7 +18641,7 @@ function myToFixed$1(s, n) {
   return s;
 }
 
-let keymap$3 = keymap$1;
+let keymap$2 = keymap;
 
 let EnumProperty$4 = EnumProperty$1,
   PropTypes$3 = PropTypes;
@@ -18733,10 +18728,10 @@ class TextBox extends TextBoxBase {
       e.stopPropagation();
 
       switch (e.keyCode) {
-        case keymap$3.Enter:
+        case keymap$2.Enter:
           finish(true);
           break;
-        case keymap$3.Escape:
+        case keymap$2.Escape:
           finish(false);
           break;
       }
@@ -18810,8 +18805,15 @@ class TextBox extends TextBoxBase {
   setCSS() {
     super.setCSS();
 
-    this.dom.style["background-color"] = this.getDefault("background-color");
-
+    this.overrideDefault("BoxBG", this.getDefault("background-color"));
+    
+    this.background = this.getDefault("background-color");
+    this.dom.style["margin"] = this.dom.style["padding"] = "0px";
+    
+    if (this.getDefault("background-color")) {
+      this.dom.style["background-color"] = this.getDefault("background-color");
+    }
+    
     if (this._focus) {
       this.dom.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
     } else {
@@ -18983,7 +18985,7 @@ function myToFixed$2(s, n) {
   return s;
 }
 
-let keymap$4 = keymap$1;
+let keymap$3 = keymap;
 
 let EnumProperty$5 = EnumProperty$1,
     PropTypes$4 = PropTypes;
@@ -19133,7 +19135,7 @@ class Check extends UIBase$3 {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap$4["Escape"]:
+        case keymap$3["Escape"]:
           this._highlight = undefined;
           this._redraw();
           e.preventDefault();
@@ -19141,8 +19143,8 @@ class Check extends UIBase$3 {
 
           this.blur();
           break;
-        case keymap$4["Enter"]:
-        case keymap$4["Space"]:
+        case keymap$3["Enter"]:
+        case keymap$3["Space"]:
           this.checked = !this.checked;
           e.preventDefault();
           e.stopPropagation();
@@ -21084,9 +21086,12 @@ class Container extends UIBase {
 
     if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$4.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
+    } else if (exports.useNumSliderTextboxes) {
+      ret = document.createElement("numslider-textbox-x");
     } else {
       ret = document.createElement("numslider-x");
     }
+    
     ret.packflag |= packflag;
 
     let decimals;
@@ -21471,7 +21476,7 @@ class RichEditor extends TextBoxBase {
     this.textarea.setAttribute("white-space", "pre-wrap");
 
     this.textarea.addEventListener("keydown", (e) => {
-      if (e.keyCode === keymap$1["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
+      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
         this.toggleStrikeThru();
 
         e.preventDefault();
@@ -21766,7 +21771,7 @@ UIBase$5.register(RichViewer);
 
 "use strict";
 
-let keymap$5 = keymap$1;
+let keymap$4 = keymap;
 
 let EnumProperty$7 = EnumProperty$1,
   PropTypes$6 = PropTypes;
@@ -22761,7 +22766,7 @@ class HueField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
           }
@@ -22882,7 +22887,7 @@ class SatValField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
           }
@@ -22932,7 +22937,7 @@ class SatValField extends UIBase$8 {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap$1["Enter"] || e.keyCode == keymap$1["Escape"] || e.keyCode == keymap$1["Space"]) {
+            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
           }
@@ -25359,8 +25364,8 @@ class ListBox extends Container {
       console.log("yay", e.keyCode);
 
       switch (e.keyCode) {
-        case keymap$1["Up"]:
-        case keymap$1["Down"]:
+        case keymap["Up"]:
+        case keymap["Down"]:
           if (this.items.length == 0)
             return;
 
@@ -25370,7 +25375,7 @@ class ListBox extends Container {
           }
 
           let i = this.items.indexOf(this.items.active);
-          let dir = e.keyCode == keymap$1["Up"] ? -1 : 1;
+          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
 
           i = Math.max(Math.min(i+dir, this.items.length-1), 0);
           this.setActive(this.items[i]);
@@ -26079,6 +26084,8 @@ class DropBox extends Button {
 
   setCSS() {
     //do not call parent classes's setCSS here
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
   }
 
   updateWidth() {
@@ -26195,6 +26202,8 @@ class DropBox extends Button {
     }
 
     menu.onselect = (id) => {
+      this._pressed = false;
+
       //console.log("dropbox select");
       this._pressed = false;
       this._redraw();
@@ -26217,6 +26226,7 @@ class DropBox extends Button {
 
   _onpress(e) {
     if (this._menu !== undefined) {
+      this._pressed = false;
       let menu = this._menu;
       this._menu = undefined;
       menu.close();
@@ -27616,7 +27626,7 @@ class NumSliderSimpleBase extends UIBase {
 }
 UIBase.register(NumSliderSimpleBase);
 
-class NumSliderSimple extends ColumnFrame {
+class SliderWithTextbox extends ColumnFrame {
   constructor() {
     super();
 
@@ -27640,11 +27650,25 @@ class NumSliderSimple extends ColumnFrame {
     this.container = this;
 
     this.textbox = document.createElement("textbox-x");
-    this.numslider = document.createElement("numslider-simple-base-x");
-
-    this.textbox.range = this.numslider.range;
+    this.textbox.width = 55;
+    this._numslider = undefined;
 
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+  }
+
+
+  get numslider() {
+    return this._numslider;
+  }
+
+  //child classes set this in their constructors
+  set numslider(v) {
+    this._numslider = v;
+    this.textbox.range = this._numslider.range;
+  }
+
+  set range(v) {
+    this.numslider.range = v;
   }
 
   get range() {
@@ -27762,6 +27786,7 @@ class NumSliderSimple extends ColumnFrame {
 
     strip.add(textbox);
 
+    textbox.setCSS();
     this.linkTextBox();
 
     let in_onchange = 0;
@@ -27912,17 +27937,39 @@ class NumSliderSimple extends ColumnFrame {
 
   setCSS() {
     super.setCSS();
-
+    this.textbox.setCSS();
     //textbox.style["margin"] = "5px";
 
   }
+}
 
+class NumSliderSimple extends SliderWithTextbox {
+  constructor() {
+    super();
+
+    this.numslider = document.createElement("numslider-simple-base-x");
+
+  }
   static define() {return {
     tagname : "numslider-simple-x",
     style : "numslider_simple"
   }}
 }
 UIBase.register(NumSliderSimple);
+
+class NumSliderWithTextBox extends SliderWithTextbox {
+  constructor() {
+    super();
+
+    this.numslider = document.createElement("numslider-x");
+
+  }
+  static define() {return {
+    tagname : "numslider-textbox-x",
+    style : "numslider-textbox-x"
+  }}
+}
+UIBase.register(NumSliderWithTextBox);
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen$1 = 0;
@@ -30177,11 +30224,11 @@ class ToolBase extends ToolOp {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case keymap$1.Escape: //esc
+      case keymap.Escape: //esc
         this.cancel();
         break;
-      case keymap$1.Space: //space
-      case keymap$1.Enter: //return
+      case keymap.Space: //space
+      case keymap.Enter: //return
         this.finish();
         break;
     }
@@ -30267,9 +30314,9 @@ class AreaResizeTool extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap$1["Escape"]:
-      case keymap$1["Enter"]:
-      case keymap$1["Space"]:
+      case keymap["Escape"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
         this.finish();
         break;
     }
@@ -30482,11 +30529,11 @@ class SplitTool extends ToolBase {
     console.log("s", e.keyCode);
     
     switch (e.keyCode) {
-      case keymap$1.Escape: //esc
+      case keymap.Escape: //esc
         this.cancel();
         break;
-      case keymap$1.Space: //space
-      case keymap$1.Enter: //return
+      case keymap.Space: //space
+      case keymap.Enter: //return
         this.finish();
         break;
     }
@@ -30955,8 +31002,8 @@ class ToolTipViewer extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap$1.Escape:
-      case keymap$1.Enter:
+      case keymap.Escape:
+      case keymap.Enter:
       case Keymap.Space:
         if (this.tooltip) {
           this.tooltip.end();
@@ -33957,7 +34004,7 @@ function makePopupArea(area_class, screen, args={}) {
 
   if (addEscapeKeyHandler) {
     sarea.on_keydown = (e) => {
-      if (e.keyCode === keymap$1.Escape) {
+      if (e.keyCode === keymap.Escape) {
         screen.removeArea(sarea);
       }
     };
@@ -34335,7 +34382,7 @@ class Screen$2 extends UIBase {
 
       ret.style["z-index"] = z;
     };
-    
+
     this.doOnce(cb);
 
     return ret;
@@ -34521,7 +34568,7 @@ class Screen$2 extends UIBase {
       console.log(e.keyCode);
 
       switch (e.keyCode) {
-        case keymap$1["Escape"]:
+        case keymap["Escape"]:
           end();
           break;
       }
@@ -34651,7 +34698,8 @@ class Screen$2 extends UIBase {
 
     let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
-    document.body.style["touch-action"] = "none";
+    /* CSS IS EVIL! WHY DOES BODY HAVE A MARGIN? */
+    document.body.style.margin = document.body.style.padding = "0px";
     document.body.style["transform-origin"] = "top left";
     document.body.style["transform"] = `translate(${ox}px,${oy}px) scale(${1.0/scale})`;
 
@@ -34951,7 +34999,8 @@ class Screen$2 extends UIBase {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-
+      bad = bad || !(n instanceof UIBase$g);
+      
       if (n._id in visit || n.hidden) {
         return;
       }
@@ -37282,5 +37331,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap$1 as keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

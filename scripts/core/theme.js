@@ -150,7 +150,7 @@ export const DefaultTheme = {
   },
 
   textbox : {
-    "background-color" : "rgb(245, 245, 245, 0.95)",
+    "background-color" : "rgb(255, 255, 255, 1.0)",
   },
 
   richtext : {

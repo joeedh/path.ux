@@ -1327,10 +1327,13 @@ export class Container extends ui_base.UIBase {
     }
 
     if (packflag & PackFlags.SIMPLE_NUMSLIDERS && !(packflag & PackFlags.FORCE_ROLLER_SLIDER)) {
-      ret = document.createElement("numslider-simple-x")
+      ret = document.createElement("numslider-simple-x");
+    } else if (cconst.useNumSliderTextboxes) {
+      ret = document.createElement("numslider-textbox-x");
     } else {
-      ret = document.createElement("numslider-x")
+      ret = document.createElement("numslider-x");
     }
+    
     ret.packflag |= packflag;
 
     let decimals;
