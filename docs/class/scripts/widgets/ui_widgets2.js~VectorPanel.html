@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -443,13 +446,13 @@
 </nav>
 
 <div class="content" data-ice="content"><div class="header-notice">
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {VectorPanel} from &apos;<span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber774">./scripts/widgets/ui_widgets2.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {VectorPanel} from &apos;<span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber31">./scripts/widgets/ui_widgets2.js</a></span>&apos;</code></pre></div>
   <span data-ice="access">public</span>
   <span data-ice="kind">class</span>
   
   
   
-  <span data-ice="source">| <span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber774">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber31">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
@@ -3022,7 +3025,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber1015">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber287">source</a></span></span>
     </span>
   </h3>
 
@@ -3080,7 +3083,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber775">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber32">source</a></span></span>
     </span>
   </h3>
 
@@ -3126,7 +3129,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber842">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber100">source</a></span></span>
     </span>
   </h3>
 
@@ -3169,7 +3172,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber952">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber216">source</a></span></span>
     </span>
   </h3>
 
@@ -3212,7 +3215,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber782">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber39">source</a></span></span>
     </span>
   </h3>
 
@@ -3255,7 +3258,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber826">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber84">source</a></span></span>
     </span>
   </h3>
 
@@ -3298,7 +3301,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber933">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber197">source</a></span></span>
     </span>
   </h3>
 
@@ -3341,7 +3344,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber780">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber37">source</a></span></span>
     </span>
   </h3>
 
@@ -3384,7 +3387,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber778">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber35">source</a></span></span>
     </span>
   </h3>
 
@@ -3427,7 +3430,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber784">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber41">source</a></span></span>
     </span>
   </h3>
 
@@ -3470,7 +3473,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber783">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber40">source</a></span></span>
     </span>
   </h3>
 
@@ -3515,7 +3518,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber798">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber55">source</a></span></span>
     </span>
   </h3>
 
@@ -3558,7 +3561,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber799">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber56">source</a></span></span>
     </span>
   </h3>
 
@@ -3604,7 +3607,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber821">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber79">source</a></span></span>
     </span>
   </h3>
 
@@ -3647,7 +3650,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber849">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber107">source</a></span></span>
     </span>
   </h3>
 
@@ -3690,7 +3693,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber892">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber156">source</a></span></span>
     </span>
   </h3>
 
@@ -3761,7 +3764,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber1010">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber275">source</a></span></span>
     </span>
   </h3>
 
@@ -3804,7 +3807,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber924">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber188">source</a></span></span>
     </span>
   </h3>
 
@@ -3849,7 +3852,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber830">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber88">source</a></span></span>
     </span>
   </h3>
 
@@ -3920,7 +3923,7 @@ to view tooltips on mobile devices</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber834">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/widgets/ui_widgets2.js.html#lineNumber92">source</a></span></span>
     </span>
   </h3>
 

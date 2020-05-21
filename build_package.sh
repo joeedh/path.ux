@@ -4,6 +4,7 @@ mkdir -p package
 mkdir -p _package
 
 echo Exporting clean repo...
+rm pathux.tar 2> /dev/null
 git archive head --output pathux.tar
 
 echo Building package. . .

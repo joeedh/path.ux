@@ -1,0 +1,23 @@
+[
+  "example/core/app.js",
+  "example/pathux.js",
+  "example/core/state.js",
+  "example/api/api_define.js",
+  "example/core/context.js",
+  "example/editors/workspace/workspace.js",
+  "example/editors/screen.js",
+  "example/core/toolop.js",
+  "example/theme.js",
+  "example/editors/icon_enum.js",
+  "example/editors/menu/menu.js",
+  "example/core/const.js",
+  "example/editors/properties/properties.js",
+  "example/editors/log/log_editor.js",
+  "example/draw/draw.js",
+  "example/draw/brush.js",
+  "example/core/dynamics.js",
+  "example/editors/editor_base.js",
+  "example/editors/workspace/workspace_ops.js",
+  "example/draw/draw_ops.js",
+  "example/electron_api.js"
+]

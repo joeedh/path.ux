@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -468,7 +471,7 @@ import {AreaDocker} from &apos;./AreaDocker.js&apos;;
 
 import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge} from &quot;./FrameManager_mesh.js&quot;;
 export {ScreenBorder, ScreenVert, ScreenHalfEdge} from &quot;./FrameManager_mesh.js&quot;;
-
+import {theme} from &apos;../core/ui_base.js&apos;;
 import * as FrameManager_mesh from &apos;./FrameManager_mesh.js&apos;;
 import {makePopupArea} from &quot;../widgets/ui_dialog.js&quot;;
 
@@ -480,6 +483,17 @@ import &apos;../widgets/ui_colorpicker2.js&apos;;
 import &apos;../widgets/ui_noteframe.js&apos;;
 import &apos;../widgets/ui_listbox.js&apos;;
 import &apos;../widgets/ui_table.js&apos;;
+import {AreaFlags} from &quot;./ScreenArea.js&quot;;
+
+function list(iter) {
+  let ret = [];
+  
+  for (let item of iter) {
+    ret.push(item);
+  }
+
+  return ret;
+}
 
 ui_menu.startMenuEventWrangling();
 
@@ -493,7 +507,8 @@ export function registerToolStackGetter(func) {
 window._nstructjs = nstructjs;
 
 let Vector2 = vectormath.Vector2,
-  UIBase = ui_base.UIBase;
+  UIBase = ui_base.UIBase,
+  styleScrollBars = ui_base.styleScrollBars;
 
 let update_stack = new Array(8192);
 update_stack.cur = 0;
@@ -503,6 +518,11 @@ let screen_idgen = 0;
 export class Screen extends ui_base.UIBase {
   constructor() {
     super();
+
+    //all widget shadow DOMs reference this style tag,
+    //or rather they copy it
+    this.globalCSS = document.createElement(&quot;style&quot;);
+    this.shadow.prepend(this.globalCSS);
 
     this._do_updateSize = true;
     this._resize_callbacks = [];
@@ -569,6 +589,112 @@ export class Screen extends ui_base.UIBase {
       this.mpos[1] = e.touches[0].pageY;
     });
 
+  }
+  
+  /**
+   * 
+   * @param {*} style May be a string, a CSSStyleSheet instance, or a style tag
+   * @returns Promise fulfilled when style has been merged
+   */
+  mergeGlobalCSS(style) {
+    return new Promise((accept, reject) =&gt; {
+      let sheet;
+
+      let finish = () =&gt; {
+        console.warn(sheet, &quot;sheet&quot;);
+        
+        let sheet2 = this.globalCSS.sheet;
+        let map = {};
+        for (let rule of sheet2.rules) {
+          map[rule.selectorText] = rule;
+        }
+
+        for (let rule of sheet.rules) {
+          let k = rule.selectorText;
+          if (k in map) {
+            let rule2 = map[k];
+
+            if (!rule.styleMap) { //handle firefox
+              for (let k in rule.style) {
+                let desc = Object.getOwnPropertyDescriptor(rule.style, k);
+                
+                if (!desc || !desc.writable) {
+                  continue;
+                }
+                let v = rule.style[k];
+
+                if (v) {
+                  rule2.style[k] = rule.style[k];
+                }
+              }
+              continue;
+            }
+            for (let [key, val] of list(rule.styleMap.entries())) {
+              console.log(rule2.styleMap.has(key));
+
+              if (1||rule2.styleMap.has(key)) {
+                //rule2.styleMap.delete(key);
+                let sval = &quot;&quot;;
+
+                if (Array.isArray(val)) {
+                  for (let item of val) {
+                    sval += &quot; &quot; + val;
+                  }
+                  sval = sval.trim();
+                } else {
+                  sval = (&quot;&quot; + val).trim();
+                }
+
+                rule2.style[key] = sval;
+                rule2.styleMap.set(key, val);
+              } else {
+                rule2.styleMap.append(key, val);
+              }
+            }
+          } else {
+            sheet2.insertRule(rule.cssText);
+          }
+        }
+      }
+
+      console.log(&quot;style&quot;, style);
+
+      if (typeof style === &quot;string&quot;) {
+        try { //stupid firefox
+          sheet = new CSSStyleSheet();
+        } catch (error) {
+          sheet = undefined;
+        }
+
+        if (sheet &amp;&amp; sheet.replaceSync) {
+          sheet.replaceSync(style);
+          finish();
+        } else {
+          let tag = document.createElement(&quot;style&quot;);
+          tag.textContent = style;
+          document.body.appendChild(tag);
+          
+          let cb = () =&gt; {
+            if (!tag.sheet) {
+              this.doOnce(cb);
+              return;
+            }
+
+            sheet = tag.sheet;
+            finish();
+            tag.remove();
+          };
+
+          this.doOnce(cb)
+        }
+      } else if (!(style instanceof CSSStyleSheet)) {
+        sheet = style.sheet;
+        finish();
+      } else {
+        sheet = style;
+        finish();
+      }
+    });
   }
 
   newScreenArea() {
@@ -685,8 +811,43 @@ export class Screen extends ui_base.UIBase {
     return menu;
   }
 
-  /** makes a popup at x,y and returns a new container-x for it */
   popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
+    let ret = this._popup(...arguments);
+
+    let z = ret.style[&quot;z-index&quot;];
+
+    ret.style[&quot;z-index&quot;] = &quot;-10&quot;;
+
+    window.setTimeout(() =&gt; {
+      let rect = ret.getClientRects()[0];
+      let size = this.size;
+
+      console.log(&quot;rect&quot;, rect);
+
+      if (!rect) {
+        ret.style[&quot;z-index&quot;] = z;
+        return;
+      }
+
+      if (rect.bottom &gt; size[1]) {
+        ret.style[&quot;top&quot;] = (size[1] - rect.height - 10) + &quot;px&quot;;
+      } else if (rect.top &lt; 0) {
+        ret.style[&quot;top&quot;] = &quot;10px&quot;;
+      }
+      if (rect.right &gt; size[0]) {
+        ret.style[&quot;left&quot;] = (size[0] - rect.width - 10) + &quot;px&quot;;
+      } else if (rect.left &lt; 0) {
+        ret.style[&quot;left&quot;] = &quot;10px&quot;;
+      }
+
+
+      ret.style[&quot;z-index&quot;] = z;
+    }, 150);
+
+    return ret;
+  }
+  /** makes a popup at x,y and returns a new container-x for it */
+  _popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
 
     let sarea = this.sareas.active;
@@ -975,12 +1136,6 @@ export class Screen extends ui_base.UIBase {
       //height /= visualViewport.scale;
     }
 
-    if (cconst.DEBUG.customWindowSize) {
-      let s = cconst.DEBUG.customWindowSize;
-      width = s.width;
-      height = s.height;
-    }
-
     let ratio = window.outerHeight / window.innerHeight;
     let scale = visualViewport.scale;
 
@@ -991,7 +1146,16 @@ export class Screen extends ui_base.UIBase {
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
 
-    let key = `${width.toFixed(0)}:${height.toFixed(0)}:${ox.toFixed(0)}:${oy.toFixed(0)}:${devicePixelRatio}:${scale}`;
+    if (cconst.DEBUG.customWindowSize) {
+      let s = cconst.DEBUG.customWindowSize;
+      width = s.width;
+      height = s.height;
+      ox = 0;
+      oy = 0;
+      window._DEBUG = cconst.DEBUG;
+    }
+
+    let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
 
     document.body.style[&quot;touch-action&quot;] = &quot;none&quot;;
     document.body.style[&quot;transform-origin&quot;] = &quot;top left&quot;;
@@ -1003,8 +1167,8 @@ export class Screen extends ui_base.UIBase {
       console.log(&quot;resizing&quot;, key, this._last_ckey1);
       this._last_ckey1 = key;
 
-      this.on_resize(this.size, [width, height]);
-      this.on_resize(this.size, this.size);
+      this.on_resize(this.size, [width, height], false);
+      this.on_resize(this.size, this.size, false);
 
       let scale = visualViewport.scale;
 
@@ -1043,6 +1207,19 @@ export class Screen extends ui_base.UIBase {
       
       this.update();
     }, 150);
+  }
+
+  _calcSizeKey(w, h, x, y, dpi, scale) {
+    if (arguments.length !== 6) {
+      throw new Error(&quot;eek&quot;);
+    }
+
+    let s = &quot;&quot;;
+    for (let i=0; i&lt;arguments.length; i++) {
+      s += arguments[i].toFixed(0)+&quot;:&quot;;
+    }
+
+    return s;
   }
 
   _ondestroy() {
@@ -1228,7 +1405,7 @@ export class Screen extends ui_base.UIBase {
   execKeyMap(e) {
     let handled = false;
 
-    //console.warn(&quot;execKeyMap called&quot;);
+    console.warn(&quot;execKeyMap called&quot;, document.activeElement.tagName);
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -1437,9 +1614,37 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
+  updateScrollStyling() {
+    let s = theme.scrollbars;
+    if (!s) return;
+
+    let key = &quot;&quot; + s.color + &quot;:&quot; + s.color2 + &quot;:&quot; + s.border + &quot;:&quot; + s.contrast + &quot;:&quot; + s.width;
+
+    if (key !== this._last_scrollstyle_key) {
+      this._last_scrollstyle_key = key;
+
+      console.log(&quot;updating scrollbar styling&quot;);
+
+      this.mergeGlobalCSS(styleScrollBars(s.color, s.color2, s.contrast, s.width, s.border, &quot;*&quot;));
+    }
+  }
+
   //XXX race condition warning
   update_intern() {
+    this.updateScrollStyling();
+
     let popups = this._popups;
+
+    let cssText = &quot;&quot;;
+    let sheet = this.globalCSS.sheet;
+    if (sheet) {
+      for (let rule of sheet.rules) {
+        cssText += rule.cssText + &quot;\n&quot;;
+      }
+
+      window.cssText = cssText
+    }
+    let cssTextHash = util.strhash(cssText);
 
     if (this.needsBorderRegen) {
       this.needsBorderRegen = false;
@@ -1511,6 +1716,11 @@ export class Screen extends ui_base.UIBase {
 
         if (!n.hidden &amp;&amp; n !== this2 &amp;&amp; n instanceof UIBase) {
           n._ctx = ctx;
+
+          if (n._screenStyleUpdateHash !== cssTextHash) {
+            n._screenStyleTag.textContent = cssText;
+            n._screenStyleUpdateHash = cssTextHash;
+          }
 
           if (scopestack.length &gt; 0 &amp;&amp; scopestack[scopestack.length - 1]) {
             n.parentWidget = scopestack[scopestack.length - 1];
@@ -2309,11 +2519,32 @@ export class Screen extends ui_base.UIBase {
   }
 
   snapScreenVerts(fitToSize=true) {
-    let mm = this._recalcAABB();
-    let min = mm[0], max = mm[1];
+    let this2 = this;
+    function* screenverts() {
+      for (let v of this2.screenverts) {
+        let ok = 0;
 
-    snap(min);
-    snapi(max);
+        for (let sarea of v.sareas) {
+          if (!(sarea.flag &amp; AreaFlags.INDEPENDENT)) {
+            ok  = 1;
+          }
+        }
+
+        if (ok) {
+          yield v;
+        }
+      }
+    }
+
+    let mm = new math.MinMax(2);
+    for (let v of screenverts()) {
+      mm.minmax(v);
+    }
+
+    let min = mm.min, max = mm.max;
+
+    //snap(min);
+    //snapi(max);
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
@@ -2322,37 +2553,53 @@ export class Screen extends ui_base.UIBase {
 
       sz.div(vec);
 
-      for (let v of this.screenverts) {
-        snap(v.sub(min).mul(sz));//.add(this.pos);
+      for (let v of screenverts()) {
+        v.sub(min).mul(sz);
+        //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
     } else {
-      for (let v of this.screenverts) {
-        snap(v);
+      for (let v of screenverts()) {
+        //snap(v);
       }
 
       [min, max] = this._recalcAABB();
-      snap(min);
-      snapi(max);
+
+      //snap(min);
+      //snapi(max);
 
       this.size.load(max).sub(min);
       this.pos.load(min);
     }
 
+    let found = 1;
 
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
       let old = new Vector2(sarea.size);
+      let oldpos = new Vector2(sarea.pos);
+
       sarea.loadFromVerts();
+
+      found = found || old.vectorDistance(sarea.size) &gt; 1;
+      found = found || oldpos.vectorDistance(sarea.pos) &gt; 1;
+
       sarea.on_resize(old);
     }
 
-    this._recalcAABB();
-    this.setCSS();
+    if (found) {
+      //this.regenBorders();
+      this._recalcAABB();
+      this.setCSS();
+    }
   }
 
-  on_resize(oldsize, newsize=this.size) {
+  on_resize(oldsize, newsize=this.size, _set_key=true) {
     console.warn(&quot;resizing&quot;);
+
+    if (_set_key) {
+      this._last_ckey1 = this._calcSizeKey(newsize[0], newsize[1], this.pos[0], this.pos[1], devicePixelRatio, visualViewport.scale);
+    }
 
     let ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
 

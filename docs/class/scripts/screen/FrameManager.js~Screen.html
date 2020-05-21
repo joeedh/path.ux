@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -443,13 +446,13 @@
 </nav>
 
 <div class="content" data-ice="content"><div class="header-notice">
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {Screen} from &apos;<span><a href="file/scripts/screen/FrameManager.js.html#lineNumber58">./scripts/screen/FrameManager.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {Screen} from &apos;<span><a href="file/scripts/screen/FrameManager.js.html#lineNumber70">./scripts/screen/FrameManager.js</a></span>&apos;</code></pre></div>
   <span data-ice="access">public</span>
   <span data-ice="kind">class</span>
   
   
   
-  <span data-ice="source">| <span><a href="file/scripts/screen/FrameManager.js.html#lineNumber58">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/scripts/screen/FrameManager.js.html#lineNumber70">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
@@ -711,6 +714,34 @@
           
           
           <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-set-ctx">ctx</a></span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-member-globalCSS">globalCSS</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
         </p>
       </div>
       <div>
@@ -1277,6 +1308,34 @@
           
           
           <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-member-_last_ckey1">_last_ckey1</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">private</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-member-_last_scrollstyle_key">_last_scrollstyle_key</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
         </p>
       </div>
       <div>
@@ -2431,6 +2490,34 @@
           
           
           
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-mergeGlobalCSS">mergeGlobalCSS</a></span></span><span class="code" data-ice="signature">(style: <span>*</span>): <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
           <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-minmaxArea">minmaxArea</a></span></span><span class="code" data-ice="signature">(sarea: <span>*</span>, mm: <span>*</span>): <span>*</span></span>
         </p>
       </div>
@@ -2683,7 +2770,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-on_resize">on_resize</a></span></span><span class="code" data-ice="signature">(oldsize: <span>*</span>, newsize: <span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-on_resize">on_resize</a></span></span><span class="code" data-ice="signature">(oldsize: <span>*</span>, newsize: <span>*</span>, _set_key: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>)</span>
         </p>
       </div>
       <div>
@@ -2745,8 +2832,7 @@
       <div>
         
         
-        <div data-ice="description"><p>makes a popup at x,y and returns a new container-x for it</p>
-</div>
+        
       </div>
     </td>
     <td>
@@ -3356,6 +3442,34 @@
           
           
           
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-updateScrollStyling">updateScrollStyling</a></span></span><span class="code" data-ice="signature">()</span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
           <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-updateSize">updateSize</a></span></span><span class="code" data-ice="signature">()</span>
         </p>
       </div>
@@ -3447,6 +3561,34 @@
           
           <span data-ice="generator">*</span>
           <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-_allAreas">_allAreas</a></span></span><span class="code" data-ice="signature">()</span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">private</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-_calcSizeKey">_calcSizeKey</a></span></span><span class="code" data-ice="signature">(w: <span>*</span>, h: <span>*</span>, x: <span>*</span>, y: <span>*</span>, dpi: <span>*</span>, scale: <span>*</span>): <span>*</span></span>
         </p>
       </div>
       <div>
@@ -3642,6 +3784,35 @@
           
           
           
+          <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-_popup">_popup</a></span></span><span class="code" data-ice="signature">(owning_node: <span>*</span>, elem_or_x: <span>*</span>, y: <span>*</span>, closeOnMouseOut: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        <div data-ice="description"><p>makes a popup at x,y and returns a new container-x for it</p>
+</div>
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">private</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
           <span class="code" data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html#instance-method-_recalcAABB">_recalcAABB</a></span></span><span class="code" data-ice="signature">(save: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined">undefined</a></span><span>[]</span></span></span>
         </p>
       </div>
@@ -3733,7 +3904,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber826">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1000">source</a></span></span>
     </span>
   </h3>
 
@@ -3788,7 +3959,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber703">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber877">source</a></span></span>
     </span>
   </h3>
 
@@ -3866,7 +4037,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2267">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2511">source</a></span></span>
     </span>
   </h3>
 
@@ -3924,7 +4095,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber59">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber71">source</a></span></span>
     </span>
   </h3>
 
@@ -3970,7 +4141,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber65">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber82">source</a></span></span>
     </span>
   </h3>
 
@@ -4013,7 +4184,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber470">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber628">source</a></span></span>
     </span>
   </h3>
 
@@ -4056,7 +4227,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber945">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1119">source</a></span></span>
     </span>
   </h3>
 
@@ -4099,7 +4270,50 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber949">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1123">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-globalCSS">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">globalCSS</span><span class="code" data-ice="signature">: <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber76">source</a></span></span>
     </span>
   </h3>
 
@@ -4142,7 +4356,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber86">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber103">source</a></span></span>
     </span>
   </h3>
 
@@ -4185,7 +4399,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber81">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber98">source</a></span></span>
     </span>
   </h3>
 
@@ -4228,7 +4442,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber505">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber663">source</a></span></span>
     </span>
   </h3>
 
@@ -4271,7 +4485,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber89">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber106">source</a></span></span>
     </span>
   </h3>
 
@@ -4314,7 +4528,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber66">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber83">source</a></span></span>
     </span>
   </h3>
 
@@ -4357,7 +4571,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber74">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber91">source</a></span></span>
     </span>
   </h3>
 
@@ -4400,7 +4614,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber84">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber101">source</a></span></span>
     </span>
   </h3>
 
@@ -4443,7 +4657,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber87">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber104">source</a></span></span>
     </span>
   </h3>
 
@@ -4486,7 +4700,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber91">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber108">source</a></span></span>
     </span>
   </h3>
 
@@ -4529,7 +4743,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber92">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber109">source</a></span></span>
     </span>
   </h3>
 
@@ -4572,7 +4786,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber83">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber100">source</a></span></span>
     </span>
   </h3>
 
@@ -4615,7 +4829,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber72">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber89">source</a></span></span>
     </span>
   </h3>
 
@@ -4658,7 +4872,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2299">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2543">source</a></span></span>
     </span>
   </h3>
 
@@ -4703,7 +4917,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber98">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber115">source</a></span></span>
     </span>
   </h3>
 
@@ -4746,7 +4960,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber79">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber96">source</a></span></span>
     </span>
   </h3>
 
@@ -4789,7 +5003,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1383">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1590">source</a></span></span>
     </span>
   </h3>
 
@@ -4832,7 +5046,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber62">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber79">source</a></span></span>
     </span>
   </h3>
 
@@ -4875,7 +5089,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber94">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber111">source</a></span></span>
     </span>
   </h3>
 
@@ -4918,7 +5132,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber95">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber112">source</a></span></span>
     </span>
   </h3>
 
@@ -4961,7 +5175,50 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber559">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber720">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-_last_scrollstyle_key">
+    <span class="access" data-ice="access">private</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">_last_scrollstyle_key</span><span class="code" data-ice="signature">: <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1176">source</a></span></span>
     </span>
   </h3>
 
@@ -5004,7 +5261,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber68">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber85">source</a></span></span>
     </span>
   </h3>
 
@@ -5047,7 +5304,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber77">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber94">source</a></span></span>
     </span>
   </h3>
 
@@ -5090,7 +5347,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber63">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber80">source</a></span></span>
     </span>
   </h3>
 
@@ -5133,7 +5390,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber75">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber92">source</a></span></span>
     </span>
   </h3>
 
@@ -5176,7 +5433,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber933">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1107">source</a></span></span>
     </span>
   </h3>
 
@@ -5219,7 +5476,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber93">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber110">source</a></span></span>
     </span>
   </h3>
 
@@ -5265,7 +5522,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2201">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2445">source</a></span></span>
     </span>
   </h3>
 
@@ -5336,7 +5593,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber766">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber940">source</a></span></span>
     </span>
   </h3>
 
@@ -5419,7 +5676,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2271">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2515">source</a></span></span>
     </span>
   </h3>
 
@@ -5462,7 +5719,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2152">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2396">source</a></span></span>
     </span>
   </h3>
 
@@ -5533,7 +5790,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2217">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2461">source</a></span></span>
     </span>
   </h3>
 
@@ -5592,7 +5849,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2078">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2322">source</a></span></span>
     </span>
   </h3>
 
@@ -5669,7 +5926,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber832">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1006">source</a></span></span>
     </span>
   </h3>
 
@@ -5712,7 +5969,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1492">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1699">source</a></span></span>
     </span>
   </h3>
 
@@ -5790,7 +6047,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber657">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber831">source</a></span></span>
     </span>
   </h3>
 
@@ -5833,7 +6090,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber978">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1152">source</a></span></span>
     </span>
   </h3>
 
@@ -5876,7 +6133,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber990">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1164">source</a></span></span>
     </span>
   </h3>
 
@@ -5919,7 +6176,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber140">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber263">source</a></span></span>
     </span>
   </h3>
 
@@ -5974,7 +6231,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber653">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber827">source</a></span></span>
     </span>
   </h3>
 
@@ -6017,7 +6274,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2261">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2505">source</a></span></span>
     </span>
   </h3>
 
@@ -6060,7 +6317,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber874">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1048">source</a></span></span>
     </span>
   </h3>
 
@@ -6103,7 +6360,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber783">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber957">source</a></span></span>
     </span>
   </h3>
 
@@ -6174,7 +6431,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber180">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber303">source</a></span></span>
     </span>
   </h3>
 
@@ -6251,7 +6508,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1261">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1468">source</a></span></span>
     </span>
   </h3>
 
@@ -6316,7 +6573,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber719">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber893">source</a></span></span>
     </span>
   </h3>
 
@@ -6387,7 +6644,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2026">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2270">source</a></span></span>
     </span>
   </h3>
 
@@ -6476,7 +6733,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1958">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2202">source</a></span></span>
     </span>
   </h3>
 
@@ -6554,7 +6811,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1248">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1455">source</a></span></span>
     </span>
   </h3>
 
@@ -6625,7 +6882,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2205">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2449">source</a></span></span>
     </span>
   </h3>
 
@@ -6668,7 +6925,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2004">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2248">source</a></span></span>
     </span>
   </h3>
 
@@ -6746,7 +7003,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1973">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2217">source</a></span></span>
     </span>
   </h3>
 
@@ -6817,7 +7074,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1297">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1504">source</a></span></span>
     </span>
   </h3>
 
@@ -6888,7 +7145,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1252">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1459">source</a></span></span>
     </span>
   </h3>
 
@@ -6959,7 +7216,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber580">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber741">source</a></span></span>
     </span>
   </h3>
 
@@ -7019,7 +7276,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber481">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber639">source</a></span></span>
     </span>
   </h3>
 
@@ -7062,7 +7319,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1107">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1314">source</a></span></span>
     </span>
   </h3>
 
@@ -7105,7 +7362,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber678">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber852">source</a></span></span>
     </span>
   </h3>
 
@@ -7171,7 +7428,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2278">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2522">source</a></span></span>
     </span>
   </h3>
 
@@ -7242,7 +7499,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2349">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2593">source</a></span></span>
     </span>
   </h3>
 
@@ -7301,7 +7558,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2231">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2475">source</a></span></span>
     </span>
   </h3>
 
@@ -7333,6 +7590,79 @@
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-mergeGlobalCSS">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">mergeGlobalCSS</span><span class="code" data-ice="signature">(style: <span>*</span>): <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber151">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">style</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"><p>May be a string, a CSSStyleSheet instance, or a style tag</p>
+</td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>*</span></td>
+          <td class="return-desc" data-ice="returnDescription"><p>Promise fulfilled when style has been merged</p>
+</td>
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="instance-method-minmaxArea">
     <span class="access" data-ice="access">public</span>
     
@@ -7344,7 +7674,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2064">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2308">source</a></span></span>
     </span>
   </h3>
 
@@ -7422,7 +7752,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1642">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1849">source</a></span></span>
     </span>
   </h3>
 
@@ -7506,7 +7836,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1646">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1853">source</a></span></span>
     </span>
   </h3>
 
@@ -7590,7 +7920,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1682">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1889">source</a></span></span>
     </span>
   </h3>
 
@@ -7674,7 +8004,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1620">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1827">source</a></span></span>
     </span>
   </h3>
 
@@ -7739,7 +8069,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber129">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber252">source</a></span></span>
     </span>
   </h3>
 
@@ -7794,7 +8124,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2237">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2481">source</a></span></span>
     </span>
   </h3>
 
@@ -7865,7 +8195,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2255">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2499">source</a></span></span>
     </span>
   </h3>
 
@@ -7936,7 +8266,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2249">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2493">source</a></span></span>
     </span>
   </h3>
 
@@ -8003,11 +8333,11 @@
     
     
     
-    <span class="code" data-ice="name">on_resize</span><span class="code" data-ice="signature">(oldsize: <span>*</span>, newsize: <span>*</span>)</span>
+    <span class="code" data-ice="name">on_resize</span><span class="code" data-ice="signature">(oldsize: <span>*</span>, newsize: <span>*</span>, _set_key: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>)</span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1909">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2149">source</a></span></span>
     </span>
   </h3>
 
@@ -8036,6 +8366,13 @@
       <td data-ice="name" class="code" data-depth="0">newsize</td>
       <td data-ice="type" class="code"><span>*</span></td>
       <td data-ice="appendix"><ul><li>optional</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">_set_key</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: true</li></ul></td>
       <td data-ice="description"></td>
     </tr>
 </tbody>
@@ -8072,7 +8409,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber196">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber319">source</a></span></span>
     </span>
   </h3>
 
@@ -8173,15 +8510,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber244">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber366">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>makes a popup at x,y and returns a new container-x for it</p>
-</div>
+  
 
   
 
@@ -8264,7 +8600,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber488">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber646">source</a></span></span>
     </span>
   </h3>
 
@@ -8335,7 +8671,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber235">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber358">source</a></span></span>
     </span>
   </h3>
 
@@ -8418,7 +8754,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1344">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1551">source</a></span></span>
     </span>
   </h3>
 
@@ -8461,7 +8797,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1187">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1394">source</a></span></span>
     </span>
   </h3>
 
@@ -8504,7 +8840,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1183">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1390">source</a></span></span>
     </span>
   </h3>
 
@@ -8547,7 +8883,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber492">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber650">source</a></span></span>
     </span>
   </h3>
 
@@ -8619,7 +8955,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2134">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2378">source</a></span></span>
     </span>
   </h3>
 
@@ -8678,7 +9014,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber774">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber948">source</a></span></span>
     </span>
   </h3>
 
@@ -8761,7 +9097,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2089">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2333">source</a></span></span>
     </span>
   </h3>
 
@@ -8826,7 +9162,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber485">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber643">source</a></span></span>
     </span>
   </h3>
 
@@ -8869,7 +9205,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2340">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2584">source</a></span></span>
     </span>
   </h3>
 
@@ -8924,7 +9260,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1171">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1378">source</a></span></span>
     </span>
   </h3>
 
@@ -8967,7 +9303,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1866">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2073">source</a></span></span>
     </span>
   </h3>
 
@@ -9027,7 +9363,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1826">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2033">source</a></span></span>
     </span>
   </h3>
 
@@ -9087,7 +9423,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1121">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1328">source</a></span></span>
     </span>
   </h3>
 
@@ -9172,7 +9508,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2209">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2453">source</a></span></span>
     </span>
   </h3>
 
@@ -9215,7 +9551,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2305">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2549">source</a></span></span>
     </span>
   </h3>
 
@@ -9270,7 +9606,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber708">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber882">source</a></span></span>
     </span>
   </h3>
 
@@ -9325,7 +9661,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber502">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber660">source</a></span></span>
     </span>
   </h3>
 
@@ -9368,7 +9704,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber880">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1054">source</a></span></span>
     </span>
   </h3>
 
@@ -9411,7 +9747,50 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1392">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1599">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-updateScrollStyling">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">updateScrollStyling</span><span class="code" data-ice="signature">()</span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1169">source</a></span></span>
     </span>
   </h3>
 
@@ -9454,7 +9833,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber509">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber667">source</a></span></span>
     </span>
   </h3>
 
@@ -9497,7 +9876,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber996">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1185">source</a></span></span>
     </span>
   </h3>
 
@@ -9552,7 +9931,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1591">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1798">source</a></span></span>
     </span>
   </h3>
 
@@ -9625,7 +10004,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber223">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber346">source</a></span></span>
     </span>
   </h3>
 
@@ -9657,6 +10036,107 @@
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-_calcSizeKey">
+    <span class="access" data-ice="access">private</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">_calcSizeKey</span><span class="code" data-ice="signature">(w: <span>*</span>, h: <span>*</span>, x: <span>*</span>, y: <span>*</span>, dpi: <span>*</span>, scale: <span>*</span>): <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber764">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">w</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">h</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">x</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">y</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">dpi</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">scale</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>*</span></td>
+          
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="instance-method-_enterPopupSafe">
     <span class="access" data-ice="access">private</span>
     
@@ -9668,7 +10148,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber215">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber338">source</a></span></span>
     </span>
   </h3>
 
@@ -9711,7 +10191,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber231">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber354">source</a></span></span>
     </span>
   </h3>
 
@@ -9754,7 +10234,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1952">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2196">source</a></span></span>
     </span>
   </h3>
 
@@ -9813,7 +10293,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1381">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber1588">source</a></span></span>
     </span>
   </h3>
 
@@ -9868,7 +10348,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2118">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2362">source</a></span></span>
     </span>
   </h3>
 
@@ -9911,7 +10391,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber603">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber777">source</a></span></span>
     </span>
   </h3>
 
@@ -9943,6 +10423,97 @@
   
 </div>
 <div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-_popup">
+    <span class="access" data-ice="access">private</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">_popup</span><span class="code" data-ice="signature">(owning_node: <span>*</span>, elem_or_x: <span>*</span>, y: <span>*</span>, closeOnMouseOut: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>): <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber402">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  <div data-ice="description"><p>makes a popup at x,y and returns a new container-x for it</p>
+</div>
+
+  
+
+  <div data-ice="properties"><div data-ice="properties">
+  <h4 data-ice="title">Params:</h4>
+  <table class="params">
+    <thead>
+    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+    
+    <tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">owning_node</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">elem_or_x</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">y</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">closeOnMouseOut</td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span></td>
+      <td data-ice="appendix"><ul><li>optional</li>
+<li>default: true</li></ul></td>
+      <td data-ice="description"></td>
+    </tr>
+</tbody>
+  </table>
+</div>
+</div>
+
+  <div class="return-params" data-ice="returnParams">
+    <h4>Return:</h4>
+    <table>
+      <tbody>
+        <tr>
+          <td class="return-type code" data-ice="returnType"><span>*</span></td>
+          
+        </tr>
+      </tbody>
+    </table>
+    <div data-ice="returnProperties">
+</div>
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="instance-method-_recalcAABB">
     <span class="access" data-ice="access">private</span>
     
@@ -9954,7 +10525,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber455">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber613">source</a></span></span>
     </span>
   </h3>
 
@@ -10026,7 +10597,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber671">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber845">source</a></span></span>
     </span>
   </h3>
 
@@ -10069,7 +10640,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2126">source</a></span></span>
+      <span data-ice="source"><span><a href="file/scripts/screen/FrameManager.js.html#lineNumber2370">source</a></span></span>
     </span>
   </h3>
 

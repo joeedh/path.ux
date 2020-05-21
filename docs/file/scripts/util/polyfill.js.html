@@ -53,6 +53,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
@@ -75,7 +76,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~AfterAspect.html">AfterAspect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~SimpleContext.html">SimpleContext</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
@@ -104,6 +104,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
@@ -260,6 +261,8 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
@@ -334,6 +337,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
@@ -384,6 +388,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
@@ -394,14 +401,12 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~NumSlider.html">NumSlider</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~NumSliderSimple2.html">NumSliderSimple2</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
@@ -411,9 +416,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
@@ -443,7 +446,231 @@
 </nav>
 
 <div class="content" data-ice="content"><h1 data-ice="title">scripts/util/polyfill.js</h1>
-<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">if (Array.prototype.set === undefined) {
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">
+(function() {
+  let visitgen = 0;
+
+  window.destroyAllCSS = function() {
+    visitgen++;
+
+    let visit = (n) =&gt; {
+      if (n.__visit === visitgen) {
+        return;
+      }
+
+      n.__visit = visitgen;
+      if (n.tagName === &quot;STYLE&quot;) {
+        n.textContents = &apos;&apos;;
+      }
+
+      if (n.style) {
+        for (let k in n.style) {
+          try {
+            n.style[k] = &quot;&quot;;
+          } catch (error) {
+            
+          }
+        }
+      }
+
+      if (!n.childNodes) {
+        return;
+      }
+
+      for (let c of n.childNodes) {
+        visit(c);
+      }
+    }
+
+    visit(document.head);
+    visit(document.body);
+
+    for (let sheet of document.styleSheets) {
+      for (let i=0; i&lt;sheet.rules.length; i++) {
+        sheet.removeRule(sheet.rules[0]);
+      }
+    }
+  }
+})();
+
+window.eventDebugModule =   (function() {
+  &quot;use strict&quot;;
+
+  return {
+    start() {
+      window.debugEventLists = {
+      }
+      window.debugEventList = [];
+
+      this._addEventListener = EventTarget.prototype.addEventListener;
+      this._removeEventListener = EventTarget.prototype.removeEventListener;
+      this._dispatchEvent = EventTarget.prototype.dispatchEvent;
+      
+      EventTarget.prototype.addEventListener = this.onadd;
+      EventTarget.prototype.removeEventListener = this.onrem;
+      EventTarget.prototype.dispatchEvent = this.ondispatch;
+    },
+
+    add(type, data) {
+      if (!(type in debugEventLists)) {
+        debugEventLists[type] = [];
+      }
+
+      debugEventLists[type].push(data);
+    },
+
+    ondispatch() {
+      let a = arguments;
+      
+      eventDebugModule.add(&quot;Dispatch&quot;, {
+        event : a[0],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, &quot;/&quot;),
+        filepath : location.origin + a[6].replace(/\\/g, &quot;/&quot;) + &quot;:&quot; + a[5],
+        ownerpath : a[7]
+      });
+
+      return eventDebugModule._dispatchEvent.apply(this, arguments);
+    },
+
+    onadd() {
+      let a = arguments;
+      
+      eventDebugModule.add(&quot;Add&quot;, {
+        type : a[0],
+        cb : a[1],
+        args : a[2],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, &quot;/&quot;),
+        filepath : location.origin + a[6].replace(/\\/g, &quot;/&quot;) + &quot;:&quot; + a[5],
+        ownerpath : a[7]
+      });
+      
+
+      return eventDebugModule._addEventListener.apply(this, arguments);
+    },
+
+    pruneConnected() {
+      for (let k in debugEventLists) {
+        let list = debugEventLists[k];
+
+        for (let i=0; i&lt;list.length; i++) {
+          let e = list[i];
+
+          if (!e.thisvar || !(e.thisvar instanceof Node)) {
+            continue;
+          }
+
+          if (!e.thisvar.isConnected) {
+            list[i] = list[list.length-1];
+            list[list.length-1] = undefined;
+            list.length--;
+            i--;
+          }
+        }
+      }
+    },
+    
+
+    onrem() {
+      let a = arguments;
+      
+      eventDebugModule.add(&quot;Rem&quot;, {
+        type : a[0],
+        cb : a[1],
+        args : a[2],
+        thisvar : a[4],
+        line : a[5],
+        filename : a[6].replace(/\\/g, &quot;/&quot;),
+        filepath : location.origin + a[6].replace(/\\/g, &quot;/&quot;) + &quot;:&quot; + a[5],
+        ownerpath : a[7]
+      });
+      
+
+      return eventDebugModule._removeEventListener.apply(this, arguments);
+    }
+  }
+})();
+
+if (typeof _debug_event_listeners !== &quot;undefined&quot; &amp;&amp; _debug_event_listeners) {
+  eventDebugModule.start();
+}
+
+/*
+if (navigator.userAgent.toLowerCase().search(&quot;chrome&quot;) &gt;= 0) {
+  console.warn(&quot;Patching Google Chrome scrollbar bug&quot;);
+
+  let cb = (e) =&gt; {
+    if (e.touches.length == 1) {
+      let e2 = Object.create(e);
+      e2.pageX = e.touches[0].pageX;
+      e2.pageY = e.touches[0].pageY;
+      e2.x = e2.screenX = e2.pageX;
+      e2.y = e2.screenY = e2.pageY;
+      e2.button = 0;
+      e2.buttons = 1;
+
+      let type;
+      if (e.type === &quot;touchstart&quot;)
+        type = &quot;mousedown&quot;;
+      else 
+        type = &quot;mousemove&quot;;
+
+      console.log(e2);
+        //console.log(e.target);
+      e2 = new MouseEvent(type, e);
+      e.target.dispatchEvent(e2);
+    }
+  };
+
+  window.addEventListener(&quot;touchstart&quot;, (e) =&gt; cb(e));
+  window.addEventListener(&quot;touchmove&quot;, (e) =&gt; cb(e));
+
+  document.addEventListener(&quot;touchstart&quot;, (e) =&gt; cb(e));
+  document.addEventListener(&quot;touchmove&quot;, (e) =&gt; cb(e));
+}
+//*/
+
+if (window._disable_all_listeners) {
+  console.warn(&quot;Disabling all event listeners&quot;);
+  EventTarget.prototype.addEventListener = () =&gt; {};
+  EventSource.prototype.addEventListener = () =&gt; {};
+}
+
+if (typeof visualViewport === &quot;undefined&quot;) {
+  (function() {
+    class MyVisualViewport {
+      get width() {
+        return window.innerWidth;
+      }
+      get height() {
+        return window.innerHeight;
+      }
+
+      get offsetLeft() {
+        return 0;
+      }
+      get offsetTop() {
+        return 0;
+      }
+      get pageLeft() {
+        return 0;
+      }
+      get pageTop() {
+        return 0;
+      }
+      get scale() {
+        return 1.0;
+      }
+    }
+
+    window.visualViewport = new MyVisualViewport();
+  })();
+}
+
+if (Array.prototype.set === undefined) {
     Array.prototype.set = function set(array, src, dst, count) {
         src = src === undefined ? 0 : src;
         dst = dst === undefined ? 0 : dst;
