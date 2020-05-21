@@ -1196,8 +1196,9 @@ export class DropBox extends Button {
 
   _onpress(e) {
     if (this._menu !== undefined) {
-      this._menu.close();
+      let menu = this._menu;
       this._menu = undefined;
+      menu.close();
       return;
     }
 
