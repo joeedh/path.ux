@@ -315,10 +315,6 @@ export class Button extends UIBase {
   update() {
     super.update();
 
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
-    }
-
     this.updateDefaultSize();
     this.updateWidth();
     this.updateDPI();

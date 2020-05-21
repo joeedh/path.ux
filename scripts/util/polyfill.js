@@ -45,7 +45,7 @@
   }
 })();
 
-window.eventDebugModule =   (function() {
+window.eventDebugModule = (function() {
   "use strict";
 
   return {
@@ -286,7 +286,7 @@ window.list = function list(iter) {
   }
   
   return ret;
-}
+};
 
 function ArrayIter(array) {
   this.array = array;
@@ -309,7 +309,7 @@ ArrayIter.prototype.next = function() {
   
   ret.value = this.array[this.i++];
   return ret;
-}
+};
 
 //XXX surely browser vendors have fixed this by now. . .
 /*Override array iterator to not allocate too much*/
@@ -318,24 +318,19 @@ ArrayIter.prototype.next = function() {
 //  return new ArrayIter(this);
 //}
 
-if (Math.fract == undefined) {
+if (Math.fract === undefined) {
   Math.fract = function fract(f) {
-    var sn = (f>=0)*2.0-1.0;
-    f = f*sn - Math.floor(f*sn);
-    
-    sn = sn<0.0;
-    
-    return f*(1-sn) + (1.0-f)*sn;
+    return f - Math.floor(f);
   };
 }
 
-if (Math.tent == undefined) {
+if (Math.tent === undefined) {
   Math.tent = function tent(f) {
     return 1.0 - Math.abs(Math.fract(f)-0.5)*2.0;
   };
 }
 
-if (Math.sign == undefined) {
+if (Math.sign === undefined) {
   Math.sign = function sign(f) {
     return (f>0.0)*2.0-1.0;
   };
@@ -356,7 +351,7 @@ if (Array.prototype.pop_i == undefined) {
   }
 }
 
-if (Array.prototype.remove == undefined) {
+if (Array.prototype.remove === undefined) {
   Array.prototype.remove = function(item, suppress_error) {
     var i = this.indexOf(item);
     
@@ -381,9 +376,17 @@ if (String.prototype.contains == undefined) {
 
 String.prototype[Symbol.keystr] = function() {
   return this;
-}
+};
 
 Number.prototype[Symbol.keystr] = Boolean.prototype[Symbol.keystr] = function() {
   return ""+this;
-}
+};
 
+Array.prototype[Symbol.keystr] = function() {
+  let key = "";
+  for (let item of this) {
+    key += item[Symbol.keystr]() + ":";
+  }
+
+  return key;
+};

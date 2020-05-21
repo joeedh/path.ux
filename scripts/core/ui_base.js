@@ -19,6 +19,8 @@ export {theme} from "./ui_theme.js";
 
 import cconst from '../config/const.js';
 
+window.__cconst = cconst;
+
 let Vector4 = vectormath.Vector4;
 
 export {Icons} from '../icon_enum.js';
