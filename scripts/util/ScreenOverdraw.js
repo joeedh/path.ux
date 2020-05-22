@@ -76,8 +76,8 @@ export class Overdraw extends ui_base.UIBase {
     this.style["left"] = "0px";
     this.style["top"] = "0px";
     
-    this.style["width"] = "100%" //screen.size[0] + "px";
-    this.style["height"] = "100%" //screen.size[1] + "px";
+    this.style["width"] = screen.size[0] + "px";
+    this.style["height"] = screen.size[1] + "px";
     
     this.style["pointer-events"] = "none";
     

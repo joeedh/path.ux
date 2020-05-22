@@ -33,8 +33,7 @@ function ClassSetter(func) {
 }
 
 var prototype_idgen = 1;
-const _module_exports_ = {};
-var defined_classes = _module_exports_.defined_classes = [];
+var defined_classes = [];
 
 var StaticMethod = function StaticMethod(func) {
   this.func = func;
@@ -64,7 +63,7 @@ var handle_statics = function (cls, methods, parent) {
   }
 };
 
-var Class = _module_exports_.Class = function Class(methods) {
+var Class = function Class(methods) {
   var construct = undefined;
   var parent = undefined;
 
@@ -168,7 +167,7 @@ Class.static_method = function (func) {
 
 var EmptySlot = {};
 
-var set$1 = _module_exports_.set = Class([
+var set$1 = Class([
   function constructor(input) {
     this.items = [];
     this.keys = {};
@@ -235,7 +234,14 @@ var set$1 = _module_exports_.set = Class([
   }
 ]);
 
-var Class$1 = _module_exports_.Class;
+var struct_typesystem = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  defined_classes: defined_classes,
+  Class: Class,
+  set: set$1
+});
+
+var Class$1 = Class;
 var _o_basic_types = {"String": 0, "Number": 0, "Array": 0, "Function": 0};
 
 function isNodeJS() {
@@ -247,8 +253,7 @@ function isNodeJS() {
   return !!ret;
 }
 
-const _module_exports_$1 = {};
-let is_obj_lit = _module_exports_$1.is_obj_lit = function is_obj_lit(obj) {
+let is_obj_lit = function is_obj_lit(obj) {
   if (typeof obj !== "object") {
     return false;
   }
@@ -282,7 +287,7 @@ function set_getkey(obj) {
     return obj.__keystr__();
 }
 
-_module_exports_$1.get_callstack = function get_callstack(err) {
+const _export_get_callstack_ = function get_callstack(err) {
   var callstack = [];
   var isCallstackPopulated = false;
 
@@ -355,9 +360,9 @@ _module_exports_$1.get_callstack = function get_callstack(err) {
   return callstack;
 };
 
-_module_exports_$1.print_stack = function print_stack(err) {
+const _export_print_stack_ = function print_stack(err) {
   try {
-    var cs = _module_exports_$1.get_callstack(err);
+    var cs = _export_get_callstack_(err);
   } catch (err2) {
     console.log("Could not fetch call stack.");
     return;
@@ -369,7 +374,7 @@ _module_exports_$1.print_stack = function print_stack(err) {
   }
 };
 
-var set$2 = _module_exports_$1.set = Class$1([
+var set$2 = Class$1([
   function constructor(input) {
     this.items = [];
     this.keys = {};
@@ -440,7 +445,7 @@ var set$2 = _module_exports_$1.set = Class$1([
   }
 ]);
 
-var IDGen = _module_exports_$1.IDGen = Class$1([
+var IDGen = Class$1([
   function constructor() {
     this.cur_id = 1;
   },
@@ -462,32 +467,41 @@ IDGen.STRUCT = [
   "}"
 ].join("\n");
 
-const _module_exports_$2 = {};
-_module_exports_$2.STRUCT_ENDIAN = true; //little endian
+var struct_util = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  is_obj_lit: is_obj_lit,
+  get_callstack: _export_get_callstack_,
+  print_stack: _export_print_stack_,
+  set: set$2,
+  IDGen: IDGen
+});
 
-var Class$2 = _module_exports_.Class;
+const _module_exports_ = {};
+_module_exports_.STRUCT_ENDIAN = true; //little endian
+
+var Class$2 = Class;
 
 var temp_dataview = new DataView(new ArrayBuffer(16));
 var uint8_view = new Uint8Array(temp_dataview.buffer);
 
-var unpack_context = _module_exports_$2.unpack_context = Class$2([
+var unpack_context = _module_exports_.unpack_context = Class$2([
   function constructor() {
     this.i = 0;
   }
 ]);
 
-var pack_byte = _module_exports_$2.pack_byte = function (array, val) {
+var pack_byte = _module_exports_.pack_byte = function (array, val) {
   array.push(val);
 };
 
-var pack_bytes = _module_exports_$2.pack_bytes = function (array, bytes) {
+var pack_bytes = _module_exports_.pack_bytes = function (array, bytes) {
   for (var i = 0; i < bytes.length; i++) {
     array.push(bytes[i]);
   }
 };
 
-var pack_int = _module_exports_$2.pack_int = function (array, val) {
-  temp_dataview.setInt32(0, val, _module_exports_$2.STRUCT_ENDIAN);
+var pack_int = _module_exports_.pack_int = function (array, val) {
+  temp_dataview.setInt32(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -495,8 +509,8 @@ var pack_int = _module_exports_$2.pack_int = function (array, val) {
   array.push(uint8_view[3]);
 };
 
-_module_exports_$2.pack_float = function (array, val) {
-  temp_dataview.setFloat32(0, val, _module_exports_$2.STRUCT_ENDIAN);
+_module_exports_.pack_float = function (array, val) {
+  temp_dataview.setFloat32(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -504,8 +518,8 @@ _module_exports_$2.pack_float = function (array, val) {
   array.push(uint8_view[3]);
 };
 
-_module_exports_$2.pack_double = function (array, val) {
-  temp_dataview.setFloat64(0, val, _module_exports_$2.STRUCT_ENDIAN);
+_module_exports_.pack_double = function (array, val) {
+  temp_dataview.setFloat64(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -517,14 +531,14 @@ _module_exports_$2.pack_double = function (array, val) {
   array.push(uint8_view[7]);
 };
 
-_module_exports_$2.pack_short = function (array, val) {
-  temp_dataview.setInt16(0, val, _module_exports_$2.STRUCT_ENDIAN);
+_module_exports_.pack_short = function (array, val) {
+  temp_dataview.setInt16(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
 };
 
-var encode_utf8 = _module_exports_$2.encode_utf8 = function encode_utf8(arr, str) {
+var encode_utf8 = _module_exports_.encode_utf8 = function encode_utf8(arr, str) {
   for (var i = 0; i < str.length; i++) {
     var c = str.charCodeAt(i);
 
@@ -540,7 +554,7 @@ var encode_utf8 = _module_exports_$2.encode_utf8 = function encode_utf8(arr, str
   }
 };
 
-var decode_utf8 = _module_exports_$2.decode_utf8 = function decode_utf8(arr) {
+var decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
   var str = "";
   var i = 0;
 
@@ -568,7 +582,7 @@ var decode_utf8 = _module_exports_$2.decode_utf8 = function decode_utf8(arr) {
   return str;
 };
 
-var test_utf8 = _module_exports_$2.test_utf8 = function test_utf8() {
+var test_utf8 = _module_exports_.test_utf8 = function test_utf8() {
   var s = "a" + String.fromCharCode(8800) + "b";
   var arr = [];
 
@@ -611,7 +625,7 @@ function truncate_utf8(arr, maxlen) {
 }
 
 var _static_sbuf_ss = new Array(2048);
-var pack_static_string = _module_exports_$2.pack_static_string = function pack_static_string(data, str, length) {
+var pack_static_string = _module_exports_.pack_static_string = function pack_static_string(data, str, length) {
   if (length == undefined)
     throw new Error("'length' paremter is not optional for pack_static_string()");
 
@@ -633,7 +647,7 @@ var pack_static_string = _module_exports_$2.pack_static_string = function pack_s
 var _static_sbuf = new Array(32);
 
 /*strings are packed as 32-bit unicode codepoints*/
-var pack_string = _module_exports_$2.pack_string = function pack_string(data, str) {
+var pack_string = _module_exports_.pack_string = function pack_string(data, str) {
   _static_sbuf.length = 0;
   encode_utf8(_static_sbuf, str);
 
@@ -644,39 +658,39 @@ var pack_string = _module_exports_$2.pack_string = function pack_string(data, st
   }
 };
 
-var unpack_bytes = _module_exports_$2.unpack_bytes = function unpack_bytes(dview, uctx, len) {
+var unpack_bytes = _module_exports_.unpack_bytes = function unpack_bytes(dview, uctx, len) {
   var ret = new DataView(dview.buffer.slice(uctx.i, uctx.i + len));
   uctx.i += len;
 
   return ret;
 };
 
-var unpack_byte = _module_exports_$2.unpack_byte = function (dview, uctx) {
+var unpack_byte = _module_exports_.unpack_byte = function (dview, uctx) {
   return dview.getUint8(uctx.i++);
 };
 
-var unpack_int = _module_exports_$2.unpack_int = function (dview, uctx) {
+var unpack_int = _module_exports_.unpack_int = function (dview, uctx) {
   uctx.i += 4;
-  return dview.getInt32(uctx.i - 4, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getInt32(uctx.i - 4, _module_exports_.STRUCT_ENDIAN);
 };
 
-_module_exports_$2.unpack_float = function (dview, uctx) {
+_module_exports_.unpack_float = function (dview, uctx) {
   uctx.i += 4;
-  return dview.getFloat32(uctx.i - 4, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getFloat32(uctx.i - 4, _module_exports_.STRUCT_ENDIAN);
 };
 
-_module_exports_$2.unpack_double = function (dview, uctx) {
+_module_exports_.unpack_double = function (dview, uctx) {
   uctx.i += 8;
-  return dview.getFloat64(uctx.i - 8, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getFloat64(uctx.i - 8, _module_exports_.STRUCT_ENDIAN);
 };
 
-_module_exports_$2.unpack_short = function (dview, uctx) {
+_module_exports_.unpack_short = function (dview, uctx) {
   uctx.i += 2;
-  return dview.getInt16(uctx.i - 2, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getInt16(uctx.i - 2, _module_exports_.STRUCT_ENDIAN);
 };
 
 var _static_arr_us = new Array(32);
-_module_exports_$2.unpack_string = function (data, uctx) {
+_module_exports_.unpack_string = function (data, uctx) {
   var str = "";
 
   var slen = unpack_int(data, uctx);
@@ -691,7 +705,7 @@ _module_exports_$2.unpack_string = function (data, uctx) {
 };
 
 var _static_arr_uss = new Array(2048);
-_module_exports_$2.unpack_static_string = function unpack_static_string(data, uctx, length) {
+_module_exports_.unpack_static_string = function unpack_static_string(data, uctx, length) {
   var str = "";
 
   if (length == undefined)
@@ -718,14 +732,14 @@ _module_exports_$2.unpack_static_string = function unpack_static_string(data, uc
   return decode_utf8(arr);
 };
 
+let _export_parser_;
 "use strict";
 
 var t;
 
-var Class$3 = _module_exports_.Class;
+var Class$3 = Class;
 
-const _module_exports_$3 = {};
-_module_exports_$3.token = class token {
+const _export_token_ = class token {
   constructor(type, val, lexpos, lineno, lexer, parser) {
     this.type = type;
     this.value = val;
@@ -743,7 +757,7 @@ _module_exports_$3.token = class token {
   }
 };
 
-_module_exports_$3.tokdef = class tokdef {
+const _export_tokdef_ = class tokdef {
   constructor(name, regexpr, func) {
     this.name = name;
     this.re = regexpr;
@@ -751,13 +765,13 @@ _module_exports_$3.tokdef = class tokdef {
   }
 };
 
-var PUTIL_ParseError = _module_exports_$3.PUTIL_ParseError = class PUTIL_ParseError extends Error {
+var PUTIL_ParseError = class PUTIL_ParseError extends Error {
   constructor(msg) {
     Error.call(this);
   }
 };
 
-_module_exports_$3.lexer = class lexer {
+const _export_lexer_ = class lexer {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -887,7 +901,7 @@ _module_exports_$3.lexer = class lexer {
     }
 
     var def = theres[0];
-    var token = new _module_exports_$3.token(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
+    var token = new _export_token_(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
     this.lexpos += token.value.length;
 
     if (def.func) {
@@ -901,7 +915,7 @@ _module_exports_$3.lexer = class lexer {
   }
 };
 
-const parser = _module_exports_$3.parser = class parser {
+const parser = _export_parser_ = class parser {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -1009,7 +1023,7 @@ function test_parser() {
   var reserved_tokens = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
 
   function tk(name, re, func) {
-    return new _module_exports_$3.tokdef(name, re, func);
+    return new _export_tokdef_(name, re, func);
   }
 
   var tokens = [tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function (t) {
@@ -1053,14 +1067,14 @@ function test_parser() {
     return true;
   }
 
-  var lex = new _module_exports_$3.lexer(tokens, errfunc);
+  var lex = new _export_lexer_(tokens, errfunc);
   console.log("Testing lexical scanner...");
   lex.input(a);
   var token;
   while (token = lex.next()) {
     console.log(token.toString());
   }
-  var parser = new _module_exports_$3.parser(lex);
+  var parser = new _export_parser_(lex);
   parser.input(a);
 
   function p_Array(p) {
@@ -1139,13 +1153,21 @@ function test_parser() {
   console.log(JSON.stringify(ret));
 }
 
+var struct_parseutil = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get parser () { return _export_parser_; },
+  token: _export_token_,
+  tokdef: _export_tokdef_,
+  PUTIL_ParseError: PUTIL_ParseError,
+  lexer: _export_lexer_
+});
+
 "use strict";
 
 //the discontinuous id's are to make sure
 //the version I originally wrote (which had a few application-specific types)
 //and this one do not become totally incompatible.
-const _module_exports_$4 = {};
-var StructEnum = _module_exports_$4.StructEnum = {
+var StructEnum = {
   T_INT    : 0,
   T_FLOAT  : 1,
   T_DOUBLE : 2,
@@ -1160,7 +1182,7 @@ var StructEnum = _module_exports_$4.StructEnum = {
   T_BOOL    : 15
 };
 
-var StructTypes = _module_exports_$4.StructTypes = {
+var StructTypes = {
   "int": StructEnum.T_INT, 
   "float": StructEnum.T_FLOAT, 
   "double": StructEnum.T_DOUBLE, 
@@ -1175,7 +1197,7 @@ var StructTypes = _module_exports_$4.StructTypes = {
   "bool": StructEnum.T_BOOL
 };
 
-var StructTypeMap = _module_exports_$4.StructTypeMap = {};
+var StructTypeMap = {};
 
 for (var k in StructTypes) {
   StructTypeMap[StructTypes[k]] = k;
@@ -1190,17 +1212,17 @@ function gen_tabstr(t) {
 }
 
 function StructParser() {
-  var basic_types=new _module_exports_$1.set([
+  var basic_types=new set$2([
     "int", "float", "double", "string", "short", "byte", "bool"
   ]);
   
-  var reserved_tokens=new _module_exports_$1.set([
+  var reserved_tokens=new set$2([
     "int", "float", "double", "string", "static_string", "array", 
     "iter", "abstract", "short", "byte", "bool"
   ]);
 
   function tk(name, re, func) {
-    return new _module_exports_$3.tokdef(name, re, func);
+    return new _export_tokdef_(name, re, func);
   }
   
   var tokens=[
@@ -1252,8 +1274,8 @@ function StructParser() {
     return true;
   }
   
-  var lex=new _module_exports_$3.lexer(tokens, errfunc);
-  var parser=new _module_exports_$3.parser(lex);
+  var lex=new _export_lexer_(tokens, errfunc);
+  var parser=new _export_parser_(lex);
   
   function p_Static_String(p) {
     p.expect("STATIC_STRING");
@@ -1404,9 +1426,20 @@ function StructParser() {
   return parser;
 }
 
-_module_exports_$4.struct_parse = StructParser();
+const _export_struct_parse_ = StructParser();
 
+var struct_parser = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  StructEnum: StructEnum,
+  StructTypes: StructTypes,
+  StructTypeMap: StructTypeMap,
+  struct_parse: _export_struct_parse_
+});
+
+let _export_manager_;
 "use strict";
+
+let warninglvl = 2;
 
 /*
 
@@ -1433,12 +1466,12 @@ SomeClass {
 nstructjs.manager.add_class(SomeClass);
 
 */
-var StructTypeMap$1 = _module_exports_$4.StructTypeMap;
-var StructTypes$1 = _module_exports_$4.StructTypes;
-var Class$4 = _module_exports_.Class;
+var StructTypeMap$1 = StructTypeMap;
+var StructTypes$1 = StructTypes;
+var Class$4 = Class;
 
-var struct_parse = _module_exports_$4.struct_parse;
-var StructEnum$1 = _module_exports_$4.StructEnum;
+var struct_parse = _export_struct_parse_;
+var StructEnum$1 = StructEnum;
 
 var _static_envcode_null = "";
 var debug_struct = 0;
@@ -1484,8 +1517,16 @@ else {
   };
 }
 
-const _module_exports_$5 = {};
-_module_exports_$5.setDebugMode = (t) => {
+
+const _export_setWarningMode_ = (t) => {
+  if (typeof t !== "number" || isNaN(t)) {
+    throw new Error("Expected a single number (>= 0) argument to setWarningMode");
+  }
+
+  warninglvl = t;
+};
+
+const _export_setDebugMode_ = (t) => {
   debug_struct = t;
 
   if (debug_struct) {
@@ -1522,15 +1563,15 @@ var pack_callbacks = [
   function pack_int(data, val) {
     packer_debug("int " + val);
 
-    _module_exports_$2.pack_int(data, val);
+    _module_exports_.pack_int(data, val);
   }, function pack_float(data, val) {
     packer_debug("float " + val);
 
-    _module_exports_$2.pack_float(data, val);
+    _module_exports_.pack_float(data, val);
   }, function pack_double(data, val) {
     packer_debug("double " + val);
 
-    _module_exports_$2.pack_double(data, val);
+    _module_exports_.pack_double(data, val);
   }, 0, 0, 0, 0,
   function pack_string(data, val) {
     if (val == undefined)
@@ -1538,13 +1579,13 @@ var pack_callbacks = [
     packer_debug("string: " + val);
     packer_debug("int " + val.length);
 
-    _module_exports_$2.pack_string(data, val);
+    _module_exports_.pack_string(data, val);
   }, function pack_static_string(data, val, obj, thestruct, field, type) {
     if (val == undefined)
       val = "";
     packer_debug("static_string: '" + val + "' length=" + type.data.maxlength);
 
-    _module_exports_$2.pack_static_string(data, val, type.data.maxlength);
+    _module_exports_.pack_static_string(data, val, type.data.maxlength);
   }, function pack_struct(data, val, obj, thestruct, field, type) {
     packer_debug_start("struct " + type.data);
 
@@ -1574,7 +1615,7 @@ var pack_callbacks = [
     packer_debug_start("tstruct '" + stt.name + "'");
     packer_debug("int " + stt.id);
 
-    _module_exports_$2.pack_int(data, stt.id);
+    _module_exports_.pack_int(data, stt.id);
     thestruct.write_struct(data, val, stt);
 
     packer_debug_end("tstruct");
@@ -1588,12 +1629,12 @@ var pack_callbacks = [
       console.log("Type: ", type);
       console.log("");
       packer_debug("int 0");
-      _module_exports_$2.pack_int(data, 0);
+      _module_exports_.pack_int(data, 0);
       return;
     }
 
     packer_debug("int " + val.length);
-    _module_exports_$2.pack_int(data, val.length);
+    _module_exports_.pack_int(data, val.length);
 
     var d = type.data;
 
@@ -1624,7 +1665,7 @@ var pack_callbacks = [
       console.log("Type: ", type);
       console.log("");
       packer_debug("int 0");
-      _module_exports_$2.pack_int(data, 0);
+      _module_exports_.pack_int(data, 0);
       return;
     }
 
@@ -1634,7 +1675,7 @@ var pack_callbacks = [
     }, this);
 
     packer_debug("int " + len);
-    _module_exports_$2.pack_int(data, len);
+    _module_exports_.pack_int(data, len);
 
     var d = type.data, itername = d.iname, type2 = d.type;
     var env = _ws_env;
@@ -1642,7 +1683,8 @@ var pack_callbacks = [
     var i = 0;
     val.forEach(function (val2) {
       if (i >= len) {
-        console.trace("Warning: iterator returned different length of list!", val, i);
+        if (warninglvl > 0) 
+          console.trace("Warning: iterator returned different length of list!", val, i);
         return;
       }
 
@@ -1662,15 +1704,15 @@ var pack_callbacks = [
   }, function pack_short(data, val) {
     packer_debug("short " + val);
 
-    _module_exports_$2.pack_short(data, Math.floor(val));
+    _module_exports_.pack_short(data, Math.floor(val));
   }, function pack_byte(data, val) {
     packer_debug("byte " + val);
 
-    _module_exports_$2.pack_byte(data, Math.floor(val));
+    _module_exports_.pack_byte(data, Math.floor(val));
   }, function pack_bool(data, val) {
     packer_debug("bool " + val);
 
-    _module_exports_$2.pack_byte(data, !!val);
+    _module_exports_.pack_byte(data, !!val);
   }];
 
 function do_pack(data, val, obj, thestruct, field, type) {
@@ -1699,9 +1741,9 @@ function define_empty_class(name) {
   return cls;
 }
 
-var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
+var STRUCT = class STRUCT {
   constructor() {
-    this.idgen = new _module_exports_$1.IDGen();
+    this.idgen = new IDGen();
 
     this.structs = {};
     this.struct_cls = {};
@@ -1744,7 +1786,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
   //defaults to structjs.manager
   parse_structs(buf, defined_classes) {
     if (defined_classes === undefined) {
-      defined_classes = _module_exports_$5.manager;
+      defined_classes = _export_manager_;
     }
 
     if (defined_classes instanceof STRUCT) {
@@ -1758,8 +1800,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
     if (defined_classes == undefined) {
       defined_classes = [];
-      for (var k in _module_exports_$5.manager.struct_cls) {
-        defined_classes.push(_module_exports_$5.manager.struct_cls[k]);
+      for (var k in _export_manager_.struct_cls) {
+        defined_classes.push(_export_manager_.struct_cls[k]);
       }
     }
 
@@ -1772,7 +1814,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
         var stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
       } else if (cls.structName == undefined && cls.name != "Object") {
-        console.log("Warning, bad class in registered class list", cls.name, cls);
+        if (warninglvl > 0) 
+          console.log("Warning, bad class in registered class list", cls.name, cls);
         continue;
       }
 
@@ -1786,6 +1829,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
       if (!(stt.name in clsmap)) {
         if (!(stt.name in this.null_natives))
+        if (warninglvl > 0) 
           console.log("WARNING: struct " + stt.name + " is missing from class list.");
 
         var dummy = define_empty_class(stt.name);
@@ -1887,7 +1931,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
   /** invoke loadSTRUCT methods on parent objects.  note that
    reader() is only called once.  it is called however.*/
   static Super(obj, reader) {
-    console.warn("deprecated");
+    if (warninglvl > 0) 
+      console.warn("deprecated");
 
     reader(obj);
 
@@ -1911,7 +1956,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
   /** deprecated.  used with old fromSTRUCT interface. */
   static chain_fromSTRUCT(cls, reader) {
-    console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
+    if (warninglvl > 0) 
+      console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
 
     var proto = cls.prototype;
     var parent = cls.prototype.prototype.constructor;
@@ -1928,7 +1974,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       try {
         obj2[k] = obj[k];
       } catch (error) {
-        console.warn("  failed to set property", k);
+        if (warninglvl > 0) 
+          console.warn("  failed to set property", k);
       }
       //var k=keys[i];
       //if (k=="__proto__")
@@ -2016,10 +2063,10 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
     if (!(fullcode in this.compiled_code)) {
       var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       try {
-        eval(code2);
+        func = _structEval(code2);
       }
       catch (err) {
-        _module_exports_$1.print_stack(err);
+        _export_print_stack_(err);
 
         console.log(code2);
         console.log(" ");
@@ -2034,7 +2081,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       return func.call(obj, obj, env);
     }
     catch (err) {
-      _module_exports_$1.print_stack(err);
+      _export_print_stack_(err);
 
       var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       console.log(code2);
@@ -2108,7 +2155,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
     stt = this.structs[cls.structName];
 
     if (uctx == undefined) {
-      uctx = new _module_exports_$2.unpack_context();
+      uctx = new _module_exports_.unpack_context();
 
       packer_debug("\n\n=Begin reading " + cls.structName + "=");
     }
@@ -2116,19 +2163,19 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
     var unpack_funcs = [
       function t_int(type) { //int
-        var ret = _module_exports_$2.unpack_int(data, uctx);
+        var ret = _module_exports_.unpack_int(data, uctx);
 
         packer_debug("-int " + (debug_struct > 1 ? ret : ""));
 
         return ret;
       }, function t_float(type) {
-        var ret = _module_exports_$2.unpack_float(data, uctx);
+        var ret = _module_exports_.unpack_float(data, uctx);
 
         packer_debug("-float " + (debug_struct > 1 ? ret : ""));
 
         return ret;
       }, function t_double(type) {
-        var ret = _module_exports_$2.unpack_double(data, uctx);
+        var ret = _module_exports_.unpack_double(data, uctx);
 
         packer_debug("-double " + (debug_struct > 1 ? ret : ""));
 
@@ -2137,7 +2184,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       function t_string(type) {
         packer_debug_start("string");
 
-        var s = _module_exports_$2.unpack_string(data, uctx);
+        var s = _module_exports_.unpack_string(data, uctx);
 
         packer_debug("data: '" + s + "'");
         packer_debug_end("string");
@@ -2145,7 +2192,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_static_string(type) {
         packer_debug_start("static_string");
 
-        var s = _module_exports_$2.unpack_static_string(data, uctx, type.data.maxlength);
+        var s = _module_exports_.unpack_static_string(data, uctx, type.data.maxlength);
 
         packer_debug("data: '" + s + "'");
         packer_debug_end("static_string");
@@ -2162,7 +2209,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_tstruct(type) {
         packer_debug_start("tstruct");
 
-        var id = _module_exports_$2.unpack_int(data, uctx);
+        var id = _module_exports_.unpack_int(data, uctx);
 
         packer_debug("-int " + id);
         if (!(id in thestruct.struct_ids)) {
@@ -2186,7 +2233,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_array(type) {
         packer_debug_start("array");
 
-        var len = _module_exports_$2.unpack_int(data, uctx);
+        var len = _module_exports_.unpack_int(data, uctx);
         packer_debug("-int " + len);
 
         var arr = new Array(len);
@@ -2199,7 +2246,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_iter(type) {
         packer_debug_start("iter");
 
-        var len = _module_exports_$2.unpack_int(data, uctx);
+        var len = _module_exports_.unpack_int(data, uctx);
         packer_debug("-int " + len);
 
         var arr = new Array(len);
@@ -2210,19 +2257,19 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
         packer_debug_end("iter");
         return arr;
       }, function t_short(type) { //int
-        var ret = _module_exports_$2.unpack_short(data, uctx);
+        var ret = _module_exports_.unpack_short(data, uctx);
 
         packer_debug("-short " + ret);
 
         return ret;
       }, function t_byte(type) {
-        var ret = _module_exports_$2.unpack_byte(data, uctx);
+        var ret = _module_exports_.unpack_byte(data, uctx);
 
         packer_debug("-byte " + ret);
 
         return ret;
       }, function t_bool(type) {
-        var ret = _module_exports_$2.unpack_byte(data, uctx);
+        var ret = _module_exports_.unpack_byte(data, uctx);
 
         packer_debug("-bool " + ret);
 
@@ -2264,7 +2311,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       obj.loadSTRUCT(load);
       return obj;
     } else if (cls.fromSTRUCT !== undefined) {
-      console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
+      if (warninglvl > 1) 
+        console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
       return cls.fromSTRUCT(load);
     } else { //default case, make new instance and then call load() on it
       let obj;
@@ -2282,12 +2330,17 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 };
 
 //main struct script manager
-var manager = _module_exports_$5.manager = new STRUCT();
+var manager = _export_manager_ = new STRUCT();
 
-//manager defaults to structjs.manager
-var write_scripts = _module_exports_$5.write_scripts = function write_scripts(manager, include_code = false) {
+/**
+ * Write all defined structs out to a string.
+ *
+ * @param manager STRUCT instance, defaults to nstructjs.manager
+ * @param include_code include save code snippets
+ * */
+var write_scripts = function write_scripts(manager, include_code = false) {
   if (manager === undefined)
-    manager = _module_exports_$5.manager;
+    manager = _export_manager_;
 
   var buf = "";
 
@@ -2317,11 +2370,20 @@ var write_scripts = _module_exports_$5.write_scripts = function write_scripts(ma
   return buf;
 };
 
+var struct_intern = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get manager () { return _export_manager_; },
+  setWarningMode: _export_setWarningMode_,
+  setDebugMode: _export_setDebugMode_,
+  STRUCT: STRUCT,
+  write_scripts: write_scripts
+});
+
 "use strict";
 
-if (typeof btoa == "undefined") {
+if (typeof btoa === "undefined") {
   _nGlobal.btoa = function btoa(str) {
-    var buffer = new Buffer("" + str, 'binary');
+    let buffer = new Buffer("" + str, 'binary');
     return buffer.toString('base64');
   };
 
@@ -2329,8 +2391,6 @@ if (typeof btoa == "undefined") {
     return new Buffer(str, 'base64').toString('binary');
   };
 }
-
-var Class$5 = _module_exports_.Class;
 
 /*
 file format:
@@ -2349,8 +2409,56 @@ file format:
     data                                   : ...
 */
 
-const _module_exports_$6 = {};
-var FileParams = _module_exports_$6.FileParams = class FileParams {
+const _export_versionToInt_ = function(v) {
+  v = _export_versionCoerce_(v);
+  let mul = 64;
+  return ~~(v.major*mul*mul*mul + v.minor*mul*mul + v.micro*mul);
+};
+
+let ver_pat = /[0-9]+\.[0-9]+\.[0-9]+$/;
+
+const _export_versionCoerce_ = function(v) {
+  if (!v) {
+    throw new Error("empty version: " + v);
+  }
+
+  if (typeof v === "string") {
+    if (!ver_pat.exec(v)) {
+      throw new Error("invalid version string " + v);
+    }
+
+    let ver = v.split(".");
+    return {
+      major : parseInt(ver[0]),
+      minor : parseInt(ver[1]),
+      micro : parseInt(ver[2])
+    }
+  } else if (Array.isArray(v)) {
+    return {
+      major : v[0],
+      minor : v[1],
+      micro : v[2]
+    }
+  } else if (typeof v === "object") {
+    let test = (k) => k in v && typeof v[k] === "number";
+
+    if (!test("major") || !test("minor") || !test("micro")) {
+      throw new Error("invalid version object: " + v);
+    }
+
+    return v;
+  } else {
+    throw new Error("invalid version " + v);
+  }
+};
+
+const _export_versionLessThan_ = function(a, b) {
+  return _export_versionToInt_(a) < _export_versionToInt_(b);
+};
+
+let versionLessThan = _export_versionLessThan_;
+
+let FileParams = class FileParams {
   constructor() {
     this.magic = "STRT";
     this.ext = ".bin";
@@ -2365,26 +2473,26 @@ var FileParams = _module_exports_$6.FileParams = class FileParams {
 };
 
 //used to define blocks
-var Block = _module_exports_$6.Block = class Block {
+let Block = class Block {
   constructor(type_magic, data) {
     this.type = type_magic;
     this.data = data;
   }
 };
 
-var FileError = _module_exports_$6.FileError = class FileeError extends Error {
+let FileError = class FileeError extends Error {
 };
 
-var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
+let FileHelper = class FileHelper {
   //params can be FileParams instance, or object literal
   //(it will convert to FileParams)
   constructor(params) {
     if (params === undefined) {
       params = new FileParams();
     } else {
-      var fp = new FileParams();
+      let fp = new FileParams();
 
-      for (var k in params) {
+      for (let k in params) {
         fp[k] = params[k];
       }
       params = fp;
@@ -2399,45 +2507,45 @@ var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
   }
 
   read(dataview) {
-    this.unpack_ctx = new _module_exports_$2.unpack_context();
+    this.unpack_ctx = new _module_exports_.unpack_context();
 
-    var magic = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, 4);
+    let magic = _module_exports_.unpack_static_string(dataview, this.unpack_ctx, 4);
 
     if (magic !== this.magic) {
       throw new FileError("corrupted file");
     }
 
     this.version = {};
-    this.version.major = _module_exports_$2.unpack_short(dataview, this.unpack_ctx);
-    this.version.minor = _module_exports_$2.unpack_byte(dataview, this.unpack_ctx);
-    this.version.micro = _module_exports_$2.unpack_byte(dataview, this.unpack_ctx);
+    this.version.major = _module_exports_.unpack_short(dataview, this.unpack_ctx);
+    this.version.minor = _module_exports_.unpack_byte(dataview, this.unpack_ctx);
+    this.version.micro = _module_exports_.unpack_byte(dataview, this.unpack_ctx);
 
-    var struct = this.struct = new structjs.STRUCT();
+    let struct = this.struct = new STRUCT();
 
-    var scripts = _module_exports_$2.unpack_string(dataview, this.unpack_ctx);
-    this.struct.parse_structs(scripts, structjs.manager);
+    let scripts = _module_exports_.unpack_string(dataview, this.unpack_ctx);
+    this.struct.parse_structs(scripts, _export_manager_);
 
-    var blocks = [];
-    var dviewlen = dataview.buffer.byteLength;
+    let blocks = [];
+    let dviewlen = dataview.buffer.byteLength;
 
     while (this.unpack_ctx.i < dviewlen) {
       //console.log("reading block. . .", this.unpack_ctx.i, dviewlen);
 
-      var type = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, 4);
-      var datalen = _module_exports_$2.unpack_int(dataview, this.unpack_ctx);
-      var bstruct = _module_exports_$2.unpack_int(dataview, this.unpack_ctx);
-      var bdata;
+      let type = _module_exports_.unpack_static_string(dataview, this.unpack_ctx, 4);
+      let datalen = _module_exports_.unpack_int(dataview, this.unpack_ctx);
+      let bstruct = _module_exports_.unpack_int(dataview, this.unpack_ctx);
+      let bdata;
 
       //console.log(type, datalen, bstruct);
 
       if (bstruct == -2) { //string data, e.g. JSON
-        bdata = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, datalen);
+        bdata = _module_exports_.unpack_static_string(dataview, this.unpack_ctx, datalen);
       } else {
-        bdata = _module_exports_$2.unpack_bytes(dataview, this.unpack_ctx, datalen);
-        bdata = struct.read_object(bdata, bstruct, new _module_exports_$2.unpack_context());
+        bdata = _module_exports_.unpack_bytes(dataview, this.unpack_ctx, datalen);
+        bdata = struct.read_object(bdata, bstruct, new _module_exports_.unpack_context());
       }
 
-      var block = new Block();
+      let block = new Block();
       block.type = type;
       block.data = bdata;
 
@@ -2448,58 +2556,66 @@ var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
     return blocks;
   }
 
+  doVersions(old) {
+    let blocks = this.blocks;
+
+    if (versionLessThan(old, "0.0.1")) {
+      //do something
+    }
+  }
+
   write(blocks) {
-    this.struct = structjs.manager;
+    this.struct = _export_manager_;
     this.blocks = blocks;
 
-    var data = [];
+    let data = [];
 
-    _module_exports_$2.pack_static_string(data, this.magic, 4);
-    _module_exports_$2.pack_short(data, this.version.major);
-    _module_exports_$2.pack_byte(data, this.version.minor & 255);
-    _module_exports_$2.pack_byte(data, this.version.micro & 255);
+    _module_exports_.pack_static_string(data, this.magic, 4);
+    _module_exports_.pack_short(data, this.version.major);
+    _module_exports_.pack_byte(data, this.version.minor & 255);
+    _module_exports_.pack_byte(data, this.version.micro & 255);
 
-    var scripts = structjs.write_scripts();
-    _module_exports_$2.pack_string(data, scripts);
+    let scripts = write_scripts();
+    _module_exports_.pack_string(data, scripts);
 
-    var struct = this.struct;
+    let struct = this.struct;
 
-    for (var block of blocks) {
-      if (typeof block.data == "string") { //string data, e.g. JSON
-        _module_exports_$2.pack_static_string(data, block.type, 4);
-        _module_exports_$2.pack_int(data, block.data.length);
-        _module_exports_$2.pack_int(data, -2); //flag as string data
-        _module_exports_$2.pack_static_string(data, block.data, block.data.length);
+    for (let block of blocks) {
+      if (typeof block.data === "string") { //string data, e.g. JSON
+        _module_exports_.pack_static_string(data, block.type, 4);
+        _module_exports_.pack_int(data, block.data.length);
+        _module_exports_.pack_int(data, -2); //flag as string data
+        _module_exports_.pack_static_string(data, block.data, block.data.length);
         continue;
       }
 
-      var structName = block.data.constructor.structName;
+      let structName = block.data.constructor.structName;
       if (structName === undefined || !(structName in struct.structs)) {
         throw new Error("Non-STRUCTable object " + block.data);
       }
 
-      var data2 = [];
-      var stt = struct.structs[structName];
+      let data2 = [];
+      let stt = struct.structs[structName];
 
       struct.write_object(data2, block.data);
 
-      _module_exports_$2.pack_static_string(data, block.type, 4);
-      _module_exports_$2.pack_int(data, data2.length);
-      _module_exports_$2.pack_int(data, stt.id);
+      _module_exports_.pack_static_string(data, block.type, 4);
+      _module_exports_.pack_int(data, data2.length);
+      _module_exports_.pack_int(data, stt.id);
 
-      _module_exports_$2.pack_bytes(data, data2);
+      _module_exports_.pack_bytes(data, data2);
     }
 
     return new DataView(new Uint8Array(data).buffer);
   }
 
   writeBase64(blocks) {
-    var dataview = this.write(blocks);
+    let dataview = this.write(blocks);
 
-    var str = "";
-    var bytes = new Uint8Array(dataview.buffer);
+    let str = "";
+    let bytes = new Uint8Array(dataview.buffer);
 
-    for (var i = 0; i < bytes.length; i++) {
+    for (let i = 0; i < bytes.length; i++) {
       str += String.fromCharCode(bytes[i]);
     }
 
@@ -2511,23 +2627,27 @@ var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
   }
 
   readBase64(base64) {
-    var data = atob(base64);
-    var data2 = new Uint8Array(data.length);
+    let data = atob(base64);
+    let data2 = new Uint8Array(data.length);
 
-    for (var i = 0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i++) {
       data2[i] = data.charCodeAt(i);
     }
 
     return this.read(new DataView(data2.buffer));
   }
 };
-/*
-  //get type data from structjs.manager
-  var classes = {};
-  structjs.manager.forEach(function(stt) {
-    classes[stt] 
-  }, this);
-*/
+
+var struct_filehelper = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  versionToInt: _export_versionToInt_,
+  versionCoerce: _export_versionCoerce_,
+  versionLessThan: _export_versionLessThan_,
+  FileParams: FileParams,
+  Block: Block,
+  FileError: FileError,
+  FileHelper: FileHelper
+});
 
 if (typeof window !== "undefined") {
   window._nGlobal = window;
@@ -2537,48 +2657,64 @@ if (typeof window !== "undefined") {
   global._nGlobal = global;
 }
 
-const _module_exports_$7 = {};
-Object.defineProperty(_module_exports_$7, "STRUCT_ENDIAN", {
+_nGlobal._structEval = eval;
+
+const _module_exports_$1 = {};
+Object.defineProperty(_module_exports_$1, "STRUCT_ENDIAN", {
   get: function () {
-    return _module_exports_$2.STRUCT_ENDIAN;
+    return _module_exports_.STRUCT_ENDIAN;
   },
   set: function (val) {
-    _module_exports_$2.STRUCT_ENDIAN = val;
+    _module_exports_.STRUCT_ENDIAN = val;
   }
 });
 
-for (let k in _module_exports_$5) {
-  _module_exports_$7[k] = _module_exports_$5[k];
+for (let k in struct_intern) {
+  _module_exports_$1[k] = struct_intern[k];
 }
 
-var StructTypeMap$2 = _module_exports_$4.StructTypeMap;
-var StructTypes$2 = _module_exports_$4.StructTypes;
-var Class$6 = _module_exports_.Class;
+var StructTypeMap$2 = StructTypeMap;
+var StructTypes$2 = StructTypes;
+var Class$5 = Class;
 
 //forward struct_intern's exports
-for (var k$1 in _module_exports_$5) {
-  _module_exports_$7[k$1] = _module_exports_$5[k$1];
+for (var k$1 in struct_intern) {
+  _module_exports_$1[k$1] = struct_intern[k$1];
 }
 
 /** Register a class with nstructjs **/
-_module_exports_$7.register = function register(cls, name) {
-  return _module_exports_$7.manager.register(cls, name);
+_module_exports_$1.register = function register(cls, name) {
+  return _module_exports_$1.manager.register(cls, name);
 };
-_module_exports_$7.inherit = function () {
-  return _module_exports_$7.STRUCT.inherit(...arguments);
+_module_exports_$1.inherit = function () {
+  return _module_exports_$1.STRUCT.inherit(...arguments);
 };
 
-_module_exports_$7.setDebugMode = _module_exports_$5.setDebugMode;
+_module_exports_$1.setDebugMode = _export_setDebugMode_;
+_module_exports_$1.setWarningMode = _export_setWarningMode_;
+
+/*
+import * as _require___$tinyeval$tinyeval_js_ from "../tinyeval/tinyeval.js";
+_module_exports_.tinyeval = _require___$tinyeval$tinyeval_js_;
+
+_module_exports_.useTinyEval = function() {
+  _nGlobal._structEval = (buf) => {
+    return _module_exports_.tinyeval.eval(buf);
+  }
+};
+*/
+   _module_exports_$1.useTinyEval = () => {};
+
 
 //export other modules
-_module_exports_$7.binpack = _module_exports_$2;
-_module_exports_$7.util = _module_exports_$1;
-_module_exports_$7.typesystem = _module_exports_;
-_module_exports_$7.parseutil = _module_exports_$3;
-_module_exports_$7.parser = _module_exports_$4;
-_module_exports_$7.filehelper = _module_exports_$6;
+_module_exports_$1.binpack = _module_exports_;
+_module_exports_$1.util = struct_util;
+_module_exports_$1.typesystem = struct_typesystem;
+_module_exports_$1.parseutil = struct_parseutil;
+_module_exports_$1.parser = struct_parser;
+_module_exports_$1.filehelper = struct_filehelper;
 
-module.exports = _module_exports_$7;
+module.exports = _module_exports_$1;
   if (!(typeof window === "undefined" && typeof global !== "undefined")) {
     //not nodejs?
     _nGlobal.nstructjs = module.exports;    

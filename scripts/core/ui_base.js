@@ -1,8 +1,15 @@
 let _ui_base = undefined;
 
+if (window.document && document.body) {
+  console.log("ensuring body.style.margin/padding are zero");
+  document.body.style["margin"] = "0px";
+  document.body.style["padding"] = "0px";
+}
+
 import './units.js';
 import * as util from '../util/util.js';
 import * as vectormath from '../util/vectormath.js';
+import * as math from '../util/math.js';
 import * as toolprop from '../toolsys/toolprop.js';
 import * as controller from '../controller/controller.js';
 import {pushModalLight, popModalLight, copyEvent, pathDebugEvent} from '../util/simple_events.js';
@@ -544,7 +551,7 @@ ${selector}::-webkit-scrollbar-thumb {
 }
     `;
 
-  console.log(buf);
+  //console.log(buf);
   return buf;
 }
 
@@ -1203,7 +1210,35 @@ export class UIBase extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
+  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
+    let marginx;
+    let clip;
+
+    if (typeof args === "object") {
+      marginx = args.sx || 0;
+      marginy = args.sy || 0;
+      nodeclass = args.nodeclass || UIBase;
+      excluded_classes = args.excluded_classes;
+      clip = args.clip;
+    } else {
+      marginx = args;
+
+      args = {
+        marginx : marginx || 0,
+        marginy : marginy || 0,
+        nodeclass : nodeclass || UIBase,
+        excluded_classes : excluded_classes,
+        clip : clip
+      }
+    }
+
+    if (!clip) {
+      clip = {
+        pos : new Vector2([-10000, 10000]),
+        size : new Vector2([20000, 10000])
+      };
+    }
+    
     let ret = undefined;
 
     let retzindex = undefined;
@@ -1219,7 +1254,7 @@ export class UIBase extends HTMLElement {
       }
     };
 
-    let rec = (n, widget, widget_zindex, zindex, depth=0) => {
+    let rec = (n, widget, widget_zindex, zindex, clip, depth=0) => {
       if (n.style && n.style["z-index"]) {
         if (!(n instanceof UIBase) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
@@ -1229,24 +1264,47 @@ export class UIBase extends HTMLElement {
       if (n.getClientRects && n.getClientRects().length > 0) {
         let rects = n.getClientRects();
 
+        let rect = n.getBoundingClientRect();
+
+        if (n.style && n.style["overflow"] === "hidden" || n.style["overflow"] === "scroll") {
+          clip = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
+
+          if (!clip) {
+            return;
+          }
+        }
+
         if (testwidget(n)) {
           widget = n;
           widget_zindex = zindex;
         }
 
-        for (let rect of rects) {
-          let ok = true;
+        let ok = true;
 
-          if (n instanceof UIBase) {
-            ok = ok && n.visibleToPick;
+        if (n instanceof UIBase) {
+          ok = ok && n.visibleToPick;
+        }
+
+        if (!ok) {
+          return;
+        }
+
+        for (let rect of rects) {
+          ok = true;
+
+          let clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
+          
+          if (!clip2) {
+            ok = false;
+            continue;
           }
 
           ok = ok && !n.hidden;
           ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
           ok = ok && (retzindex === undefined || zindex >= retzindex);
 
-          ok =  ok && x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
-          ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
+          ok = ok && x >= clip2.pos[0]-marginx && x <= clip2.pos[0] + clip2.size[0]+marginy;
+          ok = ok && y >= clip2.pos[1]-marginy && y <= clip2.pos[1] + clip2.size[1]+marginx;
 
           if (n.visibleToPick !== undefined) {
             ok = ok && n.visibleToPick;
@@ -1277,7 +1335,7 @@ export class UIBase extends HTMLElement {
 
             let n2 = n.shadow.childNodes[i2];
             if (n2.childNodes && n2.style) {
-              rec(n2, widget, widget_zindex, zindex, depth + 1);
+              rec(n2, widget, widget_zindex, zindex, clip, depth + 1);
             }
           }
         }
@@ -1287,7 +1345,7 @@ export class UIBase extends HTMLElement {
 
           let n2 = n.childNodes[i2];
           if (n2.childNodes && n2.style) {
-            rec(n2, widget, widget_zindex, zindex, depth + 1);
+            rec(n2, widget, widget_zindex, zindex, clip, depth + 1);
           }
         }
       }
@@ -1300,7 +1358,7 @@ export class UIBase extends HTMLElement {
     }
     let zindex = p !== undefined ? parseInt(p.style["z-index"]) : 0;
 
-    rec(this, testwidget(this) ? this : undefined, zindex, zindex);
+    rec(this, testwidget(this) ? this : undefined, zindex, zindex, clip, 0);
 
     return ret;
   }

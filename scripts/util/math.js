@@ -3,6 +3,8 @@
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 
+import {Vector2, Vector3, Vector4, Matrix4, Quat} from './vectormath.js';
+
 export function aabb_overlap_area(pos1, size1, pos2, size2) {
   let r1=0.0, r2=0.0;
 
@@ -25,6 +27,14 @@ export function aabb_overlap_area(pos1, size1, pos2, size2) {
   return r1*r2;
 }
 
+/**
+ * Returns true if two aabbs intersect
+ * @param {*} pos1 
+ * @param {*} size1 
+ * @param {*} pos2 
+ * @param {*} size2 
+ */
+
 export function aabb_isect_2d(pos1, size1, pos2, size2) {
   var ret=0;
   for (var i=0; i<2; i++) {
@@ -38,6 +48,183 @@ export function aabb_isect_2d(pos1, size1, pos2, size2) {
   return ret==2;
 };
 
+let aabb_intersect_vs = util.cachering.fromConstructor(Vector2, 32);
+let aabb_intersect_rets = new util.cachering(() => {
+  return {
+    pos   : new Vector2(),
+    size  : new Vector2() 
+  }
+}, 512);
+
+/**
+ * Returns aabb that's the intersection of two aabbs
+ * @param {*} pos1 
+ * @param {*} size1 
+ * @param {*} pos2 
+ * @param {*} size2 
+ */
+export function aabb_intersect_2d(pos1, size1, pos2, size2) {
+  let v1 = aabb_intersect_vs.next().load(pos1);
+  let v2 = aabb_intersect_vs.next().load(pos1).add(size1);
+  let v3 = aabb_intersect_vs.next().load(pos2);
+  let v4 = aabb_intersect_vs.next().load(pos2).add(size2);
+
+  let min = aabb_intersect_vs.next().zero();
+  let max = aabb_intersect_vs.next().zero();
+
+  let tot=0;
+
+  for (let i=0; i<2; i++) {
+    if (v2[i] >= v3[i] && v1[i] <= v4[i]) {
+      tot++;
+
+      min[i] = Math.max(v3[i], v1[i]);
+      max[i] = Math.min(v2[i], v4[i]);
+    }
+  }
+
+  if (tot !== 2) {
+    return undefined;
+  }
+
+  let ret = aabb_intersect_rets.next();
+  ret.pos.load(min);
+  ret.size.load(max).sub(min);
+
+  return ret;
+}
+
+window.test_aabb_intersect_2d = function() {
+  let canvas = document.getElementById("test_canvas");
+
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.setAttribute("id", "test_canvas");
+    canvas.g = canvas.getContext("2d");
+
+    document.body.appendChild(canvas);
+  }
+
+  canvas.width = ~~(window.innerWidth*devicePixelRatio);
+  canvas.height = ~~(window.innerHeight*devicePixelRatio);
+  canvas.style.width = (canvas.width/devicePixelRatio) + "px";
+  canvas.style.height = (canvas.height/devicePixelRatio) + "px";
+  canvas.style.position = "absolute";
+  canvas.style["z-index"] = "1000";
+
+  let g = canvas.g;
+  g.clearRect(0, 0, canvas.width, canvas.height);
+
+  let sz = 800;
+  let a1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let a2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let b1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let b2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  
+  let p1 = new Vector2();
+  let s1 = new Vector2();
+  let p2 = new Vector2();
+  let s2 = new Vector2();
+
+  p1.load(a1).min(a2);
+  s1.load(a1).max(a2);
+  p2.load(b1).min(b2);
+  s2.load(b1).max(b2);
+
+  s1.sub(p1);
+  s2.sub(p1);
+
+  console.log(p1, s1);
+  console.log(p2, s2);
+
+  g.beginPath();
+  g.rect(0, 0, canvas.width, canvas.height);
+  g.fillStyle = "white";
+  g.fill();
+
+  g.beginPath();
+  g.rect(p1[0], p1[1], s1[0], s1[1]);
+  g.fillStyle = "rgba(255, 100, 75, 1.0)";
+  g.fill();
+
+  g.beginPath();
+  g.rect(p2[0], p2[1], s2[0], s2[1]);
+  g.fillStyle = "rgba(75, 100, 255, 1.0)";
+  g.fill();
+  
+  let ret = aabb_intersect_2d(p1, s1, p2, s2);
+
+  if (ret) {
+
+    g.beginPath();
+    g.rect(ret.pos[0], ret.pos[1], ret.size[0], ret.size[1]);
+    g.fillStyle = "rgba(0, 0, 0, 1.0)";
+    g.fill();
+  }
+
+  /*
+  window.setTimeout(() => {
+    canvas.remove();
+  }, 2000);
+  //*/
+
+  return {
+    end   : test_aabb_intersect_2d.end,
+    timer : test_aabb_intersect_2d.timer
+  };
+}
+
+test_aabb_intersect_2d.stop = function stop() {
+  if (test_aabb_intersect_2d._timer) {
+    console.log("stopping timer");
+    
+    window.clearInterval(test_aabb_intersect_2d._timer);
+    test_aabb_intersect_2d._timer = undefined;
+  }
+}
+
+test_aabb_intersect_2d.end = function end() {
+  test_aabb_intersect_2d.stop();
+
+  let canvas = document.getElementById("test_canvas");
+  if (canvas) {
+    canvas.remove();
+  }
+}
+test_aabb_intersect_2d.timer = function timer(rate=500) {
+  if (test_aabb_intersect_2d._timer) {
+    window.clearInterval(test_aabb_intersect_2d._timer);
+    test_aabb_intersect_2d._timer = undefined;
+    console.log("stopping timer");
+    return;
+  }
+
+  console.log("starting timer");
+
+  test_aabb_intersect_2d._timer = window.setInterval(() => {
+    test_aabb_intersect_2d();
+  }, rate);
+};
+
+export function aabb_union_2d(pos1, size1, pos2, size2) {
+  let v1 = aabb_intersect_vs.next();
+  let v2 = aabb_intersect_vs.next();
+  let min = aabb_intersect_vs.next();
+  let max = aabb_intersect_vs.next(); 
+  v1.load(pos1).add(size1);
+  v2.load(pos2).add(size2);
+
+  min.load(v1).min(v2);
+  max.load(v1).max(v2);
+
+  max.sub(min);
+  let ret = aabb_intersect_rets.next();
+
+  ret.pos.load(min);
+  ret.pos.load(max);
+
+  return ret;
+}
 
 //XXX refactor to use es6 classes,
 //    or at last the class system in typesystem.js
@@ -58,9 +245,6 @@ function inherit(cls, parent, proto) {
   
   return cls.prototype;
 }
-
-var Vector2 = vectormath.Vector2, Vector3 = vectormath.Vector3;
-var Vector4 = vectormath.Vector4, Matrix4 = vectormath.Matrix4;
 
 var set = util.set;
 

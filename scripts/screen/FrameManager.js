@@ -153,8 +153,6 @@ export class Screen extends ui_base.UIBase {
       let sheet;
 
       let finish = () => {
-        console.warn(sheet, "sheet");
-        
         let sheet2 = this.globalCSS.sheet;
         if (!sheet2) {
           this.doOnce(finish);
@@ -187,8 +185,6 @@ export class Screen extends ui_base.UIBase {
               continue;
             }
             for (let [key, val] of list(rule.styleMap.entries())) {
-              console.log(rule2.styleMap.has(key));
-
               if (1||rule2.styleMap.has(key)) {
                 //rule2.styleMap.delete(key);
                 let sval = "";
@@ -213,8 +209,6 @@ export class Screen extends ui_base.UIBase {
           }
         }
       }
-
-      console.log("style", style);
 
       if (typeof style === "string") {
         try { //stupid firefox
@@ -322,6 +316,41 @@ export class Screen extends ui_base.UIBase {
   //}
 
   pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
+  }
+  
+  /** 
+   * @param x
+   * @param y
+   * @param args arguments : {sx, sy, nodeclass, excluded_classes}
+  */
+  pickElement(x, y, args, sy, nodeclass, excluded_classes) {
+    let sx;
+    let clip;
+
+    if (typeof args === "object") {
+      sx = args.sx;
+      sy = args.sy;
+      nodeclass = args.nodeclass;
+      excluded_classes = args.excluded_classes;
+      clip = args.clip;
+    } else {
+      sx = args;
+
+      args = {
+        sx : sx,
+        sy : sy,
+        nodeclass : nodeclass,
+        excluded_classes : excluded_classes
+      };
+    }
+
+    if (clip === undefined) {
+      clip = args.clip = {
+        pos   : new Vector2(this.pos),
+        size  : new Vector2(this.size)
+      }
+    };
+
     if (!this.ctx) {
       console.warn("no ctx in screen");
       return;
@@ -332,10 +361,10 @@ export class Screen extends ui_base.UIBase {
     for (let i=this._popups.length-1; i >= 0; i--) {
       let popup = this._popups[i];
 
-      ret = ret || popup.pickElement(...arguments);
+      ret = ret || popup.pickElement(x, y, args);
     }
 
-    ret = ret || super.pickElement(...arguments);
+    ret = ret || super.pickElement(x, y, args);
 
     return ret;
   }
@@ -1183,7 +1212,7 @@ export class Screen extends ui_base.UIBase {
     if (key !== this._last_scrollstyle_key) {
       this._last_scrollstyle_key = key;
 
-      console.log("updating scrollbar styling");
+      //console.log("updating scrollbar styling");
 
       this.mergeGlobalCSS(styleScrollBars(s.color, s.color2, s.contrast, s.width, s.border, "*"));
     }

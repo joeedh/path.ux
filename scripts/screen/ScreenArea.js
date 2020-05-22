@@ -399,7 +399,6 @@ export class Area extends ui_base.UIBase {
 
     row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
 
-
     let rh = ~~(16*this.getDPI());
 
     //container.setSize(undefined, rh);
@@ -421,7 +420,16 @@ export class Area extends ui_base.UIBase {
       pageY = pageY === undefined ? e.pageY : pageY;
 
       let node = this.getScreen().pickElement(pageX, pageY);
-      console.log(node.tagName, node === row)
+      
+      /*
+      while (node) {
+        if (node === row) {
+          break;
+        }
+        node = node.parentWidget;
+      }//*/
+
+      //console.log(node === row, node ? node._id : undefined, row._id)
       
       if (node !== row) {
         return false;
@@ -448,7 +456,10 @@ export class Area extends ui_base.UIBase {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
+      
       let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
+
+      //console.log("area drag?", e, mdown2, e.pageX, e.pageY, mpre(e, pageX, pageY), e.was_touch);
 
       if (!mdown2 || !mpre(e, pageX, pageY)) return;
 
@@ -629,7 +640,7 @@ export class Area extends ui_base.UIBase {
       return true;
   }
 
-  //subclassing loadSTRUCTs should either call this, or invoke super.loadSTRUCT()
+  //called by owning ScreenArea on file load
   afterSTRUCT() {
     let f = () => {
       if (this._isDead()) {
