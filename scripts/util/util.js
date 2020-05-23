@@ -21,7 +21,12 @@ let colormap = {
 }
 
 export function termColor(s, c) {
-  s = str(s)
+  if (typeof s === "symbol") {
+    s = s.toString();
+  } else {
+    s = "" + s;
+  }
+
   if (c in colormap)
     c = colormap[c]
   

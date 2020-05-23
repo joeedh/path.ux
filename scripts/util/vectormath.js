@@ -1700,8 +1700,8 @@ export class Matrix4 {
   }
   
   multiply(mat) {
-    let mm = mm;
-    let mm2 = mm2;
+    let mm = this.$matrix;
+    let mm2 = mat.$matrix;
 
     let m11 = (mm2.m11 * mm.m11 + mm2.m12 * mm.m21 + mm2.m13 * mm.m31 + mm2.m14 * mm.m41);
     let m12 = (mm2.m11 * mm.m12 + mm2.m12 * mm.m22 + mm2.m13 * mm.m32 + mm2.m14 * mm.m42);
