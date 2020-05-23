@@ -11,8 +11,16 @@ let colormap = {
   magenta : 35,
   cyan    : 36,
   white   : 37,
+  bold    : 4,
   reset   : 0
 };
+
+export let termColorMap = {};
+for (let k in colormap) {
+  termColorMap[k] = colormap[k];
+  termColorMap[colormap[k]] = k;
+}
+window.termColorMap = termColorMap;
 
 export function termColor(s, color = colormap.reset) {
   if (typeof color === "string") {
