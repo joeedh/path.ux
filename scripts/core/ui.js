@@ -835,6 +835,12 @@ export class Container extends ui_base.UIBase {
     //console.log(prop, PropTypes, PropSubTypes);
 
     function makeUIName(name) {
+      if (typeof name === "number" && isNaN(name)) {
+        console.warn("Subkey error in data api", inpath);
+        return ""+name;
+      }
+      
+      name = ""+name;
       name = name[0].toUpperCase() + name.slice(1, name.length).toLowerCase();
       name = name.replace(/_/g, " ");
       return name;

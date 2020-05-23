@@ -373,7 +373,6 @@ export class Check extends UIBase {
   update() {
     super.update();
 
-    this.title = this.description;
     this.updateDPI();
 
     if (this.hasAttribute("datapath")) {
@@ -525,10 +524,6 @@ export class IconCheck extends Button {
       this.drawCheck = false;
     }
 
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
-    }
-    
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
@@ -650,10 +645,6 @@ export class IconButton extends Button {
   }
   
   update() {
-    if (this.description !== undefined && this.title != this.description) {
-      this.title = this.description;
-    }
-
     super.update();
   }
 

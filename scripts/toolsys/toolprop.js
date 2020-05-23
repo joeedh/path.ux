@@ -1,6 +1,7 @@
 import * as util from '../util/util.js';
 import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
 import {ToolPropertyIF, PropTypes, PropFlags} from "./toolprop_abstract.js";
+import * as nstructjs from '../util/struct.js';
 
 export {PropTypes, PropFlags} from './toolprop_abstract.js';
 
@@ -65,6 +66,10 @@ export class ToolProperty extends ToolPropertyIF {
     this.flag = flag;
     this.icon = icon;
 
+    this.decimalPlaces = 4;
+    this.radix = 10;
+    this.step = 0.05;
+
     this.callbacks = {};
   }
 
@@ -74,6 +79,8 @@ export class ToolProperty extends ToolPropertyIF {
 
     customPropTypeBase++;
     customPropertyTypes.push(cls);
+
+    PropClasses[new cls().type] = cls;
 
     return cls.PROP_TYPE_ID;
   }
@@ -232,7 +239,30 @@ export class ToolProperty extends ToolPropertyIF {
 
     return this;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
 }
+ToolProperty.STRUCT = `
+ToolProperty { 
+  type           : int;
+  flag           : int;
+  subtype        : int;
+  icon           : int;
+  baseUnit       : string | ""+this.baseUnit;
+  displayUnit    : string | ""+this.displayUnit;
+  range          : array(float) | this.range ? this.range : [-1e17, 1e17];
+  uiRange        : array(float) | this.range ? this.range : [-1e17, 1e17];
+  description    : string;
+  stepIsRelative : bool;
+  step           : float;
+  expRate        : float;
+  radix          : float;
+  decimalPlaces  : int;
+}
+`;
+nstructjs.register(ToolProperty);
 
 export class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
@@ -267,7 +297,12 @@ export class StringProperty extends ToolProperty {
     this.data = val;
   }
 }  
-  
+StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty) + `
+  data : string;
+}
+`;  
+nstructjs.register(StringProperty);
+
 let num_res =[
   /([0-9]+)/,
   /((0x)?[0-9a-fA-F]+(h?))/,
