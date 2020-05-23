@@ -425,8 +425,7 @@ function ClassSetter(func) {
 }
 
 var prototype_idgen = 1;
-const _module_exports_ = {};
-var defined_classes = _module_exports_.defined_classes = [];
+var defined_classes = [];
 
 var StaticMethod = function StaticMethod(func) {
   this.func = func;
@@ -456,7 +455,7 @@ var handle_statics = function (cls, methods, parent) {
   }
 };
 
-var Class = _module_exports_.Class = function Class(methods) {
+var Class = function Class(methods) {
   var construct = undefined;
   var parent = undefined;
 
@@ -560,7 +559,7 @@ Class.static_method = function (func) {
 
 var EmptySlot = {};
 
-var set$1 = _module_exports_.set = Class([
+var set$1 = Class([
   function constructor(input) {
     this.items = [];
     this.keys = {};
@@ -627,7 +626,14 @@ var set$1 = _module_exports_.set = Class([
   }
 ]);
 
-var Class$1 = _module_exports_.Class;
+var struct_typesystem = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  defined_classes: defined_classes,
+  Class: Class,
+  set: set$1
+});
+
+var Class$1 = Class;
 var _o_basic_types = {"String": 0, "Number": 0, "Array": 0, "Function": 0};
 
 function isNodeJS() {
@@ -639,8 +645,7 @@ function isNodeJS() {
   return !!ret;
 }
 
-const _module_exports_$1 = {};
-let is_obj_lit = _module_exports_$1.is_obj_lit = function is_obj_lit(obj) {
+let is_obj_lit = function is_obj_lit(obj) {
   if (typeof obj !== "object") {
     return false;
   }
@@ -674,7 +679,7 @@ function set_getkey(obj) {
     return obj.__keystr__();
 }
 
-_module_exports_$1.get_callstack = function get_callstack(err) {
+const _export_get_callstack_ = function get_callstack(err) {
   var callstack = [];
   var isCallstackPopulated = false;
 
@@ -747,9 +752,9 @@ _module_exports_$1.get_callstack = function get_callstack(err) {
   return callstack;
 };
 
-_module_exports_$1.print_stack = function print_stack(err) {
+const _export_print_stack_ = function print_stack(err) {
   try {
-    var cs = _module_exports_$1.get_callstack(err);
+    var cs = _export_get_callstack_(err);
   } catch (err2) {
     console.log("Could not fetch call stack.");
     return;
@@ -761,7 +766,7 @@ _module_exports_$1.print_stack = function print_stack(err) {
   }
 };
 
-var set$2 = _module_exports_$1.set = Class$1([
+var set$2 = Class$1([
   function constructor(input) {
     this.items = [];
     this.keys = {};
@@ -832,7 +837,7 @@ var set$2 = _module_exports_$1.set = Class$1([
   }
 ]);
 
-var IDGen = _module_exports_$1.IDGen = Class$1([
+var IDGen = Class$1([
   function constructor() {
     this.cur_id = 1;
   },
@@ -854,32 +859,41 @@ IDGen.STRUCT = [
   "}"
 ].join("\n");
 
-const _module_exports_$2 = {};
-_module_exports_$2.STRUCT_ENDIAN = true; //little endian
+var struct_util = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  is_obj_lit: is_obj_lit,
+  get_callstack: _export_get_callstack_,
+  print_stack: _export_print_stack_,
+  set: set$2,
+  IDGen: IDGen
+});
 
-var Class$2 = _module_exports_.Class;
+const _module_exports_ = {};
+_module_exports_.STRUCT_ENDIAN = true; //little endian
+
+var Class$2 = Class;
 
 var temp_dataview = new DataView(new ArrayBuffer(16));
 var uint8_view = new Uint8Array(temp_dataview.buffer);
 
-var unpack_context = _module_exports_$2.unpack_context = Class$2([
+var unpack_context = _module_exports_.unpack_context = Class$2([
   function constructor() {
     this.i = 0;
   }
 ]);
 
-var pack_byte = _module_exports_$2.pack_byte = function (array, val) {
+var pack_byte = _module_exports_.pack_byte = function (array, val) {
   array.push(val);
 };
 
-var pack_bytes = _module_exports_$2.pack_bytes = function (array, bytes) {
+var pack_bytes = _module_exports_.pack_bytes = function (array, bytes) {
   for (var i = 0; i < bytes.length; i++) {
     array.push(bytes[i]);
   }
 };
 
-var pack_int = _module_exports_$2.pack_int = function (array, val) {
-  temp_dataview.setInt32(0, val, _module_exports_$2.STRUCT_ENDIAN);
+var pack_int = _module_exports_.pack_int = function (array, val) {
+  temp_dataview.setInt32(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -887,8 +901,8 @@ var pack_int = _module_exports_$2.pack_int = function (array, val) {
   array.push(uint8_view[3]);
 };
 
-_module_exports_$2.pack_float = function (array, val) {
-  temp_dataview.setFloat32(0, val, _module_exports_$2.STRUCT_ENDIAN);
+_module_exports_.pack_float = function (array, val) {
+  temp_dataview.setFloat32(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -896,8 +910,8 @@ _module_exports_$2.pack_float = function (array, val) {
   array.push(uint8_view[3]);
 };
 
-_module_exports_$2.pack_double = function (array, val) {
-  temp_dataview.setFloat64(0, val, _module_exports_$2.STRUCT_ENDIAN);
+_module_exports_.pack_double = function (array, val) {
+  temp_dataview.setFloat64(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
@@ -909,14 +923,14 @@ _module_exports_$2.pack_double = function (array, val) {
   array.push(uint8_view[7]);
 };
 
-_module_exports_$2.pack_short = function (array, val) {
-  temp_dataview.setInt16(0, val, _module_exports_$2.STRUCT_ENDIAN);
+_module_exports_.pack_short = function (array, val) {
+  temp_dataview.setInt16(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
   array.push(uint8_view[1]);
 };
 
-var encode_utf8 = _module_exports_$2.encode_utf8 = function encode_utf8(arr, str) {
+var encode_utf8 = _module_exports_.encode_utf8 = function encode_utf8(arr, str) {
   for (var i = 0; i < str.length; i++) {
     var c = str.charCodeAt(i);
 
@@ -932,7 +946,7 @@ var encode_utf8 = _module_exports_$2.encode_utf8 = function encode_utf8(arr, str
   }
 };
 
-var decode_utf8 = _module_exports_$2.decode_utf8 = function decode_utf8(arr) {
+var decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
   var str = "";
   var i = 0;
 
@@ -960,7 +974,7 @@ var decode_utf8 = _module_exports_$2.decode_utf8 = function decode_utf8(arr) {
   return str;
 };
 
-var test_utf8 = _module_exports_$2.test_utf8 = function test_utf8() {
+var test_utf8 = _module_exports_.test_utf8 = function test_utf8() {
   var s = "a" + String.fromCharCode(8800) + "b";
   var arr = [];
 
@@ -1003,7 +1017,7 @@ function truncate_utf8(arr, maxlen) {
 }
 
 var _static_sbuf_ss = new Array(2048);
-var pack_static_string = _module_exports_$2.pack_static_string = function pack_static_string(data, str, length) {
+var pack_static_string = _module_exports_.pack_static_string = function pack_static_string(data, str, length) {
   if (length == undefined)
     throw new Error("'length' paremter is not optional for pack_static_string()");
 
@@ -1025,7 +1039,7 @@ var pack_static_string = _module_exports_$2.pack_static_string = function pack_s
 var _static_sbuf = new Array(32);
 
 /*strings are packed as 32-bit unicode codepoints*/
-var pack_string = _module_exports_$2.pack_string = function pack_string(data, str) {
+var pack_string = _module_exports_.pack_string = function pack_string(data, str) {
   _static_sbuf.length = 0;
   encode_utf8(_static_sbuf, str);
 
@@ -1036,39 +1050,39 @@ var pack_string = _module_exports_$2.pack_string = function pack_string(data, st
   }
 };
 
-var unpack_bytes = _module_exports_$2.unpack_bytes = function unpack_bytes(dview, uctx, len) {
+var unpack_bytes = _module_exports_.unpack_bytes = function unpack_bytes(dview, uctx, len) {
   var ret = new DataView(dview.buffer.slice(uctx.i, uctx.i + len));
   uctx.i += len;
 
   return ret;
 };
 
-var unpack_byte = _module_exports_$2.unpack_byte = function (dview, uctx) {
+var unpack_byte = _module_exports_.unpack_byte = function (dview, uctx) {
   return dview.getUint8(uctx.i++);
 };
 
-var unpack_int = _module_exports_$2.unpack_int = function (dview, uctx) {
+var unpack_int = _module_exports_.unpack_int = function (dview, uctx) {
   uctx.i += 4;
-  return dview.getInt32(uctx.i - 4, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getInt32(uctx.i - 4, _module_exports_.STRUCT_ENDIAN);
 };
 
-_module_exports_$2.unpack_float = function (dview, uctx) {
+_module_exports_.unpack_float = function (dview, uctx) {
   uctx.i += 4;
-  return dview.getFloat32(uctx.i - 4, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getFloat32(uctx.i - 4, _module_exports_.STRUCT_ENDIAN);
 };
 
-_module_exports_$2.unpack_double = function (dview, uctx) {
+_module_exports_.unpack_double = function (dview, uctx) {
   uctx.i += 8;
-  return dview.getFloat64(uctx.i - 8, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getFloat64(uctx.i - 8, _module_exports_.STRUCT_ENDIAN);
 };
 
-_module_exports_$2.unpack_short = function (dview, uctx) {
+_module_exports_.unpack_short = function (dview, uctx) {
   uctx.i += 2;
-  return dview.getInt16(uctx.i - 2, _module_exports_$2.STRUCT_ENDIAN);
+  return dview.getInt16(uctx.i - 2, _module_exports_.STRUCT_ENDIAN);
 };
 
 var _static_arr_us = new Array(32);
-_module_exports_$2.unpack_string = function (data, uctx) {
+_module_exports_.unpack_string = function (data, uctx) {
   var str = "";
 
   var slen = unpack_int(data, uctx);
@@ -1083,7 +1097,7 @@ _module_exports_$2.unpack_string = function (data, uctx) {
 };
 
 var _static_arr_uss = new Array(2048);
-_module_exports_$2.unpack_static_string = function unpack_static_string(data, uctx, length) {
+_module_exports_.unpack_static_string = function unpack_static_string(data, uctx, length) {
   var str = "";
 
   if (length == undefined)
@@ -1110,14 +1124,14 @@ _module_exports_$2.unpack_static_string = function unpack_static_string(data, uc
   return decode_utf8(arr);
 };
 
+let _export_parser_;
 "use strict";
 
 var t;
 
-var Class$3 = _module_exports_.Class;
+var Class$3 = Class;
 
-const _module_exports_$3 = {};
-_module_exports_$3.token = class token {
+const _export_token_ = class token {
   constructor(type, val, lexpos, lineno, lexer, parser) {
     this.type = type;
     this.value = val;
@@ -1135,7 +1149,7 @@ _module_exports_$3.token = class token {
   }
 };
 
-_module_exports_$3.tokdef = class tokdef {
+const _export_tokdef_ = class tokdef {
   constructor(name, regexpr, func) {
     this.name = name;
     this.re = regexpr;
@@ -1143,13 +1157,13 @@ _module_exports_$3.tokdef = class tokdef {
   }
 };
 
-var PUTIL_ParseError = _module_exports_$3.PUTIL_ParseError = class PUTIL_ParseError extends Error {
+var PUTIL_ParseError = class PUTIL_ParseError extends Error {
   constructor(msg) {
     Error.call(this);
   }
 };
 
-_module_exports_$3.lexer = class lexer {
+const _export_lexer_ = class lexer {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -1279,7 +1293,7 @@ _module_exports_$3.lexer = class lexer {
     }
 
     var def = theres[0];
-    var token = new _module_exports_$3.token(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
+    var token = new _export_token_(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
     this.lexpos += token.value.length;
 
     if (def.func) {
@@ -1293,7 +1307,7 @@ _module_exports_$3.lexer = class lexer {
   }
 };
 
-const parser = _module_exports_$3.parser = class parser {
+const parser = _export_parser_ = class parser {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -1401,7 +1415,7 @@ function test_parser() {
   var reserved_tokens = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
 
   function tk(name, re, func) {
-    return new _module_exports_$3.tokdef(name, re, func);
+    return new _export_tokdef_(name, re, func);
   }
 
   var tokens = [tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function (t) {
@@ -1445,14 +1459,14 @@ function test_parser() {
     return true;
   }
 
-  var lex = new _module_exports_$3.lexer(tokens, errfunc);
+  var lex = new _export_lexer_(tokens, errfunc);
   console.log("Testing lexical scanner...");
   lex.input(a);
   var token;
   while (token = lex.next()) {
     console.log(token.toString());
   }
-  var parser = new _module_exports_$3.parser(lex);
+  var parser = new _export_parser_(lex);
   parser.input(a);
 
   function p_Array(p) {
@@ -1531,13 +1545,21 @@ function test_parser() {
   console.log(JSON.stringify(ret));
 }
 
+var struct_parseutil = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get parser () { return _export_parser_; },
+  token: _export_token_,
+  tokdef: _export_tokdef_,
+  PUTIL_ParseError: PUTIL_ParseError,
+  lexer: _export_lexer_
+});
+
 "use strict";
 
 //the discontinuous id's are to make sure
 //the version I originally wrote (which had a few application-specific types)
 //and this one do not become totally incompatible.
-const _module_exports_$4 = {};
-var StructEnum = _module_exports_$4.StructEnum = {
+var StructEnum = {
   T_INT    : 0,
   T_FLOAT  : 1,
   T_DOUBLE : 2,
@@ -1552,7 +1574,7 @@ var StructEnum = _module_exports_$4.StructEnum = {
   T_BOOL    : 15
 };
 
-var StructTypes = _module_exports_$4.StructTypes = {
+var StructTypes = {
   "int": StructEnum.T_INT, 
   "float": StructEnum.T_FLOAT, 
   "double": StructEnum.T_DOUBLE, 
@@ -1567,7 +1589,7 @@ var StructTypes = _module_exports_$4.StructTypes = {
   "bool": StructEnum.T_BOOL
 };
 
-var StructTypeMap = _module_exports_$4.StructTypeMap = {};
+var StructTypeMap = {};
 
 for (var k in StructTypes) {
   StructTypeMap[StructTypes[k]] = k;
@@ -1582,17 +1604,17 @@ function gen_tabstr(t) {
 }
 
 function StructParser() {
-  var basic_types=new _module_exports_$1.set([
+  var basic_types=new set$2([
     "int", "float", "double", "string", "short", "byte", "bool"
   ]);
   
-  var reserved_tokens=new _module_exports_$1.set([
+  var reserved_tokens=new set$2([
     "int", "float", "double", "string", "static_string", "array", 
     "iter", "abstract", "short", "byte", "bool"
   ]);
 
   function tk(name, re, func) {
-    return new _module_exports_$3.tokdef(name, re, func);
+    return new _export_tokdef_(name, re, func);
   }
   
   var tokens=[
@@ -1644,8 +1666,8 @@ function StructParser() {
     return true;
   }
   
-  var lex=new _module_exports_$3.lexer(tokens, errfunc);
-  var parser=new _module_exports_$3.parser(lex);
+  var lex=new _export_lexer_(tokens, errfunc);
+  var parser=new _export_parser_(lex);
   
   function p_Static_String(p) {
     p.expect("STATIC_STRING");
@@ -1796,9 +1818,20 @@ function StructParser() {
   return parser;
 }
 
-_module_exports_$4.struct_parse = StructParser();
+const _export_struct_parse_ = StructParser();
 
+var struct_parser = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  StructEnum: StructEnum,
+  StructTypes: StructTypes,
+  StructTypeMap: StructTypeMap,
+  struct_parse: _export_struct_parse_
+});
+
+let _export_manager_;
 "use strict";
+
+let warninglvl = 2;
 
 /*
 
@@ -1825,12 +1858,12 @@ SomeClass {
 nstructjs.manager.add_class(SomeClass);
 
 */
-var StructTypeMap$1 = _module_exports_$4.StructTypeMap;
-var StructTypes$1 = _module_exports_$4.StructTypes;
-var Class$4 = _module_exports_.Class;
+var StructTypeMap$1 = StructTypeMap;
+var StructTypes$1 = StructTypes;
+var Class$4 = Class;
 
-var struct_parse = _module_exports_$4.struct_parse;
-var StructEnum$1 = _module_exports_$4.StructEnum;
+var struct_parse = _export_struct_parse_;
+var StructEnum$1 = StructEnum;
 
 var _static_envcode_null = "";
 var debug_struct = 0;
@@ -1876,8 +1909,16 @@ else {
   };
 }
 
-const _module_exports_$5 = {};
-_module_exports_$5.setDebugMode = (t) => {
+
+const _export_setWarningMode_ = (t) => {
+  if (typeof t !== "number" || isNaN(t)) {
+    throw new Error("Expected a single number (>= 0) argument to setWarningMode");
+  }
+
+  warninglvl = t;
+};
+
+const _export_setDebugMode_ = (t) => {
   debug_struct = t;
 
   if (debug_struct) {
@@ -1914,15 +1955,15 @@ var pack_callbacks = [
   function pack_int(data, val) {
     packer_debug("int " + val);
 
-    _module_exports_$2.pack_int(data, val);
+    _module_exports_.pack_int(data, val);
   }, function pack_float(data, val) {
     packer_debug("float " + val);
 
-    _module_exports_$2.pack_float(data, val);
+    _module_exports_.pack_float(data, val);
   }, function pack_double(data, val) {
     packer_debug("double " + val);
 
-    _module_exports_$2.pack_double(data, val);
+    _module_exports_.pack_double(data, val);
   }, 0, 0, 0, 0,
   function pack_string(data, val) {
     if (val == undefined)
@@ -1930,13 +1971,13 @@ var pack_callbacks = [
     packer_debug("string: " + val);
     packer_debug("int " + val.length);
 
-    _module_exports_$2.pack_string(data, val);
+    _module_exports_.pack_string(data, val);
   }, function pack_static_string(data, val, obj, thestruct, field, type) {
     if (val == undefined)
       val = "";
     packer_debug("static_string: '" + val + "' length=" + type.data.maxlength);
 
-    _module_exports_$2.pack_static_string(data, val, type.data.maxlength);
+    _module_exports_.pack_static_string(data, val, type.data.maxlength);
   }, function pack_struct(data, val, obj, thestruct, field, type) {
     packer_debug_start("struct " + type.data);
 
@@ -1966,7 +2007,7 @@ var pack_callbacks = [
     packer_debug_start("tstruct '" + stt.name + "'");
     packer_debug("int " + stt.id);
 
-    _module_exports_$2.pack_int(data, stt.id);
+    _module_exports_.pack_int(data, stt.id);
     thestruct.write_struct(data, val, stt);
 
     packer_debug_end("tstruct");
@@ -1980,12 +2021,12 @@ var pack_callbacks = [
       console.log("Type: ", type);
       console.log("");
       packer_debug("int 0");
-      _module_exports_$2.pack_int(data, 0);
+      _module_exports_.pack_int(data, 0);
       return;
     }
 
     packer_debug("int " + val.length);
-    _module_exports_$2.pack_int(data, val.length);
+    _module_exports_.pack_int(data, val.length);
 
     var d = type.data;
 
@@ -2016,7 +2057,7 @@ var pack_callbacks = [
       console.log("Type: ", type);
       console.log("");
       packer_debug("int 0");
-      _module_exports_$2.pack_int(data, 0);
+      _module_exports_.pack_int(data, 0);
       return;
     }
 
@@ -2026,7 +2067,7 @@ var pack_callbacks = [
     }, this);
 
     packer_debug("int " + len);
-    _module_exports_$2.pack_int(data, len);
+    _module_exports_.pack_int(data, len);
 
     var d = type.data, itername = d.iname, type2 = d.type;
     var env = _ws_env;
@@ -2034,7 +2075,8 @@ var pack_callbacks = [
     var i = 0;
     val.forEach(function (val2) {
       if (i >= len) {
-        console.trace("Warning: iterator returned different length of list!", val, i);
+        if (warninglvl > 0) 
+          console.trace("Warning: iterator returned different length of list!", val, i);
         return;
       }
 
@@ -2054,15 +2096,15 @@ var pack_callbacks = [
   }, function pack_short(data, val) {
     packer_debug("short " + val);
 
-    _module_exports_$2.pack_short(data, Math.floor(val));
+    _module_exports_.pack_short(data, Math.floor(val));
   }, function pack_byte(data, val) {
     packer_debug("byte " + val);
 
-    _module_exports_$2.pack_byte(data, Math.floor(val));
+    _module_exports_.pack_byte(data, Math.floor(val));
   }, function pack_bool(data, val) {
     packer_debug("bool " + val);
 
-    _module_exports_$2.pack_byte(data, !!val);
+    _module_exports_.pack_byte(data, !!val);
   }];
 
 function do_pack(data, val, obj, thestruct, field, type) {
@@ -2091,9 +2133,9 @@ function define_empty_class(name) {
   return cls;
 }
 
-var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
+var STRUCT = class STRUCT {
   constructor() {
-    this.idgen = new _module_exports_$1.IDGen();
+    this.idgen = new IDGen();
 
     this.structs = {};
     this.struct_cls = {};
@@ -2136,7 +2178,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
   //defaults to structjs.manager
   parse_structs(buf, defined_classes) {
     if (defined_classes === undefined) {
-      defined_classes = _module_exports_$5.manager;
+      defined_classes = _export_manager_;
     }
 
     if (defined_classes instanceof STRUCT) {
@@ -2150,8 +2192,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
     if (defined_classes == undefined) {
       defined_classes = [];
-      for (var k in _module_exports_$5.manager.struct_cls) {
-        defined_classes.push(_module_exports_$5.manager.struct_cls[k]);
+      for (var k in _export_manager_.struct_cls) {
+        defined_classes.push(_export_manager_.struct_cls[k]);
       }
     }
 
@@ -2164,7 +2206,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
         var stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
       } else if (cls.structName == undefined && cls.name != "Object") {
-        console.log("Warning, bad class in registered class list", cls.name, cls);
+        if (warninglvl > 0) 
+          console.log("Warning, bad class in registered class list", cls.name, cls);
         continue;
       }
 
@@ -2178,6 +2221,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
       if (!(stt.name in clsmap)) {
         if (!(stt.name in this.null_natives))
+        if (warninglvl > 0) 
           console.log("WARNING: struct " + stt.name + " is missing from class list.");
 
         var dummy = define_empty_class(stt.name);
@@ -2279,7 +2323,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
   /** invoke loadSTRUCT methods on parent objects.  note that
    reader() is only called once.  it is called however.*/
   static Super(obj, reader) {
-    console.warn("deprecated");
+    if (warninglvl > 0) 
+      console.warn("deprecated");
 
     reader(obj);
 
@@ -2303,7 +2348,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
   /** deprecated.  used with old fromSTRUCT interface. */
   static chain_fromSTRUCT(cls, reader) {
-    console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
+    if (warninglvl > 0) 
+      console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
 
     var proto = cls.prototype;
     var parent = cls.prototype.prototype.constructor;
@@ -2320,7 +2366,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       try {
         obj2[k] = obj[k];
       } catch (error) {
-        console.warn("  failed to set property", k);
+        if (warninglvl > 0) 
+          console.warn("  failed to set property", k);
       }
       //var k=keys[i];
       //if (k=="__proto__")
@@ -2408,10 +2455,10 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
     if (!(fullcode in this.compiled_code)) {
       var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       try {
-        eval(code2);
+        func = _structEval(code2);
       }
       catch (err) {
-        _module_exports_$1.print_stack(err);
+        _export_print_stack_(err);
 
         console.log(code2);
         console.log(" ");
@@ -2426,7 +2473,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       return func.call(obj, obj, env);
     }
     catch (err) {
-      _module_exports_$1.print_stack(err);
+      _export_print_stack_(err);
 
       var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       console.log(code2);
@@ -2500,7 +2547,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
     stt = this.structs[cls.structName];
 
     if (uctx == undefined) {
-      uctx = new _module_exports_$2.unpack_context();
+      uctx = new _module_exports_.unpack_context();
 
       packer_debug("\n\n=Begin reading " + cls.structName + "=");
     }
@@ -2508,19 +2555,19 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 
     var unpack_funcs = [
       function t_int(type) { //int
-        var ret = _module_exports_$2.unpack_int(data, uctx);
+        var ret = _module_exports_.unpack_int(data, uctx);
 
         packer_debug("-int " + (debug_struct > 1 ? ret : ""));
 
         return ret;
       }, function t_float(type) {
-        var ret = _module_exports_$2.unpack_float(data, uctx);
+        var ret = _module_exports_.unpack_float(data, uctx);
 
         packer_debug("-float " + (debug_struct > 1 ? ret : ""));
 
         return ret;
       }, function t_double(type) {
-        var ret = _module_exports_$2.unpack_double(data, uctx);
+        var ret = _module_exports_.unpack_double(data, uctx);
 
         packer_debug("-double " + (debug_struct > 1 ? ret : ""));
 
@@ -2529,7 +2576,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       function t_string(type) {
         packer_debug_start("string");
 
-        var s = _module_exports_$2.unpack_string(data, uctx);
+        var s = _module_exports_.unpack_string(data, uctx);
 
         packer_debug("data: '" + s + "'");
         packer_debug_end("string");
@@ -2537,7 +2584,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_static_string(type) {
         packer_debug_start("static_string");
 
-        var s = _module_exports_$2.unpack_static_string(data, uctx, type.data.maxlength);
+        var s = _module_exports_.unpack_static_string(data, uctx, type.data.maxlength);
 
         packer_debug("data: '" + s + "'");
         packer_debug_end("static_string");
@@ -2554,7 +2601,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_tstruct(type) {
         packer_debug_start("tstruct");
 
-        var id = _module_exports_$2.unpack_int(data, uctx);
+        var id = _module_exports_.unpack_int(data, uctx);
 
         packer_debug("-int " + id);
         if (!(id in thestruct.struct_ids)) {
@@ -2578,7 +2625,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_array(type) {
         packer_debug_start("array");
 
-        var len = _module_exports_$2.unpack_int(data, uctx);
+        var len = _module_exports_.unpack_int(data, uctx);
         packer_debug("-int " + len);
 
         var arr = new Array(len);
@@ -2591,7 +2638,7 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       }, function t_iter(type) {
         packer_debug_start("iter");
 
-        var len = _module_exports_$2.unpack_int(data, uctx);
+        var len = _module_exports_.unpack_int(data, uctx);
         packer_debug("-int " + len);
 
         var arr = new Array(len);
@@ -2602,19 +2649,19 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
         packer_debug_end("iter");
         return arr;
       }, function t_short(type) { //int
-        var ret = _module_exports_$2.unpack_short(data, uctx);
+        var ret = _module_exports_.unpack_short(data, uctx);
 
         packer_debug("-short " + ret);
 
         return ret;
       }, function t_byte(type) {
-        var ret = _module_exports_$2.unpack_byte(data, uctx);
+        var ret = _module_exports_.unpack_byte(data, uctx);
 
         packer_debug("-byte " + ret);
 
         return ret;
       }, function t_bool(type) {
-        var ret = _module_exports_$2.unpack_byte(data, uctx);
+        var ret = _module_exports_.unpack_byte(data, uctx);
 
         packer_debug("-bool " + ret);
 
@@ -2656,7 +2703,8 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
       obj.loadSTRUCT(load);
       return obj;
     } else if (cls.fromSTRUCT !== undefined) {
-      console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
+      if (warninglvl > 1) 
+        console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
       return cls.fromSTRUCT(load);
     } else { //default case, make new instance and then call load() on it
       let obj;
@@ -2674,12 +2722,17 @@ var STRUCT = _module_exports_$5.STRUCT = class STRUCT {
 };
 
 //main struct script manager
-var manager = _module_exports_$5.manager = new STRUCT();
+var manager = _export_manager_ = new STRUCT();
 
-//manager defaults to structjs.manager
-var write_scripts = _module_exports_$5.write_scripts = function write_scripts(manager, include_code = false) {
+/**
+ * Write all defined structs out to a string.
+ *
+ * @param manager STRUCT instance, defaults to nstructjs.manager
+ * @param include_code include save code snippets
+ * */
+var write_scripts = function write_scripts(manager, include_code = false) {
   if (manager === undefined)
-    manager = _module_exports_$5.manager;
+    manager = _export_manager_;
 
   var buf = "";
 
@@ -2709,11 +2762,20 @@ var write_scripts = _module_exports_$5.write_scripts = function write_scripts(ma
   return buf;
 };
 
+var struct_intern = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get manager () { return _export_manager_; },
+  setWarningMode: _export_setWarningMode_,
+  setDebugMode: _export_setDebugMode_,
+  STRUCT: STRUCT,
+  write_scripts: write_scripts
+});
+
 "use strict";
 
-if (typeof btoa == "undefined") {
+if (typeof btoa === "undefined") {
   _nGlobal.btoa = function btoa(str) {
-    var buffer = new Buffer("" + str, 'binary');
+    let buffer = new Buffer("" + str, 'binary');
     return buffer.toString('base64');
   };
 
@@ -2721,8 +2783,6 @@ if (typeof btoa == "undefined") {
     return new Buffer(str, 'base64').toString('binary');
   };
 }
-
-var Class$5 = _module_exports_.Class;
 
 /*
 file format:
@@ -2741,8 +2801,56 @@ file format:
     data                                   : ...
 */
 
-const _module_exports_$6 = {};
-var FileParams = _module_exports_$6.FileParams = class FileParams {
+const _export_versionToInt_ = function(v) {
+  v = _export_versionCoerce_(v);
+  let mul = 64;
+  return ~~(v.major*mul*mul*mul + v.minor*mul*mul + v.micro*mul);
+};
+
+let ver_pat = /[0-9]+\.[0-9]+\.[0-9]+$/;
+
+const _export_versionCoerce_ = function(v) {
+  if (!v) {
+    throw new Error("empty version: " + v);
+  }
+
+  if (typeof v === "string") {
+    if (!ver_pat.exec(v)) {
+      throw new Error("invalid version string " + v);
+    }
+
+    let ver = v.split(".");
+    return {
+      major : parseInt(ver[0]),
+      minor : parseInt(ver[1]),
+      micro : parseInt(ver[2])
+    }
+  } else if (Array.isArray(v)) {
+    return {
+      major : v[0],
+      minor : v[1],
+      micro : v[2]
+    }
+  } else if (typeof v === "object") {
+    let test = (k) => k in v && typeof v[k] === "number";
+
+    if (!test("major") || !test("minor") || !test("micro")) {
+      throw new Error("invalid version object: " + v);
+    }
+
+    return v;
+  } else {
+    throw new Error("invalid version " + v);
+  }
+};
+
+const _export_versionLessThan_ = function(a, b) {
+  return _export_versionToInt_(a) < _export_versionToInt_(b);
+};
+
+let versionLessThan = _export_versionLessThan_;
+
+let FileParams = class FileParams {
   constructor() {
     this.magic = "STRT";
     this.ext = ".bin";
@@ -2757,26 +2865,26 @@ var FileParams = _module_exports_$6.FileParams = class FileParams {
 };
 
 //used to define blocks
-var Block = _module_exports_$6.Block = class Block {
+let Block = class Block {
   constructor(type_magic, data) {
     this.type = type_magic;
     this.data = data;
   }
 };
 
-var FileError = _module_exports_$6.FileError = class FileeError extends Error {
+let FileError = class FileeError extends Error {
 };
 
-var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
+let FileHelper = class FileHelper {
   //params can be FileParams instance, or object literal
   //(it will convert to FileParams)
   constructor(params) {
     if (params === undefined) {
       params = new FileParams();
     } else {
-      var fp = new FileParams();
+      let fp = new FileParams();
 
-      for (var k in params) {
+      for (let k in params) {
         fp[k] = params[k];
       }
       params = fp;
@@ -2791,45 +2899,45 @@ var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
   }
 
   read(dataview) {
-    this.unpack_ctx = new _module_exports_$2.unpack_context();
+    this.unpack_ctx = new _module_exports_.unpack_context();
 
-    var magic = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, 4);
+    let magic = _module_exports_.unpack_static_string(dataview, this.unpack_ctx, 4);
 
     if (magic !== this.magic) {
       throw new FileError("corrupted file");
     }
 
     this.version = {};
-    this.version.major = _module_exports_$2.unpack_short(dataview, this.unpack_ctx);
-    this.version.minor = _module_exports_$2.unpack_byte(dataview, this.unpack_ctx);
-    this.version.micro = _module_exports_$2.unpack_byte(dataview, this.unpack_ctx);
+    this.version.major = _module_exports_.unpack_short(dataview, this.unpack_ctx);
+    this.version.minor = _module_exports_.unpack_byte(dataview, this.unpack_ctx);
+    this.version.micro = _module_exports_.unpack_byte(dataview, this.unpack_ctx);
 
-    var struct = this.struct = new structjs.STRUCT();
+    let struct = this.struct = new STRUCT();
 
-    var scripts = _module_exports_$2.unpack_string(dataview, this.unpack_ctx);
-    this.struct.parse_structs(scripts, structjs.manager);
+    let scripts = _module_exports_.unpack_string(dataview, this.unpack_ctx);
+    this.struct.parse_structs(scripts, _export_manager_);
 
-    var blocks = [];
-    var dviewlen = dataview.buffer.byteLength;
+    let blocks = [];
+    let dviewlen = dataview.buffer.byteLength;
 
     while (this.unpack_ctx.i < dviewlen) {
       //console.log("reading block. . .", this.unpack_ctx.i, dviewlen);
 
-      var type = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, 4);
-      var datalen = _module_exports_$2.unpack_int(dataview, this.unpack_ctx);
-      var bstruct = _module_exports_$2.unpack_int(dataview, this.unpack_ctx);
-      var bdata;
+      let type = _module_exports_.unpack_static_string(dataview, this.unpack_ctx, 4);
+      let datalen = _module_exports_.unpack_int(dataview, this.unpack_ctx);
+      let bstruct = _module_exports_.unpack_int(dataview, this.unpack_ctx);
+      let bdata;
 
       //console.log(type, datalen, bstruct);
 
       if (bstruct == -2) { //string data, e.g. JSON
-        bdata = _module_exports_$2.unpack_static_string(dataview, this.unpack_ctx, datalen);
+        bdata = _module_exports_.unpack_static_string(dataview, this.unpack_ctx, datalen);
       } else {
-        bdata = _module_exports_$2.unpack_bytes(dataview, this.unpack_ctx, datalen);
-        bdata = struct.read_object(bdata, bstruct, new _module_exports_$2.unpack_context());
+        bdata = _module_exports_.unpack_bytes(dataview, this.unpack_ctx, datalen);
+        bdata = struct.read_object(bdata, bstruct, new _module_exports_.unpack_context());
       }
 
-      var block = new Block();
+      let block = new Block();
       block.type = type;
       block.data = bdata;
 
@@ -2840,58 +2948,66 @@ var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
     return blocks;
   }
 
+  doVersions(old) {
+    let blocks = this.blocks;
+
+    if (versionLessThan(old, "0.0.1")) {
+      //do something
+    }
+  }
+
   write(blocks) {
-    this.struct = structjs.manager;
+    this.struct = _export_manager_;
     this.blocks = blocks;
 
-    var data = [];
+    let data = [];
 
-    _module_exports_$2.pack_static_string(data, this.magic, 4);
-    _module_exports_$2.pack_short(data, this.version.major);
-    _module_exports_$2.pack_byte(data, this.version.minor & 255);
-    _module_exports_$2.pack_byte(data, this.version.micro & 255);
+    _module_exports_.pack_static_string(data, this.magic, 4);
+    _module_exports_.pack_short(data, this.version.major);
+    _module_exports_.pack_byte(data, this.version.minor & 255);
+    _module_exports_.pack_byte(data, this.version.micro & 255);
 
-    var scripts = structjs.write_scripts();
-    _module_exports_$2.pack_string(data, scripts);
+    let scripts = write_scripts();
+    _module_exports_.pack_string(data, scripts);
 
-    var struct = this.struct;
+    let struct = this.struct;
 
-    for (var block of blocks) {
-      if (typeof block.data == "string") { //string data, e.g. JSON
-        _module_exports_$2.pack_static_string(data, block.type, 4);
-        _module_exports_$2.pack_int(data, block.data.length);
-        _module_exports_$2.pack_int(data, -2); //flag as string data
-        _module_exports_$2.pack_static_string(data, block.data, block.data.length);
+    for (let block of blocks) {
+      if (typeof block.data === "string") { //string data, e.g. JSON
+        _module_exports_.pack_static_string(data, block.type, 4);
+        _module_exports_.pack_int(data, block.data.length);
+        _module_exports_.pack_int(data, -2); //flag as string data
+        _module_exports_.pack_static_string(data, block.data, block.data.length);
         continue;
       }
 
-      var structName = block.data.constructor.structName;
+      let structName = block.data.constructor.structName;
       if (structName === undefined || !(structName in struct.structs)) {
         throw new Error("Non-STRUCTable object " + block.data);
       }
 
-      var data2 = [];
-      var stt = struct.structs[structName];
+      let data2 = [];
+      let stt = struct.structs[structName];
 
       struct.write_object(data2, block.data);
 
-      _module_exports_$2.pack_static_string(data, block.type, 4);
-      _module_exports_$2.pack_int(data, data2.length);
-      _module_exports_$2.pack_int(data, stt.id);
+      _module_exports_.pack_static_string(data, block.type, 4);
+      _module_exports_.pack_int(data, data2.length);
+      _module_exports_.pack_int(data, stt.id);
 
-      _module_exports_$2.pack_bytes(data, data2);
+      _module_exports_.pack_bytes(data, data2);
     }
 
     return new DataView(new Uint8Array(data).buffer);
   }
 
   writeBase64(blocks) {
-    var dataview = this.write(blocks);
+    let dataview = this.write(blocks);
 
-    var str = "";
-    var bytes = new Uint8Array(dataview.buffer);
+    let str = "";
+    let bytes = new Uint8Array(dataview.buffer);
 
-    for (var i = 0; i < bytes.length; i++) {
+    for (let i = 0; i < bytes.length; i++) {
       str += String.fromCharCode(bytes[i]);
     }
 
@@ -2903,23 +3019,27 @@ var FileHelper = _module_exports_$6.FileHelper = class FileHelper {
   }
 
   readBase64(base64) {
-    var data = atob(base64);
-    var data2 = new Uint8Array(data.length);
+    let data = atob(base64);
+    let data2 = new Uint8Array(data.length);
 
-    for (var i = 0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i++) {
       data2[i] = data.charCodeAt(i);
     }
 
     return this.read(new DataView(data2.buffer));
   }
 };
-/*
-  //get type data from structjs.manager
-  var classes = {};
-  structjs.manager.forEach(function(stt) {
-    classes[stt] 
-  }, this);
-*/
+
+var struct_filehelper = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  versionToInt: _export_versionToInt_,
+  versionCoerce: _export_versionCoerce_,
+  versionLessThan: _export_versionLessThan_,
+  FileParams: FileParams,
+  Block: Block,
+  FileError: FileError,
+  FileHelper: FileHelper
+});
 
 if (typeof window !== "undefined") {
   window._nGlobal = window;
@@ -2929,48 +3049,64 @@ if (typeof window !== "undefined") {
   global._nGlobal = global;
 }
 
-const _module_exports_$7 = {};
-Object.defineProperty(_module_exports_$7, "STRUCT_ENDIAN", {
+_nGlobal._structEval = eval;
+
+const _module_exports_$1 = {};
+Object.defineProperty(_module_exports_$1, "STRUCT_ENDIAN", {
   get: function () {
-    return _module_exports_$2.STRUCT_ENDIAN;
+    return _module_exports_.STRUCT_ENDIAN;
   },
   set: function (val) {
-    _module_exports_$2.STRUCT_ENDIAN = val;
+    _module_exports_.STRUCT_ENDIAN = val;
   }
 });
 
-for (let k in _module_exports_$5) {
-  _module_exports_$7[k] = _module_exports_$5[k];
+for (let k in struct_intern) {
+  _module_exports_$1[k] = struct_intern[k];
 }
 
-var StructTypeMap$2 = _module_exports_$4.StructTypeMap;
-var StructTypes$2 = _module_exports_$4.StructTypes;
-var Class$6 = _module_exports_.Class;
+var StructTypeMap$2 = StructTypeMap;
+var StructTypes$2 = StructTypes;
+var Class$5 = Class;
 
 //forward struct_intern's exports
-for (var k$1 in _module_exports_$5) {
-  _module_exports_$7[k$1] = _module_exports_$5[k$1];
+for (var k$1 in struct_intern) {
+  _module_exports_$1[k$1] = struct_intern[k$1];
 }
 
 /** Register a class with nstructjs **/
-_module_exports_$7.register = function register(cls, name) {
-  return _module_exports_$7.manager.register(cls, name);
+_module_exports_$1.register = function register(cls, name) {
+  return _module_exports_$1.manager.register(cls, name);
 };
-_module_exports_$7.inherit = function () {
-  return _module_exports_$7.STRUCT.inherit(...arguments);
+_module_exports_$1.inherit = function () {
+  return _module_exports_$1.STRUCT.inherit(...arguments);
 };
 
-_module_exports_$7.setDebugMode = _module_exports_$5.setDebugMode;
+_module_exports_$1.setDebugMode = _export_setDebugMode_;
+_module_exports_$1.setWarningMode = _export_setWarningMode_;
+
+/*
+import * as _require___$tinyeval$tinyeval_js_ from "../tinyeval/tinyeval.js";
+_module_exports_.tinyeval = _require___$tinyeval$tinyeval_js_;
+
+_module_exports_.useTinyEval = function() {
+  _nGlobal._structEval = (buf) => {
+    return _module_exports_.tinyeval.eval(buf);
+  }
+};
+*/
+   _module_exports_$1.useTinyEval = () => {};
+
 
 //export other modules
-_module_exports_$7.binpack = _module_exports_$2;
-_module_exports_$7.util = _module_exports_$1;
-_module_exports_$7.typesystem = _module_exports_;
-_module_exports_$7.parseutil = _module_exports_$3;
-_module_exports_$7.parser = _module_exports_$4;
-_module_exports_$7.filehelper = _module_exports_$6;
+_module_exports_$1.binpack = _module_exports_;
+_module_exports_$1.util = struct_util;
+_module_exports_$1.typesystem = struct_typesystem;
+_module_exports_$1.parseutil = struct_parseutil;
+_module_exports_$1.parser = struct_parser;
+_module_exports_$1.filehelper = struct_filehelper;
 
-module.exports = _module_exports_$7;
+module.exports = _module_exports_$1;
   if (!(typeof window === "undefined" && typeof global !== "undefined")) {
     //not nodejs?
     _nGlobal.nstructjs = module.exports;    
@@ -3998,24 +4134,35 @@ define(function () {
 })());
 
 let colormap = {
-  black   : 30,
-  red     : 31,
-  green   : 32,
-  yellow  : 33,
-  blue    : 34,
-  magenta : 35,
-  cyan    : 36,
-  white   : 37,
-  reset   : 0
+  "black"   : 30,
+  "red"     : 31,
+  "green"   : 32,
+  "yellow"  : 33,
+  "blue"    : 34,
+  "magenta" : 35,
+  "cyan"    : 36,
+  "white"   : 37,
+  "reset"   : 0,
+  "grey"    : 2,
+  "orange"  : 202,
+  "pink"    : 198,
+  "brown"   : 314,
+  "lightred": 91,
+  "peach"   : 210
 };
 
-function termColor(s, color = colormap.reset) {
-  if (typeof color === "string") {
-    color = colormap[color] || colormap.reset;
+function termColor(s, c) {
+  s = str(s);
+  if (c in colormap)
+    c = colormap[c];
+  
+  if (c > 107) {
+    s2 = '\u001b[38;5;' + str(c) + "m";
+    return s2 + s + '\u001b[0m'
   }
 
-  return `\u001b[${color}m${s}\u001b[0m`;
-}
+  return '\u001b[' + c + 'm' + s + '\u001b[0m'
+};
 
 window.termColor = termColor;
 
@@ -7451,6 +7598,1690 @@ function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
+
+"use strict";
+
+function aabb_overlap_area(pos1, size1, pos2, size2) {
+  let r1=0.0, r2=0.0;
+
+  for (let i=0; i<2; i++) {
+    let a1 = pos1[i], a2 = pos2[i];
+    let b1 = pos1[i] + size1[i];
+    let b2 = pos2[i] + size2[i];
+
+    if (b1 >= a2 && a1 <= b2) {
+      let r = a2 - b1;
+      
+      if (i) {
+        r2 = r;
+      } else {
+        r1 = r;
+      }
+    }
+  }
+
+  return r1*r2;
+}
+
+/**
+ * Returns true if two aabbs intersect
+ * @param {*} pos1 
+ * @param {*} size1 
+ * @param {*} pos2 
+ * @param {*} size2 
+ */
+
+function aabb_isect_2d(pos1, size1, pos2, size2) {
+  var ret=0;
+  for (var i=0; i<2; i++) {
+    var a=pos1[i];
+    var b=pos1[i]+size1[i];
+    var c=pos2[i];
+    var d=pos2[i]+size2[i];
+    if (b>=c&&a<=d)
+      ret+=1;
+  }
+  return ret==2;
+};
+
+let aabb_intersect_vs = cachering.fromConstructor(Vector2, 32);
+let aabb_intersect_rets = new cachering(() => {
+  return {
+    pos   : new Vector2(),
+    size  : new Vector2() 
+  }
+}, 512);
+
+/**
+ * Returns aabb that's the intersection of two aabbs
+ * @param {*} pos1 
+ * @param {*} size1 
+ * @param {*} pos2 
+ * @param {*} size2 
+ */
+function aabb_intersect_2d(pos1, size1, pos2, size2) {
+  let v1 = aabb_intersect_vs.next().load(pos1);
+  let v2 = aabb_intersect_vs.next().load(pos1).add(size1);
+  let v3 = aabb_intersect_vs.next().load(pos2);
+  let v4 = aabb_intersect_vs.next().load(pos2).add(size2);
+
+  let min = aabb_intersect_vs.next().zero();
+  let max = aabb_intersect_vs.next().zero();
+
+  let tot=0;
+
+  for (let i=0; i<2; i++) {
+    if (v2[i] >= v3[i] && v1[i] <= v4[i]) {
+      tot++;
+
+      min[i] = Math.max(v3[i], v1[i]);
+      max[i] = Math.min(v2[i], v4[i]);
+    }
+  }
+
+  if (tot !== 2) {
+    return undefined;
+  }
+
+  let ret = aabb_intersect_rets.next();
+  ret.pos.load(min);
+  ret.size.load(max).sub(min);
+
+  return ret;
+}
+
+window.test_aabb_intersect_2d = function() {
+  let canvas = document.getElementById("test_canvas");
+
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.setAttribute("id", "test_canvas");
+    canvas.g = canvas.getContext("2d");
+
+    document.body.appendChild(canvas);
+  }
+
+  canvas.width = ~~(window.innerWidth*devicePixelRatio);
+  canvas.height = ~~(window.innerHeight*devicePixelRatio);
+  canvas.style.width = (canvas.width/devicePixelRatio) + "px";
+  canvas.style.height = (canvas.height/devicePixelRatio) + "px";
+  canvas.style.position = "absolute";
+  canvas.style["z-index"] = "1000";
+
+  let g = canvas.g;
+  g.clearRect(0, 0, canvas.width, canvas.height);
+
+  let sz = 800;
+  let a1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let a2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let b1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let b2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  
+  let p1 = new Vector2();
+  let s1 = new Vector2();
+  let p2 = new Vector2();
+  let s2 = new Vector2();
+
+  p1.load(a1).min(a2);
+  s1.load(a1).max(a2);
+  p2.load(b1).min(b2);
+  s2.load(b1).max(b2);
+
+  s1.sub(p1);
+  s2.sub(p1);
+
+  console.log(p1, s1);
+  console.log(p2, s2);
+
+  g.beginPath();
+  g.rect(0, 0, canvas.width, canvas.height);
+  g.fillStyle = "white";
+  g.fill();
+
+  g.beginPath();
+  g.rect(p1[0], p1[1], s1[0], s1[1]);
+  g.fillStyle = "rgba(255, 100, 75, 1.0)";
+  g.fill();
+
+  g.beginPath();
+  g.rect(p2[0], p2[1], s2[0], s2[1]);
+  g.fillStyle = "rgba(75, 100, 255, 1.0)";
+  g.fill();
+  
+  let ret = aabb_intersect_2d(p1, s1, p2, s2);
+
+  if (ret) {
+
+    g.beginPath();
+    g.rect(ret.pos[0], ret.pos[1], ret.size[0], ret.size[1]);
+    g.fillStyle = "rgba(0, 0, 0, 1.0)";
+    g.fill();
+  }
+
+  /*
+  window.setTimeout(() => {
+    canvas.remove();
+  }, 2000);
+  //*/
+
+  return {
+    end   : test_aabb_intersect_2d.end,
+    timer : test_aabb_intersect_2d.timer
+  };
+};
+
+test_aabb_intersect_2d.stop = function stop() {
+  if (test_aabb_intersect_2d._timer) {
+    console.log("stopping timer");
+    
+    window.clearInterval(test_aabb_intersect_2d._timer);
+    test_aabb_intersect_2d._timer = undefined;
+  }
+};
+
+test_aabb_intersect_2d.end = function end() {
+  test_aabb_intersect_2d.stop();
+
+  let canvas = document.getElementById("test_canvas");
+  if (canvas) {
+    canvas.remove();
+  }
+};
+test_aabb_intersect_2d.timer = function timer(rate=500) {
+  if (test_aabb_intersect_2d._timer) {
+    window.clearInterval(test_aabb_intersect_2d._timer);
+    test_aabb_intersect_2d._timer = undefined;
+    console.log("stopping timer");
+    return;
+  }
+
+  console.log("starting timer");
+
+  test_aabb_intersect_2d._timer = window.setInterval(() => {
+    test_aabb_intersect_2d();
+  }, rate);
+};
+
+function aabb_union_2d(pos1, size1, pos2, size2) {
+  let v1 = aabb_intersect_vs.next();
+  let v2 = aabb_intersect_vs.next();
+  let min = aabb_intersect_vs.next();
+  let max = aabb_intersect_vs.next(); 
+  v1.load(pos1).add(size1);
+  v2.load(pos2).add(size2);
+
+  min.load(v1).min(v2);
+  max.load(v1).max(v2);
+
+  max.sub(min);
+  let ret = aabb_intersect_rets.next();
+
+  ret.pos.load(min);
+  ret.pos.load(max);
+
+  return ret;
+}
+
+//XXX refactor to use es6 classes,
+//    or at last the class system in typesystem.js
+function init_prototype(cls, proto) {
+  for (var k in proto) {
+    cls.prototype[k] = proto[k];
+  }
+  
+  return cls.prototype;
+}
+
+function inherit$1(cls, parent, proto) {
+  cls.prototype = Object.create(parent.prototype);
+  
+  for (var k in proto) {
+    cls.prototype[k] = proto[k];
+  }
+  
+  return cls.prototype;
+}
+
+var set$2 = set$1;
+
+//everything below here was compiled from es6 code  
+//variables starting with $ are function static local vars,
+//like in C.  don't use them outside their owning functions.
+//
+//except for $_mh and $_swapt.  they were used with a C macro
+//preprocessor.
+var $_mh, $_swapt;
+
+//XXX destroy me
+const feps = 2.22e-16;
+
+const COLINEAR = 1;
+const LINECROSS = 2;
+const COLINEAR_ISECT = 3;
+
+var _cross_vec1=new Vector3();
+var _cross_vec2=new Vector3();
+
+const SQRT2 = Math.sqrt(2.0);
+const FEPS_DATA = {
+  F16 : 1.11e-16,
+  F32 : 5.96e-08,
+  F64 : 4.88e-04
+};
+
+/*use 32 bit epsilon by default, since we're often working from
+  32-bit float data.  note that javascript uses 64-bit doubles 
+  internally.*/
+const FEPS = FEPS_DATA.F32;
+const FLOAT_MIN = -1e+21;
+const FLOAT_MAX = 1e+22;
+const Matrix4UI = Matrix4;
+
+/*
+var Matrix4UI=exports.Matrix4UI = function(loc, rot, size) {
+  if (rot==undefined) {
+      rot = undefined;
+  }
+  
+  if (size==undefined) {
+      size = undefined;
+  }
+  
+  Object.defineProperty(this, "loc", {get: function() {
+    var t=new Vector3();
+    this.decompose(t);
+    return t;
+  }, set: function(loc) {
+    var l=new Vector3(), r=new Vector3(), s=new Vector3();
+    this.decompose(l, r, s);
+    this.calc(loc, r, s);
+  }});
+  
+  Object.defineProperty(this, "size", {get: function() {
+    var t=new Vector3();
+    this.decompose(undefined, undefined, t);
+    return t;
+  }, set: function(size) {
+    var l=new Vector3(), r=new Vector3(), s=new Vector3();
+    this.decompose(l, r, s);
+    this.calc(l, r, size);
+  }});
+  
+  Object.defineProperty(this, "rot", {get: function() {
+    var t=new Vector3();
+    this.decompose(undefined, t);
+    return t;
+  }, set: function(rot) {
+    var l=new Vector3(), r=new Vector3(), s=new Vector3();
+    this.decompose(l, r, s);
+    this.calc(l, rot, s);
+  }});
+  
+  if (loc instanceof Matrix4) {
+      this.load(loc);
+      return ;
+  }
+  
+  if (rot==undefined)
+    rot = [0, 0, 0];
+  if (size==undefined)
+    size = [1.0, 1.0, 1.0];
+  this.makeIdentity();
+  this.calc(loc, rot, size);
+};
+
+Matrix4UI.prototype = inherit(Matrix4UI, Matrix4, {
+  calc : function(loc, rot, size) {
+    this.rotate(rot[0], rot[1], rot[2]);
+    this.scale(size[0], size[1], size[2]);
+    this.translate(loc[0], loc[1], loc[2]);
+  }
+
+});
+*/
+
+if (FLOAT_MIN!=FLOAT_MIN||FLOAT_MAX!=FLOAT_MAX) {
+    FLOAT_MIN = 1e-05;
+    FLOAT_MAX = 1000000.0;
+    console.log("Floating-point 16-bit system detected!");
+}
+
+var _static_grp_points4=new Array(4);
+var _static_grp_points8=new Array(8);
+function get_rect_points(p, size) {
+  var cs;
+  if (p.length==2) {
+      cs = _static_grp_points4;
+      cs[0] = p;
+      cs[1] = [p[0]+size[0], p[1]];
+      cs[2] = [p[0]+size[0], p[1]+size[1]];
+      cs[3] = [p[0], p[1]+size[1]];
+  }
+  else 
+    if (p.length==3) {
+      cs = _static_grp_points8;
+      cs[0] = p;
+      cs[1] = [p[0]+size[0], p[1], p[2]];
+      cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
+      cs[3] = [p[0], p[1]+size[0], p[2]];
+      cs[4] = [p[0], p[1], p[2]+size[2]];
+      cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
+      cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
+      cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
+  }
+  else {
+    throw "get_rect_points has no implementation for "+p.length+"-dimensional data";
+  }
+  return cs;
+};
+
+function get_rect_lines(p, size) {
+  var ps=get_rect_points(p, size);
+  if (p.length==2) {
+      return [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
+  }
+  else 
+    if (p.length==3) {
+      var l1=[[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
+      var l2=[[ps[4], ps[5]], [ps[5], ps[6]], [ps[6], ps[7]], [ps[7], ps[4]]];
+      l1.concat(l2);
+      l1.push([ps[0], ps[4]]);
+      l1.push([ps[1], ps[5]]);
+      l1.push([ps[2], ps[6]]);
+      l1.push([ps[3], ps[7]]);
+      return l1;
+  }
+  else {
+    throw "get_rect_points has no implementation for "+p.length+"-dimensional data";
+  }
+};
+
+var $vs_simple_tri_aabb_isect=[0, 0, 0];
+function simple_tri_aabb_isect(v1, v2, v3, min, max) {
+  $vs_simple_tri_aabb_isect[0] = v1;
+  $vs_simple_tri_aabb_isect[1] = v2;
+  $vs_simple_tri_aabb_isect[2] = v3;
+  for (var i=0; i<3; i++) {
+      var isect=true;
+      for (var j=0; j<3; j++) {
+          if ($vs_simple_tri_aabb_isect[j][i]<min[i]||$vs_simple_tri_aabb_isect[j][i]>=max[i])
+            isect = false;
+      }
+      if (isect)
+        return true;
+  }
+  return false;
+};
+
+class MinMax {
+  constructor(totaxis) {
+    if (totaxis==undefined) {
+        totaxis = 1;
+    }
+    this.totaxis = totaxis;
+    if (totaxis!=1) {
+        let cls;
+        
+        switch (totaxis) {
+          case 2:
+            cls = Vector2;
+            break;
+          case 3:
+            cls = Vector3;
+            break;
+          case 4:
+            cls = Vector4;
+            break;
+          default:
+            cls = Array;
+            break;
+        }
+        
+        this._min = new cls(totaxis);
+        this._max = new cls(totaxis);
+        this.min = new cls(totaxis);
+        this.max = new cls(totaxis);
+    }
+    else {
+      this.min = this.max = 0;
+      this._min = FLOAT_MAX;
+      this._max = FLOAT_MIN;
+    }
+    this.reset();
+    this._static_mr_co = new Array(this.totaxis);
+    this._static_mr_cs = new Array(this.totaxis*this.totaxis);
+  }
+  
+  load(mm) {
+    if (this.totaxis==1) {
+        this.min = mm.min;
+        this.max = mm.max;
+        this._min = mm.min;
+        this._max = mm.max;
+    }
+    else {
+      this.min = new Vector3(mm.min);
+      this.max = new Vector3(mm.max);
+      this._min = new Vector3(mm._min);
+      this._max = new Vector3(mm._max);
+    }
+  }
+  
+  reset() {
+    var totaxis=this.totaxis;
+    if (totaxis==1) {
+        this.min = this.max = 0;
+        this._min = FLOAT_MAX;
+        this._max = FLOAT_MIN;
+    }
+    else {
+      for (var i=0; i<totaxis; i++) {
+          this._min[i] = FLOAT_MAX;
+          this._max[i] = FLOAT_MIN;
+          this.min[i] = 0;
+          this.max[i] = 0;
+      }
+    }
+  }
+
+  minmax_rect(p, size) {
+    var totaxis=this.totaxis;
+    var cs=this._static_mr_cs;
+    if (totaxis==2) {
+        cs[0] = p;
+        cs[1] = [p[0]+size[0], p[1]];
+        cs[2] = [p[0]+size[0], p[1]+size[1]];
+        cs[3] = [p[0], p[1]+size[1]];
+    }
+    else 
+      if (totaxis = 3) {
+        cs[0] = p;
+        cs[1] = [p[0]+size[0], p[1], p[2]];
+        cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
+        cs[3] = [p[0], p[1]+size[0], p[2]];
+        cs[4] = [p[0], p[1], p[2]+size[2]];
+        cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
+        cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
+        cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
+    }
+    else {
+      throw "Minmax.minmax_rect has no implementation for "+totaxis+"-dimensional data";
+    }
+    for (var i=0; i<cs.length; i++) {
+        this.minmax(cs[i]);
+    }
+  }
+
+  minmax(p) {
+    var totaxis=this.totaxis;
+    
+    if (totaxis==1) {
+        this._min = this.min = Math.min(this._min, p);
+        this._max = this.max = Math.max(this._max, p);
+    } else if (totaxis == 2) {
+      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
+      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
+      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
+      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
+    } else if (totaxis == 3) {
+      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
+      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
+      this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
+      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
+      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
+      this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
+    } else {
+      for (var i=0; i<totaxis; i++) {
+          this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
+          this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
+      }
+    }
+  }
+
+  static fromSTRUCT(reader) {
+    var ret=new MinMax();
+    reader(ret);
+    return ret;
+  }
+};
+MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
+
+function winding(a, b, c, zero_z, tol) {
+  if (tol == undefined) tol = 0.0;
+  
+  for (var i=0; i<a.length; i++) {
+      _cross_vec1[i] = b[i]-a[i];
+      _cross_vec2[i] = c[i]-a[i];
+  }
+  if (a.length==2 || zero_z) {
+      _cross_vec1[2] = 0.0;
+      _cross_vec2[2] = 0.0;
+  }
+  _cross_vec1.cross(_cross_vec2);
+  return _cross_vec1[2]>tol;
+};
+function inrect_2d(p, pos, size) {
+  if (p==undefined||pos==undefined||size==undefined) {
+      console.trace();
+      console.log("Bad paramters to inrect_2d()");
+      console.log("p: ", p, ", pos: ", pos, ", size: ", size);
+      return false;
+  }
+  return p[0]>=pos[0]&&p[0]<=pos[0]+size[0]&&p[1]>=pos[1]&&p[1]<=pos[1]+size[1];
+};
+var $smin_aabb_isect_line_2d=new Vector2();
+var $ssize_aabb_isect_line_2d=new Vector2();
+var $sv1_aabb_isect_line_2d=new Vector2();
+var $ps_aabb_isect_line_2d=[new Vector2(), new Vector2(), new Vector2()];
+var $l1_aabb_isect_line_2d=[0, 0];
+var $smax_aabb_isect_line_2d=new Vector2();
+var $sv2_aabb_isect_line_2d=new Vector2();
+var $l2_aabb_isect_line_2d=[0, 0];
+function aabb_isect_line_2d(v1, v2, min, max) {
+  for (var i=0; i<2; i++) {
+      $smin_aabb_isect_line_2d[i] = Math.min(min[i], v1[i]);
+      $smax_aabb_isect_line_2d[i] = Math.max(max[i], v2[i]);
+  }
+  $smax_aabb_isect_line_2d.sub($smin_aabb_isect_line_2d);
+  $ssize_aabb_isect_line_2d.load(max).sub(min);
+  if (!aabb_isect_2d($smin_aabb_isect_line_2d, $smax_aabb_isect_line_2d, min, $ssize_aabb_isect_line_2d))
+    return false;
+  for (var i=0; i<4; i++) {
+      if (inrect_2d(v1, min, $ssize_aabb_isect_line_2d))
+        return true;
+      if (inrect_2d(v2, min, $ssize_aabb_isect_line_2d))
+        return true;
+  }
+  $ps_aabb_isect_line_2d[0] = min;
+  $ps_aabb_isect_line_2d[1][0] = min[0];
+  $ps_aabb_isect_line_2d[1][1] = max[1];
+  $ps_aabb_isect_line_2d[2] = max;
+  $ps_aabb_isect_line_2d[3][0] = max[0];
+  $ps_aabb_isect_line_2d[3][1] = min[1];
+  $l1_aabb_isect_line_2d[0] = v1;
+  $l1_aabb_isect_line_2d[1] = v2;
+  for (var i=0; i<4; i++) {
+      var a=$ps_aabb_isect_line_2d[i], b=$ps_aabb_isect_line_2d[(i+1)%4];
+      $l2_aabb_isect_line_2d[0] = a;
+      $l2_aabb_isect_line_2d[1] = b;
+      if (line_line_cross($l1_aabb_isect_line_2d, $l2_aabb_isect_line_2d))
+        return true;
+  }
+  return false;
+};
+
+
+function expand_rect2d(pos, size, margin) {
+  pos[0]-=Math.floor(margin[0]);
+  pos[1]-=Math.floor(margin[1]);
+  size[0]+=Math.floor(margin[0]*2.0);
+  size[1]+=Math.floor(margin[1]*2.0);
+};
+
+function expand_line(l, margin) {
+  var c=new Vector3();
+  c.add(l[0]);
+  c.add(l[1]);
+  c.mulScalar(0.5);
+  l[0].sub(c);
+  l[1].sub(c);
+  var l1=l[0].vectorLength();
+  var l2=l[1].vectorLength();
+  l[0].normalize();
+  l[1].normalize();
+  l[0].mulScalar(margin+l1);
+  l[1].mulScalar(margin+l2);
+  l[0].add(c);
+  l[1].add(c);
+  return l;
+};
+
+function colinear(a, b, c) {
+  for (var i=0; i<3; i++) {
+      _cross_vec1[i] = b[i]-a[i];
+      _cross_vec2[i] = c[i]-a[i];
+  }
+  var limit=2.2e-16;
+  if (a.vectorDistance(b)<feps*100&&a.vectorDistance(c)<feps*100) {
+      return true;
+  }
+  if (_cross_vec1.dot(_cross_vec1)<limit||_cross_vec2.dot(_cross_vec2)<limit)
+    return true;
+  _cross_vec1.cross(_cross_vec2);
+  return _cross_vec1.dot(_cross_vec1)<limit;
+};
+
+var _llc_l1=[new Vector3(), new Vector3()];
+var _llc_l2=[new Vector3(), new Vector3()];
+var _llc_l3=[new Vector3(), new Vector3()];
+var _llc_l4=[new Vector3(), new Vector3()];
+
+var lli_v1 = new Vector3(), lli_v2 = new Vector3(), lli_v3 = new Vector3(), lli_v4 = new Vector3();
+
+var _zero_cn = new Vector3();
+var _tmps_cn = cachering.fromConstructor(Vector3, 64);
+var _rets_cn = cachering.fromConstructor(Vector3, 64);
+
+//vec1, vec2 should both be normalized
+function corner_normal(vec1, vec2, width) {
+  var ret = _rets_cn.next().zero();
+
+  var vec = _tmps_cn.next().zero();
+  vec.load(vec1).add(vec2).normalize();
+
+  /*
+  ret.load(vec).mulScalar(width);
+  return ret;
+  */
+
+  //handle colinear case
+  if (Math.abs(vec1.normalizedDot(vec2)) > 0.9999) {
+    if (vec1.dot(vec2) > 0.0001) {
+      ret.load(vec1).add(vec2).normalize();
+    } else {
+      ret.load(vec1).normalize();
+    }
+
+    ret.mulScalar(width);
+
+    return ret;
+  } else { //XXX
+    //ret.load(vec).mulScalar(width);
+    //return ret;
+  }
+
+  vec1 = _tmps_cn.next().load(vec1).mulScalar(width);
+  vec2 = _tmps_cn.next().load(vec2).mulScalar(width);
+
+  var p1 = _tmps_cn.next().load(vec1);
+  var p2 = _tmps_cn.next().load(vec2);
+
+  vec1.addFac(vec1, 0.01);
+  vec2.addFac(vec2, 0.01);
+
+  var sc = 1.0;
+
+  p1[0] += vec1[1]*sc;
+  p1[1] += -vec1[0]*sc;
+
+  p2[0] += -vec2[1]*sc;
+  p2[1] += vec2[0]*sc;
+
+  var p = line_line_isect(vec1, p1, vec2, p2, false);
+
+  if (p == undefined || p === COLINEAR_ISECT || p.dot(p) < 0.000001) {
+    ret.load(vec1).add(vec2).normalize().mulScalar(width);
+  } else {
+    ret.load(p);
+
+    if (vec.dot(vec) > 0 && vec.dot(ret) < 0) {
+      ret.load(vec).mulScalar(width);
+    }
+  }
+
+  return ret;
+}
+
+//test_segment is optional, true
+function line_line_isect(v1, v2, v3, v4, test_segment) {
+  test_segment = test_segment === undefined ? true : test_segment;
+
+  if (!line_line_cross(v1, v2, v3, v4)) {
+    return undefined;
+  }
+  
+  /*
+  on factor;
+  off period;
+  
+  xa := xa1 + (xa2 - xa1)*t1;
+  xb := xb1 + (xb2 - xb1)*t2;
+  ya := ya1 + (ya2 - ya1)*t1;
+  yb := yb1 + (yb2 - yb1)*t2;
+  
+  f1 := xa - xb;
+  f2 := ya - yb;
+  
+  f := solve({f1, f2}, {t1, t2});
+  ft1 := part(f, 1, 1, 2);
+  ft2 := part(f, 1, 2, 2);
+  
+  */
+  
+  var xa1 = v1[0], xa2 = v2[0], ya1 = v1[1], ya2 = v2[1];
+  var xb1 = v3[0], xb2 = v4[0], yb1 = v3[1], yb2 = v4[1];
+  
+  var div = ((xa1-xa2)*(yb1-yb2)-(xb1-xb2)*(ya1-ya2));
+  if (div < 0.00000001) { //parallel but intersecting lines.
+    return COLINEAR_ISECT;
+  } else { //intersection exists
+    var t1 = (-((ya1-yb2)*xb1-(yb1-yb2)*xa1-(ya1-yb1)*xb2))/div;
+    
+    return lli_v1.load(v1).interp(v2, t1);
+  }
+}
+
+function line_line_cross(v1, v2, v3, v4) {
+  var l1 = _llc_l3, l2 = _llc_l4;
+  l1[0].load(v1), l1[1].load(v2), l2[0].load(v3), l2[1].load(v4);
+  
+  /*
+  var limit=feps*1000;
+  if (Math.abs(l1[0].vectorDistance(l2[0])+l1[1].vectorDistance(l2[0])-l1[0].vectorDistance(l1[1]))<limit) {
+      return true;
+  }
+  if (Math.abs(l1[0].vectorDistance(l2[1])+l1[1].vectorDistance(l2[1])-l1[0].vectorDistance(l1[1]))<limit) {
+      return true;
+  }
+  if (Math.abs(l2[0].vectorDistance(l1[0])+l2[1].vectorDistance(l1[0])-l2[0].vectorDistance(l2[1]))<limit) {
+      return true;
+  }
+  if (Math.abs(l2[0].vectorDistance(l1[1])+l2[1].vectorDistance(l1[1])-l2[0].vectorDistance(l2[1]))<limit) {
+      return true;
+  }
+  //*/
+  
+  var a=l1[0];
+  var b=l1[1];
+  var c=l2[0];
+  var d=l2[1];
+  var w1=winding(a, b, c);
+  var w2=winding(c, a, d);
+  var w3=winding(a, b, d);
+  var w4=winding(c, b, d);
+  return (w1==w2)&&(w3==w4)&&(w1!=w3);
+};
+
+var _asi_v1 = new Vector3();
+var _asi_v2 = new Vector3();
+var _asi_v3 = new Vector3();
+var _asi_v4 = new Vector3();
+var _asi_v5 = new Vector3();
+var _asi_v6 = new Vector3();
+
+function point_in_aabb_2d(p, min, max) {
+  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
+}
+
+var _asi2d_v1 = new Vector2();
+var _asi2d_v2 = new Vector2();
+var _asi2d_v3 = new Vector2();
+var _asi2d_v4 = new Vector2();
+var _asi2d_v5 = new Vector2();
+var _asi2d_v6 = new Vector2();
+function aabb_sphere_isect_2d(p, r, min, max) {
+  var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
+  var v4 = _asi2d_v5;
+  
+  p = _asi2d_v6.load(p);
+  v1.load(p);
+  v2.load(p);
+  
+  min = _asi_v5.load(min);
+  max = _asi_v6.load(max);
+  
+  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
+  
+  v1.sub(mvec);
+  v2.add(mvec);
+  v3.load(p);
+  
+  var ret = point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)
+         || point_in_aabb_2d(v3, min, max);
+  
+  if (ret)
+      return ret;
+  
+  /*
+  v1.load(min).add(max).mulScalar(0.5);
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1.load(min);
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1.load(max);
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1[0] = min[0], v1[1] = max[1];
+  ret = ret || v1.vectorDistance(p) < r;
+  
+  v1[0] = max[0], v1[1] = min[1];
+  ret = ret || v1.vectorDistance(p) < r;
+  */
+  //*
+  v1.load(min);
+  v2[0] = min[0]; v2[1] = max[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+  
+  v1.load(max);
+  v2[0] = max[0]; v2[1] = max[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+
+  v1.load(max);
+  v2[0] = max[0]; v2[1] = min[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+
+  v1.load(max);
+  v2[0] = min[0]; v2[1] = min[1];
+  ret = ret || dist_to_line_2d(p, v1, v2) < r;
+  //*/
+  return ret;
+};
+
+function point_in_aabb(p, min, max) {
+  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1]
+         && p[2] >= min[2] && p[2] <= max[2];
+}
+function aabb_sphere_isect(p, r, min, max) {
+  var v1 = _asi_v1, v2 = _asi_v2, v3 = _asi_v3, mvec = _asi_v4;
+  min = _asi_v5.load(min);
+  max = _asi_v6.load(max);
+  
+  if (min.length == 2) {
+    min[2] = max[2] = 0.0;
+  }
+  
+  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
+  v1.sub(mvec);
+  v2.add(mvec);
+  v3.load(p);
+  
+  //prevent NaN on 2d vecs
+  if (p.length == 2) {
+      mvec[2] = v1[2] = v2[2] = v3[2] = 0.0;
+  }
+  
+  return point_in_aabb(v1, min, max) || point_in_aabb(v2, min, max) ||
+         point_in_aabb(v3, min, max);
+};
+
+function point_in_tri(p, v1, v2, v3) {
+  var w1=winding(p, v1, v2);
+  var w2=winding(p, v2, v3);
+  var w3=winding(p, v3, v1);
+  return w1==w2&&w2==w3;
+};
+
+function convex_quad(v1, v2, v3, v4) {
+  return line_line_cross([v1, v3], [v2, v4]);
+};
+
+var $e1_normal_tri=new Vector3();
+var $e3_normal_tri=new Vector3();
+var $e2_normal_tri=new Vector3();
+function normal_tri(v1, v2, v3) {
+  $e1_normal_tri[0] = v2[0]-v1[0];
+  $e1_normal_tri[1] = v2[1]-v1[1];
+  $e1_normal_tri[2] = v2[2]-v1[2];
+  $e2_normal_tri[0] = v3[0]-v1[0];
+  $e2_normal_tri[1] = v3[1]-v1[1];
+  $e2_normal_tri[2] = v3[2]-v1[2];
+  $e3_normal_tri[0] = $e1_normal_tri[1]*$e2_normal_tri[2]-$e1_normal_tri[2]*$e2_normal_tri[1];
+  $e3_normal_tri[1] = $e1_normal_tri[2]*$e2_normal_tri[0]-$e1_normal_tri[0]*$e2_normal_tri[2];
+  $e3_normal_tri[2] = $e1_normal_tri[0]*$e2_normal_tri[1]-$e1_normal_tri[1]*$e2_normal_tri[0];
+  
+  var _len=Math.sqrt(($e3_normal_tri[0]*$e3_normal_tri[0]+$e3_normal_tri[1]*$e3_normal_tri[1]+$e3_normal_tri[2]*$e3_normal_tri[2]));
+  if (_len>1e-05)
+    _len = 1.0/_len;
+  $e3_normal_tri[0]*=_len;
+  $e3_normal_tri[1]*=_len;
+  $e3_normal_tri[2]*=_len;
+  return $e3_normal_tri;
+};
+
+var $n2_normal_quad=new Vector3();
+function normal_quad(v1, v2, v3, v4) {
+  var n=normal_tri(v1, v2, v3);
+  $n2_normal_quad[0] = n[0];
+  $n2_normal_quad[1] = n[1];
+  $n2_normal_quad[2] = n[2];
+  n = normal_tri(v1, v3, v4);
+  $n2_normal_quad[0] = $n2_normal_quad[0]+n[0];
+  $n2_normal_quad[1] = $n2_normal_quad[1]+n[1];
+  $n2_normal_quad[2] = $n2_normal_quad[2]+n[2];
+  var _len=Math.sqrt(($n2_normal_quad[0]*$n2_normal_quad[0]+$n2_normal_quad[1]*$n2_normal_quad[1]+$n2_normal_quad[2]*$n2_normal_quad[2]));
+  if (_len>1e-05)
+    _len = 1.0/_len;
+  $n2_normal_quad[0]*=_len;
+  $n2_normal_quad[1]*=_len;
+  $n2_normal_quad[2]*=_len;
+  return $n2_normal_quad;
+};
+
+var _li_vi=new Vector3();
+
+//calc_t is optional, false
+function line_isect(v1, v2, v3, v4, calc_t) {
+  if (calc_t==undefined) {
+      calc_t = false;
+  }
+  var div=(v2[0]-v1[0])*(v4[1]-v3[1])-(v2[1]-v1[1])*(v4[0]-v3[0]);
+  if (div==0.0)
+    return [new Vector3(), COLINEAR, 0.0];
+  var vi=_li_vi;
+  vi[0] = 0;
+  vi[1] = 0;
+  vi[2] = 0;
+  vi[0] = ((v3[0]-v4[0])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[0]-v2[0])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
+  vi[1] = ((v3[1]-v4[1])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[1]-v2[1])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
+  if (calc_t||v1.length==3) {
+      var n1=new Vector2(v2).sub(v1);
+      var n2=new Vector2(vi).sub(v1);
+      var t=n2.vectorLength()/n1.vectorLength();
+      n1.normalize();
+      n2.normalize();
+      if (n1.dot(n2)<0.0) {
+          t = -t;
+      }
+      if (v1.length==3) {
+          vi[2] = v1[2]+(v2[2]-v1[2])*t;
+      }
+      return [vi, LINECROSS, t];
+  }
+  return [vi, LINECROSS];
+};
+
+var dt2l_v1 = new Vector2();
+var dt2l_v2 = new Vector2();
+var dt2l_v3 = new Vector2();
+var dt2l_v4 = new Vector2();
+var dt2l_v5 = new Vector2();
+
+function dist_to_line_2d(p, v1, v2, clip, closest_co_out=undefined, t_out=undefined) {
+  if (clip == undefined) {
+      clip = true;
+  }
+  
+  v1 = dt2l_v4.load(v1);
+  v2 = dt2l_v5.load(v2);
+  
+  var n = dt2l_v1;
+  var vec = dt2l_v3;
+  
+  n.load(v2).sub(v1).normalize();
+  vec.load(p).sub(v1);
+  
+  var t = vec.dot(n);
+  if (clip) {
+    t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
+  }
+  
+  n.mulScalar(t).add(v1);
+
+  if (closest_co_out) {
+    closest_co_out[0] = n[0];
+    closest_co_out[1] = n[1];
+  }
+
+  if (t_out !== undefined) {
+    t_out = t;
+  }
+
+  return n.vectorDistance(p);
+}
+
+var dt3l_v1 = new Vector3();
+var dt3l_v2 = new Vector3();
+var dt3l_v3 = new Vector3();
+var dt3l_v4 = new Vector3();
+var dt3l_v5 = new Vector3();
+
+function dist_to_line(p, v1, v2, clip) {
+  if (clip == undefined) {
+      clip = true;
+  }
+  
+  v1 = dt3l_v4.load(v1);
+  v2 = dt3l_v5.load(v2);
+  
+  var n = dt3l_v1;
+  var vec = dt3l_v3;
+  
+  n.load(v2).sub(v1).normalize();
+  vec.load(p).sub(v1);
+  
+  var t = vec.dot(n);
+  if (clip) {
+    t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
+  }
+  
+  n.mulScalar(t).add(v1);
+  
+  return n.vectorDistance(p);
+}
+
+//p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
+var _cplw_vs4 = cachering.fromConstructor(Vector4, 64);
+var _cplw_vs3 = cachering.fromConstructor(Vector3, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2, 64);
+
+function wclip(x1, x2, w1, w2, near) {
+  var r1 = near*w1 - x1;
+  var r2 = (w1-w2)*near - (x1-x2);
+
+  if (r2 == 0.0) return 0.0;
+
+  return r1 / r2;
+}
+
+function clip(a, b, znear) {
+  if (a-b == 0.0) return 0.0;
+
+  return (a - znear) / (a - b);
+}
+
+/*clips v1 and v2 to lie within homogenous projection range
+  v1 and v2 are assumed to be projected, pre-division Vector4's
+  returns a positive number (how much the line was scaled) if either _v1 or _v2 are
+  in front of the near clipping plane otherwise, returns 0
+ */
+function clip_line_w(_v1, _v2, znear, zfar) {
+  var v1 = _cplw_vs4.next().load(_v1);
+  var v2 = _cplw_vs4.next().load(_v2);
+
+  //are we fully behind the view plane?
+  if ((v1[2] < 1.0 && v2[2] < 1.0))
+    return false;
+
+  function doclip1(v1, v2, axis) {
+    if (v1[axis]/v1[3] < -1) {
+      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], -1);
+      v1.interp(v2, t);
+    } else if (v1[axis]/v1[3] > 1) {
+      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], 1);
+      v1.interp(v2, t);
+    }
+  }
+
+  function doclip(v1, v2, axis) {
+    doclip1(v1, v2, axis);
+    doclip1(v2, v1, axis);
+  }
+
+  function dozclip(v1, v2) {
+    if (v1[2] < 1) {
+      var t = clip(v1[2], v2[2], 1);
+      v1.interp(v2, t);
+    } else if (v2[2] < 1) {
+      var t = clip(v2[2], v1[2], 1);
+      v2.interp(v1, t);
+    }
+  }
+
+  dozclip(v1, v2, 1);
+  doclip(v1, v2, 0);
+  doclip(v1, v2, 1);
+
+  for (var i=0; i<4; i++) {
+    _v1[i] = v1[i];
+    _v2[i] = v2[i];
+  }
+
+  return !(v1[0]/v1[3] == v2[0]/v2[3] || v1[1]/v2[3] == v2[1]/v2[3]);
+};
+
+//clip is optional, true.  clip point to lie within line segment v1->v2
+var _closest_point_on_line_cache = cachering.fromConstructor(Vector3, 64);
+var _closest_point_rets = new cachering(function() {
+  return [0, 0];
+}, 64);
+
+var _closest_tmps = [new Vector3(), new Vector3(), new Vector3()];
+function closest_point_on_line(p, v1, v2, clip) {
+  if (clip == undefined)
+    clip = true;
+  var l1 = _closest_tmps[0], l2 = _closest_tmps[1];
+  
+  l1.load(v2).sub(v1).normalize();
+  l2.load(p).sub(v1);
+  
+  var t = l2.dot(l1);
+  if (clip) {
+    t = t*(t<0.0) + t*(t>1.0) + (t>1.0);
+  }
+  
+  var p = _closest_point_on_line_cache.next();
+  p.load(l1).mulScalar(t).add(v1);
+  var ret = _closest_point_rets.next();
+  
+  ret[0] = p;
+  ret[1] = t;
+  
+  return ret;
+};
+
+/*given input line (a,d) and tangent t,
+  returns a circle that goes through both
+  a and d, whose normalized tangent at a is the same
+  as normalized t.
+  
+  note that t need not be normalized, this function
+  does that itself*/
+var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3, 32);
+var _circ_from_line_tan_ret = new cachering(function() {
+  return [new Vector3(), 0];
+});
+function circ_from_line_tan(a, b, t) {
+  var p1 = _circ_from_line_tan_vs.next();
+  var t2 = _circ_from_line_tan_vs.next();
+  var n1 = _circ_from_line_tan_vs.next();
+  
+  p1.load(a).sub(b);
+  t2.load(t).normalize();
+  n1.load(p1).normalize().cross(t2).cross(t2).normalize();
+  
+  var ax = p1[0], ay = p1[1], az=p1[2], nx = n1[0], ny=n1[1], nz=n1[2];
+  var r = -(ax*ax + ay*ay + az*az) / (2*(ax*nx + ay*ny +az*nz));
+  
+  var ret = _circ_from_line_tan_ret.next();
+  ret[0].load(n1).mulScalar(r).add(a);
+  ret[1] = r;
+  
+  return ret;
+}
+
+var _gtc_e1=new Vector3();
+var _gtc_e2=new Vector3();
+var _gtc_e3=new Vector3();
+var _gtc_p1=new Vector3();
+var _gtc_p2=new Vector3();
+var _gtc_v1=new Vector3();
+var _gtc_v2=new Vector3();
+var _gtc_p12=new Vector3();
+var _gtc_p22=new Vector3();
+var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
+
+function get_tri_circ(a, b, c) {
+  var v1=_gtc_v1;
+  var v2=_gtc_v2;
+  var e1=_gtc_e1;
+  var e2=_gtc_e2;
+  var e3=_gtc_e3;
+  var p1=_gtc_p1;
+  var p2=_gtc_p2;
+  
+  for (var i=0; i<3; i++) {
+      e1[i] = b[i]-a[i];
+      e2[i] = c[i]-b[i];
+      e3[i] = a[i]-c[i];
+  }
+  
+  for (var i=0; i<3; i++) {
+      p1[i] = (a[i]+b[i])*0.5;
+      p2[i] = (c[i]+b[i])*0.5;
+  }
+  
+  e1.normalize();
+  
+  v1[0] = -e1[1];
+  v1[1] = e1[0];
+  v1[2] = e1[2];
+
+  v2[0] = -e2[1];
+  v2[1] = e2[0];
+  v2[2] = e2[2];
+
+  v1.normalize();
+  v2.normalize();
+
+  var cent;
+  var type;
+  for (var i=0; i<3; i++) {
+      _gtc_p12[i] = p1[i]+v1[i];
+      _gtc_p22[i] = p2[i]+v2[i];
+  }
+
+  var ret=line_isect(p1, _gtc_p12, p2, _gtc_p22);
+  cent = ret[0];
+  type = ret[1];
+
+  e1.load(a);
+  e2.load(b);
+  e3.load(c);
+
+  var r=e1.sub(cent).vectorLength();
+  if (r<feps)
+    r = e2.sub(cent).vectorLength();
+  if (r<feps)
+    r = e3.sub(cent).vectorLength();
+  
+  var ret = _get_tri_circ_ret.next();
+  ret[0] = cent;
+  ret[1] = r;
+  
+  return ret;
+};
+
+function gen_circle(m, origin, r, stfeps) {
+  var pi=Math.PI;
+  var f=-pi/2;
+  var df=(pi*2)/stfeps;
+  var verts=new Array();
+  for (var i=0; i<stfeps; i++) {
+      var x=origin[0]+r*Math.sin(f);
+      var y=origin[1]+r*Math.cos(f);
+      var v=m.make_vert(new Vector3([x, y, origin[2]]));
+      verts.push(v);
+      f+=df;
+  }
+  for (var i=0; i<verts.length; i++) {
+      var v1=verts[i];
+      var v2=verts[(i+1)%verts.length];
+      m.make_edge(v1, v2);
+  }
+  return verts;
+};
+
+var cos$1 = Math.cos;
+var sin$1 = Math.sin;
+//axis is optional, 0
+function rot2d(v1, A, axis) {
+  var x = v1[0];
+  var y = v1[1];
+  
+  if (axis == 1) {
+    v1[0] = x * cos$1(A) + y*sin$1(A);
+    v1[2] = y * cos$1(A) - x*sin$1(A);
+  } else {
+    v1[0] = x * cos$1(A) - y*sin$1(A);
+    v1[1] = y * cos$1(A) + x*sin$1(A);
+  }
+}
+
+function makeCircleMesh(gl, radius, stfeps) {
+  var mesh=new Mesh();
+  var verts1=gen_circle(mesh, new Vector3(), radius, stfeps);
+  var verts2=gen_circle(mesh, new Vector3(), radius/1.75, stfeps);
+  mesh.make_face_complex([verts1, verts2]);
+  return mesh;
+};
+function minmax_verts(verts) {
+  var min=new Vector3([1000000000000.0, 1000000000000.0, 1000000000000.0]);
+  var max=new Vector3([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
+  var __iter_v=__get_iter(verts);
+  var v;
+  while (1) {
+    var __ival_v=__iter_v.next();
+    if (__ival_v.done) {
+        break;
+    }
+    v = __ival_v.value;
+    for (var i=0; i<3; i++) {
+        min[i] = Math.min(min[i], v.co[i]);
+        max[i] = Math.max(max[i], v.co[i]);
+    }
+  }
+  return [min, max];
+};
+
+function unproject(vec, ipers, iview) {
+  var newvec=new Vector3(vec);
+  newvec.multVecMatrix(ipers);
+  newvec.multVecMatrix(iview);
+  return newvec;
+};
+
+function project(vec, pers, view) {
+  var newvec=new Vector3(vec);
+  newvec.multVecMatrix(pers);
+  newvec.multVecMatrix(view);
+  return newvec;
+};
+
+var _sh_minv=new Vector3();
+var _sh_maxv=new Vector3();
+var _sh_start=[];
+var _sh_end=[];
+
+var static_cent_gbw = new Vector3();
+function get_boundary_winding(points) {
+  var cent=static_cent_gbw.zero();
+  if (points.length==0)
+    return false;
+  for (var i=0; i<points.length; i++) {
+      cent.add(points[i]);
+  }
+  cent.divideScalar(points.length);
+  var w=0, totw=0;
+  for (var i=0; i<points.length; i++) {
+      var v1=points[i];
+      var v2=points[(i+1)%points.length];
+      if (!colinear(v1, v2, cent)) {
+          w+=winding(v1, v2, cent);
+          totw+=1;
+      }
+  }
+  if (totw>0)
+    w/=totw;
+  return Math.round(w)==1;
+};
+
+class PlaneOps {
+  constructor(normal) {
+    var no=normal;
+    this.axis = [0, 0, 0];
+    this.reset_axis(normal);
+  }
+
+  reset_axis(no) {
+    var ax, ay, az;
+    var nx=Math.abs(no[0]), ny=Math.abs(no[1]), nz=Math.abs(no[2]);
+    if (nz>nx&&nz>ny) {
+        ax = 0;
+        ay = 1;
+        az = 2;
+    }
+    else 
+      if (nx>ny&&nx>nz) {
+        ax = 2;
+        ay = 1;
+        az = 0;
+    }
+    else {
+      ax = 0;
+      ay = 2;
+      az = 1;
+    }
+    this.axis = [ax, ay, az];
+  }
+
+  convex_quad(v1, v2, v3, v4) {
+    var ax=this.axis;
+    v1 = new Vector3([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
+    v2 = new Vector3([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
+    v3 = new Vector3([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
+    v4 = new Vector3([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
+    return convex_quad(v1, v2, v3, v4);
+  }
+
+  line_isect(v1, v2, v3, v4) {
+    var ax=this.axis;
+    var orig1=v1, orig2=v2;
+    v1 = new Vector3([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
+    v2 = new Vector3([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
+    v3 = new Vector3([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
+    v4 = new Vector3([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
+    var ret=line_isect(v1, v2, v3, v4, true);
+    var vi=ret[0];
+    if (ret[1]==LINECROSS) {
+        ret[0].load(orig2).sub(orig1).mulScalar(ret[2]).add(orig1);
+    }
+    return ret;
+  }
+
+  line_line_cross(l1, l2) {
+    var ax=this.axis;
+    var v1=l1[0], v2=l1[1], v3=l2[0], v4=l2[1];
+    v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0.0]);
+    v4 = new Vector3([v4[ax[0]], v4[ax[1]], 0.0]);
+    return line_line_cross([v1, v2], [v3, v4]);
+  }
+
+  winding(v1, v2, v3) {
+    var ax=this.axis;
+    if (v1==undefined)
+      console.trace();
+    v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0.0]);
+    return winding(v1, v2, v3);
+  }
+
+  colinear(v1, v2, v3) {
+    var ax=this.axis;
+    v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0.0]);
+    return colinear(v1, v2, v3);
+  }
+
+  get_boundary_winding(points) {
+    var ax=this.axis;
+    var cent=new Vector3();
+    if (points.length==0)
+      return false;
+    for (var i=0; i<points.length; i++) {
+        cent.add(points[i]);
+    }
+    cent.divideScalar(points.length);
+    var w=0, totw=0;
+    for (var i=0; i<points.length; i++) {
+        var v1=points[i];
+        var v2=points[(i+1)%points.length];
+        if (!this.colinear(v1, v2, cent)) {
+            w+=this.winding(v1, v2, cent);
+            totw+=1;
+        }
+    }
+    if (totw>0)
+      w/=totw;
+    return Math.round(w)==1;
+  }
+}
+
+/*
+on factor;
+
+px := rox + rnx*t;
+py := roy + rny*t;
+pz := roz + rnz*t;
+
+f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
+ff := solve(f1, t);
+on fort;
+part(ff, 1, 2);
+off fort;
+
+* */
+var _isrp_ret=new Vector3();
+function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
+  let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
+  
+  let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
+
+  if (Math.abs(div) < 0.000001) {
+    return undefined;
+  }
+
+  let t = ((po[1]-ro[1])*pn[1]+(po[2]-ro[2])*pn[2]+(po[0]-ro[0])*pn[0])/div;
+  _isrp_ret.load(ro).addFac(rn, t);
+
+  return _isrp_ret;
+}
+
+function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
+  var p=planeorigin, n=planenormal;
+  var r=rayorigin, v=raynormal;
+
+  var d=p.vectorLength();
+  var t=-(r.dot(n)-p.dot(n))/v.dot(n);
+  _isrp_ret.load(v);
+  _isrp_ret.mulScalar(t);
+  _isrp_ret.add(r);
+  return _isrp_ret;
+};
+
+function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
+  if (verts==undefined)
+    verts = mesh.verts.selected;
+  var vset=new set$2();
+  var eset=new set$2();
+  var __iter_v=__get_iter(verts);
+  var v;
+  while (1) {
+    var __ival_v=__iter_v.next();
+    if (__ival_v.done) {
+        break;
+    }
+    v = __ival_v.value;
+    vset.add(v);
+  }
+  var __iter_v=__get_iter(vset);
+  var v;
+  while (1) {
+    var __ival_v=__iter_v.next();
+    if (__ival_v.done) {
+        break;
+    }
+    v = __ival_v.value;
+    var __iter_e=__get_iter(v.edges);
+    var e;
+    while (1) {
+      var __ival_e=__iter_e.next();
+      if (__ival_e.done) {
+          break;
+      }
+      e = __ival_e.value;
+      if (vset.has(e.other_vert(v))) {
+          eset.add(e);
+      }
+    }
+  }
+  if (eset.length==0) {
+      return new Vector3(offvec);
+  }
+  var tanav=new Vector3();
+  var evec=new Vector3();
+  var tan=new Vector3();
+  var co2=new Vector3();
+  var __iter_e=__get_iter(eset);
+  var e;
+  while (1) {
+    var __ival_e=__iter_e.next();
+    if (__ival_e.done) {
+        break;
+    }
+    e = __ival_e.value;
+    evec.load(e.v1.co).multVecMatrix(projmat);
+    co2.load(e.v2.co).multVecMatrix(projmat);
+    evec.sub(co2);
+    evec.normalize();
+    tan[0] = evec[1];
+    tan[1] = -evec[0];
+    tan[2] = 0.0;
+    if (tan.dot(offvec)<0.0)
+      tan.mulScalar(-1.0);
+    tanav.add(tan);
+  }
+  tanav.normalize();
+  return tanav;
+};
+
+class Mat4Stack {
+  constructor() {
+    this.stack = [];
+    this.matrix = new Matrix4();
+    this.matrix.makeIdentity();
+    this.update_func = undefined;
+  }
+
+  set_internal_matrix(mat, update_func) {
+    this.update_func = update_func;
+    this.matrix = mat;
+  }
+
+  reset(mat) {
+    this.matrix.load(mat);
+    this.stack = [];
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  load(mat) {
+    this.matrix.load(mat);
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  multiply(mat) {
+    this.matrix.multiply(mat);
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  identity() {
+    this.matrix.loadIdentity();
+    if (this.update_func!=undefined)
+      this.update_func();
+  }
+
+  push(mat2) {
+    this.stack.push(new Matrix4(this.matrix));
+    if (mat2!=undefined) {
+        this.matrix.load(mat2);
+        if (this.update_func!=undefined)
+          this.update_func();
+    }
+  }
+
+  pop() {
+    var mat=this.stack.pop(this.stack.length-1);
+    this.matrix.load(mat);
+    if (this.update_func!=undefined)
+      this.update_func();
+    return mat;
+  }
+}
+
+var math1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_union_2d: aabb_union_2d,
+  feps: feps,
+  COLINEAR: COLINEAR,
+  LINECROSS: LINECROSS,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  SQRT2: SQRT2,
+  FEPS_DATA: FEPS_DATA,
+  FEPS: FEPS,
+  get FLOAT_MIN () { return FLOAT_MIN; },
+  get FLOAT_MAX () { return FLOAT_MAX; },
+  Matrix4UI: Matrix4UI,
+  get_rect_points: get_rect_points,
+  get_rect_lines: get_rect_lines,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  MinMax: MinMax,
+  winding: winding,
+  inrect_2d: inrect_2d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  expand_rect2d: expand_rect2d,
+  expand_line: expand_line,
+  colinear: colinear,
+  corner_normal: corner_normal,
+  line_line_isect: line_line_isect,
+  line_line_cross: line_line_cross,
+  point_in_aabb_2d: point_in_aabb_2d,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  point_in_aabb: point_in_aabb,
+  aabb_sphere_isect: aabb_sphere_isect,
+  point_in_tri: point_in_tri,
+  convex_quad: convex_quad,
+  normal_tri: normal_tri,
+  normal_quad: normal_quad,
+  line_isect: line_isect,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line: dist_to_line,
+  clip_line_w: clip_line_w,
+  closest_point_on_line: closest_point_on_line,
+  circ_from_line_tan: circ_from_line_tan,
+  get_tri_circ: get_tri_circ,
+  gen_circle: gen_circle,
+  rot2d: rot2d,
+  makeCircleMesh: makeCircleMesh,
+  minmax_verts: minmax_verts,
+  unproject: unproject,
+  project: project,
+  get_boundary_winding: get_boundary_winding,
+  PlaneOps: PlaneOps,
+  isect_ray_plane: isect_ray_plane,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  mesh_find_tangent: mesh_find_tangent,
+  Mat4Stack: Mat4Stack
+});
 
 "use strict";
 
@@ -15782,6 +17613,12 @@ const DefaultTheme = {
 
 let _ui_base = undefined;
 
+if (window.document && document.body) {
+  console.log("ensuring body.style.margin/padding are zero");
+  document.body.style["margin"] = "0px";
+  document.body.style["padding"] = "0px";
+}
+
 window.__cconst = exports;
 
 let Vector4$1 = Vector4;
@@ -16297,7 +18134,7 @@ ${selector}::-webkit-scrollbar-thumb {
 }
     `;
 
-  console.log(buf);
+  //console.log(buf);
   return buf;
 }
 
@@ -16956,7 +18793,35 @@ class UIBase extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, marginx=0, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
+  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
+    let marginx;
+    let clip;
+
+    if (typeof args === "object") {
+      marginx = args.sx || 0;
+      marginy = args.sy || 0;
+      nodeclass = args.nodeclass || UIBase;
+      excluded_classes = args.excluded_classes;
+      clip = args.clip;
+    } else {
+      marginx = args;
+
+      args = {
+        marginx : marginx || 0,
+        marginy : marginy || 0,
+        nodeclass : nodeclass || UIBase,
+        excluded_classes : excluded_classes,
+        clip : clip
+      };
+    }
+
+    if (!clip) {
+      clip = {
+        pos : new Vector2$3([-10000, 10000]),
+        size : new Vector2$3([20000, 10000])
+      };
+    }
+    
     let ret = undefined;
 
     let retzindex = undefined;
@@ -16972,7 +18837,7 @@ class UIBase extends HTMLElement {
       }
     };
 
-    let rec = (n, widget, widget_zindex, zindex, depth=0) => {
+    let rec = (n, widget, widget_zindex, zindex, clip, depth=0) => {
       if (n.style && n.style["z-index"]) {
         if (!(n instanceof UIBase) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
@@ -16982,24 +18847,47 @@ class UIBase extends HTMLElement {
       if (n.getClientRects && n.getClientRects().length > 0) {
         let rects = n.getClientRects();
 
+        let rect = n.getBoundingClientRect();
+
+        if (n.style && n.style["overflow"] === "hidden" || n.style["overflow"] === "scroll") {
+          clip = aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
+
+          if (!clip) {
+            return;
+          }
+        }
+
         if (testwidget(n)) {
           widget = n;
           widget_zindex = zindex;
         }
 
-        for (let rect of rects) {
-          let ok = true;
+        let ok = true;
 
-          if (n instanceof UIBase) {
-            ok = ok && n.visibleToPick;
+        if (n instanceof UIBase) {
+          ok = ok && n.visibleToPick;
+        }
+
+        if (!ok) {
+          return;
+        }
+
+        for (let rect of rects) {
+          ok = true;
+
+          let clip2 = aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
+          
+          if (!clip2) {
+            ok = false;
+            continue;
           }
 
           ok = ok && !n.hidden;
           ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
           ok = ok && (retzindex === undefined || zindex >= retzindex);
 
-          ok =  ok && x >= rect.x-marginx && x <= rect.x+marginx+rect.width;
-          ok = ok && y >= rect.y-marginy && y <= rect.y+marginy+rect.height;
+          ok = ok && x >= clip2.pos[0]-marginx && x <= clip2.pos[0] + clip2.size[0]+marginy;
+          ok = ok && y >= clip2.pos[1]-marginy && y <= clip2.pos[1] + clip2.size[1]+marginx;
 
           if (n.visibleToPick !== undefined) {
             ok = ok && n.visibleToPick;
@@ -17030,7 +18918,7 @@ class UIBase extends HTMLElement {
 
             let n2 = n.shadow.childNodes[i2];
             if (n2.childNodes && n2.style) {
-              rec(n2, widget, widget_zindex, zindex, depth + 1);
+              rec(n2, widget, widget_zindex, zindex, clip, depth + 1);
             }
           }
         }
@@ -17040,7 +18928,7 @@ class UIBase extends HTMLElement {
 
           let n2 = n.childNodes[i2];
           if (n2.childNodes && n2.style) {
-            rec(n2, widget, widget_zindex, zindex, depth + 1);
+            rec(n2, widget, widget_zindex, zindex, clip, depth + 1);
           }
         }
       }
@@ -17053,7 +18941,7 @@ class UIBase extends HTMLElement {
     }
     let zindex = p !== undefined ? parseInt(p.style["z-index"]) : 0;
 
-    rec(this, testwidget(this) ? this : undefined, zindex, zindex);
+    rec(this, testwidget(this) ? this : undefined, zindex, zindex, clip, 0);
 
     return ret;
   }
@@ -28151,1506 +30039,6 @@ class LastToolPanel extends ColumnFrame {
 }
 UIBase.register(LastToolPanel);
 
-"use strict";
-
-function aabb_overlap_area(pos1, size1, pos2, size2) {
-  let r1=0.0, r2=0.0;
-
-  for (let i=0; i<2; i++) {
-    let a1 = pos1[i], a2 = pos2[i];
-    let b1 = pos1[i] + size1[i];
-    let b2 = pos2[i] + size2[i];
-
-    if (b1 >= a2 && a1 <= b2) {
-      let r = a2 - b1;
-      
-      if (i) {
-        r2 = r;
-      } else {
-        r1 = r;
-      }
-    }
-  }
-
-  return r1*r2;
-}
-
-function aabb_isect_2d(pos1, size1, pos2, size2) {
-  var ret=0;
-  for (var i=0; i<2; i++) {
-    var a=pos1[i];
-    var b=pos1[i]+size1[i];
-    var c=pos2[i];
-    var d=pos2[i]+size2[i];
-    if (b>=c&&a<=d)
-      ret+=1;
-  }
-  return ret==2;
-};
-
-
-//XXX refactor to use es6 classes,
-//    or at last the class system in typesystem.js
-function init_prototype(cls, proto) {
-  for (var k in proto) {
-    cls.prototype[k] = proto[k];
-  }
-  
-  return cls.prototype;
-}
-
-function inherit$1(cls, parent, proto) {
-  cls.prototype = Object.create(parent.prototype);
-  
-  for (var k in proto) {
-    cls.prototype[k] = proto[k];
-  }
-  
-  return cls.prototype;
-}
-
-var Vector2$9 = Vector2, Vector3$2 = Vector3;
-var Vector4$3 = Vector4, Matrix4$3 = Matrix4;
-
-var set$2 = set$1;
-
-//everything below here was compiled from es6 code  
-//variables starting with $ are function static local vars,
-//like in C.  don't use them outside their owning functions.
-//
-//except for $_mh and $_swapt.  they were used with a C macro
-//preprocessor.
-var $_mh, $_swapt;
-
-//XXX destroy me
-const feps = 2.22e-16;
-
-const COLINEAR = 1;
-const LINECROSS = 2;
-const COLINEAR_ISECT = 3;
-
-var _cross_vec1=new Vector3$2();
-var _cross_vec2=new Vector3$2();
-
-const SQRT2 = Math.sqrt(2.0);
-const FEPS_DATA = {
-  F16 : 1.11e-16,
-  F32 : 5.96e-08,
-  F64 : 4.88e-04
-};
-
-/*use 32 bit epsilon by default, since we're often working from
-  32-bit float data.  note that javascript uses 64-bit doubles 
-  internally.*/
-const FEPS = FEPS_DATA.F32;
-const FLOAT_MIN = -1e+21;
-const FLOAT_MAX = 1e+22;
-const Matrix4UI = Matrix4$3;
-
-/*
-var Matrix4UI=exports.Matrix4UI = function(loc, rot, size) {
-  if (rot==undefined) {
-      rot = undefined;
-  }
-  
-  if (size==undefined) {
-      size = undefined;
-  }
-  
-  Object.defineProperty(this, "loc", {get: function() {
-    var t=new Vector3();
-    this.decompose(t);
-    return t;
-  }, set: function(loc) {
-    var l=new Vector3(), r=new Vector3(), s=new Vector3();
-    this.decompose(l, r, s);
-    this.calc(loc, r, s);
-  }});
-  
-  Object.defineProperty(this, "size", {get: function() {
-    var t=new Vector3();
-    this.decompose(undefined, undefined, t);
-    return t;
-  }, set: function(size) {
-    var l=new Vector3(), r=new Vector3(), s=new Vector3();
-    this.decompose(l, r, s);
-    this.calc(l, r, size);
-  }});
-  
-  Object.defineProperty(this, "rot", {get: function() {
-    var t=new Vector3();
-    this.decompose(undefined, t);
-    return t;
-  }, set: function(rot) {
-    var l=new Vector3(), r=new Vector3(), s=new Vector3();
-    this.decompose(l, r, s);
-    this.calc(l, rot, s);
-  }});
-  
-  if (loc instanceof Matrix4) {
-      this.load(loc);
-      return ;
-  }
-  
-  if (rot==undefined)
-    rot = [0, 0, 0];
-  if (size==undefined)
-    size = [1.0, 1.0, 1.0];
-  this.makeIdentity();
-  this.calc(loc, rot, size);
-};
-
-Matrix4UI.prototype = inherit(Matrix4UI, Matrix4, {
-  calc : function(loc, rot, size) {
-    this.rotate(rot[0], rot[1], rot[2]);
-    this.scale(size[0], size[1], size[2]);
-    this.translate(loc[0], loc[1], loc[2]);
-  }
-
-});
-*/
-
-if (FLOAT_MIN!=FLOAT_MIN||FLOAT_MAX!=FLOAT_MAX) {
-    FLOAT_MIN = 1e-05;
-    FLOAT_MAX = 1000000.0;
-    console.log("Floating-point 16-bit system detected!");
-}
-
-var _static_grp_points4=new Array(4);
-var _static_grp_points8=new Array(8);
-function get_rect_points(p, size) {
-  var cs;
-  if (p.length==2) {
-      cs = _static_grp_points4;
-      cs[0] = p;
-      cs[1] = [p[0]+size[0], p[1]];
-      cs[2] = [p[0]+size[0], p[1]+size[1]];
-      cs[3] = [p[0], p[1]+size[1]];
-  }
-  else 
-    if (p.length==3) {
-      cs = _static_grp_points8;
-      cs[0] = p;
-      cs[1] = [p[0]+size[0], p[1], p[2]];
-      cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
-      cs[3] = [p[0], p[1]+size[0], p[2]];
-      cs[4] = [p[0], p[1], p[2]+size[2]];
-      cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
-      cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
-      cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
-  }
-  else {
-    throw "get_rect_points has no implementation for "+p.length+"-dimensional data";
-  }
-  return cs;
-};
-
-function get_rect_lines(p, size) {
-  var ps=get_rect_points(p, size);
-  if (p.length==2) {
-      return [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
-  }
-  else 
-    if (p.length==3) {
-      var l1=[[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
-      var l2=[[ps[4], ps[5]], [ps[5], ps[6]], [ps[6], ps[7]], [ps[7], ps[4]]];
-      l1.concat(l2);
-      l1.push([ps[0], ps[4]]);
-      l1.push([ps[1], ps[5]]);
-      l1.push([ps[2], ps[6]]);
-      l1.push([ps[3], ps[7]]);
-      return l1;
-  }
-  else {
-    throw "get_rect_points has no implementation for "+p.length+"-dimensional data";
-  }
-};
-
-var $vs_simple_tri_aabb_isect=[0, 0, 0];
-function simple_tri_aabb_isect(v1, v2, v3, min, max) {
-  $vs_simple_tri_aabb_isect[0] = v1;
-  $vs_simple_tri_aabb_isect[1] = v2;
-  $vs_simple_tri_aabb_isect[2] = v3;
-  for (var i=0; i<3; i++) {
-      var isect=true;
-      for (var j=0; j<3; j++) {
-          if ($vs_simple_tri_aabb_isect[j][i]<min[i]||$vs_simple_tri_aabb_isect[j][i]>=max[i])
-            isect = false;
-      }
-      if (isect)
-        return true;
-  }
-  return false;
-};
-
-class MinMax {
-  constructor(totaxis) {
-    if (totaxis==undefined) {
-        totaxis = 1;
-    }
-    this.totaxis = totaxis;
-    if (totaxis!=1) {
-        let cls;
-        
-        switch (totaxis) {
-          case 2:
-            cls = Vector2$9;
-            break;
-          case 3:
-            cls = Vector3$2;
-            break;
-          case 4:
-            cls = Vector4$3;
-            break;
-          default:
-            cls = Array;
-            break;
-        }
-        
-        this._min = new cls(totaxis);
-        this._max = new cls(totaxis);
-        this.min = new cls(totaxis);
-        this.max = new cls(totaxis);
-    }
-    else {
-      this.min = this.max = 0;
-      this._min = FLOAT_MAX;
-      this._max = FLOAT_MIN;
-    }
-    this.reset();
-    this._static_mr_co = new Array(this.totaxis);
-    this._static_mr_cs = new Array(this.totaxis*this.totaxis);
-  }
-  
-  load(mm) {
-    if (this.totaxis==1) {
-        this.min = mm.min;
-        this.max = mm.max;
-        this._min = mm.min;
-        this._max = mm.max;
-    }
-    else {
-      this.min = new Vector3$2(mm.min);
-      this.max = new Vector3$2(mm.max);
-      this._min = new Vector3$2(mm._min);
-      this._max = new Vector3$2(mm._max);
-    }
-  }
-  
-  reset() {
-    var totaxis=this.totaxis;
-    if (totaxis==1) {
-        this.min = this.max = 0;
-        this._min = FLOAT_MAX;
-        this._max = FLOAT_MIN;
-    }
-    else {
-      for (var i=0; i<totaxis; i++) {
-          this._min[i] = FLOAT_MAX;
-          this._max[i] = FLOAT_MIN;
-          this.min[i] = 0;
-          this.max[i] = 0;
-      }
-    }
-  }
-
-  minmax_rect(p, size) {
-    var totaxis=this.totaxis;
-    var cs=this._static_mr_cs;
-    if (totaxis==2) {
-        cs[0] = p;
-        cs[1] = [p[0]+size[0], p[1]];
-        cs[2] = [p[0]+size[0], p[1]+size[1]];
-        cs[3] = [p[0], p[1]+size[1]];
-    }
-    else 
-      if (totaxis = 3) {
-        cs[0] = p;
-        cs[1] = [p[0]+size[0], p[1], p[2]];
-        cs[2] = [p[0]+size[0], p[1]+size[1], p[2]];
-        cs[3] = [p[0], p[1]+size[0], p[2]];
-        cs[4] = [p[0], p[1], p[2]+size[2]];
-        cs[5] = [p[0]+size[0], p[1], p[2]+size[2]];
-        cs[6] = [p[0]+size[0], p[1]+size[1], p[2]+size[2]];
-        cs[7] = [p[0], p[1]+size[0], p[2]+size[2]];
-    }
-    else {
-      throw "Minmax.minmax_rect has no implementation for "+totaxis+"-dimensional data";
-    }
-    for (var i=0; i<cs.length; i++) {
-        this.minmax(cs[i]);
-    }
-  }
-
-  minmax(p) {
-    var totaxis=this.totaxis;
-    
-    if (totaxis==1) {
-        this._min = this.min = Math.min(this._min, p);
-        this._max = this.max = Math.max(this._max, p);
-    } else if (totaxis == 2) {
-      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
-      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
-      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
-      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-    } else if (totaxis == 3) {
-      this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
-      this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
-      this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
-      this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
-      this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-      this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
-    } else {
-      for (var i=0; i<totaxis; i++) {
-          this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
-          this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
-      }
-    }
-  }
-
-  static fromSTRUCT(reader) {
-    var ret=new MinMax();
-    reader(ret);
-    return ret;
-  }
-};
-MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
-
-function winding(a, b, c, zero_z, tol) {
-  if (tol == undefined) tol = 0.0;
-  
-  for (var i=0; i<a.length; i++) {
-      _cross_vec1[i] = b[i]-a[i];
-      _cross_vec2[i] = c[i]-a[i];
-  }
-  if (a.length==2 || zero_z) {
-      _cross_vec1[2] = 0.0;
-      _cross_vec2[2] = 0.0;
-  }
-  _cross_vec1.cross(_cross_vec2);
-  return _cross_vec1[2]>tol;
-};
-function inrect_2d(p, pos, size) {
-  if (p==undefined||pos==undefined||size==undefined) {
-      console.trace();
-      console.log("Bad paramters to inrect_2d()");
-      console.log("p: ", p, ", pos: ", pos, ", size: ", size);
-      return false;
-  }
-  return p[0]>=pos[0]&&p[0]<=pos[0]+size[0]&&p[1]>=pos[1]&&p[1]<=pos[1]+size[1];
-};
-var $smin_aabb_isect_line_2d=new Vector2$9();
-var $ssize_aabb_isect_line_2d=new Vector2$9();
-var $sv1_aabb_isect_line_2d=new Vector2$9();
-var $ps_aabb_isect_line_2d=[new Vector2$9(), new Vector2$9(), new Vector2$9()];
-var $l1_aabb_isect_line_2d=[0, 0];
-var $smax_aabb_isect_line_2d=new Vector2$9();
-var $sv2_aabb_isect_line_2d=new Vector2$9();
-var $l2_aabb_isect_line_2d=[0, 0];
-function aabb_isect_line_2d(v1, v2, min, max) {
-  for (var i=0; i<2; i++) {
-      $smin_aabb_isect_line_2d[i] = Math.min(min[i], v1[i]);
-      $smax_aabb_isect_line_2d[i] = Math.max(max[i], v2[i]);
-  }
-  $smax_aabb_isect_line_2d.sub($smin_aabb_isect_line_2d);
-  $ssize_aabb_isect_line_2d.load(max).sub(min);
-  if (!aabb_isect_2d($smin_aabb_isect_line_2d, $smax_aabb_isect_line_2d, min, $ssize_aabb_isect_line_2d))
-    return false;
-  for (var i=0; i<4; i++) {
-      if (inrect_2d(v1, min, $ssize_aabb_isect_line_2d))
-        return true;
-      if (inrect_2d(v2, min, $ssize_aabb_isect_line_2d))
-        return true;
-  }
-  $ps_aabb_isect_line_2d[0] = min;
-  $ps_aabb_isect_line_2d[1][0] = min[0];
-  $ps_aabb_isect_line_2d[1][1] = max[1];
-  $ps_aabb_isect_line_2d[2] = max;
-  $ps_aabb_isect_line_2d[3][0] = max[0];
-  $ps_aabb_isect_line_2d[3][1] = min[1];
-  $l1_aabb_isect_line_2d[0] = v1;
-  $l1_aabb_isect_line_2d[1] = v2;
-  for (var i=0; i<4; i++) {
-      var a=$ps_aabb_isect_line_2d[i], b=$ps_aabb_isect_line_2d[(i+1)%4];
-      $l2_aabb_isect_line_2d[0] = a;
-      $l2_aabb_isect_line_2d[1] = b;
-      if (line_line_cross($l1_aabb_isect_line_2d, $l2_aabb_isect_line_2d))
-        return true;
-  }
-  return false;
-};
-
-
-function expand_rect2d(pos, size, margin) {
-  pos[0]-=Math.floor(margin[0]);
-  pos[1]-=Math.floor(margin[1]);
-  size[0]+=Math.floor(margin[0]*2.0);
-  size[1]+=Math.floor(margin[1]*2.0);
-};
-
-function expand_line(l, margin) {
-  var c=new Vector3$2();
-  c.add(l[0]);
-  c.add(l[1]);
-  c.mulScalar(0.5);
-  l[0].sub(c);
-  l[1].sub(c);
-  var l1=l[0].vectorLength();
-  var l2=l[1].vectorLength();
-  l[0].normalize();
-  l[1].normalize();
-  l[0].mulScalar(margin+l1);
-  l[1].mulScalar(margin+l2);
-  l[0].add(c);
-  l[1].add(c);
-  return l;
-};
-
-function colinear(a, b, c) {
-  for (var i=0; i<3; i++) {
-      _cross_vec1[i] = b[i]-a[i];
-      _cross_vec2[i] = c[i]-a[i];
-  }
-  var limit=2.2e-16;
-  if (a.vectorDistance(b)<feps*100&&a.vectorDistance(c)<feps*100) {
-      return true;
-  }
-  if (_cross_vec1.dot(_cross_vec1)<limit||_cross_vec2.dot(_cross_vec2)<limit)
-    return true;
-  _cross_vec1.cross(_cross_vec2);
-  return _cross_vec1.dot(_cross_vec1)<limit;
-};
-
-var _llc_l1=[new Vector3$2(), new Vector3$2()];
-var _llc_l2=[new Vector3$2(), new Vector3$2()];
-var _llc_l3=[new Vector3$2(), new Vector3$2()];
-var _llc_l4=[new Vector3$2(), new Vector3$2()];
-
-var lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
-
-var _zero_cn = new Vector3$2();
-var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
-var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
-
-//vec1, vec2 should both be normalized
-function corner_normal(vec1, vec2, width) {
-  var ret = _rets_cn.next().zero();
-
-  var vec = _tmps_cn.next().zero();
-  vec.load(vec1).add(vec2).normalize();
-
-  /*
-  ret.load(vec).mulScalar(width);
-  return ret;
-  */
-
-  //handle colinear case
-  if (Math.abs(vec1.normalizedDot(vec2)) > 0.9999) {
-    if (vec1.dot(vec2) > 0.0001) {
-      ret.load(vec1).add(vec2).normalize();
-    } else {
-      ret.load(vec1).normalize();
-    }
-
-    ret.mulScalar(width);
-
-    return ret;
-  } else { //XXX
-    //ret.load(vec).mulScalar(width);
-    //return ret;
-  }
-
-  vec1 = _tmps_cn.next().load(vec1).mulScalar(width);
-  vec2 = _tmps_cn.next().load(vec2).mulScalar(width);
-
-  var p1 = _tmps_cn.next().load(vec1);
-  var p2 = _tmps_cn.next().load(vec2);
-
-  vec1.addFac(vec1, 0.01);
-  vec2.addFac(vec2, 0.01);
-
-  var sc = 1.0;
-
-  p1[0] += vec1[1]*sc;
-  p1[1] += -vec1[0]*sc;
-
-  p2[0] += -vec2[1]*sc;
-  p2[1] += vec2[0]*sc;
-
-  var p = line_line_isect(vec1, p1, vec2, p2, false);
-
-  if (p == undefined || p === COLINEAR_ISECT || p.dot(p) < 0.000001) {
-    ret.load(vec1).add(vec2).normalize().mulScalar(width);
-  } else {
-    ret.load(p);
-
-    if (vec.dot(vec) > 0 && vec.dot(ret) < 0) {
-      ret.load(vec).mulScalar(width);
-    }
-  }
-
-  return ret;
-}
-
-//test_segment is optional, true
-function line_line_isect(v1, v2, v3, v4, test_segment) {
-  test_segment = test_segment === undefined ? true : test_segment;
-
-  if (!line_line_cross(v1, v2, v3, v4)) {
-    return undefined;
-  }
-  
-  /*
-  on factor;
-  off period;
-  
-  xa := xa1 + (xa2 - xa1)*t1;
-  xb := xb1 + (xb2 - xb1)*t2;
-  ya := ya1 + (ya2 - ya1)*t1;
-  yb := yb1 + (yb2 - yb1)*t2;
-  
-  f1 := xa - xb;
-  f2 := ya - yb;
-  
-  f := solve({f1, f2}, {t1, t2});
-  ft1 := part(f, 1, 1, 2);
-  ft2 := part(f, 1, 2, 2);
-  
-  */
-  
-  var xa1 = v1[0], xa2 = v2[0], ya1 = v1[1], ya2 = v2[1];
-  var xb1 = v3[0], xb2 = v4[0], yb1 = v3[1], yb2 = v4[1];
-  
-  var div = ((xa1-xa2)*(yb1-yb2)-(xb1-xb2)*(ya1-ya2));
-  if (div < 0.00000001) { //parallel but intersecting lines.
-    return COLINEAR_ISECT;
-  } else { //intersection exists
-    var t1 = (-((ya1-yb2)*xb1-(yb1-yb2)*xa1-(ya1-yb1)*xb2))/div;
-    
-    return lli_v1.load(v1).interp(v2, t1);
-  }
-}
-
-function line_line_cross(v1, v2, v3, v4) {
-  var l1 = _llc_l3, l2 = _llc_l4;
-  l1[0].load(v1), l1[1].load(v2), l2[0].load(v3), l2[1].load(v4);
-  
-  /*
-  var limit=feps*1000;
-  if (Math.abs(l1[0].vectorDistance(l2[0])+l1[1].vectorDistance(l2[0])-l1[0].vectorDistance(l1[1]))<limit) {
-      return true;
-  }
-  if (Math.abs(l1[0].vectorDistance(l2[1])+l1[1].vectorDistance(l2[1])-l1[0].vectorDistance(l1[1]))<limit) {
-      return true;
-  }
-  if (Math.abs(l2[0].vectorDistance(l1[0])+l2[1].vectorDistance(l1[0])-l2[0].vectorDistance(l2[1]))<limit) {
-      return true;
-  }
-  if (Math.abs(l2[0].vectorDistance(l1[1])+l2[1].vectorDistance(l1[1])-l2[0].vectorDistance(l2[1]))<limit) {
-      return true;
-  }
-  //*/
-  
-  var a=l1[0];
-  var b=l1[1];
-  var c=l2[0];
-  var d=l2[1];
-  var w1=winding(a, b, c);
-  var w2=winding(c, a, d);
-  var w3=winding(a, b, d);
-  var w4=winding(c, b, d);
-  return (w1==w2)&&(w3==w4)&&(w1!=w3);
-};
-
-var _asi_v1 = new Vector3$2();
-var _asi_v2 = new Vector3$2();
-var _asi_v3 = new Vector3$2();
-var _asi_v4 = new Vector3$2();
-var _asi_v5 = new Vector3$2();
-var _asi_v6 = new Vector3$2();
-
-function point_in_aabb_2d(p, min, max) {
-  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
-}
-
-var _asi2d_v1 = new Vector2$9();
-var _asi2d_v2 = new Vector2$9();
-var _asi2d_v3 = new Vector2$9();
-var _asi2d_v4 = new Vector2$9();
-var _asi2d_v5 = new Vector2$9();
-var _asi2d_v6 = new Vector2$9();
-function aabb_sphere_isect_2d(p, r, min, max) {
-  var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
-  var v4 = _asi2d_v5;
-  
-  p = _asi2d_v6.load(p);
-  v1.load(p);
-  v2.load(p);
-  
-  min = _asi_v5.load(min);
-  max = _asi_v6.load(max);
-  
-  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
-  
-  v1.sub(mvec);
-  v2.add(mvec);
-  v3.load(p);
-  
-  var ret = point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)
-         || point_in_aabb_2d(v3, min, max);
-  
-  if (ret)
-      return ret;
-  
-  /*
-  v1.load(min).add(max).mulScalar(0.5);
-  ret = ret || v1.vectorDistance(p) < r;
-  
-  v1.load(min);
-  ret = ret || v1.vectorDistance(p) < r;
-  
-  v1.load(max);
-  ret = ret || v1.vectorDistance(p) < r;
-  
-  v1[0] = min[0], v1[1] = max[1];
-  ret = ret || v1.vectorDistance(p) < r;
-  
-  v1[0] = max[0], v1[1] = min[1];
-  ret = ret || v1.vectorDistance(p) < r;
-  */
-  //*
-  v1.load(min);
-  v2[0] = min[0]; v2[1] = max[1];
-  ret = ret || dist_to_line_2d(p, v1, v2) < r;
-  
-  v1.load(max);
-  v2[0] = max[0]; v2[1] = max[1];
-  ret = ret || dist_to_line_2d(p, v1, v2) < r;
-
-  v1.load(max);
-  v2[0] = max[0]; v2[1] = min[1];
-  ret = ret || dist_to_line_2d(p, v1, v2) < r;
-
-  v1.load(max);
-  v2[0] = min[0]; v2[1] = min[1];
-  ret = ret || dist_to_line_2d(p, v1, v2) < r;
-  //*/
-  return ret;
-};
-
-function point_in_aabb(p, min, max) {
-  return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1]
-         && p[2] >= min[2] && p[2] <= max[2];
-}
-function aabb_sphere_isect(p, r, min, max) {
-  var v1 = _asi_v1, v2 = _asi_v2, v3 = _asi_v3, mvec = _asi_v4;
-  min = _asi_v5.load(min);
-  max = _asi_v6.load(max);
-  
-  if (min.length == 2) {
-    min[2] = max[2] = 0.0;
-  }
-  
-  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
-  v1.sub(mvec);
-  v2.add(mvec);
-  v3.load(p);
-  
-  //prevent NaN on 2d vecs
-  if (p.length == 2) {
-      mvec[2] = v1[2] = v2[2] = v3[2] = 0.0;
-  }
-  
-  return point_in_aabb(v1, min, max) || point_in_aabb(v2, min, max) ||
-         point_in_aabb(v3, min, max);
-};
-
-function point_in_tri(p, v1, v2, v3) {
-  var w1=winding(p, v1, v2);
-  var w2=winding(p, v2, v3);
-  var w3=winding(p, v3, v1);
-  return w1==w2&&w2==w3;
-};
-
-function convex_quad(v1, v2, v3, v4) {
-  return line_line_cross([v1, v3], [v2, v4]);
-};
-
-var $e1_normal_tri=new Vector3$2();
-var $e3_normal_tri=new Vector3$2();
-var $e2_normal_tri=new Vector3$2();
-function normal_tri(v1, v2, v3) {
-  $e1_normal_tri[0] = v2[0]-v1[0];
-  $e1_normal_tri[1] = v2[1]-v1[1];
-  $e1_normal_tri[2] = v2[2]-v1[2];
-  $e2_normal_tri[0] = v3[0]-v1[0];
-  $e2_normal_tri[1] = v3[1]-v1[1];
-  $e2_normal_tri[2] = v3[2]-v1[2];
-  $e3_normal_tri[0] = $e1_normal_tri[1]*$e2_normal_tri[2]-$e1_normal_tri[2]*$e2_normal_tri[1];
-  $e3_normal_tri[1] = $e1_normal_tri[2]*$e2_normal_tri[0]-$e1_normal_tri[0]*$e2_normal_tri[2];
-  $e3_normal_tri[2] = $e1_normal_tri[0]*$e2_normal_tri[1]-$e1_normal_tri[1]*$e2_normal_tri[0];
-  
-  var _len=Math.sqrt(($e3_normal_tri[0]*$e3_normal_tri[0]+$e3_normal_tri[1]*$e3_normal_tri[1]+$e3_normal_tri[2]*$e3_normal_tri[2]));
-  if (_len>1e-05)
-    _len = 1.0/_len;
-  $e3_normal_tri[0]*=_len;
-  $e3_normal_tri[1]*=_len;
-  $e3_normal_tri[2]*=_len;
-  return $e3_normal_tri;
-};
-
-var $n2_normal_quad=new Vector3$2();
-function normal_quad(v1, v2, v3, v4) {
-  var n=normal_tri(v1, v2, v3);
-  $n2_normal_quad[0] = n[0];
-  $n2_normal_quad[1] = n[1];
-  $n2_normal_quad[2] = n[2];
-  n = normal_tri(v1, v3, v4);
-  $n2_normal_quad[0] = $n2_normal_quad[0]+n[0];
-  $n2_normal_quad[1] = $n2_normal_quad[1]+n[1];
-  $n2_normal_quad[2] = $n2_normal_quad[2]+n[2];
-  var _len=Math.sqrt(($n2_normal_quad[0]*$n2_normal_quad[0]+$n2_normal_quad[1]*$n2_normal_quad[1]+$n2_normal_quad[2]*$n2_normal_quad[2]));
-  if (_len>1e-05)
-    _len = 1.0/_len;
-  $n2_normal_quad[0]*=_len;
-  $n2_normal_quad[1]*=_len;
-  $n2_normal_quad[2]*=_len;
-  return $n2_normal_quad;
-};
-
-var _li_vi=new Vector3$2();
-
-//calc_t is optional, false
-function line_isect(v1, v2, v3, v4, calc_t) {
-  if (calc_t==undefined) {
-      calc_t = false;
-  }
-  var div=(v2[0]-v1[0])*(v4[1]-v3[1])-(v2[1]-v1[1])*(v4[0]-v3[0]);
-  if (div==0.0)
-    return [new Vector3$2(), COLINEAR, 0.0];
-  var vi=_li_vi;
-  vi[0] = 0;
-  vi[1] = 0;
-  vi[2] = 0;
-  vi[0] = ((v3[0]-v4[0])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[0]-v2[0])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
-  vi[1] = ((v3[1]-v4[1])*(v1[0]*v2[1]-v1[1]*v2[0])-(v1[1]-v2[1])*(v3[0]*v4[1]-v3[1]*v4[0]))/div;
-  if (calc_t||v1.length==3) {
-      var n1=new Vector2$9(v2).sub(v1);
-      var n2=new Vector2$9(vi).sub(v1);
-      var t=n2.vectorLength()/n1.vectorLength();
-      n1.normalize();
-      n2.normalize();
-      if (n1.dot(n2)<0.0) {
-          t = -t;
-      }
-      if (v1.length==3) {
-          vi[2] = v1[2]+(v2[2]-v1[2])*t;
-      }
-      return [vi, LINECROSS, t];
-  }
-  return [vi, LINECROSS];
-};
-
-var dt2l_v1 = new Vector2$9();
-var dt2l_v2 = new Vector2$9();
-var dt2l_v3 = new Vector2$9();
-var dt2l_v4 = new Vector2$9();
-var dt2l_v5 = new Vector2$9();
-
-function dist_to_line_2d(p, v1, v2, clip, closest_co_out=undefined, t_out=undefined) {
-  if (clip == undefined) {
-      clip = true;
-  }
-  
-  v1 = dt2l_v4.load(v1);
-  v2 = dt2l_v5.load(v2);
-  
-  var n = dt2l_v1;
-  var vec = dt2l_v3;
-  
-  n.load(v2).sub(v1).normalize();
-  vec.load(p).sub(v1);
-  
-  var t = vec.dot(n);
-  if (clip) {
-    t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
-  }
-  
-  n.mulScalar(t).add(v1);
-
-  if (closest_co_out) {
-    closest_co_out[0] = n[0];
-    closest_co_out[1] = n[1];
-  }
-
-  if (t_out !== undefined) {
-    t_out = t;
-  }
-
-  return n.vectorDistance(p);
-}
-
-var dt3l_v1 = new Vector3$2();
-var dt3l_v2 = new Vector3$2();
-var dt3l_v3 = new Vector3$2();
-var dt3l_v4 = new Vector3$2();
-var dt3l_v5 = new Vector3$2();
-
-function dist_to_line(p, v1, v2, clip) {
-  if (clip == undefined) {
-      clip = true;
-  }
-  
-  v1 = dt3l_v4.load(v1);
-  v2 = dt3l_v5.load(v2);
-  
-  var n = dt3l_v1;
-  var vec = dt3l_v3;
-  
-  n.load(v2).sub(v1).normalize();
-  vec.load(p).sub(v1);
-  
-  var t = vec.dot(n);
-  if (clip) {
-    t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
-  }
-  
-  n.mulScalar(t).add(v1);
-  
-  return n.vectorDistance(p);
-}
-
-//p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
-var _cplw_vs4 = cachering.fromConstructor(Vector4$3, 64);
-var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$9, 64);
-
-function wclip(x1, x2, w1, w2, near) {
-  var r1 = near*w1 - x1;
-  var r2 = (w1-w2)*near - (x1-x2);
-
-  if (r2 == 0.0) return 0.0;
-
-  return r1 / r2;
-}
-
-function clip(a, b, znear) {
-  if (a-b == 0.0) return 0.0;
-
-  return (a - znear) / (a - b);
-}
-
-/*clips v1 and v2 to lie within homogenous projection range
-  v1 and v2 are assumed to be projected, pre-division Vector4's
-  returns a positive number (how much the line was scaled) if either _v1 or _v2 are
-  in front of the near clipping plane otherwise, returns 0
- */
-function clip_line_w(_v1, _v2, znear, zfar) {
-  var v1 = _cplw_vs4.next().load(_v1);
-  var v2 = _cplw_vs4.next().load(_v2);
-
-  //are we fully behind the view plane?
-  if ((v1[2] < 1.0 && v2[2] < 1.0))
-    return false;
-
-  function doclip1(v1, v2, axis) {
-    if (v1[axis]/v1[3] < -1) {
-      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], -1);
-      v1.interp(v2, t);
-    } else if (v1[axis]/v1[3] > 1) {
-      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], 1);
-      v1.interp(v2, t);
-    }
-  }
-
-  function doclip(v1, v2, axis) {
-    doclip1(v1, v2, axis);
-    doclip1(v2, v1, axis);
-  }
-
-  function dozclip(v1, v2) {
-    if (v1[2] < 1) {
-      var t = clip(v1[2], v2[2], 1);
-      v1.interp(v2, t);
-    } else if (v2[2] < 1) {
-      var t = clip(v2[2], v1[2], 1);
-      v2.interp(v1, t);
-    }
-  }
-
-  dozclip(v1, v2, 1);
-  doclip(v1, v2, 0);
-  doclip(v1, v2, 1);
-
-  for (var i=0; i<4; i++) {
-    _v1[i] = v1[i];
-    _v2[i] = v2[i];
-  }
-
-  return !(v1[0]/v1[3] == v2[0]/v2[3] || v1[1]/v2[3] == v2[1]/v2[3]);
-};
-
-//clip is optional, true.  clip point to lie within line segment v1->v2
-var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
-var _closest_point_rets = new cachering(function() {
-  return [0, 0];
-}, 64);
-
-var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
-function closest_point_on_line(p, v1, v2, clip) {
-  if (clip == undefined)
-    clip = true;
-  var l1 = _closest_tmps[0], l2 = _closest_tmps[1];
-  
-  l1.load(v2).sub(v1).normalize();
-  l2.load(p).sub(v1);
-  
-  var t = l2.dot(l1);
-  if (clip) {
-    t = t*(t<0.0) + t*(t>1.0) + (t>1.0);
-  }
-  
-  var p = _closest_point_on_line_cache.next();
-  p.load(l1).mulScalar(t).add(v1);
-  var ret = _closest_point_rets.next();
-  
-  ret[0] = p;
-  ret[1] = t;
-  
-  return ret;
-};
-
-/*given input line (a,d) and tangent t,
-  returns a circle that goes through both
-  a and d, whose normalized tangent at a is the same
-  as normalized t.
-  
-  note that t need not be normalized, this function
-  does that itself*/
-var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
-var _circ_from_line_tan_ret = new cachering(function() {
-  return [new Vector3$2(), 0];
-});
-function circ_from_line_tan(a, b, t) {
-  var p1 = _circ_from_line_tan_vs.next();
-  var t2 = _circ_from_line_tan_vs.next();
-  var n1 = _circ_from_line_tan_vs.next();
-  
-  p1.load(a).sub(b);
-  t2.load(t).normalize();
-  n1.load(p1).normalize().cross(t2).cross(t2).normalize();
-  
-  var ax = p1[0], ay = p1[1], az=p1[2], nx = n1[0], ny=n1[1], nz=n1[2];
-  var r = -(ax*ax + ay*ay + az*az) / (2*(ax*nx + ay*ny +az*nz));
-  
-  var ret = _circ_from_line_tan_ret.next();
-  ret[0].load(n1).mulScalar(r).add(a);
-  ret[1] = r;
-  
-  return ret;
-}
-
-var _gtc_e1=new Vector3$2();
-var _gtc_e2=new Vector3$2();
-var _gtc_e3=new Vector3$2();
-var _gtc_p1=new Vector3$2();
-var _gtc_p2=new Vector3$2();
-var _gtc_v1=new Vector3$2();
-var _gtc_v2=new Vector3$2();
-var _gtc_p12=new Vector3$2();
-var _gtc_p22=new Vector3$2();
-var _get_tri_circ_ret = new cachering(function() { return [0, 0]});
-
-function get_tri_circ(a, b, c) {
-  var v1=_gtc_v1;
-  var v2=_gtc_v2;
-  var e1=_gtc_e1;
-  var e2=_gtc_e2;
-  var e3=_gtc_e3;
-  var p1=_gtc_p1;
-  var p2=_gtc_p2;
-  
-  for (var i=0; i<3; i++) {
-      e1[i] = b[i]-a[i];
-      e2[i] = c[i]-b[i];
-      e3[i] = a[i]-c[i];
-  }
-  
-  for (var i=0; i<3; i++) {
-      p1[i] = (a[i]+b[i])*0.5;
-      p2[i] = (c[i]+b[i])*0.5;
-  }
-  
-  e1.normalize();
-  
-  v1[0] = -e1[1];
-  v1[1] = e1[0];
-  v1[2] = e1[2];
-
-  v2[0] = -e2[1];
-  v2[1] = e2[0];
-  v2[2] = e2[2];
-
-  v1.normalize();
-  v2.normalize();
-
-  var cent;
-  var type;
-  for (var i=0; i<3; i++) {
-      _gtc_p12[i] = p1[i]+v1[i];
-      _gtc_p22[i] = p2[i]+v2[i];
-  }
-
-  var ret=line_isect(p1, _gtc_p12, p2, _gtc_p22);
-  cent = ret[0];
-  type = ret[1];
-
-  e1.load(a);
-  e2.load(b);
-  e3.load(c);
-
-  var r=e1.sub(cent).vectorLength();
-  if (r<feps)
-    r = e2.sub(cent).vectorLength();
-  if (r<feps)
-    r = e3.sub(cent).vectorLength();
-  
-  var ret = _get_tri_circ_ret.next();
-  ret[0] = cent;
-  ret[1] = r;
-  
-  return ret;
-};
-
-function gen_circle(m, origin, r, stfeps) {
-  var pi=Math.PI;
-  var f=-pi/2;
-  var df=(pi*2)/stfeps;
-  var verts=new Array();
-  for (var i=0; i<stfeps; i++) {
-      var x=origin[0]+r*Math.sin(f);
-      var y=origin[1]+r*Math.cos(f);
-      var v=m.make_vert(new Vector3$2([x, y, origin[2]]));
-      verts.push(v);
-      f+=df;
-  }
-  for (var i=0; i<verts.length; i++) {
-      var v1=verts[i];
-      var v2=verts[(i+1)%verts.length];
-      m.make_edge(v1, v2);
-  }
-  return verts;
-};
-
-var cos$1 = Math.cos;
-var sin$1 = Math.sin;
-//axis is optional, 0
-function rot2d(v1, A, axis) {
-  var x = v1[0];
-  var y = v1[1];
-  
-  if (axis == 1) {
-    v1[0] = x * cos$1(A) + y*sin$1(A);
-    v1[2] = y * cos$1(A) - x*sin$1(A);
-  } else {
-    v1[0] = x * cos$1(A) - y*sin$1(A);
-    v1[1] = y * cos$1(A) + x*sin$1(A);
-  }
-}
-
-function makeCircleMesh(gl, radius, stfeps) {
-  var mesh=new Mesh();
-  var verts1=gen_circle(mesh, new Vector3$2(), radius, stfeps);
-  var verts2=gen_circle(mesh, new Vector3$2(), radius/1.75, stfeps);
-  mesh.make_face_complex([verts1, verts2]);
-  return mesh;
-};
-function minmax_verts(verts) {
-  var min=new Vector3$2([1000000000000.0, 1000000000000.0, 1000000000000.0]);
-  var max=new Vector3$2([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
-  var __iter_v=__get_iter(verts);
-  var v;
-  while (1) {
-    var __ival_v=__iter_v.next();
-    if (__ival_v.done) {
-        break;
-    }
-    v = __ival_v.value;
-    for (var i=0; i<3; i++) {
-        min[i] = Math.min(min[i], v.co[i]);
-        max[i] = Math.max(max[i], v.co[i]);
-    }
-  }
-  return [min, max];
-};
-
-function unproject(vec, ipers, iview) {
-  var newvec=new Vector3$2(vec);
-  newvec.multVecMatrix(ipers);
-  newvec.multVecMatrix(iview);
-  return newvec;
-};
-
-function project(vec, pers, view) {
-  var newvec=new Vector3$2(vec);
-  newvec.multVecMatrix(pers);
-  newvec.multVecMatrix(view);
-  return newvec;
-};
-
-var _sh_minv=new Vector3$2();
-var _sh_maxv=new Vector3$2();
-var _sh_start=[];
-var _sh_end=[];
-
-var static_cent_gbw = new Vector3$2();
-function get_boundary_winding(points) {
-  var cent=static_cent_gbw.zero();
-  if (points.length==0)
-    return false;
-  for (var i=0; i<points.length; i++) {
-      cent.add(points[i]);
-  }
-  cent.divideScalar(points.length);
-  var w=0, totw=0;
-  for (var i=0; i<points.length; i++) {
-      var v1=points[i];
-      var v2=points[(i+1)%points.length];
-      if (!colinear(v1, v2, cent)) {
-          w+=winding(v1, v2, cent);
-          totw+=1;
-      }
-  }
-  if (totw>0)
-    w/=totw;
-  return Math.round(w)==1;
-};
-
-class PlaneOps {
-  constructor(normal) {
-    var no=normal;
-    this.axis = [0, 0, 0];
-    this.reset_axis(normal);
-  }
-
-  reset_axis(no) {
-    var ax, ay, az;
-    var nx=Math.abs(no[0]), ny=Math.abs(no[1]), nz=Math.abs(no[2]);
-    if (nz>nx&&nz>ny) {
-        ax = 0;
-        ay = 1;
-        az = 2;
-    }
-    else 
-      if (nx>ny&&nx>nz) {
-        ax = 2;
-        ay = 1;
-        az = 0;
-    }
-    else {
-      ax = 0;
-      ay = 2;
-      az = 1;
-    }
-    this.axis = [ax, ay, az];
-  }
-
-  convex_quad(v1, v2, v3, v4) {
-    var ax=this.axis;
-    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
-    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
-    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
-    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
-    return convex_quad(v1, v2, v3, v4);
-  }
-
-  line_isect(v1, v2, v3, v4) {
-    var ax=this.axis;
-    var orig1=v1, orig2=v2;
-    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
-    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
-    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
-    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
-    var ret=line_isect(v1, v2, v3, v4, true);
-    var vi=ret[0];
-    if (ret[1]==LINECROSS) {
-        ret[0].load(orig2).sub(orig1).mulScalar(ret[2]).add(orig1);
-    }
-    return ret;
-  }
-
-  line_line_cross(l1, l2) {
-    var ax=this.axis;
-    var v1=l1[0], v2=l1[1], v3=l2[0], v4=l2[1];
-    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
-    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
-    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
-    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], 0.0]);
-    return line_line_cross([v1, v2], [v3, v4]);
-  }
-
-  winding(v1, v2, v3) {
-    var ax=this.axis;
-    if (v1==undefined)
-      console.trace();
-    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
-    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
-    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
-    return winding(v1, v2, v3);
-  }
-
-  colinear(v1, v2, v3) {
-    var ax=this.axis;
-    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
-    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
-    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
-    return colinear(v1, v2, v3);
-  }
-
-  get_boundary_winding(points) {
-    var ax=this.axis;
-    var cent=new Vector3$2();
-    if (points.length==0)
-      return false;
-    for (var i=0; i<points.length; i++) {
-        cent.add(points[i]);
-    }
-    cent.divideScalar(points.length);
-    var w=0, totw=0;
-    for (var i=0; i<points.length; i++) {
-        var v1=points[i];
-        var v2=points[(i+1)%points.length];
-        if (!this.colinear(v1, v2, cent)) {
-            w+=this.winding(v1, v2, cent);
-            totw+=1;
-        }
-    }
-    if (totw>0)
-      w/=totw;
-    return Math.round(w)==1;
-  }
-}
-
-/*
-on factor;
-
-px := rox + rnx*t;
-py := roy + rny*t;
-pz := roz + rnz*t;
-
-f1 := (px-pox)*pnx + (py-poy)*pny + (pz-poz)*pnz;
-ff := solve(f1, t);
-on fort;
-part(ff, 1, 2);
-off fort;
-
-* */
-var _isrp_ret=new Vector3$2();
-function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
-  let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
-  
-  let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
-
-  if (Math.abs(div) < 0.000001) {
-    return undefined;
-  }
-
-  let t = ((po[1]-ro[1])*pn[1]+(po[2]-ro[2])*pn[2]+(po[0]-ro[0])*pn[0])/div;
-  _isrp_ret.load(ro).addFac(rn, t);
-
-  return _isrp_ret;
-}
-
-function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
-  var p=planeorigin, n=planenormal;
-  var r=rayorigin, v=raynormal;
-
-  var d=p.vectorLength();
-  var t=-(r.dot(n)-p.dot(n))/v.dot(n);
-  _isrp_ret.load(v);
-  _isrp_ret.mulScalar(t);
-  _isrp_ret.add(r);
-  return _isrp_ret;
-};
-
-function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
-  if (verts==undefined)
-    verts = mesh.verts.selected;
-  var vset=new set$2();
-  var eset=new set$2();
-  var __iter_v=__get_iter(verts);
-  var v;
-  while (1) {
-    var __ival_v=__iter_v.next();
-    if (__ival_v.done) {
-        break;
-    }
-    v = __ival_v.value;
-    vset.add(v);
-  }
-  var __iter_v=__get_iter(vset);
-  var v;
-  while (1) {
-    var __ival_v=__iter_v.next();
-    if (__ival_v.done) {
-        break;
-    }
-    v = __ival_v.value;
-    var __iter_e=__get_iter(v.edges);
-    var e;
-    while (1) {
-      var __ival_e=__iter_e.next();
-      if (__ival_e.done) {
-          break;
-      }
-      e = __ival_e.value;
-      if (vset.has(e.other_vert(v))) {
-          eset.add(e);
-      }
-    }
-  }
-  if (eset.length==0) {
-      return new Vector3$2(offvec);
-  }
-  var tanav=new Vector3$2();
-  var evec=new Vector3$2();
-  var tan=new Vector3$2();
-  var co2=new Vector3$2();
-  var __iter_e=__get_iter(eset);
-  var e;
-  while (1) {
-    var __ival_e=__iter_e.next();
-    if (__ival_e.done) {
-        break;
-    }
-    e = __ival_e.value;
-    evec.load(e.v1.co).multVecMatrix(projmat);
-    co2.load(e.v2.co).multVecMatrix(projmat);
-    evec.sub(co2);
-    evec.normalize();
-    tan[0] = evec[1];
-    tan[1] = -evec[0];
-    tan[2] = 0.0;
-    if (tan.dot(offvec)<0.0)
-      tan.mulScalar(-1.0);
-    tanav.add(tan);
-  }
-  tanav.normalize();
-  return tanav;
-};
-
-class Mat4Stack {
-  constructor() {
-    this.stack = [];
-    this.matrix = new Matrix4$3();
-    this.matrix.makeIdentity();
-    this.update_func = undefined;
-  }
-
-  set_internal_matrix(mat, update_func) {
-    this.update_func = update_func;
-    this.matrix = mat;
-  }
-
-  reset(mat) {
-    this.matrix.load(mat);
-    this.stack = [];
-    if (this.update_func!=undefined)
-      this.update_func();
-  }
-
-  load(mat) {
-    this.matrix.load(mat);
-    if (this.update_func!=undefined)
-      this.update_func();
-  }
-
-  multiply(mat) {
-    this.matrix.multiply(mat);
-    if (this.update_func!=undefined)
-      this.update_func();
-  }
-
-  identity() {
-    this.matrix.loadIdentity();
-    if (this.update_func!=undefined)
-      this.update_func();
-  }
-
-  push(mat2) {
-    this.stack.push(new Matrix4$3(this.matrix));
-    if (mat2!=undefined) {
-        this.matrix.load(mat2);
-        if (this.update_func!=undefined)
-          this.update_func();
-    }
-  }
-
-  pop() {
-    var mat=this.stack.pop(this.stack.length-1);
-    this.matrix.load(mat);
-    if (this.update_func!=undefined)
-      this.update_func();
-    return mat;
-  }
-}
-
-var math1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  get FLOAT_MIN () { return FLOAT_MIN; },
-  get FLOAT_MAX () { return FLOAT_MAX; },
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  mesh_find_tangent: mesh_find_tangent,
-  Mat4Stack: Mat4Stack
-});
-
 class Constraint {
   constructor(name, func, klst, params, k=1.0) {
     this.glst = [];
@@ -30157,6 +30545,313 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
 
 "use strict";
 
+let _menu_init = false;
+let _init = false;
+
+function patchDropBox() {
+  //haveElectron = false;
+  //return;
+  DropBox.prototype._onpress = function _onpress(e) {
+    if (this._menu !== undefined) {
+      this._menu.close();
+      this._menu = undefined;
+      return;
+    }
+
+    this._build_menu();
+
+    let {getCurrentWindow, Menu, MenuItem} = require("electron").remote;
+
+    let emenu = buildElectronMenu(this._menu);
+
+    this._menu.close = () => {
+      emenu.closePopup(getCurrentWindow);
+    };
+
+    console.log("menu dropbox click", this._menu);
+
+    if (this._menu === undefined) {
+      return;
+    }
+
+    this._menu._dropbox = this;
+    this.dom._background = this.getDefault("BoxDepressed");
+    this._background = this.getDefault("BoxDepressed");
+    this._redraw();
+    this._pressed = true;
+    this.setCSS();
+
+    let onclose = this._menu.onclose;
+    this._menu.onclose = () => {
+      this._pressed = false;
+      this._redraw();
+
+      let menu = this._menu;
+      if (menu) {
+        this._menu = undefined;
+        menu._dropbox = undefined;
+      }
+
+      if (onclose) {
+        onclose.call(menu);
+      }
+    };
+
+    let menu = this._menu;
+    let screen = this.getScreen();
+
+    let dpi = this.getDPI();
+
+    let x = e.x, y = e.y;
+    let rects = this.dom.getClientRects();
+
+    x = rects[0].x;
+    y = rects[0].y + Math.ceil(rects[0].height);
+
+    console.log(x, y);
+    x = ~~x;
+    y = ~~y;
+    
+    emenu.popup({
+      x: x,
+      y: y,
+      callback: () => {
+        if (this._menu) {
+          this._menu.onclose();
+        }
+      }
+    });
+  };
+}
+
+let on_tick = () => {
+  let nativeTheme = require("electron").remote.nativeTheme;
+
+  let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
+
+  if (mode !== exports.colorSchemeType) {
+    nativeTheme.themeSource = exports.colorSchemeType;
+  }
+};
+
+function checkInit() {
+  if (window.haveElectron && !_init) {
+    _init = true;
+
+
+    patchDropBox();
+    setInterval(on_tick, 350);
+  }
+}
+function getNativeIcon(icon, iconsheet=0, invertColors=false) {
+  let icongen = require("./icogen.js");
+
+  window.icongen = icongen;
+  let nativeImage = require("electron").nativeImage;
+
+  let manager = getIconManager();
+  let sheet = manager.findSheet(iconsheet);
+  let images = [];
+
+  let sizes = icongen.GetRequiredICOImageSizes();
+
+  //for (let size of sizes) {
+  if (1) {
+    let size = 16;
+    let iconsheet = manager.findClosestSheet(size);
+    let tilesize = manager.getTileSize(iconsheet);
+
+    let canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    let g = canvas.getContext("2d");
+
+    if (invertColors) {
+      g.filter = "invert(100%)";
+    }
+    //console.log(size, tilesize);
+
+    let scale = size / tilesize;
+    g.scale(scale, scale);
+
+    let header = "data:image/png;base64,";
+
+    manager.canvasDraw({getDPI: () => 1.0}, canvas, g, icon, 0, 0, iconsheet);
+    let data = canvas.toDataURL();
+    
+    data = data.slice(header.length, data.length);
+    data = Buffer.from(data, "base64");
+
+    require("fs").writeFileSync("myicon2.png", data);
+    images.push(data);
+  }
+  //}
+
+  //let ico = icongen.GenerateICO(images);
+  //icon = nativeImage.createFromBuffer(ico);
+  //icon = nativeImage.createFromBitmap(ico);
+  //require("fs").writeFileSync("myicon2.ico", ico);
+  return "myicon2.png"
+  return icon;
+  return undefined
+
+  console.log("ICON", icon);
+  window._icon = icon;
+  return icon;
+}
+
+let map = {
+  CTRL : "Control",
+  ALT : "Alt",
+  SHIFT : "Shift",
+  COMMAND : "Command"
+};
+
+function buildElectronHotkey(hk) {
+  hk = hk.trim().replace(/[ \t-]+/g, "+");
+  for (let k in map) {
+    hk = hk.replace(k, map[k]);
+  }
+
+  return hk;
+}
+
+function buildElectronMenu(menu) {
+  let electron = require("electron").remote;
+
+  let ElectronMenu = electron.Menu;
+  let ElectronMenuItem = electron.MenuItem;
+
+  let emenu = new ElectronMenu();
+
+
+  let buildItem = (item) => {
+    let hotkey = item.hotkey;
+    let icon = item.icon;
+    let label = item.label;
+
+    if (hotkey) {
+      hotkey = buildElectronHotkey(hotkey);
+    }
+
+    if (icon < 0) {
+      icon = undefined;
+    }
+
+    let args = {
+      id          : item._id,
+      label       : label,
+      accelerator : hotkey,
+      icon        : icon ? getNativeIcon(icon) : undefined,
+      click       : function() {
+        menu.onselect(item._id);
+        console.log("click", item._id);
+      }
+    };
+
+    return new ElectronMenuItem(args);
+  };
+  for (let item of menu.items) {
+    emenu.append(buildItem(item));
+
+  }
+
+  return emenu;
+}
+
+function initMenuBar(menuEditor) {
+  checkInit();
+
+  if (!window.haveElectron) {
+    return;
+  }
+
+  if (_menu_init) {
+    return;
+  }
+
+  _menu_init = true;
+
+  let electron = require("electron").remote;
+
+  let win = electron.getCurrentWindow();
+  let ElectronMenu = electron.Menu;
+  let ElectronMenuItem = electron.MenuItem;
+
+  let menu = new ElectronMenu();
+
+  let _roles = new Set(["undo", "redo", "cut", "copy", "paste", "delete", "about",
+                        "quit", "open", "save", "load", "paste", "cut", "zoom"]);
+  let roles = {};
+  for (let k of _roles) {
+    roles[k] = k;
+  }
+
+  roles = Object.assign(roles, {
+    "select all" : "selectAll",
+    "file"       : "fileMenu",
+    "edit"       : "editMenu",
+    "view"       : "viewMenu",
+    "app"        : "appMenu",
+    "help"       : "help",
+    "zoom in"    : "zoomIn",
+    "zoom out"   : "zoomOut"
+  });
+
+  /*
+  let item = new MenuItem({
+    label : "Label",
+    tooltip : "Tooltip",
+    icon : getNativeIcon(0),
+    accelerator : "Control+Z",
+    checked : true,
+    id : 0,
+    role : undefined,
+    click : (arg) => {
+      console.log("menu click!", arg)
+    },
+    submenu : undefined,
+    role :  undo, redo, cut, copy, paste, pasteAndMatchStyle, delete, selectAll, reload,
+            forceReload, toggleDevTools, resetZoom, zoomIn, zoomOut, togglefullscreen, window,
+             minimize, close, help, about, services, hide, hideOthers, unhide, quit, startSpeaking,
+             stopSpeaking, close, minimize, zoom, front, appMenu, fileMenu, editMenu, viewMenu, recentDocuments,
+              toggleTabBar, selectNextTab, selectPreviousTab, mergeAllWindows, clearRecentDocuments, moveTabToNewWindow
+               or windowMenu - Define the action of the menu item, when specified the click property will be ignored.
+                See roles.
+
+  });//*/
+
+
+
+  let header = menuEditor.header;
+  console.log(header);
+  for (let dbox of header.traverse(DropBox)) {
+    dbox._build_menu();
+    dbox.update();
+
+    dbox._build_menu();
+    let menu2 = dbox._menu;
+    menu2.ctx = dbox.ctx;
+    menu2._init();
+    menu2.update();
+
+    let title = dbox._genLabel();
+    let args = {
+      label   : title,
+      tooltip : dbox.description,
+      submenu : buildElectronMenu(menu2)
+    };
+
+    console.log(title);
+    menu.insert(0, new ElectronMenuItem(args));
+  }
+
+
+  ElectronMenu.setApplicationMenu(menu);
+  //win.setMenu(menu);
+}
+
+"use strict";
+
 /*
 why am I using a toolstack here at all?  time to remove!
 */
@@ -30169,8 +30864,8 @@ function registerToolStackGetter(func) {
   toolstack_getter = func;
 }
 
-let Vector2$a = Vector2,
-    Vector3$3 = Vector3,
+let Vector2$9 = Vector2,
+    Vector3$2 = Vector3,
     UndoFlags$1 = UndoFlags,
     ToolFlags$1 = ToolFlags;
 //import {keymap} from './events';
@@ -30275,7 +30970,7 @@ class AreaResizeTool extends ToolBase {
     
     super(screen);
     
-    this.start_mpos = new Vector2$a(mpos);
+    this.start_mpos = new Vector2$9(mpos);
 
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
@@ -30356,7 +31051,7 @@ class AreaResizeTool extends ToolBase {
     }
   }
   on_mousemove(e) {
-    let mpos = new Vector2$a([e.x, e.y]);
+    let mpos = new Vector2$9([e.x, e.y]);
     
     mpos.sub(this.start_mpos);
     
@@ -30376,8 +31071,8 @@ class AreaResizeTool extends ToolBase {
     for (let border of borders) {
       bad = bad || !this.screen.isBorderMovable(border);
 
-      border.oldv1 = new Vector2$a(border.v1);
-      border.oldv2 = new Vector2$a(border.v2);
+      border.oldv1 = new Vector2$9(border.v1);
+      border.oldv2 = new Vector2$9(border.v2);
     }
 
     if (bad) {
@@ -30588,7 +31283,7 @@ class AreaDragTool extends ToolBase {
     this.boxes.active = undefined;
 
     this.sarea = sarea;
-    this.start_mpos = new Vector2$a(mpos);
+    this.start_mpos = new Vector2$9(mpos);
     this.screen = screen;
   }
   
@@ -31070,7 +31765,7 @@ class ToolTipViewer extends ToolBase {
 "use strict";
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
-let Vector2$b = Vector2;
+let Vector2$a = Vector2;
 
 class Overdraw extends UIBase {
   constructor() {
@@ -31138,8 +31833,8 @@ class Overdraw extends UIBase {
     this.style["left"] = "0px";
     this.style["top"] = "0px";
     
-    this.style["width"] = "100%"; //screen.size[0] + "px";
-    this.style["height"] = "100%"; //screen.size[1] + "px";
+    this.style["width"] = screen.size[0] + "px";
+    this.style["height"] = screen.size[1] + "px";
     
     this.style["pointer-events"] = "none";
     
@@ -31168,7 +31863,7 @@ class Overdraw extends UIBase {
     let boxes = [];
     let elems = [];
 
-    let cent = new Vector2$b();
+    let cent = new Vector2$a();
 
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
@@ -31213,7 +31908,7 @@ class Overdraw extends UIBase {
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$b([x, y]);
+      box.startpos = new Vector2$a([x, y]);
 
       box.setCSS = function() {
         this.style["padding"] = "0px";
@@ -32116,7 +32811,7 @@ UIBase.register(ScreenBorder);
 let _ScreenArea = undefined;
 
 let UIBase$e = UIBase;
-let Vector2$c = Vector2;
+let Vector2$b = Vector2;
 let ScreenClass = undefined;
 
 
@@ -32256,7 +32951,7 @@ let _ScreenArea$1 = undefined;
 
 let UIBase$f = UIBase;
 
-let Vector2$d = Vector2;
+let Vector2$c = Vector2;
 let Screen$1 = undefined;
 
 const AreaFlags = {
@@ -32634,7 +33329,6 @@ class Area$1 extends UIBase {
 
     row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
 
-
     let rh = ~~(16*this.getDPI());
 
     //container.setSize(undefined, rh);
@@ -32649,14 +33343,23 @@ class Area$1 extends UIBase {
     row.style["padding"] = "0px";
 
     let mdown = false;
-    let mpos = new Vector2$d();
+    let mpos = new Vector2$c();
     
     let mpre = (e, pageX, pageY) => {
       pageX = pageX === undefined ? e.pageX : pageX;
       pageY = pageY === undefined ? e.pageY : pageY;
 
       let node = this.getScreen().pickElement(pageX, pageY);
-      console.log(node.tagName, node === row);
+      
+      /*
+      while (node) {
+        if (node === row) {
+          break;
+        }
+        node = node.parentWidget;
+      }//*/
+
+      //console.log(node === row, node ? node._id : undefined, row._id)
       
       if (node !== row) {
         return false;
@@ -32683,7 +33386,10 @@ class Area$1 extends UIBase {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
+      
       let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
+
+      //console.log("area drag?", e, mdown2, e.pageX, e.pageY, mpre(e, pageX, pageY), e.was_touch);
 
       if (!mdown2 || !mpre(e, pageX, pageY)) return;
 
@@ -32864,7 +33570,7 @@ class Area$1 extends UIBase {
       return true;
   }
 
-  //subclassing loadSTRUCTs should either call this, or invoke super.loadSTRUCT()
+  //called by owning ScreenArea on file load
   afterSTRUCT() {
     let f = () => {
       if (this._isDead()) {
@@ -32921,8 +33627,8 @@ class ScreenArea extends UIBase {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this._pos = new Vector2$d();
-    this._size = new Vector2$d([512, 512]);
+    this._pos = new Vector2$c();
+    this._size = new Vector2$c([512, 512]);
 
     if (exports.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -33136,8 +33842,8 @@ class ScreenArea extends UIBase {
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$d(obj.pos);
-      area.size = new Vector2$d(obj.size);
+      area.pos = new Vector2$c(obj.pos);
+      area.size = new Vector2$c(obj.size);
       area.ctx = this.ctx;
       
       area.inactive = true;
@@ -33264,7 +33970,7 @@ class ScreenArea extends UIBase {
 
   snapToScreenSize() {
     let screen = this.getScreen();
-    let co = new Vector2$d();
+    let co = new Vector2$c();
     let changed = 0;
 
     for (let v of this._verts) {
@@ -33311,8 +34017,8 @@ class ScreenArea extends UIBase {
       return;
     }
 
-    let min = new Vector2$d([1e17, 1e17]);
-    let max = new Vector2$d([-1e17, -1e17]);
+    let min = new Vector2$c([1e17, 1e17]);
+    let max = new Vector2$c([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -33346,10 +34052,10 @@ class ScreenArea extends UIBase {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$d([p[0],      p[1]]),
-      new Vector2$d([p[0],      p[1]+s[1]]),
-      new Vector2$d([p[0]+s[0], p[1]+s[1]]),
-      new Vector2$d([p[0]+s[0], p[1]])
+      new Vector2$c([p[0],      p[1]]),
+      new Vector2$c([p[0],      p[1]+s[1]]),
+      new Vector2$c([p[0]+s[0], p[1]+s[1]]),
+      new Vector2$c([p[0]+s[0], p[1]])
     ];
 
     for (let i=0; i<vs.length; i++) {
@@ -33456,8 +34162,8 @@ class ScreenArea extends UIBase {
     //var finish = () => {
       if (this.area !== undefined) {
         //break direct pos/size references for old active area
-        this.area.pos = new Vector2$d(this.area.pos);
-        this.area.size = new Vector2$d(this.area.size);
+        this.area.pos = new Vector2$c(this.area.pos);
+        this.area.size = new Vector2$c(this.area.size);
         
         this.area.owning_sarea = undefined;
         this.area.inactive = true;
@@ -33588,8 +34294,8 @@ class ScreenArea extends UIBase {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$d(this.pos);
-    this.size = new Vector2$d(this.size);
+    this.pos = new Vector2$c(this.pos);
+    this.size = new Vector2$c(this.size);
     
     //find active editor
     
@@ -34074,7 +34780,7 @@ function registerToolStackGetter$1(func) {
 //XXX why!!!
 window._nstructjs = nstructjs;
 
-let Vector2$e = Vector2,
+let Vector2$d = Vector2,
   UIBase$g = UIBase,
   styleScrollBars$1 = styleScrollBars;
 
@@ -34113,8 +34819,8 @@ class Screen$2 extends UIBase {
 
     this.keymap = new KeyMap();
 
-    this.size = new Vector2$e([window.innerWidth, window.innerHeight]);
-    this.pos = new Vector2$e();
+    this.size = new Vector2$d([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2$d();
 
     this.idgen = 0;
     this.sareas = [];
@@ -34128,7 +34834,7 @@ class Screen$2 extends UIBase {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$e(), new Vector2$e()];
+    this._aabb = [new Vector2$d(), new Vector2$d()];
 
     this.shadow.addEventListener("mousemove", (e) => {
       let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
@@ -34169,8 +34875,6 @@ class Screen$2 extends UIBase {
       let sheet;
 
       let finish = () => {
-        console.warn(sheet, "sheet");
-        
         let sheet2 = this.globalCSS.sheet;
         if (!sheet2) {
           this.doOnce(finish);
@@ -34203,8 +34907,6 @@ class Screen$2 extends UIBase {
               continue;
             }
             for (let [key, val] of list$4(rule.styleMap.entries())) {
-              console.log(rule2.styleMap.has(key));
-
               if (1||rule2.styleMap.has(key)) {
                 //rule2.styleMap.delete(key);
                 let sval = "";
@@ -34229,8 +34931,6 @@ class Screen$2 extends UIBase {
           }
         }
       };
-
-      console.log("style", style);
 
       if (typeof style === "string") {
         try { //stupid firefox
@@ -34338,6 +35038,41 @@ class Screen$2 extends UIBase {
   //}
 
   pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
+  }
+  
+  /** 
+   * @param x
+   * @param y
+   * @param args arguments : {sx, sy, nodeclass, excluded_classes}
+  */
+  pickElement(x, y, args, sy, nodeclass, excluded_classes) {
+    let sx;
+    let clip;
+
+    if (typeof args === "object") {
+      sx = args.sx;
+      sy = args.sy;
+      nodeclass = args.nodeclass;
+      excluded_classes = args.excluded_classes;
+      clip = args.clip;
+    } else {
+      sx = args;
+
+      args = {
+        sx : sx,
+        sy : sy,
+        nodeclass : nodeclass,
+        excluded_classes : excluded_classes
+      };
+    }
+
+    if (clip === undefined) {
+      clip = args.clip = {
+        pos   : new Vector2$d(this.pos),
+        size  : new Vector2$d(this.size)
+      };
+    };
+
     if (!this.ctx) {
       console.warn("no ctx in screen");
       return;
@@ -34348,10 +35083,10 @@ class Screen$2 extends UIBase {
     for (let i=this._popups.length-1; i >= 0; i--) {
       let popup = this._popups[i];
 
-      ret = ret || popup.pickElement(...arguments);
+      ret = ret || popup.pickElement(x, y, args);
     }
 
-    ret = ret || super.pickElement(...arguments);
+    ret = ret || super.pickElement(x, y, args);
 
     return ret;
   }
@@ -34469,7 +35204,7 @@ class Screen$2 extends UIBase {
     container.parentWidget = this;
 
     let mm = new MinMax(2);
-    let p = new Vector2$e();
+    let p = new Vector2$d();
 
     let _update = container.update;
     /*causes weird bugs
@@ -34644,7 +35379,7 @@ class Screen$2 extends UIBase {
       this._aabb[1].load(mm.max);
     }
 
-    return [new Vector2$e(mm.min), new Vector2$e(mm.max)];
+    return [new Vector2$d(mm.min), new Vector2$d(mm.max)];
   }
 
   get borders() {
@@ -35199,7 +35934,7 @@ class Screen$2 extends UIBase {
     if (key !== this._last_scrollstyle_key) {
       this._last_scrollstyle_key = key;
 
-      console.log("updating scrollbar styling");
+      //console.log("updating scrollbar styling");
 
       this.mergeGlobalCSS(styleScrollBars$1(s.color, s.color2, s.contrast, s.width, s.border, "*"));
     }
@@ -35703,7 +36438,7 @@ class Screen$2 extends UIBase {
       for (let b of this.screenborders) {
         for (let he of b.halfedges) {
           let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
-          let p = new Vector2$e(b.v1).add(b.v2).mulScalar(0.5);
+          let p = new Vector2$d(b.v1).add(b.v2).mulScalar(0.5);
           let size = 10 * b.halfedges.length;
 
           let wadd = 25+size*0.5;
@@ -36124,8 +36859,8 @@ class Screen$2 extends UIBase {
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
-      let vec = new Vector2$e(max).sub(min);
-      let sz = new Vector2$e(this.size);
+      let vec = new Vector2$d(max).sub(min);
+      let sz = new Vector2$d(this.size);
 
       sz.div(vec);
 
@@ -36152,8 +36887,8 @@ class Screen$2 extends UIBase {
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
-      let old = new Vector2$e(sarea.size);
-      let oldpos = new Vector2$e(sarea.pos);
+      let old = new Vector2$d(sarea.size);
+      let oldpos = new Vector2$d(sarea.pos);
 
       sarea.loadFromVerts();
 
@@ -36547,7 +37282,7 @@ class Screen$2 extends UIBase {
     reader(this);
 
     //handle old files that might have saved as simple arrays
-    this.size = new Vector2$e(this.size);
+    this.size = new Vector2$d(this.size);
 
     let sareas = this.sareas;
     this.sareas = [];
@@ -37364,5 +38099,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, cconst$1 as cconst, checkForTextBox, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
