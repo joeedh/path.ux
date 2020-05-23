@@ -1,26 +1,36 @@
 import './polyfill.js';
 import './struct.js';
 import './mobile-detect.js';
+colormap = {
+  "black"   : 30,
+  "red"     : 31,
+  "green"   : 32,
+  "yellow"  : 33,
+  "blue"    : 34,
+  "magenta" : 35,
+  "cyan"    : 36,
+  "white"   : 37,
+  "reset"   : 0,
+  "grey"    : 2,
+  "orange"  : 202,
+  "pink"    : 198,
+  "brown"   : 314,
+  "lightred": 91,
+  "peach"   : 210
+}
 
-let colormap = {
-  black   : 30,
-  red     : 31,
-  green   : 32,
-  yellow  : 33,
-  blue    : 34,
-  magenta : 35,
-  cyan    : 36,
-  white   : 37,
-  reset   : 0
-};
-
-export function termColor(s, color = colormap.reset) {
-  if (typeof color === "string") {
-    color = colormap[color] || colormap.reset;
+export function termColor(s, c) {
+  s = str(s)
+  if (c in colormap)
+    c = colormap[c]
+  
+  if (c > 107) {
+    s2 = '\u001b[38;5;' + str(c) + "m"
+    return s2 + s + '\u001b[0m'
   }
 
-  return `\u001b[${color}m${s}\u001b[0m`;
-}
+  return '\u001b[' + c + 'm' + s + '\u001b[0m'
+};
 
 window.termColor = termColor;
 
