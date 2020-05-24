@@ -1,4 +1,4 @@
-import {ToolOp} from "../toolsys/simple_toolsys.js";
+import {ToolOp, ToolFlags} from "../toolsys/simple_toolsys.js";
 import {PropTypes, BoolProperty, IntProperty, FloatProperty, FlagProperty,
         EnumProperty, StringProperty, Vec3Property, Vec2Property, Vec4Property,
         QuatProperty, Mat4Property} from "../toolsys/toolprop.js";
@@ -187,6 +187,7 @@ export class DataPathSetOp extends ToolOp {
     uiname : "Property Set",
     toolpath : "app.prop_set",
     icon : -1,
+    flag : ToolFlags.PRIVATE,
     is_modal : true,
     inputs : {
       dataPath : new StringProperty(),

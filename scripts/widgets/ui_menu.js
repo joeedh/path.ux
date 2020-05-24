@@ -10,6 +10,8 @@ import * as toolprop from '../toolsys/toolprop.js';
 import {Button} from "./ui_widgets.js";
 import {DomEventTypes} from '../util/events.js';
 
+import {keymap} from '../util/simple_events.js';
+
 let EnumProperty = toolprop.EnumProperty,
   PropTypes = toolprop.PropTypes;
 
@@ -27,6 +29,7 @@ export class Menu extends UIBase {
 
     this.items = [];
 
+    this._ignoreFocusEvents = false;
     this.closeOnMouseUp = true;
 
     this.itemindex = 0;
@@ -199,11 +202,12 @@ export class Menu extends UIBase {
       return;
     }
 
+    this.closed = true;
+
     if (this.started) {
       menuWrangler.popMenu(this);
     }
 
-    this.closed = true;
     this.started = false;
 
     //if (this._popup.parentNode !== undefined) {
@@ -222,6 +226,43 @@ export class Menu extends UIBase {
     }
   }
 
+  _select(dir, focus=true) {
+    if (this.activeItem === undefined) {
+      for (let item of this.items) {
+        if (!item.hidden) {
+          this.setActive(item, focus);
+          break;
+        }
+      }
+    } else {
+      let i = this.items.indexOf(this.activeItem);
+      let item = this.activeItem;
+
+      do {
+        i = (i + dir + this.items.length) % this.items.length;
+        item = this.items[i];
+
+        if (!item.hidden) {
+          break;
+        }
+      } while (item !== this.activeItem);
+
+      this.setActive(item, focus); 
+    }
+
+    if (this.hasSearchBox) {
+      this.activeItem.scrollIntoView();
+    }
+  }
+
+  selectPrev(focus=true) {
+    return this._select(-1, focus);
+  }
+
+  selectNext(focus=true) {
+    return this._select(1, focus);
+  }
+
   static define() {return {
     tagname : "menu-x",
     style   : "menu"
@@ -231,8 +272,36 @@ export class Menu extends UIBase {
     return this.startFancy(prepend, setActive);
   }
 
+  setActive(item, focus=true) {
+    if (this.activeItem === item) {
+      return;
+    }
+
+    if (this.activeItem) {
+      this.activeItem.style["background-color"] = this.getDefault("MenuBG");
+
+      if (focus) {
+        this.activeItem.blur();
+      }
+    }
+
+    if (item) {
+      item.style["background-color"] = this.getDefault("MenuHighlight");
+
+      if (focus) {
+        item.focus();
+      }
+    }
+    
+    this.activeItem = item;
+  }
+
   startFancy(prepend, setActive=true) {
     console.log("menu fancy start");
+
+    this.hasSearchBox = true;
+    this.started = true;
+    menuWrangler.pushMenu(this);
 
     let dom2 = document.createElement("div");
     //let dom2 = document.createElement("div");
@@ -240,11 +309,12 @@ export class Menu extends UIBase {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = document.createElement("textbox-x");
-
+    let sbox = this.textbox = document.createElement("textbox-x");
+    this.textbox.parentWidget = this;
+    
     dom2.appendChild(sbox);
     dom2.appendChild(this.dom);
-
+    
     dom2.style["height"] = "300px";
     this.dom.style["height"] = "300px";
     this.dom.style["overflow"] = "scroll";
@@ -255,6 +325,8 @@ export class Menu extends UIBase {
       this.container.appendChild(dom2);
     }
 
+    dom2.parentWidget = this.container;
+
     sbox.focus();
     sbox.onchange = () => {
       let t = sbox.text.trim().toLowerCase();
@@ -262,6 +334,7 @@ export class Menu extends UIBase {
       console.log("applying search", t);
 
       for (let item of this.items) {
+        item.hidden = true;
         item.remove();
       }
 
@@ -270,7 +343,10 @@ export class Menu extends UIBase {
         ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
 
         if (ok) {
+          item.hidden = false;
           this.dom.appendChild(item);
+        } else if (item === this.activeItem) {
+          this.selectNext(false);
         }
         //item.hidden = !ok;
       }
@@ -288,9 +364,6 @@ export class Menu extends UIBase {
           break;
       }
     });
-
-    if (!setActive)
-      return;
   }
 
   start(prepend=false, setActive=true) {
@@ -493,13 +566,21 @@ export class Menu extends UIBase {
       });
 
       li.addEventListener("blur", (e) => {
+        if (this._ignoreFocusEvents) {
+          return;
+        }
+
         //console.log("blur", li.getAttribute("tabindex"));
         if (this.activeItem && !this.activeItem._isMenu) {
-          this.activeItem = undefined;
+          this.setActive(undefined, false);
         }
       });
 
       let onfocus = (e) => {
+        if (this._ignoreFocusEvents) {
+          return;
+        }
+
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           let active = this.activeItem;
 
@@ -519,7 +600,7 @@ export class Menu extends UIBase {
           li._menu.start(false, false);
         }
 
-        this.activeItem = li;
+        this.setActive(li, false);
       };
 
       li.addEventListener("touchend", (e) => {
@@ -970,21 +1051,60 @@ export class MenuWrangler {
     this.menustack = [];
   }
 
+  searchKeyDown(e) {
+    let menu = this.menu;
+    
+    console.log("s", e.keyCode);
+    
+    e.stopPropagation();
+    menu._ignoreFocusEvents = true;
+    menu.textbox.focus();
+    menu._ignoreFocusEvents = false;
+
+    //if (e.shiftKey || e.altKey || e.ctrlKey || e.commandKey) {
+    //  return;
+    //}
+
+    switch (e.keyCode) {
+      case keymap["Enter"]: //return key
+        menu.click(menu.activeItem);
+        break;
+      case keymap["Escape"]: //escape key
+        menu.close();
+        break;
+      case keymap["Up"]:
+        console.log("Up");
+        menu.selectPrev(false);
+        break;
+      case keymap["Down"]:
+        console.log("Down");
+        menu.selectNext(false);
+        break;
+    }
+  }
+
   on_keydown(e) {
+    window.menu = this.menu;
+    //console.log("M", e.keyCode, this.menu !== undefined);
+
     if (this.menu === undefined) {
       return;
+    }
+
+    if (this.menu.hasSearchBox) {
+      return this.searchKeyDown(e);
     }
 
     console.log("key", e.keyCode);
     let menu = this.menu;
 
     switch (e.keyCode) {
-      case 37: //left
-      case 39: //right
+      case keymap["Left"]: //left
+      case keymap["Right"]: //right
         if (menu._dropbox) {
           let dropbox = menu._dropbox;
 
-          if (e.keyCode === 37) {
+          if (e.keyCode === keymap["Left"]) {
             dropbox = dropbox.previousElementSibling;
           } else {
             dropbox = dropbox.nextElementSibling;
@@ -996,8 +1116,13 @@ export class MenuWrangler {
           }
         }
         break;
-      case 38: //up
-      case 40: //down
+      case keymap["Up"]: //up
+        this.selectPrev();
+        break;
+      case keymap["Down"]: //down
+        this.selectNext();
+        break;
+        /*
         let item = menu.activeItem;
         if (!item) {
           item = menu.items[0];
@@ -1019,12 +1144,9 @@ export class MenuWrangler {
         item2 = menu.items[i];
 
         if (item2) {
-          menu.activeItem = item2;
-
-          item.blur();
-          item2.focus();
+          menu.setActive(item2);
         }
-        break;
+        break;//*/
       case 13: //return key
       case 32: //space key
         menu.click(menu.activeItem);
@@ -1078,6 +1200,12 @@ export class MenuWrangler {
   }
 
   on_mousemove(e) {
+    //XXX
+    if (this.menu && this.menu.hasSearchBox) {
+      this.closetimer = util.time_ms();
+      return;
+    }
+
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = util.time_ms();
       return;

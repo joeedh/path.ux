@@ -248,6 +248,14 @@ export class ToolOp extends events.EventHandler {
     }
   }
 
+  static searchBoxOk(ctx) {
+    let flag = this.tooldef().flag;
+    let ret = !(flag && (flag & ToolFlags.PRIVATE));
+    ret = ret && this.canRun(ctx);
+
+    return ret;
+  }
+
   static canRun(ctx) {
     return true;
   }

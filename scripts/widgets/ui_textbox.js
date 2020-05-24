@@ -123,7 +123,6 @@ export class TextBox extends TextBoxBase {
           break;
       }
 
-      console.log(e.keyCode);
       return;
       if (ignore) return;
 

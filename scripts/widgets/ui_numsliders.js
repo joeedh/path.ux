@@ -1338,6 +1338,11 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
     this.numslider = document.createElement("numslider-x");
 
   }
+
+  _redraw() {
+    this.numslider._redraw();
+  }
+  
   static define() {return {
     tagname : "numslider-textbox-x",
     style : "numslider-textbox-x"
