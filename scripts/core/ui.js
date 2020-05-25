@@ -906,7 +906,7 @@ export class Container extends ui_base.UIBase {
           }
         }
 
-        this.listenum(inpath, undefined, undefined, val, undefined, undefined, packflag);
+        this.listenum(inpath, undefined, undefined, undefined, undefined, undefined, packflag);
       } else {
         this.checkenum(inpath, undefined, packflag);
       }

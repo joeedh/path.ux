@@ -116,51 +116,104 @@ export class PanelFrame extends ColumnFrame {
       iconcheck.checked = !iconcheck.checked;
     };
 
-    let label = this.label = row.label(this.getAttribute("title"));
+    let label = this.__label = row.label(this.getAttribute("title"));
 
-    this.label.font = "TitleText";
+    this.__label.font = "TitleText";
     label._updateFont();
 
     label.noMarginsOrPadding();
     label.addEventListener("mousedown", onclick);
     label.addEventListener("touchdown", onclick);
 
-    row.background = this.getDefault("BoxSubBG");
-    row.style["border-radius"] = "5px";
+    let bs = this.getDefault("border-style");
 
-    this.background = this.getDefault("BoxSub2BG");
+    row.background = this.getDefault("TitleBackground");
+    row.style["border-radius"] = this.getDefault("BoxRadius") + "px";
+    row.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+
+    this.background = this.getDefault("Background");
 
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
-    row.style["padding-top"] = "7px";
-    row.style["padding-bottom"] = "5px";
+    row.style["padding-top"] = this.getDefault("padding-top") + "px";
+    row.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
 
     this.contents.ctx = this.ctx;
     this.add(this.contents);
+
+    this.setCSS();
+  }
+
+  get label() {
+    return this.__label.text;
+  }
+
+  set label(v) {
+    this.__label.text = v;
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    if (!this.titleframe || !this.__label) {
+      return;
+    }
+
+    let bs = this.getDefault("border-style");
+
+    this.titleframe.background = this.getDefault("TitleBackground");
+    this.titleframe.style["border-radius"] = this.getDefault("BoxRadius") + "px";
+    this.titleframe.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
+    this.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+    this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
+    this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
+
+    let bg = this.getDefault("Background");
+    
+    this.background = bg;
+    this.contents.background = bg;
+    this.contents.style["background-color"] = bg;
+    this.style["background-color"] = bg;
+
+    console.log("BG", bg);
+    
+    this.__label._updateFont();
   }
 
   on_disabled() {
     super.on_disabled();
 
-    this.label._updateFont();
+    this.__label._updateFont();
     this.setCSS();
   }
 
   on_enabled() {
     super.on_enabled();
     
-    this.label.setCSS();
-    this.label.style["color"] = this.style["color"];
+    this.__label.setCSS();
+    this.__label.style["color"] = this.style["color"];
     this.setCSS();
   }
 
   static define() {
     return {
-      tagname: "panelframe-x"
+      tagname: "panelframe-x",
+      style  : "panel"
     };
   }
 
   update() {
+    let key = this.getDefault("background-color") + this.getDefault("TitleBackground");
+    key += this.getDefault("BoxBorder") + this.getDefault("BoxLineWidth");
+    key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
+    key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
+    key += this.getDefault("Background");
+
+    if (key !== this._last_key) {
+      this._last_key = key;
+      this.setCSS();
+    }
+
     super.update();
   }
 

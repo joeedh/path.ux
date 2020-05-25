@@ -510,7 +510,7 @@ export class ColorField extends ui.ColumnFrame {
   constructor() {
     super();
 
-    this.hsva = [0.05, 0.6, 0.15, 1.0];
+    this.hsva = new Vector4([0.05, 0.6, 0.15, 1.0]);
     this.rgba = new Vector4([0, 0, 0, 0]);
 
     this._recalcRGBA();
@@ -793,13 +793,13 @@ export class ColorPicker extends ui.ColumnFrame {
       return;
     }
 
-    let hsva = this.hsva;
+    let hsva = this.field.hsva;
     this.h.setValue(hsva[0], false);
     this.s.setValue(hsva[1], false);
     this.v.setValue(hsva[2], false);
     this.a.setValue(hsva[3], false);
 
-    let rgba = this.rgba;
+    let rgba = this.field.rgba;
 
     this.r.setValue(rgba[0], false);
     this.g.setValue(rgba[1], false);
@@ -813,13 +813,14 @@ export class ColorPicker extends ui.ColumnFrame {
     }
   }
 
+  //*
   get hsva() {
     return this.field.hsva;
   }
 
   get rgba() {
     return this.field.rgba;
-  }
+  }//*/
 
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
@@ -906,6 +907,7 @@ export class ColorPickerButton extends UIBase {
     this._label = "";
 
     this.rgba = new Vector4([1, 1, 1, 1]);
+
     this.labelDom = document.createElement("span");
     this.labelDom.textContent = "error";
     this.dom = document.createElement("canvas");
@@ -971,11 +973,33 @@ export class ColorPickerButton extends UIBase {
     widget._init();
 
     widget.style["padding"] = "20px";
+
+    let onchange = () => {
+      this.rgba.load(widget.rgba);
+      this.redraw();
+      
+      if (this.onchange) {
+        this.onchange(this);
+      }
+    }
+
     widget.onchange = onchange;
 
     colorpicker.style["background-color"] = widget.getDefault("DefaultPanelBG");
     colorpicker.style["border-radius"] = "25px";
     colorpicker.style["border"] = widget.getDefault("border");
+  }
+
+  setRGBA(val) {
+    let a = this.rgba[3];
+
+    this.rgba.load(val);
+
+    if (val.length < 4) {
+      this.rgba[3] = a;
+    }
+
+    return this;
   }
 
   get font() {
@@ -1038,6 +1062,9 @@ export class ColorPickerButton extends UIBase {
 
     //console.log("TOTX, TOTY", totx, toty);
 
+    ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
+    g.clip();
+
     g.beginPath();
     for (let x=0; x<totx; x++) {
       for (let y=0; y<toty; y++) {
@@ -1093,7 +1120,8 @@ export class ColorPickerButton extends UIBase {
     canvas.style["height"] = h + "px";
     canvas.width = ~~(w*dpi);
     canvas.height = ~~(h*dpi);
-
+        
+    this.style["background-color"] = "rgba(0,0,0,0)";
     this._redraw();
   }
 
@@ -1164,6 +1192,12 @@ export class ColorPickerButton extends UIBase {
   update() {
     super.update();
 
+    let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
+    if (key !== this._last_key) {
+      this._last_key = key;
+      this.redraw();
+    }
+    
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }

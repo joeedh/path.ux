@@ -80,7 +80,7 @@ export const DefaultTheme = {
     },
 
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
-    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
+    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)",
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
 
     //fonts
@@ -243,6 +243,18 @@ export const DefaultTheme = {
     //DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
   },
 
+  panel : { 
+    "Background" : "rgba(175, 175, 175, 1.0)",
+    "TitleBackground" : "rgba(125, 125, 125, 1.0)", //for panels
+    "BoxBorder" : "rgba(255, 255, 255, 0.0)",
+    "TitleBorder" : "rgba(255, 255, 255, 0.0)",
+    "BoxRadius" : 5,
+    "BoxLineWidth"  : 1,
+    "padding-top" : 7,
+    "padding-bottom" : 5,
+    "border-style" : "solid"
+  },
+
   listbox : {
     DefaultPanelBG : "rgba(230, 230, 230, 1.0)",
     ListHighlight : "rgba(155, 220, 255, 0.5)",
@@ -259,7 +271,8 @@ export const DefaultTheme = {
   colorpickerbutton : {
     defaultWidth  : 100,
     defaultHeight : 25,
-    defaultFont   : "LabelText"
+    defaultFont   : "LabelText",
+    
   },
 
   dropbox : {

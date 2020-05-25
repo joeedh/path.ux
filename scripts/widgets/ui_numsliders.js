@@ -1114,7 +1114,7 @@ export class SliderWithTextbox extends ColumnFrame {
     this.l.style["display"] = "float";
     this.l.style["position"] = "relative";
 
-    if (!this.labelOnTop) {
+    if (!this.labelOnTop && !(this.numslider instanceof NumSlider)) {
       this.l.style["left"] = "8px";
       this.l.style["top"] = "5px";
     }
@@ -1322,8 +1322,8 @@ export class NumSliderSimple extends SliderWithTextbox {
     super();
 
     this.numslider = document.createElement("numslider-simple-base-x");
-
   }
+
   static define() {return {
     tagname : "numslider-simple-x",
     style : "numslider_simple"

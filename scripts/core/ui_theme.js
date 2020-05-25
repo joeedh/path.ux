@@ -263,3 +263,106 @@ CSSFont {
 }
 `;
 nstructjs.register(CSSFont);
+
+export function exportTheme(theme1=theme) {
+  let sortkeys = (obj) => {
+    let keys = [];
+    for (let k in obj) {
+      keys.push(k);
+    }
+    keys.sort();
+    
+    return keys;
+  }
+
+  let s = "var theme = {\n";
+
+  function writekey(v, indent="") {
+    if (typeof v === "string") {
+      if (v.search("\n") >= 0) {
+        v = "`" + v + "`";
+      } else {
+        v = "'" + v + "'";
+      }
+      
+      return v;
+    } else if (typeof v === "object") {
+      if (v instanceof CSSFont) {
+        return 
+`new CSSFont({
+${indent}  font    : ${writekey(v.font)},
+${indent}  weight  : ${writekey(v.weight)},
+${indent}  variant : ${writekey(v.variant)},
+${indent}  style   : ${writekey(v.style)},
+${indent}  size    : ${writekey(v._size)},
+${indent}  color   : ${writekey(v.color)}
+${indent}})`;
+      } else {
+        let s = "{\n";
+
+        for (let k of sortkeys(v)) {
+          let v2 = v[k];
+
+          if (k.search(" ") >= 0 || k.search("-") >= 0) {
+            k = "'" + k + "'";
+          }
+
+          s += indent + "  " + k + " : " + writekey(v2) + ",\n";
+        }
+
+        s += indent + "}";
+        return s;
+      }
+    } else {
+      return v;
+    }
+  }
+
+  for (let k of sortkeys(theme1)) {
+    if (k.search("-") >= 0 || k.search(" ") >= 0) {
+      k = "'" + k + "'";
+    }
+    s += "  " + k + ": ";
+
+    let v = theme1[k];
+    if (typeof v !== "object" || v instanceof CSSFont) {
+      s += writekey(v, "  ") + ",\n";
+    } else {
+      s += " {\n"
+      let s2 = "";
+
+      let maxwid = 0;
+
+      for (let k2 of sortkeys(v)) {
+        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
+          k2 = "'" + k2 + "'";
+        }
+
+        maxwid = Math.max(maxwid, k2.length);
+      }
+
+      for (let k2 of sortkeys(v)) {
+        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
+          k2 = "'" + k2 + "'";
+        }
+    
+        let v2 = v[k2];
+        let pad = "";
+
+        for (let i=0; i<maxwid-k2.length; i++) {
+          pad += " ";
+        }
+
+        s2 += "    " + k2 + pad + ": " + writekey(v2, "    ") + ",\n";
+      }
+
+      s += s2;
+      s += "  },\n\n"
+    }
+  }
+  s += "};\n";
+
+  return s;
+}
+window._exportTheme = exportTheme;
+

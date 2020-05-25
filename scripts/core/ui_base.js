@@ -2376,6 +2376,8 @@ export function saveUIData(node, key) {
   });
 }
 
+window._saveUIData = saveUIData;
+
 export function loadUIData(node, buf) {
   if (buf === undefined || buf === null) {
     return;
@@ -2423,3 +2425,4 @@ export function loadUIData(node, buf) {
   }
 }
 
+window._loadUIData = loadUIData;

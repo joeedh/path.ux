@@ -20,6 +20,12 @@ let colormap = {
   "peach"   : 210
 }
 
+export let termColorMap = {};
+for (let k in colormap) {
+  termColorMap[k] = colormap[k];
+  termColorMap[colormap[k]] = k;
+}
+
 export function termColor(s, c) {
   if (typeof s === "symbol") {
     s = s.toString();
