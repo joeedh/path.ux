@@ -20,6 +20,7 @@ export * from './widgets/ui_textbox.js';
 export * from './util/graphpack.js';
 import * as solver1 from './util/solver.js';
 export * from './platforms/electron/electron_api.js';
+export * from './widgets/theme_editor.js';
 
 export let solver = solver1;
 
