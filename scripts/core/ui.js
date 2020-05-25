@@ -484,6 +484,21 @@ export class Container extends ui_base.UIBase {
     return this._add(child);
   }
 
+  insert(i, ch) {
+    ch.parentWidget = this;
+    ch.ctx = this;
+
+    if (i >= this.shadow.childNodes.length) {
+      this.add(ch);
+    } else {
+      this.shadow.insertBefore(ch, list(this.children)[i]);
+    }
+
+    if (ch.onadd) {
+      ch.onadd();
+    }
+  }
+
   _add(child, prepend = false) {
     //paranoia check for if we accidentally got a DOM NodeList
     if (child instanceof NodeList) {
@@ -493,7 +508,11 @@ export class Container extends ui_base.UIBase {
     child.ctx = this.ctx;
     child.parentWidget = this;
 
-    this.shadow.appendChild(child);
+    if (prepend) {
+      this.shadow.prepend(child);
+    } else {
+      this.shadow.appendChild(child);
+    }
 
     /*
     if (child._ctx) {
@@ -989,6 +1008,24 @@ export class Container extends ui_base.UIBase {
     }
   }
 
+  iconcheck(inpath, icon, name, mass_set_path) {
+    ret = document.createElement("iconcheck-x");
+    ret.icon = icon;
+    ret.description = name;
+
+    if (inpath) {
+      ret.setAttribute("datapath", inpath);
+    }
+
+    if (mass_set_path) {
+      ret.setAttribute("mass_set_path", mass_set_path);
+    }
+
+    this.add(ret);
+
+    return ret;
+  }
+
   check(inpath, name, packflag = 0, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
@@ -1425,6 +1462,14 @@ export class Container extends ui_base.UIBase {
     }
 
     this._add(ret);
+
+    return ret;
+  }
+
+  treeview() {
+    let ret = document.createElement("tree-view-x");
+    ret.ctx = this.ctx;
+    this.add(ret);
 
     return ret;
   }

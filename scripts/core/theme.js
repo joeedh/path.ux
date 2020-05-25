@@ -121,6 +121,11 @@ export const DefaultTheme = {
     }),
   },
 
+  treeview : {
+    itemIndent : 10,
+    rowHeight  : 18
+  },
+
   menu : {
     MenuBG : "rgba(250, 250, 250, 1.0)",
     MenuHighlight : "rgba(155, 220, 255, 1.0)",

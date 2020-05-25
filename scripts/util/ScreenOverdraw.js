@@ -34,8 +34,10 @@ export class Overdraw extends ui_base.UIBase {
   }
 
   startNode(node, screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
+    if (screen) {
+      this.screen = screen;
+      this.ctx = screen.ctx;
+    }
 
     if (!this.parentNode) {
       node.appendChild(this);

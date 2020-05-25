@@ -4,6 +4,7 @@ let _FrameManager = undefined;
 import '../widgets/dragbox.js';
 import '../widgets/ui_widgets2.js';
 import '../widgets/ui_panel.js';
+import '../widgets/ui_treeview.js';
 
 import '../util/ScreenOverdraw.js';
 import cconst from '../config/const.js';

@@ -694,6 +694,21 @@ export class UIBase extends HTMLElement {
     }, {passive : false});
   }
 
+  hide(sethide=true) {
+    this.hidden = sethide;
+
+    for (let n of this.shadow.childNodes) {
+      n.hidden = sethide;
+    }
+
+    this._forEachChildWidget((n) => {
+      n.hide(sethide);
+    })
+  }
+
+  unhide() {
+    this.hide(false);
+  }
   /**
    causes calls to setPathValue to go through
    toolpath app.datapath_set(path="" newValueJSON="")

@@ -372,6 +372,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/widgets/dragbox.js~dragbox",
+    "class/scripts/widgets/dragbox.js~DragBox.html",
+    "<span>DragBox</span> <span class=\"search-result-import-path\">./scripts/widgets/dragbox.js</span>",
+    "class"
+  ],
+  [
     "./scripts/widgets/ui_menu.js~dropbox",
     "class/scripts/widgets/ui_menu.js~DropBox.html",
     "<span>DropBox</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_menu.js</span>",
@@ -726,6 +732,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/widgets/ui_numsliders.js~numsliderwithtextbox",
+    "class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html",
+    "<span>NumSliderWithTextBox</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_numsliders.js</span>",
+    "class"
+  ],
+  [
     "./scripts/util/screenoverdraw.js~overdraw",
     "class/scripts/util/ScreenOverdraw.js~Overdraw.html",
     "<span>Overdraw</span> <span class=\"search-result-import-path\">./scripts/util/ScreenOverdraw.js</span>",
@@ -930,6 +942,12 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/widgets/ui_numsliders.js~sliderwithtextbox",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html",
+    "<span>SliderWithTextbox</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_numsliders.js</span>",
+    "class"
+  ],
+  [
     "./scripts/util/util.js~smartconsole",
     "class/scripts/util/util.js~SmartConsole.html",
     "<span>SmartConsole</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
@@ -1041,6 +1059,12 @@ window.esdocSearchIndex = [
     "./scripts/widgets/ui_textbox.js~textboxbase",
     "class/scripts/widgets/ui_textbox.js~TextBoxBase.html",
     "<span>TextBoxBase</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_textbox.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/widgets/theme_editor.js~themeeditor",
+    "class/scripts/widgets/theme_editor.js~ThemeEditor.html",
+    "<span>ThemeEditor</span> <span class=\"search-result-import-path\">./scripts/widgets/theme_editor.js</span>",
     "class"
   ],
   [
@@ -1266,6 +1290,12 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/util/math.js~aabb_intersect_2d",
+    "function/index.html#static-function-aabb_intersect_2d",
+    "<span>aabb_intersect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "function"
+  ],
+  [
     "./scripts/util/math.js~aabb_isect_2d",
     "function/index.html#static-function-aabb_isect_2d",
     "<span>aabb_isect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
@@ -1293,6 +1323,12 @@ window.esdocSearchIndex = [
     "./scripts/util/math.js~aabb_sphere_isect_2d",
     "function/index.html#static-function-aabb_sphere_isect_2d",
     "<span>aabb_sphere_isect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/util/math.js~aabb_union_2d",
+    "function/index.html#static-function-aabb_union_2d",
+    "<span>aabb_union_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
     "function"
   ],
   [
@@ -1332,6 +1368,18 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/platforms/electron/electron_api.js~buildelectronhotkey",
+    "function/index.html#static-function-buildElectronHotkey",
+    "<span>buildElectronHotkey</span> <span class=\"search-result-import-path\">./scripts/platforms/electron/electron_api.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/electron/electron_api.js~buildelectronmenu",
+    "function/index.html#static-function-buildElectronMenu",
+    "<span>buildElectronMenu</span> <span class=\"search-result-import-path\">./scripts/platforms/electron/electron_api.js</span>",
+    "function"
+  ],
+  [
     "./scripts/toolsys/toolpath.js~buildparser",
     "function/index.html#static-function-buildParser",
     "<span>buildParser</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
@@ -1359,6 +1407,12 @@ window.esdocSearchIndex = [
     "./scripts/widgets/ui_textbox.js~checkfortextbox",
     "function/index.html#static-function-checkForTextBox",
     "<span>checkForTextBox</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_textbox.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/electron/electron_api.js~checkinit",
+    "function/index.html#static-function-checkInit",
+    "<span>checkInit</span> <span class=\"search-result-import-path\">./scripts/platforms/electron/electron_api.js</span>",
     "function"
   ],
   [
@@ -1518,6 +1572,12 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/core/ui_theme.js~exporttheme",
+    "function/index.html#static-function-exportTheme",
+    "<span>exportTheme</span> <span class=\"search-result-import-path\">./scripts/core/ui_theme.js</span>",
+    "function"
+  ],
+  [
     "./scripts/config/const.js~exports",
     "variable/index.html#static-variable-exports",
     "<span>exports</span> <span class=\"search-result-import-path\">./scripts/config/const.js</span>",
@@ -1611,6 +1671,12 @@ window.esdocSearchIndex = [
     "./scripts/util/image.js~getimagedata",
     "function/index.html#static-function-getImageData",
     "<span>getImageData</span> <span class=\"search-result-import-path\">./scripts/util/image.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/electron/electron_api.js~getnativeicon",
+    "function/index.html#static-function-getNativeIcon",
+    "<span>getNativeIcon</span> <span class=\"search-result-import-path\">./scripts/platforms/electron/electron_api.js</span>",
     "function"
   ],
   [
@@ -1708,6 +1774,12 @@ window.esdocSearchIndex = [
     "variable/index.html#static-variable-inherit",
     "<span>inherit</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/platforms/electron/electron_api.js~initmenubar",
+    "function/index.html#static-function-initMenuBar",
+    "<span>initMenuBar</span> <span class=\"search-result-import-path\">./scripts/platforms/electron/electron_api.js</span>",
+    "function"
   ],
   [
     "./scripts/controller/simple_controller.js~initsimplecontroller",
@@ -2368,6 +2440,12 @@ window.esdocSearchIndex = [
     "function/index.html#static-function-termColor",
     "<span>termColor</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
     "function"
+  ],
+  [
+    "./scripts/util/util.js~termcolormap",
+    "variable/index.html#static-variable-termColorMap",
+    "<span>termColorMap</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "variable"
   ],
   [
     "./scripts/controller/context.js~test",
@@ -4044,6 +4122,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/core/ui.js~container#dynamicmenu",
+    "class/scripts/core/ui.js~Container.html#instance-method-dynamicMenu",
+    "scripts/core/ui.js~Container#dynamicMenu",
+    "method"
+  ],
+  [
     "scripts/core/ui.js~container#getroot",
     "class/scripts/core/ui.js~Container.html#instance-method-getroot",
     "scripts/core/ui.js~Container#getroot",
@@ -4167,6 +4251,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~container#pathlabel",
     "class/scripts/core/ui.js~Container.html#instance-method-pathlabel",
     "scripts/core/ui.js~Container#pathlabel",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~container#prepend",
+    "class/scripts/core/ui.js~Container.html#instance-method-prepend",
+    "scripts/core/ui.js~Container#prepend",
     "method"
   ],
   [
@@ -4314,6 +4404,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui.js~label#_enabled_font",
+    "class/scripts/core/ui.js~Label.html#instance-member-_enabled_font",
+    "scripts/core/ui.js~Label#_enabled_font",
+    "member"
+  ],
+  [
     "scripts/core/ui.js~label#_font",
     "class/scripts/core/ui.js~Label.html#instance-member-_font",
     "scripts/core/ui.js~Label#_font",
@@ -4323,6 +4419,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~label#_label",
     "class/scripts/core/ui.js~Label.html#instance-member-_label",
     "scripts/core/ui.js~Label#_label",
+    "member"
+  ],
+  [
+    "scripts/core/ui.js~label#_last_font",
+    "class/scripts/core/ui.js~Label.html#instance-member-_last_font",
+    "scripts/core/ui.js~Label#_last_font",
     "member"
   ],
   [
@@ -4359,6 +4461,18 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~label#init",
     "class/scripts/core/ui.js~Label.html#instance-method-init",
     "scripts/core/ui.js~Label#init",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~label#on_disabled",
+    "class/scripts/core/ui.js~Label.html#instance-method-on_disabled",
+    "scripts/core/ui.js~Label#on_disabled",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~label#on_enabled",
+    "class/scripts/core/ui.js~Label.html#instance-method-on_enabled",
+    "scripts/core/ui.js~Label#on_enabled",
     "method"
   ],
   [
@@ -4833,6 +4947,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase#float",
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-float",
     "scripts/core/ui_base.js~UIBase#float",
+    "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#flushupdate",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-flushUpdate",
+    "scripts/core/ui_base.js~UIBase#flushUpdate",
     "method"
   ],
   [
@@ -5880,6 +6000,18 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "scripts/platforms/electron/electron_api.js",
+    "file/scripts/platforms/electron/electron_api.js.html",
+    "scripts/platforms/electron/electron_api.js",
+    "file"
+  ],
+  [
+    "scripts/platforms/electron/icogen.js",
+    "file/scripts/platforms/electron/icogen.js.html",
+    "scripts/platforms/electron/icogen.js",
+    "file"
+  ],
+  [
     "scripts/screen/areadocker.js",
     "file/scripts/screen/AreaDocker.js.html",
     "scripts/screen/AreaDocker.js",
@@ -6216,6 +6348,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screen/framemanager.js~screen#draggablepopup",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-draggablePopup",
+    "scripts/screen/FrameManager.js~Screen#draggablePopup",
+    "method"
+  ],
+  [
     "scripts/screen/framemanager.js~screen#draw",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-draw",
     "scripts/screen/FrameManager.js~Screen#draw",
@@ -6447,6 +6585,12 @@ window.esdocSearchIndex = [
     "scripts/screen/framemanager.js~screen#on_resize",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-on_resize",
     "scripts/screen/FrameManager.js~Screen#on_resize",
+    "method"
+  ],
+  [
+    "scripts/screen/framemanager.js~screen#pickelement",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-pickElement",
+    "scripts/screen/FrameManager.js~Screen#pickElement",
     "method"
   ],
   [
@@ -8370,6 +8514,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolsys/simple_toolsys.js~toolop.searchboxok",
+    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-searchBoxOk",
+    "scripts/toolsys/simple_toolsys.js~ToolOp.searchBoxOk",
+    "method"
+  ],
+  [
     "scripts/toolsys/simple_toolsys.js~toolop.tooldef",
     "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-tooldef",
     "scripts/toolsys/simple_toolsys.js~ToolOp.tooldef",
@@ -9126,6 +9276,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop.js~toolproperty#decimalplaces",
+    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-decimalPlaces",
+    "scripts/toolsys/toolprop.js~ToolProperty#decimalPlaces",
+    "member"
+  ],
+  [
     "scripts/toolsys/toolprop.js~toolproperty#description",
     "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-description",
     "scripts/toolsys/toolprop.js~ToolProperty#description",
@@ -9168,6 +9324,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolsys/toolprop.js~toolproperty#loadstruct",
+    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-loadSTRUCT",
+    "scripts/toolsys/toolprop.js~ToolProperty#loadSTRUCT",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~toolproperty#off",
     "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-off",
     "scripts/toolsys/toolprop.js~ToolProperty#off",
@@ -9184,6 +9346,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-private",
     "scripts/toolsys/toolprop.js~ToolProperty#private",
     "method"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~toolproperty#radix",
+    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-radix",
+    "scripts/toolsys/toolprop.js~ToolProperty#radix",
+    "member"
   ],
   [
     "scripts/toolsys/toolprop.js~toolproperty#range",
@@ -10824,6 +10992,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/util/simple_events.js~hotkey#uiname",
+    "class/scripts/util/simple_events.js~HotKey.html#instance-member-uiname",
+    "scripts/util/simple_events.js~HotKey#uiname",
+    "member"
+  ],
+  [
     "scripts/util/simple_events.js~keymap#add",
     "class/scripts/util/simple_events.js~KeyMap.html#instance-method-add",
     "scripts/util/simple_events.js~KeyMap#add",
@@ -11670,6 +11844,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/util/vectormath.js~matrix4#determinant",
+    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-determinant",
+    "scripts/util/vectormath.js~Matrix4#determinant",
+    "method"
+  ],
+  [
     "scripts/util/vectormath.js~matrix4#divide",
     "class/scripts/util/vectormath.js~Matrix4.html#instance-method-divide",
     "scripts/util/vectormath.js~Matrix4#divide",
@@ -11787,6 +11967,18 @@ window.esdocSearchIndex = [
     "scripts/util/vectormath.js~matrix4#premultiply",
     "class/scripts/util/vectormath.js~Matrix4.html#instance-method-preMultiply",
     "scripts/util/vectormath.js~Matrix4#preMultiply",
+    "method"
+  ],
+  [
+    "scripts/util/vectormath.js~matrix4#prescale",
+    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-preScale",
+    "scripts/util/vectormath.js~Matrix4#preScale",
+    "method"
+  ],
+  [
+    "scripts/util/vectormath.js~matrix4#pretranslate",
+    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-preTranslate",
+    "scripts/util/vectormath.js~Matrix4#preTranslate",
     "method"
   ],
   [
@@ -12240,6 +12432,246 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/dragbox.js",
+    "file/scripts/widgets/dragbox.js.html",
+    "scripts/widgets/dragbox.js",
+    "file"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#_done",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-member-_done",
+    "scripts/widgets/dragbox.js~DragBox#_done",
+    "member"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#add",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-add",
+    "scripts/widgets/dragbox.js~DragBox#add",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#appendchild",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-appendChild",
+    "scripts/widgets/dragbox.js~DragBox#appendChild",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#background",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-member-background",
+    "scripts/widgets/dragbox.js~DragBox#background",
+    "member"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#button",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-button",
+    "scripts/widgets/dragbox.js~DragBox#button",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#check",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-check",
+    "scripts/widgets/dragbox.js~DragBox#check",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#col",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-col",
+    "scripts/widgets/dragbox.js~DragBox#col",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#constructor",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-constructor-constructor",
+    "scripts/widgets/dragbox.js~DragBox#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#contents",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-member-contents",
+    "scripts/widgets/dragbox.js~DragBox#contents",
+    "member"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#curve",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-curve",
+    "scripts/widgets/dragbox.js~DragBox#curve",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#end",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-end",
+    "scripts/widgets/dragbox.js~DragBox#end",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#header",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-member-header",
+    "scripts/widgets/dragbox.js~DragBox#header",
+    "member"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#iconbutton",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-iconbutton",
+    "scripts/widgets/dragbox.js~DragBox#iconbutton",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#iconcheck",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-iconcheck",
+    "scripts/widgets/dragbox.js~DragBox#iconcheck",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#iconenum",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-iconenum",
+    "scripts/widgets/dragbox.js~DragBox#iconenum",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#init",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-init",
+    "scripts/widgets/dragbox.js~DragBox#init",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#listenum",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-listenum",
+    "scripts/widgets/dragbox.js~DragBox#listenum",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#menu",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-menu",
+    "scripts/widgets/dragbox.js~DragBox#menu",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#panel",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-panel",
+    "scripts/widgets/dragbox.js~DragBox#panel",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#prepend",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-prepend",
+    "scripts/widgets/dragbox.js~DragBox#prepend",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#prop",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-prop",
+    "scripts/widgets/dragbox.js~DragBox#prop",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#row",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-row",
+    "scripts/widgets/dragbox.js~DragBox#row",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#setcss",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-setCSS",
+    "scripts/widgets/dragbox.js~DragBox#setCSS",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#simpleslider",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-simpleslider",
+    "scripts/widgets/dragbox.js~DragBox#simpleslider",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#slider",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-slider",
+    "scripts/widgets/dragbox.js~DragBox#slider",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#strip",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-strip",
+    "scripts/widgets/dragbox.js~DragBox#strip",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#table",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-table",
+    "scripts/widgets/dragbox.js~DragBox#table",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#tabs",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-tabs",
+    "scripts/widgets/dragbox.js~DragBox#tabs",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#textarea",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-textarea",
+    "scripts/widgets/dragbox.js~DragBox#textarea",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#textbox",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-textbox",
+    "scripts/widgets/dragbox.js~DragBox#textbox",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#tool",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-tool",
+    "scripts/widgets/dragbox.js~DragBox#tool",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox#viewer",
+    "class/scripts/widgets/dragbox.js~DragBox.html#instance-method-viewer",
+    "scripts/widgets/dragbox.js~DragBox#viewer",
+    "method"
+  ],
+  [
+    "scripts/widgets/dragbox.js~dragbox.define",
+    "class/scripts/widgets/dragbox.js~DragBox.html#static-method-define",
+    "scripts/widgets/dragbox.js~DragBox.define",
+    "method"
+  ],
+  [
+    "scripts/widgets/theme_editor.js",
+    "file/scripts/widgets/theme_editor.js.html",
+    "scripts/widgets/theme_editor.js",
+    "file"
+  ],
+  [
+    "scripts/widgets/theme_editor.js~themeeditor#build",
+    "class/scripts/widgets/theme_editor.js~ThemeEditor.html#instance-method-build",
+    "scripts/widgets/theme_editor.js~ThemeEditor#build",
+    "method"
+  ],
+  [
+    "scripts/widgets/theme_editor.js~themeeditor#constructor",
+    "class/scripts/widgets/theme_editor.js~ThemeEditor.html#instance-constructor-constructor",
+    "scripts/widgets/theme_editor.js~ThemeEditor#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/theme_editor.js~themeeditor#dofolder",
+    "class/scripts/widgets/theme_editor.js~ThemeEditor.html#instance-method-doFolder",
+    "scripts/widgets/theme_editor.js~ThemeEditor#doFolder",
+    "method"
+  ],
+  [
+    "scripts/widgets/theme_editor.js~themeeditor#init",
+    "class/scripts/widgets/theme_editor.js~ThemeEditor.html#instance-method-init",
+    "scripts/widgets/theme_editor.js~ThemeEditor#init",
+    "method"
+  ],
+  [
+    "scripts/widgets/theme_editor.js~themeeditor.define",
+    "class/scripts/widgets/theme_editor.js~ThemeEditor.html#static-method-define",
+    "scripts/widgets/theme_editor.js~ThemeEditor.define",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_button.js",
     "file/scripts/widgets/ui_button.js.html",
     "scripts/widgets/ui_button.js",
@@ -12441,12 +12873,6 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_button.js~button#tabindex",
     "class/scripts/widgets/ui_button.js~Button.html#instance-set-tabIndex",
     "scripts/widgets/ui_button.js~Button#tabIndex",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_button.js~button#title",
-    "class/scripts/widgets/ui_button.js~Button.html#instance-member-title",
-    "scripts/widgets/ui_button.js~Button#title",
     "member"
   ],
   [
@@ -12918,6 +13344,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_last_key",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-_last_key",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_last_key",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_redraw",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-_redraw",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_redraw",
@@ -12990,6 +13422,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#on_disabled",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-on_disabled",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#on_disabled",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#redraw",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-redraw",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#redraw",
@@ -13005,6 +13443,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#setcss",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-setCSS",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#setCSS",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#setrgba",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-setRGBA",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#setRGBA",
     "method"
   ],
   [
@@ -14154,6 +14598,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_menu.js~dropbox#_searchmenumode",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-_searchMenuMode",
+    "scripts/widgets/ui_menu.js~DropBox#_searchMenuMode",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_menu.js~dropbox#constructor",
     "class/scripts/widgets/ui_menu.js~DropBox.html#instance-constructor-constructor",
     "scripts/widgets/ui_menu.js~DropBox#constructor",
@@ -14191,7 +14641,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/widgets/ui_menu.js~dropbox#searchmenumode",
-    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-searchMenuMode",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-get-searchMenuMode",
+    "scripts/widgets/ui_menu.js~DropBox#searchMenuMode",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~dropbox#searchmenumode",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-set-searchMenuMode",
     "scripts/widgets/ui_menu.js~DropBox#searchMenuMode",
     "member"
   ],
@@ -14238,6 +14694,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_menu.js~menu#_ignorefocusevents",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-member-_ignoreFocusEvents",
+    "scripts/widgets/ui_menu.js~Menu#_ignoreFocusEvents",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_menu.js~menu#_ondestroy",
     "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-_ondestroy",
     "scripts/widgets/ui_menu.js~Menu#_ondestroy",
@@ -14248,6 +14710,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_menu.js~Menu.html#instance-member-_popup",
     "scripts/widgets/ui_menu.js~Menu#_popup",
     "member"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~menu#_select",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-_select",
+    "scripts/widgets/ui_menu.js~Menu#_select",
+    "method"
   ],
   [
     "scripts/widgets/ui_menu.js~menu#activeitem",
@@ -14322,6 +14790,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_menu.js~menu#hassearchbox",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-member-hasSearchBox",
+    "scripts/widgets/ui_menu.js~Menu#hasSearchBox",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_menu.js~menu#itemindex",
     "class/scripts/widgets/ui_menu.js~Menu.html#instance-member-itemindex",
     "scripts/widgets/ui_menu.js~Menu#itemindex",
@@ -14340,9 +14814,27 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_menu.js~menu#selectnext",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-selectNext",
+    "scripts/widgets/ui_menu.js~Menu#selectNext",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~menu#selectprev",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-selectPrev",
+    "scripts/widgets/ui_menu.js~Menu#selectPrev",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_menu.js~menu#seperator",
     "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-seperator",
     "scripts/widgets/ui_menu.js~Menu#seperator",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~menu#setactive",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-setActive",
+    "scripts/widgets/ui_menu.js~Menu#setActive",
     "method"
   ],
   [
@@ -14458,6 +14950,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_menu.js~MenuWrangler.html#instance-member-screen",
     "scripts/widgets/ui_menu.js~MenuWrangler#screen",
     "member"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~menuwrangler#searchkeydown",
+    "class/scripts/widgets/ui_menu.js~MenuWrangler.html#instance-method-searchKeyDown",
+    "scripts/widgets/ui_menu.js~MenuWrangler#searchKeyDown",
+    "method"
   ],
   [
     "scripts/widgets/ui_noteframe.js",
@@ -14826,177 +15324,15 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#_last_label_on_top",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-_last_label_on_top",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#_last_label_on_top",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#_lock_textbox",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-_lock_textbox",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#_lock_textbox",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#_name",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-_name",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#_name",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#_value",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-_value",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#_value",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#baseunit",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-get-baseUnit",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#baseUnit",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#baseunit",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-set-baseUnit",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#baseUnit",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_numsliders.js~numslidersimple#constructor",
     "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-constructor-constructor",
     "scripts/widgets/ui_numsliders.js~NumSliderSimple#constructor",
     "method"
   ],
   [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#container",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-container",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#container",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#decimalplaces",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-decimalPlaces",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#decimalPlaces",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#displayunit",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-get-displayUnit",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#displayUnit",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#displayunit",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-set-displayUnit",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#displayUnit",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#init",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-init",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#init",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#isint",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-isInt",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#isInt",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#l",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-l",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#l",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#labelontop",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-labelOnTop",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#labelOnTop",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#linktextbox",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-linkTextBox",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#linkTextBox",
-    "method"
-  ],
-  [
     "scripts/widgets/ui_numsliders.js~numslidersimple#numslider",
     "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-numslider",
     "scripts/widgets/ui_numsliders.js~NumSliderSimple#numslider",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#range",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-get-range",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#range",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#rebuild",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-rebuild",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#rebuild",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#setcss",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-setCSS",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#setCSS",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#setvalue",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-setValue",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#setValue",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#textbox",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-member-textbox",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#textbox",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#update",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-update",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#update",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#updatedatapath",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-updateDataPath",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#updateDataPath",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#updatelabelontop",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-updateLabelOnTop",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#updateLabelOnTop",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#updatename",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-updateName",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#updateName",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#updatetextbox",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-method-updateTextBox",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#updateTextBox",
-    "method"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#value",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-get-value",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#value",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_numsliders.js~numslidersimple#value",
-    "class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html#instance-set-value",
-    "scripts/widgets/ui_numsliders.js~NumSliderSimple#value",
     "member"
   ],
   [
@@ -15198,6 +15534,222 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_numsliders.js~numsliderwithtextbox#_redraw",
+    "class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html#instance-method-_redraw",
+    "scripts/widgets/ui_numsliders.js~NumSliderWithTextBox#_redraw",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~numsliderwithtextbox#constructor",
+    "class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html#instance-constructor-constructor",
+    "scripts/widgets/ui_numsliders.js~NumSliderWithTextBox#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~numsliderwithtextbox#numslider",
+    "class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html#instance-member-numslider",
+    "scripts/widgets/ui_numsliders.js~NumSliderWithTextBox#numslider",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~numsliderwithtextbox.define",
+    "class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html#static-method-define",
+    "scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.define",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_last_label_on_top",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_last_label_on_top",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_last_label_on_top",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_lock_textbox",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_lock_textbox",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_lock_textbox",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_name",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_name",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_name",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_numslider",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_numslider",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_numslider",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_value",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_value",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_value",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#baseunit",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-baseUnit",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#baseUnit",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#baseunit",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-set-baseUnit",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#baseUnit",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#constructor",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-constructor-constructor",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#container",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-container",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#container",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#decimalplaces",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-decimalPlaces",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#decimalPlaces",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#displayunit",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-displayUnit",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#displayUnit",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#displayunit",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-set-displayUnit",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#displayUnit",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#init",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-init",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#init",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#isint",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-isInt",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#isInt",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#l",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-l",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#l",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#labelontop",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-labelOnTop",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#labelOnTop",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#linktextbox",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-linkTextBox",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#linkTextBox",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#numslider",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-numslider",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#numslider",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#numslider",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-set-numslider",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#numslider",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#range",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-set-range",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#range",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#range",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-range",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#range",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#rebuild",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-rebuild",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#rebuild",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#setcss",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-setCSS",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#setCSS",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#setvalue",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-setValue",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#setValue",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#textbox",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-textbox",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#textbox",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#update",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-update",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#update",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#updatedatapath",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-updateDataPath",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#updateDataPath",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#updatelabelontop",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-updateLabelOnTop",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#updateLabelOnTop",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#updatename",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-updateName",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#updateName",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#updatetextbox",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-method-updateTextBox",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#updateTextBox",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#value",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-value",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#value",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#value",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-set-value",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#value",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_panel.js",
     "file/scripts/widgets/ui_panel.js.html",
     "scripts/widgets/ui_panel.js",
@@ -15207,6 +15759,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_panel.js~panelframe#_closed",
     "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-member-_closed",
     "scripts/widgets/ui_panel.js~PanelFrame#_closed",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#_last_key",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-member-_last_key",
+    "scripts/widgets/ui_panel.js~PanelFrame#_last_key",
     "member"
   ],
   [
@@ -15282,9 +15840,33 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_panel.js~panelframe#label",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-get-label",
+    "scripts/widgets/ui_panel.js~PanelFrame#label",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#label",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-set-label",
+    "scripts/widgets/ui_panel.js~PanelFrame#label",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_panel.js~panelframe#loaddata",
     "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-loadData",
     "scripts/widgets/ui_panel.js~PanelFrame#loadData",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#on_disabled",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-on_disabled",
+    "scripts/widgets/ui_panel.js~PanelFrame#on_disabled",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#on_enabled",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-on_enabled",
+    "scripts/widgets/ui_panel.js~PanelFrame#on_enabled",
     "method"
   ],
   [
@@ -15303,6 +15885,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_panel.js~panelframe#savedata",
     "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-saveData",
     "scripts/widgets/ui_panel.js~PanelFrame#saveData",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#setcss",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-setCSS",
+    "scripts/widgets/ui_panel.js~PanelFrame#setCSS",
     "method"
   ],
   [
@@ -16248,6 +16836,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_textbox.js~textbox#background",
+    "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-background",
+    "scripts/widgets/ui_textbox.js~TextBox#background",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_textbox.js~textbox#baseunit",
     "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-baseUnit",
     "scripts/widgets/ui_textbox.js~TextBox#baseUnit",
@@ -16494,12 +17088,6 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_widgets.js~check#title",
-    "class/scripts/widgets/ui_widgets.js~Check.html#instance-member-title",
-    "scripts/widgets/ui_widgets.js~Check#title",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_widgets.js~check#update",
     "class/scripts/widgets/ui_widgets.js~Check.html#instance-method-update",
     "scripts/widgets/ui_widgets.js~Check#update",
@@ -16623,12 +17211,6 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_widgets.js~iconbutton#iconsheet",
     "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-member-iconsheet",
     "scripts/widgets/ui_widgets.js~IconButton#iconsheet",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_widgets.js~iconbutton#title",
-    "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-member-title",
-    "scripts/widgets/ui_widgets.js~IconButton#title",
     "member"
   ],
   [
@@ -16791,12 +17373,6 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_widgets.js~iconcheck#packflag",
     "class/scripts/widgets/ui_widgets.js~IconCheck.html#instance-member-packflag",
     "scripts/widgets/ui_widgets.js~IconCheck#packflag",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_widgets.js~iconcheck#title",
-    "class/scripts/widgets/ui_widgets.js~IconCheck.html#instance-member-title",
-    "scripts/widgets/ui_widgets.js~IconCheck#title",
     "member"
   ],
   [

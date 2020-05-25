@@ -66,6 +66,8 @@ export let Icons = {
   BOLD           : 40,
   ITALIC         : 41,
   UNDERLINE      : 42,
-  STRIKETHRU     : 43
+  STRIKETHRU     : 43,
+  TREE_EXPAND    : 44,
+  TREE_COLLAPSE  : 45
 };
 

@@ -64,6 +64,30 @@ export class PropsEditor extends Editor {
     this.buildGraphPack(tabs.tab("Graph Packing"));
 
     this.setCSS();
+
+    let tab = tabs.tab("TreeView");
+    let tview = tab.treeview();
+
+    tview.item("One");
+    tview.item("Two");
+    let t = tview.item("Three", {icon : Icons.FILE});
+    //t.button("Yay", () => {});
+    //t.label("Label");
+
+    t = t.item("Four", {icon : Icons.FILE});
+    t.item("4.5");
+
+    let row = document.createElement("rowframe-x");
+    row.ctx = this.ctx;
+
+    let icon = row.check()
+    row.label("Four");
+
+    t.text = row;
+
+    //t.button("Yay2", () => {});
+    t = t.item("Five");
+    tview.item("Six", {icon : Icons.DELETE});
   }
 
   copy() {

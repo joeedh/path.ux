@@ -4151,8 +4151,19 @@ let colormap = {
   "peach"   : 210
 };
 
+let termColorMap = {};
+for (let k in colormap) {
+  termColorMap[k] = colormap[k];
+  termColorMap[colormap[k]] = k;
+}
+
 function termColor(s, c) {
-  s = str(s);
+  if (typeof s === "symbol") {
+    s = s.toString();
+  } else {
+    s = "" + s;
+  }
+
   if (c in colormap)
     c = colormap[c];
   
@@ -5332,6 +5343,7 @@ class ImageReader {
 
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  termColorMap: termColorMap,
   termColor: termColor,
   MovingAvg: MovingAvg,
   timers: timers,
@@ -7065,8 +7077,8 @@ class Matrix4 {
   }
   
   multiply(mat) {
-    let mm = mm;
-    let mm2 = mm2;
+    let mm = this.$matrix;
+    let mm2 = mat.$matrix;
 
     let m11 = (mm2.m11 * mm.m11 + mm2.m12 * mm.m21 + mm2.m13 * mm.m31 + mm2.m14 * mm.m41);
     let m12 = (mm2.m11 * mm.m12 + mm2.m12 * mm.m22 + mm2.m13 * mm.m32 + mm2.m14 * mm.m42);
@@ -9922,7 +9934,9 @@ let Icons = {
   BOLD           : 40,
   ITALIC         : 41,
   UNDERLINE      : 42,
-  STRIKETHRU     : 43
+  STRIKETHRU     : 43,
+  TREE_EXPAND    : 44,
+  TREE_COLLAPSE  : 45
 };
 
 let exports = {
@@ -10566,10 +10580,11 @@ var reverse_keymap = keymap_latin_1_rev;
 
 class HotKey {
   /**action can be a callback or a toolpath string*/
-  constructor(key, modifiers, action) {
+  constructor(key, modifiers, action, uiname) {
     this.action = action;
     this.mods = modifiers;
     this.key = keymap[key];
+    this.uiname = uiname;
   }
 
   exec(ctx) {
@@ -10585,10 +10600,13 @@ class HotKey {
 
     for (let i=0; i<this.mods.length; i++) {
       if (i > 0) {
-        s += "+";
+        s += " + ";
       }
 
-      s += this.mods[i].toLowerCase();
+      let k = this.mods[i].toLowerCase();
+      k = k[0].toUpperCase() + k.slice(1, k.length).toLowerCase();
+
+      s += k;
     }
 
     if (this.mods.length > 0) {
@@ -14228,6 +14246,14 @@ class ToolOp extends EventHandler {
     }
   }
 
+  static searchBoxOk(ctx) {
+    let flag = this.tooldef().flag;
+    let ret = !(flag && (flag & ToolFlags.PRIVATE));
+    ret = ret && this.canRun(ctx);
+
+    return ret;
+  }
+
   static canRun(ctx) {
     return true;
   }
@@ -15755,6 +15781,7 @@ class DataPathSetOp extends ToolOp {
     uiname : "Property Set",
     toolpath : "app.prop_set",
     icon : -1,
+    flag : ToolFlags.PRIVATE,
     is_modal : true,
     inputs : {
       dataPath : new StringProperty(),
@@ -17613,8 +17640,115 @@ CSSFont {
 `;
 register(CSSFont);
 
+function exportTheme(theme1=theme) {
+  let sortkeys = (obj) => {
+    let keys = [];
+    for (let k in obj) {
+      keys.push(k);
+    }
+    keys.sort();
+    
+    return keys;
+  };
+
+  let s = "var theme = {\n";
+
+  function writekey(v, indent="") {
+    if (typeof v === "string") {
+      if (v.search("\n") >= 0) {
+        v = "`" + v + "`";
+      } else {
+        v = "'" + v + "'";
+      }
+      
+      return v;
+    } else if (typeof v === "object") {
+      if (v instanceof CSSFont) {
+        return `new CSSFont({
+${indent}  font    : ${writekey(v.font)},
+${indent}  weight  : ${writekey(v.weight)},
+${indent}  variant : ${writekey(v.variant)},
+${indent}  style   : ${writekey(v.style)},
+${indent}  size    : ${writekey(v._size)},
+${indent}  color   : ${writekey(v.color)}
+${indent}})`;
+      } else {
+        let s = "{\n";
+
+        for (let k of sortkeys(v)) {
+          let v2 = v[k];
+
+          if (k.search(" ") >= 0 || k.search("-") >= 0) {
+            k = "'" + k + "'";
+          }
+
+          s += indent + "  " + k + " : " + writekey(v2, indent + "  ") + ",\n";
+        }
+
+        s += indent + "}";
+        return s;
+      }
+    } else {
+      return ""+v;
+    }
+
+    return "error";
+  }
+
+  for (let k of sortkeys(theme1)) {
+    let k2 = k;
+
+    if (k.search("-") >= 0 || k.search(" ") >= 0) {
+      k2 = "'" + k + "'";
+    }
+    s += "  " + k2 + ": ";
+
+    let v = theme1[k];
+    if (typeof v !== "object" || v instanceof CSSFont) {
+      s += writekey(v, "  ") + ",\n";
+    } else {
+      s += " {\n";
+      let s2 = "";
+
+      let maxwid = 0;
+
+      for (let k2 of sortkeys(v)) {
+        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
+          k2 = "'" + k2 + "'";
+        }
+
+        maxwid = Math.max(maxwid, k2.length);
+      }
+
+      for (let k2 of sortkeys(v)) {
+        let v2 = v[k2];
+
+        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
+          k2 = "'" + k2 + "'";
+        }
+    
+        let pad = "";
+
+        for (let i=0; i<maxwid-k2.length; i++) {
+          pad += " ";
+        }
+
+        s2 += "    " + k2 + pad + ": " + writekey(v2, "    ") + ",\n";
+      }
+
+      s += s2;
+      s += "  },\n\n";
+    }
+  }
+  s += "};\n";
+
+  return s;
+}
+window._exportTheme = exportTheme;
+
 const DefaultTheme = {
   base : {
+    themeVersion : 0.1,
     mobileTextSizeMultiplier : 1.5,
     mobileSizeMultiplier : 2, //does not include text
 
@@ -17692,7 +17826,7 @@ const DefaultTheme = {
     },
 
     "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
-    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)", //for panels
+    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)",
     "BoxBorder" : "rgba(255, 255, 255, 1.0)",
 
     //fonts
@@ -17730,6 +17864,11 @@ const DefaultTheme = {
       font     : "sans-serif",
       weight   : "bold"
     }),
+  },
+
+  treeview : {
+    itemIndent : 10,
+    rowHeight  : 18
   },
 
   menu : {
@@ -17855,6 +17994,18 @@ const DefaultTheme = {
     //DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
   },
 
+  panel : { 
+    "Background" : "rgba(175, 175, 175, 1.0)",
+    "TitleBackground" : "rgba(125, 125, 125, 1.0)", //for panels
+    "BoxBorder" : "rgba(255, 255, 255, 0.0)",
+    "TitleBorder" : "rgba(255, 255, 255, 0.0)",
+    "BoxRadius" : 5,
+    "BoxLineWidth"  : 1,
+    "padding-top" : 7,
+    "padding-bottom" : 5,
+    "border-style" : "solid"
+  },
+
   listbox : {
     DefaultPanelBG : "rgba(230, 230, 230, 1.0)",
     ListHighlight : "rgba(155, 220, 255, 0.5)",
@@ -17871,7 +18022,8 @@ const DefaultTheme = {
   colorpickerbutton : {
     defaultWidth  : 100,
     defaultHeight : 25,
-    defaultFont   : "LabelText"
+    defaultFont   : "LabelText",
+    
   },
 
   dropbox : {
@@ -18547,6 +18699,21 @@ class UIBase extends HTMLElement {
     }, {passive : false});
   }
 
+  hide(sethide=true) {
+    this.hidden = sethide;
+
+    for (let n of this.shadow.childNodes) {
+      n.hidden = sethide;
+    }
+
+    this._forEachChildWidget((n) => {
+      n.hide(sethide);
+    });
+  }
+
+  unhide() {
+    this.hide(false);
+  }
   /**
    causes calls to setPathValue to go through
    toolpath app.datapath_set(path="" newValueJSON="")
@@ -18979,6 +19146,13 @@ class UIBase extends HTMLElement {
     }
   }
 
+  flushUpdate() {
+    this.update();
+
+    this._forEachChildWidget((c) => {
+      c.flushUpdate();
+    });
+  }
 
   //used by container nodes
   /**
@@ -20229,6 +20403,8 @@ function saveUIData(node, key) {
   });
 }
 
+window._saveUIData = saveUIData;
+
 function loadUIData(node, buf) {
   if (buf === undefined || buf === null) {
     return;
@@ -20276,6 +20452,8 @@ function loadUIData(node, buf) {
   }
 }
 
+window._loadUIData = loadUIData;
+
 var ui_base = /*#__PURE__*/Object.freeze({
   __proto__: null,
   _setAreaClass: _setAreaClass,
@@ -20321,7 +20499,8 @@ var ui_base = /*#__PURE__*/Object.freeze({
   validateWebColor: validateWebColor,
   invertTheme: invertTheme,
   setColorSchemeType: setColorSchemeType,
-  CSSFont: CSSFont
+  CSSFont: CSSFont,
+  exportTheme: exportTheme
 });
 
 "use strict";
@@ -20931,7 +21110,6 @@ class TextBox extends TextBoxBase {
           break;
       }
 
-      console.log(e.keyCode);
       return;
       if (ignore) return;
 
@@ -21190,6 +21368,47 @@ let UIBase$3 = UIBase,
     IconSheets$3 = IconSheets;
 
 let parsepx$3 = parsepx;
+
+class IconLabel extends UIBase$3 {
+  constructor() {
+    super();
+    this._icon = -1;
+    this.iconsheet = 1;
+  }
+
+  init() {
+    super.init();
+
+    this.style["display"] = "flex";
+    this.style["margin"] = this.style["padding"] = "0px";
+
+    this.setCSS();
+  }
+
+  set icon(id) {
+    this._icon = id;
+    this.setCSS();
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  setCSS() {
+    let size = iconmanager.getTileSize(this.iconsheet);
+
+
+    iconmanager.setCSS(this.icon, this);
+
+    this.style["width"] = size + "px";
+    this.style["height"] = size + "px";
+  }
+
+  static define() {return {
+    tagname : "icon-label-x"
+  }}
+}
+UIBase$3.register(IconLabel);
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -21775,6 +21994,7 @@ class IconButton extends Button {
     this._icon = 0;
     this._icon_pressed = undefined;
     this.iconsheet = Icons.LARGE;
+    this.drawButtonBG = true;
   }
 
   updateDefaultSize() {
@@ -21827,7 +22047,9 @@ class IconButton extends Button {
     
     //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
     //
-    super._redraw(false);
+    if (this.drawButtonBG) {
+      super._redraw(false);
+    }
 
     let icon = this._icon;
     
@@ -22375,15 +22597,16 @@ class Container extends UIBase {
     if (child instanceof UIBase) {
       child.ctx = this.ctx;
       child.parentWidget = this;
+      this.shadow.appendChild(child);
+
+      if (child.onadd) {
+        child.onadd();
+      }
+
+      return;
     }
 
-    let ret = super.appendChild(child);
-
-    if (child instanceof UIBase && child.onadd) {
-      child.onadd();
-    }
-
-    return ret;
+    return super.appendChild(child);
   }
 
   clear(trigger_on_destroy=true) {
@@ -22410,6 +22633,14 @@ class Container extends UIBase {
     return ret;
   }
 
+  prepend(child) {
+    if (child instanceof UIBase$4) {
+      this._prepend(child);
+    } else {
+      super.prepend(child);
+    }
+  }
+
   //*
   _prepend(child) {
     return this._add(child, true);
@@ -22417,6 +22648,21 @@ class Container extends UIBase {
 
   add(child) {
     return this._add(child);
+  }
+
+  insert(i, ch) {
+    ch.parentWidget = this;
+    ch.ctx = this;
+
+    if (i >= this.shadow.childNodes.length) {
+      this.add(ch);
+    } else {
+      this.shadow.insertBefore(ch, list$2(this.children)[i]);
+    }
+
+    if (ch.onadd) {
+      ch.onadd();
+    }
   }
 
   _add(child, prepend = false) {
@@ -22428,7 +22674,11 @@ class Container extends UIBase {
     child.ctx = this.ctx;
     child.parentWidget = this;
 
-    this.shadow.appendChild(child);
+    if (prepend) {
+      this.shadow.prepend(child);
+    } else {
+      this.shadow.appendChild(child);
+    }
 
     /*
     if (child._ctx) {
@@ -22449,6 +22699,13 @@ class Container extends UIBase {
     ["Name", () => {console.log("do something")}]
   ])
   */
+
+  //TODO: make sure this works on Electron?
+  dynamicMenu(title, list, packflag=0) {
+    //actually, .menu works for now
+    return this.menu(title, list, packflag);
+  }
+
   menu(title, list, packflag = 0) {
     let dbox = document.createElement("dropbox-x");
 
@@ -22493,8 +22750,13 @@ class Container extends UIBase {
         } else if (item instanceof Array) {
           let hotkey = item.length > 2 ? item[2] : undefined;
           let icon = item.length > 3 ? item[3] : undefined;
+          let tooltip = item.length > 4 ? item[4] : undefined;
 
-          menu.addItemExtra(item[0], id, hotkey, icon);
+          if (hotkey !== undefined && hotkey instanceof HotKey) {
+            hotkey = hotkey.buildString();
+          }
+
+          menu.addItemExtra(item[0], id, hotkey, icon, undefined, tooltip);
 
           cbs[id] = (function (cbfunc, arg) {
             return function () {
@@ -22850,7 +23112,7 @@ class Container extends UIBase {
           }
         }
 
-        this.listenum(inpath, undefined, undefined, val, undefined, undefined, packflag);
+        this.listenum(inpath, undefined, undefined, undefined, undefined, undefined, packflag);
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
@@ -22910,6 +23172,24 @@ class Container extends UIBase {
         }
       }
     }
+  }
+
+  iconcheck(inpath, icon, name, mass_set_path) {
+    ret = document.createElement("iconcheck-x");
+    ret.icon = icon;
+    ret.description = name;
+
+    if (inpath) {
+      ret.setAttribute("datapath", inpath);
+    }
+
+    if (mass_set_path) {
+      ret.setAttribute("mass_set_path", mass_set_path);
+    }
+
+    this.add(ret);
+
+    return ret;
   }
 
   check(inpath, name, packflag = 0, mass_set_path = undefined) {
@@ -23234,7 +23514,7 @@ class Container extends UIBase {
     throw new Error("implement me!");
   }
 
-  simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+    simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
@@ -23348,6 +23628,14 @@ class Container extends UIBase {
     }
 
     this._add(ret);
+
+    return ret;
+  }
+
+  treeview() {
+    let ret = document.createElement("tree-view-x");
+    ret.ctx = this.ctx;
+    this.add(ret);
 
     return ret;
   }
@@ -24577,6 +24865,17 @@ class PanelFrame extends ColumnFrame {
     super();
 
     this.contents = document.createElement("colframe-x");
+    this.iconcheck = document.createElement("iconcheck-x");
+
+    Object.defineProperty(this.contents, "closed", {
+      get : () => {
+        return this.closed;
+      },
+
+      set : (v) => {
+        this.closed = v;
+      }
+    });
 
     this.packflag = this.inherit_packflag = 0;
 
@@ -24630,9 +24929,7 @@ class PanelFrame extends ColumnFrame {
 
     let row = con;
 
-    let iconcheck = document.createElement("iconcheck-x");
-    this.iconcheck = iconcheck;
-
+    let iconcheck = this.iconcheck;
     this.style["width"] = "100%";
 
     this.overrideDefault("BoxMargin", 0);
@@ -24665,51 +24962,107 @@ class PanelFrame extends ColumnFrame {
       iconcheck.checked = !iconcheck.checked;
     };
 
-    let label = this.label = row.label(this.getAttribute("title"));
+    let label = this.__label = row.label(this.getAttribute("title"));
 
-    this.label.font = "TitleText";
+    this.__label.font = "TitleText";
     label._updateFont();
 
     label.noMarginsOrPadding();
     label.addEventListener("mousedown", onclick);
     label.addEventListener("touchdown", onclick);
 
-    row.background = this.getDefault("BoxSubBG");
-    row.style["border-radius"] = "5px";
+    let bs = this.getDefault("border-style");
 
-    this.background = this.getDefault("BoxSub2BG");
+    row.background = this.getDefault("TitleBackground");
+    row.style["border-radius"] = this.getDefault("BoxRadius") + "px";
+    row.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+
+    this.background = this.getDefault("Background");
 
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
-    row.style["padding-top"] = "7px";
-    row.style["padding-bottom"] = "5px";
+    row.style["padding-top"] = this.getDefault("padding-top") + "px";
+    row.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
 
     this.contents.ctx = this.ctx;
-    this.add(this.contents);
+    if (!this._closed) {
+      this.add(this.contents);
+      this.contents.flushUpdate();
+    }
+
+    this.setCSS();
+  }
+
+  get label() {
+    return this.__label.text;
+  }
+
+  set label(v) {
+    this.__label.text = v;
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    if (!this.titleframe || !this.__label) {
+      return;
+    }
+
+    let bs = this.getDefault("border-style");
+
+    this.titleframe.background = this.getDefault("TitleBackground");
+    this.titleframe.style["border-radius"] = this.getDefault("BoxRadius") + "px";
+    this.titleframe.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
+    this.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+    this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
+    this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
+
+    let bg = this.getDefault("Background");
+    
+    this.background = bg;
+    this.contents.background = bg;
+    this.contents.style["background-color"] = bg;
+    this.style["background-color"] = bg;
+
+    console.log("BG", bg);
+    
+    this.__label._updateFont();
   }
 
   on_disabled() {
     super.on_disabled();
 
-    this.label._updateFont();
+    this.__label._updateFont();
     this.setCSS();
   }
 
   on_enabled() {
     super.on_enabled();
     
-    this.label.setCSS();
-    this.label.style["color"] = this.style["color"];
+    this.__label.setCSS();
+    this.__label.style["color"] = this.style["color"];
     this.setCSS();
   }
 
   static define() {
     return {
-      tagname: "panelframe-x"
+      tagname: "panelframe-x",
+      style  : "panel"
     };
   }
 
   update() {
+    let key = this.getDefault("background-color") + this.getDefault("TitleBackground");
+    key += this.getDefault("BoxBorder") + this.getDefault("BoxLineWidth");
+    key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
+    key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
+    key += this.getDefault("Background");
+
+    if (key !== this._last_key) {
+      this._last_key = key;
+      this.setCSS();
+    }
+
     super.update();
   }
 
@@ -24718,6 +25071,8 @@ class PanelFrame extends ColumnFrame {
       this.contents.remove();
     } else {
       this.add(this.contents, false);
+
+      this.contents.flushUpdate();
     }
 
     this.contents.hidden = state;
@@ -25250,7 +25605,7 @@ class ColorField extends ColumnFrame {
   constructor() {
     super();
 
-    this.hsva = [0.05, 0.6, 0.15, 1.0];
+    this.hsva = new Vector4$2([0.05, 0.6, 0.15, 1.0]);
     this.rgba = new Vector4$2([0, 0, 0, 0]);
 
     this._recalcRGBA();
@@ -25533,13 +25888,13 @@ class ColorPicker extends ColumnFrame {
       return;
     }
 
-    let hsva = this.hsva;
+    let hsva = this.field.hsva;
     this.h.setValue(hsva[0], false);
     this.s.setValue(hsva[1], false);
     this.v.setValue(hsva[2], false);
     this.a.setValue(hsva[3], false);
 
-    let rgba = this.rgba;
+    let rgba = this.field.rgba;
 
     this.r.setValue(rgba[0], false);
     this.g.setValue(rgba[1], false);
@@ -25553,13 +25908,14 @@ class ColorPicker extends ColumnFrame {
     }
   }
 
+  //*
   get hsva() {
     return this.field.hsva;
   }
 
   get rgba() {
     return this.field.rgba;
-  }
+  }//*/
 
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
@@ -25646,6 +26002,7 @@ class ColorPickerButton extends UIBase$8 {
     this._label = "";
 
     this.rgba = new Vector4$2([1, 1, 1, 1]);
+
     this.labelDom = document.createElement("span");
     this.labelDom.textContent = "error";
     this.dom = document.createElement("canvas");
@@ -25711,11 +26068,33 @@ class ColorPickerButton extends UIBase$8 {
     widget._init();
 
     widget.style["padding"] = "20px";
+
+    let onchange = () => {
+      this.rgba.load(widget.rgba);
+      this.redraw();
+      
+      if (this.onchange) {
+        this.onchange(this);
+      }
+    };
+
     widget.onchange = onchange;
 
     colorpicker.style["background-color"] = widget.getDefault("DefaultPanelBG");
     colorpicker.style["border-radius"] = "25px";
     colorpicker.style["border"] = widget.getDefault("border");
+  }
+
+  setRGBA(val) {
+    let a = this.rgba[3];
+
+    this.rgba.load(val);
+
+    if (val.length < 4) {
+      this.rgba[3] = a;
+    }
+
+    return this;
   }
 
   get font() {
@@ -25778,6 +26157,9 @@ class ColorPickerButton extends UIBase$8 {
 
     //console.log("TOTX, TOTY", totx, toty);
 
+    drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
+    g.clip();
+
     g.beginPath();
     for (let x=0; x<totx; x++) {
       for (let y=0; y<toty; y++) {
@@ -25833,7 +26215,8 @@ class ColorPickerButton extends UIBase$8 {
     canvas.style["height"] = h + "px";
     canvas.width = ~~(w*dpi);
     canvas.height = ~~(h*dpi);
-
+        
+    this.style["background-color"] = "rgba(0,0,0,0)";
     this._redraw();
   }
 
@@ -25904,6 +26287,12 @@ class ColorPickerButton extends UIBase$8 {
   update() {
     super.update();
 
+    let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
+    if (key !== this._last_key) {
+      this._last_key = key;
+      this.redraw();
+    }
+    
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
@@ -27693,6 +28082,7 @@ class Menu extends UIBase$c {
 
     this.items = [];
 
+    this._ignoreFocusEvents = false;
     this.closeOnMouseUp = true;
 
     this.itemindex = 0;
@@ -27865,11 +28255,12 @@ class Menu extends UIBase$c {
       return;
     }
 
+    this.closed = true;
+
     if (this.started) {
       menuWrangler.popMenu(this);
     }
 
-    this.closed = true;
     this.started = false;
 
     //if (this._popup.parentNode !== undefined) {
@@ -27888,6 +28279,43 @@ class Menu extends UIBase$c {
     }
   }
 
+  _select(dir, focus=true) {
+    if (this.activeItem === undefined) {
+      for (let item of this.items) {
+        if (!item.hidden) {
+          this.setActive(item, focus);
+          break;
+        }
+      }
+    } else {
+      let i = this.items.indexOf(this.activeItem);
+      let item = this.activeItem;
+
+      do {
+        i = (i + dir + this.items.length) % this.items.length;
+        item = this.items[i];
+
+        if (!item.hidden) {
+          break;
+        }
+      } while (item !== this.activeItem);
+
+      this.setActive(item, focus); 
+    }
+
+    if (this.hasSearchBox) {
+      this.activeItem.scrollIntoView();
+    }
+  }
+
+  selectPrev(focus=true) {
+    return this._select(-1, focus);
+  }
+
+  selectNext(focus=true) {
+    return this._select(1, focus);
+  }
+
   static define() {return {
     tagname : "menu-x",
     style   : "menu"
@@ -27897,8 +28325,36 @@ class Menu extends UIBase$c {
     return this.startFancy(prepend, setActive);
   }
 
+  setActive(item, focus=true) {
+    if (this.activeItem === item) {
+      return;
+    }
+
+    if (this.activeItem) {
+      this.activeItem.style["background-color"] = this.getDefault("MenuBG");
+
+      if (focus) {
+        this.activeItem.blur();
+      }
+    }
+
+    if (item) {
+      item.style["background-color"] = this.getDefault("MenuHighlight");
+
+      if (focus) {
+        item.focus();
+      }
+    }
+    
+    this.activeItem = item;
+  }
+
   startFancy(prepend, setActive=true) {
-    console.log("menu fancy start");
+    console.warn("menu searchbox mode start");
+
+    this.hasSearchBox = true;
+    this.started = true;
+    menuWrangler.pushMenu(this);
 
     let dom2 = document.createElement("div");
     //let dom2 = document.createElement("div");
@@ -27906,11 +28362,12 @@ class Menu extends UIBase$c {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = document.createElement("textbox-x");
-
+    let sbox = this.textbox = document.createElement("textbox-x");
+    this.textbox.parentWidget = this;
+    
     dom2.appendChild(sbox);
     dom2.appendChild(this.dom);
-
+    
     dom2.style["height"] = "300px";
     this.dom.style["height"] = "300px";
     this.dom.style["overflow"] = "scroll";
@@ -27921,6 +28378,8 @@ class Menu extends UIBase$c {
       this.container.appendChild(dom2);
     }
 
+    dom2.parentWidget = this.container;
+
     sbox.focus();
     sbox.onchange = () => {
       let t = sbox.text.trim().toLowerCase();
@@ -27928,6 +28387,7 @@ class Menu extends UIBase$c {
       console.log("applying search", t);
 
       for (let item of this.items) {
+        item.hidden = true;
         item.remove();
       }
 
@@ -27936,7 +28396,10 @@ class Menu extends UIBase$c {
         ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
 
         if (ok) {
+          item.hidden = false;
           this.dom.appendChild(item);
+        } else if (item === this.activeItem) {
+          this.selectNext(false);
         }
         //item.hidden = !ok;
       }
@@ -27954,9 +28417,6 @@ class Menu extends UIBase$c {
           break;
       }
     });
-
-    if (!setActive)
-      return;
   }
 
   start(prepend=false, setActive=true) {
@@ -27964,7 +28424,7 @@ class Menu extends UIBase$c {
     this.focus();
     menuWrangler.pushMenu(this);
 
-    if (this.items.length > 10) {
+    if (this.items.length > 15) {
       return this.start_fancy(prepend, setActive);
     }
 
@@ -27993,7 +28453,7 @@ class Menu extends UIBase$c {
     }, 0);
   }
 
-  addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
+  addItemExtra(text, id=undefined, hotkey, icon=-1, add=true, tooltip=undefined) {
     let dom = document.createElement("span");
 
     dom.style["display"] = "inline-flex";
@@ -28095,6 +28555,10 @@ class Menu extends UIBase$c {
     ret.icon = icon;
     ret.label = text ? text : ret.innerText;
 
+    if (tooltip) {
+      ret.title = tooltip;
+    }
+
     return ret;
   }
 
@@ -28159,13 +28623,21 @@ class Menu extends UIBase$c {
       });
 
       li.addEventListener("blur", (e) => {
+        if (this._ignoreFocusEvents) {
+          return;
+        }
+
         //console.log("blur", li.getAttribute("tabindex"));
         if (this.activeItem && !this.activeItem._isMenu) {
-          this.activeItem = undefined;
+          this.setActive(undefined, false);
         }
       });
 
       let onfocus = (e) => {
+        if (this._ignoreFocusEvents) {
+          return;
+        }
+
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           let active = this.activeItem;
 
@@ -28185,7 +28657,7 @@ class Menu extends UIBase$c {
           li._menu.start(false, false);
         }
 
-        this.activeItem = li;
+        this.setActive(li, false);
       };
 
       li.addEventListener("touchend", (e) => {
@@ -28259,7 +28731,7 @@ class DropBox extends Button {
   constructor() {
     super();
 
-    this.searchMenuMode = false;
+    this._searchMenuMode = false;
 
     this.r = 5;
     this._menu = undefined;
@@ -28273,6 +28745,17 @@ class DropBox extends Button {
     super.init();
     this.updateWidth();
   }
+
+  get searchMenuMode() {
+    return this._searchMenuMode;
+  }
+
+  set searchMenuMode(v) {
+    this._searchMenuMode = v;
+
+    console.warn("searchMenuMode was set", this);
+  }
+
 
   setCSS() {
     //do not call parent classes's setCSS here
@@ -28636,21 +29119,60 @@ class MenuWrangler {
     this.menustack = [];
   }
 
+  searchKeyDown(e) {
+    let menu = this.menu;
+    
+    console.log("s", e.keyCode);
+    
+    e.stopPropagation();
+    menu._ignoreFocusEvents = true;
+    menu.textbox.focus();
+    menu._ignoreFocusEvents = false;
+
+    //if (e.shiftKey || e.altKey || e.ctrlKey || e.commandKey) {
+    //  return;
+    //}
+
+    switch (e.keyCode) {
+      case keymap["Enter"]: //return key
+        menu.click(menu.activeItem);
+        break;
+      case keymap["Escape"]: //escape key
+        menu.close();
+        break;
+      case keymap["Up"]:
+        console.log("Up");
+        menu.selectPrev(false);
+        break;
+      case keymap["Down"]:
+        console.log("Down");
+        menu.selectNext(false);
+        break;
+    }
+  }
+
   on_keydown(e) {
+    window.menu = this.menu;
+    //console.log("M", e.keyCode, this.menu !== undefined);
+
     if (this.menu === undefined) {
       return;
+    }
+
+    if (this.menu.hasSearchBox) {
+      return this.searchKeyDown(e);
     }
 
     console.log("key", e.keyCode);
     let menu = this.menu;
 
     switch (e.keyCode) {
-      case 37: //left
-      case 39: //right
+      case keymap["Left"]: //left
+      case keymap["Right"]: //right
         if (menu._dropbox) {
           let dropbox = menu._dropbox;
 
-          if (e.keyCode === 37) {
+          if (e.keyCode === keymap["Left"]) {
             dropbox = dropbox.previousElementSibling;
           } else {
             dropbox = dropbox.nextElementSibling;
@@ -28662,8 +29184,13 @@ class MenuWrangler {
           }
         }
         break;
-      case 38: //up
-      case 40: //down
+      case keymap["Up"]: //up
+        this.selectPrev();
+        break;
+      case keymap["Down"]: //down
+        this.selectNext();
+        break;
+        /*
         let item = menu.activeItem;
         if (!item) {
           item = menu.items[0];
@@ -28685,12 +29212,9 @@ class MenuWrangler {
         item2 = menu.items[i];
 
         if (item2) {
-          menu.activeItem = item2;
-
-          item.blur();
-          item2.focus();
+          menu.setActive(item2);
         }
-        break;
+        break;//*/
       case 13: //return key
       case 32: //space key
         menu.click(menu.activeItem);
@@ -28744,6 +29268,12 @@ class MenuWrangler {
   }
 
   on_mousemove(e) {
+    //XXX
+    if (this.menu && this.menu.hasSearchBox) {
+      this.closetimer = time_ms();
+      return;
+    }
+
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = time_ms();
       return;
@@ -29932,7 +30462,7 @@ class SliderWithTextbox extends ColumnFrame {
     this.l.style["display"] = "float";
     this.l.style["position"] = "relative";
 
-    if (!this.labelOnTop) {
+    if (!this.labelOnTop && !(this.numslider instanceof NumSlider)) {
       this.l.style["left"] = "8px";
       this.l.style["top"] = "5px";
     }
@@ -30140,8 +30670,8 @@ class NumSliderSimple extends SliderWithTextbox {
     super();
 
     this.numslider = document.createElement("numslider-simple-base-x");
-
   }
+
   static define() {return {
     tagname : "numslider-simple-x",
     style : "numslider_simple"
@@ -30156,6 +30686,11 @@ class NumSliderWithTextBox extends SliderWithTextbox {
     this.numslider = document.createElement("numslider-x");
 
   }
+
+  _redraw() {
+    this.numslider._redraw();
+  }
+  
   static define() {return {
     tagname : "numslider-textbox-x",
     style : "numslider-textbox-x"
@@ -30838,7 +31373,7 @@ function patchDropBox() {
       emenu.closePopup(getCurrentWindow);
     };
 
-    console.log("menu dropbox click", this._menu);
+    //console.log("menu dropbox click", this._menu);
 
     if (this._menu === undefined) {
       return;
@@ -30878,7 +31413,7 @@ function patchDropBox() {
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
 
-    console.log(x, y);
+    //console.log(x, y);
     x = ~~x;
     y = ~~y;
     
@@ -30964,7 +31499,7 @@ function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   return icon;
   return undefined
 
-  console.log("ICON", icon);
+  //console.log("ICON", icon);
   window._icon = icon;
   return icon;
 }
@@ -31014,7 +31549,7 @@ function buildElectronMenu(menu) {
       icon        : icon ? getNativeIcon(icon) : undefined,
       click       : function() {
         menu.onselect(item._id);
-        console.log("click", item._id);
+        //console.log("click", item._id);
       }
     };
 
@@ -31093,7 +31628,7 @@ function initMenuBar(menuEditor) {
 
 
   let header = menuEditor.header;
-  console.log(header);
+  //console.log(header)
   for (let dbox of header.traverse(DropBox)) {
     dbox._build_menu();
     dbox.update();
@@ -31111,13 +31646,347 @@ function initMenuBar(menuEditor) {
       submenu : buildElectronMenu(menu2)
     };
 
-    console.log(title);
+    //console.log(title);
     menu.insert(0, new ElectronMenuItem(args));
   }
 
 
   ElectronMenu.setApplicationMenu(menu);
   //win.setMenu(menu);
+}
+
+let UIBase$d = UIBase;
+
+class Note extends UIBase {
+  constructor() {
+    super();
+
+    let style = document.createElement("style");
+
+    this._noteid = undefined;
+    this.height = 20;
+
+    style.textContent = `
+    .notex {
+      display : flex;
+      flex-direction : row;
+      flex-wrap : nowrap;
+      height : {this.height}px;
+      padding : 0px;
+      margin : 0px;
+    }
+    `;
+
+    this.dom = document.createElement("div");
+    this.dom.setAttribute("class", "notex");
+    this.color = "red";
+
+    this.shadow.appendChild(style);
+    this.shadow.append(this.dom);
+    this.setLabel("");
+  }
+
+  setLabel(s) {
+    let color = this.color;
+    if (this.mark === undefined) {
+      this.mark = document.createElement("div");
+      this.mark.style["display"] = "flex";
+      this.mark.style["flex-direction"] = "row";
+      this.mark.style["flex-wrap"] = "nowrap";
+
+      //this.mark.style["width"]
+      let sheet = 0;
+
+      let size = iconmanager.getTileSize(sheet);
+
+      this.mark.style["width"] = "" + size + "px";
+      this.mark.style["height"] = "" + size + "px";
+
+      this.dom.appendChild(this.mark);
+
+      this.ntext = document.createElement("div");
+      this.ntext.style["display"] = "inline-flex";
+      this.ntext.style["flex-wrap"] = "nowrap";
+
+      this.dom.appendChild(this.ntext);
+
+      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
+
+      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
+      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
+      //this.mark.style["background-color"] = color;
+    }
+
+    let mark = this.mark, ntext = this.ntext;
+    //mark.innerText = "!";
+    ntext.innerText = " " + s;
+  }
+
+  init() {
+    super.init();
+
+    this.setAttribute("class", "notex");
+
+    this.style["display"] = "flex";
+    this.style["flex-wrap"] = "nowrap";
+    this.style["flex-direction"] = "row";
+    this.style["border-radius"] = "7px";
+    this.style["padding"] = "2px";
+
+    this.style["color"] = this.getDefault("NoteText").color;
+    let clr = css2color$1(this.color);
+    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
+
+    this.style["background-color"] = clr;
+    this.setCSS();
+  }
+
+  static define() {return {
+    tagname : "note-x"
+  }}
+}
+UIBase$d.register(Note);
+
+class ProgBarNote extends Note {
+  constructor() {
+    super();
+
+    this._percent = 0.0;
+    this.barWidth = 100;
+
+    let bar = this.bar = document.createElement("div");
+    bar.style["display"] = "flex";
+    bar.style["flex-direction"] = "row";
+    bar.style["width"] = this.barWidth + "px";
+    bar.style["height"] = this.height + "px";
+    bar.style["background-color"] = this.getDefault("ProgressBarBG");
+    bar.style["border-radius"] = "12px";
+    bar.style["align-items"] = "center";
+    bar.style["padding"] = bar.style["margin"] = "0px";
+
+    let bar2 = this.bar2 = document.createElement("div");
+    let w = 50.0;
+
+    bar2.style["display"] = "flex";
+    bar2.style["flex-direction"] = "row";
+    bar2.style["height"] = this.height + "px";
+    bar2.style["background-color"] = this.getDefault("ProgressBar");
+    bar2.style["border-radius"] = "12px";
+    bar2.style["align-items"] = "center";
+    bar2.style["padding"] = bar2.style["margin"] = "0px";
+
+    this.bar.appendChild(bar2);
+    this.dom.appendChild(this.bar);
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let w = ~~(this.percent * this.barWidth + 0.5);
+
+    this.bar2.style["width"] = w + "px";
+  }
+
+  set percent(val) {
+    this._percent = val;
+    this.setCSS();
+  }
+
+  get percent() {
+    return this._percent;
+  }
+
+  init() {
+    super.init();
+  }
+
+  static define() {return {
+    tagname : "note-progress-x"
+  }}
+}
+UIBase$d.register(ProgBarNote);
+
+class NoteFrame extends RowFrame {
+  constructor() {
+    super();
+    this._h = 20;
+  }
+
+  init() {
+    super.init();
+
+    this.noMarginsOrPadding();
+
+    noteframes.push(this);
+    this.background = this.getDefault("NoteBG");
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.style["width"] = "min-contents";
+    this.style["height"] = this._h + "px";
+  }
+
+  _ondestroy() {
+    if (noteframes.indexOf(this) >= 0) {
+      noteframes.remove(this);
+    }
+
+    super._ondestroy();
+  }
+
+  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
+    let note;
+
+    for (let child of this.children) {
+      if (child._noteid === id) {
+        note = child;
+        break;
+      }
+    }
+
+    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
+
+    if (note === undefined) {
+      note = this.addNote(msg, color, -1, "note-progress-x");
+      note._noteid = id;
+    }
+
+    //note.setLabel(msg + " " + f + "%");
+    note.percent = percent;
+
+    if (percent >= 1.0) {
+      //note.setLabel(msg + " " + f + "%");
+
+      window.setTimeout(() => {
+        note.remove();
+      }, timeout);
+    }
+
+    return note;
+  }
+
+  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
+    //let note = document.createElement("note-x");
+
+    //note.ctx = this.ctx;
+    //note.background = "red";
+    //note.dom.innerText = msg;
+
+    //this._add(note);
+
+    let note = document.createElement(tagname);
+
+    note.color = color;
+    note.setLabel(msg);
+
+    note.style["text-align"] = "center";
+
+    note.style["font"] = getFont(note, "NoteText");
+    note.style["color"] = this.getDefault("NoteText").color;
+
+    this.add(note);
+
+    this.noMarginsOrPadding();
+    note.noMarginsOrPadding();
+
+    //this.dom.style["position"] = "absolute";
+    //this.style["position"] = "absolute";
+    //note.style["position"] = "absolute";
+
+    note.style["height"] = this._h + "px";
+    note.height = this._h;
+
+
+    if (timeout != -1) {
+      window.setTimeout(() => {
+        console.log("remove!");
+        note.remove();
+      }, timeout);
+    }
+
+    //this.appendChild(note);
+    return note;
+
+  }
+
+  static define() {return {
+    tagname : "noteframe-x"
+  }}
+}
+UIBase$d.register(NoteFrame);
+
+function getNoteFrames(screen) {
+  let ret = [];
+
+  let rec = (n) => {
+
+    if (n instanceof NoteFrame) {
+      ret.push(n);
+    }
+
+    if (n.childNodes !== undefined) {
+      for (let node of n.childNodes) {
+        rec(node);
+      }
+    }
+
+    if (n instanceof UIBase && n.shadow !== undefined && n.shadow.childNodes) {
+      for (let node of n.shadow.childNodes) {
+        rec(node);
+      }
+    }
+  };
+
+  rec(screen);
+  return ret;
+}
+
+let noteframes = [];
+
+function progbarNote(screen, msg, percent, color, timeout) {
+  noteframes = getNoteFrames(screen);
+
+  for (let frame of noteframes) {
+    try {
+      frame.progbarNote(msg, percent, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log("bad notification frame");
+    }
+  }
+}
+
+function sendNote(screen, msg, color, timeout=1000) {
+  noteframes = getNoteFrames(screen);
+
+  console.log(noteframes.length);
+
+  for (let frame of noteframes) {
+    console.log(frame);
+
+    try {
+      frame.addNote(msg, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log("bad notification frame");
+    }
+  }
+}
+
+window._sendNote = sendNote;
+
+function error(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, color2css$2([1.0, 0.0, 0.0, 1.0]), timeout);
+}
+
+function warning(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, color2css$2([0.78, 0.78, 0.2, 1.0]), timeout);
+}
+
+function message(screen, msg, timeout=1000) {
+  return sendNote(screen, msg, color2css$2([0.4, 1.0, 0.5, 1.0]), timeout);
 }
 
 "use strict";
@@ -32032,707 +32901,6 @@ class ToolTipViewer extends ToolBase {
   }
 }
 
-"use strict";
-let SVG_URL = 'http://www.w3.org/2000/svg';
-
-let Vector2$a = Vector2;
-
-class Overdraw extends UIBase {
-  constructor() {
-    super();
-
-    this.visibleToPick = false;
-
-    this.screen = undefined;
-    this.shapes = [];
-    this.otherChildren = []; //non-svg elements
-    this.font = undefined;
-
-    let style = document.createElement("style");
-    style.textContent = `
-      .overdrawx {
-        pointer-events : none;
-      }
-    `;
-    
-    this.shadow.appendChild(style);
-    
-    this.zindex_base = 1000;
-  }
-
-  startNode(node, screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
-
-    if (!this.parentNode) {
-      node.appendChild(this);
-    }
-
-    this.style["display"] = "float";
-    this.style["z-index"] = this.zindex_base;
-
-    this.style["position"] = "absolute";
-    this.style["left"] = "0px";
-    this.style["top"] = "0px";
-
-    this.style["width"] = "100%"; //screen.size[0] + "px";
-    this.style["height"] = "100%"; //screen.size[1] + "px";
-
-    this.style["pointer-events"] = "none";
-
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style["width"] = "100%";
-    this.svg.style["height"] = "100%";
-
-    this.svg.style["pointer-events"] = "none";
-
-    this.shadow.appendChild(this.svg);
-    //this.style["background-color"] = "green";
-  }
-
-  start(screen) {
-    this.screen = screen;
-    this.ctx = screen.ctx;
-    
-    screen.parentNode.appendChild(this);
-    
-    this.style["display"] = "float";
-    this.style["z-index"] = this.zindex_base;
-    
-    this.style["position"] = "absolute";
-    this.style["left"] = "0px";
-    this.style["top"] = "0px";
-    
-    this.style["width"] = screen.size[0] + "px";
-    this.style["height"] = screen.size[1] + "px";
-    
-    this.style["pointer-events"] = "none";
-    
-    this.svg = document.createElementNS(SVG_URL, "svg");
-    this.svg.style["width"] = "100%";
-    this.svg.style["height"] = "100%";
-    
-    this.shadow.appendChild(this.svg);
-    
-    //this.style["background-color"] = "green";
-  }
-  
-  clear() {
-    for (let child of list(this.svg.childNodes)) {
-      child.remove();
-    }
-    
-    for (let child of this.otherChildren) {
-      child.remove();
-    }
-    
-    this.otherChildren.length = 0;
-  }
-
-  drawTextBubbles(texts, cos, colors) {
-    let boxes = [];
-    let elems = [];
-
-    let cent = new Vector2$a();
-
-    for (let i=0; i<texts.length; i++) {
-      let co = cos[i];
-      let text = texts[i];
-      let color;
-
-      if (colors !== undefined) {
-        color = colors[i];
-      }
-
-      cent.add(co);
-      let box = this.text(texts[i], co[0], co[1], {color : color});
-
-      boxes.push(box);
-      let font = box.style["font"];
-      let pat = /[0-9]+px/;
-      let size = font.match(pat)[0];
-
-      //console.log("size", size);
-
-      if (size === undefined) {
-        size = this.getDefault("DefaultText").size;
-      } else {
-        size = parsepx(size);
-      }
-
-      //console.log(size);
-      let tsize = measureTextBlock(this, text, undefined, undefined, size, font);
-
-      box.minsize = [
-        ~~tsize.width,
-        ~~tsize.height
-      ];
-
-      let pad = parsepx(box.style["padding"]);
-
-      box.minsize[0] += pad*2;
-      box.minsize[1] += pad*2;
-
-      let x = parsepx(box.style["left"]);
-      let y = parsepx(box.style["top"]);
-
-      box.grads = new Array(4);
-      box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$a([x, y]);
-
-      box.setCSS = function() {
-        this.style["padding"] = "0px";
-        this.style["margin"] = "0px";
-        this.style["left"] = ~~this.params[0] + "px";
-        this.style["top"] = ~~this.params[1] + "px";
-        this.style["width"] = ~~this.params[2] + "px";
-        this.style["height"] = ~~this.params[3] + "px";
-      };
-
-      box.setCSS();
-      //console.log(box.params);
-      elems.push(box);
-    }
-
-    if (boxes.length === 0) {
-      return;
-    }
-
-    cent.mulScalar(1.0 / boxes.length);
-
-    function error() {
-      let p1 = [0, 0], p2 = [0, 0];
-      let s1 = [0, 0], s2 = [0, 0];
-
-      let ret = 0.0;
-
-      for (let box1 of boxes) {
-        for (let box2 of boxes) {
-          if (box2 === box1) {
-            continue;
-          }
-
-          s1[0] = box1.params[2];
-          s1[1] = box1.params[3];
-          s2[0] = box2.params[2];
-          s2[1] = box2.params[3];
-
-          let overlap = aabb_overlap_area(box1.params, s1, box2.params, s2);
-          ret += overlap;
-        }
-
-        ret += box1.startpos.vectorDistance(box1.params)*0.25;
-      }
-
-      return ret;
-    }
-
-    function solve() {
-      //console.log("ERROR", error());
-      let r1 = error();
-      if (r1 === 0.0) {
-        return;
-      }
-
-      let df = 0.0001;
-      let totgs = 0.0;
-
-      for (let box of boxes) {
-        for (let i=0; i<box.params.length; i++) {
-          let orig = box.params[i];
-          box.params[i] += df;
-          let r2 = error();
-          box.params[i] = orig;
-
-          box.grads[i] = (r2 - r1) / df;
-          totgs += box.grads[i]**2;
-        }
-      }
-
-      if (totgs === 0.0) {
-        return;
-      }
-
-      r1 /= totgs;
-      let k = 0.4;
-
-      for (let box of boxes) {
-        for (let i = 0; i < box.params.length; i++) {
-          box.params[i] += -r1*box.grads[i]*k;
-        }
-
-        box.params[2] = Math.max(box.params[2], box.minsize[0]);
-        box.params[3] = Math.max(box.params[3], box.minsize[1]);
-
-        box.setCSS();
-      }
-    }
-
-    for (let i=0; i<15; i++) {
-      solve();
-    }
-
-    for (let box of boxes) {
-      elems.push(this.line(box.startpos, box.params));
-    }
-
-    return elems;
-  }
-
-  text(text, x, y, args={}) {
-    args = Object.assign({}, args);
-
-    if (args.font === undefined) {
-      if (this.font !== undefined)
-        args.font = this.font;
-      else
-        args.font = this.getDefault("DefaultText").genCSS();
-    }
-
-    if (!args["background-color"]) {
-      args["background-color"] = "rgba(75, 75, 75, 0.75)";
-    }
-
-    args.color = args.color ? args.color : "white";
-    if (typeof args.color === "object") {
-      args.color = color2css$2(args.color);
-    }
-
-    args["padding"] = args["padding"] === undefined ? "5px" : args["padding"];
-    args["border-color"] = args["border-color"] ? args["border-color"] : "grey";
-    args["border-radius"] = args["border-radius"] ? args["border-radius"] : "25px";
-    args["border-width"] = args["border-width"] !== undefined ? args["border-width"] : "2px";
-
-    if (typeof args["border-width"] === "number") {
-      args["border-width"] = "" + args["border-width"] + "px";
-    }
-    if (typeof args["border-radius"] === "number") {
-      args["border-radius"] = "" + args["border-radius"] + "px";
-    }
-
-      //not sure I need SVG for this. . .
-    let box = document.createElement("div");
-
-    box.setAttribute("class", "overdrawx");
-
-    box.style["position"] = "absolute";
-    box.style["width"] = "min-contents";
-    box.style["height"] = "min-contents";
-    box.style["border-width"] = args["border-width"];
-    box.style["border-radius"] = "25px";
-    box.style["pointer-events"] = "none";
-    box.style["z-index"] = this.zindex_base + 1;
-    box.style["background-color"] = args["background-color"];
-    box.style["padding"] = args["padding"];
-
-    box.style["left"] = x + "px";
-    box.style["top"] = y + "px";
-
-    box.style["display"] = "flex";
-    box.style["justify-content"] = "center";
-    box.style["align-items"] = "center";
-
-    box.innerText = text;
-    box.style["font"] = args.font;
-    box.style["color"] = args.color;
-
-    this.otherChildren.push(box);
-    this.shadow.appendChild(box);
-
-    return box;
-  }
-
-  circle(p, r, stroke="black", fill="none") {
-    let circle = document.createElementNS(SVG_URL, "circle");
-    circle.setAttribute("cx", p[0]);
-    circle.setAttribute("cy", p[1]);
-    circle.setAttribute("r", r);
-
-    if (fill) {
-      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
-    } else {
-      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
-    }
-
-    this.svg.appendChild(circle);
-
-    return circle;
-  }
-
-  line(v1, v2, color="black") {
-    let line = document.createElementNS(SVG_URL, "line");
-    line.setAttribute("x1", v1[0]);
-    line.setAttribute("y1", v1[1]);
-    line.setAttribute("x2", v2[0]);
-    line.setAttribute("y2", v2[1]);
-    line.setAttribute("style", `stroke:${color};stroke-width:2`);
-    
-    this.svg.appendChild(line);
-    return line;
-  }
-  
-  rect(p, size, color="black") {
-    let line = document.createElementNS(SVG_URL, "rect");
-    line.setAttribute("x", p[0]);
-    line.setAttribute("y", p[1]);
-    line.setAttribute("width", size[0]);
-    line.setAttribute("height", size[1]);
-    line.setAttribute("style", `fill:${color};stroke-width:2`);
-
-    line.setColor = (color) => {
-      line.setAttribute("style", `fill:${color};stroke-width:2`);
-    };
-
-    this.svg.appendChild(line);
-    return line;
-  }
-  
-  end() {
-    this.clear();
-    this.remove();
-  }
-  
-  static define() {return {
-    tagname : "overdraw-x"
-  };}
-}
-
-UIBase.register(Overdraw);
-
-let UIBase$d = UIBase;
-
-class Note extends UIBase {
-  constructor() {
-    super();
-
-    let style = document.createElement("style");
-
-    this._noteid = undefined;
-    this.height = 20;
-
-    style.textContent = `
-    .notex {
-      display : flex;
-      flex-direction : row;
-      flex-wrap : nowrap;
-      height : {this.height}px;
-      padding : 0px;
-      margin : 0px;
-    }
-    `;
-
-    this.dom = document.createElement("div");
-    this.dom.setAttribute("class", "notex");
-    this.color = "red";
-
-    this.shadow.appendChild(style);
-    this.shadow.append(this.dom);
-    this.setLabel("");
-  }
-
-  setLabel(s) {
-    let color = this.color;
-    if (this.mark === undefined) {
-      this.mark = document.createElement("div");
-      this.mark.style["display"] = "flex";
-      this.mark.style["flex-direction"] = "row";
-      this.mark.style["flex-wrap"] = "nowrap";
-
-      //this.mark.style["width"]
-      let sheet = 0;
-
-      let size = iconmanager.getTileSize(sheet);
-
-      this.mark.style["width"] = "" + size + "px";
-      this.mark.style["height"] = "" + size + "px";
-
-      this.dom.appendChild(this.mark);
-
-      this.ntext = document.createElement("div");
-      this.ntext.style["display"] = "inline-flex";
-      this.ntext.style["flex-wrap"] = "nowrap";
-
-      this.dom.appendChild(this.ntext);
-
-      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
-
-      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
-      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
-      //this.mark.style["background-color"] = color;
-    }
-
-    let mark = this.mark, ntext = this.ntext;
-    //mark.innerText = "!";
-    ntext.innerText = " " + s;
-  }
-
-  init() {
-    super.init();
-
-    this.setAttribute("class", "notex");
-
-    this.style["display"] = "flex";
-    this.style["flex-wrap"] = "nowrap";
-    this.style["flex-direction"] = "row";
-    this.style["border-radius"] = "7px";
-    this.style["padding"] = "2px";
-
-    this.style["color"] = this.getDefault("NoteText").color;
-    let clr = css2color$1(this.color);
-    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
-
-    this.style["background-color"] = clr;
-    this.setCSS();
-  }
-
-  static define() {return {
-    tagname : "note-x"
-  }}
-}
-UIBase$d.register(Note);
-
-class ProgBarNote extends Note {
-  constructor() {
-    super();
-
-    this._percent = 0.0;
-    this.barWidth = 100;
-
-    let bar = this.bar = document.createElement("div");
-    bar.style["display"] = "flex";
-    bar.style["flex-direction"] = "row";
-    bar.style["width"] = this.barWidth + "px";
-    bar.style["height"] = this.height + "px";
-    bar.style["background-color"] = this.getDefault("ProgressBarBG");
-    bar.style["border-radius"] = "12px";
-    bar.style["align-items"] = "center";
-    bar.style["padding"] = bar.style["margin"] = "0px";
-
-    let bar2 = this.bar2 = document.createElement("div");
-    let w = 50.0;
-
-    bar2.style["display"] = "flex";
-    bar2.style["flex-direction"] = "row";
-    bar2.style["height"] = this.height + "px";
-    bar2.style["background-color"] = this.getDefault("ProgressBar");
-    bar2.style["border-radius"] = "12px";
-    bar2.style["align-items"] = "center";
-    bar2.style["padding"] = bar2.style["margin"] = "0px";
-
-    this.bar.appendChild(bar2);
-    this.dom.appendChild(this.bar);
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    let w = ~~(this.percent * this.barWidth + 0.5);
-
-    this.bar2.style["width"] = w + "px";
-  }
-
-  set percent(val) {
-    this._percent = val;
-    this.setCSS();
-  }
-
-  get percent() {
-    return this._percent;
-  }
-
-  init() {
-    super.init();
-  }
-
-  static define() {return {
-    tagname : "note-progress-x"
-  }}
-}
-UIBase$d.register(ProgBarNote);
-
-class NoteFrame extends RowFrame {
-  constructor() {
-    super();
-    this._h = 20;
-  }
-
-  init() {
-    super.init();
-
-    this.noMarginsOrPadding();
-
-    noteframes.push(this);
-    this.background = this.getDefault("NoteBG");
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    this.style["width"] = "min-contents";
-    this.style["height"] = this._h + "px";
-  }
-
-  _ondestroy() {
-    if (noteframes.indexOf(this) >= 0) {
-      noteframes.remove(this);
-    }
-
-    super._ondestroy();
-  }
-
-  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
-    let note;
-
-    for (let child of this.children) {
-      if (child._noteid === id) {
-        note = child;
-        break;
-      }
-    }
-
-    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
-
-    if (note === undefined) {
-      note = this.addNote(msg, color, -1, "note-progress-x");
-      note._noteid = id;
-    }
-
-    //note.setLabel(msg + " " + f + "%");
-    note.percent = percent;
-
-    if (percent >= 1.0) {
-      //note.setLabel(msg + " " + f + "%");
-
-      window.setTimeout(() => {
-        note.remove();
-      }, timeout);
-    }
-
-    return note;
-  }
-
-  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
-    //let note = document.createElement("note-x");
-
-    //note.ctx = this.ctx;
-    //note.background = "red";
-    //note.dom.innerText = msg;
-
-    //this._add(note);
-
-    let note = document.createElement(tagname);
-
-    note.color = color;
-    note.setLabel(msg);
-
-    note.style["text-align"] = "center";
-
-    note.style["font"] = getFont(note, "NoteText");
-    note.style["color"] = this.getDefault("NoteText").color;
-
-    this.add(note);
-
-    this.noMarginsOrPadding();
-    note.noMarginsOrPadding();
-
-    //this.dom.style["position"] = "absolute";
-    //this.style["position"] = "absolute";
-    //note.style["position"] = "absolute";
-
-    note.style["height"] = this._h + "px";
-    note.height = this._h;
-
-
-    if (timeout != -1) {
-      window.setTimeout(() => {
-        console.log("remove!");
-        note.remove();
-      }, timeout);
-    }
-
-    //this.appendChild(note);
-    return note;
-
-  }
-
-  static define() {return {
-    tagname : "noteframe-x"
-  }}
-}
-UIBase$d.register(NoteFrame);
-
-function getNoteFrames(screen) {
-  let ret = [];
-
-  let rec = (n) => {
-
-    if (n instanceof NoteFrame) {
-      ret.push(n);
-    }
-
-    if (n.childNodes !== undefined) {
-      for (let node of n.childNodes) {
-        rec(node);
-      }
-    }
-
-    if (n instanceof UIBase && n.shadow !== undefined && n.shadow.childNodes) {
-      for (let node of n.shadow.childNodes) {
-        rec(node);
-      }
-    }
-  };
-
-  rec(screen);
-  return ret;
-}
-
-let noteframes = [];
-
-function progbarNote(screen, msg, percent, color, timeout) {
-  noteframes = getNoteFrames(screen);
-
-  for (let frame of noteframes) {
-    try {
-      frame.progbarNote(msg, percent, color, timeout);
-    } catch (error) {
-      print_stack(error);
-      console.log("bad notification frame");
-    }
-  }
-}
-
-function sendNote(screen, msg, color, timeout=1000) {
-  noteframes = getNoteFrames(screen);
-
-  console.log(noteframes.length);
-
-  for (let frame of noteframes) {
-    console.log(frame);
-
-    try {
-      frame.addNote(msg, color, timeout);
-    } catch (error) {
-      print_stack(error);
-      console.log("bad notification frame");
-    }
-  }
-}
-
-window._sendNote = sendNote;
-
-function error(screen, msg, timeout=1000) {
-  return sendNote(screen, msg, color2css$2([1.0, 0.0, 0.0, 1.0]), timeout);
-}
-
-function warning(screen, msg, timeout=1000) {
-  return sendNote(screen, msg, color2css$2([0.78, 0.78, 0.2, 1.0]), timeout);
-}
-
-function message(screen, msg, timeout=1000) {
-  return sendNote(screen, msg, color2css$2([0.4, 1.0, 0.5, 1.0]), timeout);
-}
-
 let SnapLimit = 1;
 
 function snap(c, snap_limit=SnapLimit) {
@@ -33081,7 +33249,7 @@ UIBase.register(ScreenBorder);
 let _ScreenArea = undefined;
 
 let UIBase$e = UIBase;
-let Vector2$b = Vector2;
+let Vector2$a = Vector2;
 let ScreenClass = undefined;
 
 
@@ -33221,7 +33389,7 @@ let _ScreenArea$1 = undefined;
 
 let UIBase$f = UIBase;
 
-let Vector2$c = Vector2;
+let Vector2$b = Vector2;
 let Screen$1 = undefined;
 
 const AreaFlags = {
@@ -33613,7 +33781,7 @@ class Area$1 extends UIBase {
     row.style["padding"] = "0px";
 
     let mdown = false;
-    let mpos = new Vector2$c();
+    let mpos = new Vector2$b();
     
     let mpre = (e, pageX, pageY) => {
       pageX = pageX === undefined ? e.pageX : pageX;
@@ -33897,8 +34065,8 @@ class ScreenArea extends UIBase {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this._pos = new Vector2$c();
-    this._size = new Vector2$c([512, 512]);
+    this._pos = new Vector2$b();
+    this._size = new Vector2$b([512, 512]);
 
     if (exports.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -34112,8 +34280,8 @@ class ScreenArea extends UIBase {
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$c(obj.pos);
-      area.size = new Vector2$c(obj.size);
+      area.pos = new Vector2$b(obj.pos);
+      area.size = new Vector2$b(obj.size);
       area.ctx = this.ctx;
       
       area.inactive = true;
@@ -34240,7 +34408,7 @@ class ScreenArea extends UIBase {
 
   snapToScreenSize() {
     let screen = this.getScreen();
-    let co = new Vector2$c();
+    let co = new Vector2$b();
     let changed = 0;
 
     for (let v of this._verts) {
@@ -34287,8 +34455,8 @@ class ScreenArea extends UIBase {
       return;
     }
 
-    let min = new Vector2$c([1e17, 1e17]);
-    let max = new Vector2$c([-1e17, -1e17]);
+    let min = new Vector2$b([1e17, 1e17]);
+    let max = new Vector2$b([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -34322,10 +34490,10 @@ class ScreenArea extends UIBase {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$c([p[0],      p[1]]),
-      new Vector2$c([p[0],      p[1]+s[1]]),
-      new Vector2$c([p[0]+s[0], p[1]+s[1]]),
-      new Vector2$c([p[0]+s[0], p[1]])
+      new Vector2$b([p[0],      p[1]]),
+      new Vector2$b([p[0],      p[1]+s[1]]),
+      new Vector2$b([p[0]+s[0], p[1]+s[1]]),
+      new Vector2$b([p[0]+s[0], p[1]])
     ];
 
     for (let i=0; i<vs.length; i++) {
@@ -34432,8 +34600,8 @@ class ScreenArea extends UIBase {
     //var finish = () => {
       if (this.area !== undefined) {
         //break direct pos/size references for old active area
-        this.area.pos = new Vector2$c(this.area.pos);
-        this.area.size = new Vector2$c(this.area.size);
+        this.area.pos = new Vector2$b(this.area.pos);
+        this.area.size = new Vector2$b(this.area.size);
         
         this.area.owning_sarea = undefined;
         this.area.inactive = true;
@@ -34564,8 +34732,8 @@ class ScreenArea extends UIBase {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$c(this.pos);
-    this.size = new Vector2$c(this.size);
+    this.pos = new Vector2$b(this.pos);
+    this.size = new Vector2$b(this.size);
     
     //find active editor
     
@@ -34699,6 +34867,1101 @@ var ScreenArea$1 = /*#__PURE__*/Object.freeze({
   areaclasses: areaclasses,
   AreaWrangler: AreaWrangler
 });
+
+let basic_colors = {
+  'white' : [1,1,1],
+  'grey' : [0.5, 0.5, 0.5],
+  'gray' : [0.5, 0.5, 0.5],
+  'black' : [0, 0, 0],
+  'red' : [1, 0, 0],
+  'yellow' : [1, 1, 0],
+  'green' : [0, 1, 0],
+  'teal' : [0, 1, 1],
+  'cyan' : [0, 1, 1],
+  'blue' : [0, 0, 1],
+  'orange' : [1, 0.5, 0.25],
+  'brown' : [0.5, 0.4, 0.3],
+  'purple' : [1, 0, 1],
+  'pink' : [1, 0.5, 0.5]
+};
+
+class ThemeEditor extends Container {
+  constructor() {
+    super();
+  }
+
+  init() {
+    super.init();
+
+    this.build();
+  }
+
+  doFolder(key, obj) {
+    let panel = this.panel(key);
+    panel.style["margin-left"] = "15px";
+
+    let row = panel.row();
+    let col1 = row.col();
+    let col2 = row.col();
+
+
+    let do_onchange = (key, k) => {
+      if (this.onchange) {
+        this.onchange(key, k);
+      }
+    };
+
+    let ok = false;
+    let _i = 0;
+
+    let dokey = (k, v) => {
+      let col = _i % 2 == 0 ? col1 : col2;
+
+      if (k.toLowerCase().search("flag") >= 0) {
+        return; //don't do flags
+      }
+
+      if (typeof v === "string") {
+        let v2 = v.toLowerCase().trim();
+
+        let iscolor = v2 in basic_colors;
+        iscolor = iscolor || v2.search("rgb") >= 0;
+        iscolor = iscolor || v2[0] === "#";
+
+        if (iscolor) {
+          let cw = col.colorbutton();
+          ok = true;
+          _i++;
+
+          try {
+            cw.setRGBA(css2color$1(v2));
+          } catch (error) {
+            console.warn("Failed to set color " + k, v2);
+          }
+
+          cw.onchange = () => {
+            console.log("setting '" + k + "' to " + color2css$2(cw.rgba), key);
+            theme[key][k] = color2css$2(cw.rgba);
+
+            do_onchange(key, k);
+          };
+          cw.label = k;
+        }
+      } else if (typeof v === "number") {
+        let slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
+
+        ok = true;
+        _i++;
+
+        slider.onchange = () => {
+          theme[key][k] = slider.value;
+
+          do_onchange(key, k);
+        };
+      } else if (typeof v === "object" && v instanceof CSSFont) {
+        let panel2 = col.panel(k);
+        ok = true;
+        _i++;
+
+        let textbox = (key) => {
+          panel2.label(key);
+          panel2.textbox(undefined, v[key]).onchange = function() {
+            v[key] = this.text;
+            do_onchange(key, k);
+          };
+        };
+
+        textbox("font");
+        textbox("variant");
+        textbox("weight");
+        textbox("style");
+
+        let cw = panel2.colorbutton();
+        cw.label = "color";
+        cw.setRGBA(css2color$1(v));
+        cw.onchange = () => {
+          v.color = color2css$2(v.color);
+        };
+
+        let slider = panel2.slider(undefined, "size", v.size);
+        slider.onchange = () => {
+          v.size = slider.value;
+          do_onchange(key, k);
+        };
+      }
+    };
+
+    for (let k in obj) {
+      let v = obj[k];
+
+      dokey(k, v);
+    }
+
+    if (!ok) {
+      panel.remove();
+    } else {
+      panel.closed = true;
+    }
+
+  }
+
+  build() {
+    let keys = Object.keys(theme);
+    keys.sort();
+
+    for (let k of keys) {
+      let v = theme[k];
+      if (typeof v === "object") {
+        this.doFolder(k, v);
+      }
+    }
+  }
+
+  static define() { return {
+    tagname : "theme-editor-x",
+    style   : "theme-editor"
+  }}
+}
+UIBase.register(ThemeEditor);
+
+"use strict";
+let SVG_URL = 'http://www.w3.org/2000/svg';
+
+let Vector2$c = Vector2;
+
+class Overdraw extends UIBase {
+  constructor() {
+    super();
+
+    this.visibleToPick = false;
+
+    this.screen = undefined;
+    this.shapes = [];
+    this.otherChildren = []; //non-svg elements
+    this.font = undefined;
+
+    let style = document.createElement("style");
+    style.textContent = `
+      .overdrawx {
+        pointer-events : none;
+      }
+    `;
+    
+    this.shadow.appendChild(style);
+    
+    this.zindex_base = 1000;
+  }
+
+  startNode(node, screen) {
+    if (screen) {
+      this.screen = screen;
+      this.ctx = screen.ctx;
+    }
+
+    if (!this.parentNode) {
+      node.appendChild(this);
+    }
+
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+
+    this.style["width"] = "100%"; //screen.size[0] + "px";
+    this.style["height"] = "100%"; //screen.size[1] + "px";
+
+    this.style["pointer-events"] = "none";
+
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+
+    this.svg.style["pointer-events"] = "none";
+
+    this.shadow.appendChild(this.svg);
+    //this.style["background-color"] = "green";
+  }
+
+  start(screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
+    
+    screen.parentNode.appendChild(this);
+    
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+    
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+    
+    this.style["width"] = screen.size[0] + "px";
+    this.style["height"] = screen.size[1] + "px";
+    
+    this.style["pointer-events"] = "none";
+    
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+    
+    this.shadow.appendChild(this.svg);
+    
+    //this.style["background-color"] = "green";
+  }
+  
+  clear() {
+    for (let child of list(this.svg.childNodes)) {
+      child.remove();
+    }
+    
+    for (let child of this.otherChildren) {
+      child.remove();
+    }
+    
+    this.otherChildren.length = 0;
+  }
+
+  drawTextBubbles(texts, cos, colors) {
+    let boxes = [];
+    let elems = [];
+
+    let cent = new Vector2$c();
+
+    for (let i=0; i<texts.length; i++) {
+      let co = cos[i];
+      let text = texts[i];
+      let color;
+
+      if (colors !== undefined) {
+        color = colors[i];
+      }
+
+      cent.add(co);
+      let box = this.text(texts[i], co[0], co[1], {color : color});
+
+      boxes.push(box);
+      let font = box.style["font"];
+      let pat = /[0-9]+px/;
+      let size = font.match(pat)[0];
+
+      //console.log("size", size);
+
+      if (size === undefined) {
+        size = this.getDefault("DefaultText").size;
+      } else {
+        size = parsepx(size);
+      }
+
+      //console.log(size);
+      let tsize = measureTextBlock(this, text, undefined, undefined, size, font);
+
+      box.minsize = [
+        ~~tsize.width,
+        ~~tsize.height
+      ];
+
+      let pad = parsepx(box.style["padding"]);
+
+      box.minsize[0] += pad*2;
+      box.minsize[1] += pad*2;
+
+      let x = parsepx(box.style["left"]);
+      let y = parsepx(box.style["top"]);
+
+      box.grads = new Array(4);
+      box.params = [x, y, box.minsize[0], box.minsize[1]];
+      box.startpos = new Vector2$c([x, y]);
+
+      box.setCSS = function() {
+        this.style["padding"] = "0px";
+        this.style["margin"] = "0px";
+        this.style["left"] = ~~this.params[0] + "px";
+        this.style["top"] = ~~this.params[1] + "px";
+        this.style["width"] = ~~this.params[2] + "px";
+        this.style["height"] = ~~this.params[3] + "px";
+      };
+
+      box.setCSS();
+      //console.log(box.params);
+      elems.push(box);
+    }
+
+    if (boxes.length === 0) {
+      return;
+    }
+
+    cent.mulScalar(1.0 / boxes.length);
+
+    function error() {
+      let p1 = [0, 0], p2 = [0, 0];
+      let s1 = [0, 0], s2 = [0, 0];
+
+      let ret = 0.0;
+
+      for (let box1 of boxes) {
+        for (let box2 of boxes) {
+          if (box2 === box1) {
+            continue;
+          }
+
+          s1[0] = box1.params[2];
+          s1[1] = box1.params[3];
+          s2[0] = box2.params[2];
+          s2[1] = box2.params[3];
+
+          let overlap = aabb_overlap_area(box1.params, s1, box2.params, s2);
+          ret += overlap;
+        }
+
+        ret += box1.startpos.vectorDistance(box1.params)*0.25;
+      }
+
+      return ret;
+    }
+
+    function solve() {
+      //console.log("ERROR", error());
+      let r1 = error();
+      if (r1 === 0.0) {
+        return;
+      }
+
+      let df = 0.0001;
+      let totgs = 0.0;
+
+      for (let box of boxes) {
+        for (let i=0; i<box.params.length; i++) {
+          let orig = box.params[i];
+          box.params[i] += df;
+          let r2 = error();
+          box.params[i] = orig;
+
+          box.grads[i] = (r2 - r1) / df;
+          totgs += box.grads[i]**2;
+        }
+      }
+
+      if (totgs === 0.0) {
+        return;
+      }
+
+      r1 /= totgs;
+      let k = 0.4;
+
+      for (let box of boxes) {
+        for (let i = 0; i < box.params.length; i++) {
+          box.params[i] += -r1*box.grads[i]*k;
+        }
+
+        box.params[2] = Math.max(box.params[2], box.minsize[0]);
+        box.params[3] = Math.max(box.params[3], box.minsize[1]);
+
+        box.setCSS();
+      }
+    }
+
+    for (let i=0; i<15; i++) {
+      solve();
+    }
+
+    for (let box of boxes) {
+      elems.push(this.line(box.startpos, box.params));
+    }
+
+    return elems;
+  }
+
+  text(text, x, y, args={}) {
+    args = Object.assign({}, args);
+
+    if (args.font === undefined) {
+      if (this.font !== undefined)
+        args.font = this.font;
+      else
+        args.font = this.getDefault("DefaultText").genCSS();
+    }
+
+    if (!args["background-color"]) {
+      args["background-color"] = "rgba(75, 75, 75, 0.75)";
+    }
+
+    args.color = args.color ? args.color : "white";
+    if (typeof args.color === "object") {
+      args.color = color2css$2(args.color);
+    }
+
+    args["padding"] = args["padding"] === undefined ? "5px" : args["padding"];
+    args["border-color"] = args["border-color"] ? args["border-color"] : "grey";
+    args["border-radius"] = args["border-radius"] ? args["border-radius"] : "25px";
+    args["border-width"] = args["border-width"] !== undefined ? args["border-width"] : "2px";
+
+    if (typeof args["border-width"] === "number") {
+      args["border-width"] = "" + args["border-width"] + "px";
+    }
+    if (typeof args["border-radius"] === "number") {
+      args["border-radius"] = "" + args["border-radius"] + "px";
+    }
+
+      //not sure I need SVG for this. . .
+    let box = document.createElement("div");
+
+    box.setAttribute("class", "overdrawx");
+
+    box.style["position"] = "absolute";
+    box.style["width"] = "min-contents";
+    box.style["height"] = "min-contents";
+    box.style["border-width"] = args["border-width"];
+    box.style["border-radius"] = "25px";
+    box.style["pointer-events"] = "none";
+    box.style["z-index"] = this.zindex_base + 1;
+    box.style["background-color"] = args["background-color"];
+    box.style["padding"] = args["padding"];
+
+    box.style["left"] = x + "px";
+    box.style["top"] = y + "px";
+
+    box.style["display"] = "flex";
+    box.style["justify-content"] = "center";
+    box.style["align-items"] = "center";
+
+    box.innerText = text;
+    box.style["font"] = args.font;
+    box.style["color"] = args.color;
+
+    this.otherChildren.push(box);
+    this.shadow.appendChild(box);
+
+    return box;
+  }
+
+  circle(p, r, stroke="black", fill="none") {
+    let circle = document.createElementNS(SVG_URL, "circle");
+    circle.setAttribute("cx", p[0]);
+    circle.setAttribute("cy", p[1]);
+    circle.setAttribute("r", r);
+
+    if (fill) {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2;fill:${fill}`);
+    } else {
+      circle.setAttribute("style", `stroke:${stroke};stroke-width:2`);
+    }
+
+    this.svg.appendChild(circle);
+
+    return circle;
+  }
+
+  line(v1, v2, color="black") {
+    let line = document.createElementNS(SVG_URL, "line");
+    line.setAttribute("x1", v1[0]);
+    line.setAttribute("y1", v1[1]);
+    line.setAttribute("x2", v2[0]);
+    line.setAttribute("y2", v2[1]);
+    line.setAttribute("style", `stroke:${color};stroke-width:2`);
+    
+    this.svg.appendChild(line);
+    return line;
+  }
+  
+  rect(p, size, color="black") {
+    let line = document.createElementNS(SVG_URL, "rect");
+    line.setAttribute("x", p[0]);
+    line.setAttribute("y", p[1]);
+    line.setAttribute("width", size[0]);
+    line.setAttribute("height", size[1]);
+    line.setAttribute("style", `fill:${color};stroke-width:2`);
+
+    line.setColor = (color) => {
+      line.setAttribute("style", `fill:${color};stroke-width:2`);
+    };
+
+    this.svg.appendChild(line);
+    return line;
+  }
+  
+  end() {
+    this.clear();
+    this.remove();
+  }
+  
+  static define() {return {
+    tagname : "overdraw-x"
+  };}
+}
+
+UIBase.register(Overdraw);
+
+class TreeItem extends Container {
+  constructor() {
+    super();
+
+    this.treeParent = undefined;
+    this.treeChildren = [];
+    this.treeView = undefined;
+    this.treeDepth = 0;
+
+    this.header = this.row();
+
+    this._icon1 = this.header.iconbutton(Icons.TREE_COLLAPSE);
+    this._icon1.iconsheet = 0;
+    this._icon1.drawButtonBG = false;
+
+    this._icon2 = undefined;
+
+    this._icon1.onclick = () => {
+      if (this.opened) {
+        this.close();
+      }  else {
+        this.open();
+      }
+    };
+
+    this.opened = true;
+
+    this._label = this.header.label("unlabeled");
+    this._labelText = "unlabeled";
+  }
+
+  set icon(id) {
+    if (this._icon2) {
+      this._icon2 = id;
+    } else {
+      this._icon2 = document.createElement("icon-label-x");
+      this._icon2.icon = id;
+      this._icon2.iconsheet = 0;
+
+
+      this.header.insert(1, this._icon2);
+    }
+  }
+
+  get icon() {
+    if (this._icon2)
+      return this._icon2.icon;
+    else
+      return -1;
+  }
+
+  open() {
+    this._icon1.icon = Icons.TREE_COLLAPSE;
+    this.opened = true;
+    this.treeView._open(this);
+  }
+
+  close() {
+    this._icon1.icon = Icons.TREE_EXPAND;
+    this.opened = false;
+    this.treeView._close(this);
+  }
+
+  set text(b) {
+    if (typeof b === "string") {
+      this._label.text = b;
+      this._labelText = b;
+    } else if (b instanceof HTMLElement) {
+      this._label.remove();
+      this.header.add(b);
+
+      this._label = b;
+      this._labelText = b;
+    }
+  }
+
+  get text() {
+    return this._labelText;
+  }
+
+
+  item(name, args={}) {
+    args.treeParent = this;
+    return this.parentWidget.item(name, args);
+  }
+
+  init() {
+    super.init();
+  }
+
+  static define() {return {
+    tagname : "tree-item-x",
+    style   : "treeview"
+  }}
+}
+UIBase.register(TreeItem);
+
+class TreeView extends Container {
+  constructor() {
+    super();
+
+    this.items = [];
+    this.strokes = [];
+  }
+
+  init() {
+    super.init();
+
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = "column";
+
+    //this.shadow.appendChild(this.overdraw);
+
+    this.overdraw = document.createElement("overdraw-x");
+    console.log(this.overdraw.startNode);
+    this.overdraw.startNode(this);
+
+    this.style["margin"] = this.style["padding"] = "0px";
+
+    this.updateOverdraw();
+  }
+
+  _forAllChildren(item, cb) {
+    let visit = (n) => {
+      cb(n);
+
+      for (let c of n.treeChildren) {
+        visit(c);
+      }
+    };
+
+    for (let c of item.treeChildren) {
+      visit(c);
+    }
+  }
+
+  _open(item) {
+    this._forAllChildren(item, (c) => {
+      if (c.opened) {
+        c.unhide();
+      }
+    });
+
+    this._makeStrokes();
+  }
+
+  _close(item) {
+    this._forAllChildren(item, (c) => {
+      c.hide();
+    });
+
+    this._makeStrokes();
+  }
+
+  _makeStrokes() {
+    if (!this.overdraw) {
+      //this.doOnce(this._makeStrokes);
+      return;
+    }
+
+    for (let elem of this.strokes) {
+      elem.remove();
+    }
+    this.strokes.length = 0;
+
+    let hidden = (item) => {
+      return item.hidden;
+      let p = item;
+
+      while (p) {
+        if (!p.opened)
+          return true;
+        p = p.treeParent;
+      }
+
+      return false;
+    };
+
+    let items = this.items;
+    if (items.length == 0) {
+      return;
+    }
+
+    this.overdraw.clear();
+
+    let next = (i) => {
+      i++;
+
+      while (i < items.length && hidden(items[i])) {
+        i++;
+        continue;
+      }
+
+      return i;
+    };
+
+    let i = 0;
+    if (hidden(items[i]))
+      i = next(i);
+
+    let origin = this.overdraw.getBoundingClientRect();
+    let overdraw = this.overdraw;
+
+    let line = function(x1, y1, x2, y2) {
+      let ox = origin.x, oy = origin.y;
+
+      x1 -= ox; y1 -= oy;
+      x2 -= ox; y2 -= oy;
+
+      overdraw.line([x1, y1], [x2, y2]);
+    };
+
+    console.log("making lines", i);
+
+    let indent = this.getDefault("itemIndent");
+    let rowh = this.getDefault("rowHeight");
+
+    let getx = (depth) => {
+      return (depth+2.2)*indent + origin.x;
+    };
+
+    this.overdraw.style["z-index"] = "0";
+
+    let prev = undefined;
+
+    for (; i<items.length; i = next(i)) {
+      let item = this.items[i];
+      let item2 = next(i);
+      item2 = item2 < items.length ? items[item2] : undefined;
+
+      let r = item._icon1.getBoundingClientRect();
+
+      if (!r) continue;
+
+      let x1 = getx(item.treeDepth);
+      let y1 = origin.y + (i+1)*rowh - rowh*0.25;
+
+
+      if (item2 && item2.treeDepth > item.treeDepth) {//} && (!prev || prev.treeDepth !== item.treeDepth)) {
+        let y2 = y1 + rowh*0.75;
+
+        line(x1, y1, x1, y2);
+        line(x1, y2, getx(item2.treeDepth)-3, y2);
+
+      } else if (item2 && item2.treeDepth === item.treeDepth) {
+        line(x1, y1, x1, y1+rowh*0.5);
+      }
+
+      prev = item;
+    }
+  }
+
+  updateOverdraw() {
+    let mm = new MinMax(2);
+    let ok = false;
+
+    for (let item of this.items) {
+      if (item.hidden) {
+        //continue;
+      }
+
+      for (let r of item.getClientRects()) {
+        //console.log(r.y);
+        mm.minmax([r.x, r.y]);
+        mm.minmax([r.x+r.width, r.y+r.height]);
+        ok = true;
+      }
+    }
+
+    if (!ok) {
+      return;
+    }
+
+    let r = this.getClientRects()[0];
+    if (!r) return;
+
+    let x = r.left;
+    let y = r.top;// - r.y;
+
+    let od = this.overdraw;
+    let w = mm.max[0] - mm.min[0];
+    let h = mm.max[1] - mm.min[1];
+
+    od.style["margin"] = "0px";
+    od.style["padding"] = "0px";
+    od.svg.style["margin"] = "0px";
+
+    od.style["position"] = "fixed";
+
+    od.style["width"] = (r.width-1) + "px";
+    od.style["height"] = (r.height-1) + "px";
+
+    od.style["left"] = x + "px";
+    od.style["top"] =  y + "px";
+
+    //od.style["background-color"] = "rgba(50, 50, 50, 0.25)";
+    //od.svg.style["background-color"] = "rgba(50, 50, 50, 0.25)";
+
+  }
+
+  update() {
+    super.update();
+
+    this.updateOverdraw();
+  }
+
+  item(name, args={icon : undefined}) {
+    let ret = document.createElement("tree-item-x");
+    this.add(ret);
+    ret._init();
+
+    ret.text = name;
+
+    if (args.icon) {
+      ret.icon = args.icon;
+    }
+
+    ret.treeParent = args.treeParent;
+    ret.treeView = this;
+
+    //ret.style["margin-bottom"] = ret.style["margin-top"] = "0px";
+    //ret.style["padding-bottom"] = ret.style["padding-top"] = "0px";
+    ret.style["max-height"] = this.getDefault("rowHeight") + "px";
+
+    if (ret.treeParent) {
+      ret.treeParent.treeChildren.push(ret);
+      ret.treeDepth = ret.treeParent.treeDepth + 1;
+    }
+
+    let p = ret.treeParent;
+    let i = 1;
+    while (p) {
+      p = p.treeParent;
+      i++;
+    }
+
+    ret.style["margin-left"] = (i*this.getDefault("itemIndent")) + "px";
+    this.items.push(ret);
+
+    this.doOnce(() => {
+      this._makeStrokes();
+    });
+
+    return ret;
+  }
+
+  static define() {return {
+    tagname : "tree-view-x",
+    style   : "treeview"
+  }}
+}
+UIBase.register(TreeView);
+
+function startDrag(box) {
+  if (box._modal) {
+    popModalLight(box._modal);
+    box._modal = undefined;
+    return;
+  }
+
+  let first = true;
+  let lastx = 0;
+  let lasty = 0;
+
+  let handlers = {
+    on_mousemove(e) {
+      let x = e.x, y = e.y;
+
+      if (first) {
+        lastx = x;
+        lasty = y;
+        first = false;
+
+        return;
+      }
+
+      let dx = x - lastx;
+      let dy = y - lasty;
+
+      let hx = parsepx(box.style["left"]);
+      let hy = parsepx(box.style["top"]);
+
+      hx += dx;
+      hy += dy;
+
+      console.log(hx, hy);
+
+      box.style["left"] = hx + "px";
+      box.style["top"] = hy + "px";
+
+      lastx = x;
+      lasty = y;
+    },
+
+    end() {
+      if (box._modal) {
+        popModalLight(box._modal);
+        box._modal = undefined;
+      }
+    },
+
+    on_mouseup(e) {
+      this.end();
+    },
+
+    on_keydown(e) {
+      switch (e.keyCode) {
+        case keymap["Escape"]:
+        case keymap["Return"]:
+          this.end();
+          break;
+      }
+    }
+
+  };
+
+  box._modal = pushModalLight(handlers);
+}
+
+class DragBox extends Container {
+  constructor() {
+    super();
+
+    this._done = false;
+    this.header = document.createElement("rowframe-x");
+    this.contents = document.createElement("container-x");
+
+    this.header.style["border-radius"] = "20px";
+
+    this.header.parentWidget = this;
+    this.contents.parentWidget = this;
+
+    this.shadow.appendChild(this.header);
+    this.shadow.appendChild(this.contents);
+  }
+
+  init() {
+    super.init();
+
+    let header = this.header;
+
+    header.ctx = this.ctx;
+    this.contents.ctx = this.ctx;
+    header._init();
+    this.contents._init();
+
+    this.style["min-width"] = "350px";
+    header.style["height"] = "35px";
+
+    let icon = header.iconbutton(Icons.DELETE, "Hide", () => {
+      this.end();
+    });
+    icon.iconsheet = 0; //use small icons
+
+    this.addEventListener("mousedown", (e) => {
+      console.log("start drag");
+      startDrag(this);
+    }, {capture : false});
+
+    header.background = this.getDefault("Background");
+
+    this.setCSS();
+  }
+
+  add() {
+    return this.contents.add(...arguments);
+  }
+
+  prepend(n) {
+    return this.contents.prepend(n);
+  }
+
+  appendChild(n) {
+    return this.contents.appendChild(n);
+  }
+  col() {
+    return this.contents.col(...arguments);
+  }
+
+  row() {
+    return this.contents.row(...arguments);
+  }
+
+  strip() {
+    return this.contents.strip(...arguments);
+  }
+  button() {
+    return this.contents.button(...arguments);
+  }
+  iconbutton() {
+    return this.contents.iconbutton(...arguments);
+  }
+  iconcheck() {
+    return this.contents.iconcheck(...arguments);
+  }
+  tool() {
+    return this.contents.tool(...arguments);
+  }
+  menu() {
+    return this.contents.menu(...arguments);
+  }
+  prop() {
+    return this.contents.prop(...arguments);
+  }
+  listenum() {
+    return this.contents.listenum(...arguments);
+  }
+  check() {
+    return this.contents.check(...arguments);
+  }
+  iconenum() {
+    return this.contents.iconenum(...arguments);
+  }
+  slider() {
+    return this.contents.slider(...arguments);
+  }
+  simpleslider() {
+    return this.contents.simpleslider(...arguments);
+  }
+  curve() {
+    return this.contents.curve(...arguments);
+  }
+  textbox() {
+    return this.contents.textbox(...arguments);
+  }
+  textarea() {
+    return this.contents.textarea(...arguments);
+  }
+  viewer() {
+    return this.contents.viewer(...arguments);
+  }
+  panel() {
+    return this.contents.panel(...arguments);
+  }
+  tabs() {
+    return this.contents.tabs(...arguments);
+  }
+  table() {
+    return this.contents.table(...arguments);
+  }
+
+
+  end() {
+    if (this._done) {
+      return;
+    }
+    this.remove();
+
+    if (this._onend) {
+      this._onend();
+    }
+
+    if (this.onend) {
+      this.onend();
+    }
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.background = this.getDefault("Background");
+  }
+
+  static define() {return {
+    tagname : "drag-box-x",
+    style   : "panel"
+  }}
+}
+UIBase.register(DragBox);
 
 let ignore = 0;
 
@@ -35426,6 +36689,31 @@ class Screen$2 extends UIBase {
 
     return ret;
   }
+
+  draggablePopup(x, y) {
+    let ret = document.createElement("drag-box-x");
+    ret.ctx = this.ctx;
+    ret.parentWidget = this;
+    ret._init();
+
+    this._popups.push(ret);
+
+    ret._onend = () => {
+      if (this._popups.indexOf(ret) >= 0) {
+        this._popups.remove(ret);
+      }
+    };
+
+    ret.style["z-index"] = 205;
+    ret.style["position"] = "absolute";
+    ret.style["left"] = x + "px";
+    ret.style["top"] = y + "px";
+
+    document.body.appendChild(ret);
+
+    return ret;
+  }
+
   /** makes a popup at x,y and returns a new container-x for it */
   _popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
@@ -38369,5 +39657,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

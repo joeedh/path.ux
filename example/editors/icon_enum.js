@@ -24,5 +24,7 @@ export const Icons = {
   BOLD           : 20,
   ITALIC         : 21,
   UNDERLINE      : 22,
-  STRIKETHRU     : 23
+  STRIKETHRU     : 23,
+  TREE_EXPAND    : 24,
+  TREE_COLLAPSE  : 25
 };

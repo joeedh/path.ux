@@ -40,6 +40,47 @@ let parsepx = ui_base.parsepx;
 import {Button} from './ui_button.js';
 export {Button} from './ui_button.js';
 
+export class IconLabel extends UIBase {
+  constructor() {
+    super();
+    this._icon = -1;
+    this.iconsheet = 1;
+  }
+
+  init() {
+    super.init();
+
+    this.style["display"] = "flex";
+    this.style["margin"] = this.style["padding"] = "0px";
+
+    this.setCSS();
+  }
+
+  set icon(id) {
+    this._icon = id;
+    this.setCSS();
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  setCSS() {
+    let size = ui_base.iconmanager.getTileSize(this.iconsheet);
+
+
+    ui_base.iconmanager.setCSS(this.icon, this);
+
+    this.style["width"] = size + "px";
+    this.style["height"] = size + "px";
+  }
+
+  static define() {return {
+    tagname : "icon-label-x"
+  }}
+}
+UIBase.register(IconLabel);
+
 export class ValueButtonBase extends Button {
   constructor() {
     super();
@@ -624,6 +665,7 @@ export class IconButton extends Button {
     this._icon = 0;
     this._icon_pressed = undefined;
     this.iconsheet = ui_base.Icons.LARGE;
+    this.drawButtonBG = true;
   }
 
   updateDefaultSize() {
@@ -676,7 +718,9 @@ export class IconButton extends Button {
     
     //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
     //
-    super._redraw(false);
+    if (this.drawButtonBG) {
+      super._redraw(false);
+    }
 
     let icon = this._icon;
     

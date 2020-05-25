@@ -96,27 +96,27 @@
     "filePath": "scripts/core/ui.js",
     "lines": [
       {
-        "lineNumber": 192,
+        "lineNumber": 210,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 193,
+        "lineNumber": 211,
         "line": "   *\r"
       },
       {
-        "lineNumber": 194,
+        "lineNumber": 212,
         "line": "   * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse\r"
       },
       {
-        "lineNumber": 195,
+        "lineNumber": 213,
         "line": "   * @returns {Container}\r"
       },
       {
-        "lineNumber": 196,
+        "lineNumber": 214,
         "line": "   */\r"
       },
       {
-        "lineNumber": 197,
+        "lineNumber": 215,
         "line": "  wrap(mode=\"wrap\") {\r"
       }
     ],
@@ -169,6 +169,49 @@
     "docParams": [
       "value",
       "unit:"
+    ]
+  },
+  {
+    "name": "Screen#pickElement",
+    "filePath": "scripts/screen/FrameManager.js",
+    "lines": [
+      {
+        "lineNumber": 321,
+        "line": "  /** \r"
+      },
+      {
+        "lineNumber": 322,
+        "line": "   * @param x\r"
+      },
+      {
+        "lineNumber": 323,
+        "line": "   * @param y\r"
+      },
+      {
+        "lineNumber": 324,
+        "line": "   * @param args arguments : {sx, sy, nodeclass, excluded_classes}\r"
+      },
+      {
+        "lineNumber": 325,
+        "line": "  */\r"
+      },
+      {
+        "lineNumber": 326,
+        "line": "  pickElement(x, y, args, sy, nodeclass, excluded_classes) {\r"
+      }
+    ],
+    "codeParams": [
+      "x",
+      "y",
+      "args",
+      "sy",
+      "nodeclass",
+      "excluded_classes"
+    ],
+    "docParams": [
+      "x",
+      "y",
+      "args"
     ]
   },
   {
