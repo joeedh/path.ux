@@ -297,7 +297,7 @@ export class Menu extends UIBase {
   }
 
   startFancy(prepend, setActive=true) {
-    console.log("menu fancy start");
+    console.warn("menu searchbox mode start");
 
     this.hasSearchBox = true;
     this.started = true;
@@ -371,7 +371,7 @@ export class Menu extends UIBase {
     this.focus();
     menuWrangler.pushMenu(this);
 
-    if (this.items.length > 10) {
+    if (this.items.length > 15) {
       return this.start_fancy(prepend, setActive);
     }
 
@@ -400,7 +400,7 @@ export class Menu extends UIBase {
     }, 0);
   }
 
-  addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
+  addItemExtra(text, id=undefined, hotkey, icon=-1, add=true, tooltip=undefined) {
     let dom = document.createElement("span");
 
     dom.style["display"] = "inline-flex";
@@ -501,6 +501,10 @@ export class Menu extends UIBase {
     ret.hotkey = hotkey;
     ret.icon = icon;
     ret.label = text ? text : ret.innerText;
+
+    if (tooltip) {
+      ret.title = tooltip;
+    }
 
     return ret;
   }
@@ -674,7 +678,7 @@ export class DropBox extends Button {
   constructor() {
     super();
 
-    this.searchMenuMode = false;
+    this._searchMenuMode = false;
 
     this.r = 5;
     this._menu = undefined;
@@ -688,6 +692,17 @@ export class DropBox extends Button {
     super.init();
     this.updateWidth();
   }
+
+  get searchMenuMode() {
+    return this._searchMenuMode;
+  }
+
+  set searchMenuMode(v) {
+    this._searchMenuMode = v;
+
+    console.warn("searchMenuMode was set", this);
+  }
+
 
   setCSS() {
     //do not call parent classes's setCSS here

@@ -589,10 +589,11 @@ export var reverse_keymap = keymap_latin_1_rev;
 
 export class HotKey {
   /**action can be a callback or a toolpath string*/
-  constructor(key, modifiers, action) {
+  constructor(key, modifiers, action, uiname) {
     this.action = action;
     this.mods = modifiers;
     this.key = keymap[key];
+    this.uiname = uiname;
   }
 
   exec(ctx) {
@@ -608,10 +609,13 @@ export class HotKey {
 
     for (let i=0; i<this.mods.length; i++) {
       if (i > 0) {
-        s += "+";
+        s += " + ";
       }
 
-      s += this.mods[i].toLowerCase();
+      let k = this.mods[i].toLowerCase();
+      k = k[0].toUpperCase() + k.slice(1, k.length).toLowerCase();
+
+      s += k;
     }
 
     if (this.mods.length > 0) {

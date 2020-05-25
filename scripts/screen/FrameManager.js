@@ -440,11 +440,14 @@ export class Screen extends ui_base.UIBase {
     let ret = document.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
+    ret._init();
 
     this._popups.push(ret);
 
     ret._onend = () => {
-      this._popups.remove(ret);
+      if (this._popups.indexOf(ret) >= 0) {
+        this._popups.remove(ret);
+      }
     }
 
     ret.style["z-index"] = 205;

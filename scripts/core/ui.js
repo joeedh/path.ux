@@ -11,7 +11,7 @@ import * as ui_base from './ui_base.js';
 import * as ui_widgets from '../widgets/ui_widgets.js';
 import * as toolprop from '../toolsys/toolprop.js';
 import '../util/html5_fileapi.js';
-
+import {HotKey} from '../util/simple_events.js';
 import {CSSFont} from './ui_theme.js';
 
 let PropFlags = toolprop.PropFlags;
@@ -431,15 +431,16 @@ export class Container extends ui_base.UIBase {
     if (child instanceof ui_base.UIBase) {
       child.ctx = this.ctx;
       child.parentWidget = this;
+      this.shadow.appendChild(child);
+
+      if (child.onadd) {
+        child.onadd();
+      }
+
+      return;
     }
 
-    let ret = super.appendChild(child);
-
-    if (child instanceof ui_base.UIBase && child.onadd) {
-      child.onadd();
-    }
-
-    return ret;
+    return super.appendChild(child);
   }
 
   clear(trigger_on_destroy=true) {
@@ -464,6 +465,14 @@ export class Container extends ui_base.UIBase {
     child.parentWidget = undefined;
 
     return ret;
+  }
+
+  prepend(child) {
+    if (child instanceof UIBase) {
+      this._prepend(child);
+    } else {
+      super.prepend(child);
+    }
   }
 
   //*
@@ -505,6 +514,13 @@ export class Container extends ui_base.UIBase {
     ["Name", () => {console.log("do something")}]
   ])
   */
+
+  //TODO: make sure this works on Electron?
+  dynamicMenu(title, list, packflag=0) {
+    //actually, .menu works for now
+    return this.menu(title, list, packflag);
+  }
+
   menu(title, list, packflag = 0) {
     let dbox = document.createElement("dropbox-x");
 
@@ -549,8 +565,13 @@ export class Container extends ui_base.UIBase {
         } else if (item instanceof Array) {
           let hotkey = item.length > 2 ? item[2] : undefined;
           let icon = item.length > 3 ? item[3] : undefined;
+          let tooltip = item.length > 4 ? item[4] : undefined;
 
-          menu.addItemExtra(item[0], id, hotkey, icon);
+          if (hotkey !== undefined && hotkey instanceof HotKey) {
+            hotkey = hotkey.buildString();
+          }
+
+          menu.addItemExtra(item[0], id, hotkey, icon, undefined, tooltip);
 
           cbs[id] = (function (cbfunc, arg) {
             return function () {
@@ -1290,7 +1311,7 @@ export class Container extends ui_base.UIBase {
     throw new Error("implement me!");
   }
 
-  simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+    simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
