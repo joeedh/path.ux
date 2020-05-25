@@ -34,7 +34,6 @@ export class ThemeEditor extends Container {
 
   doFolder(key, obj) {
     let panel = this.panel(key);
-    panel.closed = true;
     panel.style["margin-left"] = "15px";
 
     let row = panel.row();
@@ -136,7 +135,10 @@ export class ThemeEditor extends Container {
 
     if (!ok) {
       panel.remove();
+    } else {
+      panel.closed = true;
     }
+
   }
 
   build() {

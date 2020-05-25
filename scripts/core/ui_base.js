@@ -1126,6 +1126,13 @@ export class UIBase extends HTMLElement {
     }
   }
 
+  flushUpdate() {
+    this.update();
+
+    this._forEachChildWidget((c) => {
+      c.flushUpdate();
+    });
+  }
 
   //used by container nodes
   /**

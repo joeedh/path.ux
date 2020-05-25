@@ -288,8 +288,7 @@ export function exportTheme(theme1=theme) {
       return v;
     } else if (typeof v === "object") {
       if (v instanceof CSSFont) {
-        return 
-`new CSSFont({
+        return `new CSSFont({
 ${indent}  font    : ${writekey(v.font)},
 ${indent}  weight  : ${writekey(v.weight)},
 ${indent}  variant : ${writekey(v.variant)},
@@ -307,22 +306,26 @@ ${indent}})`;
             k = "'" + k + "'";
           }
 
-          s += indent + "  " + k + " : " + writekey(v2) + ",\n";
+          s += indent + "  " + k + " : " + writekey(v2, indent + "  ") + ",\n";
         }
 
         s += indent + "}";
         return s;
       }
     } else {
-      return v;
+      return ""+v;
     }
+
+    return "error";
   }
 
   for (let k of sortkeys(theme1)) {
+    let k2 = k;
+
     if (k.search("-") >= 0 || k.search(" ") >= 0) {
-      k = "'" + k + "'";
+      k2 = "'" + k + "'";
     }
-    s += "  " + k + ": ";
+    s += "  " + k2 + ": ";
 
     let v = theme1[k];
     if (typeof v !== "object" || v instanceof CSSFont) {
@@ -342,11 +345,12 @@ ${indent}})`;
       }
 
       for (let k2 of sortkeys(v)) {
+        let v2 = v[k2];
+
         if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
           k2 = "'" + k2 + "'";
         }
     
-        let v2 = v[k2];
         let pad = "";
 
         for (let i=0; i<maxwid-k2.length; i++) {

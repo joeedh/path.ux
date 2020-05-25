@@ -3,6 +3,7 @@ import * as util from '../util/util.js';
 
 export const DefaultTheme = {
   base : {
+    themeVersion : 0.1,
     mobileTextSizeMultiplier : 1.5,
     mobileSizeMultiplier : 2, //does not include text
 

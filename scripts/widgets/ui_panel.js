@@ -28,6 +28,17 @@ export class PanelFrame extends ColumnFrame {
     super();
 
     this.contents = document.createElement("colframe-x");
+    this.iconcheck = document.createElement("iconcheck-x");
+
+    Object.defineProperty(this.contents, "closed", {
+      get : () => {
+        return this.closed;
+      },
+
+      set : (v) => {
+        this.closed = v;
+      }
+    })
 
     this.packflag = this.inherit_packflag = 0;
 
@@ -81,9 +92,7 @@ export class PanelFrame extends ColumnFrame {
 
     let row = con;
 
-    let iconcheck = document.createElement("iconcheck-x");
-    this.iconcheck = iconcheck;
-
+    let iconcheck = this.iconcheck;
     this.style["width"] = "100%";
 
     this.overrideDefault("BoxMargin", 0);
@@ -139,7 +148,10 @@ export class PanelFrame extends ColumnFrame {
     row.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
 
     this.contents.ctx = this.ctx;
-    this.add(this.contents);
+    if (!this._closed) {
+      this.add(this.contents);
+      this.contents.flushUpdate();
+    }
 
     this.setCSS();
   }
@@ -222,6 +234,8 @@ export class PanelFrame extends ColumnFrame {
       this.contents.remove();
     } else {
       this.add(this.contents, false);
+
+      this.contents.flushUpdate();
     }
 
     this.contents.hidden = state;

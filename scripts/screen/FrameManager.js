@@ -1,6 +1,7 @@
 import {ToolTipViewer} from "./FrameManager_ops.js";
 
 let _FrameManager = undefined;
+import '../widgets/dragbox.js';
 import '../widgets/ui_widgets2.js';
 import '../widgets/ui_panel.js';
 
@@ -434,6 +435,28 @@ export class Screen extends ui_base.UIBase {
 
     return ret;
   }
+
+  draggablePopup(x, y) {
+    let ret = document.createElement("drag-box-x");
+    ret.ctx = this.ctx;
+    ret.parentWidget = this;
+
+    this._popups.push(ret);
+
+    ret._onend = () => {
+      this._popups.remove(ret);
+    }
+
+    ret.style["z-index"] = 205;
+    ret.style["position"] = "absolute";
+    ret.style["left"] = x + "px";
+    ret.style["top"] = y + "px";
+
+    document.body.appendChild(ret);
+
+    return ret;
+  }
+
   /** makes a popup at x,y and returns a new container-x for it */
   _popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
     let x;
