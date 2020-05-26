@@ -9,10 +9,13 @@ import * as util from '../util/util.js';
 import * as vectormath from '../util/vectormath.js';
 import {EventDispatcher} from "../util/events.js";
 
+export {getCurve} from './curve1d_base.js';
+
 var Vector2 = vectormath.Vector2;
 
 import './curve1d_basic.js';
 import './curve1d_bspline.js';
+import './curve1d_anim.js';
 
 export function mySafeJSONStringify(obj) {
   return JSON.stringify(obj.toJSON(), function(key) {
@@ -37,12 +40,14 @@ export function mySafeJSONParse(buf) {
 
 window.mySafeJSONStringify = mySafeJSONStringify;
 
-export {CurveConstructors, CURVE_VERSION} from './curve1d_base.js';
-import {CurveConstructors, CURVE_VERSION} from './curve1d_base.js';
+export {CurveConstructors, CURVE_VERSION, CurveTypeData} from './curve1d_base.js';
+import {CurveConstructors, CURVE_VERSION, CurveTypeData} from './curve1d_base.js';
 
 export class Curve1D extends EventDispatcher {
   constructor() {
     super();
+
+    this.uiZoom = 1.0;
 
     this.generators = [];
     this.VERSION = CURVE_VERSION;
@@ -126,6 +131,7 @@ export class Curve1D extends EventDispatcher {
   toJSON() {
     let ret = {
       generators       : [],
+      uiZoom           : this.uiZoom,
       VERSION          : this.VERSION,
       active_generator : this.generatorType
     };
@@ -137,14 +143,27 @@ export class Curve1D extends EventDispatcher {
     return ret;
   }
 
-  getGenerator(type) {
+  getGenerator(type, throw_on_error=true) {
     for (let gen of this.generators) {
       if (gen.type === type) {
         return gen;
       }
     }
 
-    throw new Error("Unknown generator " + type + ".");
+    //was a new generator registerd?
+    for (let cls of CurveConstructors) {
+      if (cls.name === type) {
+        let gen = new cls();
+        this.generators.push(gen);
+        return gen;
+      }
+    }
+
+    if (throw_on_error) {
+      throw new Error("Unknown generator " + type + ".");
+    } else {
+      return undefined;
+    }
   }
 
   switchGenerator(type) {
@@ -184,9 +203,21 @@ export class Curve1D extends EventDispatcher {
   loadJSON(obj) {
     this.VERSION = obj.VERSION;
 
+    this.uiZoom = parseFloat(obj.uiZoom) || this.uiZoom;
+
     //this.generators = [];
     for (let gen of obj.generators) {
-      let gen2 = this.getGenerator(gen.type);
+      let gen2 = this.getGenerator(gen.type, false);
+
+      if (!gen2 || !(gen2 instanceof CurveTypeData)) {
+        //old curve class?
+        console.warn("Bad curve generator class:", gen2);
+        if (gen2) {
+          this.generators.remove(gen2);
+        }
+        continue;
+      }
+
       gen2.parent = undefined;
       gen2.reset();
       gen2.loadJSON(gen);
@@ -293,6 +324,7 @@ export class Curve1D extends EventDispatcher {
 
     if (this.VERSION <= 0.75) {
       this.generators = [];
+
       for (let cls of CurveConstructors) {
         this.generators.push(new cls());
       }
@@ -302,7 +334,13 @@ export class Curve1D extends EventDispatcher {
 
     console.log("ACTIVE", this._active);
 
-    for (let gen of this.generators) {
+    for (let gen of this.generators.concat([])) {
+      if (!(gen instanceof CurveTypeData)) {
+        console.warn("Bad generator data found:", gen);
+        this.generators.remove(gen);
+        continue;
+      }
+
       if (gen.type === this._active) {
         console.log("found active", this._active);
         this.generators.active = gen;
@@ -318,6 +356,7 @@ Curve1D {
   generators  : array(abstract(CurveTypeData));
   _active     : string | obj.generators.active.type;
   VERSION     : float;
+  uiZoom      : float;
 }
 `;
 nstructjs.register(Curve1D);

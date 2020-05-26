@@ -393,18 +393,23 @@ export function convert(value, unita, unitb) {
  * @returns {*}
  */
 export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {
-  if (typeof baseUnit === "string") {
+  if (typeof baseUnit === "string" && baseUnit !== "none") {
     baseUnit = Unit.getUnit(baseUnit);
   }
-  if (typeof displayUnit === "string") {
+  if (typeof displayUnit === "string" && displayUnit !== "none") {
     displayUnit = Unit.getUnit(displayUnit);
   }
 
-  if (displayUnit !== baseUnit) {
+
+  if (baseUnit !== "none" && displayUnit !== baseUnit && displayUnit !== "none") {
     value = convert(value, baseUnit, displayUnit);
   }
 
-  return displayUnit.buildString(value, decimalPlaces);
+  if (displayUnit !== "none") {
+    return displayUnit.buildString(value, decimalPlaces);
+  } else {
+    return myToFixed(value, decimalPlaces);
+  }
 }
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;

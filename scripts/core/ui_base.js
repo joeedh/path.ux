@@ -6,6 +6,8 @@ if (window.document && document.body) {
   document.body.style["padding"] = "0px";
 }
 
+import * as cssutils from '../util/cssutils.js';
+import {Animator} from "./anim.js";
 import './units.js';
 import * as util from '../util/util.js';
 import * as vectormath from '../util/vectormath.js';
@@ -35,6 +37,8 @@ import {Icons} from '../icon_enum.js';
 
 export {setIconMap} from '../icon_enum.js';
 import {setIconMap} from '../icon_enum.js';
+
+import {AfterAspect, initAspectClass, _setUIBase} from "./aspect.js";
 
 const EnumProperty = toolprop.EnumProperty;
 
@@ -410,85 +414,6 @@ let _mobile_theme_patterns = [
 
 let _idgen = 0;
 
-export class AfterAspect {
-  constructor(owner, key) {
-    this.owner = owner;
-    this.key = key;
-
-    this.chain = [[owner[key], false]];
-    this.chain2 = [[owner[key], false]];
-
-    let this2 = this;
-
-    owner[key] = function() {
-      let chain = this2.chain;
-      let chain2 = this2.chain2;
-
-      chain2.length = chain.length;
-
-      for (let i=0; i<chain.length; i++) {
-        chain2[i] = chain[i];
-      }
-
-      for (let i=0; i<chain2.length; i++) {
-        let [cb, node, once] = chain2[i];
-
-        if (node) {
-          let isDead = !node.isConnected;
-
-          if (node instanceof UIBase) {
-            isDead = isDead || node.isDead();
-          }
-
-          if (isDead) {
-            console.warn("pruning dead AfterAspect callback", node);
-            chain.remove(chain2[i]);
-            continue;
-          }
-        }
-
-        if (once && chain.indexOf(chain2[i]) >= 0) {
-          chain.remove(chain2[i]);
-        }
-
-        if (cb && cb.apply) {
-          cb.apply(this, arguments);
-        }
-      }
-    };
-
-    owner[key].after = this.after.bind(this);
-    owner[key].once = this.once.bind(this);
-    owner[key].remove = this.remove.bind(this);
-  }
-
-  static bind(owner, key) {
-    return new AfterAspect(owner, key);
-  }
-
-  remove(cb) {
-    for (item of this.chain) {
-      if (item[0] === cb) {
-        this.chain.remove(item);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  once(cb, node) {
-    return this.after(cb, node, true);
-  }
-
-  after(cb, node, once=false) {
-    if (cb === undefined) {
-      console.warn("invalid call to .after(); cb was undefined");
-    }
-    this.chain.push([cb, node, once]);
-  }
-}
-
 window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
   let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
   CTX.screen.mergeGlobalCSS(buf);
@@ -566,10 +491,10 @@ export class UIBase extends HTMLElement {
     this._screenStyleTag = document.createElement("style");
     this._screenStyleUpdateHash = 0;
 
-    AfterAspect.bind(this, "setCSS");
-    AfterAspect.bind(this, "update");
+    initAspectClass(this, new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"]));
 
     this.shadow = this.attachShadow({mode : 'open'});
+
     if (cconst.DEBUG.paranoidEvents) {
       this.__cbs = [];
     }
@@ -705,6 +630,7 @@ export class UIBase extends HTMLElement {
       n.hide(sethide);
     })
   }
+
 
   unhide() {
     this.hide(false);
@@ -2064,6 +1990,69 @@ export class UIBase extends HTMLElement {
     return this.getStyleClass();
   }
 
+  animate(_extra_handlers={}) {
+    let transform = new DOMMatrix(this.style["transform"]);
+
+    let update_trans = () => {
+      let t = transform;
+      let css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
+      this.style["transform"] = css;
+    }
+
+    let handlers = {
+      background_get() {
+        return css2color(this.background);
+      },
+
+      background_set(c) {
+        if (typeof c !== "string") {
+          c = color2css(c);
+        }
+        this.background = c;
+      },
+
+      dx_get() {
+        return transform.m41;
+      },
+      dx_set(x) {
+        transform.m41 = x;
+        update_trans();
+      },
+
+      dy_get() {
+        return transform.m42;
+      },
+      dy_set(x) {
+        transform.m42 = x;
+        update_trans();
+      }
+    }
+
+    handlers = Object.assign(handlers, _extra_handlers);
+
+    let handler = {
+      get : (target, key, receiver) => {
+        if ((key + "_get") in handlers) {
+          return handlers[key + "_get"].call(target);
+        } else {
+          return target[key];
+        }
+      },
+      set : (target, key, val, receiver) => {
+        if ((key + "_set") in handlers) {
+          handlers[key + "_set"].call(target, val);
+        } else {
+          target[key] = val;
+        }
+
+        return true;
+      }
+    }
+
+    let proxy = new Proxy(this, handler);
+    return new Animator(proxy);
+  }
+
   /**
    * Defines core attributes of the class
    *
@@ -2448,3 +2437,5 @@ export function loadUIData(node, buf) {
 }
 
 window._loadUIData = loadUIData;
+
+_setUIBase(UIBase);

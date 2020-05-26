@@ -1,3 +1,6 @@
+if (typeof window === "undefined" && typeof global !== "undefined") {
+  global.window = global;
+}
 
 (function() {
   let visitgen = 0;

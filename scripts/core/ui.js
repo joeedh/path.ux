@@ -1443,10 +1443,12 @@ export class Container extends ui_base.UIBase {
     }
 
     if (min !== undefined) {
-      ret.range[0] = min;
+      //ret.range[0] = min;
+      ret.setAttribute("min", min);
     }
     if (max !== undefined) {
-      ret.range[1] = max;
+      //ret.range[1] = max;
+      ret.setAttribute("max", max);
     }
 
     if (defaultval !== undefined) {

@@ -1,3 +1,7 @@
+if (typeof window === "undefined" && typeof global !== "undefined") {
+  global.window = global;
+}
+
 (function() {
   let visitgen = 0;
 
@@ -389,6 +393,18 @@ Array.prototype[Symbol.keystr] = function() {
 
   return key;
 };
+
+function css2matrix(s) {
+  return new DOMMatrix(s);
+}
+
+function matrix2css(m) {
+  if (m.$matrix) {
+    m = m.$matrix;
+  }
+
+  return `matrix(${m.m11},${m.m12},${m.m21},${m.m22},${m.m41},${m.m42})`
+}
 
 (function () {
   if (typeof window === "undefined" && typeof global != "undefined") {
@@ -7473,414 +7489,6 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
   Matrix4: Matrix4
 });
 
-/*
-all units convert to meters
-*/
-
-function normString(s) {
-  //remove all whitespace
-  s = s.replace(/ /g, "").replace(/\t/g, "");
-  return s.toLowerCase();
-}
-
-function myToFixed(f, decimals) {
-  f = f.toFixed(decimals);
-  while (f.endsWith("0") || f.endsWith(".")) {
-    f = f.slice(0, f.length-1);
-  }
-
-  if (f.length == 0)
-    f = "0";
-
-  return f.trim();
-}
-const Units = [];
-
-class Unit {
-  static getUnit(name) {
-    for (let cls of Units) {
-      if (cls.unitDefine().name === name) {
-        return cls;
-      }
-    }
-
-    throw new Error("Unknown unit " + name);
-  }
-
-  static register(cls) {
-    Units.push(cls);
-  }
-
-  //subclassed static methods start here
-  static unitDefine() {return {
-    name    : "",
-    uiname  : "",
-    type    : "", //e.g. distance
-    icon    : -1,
-    pattern : undefined //a re literal to validate strings
-  }}
-
-  static parse(string) {
-
-  }
-
-  static validate(string) {
-    string = normString(string);
-    let def = this.unitDefine();
-
-    let m = string.match(def.pattern);
-    if (!m)
-      return false;
-
-    return m[0] === string;
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-
-  }
-
-  static fromInternal(value) {
-
-  }
-
-  static buildString(value, decimals=2) {
-
-  }
-}
-
-class MeterUnit extends Unit {
-  static unitDefine() {return {
-    name    : "meter",
-    uiname  : "Meter",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d*)?m$/
-  }}
-
-  static parse(string) {
-    string = normString(string);
-    if (string.endsWith("m")) {
-      string = string.slice(0, string.length-1);
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value;
-  }
-
-  static fromInternal(value) {
-    return value;
-  }
-
-  static buildString(value, decimals=2) {
-    return "" + myToFixed(value, decimals) + " m";
-  }
-}
-
-Unit.register(MeterUnit);
-
-class InchUnit extends Unit {
-  static unitDefine() {return {
-    name    : "inch",
-    uiname  : "Inch",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d*)?(in|inch)$/
-  }}
-
-  static parse(string) {
-    string = string.toLowerCase();
-    let i = string.indexOf("i");
-
-    if (i >= 0) {
-      string = string.slice(0, i);
-    }
-
-    return parseInt(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value*0.0254;
-  }
-
-  static fromInternal(value) {
-    return value/0.0254;
-  }
-
-  static buildString(value, decimals=2) {
-    return "" + myToFixed(value, decimals) + "in";
-  }
-}
-Unit.register(InchUnit);
-
-let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
-
-class FootUnit extends Unit {
-  static unitDefine() {return {
-    name    : "foot",
-    uiname  : "Foot",
-    type    : "distance",
-    icon    : -1,
-    pattern : foot_re
-  }}
-
-  static parse(string) {
-    string = normString(string);
-    let i = string.search("ft");
-    let parts = [];
-    let vft=0.0, vin=0.0;
-
-    if (i >= 0) {
-      parts = string.split("ft");
-      let j = parts[1].search("in");
-
-      if (j >= 0) {
-        parts = [parts[0]].concat(parts[1].split("in"));
-        vin = parseFloat(parts[1]);
-      }
-
-      vft = parseFloat(parts[0]);
-    } else {
-      string = string.replace(/in/g, "");
-      vin = parseFloat(string);
-    }
-
-    return vin/12.0 + vft;
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value*0.3048;
-  }
-
-  static fromInternal(value) {
-    return value/0.3048;
-  }
-
-  static buildString(value, decimals=2) {
-    let vft = ~~(value / 12);
-    let vin = value % 12;
-
-    if (vft === 0.0) {
-      return myToFixed(value, decimals) + " in";
-    }
-
-    let s = "" + vft + " ft";
-    if (vin !== 0.0) {
-      s += " " + myToFixed(value, decimals) + " in";
-    }
-
-    return s;
-  }
-}
-Unit.register(FootUnit);
-
-
-class MileUnit extends Unit {
-  static unitDefine() {return {
-    name    : "mile",
-    uiname  : "Mile",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d+)?miles$/
-  }}
-
-  static parse(string) {
-    string = normString(string);
-    string = string.replace(/miles/, "");
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value*1609.34;
-  }
-
-  static fromInternal(value) {
-    return value/1609.34;
-  }
-
-  static buildString(value, decimals=3) {
-    return "" + myToFixed(value, decimals) + " miles";
-  }
-}
-Unit.register(MileUnit);
-
-class DegreeUnit extends Unit {
-  static unitDefine() {return {
-    name    : "degree",
-    uiname  : "Degrees",
-    type    : "angle",
-    icon    : -1,
-    pattern : /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)?$/
-  }}
-
-  static parse(string) {
-    string = normString(string);
-    if (string.search("d") >= 0) {
-      string = string.slice(0, string.search("d")).trim();
-    } else if (string.search("\u00B0") >= 0) {
-      string = string.slice(0, string.search("\u00B0")).trim();
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value/180.0*Math.PI;
-  }
-
-  static fromInternal(value) {
-    return value*180.0/Math.PI;
-  }
-
-  static buildString(value, decimals=3) {
-    return "" + myToFixed(value, decimals) + " \u00B0";
-  }
-};
-Unit.register(DegreeUnit);
-
-class RadianUnit extends Unit {
-  static unitDefine() {return {
-    name    : "radian",
-    uiname  : "Radians",
-    type    : "angle",
-    icon    : -1,
-    pattern : /-?\d+(\.\d+)?(r|rad|radian|radians)$/
-  }}
-
-  static parse(string) {
-    string = normString(string);
-    if (string.search("r") >= 0) {
-      string = string.slice(0, string.search("r")).trim();
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value;
-  }
-
-  static fromInternal(value) {
-    return value;
-  }
-
-  static buildString(value, decimals=3) {
-    return "" + myToFixed(value, decimals) + " r";
-  }
-};
-
-Unit.register(RadianUnit);
-
-function setBaseUnit(unit) {
-  Unit.baseUnit = unit;
-}
-function setMetric(val) {
-  Unit.isMetric = val;
-}
-
-Unit.isMetric = true;
-Unit.baseUnit = "meter";
-
-let numre = /[+\-]?[0-9]+(\.[0-9]*)?$/;
-let hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
-let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
-let binre = /[+\-]?0b[01]+$/;
-let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
-
-function isNumber$1(s) {
-  s = (""+s).trim();
-  function test(re) {
-    return s.search(re) == 0;
-  }
-
-  return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
-}
-
-function parseValue(string, baseUnit=undefined) {
-  let base;
-
-  //unannotated string?
-  if (isNumber$1(string)) {
-    //assume base unit
-    let f = parseFloat(string);
-    
-    return f;
-  }  
-
-  if (baseUnit) {
-    base = Unit.getUnit(baseUnit);
-    if (base === undefined) {
-      console.warn("Unknown unit " + baseUnit);
-      return NaN;
-    }
-  } else {
-    base = Unit.getUnit(Unit.baseUnit);
-  }
-
-  for (let unit of Units) {
-    let def = unit.unitDefine();
-
-    if (unit.validate(string)) {
-      console.log(unit);
-      let value = unit.parse(string);
-
-      value = unit.toInternal(value);
-      return base.fromInternal(value);
-    }
-  }
-
-  return NaN;
-}
-
-function convert(value, unita, unitb) {
-  if (typeof unita === "string")
-    unita = Unit.getUnit(unita);
-
-  if (typeof unitb === "string")
-    unitb = Unit.getUnit(unitb);
-
-  return unitb.fromInternal(unita.toInternal(value));
-}
-
-/**
- *
- * @param value Note: is not converted to internal unit
- * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
- * @returns {*}
- */
-function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {
-  if (typeof baseUnit === "string") {
-    baseUnit = Unit.getUnit(baseUnit);
-  }
-  if (typeof displayUnit === "string") {
-    displayUnit = Unit.getUnit(displayUnit);
-  }
-
-  if (displayUnit !== baseUnit) {
-    value = convert(value, baseUnit, displayUnit);
-  }
-
-  return displayUnit.buildString(value, decimalPlaces);
-}
-window._parseValueTest = parseValue;
-window._buildStringTest = buildString;
-
 "use strict";
 
 function aabb_overlap_area(pos1, size1, pos2, size2) {
@@ -9565,306 +9173,426 @@ var math1 = /*#__PURE__*/Object.freeze({
   Mat4Stack: Mat4Stack
 });
 
-"use strict";
+let exports = {
+  colorSchemeType : "light",
 
-let PropTypes = {
-  INT : 1,
-  STRING : 2,
-  BOOL : 4,
-  ENUM : 8,
-  FLAG : 16,
-  FLOAT : 32,
-  VEC2 : 64,
-  VEC3 : 128,
-  VEC4 : 256,
-  MATRIX4 : 512,
-  QUAT : 1024,
-  PROPLIST : 4096,
-  STRSET : 8192,
-  CURVE  : 8192<<1
-  //ITER : 8192<<1
+  //add textboxes to rollar sliders,
+  //note that  users can also double click them to
+  //enter text as well
+  useNumSliderTextboxes : true,
+
+  menu_close_time : 500,
+  doubleClickTime : 500,
+  //timeout for press-and-hold (touch) version of double clicking
+  doubleClickHoldTime : 750,
+  DEBUG : {
+    paranoidEvents: false,
+    screenborders: false,
+    areaContextPushes: false,
+    allBordersMovable: false,
+    doOnce: false,
+    modalEvents : true,
+    areaConstraintSolver : false,
+    datapaths : false,
+
+    domEvents : false,
+    domEventAddRemove : false,
+
+    debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
+
+    screenAreaPosSizeAccesses : false,
+    buttonEvents : false,
+
+    /*
+    customWindowSize: {
+      width: 2048, height: 2048
+    },
+    //*/
+  },
+
+  addHelpPickers : true,
+
+  useAreaTabSwitcher: true,
+  autoSizeUpdate : true,
+  showPathsInToolTips: true,
+
+  loadConstants : function(args) {
+    for (let k in args) {
+      if (k === "loadConstants")
+        continue;
+
+      this[k] = args[k];
+    }
+  }
+};
+window.DEBUG = exports.DEBUG;
+
+let ColorSchemeTypes = {
+  LIGHT : "light",
+  DARK  : "dark"
 };
 
-const PropSubTypes = {
-  COLOR : 1
+function parsepx(css) {
+  return parseFloat(css.trim().replace("px", ""))
+}
+
+function color2css$2(c, alpha_override) {
+  let r = ~~(c[0]*255);
+  let g = ~~(c[1]*255);
+  let b = ~~(c[2]*255);
+  let a = c.length < 4 ? 1.0 : c[3];
+
+  a = alpha_override !== undefined ? alpha_override : a;
+
+  if (c.length == 3 && alpha_override === undefined) {
+    return `rgb(${r},${g},${b})`;
+  } else {
+    return `rgba(${r},${g},${b}, ${a})`;
+  }
+}
+window.color2css = color2css$2;
+
+let css2color_rets = cachering.fromConstructor(Vector4, 64);
+let cmap = {
+  red : [1, 0, 0, 1],
+  green : [0, 1, 0, 1],
+  blue : [0, 0, 1, 1],
+  yellow : [1, 1, 0, 1],
+  white : [1, 1, 1, 1],
+  black : [0, 0, 0, 1],
+  grey : [0.7, 0.7, 0.7, 1],
+  teal : [0, 1, 1, 1],
+  orange : [1,0.55,0.25,1],
+  brown  : [0.7, 0.4, 0.3, 1]
 };
 
-//flags
-const PropFlags = {
-  SELECT            : 1,
-  PRIVATE           : 2,
-  LABEL             : 4,
-  USE_ICONS         : 64,
-  USE_CUSTOM_GETSET : 128, //used by controller.js interface
-  SAVE_LAST_VALUE   : 256,
-  READ_ONLY         : 512,
-  SIMPLE_SLIDER     : 1024,
-  FORCE_ROLLER_SLIDER : 2048
-};
+function color2web(color) {
+  function tostr(n) {
+    n = ~~(n*255);
+    let s = n.toString(16);
 
-class ToolPropertyIF {
-  constructor(type, subtype, apiname, uiname, description, flag, icon) {
-    this.data = undefined;
+    if (s.length > 2) {
+      s = s.slice(0, 2);
+    }
 
-    this.type = type;
-    this.subtype = subtype;
+    while (s.length < 2) {
+      s = "0" + s;
+    }
 
-    this.apiname = apiname;
-    this.uiname = uiname;
-    this.description = description;
-    this.flag = flag;
-    this.icon = icon;
+    return s;
+  }
+
+  if (color.length === 3 || color[3] === 1.0) {
+    let r = tostr(color[0]);
+    let g = tostr(color[1]);
+    let b = tostr(color[2]);
+
+    return "#" + r + g + b;
+  } else {
+    let r = tostr(color[0]);
+    let g = tostr(color[1]);
+    let b = tostr(color[2]);
+    let a = tostr(color[3]);
+
+    return "#" + r + g + b + a;
+  }
+}
+
+window.color2web = color2web;
+
+function css2color$1(color) {
+  if (!color) {
+    return new Vector4([0,0,0,1]);
+  }
+
+  color = (""+color).trim();
+
+  let ret = css2color_rets.next();
+
+  if (color[0] === "#") {
+    color = color.slice(1, color.length);
+    let parts = [];
+
+    for (let i=0; i<color.length>>1; i++) {
+      let part = "0x" + color.slice(i*2, i*2+2);
+      parts.push(parseInt(part));
+    }
+
+    ret.zero();
+    let i;
+    for (i=0; i<Math.min(parts.length, ret.length); i++) {
+      ret[i] = parts[i] / 255.0;
+    }
+
+    if (i < 4) {
+      ret[3] = 1.0;
+    }
+
+    return ret;
+  }
+
+  if (color in cmap) {
+    return ret.load(cmap[color]);
+  }
+
+  color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
+
+  for (let i=0; i<color.length; i++) {
+    ret[i] = parseFloat(color[i]);
+    if (i < 3) {
+      ret[i] /= 255;
+    }
+  }
+
+  return ret;
+}
+
+window.css2color = css2color$1;
+
+function web2color(str) {
+  if (typeof str === "string" && str.trim()[0] !== "#") {
+    str = "#" + str.trim();
+  }
+
+  return css2color$1(str);
+}
+window.web2color = web2color;
+
+let validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+
+function validateWebColor(str) {
+  if (typeof str !== "string" && !(str instanceof String))
+    return false;
+
+  return str.trim().search(validate_pat) === 0;
+}
+
+let theme = {};
+
+function invertTheme() {
+  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+
+  function inverted(color) {
+    if (Array.isArray(color)) {
+      for (let i = 0; i < 3; i++) {
+        color[i] = 1.0 - color[i];
+      }
+
+      return color;
+    }
+
+    color = css2color$1(color);
+    return color2css$2(inverted(color));
+  }
+
+  let bg = document.body.style["background-color"];
+  //if (!bg) {
+    bg = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  //} else {
+  //  bg = inverted(bg);
+  //}
+
+  document.body.style["background-color"] = bg;
+
+  for (let style in theme) {
+    style = theme[style];
+
+    for (let k in style) {
+      let v = style[k];
+
+      if (v instanceof CSSFont) {
+        v.color = inverted(v.color);
+      } else if (typeof v === "string") {
+        v = v.trim().toLowerCase();
+
+        let iscolor = v.search("rgb") >= 0;
+        iscolor = iscolor || v in cmap;
+        iscolor = iscolor || validateWebColor(v);
+
+        if (iscolor) {
+          style[k] = inverted(v);
+        }
+      }
+    }
+  }
+}
+
+window.invertTheme = invertTheme;
+
+function setColorSchemeType(mode) {
+  if (!!mode !== exports.colorSchemeType) {
+    invertTheme();
+    exports.colorSchemeType = mode;
+  }
+
+}
+window.validateWebColor = validateWebColor;
+
+class CSSFont {
+  constructor(args={}) {
+    this._size = args.size ? args.size : 12;
+    this.font = args.font;
+    this.style = args.style !== undefined ? args.style : "normal";
+    this.weight = args.weight !== undefined ? args.weight : "normal";
+    this.variant = args.variant !== undefined ? args.variant : "normal";
+    this.color = args.color;
+  }
+
+  set size(val) {
+    this._size = val;
+  }
+
+  get size() {
+    if (isMobile()) {
+      let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
+      if (mul) {
+        return this._size * mul;;
+      }
+    }
+
+    return this._size;
   }
 
   copyTo(b) {
-
+    b._size = this._size;
+    b.font = this.font;
+    b.style = this.style;
+    b.color = this.color;
+    b.variant = this.variant;
+    b.weight = this.weight;
   }
 
   copy() {
-
+    let ret = new CSSFont();
+    this.copyTo(ret);
+    return ret;
   }
 
-  _fire(type, arg1, arg2) {
+  genCSS(size=this.size) {
+    return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
   }
 
-  on(type, cb) {
-  }
-
-  off(type, cb) {
-  }
-
-  getValue() {
-  }
-
-  setValue(val) {
-  }
-
-  setStep(step) {
-  }
-
-  setRange(min, max) {
-  }
-
-  setUnit(unit) {
-  }
-
-  //some clients have seperate ui range
-  setUIRange(min, max) {
-  }
-
-  setIcon(icon) {
+  hash() {
+    return this.genCSS + ":" + this.size + ":" + this.color;
   }
 }
-
-class StringPropertyIF extends ToolPropertyIF {
-  constructor() {
-    super(PropTypes.STRING);
-  }
+CSSFont.STRUCT = `
+CSSFont {
+  size     : float | obj._size;
+  font     : string | obj.font || "";
+  style    : string | obj.font || "";
+  color    : string | ""+obj.color;
+  variant  : string | obj.variant || "";
+  weight   : string | ""+obj.weight;
 }
+`;
+register(CSSFont);
 
-class NumPropertyIF extends ToolPropertyIF {
-};
+function exportTheme(theme1=theme) {
+  let sortkeys = (obj) => {
+    let keys = [];
+    for (let k in obj) {
+      keys.push(k);
+    }
+    keys.sort();
+    
+    return keys;
+  };
 
-class IntProperty extends ToolPropertyIF {
-  constructor() {
-    super(PropTypes.INT);
-  }
+  let s = "var theme = {\n";
 
-  setRadix(radix) {
-    throw new Error("implement me");
-  }
-}
+  function writekey(v, indent="") {
+    if (typeof v === "string") {
+      if (v.search("\n") >= 0) {
+        v = "`" + v + "`";
+      } else {
+        v = "'" + v + "'";
+      }
+      
+      return v;
+    } else if (typeof v === "object") {
+      if (v instanceof CSSFont) {
+        return `new CSSFont({
+${indent}  font    : ${writekey(v.font)},
+${indent}  weight  : ${writekey(v.weight)},
+${indent}  variant : ${writekey(v.variant)},
+${indent}  style   : ${writekey(v.style)},
+${indent}  size    : ${writekey(v._size)},
+${indent}  color   : ${writekey(v.color)}
+${indent}})`;
+      } else {
+        let s = "{\n";
 
-class FloatProperty extends ToolPropertyIF {
-  constructor() {
-    super(PropTypes.FLOAT);
-  }
+        for (let k of sortkeys(v)) {
+          let v2 = v[k];
 
-  setDecimalPlaces(n) {
-  }
-}
+          if (k.search(" ") >= 0 || k.search("-") >= 0) {
+            k = "'" + k + "'";
+          }
 
-class EnumProperty extends ToolPropertyIF {
-  constructor(value, valid_values) {
-    super(PropTypes.ENUM);
+          s += indent + "  " + k + " : " + writekey(v2, indent + "  ") + ",\n";
+        }
 
-    this.values = {};
-    this.keys = {};
-    this.ui_value_names = {};
-    this.iconmap = {};
-
-    if (valid_values === undefined) return this;
-
-    if (valid_values instanceof Array || valid_values instanceof String) {
-      for (var i=0; i<valid_values.length; i++) {
-        this.values[valid_values[i]] = valid_values[i];
-        this.keys[valid_values[i]] = valid_values[i];
+        s += indent + "}";
+        return s;
       }
     } else {
-      for (var k in valid_values) {
-        this.values[k] = valid_values[k];
-        this.keys[valid_values[k]] = k;
+      return ""+v;
+    }
+
+    return "error";
+  }
+
+  for (let k of sortkeys(theme1)) {
+    let k2 = k;
+
+    if (k.search("-") >= 0 || k.search(" ") >= 0) {
+      k2 = "'" + k + "'";
+    }
+    s += "  " + k2 + ": ";
+
+    let v = theme1[k];
+    if (typeof v !== "object" || v instanceof CSSFont) {
+      s += writekey(v, "  ") + ",\n";
+    } else {
+      s += " {\n";
+      let s2 = "";
+
+      let maxwid = 0;
+
+      for (let k2 of sortkeys(v)) {
+        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
+          k2 = "'" + k2 + "'";
+        }
+
+        maxwid = Math.max(maxwid, k2.length);
       }
+
+      for (let k2 of sortkeys(v)) {
+        let v2 = v[k2];
+
+        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
+          k2 = "'" + k2 + "'";
+        }
+    
+        let pad = "";
+
+        for (let i=0; i<maxwid-k2.length; i++) {
+          pad += " ";
+        }
+
+        s2 += "    " + k2 + pad + ": " + writekey(v2, "    ") + ",\n";
+      }
+
+      s += s2;
+      s += "  },\n\n";
     }
-
-    for (var k in this.values) {
-      var uin = k[0].toUpperCase() + k.slice(1, k.length);
-
-      uin = uin.replace(/\_/g, " ");
-      this.ui_value_names[k] = uin;
-    }
   }
+  s += "};\n";
 
-  addIcons(iconmap) {
-    if (this.iconmap === undefined) {
-      this.iconmap = {};
-    }
-    for (var k in iconmap) {
-      this.iconmap[k] = iconmap[k];
-    }
-  }
+  return s;
 }
-
-class FlagPropertyIF extends EnumProperty {
-  constructor(valid_values) {
-    super(PropTypes.FLAG);
-  }
-}
-
-class Vec2Property extends ToolPropertyIF {
-  constructor(valid_values) {
-    super(PropTypes.VEC2);
-  }
-}
-
-class Vec3Property extends ToolPropertyIF {
-  constructor(valid_values) {
-    super(PropTypes.VEC3);
-  }
-}
-
-class Vec4Property extends ToolPropertyIF {
-  constructor(valid_values) {
-    super(PropTypes.VEC4);
-  }
-}
-
-/**
- * List of other tool props (all of one type)
- */
-class ListProperty extends ToolPropertyIF {
-  /*
-  * Prop must be a ToolProperty subclass instance
-  * */
-  constructor(prop) {
-    super(PropTypes.PROPLIST);
-
-    this.prop = prop;
-  }
-
-  copyTo(b) {
-  }
-
-  copy() {
-  }
-
-  /**
-   * clear list
-   * */
-  clear() {
-
-  }
-
-  push(item=this.prop.copy()) {
-  }
-
-  [Symbol.iterator]() {
-  }
-
-  get length() {
-  }
-
-  set length(val) {
-  }
-}
-
-//like FlagsProperty but uses strings
-class StringSetProperty extends ToolPropertyIF {
-  constructor(value=undefined, definition=[]) {
-    super(PropTypes.STRSET);
-  }
-
-  /*
-  * Values can be a string, undefined/null, or a list/set/object-literal of strings.
-  * If destructive is true, then existing set will be cleared.
-  * */
-  setValue(values, destructive=true, soft_fail=true) {
-  }
-
-  getValue() {
-  }
-
-  addIcons(iconmap) {
-  }
-
-
-  addUINames(map) {
-  }
-
-  addDescriptions(map) {
-  }
-
-  copyTo(b) {
-  }
-
-  copy() {
-  }
-}
-
-class Curve1DPropertyIF extends ToolPropertyIF {
-  constructor(curve, uiname) {
-    super(PropTypes.CURVE);
-
-    this.data = curve;
-  }
-
-  getValue() {
-    return this.curve;
-  }
-
-  setValue(curve) {
-    if (curve === undefined) {
-      return;
-    }
-
-    let json = JSON.parse(JSON.stringify(curve));
-    this.data.load(json);
-  }
-
-  copyTo(b) {
-    b.setValue(this.data);
-  }
-}
-
-var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  PropTypes: PropTypes,
-  PropSubTypes: PropSubTypes,
-  PropFlags: PropFlags,
-  ToolPropertyIF: ToolPropertyIF,
-  StringPropertyIF: StringPropertyIF,
-  NumPropertyIF: NumPropertyIF,
-  IntProperty: IntProperty,
-  FloatProperty: FloatProperty,
-  EnumProperty: EnumProperty,
-  FlagPropertyIF: FlagPropertyIF,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  Curve1DPropertyIF: Curve1DPropertyIF
-});
+window._exportTheme = exportTheme;
 
 "use strict";
 
@@ -9936,62 +9664,10 @@ let Icons = {
   UNDERLINE      : 42,
   STRIKETHRU     : 43,
   TREE_EXPAND    : 44,
-  TREE_COLLAPSE  : 45
+  TREE_COLLAPSE  : 45,
+  ZOOM_OUT       : 46,
+  ZOOM_IN        : 47
 };
-
-let exports = {
-  colorSchemeType : "light",
-
-  //add textboxes to rollar sliders,
-  //note that  users can also double click them to
-  //enter text as well
-  useNumSliderTextboxes : true,
-
-  menu_close_time : 500,
-  doubleClickTime : 500,
-  //timeout for press-and-hold (touch) version of double clicking
-  doubleClickHoldTime : 750,
-  DEBUG : {
-    paranoidEvents: false,
-    screenborders: false,
-    areaContextPushes: false,
-    allBordersMovable: false,
-    doOnce: false,
-    modalEvents : true,
-    areaConstraintSolver : false,
-    datapaths : false,
-
-    domEvents : false,
-    domEventAddRemove : false,
-
-    debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
-
-    screenAreaPosSizeAccesses : false,
-    buttonEvents : false,
-
-    /*
-    customWindowSize: {
-      width: 2048, height: 2048
-    },
-    //*/
-  },
-
-  addHelpPickers : true,
-
-  useAreaTabSwitcher: true,
-  autoSizeUpdate : true,
-  showPathsInToolTips: true,
-
-  loadConstants : function(args) {
-    for (let k in args) {
-      if (k === "loadConstants")
-        continue;
-
-      this[k] = args[k];
-    }
-  }
-};
-window.DEBUG = exports.DEBUG;
 
 let modalstack = [];
 let singleMouseCBs = {};
@@ -10910,6 +10586,22 @@ const TangentModes = {
   BREAK  : 2
 };
 
+function getCurve(type, throw_on_error=true) {
+  for (let cls of CurveConstructors) {
+    if (cls.name === type)
+      return cls;
+    if (cls.define().name === type)
+      return cls;
+  }
+
+  if (throw_on_error) {
+    throw new Error("Unknown curve type " + type)
+  } else {
+    console.warn("Unknown curve type", type);
+    return getCurve("ease");
+  }
+}
+
 class CurveTypeData {
   constructor() {
     this.type = this.constructor.name;
@@ -11009,6 +10701,11 @@ class CurveTypeData {
 
     return ret === undefined ? 0.0 : ret;
   }
+
+  static define() {return {
+    uiname : "Some Curve",
+    name   : "somecurve"
+  }}
 
   onActive(parent, draw_transform) {
   }
@@ -12469,6 +12166,810 @@ BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
 nstructjs$1.register(BSplineCurve);
 CurveTypeData.register(BSplineCurve);
 
+/*
+* Ease
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2010 gskinner.com, inc.
+*
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+*
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+/**
+* @module TweenJS
+*/
+
+
+/**
+ * The Ease class provides a collection of easing functions for use with TweenJS. It does not use the standard 4 param
+ * easing signature. Instead it uses a single param which indicates the current linear ratio (0 to 1) of the tween.
+ *
+ * Most methods on Ease can be passed directly as easing functions:
+ *
+ *      createjs.Tween.get(target).to({x:100}, 500, createjs.Ease.linear);
+ *
+ * However, methods beginning with "get" will return an easing function based on parameter values:
+ *
+ *      createjs.Tween.get(target).to({y:200}, 500, createjs.Ease.getPowIn(2.2));
+ *
+ * Please see the <a href="http://www.createjs.com/Demos/TweenJS/Tween_SparkTable">spark table demo</a> for an
+ * overview of the different ease types on <a href="http://tweenjs.com">TweenJS.com</a>.
+ *
+ * <em>Equations derived from work by Robert Penner.</em>
+ * @class Ease
+ * @static
+ **/
+
+
+function Ease() {
+  throw "Ease cannot be instantiated.";
+}
+
+// static methods and properties
+/**
+ * @method linear
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.linear = function(t) { return t; };
+
+/**
+ * Identical to linear.
+ * @method none
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.none = Ease.linear;
+
+/**
+ * Mimics the simple -100 to 100 easing in Adobe Flash/Animate.
+ * @method get
+ * @param {Number} amount A value from -1 (ease in) to 1 (ease out) indicating the strength and direction of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.get = function(amount) {
+  if (amount < -1) { amount = -1; }
+  else if (amount > 1) { amount = 1; }
+  return function(t) {
+    if (amount==0) { return t; }
+    if (amount<0) { return t*(t*-amount+1+amount); }
+    return t*((2-t)*amount+(1-amount));
+  };
+};
+
+/**
+ * Configurable exponential ease.
+ * @method getPowIn
+ * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+ * @static
+ * @return {Function}
+ **/
+Ease.getPowIn = function(pow) {
+  return function(t) {
+    return Math.pow(t,pow);
+  };
+};
+
+/**
+ * Configurable exponential ease.
+ * @method getPowOut
+ * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+ * @static
+ * @return {Function}
+ **/
+Ease.getPowOut = function(pow) {
+  return function(t) {
+    return 1-Math.pow(1-t,pow);
+  };
+};
+
+/**
+ * Configurable exponential ease.
+ * @method getPowInOut
+ * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
+ * @static
+ * @return {Function}
+ **/
+Ease.getPowInOut = function(pow) {
+  return function(t) {
+    if ((t*=2)<1) return 0.5*Math.pow(t,pow);
+    return 1-0.5*Math.abs(Math.pow(2-t,pow));
+  };
+};
+
+/**
+ * @method quadIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quadIn = Ease.getPowIn(2);
+/**
+ * @method quadOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quadOut = Ease.getPowOut(2);
+/**
+ * @method quadInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quadInOut = Ease.getPowInOut(2);
+
+/**
+ * @method cubicIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.cubicIn = Ease.getPowIn(3);
+/**
+ * @method cubicOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.cubicOut = Ease.getPowOut(3);
+/**
+ * @method cubicInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.cubicInOut = Ease.getPowInOut(3);
+
+/**
+ * @method quartIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quartIn = Ease.getPowIn(4);
+/**
+ * @method quartOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quartOut = Ease.getPowOut(4);
+/**
+ * @method quartInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quartInOut = Ease.getPowInOut(4);
+
+/**
+ * @method quintIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quintIn = Ease.getPowIn(5);
+/**
+ * @method quintOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quintOut = Ease.getPowOut(5);
+/**
+ * @method quintInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.quintInOut = Ease.getPowInOut(5);
+
+/**
+ * @method sineIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.sineIn = function(t) {
+  return 1-Math.cos(t*Math.PI/2);
+};
+
+/**
+ * @method sineOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.sineOut = function(t) {
+  return Math.sin(t*Math.PI/2);
+};
+
+/**
+ * @method sineInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.sineInOut = function(t) {
+  return -0.5*(Math.cos(Math.PI*t) - 1);
+};
+
+/**
+ * Configurable "back in" ease.
+ * @method getBackIn
+ * @param {Number} amount The strength of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.getBackIn = function(amount) {
+  return function(t) {
+    return t*t*((amount+1)*t-amount);
+  };
+};
+/**
+ * @method backIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.backIn = Ease.getBackIn(1.7);
+
+/**
+ * Configurable "back out" ease.
+ * @method getBackOut
+ * @param {Number} amount The strength of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.getBackOut = function(amount) {
+  return function(t) {
+    return (--t*t*((amount+1)*t + amount) + 1);
+  };
+};
+/**
+ * @method backOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.backOut = Ease.getBackOut(1.7);
+
+/**
+ * Configurable "back in out" ease.
+ * @method getBackInOut
+ * @param {Number} amount The strength of the ease.
+ * @static
+ * @return {Function}
+ **/
+Ease.getBackInOut = function(amount) {
+  amount*=1.525;
+  return function(t) {
+    if ((t*=2)<1) return 0.5*(t*t*((amount+1)*t-amount));
+    return 0.5*((t-=2)*t*((amount+1)*t+amount)+2);
+  };
+};
+/**
+ * @method backInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.backInOut = Ease.getBackInOut(1.7);
+
+/**
+ * @method circIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.circIn = function(t) {
+  return -(Math.sqrt(1-t*t)- 1);
+};
+
+/**
+ * @method circOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.circOut = function(t) {
+  return Math.sqrt(1-(--t)*t);
+};
+
+/**
+ * @method circInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.circInOut = function(t) {
+  if ((t*=2) < 1) return -0.5*(Math.sqrt(1-t*t)-1);
+  return 0.5*(Math.sqrt(1-(t-=2)*t)+1);
+};
+
+/**
+ * @method bounceIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.bounceIn = function(t) {
+  return 1-Ease.bounceOut(1-t);
+};
+
+/**
+ * @method bounceOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.bounceOut = function(t) {
+  if (t < 1/2.75) {
+    return (7.5625*t*t);
+  } else if (t < 2/2.75) {
+    return (7.5625*(t-=1.5/2.75)*t+0.75);
+  } else if (t < 2.5/2.75) {
+    return (7.5625*(t-=2.25/2.75)*t+0.9375);
+  } else {
+    return (7.5625*(t-=2.625/2.75)*t +0.984375);
+  }
+};
+
+/**
+ * @method bounceInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.bounceInOut = function(t) {
+  if (t<0.5) return Ease.bounceIn (t*2) * .5;
+  return Ease.bounceOut(t*2-1)*0.5+0.5;
+};
+
+/**
+ * Configurable elastic ease.
+ * @method getElasticIn
+ * @param {Number} amplitude
+ * @param {Number} period
+ * @static
+ * @return {Function}
+ **/
+Ease.getElasticIn = function(amplitude,period) {
+  var pi2 = Math.PI*2;
+  return function(t) {
+    if (t==0 || t==1) return t;
+    var s = period/pi2*Math.asin(1/amplitude);
+    return -(amplitude*Math.pow(2,10*(t-=1))*Math.sin((t-s)*pi2/period));
+  };
+};
+/**
+ * @method elasticIn
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.elasticIn = Ease.getElasticIn(1,0.3);
+
+/**
+ * Configurable elastic ease.
+ * @method getElasticOut
+ * @param {Number} amplitude
+ * @param {Number} period
+ * @static
+ * @return {Function}
+ **/
+Ease.getElasticOut = function(amplitude,period) {
+  var pi2 = Math.PI*2;
+  return function(t) {
+    if (t==0 || t==1) return t;
+    var s = period/pi2 * Math.asin(1/amplitude);
+    return (amplitude*Math.pow(2,-10*t)*Math.sin((t-s)*pi2/period )+1);
+  };
+};
+/**
+ * @method elasticOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.elasticOut = Ease.getElasticOut(1,0.3);
+
+/**
+ * Configurable elastic ease.
+ * @method getElasticInOut
+ * @param {Number} amplitude
+ * @param {Number} period
+ * @static
+ * @return {Function}
+ **/
+Ease.getElasticInOut = function(amplitude,period) {
+  var pi2 = Math.PI*2;
+  return function(t) {
+    var s = period/pi2 * Math.asin(1/amplitude);
+    if ((t*=2)<1) return -0.5*(amplitude*Math.pow(2,10*(t-=1))*Math.sin( (t-s)*pi2/period ));
+    return amplitude*Math.pow(2,-10*(t-=1))*Math.sin((t-s)*pi2/period)*0.5+1;
+  };
+};
+/**
+ * @method elasticInOut
+ * @param {Number} t
+ * @static
+ * @return {Number}
+ **/
+Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
+
+function bez3$1(a, b, c, t) {
+  var r1 = a + (b - a)*t;
+  var r2 = b + (c - b)*t;
+
+  return r1 + (r2 - r1)*t;
+}
+
+function bez4$1(a, b, c, d, t) {
+  var r1 = bez3$1(a, b, c, t);
+  var r2 = bez3$1(b, c, d, t);
+
+  return r1 + (r2 - r1)*t;
+}
+
+class ParamKey {
+  constructor(key, val) {
+    this.key = key;
+    this.val = val;
+  }
+}
+ParamKey.STRUCT = `
+ParamKey {
+  key : string;
+  val : float;
+}
+`;
+nstructjs$1.register(ParamKey);
+let BOOL_FLAG = 1e17;
+
+class SimpleCurveBase extends CurveTypeData {
+  constructor() {
+    super();
+
+    this.type = this.constructor.name;
+
+    let def = this.constructor.define();
+    let params = def.params;
+
+    this.params = {};
+    for (let k in params) {
+      this.params[k] = params[k][1];
+    }
+  }
+
+  redraw() {
+    if (this.parent)
+      this.parent.redraw();
+  }
+
+  get hasGUI() {
+    return true;
+  }
+
+  makeGUI(container) {
+    let def = this.constructor.define();
+    let params = def.params;
+
+    for (let k in params) {
+      let p = params[k];
+
+      if (p[2] === BOOL_FLAG) {
+        let check = container.check(undefined, p[0]);
+        check.checked = !!this.params[k];
+        check.key = k;
+
+        let this2 = this;
+        check.onchange = function () {
+          this2.params[this.key] = this.checked ? 1 : 0;
+          this2.update();
+          this2.redraw();
+        };
+      } else {
+        let slider = container.slider(undefined, {
+          name: p[0],
+          defaultval: this.params[k],
+          min: p[2],
+          max: p[3]
+        });
+        slider.baseUnit = slider.displayUnit = "none";
+
+        slider.key = k;
+
+        let this2 = this;
+        slider.onchange = function () {
+          this2.params[this.key] = this.value;
+          this2.update();
+          this2.redraw();
+        };
+      }
+    }
+  }
+
+  killGUI(container) {
+    container.clear();
+  }
+
+  evaluate(s) {
+    throw new Error("implement me!");
+  }
+
+  reset() {
+
+  }
+
+  update() {
+    super.update();
+  }
+
+  draw(canvas, g, draw_transform) {
+    let steps = 128;
+    let s=0, ds = 1.0 / (steps-1);
+
+    g.beginPath();
+    for (let i=0; i<steps; i++, s += ds) {
+      let co = this.evaluate(s);
+
+      if (i) {
+        g.lineTo(co[0], co[1]);
+      } else {
+        g.moveTo(co[0], co[1]);
+      }
+    }
+
+    g.stroke();
+  }
+
+  _saveParams() {
+    let ret = [];
+    for (let k in this.params) {
+      ret.push(new ParamKey(k, this.params[k]));
+    }
+
+    return ret;
+  }
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      params : this.params
+    });
+  }
+
+  loadJSON(obj) {
+    for (let k in obj.params) {
+      this.params[k] = obj.params[k];
+    }
+
+    return this;
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+
+    let ps = this.params;
+    this.params = {};
+
+    let pdef = this.constructor.define().params;
+    console.log(this.constructor.define(), this, "<-----");
+
+    for (let pair of ps) {
+      if (pair.key in pdef) {
+        this.params[pair.key] = pair.val;
+      }
+    }
+
+    for (let k in pdef) {
+      if (!(k in this.params)) {
+        this.params[k] = pdef[k][1];
+      }
+    }
+  }
+}
+
+SimpleCurveBase.STRUCT = nstructjs$1.inherit(SimpleCurveBase, CurveTypeData) + `
+  params : array(ParamKey) | obj._saveParams();
+}
+`;
+nstructjs$1.register(SimpleCurveBase);
+
+class BounceCurve extends SimpleCurveBase {
+  _evaluate(t) {
+    let params = this.params;
+    let decay = params.decay + 1.0;
+    let scale = params.scale;
+    let freq = params.freq;
+    let phase = params.phase;
+    let offset = params.offset;
+
+    t *= freq;
+    let t2 = Math.abs(Math.cos(phase + t*Math.PI*2.0))*scale; ;//+ (1.0-scale);
+
+    t2 *= Math.exp(decay*t) / Math.exp(decay);
+
+    return t2;
+  }
+
+  evaluate(t) {
+    let s = this._evaluate(0.0);
+    let e = this._evaluate(1.0);
+
+    return (this._evaluate(t) - s) / (e - s) + this.params.offset;
+  }
+
+  static define() {return {
+    params : {
+      decay  : ["Decay", 1.0, 0.1, 5.0],
+      scale  : ["Scale", 1.0, 0.01, 10.0],
+      freq   : ["Freq", 1.0, 0.01, 50.0],
+      phase  : ["Phase", 0.0, -Math.PI*2.0, Math.PI*2.0],
+      offset : ["Offset", 0.0, -2.0, 2.0]
+    },
+    name   : "bounce",
+    uiname : "Bounce"
+  }}
+}
+CurveTypeData.register(BounceCurve);
+BounceCurve.STRUCT = nstructjs$1.inherit(BounceCurve, SimpleCurveBase) + `
+}`;
+nstructjs$1.register(BounceCurve);
+
+
+class ElasticCurve extends SimpleCurveBase {
+  constructor() {
+    super();
+
+    this._func = undefined;
+    this._last_hash = undefined;
+  }
+
+  evaluate(t) {
+    let hash = ~~(this.params.mode*127 + this.params.amplitude*256 + this.params.period*512);
+
+    if (hash !== this._last_hash || !this._func) {
+      this._last_hash = hash;
+      if (this.params.mode) {
+        this._func = Ease.getElasticOut(this.params.amplitude, this.params.period);
+      } else {
+        this._func = Ease.getElasticIn(this.params.amplitude, this.params.period);
+      }
+    }
+    return this._func(t);
+  }
+
+  static define() {return {
+    params : {
+      mode      : ["Out Mode", false, BOOL_FLAG, BOOL_FLAG],
+      amplitude : ["Amplitude", 1.0, 0.01, 10.0],
+      period    : ["Period", 1.0, 0.01, 5.0]
+    },
+    name   : "elastic",
+    uiname : "Elastic"
+  }}
+}
+CurveTypeData.register(ElasticCurve);
+ElasticCurve.STRUCT = nstructjs$1.inherit(ElasticCurve, SimpleCurveBase) + `
+}`;
+nstructjs$1.register(ElasticCurve);
+
+
+class EaseCurve extends SimpleCurveBase {
+  constructor() {
+    super();
+  }
+
+  evaluate(t) {
+    let amp = this.params.amplitude;
+    let a1 = this.params.mode_in ? 1.0-amp : 0.0;
+    let a2 = this.params.mode_out ? amp : 0.0;
+
+    return bez4$1(0.0, a1, a2, 1.0, t);
+  }
+
+  static define() {return {
+    params : {
+      mode_in   : ["in", true, BOOL_FLAG, BOOL_FLAG],
+      mode_out  : ["out", true, BOOL_FLAG, BOOL_FLAG],
+      amplitude : ["Amplitude", 1.0, 0.01, 4.0]
+    },
+    name   : "ease",
+    uiname : "Ease"
+  }}
+}
+CurveTypeData.register(EaseCurve);
+EaseCurve.STRUCT = nstructjs$1.inherit(EaseCurve, SimpleCurveBase) + `
+}`;
+nstructjs$1.register(EaseCurve);
+
+
+class RandCurve extends SimpleCurveBase {
+  constructor() {
+    super();
+    this.random = new MersenneRandom();
+    this.seed = 0;
+  }
+
+  set seed(v) {
+    this.random.seed(v);
+    this._seed = v;
+  }
+
+  get seed() {
+    return this._seed;
+  }
+
+  evaluate(t) {
+    let r = this.random.random();
+    let decay = this.params.decay + 1.0;
+    let amp = this.params.amplitude;
+    let in_mode = this.params.in_mode;
+
+    if (in_mode) {
+      t = 1.0 - t;
+    }
+    //r *= t;
+
+    let d;
+
+    //r *= 0.5;
+
+    if (in_mode) {
+      d = Math.exp(t*decay) / Math.exp(decay);
+    } else {
+      d = Math.exp(t*decay) / Math.exp(decay);
+    }
+
+    t = t + (r - t) * d;
+
+    if (in_mode) {
+      t = 1.0 - t;
+    }
+
+    return t;
+  }
+
+  static define() {return {
+    params : {
+      amplitude : ["Amplitude", 1.0, 0.01, 4.0],
+      decay     : ["Decay", 1.0, 0.0, 5.0],
+      in_mode   : ["In", true, BOOL_FLAG, BOOL_FLAG]
+    },
+    name   : "random",
+    uiname : "Random"
+  }}
+}
+CurveTypeData.register(RandCurve);
+EaseCurve.STRUCT = nstructjs$1.inherit(RandCurve, SimpleCurveBase) + `
+}`;
+nstructjs$1.register(RandCurve);
+
 "use strict";
 
 var Vector2$2 = Vector2;
@@ -12499,6 +13000,8 @@ window.mySafeJSONStringify = mySafeJSONStringify$1;
 class Curve1D extends EventDispatcher {
   constructor() {
     super();
+
+    this.uiZoom = 1.0;
 
     this.generators = [];
     this.VERSION = CURVE_VERSION;
@@ -12582,6 +13085,7 @@ class Curve1D extends EventDispatcher {
   toJSON() {
     let ret = {
       generators       : [],
+      uiZoom           : this.uiZoom,
       VERSION          : this.VERSION,
       active_generator : this.generatorType
     };
@@ -12593,14 +13097,27 @@ class Curve1D extends EventDispatcher {
     return ret;
   }
 
-  getGenerator(type) {
+  getGenerator(type, throw_on_error=true) {
     for (let gen of this.generators) {
       if (gen.type === type) {
         return gen;
       }
     }
 
-    throw new Error("Unknown generator " + type + ".");
+    //was a new generator registerd?
+    for (let cls of CurveConstructors) {
+      if (cls.name === type) {
+        let gen = new cls();
+        this.generators.push(gen);
+        return gen;
+      }
+    }
+
+    if (throw_on_error) {
+      throw new Error("Unknown generator " + type + ".");
+    } else {
+      return undefined;
+    }
   }
 
   switchGenerator(type) {
@@ -12640,9 +13157,21 @@ class Curve1D extends EventDispatcher {
   loadJSON(obj) {
     this.VERSION = obj.VERSION;
 
+    this.uiZoom = parseFloat(obj.uiZoom) || this.uiZoom;
+
     //this.generators = [];
     for (let gen of obj.generators) {
-      let gen2 = this.getGenerator(gen.type);
+      let gen2 = this.getGenerator(gen.type, false);
+
+      if (!gen2 || !(gen2 instanceof CurveTypeData)) {
+        //old curve class?
+        console.warn("Bad curve generator class:", gen2);
+        if (gen2) {
+          this.generators.remove(gen2);
+        }
+        continue;
+      }
+
       gen2.parent = undefined;
       gen2.reset();
       gen2.loadJSON(gen);
@@ -12749,6 +13278,7 @@ class Curve1D extends EventDispatcher {
 
     if (this.VERSION <= 0.75) {
       this.generators = [];
+
       for (let cls of CurveConstructors) {
         this.generators.push(new cls());
       }
@@ -12758,7 +13288,13 @@ class Curve1D extends EventDispatcher {
 
     console.log("ACTIVE", this._active);
 
-    for (let gen of this.generators) {
+    for (let gen of this.generators.concat([])) {
+      if (!(gen instanceof CurveTypeData)) {
+        console.warn("Bad generator data found:", gen);
+        this.generators.remove(gen);
+        continue;
+      }
+
       if (gen.type === this._active) {
         console.log("found active", this._active);
         this.generators.active = gen;
@@ -12774,9 +13310,1021 @@ Curve1D {
   generators  : array(abstract(CurveTypeData));
   _active     : string | obj.generators.active.type;
   VERSION     : float;
+  uiZoom      : float;
 }
 `;
 nstructjs$1.register(Curve1D);
+
+class Task {
+  constructor(taskcb) {
+    this.task = taskcb;
+    this.start = time_ms();
+    this.done = false;
+  }
+}
+
+class AnimManager {
+  constructor() {
+    this.tasks = [];
+    this.timer = undefined;
+
+    //all animation tasks that last longer then 10 seconds are terminated
+    this.timeOut = 10*1000.0;
+  }
+
+  stop() {
+    if (this.timer !== undefined) {
+      window.clearInterval(this.timer);
+      this.timer = undefined;
+    }
+  }
+
+  add(task) {
+    this.tasks.push(new Task(task));
+  }
+
+  remove(task) {
+    for (let t of this.tasks) {
+      if (t.task === task) {
+        t.dead = true;
+        this.tasks.remove(t);
+        return;
+      }
+    }
+  }
+
+  start() {
+    this.timer = window.setInterval(() => {
+      for (let t of this.tasks) {
+        try {
+          t.task();
+        } catch (error) {
+          t.done = true;
+          print_stack$1(error);
+        }
+
+        if (time_ms() - t.start > this.timeOut) {
+          t.dead = true;
+        }
+      }
+
+      for (let i=0; i<this.tasks.length; i++) {
+        if (this.tasks[i].done) {
+          let t = this.tasks[i];
+          this.tasks.remove(t);
+          i--;
+
+          try {
+            if (t.onend) {
+              t.onend();
+            }
+          } catch (error) {
+            print_stack$1(error);
+          }
+        }
+      }
+    }, 1000/40.0);
+  }
+}
+
+
+const manager$1 = new AnimManager();
+manager$1.start();
+
+class AbstractCommand {
+  constructor() {
+    this.cbs = [];
+  }
+
+  start(animator, done) {
+
+  }
+
+  exec(animator, done) {
+
+  }
+}
+
+class WaitCommand extends AbstractCommand {
+  constructor(ms) {
+    super();
+    this.ms = ms;
+  }
+
+  start(animator, done) {
+    this.time = animator.time;
+  }
+
+  exec(animator, done) {
+    if (animator.time - this.time > this.ms) {
+      done();
+    }
+  }
+}
+
+class GoToCommand extends AbstractCommand {
+  constructor(obj, key, value, time, curve="ease") {
+    super();
+
+    this.object = obj;
+    this.key = key;
+    this.value = value;
+    this.ms = time;
+
+    if (typeof curve === "string") {
+      this.curve = new (getCurve(curve))();
+    } else {
+      this.curve = curve;
+    }
+  }
+
+  start(animator, done) {
+    this.time = animator.time;
+
+    let value = this.object[this.key];
+
+    if (Array.isArray(value)) {
+      this.startValue = value.concat([]);
+    } else {
+      this.startValue = value;
+    }
+  }
+
+  exec(animator, done) {
+    let t = animator.time - this.time;
+    let ms = this.ms;
+
+    if (t > ms) {
+      done();
+      t = ms;
+    }
+
+    t /= ms;
+
+    t = this.curve.evaluate(t);
+
+    if (Array.isArray(this.startValue)) {
+      let value = this.object[this.key];
+
+      for (let i=0; i<this.startValue.length; i++) {
+        if (value[i] === undefined || this.value[i] === undefined) {
+          continue;
+        }
+
+        value[i] = this.startValue[i] + (this.value[i] - this.startValue[i]) * t;
+      }
+    } else {
+      this.object[this.key] = this.startValue + (this.value - this.startValue) * t;
+
+    }
+
+    console.log("-    ", this.time, animator.time - this.time);
+    console.log(this.object[this.key], this.startValue, this.value);
+  }
+}
+
+class SetCommand extends AbstractCommand {
+  constructor(obj, key, val) {
+    super();
+
+    this.object = obj;
+    this.key = key;
+    this.value = val;
+  }
+
+  start(animator, done) {
+    this.object[key] = val;
+    done();
+  }
+}
+
+class Command {
+  constructor(type, args) {
+    this.args = args;
+    this.cbs = [];
+  }
+}
+
+class Animator {
+  constructor(owner, method = "update") {
+    this.on_tick = this.on_tick.bind(this);
+    this.commands = [];
+    this.owner = owner;
+    this._done = false;
+    this.method = method;
+    this.onend = null;
+    this.first = true;
+
+    this.time = 0.0;
+    this.last = time_ms();
+
+    this.bind(owner);
+  }
+
+  bind(owner) {
+    this._done = false;
+    this.owner = owner;
+    //this.owner[this.method].after(this.on_tick);
+    manager$1.add(this.on_tick);
+  }
+
+  wait(ms) {
+    this.commands.push(new WaitCommand(ms));
+    return this;
+  }
+
+  goto(key, val, time, curve = "ease") {
+    let cmd = new GoToCommand(this.owner, key, val, time, curve);
+    this.commands.push(cmd);
+    return this;
+  }
+
+  set(key, val, time) {
+    let cmd = new SetCommand(this.owner, key, val);
+    this.commands.push(cmd);
+    return this;
+  }
+
+  then(cb) {
+    this.commands[this.commands.length - 1].cbs.push(cb);
+    return this;
+  }
+
+  end() {
+    if (this._done) {
+      return;
+    }
+
+    this._done = true;
+    manager$1.remove(this.on_tick);
+    //this.owner.update.remove(this.on_tick);
+
+    if (this.onend) {
+      this.onend();
+    }
+  }
+
+  on_tick() {
+    let dt = time_ms() - this.last;
+    this.time += dt;
+    this.last = time_ms();
+
+    if (this.commands.length === 0) {
+      this.end();
+      return
+    }
+
+    let cmd = this.commands[0];
+    let done = false;
+
+    if (this.first) {
+      this.first = false;
+      console.log(cmd, cmd.start);
+      cmd.start(this, donecb);
+    }
+
+    function donecb() {
+      done = true;
+    }
+
+    try {
+      cmd.exec(this, donecb);
+    } catch (error) {
+      done = true;
+      print_stack$1(error);
+    }
+
+    if (done) {
+      while (this.commands.length > 0) {
+        this.commands.shift();
+
+        done = false;
+
+        if (this.commands.length > 0) {
+          this.commands[0].start(this, donecb);
+        }
+
+        if (!done) {
+          break;
+        }
+      }
+    }
+  }
+}
+
+/*
+all units convert to meters
+*/
+
+function normString(s) {
+  //remove all whitespace
+  s = s.replace(/ /g, "").replace(/\t/g, "");
+  return s.toLowerCase();
+}
+
+function myToFixed(f, decimals) {
+  f = f.toFixed(decimals);
+  while (f.endsWith("0") || f.endsWith(".")) {
+    f = f.slice(0, f.length-1);
+  }
+
+  if (f.length == 0)
+    f = "0";
+
+  return f.trim();
+}
+const Units = [];
+
+class Unit {
+  static getUnit(name) {
+    for (let cls of Units) {
+      if (cls.unitDefine().name === name) {
+        return cls;
+      }
+    }
+
+    throw new Error("Unknown unit " + name);
+  }
+
+  static register(cls) {
+    Units.push(cls);
+  }
+
+  //subclassed static methods start here
+  static unitDefine() {return {
+    name    : "",
+    uiname  : "",
+    type    : "", //e.g. distance
+    icon    : -1,
+    pattern : undefined //a re literal to validate strings
+  }}
+
+  static parse(string) {
+
+  }
+
+  static validate(string) {
+    string = normString(string);
+    let def = this.unitDefine();
+
+    let m = string.match(def.pattern);
+    if (!m)
+      return false;
+
+    return m[0] === string;
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+
+  }
+
+  static fromInternal(value) {
+
+  }
+
+  static buildString(value, decimals=2) {
+
+  }
+}
+
+class MeterUnit extends Unit {
+  static unitDefine() {return {
+    name    : "meter",
+    uiname  : "Meter",
+    type    : "distance",
+    icon    : -1,
+    pattern : /-?\d+(\.\d*)?m$/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.endsWith("m")) {
+      string = string.slice(0, string.length-1);
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value;
+  }
+
+  static fromInternal(value) {
+    return value;
+  }
+
+  static buildString(value, decimals=2) {
+    return "" + myToFixed(value, decimals) + " m";
+  }
+}
+
+Unit.register(MeterUnit);
+
+class InchUnit extends Unit {
+  static unitDefine() {return {
+    name    : "inch",
+    uiname  : "Inch",
+    type    : "distance",
+    icon    : -1,
+    pattern : /-?\d+(\.\d*)?(in|inch)$/
+  }}
+
+  static parse(string) {
+    string = string.toLowerCase();
+    let i = string.indexOf("i");
+
+    if (i >= 0) {
+      string = string.slice(0, i);
+    }
+
+    return parseInt(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*0.0254;
+  }
+
+  static fromInternal(value) {
+    return value/0.0254;
+  }
+
+  static buildString(value, decimals=2) {
+    return "" + myToFixed(value, decimals) + "in";
+  }
+}
+Unit.register(InchUnit);
+
+let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
+
+class FootUnit extends Unit {
+  static unitDefine() {return {
+    name    : "foot",
+    uiname  : "Foot",
+    type    : "distance",
+    icon    : -1,
+    pattern : foot_re
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    let i = string.search("ft");
+    let parts = [];
+    let vft=0.0, vin=0.0;
+
+    if (i >= 0) {
+      parts = string.split("ft");
+      let j = parts[1].search("in");
+
+      if (j >= 0) {
+        parts = [parts[0]].concat(parts[1].split("in"));
+        vin = parseFloat(parts[1]);
+      }
+
+      vft = parseFloat(parts[0]);
+    } else {
+      string = string.replace(/in/g, "");
+      vin = parseFloat(string);
+    }
+
+    return vin/12.0 + vft;
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*0.3048;
+  }
+
+  static fromInternal(value) {
+    return value/0.3048;
+  }
+
+  static buildString(value, decimals=2) {
+    let vft = ~~(value / 12);
+    let vin = value % 12;
+
+    if (vft === 0.0) {
+      return myToFixed(value, decimals) + " in";
+    }
+
+    let s = "" + vft + " ft";
+    if (vin !== 0.0) {
+      s += " " + myToFixed(value, decimals) + " in";
+    }
+
+    return s;
+  }
+}
+Unit.register(FootUnit);
+
+
+class MileUnit extends Unit {
+  static unitDefine() {return {
+    name    : "mile",
+    uiname  : "Mile",
+    type    : "distance",
+    icon    : -1,
+    pattern : /-?\d+(\.\d+)?miles$/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    string = string.replace(/miles/, "");
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*1609.34;
+  }
+
+  static fromInternal(value) {
+    return value/1609.34;
+  }
+
+  static buildString(value, decimals=3) {
+    return "" + myToFixed(value, decimals) + " miles";
+  }
+}
+Unit.register(MileUnit);
+
+class DegreeUnit extends Unit {
+  static unitDefine() {return {
+    name    : "degree",
+    uiname  : "Degrees",
+    type    : "angle",
+    icon    : -1,
+    pattern : /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)?$/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("d") >= 0) {
+      string = string.slice(0, string.search("d")).trim();
+    } else if (string.search("\u00B0") >= 0) {
+      string = string.slice(0, string.search("\u00B0")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value/180.0*Math.PI;
+  }
+
+  static fromInternal(value) {
+    return value*180.0/Math.PI;
+  }
+
+  static buildString(value, decimals=3) {
+    return "" + myToFixed(value, decimals) + " \u00B0";
+  }
+};
+Unit.register(DegreeUnit);
+
+class RadianUnit extends Unit {
+  static unitDefine() {return {
+    name    : "radian",
+    uiname  : "Radians",
+    type    : "angle",
+    icon    : -1,
+    pattern : /-?\d+(\.\d+)?(r|rad|radian|radians)$/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("r") >= 0) {
+      string = string.slice(0, string.search("r")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value;
+  }
+
+  static fromInternal(value) {
+    return value;
+  }
+
+  static buildString(value, decimals=3) {
+    return "" + myToFixed(value, decimals) + " r";
+  }
+};
+
+Unit.register(RadianUnit);
+
+function setBaseUnit(unit) {
+  Unit.baseUnit = unit;
+}
+function setMetric(val) {
+  Unit.isMetric = val;
+}
+
+Unit.isMetric = true;
+Unit.baseUnit = "meter";
+
+let numre = /[+\-]?[0-9]+(\.[0-9]*)?$/;
+let hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
+let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
+let binre = /[+\-]?0b[01]+$/;
+let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
+
+function isNumber$1(s) {
+  s = (""+s).trim();
+  function test(re) {
+    return s.search(re) == 0;
+  }
+
+  return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
+}
+
+function parseValue(string, baseUnit=undefined) {
+  let base;
+
+  //unannotated string?
+  if (isNumber$1(string)) {
+    //assume base unit
+    let f = parseFloat(string);
+    
+    return f;
+  }  
+
+  if (baseUnit) {
+    base = Unit.getUnit(baseUnit);
+    if (base === undefined) {
+      console.warn("Unknown unit " + baseUnit);
+      return NaN;
+    }
+  } else {
+    base = Unit.getUnit(Unit.baseUnit);
+  }
+
+  for (let unit of Units) {
+    let def = unit.unitDefine();
+
+    if (unit.validate(string)) {
+      console.log(unit);
+      let value = unit.parse(string);
+
+      value = unit.toInternal(value);
+      return base.fromInternal(value);
+    }
+  }
+
+  return NaN;
+}
+
+function convert(value, unita, unitb) {
+  if (typeof unita === "string")
+    unita = Unit.getUnit(unita);
+
+  if (typeof unitb === "string")
+    unitb = Unit.getUnit(unitb);
+
+  return unitb.fromInternal(unita.toInternal(value));
+}
+
+/**
+ *
+ * @param value Note: is not converted to internal unit
+ * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
+ * @returns {*}
+ */
+function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {
+  if (typeof baseUnit === "string" && baseUnit !== "none") {
+    baseUnit = Unit.getUnit(baseUnit);
+  }
+  if (typeof displayUnit === "string" && displayUnit !== "none") {
+    displayUnit = Unit.getUnit(displayUnit);
+  }
+
+
+  if (baseUnit !== "none" && displayUnit !== baseUnit && displayUnit !== "none") {
+    value = convert(value, baseUnit, displayUnit);
+  }
+
+  if (displayUnit !== "none") {
+    return displayUnit.buildString(value, decimalPlaces);
+  } else {
+    return myToFixed(value, decimalPlaces);
+  }
+}
+window._parseValueTest = parseValue;
+window._buildStringTest = buildString;
+
+"use strict";
+
+let PropTypes = {
+  INT : 1,
+  STRING : 2,
+  BOOL : 4,
+  ENUM : 8,
+  FLAG : 16,
+  FLOAT : 32,
+  VEC2 : 64,
+  VEC3 : 128,
+  VEC4 : 256,
+  MATRIX4 : 512,
+  QUAT : 1024,
+  PROPLIST : 4096,
+  STRSET : 8192,
+  CURVE  : 8192<<1
+  //ITER : 8192<<1
+};
+
+const PropSubTypes = {
+  COLOR : 1
+};
+
+//flags
+const PropFlags = {
+  SELECT            : 1,
+  PRIVATE           : 2,
+  LABEL             : 4,
+  USE_ICONS         : 64,
+  USE_CUSTOM_GETSET : 128, //used by controller.js interface
+  SAVE_LAST_VALUE   : 256,
+  READ_ONLY         : 512,
+  SIMPLE_SLIDER     : 1024,
+  FORCE_ROLLER_SLIDER : 2048
+};
+
+class ToolPropertyIF {
+  constructor(type, subtype, apiname, uiname, description, flag, icon) {
+    this.data = undefined;
+
+    this.type = type;
+    this.subtype = subtype;
+
+    this.apiname = apiname;
+    this.uiname = uiname;
+    this.description = description;
+    this.flag = flag;
+    this.icon = icon;
+  }
+
+  copyTo(b) {
+
+  }
+
+  copy() {
+
+  }
+
+  _fire(type, arg1, arg2) {
+  }
+
+  on(type, cb) {
+  }
+
+  off(type, cb) {
+  }
+
+  getValue() {
+  }
+
+  setValue(val) {
+  }
+
+  setStep(step) {
+  }
+
+  setRange(min, max) {
+  }
+
+  setUnit(unit) {
+  }
+
+  //some clients have seperate ui range
+  setUIRange(min, max) {
+  }
+
+  setIcon(icon) {
+  }
+}
+
+class StringPropertyIF extends ToolPropertyIF {
+  constructor() {
+    super(PropTypes.STRING);
+  }
+}
+
+class NumPropertyIF extends ToolPropertyIF {
+};
+
+class IntProperty extends ToolPropertyIF {
+  constructor() {
+    super(PropTypes.INT);
+  }
+
+  setRadix(radix) {
+    throw new Error("implement me");
+  }
+}
+
+class FloatProperty extends ToolPropertyIF {
+  constructor() {
+    super(PropTypes.FLOAT);
+  }
+
+  setDecimalPlaces(n) {
+  }
+}
+
+class EnumProperty extends ToolPropertyIF {
+  constructor(value, valid_values) {
+    super(PropTypes.ENUM);
+
+    this.values = {};
+    this.keys = {};
+    this.ui_value_names = {};
+    this.iconmap = {};
+
+    if (valid_values === undefined) return this;
+
+    if (valid_values instanceof Array || valid_values instanceof String) {
+      for (var i=0; i<valid_values.length; i++) {
+        this.values[valid_values[i]] = valid_values[i];
+        this.keys[valid_values[i]] = valid_values[i];
+      }
+    } else {
+      for (var k in valid_values) {
+        this.values[k] = valid_values[k];
+        this.keys[valid_values[k]] = k;
+      }
+    }
+
+    for (var k in this.values) {
+      var uin = k[0].toUpperCase() + k.slice(1, k.length);
+
+      uin = uin.replace(/\_/g, " ");
+      this.ui_value_names[k] = uin;
+    }
+  }
+
+  addIcons(iconmap) {
+    if (this.iconmap === undefined) {
+      this.iconmap = {};
+    }
+    for (var k in iconmap) {
+      this.iconmap[k] = iconmap[k];
+    }
+  }
+}
+
+class FlagPropertyIF extends EnumProperty {
+  constructor(valid_values) {
+    super(PropTypes.FLAG);
+  }
+}
+
+class Vec2Property extends ToolPropertyIF {
+  constructor(valid_values) {
+    super(PropTypes.VEC2);
+  }
+}
+
+class Vec3Property extends ToolPropertyIF {
+  constructor(valid_values) {
+    super(PropTypes.VEC3);
+  }
+}
+
+class Vec4Property extends ToolPropertyIF {
+  constructor(valid_values) {
+    super(PropTypes.VEC4);
+  }
+}
+
+/**
+ * List of other tool props (all of one type)
+ */
+class ListProperty extends ToolPropertyIF {
+  /*
+  * Prop must be a ToolProperty subclass instance
+  * */
+  constructor(prop) {
+    super(PropTypes.PROPLIST);
+
+    this.prop = prop;
+  }
+
+  copyTo(b) {
+  }
+
+  copy() {
+  }
+
+  /**
+   * clear list
+   * */
+  clear() {
+
+  }
+
+  push(item=this.prop.copy()) {
+  }
+
+  [Symbol.iterator]() {
+  }
+
+  get length() {
+  }
+
+  set length(val) {
+  }
+}
+
+//like FlagsProperty but uses strings
+class StringSetProperty extends ToolPropertyIF {
+  constructor(value=undefined, definition=[]) {
+    super(PropTypes.STRSET);
+  }
+
+  /*
+  * Values can be a string, undefined/null, or a list/set/object-literal of strings.
+  * If destructive is true, then existing set will be cleared.
+  * */
+  setValue(values, destructive=true, soft_fail=true) {
+  }
+
+  getValue() {
+  }
+
+  addIcons(iconmap) {
+  }
+
+
+  addUINames(map) {
+  }
+
+  addDescriptions(map) {
+  }
+
+  copyTo(b) {
+  }
+
+  copy() {
+  }
+}
+
+class Curve1DPropertyIF extends ToolPropertyIF {
+  constructor(curve, uiname) {
+    super(PropTypes.CURVE);
+
+    this.data = curve;
+  }
+
+  getValue() {
+    return this.curve;
+  }
+
+  setValue(curve) {
+    if (curve === undefined) {
+      return;
+    }
+
+    let json = JSON.parse(JSON.stringify(curve));
+    this.data.load(json);
+  }
+
+  copyTo(b) {
+    b.setValue(this.data);
+  }
+}
+
+var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  PropTypes: PropTypes,
+  PropSubTypes: PropSubTypes,
+  PropFlags: PropFlags,
+  ToolPropertyIF: ToolPropertyIF,
+  StringPropertyIF: StringPropertyIF,
+  NumPropertyIF: NumPropertyIF,
+  IntProperty: IntProperty,
+  FloatProperty: FloatProperty,
+  EnumProperty: EnumProperty,
+  FlagPropertyIF: FlagPropertyIF,
+  Vec2Property: Vec2Property,
+  Vec3Property: Vec3Property,
+  Vec4Property: Vec4Property,
+  ListProperty: ListProperty,
+  StringSetProperty: StringSetProperty,
+  Curve1DPropertyIF: Curve1DPropertyIF
+});
 
 let first = (iter) => {
   if (iter === undefined) {
@@ -17379,378 +18927,11 @@ function rgb_to_hsv (r,g,b) {
     return color;
   }
 
-let ColorSchemeTypes = {
-  LIGHT : "light",
-  DARK  : "dark"
-};
-
-function parsepx(css) {
-  return parseFloat(css.trim().replace("px", ""))
-}
-
-function color2css$2(c, alpha_override) {
-  let r = ~~(c[0]*255);
-  let g = ~~(c[1]*255);
-  let b = ~~(c[2]*255);
-  let a = c.length < 4 ? 1.0 : c[3];
-
-  a = alpha_override !== undefined ? alpha_override : a;
-
-  if (c.length == 3 && alpha_override === undefined) {
-    return `rgb(${r},${g},${b})`;
-  } else {
-    return `rgba(${r},${g},${b}, ${a})`;
-  }
-}
-window.color2css = color2css$2;
-
-let css2color_rets = cachering.fromConstructor(Vector4, 64);
-let cmap = {
-  red : [1, 0, 0, 1],
-  green : [0, 1, 0, 1],
-  blue : [0, 0, 1, 1],
-  yellow : [1, 1, 0, 1],
-  white : [1, 1, 1, 1],
-  black : [0, 0, 0, 1],
-  grey : [0.7, 0.7, 0.7, 1],
-  teal : [0, 1, 1, 1],
-  orange : [1,0.55,0.25,1],
-  brown  : [0.7, 0.4, 0.3, 1]
-};
-
-function color2web(color) {
-  function tostr(n) {
-    n = ~~(n*255);
-    let s = n.toString(16);
-
-    if (s.length > 2) {
-      s = s.slice(0, 2);
-    }
-
-    while (s.length < 2) {
-      s = "0" + s;
-    }
-
-    return s;
-  }
-
-  if (color.length === 3 || color[3] === 1.0) {
-    let r = tostr(color[0]);
-    let g = tostr(color[1]);
-    let b = tostr(color[2]);
-
-    return "#" + r + g + b;
-  } else {
-    let r = tostr(color[0]);
-    let g = tostr(color[1]);
-    let b = tostr(color[2]);
-    let a = tostr(color[3]);
-
-    return "#" + r + g + b + a;
-  }
-}
-
-window.color2web = color2web;
-
-function css2color$1(color) {
-  if (!color) {
-    return new Vector4([0,0,0,1]);
-  }
-
-  color = (""+color).trim();
-
-  let ret = css2color_rets.next();
-
-  if (color[0] === "#") {
-    color = color.slice(1, color.length);
-    let parts = [];
-
-    for (let i=0; i<color.length>>1; i++) {
-      let part = "0x" + color.slice(i*2, i*2+2);
-      parts.push(parseInt(part));
-    }
-
-    ret.zero();
-    let i;
-    for (i=0; i<Math.min(parts.length, ret.length); i++) {
-      ret[i] = parts[i] / 255.0;
-    }
-
-    if (i < 4) {
-      ret[3] = 1.0;
-    }
-
-    return ret;
-  }
-
-  if (color in cmap) {
-    return ret.load(cmap[color]);
-  }
-
-  color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
-
-  for (let i=0; i<color.length; i++) {
-    ret[i] = parseFloat(color[i]);
-    if (i < 3) {
-      ret[i] /= 255;
-    }
-  }
-
-  return ret;
-}
-
-window.css2color = css2color$1;
-
-function web2color(str) {
-  if (typeof str === "string" && str.trim()[0] !== "#") {
-    str = "#" + str.trim();
-  }
-
-  return css2color$1(str);
-}
-window.web2color = web2color;
-
-let validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
-
-function validateWebColor(str) {
-  if (typeof str !== "string" && !(str instanceof String))
-    return false;
-
-  return str.trim().search(validate_pat) === 0;
-}
-
-let theme = {};
-
-function invertTheme() {
-  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
-
-  function inverted(color) {
-    if (Array.isArray(color)) {
-      for (let i = 0; i < 3; i++) {
-        color[i] = 1.0 - color[i];
-      }
-
-      return color;
-    }
-
-    color = css2color$1(color);
-    return color2css$2(inverted(color));
-  }
-
-  let bg = document.body.style["background-color"];
-  //if (!bg) {
-    bg = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
-  //} else {
-  //  bg = inverted(bg);
-  //}
-
-  document.body.style["background-color"] = bg;
-
-  for (let style in theme) {
-    style = theme[style];
-
-    for (let k in style) {
-      let v = style[k];
-
-      if (v instanceof CSSFont) {
-        v.color = inverted(v.color);
-      } else if (typeof v === "string") {
-        v = v.trim().toLowerCase();
-
-        let iscolor = v.search("rgb") >= 0;
-        iscolor = iscolor || v in cmap;
-        iscolor = iscolor || validateWebColor(v);
-
-        if (iscolor) {
-          style[k] = inverted(v);
-        }
-      }
-    }
-  }
-}
-
-window.invertTheme = invertTheme;
-
-function setColorSchemeType(mode) {
-  if (!!mode !== exports.colorSchemeType) {
-    invertTheme();
-    exports.colorSchemeType = mode;
-  }
-
-}
-window.validateWebColor = validateWebColor;
-
-class CSSFont {
-  constructor(args={}) {
-    this._size = args.size ? args.size : 12;
-    this.font = args.font;
-    this.style = args.style !== undefined ? args.style : "normal";
-    this.weight = args.weight !== undefined ? args.weight : "normal";
-    this.variant = args.variant !== undefined ? args.variant : "normal";
-    this.color = args.color;
-  }
-
-  set size(val) {
-    this._size = val;
-  }
-
-  get size() {
-    if (isMobile()) {
-      let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
-      if (mul) {
-        return this._size * mul;;
-      }
-    }
-
-    return this._size;
-  }
-
-  copyTo(b) {
-    b._size = this._size;
-    b.font = this.font;
-    b.style = this.style;
-    b.color = this.color;
-    b.variant = this.variant;
-    b.weight = this.weight;
-  }
-
-  copy() {
-    let ret = new CSSFont();
-    this.copyTo(ret);
-    return ret;
-  }
-
-  genCSS(size=this.size) {
-    return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
-  }
-
-  hash() {
-    return this.genCSS + ":" + this.size + ":" + this.color;
-  }
-}
-CSSFont.STRUCT = `
-CSSFont {
-  size     : float | obj._size;
-  font     : string | obj.font || "";
-  style    : string | obj.font || "";
-  color    : string | ""+obj.color;
-  variant  : string | obj.variant || "";
-  weight   : string | ""+obj.weight;
-}
-`;
-register(CSSFont);
-
-function exportTheme(theme1=theme) {
-  let sortkeys = (obj) => {
-    let keys = [];
-    for (let k in obj) {
-      keys.push(k);
-    }
-    keys.sort();
-    
-    return keys;
-  };
-
-  let s = "var theme = {\n";
-
-  function writekey(v, indent="") {
-    if (typeof v === "string") {
-      if (v.search("\n") >= 0) {
-        v = "`" + v + "`";
-      } else {
-        v = "'" + v + "'";
-      }
-      
-      return v;
-    } else if (typeof v === "object") {
-      if (v instanceof CSSFont) {
-        return `new CSSFont({
-${indent}  font    : ${writekey(v.font)},
-${indent}  weight  : ${writekey(v.weight)},
-${indent}  variant : ${writekey(v.variant)},
-${indent}  style   : ${writekey(v.style)},
-${indent}  size    : ${writekey(v._size)},
-${indent}  color   : ${writekey(v.color)}
-${indent}})`;
-      } else {
-        let s = "{\n";
-
-        for (let k of sortkeys(v)) {
-          let v2 = v[k];
-
-          if (k.search(" ") >= 0 || k.search("-") >= 0) {
-            k = "'" + k + "'";
-          }
-
-          s += indent + "  " + k + " : " + writekey(v2, indent + "  ") + ",\n";
-        }
-
-        s += indent + "}";
-        return s;
-      }
-    } else {
-      return ""+v;
-    }
-
-    return "error";
-  }
-
-  for (let k of sortkeys(theme1)) {
-    let k2 = k;
-
-    if (k.search("-") >= 0 || k.search(" ") >= 0) {
-      k2 = "'" + k + "'";
-    }
-    s += "  " + k2 + ": ";
-
-    let v = theme1[k];
-    if (typeof v !== "object" || v instanceof CSSFont) {
-      s += writekey(v, "  ") + ",\n";
-    } else {
-      s += " {\n";
-      let s2 = "";
-
-      let maxwid = 0;
-
-      for (let k2 of sortkeys(v)) {
-        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
-          k2 = "'" + k2 + "'";
-        }
-
-        maxwid = Math.max(maxwid, k2.length);
-      }
-
-      for (let k2 of sortkeys(v)) {
-        let v2 = v[k2];
-
-        if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
-          k2 = "'" + k2 + "'";
-        }
-    
-        let pad = "";
-
-        for (let i=0; i<maxwid-k2.length; i++) {
-          pad += " ";
-        }
-
-        s2 += "    " + k2 + pad + ": " + writekey(v2, "    ") + ",\n";
-      }
-
-      s += s2;
-      s += "  },\n\n";
-    }
-  }
-  s += "};\n";
-
-  return s;
-}
-window._exportTheme = exportTheme;
-
 const DefaultTheme = {
   base : {
     themeVersion : 0.1,
-    mobileTextSizeMultiplier : 1.5,
-    mobileSizeMultiplier : 2, //does not include text
+    mobileTextSizeMultiplier : 1.0,
+    mobileSizeMultiplier : 1, //does not include text
 
     //used for by icon strips and the like
     "oneAxisPadding" : 6,
@@ -18033,6 +19214,166 @@ const DefaultTheme = {
   }
 };
 
+let exclude = new Set([
+  "toString", "constructor", "prototype", "__proto__", "toLocaleString",
+  "hasOwnProperty", "shadow"
+]);
+
+let UIBase = undefined;
+
+//deal with circular module refrence
+function _setUIBase(uibase) {
+  UIBase = uibase;
+}
+
+function initAspectClass(object, blacklist=new Set()) {
+  let cls = object.constructor;
+
+  let keys = [];
+
+  let p = object.__proto__;
+  while (p) {
+    keys = keys.concat(Reflect.ownKeys(p));
+    p = p.__proto__;
+  }
+  keys = new Set(keys);
+
+  for (let k of keys) {
+    let v;
+
+    if (typeof k === "string" && k.startsWith("_")) {
+      continue;
+    }
+
+    if (k === "constructor") {
+      continue;
+    }
+
+    if (blacklist.has(k) || exclude.has(k)) {
+      continue;
+    }
+
+    try {
+      v = object[k];
+    } catch (error) {
+      continue;
+    }
+
+    if (typeof v !== "function") {
+      continue;
+    }
+
+
+    AfterAspect.bind(object, k);
+  }
+}
+
+/**
+ *
+ * example:
+ *
+ * someobject.update.after(() => {
+ *   do_something();
+ *   return someobject.update.value;
+ * }
+ *
+ * */
+class AfterAspect {
+  constructor(owner, key) {
+    this.owner = owner;
+    this.key = key;
+
+    this.chain = [[owner[key], false]];
+    this.chain2 = [[owner[key], false]];
+
+    let this2 = this;
+
+    let method = owner[key] = function() {
+      let chain = this2.chain;
+      let chain2 = this2.chain2;
+
+      chain2.length = chain.length;
+
+      for (let i=0; i<chain.length; i++) {
+        chain2[i] = chain[i];
+      }
+
+      for (let i=0; i<chain2.length; i++) {
+        let [cb, node, once] = chain2[i];
+
+        if (node) {
+          let isDead = !node.isConnected;
+
+          if (node instanceof UIBase) {
+            isDead = isDead || node.isDead();
+          }
+
+          if (isDead) {
+            console.warn("pruning dead AfterAspect callback", node);
+            chain.remove(chain2[i]);
+            continue;
+          }
+        }
+
+
+        if (once && chain.indexOf(chain2[i]) >= 0) {
+          chain.remove(chain2[i]);
+        }
+
+        if (cb && cb.apply) {
+          method.value = cb.apply(this, arguments);
+          //method.value = Reflect.apply(cb, this, arguments);
+          //cb.apply(this, args);
+        }
+      }
+
+      let ret = method.value;
+      method.value = undefined;
+
+      return ret;
+    };
+
+    owner[key].after = this.after.bind(this);
+    owner[key].once = this.once.bind(this);
+    owner[key].remove = this.remove.bind(this);
+  }
+
+  static bind(owner, key) {
+    return new AfterAspect(owner, key);
+  }
+
+  remove(cb) {
+    for (let item of this.chain) {
+      if (item[0] === cb) {
+        this.chain.remove(item);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  once(cb, node) {
+    return this.after(cb, node, true);
+  }
+
+  before(cb, node, once) {
+    if (cb === undefined) {
+      console.warn("invalid call to .after(); cb was undefined");
+      return;
+    }
+    this.chain = [[cb, node, once]].concat(this.chain);
+  }
+
+  after(cb, node, once) {
+    if (cb === undefined) {
+      console.warn("invalid call to .after(); cb was undefined");
+      return;
+    }
+    this.chain.push([cb, node, once]);
+  }
+}
+
 let _ui_base = undefined;
 
 if (window.document && document.body) {
@@ -18252,7 +19593,7 @@ class IconManager {
     let base = this.iconsheets[sheet];
 
     /**sigh**/
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let minsheet = undefined;
     let goal = dpi*base.drawsize;
 
@@ -18415,85 +19756,6 @@ let _mobile_theme_patterns = [
 
 let _idgen = 0;
 
-class AfterAspect {
-  constructor(owner, key) {
-    this.owner = owner;
-    this.key = key;
-
-    this.chain = [[owner[key], false]];
-    this.chain2 = [[owner[key], false]];
-
-    let this2 = this;
-
-    owner[key] = function() {
-      let chain = this2.chain;
-      let chain2 = this2.chain2;
-
-      chain2.length = chain.length;
-
-      for (let i=0; i<chain.length; i++) {
-        chain2[i] = chain[i];
-      }
-
-      for (let i=0; i<chain2.length; i++) {
-        let [cb, node, once] = chain2[i];
-
-        if (node) {
-          let isDead = !node.isConnected;
-
-          if (node instanceof UIBase) {
-            isDead = isDead || node.isDead();
-          }
-
-          if (isDead) {
-            console.warn("pruning dead AfterAspect callback", node);
-            chain.remove(chain2[i]);
-            continue;
-          }
-        }
-
-        if (once && chain.indexOf(chain2[i]) >= 0) {
-          chain.remove(chain2[i]);
-        }
-
-        if (cb && cb.apply) {
-          cb.apply(this, arguments);
-        }
-      }
-    };
-
-    owner[key].after = this.after.bind(this);
-    owner[key].once = this.once.bind(this);
-    owner[key].remove = this.remove.bind(this);
-  }
-
-  static bind(owner, key) {
-    return new AfterAspect(owner, key);
-  }
-
-  remove(cb) {
-    for (item of this.chain) {
-      if (item[0] === cb) {
-        this.chain.remove(item);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  once(cb, node) {
-    return this.after(cb, node, true);
-  }
-
-  after(cb, node, once=false) {
-    if (cb === undefined) {
-      console.warn("invalid call to .after(); cb was undefined");
-    }
-    this.chain.push([cb, node, once]);
-  }
-}
-
 window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
   let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
   CTX.screen.mergeGlobalCSS(buf);
@@ -18562,7 +19824,7 @@ ${selector}::-webkit-scrollbar-thumb {
 
 window.styleScrollBars = styleScrollBars;
 
-class UIBase extends HTMLElement {
+class UIBase$1 extends HTMLElement {
   constructor() {
     super();
 
@@ -18571,10 +19833,10 @@ class UIBase extends HTMLElement {
     this._screenStyleTag = document.createElement("style");
     this._screenStyleUpdateHash = 0;
 
-    AfterAspect.bind(this, "setCSS");
-    AfterAspect.bind(this, "update");
+    initAspectClass(this, new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"]));
 
     this.shadow = this.attachShadow({mode : 'open'});
+
     if (exports.DEBUG.paranoidEvents) {
       this.__cbs = [];
     }
@@ -18585,7 +19847,7 @@ class UIBase extends HTMLElement {
     ///*
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
-      if (child && typeof child === "object" && child instanceof UIBase) {
+      if (child && typeof child === "object" && child instanceof UIBase$1) {
         child.parentWidget = this;
       }
 
@@ -18710,6 +19972,7 @@ class UIBase extends HTMLElement {
       n.hide(sethide);
     });
   }
+
 
   unhide() {
     this.hide(false);
@@ -19073,7 +20336,7 @@ class UIBase extends HTMLElement {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase) {
+    if (child instanceof UIBase$1) {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
@@ -19166,7 +20429,7 @@ class UIBase extends HTMLElement {
    **/
   _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
-      if (n instanceof UIBase) {
+      if (n instanceof UIBase$1) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
         } else {
@@ -19237,14 +20500,14 @@ class UIBase extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
+  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase$1, excluded_classes=undefined) {
     let marginx;
     let clip;
 
     if (typeof args === "object") {
       marginx = args.sx || 0;
       marginy = args.sy || 0;
-      nodeclass = args.nodeclass || UIBase;
+      nodeclass = args.nodeclass || UIBase$1;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
     } else {
@@ -19253,7 +20516,7 @@ class UIBase extends HTMLElement {
       args = {
         marginx : marginx || 0,
         marginy : marginy || 0,
-        nodeclass : nodeclass || UIBase,
+        nodeclass : nodeclass || UIBase$1,
         excluded_classes : excluded_classes,
         clip : clip
       };
@@ -19283,7 +20546,7 @@ class UIBase extends HTMLElement {
 
     let rec = (n, widget, widget_zindex, zindex, clip, depth=0) => {
       if (n.style && n.style["z-index"]) {
-        if (!(n instanceof UIBase) || n.visibleToPick) {
+        if (!(n instanceof UIBase$1) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
         }
       }
@@ -19308,7 +20571,7 @@ class UIBase extends HTMLElement {
 
         let ok = true;
 
-        if (n instanceof UIBase) {
+        if (n instanceof UIBase$1) {
           ok = ok && n.visibleToPick;
         }
 
@@ -19350,7 +20613,7 @@ class UIBase extends HTMLElement {
         isleaf = isleaf && (n.shadow.childNodes.length === 0);
       }
 
-      if (typeof n === "object" && n instanceof UIBase && !n.visibleToPick) {
+      if (typeof n === "object" && n instanceof UIBase$1 && !n.visibleToPick) {
         return;
       }
 
@@ -19446,7 +20709,7 @@ class UIBase extends HTMLElement {
     this._disabled = val;
 
     let rec = (n) => {
-      if (n instanceof UIBase) {
+      if (n instanceof UIBase$1) {
         let changed = !!n.disabled != !!val;
 
         n.disabled = val;
@@ -19910,7 +21173,7 @@ class UIBase extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return UIBase.getDPI();
+    return UIBase$1.getDPI();
   }
 
   /**DEPRECATED
@@ -20023,7 +21286,7 @@ class UIBase extends HTMLElement {
 
     let p = this.constructor, lastp = undefined;
 
-    while (p && p !== lastp && p !== UIBase && p !== Object) {
+    while (p && p !== lastp && p !== UIBase$1 && p !== Object) {
       let def = p.define();
 
       if (def.style) {
@@ -20067,6 +21330,69 @@ class UIBase extends HTMLElement {
   getStyle() {
     console.warn("deprecated call to UIBase.getStyle");
     return this.getStyleClass();
+  }
+
+  animate(_extra_handlers={}) {
+    let transform = new DOMMatrix(this.style["transform"]);
+
+    let update_trans = () => {
+      let t = transform;
+      let css = "matrix(" + t.a + "," + t.b + "," + t.c + "," + t.d + "," + t.e + "," + t.f + ")";
+      this.style["transform"] = css;
+    };
+
+    let handlers = {
+      background_get() {
+        return css2color(this.background);
+      },
+
+      background_set(c) {
+        if (typeof c !== "string") {
+          c = color2css(c);
+        }
+        this.background = c;
+      },
+
+      dx_get() {
+        return transform.m41;
+      },
+      dx_set(x) {
+        transform.m41 = x;
+        update_trans();
+      },
+
+      dy_get() {
+        return transform.m42;
+      },
+      dy_set(x) {
+        transform.m42 = x;
+        update_trans();
+      }
+    };
+
+    handlers = Object.assign(handlers, _extra_handlers);
+
+    let handler = {
+      get : (target, key, receiver) => {
+        if ((key + "_get") in handlers) {
+          return handlers[key + "_get"].call(target);
+        } else {
+          return target[key];
+        }
+      },
+      set : (target, key, val, receiver) => {
+        if ((key + "_set") in handlers) {
+          handlers[key + "_set"].call(target, val);
+        } else {
+          target[key] = val;
+        }
+
+        return true;
+      }
+    };
+
+    let proxy = new Proxy(this, handler);
+    return new Animator(proxy);
   }
 
   /**
@@ -20282,7 +21608,7 @@ function measureText(elem, text, canvas=undefined,
 
   if (ret && isMobile()) {
     let ret2 = {};
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
 
     for (let k in ret) {
       let v = ret[k];
@@ -20319,7 +21645,7 @@ function drawText(elem, x, y, text, args={}) {
     }
   }
 
-  size *= UIBase.getDPI();
+  size *= UIBase$1.getDPI();
 
   if (font === undefined) {
     _ensureFont(elem, canvas, g, size);
@@ -20367,7 +21693,7 @@ function saveUIData(node, key) {
     path[pi] = ni;
     path[pi+1] = is_shadow;
     
-    if (n instanceof UIBase) {
+    if (n instanceof UIBase$1) {
       let path2 = path.slice(0, path.length);
       path2.push(n.saveData());
       
@@ -20443,7 +21769,7 @@ function loadUIData(node, buf) {
       n = list[ni];
     }
     
-    if (n !== undefined && n instanceof UIBase) {
+    if (n !== undefined && n instanceof UIBase$1) {
       n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
       
@@ -20453,6 +21779,8 @@ function loadUIData(node, buf) {
 }
 
 window._loadUIData = loadUIData;
+
+_setUIBase(UIBase$1);
 
 var ui_base = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -20472,9 +21800,8 @@ var ui_base = /*#__PURE__*/Object.freeze({
   dpistack: dpistack,
   UIFlags: UIFlags,
   PackFlags: PackFlags,
-  AfterAspect: AfterAspect,
   styleScrollBars: styleScrollBars,
-  UIBase: UIBase,
+  UIBase: UIBase$1,
   drawRoundBox2: drawRoundBox2,
   drawRoundBox: drawRoundBox,
   _getFont_new: _getFont_new,
@@ -20510,14 +21837,14 @@ let keymap$1 = keymap;
 let EnumProperty$3 = EnumProperty$1,
   PropTypes$2 = PropTypes;
 
-let UIBase$1 = UIBase,
+let UIBase$2 = UIBase$1,
   PackFlags$1 = PackFlags,
   IconSheets$1 = IconSheets;
 
 let parsepx$1 = parsepx;
 
 //use .setAttribute("linear") to disable nonlinear sliding
-class Button extends UIBase$1 {
+class Button extends UIBase$2 {
   constructor() {
     super();
 
@@ -20998,7 +22325,7 @@ class Button extends UIBase$1 {
     style : "button"
   };}
 }
-UIBase$1.register(Button);
+UIBase$2.register(Button);
 
 "use strict";
 
@@ -21020,13 +22347,13 @@ let keymap$2 = keymap;
 let EnumProperty$4 = EnumProperty$1,
   PropTypes$3 = PropTypes;
 
-let UIBase$2 = UIBase,
+let UIBase$3 = UIBase$1,
   PackFlags$2 = PackFlags,
   IconSheets$2 = IconSheets;
 
 let parsepx$2 = parsepx;
 
-class TextBoxBase extends UIBase$2 {
+class TextBoxBase extends UIBase$3 {
   static define() {return {
 
   }}
@@ -21330,7 +22657,7 @@ class TextBox extends TextBoxBase {
   }
 }
 
-UIBase$2.register(TextBox);
+UIBase$3.register(TextBox);
 
 function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);
@@ -21363,13 +22690,13 @@ let keymap$3 = keymap;
 let EnumProperty$5 = EnumProperty$1,
     PropTypes$4 = PropTypes;
 
-let UIBase$3 = UIBase, 
+let UIBase$4 = UIBase$1, 
     PackFlags$3 = PackFlags,
     IconSheets$3 = IconSheets;
 
 let parsepx$3 = parsepx;
 
-class IconLabel extends UIBase$3 {
+class IconLabel extends UIBase$4 {
   constructor() {
     super();
     this._icon = -1;
@@ -21408,7 +22735,7 @@ class IconLabel extends UIBase$3 {
     tagname : "icon-label-x"
   }}
 }
-UIBase$3.register(IconLabel);
+UIBase$4.register(IconLabel);
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -21464,7 +22791,7 @@ class ValueButtonBase extends Button {
   }
 }
 
-class Check extends UIBase$3 {
+class Check extends UIBase$4 {
   constructor() {
     super();
     
@@ -21666,7 +22993,7 @@ class Check extends UIBase$3 {
       return;
 
     let canvas = this.canvas, g = this.g;
-    let dpi = UIBase$3.getDPI();
+    let dpi = UIBase$4.getDPI();
     let tilesize = iconmanager.getTileSize(0);
     let pad = this.getDefault("BoxMargin");
 
@@ -21732,7 +23059,7 @@ class Check extends UIBase$3 {
   }
 
   updateDPI() {
-    let dpi = UIBase$3.getDPI();
+    let dpi = UIBase$4.getDPI();
 
     if (dpi !== this._last_dpi) {
       this._last_dpi = dpi;
@@ -21770,7 +23097,7 @@ class Check extends UIBase$3 {
     style   : "checkbox"
   };}
 }
-UIBase$3.register(Check);
+UIBase$4.register(Check);
 
 class IconCheck extends Button {
   constructor() {
@@ -21907,7 +23234,7 @@ class IconCheck extends Button {
   }
   
   _repos_canvas() {
-    let dpi = UIBase$3.getDPI();
+    let dpi = UIBase$4.getDPI();
 
     let w = (~~(this._getsize()*dpi))/dpi;
     let h = (~~(this._getsize()*dpi))/dpi;
@@ -21985,7 +23312,7 @@ class IconCheck extends Button {
   };}
 }
 
-UIBase$3.register(IconCheck);
+UIBase$4.register(IconCheck);
 
 class IconButton extends Button {
   constructor() {
@@ -22026,7 +23353,7 @@ class IconButton extends Button {
   }
   
   _repos_canvas() {
-    let dpi = UIBase$3.getDPI();
+    let dpi = UIBase$4.getDPI();
 
     let w = (~~(this._getsize()*dpi))/dpi;
     let h = (~~(this._getsize()*dpi))/dpi;
@@ -22060,7 +23387,7 @@ class IconButton extends Button {
     let tsize = iconmanager.getTileSize(this.iconsheet);
     let size = this._getsize();
 
-    let dpi = UIBase$3.getDPI();
+    let dpi = UIBase$4.getDPI();
     let off = size > tsize ? (size - tsize)*0.5*dpi : 0.0;
 
     this.g.save();
@@ -22075,7 +23402,7 @@ class IconButton extends Button {
   };}
 }
 
-UIBase$3.register(IconButton);
+UIBase$4.register(IconButton);
 
 class Check1 extends Button {
   constructor() {
@@ -22115,7 +23442,7 @@ class Check1 extends Button {
   };}
 }
 
-UIBase$3.register(Check1);
+UIBase$4.register(Check1);
 
 function saveFile(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
   let blob = new Blob([data], {type : mime});
@@ -22187,7 +23514,7 @@ let PropSubTypes$2 = PropSubTypes$1;
 let EnumProperty$6 = EnumProperty$1;
 
 let Vector2$4 = undefined,
-  UIBase$4 = UIBase,
+  UIBase$5 = UIBase$1,
   PackFlags$4 = PackFlags,
   PropTypes$5 = PropTypes;
 
@@ -22204,7 +23531,7 @@ var list$2 = function list(iter) {
   return ret;
 };
 
-class Label extends UIBase {
+class Label extends UIBase$1 {
   constructor() {
     super();
 
@@ -22218,6 +23545,8 @@ class Label extends UIBase {
       div._labelx::selection {
         color: none;
         background: none;
+         -webkit-user-select:none;
+         user-select:none;
       }
     `;
 
@@ -22336,9 +23665,9 @@ class Label extends UIBase {
   }
 }
 
-UIBase.register(Label);
+UIBase$1.register(Label);
 
-class Container extends UIBase {
+class Container extends UIBase$1 {
   constructor() {
     super();
 
@@ -22594,7 +23923,7 @@ class Container extends UIBase {
   //}
 
   appendChild(child) {
-    if (child instanceof UIBase) {
+    if (child instanceof UIBase$1) {
       child.ctx = this.ctx;
       child.parentWidget = this;
       this.shadow.appendChild(child);
@@ -22611,7 +23940,7 @@ class Container extends UIBase {
 
   clear(trigger_on_destroy=true) {
     for (let child of this.children) {
-      if (child instanceof UIBase) {
+      if (child instanceof UIBase$1) {
         child.remove(trigger_on_destroy);
       }
     }
@@ -22634,7 +23963,7 @@ class Container extends UIBase {
   }
 
   prepend(child) {
-    if (child instanceof UIBase$4) {
+    if (child instanceof UIBase$5) {
       this._prepend(child);
     } else {
       super.prepend(child);
@@ -23607,10 +24936,12 @@ class Container extends UIBase {
     }
 
     if (min !== undefined) {
-      ret.range[0] = min;
+      //ret.range[0] = min;
+      ret.setAttribute("min", min);
     }
     if (max !== undefined) {
-      ret.range[1] = max;
+      //ret.range[1] = max;
+      ret.setAttribute("max", max);
     }
 
     if (defaultval !== undefined) {
@@ -23808,7 +25139,7 @@ class Container extends UIBase {
   }
 };
 
-UIBase.register(Container, "div");
+UIBase$1.register(Container, "div");
 
 
 class RowFrame extends Container {
@@ -23862,7 +25193,7 @@ class RowFrame extends Container {
   }
 }
 
-UIBase$4.register(RowFrame);
+UIBase$5.register(RowFrame);
 
 class ColumnFrame extends Container {
   constructor() {
@@ -23887,9 +25218,9 @@ class ColumnFrame extends Container {
   }
 }
 
-UIBase$4.register(ColumnFrame);
+UIBase$5.register(ColumnFrame);
 
-let UIBase$5 = UIBase, Icons$1 = Icons;
+let UIBase$6 = UIBase$1, Icons$1 = Icons;
 
 class RichEditor extends TextBoxBase {
   constructor() {
@@ -24175,9 +25506,9 @@ class RichEditor extends TextBoxBase {
     style   : "richtext"
   }}
 }
-UIBase$5.register(RichEditor);
+UIBase$6.register(RichEditor);
 
-class RichViewer extends UIBase$5 {
+class RichViewer extends UIBase$6 {
   constructor() {
     super();
 
@@ -24247,7 +25578,7 @@ class RichViewer extends UIBase$5 {
     style   : "html_viewer"
   }}
 }
-UIBase$5.register(RichViewer);
+UIBase$6.register(RichViewer);
 
 "use strict";
 
@@ -24256,7 +25587,7 @@ let keymap$4 = keymap;
 let EnumProperty$7 = EnumProperty$1,
   PropTypes$6 = PropTypes;
 
-let UIBase$6 = UIBase,
+let UIBase$7 = UIBase$1,
   PackFlags$5 = PackFlags,
   IconSheets$4 = IconSheets;
 
@@ -24522,9 +25853,9 @@ class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase$6.register(VectorPanel);
+UIBase$7.register(VectorPanel);
 
-class ToolTip extends UIBase$6 {
+class ToolTip extends UIBase$7 {
   constructor() {
     super();
 
@@ -24599,7 +25930,7 @@ class ToolTip extends UIBase$6 {
     style   : "tooltip"
   }}
 };
-UIBase$6.register(ToolTip);
+UIBase$7.register(ToolTip);
 
 function makeGenEnum() {
   let enumdef = {};
@@ -24710,6 +26041,34 @@ class Curve1DWidget extends ColumnFrame {
     });
     this.dropbox._init();
 
+    row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
+      let curve = this._value;
+      if (!curve) return;
+      //if (isNaN(curve.uiZoom))
+      //  curve.uiZoom = 1.0;
+
+      curve.uiZoom *= 0.9;
+      if (this.getAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), curve);
+      }
+
+      this._redraw();
+    }).iconsheet = 0;
+    row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
+      let curve = this._value;
+      if (!curve) return;
+      //if (isNaN(curve.uiZoom))
+      //  curve.uiZoom = 1.0;
+
+      curve.uiZoom *= 1.1;
+      if (this.getAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), curve);
+      }
+
+      this._redraw();
+
+    }).iconsheet = 0;
+
     this.container = this.col();
   }
 
@@ -24722,7 +26081,7 @@ class Curve1DWidget extends ColumnFrame {
   }
 
   updateSize() {
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let w = ~~(this.getDefault("CanvasWidth")*dpi);
     let h = ~~(this.getDefault("CanvasHeight")*dpi);
 
@@ -24754,16 +26113,25 @@ class Curve1DWidget extends ColumnFrame {
 
     g.save();
 
+    let zoom = this._value.uiZoom;
     let scale = Math.max(canvas.width, canvas.height);
 
     g.lineWidth /= scale;
 
-    this.drawTransform[0] = scale;
+
+    this.drawTransform[0] = scale*zoom;
+    this.drawTransform[1][0] =  0.0;
     this.drawTransform[1][1] = -1.0;
 
-    g.scale(scale, scale);
-    g.translate(0.0, 1.0);
-    g.scale(1.0, -1.0);
+    this.drawTransform[1][0] -= 0.5 - 0.5/zoom;
+    this.drawTransform[1][1] += 0.5 - 0.5/zoom;
+
+    //g.scale(scale, scale);
+
+    g.scale(this.drawTransform[0], -this.drawTransform[0]);
+    g.translate(this.drawTransform[1][0], this.drawTransform[1][1]);
+
+    g.lineWidth /= zoom;
 
     this._value.draw(this.canvas, this.g, this.drawTransform);
     g.restore();
@@ -24841,7 +26209,7 @@ class Curve1DWidget extends ColumnFrame {
     style   : "curvewidget"
   }}
 }
-UIBase.register(Curve1DWidget);
+UIBase$1.register(Curve1DWidget);
 
 //bind module to global var to get at it in console.
 //
@@ -24856,7 +26224,7 @@ let PropSubTypes$3 = PropSubTypes$1;
 let EnumProperty$8 = EnumProperty$1;
 
 let Vector2$5 = undefined,
-  UIBase$7 = UIBase,
+  UIBase$8 = UIBase$1,
   PackFlags$6 = PackFlags,
   PropTypes$7 = PropTypes;
 
@@ -25104,7 +26472,7 @@ class PanelFrame extends ColumnFrame {
   }
 }
 
-UIBase$7.register(PanelFrame);
+UIBase$8.register(PanelFrame);
 
 "use strict";
 
@@ -25113,7 +26481,7 @@ let Vector2$6 = Vector2,
   Vector4$2 = Vector4,
   Matrix4$2 = Matrix4;
 
-let UIBase$8 = UIBase,
+let UIBase$9 = UIBase$1,
   PackFlags$7 = PackFlags,
   IconSheets$5 = IconSheets;
 
@@ -25268,7 +26636,7 @@ class SimpleBox {
   }
 }
 
-class HueField extends UIBase$8 {
+class HueField extends UIBase$9 {
   constructor() {
     super();
 
@@ -25378,9 +26746,9 @@ class HueField extends UIBase$8 {
   };}
 }
 
-UIBase$8.register(HueField);
+UIBase$9.register(HueField);
 
-class SatValField extends UIBase$8 {
+class SatValField extends UIBase$9 {
   constructor() {
     super();
 
@@ -25599,7 +26967,7 @@ class SatValField extends UIBase$8 {
   };}
 }
 
-UIBase$8.register(SatValField);
+UIBase$9.register(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
@@ -25750,7 +27118,7 @@ class ColorField extends ColumnFrame {
     this.huefield._redraw();
   }
 }
-UIBase$8.register(ColorField);
+UIBase$9.register(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -25990,10 +27358,10 @@ class ColorPicker extends ColumnFrame {
   };}
 }
 
-UIBase$8.register(ColorPicker);
+UIBase$9.register(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$8 {
+class ColorPickerButton extends UIBase$9 {
   constructor() {
     super();
 
@@ -26302,11 +27670,11 @@ class ColorPickerButton extends UIBase$8 {
     this._redraw();
   }
 };
-UIBase$8.register(ColorPickerButton);
+UIBase$9.register(ColorPickerButton);
 
 "use strict";
 
-let UIBase$9 = UIBase, 
+let UIBase$a = UIBase$1, 
     PackFlags$8 = PackFlags,
     IconSheets$6 = IconSheets,
   iconmanager$1 = iconmanager;
@@ -26449,7 +27817,7 @@ class ModalTabMove extends EventHandler {
 
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$9.getDPI();
+    let dpi = UIBase$a.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -26566,7 +27934,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$9 {
+class TabBar extends UIBase$a {
   constructor() {
     super();
     
@@ -27322,9 +28690,9 @@ class TabBar extends UIBase$9 {
     style   : "tabs"
   };}
 }
-UIBase$9.register(TabBar);
+UIBase$a.register(TabBar);
 
-class TabContainer extends UIBase$9 {
+class TabContainer extends UIBase$a {
   constructor() {
     super();
 
@@ -27595,7 +28963,7 @@ class TabContainer extends UIBase$9 {
   };}
 }
 
-UIBase$9.register(TabContainer);
+UIBase$a.register(TabContainer);
 
 //bind module to global var to get at it in console.
 
@@ -27607,7 +28975,7 @@ let PropSubTypes$4 = PropSubTypes$1;
 let EnumProperty$9 = EnumProperty$1;
 
 let Vector2$8 = undefined,
-  UIBase$a = UIBase,
+  UIBase$b = UIBase$1,
   PackFlags$9 = PackFlags,
   PropTypes$8 = PropTypes;
 
@@ -27651,7 +29019,7 @@ class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase$a.register(TableRow);
+UIBase$b.register(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -27839,14 +29207,14 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$a.register(TableFrame);
+UIBase$b.register(TableFrame);
 
 "use strict";
 
 let EnumProperty$a = EnumProperty$1,
   PropTypes$9 = PropTypes;
 
-let UIBase$b = UIBase,
+let UIBase$c = UIBase$1,
   PackFlags$a = PackFlags,
   IconSheets$7 = IconSheets;
 
@@ -27919,7 +29287,7 @@ class ListItem extends RowFrame {
     style : "listbox"
   }}
 }
-UIBase$b.register(ListItem);
+UIBase$c.register(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -28061,14 +29429,14 @@ class ListBox extends Container {
     style : "listbox"
   }}
 }
-UIBase$b.register(ListBox);
+UIBase$c.register(ListBox);
 
 "use strict";
 
 let EnumProperty$b = EnumProperty$1,
   PropTypes$a = PropTypes;
 
-let UIBase$c = UIBase,
+let UIBase$d = UIBase$1,
   PackFlags$b = PackFlags,
   IconSheets$8 = IconSheets;
 
@@ -28076,7 +29444,7 @@ function getpx$2(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
-class Menu extends UIBase$c {
+class Menu extends UIBase$d {
   constructor() {
     super();
 
@@ -28725,7 +30093,7 @@ class Menu extends UIBase$c {
 }
 
 Menu.SEP = Symbol("menu seperator");
-UIBase$c.register(Menu);
+UIBase$d.register(Menu);
 
 class DropBox extends Button {
   constructor() {
@@ -29084,7 +30452,7 @@ class DropBox extends Button {
   };}
 }
 
-UIBase$c.register(DropBox);
+UIBase$d.register(DropBox);
 
 class MenuWrangler {
   constructor() {
@@ -29902,17 +31270,17 @@ class NumSlider extends ValueButtonBase {
   }
 
   _getArrowSize() {
-    return UIBase.getDPI()*10;
+    return UIBase$1.getDPI()*10;
   }
   static define() {return {
     tagname : "numslider-x",
     style : "numslider"
   };}
 }
-UIBase.register(NumSlider);
+UIBase$1.register(NumSlider);
 
 
-class NumSliderSimpleBase extends UIBase {
+class NumSliderSimpleBase extends UIBase$1 {
   constructor() {
     super();
 
@@ -30016,7 +31384,7 @@ class NumSliderSimpleBase extends UIBase {
     }
 
     let x = e.x - rect.left;
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let co = this._getButtonPos();
 
     let val = this._invertButtonX(x*dpi);
@@ -30178,7 +31546,7 @@ class NumSliderSimpleBase extends UIBase {
   _redraw() {
     let g = this.g, canvas = this.canvas;
     let w = canvas.width, h = canvas.height;
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
 
     let color = this.getDefault("BoxBG");
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
@@ -30253,7 +31621,7 @@ class NumSliderSimpleBase extends UIBase {
 
     let co = this._getButtonPos();
 
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
     let dis = dv.vectorLength();
 
@@ -30263,7 +31631,7 @@ class NumSliderSimpleBase extends UIBase {
 
   _invertButtonX(x) {
     let w = this.canvas.width;
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
@@ -30276,7 +31644,7 @@ class NumSliderSimpleBase extends UIBase {
 
   _getButtonPos() {
     let w = this.canvas.width;
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let x = this._value;
     x = (x - this.range[0]) / (this.range[1] - this.range[0]);
@@ -30309,7 +31677,7 @@ class NumSliderSimpleBase extends UIBase {
       return;
     }
 
-    let dpi = UIBase.getDPI();
+    let dpi = UIBase$1.getDPI();
     let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
     let canvas = this.canvas;
 
@@ -30346,7 +31714,7 @@ class NumSliderSimpleBase extends UIBase {
     style : "numslider_simple"
   }}
 }
-UIBase.register(NumSliderSimpleBase);
+UIBase$1.register(NumSliderSimpleBase);
 
 class SliderWithTextbox extends ColumnFrame {
   constructor() {
@@ -30404,10 +31772,11 @@ class SliderWithTextbox extends ColumnFrame {
   set displayUnit(val) {
     let update = val !== this.displayUnit;
 
-    //console.warn("setting display unit", val);
-    this.slider.displayUnit = this.textbox.displayUnit = val;
+    console.warn("setting display unit", val);
+    this.numslider.displayUnit = this.textbox.displayUnit = val;
 
     if (update) {
+      //this.numslider._redraw();
       this.updateTextBox();
     }
   }
@@ -30418,10 +31787,12 @@ class SliderWithTextbox extends ColumnFrame {
   set baseUnit(val) {
     let update = val !== this.baseUnit;
 
-    //console.warn("setting base unit", val);
-    this.slider.baseUnit = this.textbox.baseUnit = val;
+    console.warn("setting base unit", val);
+    this.numslider.baseUnit = this.textbox.baseUnit = val;
 
     if (update) {
+      console.log(this.slider);
+      //this.slider._redraw();
       this.updateTextBox();
     }
   }
@@ -30625,22 +31996,36 @@ class SliderWithTextbox extends ColumnFrame {
     super.update();
 
     this.updateDataPath();
+    let redraw = false;
 
     if (this.hasAttribute("min")) {
+      let r = this.range[0];
       this.range[0] = parseFloat(this.getAttribute("min"));
-      this.setCSS();
-      this._redraw();
+      redraw = Math.abs(this.range[0]-r) > 0.0001;
     }
 
     if (this.hasAttribute("max")) {
+      let r = this.range[1];
       this.range[1] = parseFloat(this.getAttribute("max"));
-      this.setCSS();
-      this._redraw();
+      redraw = redraw || Math.abs(this.range[1]-r) > 0.0001;
     }
 
     if (this.hasAttribute("integer")) {
-      this.isInt = true;
-      this.numslider.isInt = true;
+      let val = this.getAttribute("integer");
+      val = val || val === null;
+
+      redraw = redraw || !!val !== this.isInt;
+
+      this.isInt = !!val;
+      this.numslider.isInt = !!val;
+      this.textbox.isInt = !!val;
+    }
+
+    if (redraw) {
+      console.log("numslider draw");
+      this.setCSS();
+      this.numslider.setCSS();
+      this.numslider._redraw();
     }
 
     this.updateName();
@@ -30677,7 +32062,7 @@ class NumSliderSimple extends SliderWithTextbox {
     style : "numslider_simple"
   }}
 }
-UIBase.register(NumSliderSimple);
+UIBase$1.register(NumSliderSimple);
 
 class NumSliderWithTextBox extends SliderWithTextbox {
   constructor() {
@@ -30696,7 +32081,7 @@ class NumSliderWithTextBox extends SliderWithTextbox {
     style : "numslider-textbox-x"
   }}
 }
-UIBase.register(NumSliderWithTextBox);
+UIBase$1.register(NumSliderWithTextBox);
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen$1 = 0;
@@ -30842,7 +32227,7 @@ class LastToolPanel extends ColumnFrame {
     tagname : "last-tool-panel-x"
   }}
 }
-UIBase.register(LastToolPanel);
+UIBase$1.register(LastToolPanel);
 
 class Constraint {
   constructor(name, func, klst, params, k=1.0) {
@@ -31655,9 +33040,9 @@ function initMenuBar(menuEditor) {
   //win.setMenu(menu);
 }
 
-let UIBase$d = UIBase;
+let UIBase$e = UIBase$1;
 
-class Note extends UIBase {
+class Note extends UIBase$1 {
   constructor() {
     super();
 
@@ -31745,7 +33130,7 @@ class Note extends UIBase {
     tagname : "note-x"
   }}
 }
-UIBase$d.register(Note);
+UIBase$e.register(Note);
 
 class ProgBarNote extends Note {
   constructor() {
@@ -31804,7 +33189,7 @@ class ProgBarNote extends Note {
     tagname : "note-progress-x"
   }}
 }
-UIBase$d.register(ProgBarNote);
+UIBase$e.register(ProgBarNote);
 
 class NoteFrame extends RowFrame {
   constructor() {
@@ -31915,7 +33300,7 @@ class NoteFrame extends RowFrame {
     tagname : "noteframe-x"
   }}
 }
-UIBase$d.register(NoteFrame);
+UIBase$e.register(NoteFrame);
 
 function getNoteFrames(screen) {
   let ret = [];
@@ -31932,7 +33317,7 @@ function getNoteFrames(screen) {
       }
     }
 
-    if (n instanceof UIBase && n.shadow !== undefined && n.shadow.childNodes) {
+    if (n instanceof UIBase$1 && n.shadow !== undefined && n.shadow.childNodes) {
       for (let node of n.shadow.childNodes) {
         rec(node);
       }
@@ -32989,7 +34374,7 @@ class ScreenHalfEdge {
 
 }
 
-class ScreenBorder extends UIBase {
+class ScreenBorder extends UIBase$1 {
   constructor() {
     super();
 
@@ -33244,11 +34629,11 @@ class ScreenBorder extends UIBase {
   }
 }
 
-UIBase.register(ScreenBorder);
+UIBase$1.register(ScreenBorder);
 
 let _ScreenArea = undefined;
 
-let UIBase$e = UIBase;
+let UIBase$f = UIBase$1;
 let Vector2$a = Vector2;
 let ScreenClass = undefined;
 
@@ -33387,7 +34772,7 @@ class AreaWrangler {
 
 let _ScreenArea$1 = undefined;
 
-let UIBase$f = UIBase;
+let UIBase$g = UIBase$1;
 
 let Vector2$b = Vector2;
 let Screen$1 = undefined;
@@ -33421,7 +34806,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-class Area$1 extends UIBase {
+class Area$1 extends UIBase$1 {
   constructor() {
     super();
 
@@ -33455,7 +34840,7 @@ class Area$1 extends UIBase {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$f) {
+      if (child instanceof UIBase$g) {
         child.parentWidget = this;
       }
     };
@@ -33464,7 +34849,7 @@ class Area$1 extends UIBase {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$f) {
+      if (child instanceof UIBase$g) {
         child.parentWidget = this;
       }
     };
@@ -33682,7 +35067,7 @@ class Area$1 extends UIBase {
     
     areaclasses[def.areaname] = cls;
     
-    UIBase.register(cls);
+    UIBase$1.register(cls);
   }
   
   getScreen() {
@@ -34055,7 +35440,7 @@ pathux.Area {
 nstructjs.manager.add_class(Area$1);  
 //ui_base.UIBase.register(Area);
 
-class ScreenArea extends UIBase {
+class ScreenArea extends UIBase$1 {
   constructor() {
     super();
     
@@ -34572,7 +35957,7 @@ class ScreenArea extends UIBase {
     
     super.appendChild(child);
     
-    if (child instanceof UIBase) {
+    if (child instanceof UIBase$1) {
       child.parentWidget = this;
       child.onadd();
     }
@@ -34849,7 +36234,7 @@ pathux.ScreenArea {
 `;
 
 nstructjs.manager.add_class(ScreenArea);  
-UIBase.register(ScreenArea);
+UIBase$1.register(ScreenArea);
 
 _setAreaClass(Area$1);
 
@@ -35022,14 +36407,14 @@ class ThemeEditor extends Container {
     style   : "theme-editor"
   }}
 }
-UIBase.register(ThemeEditor);
+UIBase$1.register(ThemeEditor);
 
 "use strict";
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
 let Vector2$c = Vector2;
 
-class Overdraw extends UIBase {
+class Overdraw extends UIBase$1 {
   constructor() {
     super();
 
@@ -35391,7 +36776,7 @@ class Overdraw extends UIBase {
   };}
 }
 
-UIBase.register(Overdraw);
+UIBase$1.register(Overdraw);
 
 class TreeItem extends Container {
   constructor() {
@@ -35488,7 +36873,7 @@ class TreeItem extends Container {
     style   : "treeview"
   }}
 }
-UIBase.register(TreeItem);
+UIBase$1.register(TreeItem);
 
 class TreeView extends Container {
   constructor() {
@@ -35744,7 +37129,7 @@ class TreeView extends Container {
     style   : "treeview"
   }}
 }
-UIBase.register(TreeView);
+UIBase$1.register(TreeView);
 
 function startDrag(box) {
   if (box._modal) {
@@ -35961,7 +37346,7 @@ class DragBox extends Container {
     style   : "panel"
   }}
 }
-UIBase.register(DragBox);
+UIBase$1.register(DragBox);
 
 let ignore = 0;
 
@@ -36248,7 +37633,7 @@ class AreaDocker extends Container {
     tagname : "area-docker-x"
   }}
 }
-UIBase.register(AreaDocker);
+UIBase$1.register(AreaDocker);
 
 function makePopupArea(area_class, screen, args={}) {
   let sarea = document.createElement("screenarea-x");
@@ -36314,7 +37699,7 @@ function registerToolStackGetter$1(func) {
 window._nstructjs = nstructjs;
 
 let Vector2$d = Vector2,
-  UIBase$g = UIBase,
+  UIBase$h = UIBase$1,
   styleScrollBars$1 = styleScrollBars;
 
 let update_stack = new Array(8192);
@@ -36322,7 +37707,7 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
-class Screen$2 extends UIBase {
+class Screen$2 extends UIBase$1 {
   constructor() {
     super();
 
@@ -37325,7 +38710,7 @@ class Screen$2 extends UIBase {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-      bad = bad || !(n instanceof UIBase$g);
+      bad = bad || !(n instanceof UIBase$h);
       
       if (n._id in visit || n.hidden) {
         return;
@@ -37442,7 +38827,7 @@ class Screen$2 extends UIBase {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$g) {
+      if (n instanceof UIBase$h) {
         n.ctx = val;
       }
 
@@ -37583,7 +38968,7 @@ class Screen$2 extends UIBase {
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$h) {
           n._ctx = ctx;
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
@@ -37619,7 +39004,7 @@ class Screen$2 extends UIBase {
           push(n2);
         }
 
-        if (n instanceof UIBase$g) {
+        if (n instanceof UIBase$h) {
           scopestack.push(n);
           push(SCOPE_POP);
         }
@@ -38928,7 +40313,7 @@ pathux.Screen {
 `;
 
 nstructjs.manager.add_class(Screen$2);
-UIBase.register(Screen$2);
+UIBase$1.register(Screen$2);
 
 setScreenClass(Screen$2);
 
@@ -39657,5 +41042,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { AfterAspect, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

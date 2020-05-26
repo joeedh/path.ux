@@ -26,5 +26,7 @@ export const Icons = {
   UNDERLINE      : 22,
   STRIKETHRU     : 23,
   TREE_EXPAND    : 24,
-  TREE_COLLAPSE  : 25
+  TREE_COLLAPSE  : 25,
+  ZOOM_OUT       : 26,
+  ZOOM_IN        : 27
 };

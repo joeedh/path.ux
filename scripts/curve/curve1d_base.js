@@ -13,6 +13,22 @@ export const TangentModes = {
   BREAK  : 2
 };
 
+export function getCurve(type, throw_on_error=true) {
+  for (let cls of CurveConstructors) {
+    if (cls.name === type)
+      return cls;
+    if (cls.define().name === type)
+      return cls;
+  }
+
+  if (throw_on_error) {
+    throw new Error("Unknown curve type " + type)
+  } else {
+    console.warn("Unknown curve type", type);
+    return getCurve("ease");
+  }
+}
+
 export class CurveTypeData {
   constructor() {
     this.type = this.constructor.name;
@@ -112,6 +128,11 @@ export class CurveTypeData {
 
     return ret === undefined ? 0.0 : ret;
   }
+
+  static define() {return {
+    uiname : "Some Curve",
+    name   : "somecurve"
+  }}
 
   onActive(parent, draw_transform) {
   }

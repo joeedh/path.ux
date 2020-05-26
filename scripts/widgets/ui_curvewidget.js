@@ -1,5 +1,5 @@
 import {Curve1DProperty} from "../toolsys/toolprop.js";
-import {UIBase} from '../core/ui_base.js';
+import {UIBase, Icons} from '../core/ui_base.js';
 import {ColumnFrame, RowFrame} from "../core/ui.js";
 import * as util from '../util/util.js';
 import {Vector2, Vector3} from "../util/vectormath.js";
@@ -95,6 +95,34 @@ export class Curve1DWidget extends ColumnFrame {
     });
     this.dropbox._init();
 
+    row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
+      let curve = this._value;
+      if (!curve) return;
+      //if (isNaN(curve.uiZoom))
+      //  curve.uiZoom = 1.0;
+
+      curve.uiZoom *= 0.9;
+      if (this.getAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), curve);
+      }
+
+      this._redraw();
+    }).iconsheet = 0;
+    row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
+      let curve = this._value;
+      if (!curve) return;
+      //if (isNaN(curve.uiZoom))
+      //  curve.uiZoom = 1.0;
+
+      curve.uiZoom *= 1.1;
+      if (this.getAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), curve);
+      }
+
+      this._redraw();
+
+    }).iconsheet = 0;
+
     this.container = this.col();
   }
 
@@ -139,16 +167,25 @@ export class Curve1DWidget extends ColumnFrame {
 
     g.save();
 
+    let zoom = this._value.uiZoom;
     let scale = Math.max(canvas.width, canvas.height);
 
     g.lineWidth /= scale;
 
-    this.drawTransform[0] = scale;
+
+    this.drawTransform[0] = scale*zoom;
+    this.drawTransform[1][0] =  0.0;
     this.drawTransform[1][1] = -1.0;
 
-    g.scale(scale, scale);
-    g.translate(0.0, 1.0);
-    g.scale(1.0, -1.0);
+    this.drawTransform[1][0] -= 0.5 - 0.5/zoom;
+    this.drawTransform[1][1] += 0.5 - 0.5/zoom;
+
+    //g.scale(scale, scale);
+
+    g.scale(this.drawTransform[0], -this.drawTransform[0]);
+    g.translate(this.drawTransform[1][0], this.drawTransform[1][1]);
+
+    g.lineWidth /= zoom;
 
     this._value.draw(this.canvas, this.g, this.drawTransform);
     g.restore();

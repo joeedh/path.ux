@@ -1056,10 +1056,11 @@ export class SliderWithTextbox extends ColumnFrame {
   set displayUnit(val) {
     let update = val !== this.displayUnit;
 
-    //console.warn("setting display unit", val);
-    this.slider.displayUnit = this.textbox.displayUnit = val;
+    console.warn("setting display unit", val);
+    this.numslider.displayUnit = this.textbox.displayUnit = val;
 
     if (update) {
+      //this.numslider._redraw();
       this.updateTextBox();
     }
   }
@@ -1070,10 +1071,12 @@ export class SliderWithTextbox extends ColumnFrame {
   set baseUnit(val) {
     let update = val !== this.baseUnit;
 
-    //console.warn("setting base unit", val);
-    this.slider.baseUnit = this.textbox.baseUnit = val;
+    console.warn("setting base unit", val);
+    this.numslider.baseUnit = this.textbox.baseUnit = val;
 
     if (update) {
+      console.log(this.slider);
+      //this.slider._redraw();
       this.updateTextBox();
     }
   }
@@ -1277,22 +1280,36 @@ export class SliderWithTextbox extends ColumnFrame {
     super.update();
 
     this.updateDataPath();
+    let redraw = false;
 
     if (this.hasAttribute("min")) {
+      let r = this.range[0];
       this.range[0] = parseFloat(this.getAttribute("min"));
-      this.setCSS();
-      this._redraw();
+      redraw = Math.abs(this.range[0]-r) > 0.0001;
     }
 
     if (this.hasAttribute("max")) {
+      let r = this.range[1];
       this.range[1] = parseFloat(this.getAttribute("max"));
-      this.setCSS();
-      this._redraw();
+      redraw = redraw || Math.abs(this.range[1]-r) > 0.0001;
     }
 
     if (this.hasAttribute("integer")) {
-      this.isInt = true;
-      this.numslider.isInt = true;
+      let val = this.getAttribute("integer");
+      val = val || val === null;
+
+      redraw = redraw || !!val !== this.isInt;
+
+      this.isInt = !!val;
+      this.numslider.isInt = !!val;
+      this.textbox.isInt = !!val;
+    }
+
+    if (redraw) {
+      console.log("numslider draw");
+      this.setCSS();
+      this.numslider.setCSS();
+      this.numslider._redraw();
     }
 
     this.updateName();

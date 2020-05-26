@@ -68,6 +68,8 @@ export let Icons = {
   UNDERLINE      : 42,
   STRIKETHRU     : 43,
   TREE_EXPAND    : 44,
-  TREE_COLLAPSE  : 45
+  TREE_COLLAPSE  : 45,
+  ZOOM_OUT       : 46,
+  ZOOM_IN        : 47
 };
 
