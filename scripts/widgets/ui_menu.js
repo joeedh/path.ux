@@ -10,7 +10,7 @@ import * as toolprop from '../toolsys/toolprop.js';
 import {Button} from "./ui_widgets.js";
 import {DomEventTypes} from '../util/events.js';
 
-import {keymap} from '../util/simple_events.js';
+import {HotKey, keymap} from '../util/simple_events.js';
 
 let EnumProperty = toolprop.EnumProperty,
   PropTypes = toolprop.PropTypes;
@@ -1302,4 +1302,76 @@ export function setWranglerScreen(screen) {
 
 export function getWranglerScreen() {
   return menuWrangler.screen;
+}
+
+export function createMenu(ctx, title, templ) {
+  let menu = document.createElement("menu-x");
+  menu.ctx = ctx;
+  menu.setAttribute("name", title);
+
+  let SEP = menu.constructor.SEP;
+  let id = 0;
+  let cbs = {};
+
+  for (let item of templ) {
+    if (typeof item == "string") {
+      let def;
+      try {
+        def = ctx.api.getToolDef(item);
+      } catch (error) {
+        menu.addItem("(tool path error)", id++);
+        continue;
+      }
+      //addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
+      menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
+      let this2 = this;
+
+      cbs[id] = (function (toolpath) {
+        return function () {
+          this2.ctx.api.execTool(this2.ctx, toolpath);
+        }
+      })(item);
+
+      id++;
+    } else if (item === SEP) {
+      menu.seperator();
+    } else if (item instanceof Array) {
+      let hotkey = item.length > 2 ? item[2] : undefined;
+      let icon = item.length > 3 ? item[3] : undefined;
+      let tooltip = item.length > 4 ? item[4] : undefined;
+
+      if (hotkey !== undefined && hotkey instanceof HotKey) {
+        hotkey = hotkey.buildString();
+      }
+
+      menu.addItemExtra(item[0], id, hotkey, icon, undefined, tooltip);
+
+      cbs[id] = (function (cbfunc, arg) {
+        return function () {
+          cbfunc(arg);
+        }
+      })(item[1], item[2]);
+
+      id++;
+    }
+  }
+
+  menu.onselect = (id) => {
+    cbs[id]();
+  }
+
+  return menu;
+}
+
+export function startMenu(menu, x, y, searchMenuMode=false) {
+  let screen = menu.ctx.screen;
+  let con = menu._popup = screen.popup(undefined, x, y, false);
+  con.noMarginsOrPadding();
+
+  con.add(menu);
+  if (searchMenuMode) {
+    menu.startFancy();
+  } else {
+    menu.start();
+  }
 }
