@@ -119,6 +119,10 @@ export class AfterAspect {
 
     this._method_bound = false;
 
+    method.after = this.after.bind(this);
+    method.once = this.once.bind(this);
+    method.remove = this.remove.bind(this);
+    
     owner[key].after = this.after.bind(this);
     owner[key].once = this.once.bind(this);
     owner[key].remove = this.remove.bind(this);

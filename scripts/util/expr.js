@@ -97,10 +97,10 @@ if (1) {
 }
 
 
-function indent(n, char="  ") {
+function indent(n, chr="  ") {
   let s = "";
   for (let i=0; i<n; i++) {
-    s += char;
+    s += chr;
   }
 
   return s;
