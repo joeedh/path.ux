@@ -194,11 +194,15 @@ export class Button extends UIBase {
       e.stopPropagation();
 
       if (cconst.DEBUG.buttonEvents)
-        console.log("button press", this._pressed);
+        console.log("button press", this._pressed, this.disabled, e.button);
 
       if (this.disabled) return;
 
       this._pressed = true;
+
+      if (util.isMobile() && this.onclick && e.button === 0) {
+        this.onclick();
+      }
 
       if (this._onpress) {
         this._onpress(this);

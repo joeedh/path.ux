@@ -61,7 +61,7 @@ export class Menu extends UIBase {
               justify-items : start;
     */
 
-    let pad1 = util.isMobile() ? 15 : 0;
+    let pad1 = util.isMobile() ? 5 : 0;
 
     let style = document.createElement("style");
     style.textContent = `
@@ -1184,7 +1184,7 @@ export class MenuWrangler {
     let element = screen.pickElement(x, y);
     console.log("wrangler mousedown", element);
 
-    if (element !== undefined && element instanceof DropBox) {
+    if (element !== undefined && (element instanceof DropBox || util.isMobile())) {
       this.endMenus();
       e.preventDefault();
       e.stopPropagation();

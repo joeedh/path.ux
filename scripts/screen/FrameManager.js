@@ -734,7 +734,7 @@ export class Screen extends ui_base.UIBase {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
-    if (util.isMobile()) {
+    if (0) {//util.isMobile()) {
       width = window.screen.availWidth || window.screen.width;
       height = window.screen.availHeight || window.screen.height;
 

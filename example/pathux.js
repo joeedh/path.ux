@@ -22072,11 +22072,15 @@ class Button extends UIBase$2 {
       e.stopPropagation();
 
       if (exports.DEBUG.buttonEvents)
-        console.log("button press", this._pressed);
+        console.log("button press", this._pressed, this.disabled, e.button);
 
       if (this.disabled) return;
 
       this._pressed = true;
+
+      if (isMobile() && this.onclick && e.button === 0) {
+        this.onclick();
+      }
 
       if (this._onpress) {
         this._onpress(this);
@@ -29527,7 +29531,7 @@ class Menu extends UIBase$d {
               justify-items : start;
     */
 
-    let pad1 = isMobile() ? 15 : 0;
+    let pad1 = isMobile() ? 5 : 0;
 
     let style = document.createElement("style");
     style.textContent = `
@@ -30650,7 +30654,7 @@ class MenuWrangler {
     let element = screen.pickElement(x, y);
     console.log("wrangler mousedown", element);
 
-    if (element !== undefined && element instanceof DropBox) {
+    if (element !== undefined && (element instanceof DropBox || isMobile())) {
       this.endMenus();
       e.preventDefault();
       e.stopPropagation();
@@ -38417,7 +38421,7 @@ class Screen$2 extends UIBase$1 {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
-    if (isMobile()) {
+    if (0) {//util.isMobile()) {
       width = window.screen.availWidth || window.screen.width;
       height = window.screen.availHeight || window.screen.height;
 
