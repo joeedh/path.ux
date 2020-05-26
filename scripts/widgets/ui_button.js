@@ -239,18 +239,7 @@ export class Button extends UIBase {
     }
 
     this.addEventListener("mousedown", press, {captured : true, passive : false});
-
-    this.addEventListener("touchstart", (e) => {
-      press(e);
-      if (e.onclick) {
-        e.onclick(e);
-      }
-    }, {captured : true, passive : false});
-    this.addEventListener("touchend", depress);
-    this.addEventListener("touchcancel", depress);
-
     this.addEventListener("mouseup", depress, {captured : true, passive : false});
-
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)
         return;

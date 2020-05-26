@@ -486,6 +486,8 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this._active_animations = [];
+
     //ref to Link element referencing Screen style node
     //Screen.update_intern sets the contents of this
     this._screenStyleTag = document.createElement("style");
@@ -2050,9 +2052,23 @@ export class UIBase extends HTMLElement {
     }
 
     let proxy = new Proxy(this, handler);
-    return new Animator(proxy);
+    let anim = new Animator(proxy);
+
+    anim.onend = () => {
+      this._active_animations.remove(anim);
+    }
+
+    this._active_animations.push(anim);
+    return anim;
   }
 
+  abortAnimations() {
+    for (let anim of util.list(this._active_animations)) {
+      anim.end();
+    }
+
+    this._active_animations = [];
+  }
   /**
    * Defines core attributes of the class
    *

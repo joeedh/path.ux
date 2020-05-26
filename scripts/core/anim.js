@@ -64,8 +64,8 @@ export class AnimManager {
           i--;
 
           try {
-            if (t.onend) {
-              t.onend();
+            if (t.task.onend) {
+              t.task.onend();
             }
           } catch (error) {
             util.print_stack(error);
@@ -83,6 +83,7 @@ manager.start();
 export class AbstractCommand {
   constructor() {
     this.cbs = [];
+    this.end_cbs = [];
   }
 
   start(animator, done) {
@@ -133,7 +134,7 @@ export class GoToCommand extends AbstractCommand {
     let value = this.object[this.key];
 
     if (Array.isArray(value)) {
-      this.startValue = value.concat([]);
+      this.startValue = util.list(value);
     } else {
       this.startValue = value;
     }
@@ -166,9 +167,6 @@ export class GoToCommand extends AbstractCommand {
       this.object[this.key] = this.startValue + (this.value - this.startValue) * t;
 
     }
-
-    console.log("-    ", this.time, animator.time - this.time);
-    console.log(this.object[this.key], this.startValue, this.value);
   }
 }
 
@@ -197,6 +195,12 @@ export class Command {
 export class Animator {
   constructor(owner, method = "update") {
     this.on_tick = this.on_tick.bind(this);
+    this.on_tick.onend = () => {
+      if (this.onend) {
+        this.onend();
+      }
+    }
+
     this.commands = [];
     this.owner = owner;
     this._done = false;
@@ -234,8 +238,13 @@ export class Animator {
     return this;
   }
 
-  then(cb) {
+  while(cb) {
     this.commands[this.commands.length - 1].cbs.push(cb);
+    return this;
+  }
+
+  then(cb) {
+    this.commands[this.commands.length-1].end_cbs.push(cb);
     return this;
   }
 
@@ -254,6 +263,10 @@ export class Animator {
   }
 
   on_tick() {
+    if (this._done) {
+      throw new Error("animation wasn't properly cleaned up");
+    }
+
     let dt = util.time_ms() - this.last;
     this.time += dt;
     this.last = util.time_ms();
@@ -266,14 +279,14 @@ export class Animator {
     let cmd = this.commands[0];
     let done = false;
 
-    if (this.first) {
-      this.first = false;
-      console.log(cmd, cmd.start)
-      cmd.start(this, donecb);
-    }
-
     function donecb() {
       done = true;
+    }
+
+    if (this.first) {
+      this.first = false;
+      //console.log(cmd, cmd.start)
+      cmd.start(this, donecb);
     }
 
     try {
@@ -283,7 +296,22 @@ export class Animator {
       util.print_stack(error);
     }
 
+    for (let cb of this.commands[0].cbs) {
+      try {
+        cb();
+      } catch (error) {
+        util.print_stack(error);
+      }
+    }
+
     if (done) {
+      for (let cb of this.commands[0].end_cbs) {
+        try {
+          cb();
+        } catch (error) {
+          util.print_stack(error);
+        }
+      }
       while (this.commands.length > 0) {
         this.commands.shift();
 

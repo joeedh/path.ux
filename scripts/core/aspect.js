@@ -72,7 +72,7 @@ export class AfterAspect {
 
     let this2 = this;
 
-    let method = owner[key] = function() {
+    let method = this._method = function() {
       let chain = this2.chain;
       let chain2 = this2.chain2;
 
@@ -117,6 +117,8 @@ export class AfterAspect {
       return ret;
     };
 
+    this._method_bound = false;
+
     owner[key].after = this.after.bind(this);
     owner[key].once = this.once.bind(this);
     owner[key].remove = this.remove.bind(this);
@@ -141,15 +143,25 @@ export class AfterAspect {
     return this.after(cb, node, true);
   }
 
+  _checkbind() {
+    if (!this._method_bound) {
+      this.owner[this.key] = this._method;
+    }
+  }
+
   before(cb, node, once) {
+    this._checkbind();
+
     if (cb === undefined) {
-      console.warn("invalid call to .after(); cb was undefined");
+        console.warn("invalid call to .after(); cb was undefined");
       return;
     }
     this.chain = [[cb, node, once]].concat(this.chain);
   }
 
   after(cb, node, once) {
+    this._checkbind();
+
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
       return;

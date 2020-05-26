@@ -553,7 +553,7 @@ export class Screen extends ui_base.UIBase {
       }
 
       if (done) return;
-      console.log("container end");
+      console.warn("container end");
 
       this.ctx.screen.removeEventListener("touchstart", touchpick, true);
       this.ctx.screen.removeEventListener("touchmove", touchpick, true);
@@ -2173,6 +2173,8 @@ export class Screen extends ui_base.UIBase {
         v.sub(min).mul(sz);
         //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
+
+      this.pos.zero();
     } else {
       for (let v of screenverts()) {
         //snap(v);
@@ -2184,7 +2186,8 @@ export class Screen extends ui_base.UIBase {
       //snapi(max);
 
       this.size.load(max).sub(min);
-      this.pos.load(min);
+      this.pos.zero();
+      //this.pos.load(min);
     }
 
     let found = 1;

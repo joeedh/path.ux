@@ -13375,8 +13375,8 @@ class AnimManager {
           i--;
 
           try {
-            if (t.onend) {
-              t.onend();
+            if (t.task.onend) {
+              t.task.onend();
             }
           } catch (error) {
             print_stack$1(error);
@@ -13394,6 +13394,7 @@ manager$1.start();
 class AbstractCommand {
   constructor() {
     this.cbs = [];
+    this.end_cbs = [];
   }
 
   start(animator, done) {
@@ -13444,7 +13445,7 @@ class GoToCommand extends AbstractCommand {
     let value = this.object[this.key];
 
     if (Array.isArray(value)) {
-      this.startValue = value.concat([]);
+      this.startValue = list$1(value);
     } else {
       this.startValue = value;
     }
@@ -13477,9 +13478,6 @@ class GoToCommand extends AbstractCommand {
       this.object[this.key] = this.startValue + (this.value - this.startValue) * t;
 
     }
-
-    console.log("-    ", this.time, animator.time - this.time);
-    console.log(this.object[this.key], this.startValue, this.value);
   }
 }
 
@@ -13508,6 +13506,12 @@ class Command {
 class Animator {
   constructor(owner, method = "update") {
     this.on_tick = this.on_tick.bind(this);
+    this.on_tick.onend = () => {
+      if (this.onend) {
+        this.onend();
+      }
+    };
+
     this.commands = [];
     this.owner = owner;
     this._done = false;
@@ -13545,8 +13549,13 @@ class Animator {
     return this;
   }
 
-  then(cb) {
+  while(cb) {
     this.commands[this.commands.length - 1].cbs.push(cb);
+    return this;
+  }
+
+  then(cb) {
+    this.commands[this.commands.length-1].end_cbs.push(cb);
     return this;
   }
 
@@ -13565,6 +13574,10 @@ class Animator {
   }
 
   on_tick() {
+    if (this._done) {
+      throw new Error("animation wasn't properly cleaned up");
+    }
+
     let dt = time_ms() - this.last;
     this.time += dt;
     this.last = time_ms();
@@ -13577,14 +13590,14 @@ class Animator {
     let cmd = this.commands[0];
     let done = false;
 
-    if (this.first) {
-      this.first = false;
-      console.log(cmd, cmd.start);
-      cmd.start(this, donecb);
-    }
-
     function donecb() {
       done = true;
+    }
+
+    if (this.first) {
+      this.first = false;
+      //console.log(cmd, cmd.start)
+      cmd.start(this, donecb);
     }
 
     try {
@@ -13594,7 +13607,22 @@ class Animator {
       print_stack$1(error);
     }
 
+    for (let cb of this.commands[0].cbs) {
+      try {
+        cb();
+      } catch (error) {
+        print_stack$1(error);
+      }
+    }
+
     if (done) {
+      for (let cb of this.commands[0].end_cbs) {
+        try {
+          cb();
+        } catch (error) {
+          print_stack$1(error);
+        }
+      }
       while (this.commands.length > 0) {
         this.commands.shift();
 
@@ -19288,7 +19316,7 @@ class AfterAspect {
 
     let this2 = this;
 
-    let method = owner[key] = function() {
+    let method = this._method = function() {
       let chain = this2.chain;
       let chain2 = this2.chain2;
 
@@ -19333,6 +19361,8 @@ class AfterAspect {
       return ret;
     };
 
+    this._method_bound = false;
+
     owner[key].after = this.after.bind(this);
     owner[key].once = this.once.bind(this);
     owner[key].remove = this.remove.bind(this);
@@ -19357,15 +19387,25 @@ class AfterAspect {
     return this.after(cb, node, true);
   }
 
+  _checkbind() {
+    if (!this._method_bound) {
+      this.owner[this.key] = this._method;
+    }
+  }
+
   before(cb, node, once) {
+    this._checkbind();
+
     if (cb === undefined) {
-      console.warn("invalid call to .after(); cb was undefined");
+        console.warn("invalid call to .after(); cb was undefined");
       return;
     }
     this.chain = [[cb, node, once]].concat(this.chain);
   }
 
   after(cb, node, once) {
+    this._checkbind();
+
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
       return;
@@ -19827,6 +19867,8 @@ window.styleScrollBars = styleScrollBars;
 class UIBase$1 extends HTMLElement {
   constructor() {
     super();
+
+    this._active_animations = [];
 
     //ref to Link element referencing Screen style node
     //Screen.update_intern sets the contents of this
@@ -21392,9 +21434,23 @@ class UIBase$1 extends HTMLElement {
     };
 
     let proxy = new Proxy(this, handler);
-    return new Animator(proxy);
+    let anim = new Animator(proxy);
+
+    anim.onend = () => {
+      this._active_animations.remove(anim);
+    };
+
+    this._active_animations.push(anim);
+    return anim;
   }
 
+  abortAnimations() {
+    for (let anim of list$1(this._active_animations)) {
+      anim.end();
+    }
+
+    this._active_animations = [];
+  }
   /**
    * Defines core attributes of the class
    *
@@ -22061,18 +22117,7 @@ class Button extends UIBase$2 {
     };
 
     this.addEventListener("mousedown", press, {captured : true, passive : false});
-
-    this.addEventListener("touchstart", (e) => {
-      press(e);
-      if (e.onclick) {
-        e.onclick(e);
-      }
-    }, {captured : true, passive : false});
-    this.addEventListener("touchend", depress);
-    this.addEventListener("touchcancel", depress);
-
     this.addEventListener("mouseup", depress, {captured : true, passive : false});
-
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)
         return;
@@ -30268,6 +30313,8 @@ class DropBox extends Button {
   }
 
   _onpress(e) {
+    console.warn("menu dropbox click", this._menu, e);
+
     if (this._menu !== undefined) {
       this._pressed = false;
       let menu = this._menu;
@@ -30277,8 +30324,6 @@ class DropBox extends Button {
     }
 
     this._build_menu();
-
-    console.log("menu dropbox click", this._menu);
 
     if (this._menu === undefined) {
       return;
@@ -38191,7 +38236,7 @@ class Screen$2 extends UIBase$1 {
       }
 
       if (done) return;
-      console.log("container end");
+      console.warn("container end");
 
       this.ctx.screen.removeEventListener("touchstart", touchpick, true);
       this.ctx.screen.removeEventListener("touchmove", touchpick, true);
@@ -39811,6 +39856,8 @@ class Screen$2 extends UIBase$1 {
         v.sub(min).mul(sz);
         //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
+
+      this.pos.zero();
     } else {
       for (let v of screenverts()) {
         //snap(v);
@@ -39822,7 +39869,8 @@ class Screen$2 extends UIBase$1 {
       //snapi(max);
 
       this.size.load(max).sub(min);
-      this.pos.load(min);
+      this.pos.zero();
+      //this.pos.load(min);
     }
 
     let found = 1;
