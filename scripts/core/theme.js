@@ -4,8 +4,8 @@ import * as util from '../util/util.js';
 export const DefaultTheme = {
   base : {
     themeVersion : 0.1,
-    mobileTextSizeMultiplier : 1.5,
-    mobileSizeMultiplier : 2, //does not include text
+    mobileTextSizeMultiplier : 1.0,
+    mobileSizeMultiplier : 1, //does not include text
 
     //used for by icon strips and the like
     "oneAxisPadding" : 6,

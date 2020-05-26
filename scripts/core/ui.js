@@ -52,6 +52,8 @@ export class Label extends ui_base.UIBase {
       div._labelx::selection {
         color: none;
         background: none;
+         -webkit-user-select:none;
+         user-select:none;
       }
     `;
 
