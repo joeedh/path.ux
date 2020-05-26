@@ -87,7 +87,9 @@ export class PropsEditor extends Editor {
 
     //t.button("Yay2", () => {});
     t = t.item("Five");
-    tview.item("Six", {icon : Icons.DELETE});
+    tview.item("Six", {icon : Icons.UNDO});
+    tview.item("Six", {icon : Icons.REDO});
+    tview.item("Six", {icon : Icons.UNDO});
   }
 
   copy() {
