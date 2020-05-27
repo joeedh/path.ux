@@ -618,7 +618,7 @@ export class set {
 
     if (!(key in this.keys)) {
       if (!ignore_existence) {
-        console.trace("Warning, item", item, "is not in set");
+        console.warn("Warning, item", item, "is not in set");
       }
       return;
     }
@@ -714,7 +714,7 @@ export class hashtable {
     var key2 = key[Symbol.keystr]();
 
     if (!(key2 in this._keys)) {
-      console.trace("Warning, key not in hashtable:", key, key2);
+      console.warn("Warning, key not in hashtable:", key, key2);
       return;
     }
 
@@ -737,7 +737,7 @@ export class hashtable {
     var key2 = key[Symbol.keystr]();
 
     if (!(key2 in this._keys)) {
-      console.trace("Warning, item not in hash", key, key2);
+      console.warn("Warning, item not in hash", key, key2);
       return undefined;
     }
 

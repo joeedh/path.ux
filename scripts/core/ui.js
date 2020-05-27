@@ -188,6 +188,25 @@ export class Container extends ui_base.UIBase {
     this.shadow.appendChild(style);
   }
 
+  saveData() {
+    return {
+      scrollTop  : this.scrollTop,
+      scrollLeft : this.scrollLeft
+    }
+  }
+
+
+  loadData(obj) {
+    if (!obj) return;
+
+    let x = obj.scrollLeft || 0;
+    let y = obj.scrollTop  || 0;
+
+    this.doOnce(() => {
+      this.scrollTo(x, y);
+    }, 12);
+  }
+
   init() {
     this.style["display"] = "flex";
     this.style["flex-direction"] = "column";

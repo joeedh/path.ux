@@ -4765,7 +4765,7 @@ class set$1 {
 
     if (!(key in this.keys)) {
       if (!ignore_existence) {
-        console$1.trace("Warning, item", item, "is not in set");
+        console$1.warn("Warning, item", item, "is not in set");
       }
       return;
     }
@@ -4861,7 +4861,7 @@ class hashtable {
     var key2 = key[Symbol.keystr]();
 
     if (!(key2 in this._keys)) {
-      console$1.trace("Warning, key not in hashtable:", key, key2);
+      console$1.warn("Warning, key not in hashtable:", key, key2);
       return;
     }
 
@@ -4884,7 +4884,7 @@ class hashtable {
     var key2 = key[Symbol.keystr]();
 
     if (!(key2 in this._keys)) {
-      console$1.trace("Warning, item not in hash", key, key2);
+      console$1.warn("Warning, item not in hash", key, key2);
       return undefined;
     }
 
@@ -19223,11 +19223,6 @@ const DefaultTheme = {
     height : 200
   },
 
-  dopesheet : {
-    treeWidth : 100,
-    treeHeight : 600
-  },
-
   colorpickerbutton : {
     defaultWidth  : 100,
     defaultHeight : 25,
@@ -19363,6 +19358,10 @@ class AfterAspect {
 
     this._method_bound = false;
 
+    method.after = this.after.bind(this);
+    method.once = this.once.bind(this);
+    method.remove = this.remove.bind(this);
+    
     owner[key].after = this.after.bind(this);
     owner[key].once = this.once.bind(this);
     owner[key].remove = this.remove.bind(this);
@@ -23728,6 +23727,25 @@ class Container extends UIBase$1 {
     `;
 
     this.shadow.appendChild(style);
+  }
+
+  saveData() {
+    return {
+      scrollTop  : this.scrollTop,
+      scrollLeft : this.scrollLeft
+    }
+  }
+
+
+  loadData(obj) {
+    if (!obj) return;
+
+    let x = obj.scrollLeft || 0;
+    let y = obj.scrollTop  || 0;
+
+    this.doOnce(() => {
+      this.scrollTo(x, y);
+    }, 12);
   }
 
   init() {

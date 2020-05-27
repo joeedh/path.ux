@@ -269,11 +269,6 @@ export const DefaultTheme = {
     height : 200
   },
 
-  dopesheet : {
-    treeWidth : 100,
-    treeHeight : 600
-  },
-
   colorpickerbutton : {
     defaultWidth  : 100,
     defaultHeight : 25,
