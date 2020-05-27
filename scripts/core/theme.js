@@ -129,7 +129,7 @@ export const DefaultTheme = {
   menu : {
     MenuBG : "rgba(250, 250, 250, 1.0)",
     MenuHighlight : "rgba(155, 220, 255, 1.0)",
-
+    MenuSpacing : 0,
     MenuText : new CSSFont({
       size     : 12,
       color    : "rgba(25, 25, 25, 1.0)",

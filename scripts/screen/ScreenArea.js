@@ -577,6 +577,7 @@ export class Area extends ui_base.UIBase {
 
     if (util.isMobile()||cconst.addHelpPickers) {
       this.helppicker = row.helppicker();
+      this.helppicker.iconsheet = 0;
     }
 
     if (add_note_area) {

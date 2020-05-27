@@ -82,6 +82,13 @@ export class ThemeEditor extends Container {
             do_onchange(key, k);
           }
           cw.label = k;
+        } else {
+          let box = col.textbox();
+          box.onchange = () => {
+            theme[key][k] = box.text;
+            do_onchange(key, k);
+          }
+          box.text = v;
         }
       } else if (typeof v === "number") {
         let slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
@@ -114,9 +121,10 @@ export class ThemeEditor extends Container {
 
         let cw = panel2.colorbutton();
         cw.label = "color";
-        cw.setRGBA(css2color(v));
+        cw.setRGBA(css2color(v.color));
         cw.onchange = () => {
-          v.color = color2css(v.color);
+          v.color = color2css(cw.rgba);
+          do_onchange(key, k);
         }
 
         let slider = panel2.slider(undefined, "size", v.size);

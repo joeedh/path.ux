@@ -971,6 +971,7 @@ export class ColorPickerButton extends UIBase {
 
     let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
     widget._init();
+    widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
 
     widget.style["padding"] = "20px";
 

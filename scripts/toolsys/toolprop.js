@@ -90,6 +90,10 @@ export class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
+  report() {
+    console.warn(...arguments);
+  }
+
   _fire(type, arg1, arg2) {
     if (this.callbacks[type] === undefined) {
       return;
@@ -191,7 +195,7 @@ export class ToolProperty extends ToolPropertyIF {
     value = Math.log(Math.abs(value) + 1.0) / Math.log(logBase);
     value = Math.max(value, step);
 
-    console.log(util.termColor("STEP", "red"), value);
+    this.report(util.termColor("STEP", "red"), value);
     return value;
   }
 
@@ -368,7 +372,7 @@ export class _NumberPropertyBase extends ToolProperty {
   }
 
   get ui_range() {
-    console.warn("NumberProperty.ui_range is deprecated");
+    this.report("NumberProperty.ui_range is deprecated");
     return this.uiRange;
   }
 
@@ -391,7 +395,7 @@ export class _NumberPropertyBase extends ToolProperty {
   }
 
   set ui_range(val) {
-    console.warn("NumberProperty.ui_range is deprecated");
+    this.report("NumberProperty.ui_range is deprecated");
     this.uiRange = val;
   }
 
@@ -690,9 +694,9 @@ export class EnumProperty extends ToolProperty {
   setValue(val) {
     if (!(val in this.values) && (val in this.keys))
       val = this.keys[val];
-    
+
     if (!(val in this.values)) {
-      console.warn("Invalid value for enum!", val, this.values);
+      this.report("Invalid value for enum!", val, this.values);
       return;
     }
     
@@ -719,8 +723,7 @@ export class FlagProperty extends EnumProperty {
     this.data = bitmask;
 
     //do not trigger EnumProperty's setValue
-    super.setValue(bitmask);
-    //ToolProperty.prototype.setValue.call(this, bitmask);
+    ToolProperty.prototype.setValue.call(this, bitmask);
     return this;
   }
 
@@ -979,7 +982,7 @@ export class ListProperty extends ToolProperty {
       } else if (item instanceof prop.constructor) {
         item.copyTo(prop);
       } else {
-        console.log(item);
+        this.report(item);
         throw new Error("invalid value " + item);
       }
     }
@@ -1067,7 +1070,7 @@ export class StringSetProperty extends ToolProperty {
 
     if (bad) {
       if (soft_fail) {
-        console.warn("Invalid argument to StringSetProperty.prototype.setValue() " + values);
+        this.report("Invalid argument to StringSetProperty.prototype.setValue() " + values);
         return;
       } else {
         throw new Error("Invalid argument to StringSetProperty.prototype.setValue() " + values);
@@ -1083,7 +1086,7 @@ export class StringSetProperty extends ToolProperty {
 
       if (!(values in this.values)) {
         if (soft_fail) {
-          console.warn(`"${values}" is not in this StringSetProperty`);
+          this.report(`"${values}" is not in this StringSetProperty`);
           return;
         } else {
           throw new Error(`"${values}" is not in this StringSetProperty`);
@@ -1107,7 +1110,7 @@ export class StringSetProperty extends ToolProperty {
       for (let item of data) {
         if (!(item in this.values)) {
           if (soft_fail) {
-            console.warn(`"${item}" is not in this StringSetProperty`);
+            this.report(`"${item}" is not in this StringSetProperty`);
             continue;
           } else {
             throw new Error(`"${item}" is not in this StringSetProperty`);

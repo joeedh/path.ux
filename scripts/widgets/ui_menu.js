@@ -7,7 +7,7 @@ import * as ui_base from '../core/ui_base.js';
 import * as events from '../util/events.js';
 import * as simple_toolsys from '../toolsys/simple_toolsys.js';
 import * as toolprop from '../toolsys/toolprop.js';
-import {Button} from "./ui_widgets.js";
+import {Button} from "./ui_button.js";
 import {DomEventTypes} from '../util/events.js';
 
 import {HotKey, keymap} from '../util/simple_events.js';
@@ -61,57 +61,8 @@ export class Menu extends UIBase {
               justify-items : start;
     */
 
-    let pad1 = util.isMobile() ? 5 : 0;
-
-    let style = document.createElement("style");
-    style.textContent = `
-        .menucon {
-          position:absolute;
-          float:left;
-          
-          display: block;
-          -moz-user-focus: normal;
-        }
-        
-        ul.menu {
-          display        : flex;
-          flex-direction : column;
-          
-          margin : 0px;
-          padding : 0px;
-          border : ${this.getDefault("MenuBorder")};
-          -moz-user-focus: normal;
-          background-color: ${this.getDefault("MenuBG")};
-        }
-        
-        .menuitem {
-          display : block;
-          
-          list-style-type:none;
-          -moz-user-focus: normal;
-          
-          margin : 0;
-          padding : 0px;
-          padding-right: 16px;
-          padding-left: 16px;
-          padding-top : ${pad1}px;
-          padding-bottom : ${pad1}px;
-          font : ${this.getDefault("MenuText").genCSS()};
-          background-color: ${this.getDefault("MenuBG")};
-        }
-        
-        .menuseparator {
-          ${this.getDefault("MenuSeparator")}
-        }
-        
-        .menuitem:focus {
-          border : none;
-          outline : none;
-          
-          background-color: ${this.getDefault("MenuHighlight")};
-          -moz-user-focus: normal;
-        }
-      `;
+    let style = this.menustyle = document.createElement("style");
+    this.buildStyle();
 
     /*
 
@@ -193,6 +144,11 @@ export class Menu extends UIBase {
         this.onclose();
       }
     }
+  }
+
+  init() {
+    super.init();
+    this.setCSS();
   }
 
   close() {
@@ -640,8 +596,68 @@ export class Menu extends UIBase {
     return li;
   }
 
+  buildStyle() {
+    let pad1 = util.isMobile() ? 2 : 0;
+    pad1 += this.getDefault("MenuSpacing");
+
+    this.menustyle.textContent = `
+        .menucon {
+          position:absolute;
+          float:left;
+          
+          display: block;
+          -moz-user-focus: normal;
+        }
+        
+        ul.menu {
+          display        : flex;
+          flex-direction : column;
+          
+          margin : 0px;
+          padding : 0px;
+          border : ${this.getDefault("MenuBorder")};
+          -moz-user-focus: normal;
+          background-color: ${this.getDefault("MenuBG")};
+          color : ${this.getDefault("MenuText").color};
+        }
+        
+        .menuitem {
+          display : block;
+          
+          list-style-type:none;
+          -moz-user-focus: normal;
+          
+          margin : 0;
+          padding : 0px;
+          padding-right: 16px;
+          padding-left: 16px;
+          padding-top : ${pad1}px;
+          padding-bottom : ${pad1}px;
+          color : ${this.getDefault("MenuText").color};
+          font : ${this.getDefault("MenuText").genCSS()};
+          background-color: ${this.getDefault("MenuBG")};
+        }
+        
+        .menuseparator {
+          ${this.getDefault("MenuSeparator")}
+        }
+        
+        .menuitem:focus {
+          border : none;
+          outline : none;
+          
+          background-color: ${this.getDefault("MenuHighlight")};
+          color : ${this.getDefault("MenuText").color};
+          -moz-user-focus: normal;
+        }
+      `;
+
+  }
+
   setCSS() {
     super.setCSS();
+
+    this.buildStyle();
 
     this.container.style["color"] = this.getDefault("MenuText").color;
     this.style["color"] = this.getDefault("MenuText").color;
@@ -778,6 +794,13 @@ export class DropBox extends Button {
   update() {
     super.update();
 
+    let key = this.getDefault("dropTextBG");
+    if (key !== this._last_dbox_key) {
+      this._last_dbox_key = key;
+      this.setCSS();
+      this._redraw();
+    }
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
@@ -851,6 +874,8 @@ export class DropBox extends Button {
 
     if (this._menu !== undefined) {
       this._pressed = false;
+      this._redraw();
+
       let menu = this._menu;
       this._menu = undefined;
       menu.close();
@@ -872,6 +897,8 @@ export class DropBox extends Button {
 
     let onclose = this._menu.onclose;
     this._menu.onclose = () => {
+      console.log("menu onclose");
+
       this._pressed = false;
       this._redraw();
 
@@ -1313,28 +1340,32 @@ export function createMenu(ctx, title, templ) {
   let id = 0;
   let cbs = {};
 
-  for (let item of templ) {
-    if (typeof item == "string") {
+  let doItem = (item) => {
+    if (item !== undefined && item instanceof Menu) {
+      menu.addItem(item);
+    } else if (typeof item == "string") {
       let def;
       try {
         def = ctx.api.getToolDef(item);
       } catch (error) {
         menu.addItem("(tool path error)", id++);
-        continue;
+        return;
       }
-      //addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
+
+      //3Extra(text, id=undefined, hotkey, icon=-1, add=true) {
       menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
-      let this2 = this;
 
       cbs[id] = (function (toolpath) {
         return function () {
-          this2.ctx.api.execTool(this2.ctx, toolpath);
+          ctx.api.execTool(ctx, toolpath);
         }
       })(item);
 
       id++;
     } else if (item === SEP) {
       menu.seperator();
+    } else if (typeof item === "function" || item instanceof Function) {
+      doItem(item());
     } else if (item instanceof Array) {
       let hotkey = item.length > 2 ? item[2] : undefined;
       let icon = item.length > 3 ? item[3] : undefined;
@@ -1354,6 +1385,10 @@ export function createMenu(ctx, title, templ) {
 
       id++;
     }
+  }
+
+  for (let item of templ) {
+    doItem(item);
   }
 
   menu.onselect = (id) => {

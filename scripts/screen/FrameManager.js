@@ -432,7 +432,8 @@ export class Screen extends ui_base.UIBase {
       ret.style["z-index"] = z;
     }
 
-    this.doOnce(cb);
+    setTimeout(cb, 250);
+    //this.doOnce(cb);
 
     return ret;
   }

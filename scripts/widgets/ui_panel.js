@@ -219,7 +219,7 @@ export class PanelFrame extends ColumnFrame {
     key += this.getDefault("BoxBorder") + this.getDefault("BoxLineWidth");
     key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
-    key += this.getDefault("Background");
+    key += this.getDefault("Background") + this.getDefault("border-style");
 
     if (key !== this._last_key) {
       this._last_key = key;

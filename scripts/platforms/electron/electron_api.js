@@ -14,6 +14,8 @@ function patchDropBox() {
     if (this._menu !== undefined) {
       this._menu.close();
       this._menu = undefined;
+      this._pressed = false;
+      this._redraw();
       return;
     }
 
@@ -75,6 +77,7 @@ function patchDropBox() {
       x: x,
       y: y,
       callback: () => {
+
         if (this._menu) {
           this._menu.onclose();
         }
@@ -102,7 +105,18 @@ export function checkInit() {
     setInterval(on_tick, 350);
   }
 }
+
+export let iconcache = {};
+function makeIconKey(icon, iconsheet, invertColors) {
+  return "" + icon + ":" + iconsheet + ":" + invertColors;
+}
+
 export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
+  //let key = makeIconKey(icon, iconsheet, invertColors);
+  //if (key in iconcache) {
+  //  return iconcache[key];
+  //}
+
   let icongen = require("./icogen.js");
 
   window.icongen = icongen;
@@ -184,12 +198,24 @@ export function buildElectronMenu(menu) {
 
 
   let buildItem = (item) => {
+    if (item._isMenu) {
+      let menu2 = item._menu;
+
+      return new ElectronMenuItem({
+        submenu : buildElectronMenu(item._menu),
+        label : menu2.getAttribute("title")
+      });
+    }
+
+
     let hotkey = item.hotkey;
     let icon = item.icon;
-    let label = item.label;
+    let label = ""+item.label;
 
-    if (hotkey) {
+    if (hotkey && typeof hotkey !== "string") {
       hotkey = buildElectronHotkey(hotkey);
+    } else {
+      hotkey = ""+hotkey;
     }
 
     if (icon < 0) {
@@ -197,7 +223,7 @@ export function buildElectronMenu(menu) {
     }
 
     let args = {
-      id          : item._id,
+      id          : ""+item._id,
       label       : label,
       accelerator : hotkey,
       icon        : icon ? getNativeIcon(icon) : undefined,
@@ -209,7 +235,10 @@ export function buildElectronMenu(menu) {
 
     return new ElectronMenuItem(args);
   }
+
   for (let item of menu.items) {
+    console.log("----->", item._isMenu, item)
+    //buildItem(item);
     emenu.append(buildItem(item));
 
   }
