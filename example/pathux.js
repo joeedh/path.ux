@@ -14439,6 +14439,10 @@ class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
+  report() {
+    console.warn(...arguments);
+  }
+
   _fire(type, arg1, arg2) {
     if (this.callbacks[type] === undefined) {
       return;
@@ -14540,7 +14544,7 @@ class ToolProperty extends ToolPropertyIF {
     value = Math.log(Math.abs(value) + 1.0) / Math.log(logBase);
     value = Math.max(value, step);
 
-    console.log(termColor("STEP", "red"), value);
+    this.report(termColor("STEP", "red"), value);
     return value;
   }
 
@@ -14717,7 +14721,7 @@ class _NumberPropertyBase extends ToolProperty {
   }
 
   get ui_range() {
-    console.warn("NumberProperty.ui_range is deprecated");
+    this.report("NumberProperty.ui_range is deprecated");
     return this.uiRange;
   }
 
@@ -14740,7 +14744,7 @@ class _NumberPropertyBase extends ToolProperty {
   }
 
   set ui_range(val) {
-    console.warn("NumberProperty.ui_range is deprecated");
+    this.report("NumberProperty.ui_range is deprecated");
     this.uiRange = val;
   }
 
@@ -15039,9 +15043,9 @@ class EnumProperty$1 extends ToolProperty {
   setValue(val) {
     if (!(val in this.values) && (val in this.keys))
       val = this.keys[val];
-    
+
     if (!(val in this.values)) {
-      console.warn("Invalid value for enum!", val, this.values);
+      this.report("Invalid value for enum!", val, this.values);
       return;
     }
     
@@ -15068,8 +15072,7 @@ class FlagProperty extends EnumProperty$1 {
     this.data = bitmask;
 
     //do not trigger EnumProperty's setValue
-    super.setValue(bitmask);
-    //ToolProperty.prototype.setValue.call(this, bitmask);
+    ToolProperty.prototype.setValue.call(this, bitmask);
     return this;
   }
 
@@ -15328,7 +15331,7 @@ class ListProperty$1 extends ToolProperty {
       } else if (item instanceof prop.constructor) {
         item.copyTo(prop);
       } else {
-        console.log(item);
+        this.report(item);
         throw new Error("invalid value " + item);
       }
     }
@@ -15416,7 +15419,7 @@ class StringSetProperty$1 extends ToolProperty {
 
     if (bad) {
       if (soft_fail) {
-        console.warn("Invalid argument to StringSetProperty.prototype.setValue() " + values);
+        this.report("Invalid argument to StringSetProperty.prototype.setValue() " + values);
         return;
       } else {
         throw new Error("Invalid argument to StringSetProperty.prototype.setValue() " + values);
@@ -15432,7 +15435,7 @@ class StringSetProperty$1 extends ToolProperty {
 
       if (!(values in this.values)) {
         if (soft_fail) {
-          console.warn(`"${values}" is not in this StringSetProperty`);
+          this.report(`"${values}" is not in this StringSetProperty`);
           return;
         } else {
           throw new Error(`"${values}" is not in this StringSetProperty`);
@@ -15456,7 +15459,7 @@ class StringSetProperty$1 extends ToolProperty {
       for (let item of data) {
         if (!(item in this.values)) {
           if (soft_fail) {
-            console.warn(`"${item}" is not in this StringSetProperty`);
+            this.report(`"${item}" is not in this StringSetProperty`);
             continue;
           } else {
             throw new Error(`"${item}" is not in this StringSetProperty`);
@@ -19083,7 +19086,7 @@ const DefaultTheme = {
   menu : {
     MenuBG : "rgba(250, 250, 250, 1.0)",
     MenuHighlight : "rgba(155, 220, 255, 1.0)",
-
+    MenuSpacing : 0,
     MenuText : new CSSFont({
       size     : 12,
       color    : "rgba(25, 25, 25, 1.0)",
@@ -19361,7 +19364,7 @@ class AfterAspect {
     method.after = this.after.bind(this);
     method.once = this.once.bind(this);
     method.remove = this.remove.bind(this);
-    
+
     owner[key].after = this.after.bind(this);
     owner[key].once = this.once.bind(this);
     owner[key].remove = this.remove.bind(this);
@@ -23549,6 +23552,1407 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
   loadFile: loadFile
 });
 
+"use strict";
+
+let EnumProperty$6 = EnumProperty$1,
+  PropTypes$5 = PropTypes;
+
+let UIBase$5 = UIBase$1,
+  PackFlags$4 = PackFlags,
+  IconSheets$4 = IconSheets;
+
+function getpx(css) {
+  return parseFloat(css.trim().replace("px", ""))
+}
+
+class Menu extends UIBase$5 {
+  constructor() {
+    super();
+
+    this.items = [];
+
+    this._ignoreFocusEvents = false;
+    this.closeOnMouseUp = true;
+
+    this.itemindex = 0;
+    this.closed = false;
+    this.started = false;
+    this.activeItem = undefined;
+
+    this.overrideDefault("DefaultText", this.getDefault("MenuText"));
+
+    //we have to make a container for any submenus to
+    this.container = document.createElement("span");
+    this.container.style["display"] = "flex";
+    this.container.style["color"] = this.getDefault("MenuText").color;
+
+    //this.container.style["background-color"] = "red";
+    this.container.setAttribute("class", "menucon");
+
+    this.dom = document.createElement("ul");
+    this.dom.setAttribute("class", "menu");
+    /*
+              place-items: start start;
+              flex-wrap : nowrap;
+              align-content : start;
+              place-content : start;
+              justify-content : start;
+
+              align-items : start;
+              place-items : start;
+              justify-items : start;
+    */
+
+    let style = this.menustyle = document.createElement("style");
+    this.buildStyle();
+
+    /*
+
+        .menuitem:focus {
+        }
+
+
+
+    */
+    this.dom.setAttribute("tabindex", -1);
+
+    //let's have the menu wrangler handle key events
+
+    this.container.addEventListener("mouseleave", (e) => {
+      console.log("menu out");
+      this.close();
+    }, false);
+
+    //this.container.appendChild(this.dom);
+
+    this.shadow.appendChild(style);
+    this.shadow.appendChild(this.container);
+  }
+
+  float(x, y, zindex=undefined) {
+    console.log("menu test!");
+
+    let dpi = this.getDPI();
+    let rect = this.dom.getClientRects();
+    let maxx = this.getWinWidth()-10;
+    let maxy = this.getWinHeight()-10;
+
+    console.log(rect.length > 0 ? rect[0] : undefined);
+
+    if (rect.length > 0) {
+      rect = rect[0];
+      console.log(y + rect.height);
+      if (y + rect.height > maxy) {
+        console.log("greater");
+        y = maxy - rect.height - 1;
+      }
+
+      if (x + rect.width > maxx) {
+        console.log("greater");
+        x = maxx - rect.width - 1;
+      }
+    }
+
+    super.float(x, y, 50);
+  }
+
+  click() {
+    if (this.activeItem == undefined)
+      return;
+
+    if (this.activeItem !== undefined && this.activeItem._isMenu)
+    //ignore
+      return;
+
+    if (this.onselect) {
+      try {
+        console.log(this.activeItem._id, "-----");
+        this.onselect(this.activeItem._id);
+      } catch (error) {
+        print_stack$1(error);
+        console.log("Error in menu callback");
+      }
+    }
+
+    console.log("menu select");
+    this.close();
+  }
+
+  _ondestroy() {
+    if (this.started) {
+      menuWrangler.popMenu(this);
+
+      if (this.onclose) {
+        this.onclose();
+      }
+    }
+  }
+
+  init() {
+    super.init();
+    this.setCSS();
+  }
+
+  close() {
+    //XXX
+    //return;
+    if (this.closed) {
+      return;
+    }
+
+    this.closed = true;
+
+    if (this.started) {
+      menuWrangler.popMenu(this);
+    }
+
+    this.started = false;
+
+    //if (this._popup.parentNode !== undefined) {
+    //  this._popup.remove();
+    //}
+    if (this._popup) {
+      this._popup.end();
+      this._popup = undefined;
+    }
+
+    this.remove();
+    this.dom.remove();
+
+    if (this.onclose) {
+      this.onclose(this);
+    }
+  }
+
+  _select(dir, focus=true) {
+    if (this.activeItem === undefined) {
+      for (let item of this.items) {
+        if (!item.hidden) {
+          this.setActive(item, focus);
+          break;
+        }
+      }
+    } else {
+      let i = this.items.indexOf(this.activeItem);
+      let item = this.activeItem;
+
+      do {
+        i = (i + dir + this.items.length) % this.items.length;
+        item = this.items[i];
+
+        if (!item.hidden) {
+          break;
+        }
+      } while (item !== this.activeItem);
+
+      this.setActive(item, focus); 
+    }
+
+    if (this.hasSearchBox) {
+      this.activeItem.scrollIntoView();
+    }
+  }
+
+  selectPrev(focus=true) {
+    return this._select(-1, focus);
+  }
+
+  selectNext(focus=true) {
+    return this._select(1, focus);
+  }
+
+  static define() {return {
+    tagname : "menu-x",
+    style   : "menu"
+  };}
+
+  start_fancy(prepend, setActive=true) {
+    return this.startFancy(prepend, setActive);
+  }
+
+  setActive(item, focus=true) {
+    if (this.activeItem === item) {
+      return;
+    }
+
+    if (this.activeItem) {
+      this.activeItem.style["background-color"] = this.getDefault("MenuBG");
+
+      if (focus) {
+        this.activeItem.blur();
+      }
+    }
+
+    if (item) {
+      item.style["background-color"] = this.getDefault("MenuHighlight");
+
+      if (focus) {
+        item.focus();
+      }
+    }
+    
+    this.activeItem = item;
+  }
+
+  startFancy(prepend, setActive=true) {
+    console.warn("menu searchbox mode start");
+
+    this.hasSearchBox = true;
+    this.started = true;
+    menuWrangler.pushMenu(this);
+
+    let dom2 = document.createElement("div");
+    //let dom2 = document.createElement("div");
+
+    this.dom.setAttribute("class", "menu");
+    dom2.setAttribute("class", "menu");
+
+    let sbox = this.textbox = document.createElement("textbox-x");
+    this.textbox.parentWidget = this;
+    
+    dom2.appendChild(sbox);
+    dom2.appendChild(this.dom);
+    
+    dom2.style["height"] = "300px";
+    this.dom.style["height"] = "300px";
+    this.dom.style["overflow"] = "scroll";
+
+    if (prepend) {
+      this.container.prepend(dom2);
+    } else {
+      this.container.appendChild(dom2);
+    }
+
+    dom2.parentWidget = this.container;
+
+    sbox.focus();
+    sbox.onchange = () => {
+      let t = sbox.text.trim().toLowerCase();
+
+      console.log("applying search", t);
+
+      for (let item of this.items) {
+        item.hidden = true;
+        item.remove();
+      }
+
+      for (let item of this.items) {
+        let ok = t == "";
+        ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
+
+        if (ok) {
+          item.hidden = false;
+          this.dom.appendChild(item);
+        } else if (item === this.activeItem) {
+          this.selectNext(false);
+        }
+        //item.hidden = !ok;
+      }
+    };
+
+    sbox.addEventListener("keydown", (e) => {
+      console.log(e.keyCode);
+      switch (e.keyCode) {
+        case 27: //escape key
+          this.close();
+          break;
+        case 13: //enter key
+          this.click(this.activeItem);
+          this.close();
+          break;
+      }
+    });
+  }
+
+  start(prepend=false, setActive=true) {
+    this.started = true;
+    this.focus();
+    menuWrangler.pushMenu(this);
+
+    if (this.items.length > 15) {
+      return this.start_fancy(prepend, setActive);
+    }
+
+    if (prepend) {
+      this.container.prepend(this.dom);
+    } else {
+      this.container.appendChild(this.dom);
+    }
+
+    if (!setActive)
+      return;
+
+    window.setTimeout(() => {
+      //select first child
+      //TODO: cache last child entry
+
+      if (this.activeItem === undefined) {
+        this.activeItem = this.dom.childNodes[0];
+      }
+
+      if (this.activeItem === undefined) {
+        return;
+      }
+
+      this.activeItem.focus();
+    }, 0);
+  }
+
+  addItemExtra(text, id=undefined, hotkey, icon=-1, add=true, tooltip=undefined) {
+    let dom = document.createElement("span");
+
+    dom.style["display"] = "inline-flex";
+
+    dom.hotkey = hotkey;
+    dom.icon = icon;
+
+    let icon_div;
+
+    if (1) { //icon >= 0) {
+      icon_div = makeIconDiv(icon, IconSheets$4.SMALL);
+    } else {
+      let tilesize = iconmanager.getTileSize(IconSheets$4.SMALL);
+
+      //tilesize *= window.devicePixelRatio;
+
+      icon_div = document.createElement("span");
+      icon_div.style["padding"] = icon_div.style["margin"] = "0px";
+      icon_div.style["width"] = tilesize + "px";
+      icon_div.style["height"] = tilesize + "px";
+    }
+
+    icon_div.style["display"] = "inline-flex";
+    icon_div.style["margin-right"] = "1px";
+    icon_div.style["align"] = "left";
+
+    let span = document.createElement("span");
+
+    //stupid css doesn't get width right. . .
+    span.style["font"] = getFont(this, undefined, "MenuText");
+
+    let dpi = this.getDPI();
+    let tsize = this.getDefault("MenuText").size;
+    //XXX proportional font fail
+
+    //XXX stupid!
+    let canvas = document.createElement("canvas");
+    let g = canvas.getContext("2d");
+
+    g.font = span.style["font"];
+
+    let rect = span.getClientRects();
+
+    let twid = Math.ceil(g.measureText(text).width);
+    let hwid;
+    if (hotkey) {
+      dom.hotkey = hotkey;
+      g.font = getFont(this, undefined, "HotkeyText");
+      hwid = Math.ceil(g.measureText(hotkey).width);
+      twid += hwid + 8;
+    }
+
+    //let twid = Math.ceil(text.trim().length * tsize / dpi);
+
+    span.innerText = text;
+
+    span.style["word-wrap"] = "none";
+    span.style["white-space"] = "pre";
+    span.style["overflow"] = "hidden";
+    span.style["text-overflow"] = "clip";
+
+    span.style["width"] = ~~(twid) + "px";
+    span.style["padding"] = "0px";
+    span.style["margin"] = "0px";
+
+    dom.style["width"] = "100%";
+
+    dom.appendChild(icon_div);
+    dom.appendChild(span);
+
+    if (hotkey) {
+      let hotkey_span = document.createElement("span");
+      hotkey_span.innerText = hotkey;
+      hotkey_span.style["margin-left"] = "0px";
+      hotkey_span.style["margin-right"] = "0px";
+      hotkey_span.style["margin"] = "0px";
+      hotkey_span.style["padding"] = "0px";
+
+      let al = "right";
+
+      hotkey_span.style["font"] = getFont(this, undefined, "HotkeyText");
+      hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
+
+      //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
+      hotkey_span.style["width"] = "100%";
+
+      hotkey_span.style["text-align"] = al;
+      hotkey_span.style["flex-align"] = al;
+      //hotkey_span.style["display"] = "inline";
+      hotkey_span.style["float"] = "right";
+      hotkey_span["flex-wrap"] = "nowrap";
+
+      dom.appendChild(hotkey_span);
+    }
+
+    let ret = this.addItem(dom, id, add);
+
+    ret.hotkey = hotkey;
+    ret.icon = icon;
+    ret.label = text ? text : ret.innerText;
+
+    if (tooltip) {
+      ret.title = tooltip;
+    }
+
+    return ret;
+  }
+
+  //item can be menu or text
+  addItem(item, id, add=true) {
+    id = id === undefined ? item : id;
+    let text = item;
+
+    if (typeof item === "string" || item instanceof String) {
+      let dom = document.createElement("dom");
+      dom.textContent = item;
+      item = dom;
+      //return this.addItemExtra(item, id);
+    } else {
+      text = item.textContent;
+    }
+
+    let li = document.createElement("li");
+
+    li.setAttribute("tabindex", this.itemindex++);
+    li.setAttribute("class", "menuitem");
+
+    if (item instanceof Menu) {
+      console.log("submenu!");
+
+      let dom = this.addItemExtra(""+item.title, id, "", -1, false);
+
+      //dom = document.createElement("div");
+      //dom.innerText = ""+item.title;
+
+      //dom.style["display"] = "inline-block";
+      li.style["width"] = "100%";
+      li.appendChild(dom);
+
+      li._isMenu = true;
+      li._menu = item;
+
+      item.hidden = false;
+      item.container = this.container;
+    } else {
+      li._isMenu = false;
+      li.appendChild(item);
+    }
+
+    li._id = id;
+
+    this.items.push(li);
+
+    li.label = text ? text : li.innerText.trim();
+
+    if (add) {
+      li.addEventListener("click", (e) => {
+        //console.log("menu click!");
+
+        if (this.activeItem !== undefined && this.activeItem._isMenu) {
+          //console.log("menu ignore");
+          //ignore
+          return n;
+        }
+
+        this.click();
+      });
+
+      li.addEventListener("blur", (e) => {
+        if (this._ignoreFocusEvents) {
+          return;
+        }
+
+        //console.log("blur", li.getAttribute("tabindex"));
+        if (this.activeItem && !this.activeItem._isMenu) {
+          this.setActive(undefined, false);
+        }
+      });
+
+      let onfocus = (e) => {
+        if (this._ignoreFocusEvents) {
+          return;
+        }
+
+        if (this.activeItem !== undefined && this.activeItem._isMenu) {
+          let active = this.activeItem;
+
+          window.setTimeout(() => {
+            if (this.activeItem && this.activeItem !== active) {
+              active._menu.close();
+            }
+          }, 10);
+        }
+        if (li._isMenu) {
+          li._menu.onselect = (item) => {
+            //console.log("submenu select", item);
+            this.onselect(item);
+            this.close();
+          };
+
+          li._menu.start(false, false);
+        }
+
+        this.setActive(li, false);
+      };
+
+      li.addEventListener("touchend", (e) => {
+        onfocus(e);
+
+        if (this.activeItem !== undefined && this.activeItem._isMenu) {
+          console.log("menu ignore");
+          //ignore
+          return;
+        }
+
+        this.click();
+      });
+
+      li.addEventListener("focus", (e) => {
+        onfocus(e);
+      });
+
+      li.addEventListener("touchmove", (e) => {
+        //console.log("menu touchmove");
+        onfocus(e);
+        li.focus();
+      });
+
+      li.addEventListener("mouseenter", (e) => {
+        //console.log("menu mouse enter");
+        li.focus();
+      });
+
+      this.dom.appendChild(li);
+    }
+
+    return li;
+  }
+
+  buildStyle() {
+    let pad1 = isMobile() ? 2 : 0;
+    pad1 += this.getDefault("MenuSpacing");
+
+    this.menustyle.textContent = `
+        .menucon {
+          position:absolute;
+          float:left;
+          
+          display: block;
+          -moz-user-focus: normal;
+        }
+        
+        ul.menu {
+          display        : flex;
+          flex-direction : column;
+          
+          margin : 0px;
+          padding : 0px;
+          border : ${this.getDefault("MenuBorder")};
+          -moz-user-focus: normal;
+          background-color: ${this.getDefault("MenuBG")};
+          color : ${this.getDefault("MenuText").color};
+        }
+        
+        .menuitem {
+          display : block;
+          
+          list-style-type:none;
+          -moz-user-focus: normal;
+          
+          margin : 0;
+          padding : 0px;
+          padding-right: 16px;
+          padding-left: 16px;
+          padding-top : ${pad1}px;
+          padding-bottom : ${pad1}px;
+          color : ${this.getDefault("MenuText").color};
+          font : ${this.getDefault("MenuText").genCSS()};
+          background-color: ${this.getDefault("MenuBG")};
+        }
+        
+        .menuseparator {
+          ${this.getDefault("MenuSeparator")}
+        }
+        
+        .menuitem:focus {
+          border : none;
+          outline : none;
+          
+          background-color: ${this.getDefault("MenuHighlight")};
+          color : ${this.getDefault("MenuText").color};
+          -moz-user-focus: normal;
+        }
+      `;
+
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.buildStyle();
+
+    this.container.style["color"] = this.getDefault("MenuText").color;
+    this.style["color"] = this.getDefault("MenuText").color;
+  }
+
+  seperator() {
+    let bar = document.createElement("div");
+    bar.setAttribute("class", "menuseparator");
+
+
+    this.dom.appendChild(bar);
+
+    return this;
+  }
+
+  menu(title) {
+    let ret = document.createElement("menu-x");
+
+    ret.setAttribute("title", title);
+    this.addItem(ret);
+
+    return ret;
+  }
+
+  calcSize() {
+
+  }
+}
+
+Menu.SEP = Symbol("menu seperator");
+UIBase$5.register(Menu);
+
+class DropBox extends Button {
+  constructor() {
+    super();
+
+    this._searchMenuMode = false;
+
+    this.r = 5;
+    this._menu = undefined;
+    this._auto_depress = false;
+    //this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
+
+    this._onpress = this._onpress.bind(this);
+  }
+
+  init() {
+    super.init();
+    this.updateWidth();
+  }
+
+  get searchMenuMode() {
+    return this._searchMenuMode;
+  }
+
+  set searchMenuMode(v) {
+    this._searchMenuMode = v;
+
+    console.warn("searchMenuMode was set", this);
+  }
+
+
+  setCSS() {
+    //do not call parent classes's setCSS here
+    this.style["user-select"] = "none";
+    this.dom.style["user-select"] = "none";
+  }
+
+  updateWidth() {
+    //let ret = super.updateWidth(10);
+    let dpi = this.getDPI();
+
+    let ts = this.getDefault("DefaultText").size;
+    let tw = this.g.measureText(this._genLabel()).width/dpi;
+    //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
+    tw = ~~tw;
+
+    tw += 15;
+
+    if (!this.getAttribute("simple")) {
+      tw += 35;
+    }
+
+    if (tw !== this._last_w) {
+      this._last_w = tw;
+      this.dom.style["width"] = tw + "px";
+      this.style["width"] = tw + "px";
+      this.width = tw;
+
+      this.overrideDefault("defaultWidth", tw);
+      this._repos_canvas();
+      this._redraw();
+    }
+
+    return 0;
+  }
+
+
+  updateDataPath() {
+    if (!this.ctx || !this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (val === undefined) {
+      this.disabled = true;
+      return;
+    } else {
+      this.disabled = false;
+    }
+
+    if (this.prop !== undefined) {
+      prop = this.prop;
+    }
+
+    let name = this.getAttribute("name");
+
+    if (prop.type & (PropTypes$5.ENUM|PropTypes$5.FLAG)) {
+      name = prop.ui_value_names[prop.keys[val]];
+    } else {
+      name = ""+val;
+    }
+
+    if (name != this.getAttribute("name")) {
+      this.setAttribute("name", name);
+      this.updateName();
+    }
+
+    //console.log(name, val);
+  }
+
+  update() {
+    super.update();
+
+    let key = this.getDefault("dropTextBG");
+    if (key !== this._last_dbox_key) {
+      this._last_dbox_key = key;
+      this.setCSS();
+      this._redraw();
+    }
+
+    if (this.hasAttribute("datapath")) {
+      this.updateDataPath();
+    }
+  }
+
+  _build_menu() {
+    let prop = this.prop;
+
+    if (this.prop === undefined) {
+      return;
+    }
+
+    if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+      this._menu.remove();
+    }
+
+    let menu = this._menu = document.createElement("menu-x");
+    menu.setAttribute("title", name);
+
+    menu._dropbox = this;
+
+    let valmap = {};
+    let enummap = prop.values;
+    let iconmap = prop.iconmap;
+    let uimap = prop.ui_value_names;
+
+    //console.log("   UIMAP", uimap);
+
+    for (let k in enummap) {
+      let uk = k;
+
+      valmap[enummap[k]] = k;
+
+      if (uimap !== undefined && k in uimap) {
+        uk = uimap[k];
+      }
+
+      //menu.addItem(k, enummap[k], ":");
+      if (iconmap && iconmap[k]) {
+        menu.addItemExtra(uk, enummap[k], undefined, iconmap[k]);
+      } else {
+        menu.addItem(uk, enummap[k]);
+      }
+    }
+
+    menu.onselect = (id) => {
+      this._pressed = false;
+
+      //console.log("dropbox select");
+      this._pressed = false;
+      this._redraw();
+      //console.trace("got click!", id, ":::");
+
+      this._menu = undefined;
+      this.prop.setValue(id);
+
+      this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
+      if (this.onselect) {
+        this.onselect(id);
+      }
+
+      if (this.hasAttribute("datapath") && this.ctx) {
+        console.log("setting data api value", id, this.getAttribute("datapath"));
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
+      }
+    };
+  }
+
+  _onpress(e) {
+    console.warn("menu dropbox click", this._menu, e);
+
+    if (this._menu !== undefined) {
+      this._pressed = false;
+      this._redraw();
+
+      let menu = this._menu;
+      this._menu = undefined;
+      menu.close();
+      return;
+    }
+
+    this._build_menu();
+
+    if (this._menu === undefined) {
+      return;
+    }
+
+    this._menu._dropbox = this;
+    this.dom._background = this.getDefault("BoxDepressed");
+    this._background = this.getDefault("BoxDepressed");
+    this._redraw();
+    this._pressed = true;
+    this.setCSS();
+
+    let onclose = this._menu.onclose;
+    this._menu.onclose = () => {
+      console.log("menu onclose");
+
+      this._pressed = false;
+      this._redraw();
+
+      let menu = this._menu;
+      if (menu) {
+        this._menu = undefined;
+        menu._dropbox = undefined;
+      }
+
+      if (onclose) {
+        onclose.call(menu);
+      }
+    };
+
+    let menu = this._menu;
+    let screen = this.getScreen();
+
+    let dpi = this.getDPI();
+
+    let x = e.x, y = e.y;
+    let rects = this.dom.getBoundingClientRect(); //getClientRects();
+
+    x = rects.x - window.scrollX;
+    y = rects.y + rects.height - window.scrollY; // + rects[0].height; // visualViewport.scale;
+
+    if (!window.haveElectron) {
+      //y -= 8;
+    }
+
+    /*
+    let w = document.createElement("div");
+    w.style["width"] = w.style["height"] = "15px";
+    w.style["background-color"] = "red";
+    w.style["z-index"] = "5000";
+    w.style["position"] = "absolute";
+    w.style["pointer-events"] = "none";
+    w.style["left"] = x + "px";
+    w.style["top"] = y + "px";
+
+    document.body.appendChild(w);
+    //*/
+
+    let con = this._popup = menu._popup = screen.popup(this, x, y, false);
+    con.noMarginsOrPadding();
+
+    con.add(menu);
+    if (this.searchMenuMode) {
+      menu.startFancy();
+    } else {
+      menu.start();
+    }
+  }
+
+  _redraw() {
+    if (this.getAttribute("simple")) {
+      let color;
+
+      if (this._highlight) {
+        drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
+      }
+
+      if (this._focus) {
+        drawRoundBox2(this, {canvas: this.dom, g : this.g, color : this.getDefault("BoxHighlight"), op : "stroke", no_clear : true});
+        drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
+      }
+
+      this._draw_text();
+      return;
+    }
+
+    super._redraw(false);
+
+    let g = this.g;
+    let w = this.dom.width, h = this.dom.height;
+    let dpi = this.getDPI();
+
+    let p = 10*dpi;
+    let p2 = 4*dpi;
+
+
+    //*
+    let bg = this.getDefault("dropTextBG");
+    if (bg !== undefined) {
+      g.fillStyle = bg;
+
+      g.beginPath();
+      g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2 * 2);
+      g.fill();
+    }
+    //*/
+
+    g.fillStyle = "rgba(50, 50, 50, 0.2)";
+    g.strokeStyle = "rgba(50, 50, 50, 0.8)";
+    g.beginPath();
+    /*
+    g.moveTo(w-p, p);
+    g.lineTo(w-(p+h*0.25), h-p);
+    g.lineTo(w-(p+h*0.5), p);
+    g.closePath();
+    //*/
+
+    let sz = 0.3;
+    g.moveTo(w-h*0.5-p, p);
+    g.lineTo(w-p, p);
+    g.moveTo(w-h*0.5-p, p+sz*h/3);
+    g.lineTo(w-p, p+sz*h/3);
+    g.moveTo(w-h*0.5-p, p+sz*h*2/3);
+    g.lineTo(w-p, p+sz*h*2/3);
+
+    g.lineWidth = 1;
+    g.stroke();
+
+    this._draw_text();
+  }
+
+  set menu(val) {
+    this._menu = val;
+
+    if (val !== undefined) {
+      this._name = val.title;
+      this.updateName();
+    }
+  }
+
+  setValue(val) {
+    if (this.prop !== undefined) {
+      this.prop.setValue(val);
+      let val2=val;
+
+      if (val2 in this.prop.keys)
+        val2 = this.prop.keys[val2];
+      val2 = this.prop.ui_value_names[val2];
+
+      this.setAttribute("name", ""+val2);
+      this._name = ""+val2;
+    } else {
+      this.setAttribute("name", ""+val);
+      this._name = ""+val;
+    }
+
+    if (this.onchange) {
+      this.onchange(val);
+    }
+
+    this.setCSS();
+    this.update();
+    this._redraw();
+  }
+
+  get menu() {
+    return this._menu;
+  }
+
+  static define() {return {
+    tagname : "dropbox-x",
+    style   : "dropbox"
+  };}
+}
+
+UIBase$5.register(DropBox);
+
+class MenuWrangler {
+  constructor() {
+    this.screen = undefined;
+    this.menustack = [];
+
+    this.closetimer = 0;
+    this.closeOnMouseUp = undefined;
+  }
+
+  get menu() {
+    return this.menustack.length > 0 ? this.menustack[this.menustack.length-1] : undefined;
+  }
+
+  pushMenu(menu) {
+    if (this.menustack.length === 0 && menu.closeOnMouseUp) {
+      this.closeOnMouseUp = true;
+    }
+
+    this.menustack.push(menu);
+  }
+
+  popMenu(menu) {
+    return this.menustack.pop();
+  }
+
+  endMenus() {
+    for (let menu of this.menustack) {
+      menu.close();
+    }
+
+    this.menustack = [];
+  }
+
+  searchKeyDown(e) {
+    let menu = this.menu;
+    
+    console.log("s", e.keyCode);
+    
+    e.stopPropagation();
+    menu._ignoreFocusEvents = true;
+    menu.textbox.focus();
+    menu._ignoreFocusEvents = false;
+
+    //if (e.shiftKey || e.altKey || e.ctrlKey || e.commandKey) {
+    //  return;
+    //}
+
+    switch (e.keyCode) {
+      case keymap["Enter"]: //return key
+        menu.click(menu.activeItem);
+        break;
+      case keymap["Escape"]: //escape key
+        menu.close();
+        break;
+      case keymap["Up"]:
+        console.log("Up");
+        menu.selectPrev(false);
+        break;
+      case keymap["Down"]:
+        console.log("Down");
+        menu.selectNext(false);
+        break;
+    }
+  }
+
+  on_keydown(e) {
+    window.menu = this.menu;
+    //console.log("M", e.keyCode, this.menu !== undefined);
+
+    if (this.menu === undefined) {
+      return;
+    }
+
+    if (this.menu.hasSearchBox) {
+      return this.searchKeyDown(e);
+    }
+
+    console.log("key", e.keyCode);
+    let menu = this.menu;
+
+    switch (e.keyCode) {
+      case keymap["Left"]: //left
+      case keymap["Right"]: //right
+        if (menu._dropbox) {
+          let dropbox = menu._dropbox;
+
+          if (e.keyCode === keymap["Left"]) {
+            dropbox = dropbox.previousElementSibling;
+          } else {
+            dropbox = dropbox.nextElementSibling;
+          }
+
+          if (dropbox !== undefined && dropbox instanceof DropBox) {
+            this.endMenus();
+            dropbox._onpress(e);
+          }
+        }
+        break;
+      case keymap["Up"]: //up
+        this.selectPrev();
+        break;
+      case keymap["Down"]: //down
+        this.selectNext();
+        break;
+        /*
+        let item = menu.activeItem;
+        if (!item) {
+          item = menu.items[0];
+        }
+
+        if (!item) {
+          return;
+        }
+
+        let item2;
+        let i = menu.items.indexOf(item);
+
+        if (e.keyCode == 38) {
+          i = (i - 1 + menu.items.length) % menu.items.length;
+        } else {
+          i = (i + 1) % menu.items.length;
+        }
+
+        item2 = menu.items[i];
+
+        if (item2) {
+          menu.setActive(item2);
+        }
+        break;//*/
+      case 13: //return key
+      case 32: //space key
+        menu.click(menu.activeItem);
+        break;
+      case 27: //escape key
+        menu.close();
+        break;
+    }
+  }
+
+  on_mousedown(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y);
+    console.log("wrangler mousedown", element);
+
+    if (element !== undefined && (element instanceof DropBox || isMobile())) {
+      this.endMenus();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  on_mouseup(e) {
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y, undefined, undefined, DropBox);
+    if (element !== undefined) {
+      this.closeOnMouseUp = false;
+    } else {
+      element = screen.pickElement(x, y, undefined, undefined, Menu);
+
+      //closeOnMouseUp
+      if (element && this.closeOnMouseUp) {
+        element.click();
+      }
+    }
+
+  }
+
+  on_mousemove(e) {
+    //XXX
+    if (this.menu && this.menu.hasSearchBox) {
+      this.closetimer = time_ms();
+      return;
+    }
+
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = time_ms();
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element = screen.pickElement(x, y);
+
+    if (element === undefined) {
+      return;
+    }
+
+    if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
+      //destroy entire menu stack
+      this.endMenus();
+
+      this.closetimer = time_ms();
+
+      //start new menu
+      element._onpress(e);
+      return;
+    }
+
+    let ok = false;
+
+    let w = element;
+    while (w) {
+      if (w === this.menu) {
+        ok = true;
+        break;
+      }
+
+      if (w instanceof DropBox && w.menu === this.menu) {
+        ok = true;
+        break;
+      }
+
+      w = w.parentWidget;
+    }
+
+    if (!ok && (time_ms() - this.closetimer > exports.menu_close_time)) {
+      this.endMenus();
+    } else if (ok) {
+      this.closetimer = time_ms();
+    }
+  }
+}
+
+let menuWrangler = new MenuWrangler();
+let wrangerStarted = false;
+
+function startMenuEventWrangling(screen) {
+  menuWrangler.screen = screen;
+
+  if (wrangerStarted) {
+    return;
+  }
+
+  wrangerStarted = true;
+
+  for (let k in DomEventTypes) {
+    if (menuWrangler[k] === undefined) {
+      continue;
+    }
+
+    let dom = k.search("key") >= 0 ? window : document.body;
+    dom = window;
+    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), {passive : false, capture : true});
+  }
+
+  menuWrangler.screen = screen;
+}
+
+function setWranglerScreen(screen) {
+  startMenuEventWrangling(screen);
+}
+
+function getWranglerScreen() {
+  return menuWrangler.screen;
+}
+
+function createMenu(ctx, title, templ) {
+  let menu = document.createElement("menu-x");
+  menu.ctx = ctx;
+  menu.setAttribute("name", title);
+
+  let SEP = menu.constructor.SEP;
+  let id = 0;
+  let cbs = {};
+
+  let doItem = (item) => {
+    if (item !== undefined && item instanceof Menu) {
+      menu.addItem(item);
+    } else if (typeof item == "string") {
+      let def;
+      try {
+        def = ctx.api.getToolDef(item);
+      } catch (error) {
+        menu.addItem("(tool path error)", id++);
+        return;
+      }
+
+      //3Extra(text, id=undefined, hotkey, icon=-1, add=true) {
+      menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
+
+      cbs[id] = (function (toolpath) {
+        return function () {
+          ctx.api.execTool(ctx, toolpath);
+        }
+      })(item);
+
+      id++;
+    } else if (item === SEP) {
+      menu.seperator();
+    } else if (typeof item === "function" || item instanceof Function) {
+      doItem(item());
+    } else if (item instanceof Array) {
+      let hotkey = item.length > 2 ? item[2] : undefined;
+      let icon = item.length > 3 ? item[3] : undefined;
+      let tooltip = item.length > 4 ? item[4] : undefined;
+
+      if (hotkey !== undefined && hotkey instanceof HotKey) {
+        hotkey = hotkey.buildString();
+      }
+
+      menu.addItemExtra(item[0], id, hotkey, icon, undefined, tooltip);
+
+      cbs[id] = (function (cbfunc, arg) {
+        return function () {
+          cbfunc(arg);
+        }
+      })(item[1], item[2]);
+
+      id++;
+    }
+  };
+
+  for (let item of templ) {
+    doItem(item);
+  }
+
+  menu.onselect = (id) => {
+    cbs[id]();
+  };
+
+  return menu;
+}
+
+function startMenu(menu, x, y, searchMenuMode=false) {
+  let screen = menu.ctx.screen;
+  let con = menu._popup = screen.popup(undefined, x, y, false);
+  con.noMarginsOrPadding();
+
+  con.add(menu);
+  if (searchMenuMode) {
+    menu.startFancy();
+  } else {
+    menu.start();
+  }
+}
+
 //bind module to global var to get at it in console.
 //
 //note that require has an api for handling circular 
@@ -23559,12 +24963,12 @@ var _ui = undefined;
 let PropFlags$2 = PropFlags;
 let PropSubTypes$2 = PropSubTypes$1;
 
-let EnumProperty$6 = EnumProperty$1;
+let EnumProperty$7 = EnumProperty$1;
 
 let Vector2$4 = undefined,
-  UIBase$5 = UIBase$1,
-  PackFlags$4 = PackFlags,
-  PropTypes$5 = PropTypes;
+  UIBase$6 = UIBase$1,
+  PackFlags$5 = PackFlags,
+  PropTypes$6 = PropTypes;
 
 const SimpleContext = undefined;
 const DataPathError$1 = DataPathError;
@@ -23663,7 +25067,7 @@ class Label extends UIBase$1 {
       return;
     }
     //console.log(path);
-    if (prop !== undefined && prop.type == PropTypes$5.INT) {
+    if (prop !== undefined && prop.type == PropTypes$6.INT) {
       val = val.toString(prop.radix);
 
       if (prop.radix == 2) {
@@ -23671,7 +25075,7 @@ class Label extends UIBase$1 {
       } else if (prop.radix == 16) {
         val += "h";
       }
-    } else if (prop !== undefined && prop.type == PropTypes$5.FLOAT && val !== Math.floor(val)) {
+    } else if (prop !== undefined && prop.type == PropTypes$6.FLOAT && val !== Math.floor(val)) {
       val = val.toFixed(prop.decimalPlaces);
     }
 
@@ -23762,11 +25166,11 @@ class Container extends UIBase$1 {
 
   useIcons(enabled=true) {
     if (enabled) {
-      this.packflag |= PackFlags$4.USE_ICONS;
-      this.inherit_packflag |= PackFlags$4.USE_ICONS;
+      this.packflag |= PackFlags$5.USE_ICONS;
+      this.inherit_packflag |= PackFlags$5.USE_ICONS;
     } else {
-      this.packflag &= ~PackFlags$4.USE_ICONS;
-      this.inherit_packflag &= ~PackFlags$4.USE_ICONS;
+      this.packflag &= ~PackFlags$5.USE_ICONS;
+      this.inherit_packflag &= ~PackFlags$5.USE_ICONS;
     }
   }
 
@@ -23816,7 +25220,7 @@ class Container extends UIBase$1 {
     let horiz = this instanceof RowFrame;
     horiz = horiz || this.style["flex-direction"] === "row";
 
-    let flag = horiz ? PackFlags$4.STRIP_HORIZ : PackFlags$4.STRIP_VERT;
+    let flag = horiz ? PackFlags$5.STRIP_HORIZ : PackFlags$5.STRIP_VERT;
 
     let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
     strip.packflag |= flag;
@@ -24030,7 +25434,7 @@ class Container extends UIBase$1 {
   }
 
   prepend(child) {
-    if (child instanceof UIBase$5) {
+    if (child instanceof UIBase$6) {
       this._prepend(child);
     } else {
       super.prepend(child);
@@ -24109,64 +25513,13 @@ class Container extends UIBase$1 {
     dbox.setAttribute("simple", true);
     dbox.setAttribute("name", title);
 
-    dbox._build_menu = () => {
+    dbox._build_menu = function() {
       if (this._menu !== undefined && this._menu.parentNode !== undefined) {
         this._menu.remove();
       }
 
-      let menu = dbox._menu = document.createElement("menu-x");
-      //menu.setAttribute("name", title);
-
-      let SEP = menu.constructor.SEP;
-      let id = 0;
-      let cbs = {};
-
-      for (let item of list) {
-        if (typeof item == "string") {
-          let def;
-          try {
-            def = this.ctx.api.getToolDef(item);
-          } catch (error) {
-            menu.addItem("(tool path error)", id++);
-            continue;
-          }
-          //addItemExtra(text, id=undefined, hotkey, icon=-1, add=true) {
-          menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
-          let this2 = this;
-
-          cbs[id] = (function (toolpath) {
-            return function () {
-              this2.ctx.api.execTool(this2.ctx, toolpath);
-            }
-          })(item);
-
-          id++;
-        } else if (item === SEP) {
-          menu.seperator();
-        } else if (item instanceof Array) {
-          let hotkey = item.length > 2 ? item[2] : undefined;
-          let icon = item.length > 3 ? item[3] : undefined;
-          let tooltip = item.length > 4 ? item[4] : undefined;
-
-          if (hotkey !== undefined && hotkey instanceof HotKey) {
-            hotkey = hotkey.buildString();
-          }
-
-          menu.addItemExtra(item[0], id, hotkey, icon, undefined, tooltip);
-
-          cbs[id] = (function (cbfunc, arg) {
-            return function () {
-              cbfunc(arg);
-            }
-          })(item[1], item[2]);
-
-          id++;
-        }
-      }
-
-      menu.onselect = (id) => {
-        cbs[id]();
-      };
+      this._menu = createMenu(this.ctx, title, list);
+      return this._menu;
     };
 
     dbox.packflag |= packflag;
@@ -24233,11 +25586,11 @@ class Container extends UIBase$1 {
 
     let ret;
 
-    if (def.icon !== undefined && (packflag & PackFlags$4.USE_ICONS)) {
+    if (def.icon !== undefined && (packflag & PackFlags$5.USE_ICONS)) {
       //console.log("iconbutton!");
       ret = this.iconbutton(def.icon, tooltip, cb);
 
-      if (packflag & PackFlags$4.SMALL_ICON) {
+      if (packflag & PackFlags$5.SMALL_ICON) {
         ret.iconsheet = IconSheets.SMALL;
       } else {
         ret.iconsheet = IconSheets.LARGE;
@@ -24339,7 +25692,7 @@ class Container extends UIBase$1 {
     ret.description = description;
     ret.icon = icon;
 
-    if (packflag & PackFlags$4.SMALL_ICON) {
+    if (packflag & PackFlags$5.SMALL_ICON) {
       ret.iconsheet = IconSheets.SMALL;
     } else {
       ret.iconsheet = IconSheets.LARGE;
@@ -24448,7 +25801,7 @@ class Container extends UIBase$1 {
       return name;
     }
 
-    if (prop.type === PropTypes$5.STRING) {
+    if (prop.type === PropTypes$6.STRING) {
       let ret;
       if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
@@ -24462,11 +25815,11 @@ class Container extends UIBase$1 {
 
       ret.packflag |= packflag;
       return ret;
-    } else if (prop.type === PropTypes$5.CURVE) {
+    } else if (prop.type === PropTypes$6.CURVE) {
       return this.curve1d(path, packflag, mass_set_path);
-    } else if (prop.type === PropTypes$5.INT || prop.type === PropTypes$5.FLOAT) {
+    } else if (prop.type === PropTypes$6.INT || prop.type === PropTypes$6.FLOAT) {
       let ret;
-      if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS) {
+      if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath);
       } else {
         ret = this.slider(inpath);
@@ -24479,9 +25832,9 @@ class Container extends UIBase$1 {
       }
 
       return ret;
-    } else if (prop.type == PropTypes$5.BOOL) {
+    } else if (prop.type == PropTypes$6.BOOL) {
       this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$5.ENUM) {
+    } else if (prop.type == PropTypes$6.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -24498,7 +25851,7 @@ class Container extends UIBase$1 {
 
         return check;
       }
-      if (!(packflag & PackFlags$4.USE_ICONS)) {
+      if (!(packflag & PackFlags$5.USE_ICONS)) {
         let val;
         try {
           val = this.ctx.api.getValue(this.ctx, path);
@@ -24512,9 +25865,9 @@ class Container extends UIBase$1 {
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
-    } else if (prop.type & (PropTypes$5.VEC2|PropTypes$5.VEC3|PropTypes$5.VEC4)) {
+    } else if (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4)) {
       if (rdef.subkey !== undefined) {
-        let ret = (packflag & PackFlags$4.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
+        let ret = (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
         ret.packflag |= packflag;
         return ret;
       } else if (prop.subtype === PropSubTypes$2.COLOR) {
@@ -24535,7 +25888,7 @@ class Container extends UIBase$1 {
 
         return ret;
       }
-    } else if (prop.type == PropTypes$5.FLAG) {
+    } else if (prop.type == PropTypes$6.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -24595,10 +25948,10 @@ class Container extends UIBase$1 {
 
     //let prop = this.ctx.getProp(path);
     let ret;
-    if (packflag & PackFlags$4.USE_ICONS) {
+    if (packflag & PackFlags$5.USE_ICONS) {
       ret = document.createElement("iconcheck-x");
 
-      if (packflag & PackFlags$4.SMALL_ICON) {
+      if (packflag & PackFlags$5.SMALL_ICON) {
         ret.iconsheet = IconSheets.SMALL;
       }
     } else {
@@ -24648,7 +26001,7 @@ class Container extends UIBase$1 {
 
       let frame;
 
-      if (packflag & PackFlags$4.VERTICAL) {
+      if (packflag & PackFlags$5.VERTICAL) {
         frame = this.col();
       } else {
         frame = this.row();
@@ -24657,7 +26010,7 @@ class Container extends UIBase$1 {
       frame.oneAxisPadding();
       frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
-      if (packflag & PackFlags$4.USE_ICONS) {
+      if (packflag & PackFlags$5.USE_ICONS) {
         for (let key in prop.values) {
           let check = frame.check(inpath + "["+key+"]", "", packflag);
 
@@ -24752,7 +26105,7 @@ class Container extends UIBase$1 {
       frame.oneAxisPadding();
       frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
-      if (packflag & PackFlags$4.USE_ICONS) {
+      if (packflag & PackFlags$5.USE_ICONS) {
         for (let key in prop.values) {
           let check = frame.check(inpath + " == " + prop.values[key], "", packflag);
 
@@ -24914,11 +26267,11 @@ class Container extends UIBase$1 {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
-      args.packflag = (args.packflag || 0) | PackFlags$4.SIMPLE_NUMSLIDERS;
+      args.packflag = (args.packflag || 0) | PackFlags$5.SIMPLE_NUMSLIDERS;
       return this.slider(inpath, args);
       //new-style api call
     } else {
-      return this.slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag | PackFlags$4.SIMPLE_NUMSLIDERS);
+      return this.slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag | PackFlags$5.SIMPLE_NUMSLIDERS);
     }
   }
 
@@ -24945,14 +26298,14 @@ class Container extends UIBase$1 {
     if (inpath) {
       let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.SIMPLE_SLIDER)) {
-        packflag |= PackFlags$4.SIMPLE_NUMSLIDERS;
+        packflag |= PackFlags$5.SIMPLE_NUMSLIDERS;
       }
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.FORCE_ROLLER_SLIDER)) {
-        packflag |= PackFlags$4.FORCE_ROLLER_SLIDER;
+        packflag |= PackFlags$5.FORCE_ROLLER_SLIDER;
       }
     }
 
-    if (packflag & PackFlags$4.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$4.FORCE_ROLLER_SLIDER)) {
+    if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
     } else if (exports.useNumSliderTextboxes) {
       ret = document.createElement("numslider-textbox-x");
@@ -24988,7 +26341,7 @@ class Container extends UIBase$1 {
 
         min = min === undefined ? range[0] : min;
         max = max === undefined ? range[1] : max;
-        is_int = is_int === undefined ? prop.type === PropTypes$5.INT : is_int;
+        is_int = is_int === undefined ? prop.type === PropTypes$6.INT : is_int;
         name = name === undefined ? prop.uiname : name;
         step = step === undefined ? prop.step : step;
         step = step === undefined ? (is_int ? 1 : 0.1) : step;
@@ -25116,7 +26469,7 @@ class Container extends UIBase$1 {
 
     let ret = document.createElement("colorpicker-x");
 
-    packflag |= PackFlags$4.SIMPLE_NUMSLIDERS;
+    packflag |= PackFlags$5.SIMPLE_NUMSLIDERS;
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
@@ -25260,7 +26613,7 @@ class RowFrame extends Container {
   }
 }
 
-UIBase$5.register(RowFrame);
+UIBase$6.register(RowFrame);
 
 class ColumnFrame extends Container {
   constructor() {
@@ -25285,9 +26638,9 @@ class ColumnFrame extends Container {
   }
 }
 
-UIBase$5.register(ColumnFrame);
+UIBase$6.register(ColumnFrame);
 
-let UIBase$6 = UIBase$1, Icons$1 = Icons;
+let UIBase$7 = UIBase$1, Icons$1 = Icons;
 
 class RichEditor extends TextBoxBase {
   constructor() {
@@ -25573,9 +26926,9 @@ class RichEditor extends TextBoxBase {
     style   : "richtext"
   }}
 }
-UIBase$6.register(RichEditor);
+UIBase$7.register(RichEditor);
 
-class RichViewer extends UIBase$6 {
+class RichViewer extends UIBase$7 {
   constructor() {
     super();
 
@@ -25645,18 +26998,18 @@ class RichViewer extends UIBase$6 {
     style   : "html_viewer"
   }}
 }
-UIBase$6.register(RichViewer);
+UIBase$7.register(RichViewer);
 
 "use strict";
 
 let keymap$4 = keymap;
 
-let EnumProperty$7 = EnumProperty$1,
-  PropTypes$6 = PropTypes;
+let EnumProperty$8 = EnumProperty$1,
+  PropTypes$7 = PropTypes;
 
-let UIBase$7 = UIBase$1,
-  PackFlags$5 = PackFlags,
-  IconSheets$4 = IconSheets;
+let UIBase$8 = UIBase$1,
+  PackFlags$6 = PackFlags,
+  IconSheets$5 = IconSheets;
 
 let parsepx$4 = parsepx;
 
@@ -25920,9 +27273,9 @@ class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase$7.register(VectorPanel);
+UIBase$8.register(VectorPanel);
 
-class ToolTip extends UIBase$7 {
+class ToolTip extends UIBase$8 {
   constructor() {
     super();
 
@@ -25997,7 +27350,7 @@ class ToolTip extends UIBase$7 {
     style   : "tooltip"
   }}
 };
-UIBase$7.register(ToolTip);
+UIBase$8.register(ToolTip);
 
 function makeGenEnum() {
   let enumdef = {};
@@ -26288,12 +27641,12 @@ var _ui$1 = undefined;
 let PropFlags$3 = PropFlags;
 let PropSubTypes$3 = PropSubTypes$1;
 
-let EnumProperty$8 = EnumProperty$1;
+let EnumProperty$9 = EnumProperty$1;
 
 let Vector2$5 = undefined,
-  UIBase$8 = UIBase$1,
-  PackFlags$6 = PackFlags,
-  PropTypes$7 = PropTypes;
+  UIBase$9 = UIBase$1,
+  PackFlags$7 = PackFlags,
+  PropTypes$8 = PropTypes;
 
 class PanelFrame extends ColumnFrame {
   constructor() {
@@ -26491,7 +27844,7 @@ class PanelFrame extends ColumnFrame {
     key += this.getDefault("BoxBorder") + this.getDefault("BoxLineWidth");
     key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
-    key += this.getDefault("Background");
+    key += this.getDefault("Background") + this.getDefault("border-style");
 
     if (key !== this._last_key) {
       this._last_key = key;
@@ -26539,7 +27892,7 @@ class PanelFrame extends ColumnFrame {
   }
 }
 
-UIBase$8.register(PanelFrame);
+UIBase$9.register(PanelFrame);
 
 "use strict";
 
@@ -26548,9 +27901,9 @@ let Vector2$6 = Vector2,
   Vector4$2 = Vector4,
   Matrix4$2 = Matrix4;
 
-let UIBase$9 = UIBase$1,
-  PackFlags$7 = PackFlags,
-  IconSheets$5 = IconSheets;
+let UIBase$a = UIBase$1,
+  PackFlags$8 = PackFlags,
+  IconSheets$6 = IconSheets;
 
 let UPW = 1.25, VPW = 0.75;
 
@@ -26703,7 +28056,7 @@ class SimpleBox {
   }
 }
 
-class HueField extends UIBase$9 {
+class HueField extends UIBase$a {
   constructor() {
     super();
 
@@ -26813,9 +28166,9 @@ class HueField extends UIBase$9 {
   };}
 }
 
-UIBase$9.register(HueField);
+UIBase$a.register(HueField);
 
-class SatValField extends UIBase$9 {
+class SatValField extends UIBase$a {
   constructor() {
     super();
 
@@ -27034,7 +28387,7 @@ class SatValField extends UIBase$9 {
   };}
 }
 
-UIBase$9.register(SatValField);
+UIBase$a.register(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
@@ -27185,7 +28538,7 @@ class ColorField extends ColumnFrame {
     this.huefield._redraw();
   }
 }
-UIBase$9.register(ColorField);
+UIBase$a.register(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -27425,10 +28778,10 @@ class ColorPicker extends ColumnFrame {
   };}
 }
 
-UIBase$9.register(ColorPicker);
+UIBase$a.register(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$9 {
+class ColorPickerButton extends UIBase$a {
   constructor() {
     super();
 
@@ -27501,6 +28854,7 @@ class ColorPickerButton extends UIBase$9 {
 
     let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
     widget._init();
+    widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
 
     widget.style["padding"] = "20px";
 
@@ -27737,20 +29091,20 @@ class ColorPickerButton extends UIBase$9 {
     this._redraw();
   }
 };
-UIBase$9.register(ColorPickerButton);
+UIBase$a.register(ColorPickerButton);
 
 "use strict";
 
-let UIBase$a = UIBase$1, 
-    PackFlags$8 = PackFlags,
-    IconSheets$6 = IconSheets,
+let UIBase$b = UIBase$1, 
+    PackFlags$9 = PackFlags,
+    IconSheets$7 = IconSheets,
   iconmanager$1 = iconmanager;
 
 let tab_idgen = 1;
 let debug = false;
 let Vector2$7 = Vector2;
 
-function getpx(css) {
+function getpx$1(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
@@ -27884,7 +29238,7 @@ class ModalTabMove extends EventHandler {
 
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$a.getDPI();
+    let dpi = UIBase$b.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -28001,7 +29355,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$a {
+class TabBar extends UIBase$b {
   constructor() {
     super();
     
@@ -28307,8 +29661,8 @@ class TabBar extends UIBase$a {
      
     let dpi = this.getDPI();
 
-    let rwidth = getpx(this.canvas.style["width"]);
-    let rheight = getpx(this.canvas.style["height"]);
+    let rwidth = getpx$1(this.canvas.style["width"]);
+    let rheight = getpx$1(this.canvas.style["height"]);
     
     let width = Math.ceil(rwidth*dpi);
     let height = Math.ceil(rheight*dpi);
@@ -28757,9 +30111,9 @@ class TabBar extends UIBase$a {
     style   : "tabs"
   };}
 }
-UIBase$a.register(TabBar);
+UIBase$b.register(TabBar);
 
-class TabContainer extends UIBase$a {
+class TabContainer extends UIBase$b {
   constructor() {
     super();
 
@@ -29030,7 +30384,7 @@ class TabContainer extends UIBase$a {
   };}
 }
 
-UIBase$a.register(TabContainer);
+UIBase$b.register(TabContainer);
 
 //bind module to global var to get at it in console.
 
@@ -29039,12 +30393,12 @@ var _ui$2 = undefined;
 let PropFlags$4 = PropFlags;
 let PropSubTypes$4 = PropSubTypes$1;
 
-let EnumProperty$9 = EnumProperty$1;
+let EnumProperty$a = EnumProperty$1;
 
 let Vector2$8 = undefined,
-  UIBase$b = UIBase$1,
-  PackFlags$9 = PackFlags,
-  PropTypes$8 = PropTypes;
+  UIBase$c = UIBase$1,
+  PackFlags$a = PackFlags,
+  PropTypes$9 = PropTypes;
 
 const SimpleContext$1 = undefined;
 const DataPathError$2 = DataPathError;
@@ -29086,7 +30440,7 @@ class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase$b.register(TableRow);
+UIBase$c.register(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -29274,18 +30628,18 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$b.register(TableFrame);
+UIBase$c.register(TableFrame);
 
 "use strict";
 
-let EnumProperty$a = EnumProperty$1,
-  PropTypes$9 = PropTypes;
+let EnumProperty$b = EnumProperty$1,
+  PropTypes$a = PropTypes;
 
-let UIBase$c = UIBase$1,
-  PackFlags$a = PackFlags,
-  IconSheets$7 = IconSheets;
+let UIBase$d = UIBase$1,
+  PackFlags$b = PackFlags,
+  IconSheets$8 = IconSheets;
 
-function getpx$1(css) {
+function getpx$2(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
@@ -29354,7 +30708,7 @@ class ListItem extends RowFrame {
     style : "listbox"
   }}
 }
-UIBase$c.register(ListItem);
+UIBase$d.register(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -29496,1301 +30850,7 @@ class ListBox extends Container {
     style : "listbox"
   }}
 }
-UIBase$c.register(ListBox);
-
-"use strict";
-
-let EnumProperty$b = EnumProperty$1,
-  PropTypes$a = PropTypes;
-
-let UIBase$d = UIBase$1,
-  PackFlags$b = PackFlags,
-  IconSheets$8 = IconSheets;
-
-function getpx$2(css) {
-  return parseFloat(css.trim().replace("px", ""))
-}
-
-class Menu extends UIBase$d {
-  constructor() {
-    super();
-
-    this.items = [];
-
-    this._ignoreFocusEvents = false;
-    this.closeOnMouseUp = true;
-
-    this.itemindex = 0;
-    this.closed = false;
-    this.started = false;
-    this.activeItem = undefined;
-
-    this.overrideDefault("DefaultText", this.getDefault("MenuText"));
-
-    //we have to make a container for any submenus to
-    this.container = document.createElement("span");
-    this.container.style["display"] = "flex";
-    this.container.style["color"] = this.getDefault("MenuText").color;
-
-    //this.container.style["background-color"] = "red";
-    this.container.setAttribute("class", "menucon");
-
-    this.dom = document.createElement("ul");
-    this.dom.setAttribute("class", "menu");
-    /*
-              place-items: start start;
-              flex-wrap : nowrap;
-              align-content : start;
-              place-content : start;
-              justify-content : start;
-
-              align-items : start;
-              place-items : start;
-              justify-items : start;
-    */
-
-    let pad1 = isMobile() ? 5 : 0;
-
-    let style = document.createElement("style");
-    style.textContent = `
-        .menucon {
-          position:absolute;
-          float:left;
-          
-          display: block;
-          -moz-user-focus: normal;
-        }
-        
-        ul.menu {
-          display        : flex;
-          flex-direction : column;
-          
-          margin : 0px;
-          padding : 0px;
-          border : ${this.getDefault("MenuBorder")};
-          -moz-user-focus: normal;
-          background-color: ${this.getDefault("MenuBG")};
-        }
-        
-        .menuitem {
-          display : block;
-          
-          list-style-type:none;
-          -moz-user-focus: normal;
-          
-          margin : 0;
-          padding : 0px;
-          padding-right: 16px;
-          padding-left: 16px;
-          padding-top : ${pad1}px;
-          padding-bottom : ${pad1}px;
-          font : ${this.getDefault("MenuText").genCSS()};
-          background-color: ${this.getDefault("MenuBG")};
-        }
-        
-        .menuseparator {
-          ${this.getDefault("MenuSeparator")}
-        }
-        
-        .menuitem:focus {
-          border : none;
-          outline : none;
-          
-          background-color: ${this.getDefault("MenuHighlight")};
-          -moz-user-focus: normal;
-        }
-      `;
-
-    /*
-
-        .menuitem:focus {
-        }
-
-
-
-    */
-    this.dom.setAttribute("tabindex", -1);
-
-    //let's have the menu wrangler handle key events
-
-    this.container.addEventListener("mouseleave", (e) => {
-      console.log("menu out");
-      this.close();
-    }, false);
-
-    //this.container.appendChild(this.dom);
-
-    this.shadow.appendChild(style);
-    this.shadow.appendChild(this.container);
-  }
-
-  float(x, y, zindex=undefined) {
-    console.log("menu test!");
-
-    let dpi = this.getDPI();
-    let rect = this.dom.getClientRects();
-    let maxx = this.getWinWidth()-10;
-    let maxy = this.getWinHeight()-10;
-
-    console.log(rect.length > 0 ? rect[0] : undefined);
-
-    if (rect.length > 0) {
-      rect = rect[0];
-      console.log(y + rect.height);
-      if (y + rect.height > maxy) {
-        console.log("greater");
-        y = maxy - rect.height - 1;
-      }
-
-      if (x + rect.width > maxx) {
-        console.log("greater");
-        x = maxx - rect.width - 1;
-      }
-    }
-
-    super.float(x, y, 50);
-  }
-
-  click() {
-    if (this.activeItem == undefined)
-      return;
-
-    if (this.activeItem !== undefined && this.activeItem._isMenu)
-    //ignore
-      return;
-
-    if (this.onselect) {
-      try {
-        console.log(this.activeItem._id, "-----");
-        this.onselect(this.activeItem._id);
-      } catch (error) {
-        print_stack$1(error);
-        console.log("Error in menu callback");
-      }
-    }
-
-    console.log("menu select");
-    this.close();
-  }
-
-  _ondestroy() {
-    if (this.started) {
-      menuWrangler.popMenu(this);
-
-      if (this.onclose) {
-        this.onclose();
-      }
-    }
-  }
-
-  close() {
-    //XXX
-    //return;
-    if (this.closed) {
-      return;
-    }
-
-    this.closed = true;
-
-    if (this.started) {
-      menuWrangler.popMenu(this);
-    }
-
-    this.started = false;
-
-    //if (this._popup.parentNode !== undefined) {
-    //  this._popup.remove();
-    //}
-    if (this._popup) {
-      this._popup.end();
-      this._popup = undefined;
-    }
-
-    this.remove();
-    this.dom.remove();
-
-    if (this.onclose) {
-      this.onclose(this);
-    }
-  }
-
-  _select(dir, focus=true) {
-    if (this.activeItem === undefined) {
-      for (let item of this.items) {
-        if (!item.hidden) {
-          this.setActive(item, focus);
-          break;
-        }
-      }
-    } else {
-      let i = this.items.indexOf(this.activeItem);
-      let item = this.activeItem;
-
-      do {
-        i = (i + dir + this.items.length) % this.items.length;
-        item = this.items[i];
-
-        if (!item.hidden) {
-          break;
-        }
-      } while (item !== this.activeItem);
-
-      this.setActive(item, focus); 
-    }
-
-    if (this.hasSearchBox) {
-      this.activeItem.scrollIntoView();
-    }
-  }
-
-  selectPrev(focus=true) {
-    return this._select(-1, focus);
-  }
-
-  selectNext(focus=true) {
-    return this._select(1, focus);
-  }
-
-  static define() {return {
-    tagname : "menu-x",
-    style   : "menu"
-  };}
-
-  start_fancy(prepend, setActive=true) {
-    return this.startFancy(prepend, setActive);
-  }
-
-  setActive(item, focus=true) {
-    if (this.activeItem === item) {
-      return;
-    }
-
-    if (this.activeItem) {
-      this.activeItem.style["background-color"] = this.getDefault("MenuBG");
-
-      if (focus) {
-        this.activeItem.blur();
-      }
-    }
-
-    if (item) {
-      item.style["background-color"] = this.getDefault("MenuHighlight");
-
-      if (focus) {
-        item.focus();
-      }
-    }
-    
-    this.activeItem = item;
-  }
-
-  startFancy(prepend, setActive=true) {
-    console.warn("menu searchbox mode start");
-
-    this.hasSearchBox = true;
-    this.started = true;
-    menuWrangler.pushMenu(this);
-
-    let dom2 = document.createElement("div");
-    //let dom2 = document.createElement("div");
-
-    this.dom.setAttribute("class", "menu");
-    dom2.setAttribute("class", "menu");
-
-    let sbox = this.textbox = document.createElement("textbox-x");
-    this.textbox.parentWidget = this;
-    
-    dom2.appendChild(sbox);
-    dom2.appendChild(this.dom);
-    
-    dom2.style["height"] = "300px";
-    this.dom.style["height"] = "300px";
-    this.dom.style["overflow"] = "scroll";
-
-    if (prepend) {
-      this.container.prepend(dom2);
-    } else {
-      this.container.appendChild(dom2);
-    }
-
-    dom2.parentWidget = this.container;
-
-    sbox.focus();
-    sbox.onchange = () => {
-      let t = sbox.text.trim().toLowerCase();
-
-      console.log("applying search", t);
-
-      for (let item of this.items) {
-        item.hidden = true;
-        item.remove();
-      }
-
-      for (let item of this.items) {
-        let ok = t == "";
-        ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
-
-        if (ok) {
-          item.hidden = false;
-          this.dom.appendChild(item);
-        } else if (item === this.activeItem) {
-          this.selectNext(false);
-        }
-        //item.hidden = !ok;
-      }
-    };
-
-    sbox.addEventListener("keydown", (e) => {
-      console.log(e.keyCode);
-      switch (e.keyCode) {
-        case 27: //escape key
-          this.close();
-          break;
-        case 13: //enter key
-          this.click(this.activeItem);
-          this.close();
-          break;
-      }
-    });
-  }
-
-  start(prepend=false, setActive=true) {
-    this.started = true;
-    this.focus();
-    menuWrangler.pushMenu(this);
-
-    if (this.items.length > 15) {
-      return this.start_fancy(prepend, setActive);
-    }
-
-    if (prepend) {
-      this.container.prepend(this.dom);
-    } else {
-      this.container.appendChild(this.dom);
-    }
-
-    if (!setActive)
-      return;
-
-    window.setTimeout(() => {
-      //select first child
-      //TODO: cache last child entry
-
-      if (this.activeItem === undefined) {
-        this.activeItem = this.dom.childNodes[0];
-      }
-
-      if (this.activeItem === undefined) {
-        return;
-      }
-
-      this.activeItem.focus();
-    }, 0);
-  }
-
-  addItemExtra(text, id=undefined, hotkey, icon=-1, add=true, tooltip=undefined) {
-    let dom = document.createElement("span");
-
-    dom.style["display"] = "inline-flex";
-
-    dom.hotkey = hotkey;
-    dom.icon = icon;
-
-    let icon_div;
-
-    if (1) { //icon >= 0) {
-      icon_div = makeIconDiv(icon, IconSheets$8.SMALL);
-    } else {
-      let tilesize = iconmanager.getTileSize(IconSheets$8.SMALL);
-
-      //tilesize *= window.devicePixelRatio;
-
-      icon_div = document.createElement("span");
-      icon_div.style["padding"] = icon_div.style["margin"] = "0px";
-      icon_div.style["width"] = tilesize + "px";
-      icon_div.style["height"] = tilesize + "px";
-    }
-
-    icon_div.style["display"] = "inline-flex";
-    icon_div.style["margin-right"] = "1px";
-    icon_div.style["align"] = "left";
-
-    let span = document.createElement("span");
-
-    //stupid css doesn't get width right. . .
-    span.style["font"] = getFont(this, undefined, "MenuText");
-
-    let dpi = this.getDPI();
-    let tsize = this.getDefault("MenuText").size;
-    //XXX proportional font fail
-
-    //XXX stupid!
-    let canvas = document.createElement("canvas");
-    let g = canvas.getContext("2d");
-
-    g.font = span.style["font"];
-
-    let rect = span.getClientRects();
-
-    let twid = Math.ceil(g.measureText(text).width);
-    let hwid;
-    if (hotkey) {
-      dom.hotkey = hotkey;
-      g.font = getFont(this, undefined, "HotkeyText");
-      hwid = Math.ceil(g.measureText(hotkey).width);
-      twid += hwid + 8;
-    }
-
-    //let twid = Math.ceil(text.trim().length * tsize / dpi);
-
-    span.innerText = text;
-
-    span.style["word-wrap"] = "none";
-    span.style["white-space"] = "pre";
-    span.style["overflow"] = "hidden";
-    span.style["text-overflow"] = "clip";
-
-    span.style["width"] = ~~(twid) + "px";
-    span.style["padding"] = "0px";
-    span.style["margin"] = "0px";
-
-    dom.style["width"] = "100%";
-
-    dom.appendChild(icon_div);
-    dom.appendChild(span);
-
-    if (hotkey) {
-      let hotkey_span = document.createElement("span");
-      hotkey_span.innerText = hotkey;
-      hotkey_span.style["margin-left"] = "0px";
-      hotkey_span.style["margin-right"] = "0px";
-      hotkey_span.style["margin"] = "0px";
-      hotkey_span.style["padding"] = "0px";
-
-      let al = "right";
-
-      hotkey_span.style["font"] = getFont(this, undefined, "HotkeyText");
-      hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
-
-      //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
-      hotkey_span.style["width"] = "100%";
-
-      hotkey_span.style["text-align"] = al;
-      hotkey_span.style["flex-align"] = al;
-      //hotkey_span.style["display"] = "inline";
-      hotkey_span.style["float"] = "right";
-      hotkey_span["flex-wrap"] = "nowrap";
-
-      dom.appendChild(hotkey_span);
-    }
-
-    let ret = this.addItem(dom, id, add);
-
-    ret.hotkey = hotkey;
-    ret.icon = icon;
-    ret.label = text ? text : ret.innerText;
-
-    if (tooltip) {
-      ret.title = tooltip;
-    }
-
-    return ret;
-  }
-
-  //item can be menu or text
-  addItem(item, id, add=true) {
-    id = id === undefined ? item : id;
-    let text = item;
-
-    if (typeof item === "string" || item instanceof String) {
-      let dom = document.createElement("dom");
-      dom.textContent = item;
-      item = dom;
-      //return this.addItemExtra(item, id);
-    } else {
-      text = item.textContent;
-    }
-
-    let li = document.createElement("li");
-
-    li.setAttribute("tabindex", this.itemindex++);
-    li.setAttribute("class", "menuitem");
-
-    if (item instanceof Menu) {
-      console.log("submenu!");
-
-      let dom = this.addItemExtra(""+item.title, id, "", -1, false);
-
-      //dom = document.createElement("div");
-      //dom.innerText = ""+item.title;
-
-      //dom.style["display"] = "inline-block";
-      li.style["width"] = "100%";
-      li.appendChild(dom);
-
-      li._isMenu = true;
-      li._menu = item;
-
-      item.hidden = false;
-      item.container = this.container;
-    } else {
-      li._isMenu = false;
-      li.appendChild(item);
-    }
-
-    li._id = id;
-
-    this.items.push(li);
-
-    li.label = text ? text : li.innerText.trim();
-
-    if (add) {
-      li.addEventListener("click", (e) => {
-        //console.log("menu click!");
-
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          //console.log("menu ignore");
-          //ignore
-          return n;
-        }
-
-        this.click();
-      });
-
-      li.addEventListener("blur", (e) => {
-        if (this._ignoreFocusEvents) {
-          return;
-        }
-
-        //console.log("blur", li.getAttribute("tabindex"));
-        if (this.activeItem && !this.activeItem._isMenu) {
-          this.setActive(undefined, false);
-        }
-      });
-
-      let onfocus = (e) => {
-        if (this._ignoreFocusEvents) {
-          return;
-        }
-
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          let active = this.activeItem;
-
-          window.setTimeout(() => {
-            if (this.activeItem && this.activeItem !== active) {
-              active._menu.close();
-            }
-          }, 10);
-        }
-        if (li._isMenu) {
-          li._menu.onselect = (item) => {
-            //console.log("submenu select", item);
-            this.onselect(item);
-            this.close();
-          };
-
-          li._menu.start(false, false);
-        }
-
-        this.setActive(li, false);
-      };
-
-      li.addEventListener("touchend", (e) => {
-        onfocus(e);
-
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          console.log("menu ignore");
-          //ignore
-          return;
-        }
-
-        this.click();
-      });
-
-      li.addEventListener("focus", (e) => {
-        onfocus(e);
-      });
-
-      li.addEventListener("touchmove", (e) => {
-        //console.log("menu touchmove");
-        onfocus(e);
-        li.focus();
-      });
-
-      li.addEventListener("mouseenter", (e) => {
-        //console.log("menu mouse enter");
-        li.focus();
-      });
-
-      this.dom.appendChild(li);
-    }
-
-    return li;
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    this.container.style["color"] = this.getDefault("MenuText").color;
-    this.style["color"] = this.getDefault("MenuText").color;
-  }
-
-  seperator() {
-    let bar = document.createElement("div");
-    bar.setAttribute("class", "menuseparator");
-
-
-    this.dom.appendChild(bar);
-
-    return this;
-  }
-
-  menu(title) {
-    let ret = document.createElement("menu-x");
-
-    ret.setAttribute("title", title);
-    this.addItem(ret);
-
-    return ret;
-  }
-
-  calcSize() {
-
-  }
-}
-
-Menu.SEP = Symbol("menu seperator");
-UIBase$d.register(Menu);
-
-class DropBox extends Button {
-  constructor() {
-    super();
-
-    this._searchMenuMode = false;
-
-    this.r = 5;
-    this._menu = undefined;
-    this._auto_depress = false;
-    //this.prop = new ui_base.EnumProperty(undefined, {}, "", "", 0);
-
-    this._onpress = this._onpress.bind(this);
-  }
-
-  init() {
-    super.init();
-    this.updateWidth();
-  }
-
-  get searchMenuMode() {
-    return this._searchMenuMode;
-  }
-
-  set searchMenuMode(v) {
-    this._searchMenuMode = v;
-
-    console.warn("searchMenuMode was set", this);
-  }
-
-
-  setCSS() {
-    //do not call parent classes's setCSS here
-    this.style["user-select"] = "none";
-    this.dom.style["user-select"] = "none";
-  }
-
-  updateWidth() {
-    //let ret = super.updateWidth(10);
-    let dpi = this.getDPI();
-
-    let ts = this.getDefault("DefaultText").size;
-    let tw = this.g.measureText(this._genLabel()).width/dpi;
-    //let tw = ui_base.measureText(this, this._genLabel(), undefined, undefined, ts).width + 8;
-    tw = ~~tw;
-
-    tw += 15;
-
-    if (!this.getAttribute("simple")) {
-      tw += 35;
-    }
-
-    if (tw !== this._last_w) {
-      this._last_w = tw;
-      this.dom.style["width"] = tw + "px";
-      this.style["width"] = tw + "px";
-      this.width = tw;
-
-      this.overrideDefault("defaultWidth", tw);
-      this._repos_canvas();
-      this._redraw();
-    }
-
-    return 0;
-  }
-
-
-  updateDataPath() {
-    if (!this.ctx || !this.hasAttribute("datapath")) {
-      return;
-    }
-
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
-
-    if (val === undefined) {
-      this.disabled = true;
-      return;
-    } else {
-      this.disabled = false;
-    }
-
-    if (this.prop !== undefined) {
-      prop = this.prop;
-    }
-
-    let name = this.getAttribute("name");
-
-    if (prop.type & (PropTypes$a.ENUM|PropTypes$a.FLAG)) {
-      name = prop.ui_value_names[prop.keys[val]];
-    } else {
-      name = ""+val;
-    }
-
-    if (name != this.getAttribute("name")) {
-      this.setAttribute("name", name);
-      this.updateName();
-    }
-
-    //console.log(name, val);
-  }
-
-  update() {
-    super.update();
-
-    if (this.hasAttribute("datapath")) {
-      this.updateDataPath();
-    }
-  }
-
-  _build_menu() {
-    let prop = this.prop;
-
-    if (this.prop === undefined) {
-      return;
-    }
-
-    if (this._menu !== undefined && this._menu.parentNode !== undefined) {
-      this._menu.remove();
-    }
-
-    let menu = this._menu = document.createElement("menu-x");
-    menu.setAttribute("title", name);
-
-    menu._dropbox = this;
-
-    let valmap = {};
-    let enummap = prop.values;
-    let iconmap = prop.iconmap;
-    let uimap = prop.ui_value_names;
-
-    //console.log("   UIMAP", uimap);
-
-    for (let k in enummap) {
-      let uk = k;
-
-      valmap[enummap[k]] = k;
-
-      if (uimap !== undefined && k in uimap) {
-        uk = uimap[k];
-      }
-
-      //menu.addItem(k, enummap[k], ":");
-      if (iconmap && iconmap[k]) {
-        menu.addItemExtra(uk, enummap[k], undefined, iconmap[k]);
-      } else {
-        menu.addItem(uk, enummap[k]);
-      }
-    }
-
-    menu.onselect = (id) => {
-      this._pressed = false;
-
-      //console.log("dropbox select");
-      this._pressed = false;
-      this._redraw();
-      //console.trace("got click!", id, ":::");
-
-      this._menu = undefined;
-      this.prop.setValue(id);
-
-      this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
-      if (this.onselect) {
-        this.onselect(id);
-      }
-
-      if (this.hasAttribute("datapath") && this.ctx) {
-        console.log("setting data api value", id, this.getAttribute("datapath"));
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
-      }
-    };
-  }
-
-  _onpress(e) {
-    console.warn("menu dropbox click", this._menu, e);
-
-    if (this._menu !== undefined) {
-      this._pressed = false;
-      let menu = this._menu;
-      this._menu = undefined;
-      menu.close();
-      return;
-    }
-
-    this._build_menu();
-
-    if (this._menu === undefined) {
-      return;
-    }
-
-    this._menu._dropbox = this;
-    this.dom._background = this.getDefault("BoxDepressed");
-    this._background = this.getDefault("BoxDepressed");
-    this._redraw();
-    this._pressed = true;
-    this.setCSS();
-
-    let onclose = this._menu.onclose;
-    this._menu.onclose = () => {
-      this._pressed = false;
-      this._redraw();
-
-      let menu = this._menu;
-      if (menu) {
-        this._menu = undefined;
-        menu._dropbox = undefined;
-      }
-
-      if (onclose) {
-        onclose.call(menu);
-      }
-    };
-
-    let menu = this._menu;
-    let screen = this.getScreen();
-
-    let dpi = this.getDPI();
-
-    let x = e.x, y = e.y;
-    let rects = this.dom.getBoundingClientRect(); //getClientRects();
-
-    x = rects.x - window.scrollX;
-    y = rects.y + rects.height - window.scrollY; // + rects[0].height; // visualViewport.scale;
-
-    if (!window.haveElectron) {
-      //y -= 8;
-    }
-
-    /*
-    let w = document.createElement("div");
-    w.style["width"] = w.style["height"] = "15px";
-    w.style["background-color"] = "red";
-    w.style["z-index"] = "5000";
-    w.style["position"] = "absolute";
-    w.style["pointer-events"] = "none";
-    w.style["left"] = x + "px";
-    w.style["top"] = y + "px";
-
-    document.body.appendChild(w);
-    //*/
-
-    let con = this._popup = menu._popup = screen.popup(this, x, y, false);
-    con.noMarginsOrPadding();
-
-    con.add(menu);
-    if (this.searchMenuMode) {
-      menu.startFancy();
-    } else {
-      menu.start();
-    }
-  }
-
-  _redraw() {
-    if (this.getAttribute("simple")) {
-      let color;
-
-      if (this._highlight) {
-        drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight") });
-      }
-
-      if (this._focus) {
-        drawRoundBox2(this, {canvas: this.dom, g : this.g, color : this.getDefault("BoxHighlight"), op : "stroke", no_clear : true});
-        drawRoundBox(this, this.dom, this.g, undefined, undefined, 2, "stroke");
-      }
-
-      this._draw_text();
-      return;
-    }
-
-    super._redraw(false);
-
-    let g = this.g;
-    let w = this.dom.width, h = this.dom.height;
-    let dpi = this.getDPI();
-
-    let p = 10*dpi;
-    let p2 = 4*dpi;
-
-
-    //*
-    let bg = this.getDefault("dropTextBG");
-    if (bg !== undefined) {
-      g.fillStyle = bg;
-
-      g.beginPath();
-      g.rect(p2, p2, this.dom.width - p2 - h, this.dom.height - p2 * 2);
-      g.fill();
-    }
-    //*/
-
-    g.fillStyle = "rgba(50, 50, 50, 0.2)";
-    g.strokeStyle = "rgba(50, 50, 50, 0.8)";
-    g.beginPath();
-    /*
-    g.moveTo(w-p, p);
-    g.lineTo(w-(p+h*0.25), h-p);
-    g.lineTo(w-(p+h*0.5), p);
-    g.closePath();
-    //*/
-
-    let sz = 0.3;
-    g.moveTo(w-h*0.5-p, p);
-    g.lineTo(w-p, p);
-    g.moveTo(w-h*0.5-p, p+sz*h/3);
-    g.lineTo(w-p, p+sz*h/3);
-    g.moveTo(w-h*0.5-p, p+sz*h*2/3);
-    g.lineTo(w-p, p+sz*h*2/3);
-
-    g.lineWidth = 1;
-    g.stroke();
-
-    this._draw_text();
-  }
-
-  set menu(val) {
-    this._menu = val;
-
-    if (val !== undefined) {
-      this._name = val.title;
-      this.updateName();
-    }
-  }
-
-  setValue(val) {
-    if (this.prop !== undefined) {
-      this.prop.setValue(val);
-      let val2=val;
-
-      if (val2 in this.prop.keys)
-        val2 = this.prop.keys[val2];
-      val2 = this.prop.ui_value_names[val2];
-
-      this.setAttribute("name", ""+val2);
-      this._name = ""+val2;
-    } else {
-      this.setAttribute("name", ""+val);
-      this._name = ""+val;
-    }
-
-    if (this.onchange) {
-      this.onchange(val);
-    }
-
-    this.setCSS();
-    this.update();
-    this._redraw();
-  }
-
-  get menu() {
-    return this._menu;
-  }
-
-  static define() {return {
-    tagname : "dropbox-x",
-    style   : "dropbox"
-  };}
-}
-
-UIBase$d.register(DropBox);
-
-class MenuWrangler {
-  constructor() {
-    this.screen = undefined;
-    this.menustack = [];
-
-    this.closetimer = 0;
-    this.closeOnMouseUp = undefined;
-  }
-
-  get menu() {
-    return this.menustack.length > 0 ? this.menustack[this.menustack.length-1] : undefined;
-  }
-
-  pushMenu(menu) {
-    if (this.menustack.length === 0 && menu.closeOnMouseUp) {
-      this.closeOnMouseUp = true;
-    }
-
-    this.menustack.push(menu);
-  }
-
-  popMenu(menu) {
-    return this.menustack.pop();
-  }
-
-  endMenus() {
-    for (let menu of this.menustack) {
-      menu.close();
-    }
-
-    this.menustack = [];
-  }
-
-  searchKeyDown(e) {
-    let menu = this.menu;
-    
-    console.log("s", e.keyCode);
-    
-    e.stopPropagation();
-    menu._ignoreFocusEvents = true;
-    menu.textbox.focus();
-    menu._ignoreFocusEvents = false;
-
-    //if (e.shiftKey || e.altKey || e.ctrlKey || e.commandKey) {
-    //  return;
-    //}
-
-    switch (e.keyCode) {
-      case keymap["Enter"]: //return key
-        menu.click(menu.activeItem);
-        break;
-      case keymap["Escape"]: //escape key
-        menu.close();
-        break;
-      case keymap["Up"]:
-        console.log("Up");
-        menu.selectPrev(false);
-        break;
-      case keymap["Down"]:
-        console.log("Down");
-        menu.selectNext(false);
-        break;
-    }
-  }
-
-  on_keydown(e) {
-    window.menu = this.menu;
-    //console.log("M", e.keyCode, this.menu !== undefined);
-
-    if (this.menu === undefined) {
-      return;
-    }
-
-    if (this.menu.hasSearchBox) {
-      return this.searchKeyDown(e);
-    }
-
-    console.log("key", e.keyCode);
-    let menu = this.menu;
-
-    switch (e.keyCode) {
-      case keymap["Left"]: //left
-      case keymap["Right"]: //right
-        if (menu._dropbox) {
-          let dropbox = menu._dropbox;
-
-          if (e.keyCode === keymap["Left"]) {
-            dropbox = dropbox.previousElementSibling;
-          } else {
-            dropbox = dropbox.nextElementSibling;
-          }
-
-          if (dropbox !== undefined && dropbox instanceof DropBox) {
-            this.endMenus();
-            dropbox._onpress(e);
-          }
-        }
-        break;
-      case keymap["Up"]: //up
-        this.selectPrev();
-        break;
-      case keymap["Down"]: //down
-        this.selectNext();
-        break;
-        /*
-        let item = menu.activeItem;
-        if (!item) {
-          item = menu.items[0];
-        }
-
-        if (!item) {
-          return;
-        }
-
-        let item2;
-        let i = menu.items.indexOf(item);
-
-        if (e.keyCode == 38) {
-          i = (i - 1 + menu.items.length) % menu.items.length;
-        } else {
-          i = (i + 1) % menu.items.length;
-        }
-
-        item2 = menu.items[i];
-
-        if (item2) {
-          menu.setActive(item2);
-        }
-        break;//*/
-      case 13: //return key
-      case 32: //space key
-        menu.click(menu.activeItem);
-        break;
-      case 27: //escape key
-        menu.close();
-        break;
-    }
-  }
-
-  on_mousedown(e) {
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = time_ms();
-      return;
-    }
-
-    let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
-
-    let element = screen.pickElement(x, y);
-    console.log("wrangler mousedown", element);
-
-    if (element !== undefined && (element instanceof DropBox || isMobile())) {
-      this.endMenus();
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }
-
-  on_mouseup(e) {
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = time_ms();
-      return;
-    }
-
-    let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
-
-    let element = screen.pickElement(x, y, undefined, undefined, DropBox);
-    if (element !== undefined) {
-      this.closeOnMouseUp = false;
-    } else {
-      element = screen.pickElement(x, y, undefined, undefined, Menu);
-
-      //closeOnMouseUp
-      if (element && this.closeOnMouseUp) {
-        element.click();
-      }
-    }
-
-  }
-
-  on_mousemove(e) {
-    //XXX
-    if (this.menu && this.menu.hasSearchBox) {
-      this.closetimer = time_ms();
-      return;
-    }
-
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = time_ms();
-      return;
-    }
-
-    let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
-
-    let element = screen.pickElement(x, y);
-
-    if (element === undefined) {
-      return;
-    }
-
-    if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
-      //destroy entire menu stack
-      this.endMenus();
-
-      this.closetimer = time_ms();
-
-      //start new menu
-      element._onpress(e);
-      return;
-    }
-
-    let ok = false;
-
-    let w = element;
-    while (w) {
-      if (w === this.menu) {
-        ok = true;
-        break;
-      }
-
-      if (w instanceof DropBox && w.menu === this.menu) {
-        ok = true;
-        break;
-      }
-
-      w = w.parentWidget;
-    }
-
-    if (!ok && (time_ms() - this.closetimer > exports.menu_close_time)) {
-      this.endMenus();
-    } else if (ok) {
-      this.closetimer = time_ms();
-    }
-  }
-}
-
-let menuWrangler = new MenuWrangler();
-let wrangerStarted = false;
-
-function startMenuEventWrangling(screen) {
-  menuWrangler.screen = screen;
-
-  if (wrangerStarted) {
-    return;
-  }
-
-  wrangerStarted = true;
-
-  for (let k in DomEventTypes) {
-    if (menuWrangler[k] === undefined) {
-      continue;
-    }
-
-    let dom = k.search("key") >= 0 ? window : document.body;
-    dom = window;
-    dom.addEventListener(DomEventTypes[k], menuWrangler[k].bind(menuWrangler), {passive : false, capture : true});
-  }
-
-  menuWrangler.screen = screen;
-}
-
-function setWranglerScreen(screen) {
-  startMenuEventWrangling(screen);
-}
-
-function getWranglerScreen() {
-  return menuWrangler.screen;
-}
+UIBase$d.register(ListBox);
 
 //use .setAttribute("linear") to disable nonlinear sliding
 class NumSlider extends ValueButtonBase {
@@ -32812,6 +32872,8 @@ function patchDropBox() {
     if (this._menu !== undefined) {
       this._menu.close();
       this._menu = undefined;
+      this._pressed = false;
+      this._redraw();
       return;
     }
 
@@ -32873,6 +32935,7 @@ function patchDropBox() {
       x: x,
       y: y,
       callback: () => {
+
         if (this._menu) {
           this._menu.onclose();
         }
@@ -32900,7 +32963,18 @@ function checkInit() {
     setInterval(on_tick, 350);
   }
 }
+
+let iconcache = {};
+function makeIconKey(icon, iconsheet, invertColors) {
+  return "" + icon + ":" + iconsheet + ":" + invertColors;
+}
+
 function getNativeIcon(icon, iconsheet=0, invertColors=false) {
+  //let key = makeIconKey(icon, iconsheet, invertColors);
+  //if (key in iconcache) {
+  //  return iconcache[key];
+  //}
+
   let icongen = require("./icogen.js");
 
   window.icongen = icongen;
@@ -32982,12 +33056,24 @@ function buildElectronMenu(menu) {
 
 
   let buildItem = (item) => {
+    if (item._isMenu) {
+      let menu2 = item._menu;
+
+      return new ElectronMenuItem({
+        submenu : buildElectronMenu(item._menu),
+        label : menu2.getAttribute("title")
+      });
+    }
+
+
     let hotkey = item.hotkey;
     let icon = item.icon;
-    let label = item.label;
+    let label = ""+item.label;
 
-    if (hotkey) {
+    if (hotkey && typeof hotkey !== "string") {
       hotkey = buildElectronHotkey(hotkey);
+    } else {
+      hotkey = ""+hotkey;
     }
 
     if (icon < 0) {
@@ -32995,7 +33081,7 @@ function buildElectronMenu(menu) {
     }
 
     let args = {
-      id          : item._id,
+      id          : ""+item._id,
       label       : label,
       accelerator : hotkey,
       icon        : icon ? getNativeIcon(icon) : undefined,
@@ -33007,7 +33093,10 @@ function buildElectronMenu(menu) {
 
     return new ElectronMenuItem(args);
   };
+
   for (let item of menu.items) {
+    console.log("----->", item._isMenu, item);
+    //buildItem(item);
     emenu.append(buildItem(item));
 
   }
@@ -35397,6 +35486,7 @@ class Area$1 extends UIBase$1 {
 
     if (isMobile()||exports.addHelpPickers) {
       this.helppicker = row.helppicker();
+      this.helppicker.iconsheet = 0;
     }
 
     if (add_note_area) {
@@ -36398,6 +36488,13 @@ class ThemeEditor extends Container {
             do_onchange(key, k);
           };
           cw.label = k;
+        } else {
+          let box = col.textbox();
+          box.onchange = () => {
+            theme[key][k] = box.text;
+            do_onchange(key, k);
+          };
+          box.text = v;
         }
       } else if (typeof v === "number") {
         let slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
@@ -36430,9 +36527,10 @@ class ThemeEditor extends Container {
 
         let cw = panel2.colorbutton();
         cw.label = "color";
-        cw.setRGBA(css2color$1(v));
+        cw.setRGBA(css2color$1(v.color));
         cw.onchange = () => {
-          v.color = color2css$2(v.color);
+          v.color = color2css$2(cw.rgba);
+          do_onchange(key, k);
         };
 
         let slider = panel2.slider(undefined, "size", v.size);
@@ -38137,7 +38235,8 @@ class Screen$2 extends UIBase$1 {
       ret.style["z-index"] = z;
     };
 
-    this.doOnce(cb);
+    setTimeout(cb, 250);
+    //this.doOnce(cb);
 
     return ret;
   }
@@ -41112,5 +41211,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
