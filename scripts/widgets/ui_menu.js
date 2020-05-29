@@ -28,6 +28,7 @@ export class Menu extends UIBase {
     super();
 
     this.items = [];
+    this.autoSearchMode = true;
 
     this._ignoreFocusEvents = false;
     this.closeOnMouseUp = true;
@@ -327,7 +328,7 @@ export class Menu extends UIBase {
     this.focus();
     menuWrangler.pushMenu(this);
 
-    if (this.items.length > 15) {
+    if (this.items.length > 15 && this.autoSearchMode) {
       return this.start_fancy(prepend, setActive);
     }
 
@@ -340,7 +341,13 @@ export class Menu extends UIBase {
     if (!setActive)
       return;
 
+    console.log(this.container, "container?");
+    this.setCSS();
+    this.flushUpdate();
+
     window.setTimeout(() => {
+      this.flushUpdate();
+
       //select first child
       //TODO: cache last child entry
 
@@ -695,6 +702,7 @@ export class DropBox extends Button {
     super();
 
     this._searchMenuMode = false;
+    this.altKey = undefined;
 
     this.r = 5;
     this._menu = undefined;
@@ -726,6 +734,28 @@ export class DropBox extends Button {
     this.dom.style["user-select"] = "none";
   }
 
+  _genLabel() {
+    let s = super._genLabel();
+    let ret = "";
+
+    if (s.length === 0) {
+      s = "(error)";
+    }
+
+    this.altKey = s[0].toUpperCase().charCodeAt(0);
+
+    for (let i=0; i<s.length; i++) {
+      if (s[i] === "&" && i < s.length-1 && s[i+1] !== "&") {
+        this.altKey = s[i+1].toUpperCase().charCodeAt(0);
+      } else if (s[i] === "&" && i < s.length-1 && s[i+1] === "&") {
+        continue;
+      } else {
+        ret += s[i];
+      }
+    }
+
+    return ret;
+  }
   updateWidth() {
     //let ret = super.updateWidth(10);
     let dpi = this.getDPI();
@@ -888,6 +918,8 @@ export class DropBox extends Button {
       return;
     }
 
+    this._menu.autoSearchMode = false;
+
     this._menu._dropbox = this;
     this.dom._background = this.getDefault("BoxDepressed");
     this._background = this.getDefault("BoxDepressed");
@@ -941,7 +973,7 @@ export class DropBox extends Button {
     document.body.appendChild(w);
     //*/
 
-    let con = this._popup = menu._popup = screen.popup(this, x, y, false);
+    let con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
     con.noMarginsOrPadding();
 
     con.add(menu);

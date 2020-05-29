@@ -399,8 +399,18 @@ export class Screen extends ui_base.UIBase {
     return menu;
   }
 
-  popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
+  /**
+   *
+   * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,
+   *                     then move the popup so it's fully inside the window (if it's outsize).
+   *
+    * */
+  popup(owning_node, elem_or_x, y, closeOnMouseOut=true, popupDelay=250) {
     let ret = this._popup(...arguments);
+
+    if (popupDelay === 0) {
+      return ret;
+    }
 
     let z = ret.style["z-index"];
 
@@ -432,7 +442,7 @@ export class Screen extends ui_base.UIBase {
       ret.style["z-index"] = z;
     }
 
-    setTimeout(cb, 250);
+    setTimeout(cb, popupDelay);
     //this.doOnce(cb);
 
     return ret;
