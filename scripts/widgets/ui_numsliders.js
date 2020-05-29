@@ -155,12 +155,37 @@ export class NumSlider extends ValueButtonBase {
         return;
       }
 
+      let r = this.getClientRects()[0];
+      let x = e.x;
+
+      if (r) {
+        x -= r.x;
+        let sz = this._getArrowSize();
+
+        let v = this.value;
+
+        let step = this.step || 0.01;
+        if (this.isInt) {
+          step = Math.max(step, 1);
+        } else {
+          step *= 5.0;
+        }
+
+        //console.log("D", x, "S", step, "V", v);
+
+        if (x < sz*1.5) {
+           this.setValue(v - step);
+        } else if (x > r.width - sz*1.5) {
+          this.setValue(v + step);
+        }
+      }
+
       if (e.button == 0 && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
 
         this.swapWithTextbox();
-      } else if (e.button == 0) {
+      } else if (!e.button) {
         this.dragStart(e);
 
         e.preventDefault();
@@ -186,6 +211,7 @@ export class NumSlider extends ValueButtonBase {
       onmousedown(e);
     });
 
+    /*
     this.addEventListener("touchstart", (e) => {
       if (this.disabled) return;
       console.log(e)
@@ -198,6 +224,7 @@ export class NumSlider extends ValueButtonBase {
       e.preventDefault();
       e.stopPropagation();
     }, {passive : false});
+    //*/
 
     //this.addEventListener("touchstart", (e) => {
     //  console.log(e);
