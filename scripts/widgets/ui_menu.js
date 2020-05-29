@@ -1191,10 +1191,10 @@ export class MenuWrangler {
         }
         break;
       case keymap["Up"]: //up
-        this.selectPrev();
+        menu.selectPrev();
         break;
       case keymap["Down"]: //down
-        this.selectNext();
+        menu.selectNext();
         break;
         /*
         let item = menu.activeItem;
@@ -1432,7 +1432,7 @@ export function createMenu(ctx, title, templ) {
 
 export function startMenu(menu, x, y, searchMenuMode=false) {
   let screen = menu.ctx.screen;
-  let con = menu._popup = screen.popup(undefined, x, y, false);
+  let con = menu._popup = screen.popup(undefined, x, y, false, 55);
   con.noMarginsOrPadding();
 
   con.add(menu);
