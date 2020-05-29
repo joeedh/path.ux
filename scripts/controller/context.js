@@ -28,6 +28,8 @@ if (Symbol.CachedDef === undefined) {
   Symbol.CachedDef = Symbol("CachedDef");
 }
 
+const _ret_tmp = [undefined];
+
 export const OverlayClasses = [];
 
 export class ContextOverlay {
@@ -194,6 +196,7 @@ export class LockedContext {
           getter = wrapget(k);
         }
       } catch (error) {
+        //util.print_stack(error);
         console.warn("Failed to save context property", k);
         continue;
       }
@@ -459,7 +462,8 @@ export class Context {
 
     Object.defineProperty(this, name, {
       get : function() {
-        let ret = [undefined];
+        let ret = _ret_tmp;
+        _ret_tmp[0] = undefined;
 
         this.getOwningOverlay(name, ret);
         return ret[0];

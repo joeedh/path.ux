@@ -351,7 +351,17 @@ export class NumProperty extends ToolProperty {
     this.data = 0;
     this.range = [0, 0];
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+  }
 };
+NumProperty.STRUCT = nstructjs.inherit(NumProperty, ToolProperty) + `
+  range : array(float);
+  data  : float;
+}
+`;
 
 export class _NumberPropertyBase extends ToolProperty {
   constructor(type, value, apiname,
@@ -447,7 +457,15 @@ export class _NumberPropertyBase extends ToolProperty {
 
     return this;
   }
+};
+_NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty) + `
+  range    : array(float);
+  expRate  : float;
+  data     : float;
+  step     : float;
 }
+`;
+nstructjs.register(_NumberPropertyBase);
 
 export class IntProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
@@ -485,7 +503,16 @@ export class IntProperty extends _NumberPropertyBase {
     return this;
   }
 
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+  }
 }
+IntProperty.STRUCT = nstructjs.inherit(IntProperty, _NumberPropertyBase) + `
+  data : int;
+}`;
+nstructjs.register(IntProperty);
+
 _addClass(IntProperty);
 
 export class BoolProperty extends ToolProperty {
@@ -533,7 +560,11 @@ export class BoolProperty extends ToolProperty {
   }
 }
 _addClass(BoolProperty);
-
+BoolProperty.STRUCT = nstructjs.inherit(BoolProperty, ToolProperty) + `
+  data : bool;
+}
+`;
+nstructjs.register(BoolProperty);
 
 export class FloatProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
@@ -581,8 +612,53 @@ export class FloatProperty extends _NumberPropertyBase {
 
     return this;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+  }
 }
 _addClass(FloatProperty);
+FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
+  decimalPlaces : int;
+  data          : float;
+}
+`;
+
+class EnumKeyPair {
+  key        : string;
+  val        : string;
+  key_is_int : boolean;
+  val_is_int : boolean;
+
+  constructor(key, val) {
+    this.key = "" + key;
+    this.val = "" + val;
+    this.key_is_int = typeof key === "number" || typeof key === "boolean";
+    this.val_is_int = typeof val === "number" || typeof val === "boolean";
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    if (this.val_is_int) {
+      this.val = parseInt(this.val);
+    }
+
+    if (this.key_is_int) {
+      this.key = parseInt(this.key);
+    }
+  }
+}
+EnumKeyPair.STRUCT = `
+EnumKeyPair {
+  key        : string;
+  val        : string;
+  key_is_int : bool;
+  val_is_int : bool; 
+}
+`
+nstructjs.register(EnumKeyPair);
 
 export class EnumProperty extends ToolProperty {
   constructor(string, valid_values, apiname, 
@@ -706,8 +782,61 @@ export class EnumProperty extends ToolProperty {
     super.setValue(val);
     return this;
   }
+
+  _loadMap(obj) {
+    if (!obj) {
+      return;
+    }
+
+    let ret = {};
+    for (let k of obj) {
+      ret[k.key] = k.val;
+    }
+
+    return ret;
+  }
+  _saveMap(obj) {
+    obj = obj === undefined ? {} : obj;
+    let ret = [];
+
+    for (let k in obj) {
+      ret.push(new EnumKeyPair(k, obj[k]));
+    }
+
+    return ret;
+  }
+
+  loadSTRUCT(reader : function) {
+    reader(this);
+    super.loadSTRUCT(reader);
+
+    this.keys = this._loadMap(obj.keys);
+    this.values = this._loadMap(obj.values);
+    this.ui_value_names = this._loadMap(obj.ui_value_names);
+    this.iconmap = this._loadMap(obj.iconmap);
+    this.descriptions = this._loadMap(obj.descriptions);
+
+    if (this.data_is_int) {
+      this.data = parseInt(this.data);
+    }
+  }
+
+  _is_data_int() {
+    return typeof(this.data) !== "string";
+  }
 }
 _addClass(EnumProperty);
+EnumProperty.STRUCT = nstructjs.inherit(EnumProperty, ToolProperty) + `
+  data            : string             | ""+this.data;
+  data_is_int     : bool               | this._is_data_int();
+  _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
+  _values         : array(EnumKeyPair) | this._saveMap(this.keys) ;
+  _ui_value_names : array(EnumKeyPair) | this._saveMap(this.ui_value_names) ;
+  _iconmap        : array(EnumKeyPair) | this._saveMap(this.iconmap) ;
+  _descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;  
+}
+`;
+nstructjs.register(EnumProperty);
 
 export class FlagProperty extends EnumProperty {
   constructor(string, valid_values, apiname,
@@ -735,6 +864,10 @@ export class FlagProperty extends EnumProperty {
   }
 }
 _addClass(FlagProperty);
+FlagProperty.STRUCT = nstructjs.inherit(FlagProperty, EnumProperty) + `
+}
+`;
+nstructjs.register(FlagProperty);
 
 export class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
@@ -768,6 +901,12 @@ export class Vec2Property extends FloatProperty {
     return ret;
   }
 }
+Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, FloatProperty) + `
+  data : vec2;
+}
+`;
+nstructjs.register(Vec2Property);
+
 _addClass(Vec2Property);
 
 export class Vec3Property extends FloatProperty {
@@ -802,6 +941,11 @@ export class Vec3Property extends FloatProperty {
     return ret;
   }
 }
+Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, FloatProperty) + `
+  data : vec3;
+}
+`;
+nstructjs.register(Vec3Property);
 _addClass(Vec3Property);
 
 export class Vec4Property extends FloatProperty {
@@ -836,6 +980,11 @@ export class Vec4Property extends FloatProperty {
     return ret;
   }
 }
+Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, FloatProperty) + `
+  data : vec4;
+}
+`;
+nstructjs.register(Vec4Property);
 _addClass(Vec4Property);
 
 export class QuatProperty extends ToolProperty {
@@ -865,6 +1014,12 @@ export class QuatProperty extends ToolProperty {
     return ret;
   }
 }
+QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, FloatProperty) + `
+  data : vec4;
+}
+`;
+nstructjs.register(QuatProperty);
+
 _addClass(QuatProperty);
 
 export class Mat4Property extends ToolProperty {
@@ -894,7 +1049,17 @@ export class Mat4Property extends ToolProperty {
     this.copyTo(ret);
     return ret;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+  }
 }
+Mat4Property.STRUCT = nstructjs.inherit(Mat4Property, FloatProperty) + `
+  data           : mat4;
+}
+`;
+nstructjs.register(Mat4Property);
 _addClass(Mat4Property);
 
 /**

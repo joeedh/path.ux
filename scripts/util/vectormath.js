@@ -1159,7 +1159,7 @@ var lookat_cache_vs4;
 var makenormalcache;
 
 export class Matrix4 {
-  constructor(m) {
+    constructor(m) {
     this.$matrix = new internal_matrix();
     this.isPersp = false;
 
@@ -2074,14 +2074,15 @@ export class Matrix4 {
     reader(this);
     
     this.load(this.mat);
-    delete this.mat;
+    this.__mat = this.mat;
+    //delete this.mat;
   }
 }
 
 Matrix4.STRUCT = `
 mat4 {
-  mat      : array(float) | obj.getAsArray();
-  isPersp  : int | obj.isPersp;
+  mat      : array(float) | this.getAsArray();
+  isPersp  : int          | this.isPersp;
 }
 `;
-nstructjs.manager.add_class(Matrix4);
+nstructjs.register(Matrix4);

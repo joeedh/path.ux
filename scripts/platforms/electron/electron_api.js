@@ -69,7 +69,6 @@ function patchDropBox() {
     x = rects[0].x;
     y = rects[0].y + Math.ceil(rects[0].height);
 
-    //console.log(x, y);
     x = ~~x;
     y = ~~y;
     
@@ -141,7 +140,6 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
     if (invertColors) {
       g.filter = "invert(100%)";
     }
-    //console.log(size, tilesize);
 
     let scale = size / tilesize;
     g.scale(scale, scale);
@@ -167,7 +165,6 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   return icon;
   return undefined
 
-  //console.log("ICON", icon);
   window._icon = icon;
   return icon;
 }
@@ -229,15 +226,14 @@ export function buildElectronMenu(menu) {
       icon        : icon ? getNativeIcon(icon) : undefined,
       click       : function() {
         menu.onselect(item._id);
-        //console.log("click", item._id);
-      }
+      },
+      registerAccelerator : false
     };
 
     return new ElectronMenuItem(args);
   }
 
   for (let item of menu.items) {
-    console.log("----->", item._isMenu, item)
     //buildItem(item);
     emenu.append(buildItem(item));
 
@@ -311,7 +307,6 @@ export function initMenuBar(menuEditor) {
 
 
   let header = menuEditor.header;
-  //console.log(header)
   for (let dbox of header.traverse(DropBox)) {
     dbox._build_menu();
     dbox.update();
@@ -329,7 +324,6 @@ export function initMenuBar(menuEditor) {
       submenu : buildElectronMenu(menu2)
     };
 
-    //console.log(title);
     menu.insert(0, new ElectronMenuItem(args));
   }
 

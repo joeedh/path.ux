@@ -767,7 +767,7 @@ const _export_tokdef_ = class tokdef {
 
 var PUTIL_ParseError = class PUTIL_ParseError extends Error {
   constructor(msg) {
-    Error.call(this);
+    super();
   }
 };
 
@@ -1173,13 +1173,14 @@ var StructEnum = {
   T_DOUBLE : 2,
   T_STRING : 7,
   T_STATIC_STRING : 8, //fixed-length string
-  T_STRUCT : 9, 
-  T_TSTRUCT : 10,
-  T_ARRAY   : 11,
-  T_ITER    : 12,
-  T_SHORT   : 13,
-  T_BYTE    : 14,
-  T_BOOL    : 15
+  T_STRUCT   : 9, 
+  T_TSTRUCT  : 10,
+  T_ARRAY    : 11,
+  T_ITER     : 12,
+  T_SHORT    : 13,
+  T_BYTE     : 14,
+  T_BOOL     : 15,
+  T_ITERKEYS : 16
 };
 
 var StructTypes = {
@@ -1194,7 +1195,8 @@ var StructTypes = {
   "iter": StructEnum.T_ITER,
   "short": StructEnum.T_SHORT,
   "byte": StructEnum.T_BYTE,
-  "bool": StructEnum.T_BOOL
+  "bool": StructEnum.T_BOOL,
+  "iterkeys" : StructEnum.T_ITERKEYS
 };
 
 var StructTypeMap = {};
@@ -1218,7 +1220,7 @@ function StructParser() {
   
   var reserved_tokens=new set$2([
     "int", "float", "double", "string", "static_string", "array", 
-    "iter", "abstract", "short", "byte", "bool"
+    "iter", "abstract", "short", "byte", "bool", "iterkeys"
   ]);
 
   function tk(name, re, func) {
@@ -1247,7 +1249,8 @@ function StructParser() {
         js+=c;
         lexer.lexpos++;
       }
-      if (js.endsWith(";")) {
+      
+      while (js.trim().endsWith(";")) {
           js = js.slice(0, js.length-1);
           lexer.lexpos--;
       }
@@ -1323,6 +1326,22 @@ function StructParser() {
     return {type: StructEnum.T_ITER, data: {type: arraytype, iname: itername}}
   }
   
+  function p_IterKeys(p) {
+    p.expect("ITERKEYS");
+    p.expect("LPARAM");
+    
+    var arraytype=p_Type(p);
+    var itername="";
+    
+    if (p.optional("COMMA")) {
+        itername = arraytype.data.replace(/"/g, "");
+        arraytype = p_Type(p);
+    }
+    
+    p.expect("RPARAM");
+    return {type: StructEnum.T_ITERKEYS, data: {type: arraytype, iname: itername}}
+  }
+  
   function p_Abstract(p) {
     p.expect("ABSTRACT");
     p.expect("LPARAM");
@@ -1344,6 +1363,8 @@ function StructParser() {
         return p_Array(p);
     } else if (tok.type=="ITER") {
         return p_Iter(p);
+    } else if (tok.type=="ITERKEYS") {
+        return p_IterKeys(p);
     } else if (tok.type=="STATIC_STRING") {
         return p_Static_String(p);
     } else if (tok.type=="ABSTRACT") {
@@ -1376,19 +1397,24 @@ function StructParser() {
     field.set = undefined;
     field.get = undefined;
     
+    let check = 0;
+    
     var tok=p.peek();
     if (tok.type=="JSCRIPT") {
         field.get = tok.value;
+        check = 1;
         p.next();
     }
     
     tok = p.peek();
     if (tok.type=="JSCRIPT") {
+        check = 1;
         field.set = tok.value;
         p.next();
     }
     
     p.expect("SEMI");
+    
     return field;
   }
   
@@ -1657,22 +1683,29 @@ var pack_callbacks = [
     //this was originally implemented to use ES6 iterators.
 
     packer_debug_start("iter");
-
-    if (val == undefined || val.forEach == undefined) {
-      console.trace();
-      console.log("Undefined iterable list fed to struct struct packer!", val);
-      console.log("Field: ", field);
-      console.log("Type: ", type);
-      console.log("");
-      packer_debug("int 0");
-      _module_exports_.pack_int(data, 0);
-      return;
+    
+    function forEach(cb, thisvar) {
+      if (val && val[Symbol.iterator]) {
+        for (let item of val) {
+          cb.call(thisvar, item);
+        }
+      } else if (val && val.forEach) {
+        val.forEach(function(item) {
+          cb.call(thisvar, item);
+        });
+      } else {
+        console.trace();
+        console.log("Undefined iterable list fed to struct struct packer!", val);
+        console.log("Field: ", field);
+        console.log("Type: ", type);
+        console.log("");
+      }
     }
-
-    var len = 0.0;
-    val.forEach(function (val2) {
+    
+    let len = 0.0;
+    forEach(() => {
       len++;
-    }, this);
+    });
 
     packer_debug("int " + len);
     _module_exports_.pack_int(data, len);
@@ -1681,7 +1714,7 @@ var pack_callbacks = [
     var env = _ws_env;
 
     var i = 0;
-    val.forEach(function (val2) {
+    forEach(function(val2) {
       if (i >= len) {
         if (warninglvl > 0) 
           console.trace("Warning: iterator returned different length of list!", val, i);
@@ -1713,6 +1746,56 @@ var pack_callbacks = [
     packer_debug("bool " + val);
 
     _module_exports_.pack_byte(data, !!val);
+  },function pack_iterkeys(data, val, obj, thestruct, field, type) {
+    //this was originally implemented to use ES6 iterators.
+
+    packer_debug_start("iterkeys");
+    
+    if ((typeof val !== "object" && typeof val !== "function") || val === null) {
+        console.warn("Bad object fed to iterkeys in struct packer!", val);
+        console.log("Field: ", field);
+        console.log("Type: ", type);
+        console.log("");
+        
+        _module_exports_.pack_int(data, 0);
+        
+        packer_debug_end("iterkeys");
+        return;
+    }
+    
+    let len = 0.0;
+    for (let k in val) {
+      len++;
+    }
+    
+    packer_debug("int " + len);
+    _module_exports_.pack_int(data, len);
+
+    var d = type.data, itername = d.iname, type2 = d.type;
+    var env = _ws_env;
+
+    var i = 0;
+    for (let val2 in val) {
+      if (i >= len) {
+        if (warninglvl > 0) 
+          console.warn("Warning: object keys magically replaced on us", val, i);
+        return;
+      }
+
+      if (itername && itername.trim().length > 0 && field.get) {
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = thestruct._env_call(field.get, obj, env);
+      } else {
+        val2 = val[val2]; //fetch value
+      }
+
+      var f2 = {type: type2, get: undefined, set: undefined};
+      do_pack(data, val2, obj, thestruct, f2, type2);
+
+      i++;
+    }
+    packer_debug_end("iterkeys");
   }];
 
 function do_pack(data, val, obj, thestruct, field, type) {
@@ -1864,6 +1947,29 @@ var STRUCT = class STRUCT {
   }
 
   add_class(cls, structName) {
+    if (cls.STRUCT) {
+      let bad = false;
+      
+      let p = cls;
+      while (p) {
+        p = p.__proto__;
+        
+        if (p && p.STRUCT && p.STRUCT === cls.STRUCT) {
+          bad = true;
+          break;
+        }
+      }
+      
+      if (bad) {
+        console.warn("Generating STRUCT script for derived class " + cls.name);
+        if (!structName) {
+          structName = cls.name;
+        }
+        
+        cls.STRUCT = STRUCT.inherit(cls, p) + `\n}`;
+      }
+    }
+    
     if (!cls.STRUCT) {
       throw new Error("class " + cls.name + " has no STRUCT script");
     }
@@ -2011,7 +2117,7 @@ var STRUCT = class STRUCT {
     var tab = "  ";
 
     function fmt_type(type) {
-      if (type.type == StructEnum$1.T_ARRAY || type.type == StructEnum$1.T_ITER) {
+      if (type.type == StructEnum$1.T_ARRAY || type.type == StructEnum$1.T_ITER || type.type === StructEnum$1.T_ITERKEYS) {
         if (type.data.iname != "" && type.data.iname != undefined) {
           return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
         }
@@ -2092,7 +2198,7 @@ var STRUCT = class STRUCT {
 
   write_struct(data, obj, stt) {
     function use_helper_js(field) {
-      if (field.type.type == StructEnum$1.T_ARRAY || field.type.type == StructEnum$1.T_ITER) {
+      if (field.type.type == StructEnum$1.T_ARRAY || field.type.type == StructEnum$1.T_ITER || field.type.type == StructEnum$1.T_ITERKEYS) {
         return field.type.data.iname == undefined || field.type.data.iname == "";
       }
       return true;
@@ -2274,6 +2380,19 @@ var STRUCT = class STRUCT {
         packer_debug("-bool " + ret);
 
         return !!ret;
+      }, function t_iterkeys(type) {
+        packer_debug_start("iterkeys");
+
+        var len = _module_exports_.unpack_int(data, uctx);
+        packer_debug("-int " + len);
+
+        var arr = new Array(len);
+        for (var i = 0; i < len; i++) {
+          arr[i] = unpack_field(type.data.type);
+        }
+
+        packer_debug_end("iterkeys");
+        return arr;
       }
     ];
 
@@ -2683,10 +2802,10 @@ for (var k$1 in struct_intern) {
 }
 
 /** Register a class with nstructjs **/
-_module_exports_$1.register = function register(cls, name) {
-  return _module_exports_$1.manager.register(cls, name);
+_module_exports_$1.register = function register(cls, structName) {
+  return _module_exports_$1.manager.register(cls, structName);
 };
-_module_exports_$1.inherit = function () {
+_module_exports_$1.inherit = function (child, parent, structName = child.name) {
   return _module_exports_$1.STRUCT.inherit(...arguments);
 };
 
