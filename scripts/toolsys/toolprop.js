@@ -626,11 +626,6 @@ FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
 `;
 
 class EnumKeyPair {
-  key        : string;
-  val        : string;
-  key_is_int : boolean;
-  val_is_int : boolean;
-
   constructor(key, val) {
     this.key = "" + key;
     this.val = "" + val;
@@ -806,7 +801,7 @@ export class EnumProperty extends ToolProperty {
     return ret;
   }
 
-  loadSTRUCT(reader : function) {
+  loadSTRUCT(reader) {
     reader(this);
     super.loadSTRUCT(reader);
 

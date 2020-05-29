@@ -24,7 +24,11 @@ export class PropsEditor extends Editor {
 
     let tab1 = tabs.tab("Mass Set Example");
     this.buildMassSetExample(tab1);
-    this.buildFill(tabs.tab("Fill"));
+
+    tab1 = tabs.tab("Theme");
+    let th = document.createElement("theme-editor-x");
+    this.style["overflow-y"] = "scroll";
+    tab1.add(th);
 
     let tab2 = tabs.tab("Settings");
 
@@ -241,12 +245,6 @@ export class PropsEditor extends Editor {
     tab.prop("data.curvemap");
     //let c = document.createElement("curve-widget-x");
     //tab.add(c);
-  }
-
-  buildFill(tab) {
-    let col = tab.col();
-    let mass_path = "canvas.paths[{$.id % 2 === 0}].material.color";
-    col.prop("canvas.paths.active.material.color", undefined, mass_path);
   }
 
   buildMassSetExample(tab) {
