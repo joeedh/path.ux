@@ -317,6 +317,7 @@ function findScreen() {
 
 window._findScreen = findScreen;
 
+
 export function pushModalLight(obj, autoStopPropagation=true) {
   if (cconst.DEBUG.modalEvents) {
     console.warn("pushModalLight");

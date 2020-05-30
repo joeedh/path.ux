@@ -619,6 +619,8 @@ export class Menu extends UIBase {
         ul.menu {
           display        : flex;
           flex-direction : column;
+          flex-wrap      : nowrap;
+          width          : max-content;
           
           margin : 0px;
           padding : 0px;
@@ -629,7 +631,9 @@ export class Menu extends UIBase {
         }
         
         .menuitem {
-          display : block;
+          display : flex;
+          flex-wrap : nowrap;
+          flex-direction : row;          
           
           list-style-type:none;
           -moz-user-focus: normal;
@@ -650,6 +654,9 @@ export class Menu extends UIBase {
         }
         
         .menuitem:focus {
+          display : flex;
+          flex-wrap : nowrap;
+          
           border : none;
           outline : none;
           
@@ -1430,9 +1437,9 @@ export function createMenu(ctx, title, templ) {
   return menu;
 }
 
-export function startMenu(menu, x, y, searchMenuMode=false) {
+export function startMenu(menu, x, y, searchMenuMode=false, safetyDelay=55) {
   let screen = menu.ctx.screen;
-  let con = menu._popup = screen.popup(undefined, x, y, false, 55);
+  let con = menu._popup = screen.popup(undefined, x, y, false, safetyDelay);
   con.noMarginsOrPadding();
 
   con.add(menu);

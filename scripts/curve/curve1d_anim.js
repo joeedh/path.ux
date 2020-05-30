@@ -160,6 +160,10 @@ export class SimpleCurveBase extends CurveTypeData {
     this.params = {};
 
     let pdef = this.constructor.define().params;
+    if (!pdef) {
+      console.warn("Missing define function for curve", this.constructor.name)
+      return;
+    }
     console.log(this.constructor.define(), this, "<-----");
 
     for (let pair of ps) {

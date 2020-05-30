@@ -1323,9 +1323,48 @@ export class ScreenArea extends ui_base.UIBase {
     }
   }
 
+  appendChild(ch) {
+    if (ch instanceof Area) {
+      this.editors.push(ch);
+      this.editormap[ch.constructor.define().areaname] = ch;
+    } else {
+      super.appendChild(ch);
+    }
+  }
+
+  removeChild(ch) {
+    if (ch instanceof Area) {
+      ch.owining_sarea = undefined;
+      ch.pos = undefined;
+      ch.size = undefined;
+
+      if (this.area === ch && this.editors.length > 1) {
+        let i = (this.editors.indexOf(ch) + 1) % this.editors.length;
+        this.switchEditor(this.editors[i].constructor);
+      } else if (this.area === ch) {
+        this.editors = [];
+        this.editormap = {};
+        this.area = undefined;
+
+        ch.remove();
+        return;
+      }
+
+      let areaname = ch.constructor.define().areaname;
+
+      this.editors.remove(ch);
+      delete this.editormap[areaname];
+
+      ch.parentWidget = undefined;
+    } else {
+      return super.removeChild(ch);
+    }
+  }
+
   static newSTRUCT() {
     return document.createElement("screenarea-x");
   }
+
 
   afterSTRUCT() {
     for (let area of this.editors) {

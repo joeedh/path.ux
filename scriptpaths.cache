@@ -19,5 +19,6 @@
   "example/editors/editor_base.js",
   "example/editors/workspace/workspace_ops.js",
   "example/draw/draw_ops.js",
-  "example/electron_api.js"
+  "example/electron_api.js",
+  "example/editors/docbrowser/docbrowser.js"
 ]

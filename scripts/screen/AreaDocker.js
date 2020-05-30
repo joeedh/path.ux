@@ -8,6 +8,7 @@ import {Container} from "../core/ui.js";
 import {Area} from "./ScreenArea.js";
 import {Icons} from "../core/ui_base.js";
 
+import {startMenu} from "../widgets/ui_menu.js";
 import {getAreaIntName, setAreaTypes, AreaWrangler, areaclasses} from './area_wrangler.js';
 
 let ignore = 0;
@@ -39,6 +40,12 @@ export class AreaDocker extends Container {
       console.log("drag start", e);
       let name = this.tbar.tbar.tabs.active.name;
 
+      let id = this.tbar.tbar.tabs.active._id;
+      let sarea = this.getArea().owning_sarea;
+      let area = this.getArea(); //sarea.editormap[id];
+
+      this.ctx.screen.dragArea = [area, sarea];
+
       e.dataTransfer.setData("area", name + "|" + this._id);
       e.preventDefault();
     });
@@ -47,16 +54,35 @@ export class AreaDocker extends Container {
       console.log("drag over");
       console.log(e.dataTransfer.getData("area"));
 
-
       let data = e.dataTransfer.getData("area");
-      let [name, id] = data.split("|");
-
-      if (this.tbar.__fake) {
-        this.tbar.removeTab(this.tbar.__fake)
-        this.tbar.__fake = undefined;
+      if (!data) {
+        return;
       }
 
-      this.tbar.__fake = this.tbar.tab(name, id);
+      let [area, sarea] = this.ctx.screen.dragArea;
+
+      if (!area || this.getArea() === area) {
+        return;
+      }
+
+      if (area.constructor.define().areaname in this.getArea().owning_sarea.editormap) {
+        return;
+      }
+
+      this.ctx.screen.dragArea[1] = this.getArea().owning_sarea;
+
+      try {
+        sarea.removeChild(area);
+      } catch (error) {
+        util.print_stack(error);
+      }
+
+      this.getArea().owning_sarea.appendChild(area);
+
+      //this.tbar.tab(name, id);
+      this.rebuild();
+
+      e.preventDefault();
     });
 
     this.tbar.addEventListener("dragexit", (e) => {
@@ -69,6 +95,17 @@ export class AreaDocker extends Container {
         this.tbar.__fake = undefined;
       }
     });
+
+    this.tbar.addEventListener("drop", (e) => {
+      console.log("drop event", e);
+      console.log(e.dataTransfer.getData("area"));
+    });
+
+    this.tbar.addEventListener("dragend", (e) => {
+      console.log("drag end event", e);
+      console.log(e.dataTransfer.getData("area"));
+    });
+
 
     this.tbar.onchange = (tab) => {
       if (ignore) {
@@ -191,6 +228,7 @@ export class AreaDocker extends Container {
             console.log("loading data", ud);
             loadUIData(area.switcher.tbar, ud);
             area.switcher.rebuild(); //make sure plus tab is at end
+            area.flushUpdate();
           } catch (error) {
             throw error;
           } finally {
@@ -200,7 +238,7 @@ export class AreaDocker extends Container {
       }
     };
 
-    this.ctx.screen.popupMenu(menu, rect.x, rect.y);
+    startMenu(menu, mpos[0], rect.y, false, 0);
   }
 
   getArea() {

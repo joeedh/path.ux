@@ -10104,6 +10104,7 @@ function findScreen() {
 
 window._findScreen = findScreen;
 
+
 function pushModalLight(obj, autoStopPropagation=true) {
   if (exports.DEBUG.modalEvents) {
     console.warn("pushModalLight");
@@ -12898,6 +12899,10 @@ class SimpleCurveBase extends CurveTypeData {
     this.params = {};
 
     let pdef = this.constructor.define().params;
+    if (!pdef) {
+      console.warn("Missing define function for curve", this.constructor.name);
+      return;
+    }
     console.log(this.constructor.define(), this, "<-----");
 
     for (let pair of ps) {
@@ -14273,7 +14278,7 @@ class StringPropertyIF extends ToolPropertyIF {
 class NumPropertyIF extends ToolPropertyIF {
 };
 
-class IntProperty extends ToolPropertyIF {
+class IntPropertyIF extends ToolPropertyIF {
   constructor() {
     super(PropTypes.INT);
   }
@@ -14283,7 +14288,7 @@ class IntProperty extends ToolPropertyIF {
   }
 }
 
-class FloatProperty extends ToolPropertyIF {
+class FloatPropertyIF extends ToolPropertyIF {
   constructor() {
     super(PropTypes.FLOAT);
   }
@@ -14292,7 +14297,7 @@ class FloatProperty extends ToolPropertyIF {
   }
 }
 
-class EnumProperty extends ToolPropertyIF {
+class EnumPropertyIF extends ToolPropertyIF {
   constructor(value, valid_values) {
     super(PropTypes.ENUM);
 
@@ -14333,25 +14338,25 @@ class EnumProperty extends ToolPropertyIF {
   }
 }
 
-class FlagPropertyIF extends EnumProperty {
+class FlagPropertyIF extends EnumPropertyIF {
   constructor(valid_values) {
     super(PropTypes.FLAG);
   }
 }
 
-class Vec2Property extends ToolPropertyIF {
+class Vec2PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.VEC2);
   }
 }
 
-class Vec3Property extends ToolPropertyIF {
+class Vec3PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.VEC3);
   }
 }
 
-class Vec4Property extends ToolPropertyIF {
+class Vec4PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.VEC4);
   }
@@ -14360,7 +14365,7 @@ class Vec4Property extends ToolPropertyIF {
 /**
  * List of other tool props (all of one type)
  */
-class ListProperty extends ToolPropertyIF {
+class ListPropertyIF extends ToolPropertyIF {
   /*
   * Prop must be a ToolProperty subclass instance
   * */
@@ -14397,7 +14402,7 @@ class ListProperty extends ToolPropertyIF {
 }
 
 //like FlagsProperty but uses strings
-class StringSetProperty extends ToolPropertyIF {
+class StringSetPropertyIF extends ToolPropertyIF {
   constructor(value=undefined, definition=[]) {
     super(PropTypes.STRSET);
   }
@@ -14462,15 +14467,15 @@ var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
   ToolPropertyIF: ToolPropertyIF,
   StringPropertyIF: StringPropertyIF,
   NumPropertyIF: NumPropertyIF,
-  IntProperty: IntProperty,
-  FloatProperty: FloatProperty,
-  EnumProperty: EnumProperty,
+  IntPropertyIF: IntPropertyIF,
+  FloatPropertyIF: FloatPropertyIF,
+  EnumPropertyIF: EnumPropertyIF,
   FlagPropertyIF: FlagPropertyIF,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
+  Vec2PropertyIF: Vec2PropertyIF,
+  Vec3PropertyIF: Vec3PropertyIF,
+  Vec4PropertyIF: Vec4PropertyIF,
+  ListPropertyIF: ListPropertyIF,
+  StringSetPropertyIF: StringSetPropertyIF,
   Curve1DPropertyIF: Curve1DPropertyIF
 });
 
@@ -14936,7 +14941,7 @@ _NumberPropertyBase.STRUCT = inherit(_NumberPropertyBase, ToolProperty) + `
 `;
 register(_NumberPropertyBase);
 
-class IntProperty$1 extends _NumberPropertyBase {
+class IntProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
@@ -14977,12 +14982,12 @@ class IntProperty$1 extends _NumberPropertyBase {
     super.loadSTRUCT(reader);
   }
 }
-IntProperty$1.STRUCT = inherit(IntProperty$1, _NumberPropertyBase) + `
+IntProperty.STRUCT = inherit(IntProperty, _NumberPropertyBase) + `
   data : int;
 }`;
-register(IntProperty$1);
+register(IntProperty);
 
-_addClass(IntProperty$1);
+_addClass(IntProperty);
 
 class BoolProperty extends ToolProperty {
   constructor(value, apiname,
@@ -15035,7 +15040,7 @@ BoolProperty.STRUCT = inherit(BoolProperty, ToolProperty) + `
 `;
 register(BoolProperty);
 
-class FloatProperty$1 extends _NumberPropertyBase {
+class FloatProperty extends _NumberPropertyBase {
   constructor(value, apiname, 
               uiname, description, flag, icon)  
   {
@@ -15087,8 +15092,8 @@ class FloatProperty$1 extends _NumberPropertyBase {
     super.loadSTRUCT(reader);
   }
 }
-_addClass(FloatProperty$1);
-FloatProperty$1.STRUCT = inherit(FloatProperty$1, _NumberPropertyBase) + `
+_addClass(FloatProperty);
+FloatProperty.STRUCT = inherit(FloatProperty, _NumberPropertyBase) + `
   decimalPlaces : int;
   data          : float;
 }
@@ -15124,7 +15129,7 @@ EnumKeyPair {
 `;
 register(EnumKeyPair);
 
-class EnumProperty$1 extends ToolProperty {
+class EnumProperty extends ToolProperty {
   constructor(string, valid_values, apiname, 
               uiname, description, flag, icon) 
   {
@@ -15218,7 +15223,7 @@ class EnumProperty$1 extends ToolProperty {
   }
   
   copy() {
-    var p = new EnumProperty$1("dummy", {"dummy" : 0}, this.apiname, this.uiname, this.description, this.flag);
+    var p = new EnumProperty("dummy", {"dummy" : 0}, this.apiname, this.uiname, this.description, this.flag);
 
     this.copyTo(p);
     return p;
@@ -15289,8 +15294,8 @@ class EnumProperty$1 extends ToolProperty {
     return typeof(this.data) !== "string";
   }
 }
-_addClass(EnumProperty$1);
-EnumProperty$1.STRUCT = inherit(EnumProperty$1, ToolProperty) + `
+_addClass(EnumProperty);
+EnumProperty.STRUCT = inherit(EnumProperty, ToolProperty) + `
   data            : string             | ""+this.data;
   data_is_int     : bool               | this._is_data_int();
   _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
@@ -15300,9 +15305,9 @@ EnumProperty$1.STRUCT = inherit(EnumProperty$1, ToolProperty) + `
   _descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;  
 }
 `;
-register(EnumProperty$1);
+register(EnumProperty);
 
-class FlagProperty extends EnumProperty$1 {
+class FlagProperty extends EnumProperty {
   constructor(string, valid_values, apiname,
               uiname, description, flag, icon) {
     super(string, valid_values, apiname,
@@ -15328,12 +15333,12 @@ class FlagProperty extends EnumProperty$1 {
   }
 }
 _addClass(FlagProperty);
-FlagProperty.STRUCT = inherit(FlagProperty, EnumProperty$1) + `
+FlagProperty.STRUCT = inherit(FlagProperty, EnumProperty) + `
 }
 `;
 register(FlagProperty);
 
-class Vec2Property$1 extends FloatProperty$1 {
+class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
@@ -15360,20 +15365,20 @@ class Vec2Property$1 extends FloatProperty$1 {
   }
 
   copy() {
-    let ret = new Vec2Property$1();
+    let ret = new Vec2Property();
     this.copyTo(ret);
     return ret;
   }
 }
-Vec2Property$1.STRUCT = inherit(Vec2Property$1, FloatProperty$1) + `
+Vec2Property.STRUCT = inherit(Vec2Property, FloatProperty) + `
   data : vec2;
 }
 `;
-register(Vec2Property$1);
+register(Vec2Property);
 
-_addClass(Vec2Property$1);
+_addClass(Vec2Property);
 
-class Vec3Property$1 extends FloatProperty$1 {
+class Vec3Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
@@ -15400,19 +15405,19 @@ class Vec3Property$1 extends FloatProperty$1 {
   }
 
   copy() {
-    let ret = new Vec3Property$1();
+    let ret = new Vec3Property();
     this.copyTo(ret);
     return ret;
   }
 }
-Vec3Property$1.STRUCT = inherit(Vec3Property$1, FloatProperty$1) + `
+Vec3Property.STRUCT = inherit(Vec3Property, FloatProperty) + `
   data : vec3;
 }
 `;
-register(Vec3Property$1);
-_addClass(Vec3Property$1);
+register(Vec3Property);
+_addClass(Vec3Property);
 
-class Vec4Property$1 extends FloatProperty$1 {
+class Vec4Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
@@ -15439,17 +15444,17 @@ class Vec4Property$1 extends FloatProperty$1 {
   }
 
   copy() {
-    let ret = new Vec4Property$1();
+    let ret = new Vec4Property();
     this.copyTo(ret);
     return ret;
   }
 }
-Vec4Property$1.STRUCT = inherit(Vec4Property$1, FloatProperty$1) + `
+Vec4Property.STRUCT = inherit(Vec4Property, FloatProperty) + `
   data : vec4;
 }
 `;
-register(Vec4Property$1);
-_addClass(Vec4Property$1);
+register(Vec4Property);
+_addClass(Vec4Property);
 
 class QuatProperty extends ToolProperty {
   constructor(data, apiname, uiname, description) {
@@ -15478,7 +15483,7 @@ class QuatProperty extends ToolProperty {
     return ret;
   }
 }
-QuatProperty.STRUCT = inherit(QuatProperty, FloatProperty$1) + `
+QuatProperty.STRUCT = inherit(QuatProperty, FloatProperty) + `
   data : vec4;
 }
 `;
@@ -15519,7 +15524,7 @@ class Mat4Property extends ToolProperty {
     super.loadSTRUCT(reader);
   }
 }
-Mat4Property.STRUCT = inherit(Mat4Property, FloatProperty$1) + `
+Mat4Property.STRUCT = inherit(Mat4Property, FloatProperty) + `
   data           : mat4;
 }
 `;
@@ -15529,7 +15534,7 @@ _addClass(Mat4Property);
 /**
  * List of other tool props (all of one type)
  */
-class ListProperty$1 extends ToolProperty {
+class ListProperty extends ToolProperty {
   /*
   * Prop must be a ToolProperty subclass instance
   * */
@@ -15576,7 +15581,7 @@ class ListProperty$1 extends ToolProperty {
   }
 
   copy() {
-    let ret = new ListProperty$1(this.prop.copy());
+    let ret = new ListProperty(this.prop.copy());
     this.copyTo(ret);
     return ret;
   }
@@ -15643,10 +15648,10 @@ class ListProperty$1 extends ToolProperty {
   }
 }
 
-_addClass(ListProperty$1);
+_addClass(ListProperty);
 
 //like FlagsProperty but uses strings
-class StringSetProperty$1 extends ToolProperty {
+class StringSetProperty extends ToolProperty {
   constructor(value=undefined, definition=[]) {
     super(PropTypes.STRSET);
 
@@ -15812,13 +15817,13 @@ class StringSetProperty$1 extends ToolProperty {
   }
 
   copy() {
-    let ret = new StringSetProperty$1(undefined, {});
+    let ret = new StringSetProperty(undefined, {});
     this.copyTo(ret);
     return ret;
   }
 }
 
-_addClass(StringSetProperty$1);
+_addClass(StringSetProperty);
 
 class Curve1DProperty extends ToolPropertyIF {
   constructor(curve, apiname, uiname, description, flag, icon) {
@@ -16481,17 +16486,17 @@ function getVecClass(proptype) {
   }
 }
 function isVecProperty(prop) {
-  if (!prop)
+  if (!prop || typeof prop !== "object" || prop === null)
     return false;
 
   let ok = false;
 
+  ok = ok || prop instanceof Vec2PropertyIF;
+  ok = ok || prop instanceof Vec3PropertyIF;
+  ok = ok || prop instanceof Vec4PropertyIF;
   ok = ok || prop instanceof Vec2Property;
   ok = ok || prop instanceof Vec3Property;
   ok = ok || prop instanceof Vec4Property;
-  ok = ok || prop instanceof Vec2Property$1;
-  ok = ok || prop instanceof Vec3Property$1;
-  ok = ok || prop instanceof Vec4Property$1;
 
   ok = ok || prop.type === PropTypes$1.VEC2;
   ok = ok || prop.type === PropTypes$1.VEC3;
@@ -17501,9 +17506,9 @@ class DataPathSetOp extends ToolOp {
 
     if (rdef.subkey !== undefined && (prop.type & mask)) {
       if (prop.type & (PropTypes.ENUM|PropTypes.FLAG))
-        tool.inputs.prop = new IntProperty$1();
+        tool.inputs.prop = new IntProperty();
       else
-        tool.inputs.prop = new FloatProperty$1();
+        tool.inputs.prop = new FloatProperty();
 
       //value = rdef.obj[rdef.key];
       //console.log("rdef.value", value);
@@ -18117,12 +18122,12 @@ class DataStruct {
 
     switch (size) {
       case 2:
-        type = Vec2Property$1;
+        type = Vec2Property;
         break;
       case 3:
-        type = Vec3Property$1;
+        type = Vec3Property;
       case 4:
-        type = Vec4Property$1;
+        type = Vec4Property;
     }
 
     if (type === undefined) {
@@ -18175,7 +18180,7 @@ class DataStruct {
   }
 
   vec2(path, apiname, uiname, description) {
-    let prop = new Vec2Property$1(undefined, apiname, uiname, description);
+    let prop = new Vec2Property(undefined, apiname, uiname, description);
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -18183,7 +18188,7 @@ class DataStruct {
   }
 
   vec3(path, apiname, uiname, description) {
-    let prop = new Vec3Property$1(undefined, apiname, uiname, description);
+    let prop = new Vec3Property(undefined, apiname, uiname, description);
     //prop.uiname = uiname;
 
     let dpath = new DataPath(path, apiname, prop);
@@ -18192,7 +18197,7 @@ class DataStruct {
   }
 
   vec4(path, apiname, uiname, description) {
-    let prop = new Vec4Property$1(undefined, apiname, uiname, description);
+    let prop = new Vec4Property(undefined, apiname, uiname, description);
     //prop.uiname = uiname;
 
     let dpath = new DataPath(path, apiname, prop);
@@ -18201,7 +18206,7 @@ class DataStruct {
   }
 
   float(path, apiname, uiname, description) {
-    let prop = new FloatProperty$1(0, apiname, uiname, description);
+    let prop = new FloatProperty(0, apiname, uiname, description);
 
     let dpath = new DataPath(path, apiname, prop);
     this.add(dpath);
@@ -18227,7 +18232,7 @@ class DataStruct {
 
   int(path, apiname, uiname, description, prop=undefined) {
     if (!prop) {
-      prop = new IntProperty$1(0, apiname, uiname, description);
+      prop = new IntProperty(0, apiname, uiname, description);
     }
 
     let dpath = new DataPath(path, apiname, prop);
@@ -18250,10 +18255,10 @@ class DataStruct {
   enum(path, apiname, enumdef, uiname, description) {
     let prop;
 
-    if (enumdef instanceof EnumProperty$1) {
+    if (enumdef instanceof EnumProperty) {
       prop = enumdef;
     } else {
-      prop = new EnumProperty$1(undefined, enumdef, apiname, uiname, description);
+      prop = new EnumProperty(undefined, enumdef, apiname, uiname, description);
     }
 
     let dpath = new DataPath(path, apiname, prop);
@@ -18302,7 +18307,7 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 
 let _dummypath = new DataPath();
 
-let DummyIntProperty = new IntProperty$1();
+let DummyIntProperty = new IntProperty();
 const CLS_API_KEY = "__dp_map_id";
 
 class DataAPI extends ModelInterface {
@@ -19708,7 +19713,7 @@ window.__cconst = exports;
 
 let Vector4$1 = Vector4;
 
-const EnumProperty$2 = EnumProperty$1;
+const EnumProperty$1 = EnumProperty;
 
 let Area;
 let _setAreaClass = (cls) => {
@@ -22172,7 +22177,7 @@ var ui_base = /*#__PURE__*/Object.freeze({
 
 let keymap$1 = keymap;
 
-let EnumProperty$3 = EnumProperty$1,
+let EnumProperty$2 = EnumProperty,
   PropTypes$2 = PropTypes;
 
 let UIBase$2 = UIBase$1,
@@ -22388,7 +22393,7 @@ class Button extends UIBase$2 {
       e.preventDefault();
       e.stopPropagation();
 
-      if (e.type === "mouseup" && (e.button || e.was_touch)) {
+      if (e.type === "mouseup" && e.button) {
         return;
       }
 
@@ -22675,7 +22680,7 @@ function myToFixed$1(s, n) {
 
 let keymap$2 = keymap;
 
-let EnumProperty$4 = EnumProperty$1,
+let EnumProperty$3 = EnumProperty,
   PropTypes$3 = PropTypes;
 
 let UIBase$3 = UIBase$1,
@@ -23018,7 +23023,7 @@ function myToFixed$2(s, n) {
 
 let keymap$3 = keymap;
 
-let EnumProperty$5 = EnumProperty$1,
+let EnumProperty$4 = EnumProperty,
     PropTypes$4 = PropTypes;
 
 let UIBase$4 = UIBase$1, 
@@ -23834,7 +23839,7 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
 
 "use strict";
 
-let EnumProperty$6 = EnumProperty$1,
+let EnumProperty$5 = EnumProperty,
   PropTypes$5 = PropTypes;
 
 let UIBase$5 = UIBase$1,
@@ -23850,6 +23855,7 @@ class Menu extends UIBase$5 {
     super();
 
     this.items = [];
+    this.autoSearchMode = true;
 
     this._ignoreFocusEvents = false;
     this.closeOnMouseUp = true;
@@ -24149,7 +24155,7 @@ class Menu extends UIBase$5 {
     this.focus();
     menuWrangler.pushMenu(this);
 
-    if (this.items.length > 15) {
+    if (this.items.length > 15 && this.autoSearchMode) {
       return this.start_fancy(prepend, setActive);
     }
 
@@ -24162,7 +24168,13 @@ class Menu extends UIBase$5 {
     if (!setActive)
       return;
 
+    console.log(this.container, "container?");
+    this.setCSS();
+    this.flushUpdate();
+
     window.setTimeout(() => {
+      this.flushUpdate();
+
       //select first child
       //TODO: cache last child entry
 
@@ -24434,6 +24446,8 @@ class Menu extends UIBase$5 {
         ul.menu {
           display        : flex;
           flex-direction : column;
+          flex-wrap      : nowrap;
+          width          : max-content;
           
           margin : 0px;
           padding : 0px;
@@ -24444,7 +24458,9 @@ class Menu extends UIBase$5 {
         }
         
         .menuitem {
-          display : block;
+          display : flex;
+          flex-wrap : nowrap;
+          flex-direction : row;          
           
           list-style-type:none;
           -moz-user-focus: normal;
@@ -24465,6 +24481,9 @@ class Menu extends UIBase$5 {
         }
         
         .menuitem:focus {
+          display : flex;
+          flex-wrap : nowrap;
+          
           border : none;
           outline : none;
           
@@ -24517,6 +24536,7 @@ class DropBox extends Button {
     super();
 
     this._searchMenuMode = false;
+    this.altKey = undefined;
 
     this.r = 5;
     this._menu = undefined;
@@ -24548,6 +24568,28 @@ class DropBox extends Button {
     this.dom.style["user-select"] = "none";
   }
 
+  _genLabel() {
+    let s = super._genLabel();
+    let ret = "";
+
+    if (s.length === 0) {
+      s = "(error)";
+    }
+
+    this.altKey = s[0].toUpperCase().charCodeAt(0);
+
+    for (let i=0; i<s.length; i++) {
+      if (s[i] === "&" && i < s.length-1 && s[i+1] !== "&") {
+        this.altKey = s[i+1].toUpperCase().charCodeAt(0);
+      } else if (s[i] === "&" && i < s.length-1 && s[i+1] === "&") {
+        continue;
+      } else {
+        ret += s[i];
+      }
+    }
+
+    return ret;
+  }
   updateWidth() {
     //let ret = super.updateWidth(10);
     let dpi = this.getDPI();
@@ -24710,6 +24752,8 @@ class DropBox extends Button {
       return;
     }
 
+    this._menu.autoSearchMode = false;
+
     this._menu._dropbox = this;
     this.dom._background = this.getDefault("BoxDepressed");
     this._background = this.getDefault("BoxDepressed");
@@ -24763,7 +24807,7 @@ class DropBox extends Button {
     document.body.appendChild(w);
     //*/
 
-    let con = this._popup = menu._popup = screen.popup(this, x, y, false);
+    let con = this._popup = menu._popup = screen.popup(this, x, y, false, 0);
     con.noMarginsOrPadding();
 
     con.add(menu);
@@ -24981,10 +25025,10 @@ class MenuWrangler {
         }
         break;
       case keymap["Up"]: //up
-        this.selectPrev();
+        menu.selectPrev();
         break;
       case keymap["Down"]: //down
-        this.selectNext();
+        menu.selectNext();
         break;
         /*
         let item = menu.activeItem;
@@ -25220,9 +25264,9 @@ function createMenu(ctx, title, templ) {
   return menu;
 }
 
-function startMenu(menu, x, y, searchMenuMode=false) {
+function startMenu(menu, x, y, searchMenuMode=false, safetyDelay=55) {
   let screen = menu.ctx.screen;
-  let con = menu._popup = screen.popup(undefined, x, y, false);
+  let con = menu._popup = screen.popup(undefined, x, y, false, safetyDelay);
   con.noMarginsOrPadding();
 
   con.add(menu);
@@ -25243,7 +25287,7 @@ var _ui = undefined;
 let PropFlags$2 = PropFlags;
 let PropSubTypes$2 = PropSubTypes$1;
 
-let EnumProperty$7 = EnumProperty$1;
+let EnumProperty$6 = EnumProperty;
 
 let Vector2$4 = undefined,
   UIBase$6 = UIBase$1,
@@ -26488,10 +26532,10 @@ class Container extends UIBase$1 {
 
     let ret = document.createElement("dropbox-x");
     if (enumDef !== undefined) {
-      if (enumDef instanceof EnumProperty$1) {
+      if (enumDef instanceof EnumProperty) {
         ret.prop = enumDef;
       } else {
-        ret.prop = new EnumProperty$1(defaultval, enumDef, path, name);
+        ret.prop = new EnumProperty(defaultval, enumDef, path, name);
       }
 
       if (iconmap !== undefined) {
@@ -27284,7 +27328,7 @@ UIBase$7.register(RichViewer);
 
 let keymap$4 = keymap;
 
-let EnumProperty$8 = EnumProperty$1,
+let EnumProperty$7 = EnumProperty,
   PropTypes$7 = PropTypes;
 
 let UIBase$8 = UIBase$1,
@@ -27649,7 +27693,7 @@ function makeGenEnum() {
   }
 
   //return enumdef;
-  return new EnumProperty$1(undefined, enumdef).addUINames(uinames).addIcons(icons);
+  return new EnumProperty(undefined, enumdef).addUINames(uinames).addIcons(icons);
 }
 
 class Curve1DWidget extends ColumnFrame {
@@ -27921,7 +27965,7 @@ var _ui$1 = undefined;
 let PropFlags$3 = PropFlags;
 let PropSubTypes$3 = PropSubTypes$1;
 
-let EnumProperty$9 = EnumProperty$1;
+let EnumProperty$8 = EnumProperty;
 
 let Vector2$5 = undefined,
   UIBase$9 = UIBase$1,
@@ -28092,8 +28136,6 @@ class PanelFrame extends ColumnFrame {
     this.contents.style["background-color"] = bg;
     this.style["background-color"] = bg;
 
-    console.log("BG", bg);
-    
     this.__label._updateFont();
   }
 
@@ -29511,7 +29553,9 @@ class ModalTabMove extends EventHandler {
 
       e2 = new DragEvent("dragover", this.dragevent);
       this.droptarget = elem;
-      elem.dispatchEvent(e2);
+      if (elem) {
+        elem.dispatchEvent(e2);
+      }
     }
     //console.log(elem);
   }
@@ -30673,7 +30717,7 @@ var _ui$2 = undefined;
 let PropFlags$4 = PropFlags;
 let PropSubTypes$4 = PropSubTypes$1;
 
-let EnumProperty$a = EnumProperty$1;
+let EnumProperty$9 = EnumProperty;
 
 let Vector2$8 = undefined,
   UIBase$c = UIBase$1,
@@ -30912,7 +30956,7 @@ UIBase$c.register(TableFrame);
 
 "use strict";
 
-let EnumProperty$b = EnumProperty$1,
+let EnumProperty$a = EnumProperty,
   PropTypes$a = PropTypes;
 
 let UIBase$d = UIBase$1,
@@ -31278,12 +31322,37 @@ class NumSlider extends ValueButtonBase {
         return;
       }
 
+      let r = this.getClientRects()[0];
+      let x = e.x;
+
+      if (r) {
+        x -= r.x;
+        let sz = this._getArrowSize();
+
+        let v = this.value;
+
+        let step = this.step || 0.01;
+        if (this.isInt) {
+          step = Math.max(step, 1);
+        } else {
+          step *= 5.0;
+        }
+
+        //console.log("D", x, "S", step, "V", v);
+
+        if (x < sz*1.5) {
+           this.setValue(v - step);
+        } else if (x > r.width - sz*1.5) {
+          this.setValue(v + step);
+        }
+      }
+
       if (e.button == 0 && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
 
         this.swapWithTextbox();
-      } else if (e.button == 0) {
+      } else if (!e.button) {
         this.dragStart(e);
 
         e.preventDefault();
@@ -31309,9 +31378,10 @@ class NumSlider extends ValueButtonBase {
       onmousedown(e);
     });
 
+    /*
     this.addEventListener("touchstart", (e) => {
       if (this.disabled) return;
-      console.log(e);
+      console.log(e)
 
       e.x = e.touches[0].screenX;
       e.y = e.touches[0].screenY;
@@ -31321,6 +31391,7 @@ class NumSlider extends ValueButtonBase {
       e.preventDefault();
       e.stopPropagation();
     }, {passive : false});
+    //*/
 
     //this.addEventListener("touchstart", (e) => {
     //  console.log(e);
@@ -35547,7 +35618,7 @@ class Area$1 extends UIBase$1 {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
-    let prop = new EnumProperty$1(undefined, areas);
+    let prop = new EnumProperty(undefined, areas);
     prop.addIcons(icons);
 
     return prop;
@@ -36506,9 +36577,48 @@ class ScreenArea extends UIBase$1 {
     }
   }
 
+  appendChild(ch) {
+    if (ch instanceof Area$1) {
+      this.editors.push(ch);
+      this.editormap[ch.constructor.define().areaname] = ch;
+    } else {
+      super.appendChild(ch);
+    }
+  }
+
+  removeChild(ch) {
+    if (ch instanceof Area$1) {
+      ch.owining_sarea = undefined;
+      ch.pos = undefined;
+      ch.size = undefined;
+
+      if (this.area === ch && this.editors.length > 1) {
+        let i = (this.editors.indexOf(ch) + 1) % this.editors.length;
+        this.switchEditor(this.editors[i].constructor);
+      } else if (this.area === ch) {
+        this.editors = [];
+        this.editormap = {};
+        this.area = undefined;
+
+        ch.remove();
+        return;
+      }
+
+      let areaname = ch.constructor.define().areaname;
+
+      this.editors.remove(ch);
+      delete this.editormap[areaname];
+
+      ch.parentWidget = undefined;
+    } else {
+      return super.removeChild(ch);
+    }
+  }
+
   static newSTRUCT() {
     return document.createElement("screenarea-x");
   }
+
 
   afterSTRUCT() {
     for (let area of this.editors) {
@@ -37816,6 +37926,12 @@ class AreaDocker extends Container {
       console.log("drag start", e);
       let name = this.tbar.tbar.tabs.active.name;
 
+      let id = this.tbar.tbar.tabs.active._id;
+      let sarea = this.getArea().owning_sarea;
+      let area = this.getArea(); //sarea.editormap[id];
+
+      this.ctx.screen.dragArea = [area, sarea];
+
       e.dataTransfer.setData("area", name + "|" + this._id);
       e.preventDefault();
     });
@@ -37824,16 +37940,35 @@ class AreaDocker extends Container {
       console.log("drag over");
       console.log(e.dataTransfer.getData("area"));
 
-
       let data = e.dataTransfer.getData("area");
-      let [name, id] = data.split("|");
-
-      if (this.tbar.__fake) {
-        this.tbar.removeTab(this.tbar.__fake);
-        this.tbar.__fake = undefined;
+      if (!data) {
+        return;
       }
 
-      this.tbar.__fake = this.tbar.tab(name, id);
+      let [area, sarea] = this.ctx.screen.dragArea;
+
+      if (!area || this.getArea() === area) {
+        return;
+      }
+
+      if (area.constructor.define().areaname in this.getArea().owning_sarea.editormap) {
+        return;
+      }
+
+      this.ctx.screen.dragArea[1] = this.getArea().owning_sarea;
+
+      try {
+        sarea.removeChild(area);
+      } catch (error) {
+        print_stack$1(error);
+      }
+
+      this.getArea().owning_sarea.appendChild(area);
+
+      //this.tbar.tab(name, id);
+      this.rebuild();
+
+      e.preventDefault();
     });
 
     this.tbar.addEventListener("dragexit", (e) => {
@@ -37846,6 +37981,17 @@ class AreaDocker extends Container {
         this.tbar.__fake = undefined;
       }
     });
+
+    this.tbar.addEventListener("drop", (e) => {
+      console.log("drop event", e);
+      console.log(e.dataTransfer.getData("area"));
+    });
+
+    this.tbar.addEventListener("dragend", (e) => {
+      console.log("drag end event", e);
+      console.log(e.dataTransfer.getData("area"));
+    });
+
 
     this.tbar.onchange = (tab) => {
       if (ignore) {
@@ -37968,6 +38114,7 @@ class AreaDocker extends Container {
             console.log("loading data", ud);
             loadUIData(area.switcher.tbar, ud);
             area.switcher.rebuild(); //make sure plus tab is at end
+            area.flushUpdate();
           } catch (error) {
             throw error;
           } finally {
@@ -37977,7 +38124,7 @@ class AreaDocker extends Container {
       }
     };
 
-    this.ctx.screen.popupMenu(menu, rect.x, rect.y);
+    startMenu(menu, mpos[0], rect.y, false, 0);
   }
 
   getArea() {
@@ -38476,8 +38623,18 @@ class Screen$2 extends UIBase$1 {
     return menu;
   }
 
-  popup(owning_node, elem_or_x, y, closeOnMouseOut=true) {
+  /**
+   *
+   * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,
+   *                     then move the popup so it's fully inside the window (if it's outsize).
+   *
+    * */
+  popup(owning_node, elem_or_x, y, closeOnMouseOut=true, popupDelay=250) {
     let ret = this._popup(...arguments);
+
+    if (popupDelay === 0) {
+      return ret;
+    }
 
     let z = ret.style["z-index"];
 
@@ -38509,7 +38666,7 @@ class Screen$2 extends UIBase$1 {
       ret.style["z-index"] = z;
     };
 
-    setTimeout(cb, 250);
+    setTimeout(cb, popupDelay);
     //this.doOnce(cb);
 
     return ret;
@@ -41489,5 +41646,5 @@ let html5_fileapi = html5_fileapi1;
 let parseutil = parseutil1;
 let cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty$1 as EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty$1 as FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty$1 as IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty$1 as ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty$1 as StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property$1 as Vec2Property, Vec3Property$1 as Vec3Property, Vec4Property$1 as Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

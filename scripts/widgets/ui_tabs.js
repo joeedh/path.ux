@@ -142,7 +142,9 @@ export class ModalTabMove extends events.EventHandler {
 
       e2 = new DragEvent("dragover", this.dragevent);
       this.droptarget = elem;
-      elem.dispatchEvent(e2);
+      if (elem) {
+        elem.dispatchEvent(e2);
+      }
     }
     //console.log(elem);
   }

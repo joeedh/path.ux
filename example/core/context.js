@@ -2,6 +2,7 @@ import {WorkspaceEditor} from "../editors/workspace/workspace.js";
 import {Editor} from "../editors/editor_base.js";
 
 import {Context, ContextOverlay, ContextFlags, Area} from '../pathux.js';
+import {DocsBrowserEditor} from "../editors/docbrowser/docbrowser.js";
 
 export class BaseOverlay extends ContextOverlay {
   static contextDefine() {return {
@@ -43,6 +44,10 @@ export class ViewOverlay extends ContextOverlay {
 
   get workspace() {
     return Area.getActiveArea(WorkspaceEditor);
+  }
+
+  get docsbrowser() {
+    return Area.getActiveArea(DocsBrowserEditor);
   }
 }
 

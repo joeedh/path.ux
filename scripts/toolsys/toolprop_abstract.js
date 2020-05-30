@@ -106,7 +106,7 @@ export class StringPropertyIF extends ToolPropertyIF {
 export class NumPropertyIF extends ToolPropertyIF {
 };
 
-export class IntProperty extends ToolPropertyIF {
+export class IntPropertyIF extends ToolPropertyIF {
   constructor() {
     super(PropTypes.INT);
   }
@@ -116,7 +116,7 @@ export class IntProperty extends ToolPropertyIF {
   }
 }
 
-export class FloatProperty extends ToolPropertyIF {
+export class FloatPropertyIF extends ToolPropertyIF {
   constructor() {
     super(PropTypes.FLOAT);
   }
@@ -125,7 +125,7 @@ export class FloatProperty extends ToolPropertyIF {
   }
 }
 
-export class EnumProperty extends ToolPropertyIF {
+export class EnumPropertyIF extends ToolPropertyIF {
   constructor(value, valid_values) {
     super(PropTypes.ENUM);
 
@@ -166,25 +166,25 @@ export class EnumProperty extends ToolPropertyIF {
   }
 }
 
-export class FlagPropertyIF extends EnumProperty {
+export class FlagPropertyIF extends EnumPropertyIF {
   constructor(valid_values) {
     super(PropTypes.FLAG);
   }
 }
 
-export class Vec2Property extends ToolPropertyIF {
+export class Vec2PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.VEC2);
   }
 }
 
-export class Vec3Property extends ToolPropertyIF {
+export class Vec3PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.VEC3);
   }
 }
 
-export class Vec4Property extends ToolPropertyIF {
+export class Vec4PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
     super(PropTypes.VEC4);
   }
@@ -193,7 +193,7 @@ export class Vec4Property extends ToolPropertyIF {
 /**
  * List of other tool props (all of one type)
  */
-export class ListProperty extends ToolPropertyIF {
+export class ListPropertyIF extends ToolPropertyIF {
   /*
   * Prop must be a ToolProperty subclass instance
   * */
@@ -230,7 +230,7 @@ export class ListProperty extends ToolPropertyIF {
 }
 
 //like FlagsProperty but uses strings
-export class StringSetProperty extends ToolPropertyIF {
+export class StringSetPropertyIF extends ToolPropertyIF {
   constructor(value=undefined, definition=[]) {
     super(PropTypes.STRSET);
   }

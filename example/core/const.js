@@ -2,6 +2,7 @@ export default {
   DEBUG : {
     screenborders: false,
     allBordersMovable: false,
+    modalEvents : true,
     /*
     customWindowSize: {
       width: 512, height: 512

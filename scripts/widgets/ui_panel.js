@@ -187,8 +187,6 @@ export class PanelFrame extends ColumnFrame {
     this.contents.style["background-color"] = bg;
     this.style["background-color"] = bg;
 
-    console.log("BG", bg);
-    
     this.__label._updateFont();
   }
 

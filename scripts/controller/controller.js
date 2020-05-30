@@ -24,14 +24,14 @@ export function getVecClass(proptype) {
   }
 }
 export function isVecProperty(prop) {
-  if (!prop)
+  if (!prop || typeof prop !== "object" || prop === null)
     return false;
 
   let ok = false;
 
-  ok = ok || prop instanceof toolprop_abstract.Vec2Property;
-  ok = ok || prop instanceof toolprop_abstract.Vec3Property;
-  ok = ok || prop instanceof toolprop_abstract.Vec4Property;
+  ok = ok || prop instanceof toolprop_abstract.Vec2PropertyIF;
+  ok = ok || prop instanceof toolprop_abstract.Vec3PropertyIF;
+  ok = ok || prop instanceof toolprop_abstract.Vec4PropertyIF;
   ok = ok || prop instanceof toolprop.Vec2Property;
   ok = ok || prop instanceof toolprop.Vec3Property;
   ok = ok || prop instanceof toolprop.Vec4Property;
