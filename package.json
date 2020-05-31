@@ -1,6 +1,6 @@
 {
   "name": "path.ux",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "html5 based UI library with blender-rna-style data binding",
   "main": "scripts/pathux.js",
   "browser": "true",
