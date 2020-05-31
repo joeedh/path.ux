@@ -12,7 +12,7 @@ cd _package
 cp ../pathux.tar .
 tar -xf pathux.tar
 
-cp -r scripts assets *.js *.json dist example index.html *.pem *.MD watch.py render_icons.py ../package
+cp -r scripts simple_docsys assets *.js *.json dist example index.html *.pem *.MD watch.py render_icons.py ../package
 rm -rf ../package/docs
 cp -r docs_src ../package/docs
 rm ../package/docs/.esdoc.json

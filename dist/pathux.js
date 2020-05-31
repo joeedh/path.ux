@@ -4820,7 +4820,7 @@ class set$1 {
       input = new String(input);
     }
 
-    if (input != undefined) {
+    if (input !== undefined) {
       if (Symbol.iterator in input) {
         for (var item of input) {
           this.add(item);
@@ -4909,7 +4909,7 @@ class set$1 {
       if (item === EmptySlot)
         continue;
 
-      thisvar != undefined ? func.call(thisvar, item) : func(item);
+      thisvar !== undefined ? func.call(thisvar, item) : func(item);
     }
   }
 }
@@ -5476,6 +5476,90 @@ class ImageReader {
   }
 };
 
+let digestcache;
+
+//NOT CRYPTOGRAPHIC
+class HashDigest {
+  constructor() {
+    this.i = 0;
+    this.hash = 0;
+  }
+
+  static cachedDigest() {
+    return digestcache.next().reset();
+  }
+
+  reset() {
+    this.i = 0;
+    this.hash = 0;
+
+    return this;
+  }
+
+  get() {
+    return this.hash;
+  }
+
+  add(v) {
+    //glibc linear congruel generator
+    this.i = (this.i*1103515245 + 12345) & ((1<<30)-1);
+    //according to wikipedia only the top 16 bits are random
+    //this.i = this.i>>16;
+
+    if (v < 5.0 && v > -5.0) {
+      v *= 1024;
+    } else if (v < 15 && v >= -15) {
+      v *= 512;
+    } else if (v < 30 && v >= -30) {
+      v *= 256;
+    }
+
+    this.hash ^= v^this.i;
+  }
+}
+
+window._test_hash2 = () => {
+  let h = new HashDigest();
+
+  let tests = [
+    [0, 0, 0, 0],
+    [0, 0, 0],
+    [0, 0],
+    [0],
+    [1],
+    [2],
+    [3],
+    [strhash("yay")],
+    [strhash("yay"), strhash("yay")],
+    [strhash("yay"), strhash("yay"), strhash("yay")]
+  ];
+
+  for (let test of tests) {
+    let h = new HashDigest();
+    for (let f of test) {
+      h.add(f);
+    }
+
+    window.console.log(h.get());
+  }
+  for (let i=0; i<50; i++) {
+    h.add(0);
+    //window.console.log(h.i/((1<<30)-1), h.hash);
+  }
+};
+
+digestcache = cachering.fromConstructor(HashDigest, 512);
+
+window._HashDigest = HashDigest;
+
+function hashjoin(hash, val) {
+  let sum = 0;
+  let mul = (1<<19)-1, off = (1<<27)-1;
+  let i = 0;
+
+  h = (h*mul + off + i*mul*0.25) & mul;
+}
+
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   termColorMap: termColorMap,
@@ -5510,7 +5594,9 @@ var util1 = /*#__PURE__*/Object.freeze({
   strhash: strhash,
   FastHash: FastHash,
   test_fasthash: test_fasthash,
-  ImageReader: ImageReader
+  ImageReader: ImageReader,
+  HashDigest: HashDigest,
+  hashjoin: hashjoin
 });
 
 /**
@@ -7470,18 +7556,18 @@ class Matrix4 {
     let row2 = new Vector3([matrix.$matrix.m31, matrix.$matrix.m32, matrix.$matrix.m33]);
 
     scale[0] = row0.vectorLength();
-    row0.div(scale[0]);
+    row0.divScalar(scale[0]);
     skew[0] = row0.dot(row1);
     row1.combine(row0, 1.0, -skew[0]);
     scale[1] = row1.vectorLength();
-    row1.div(scale[1]);
+    row1.divScalar(scale[1]);
     skew[0] /= scale[1];
     skew[1] = row1.dot(row2);
     row2.combine(row0, 1.0, -skew[1]);
     skew[2] = row1.dot(row2);
     row2.combine(row1, 1.0, -skew[2]);
     scale[2] = row2.vectorLength();
-    row2.div(scale[2]);
+    row2.divScalar(scale[2]);
     skew[1] /= scale[2];
     skew[2] /= scale[2];
 
@@ -7491,9 +7577,9 @@ class Matrix4 {
     if (row0.dot(pdum3) < 0) {
       for (let i = 0; i < 3; i++) {
         scale[i] *= -1;
-        row[0][i] *= -1;
-        row[1][i] *= -1;
-        row[2][i] *= -1;
+        row0[i] *= -1;
+        row1[i] *= -1;
+        row2[i] *= -1;
       }
     }
 
@@ -22125,54 +22211,6 @@ window._loadUIData = loadUIData;
 
 _setUIBase(UIBase$1);
 
-var ui_base = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  _setAreaClass: _setAreaClass,
-  ErrorColors: ErrorColors,
-  setTheme: setTheme,
-  report: report$1,
-  getDefault: getDefault,
-  IsMobile: IsMobile,
-  marginPaddingCSSKeys: marginPaddingCSSKeys,
-  IconManager: IconManager,
-  iconmanager: iconmanager,
-  IconSheets: IconSheets,
-  getIconManager: getIconManager,
-  setIconManager: setIconManager,
-  makeIconDiv: makeIconDiv,
-  dpistack: dpistack,
-  UIFlags: UIFlags,
-  PackFlags: PackFlags,
-  styleScrollBars: styleScrollBars,
-  UIBase: UIBase$1,
-  drawRoundBox2: drawRoundBox2,
-  drawRoundBox: drawRoundBox,
-  _getFont_new: _getFont_new,
-  getFont: getFont,
-  _getFont: _getFont,
-  _ensureFont: _ensureFont,
-  measureTextBlock: measureTextBlock,
-  measureText: measureText,
-  drawText: drawText,
-  saveUIData: saveUIData,
-  loadUIData: loadUIData,
-  theme: theme,
-  Icons: Icons,
-  setIconMap: setIconMap,
-  DataPathError: DataPathError,
-  ColorSchemeTypes: ColorSchemeTypes,
-  parsepx: parsepx,
-  color2css: color2css$2,
-  color2web: color2web,
-  css2color: css2color$1,
-  web2color: web2color,
-  validateWebColor: validateWebColor,
-  invertTheme: invertTheme,
-  setColorSchemeType: setColorSchemeType,
-  CSSFont: CSSFont,
-  exportTheme: exportTheme
-});
-
 "use strict";
 
 let keymap$1 = keymap;
@@ -22393,7 +22431,7 @@ class Button extends UIBase$2 {
       e.preventDefault();
       e.stopPropagation();
 
-      if (e.type === "mouseup" && e.button) {
+      if (isMobile() || e.type === "mouseup" && e.button) {
         return;
       }
 
@@ -25289,12 +25327,11 @@ let PropSubTypes$2 = PropSubTypes$1;
 
 let EnumProperty$6 = EnumProperty;
 
-let Vector2$4 = undefined,
+let Vector2$4 = Vector2,
   UIBase$6 = UIBase$1,
   PackFlags$5 = PackFlags,
   PropTypes$6 = PropTypes;
 
-const SimpleContext = undefined;
 const DataPathError$1 = DataPathError;
 
 var list$2 = function list(iter) {
@@ -26301,7 +26338,23 @@ class Container extends UIBase$1 {
     return ret;
   }
 
+  /*
+  *
+  * new (optional) form: checkenum(inpath, args)
+  * */
   checkenum(inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+    if (typeof name === "object" && name !== null) {
+      let args = name;
+
+      name = args.name;
+      packflag = args.packflag;
+      enummap = args.enummap;
+      defaultval = args.defaultval;
+      callback = args.callback;
+      iconmap = args.iconmap;
+      mass_set_path = args.mass_set_path;
+    }
+
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag;
 
@@ -26899,29 +26952,31 @@ class RowFrame extends Container {
   connectedCallback() {
     super.connectedCallback();
 
-    this.style["display"] = "flex";
-    this.style["flex-direction"] = "row";
+    this.style['display'] = 'flex';
+    this.style['flex-direction'] = 'row';
   }
 
   init() {
     super.init();
 
-    //this.style["flex-direction"] = "row";
-    this.style["display"] = "flex";
-    this.style["flex-direction"] = "row";
-    this.style["align-items"] = "center";
+    this.style['display'] = 'flex';
+    this.style['flex-direction'] = 'row';
+
+    if (!this.style['align-items'] || this.style['align-items'] == '') {
+      this.style['align-items'] = 'center';
+    }
   }
 
-  oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {
-    this.style["margin-left"] = this.style["margin-right"] = m + "px";
-    this.style["margin-top"] = this.style["margin-bottom"] = "" + m2 + "px";
+  oneAxisMargin(m = this.getDefault('oneAxisMargin'), m2 = 0) {
+    this.style['margin-left'] = this.style['margin-right'] = m + 'px';
+    this.style['margin-top'] = this.style['margin-bottom'] = '' + m2 + 'px';
 
     return this;
   }
 
-  oneAxisPadding(m = this.getDefault("oneAxisPadding"), m2 = 0) {
-    this.style["padding-left"] = this.style["padding-right"] = "" + m + "px";
-    this.style["padding-top"] = this.style["padding-bottom"] = "" + m2 + "px";
+  oneAxisPadding(m = this.getDefault('oneAxisPadding'), m2 = 0) {
+    this.style['padding-left'] = this.style['padding-right'] = '' + m + 'px';
+    this.style['padding-top'] = this.style['padding-bottom'] = '' + m2 + 'px';
 
     return this;
   }
@@ -26932,7 +26987,7 @@ class RowFrame extends Container {
 
   static define() {
     return {
-      tagname: "rowframe-x"
+      tagname: 'rowframe-x'
     };
   }
 }
@@ -27967,7 +28022,7 @@ let PropSubTypes$3 = PropSubTypes$1;
 
 let EnumProperty$8 = EnumProperty;
 
-let Vector2$5 = undefined,
+let Vector2$5 = Vector2,
   UIBase$9 = UIBase$1,
   PackFlags$7 = PackFlags,
   PropTypes$8 = PropTypes;
@@ -28181,11 +28236,18 @@ class PanelFrame extends ColumnFrame {
       this.contents.remove();
     } else {
       this.add(this.contents, false);
+      this.contents.parentWidget = this;
 
       this.contents.flushUpdate();
     }
 
     this.contents.hidden = state;
+
+    if (this.parentWidget) {
+      this.parentWidget.flushUpdate();
+    } else {
+      this.flushUpdate();
+    }
     return;
     for (let c of this.shadow.childNodes) {
       if (c !== this.titleframe) {
@@ -30719,12 +30781,11 @@ let PropSubTypes$4 = PropSubTypes$1;
 
 let EnumProperty$9 = EnumProperty;
 
-let Vector2$8 = undefined,
+let Vector2$8 = Vector2,
   UIBase$c = UIBase$1,
   PackFlags$a = PackFlags,
   PropTypes$9 = PropTypes;
 
-const SimpleContext$1 = undefined;
 const DataPathError$2 = DataPathError;
 
 var list$3 = function list(iter) {
@@ -41658,5 +41719,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, warning, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, warning, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map
