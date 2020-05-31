@@ -169,35 +169,53 @@ server.on('stream', (stream, headers) => {
 
   if (path.startsWith("api/")) {
     path = path.slice(4, path.length);
-    path = path.split("?");
 
-    let method = path[0];
-    let json;
+    let api_finish = (method, data) => {
+      let json;
 
-    console.log(termColor("API", "blue"), path);
+      console.log(termColor("API", "blue"), method, data);
 
-    try {
-      json = JSON.parse(unescape(path[1]));
-    } catch (error) {
-      sendError(404, escape(path[1]));
-      return;
+      try {
+        json = JSON.parse(unescape(data));
+      } catch (error) {
+        sendError(404, escape(data));
+        return;
+      }
+
+      if (!Array.isArray(json)) {
+        json = [json];
+      }
+
+      //console.log(json);
+      rpc.handle(method, json).then((result) => {
+        stream.respond({
+          'content-type': 'application/json',
+          ':status': 200
+        });
+        stream.end(result);
+      }).catch((error) => {
+        console.log(error);
+        sendError(501, "" + error);
+      })
     }
 
-    if (!Array.isArray(json)) {
-      json = [json];
-    }
 
-    //console.log(json);
-    rpc.handle(method, json).then((result) => {
-      stream.respond({
-        'content-type': 'application/json',
-        ':status': 200
+    if (headers[":method"].toLowerCase() === "get") {
+      path = path.split("?");
+      api_finish(path[0], path[1]);
+    } else {
+      stream.setEncoding("utf8")
+      let data = "";
+      stream.on('data', (chunk) => {
+        data += chunk;
+        //console.log("got data", chunk);
       });
-      stream.end(result);
-    }).catch((error) => {
-      console.log(error);
-      sendError(501, ""+error);
-    })
+
+      stream.on('end', () => {
+        console.log("end");
+        api_finish(path, data.trim());
+      });
+    }
 
     return;
   }

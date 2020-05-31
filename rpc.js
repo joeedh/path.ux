@@ -4,7 +4,8 @@ let docsysConfig = docsys.readConfig("./simple_docsys/docs.config.js");
 exports.rpcMethods = {
   updateDoc : docsysConfig.updateDoc.bind(docsysConfig),
   newDoc : docsysConfig.newDoc.bind(docsysConfig),
-  hasDoc : docsysConfig.hasDoc.bind(docsysConfig)
+  hasDoc : docsysConfig.hasDoc.bind(docsysConfig),
+  uploadImage : docsysConfig.uploadImage.bind(docsysConfig)
 };
 
 exports.handle = function(method, args) {

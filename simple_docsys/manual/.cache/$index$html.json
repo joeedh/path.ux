@@ -1398,13 +1398,139 @@
       "relpath": "/index.html",
       "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Tools</h2><h3>Undo</h3><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br data-mce-bogus=\\\"1\\\"></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
       "isDiff": true
+    },
+    {
+      "mtime": 1590888703588.7493,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsas</h2><h3>Undo</h3><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590894600284.4915,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasd</h2><h3>Undo</h3><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590894601959.8552,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undo</h3><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590894605371.0327,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undo</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590894856315.9785,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasd</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590895805893.4895,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasd</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590895831739.07,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasds</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590895869040.238,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasdss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896040536.929,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasdss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896061978.1328,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasdsss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896072902.1418,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasdsss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896086251.2234,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasdsss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896112965.7969,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasdsdss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896126027.3867,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasddsdss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896132027.8318,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Undoasddsddss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896133840.0076,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoasddsddss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896135181.3037,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoasddsddss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896179579.9636,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoassddsddss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896217322.0178,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoassddsddss</h3><p>s</p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896254403.2373,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoassddsddss</h3><p><br></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1590896305703.2847,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoassddsddss</h3><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
     }
   ],
   "relpath": "/index.html",
   "headVersion": {
-    "mtime": 1590888703137.8508,
+    "mtime": 1590896305703.2847,
     "relpath": "/index.html",
-    "data": "<h1>In<strong>tr</strong>oduction</h1><h2>Tools</h2><h3>Undo</h3><p><img src=\"./assets/index_image_4mceclip0.png\" data-mce-src=\"example/assets/index_image_4mceclip0.png\" width=\"198\" height=\"130\" style=\"float: right;\" data-mce-style=\"float: right;\"></p><p><br data-mce-bogus=\"1\"></p><p>Undo an action</p>",
+    "data": "<h1>In<strong>tr</strong>oduction</h1><h2>Toolsasdasdad</h2><h3>Unddoassddsddss</h3><p><img src=\"./assets/index_image_0mceu_27577582111590896308129.png\" data-mce-src=\"index.html/assets/index_image_0mceu_27577582111590896308129.png\" width=\"313\" height=\"218\"></p><p><img src=\"./assets/index_image_4mceclip0.png\" data-mce-src=\"example/assets/index_image_4mceclip0.png\" width=\"198\" height=\"130\" style=\"float: right;\" data-mce-style=\"float: right;\"></p><p><br></p><p>Undo an action</p>",
     "isDiff": false
   }
 }

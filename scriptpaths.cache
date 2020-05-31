@@ -24,5 +24,6 @@
   "example/electron_api.js",
   "example/lib/tinymce/js/tinymce/themes/silver/theme.js",
   "example/lib/tinymce/js/tinymce/icons/default/icons.js",
-  "example/lib/tinymce/js/tinymce/plugins/quickbars/plugin.js"
+  "example/lib/tinymce/js/tinymce/plugins/quickbars/plugin.js",
+  "example/lib/tinymce/js/tinymce/plugins/paste/plugin.js"
 ]

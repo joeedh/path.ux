@@ -184,6 +184,30 @@ export class ServerAPI extends DocsAPI {
     return this.callAPI("newDoc", relpath, data);
   }
 
+  uploadImage(relpath, blobInfo, success, onError) {
+    return new Promise((accept, reject) => {
+      let blob = blobInfo.blob();
+
+      return blob.arrayBuffer().then((data) => {
+        console.log("data!", data);
+        let uint8 = new Uint8Array(data);
+        let data2 = [];
+
+        for (let i=0; i<uint8.length; i++) {
+          data2.push(uint8[i]);
+        }
+
+        console.log("data2", data2);
+
+        this.callAPI("uploadImage", relpath, blobInfo.filename(), data2).then((path) => {
+          success(path);
+        });
+      });
+    }).catch((error) => {
+      onError(""+error);
+    });
+  }
+
   callAPI() {
     let key = arguments[0];
     let args = [];
@@ -192,7 +216,9 @@ export class ServerAPI extends DocsAPI {
     }
     console.log(args, arguments.length);
 
-    let path = location.origin + "/api/" + key + "?" + escape(JSON.stringify(args));
+    let path = location.origin + "/api/" + key;
+    console.log(path);
+
     return new Promise((accept, reject) => {
       fetch(path, {
         headers: {
