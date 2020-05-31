@@ -96,27 +96,27 @@
     "filePath": "scripts/core/ui.js",
     "lines": [
       {
-        "lineNumber": 210,
+        "lineNumber": 232,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 211,
+        "lineNumber": 233,
         "line": "   *\r"
       },
       {
-        "lineNumber": 212,
+        "lineNumber": 234,
         "line": "   * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse\r"
       },
       {
-        "lineNumber": 213,
+        "lineNumber": 235,
         "line": "   * @returns {Container}\r"
       },
       {
-        "lineNumber": 214,
+        "lineNumber": 236,
         "line": "   */\r"
       },
       {
-        "lineNumber": 215,
+        "lineNumber": 237,
         "line": "  wrap(mode=\"wrap\") {\r"
       }
     ],
@@ -176,27 +176,27 @@
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 321,
+        "lineNumber": 322,
         "line": "  /** \r"
       },
       {
-        "lineNumber": 322,
+        "lineNumber": 323,
         "line": "   * @param x\r"
       },
       {
-        "lineNumber": 323,
+        "lineNumber": 324,
         "line": "   * @param y\r"
       },
       {
-        "lineNumber": 324,
+        "lineNumber": 325,
         "line": "   * @param args arguments : {sx, sy, nodeclass, excluded_classes}\r"
       },
       {
-        "lineNumber": 325,
+        "lineNumber": 326,
         "line": "  */\r"
       },
       {
-        "lineNumber": 326,
+        "lineNumber": 327,
         "line": "  pickElement(x, y, args, sy, nodeclass, excluded_classes) {\r"
       }
     ],
@@ -212,6 +212,50 @@
       "x",
       "y",
       "args"
+    ]
+  },
+  {
+    "name": "Screen#popup",
+    "filePath": "scripts/screen/FrameManager.js",
+    "lines": [
+      {
+        "lineNumber": 401,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 402,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 403,
+        "line": "   * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,\r"
+      },
+      {
+        "lineNumber": 404,
+        "line": "   *                     then move the popup so it's fully inside the window (if it's outsize).\r"
+      },
+      {
+        "lineNumber": 405,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 406,
+        "line": "    * */\r"
+      },
+      {
+        "lineNumber": 407,
+        "line": "  popup(owning_node, elem_or_x, y, closeOnMouseOut=true, popupDelay=250) {\r"
+      }
+    ],
+    "codeParams": [
+      "owning_node",
+      "elem_or_x",
+      "y",
+      "closeOnMouseOut",
+      "popupDelay"
+    ],
+    "docParams": [
+      "popupDelay"
     ]
   },
   {

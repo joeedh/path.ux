@@ -6,6 +6,17 @@ const EPlugin = require('esdoc/out/src/Plugin/Plugin').default;
 let manualBasePath = "./";
 
 function* listdir(path) {
+  if (fs.readdirSync) {
+    for (let item of fs.readdirSync(path)) {
+      let stat = fs.statSync(path + "/" + item);
+      if (!stat.isDirectory()) {
+        yield item;
+      }
+    }
+    
+    return;
+  }
+  
   let d = fs.opendirSync(path, {});
 
   for (let item=d.readSync(); item; item=d.readSync()) {
@@ -24,14 +35,10 @@ function doManual(p) {
 
   let base = manualBasePath;
   for (let item of listdir(base)) {
-    if (item.isDirectory()) {
-      continue;
-    }
+    path = base + "/" + item;
 
-    path = base + "/" + item.name;
-
-    let extok = item.name.toLowerCase().endsWith(".md");
-    extok = extok || item.name.toLowerCase().endsWith(".html");
+    let extok = item.toLowerCase().endsWith(".md");
+    extok = extok || item.toLowerCase().endsWith(".html");
 
     if (!extok) {
       continue;
@@ -54,7 +61,7 @@ class Plugin {
 
     function test(path) {
       for (let p of listdir(manualBasePath)) {
-        if (p.name.trim() === path) {
+        if (p.trim() === path) {
           return path;
         }
       }
