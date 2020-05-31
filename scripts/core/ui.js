@@ -6,7 +6,7 @@
 var _ui = undefined;
 
 import * as util from '../util/util.js';
-import * as vectormath from '../util/util.js';
+import * as vectormath from '../util/vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as ui_widgets from '../widgets/ui_widgets.js';
 import * as toolprop from '../toolsys/toolprop.js';
@@ -26,7 +26,6 @@ let Vector2 = vectormath.Vector2,
   PackFlags = ui_base.PackFlags,
   PropTypes = toolprop.PropTypes;
 
-export const SimpleContext = ui_base.SimpleContext;
 export const DataPathError = ui_base.DataPathError;
 import cconst from '../config/const.js';
 
@@ -1648,29 +1647,31 @@ export class RowFrame extends Container {
   connectedCallback() {
     super.connectedCallback();
 
-    this.style["display"] = "flex";
-    this.style["flex-direction"] = "row";
+    this.style['display'] = 'flex';
+    this.style['flex-direction'] = 'row';
   }
 
   init() {
     super.init();
 
-    //this.style["flex-direction"] = "row";
-    this.style["display"] = "flex";
-    this.style["flex-direction"] = "row";
-    this.style["align-items"] = "center";
+    this.style['display'] = 'flex';
+    this.style['flex-direction'] = 'row';
+
+    if (!this.style['align-items'] || this.style['align-items'] == '') {
+      this.style['align-items'] = 'center';
+    }
   }
 
-  oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {
-    this.style["margin-left"] = this.style["margin-right"] = m + "px";
-    this.style["margin-top"] = this.style["margin-bottom"] = "" + m2 + "px";
+  oneAxisMargin(m = this.getDefault('oneAxisMargin'), m2 = 0) {
+    this.style['margin-left'] = this.style['margin-right'] = m + 'px';
+    this.style['margin-top'] = this.style['margin-bottom'] = '' + m2 + 'px';
 
     return this;
   }
 
-  oneAxisPadding(m = this.getDefault("oneAxisPadding"), m2 = 0) {
-    this.style["padding-left"] = this.style["padding-right"] = "" + m + "px";
-    this.style["padding-top"] = this.style["padding-bottom"] = "" + m2 + "px";
+  oneAxisPadding(m = this.getDefault('oneAxisPadding'), m2 = 0) {
+    this.style['padding-left'] = this.style['padding-right'] = '' + m + 'px';
+    this.style['padding-top'] = this.style['padding-bottom'] = '' + m2 + 'px';
 
     return this;
   }
@@ -1681,7 +1682,7 @@ export class RowFrame extends Container {
 
   static define() {
     return {
-      tagname: "rowframe-x"
+      tagname: 'rowframe-x'
     };
   }
 }

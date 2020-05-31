@@ -6,7 +6,7 @@
 var _ui = undefined;
 
 import * as util from '../util/util.js';
-import * as vectormath from '../util/util.js';
+import * as vectormath from '../util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as ui_widgets from './ui_widgets.js';
 import * as toolprop from '../toolsys/toolprop.js';
@@ -232,11 +232,18 @@ export class PanelFrame extends ColumnFrame {
       this.contents.remove();
     } else {
       this.add(this.contents, false);
+      this.contents.parentWidget = this;
 
       this.contents.flushUpdate();
     }
 
     this.contents.hidden = state;
+
+    if (this.parentWidget) {
+      this.parentWidget.flushUpdate();
+    } else {
+      this.flushUpdate();
+    }
     return;
     for (let c of this.shadow.childNodes) {
       if (c !== this.titleframe) {

@@ -228,7 +228,7 @@ export class Button extends UIBase {
       e.preventDefault();
       e.stopPropagation();
 
-      if (e.type === "mouseup" && e.button) {
+      if (util.isMobile() || e.type === "mouseup" && e.button) {
         return;
       }
 
