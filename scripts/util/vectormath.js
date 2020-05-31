@@ -1958,18 +1958,18 @@ export class Matrix4 {
     let row2 = new Vector3([matrix.$matrix.m31, matrix.$matrix.m32, matrix.$matrix.m33]);
 
     scale[0] = row0.vectorLength();
-    row0.div(scale[0]);
+    row0.divScalar(scale[0]);
     skew[0] = row0.dot(row1);
     row1.combine(row0, 1.0, -skew[0]);
     scale[1] = row1.vectorLength();
-    row1.div(scale[1]);
+    row1.divScalar(scale[1]);
     skew[0] /= scale[1];
     skew[1] = row1.dot(row2);
     row2.combine(row0, 1.0, -skew[1]);
     skew[2] = row1.dot(row2);
     row2.combine(row1, 1.0, -skew[2]);
     scale[2] = row2.vectorLength();
-    row2.div(scale[2]);
+    row2.divScalar(scale[2]);
     skew[1] /= scale[2];
     skew[2] /= scale[2];
 
@@ -1979,9 +1979,9 @@ export class Matrix4 {
     if (row0.dot(pdum3) < 0) {
       for (let i = 0; i < 3; i++) {
         scale[i] *= -1;
-        row[0][i] *= -1;
-        row[1][i] *= -1;
-        row[2][i] *= -1;
+        row0[i] *= -1;
+        row1[i] *= -1;
+        row2[i] *= -1;
       }
     }
 

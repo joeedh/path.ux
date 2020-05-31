@@ -1034,7 +1034,23 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  /*
+  *
+  * new (optional) form: checkenum(inpath, args)
+  * */
   checkenum(inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+    if (typeof name === "object" && name !== null) {
+      let args = name;
+
+      name = args.name;
+      packflag = args.packflag;
+      enummap = args.enummap;
+      defaultval = args.defaultval;
+      callback = args.callback;
+      iconmap = args.iconmap;
+      mass_set_path = args.mass_set_path;
+    }
+
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag;
 
