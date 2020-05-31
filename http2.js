@@ -1,10 +1,12 @@
 const PORT = 5002;
-const INDEX = "example/index.html";
+const INDEX = "index.html";
 const SERVER_ROOT = ".";
 
 const http2 = require('http2');
 const fs = require('fs');
 const pathmod = require('path');
+
+const rpc = require('./rpc.js');
 
 let colormap = {
   black   : 30,
@@ -80,7 +82,7 @@ server.on('error', (err) => console.error(err));
 
 let mimemap = {
   ".js" : "application/javascript",
-  ".json" : "text/json",
+  ".json" : "application/json",
   ".html" : "text/html",
   ".svg" : "image/svg",
   ".png" : "image/png",
@@ -94,7 +96,7 @@ let mimemap = {
 
 let textmap = new Set([
   "application/javascript",
-  "text/json",
+  "application/json",
   "text/html",
   "text/plain",
   "text/css",
@@ -154,7 +156,7 @@ server.on('stream', (stream, headers) => {
     let save = scriptfiles.has(path2);
     scriptfiles.add(path2);
 
-    if (save) {
+    if (!save) {
       saveScriptFiles();
     }
   }
@@ -163,6 +165,41 @@ server.on('stream', (stream, headers) => {
 
   while (path.startsWith("/")) {
     path = path.slice(1, path.length).trim();
+  }
+
+  if (path.startsWith("api/")) {
+    path = path.slice(4, path.length);
+    path = path.split("?");
+
+    let method = path[0];
+    let json;
+
+    console.log(termColor("API", "blue"), path);
+
+    try {
+      json = JSON.parse(unescape(path[1]));
+    } catch (error) {
+      sendError(404, escape(path[1]));
+      return;
+    }
+
+    if (!Array.isArray(json)) {
+      json = [json];
+    }
+
+    //console.log(json);
+    rpc.handle(method, json).then((result) => {
+      stream.respond({
+        'content-type': 'application/json',
+        ':status': 200
+      });
+      stream.end(result);
+    }).catch((error) => {
+      console.log(error);
+      sendError(501, ""+error);
+    })
+
+    return;
   }
 
   path = pathmod.resolve(SERVER_ROOT + "/" + path);
@@ -181,7 +218,7 @@ server.on('stream', (stream, headers) => {
     console.log(e);
   });
 
-  if (isIndex && stream.pushAllowed) {
+  if (path.endsWith(".html") && stream.pushAllowed) {
     console.log("push stream!");
 
     let max = 16;
@@ -222,8 +259,16 @@ server.on('stream', (stream, headers) => {
           //console.log(e)
         });
 
+        let encoding = textmap.has(getMime(f)) ? "utf8" : undefined;
+        if (!fs.existsSync(f)) {
+          console.log("EVIL!", f);
+
+          pushStream.respond({'content-type': "text/html"});
+          pushStream.end("<html><head><title>404</title></head><body>404"+f+"<body></html>");
+          return;
+        }
+
         pushStream.respond({'content-type': getMime(f)});
-        let encoding = textmap.has(f) ? "utf8" : undefined;
         pushStream.end(fs.readFileSync(f, encoding));
 
         //setTimeout(() => {

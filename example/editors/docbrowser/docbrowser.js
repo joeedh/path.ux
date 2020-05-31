@@ -1,5 +1,81 @@
 import {Editor} from "../editor_base.js";
 import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
+import '../../lib/tinymce/js/tinymce/tinymce.js';
+
+let countstr = function(buf, s) {
+  let count = 0;
+
+  while (buf.length > 0) {
+    let i = buf.search(s);
+    if (i < 0) {
+      break;
+    }
+
+    buf = buf.slice(i+1, buf.length);
+    count++;
+  }
+
+  return count;
+}
+
+function basename(path) {
+  while (path.length > 0 && path.trim().endsWith("/")) {
+    path = path.slice(0, path.length-1);
+  }
+
+  path = path.replace(/\/+/g, "/");
+  path = path.split("/");
+  return path[path.length-1];
+}
+
+function dirname(path) {
+  while (path.length > 0 && path.trim().endsWith("/")) {
+    path = path.slice(0, path.length-1);
+  }
+
+  path = path.split("/");
+  path.length--;
+
+  let s = "";
+  for (let t of path) {
+    s += t + "/";
+  }
+
+  while (s.endsWith("/")) {
+    s = s.slice(0, s.length - 1);
+  }
+
+  return s;
+}
+
+
+function relative(a1, b1) {
+  let a = a1, b = b1;
+
+  let i = 1;
+  while (i <= a.length && b.startsWith(a.slice(0, i+1))) {
+    i++;
+  }
+  i--
+  let pref = "";
+
+  a = a.slice(i, a.length).trim();
+  b = b.slice(i, b.length).trim();
+
+  let s = "";
+
+  for (let i = 0; i < countstr(a, "/"); i++) {
+    s += "../";
+  }
+
+  if (s.endsWith("/") && b.startsWith("/")) {
+    s = s.slice(0, s.length-1);
+  }
+
+  return s + b;
+}
+
+window._relative = relative;
 
 export class SavedDocument {
   constructor() {
@@ -12,9 +88,224 @@ SavedDocument {
 }`;
 nstructjs.register(SavedDocument);
 
+export class DocsAPI {
+  updateDoc(relpath, data) {
+    //returns a promise
+  }
+  uploadImage(blobInfo, success, onError) {
+
+  }
+  newDoc(relpath, data) {
+    //returns a promise
+  }
+  hasDoc(relpath, data) {
+    //returns a promise
+  }
+
+  uploadImage(relpath, blobInfo, success, onError) {
+    //returns a promise
+  }
+}
+
+
+window.PATHUX_DOCPATH = "../simple_docsys/docsys.js"
+window.PATHUX_DOC_CONFIG = "../simple_docsys/docs.config.js"
+
+export class ElectronAPI extends DocsAPI {
+  constructor() {
+    super();
+
+    this.first = true;
+  }
+
+  _doinit() {
+    if (!this.first) {
+      return;
+    }
+
+    let docsys = require(PATHUX_DOCPATH);
+    this.config = docsys.readConfig(PATHUX_DOC_CONFIG);
+
+    this.first = false;
+  }
+
+  uploadImage(relpath, blobInfo, success, onError) {
+    return new Promise((accept, reject) => {
+      this._doinit();
+
+      let blob = blobInfo.blob();
+
+      return blob.arrayBuffer().then((data) => {
+        let path = this.config.uploadImage(relpath, blobInfo.filename(), data);
+        success(path);
+      });
+    }).catch((error) => {
+      onError(""+error);
+    });
+  }
+
+  hasDoc(relpath) {
+    this._doinit();
+    return new Promise((accept, reject) => {
+      accept(this.config.hasDoc(relpath));
+    });
+  }
+
+  updateDoc(relpath, data) {
+    this._doinit();
+
+    return new Promise((accept, reject) => {
+      accept(this.config.updateDoc(relpath, data));
+    });
+  }
+
+  newDoc(relpath, data) {
+    this._doinit();
+    return new Promise((accept, reject) => {
+      accept(this.config.newDoc(relpath, data));
+    });
+  }
+}
+
+export class ServerAPI extends DocsAPI {
+  constructor() {
+    super();
+  }
+
+  hasDoc(relpath) {
+    return this.callAPI("hasDoc", relpath);
+  }
+
+  updateDoc(relpath, data) {
+    return this.callAPI("updateDoc", relpath, data);
+  }
+
+  newDoc(relpath, data) {
+    return this.callAPI("newDoc", relpath, data);
+  }
+
+  callAPI() {
+    let key = arguments[0];
+    let args = [];
+    for (let i=1; i<arguments.length; i++) {
+      args.push(arguments[i]);
+    }
+    console.log(args, arguments.length);
+
+    let path = location.origin + "/api/" + key + "?" + escape(JSON.stringify(args));
+    return new Promise((accept, reject) => {
+      fetch(path, {
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        method : "POST",
+        cache  : "no-cache",
+        body   : JSON.stringify(args)
+      }).then((res) => {
+        //console.log(res.text, res.json, "res", res);
+        console.log(path);
+
+        if (res.ok || res.status < 300) {
+          res.text().then((data) => {
+            console.log("got json", data);
+            data = JSON.parse(data);
+            accept(data.result);
+          }).catch((error) => {
+            console.log("ERROR!", error);
+            reject(error);
+          });
+        } else {
+          res.text().then((data) => {
+            console.log(data);
+            reject(data);
+          });
+        }
+        //let json = res.json();
+      }).catch((error) => {
+        reject(error);
+      });
+    });
+  }
+}
+
+export class DocHistoryItem {
+  constructor(url, title) {
+    this.url = url;
+    this.title = "" + title;
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+}
+
+DocHistoryItem.STRUCT = `
+DocHistoryItem {
+  url   : string;
+  title : string;
+}
+`;
+nstructjs.register(DocHistoryItem);
+
+export class DocHistory extends Array {
+  constructor() {
+    super();
+    this.cur = 0;
+  }
+
+  push(url, title=url) {
+    console.warn("history push", url);
+
+    this.length = this.cur+1;
+    this[this.length-1] = new DocHistoryItem(url, title);
+    this.cur++;
+
+    return this;
+  }
+
+  go(dir) {
+    dir = Math.sign(dir);
+    this.cur = Math.min(Math.max(this.cur + dir, 0), this.length-1);
+
+    return this[this.cur];
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.length = 0;
+    let cur = this.cur;
+    this.cur = 0;
+
+    for (let item of this._items) {
+      this.push(item);
+    }
+
+    this.cur = cur;
+  }
+}
+
+DocHistory.STRUCT = `
+DocHistory {
+  _items : array(DocHistoryItem) | this;
+  cur    : int;
+}
+`;
+
+nstructjs.register(DocHistory);
+
 export class DocsBrowser extends UIBase {
   constructor() {
     super();
+
+    this.editMode = false;
+
+    this.history = new DocHistory();
+
+    this._prefix = "../simple_docsys/doc_build/";
+    this.saveReq = 0;
+    this.saveReqStart = util.time_ms();
+    this._last_save = util.time_ms();
 
     this.header = document.createElement("rowframe-x");
     this.shadow.appendChild(this.header);
@@ -27,6 +318,13 @@ export class DocsBrowser extends UIBase {
       this.initDoc();
     }
 
+    if (window.haveElectron) {
+      this.serverapi = new ElectronAPI();
+    } else {
+      this.serverapi = new ServerAPI();
+    }
+
+
     this.root.style["margin"] = this.root.style["padding"] = this.root.style["border"] = "0px";
     this.root.style["width"] = "100%";
     this.root.style["height"] = "100%";
@@ -37,7 +335,70 @@ export class DocsBrowser extends UIBase {
     this.contentDiv = undefined; //inside of iframe
   }
 
+  setEditMode(state) {
+    this.editMode = state;
+
+    if (this.tinymce && this.editMode) {
+      this.disableLinks();
+      this.tinymce.show();
+    } else if (this.tinymce && !this.editMode) {
+      this.tinymce.hide();
+      this.enableLinks();
+    }
+
+    this.makeHeader();
+
+    if (state && this.oneditstart) {
+      this.oneditstart(this);
+    } else if (!state && this.oneditend) {
+      this.queueSave();
+      this.oneditend(this);
+    }
+  }
+
+  go(dir) {
+    //hrm, use iframe history?
+    if (!this.root.contentWindow) {
+      return;
+    }
+
+    if (dir > 0) {
+      this.root.contentWindow.history.forward();
+    } else {
+      this.root.contentWindow.history.back();
+    }
+  }
+
   makeHeader() {
+    this.makeHeader_intern();
+    this.flushUpdate();
+  }
+
+  makeHeader_intern() {
+    console.log("making header");
+
+    this.header.clear();
+
+    let check = this.header.check(undefined, "Edit Enabled");
+    check.value = this.editMode;
+
+    check.onchange = () => {
+      console.log("check click!", check.checked);
+
+      this.setEditMode(check.checked);
+    }
+
+    if (!this.editMode) {
+      this.header.iconbutton(Icons.LEFT_ARROW, "Back", () => {
+        this.go(-1);
+      });
+      this.header.iconbutton(Icons.RIGHT_ARROW, "Forward", () => {
+        this.go(1);
+      });
+
+      return;
+    }
+
     if (!this.contentDiv || !this.contentDiv.contentEditable) {
       setTimeout(() => {
         this.makeHeader();
@@ -46,7 +407,9 @@ export class DocsBrowser extends UIBase {
     }
 
     this.header.button("NoteBox", () => {
-      this.root.contentDocument.execCommand("formatBlock", undefined, "p");
+      this.undoPre("Note Box");
+
+      this.execCommand("formatBlock", undefined, "p");
       let sel = this.root.contentDocument.getSelection();
       let p = sel.anchorNode;
       if (!(p instanceof HTMLElement)) {
@@ -54,6 +417,8 @@ export class DocsBrowser extends UIBase {
       }
 
       p.setAttribute("class", "notebox");
+
+      this.undoPost("Note Box");
 
       console.log(p);
     })
@@ -102,20 +467,20 @@ export class DocsBrowser extends UIBase {
 
     });
     this.header.iconbutton(Icons.BOLD, "Bold", () => {
-      this.root.contentDocument.execCommand("bold");
+      this.execCommand("bold");
       console.log("ACTIVE", this.root.contentDocument.activeElement);
     }).iconsheet = 0;
     this.header.iconbutton(Icons.ITALIC, "Italic", () => {
-      this.root.contentDocument.execCommand("italic");
+      this.execCommand("italic");
     }).iconsheet = 0;
     this.header.iconbutton(Icons.UNDERLINE, "Underline", () => {
-      this.root.contentDocument.execCommand("underline");
+      this.execCommand("underline");
     }).iconsheet = 0;
     this.header.iconbutton(Icons.STRIKETHRU, "StrikeThrough", () => {
-      this.root.contentDocument.execCommand("strikeThrough");
+      this.execCommand("strikeThrough");
     }).iconsheet = 0;
     this.header.button("PRE", () => {
-      this.root.contentDocument.execCommand("formatBlock", false, "pre");
+      this.execCommand("formatBlock", false, "pre");
     }).iconsheet = 0;
     this.header.listenum(undefined, "Style", {
       Paragraph     : "P",
@@ -125,24 +490,43 @@ export class DocsBrowser extends UIBase {
       "Heading 4"   : "H4",
       "Heading 5"   : "H5",
     }).onselect = (e) => {
-      this.root.contentDocument.execCommand("formatBlock", false, e.toLowerCase());
+      this.execCommand("formatBlock", false, e.toLowerCase());
     }
   }
+
   init() {
     super.init();
     this.setCSS();
   }
 
+  execCommand() {
+    this.undoPre(arguments[0]);
+    this.root.contentDocument.execCommand(...arguments);
+    this.undoPost(arguments[0]);
+  }
+
   loadSource(data) {
+    this.saveReq = 0;
+
+    let cb = () => {
+      if (this.root.readyState !== 'loading') {
+        this.initDoc();
+      } else {
+        window.setTimeout(cb, 5);
+      }
+    };
+
     this.root.setAttribute("srcDoc", data);
-    this.root.onload = () => {
-      this.initDoc();
-    }
+    this.root.onload = cb;
     this._doDocInit = true;
     this.contentDiv = undefined;
   }
 
   load(url) {
+    this.history.push(url, url);
+
+    this.saveReq = 0;
+
     this.currentPath = url;
     this.root.setAttribute("src", url);
     this.root.onload = () => {
@@ -175,26 +559,130 @@ export class DocsBrowser extends UIBase {
       }
     }
 
+    if (!this.root.contentDocument) {
+      return;
+    }
     visit(this.root.contentDocument.body);
 
     if (this.contentDiv) {
-      this.contentDiv.contentEditable = true;
-      this.patchImageTags();
+      if (this.editMode) {
+        this.disableLinks();
+      }
 
-      this.disableLinks();
+      let globals = this.root.contentWindow;
+      console.log("tinymce globals:", globals.document, globals);
 
-      this.contentDiv.addEventListener("input", (e) => {
-        if (e.inputType === "insertFromPaste") {
-          this.patchImageTags();
+      window.tinymce = undefined;
+
+      //*
+      window.tinyMCEPreInit = {
+        suffix : "",
+        baseURL : this.currentPath,
+        documentBaseURL : location.href
+      };
+       //*/
+
+      let loc = globals.document.location;
+      if (loc.href === "about:srcdoc") {
+        loc.href = document.location.href;// this.currentPath;
+      }
+
+
+      let base_url = "/example/lib/tinymce/js/tinymce";
+
+      if (window.haveElectron) {
+        base_url = "lib/tinymce/js/tinymce";
+        let path = document.location.href;
+        path = path.slice(7, path.length);
+
+        path = "file://" + require('path').dirname(path);
+        console.log("%c" + path, "blue");
+
+        tinyMCEPreInit.baseURL = path;
+        tinyMCEPreInit.documentBaseURL = path;
+      }
+
+      let tinymce = this.tinymce = globals.tinymce = window.tinymce = _tinymce(globals);
+
+      tinymce.init({
+        selector: "div.contents",
+        base_url: base_url,
+        paste_data_images : true,
+        allow_html_data_urls : true,
+        plugins: [ 'quickbars', 'paste' ],
+        toolbar: true,
+        menubar: true,
+        inline: true,
+        images_upload_handler : (blobInfo, success, onError) => {
+          console.log("uploading image!", blobInfo);
+          this.serverapi.uploadImage(this.getDocPath(), blobInfo, success, onError);
+        },
+        setup : function(editor) {
+          console.log("tinymce editor setup!", editor);
         }
-        //document.execCommand("enableObjectResizing");
-        console.log("input event!", e);
+      }).then((arg) => {
+        this.tinymce = arg[0];
+
+        if (!this.editMode) {
+          this.tinymce.hide();
+        } else {
+          this.disableLinks();
+        }
       });
+
+      let onchange = (e) => {
+        console.log("Input event!");
+        this.queueSave();
+      }
+
+      this.contentDiv.addEventListener("input", onchange);
+      this.contentDiv.addEventListener("change", onchange);
+      //this.contentDiv.contentEditable = true;
     }
+  }
+
+  queueSave() {
+    if (!this.saveReq) {
+      this.saveReqStart = util.time_ms();
+    }
+    this.saveReq = 1;
+  }
+
+  undoPre() {
+    let undo = this.tinymce.editors[0].undoManager;
+    undo.beforeChange();
+  }
+
+  undoPost(label) {
+    let undo = this.tinymce.editors[0].undoManager;
+    undo.add();
+  }
+
+  enableLinks() {
+    let visit = (n) => {
+      if (n.getAttribute && n.getAttribute("class") === "contents") {
+        return;
+      }
+
+      if (n.tagName === "A") {
+        if (n.getAttribute("_href")) {
+          n.setAttribute("href", n.getAttribute("_href"));
+        }
+      }
+      for (let c of n.childNodes) {
+        visit(c);
+      }
+    }
+
+    visit(this.root.contentDocument.body);
   }
 
   disableLinks() {
     let visit = (n) => {
+      if (n.getAttribute && n.getAttribute("class") === "contents") {
+        return;
+      }
+
       if (n.tagName === "A") {
         n.setAttribute("_href", n.getAttribute("href"));
         n.removeAttribute("href");
@@ -631,9 +1119,126 @@ export class DocsBrowser extends UIBase {
     return buf;
   }
 
+  getDocPath() {
+    if (!this.root.contentDocument) {
+      return undefined;
+    }
+
+    let href = this.root.contentDocument.location.href;
+
+    console.log(document.location.href, this.root.src);
+    let path = relative(dirname(document.location.href), href).trim();
+    while (path.startsWith("/")) {
+      path = path.slice(1, path.length);
+    }
+
+    console.log(path, this._prefix);
+    if (!path) return;
+
+    if (path.startsWith(this._prefix)) {
+      path = path.slice(this._prefix.length, path.length).trim();
+    }
+
+    if (!path.startsWith("/")) {
+      path = "/" + path;
+    }
+
+    return path;
+    /*
+    let path = this.currentPath;
+    if (path.startsWith(this._prefix)) {
+      path = path.slice(this._prefix.length, path.length).trim();
+    }
+
+    if (!path.startsWith("/")) {
+      path = "/" + path;
+    }
+
+    return path;//*/
+  }
+
+  save() {
+    if (!this.contentDiv) {
+      this.report("Save Error", "red");
+      return;
+    }
+
+    if (this.saveReq === 2) {
+      if (util.time_ms() - this.saveReqStart > 13000) {
+        this.saveReqStart = util.time_ms();
+        this.saveReq = 1;
+        console.log("save timeout");
+      } else {
+        return;
+      }
+    }
+
+    this.report("Saving...", "yellow", 400);
+
+    let path = this.getDocPath();
+
+    console.log("saving " + path);
+
+    this.saveReq = 2;
+
+    this.serverapi.updateDoc(path, this.contentDiv.innerHTML).then((result) => {
+      this.saveReq = 0;
+      console.log("Sucess! Saved document", result);
+
+      if (result) {
+        console.log("Server changed final document; reloading...");
+        this.contentDiv.innerHTML = result;
+      }
+
+      this.report("Saved", "green", 750)
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  updateCurrentPath() {
+    if (!this.contentDiv) {
+      return;
+    }
+
+    let href = this.root.contentDocument.location.href;
+    href = relative(dirname(location.href), href).trim();
+
+    if (href !== this.currentPath) {
+      console.log("path change detected", href);
+      this.history.push(href, href);
+
+      this.currentPath = href;
+    }
+  }
+
+
+  //send notifications to user
+  report(message, color=undefined, timeout=undefined) {
+    if (this.ctx.report) {
+      console.warn("%c"+message, "color : " + color + ";");
+      this.ctx.report(message, color, timeout);
+    } else {
+      console.warn("%c"+message, "color : " + color + ";");
+    }
+  }
+
   update() {
+    if (this.saveReq) {
+      if (util.pollTimer(this._id, 500)) {
+        this.report("saving...", "yellow", 400);
+      }
+    }
+
+    this.updateCurrentPath();
+
     if (this._doDocInit && this.root.contentDocument && this.root.contentDocument.readyState === "complete") {
       //this.initDoc();
+    } else if (!this._doDocInit && this.saveReq) {
+      if (util.time_ms() - this._last_save > 500) {
+        this.save();
+        this._last_save = util.time_ms();
+      }
     }
   }
 
@@ -651,6 +1256,8 @@ export class DocsBrowser extends UIBase {
   loadSTRUCT(reader) {
     reader(this);
 
+    this.doOnce(this.makeHeader);
+
     this.root.setAttribute("src", this.currentPath);
   }
 
@@ -664,6 +1271,8 @@ DocsBrowser.STRUCT = `
 DocsBrowser {
   currentPath   : string;
   savedDocument : string;
+  editMode      : bool;
+  history       : DocHistory;
 }
 `;
 
@@ -706,46 +1315,8 @@ export class DocsBrowserEditor extends Editor {
     this.style["overflow"] = "scroll";
 
     this.header.button("Save", () => {
-      let doc = this.browser.root.contentDocument;
-      let head = doc.head;
-      let style = document.createElement("style");
-      head.appendChild(style);
-
-      let text = "";
-      for (let sheet of doc.styleSheets) {
-        let rules;
-
-        try {
-          rules = sheet.rules;
-        } catch (error) {
-          continue; //can't read rules
-        }
-        for (let rule of sheet.rules) {
-          text += rule.cssText + "\n\n";
-        }
-      }
-
-      style.textContent = text;
-
-      let data = `<!doctype html>
-<html>
-${doc.head.outerHTML.trim()}
-${doc.body.outerHTML.trim()}
-</html>
-      `;
-
-      console.log(data);
-      this.savedDocument.data = data;
-      _appstate.saveLocalStorage();
+      this.browser.queueSave();
     });
-
-    this.header.button("Clear", () => {
-      if (prompt("ok?", "true")) {
-        this.savedDocument.data = "";
-        console.log("cleared saved data");
-        _appstate.saveLocalStorage();
-      }
-    })
   }
   static define() {return {
     uiname    : "Docs Browser",
@@ -766,3 +1337,45 @@ DocsBrowserEditor.STRUCT = nstructjs.inherit(DocsBrowserEditor, Editor) + `
 }
 `;
 nstructjs.register(DocsBrowserEditor);
+
+function oldSave() {
+    let doc = this.browser.root.contentDocument;
+    let head = doc.head;
+    let style = document.createElement("style");
+    head.appendChild(style);
+
+    let text = "";
+    for (let sheet of doc.styleSheets) {
+      let rules;
+
+      try {
+        rules = sheet.rules;
+      } catch (error) {
+        continue; //can't read rules
+      }
+      for (let rule of sheet.rules) {
+        text += rule.cssText + "\n\n";
+      }
+    }
+
+    style.textContent = text;
+
+    let data = `<!doctype html>
+<html>
+${doc.head.outerHTML.trim()}
+${doc.body.outerHTML.trim()}
+</html>
+      `;
+
+    console.log(data);
+    this.savedDocument.data = data;
+    _appstate.saveLocalStorage();
+  };
+
+  /*this.header.button("Clear", () => {
+    if (prompt("ok?", "true")) {
+      this.savedDocument.data = "";
+      console.log("cleared saved data");
+      _appstate.saveLocalStorage();
+    }
+  })//*/

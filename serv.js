@@ -1,6 +1,28 @@
+let colormap = {
+  black   : 30,
+  red     : 31,
+  green   : 32,
+  yellow  : 33,
+  blue    : 34,
+  magenta : 35,
+  cyan    : 36,
+  white   : 37,
+  reset   : 0
+};
+
+function termColor(s, color = colormap.reset) {
+  if (typeof color === "string") {
+    color = colormap[color] || colormap.reset;
+  }
+
+  return `\u001b[${color}m${s}\u001b[0m`;
+}
+
 const url = require('url');
 const PORT = 5002;
 const HOST = "localhost"
+
+const rpc = require('./rpc.js')
 
 const debug_prevent_default = false;
 const debug_disable_all_listeners = false;
@@ -99,8 +121,43 @@ const serv = http.createServer({
   if (!p.startsWith("/")) {
     p = "/" + p
   }
-  
-  console.log(req.method, p);
+
+  if (p.startsWith("/api/")) {
+    let path = p.slice(5, p.length);
+    path = path.split("?");
+
+    let method = path[0];
+    let json;
+
+    console.log(termColor("API", "blue"), path);
+
+    try {
+      json = JSON.parse(unescape(path[1]));
+    } catch (error) {
+      sendError(404, escape(path[1]));
+      return;
+    }
+
+    if (!Array.isArray(json)) {
+      json = [json];
+    }
+
+    console.log(json);
+    rpc.handle(method, json).then((result) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', "application/json");
+        res.setHeader('Content-Length', result.length);
+        res._addHeaders();
+        res.end(result);
+    }).catch((error) => {
+      console.log(error);
+      res.sendError(501, ""+error);
+    })
+
+    return;
+  }
+
+  console.log(termColor(req.method, "green"), p);
   
   if (p == "/") {
     p += INDEX

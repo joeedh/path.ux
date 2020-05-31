@@ -14,16 +14,20 @@ export * from './widgets/ui_tabs.js';
 export * from './widgets/ui_listbox.js';
 export * from './widgets/ui_menu.js';
 export * from './widgets/ui_table.js';
+export * from './widgets/ui_noteframe.js';
 export * from './widgets/ui_numsliders.js';
 export * from './widgets/ui_lasttool.js';
 export * from './widgets/ui_textbox.js';
 export * from './util/graphpack.js';
 import * as solver1 from './util/solver.js';
+import * as electron_api1 from './platforms/electron/electron_api.js';
+export const electron_api = electron_api1;
+
 export * from './platforms/electron/electron_api.js';
 export * from './widgets/theme_editor.js';
 export * from './widgets/ui_treeview.js';
 
-export let solver = solver1;
+export const solver = solver1;
 
 import * as math1 from "./util/math.js";
 export const math = math1;
@@ -31,21 +35,21 @@ export const math = math1;
 export * from './screen/FrameManager.js';
 import * as util1 from './util/util.js';
 import * as vectormath1 from './util/vectormath.js';
-export let util = util1;
-export let vectormath = vectormath1;
+export const util = util1;
+export const vectormath = vectormath1;
 export * from './util/vectormath.js';
 
 export * from './toolsys/toolprop.js';
 
 import * as toolprop_abstract1 from './toolsys/toolprop_abstract.js';
-export let toolprop_abstract = toolprop_abstract1;
+export const toolprop_abstract = toolprop_abstract1;
 
 export * from './toolsys/simple_toolsys.js';
 export * from './controller/controller.js';
 export * from './controller/controller_ops.js';
 export * from './controller/simple_controller.js';
 import * as html5_fileapi1 from './util/html5_fileapi.js';
-export let html5_fileapi = html5_fileapi1;
+export const html5_fileapi = html5_fileapi1;
 export * from './util/image.js';
 export * from './screen/ScreenArea.js';
 export * from './util/ScreenOverdraw.js';
@@ -57,7 +61,7 @@ export * from './curve/curve1d_base.js';
 
 export * from './controller/context.js';
 import * as parseutil1 from './util/parseutil.js';
-export let parseutil = parseutil1;
+export const parseutil = parseutil1;
 
 import cconst1 from './config/const.js';
-export let cconst = cconst1;
+export const cconst = cconst1;

@@ -11,6 +11,23 @@ body {
     --c7 : #efefef;
 }
 
+p.notebox {
+    background-color: #ead094;
+    font-family: "Times New Roman";
+    border-radius: 25px;
+    border-top : 15px solid orange;
+    padding : 10px;
+    font-size : 1.0em;
+    display : inline-flex;
+    flex-direction: column;
+    flex-wrap : wrap;
+    float : right;
+}
+
+p {
+    text-indent : 2em;
+}
+
 h1 {
     background-color : var(--c1);
     border-radius : 1px 13px 13px 1px;

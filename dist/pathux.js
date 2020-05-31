@@ -31176,6 +31176,340 @@ class ListBox extends Container {
 }
 UIBase$d.register(ListBox);
 
+let UIBase$e = UIBase$1;
+
+class Note extends UIBase$1 {
+  constructor() {
+    super();
+
+    let style = document.createElement("style");
+
+    this._noteid = undefined;
+    this.height = 20;
+
+    style.textContent = `
+    .notex {
+      display : flex;
+      flex-direction : row;
+      flex-wrap : nowrap;
+      height : {this.height}px;
+      padding : 0px;
+      margin : 0px;
+    }
+    `;
+
+    this.dom = document.createElement("div");
+    this.dom.setAttribute("class", "notex");
+    this.color = "red";
+
+    this.shadow.appendChild(style);
+    this.shadow.append(this.dom);
+    this.setLabel("");
+  }
+
+  setLabel(s) {
+    let color = this.color;
+    if (this.mark === undefined) {
+      this.mark = document.createElement("div");
+      this.mark.style["display"] = "flex";
+      this.mark.style["flex-direction"] = "row";
+      this.mark.style["flex-wrap"] = "nowrap";
+
+      //this.mark.style["width"]
+      let sheet = 0;
+
+      let size = iconmanager.getTileSize(sheet);
+
+      this.mark.style["width"] = "" + size + "px";
+      this.mark.style["height"] = "" + size + "px";
+
+      this.dom.appendChild(this.mark);
+
+      this.ntext = document.createElement("div");
+      this.ntext.style["display"] = "inline-flex";
+      this.ntext.style["flex-wrap"] = "nowrap";
+
+      this.dom.appendChild(this.ntext);
+
+      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
+
+      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
+      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
+      //this.mark.style["background-color"] = color;
+    }
+
+    let mark = this.mark, ntext = this.ntext;
+    //mark.innerText = "!";
+    ntext.innerText = " " + s;
+  }
+
+  init() {
+    super.init();
+
+    this.setAttribute("class", "notex");
+
+    this.style["display"] = "flex";
+    this.style["flex-wrap"] = "nowrap";
+    this.style["flex-direction"] = "row";
+    this.style["border-radius"] = "7px";
+    this.style["padding"] = "2px";
+
+    this.style["color"] = this.getDefault("NoteText").color;
+    let clr = css2color$1(this.color);
+    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
+
+    this.style["background-color"] = clr;
+    this.setCSS();
+  }
+
+  static define() {return {
+    tagname : "note-x"
+  }}
+}
+UIBase$e.register(Note);
+
+class ProgBarNote extends Note {
+  constructor() {
+    super();
+
+    this._percent = 0.0;
+    this.barWidth = 100;
+
+    let bar = this.bar = document.createElement("div");
+    bar.style["display"] = "flex";
+    bar.style["flex-direction"] = "row";
+    bar.style["width"] = this.barWidth + "px";
+    bar.style["height"] = this.height + "px";
+    bar.style["background-color"] = this.getDefault("ProgressBarBG");
+    bar.style["border-radius"] = "12px";
+    bar.style["align-items"] = "center";
+    bar.style["padding"] = bar.style["margin"] = "0px";
+
+    let bar2 = this.bar2 = document.createElement("div");
+    let w = 50.0;
+
+    bar2.style["display"] = "flex";
+    bar2.style["flex-direction"] = "row";
+    bar2.style["height"] = this.height + "px";
+    bar2.style["background-color"] = this.getDefault("ProgressBar");
+    bar2.style["border-radius"] = "12px";
+    bar2.style["align-items"] = "center";
+    bar2.style["padding"] = bar2.style["margin"] = "0px";
+
+    this.bar.appendChild(bar2);
+    this.dom.appendChild(this.bar);
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let w = ~~(this.percent * this.barWidth + 0.5);
+
+    this.bar2.style["width"] = w + "px";
+  }
+
+  set percent(val) {
+    this._percent = val;
+    this.setCSS();
+  }
+
+  get percent() {
+    return this._percent;
+  }
+
+  init() {
+    super.init();
+  }
+
+  static define() {return {
+    tagname : "note-progress-x"
+  }}
+}
+UIBase$e.register(ProgBarNote);
+
+class NoteFrame extends RowFrame {
+  constructor() {
+    super();
+    this._h = 20;
+  }
+
+  init() {
+    super.init();
+
+    this.noMarginsOrPadding();
+
+    noteframes.push(this);
+    this.background = this.getDefault("NoteBG");
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.style["width"] = "min-contents";
+    this.style["height"] = this._h + "px";
+  }
+
+  _ondestroy() {
+    if (noteframes.indexOf(this) >= 0) {
+      noteframes.remove(this);
+    }
+
+    super._ondestroy();
+  }
+
+  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
+    let note;
+
+    for (let child of this.children) {
+      if (child._noteid === id) {
+        note = child;
+        break;
+      }
+    }
+
+    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
+
+    if (note === undefined) {
+      note = this.addNote(msg, color, -1, "note-progress-x");
+      note._noteid = id;
+    }
+
+    //note.setLabel(msg + " " + f + "%");
+    note.percent = percent;
+
+    if (percent >= 1.0) {
+      //note.setLabel(msg + " " + f + "%");
+
+      window.setTimeout(() => {
+        note.remove();
+      }, timeout);
+    }
+
+    return note;
+  }
+
+  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
+    //let note = document.createElement("note-x");
+
+    //note.ctx = this.ctx;
+    //note.background = "red";
+    //note.dom.innerText = msg;
+
+    //this._add(note);
+
+    let note = document.createElement(tagname);
+
+    note.color = color;
+    note.setLabel(msg);
+
+    note.style["text-align"] = "center";
+
+    note.style["font"] = getFont(note, "NoteText");
+    note.style["color"] = this.getDefault("NoteText").color;
+
+    this.add(note);
+
+    this.noMarginsOrPadding();
+    note.noMarginsOrPadding();
+
+    //this.dom.style["position"] = "absolute";
+    //this.style["position"] = "absolute";
+    //note.style["position"] = "absolute";
+
+    note.style["height"] = this._h + "px";
+    note.height = this._h;
+
+
+    if (timeout != -1) {
+      window.setTimeout(() => {
+        console.log("remove!");
+        note.remove();
+      }, timeout);
+    }
+
+    //this.appendChild(note);
+    return note;
+
+  }
+
+  static define() {return {
+    tagname : "noteframe-x"
+  }}
+}
+UIBase$e.register(NoteFrame);
+
+function getNoteFrames(screen) {
+  let ret = [];
+
+  let rec = (n) => {
+
+    if (n instanceof NoteFrame) {
+      ret.push(n);
+    }
+
+    if (n.childNodes !== undefined) {
+      for (let node of n.childNodes) {
+        rec(node);
+      }
+    }
+
+    if (n instanceof UIBase$1 && n.shadow !== undefined && n.shadow.childNodes) {
+      for (let node of n.shadow.childNodes) {
+        rec(node);
+      }
+    }
+  };
+
+  rec(screen);
+  return ret;
+}
+
+let noteframes = [];
+
+function progbarNote(screen, msg, percent, color, timeout) {
+  noteframes = getNoteFrames(screen);
+
+  for (let frame of noteframes) {
+    try {
+      frame.progbarNote(msg, percent, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log("bad notification frame");
+    }
+  }
+}
+
+function sendNote(screen, msg, color, timeout=3000) {
+  noteframes = getNoteFrames(screen);
+
+  console.log(noteframes.length);
+
+  for (let frame of noteframes) {
+    console.log(frame);
+
+    try {
+      frame.addNote(msg, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log("bad notification frame");
+    }
+  }
+}
+
+window._sendNote = sendNote;
+
+function error(screen, msg, timeout) {
+  return sendNote(screen, msg, color2css$2([1.0, 0.0, 0.0, 1.0]), timeout);
+}
+
+function warning(screen, msg, timeout) {
+  return sendNote(screen, msg, color2css$2([0.78, 0.78, 0.2, 1.0]), timeout);
+}
+
+function message(screen, msg, timeout) {
+  return sendNote(screen, msg, color2css$2([0.4, 1.0, 0.5, 1.0]), timeout);
+}
+
 //use .setAttribute("linear") to disable nonlinear sliding
 class NumSlider extends ValueButtonBase {
   constructor() {
@@ -33541,339 +33875,15 @@ function initMenuBar(menuEditor) {
   //win.setMenu(menu);
 }
 
-let UIBase$e = UIBase$1;
-
-class Note extends UIBase$1 {
-  constructor() {
-    super();
-
-    let style = document.createElement("style");
-
-    this._noteid = undefined;
-    this.height = 20;
-
-    style.textContent = `
-    .notex {
-      display : flex;
-      flex-direction : row;
-      flex-wrap : nowrap;
-      height : {this.height}px;
-      padding : 0px;
-      margin : 0px;
-    }
-    `;
-
-    this.dom = document.createElement("div");
-    this.dom.setAttribute("class", "notex");
-    this.color = "red";
-
-    this.shadow.appendChild(style);
-    this.shadow.append(this.dom);
-    this.setLabel("");
-  }
-
-  setLabel(s) {
-    let color = this.color;
-    if (this.mark === undefined) {
-      this.mark = document.createElement("div");
-      this.mark.style["display"] = "flex";
-      this.mark.style["flex-direction"] = "row";
-      this.mark.style["flex-wrap"] = "nowrap";
-
-      //this.mark.style["width"]
-      let sheet = 0;
-
-      let size = iconmanager.getTileSize(sheet);
-
-      this.mark.style["width"] = "" + size + "px";
-      this.mark.style["height"] = "" + size + "px";
-
-      this.dom.appendChild(this.mark);
-
-      this.ntext = document.createElement("div");
-      this.ntext.style["display"] = "inline-flex";
-      this.ntext.style["flex-wrap"] = "nowrap";
-
-      this.dom.appendChild(this.ntext);
-
-      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
-
-      //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
-      //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
-      //this.mark.style["background-color"] = color;
-    }
-
-    let mark = this.mark, ntext = this.ntext;
-    //mark.innerText = "!";
-    ntext.innerText = " " + s;
-  }
-
-  init() {
-    super.init();
-
-    this.setAttribute("class", "notex");
-
-    this.style["display"] = "flex";
-    this.style["flex-wrap"] = "nowrap";
-    this.style["flex-direction"] = "row";
-    this.style["border-radius"] = "7px";
-    this.style["padding"] = "2px";
-
-    this.style["color"] = this.getDefault("NoteText").color;
-    let clr = css2color$1(this.color);
-    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
-
-    this.style["background-color"] = clr;
-    this.setCSS();
-  }
-
-  static define() {return {
-    tagname : "note-x"
-  }}
-}
-UIBase$e.register(Note);
-
-class ProgBarNote extends Note {
-  constructor() {
-    super();
-
-    this._percent = 0.0;
-    this.barWidth = 100;
-
-    let bar = this.bar = document.createElement("div");
-    bar.style["display"] = "flex";
-    bar.style["flex-direction"] = "row";
-    bar.style["width"] = this.barWidth + "px";
-    bar.style["height"] = this.height + "px";
-    bar.style["background-color"] = this.getDefault("ProgressBarBG");
-    bar.style["border-radius"] = "12px";
-    bar.style["align-items"] = "center";
-    bar.style["padding"] = bar.style["margin"] = "0px";
-
-    let bar2 = this.bar2 = document.createElement("div");
-    let w = 50.0;
-
-    bar2.style["display"] = "flex";
-    bar2.style["flex-direction"] = "row";
-    bar2.style["height"] = this.height + "px";
-    bar2.style["background-color"] = this.getDefault("ProgressBar");
-    bar2.style["border-radius"] = "12px";
-    bar2.style["align-items"] = "center";
-    bar2.style["padding"] = bar2.style["margin"] = "0px";
-
-    this.bar.appendChild(bar2);
-    this.dom.appendChild(this.bar);
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    let w = ~~(this.percent * this.barWidth + 0.5);
-
-    this.bar2.style["width"] = w + "px";
-  }
-
-  set percent(val) {
-    this._percent = val;
-    this.setCSS();
-  }
-
-  get percent() {
-    return this._percent;
-  }
-
-  init() {
-    super.init();
-  }
-
-  static define() {return {
-    tagname : "note-progress-x"
-  }}
-}
-UIBase$e.register(ProgBarNote);
-
-class NoteFrame extends RowFrame {
-  constructor() {
-    super();
-    this._h = 20;
-  }
-
-  init() {
-    super.init();
-
-    this.noMarginsOrPadding();
-
-    noteframes.push(this);
-    this.background = this.getDefault("NoteBG");
-  }
-
-  setCSS() {
-    super.setCSS();
-
-    this.style["width"] = "min-contents";
-    this.style["height"] = this._h + "px";
-  }
-
-  _ondestroy() {
-    if (noteframes.indexOf(this) >= 0) {
-      noteframes.remove(this);
-    }
-
-    super._ondestroy();
-  }
-
-  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
-    let note;
-
-    for (let child of this.children) {
-      if (child._noteid === id) {
-        note = child;
-        break;
-      }
-    }
-
-    let f = (100.0*Math.min(percent, 1.0)).toFixed(1);
-
-    if (note === undefined) {
-      note = this.addNote(msg, color, -1, "note-progress-x");
-      note._noteid = id;
-    }
-
-    //note.setLabel(msg + " " + f + "%");
-    note.percent = percent;
-
-    if (percent >= 1.0) {
-      //note.setLabel(msg + " " + f + "%");
-
-      window.setTimeout(() => {
-        note.remove();
-      }, timeout);
-    }
-
-    return note;
-  }
-
-  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
-    //let note = document.createElement("note-x");
-
-    //note.ctx = this.ctx;
-    //note.background = "red";
-    //note.dom.innerText = msg;
-
-    //this._add(note);
-
-    let note = document.createElement(tagname);
-
-    note.color = color;
-    note.setLabel(msg);
-
-    note.style["text-align"] = "center";
-
-    note.style["font"] = getFont(note, "NoteText");
-    note.style["color"] = this.getDefault("NoteText").color;
-
-    this.add(note);
-
-    this.noMarginsOrPadding();
-    note.noMarginsOrPadding();
-
-    //this.dom.style["position"] = "absolute";
-    //this.style["position"] = "absolute";
-    //note.style["position"] = "absolute";
-
-    note.style["height"] = this._h + "px";
-    note.height = this._h;
-
-
-    if (timeout != -1) {
-      window.setTimeout(() => {
-        console.log("remove!");
-        note.remove();
-      }, timeout);
-    }
-
-    //this.appendChild(note);
-    return note;
-
-  }
-
-  static define() {return {
-    tagname : "noteframe-x"
-  }}
-}
-UIBase$e.register(NoteFrame);
-
-function getNoteFrames(screen) {
-  let ret = [];
-
-  let rec = (n) => {
-
-    if (n instanceof NoteFrame) {
-      ret.push(n);
-    }
-
-    if (n.childNodes !== undefined) {
-      for (let node of n.childNodes) {
-        rec(node);
-      }
-    }
-
-    if (n instanceof UIBase$1 && n.shadow !== undefined && n.shadow.childNodes) {
-      for (let node of n.shadow.childNodes) {
-        rec(node);
-      }
-    }
-  };
-
-  rec(screen);
-  return ret;
-}
-
-let noteframes = [];
-
-function progbarNote(screen, msg, percent, color, timeout) {
-  noteframes = getNoteFrames(screen);
-
-  for (let frame of noteframes) {
-    try {
-      frame.progbarNote(msg, percent, color, timeout);
-    } catch (error) {
-      print_stack(error);
-      console.log("bad notification frame");
-    }
-  }
-}
-
-function sendNote(screen, msg, color, timeout=1000) {
-  noteframes = getNoteFrames(screen);
-
-  console.log(noteframes.length);
-
-  for (let frame of noteframes) {
-    console.log(frame);
-
-    try {
-      frame.addNote(msg, color, timeout);
-    } catch (error) {
-      print_stack(error);
-      console.log("bad notification frame");
-    }
-  }
-}
-
-window._sendNote = sendNote;
-
-function error(screen, msg, timeout=1000) {
-  return sendNote(screen, msg, color2css$2([1.0, 0.0, 0.0, 1.0]), timeout);
-}
-
-function warning(screen, msg, timeout=1000) {
-  return sendNote(screen, msg, color2css$2([0.78, 0.78, 0.2, 1.0]), timeout);
-}
-
-function message(screen, msg, timeout=1000) {
-  return sendNote(screen, msg, color2css$2([0.4, 1.0, 0.5, 1.0]), timeout);
-}
+var electron_api1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  checkInit: checkInit,
+  iconcache: iconcache,
+  getNativeIcon: getNativeIcon,
+  buildElectronHotkey: buildElectronHotkey,
+  buildElectronMenu: buildElectronMenu,
+  initMenuBar: initMenuBar
+});
 
 "use strict";
 
@@ -41637,14 +41647,16 @@ if (!test()) {
   throw new Error("Context test failed");
 }
 
-let solver = solver1;
-const math = math1;
-let util = util1;
-let vectormath = vectormath1;
-let toolprop_abstract = toolprop_abstract1;
-let html5_fileapi = html5_fileapi1;
-let parseutil = parseutil1;
-let cconst$1 = exports;
+const electron_api = electron_api1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, web2color, write_scripts };
+const solver = solver1;
+const math = math1;
+const util = util1;
+const vectormath = vectormath1;
+const toolprop_abstract = toolprop_abstract1;
+const html5_fileapi = html5_fileapi1;
+const parseutil = parseutil1;
+const cconst$1 = exports;
+
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SimpleContext, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, warning, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

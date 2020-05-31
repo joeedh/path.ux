@@ -8,7 +8,9 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true,
       sandbox : false,
-      enableRemoteModule : true
+      enableRemoteModule : true,
+      experimentalFeatures: true,
+      allowRunningInsecureContent : true
     }
   })
 

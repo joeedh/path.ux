@@ -1,7 +1,5 @@
 import {Editor} from "../editor_base.js";
-import {UIBase, PackFlags, Icons, KeyMap, HotKey, nstructjs, Menu, AreaFlags, util} from '../../pathux.js';
-
-import * as electron_api from '../../electron_api.js';
+import {UIBase, electron_api, PackFlags, Icons, KeyMap, HotKey, nstructjs, Menu, AreaFlags, util} from '../../pathux.js';
 
 export class MenuBarEditor extends Editor {
   constructor() {

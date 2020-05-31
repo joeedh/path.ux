@@ -1,5 +1,6 @@
 [
   "example/core/app.js",
+  "example/editors/docbrowser/docbrowser.js",
   "example/pathux.js",
   "example/core/state.js",
   "example/api/api_define.js",
@@ -13,12 +14,15 @@
   "example/core/const.js",
   "example/editors/properties/properties.js",
   "example/editors/log/log_editor.js",
+  "example/editors/editor_base.js",
+  "example/lib/tinymce/js/tinymce/tinymce.js",
   "example/draw/draw.js",
   "example/draw/brush.js",
   "example/core/dynamics.js",
-  "example/editors/editor_base.js",
   "example/editors/workspace/workspace_ops.js",
   "example/draw/draw_ops.js",
   "example/electron_api.js",
-  "example/editors/docbrowser/docbrowser.js"
+  "example/lib/tinymce/js/tinymce/themes/silver/theme.js",
+  "example/lib/tinymce/js/tinymce/icons/default/icons.js",
+  "example/lib/tinymce/js/tinymce/plugins/quickbars/plugin.js"
 ]

@@ -2,7 +2,7 @@
 <html>
 <head>
 <title>Introduction</title>
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="style.css">
 <style>
 
 </style>
@@ -11,48 +11,12 @@
 <div class="page">
 <div class="navbar">
 <a href="index.html" class="nav-item">Introduction</a>
-<a href="page2.html" class="nav-item">Page 2</a>
-<div class="nav-folder"><a href="sub/page3.html" class="nav-item">Page 3</a></div>
+<a href="page2.html" class="nav-item">undefined</a>
+<div class="nav-folder"><a href="sub/page3.html" class="nav-item">undefined</a></div>
 
 </div>
 <div class="contents">
-<h1 id="Introduction">Introduction</h1><p>Path.ux follows a strict model/view/controller paradigm.  The application 
-state is the model, path.ux is the (or a) view, and the controller is 
-the means by which path.ux queries the model.  In addition, there are two
-layers of controllers: the first, <a href="context">Context</a>, is a simple
-(and application-defined) API to access the application state, while the
-second is small scripting language akin to Angle&#39;s data bindings and builds
-on the first.</p>
-<p>For example, you might see code like this:</p>
-<pre><code>    function makePanel(layout) {
-      layout.useIcons();
-      layout.prop(&quot;view3d.selectmode&quot;);
-      layout.tool(&quot;view3d.select_all()&quot;);
-    }</code></pre>
-<p>&quot;View3d.selectmode&quot; is a data path.  It&#39;s akin to an object path or Angle&#39;s data bindings.
-&quot;View3d.select_all()&quot; is a tool path, which is a bit different.  </p>
-<p>Note that path.ux mostly makes use of the data path controller.  It does pass
-around a (client-provided) Context instance, which is required to have the 
-following properties:</p>
-<ul>
-<li>api       : a <a href="@ModelInterface">ModelInterface</a> class (typically a <a href="@DataAPI">DataAPI</a> instance)</li>
-<li>screen    : The current screen, a <a href="@Screen">Screen</a> instance (or subclass of)</li>
-<li>toolstack : The tool stack, see <a href="@ToolStack">ToolStack</a></li>
-</ul>
-<p>Path.ux allows different controller implementations (though they must all pass type information via the 
-classes in toolprop.js).  The included implementation can be found in 
-&quot;simple_controller.js&quot;, and the abstract interface in &quot;controller.js&quot;.</p>
-<h2 id="Context">Context</h2><h2 id="History">History</h2><p>Path.ux is roughly based on <a href="http://www.blender.org">Blender&#39;s</a> architecture.</p>
-<p><a href="manual/controller.html">Main page</a></p>
-<p>The Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.</p>
-<p>The controller is called &quot;RNA&quot; and it uses the concept of object paths. So if you have an object, you could look up type information (and the value of) a property with a simple path, e.g. &quot;object.subobject.some_property&quot;.  Blender uses RNA for its user interface, its python api and its animation system (you can associate object paths with animation curves).</p>
-<p>Internally the controller has a special wrapper API for blender&#39;s c-struct-based pseudo-objects.  This works extremely well as it keeps type information that&#39;s only used by the UI out of the model codebase (e.g. the model might not care that a specific color should be clamped to 0-2 instead of 0-1).  Even better, the object model presented by the controller need not match the internal data structures.</p>
-<p>Since the controller provides type info to the UI a lot of messy boilerplate is avoided, leading to very consise layout code:</p>
-<pre><code>def panel(layout, context):
-    row = layout.row
-    row.prop(context.object, &quot;some_object_property&quot;)
-    row.tool(&quot;mesh.subdivide&quot;)</code></pre>
-
+<!doctype html><h1>In<strong>tr</strong>oduction</h1><h2>Tools</h2><h3>Undo</h3><p><img src="./assets/index_image_4mceclip0.png" data-mce-src="example/assets/index_image_4mceclip0.png" width="198" height="130" style="float: right;" data-mce-style="float: right;"></p><p><br data-mce-bogus="1"></p><p>Undo an action</p>
 </div>
 </div>
 </body>

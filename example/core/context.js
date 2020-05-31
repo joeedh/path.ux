@@ -4,6 +4,8 @@ import {Editor} from "../editors/editor_base.js";
 import {Context, ContextOverlay, ContextFlags, Area} from '../pathux.js';
 import {DocsBrowserEditor} from "../editors/docbrowser/docbrowser.js";
 
+import {message, warning, error, sendNote} from '../pathux.js';
+
 export class BaseOverlay extends ContextOverlay {
   static contextDefine() {return {
     name : "view",
@@ -60,6 +62,11 @@ export class ContextBase extends Context {
     }
 
     return ["object", k];
+  }
+
+  //send notification to user
+  report(message, color, timeout=undefined) {
+    sendNote(_appstate.screen, message, color, timeout);
   }
 
   loadProperty(ctx, key, data) {
