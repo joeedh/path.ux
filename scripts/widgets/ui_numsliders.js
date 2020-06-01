@@ -1181,7 +1181,6 @@ export class SliderWithTextbox extends ColumnFrame {
   set displayUnit(val) {
     let update = val !== this.displayUnit;
 
-    console.warn("setting display unit", val);
     this.numslider.displayUnit = this.textbox.displayUnit = val;
 
     if (update) {
@@ -1196,7 +1195,6 @@ export class SliderWithTextbox extends ColumnFrame {
   set baseUnit(val) {
     let update = val !== this.baseUnit;
 
-    console.warn("setting base unit", val);
     this.numslider.baseUnit = this.textbox.baseUnit = val;
 
     if (update) {
