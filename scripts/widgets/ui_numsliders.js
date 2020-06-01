@@ -318,7 +318,7 @@ export class NumSlider extends ValueButtonBase {
     let startvalue = this.value;
     let value = startvalue;
 
-    let startx = e.x, starty = e.y;
+    let startx = this.vertical ? e.y : e.x, starty = this.vertical ? e.x : e.y;
 
     this.dom._background = this.getDefault("BoxDepressed");
     let fire = () => {
