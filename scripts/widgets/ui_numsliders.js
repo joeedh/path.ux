@@ -149,6 +149,21 @@ export class NumSlider extends ValueButtonBase {
   }
 
   bindEvents() {
+    let dir = this.range && this.range[0] > this.range[1] ? -1 : 1;
+
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap["Left"]:
+        case keymap["Down"]:
+          this.setValue(this.value - dir*5*this.step);
+          break;
+        case keymap["Up"]:
+        case keymap["Right"]:
+          this.setValue(this.value + dir*5*this.step);
+          break;
+      }
+    });
+
     let onmousedown = (e) => {
       if (this.disabled) {
         e.preventDefault();
@@ -341,7 +356,7 @@ export class NumSlider extends ValueButtonBase {
         }
 
         dx *= this.vertical ? -1 : 1;
-        
+
         value += dx * this._step * 0.1;
 
         let dvalue = value - startvalue;
