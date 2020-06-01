@@ -376,7 +376,8 @@ export const PackFlags = {
   STRIP : 512|1024,
   SIMPLE_NUMSLIDERS : 2048,
   FORCE_ROLLER_SLIDER : 4096,
-  HIDE_CHECK_MARKS : (1<<13)
+  HIDE_CHECK_MARKS : (1<<13),
+  NO_NUMSLIDER_TEXTBOX : (1<<14)
 };
  
 let first = (iter) => {
@@ -2263,6 +2264,16 @@ export function measureTextBlock(elem, text, canvas=undefined,
 
 export function measureText(elem, text, canvas=undefined,
                             g=undefined, size=undefined, font=undefined) {
+  if (typeof canvas === "object" && canvas !== null && !(canvas instanceof HTMLCanvasElement) && canvas.tagName !== "CANVAS") {
+    let args = canvas;
+
+    canvas = args.canvas;
+    g = args.g;
+    size = args.size;
+    font = args.font;
+
+  }
+
   if (g === undefined) {
     canvas = get_measure_canvas();
     g = canvas.g;

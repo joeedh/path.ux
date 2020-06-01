@@ -212,6 +212,13 @@ export class DataPath {
     return this;
   }
 
+  /**adds a slider for moving vector component sliders simultaneously*/
+  uniformSlider(state=true) {
+    this.data.uniformSlider(state);
+
+    return this;
+  }
+
   radix(r) {
     this.data.setRadix(r);
     return this;

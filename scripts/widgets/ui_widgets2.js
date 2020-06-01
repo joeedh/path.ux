@@ -4,10 +4,6 @@ import './ui_richedit.js';
 import * as util from '../util/util.js';
 import * as ui_base from '../core/ui_base.js';
 import * as events from '../util/events.js';
-import * as simple_toolsys from '../toolsys/simple_toolsys.js';
-import {pushModalLight, popModalLight} from '../util/simple_events.js';
-import * as toolprop from '../toolsys/toolprop.js';
-import {DataPathError} from '../controller/simple_controller.js';
 import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
 import {RowFrame, ColumnFrame} from "../core/ui.js";
 import {isNumber} from "../toolsys/toolprop.js";
@@ -16,17 +12,11 @@ import './ui_widgets.js';
 
 let keymap = events.keymap;
 
-let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
-
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
-
-let parsepx = ui_base.parsepx;
+import {EnumProperty, PropTypes} from '../toolsys/toolprop.js';
+import {UIBase, PackFlags, IconSheets, parsepx} from '../core/ui_base.js';
 
 import * as units from '../core/units.js';
-import {ToolProperty} from "../toolsys/toolprop.js";
+import {ToolProperty} from '../toolsys/toolprop.js';
 
 export class VectorPanel extends ColumnFrame {
   constructor() {
@@ -39,6 +29,7 @@ export class VectorPanel extends ColumnFrame {
     this.axes = "XYZW";
     this.value = new Vector3();
     this.sliders = [];
+    this.hasUniformSlider = false;
 
     let makeParam = (key) => {
       Object.defineProperty(this, key, {
@@ -107,18 +98,27 @@ export class VectorPanel extends ColumnFrame {
   rebuild() {
     this.clear();
 
-    console.warn("rebuilding");
-
     if (this.name) {
       this.label(this.name);
     }
+
+    let frame, row;
+
+    if (this.hasUniformSlider) {
+      row = this.row();
+      frame = row.col();
+    } else {
+      frame = this;
+    }
+
+    console.warn("rebuilding");
 
     this.sliders = [];
 
     for (let i=0; i<this.value.length; i++) {
       //inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
 
-      let slider = this.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
+      let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
 
@@ -142,6 +142,10 @@ export class VectorPanel extends ColumnFrame {
           this2.setPathValue(this2.ctx, this2.getAttribute("datapath"), this2.value);
         }
 
+        if (this2.uslider) {
+          this2.uslider.setValue(this2.uniformValue, false);
+        }
+
         if (this2.onchange) {
           this2.onchange(this2.value);
         }
@@ -150,7 +154,82 @@ export class VectorPanel extends ColumnFrame {
       this.sliders.push(slider);
     }
 
+    if (this.hasUniformSlider) {
+      let uslider = this.uslider = document.createElement("numslider-x");
+      row._prepend(uslider);
+
+      uslider.range = this.range;
+      uslider.baseUnit = this.baseUnit;
+      uslider.displayUnit = this.displayUnit;
+      uslider.expRate = this.expRate;
+      uslider.step = this.step;
+      uslider.expRate = this.expRate;
+      uslider.isInt = this.isInt;
+      uslider.radix = this.radix;
+      uslider.decimalPlaces = this.decimalPlaces;
+      uslider.stepIsRelative= this.stepIsRelative;
+
+      uslider.vertical = true;
+      uslider.setValue(this.uniformValue, false);
+
+      this.sliders.push(uslider);
+
+      uslider.onchange = () => {
+        this.uniformValue = uslider.value;
+      }
+    } else {
+      this.uslider = undefined;
+    }
+
     this.setCSS();
+  }
+
+  get uniformValue() {
+    let sum = 0.0;
+
+    for (let i=0; i<this.value.length; i++) {
+      sum += isNaN(this.value[i]) ? 0.0 : this.value[i];
+    }
+
+    return sum / this.value.length;
+  }
+
+  set uniformValue(val) {
+    let old = this.uniformValue;
+    let doupdate = false;
+
+    if (old === 0.0 || val === 0.0) {
+      doupdate = this.value.dot(this.value) !== 0.0
+
+      this.value.zero();
+    } else {
+      let ratio = val / old;
+      for (let i = 0; i < this.value.length; i++) {
+        this.value[i] *= ratio;
+      }
+
+      doupdate = true;
+    }
+
+    if (doupdate) {
+      if (this.hasAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.value);
+      }
+
+      if (this.onchange) {
+        this.onchange(this.value);
+      }
+
+      for (let i=0; i<this.value.length; i++) {
+        this.sliders[i].setValue(this.value[i], false);
+        this.sliders[i]._redraw();
+      }
+
+      if (this.uslider) {
+        this.uslider.setValue(val, false);
+        this.uslider._redraw();
+      }
+    }
   }
 
   setValue(value) {
@@ -211,11 +290,16 @@ export class VectorPanel extends ColumnFrame {
       return;
     }
 
-    let loadNumParam = (k) => {
+    let loadNumParam = (k, do_rebuild=false) => {
       if (meta && meta[k] !== undefined && this[k] === undefined) {
         this[k] = meta[k];
+
+        if (this[k] !== meta[k] && do_rebuild) {
+          this.doOnce(this.rebuild);
+        }
       }
     }
+
 
     loadNumParam("baseUnit");
     loadNumParam("displayUnit");
@@ -225,6 +309,11 @@ export class VectorPanel extends ColumnFrame {
     loadNumParam("step");
     loadNumParam("expRate");
     loadNumParam("stepIsRelative");
+
+    if (meta && meta.hasUniformSlider !== undefined && meta.hasUniformSlider !== this.hasUniformSlider) {
+      this.hasUniformSlider = meta.hasUniformSlider;
+      this.doOnce(this.rebuild);
+    }
 
     if (meta && meta.range) {
       this.range[0] = meta.range[0];
@@ -265,6 +354,10 @@ export class VectorPanel extends ColumnFrame {
       if (this.value.vectorDistance(val) > 0) {
         this.value.load(val);
 
+        if (this.uslider) {
+          this.uslider.setValue(this.uniformValue, false);
+        }
+
         for (let i=0; i<this.value.length; i++) {
           this.sliders[i].setValue(val[i], false);
           this.sliders[i]._redraw();
@@ -272,15 +365,24 @@ export class VectorPanel extends ColumnFrame {
       }
     }
   }
+
   update() {
     super.update();
 
     this.updateDataPath();
-    
+
     if (this.stepIsRelative) {
-      for (let i = 0; i < this.sliders.length; i++) {
-        this.sliders[i].step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+      for (let slider of this.sliders) {
+        slider.step = ToolProperty.calcRelativeStep(this.step, slider.value);
       }
+    }
+
+    if (this.uslider) {
+      this.uslider.step = this.step;
+      if (this.stepIsRelative) {
+        this.uslider.step = ToolProperty.calcRelativeStep(this.step, this.uniformValue);
+      }
+
     }
   }
 

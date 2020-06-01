@@ -23,6 +23,8 @@ export class NumSlider extends ValueButtonBase {
     this.decimalPlaces = 4;
     this.radix = 10;
 
+    this.vertical = false;
+
     this.range = [-1e17, 1e17];
     this.isInt = false;
 
@@ -331,13 +333,15 @@ export class NumSlider extends ValueButtonBase {
         e.preventDefault();
         e.stopPropagation();
 
-        let dx = e.x - startx;
-        startx = e.x;
+        let dx = (this.vertical ? e.y : e.x) - startx;
+        startx = (this.vertical ? e.y : e.x)
 
         if (e.shiftKey) {
           dx *= 0.1;
         }
 
+        dx *= this.vertical ? -1 : 1;
+        
         value += dx * this._step * 0.1;
 
         let dvalue = value - startvalue;
@@ -451,35 +455,34 @@ export class NumSlider extends ValueButtonBase {
     //do not call parent class implementation
     let dpi = this.getDPI();
 
-    let ts = this.getDefault("DefaultText").size;
+    let ts = this.getDefault("DefaultText").size*UIBase.getDPI();
 
     let dd = this.isInt ? 5 : this.decimalPlaces + 8;
 
-    let label = this._name;
-    if (this.isInt) {
-      label += ": 0";
-      for (let i=0; i<this.radix; i++) {
-        label += "0";
-      }
-    } else {
-      label += ": 0.";
-      for (let i=0; i<this.decimalPlaces+1; i++) {
-        label += "0";
-      }
-    }
+    let label = this._genLabel();
 
-    let tw = ui_base.measureText(this, label, undefined, undefined,
-      ts, this.getDefault("DefaultText")).width ;
+    let tw = ui_base.measureText(this, label, {
+      size :ts,
+      font : this.getDefault("DefaultText")
+    }).width;
 
-    tw += this._getArrowSize()*2.0 + ts;
+    tw = Math.max(tw, this.getDefault("defaultWidth"));
+
+    tw += this._getArrowSize()*4 + ts;
     tw = ~~tw;
 
-    let defw = this.getDefault("numslider_width");
-
     //tw = Math.max(tw, w);
+    if (this.vertical) {
+      this.style["width"] = this.dom.style["width"] = this.getDefault("defaultHeight") + "px";
 
-    this.style["width"] = tw+"px";
-    this.dom.style["width"] = tw+"px";
+      this.style["height"] = tw+"px";
+      this.dom.style["height"] = tw+"px";
+    } else {
+      this.style["height"] = this.dom.style["height"] = this.getDefault("defaultHeight") + "px";
+
+      this.style["width"] = tw+"px";
+      this.dom.style["width"] = tw+"px";
+    }
 
     this._repos_canvas();
     this._redraw();
@@ -521,6 +524,21 @@ export class NumSlider extends ValueButtonBase {
     return text;
   }
 
+  updateDefaultSize() {
+    let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
+
+    let size = this.getDefault("DefaultText").size * 1.33;
+
+    height = ~~Math.max(height, size);
+    height = height + "px";
+
+    if (height !== this.style["height"]) {
+      this.setCSS();
+      this._repos_canvas();
+      this._redraw();
+    }
+  }
+
   _redraw() {
     let g = this.g;
     let canvas = this.dom;
@@ -551,11 +569,27 @@ export class NumSlider extends ValueButtonBase {
 
     this.dom.font = undefined;
 
-    ui_base.drawText(this, cx, cy + ts/2, text, {
-      canvas : this.dom,
-      g      : this.g,
-      size   : ts
-    });
+    g.save();
+    if (!window._d) {
+      window._d = Math.PI*0.5;
+    }
+
+    if (this.vertical) {
+      g.rotate(_d);
+
+      ui_base.drawText(this, cx, -ts*0.5, text, {
+        canvas: this.dom,
+        g: this.g,
+        size: ts
+      });
+      g.restore();
+    } else {
+      ui_base.drawText(this, cx, cy + ts / 2, text, {
+        canvas: this.dom,
+        g: this.g,
+        size: ts
+      });
+    }
 
     //}
 
@@ -568,14 +602,25 @@ export class NumSlider extends ValueButtonBase {
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();
 
-    g.beginPath();
-    g.moveTo(d, h*0.5);
-    g.lineTo(d+sz, h*0.5 + sz*0.5);
-    g.lineTo(d+sz, h*0.5 - sz*0.5);
+    if (this.vertical) {
+      g.beginPath();
+      g.moveTo(w*0.5, d);
+      g.lineTo(w*0.5 + sz*0.5, d+sz);
+      g.lineTo(w*0.5 - sz*0.5, d+sz);
 
-    g.moveTo(w-d, h*0.5);
-    g.lineTo(w-sz-d, h*0.5 + sz*0.5);
-    g.lineTo(w-sz-d, h*0.5 - sz*0.5);
+      g.moveTo(w*0.5, h-d);
+      g.lineTo(w*0.5 + sz*0.5, h-sz-d);
+      g.lineTo(w*0.5 - sz*0.5, h-sz-d);
+    } else {
+      g.beginPath();
+      g.moveTo(d, h*0.5);
+      g.lineTo(d+sz, h*0.5 + sz*0.5);
+      g.lineTo(d+sz, h*0.5 - sz*0.5);
+
+      g.moveTo(w-d, h*0.5);
+      g.lineTo(w-sz-d, h*0.5 + sz*0.5);
+      g.lineTo(w-sz-d, h*0.5 - sz*0.5);
+    }
 
     g.fill();
   }
@@ -618,7 +663,7 @@ export class NumSliderSimpleBase extends UIBase {
     this.modal = undefined;
   }
 
-  setValue(val, ignore_events=false) {
+  setValue(val, fire_onchange=true) {
     val = Math.min(Math.max(val, this.range[0]), this.range[1]);
 
     if (this.isInt) {
@@ -629,7 +674,7 @@ export class NumSliderSimpleBase extends UIBase {
       this._value = val;
       this._redraw();
 
-      if (this.onchange && !ignore_events) {
+      if (this.onchange && fire_onchange) {
         this.onchange(val);
       }
 
@@ -1033,8 +1078,6 @@ export class SliderWithTextbox extends ColumnFrame {
 
     this._value = 0;
     this._name = undefined;
-    this.decimalPlaces = 4;
-    this.isInt = false;
     this._lock_textbox = false;
     this.labelOnTop = undefined;
 
@@ -1071,15 +1114,55 @@ export class SliderWithTextbox extends ColumnFrame {
   set range(v) {
     this.numslider.range = v;
   }
-
   get range() {
     return this.numslider.range;
+  }
+
+  get step() {
+    return this.numslider.step;
+  }
+  set step(v) {
+    this.numslider.step = v;
+  }
+
+  get expRate() {
+    return this.numslider.expRate;
+  }
+  set expRate(v) {
+    this.numslider.expRate = v;
+  }
+
+  get decimalPlaces() {
+    return this.numslider.decimalPlaces;
+  }
+  set decimalPlaces(v) {
+    this.numslider.decimalPlaces = v;
+  }
+
+  get isInt() {
+    return this.numslider.isInt;
+  }
+  set isInt(v) {
+    this.numslider.isInt = v;
+  }
+
+  get radix() {
+    return this.numslider.radix;
+  }
+  set radix(v) {
+    this.numslider.radix = v;
+  }
+
+  get stepIsRelative() {
+    return this.numslider.stepIsRelative;
+  }
+  set stepIsRelative(v) {
+    this.numslider.stepIsRelative = v;
   }
 
   get displayUnit() {
     return this.textbox.displayUnit;
   }
-
   set displayUnit(val) {
     let update = val !== this.displayUnit;
 
@@ -1125,7 +1208,7 @@ export class SliderWithTextbox extends ColumnFrame {
 
     this.container.clear();
 
-    if (this.labelOnTop) {
+    if (!this.labelOnTop) {
       this.container = this.row();
     } else {
       this.container = this;
@@ -1244,9 +1327,9 @@ export class SliderWithTextbox extends ColumnFrame {
     }
   }
 
-  setValue(val) {
+  setValue(val, fire_onchange=true) {
     this._value = val;
-    this.numslider.setValue(val);
+    this.numslider.setValue(val, fire_onchange);
     this.updateTextBox();
   }
 
