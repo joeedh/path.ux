@@ -944,7 +944,7 @@ export class Container extends ui_base.UIBase {
 
         return ret;
       }
-    } else if (prop.type == PropTypes.FLAG) {
+    } else if (prop.type === PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
