@@ -949,8 +949,17 @@ export class Container extends ui_base.UIBase {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
 
+        if (typeof rdef.subkey === "number") {
+          name = rdef.prop.keys[rdef.subkey];
+          if (name && name in rdef.prop.ui_value_names) {
+            name = rdef.prop.ui_value_names[name];
+          } else {
+            name = makeUIName(name ? name : "(error)");
+          }
+        }
+
         if (name === undefined) {
-          name = makeUIName(rdef.subkey);
+          name = "(error)";
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
