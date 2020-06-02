@@ -1586,14 +1586,25 @@ export class UIBase extends HTMLElement {
     }
   }
 
+  pushReportContext(key) {
+    if (this.ctx.api.pushReportContext) {
+      this.ctx.api.pushReportContext(key);
+    }
+  }
+
+  popReportContext() {
+    if (this.ctx.api.popReportContext)
+      this.ctx.api.popReportContext();
+  }
+
   setPathValue(ctx, path, val) {
     if (this.useDataPathUndo) {
-      ctx.api.pushReportContext(this._reportCtxName);
+      this.pushReportContext(this._reportCtxName);
 
       try {
         this.setPathValueUndo(ctx, path, val);
       } catch (error) {
-        ctx.api.popReportContext();
+        this.popReportContext();
 
         if (!(error instanceof DataPathError)) {
           throw error;
@@ -1602,11 +1613,11 @@ export class UIBase extends HTMLElement {
         }
       }
 
-      ctx.api.popReportContext();
+      this.popReportContext();
       return;
     }
 
-    ctx.api.pushReportContext(this._reportCtxName);
+    this.pushReportContext(this._reportCtxName);
 
     try {
       if (this.hasAttribute("mass_set_path")) {
@@ -1616,7 +1627,7 @@ export class UIBase extends HTMLElement {
         ctx.api.setValue(ctx, path, val);
       }
     } catch (error) {
-      ctx.api.popReportContext();
+      this.popReportContext();
 
       if (!(error instanceof DataPathError)) {
         throw error;
@@ -1625,7 +1636,7 @@ export class UIBase extends HTMLElement {
       return;
     }
 
-    ctx.api.popReportContext();
+    this.popReportContext();
   }
 
   get _reportCtxName() {
@@ -1633,21 +1644,21 @@ export class UIBase extends HTMLElement {
   }
 
   getPathMeta(ctx, path) {
-    ctx.api.pushReportContext(this._reportCtxName);
+    this.pushReportContext(this._reportCtxName);
     let ret = ctx.api.resolvePath(ctx, path);
-    ctx.api.popReportContext();
+    this.popReportContext();
 
     return ret !== undefined ? ret.prop : undefined;
   }
 
   getPathDescription(ctx, path) {
     let ret;
-    ctx.api.pushReportContext(this._reportCtxName);
+    this.pushReportContext(this._reportCtxName);
 
     try {
       ret = ctx.api.getDescription(ctx, path);
     } catch (error) {
-      ctx.api.popReportContext();
+      this.popReportContext();
 
       if (error instanceof DataPathError) {
         //console.warn("Invalid data path '" + path + "'");
@@ -1657,7 +1668,7 @@ export class UIBase extends HTMLElement {
       }
     }
 
-    ctx.api.popReportContext();
+    this.popReportContext();
     return ret;
   }
 

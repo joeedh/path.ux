@@ -118,7 +118,17 @@ export class VectorPanel extends ColumnFrame {
     for (let i=0; i<this.value.length; i++) {
       //inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
 
-      let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
+      let slider = frame.slider(undefined, {
+        name       : this.axes[i],
+        defaultval : this.value[i],
+        min        : this.range[0],
+        max        : this.range[1],
+        step       : this.step || 0.001,
+        is_int     : this.isInt,
+        packflag   : this.packflag
+      });
+
+      //let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
 

@@ -876,9 +876,9 @@ export class Container extends ui_base.UIBase {
     } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
       let ret;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
-        ret = this.simpleslider(inpath);
+        ret = this.simpleslider(inpath, {packflag : packflag});
       } else {
-        ret = this.slider(inpath);
+        ret = this.slider(inpath, {packflag : packflag});
       }
 
       ret.packflag |= packflag;
@@ -923,7 +923,13 @@ export class Container extends ui_base.UIBase {
       }
     } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
       if (rdef.subkey !== undefined) {
-        let ret = (packflag & PackFlags.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
+        let ret;
+
+        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
+          ret = this.simpleslider(path, {packflag : packflag});
+        else
+          this.slider(path, {packflag : packflag});
+
         ret.packflag |= packflag;
         return ret;
       } else if (prop.subtype === PropSubTypes.COLOR) {
@@ -931,6 +937,7 @@ export class Container extends ui_base.UIBase {
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
         let ret = document.createElement("vector-panel-x");
+        ret.packflag |= packflag;
 
         if (inpath) {
           ret.setAttribute("datapath", inpath);
@@ -1344,7 +1351,7 @@ export class Container extends ui_base.UIBase {
     throw new Error("implement me!");
   }
 
-    simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+  simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
@@ -1367,7 +1374,7 @@ export class Container extends ui_base.UIBase {
       min = args.min;
       max = args.max;
       step = args.step;
-      is_int = args.is_int;
+      is_int = args.is_int || args.isInt;
       do_redraw = args.do_redraw;
       callback = args.callback;
       packflag = args.packflag || 0;

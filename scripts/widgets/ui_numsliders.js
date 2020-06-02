@@ -479,11 +479,11 @@ export class NumSlider extends ValueButtonBase {
     let tw = ui_base.measureText(this, label, {
       size :ts,
       font : this.getDefault("DefaultText")
-    }).width;
+    }).width / dpi;
 
-    tw = Math.max(tw, this.getDefault("defaultWidth"));
+    tw = Math.max(tw + this._getArrowSize()*0, this.getDefault("defaultWidth"));
 
-    tw += this._getArrowSize()*4 + ts;
+    tw += ts;
     tw = ~~tw;
 
     //tw = Math.max(tw, w);

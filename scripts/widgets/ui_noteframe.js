@@ -249,7 +249,7 @@ export class NoteFrame extends ui.RowFrame {
 
     if (timeout != -1) {
       window.setTimeout(() => {
-        console.log("remove!");
+        //console.log("remove!");
         note.remove();
       }, timeout);
     }
@@ -309,11 +309,7 @@ export function progbarNote(screen, msg, percent, color, timeout) {
 export function sendNote(screen, msg, color, timeout=3000) {
   noteframes = getNoteFrames(screen);
 
-  console.log(noteframes.length);
-
   for (let frame of noteframes) {
-    console.log(frame);
-
     try {
       frame.addNote(msg, color, timeout);
     } catch (error) {
