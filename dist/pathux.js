@@ -26389,7 +26389,7 @@ class Container extends UIBase$1 {
         if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS)
           ret = this.simpleslider(path, {packflag : packflag});
         else
-          this.slider(path, {packflag : packflag});
+          ret = this.slider(path, {packflag : packflag});
 
         ret.packflag |= packflag;
         return ret;

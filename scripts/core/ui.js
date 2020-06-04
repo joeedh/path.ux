@@ -928,7 +928,7 @@ export class Container extends ui_base.UIBase {
         if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
           ret = this.simpleslider(path, {packflag : packflag});
         else
-          this.slider(path, {packflag : packflag});
+          ret = this.slider(path, {packflag : packflag});
 
         ret.packflag |= packflag;
         return ret;

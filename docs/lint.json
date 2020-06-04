@@ -4,39 +4,39 @@
     "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 718,
+        "lineNumber": 741,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 719,
+        "lineNumber": 742,
         "line": "   * Look up struct definition for a class.\r"
       },
       {
-        "lineNumber": 720,
+        "lineNumber": 743,
         "line": "   *\r"
       },
       {
-        "lineNumber": 721,
+        "lineNumber": 744,
         "line": "   * @param cls: the class\r"
       },
       {
-        "lineNumber": 722,
+        "lineNumber": 745,
         "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
       },
       {
-        "lineNumber": 723,
+        "lineNumber": 746,
         "line": "   * @returns {IterableIterator<*>}\r"
       },
       {
-        "lineNumber": 724,
+        "lineNumber": 747,
         "line": "   */\r"
       },
       {
-        "lineNumber": 725,
+        "lineNumber": 748,
         "line": "\r"
       },
       {
-        "lineNumber": 726,
+        "lineNumber": 749,
         "line": "  _addClass(cls, dstruct) {\r"
       }
     ],
@@ -54,31 +54,31 @@
     "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 839,
+        "lineNumber": 862,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 840,
+        "lineNumber": 863,
         "line": "   get meta information for a datapath.\r"
       },
       {
-        "lineNumber": 841,
+        "lineNumber": 864,
         "line": "\r"
       },
       {
-        "lineNumber": 842,
+        "lineNumber": 865,
         "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
       },
       {
-        "lineNumber": 843,
+        "lineNumber": 866,
         "line": "   just want meta information\r"
       },
       {
-        "lineNumber": 844,
+        "lineNumber": 867,
         "line": "   */\r"
       },
       {
-        "lineNumber": 845,
+        "lineNumber": 868,
         "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false) {\r"
       }
     ],
