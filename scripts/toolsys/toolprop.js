@@ -221,12 +221,19 @@ export class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
+  noUnits() {
+    this.baseUnit = this.displayUnit = "none";
+    return this;
+  }
+
   setBaseUnit(unit) {
     this.baseUnit = unit;
+    return this;
   }
 
   setDisplayUnit(unit) {
     this.displayUnit = unit;
+    return this;
   }
 
   setUIRange(min, max) {
@@ -410,6 +417,10 @@ export class _NumberPropertyBase extends ToolProperty {
   }
 
   copyTo(b) {
+    super.copyTo(b);
+
+    b.displayUnit = this.displayUnit;
+    b.baseUnit = this.baseUnit;
     b.data = this.data;
     b.expRate = this.expRate;
     b.step = this.step;
