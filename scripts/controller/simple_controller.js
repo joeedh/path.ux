@@ -149,6 +149,16 @@ export class DataPath {
     return this;
   }
 
+  customSet(set) {
+    this.customGetSet(undefined, set);
+    return this;
+  }
+
+  customGet(get) {
+    this.customGetSet(get, undefined);
+    return this;
+  }
+
   /**db will be executed with underlying data object
    that contains this path in 'this.dataref'
 
@@ -246,6 +256,12 @@ export class DataPath {
 
   descriptions(description_map) { //for enum/flag properties
     this.data.addDescriptions(description_map);
+    return this;
+  }
+
+  uiNames(uinames) {
+    this.data.setUINames(uinames);
+    return this;
   }
 
   description(d) {
@@ -254,7 +270,7 @@ export class DataPath {
   }
 }
 
-export class DataList extends ListIface {
+export class  DataList extends ListIface {
   /**
    Okay, this is a simple interface for the controller to access lists,
    whether it's {} object maps, [] arrays, util.set's, or whatever.
