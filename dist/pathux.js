@@ -7057,33 +7057,110 @@ class Matrix4 {
     return this
   }
 
-  euler_rotate(x, y, z, order) {
-    if (order == undefined) 
-      order = "xyz";
-    else
-      order = order.toLowerCase();
+  /*
+  on factor;
+  off period;
 
+  c1 := cx; comment: cos(thx);
+  s1 := sx; comment: sin(thx);
+
+  c2 := cy; comment: cos(thy);
+  s2 := sy; comment: sin(thy);
+
+  c3 := cz; comment: cos(thz);
+  s3 := sz; comment: sin(thz);
+
+  cx := cos(thx);
+  sx := sin(thx);
+  cy := cos(thy);
+  sy := sin(thy);
+  cz := cos(thz);
+  sz := sin(thz);
+
+  imat := mat((1, 0, 0, 0),
+              (0, 1, 0, 0),
+              (0, 0, 1, 0),
+              (0, 0, 0, 1));
+
+  xmat :=mat((1,  0,  0,  0),
+             (0, c1, -s1, 0),
+             (0, s1,  c1, 0),
+             (0,  0,  0,  0));
+
+  ymat :=mat((c2, 0, s2, 0),
+             (0,  1,  0,  0),
+             (-s2, 0,  c2, 0),
+             (0,  0,  0,  0));
+
+  zmat :=mat(( c3, -s3, 0, 0),
+             (s3, c3, 0, 0),
+             ( 0,  0,  1, 0),
+             ( 0,  0,  0, 0));
+
+  mmat := mat((m11, m21, m31, 0),
+              (m12, m22, m32, 0),
+              (m13, m23, m33, 0),
+              (0,   0,   0,   0));
+
+  fmat := zmat * ymat * xmat;
+
+  f1 := m11**2 + m12**2 + m13**2 - 1.0;
+  f2 := m21**2 + m22**2 + m23**2 - 1.0;
+  f3 := m31**2 + m32**2 + m33**2 - 1.0;
+
+  tmat := fmat * mmat;
+  f1 := tmat(1, 1) - 1.0;
+  f2 := tmat(2, 2) - 1.0;
+  f3 := tmat(3, 3) - 1.0;
+
+  operator myasin;
+
+  fthy := asin(mmat(3, 1));
+  f1 := mmat(3,1)**2 + mmat(2,1)**2 + mmat(1,1)**2 = 1.0;
+
+  fmat2 := sub(thy=fthy, fmat);
+
+  fmat3 := fmat2 * (tp mmat);
+  ffz := solve(fmat2(1, 1) - m11, thz);
+  ffx := solve(fmat2(3, 3) - m33, thx);
+
+  fthz := part(ffz, 1, 2);
+  fthx := part(ffx, 1, 2);
+
+  sub(thx=fthx, thy=fthy, thz=fthz, fmat);
+
+(cos(thy)*cos(thz),         cos(thx)*sin(thz)-cos(thz)*sin(thx)*sin(thy),  -(cos(thx)*cos(thz)*sin(thy)+sin(thx)*sin(thz)), 0),
+
+(-cos(thy)*sin(thz),        cos(thx)*cos(thz) + sin(thx)*sin(thy)*sin(thz),  cos(thx)*sin(thy)*sin(thz)-cos(thz)*sin(thx), 0),
+
+(sin(thy),                  cos(thy)*sin(thx),                               cos(thx)*cos(thy),  0),
+
+    (0,0,0,1))
+
+  */
+  euler_rotate(x, y, z) {
     if (y === undefined) {
       y = 0.0;
     }
     if (z === undefined) {
       z = 0.0;
     }
+    window.Matrix4 = Matrix4;
 
     var xmat = new Matrix4();
     var m = xmat.$matrix;
     
     var c = Math.cos(x), s = Math.sin(x);
     
-    m.m22 = c; m.m23 = s;
-    m.m32 = -s; m.m33 = c;
+    m.m22 =  c;  m.m23 = s;
+    m.m32 = -s;  m.m33 = c;
     
     var ymat = new Matrix4();
     c = Math.cos(y); s = Math.sin(y);
     var m = ymat.$matrix;
     
-    m.m11 = c;  m.m13 = s;
-    m.m31 = -s; m.m33 = c;
+    m.m11 = c;  m.m13 = -s;
+    m.m31 = s;  m.m33 =  c;
     
     ymat.multiply(xmat);
 
@@ -7091,12 +7168,13 @@ class Matrix4 {
     c = Math.cos(z); s = Math.sin(z);
     var m = zmat.$matrix;
     
-    m.m11 = c;  m.m12 = -s;
-    m.m21 = s;  m.m22 = c;
+    m.m11 = c;  m.m12 = s;
+    m.m21 =-s;  m.m22 = c;
     
     zmat.multiply(ymat);
-    
+
     //console.log(""+ymat);
+    //this.multiply(zmat);
     this.preMultiply(zmat);
 
     return this;
@@ -7490,6 +7568,7 @@ class Matrix4 {
   
     this.multiply(matrix);
 
+
     return this;
   }
 
@@ -7498,7 +7577,29 @@ class Matrix4 {
     
     m.m41 = m.m42 = m.m43 = 0.0;
     m.m44 = 1.0;
-    
+
+    let l1 = Math.sqrt(m.m11*m.m11 + m.m12*m.m12 + m.m13*m.m13);
+    let l2 = Math.sqrt(m.m21*m.m21 + m.m22*m.m22 + m.m23*m.m23);
+    let l3 = Math.sqrt(m.m31*m.m31 + m.m32*m.m32 + m.m33*m.m33);
+
+    if (l1) {
+      m.m11 /= l1;
+      m.m12 /= l1;
+      m.m13 /= l1;
+    }
+
+    if (l2) {
+      m.m21 /= l2;
+      m.m22 /= l2;
+      m.m23 /= l2;
+    }
+
+    if (l3) {
+      m.m31 /= l3;
+      m.m32 /= l3;
+      m.m33 /= l3;
+    }
+
     return this;
   }
 
@@ -7506,98 +7607,47 @@ class Matrix4 {
     if (this.$matrix.m44 == 0)
       return false;
 
-    let translate = (_translate == undefined || !("length" in _translate)) ? new Vector3() : _translate;
-    let rotate = (_rotate == undefined || !("length" in _rotate)) ? new Vector3() : _rotate;
-    let scale = (_scale == undefined || !("length" in _scale)) ? new Vector3() : _scale;
-    let skew = (_skew == undefined || !("length" in _skew)) ? new Vector3() : _skew;
-    let perspective = (_perspective == undefined || !("length" in _perspective)) ? new Array(4) : _perspective;
-    let matrix = new Matrix4(this);
+    let mat = new Matrix4(this);
+    let m = mat.$matrix;
 
-    matrix.divide(matrix.$matrix.m44);
-    let perspectiveMatrix = new Matrix4(matrix);
-    perspectiveMatrix.$matrix.m14 = 0;
-    perspectiveMatrix.$matrix.m24 = 0;
-    perspectiveMatrix.$matrix.m34 = 0;
-    perspectiveMatrix.$matrix.m44 = 1;
-    if (perspectiveMatrix._determinant4x4() == 0)
-      return false;
-
-    if (matrix.$matrix.m14 != 0 || matrix.$matrix.m24 != 0 || matrix.$matrix.m34 != 0) {
-      let rightHandSide = [matrix.$matrix.m14, matrix.$matrix.m24, matrix.$matrix.m34, matrix.$matrix.m44];
-      let inversePerspectiveMatrix = new Matrix4(perspectiveMatrix);
-      inversePerspectiveMatrix.invert();
-      let transposedInversePerspectiveMatrix = new Matrix4(inversePerspectiveMatrix);
-      transposedInversePerspectiveMatrix.transpose();
-
-      let v4 = new Vector3(rightHandSide);
-      v4.multVecMatrix(transposedInversePerspectiveMatrix);
-
-      perspective[0] = v4[0];
-      perspective[1] = v4[1];
-      perspective[2] = v4[2];
-      perspective[3] = v4[3];
-
-      matrix.$matrix.m14 = matrix.$matrix.m24 = matrix.$matrix.m34 = 0;
-      matrix.$matrix.m44 = 1;
-    } else {
-      perspective[0] = perspective[1] = perspective[2] = 0;
-      perspective[3] = 1;
+    let t = _translate, r = _rotate, s = _scale;
+    if (t) {
+      t[0] = m.m41;
+      t[1] = m.m42;
+      t[2] = m.m43;
     }
 
-    translate[0] = matrix.$matrix.m41;
-    matrix.$matrix.m41 = 0;
-    translate[1] = matrix.$matrix.m42;
-    matrix.$matrix.m42 = 0;
-    translate[2] = matrix.$matrix.m43;
-    matrix.$matrix.m43 = 0;
+    let l1 = Math.sqrt(m.m11*m.m11 + m.m12*m.m12 + m.m13*m.m13);
+    let l2 = Math.sqrt(m.m21*m.m21 + m.m22*m.m22 + m.m23*m.m23);
+    let l3 = Math.sqrt(m.m31*m.m31 + m.m32*m.m32 + m.m33*m.m33);
 
-    let row0 = new Vector3([matrix.$matrix.m11, matrix.$matrix.m12, matrix.$matrix.m13]);
-    let row1 = new Vector3([matrix.$matrix.m21, matrix.$matrix.m22, matrix.$matrix.m23]);
-    let row2 = new Vector3([matrix.$matrix.m31, matrix.$matrix.m32, matrix.$matrix.m33]);
-
-    scale[0] = row0.vectorLength();
-    row0.divScalar(scale[0]);
-    skew[0] = row0.dot(row1);
-    row1.combine(row0, 1.0, -skew[0]);
-    scale[1] = row1.vectorLength();
-    row1.divScalar(scale[1]);
-    skew[0] /= scale[1];
-    skew[1] = row1.dot(row2);
-    row2.combine(row0, 1.0, -skew[1]);
-    skew[2] = row1.dot(row2);
-    row2.combine(row1, 1.0, -skew[2]);
-    scale[2] = row2.vectorLength();
-    row2.divScalar(scale[2]);
-    skew[1] /= scale[2];
-    skew[2] /= scale[2];
-
-    let pdum3 = new Vector3(row1);
-    pdum3.cross(row2);
-
-    if (row0.dot(pdum3) < 0) {
-      for (let i = 0; i < 3; i++) {
-        scale[i] *= -1;
-        row0[i] *= -1;
-        row1[i] *= -1;
-        row2[i] *= -1;
-      }
+    if (l1) {
+      m.m11 /= l1;
+      m.m12 /= l1;
+      m.m13 /= l1;
+    }
+    if (l2) {
+      m.m21 /= l2;
+      m.m22 /= l2;
+      m.m23 /= l2;
+    }
+    if (l3) {
+      m.m31 /= l3;
+      m.m32 /= l3;
+      m.m33 /= l3;
     }
 
-    rotate[1] = Math.asin(-row0[2]);
-    if (Math.cos(rotate[1]) != 0) {
-      rotate[0] = Math.atan2(row1[2], row2[2]);
-      rotate[2] = Math.atan2(row0[1], row0[0]);
-    } else {
-      rotate[0] = Math.atan2(-row2[0], row1[1]);
-      rotate[2] = 0;
+    if (s) {
+      s[0] = l1;
+      s[1] = l2;
+      s[2] = l3;
     }
 
-    let rad2deg = 180 / Math.PI;
-    rotate[0] *= rad2deg;
-    rotate[1] *= rad2deg;
-    rotate[2] *= rad2deg;
-
-    return true;
+    if (r) {
+      r[0] = Math.atan2(m.m23, m.m33);
+      r[1] = Math.atan2(-m.m13, Math.sqrt(m.m23*m.m23 + m.m33*m.m33));
+      r[2] = Math.atan2(m.m12, m.m11);
+    }
   }
 
   _determinant2x2(a, b, c, d) {
@@ -7684,6 +7734,30 @@ mat4 {
 }
 `;
 nstructjs.register(Matrix4);
+
+
+window.testmat = (x=0, y=0, z=Math.PI*0.5) => {
+  let m1 = new Matrix4();
+  m1.euler_rotate(x, y, z);
+  //m1.scale(2.0, 0.5, 3.0);
+
+  let t = [0, 0, 0], r = [0, 0, 0], s = [0,0 ,0];
+
+  m1.decompose(t, r, s);
+
+  window.console.log("\n");
+  window.console.log(t);
+  window.console.log(r);
+  window.console.log(s);
+
+
+  let mat = m1.clone();
+  mat.transpose();
+  mat.multiply(m1);
+
+  console.log(mat.toString());
+  return r;
+};
 
 var vectormath1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -9381,7 +9455,8 @@ var math1 = /*#__PURE__*/Object.freeze({
 
 let exports = {
   colorSchemeType : "light",
-
+  docManualPath : "../simple_docsys/doc_build/",
+  
   //add textboxes to rollar sliders,
   //note that  users can also double click them to
   //enter text as well
@@ -14781,12 +14856,19 @@ class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
+  noUnits() {
+    this.baseUnit = this.displayUnit = "none";
+    return this;
+  }
+
   setBaseUnit(unit) {
     this.baseUnit = unit;
+    return this;
   }
 
   setDisplayUnit(unit) {
     this.displayUnit = unit;
+    return this;
   }
 
   setUIRange(min, max) {
@@ -14970,6 +15052,10 @@ class _NumberPropertyBase extends ToolProperty {
   }
 
   copyTo(b) {
+    super.copyTo(b);
+
+    b.displayUnit = this.displayUnit;
+    b.baseUnit = this.baseUnit;
     b.data = this.data;
     b.expRate = this.expRate;
     b.step = this.step;
@@ -15424,6 +15510,30 @@ FlagProperty.STRUCT = inherit(FlagProperty, EnumProperty) + `
 `;
 register(FlagProperty);
 
+
+class VecPropertyBase extends FloatProperty {
+  constructor(data, apiname, uiname, description) {
+    super(undefined, apiname, uiname, description);
+
+    this.hasUniformSlider = false;
+  }
+
+  uniformSlider(state=true) {
+    this.hasUniformSlider = state;
+    return this;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.hasUniformSlider = this.hasUniformSlider;
+  }
+}
+VecPropertyBase.STRUCT = inherit(VecPropertyBase, FloatProperty) + `
+  hasUniformSlider : bool;
+}
+`;
+
+
 class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
@@ -15456,7 +15566,7 @@ class Vec2Property extends FloatProperty {
     return ret;
   }
 }
-Vec2Property.STRUCT = inherit(Vec2Property, FloatProperty) + `
+Vec2Property.STRUCT = inherit(Vec2Property, VecPropertyBase) + `
   data : vec2;
 }
 `;
@@ -15464,7 +15574,7 @@ register(Vec2Property);
 
 _addClass(Vec2Property);
 
-class Vec3Property extends FloatProperty {
+class Vec3Property extends VecPropertyBase {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
@@ -15496,7 +15606,7 @@ class Vec3Property extends FloatProperty {
     return ret;
   }
 }
-Vec3Property.STRUCT = inherit(Vec3Property, FloatProperty) + `
+Vec3Property.STRUCT = inherit(Vec3Property, VecPropertyBase) + `
   data : vec3;
 }
 `;
@@ -15535,7 +15645,7 @@ class Vec4Property extends FloatProperty {
     return ret;
   }
 }
-Vec4Property.STRUCT = inherit(Vec4Property, FloatProperty) + `
+Vec4Property.STRUCT = inherit(Vec4Property, VecPropertyBase) + `
   data : vec4;
 }
 `;
@@ -15569,7 +15679,7 @@ class QuatProperty extends ToolProperty {
     return ret;
   }
 }
-QuatProperty.STRUCT = inherit(QuatProperty, FloatProperty) + `
+QuatProperty.STRUCT = inherit(QuatProperty, VecPropertyBase) + `
   data : vec4;
 }
 `;
@@ -15982,6 +16092,28 @@ class InheritFlag {
 let modalstack$1 = [];
 
 class ToolOp extends EventHandler {
+  /**
+  ToolOp definition.
+
+  An example:
+  <pre>
+  static tooldef() {return {
+      uiname   : "Tool Name",
+      toolpath : "logical_module.tool", //logical_module need not match up to a real module
+      icon     : -1, //tool's icon, or -1 if there is none
+      description : "tooltip",
+      is_modal : false, //tool is interactive and takes control of events
+      hotkey : undefined,
+      undoflag : 0, //see UndoFlags
+      flag     : 0,
+      inputs   : ToolOp.inherit({
+        f32val : new Float32Property(1.0),
+        path   : new StringProperty("./path");
+      }),
+      outputs  : {}
+  }}
+  </pre>
+  */
   static tooldef() {
     if (this === ToolOp) {
       throw new Error("Tools must implemented static tooldef() methods!");
@@ -15990,33 +16122,11 @@ class ToolOp extends EventHandler {
     return {};
   }
 
-  /*
-  ToolOp definition.
-
-  An example:
-  <pre>
-  static tooldef() {return {
-    uiname   : "Tool Name",
-    toolpath : "logical_module.tool", //logical_module need not match up to a real module
-    icon     : -1, //tool's icon, or -1 if there is none
-    description : "tooltip",
-    is_modal : false, //tool is interactive and takes control of events
-    hotkey : undefined,
-    undoflag : 0, //see UndoFlags
-    flag     : 0,
-    inputs   : ToolOp.inherit({
-      f32val : new Float32Property(1.0),
-      path   : new StringProperty("./path");
-    }),
-    outputs  : {}
-  }}
-  </pre>
-  */
   static inherit(slots) {
     return new InheritFlag(slots);
   }
   
-  /*creates a new instance of this toolop from args*/
+  /**creates a new instance of this toolop from args*/
   static invoke(ctx, args) {
     let tool = new this();
 
@@ -16182,8 +16292,8 @@ class ToolOp extends EventHandler {
 
   }
 
-  //default on_keydown implementation for modal tools,
-  //no need to call super() to execute this if you don't want to
+  /**default on_keydown implementation for modal tools,
+  no need to call super() to execute this if you don't want to*/
   on_keydown(e) {
     switch (e.keyCode) {
       case keymap["Enter"]:
@@ -16229,7 +16339,7 @@ class ToolOp extends EventHandler {
 
   }
 
-  //for use in modal mode only
+  /**for use in modal mode only*/
   resetDrawLines() {
     var ctx = this.modal_ctx;
     
@@ -16252,7 +16362,8 @@ class ToolOp extends EventHandler {
 
     return this._overdraw;
   }
-  //for use in modal mode only
+
+  /**for use in modal mode only*/
   addDrawLine(v1, v2, style) {
     let line = this.getOverdraw().line(v1, v2, style);
     this.drawlines.push(line);
@@ -16267,7 +16378,7 @@ class ToolOp extends EventHandler {
     throw new Error("cannot call this; use modalEnd");
   }
 
-  //returns promise to be executed on modalEnd
+  /**returns promise to be executed on modalEnd*/
   modalStart(ctx) {
     if (this.modalRunning) {
       console.warn("Warning, tool is already in modal mode consuming events");
@@ -17871,6 +17982,16 @@ class DataPath {
     return this;
   }
 
+  customSet(set) {
+    this.customGetSet(undefined, set);
+    return this;
+  }
+
+  customGet(get) {
+    this.customGetSet(get, undefined);
+    return this;
+  }
+
   /**db will be executed with underlying data object
    that contains this path in 'this.dataref'
 
@@ -17934,6 +18055,13 @@ class DataPath {
     return this;
   }
 
+  /**adds a slider for moving vector component sliders simultaneously*/
+  uniformSlider(state=true) {
+    this.data.uniformSlider(state);
+
+    return this;
+  }
+
   radix(r) {
     this.data.setRadix(r);
     return this;
@@ -17961,6 +18089,12 @@ class DataPath {
 
   descriptions(description_map) { //for enum/flag properties
     this.data.addDescriptions(description_map);
+    return this;
+  }
+
+  uiNames(uinames) {
+    this.data.setUINames(uinames);
+    return this;
   }
 
   description(d) {
@@ -17969,7 +18103,7 @@ class DataPath {
   }
 }
 
-class DataList extends ListIface {
+class  DataList extends ListIface {
   /**
    Okay, this is a simple interface for the controller to access lists,
    whether it's {} object maps, [] arrays, util.set's, or whatever.
@@ -20135,7 +20269,8 @@ const PackFlags = {
   STRIP : 512|1024,
   SIMPLE_NUMSLIDERS : 2048,
   FORCE_ROLLER_SLIDER : 4096,
-  HIDE_CHECK_MARKS : (1<<13)
+  HIDE_CHECK_MARKS : (1<<13),
+  NO_NUMSLIDER_TEXTBOX : (1<<14)
 };
  
 let first$1 = (iter) => {
@@ -21340,14 +21475,25 @@ class UIBase$1 extends HTMLElement {
     }
   }
 
+  pushReportContext(key) {
+    if (this.ctx.api.pushReportContext) {
+      this.ctx.api.pushReportContext(key);
+    }
+  }
+
+  popReportContext() {
+    if (this.ctx.api.popReportContext)
+      this.ctx.api.popReportContext();
+  }
+
   setPathValue(ctx, path, val) {
     if (this.useDataPathUndo) {
-      ctx.api.pushReportContext(this._reportCtxName);
+      this.pushReportContext(this._reportCtxName);
 
       try {
         this.setPathValueUndo(ctx, path, val);
       } catch (error) {
-        ctx.api.popReportContext();
+        this.popReportContext();
 
         if (!(error instanceof DataPathError)) {
           throw error;
@@ -21356,11 +21502,11 @@ class UIBase$1 extends HTMLElement {
         }
       }
 
-      ctx.api.popReportContext();
+      this.popReportContext();
       return;
     }
 
-    ctx.api.pushReportContext(this._reportCtxName);
+    this.pushReportContext(this._reportCtxName);
 
     try {
       if (this.hasAttribute("mass_set_path")) {
@@ -21370,7 +21516,7 @@ class UIBase$1 extends HTMLElement {
         ctx.api.setValue(ctx, path, val);
       }
     } catch (error) {
-      ctx.api.popReportContext();
+      this.popReportContext();
 
       if (!(error instanceof DataPathError)) {
         throw error;
@@ -21379,7 +21525,7 @@ class UIBase$1 extends HTMLElement {
       return;
     }
 
-    ctx.api.popReportContext();
+    this.popReportContext();
   }
 
   get _reportCtxName() {
@@ -21387,21 +21533,21 @@ class UIBase$1 extends HTMLElement {
   }
 
   getPathMeta(ctx, path) {
-    ctx.api.pushReportContext(this._reportCtxName);
+    this.pushReportContext(this._reportCtxName);
     let ret = ctx.api.resolvePath(ctx, path);
-    ctx.api.popReportContext();
+    this.popReportContext();
 
     return ret !== undefined ? ret.prop : undefined;
   }
 
   getPathDescription(ctx, path) {
     let ret;
-    ctx.api.pushReportContext(this._reportCtxName);
+    this.pushReportContext(this._reportCtxName);
 
     try {
       ret = ctx.api.getDescription(ctx, path);
     } catch (error) {
-      ctx.api.popReportContext();
+      this.popReportContext();
 
       if (error instanceof DataPathError) {
         //console.warn("Invalid data path '" + path + "'");
@@ -21411,7 +21557,7 @@ class UIBase$1 extends HTMLElement {
       }
     }
 
-    ctx.api.popReportContext();
+    this.popReportContext();
     return ret;
   }
 
@@ -22018,6 +22164,16 @@ function measureTextBlock(elem, text, canvas=undefined,
 
 function measureText(elem, text, canvas=undefined,
                             g=undefined, size=undefined, font=undefined) {
+  if (typeof canvas === "object" && canvas !== null && !(canvas instanceof HTMLCanvasElement) && canvas.tagName !== "CANVAS") {
+    let args = canvas;
+
+    canvas = args.canvas;
+    g = args.g;
+    size = args.size;
+    font = args.font;
+
+  }
+
   if (g === undefined) {
     canvas = get_measure_canvas();
     g = canvas.g;
@@ -26181,9 +26337,9 @@ class Container extends UIBase$1 {
     } else if (prop.type === PropTypes$6.INT || prop.type === PropTypes$6.FLOAT) {
       let ret;
       if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) {
-        ret = this.simpleslider(inpath);
+        ret = this.simpleslider(inpath, {packflag : packflag});
       } else {
-        ret = this.slider(inpath);
+        ret = this.slider(inpath, {packflag : packflag});
       }
 
       ret.packflag |= packflag;
@@ -26228,7 +26384,13 @@ class Container extends UIBase$1 {
       }
     } else if (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4)) {
       if (rdef.subkey !== undefined) {
-        let ret = (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
+        let ret;
+
+        if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS)
+          ret = this.simpleslider(path, {packflag : packflag});
+        else
+          this.slider(path, {packflag : packflag});
+
         ret.packflag |= packflag;
         return ret;
       } else if (prop.subtype === PropSubTypes$2.COLOR) {
@@ -26236,6 +26398,7 @@ class Container extends UIBase$1 {
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
         let ret = document.createElement("vector-panel-x");
+        ret.packflag |= packflag;
 
         if (inpath) {
           ret.setAttribute("datapath", inpath);
@@ -26249,13 +26412,22 @@ class Container extends UIBase$1 {
 
         return ret;
       }
-    } else if (prop.type == PropTypes$6.FLAG) {
+    } else if (prop.type === PropTypes$6.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
 
+        if (typeof rdef.subkey === "number") {
+          name = rdef.prop.keys[rdef.subkey];
+          if (name && name in rdef.prop.ui_value_names) {
+            name = rdef.prop.ui_value_names[name];
+          } else {
+            name = makeUIName(name ? name : "(error)");
+          }
+        }
+
         if (name === undefined) {
-          name = makeUIName(rdef.subkey);
+          name = "(error)";
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
@@ -26640,7 +26812,7 @@ class Container extends UIBase$1 {
     throw new Error("implement me!");
   }
 
-    simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+  simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
@@ -26663,7 +26835,7 @@ class Container extends UIBase$1 {
       min = args.min;
       max = args.max;
       step = args.step;
-      is_int = args.is_int;
+      is_int = args.is_int || args.isInt;
       do_redraw = args.do_redraw;
       callback = args.callback;
       packflag = args.packflag || 0;
@@ -26684,7 +26856,7 @@ class Container extends UIBase$1 {
 
     if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
-    } else if (exports.useNumSliderTextboxes) {
+    } else if (exports.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX)) {
       ret = document.createElement("numslider-textbox-x");
     } else {
       ret = document.createElement("numslider-x");
@@ -27383,15 +27555,6 @@ UIBase$7.register(RichViewer);
 
 let keymap$4 = keymap;
 
-let EnumProperty$7 = EnumProperty,
-  PropTypes$7 = PropTypes;
-
-let UIBase$8 = UIBase$1,
-  PackFlags$6 = PackFlags,
-  IconSheets$5 = IconSheets;
-
-let parsepx$4 = parsepx;
-
 class VectorPanel extends ColumnFrame {
   constructor() {
     super();
@@ -27403,6 +27566,9 @@ class VectorPanel extends ColumnFrame {
     this.axes = "XYZW";
     this.value = new Vector3();
     this.sliders = [];
+    this.hasUniformSlider = false;
+
+    this.packflag |= PackFlags.FORCE_ROLLER_SLIDER|PackFlags.NO_NUMSLIDER_TEXTBOX;
 
     let makeParam = (key) => {
       Object.defineProperty(this, key, {
@@ -27471,18 +27637,37 @@ class VectorPanel extends ColumnFrame {
   rebuild() {
     this.clear();
 
-    console.warn("rebuilding");
-
     if (this.name) {
       this.label(this.name);
     }
+
+    let frame, row;
+
+    if (this.hasUniformSlider) {
+      row = this.row();
+      frame = row.col();
+    } else {
+      frame = this;
+    }
+
+    console.warn("rebuilding");
 
     this.sliders = [];
 
     for (let i=0; i<this.value.length; i++) {
       //inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
 
-      let slider = this.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
+      let slider = frame.slider(undefined, {
+        name       : this.axes[i],
+        defaultval : this.value[i],
+        min        : this.range[0],
+        max        : this.range[1],
+        step       : this.step || 0.001,
+        is_int     : this.isInt,
+        packflag   : this.packflag
+      });
+
+      //let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
 
@@ -27506,6 +27691,10 @@ class VectorPanel extends ColumnFrame {
           this2.setPathValue(this2.ctx, this2.getAttribute("datapath"), this2.value);
         }
 
+        if (this2.uslider) {
+          this2.uslider.setValue(this2.uniformValue, false);
+        }
+
         if (this2.onchange) {
           this2.onchange(this2.value);
         }
@@ -27514,7 +27703,82 @@ class VectorPanel extends ColumnFrame {
       this.sliders.push(slider);
     }
 
+    if (this.hasUniformSlider) {
+      let uslider = this.uslider = document.createElement("numslider-x");
+      row._prepend(uslider);
+
+      uslider.range = this.range;
+      uslider.baseUnit = this.baseUnit;
+      uslider.displayUnit = this.displayUnit;
+      uslider.expRate = this.expRate;
+      uslider.step = this.step;
+      uslider.expRate = this.expRate;
+      uslider.isInt = this.isInt;
+      uslider.radix = this.radix;
+      uslider.decimalPlaces = this.decimalPlaces;
+      uslider.stepIsRelative= this.stepIsRelative;
+
+      uslider.vertical = true;
+      uslider.setValue(this.uniformValue, false);
+
+      this.sliders.push(uslider);
+
+      uslider.onchange = () => {
+        this.uniformValue = uslider.value;
+      };
+    } else {
+      this.uslider = undefined;
+    }
+
     this.setCSS();
+  }
+
+  get uniformValue() {
+    let sum = 0.0;
+
+    for (let i=0; i<this.value.length; i++) {
+      sum += isNaN(this.value[i]) ? 0.0 : this.value[i];
+    }
+
+    return sum / this.value.length;
+  }
+
+  set uniformValue(val) {
+    let old = this.uniformValue;
+    let doupdate = false;
+
+    if (old === 0.0 || val === 0.0) {
+      doupdate = this.value.dot(this.value) !== 0.0;
+
+      this.value.zero();
+    } else {
+      let ratio = val / old;
+      for (let i = 0; i < this.value.length; i++) {
+        this.value[i] *= ratio;
+      }
+
+      doupdate = true;
+    }
+
+    if (doupdate) {
+      if (this.hasAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.value);
+      }
+
+      if (this.onchange) {
+        this.onchange(this.value);
+      }
+
+      for (let i=0; i<this.value.length; i++) {
+        this.sliders[i].setValue(this.value[i], false);
+        this.sliders[i]._redraw();
+      }
+
+      if (this.uslider) {
+        this.uslider.setValue(val, false);
+        this.uslider._redraw();
+      }
+    }
   }
 
   setValue(value) {
@@ -27575,11 +27839,16 @@ class VectorPanel extends ColumnFrame {
       return;
     }
 
-    let loadNumParam = (k) => {
+    let loadNumParam = (k, do_rebuild=false) => {
       if (meta && meta[k] !== undefined && this[k] === undefined) {
         this[k] = meta[k];
+
+        if (this[k] !== meta[k] && do_rebuild) {
+          this.doOnce(this.rebuild);
+        }
       }
     };
+
 
     loadNumParam("baseUnit");
     loadNumParam("displayUnit");
@@ -27589,6 +27858,11 @@ class VectorPanel extends ColumnFrame {
     loadNumParam("step");
     loadNumParam("expRate");
     loadNumParam("stepIsRelative");
+
+    if (meta && meta.hasUniformSlider !== undefined && meta.hasUniformSlider !== this.hasUniformSlider) {
+      this.hasUniformSlider = meta.hasUniformSlider;
+      this.doOnce(this.rebuild);
+    }
 
     if (meta && meta.range) {
       this.range[0] = meta.range[0];
@@ -27629,6 +27903,10 @@ class VectorPanel extends ColumnFrame {
       if (this.value.vectorDistance(val) > 0) {
         this.value.load(val);
 
+        if (this.uslider) {
+          this.uslider.setValue(this.uniformValue, false);
+        }
+
         for (let i=0; i<this.value.length; i++) {
           this.sliders[i].setValue(val[i], false);
           this.sliders[i]._redraw();
@@ -27636,15 +27914,24 @@ class VectorPanel extends ColumnFrame {
       }
     }
   }
+
   update() {
     super.update();
 
     this.updateDataPath();
-    
+
     if (this.stepIsRelative) {
-      for (let i = 0; i < this.sliders.length; i++) {
-        this.sliders[i].step = ToolProperty.calcRelativeStep(this.step, this.value[i]);
+      for (let slider of this.sliders) {
+        slider.step = ToolProperty.calcRelativeStep(this.step, slider.value);
       }
+    }
+
+    if (this.uslider) {
+      this.uslider.step = this.step;
+      if (this.stepIsRelative) {
+        this.uslider.step = ToolProperty.calcRelativeStep(this.step, this.uniformValue);
+      }
+
     }
   }
 
@@ -27652,9 +27939,9 @@ class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase$8.register(VectorPanel);
+UIBase$1.register(VectorPanel);
 
-class ToolTip extends UIBase$8 {
+class ToolTip extends UIBase$1 {
   constructor() {
     super();
 
@@ -27729,7 +28016,7 @@ class ToolTip extends UIBase$8 {
     style   : "tooltip"
   }}
 };
-UIBase$8.register(ToolTip);
+UIBase$1.register(ToolTip);
 
 function makeGenEnum() {
   let enumdef = {};
@@ -28020,12 +28307,12 @@ var _ui$1 = undefined;
 let PropFlags$3 = PropFlags;
 let PropSubTypes$3 = PropSubTypes$1;
 
-let EnumProperty$8 = EnumProperty;
+let EnumProperty$7 = EnumProperty;
 
 let Vector2$5 = Vector2,
-  UIBase$9 = UIBase$1,
-  PackFlags$7 = PackFlags,
-  PropTypes$8 = PropTypes;
+  UIBase$8 = UIBase$1,
+  PackFlags$6 = PackFlags,
+  PropTypes$7 = PropTypes;
 
 class PanelFrame extends ColumnFrame {
   constructor() {
@@ -28276,7 +28563,7 @@ class PanelFrame extends ColumnFrame {
   }
 }
 
-UIBase$9.register(PanelFrame);
+UIBase$8.register(PanelFrame);
 
 "use strict";
 
@@ -28285,9 +28572,9 @@ let Vector2$6 = Vector2,
   Vector4$2 = Vector4,
   Matrix4$2 = Matrix4;
 
-let UIBase$a = UIBase$1,
-  PackFlags$8 = PackFlags,
-  IconSheets$6 = IconSheets;
+let UIBase$9 = UIBase$1,
+  PackFlags$7 = PackFlags,
+  IconSheets$5 = IconSheets;
 
 let UPW = 1.25, VPW = 0.75;
 
@@ -28440,7 +28727,7 @@ class SimpleBox {
   }
 }
 
-class HueField extends UIBase$a {
+class HueField extends UIBase$9 {
   constructor() {
     super();
 
@@ -28550,9 +28837,9 @@ class HueField extends UIBase$a {
   };}
 }
 
-UIBase$a.register(HueField);
+UIBase$9.register(HueField);
 
-class SatValField extends UIBase$a {
+class SatValField extends UIBase$9 {
   constructor() {
     super();
 
@@ -28771,7 +29058,7 @@ class SatValField extends UIBase$a {
   };}
 }
 
-UIBase$a.register(SatValField);
+UIBase$9.register(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
@@ -28922,7 +29209,7 @@ class ColorField extends ColumnFrame {
     this.huefield._redraw();
   }
 }
-UIBase$a.register(ColorField);
+UIBase$9.register(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -29162,10 +29449,10 @@ class ColorPicker extends ColumnFrame {
   };}
 }
 
-UIBase$a.register(ColorPicker);
+UIBase$9.register(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$a {
+class ColorPickerButton extends UIBase$9 {
   constructor() {
     super();
 
@@ -29475,13 +29762,13 @@ class ColorPickerButton extends UIBase$a {
     this._redraw();
   }
 };
-UIBase$a.register(ColorPickerButton);
+UIBase$9.register(ColorPickerButton);
 
 "use strict";
 
-let UIBase$b = UIBase$1, 
-    PackFlags$9 = PackFlags,
-    IconSheets$7 = IconSheets,
+let UIBase$a = UIBase$1, 
+    PackFlags$8 = PackFlags,
+    IconSheets$6 = IconSheets,
   iconmanager$1 = iconmanager;
 
 let tab_idgen = 1;
@@ -29624,7 +29911,7 @@ class ModalTabMove extends EventHandler {
 
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$b.getDPI();
+    let dpi = UIBase$a.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -29741,7 +30028,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$b {
+class TabBar extends UIBase$a {
   constructor() {
     super();
     
@@ -30497,9 +30784,9 @@ class TabBar extends UIBase$b {
     style   : "tabs"
   };}
 }
-UIBase$b.register(TabBar);
+UIBase$a.register(TabBar);
 
-class TabContainer extends UIBase$b {
+class TabContainer extends UIBase$a {
   constructor() {
     super();
 
@@ -30770,7 +31057,7 @@ class TabContainer extends UIBase$b {
   };}
 }
 
-UIBase$b.register(TabContainer);
+UIBase$a.register(TabContainer);
 
 //bind module to global var to get at it in console.
 
@@ -30779,12 +31066,12 @@ var _ui$2 = undefined;
 let PropFlags$4 = PropFlags;
 let PropSubTypes$4 = PropSubTypes$1;
 
-let EnumProperty$9 = EnumProperty;
+let EnumProperty$8 = EnumProperty;
 
 let Vector2$8 = Vector2,
-  UIBase$c = UIBase$1,
-  PackFlags$a = PackFlags,
-  PropTypes$9 = PropTypes;
+  UIBase$b = UIBase$1,
+  PackFlags$9 = PackFlags,
+  PropTypes$8 = PropTypes;
 
 const DataPathError$2 = DataPathError;
 
@@ -30825,7 +31112,7 @@ class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase$c.register(TableRow);
+UIBase$b.register(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -31013,16 +31300,16 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$c.register(TableFrame);
+UIBase$b.register(TableFrame);
 
 "use strict";
 
-let EnumProperty$a = EnumProperty,
-  PropTypes$a = PropTypes;
+let EnumProperty$9 = EnumProperty,
+  PropTypes$9 = PropTypes;
 
-let UIBase$d = UIBase$1,
-  PackFlags$b = PackFlags,
-  IconSheets$8 = IconSheets;
+let UIBase$c = UIBase$1,
+  PackFlags$a = PackFlags,
+  IconSheets$7 = IconSheets;
 
 function getpx$2(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -31093,7 +31380,7 @@ class ListItem extends RowFrame {
     style : "listbox"
   }}
 }
-UIBase$d.register(ListItem);
+UIBase$c.register(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -31235,9 +31522,9 @@ class ListBox extends Container {
     style : "listbox"
   }}
 }
-UIBase$d.register(ListBox);
+UIBase$c.register(ListBox);
 
-let UIBase$e = UIBase$1;
+let UIBase$d = UIBase$1;
 
 class Note extends UIBase$1 {
   constructor() {
@@ -31327,7 +31614,7 @@ class Note extends UIBase$1 {
     tagname : "note-x"
   }}
 }
-UIBase$e.register(Note);
+UIBase$d.register(Note);
 
 class ProgBarNote extends Note {
   constructor() {
@@ -31386,7 +31673,7 @@ class ProgBarNote extends Note {
     tagname : "note-progress-x"
   }}
 }
-UIBase$e.register(ProgBarNote);
+UIBase$d.register(ProgBarNote);
 
 class NoteFrame extends RowFrame {
   constructor() {
@@ -31483,7 +31770,7 @@ class NoteFrame extends RowFrame {
 
     if (timeout != -1) {
       window.setTimeout(() => {
-        console.log("remove!");
+        //console.log("remove!");
         note.remove();
       }, timeout);
     }
@@ -31497,7 +31784,7 @@ class NoteFrame extends RowFrame {
     tagname : "noteframe-x"
   }}
 }
-UIBase$e.register(NoteFrame);
+UIBase$d.register(NoteFrame);
 
 function getNoteFrames(screen) {
   let ret = [];
@@ -31543,11 +31830,7 @@ function progbarNote(screen, msg, percent, color, timeout) {
 function sendNote(screen, msg, color, timeout=3000) {
   noteframes = getNoteFrames(screen);
 
-  console.log(noteframes.length);
-
   for (let frame of noteframes) {
-    console.log(frame);
-
     try {
       frame.addNote(msg, color, timeout);
     } catch (error) {
@@ -31584,6 +31867,8 @@ class NumSlider extends ValueButtonBase {
     this._expRate = 1.333;
     this.decimalPlaces = 4;
     this.radix = 10;
+
+    this.vertical = false;
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
@@ -31709,6 +31994,21 @@ class NumSlider extends ValueButtonBase {
   }
 
   bindEvents() {
+    let dir = this.range && this.range[0] > this.range[1] ? -1 : 1;
+
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap["Left"]:
+        case keymap["Down"]:
+          this.setValue(this.value - dir*5*this.step);
+          break;
+        case keymap["Up"]:
+        case keymap["Right"]:
+          this.setValue(this.value + dir*5*this.step);
+          break;
+      }
+    });
+
     let onmousedown = (e) => {
       if (this.disabled) {
         e.preventDefault();
@@ -31863,7 +32163,7 @@ class NumSlider extends ValueButtonBase {
     let startvalue = this.value;
     let value = startvalue;
 
-    let startx = e.x, starty = e.y;
+    let startx = this.vertical ? e.y : e.x, starty = this.vertical ? e.x : e.y;
 
     this.dom._background = this.getDefault("BoxDepressed");
     let fire = () => {
@@ -31893,12 +32193,14 @@ class NumSlider extends ValueButtonBase {
         e.preventDefault();
         e.stopPropagation();
 
-        let dx = e.x - startx;
-        startx = e.x;
+        let dx = (this.vertical ? e.y : e.x) - startx;
+        startx = (this.vertical ? e.y : e.x);
 
         if (e.shiftKey) {
           dx *= 0.1;
         }
+
+        dx *= this.vertical ? -1 : 1;
 
         value += dx * this._step * 0.1;
 
@@ -32013,35 +32315,34 @@ class NumSlider extends ValueButtonBase {
     //do not call parent class implementation
     let dpi = this.getDPI();
 
-    let ts = this.getDefault("DefaultText").size;
+    let ts = this.getDefault("DefaultText").size*UIBase$1.getDPI();
 
     let dd = this.isInt ? 5 : this.decimalPlaces + 8;
 
-    let label = this._name;
-    if (this.isInt) {
-      label += ": 0";
-      for (let i=0; i<this.radix; i++) {
-        label += "0";
-      }
-    } else {
-      label += ": 0.";
-      for (let i=0; i<this.decimalPlaces+1; i++) {
-        label += "0";
-      }
-    }
+    let label = this._genLabel();
 
-    let tw = measureText(this, label, undefined, undefined,
-      ts, this.getDefault("DefaultText")).width ;
+    let tw = measureText(this, label, {
+      size :ts,
+      font : this.getDefault("DefaultText")
+    }).width / dpi;
 
-    tw += this._getArrowSize()*2.0 + ts;
+    tw = Math.max(tw + this._getArrowSize()*0, this.getDefault("defaultWidth"));
+
+    tw += ts;
     tw = ~~tw;
 
-    let defw = this.getDefault("numslider_width");
-
     //tw = Math.max(tw, w);
+    if (this.vertical) {
+      this.style["width"] = this.dom.style["width"] = this.getDefault("defaultHeight") + "px";
 
-    this.style["width"] = tw+"px";
-    this.dom.style["width"] = tw+"px";
+      this.style["height"] = tw+"px";
+      this.dom.style["height"] = tw+"px";
+    } else {
+      this.style["height"] = this.dom.style["height"] = this.getDefault("defaultHeight") + "px";
+
+      this.style["width"] = tw+"px";
+      this.dom.style["width"] = tw+"px";
+    }
 
     this._repos_canvas();
     this._redraw();
@@ -32083,6 +32384,21 @@ class NumSlider extends ValueButtonBase {
     return text;
   }
 
+  updateDefaultSize() {
+    let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
+
+    let size = this.getDefault("DefaultText").size * 1.33;
+
+    height = ~~Math.max(height, size);
+    height = height + "px";
+
+    if (height !== this.style["height"]) {
+      this.setCSS();
+      this._repos_canvas();
+      this._redraw();
+    }
+  }
+
   _redraw() {
     let g = this.g;
     let canvas = this.dom;
@@ -32113,11 +32429,27 @@ class NumSlider extends ValueButtonBase {
 
     this.dom.font = undefined;
 
-    drawText(this, cx, cy + ts/2, text, {
-      canvas : this.dom,
-      g      : this.g,
-      size   : ts
-    });
+    g.save();
+    if (!window._d) {
+      window._d = Math.PI*0.5;
+    }
+
+    if (this.vertical) {
+      g.rotate(_d);
+
+      drawText(this, cx, -ts*0.5, text, {
+        canvas: this.dom,
+        g: this.g,
+        size: ts
+      });
+      g.restore();
+    } else {
+      drawText(this, cx, cy + ts / 2, text, {
+        canvas: this.dom,
+        g: this.g,
+        size: ts
+      });
+    }
 
     //}
 
@@ -32130,14 +32462,25 @@ class NumSlider extends ValueButtonBase {
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();
 
-    g.beginPath();
-    g.moveTo(d, h*0.5);
-    g.lineTo(d+sz, h*0.5 + sz*0.5);
-    g.lineTo(d+sz, h*0.5 - sz*0.5);
+    if (this.vertical) {
+      g.beginPath();
+      g.moveTo(w*0.5, d);
+      g.lineTo(w*0.5 + sz*0.5, d+sz);
+      g.lineTo(w*0.5 - sz*0.5, d+sz);
 
-    g.moveTo(w-d, h*0.5);
-    g.lineTo(w-sz-d, h*0.5 + sz*0.5);
-    g.lineTo(w-sz-d, h*0.5 - sz*0.5);
+      g.moveTo(w*0.5, h-d);
+      g.lineTo(w*0.5 + sz*0.5, h-sz-d);
+      g.lineTo(w*0.5 - sz*0.5, h-sz-d);
+    } else {
+      g.beginPath();
+      g.moveTo(d, h*0.5);
+      g.lineTo(d+sz, h*0.5 + sz*0.5);
+      g.lineTo(d+sz, h*0.5 - sz*0.5);
+
+      g.moveTo(w-d, h*0.5);
+      g.lineTo(w-sz-d, h*0.5 + sz*0.5);
+      g.lineTo(w-sz-d, h*0.5 - sz*0.5);
+    }
 
     g.fill();
   }
@@ -32180,7 +32523,7 @@ class NumSliderSimpleBase extends UIBase$1 {
     this.modal = undefined;
   }
 
-  setValue(val, ignore_events=false) {
+  setValue(val, fire_onchange=true) {
     val = Math.min(Math.max(val, this.range[0]), this.range[1]);
 
     if (this.isInt) {
@@ -32191,7 +32534,7 @@ class NumSliderSimpleBase extends UIBase$1 {
       this._value = val;
       this._redraw();
 
-      if (this.onchange && !ignore_events) {
+      if (this.onchange && fire_onchange) {
         this.onchange(val);
       }
 
@@ -32595,8 +32938,6 @@ class SliderWithTextbox extends ColumnFrame {
 
     this._value = 0;
     this._name = undefined;
-    this.decimalPlaces = 4;
-    this.isInt = false;
     this._lock_textbox = false;
     this.labelOnTop = undefined;
 
@@ -32633,19 +32974,58 @@ class SliderWithTextbox extends ColumnFrame {
   set range(v) {
     this.numslider.range = v;
   }
-
   get range() {
     return this.numslider.range;
+  }
+
+  get step() {
+    return this.numslider.step;
+  }
+  set step(v) {
+    this.numslider.step = v;
+  }
+
+  get expRate() {
+    return this.numslider.expRate;
+  }
+  set expRate(v) {
+    this.numslider.expRate = v;
+  }
+
+  get decimalPlaces() {
+    return this.numslider.decimalPlaces;
+  }
+  set decimalPlaces(v) {
+    this.numslider.decimalPlaces = v;
+  }
+
+  get isInt() {
+    return this.numslider.isInt;
+  }
+  set isInt(v) {
+    this.numslider.isInt = v;
+  }
+
+  get radix() {
+    return this.numslider.radix;
+  }
+  set radix(v) {
+    this.numslider.radix = v;
+  }
+
+  get stepIsRelative() {
+    return this.numslider.stepIsRelative;
+  }
+  set stepIsRelative(v) {
+    this.numslider.stepIsRelative = v;
   }
 
   get displayUnit() {
     return this.textbox.displayUnit;
   }
-
   set displayUnit(val) {
     let update = val !== this.displayUnit;
 
-    console.warn("setting display unit", val);
     this.numslider.displayUnit = this.textbox.displayUnit = val;
 
     if (update) {
@@ -32660,7 +33040,6 @@ class SliderWithTextbox extends ColumnFrame {
   set baseUnit(val) {
     let update = val !== this.baseUnit;
 
-    console.warn("setting base unit", val);
     this.numslider.baseUnit = this.textbox.baseUnit = val;
 
     if (update) {
@@ -32687,7 +33066,7 @@ class SliderWithTextbox extends ColumnFrame {
 
     this.container.clear();
 
-    if (this.labelOnTop) {
+    if (!this.labelOnTop) {
       this.container = this.row();
     } else {
       this.container = this;
@@ -32806,9 +33185,9 @@ class SliderWithTextbox extends ColumnFrame {
     };
   }
 
-  setValue(val) {
+  setValue(val, fire_onchange=true) {
     this._value = val;
-    this.numslider.setValue(val);
+    this.numslider.setValue(val, fire_onchange);
     this.updateTextBox();
   }
 
@@ -33088,7 +33467,7 @@ class LastToolPanel extends ColumnFrame {
     }
 
     let tool = ctx.toolstack[ctx.toolstack.cur];
-    if (!(LastKey in tool) || tool[LastKey] !== this._tool_id) {
+    if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
       tool[LastKey] = tool_idgen$1++;
       this._tool_id = tool[LastKey];
 
@@ -35205,7 +35584,7 @@ UIBase$1.register(ScreenBorder);
 
 let _ScreenArea = undefined;
 
-let UIBase$f = UIBase$1;
+let UIBase$e = UIBase$1;
 let Vector2$a = Vector2;
 let ScreenClass = undefined;
 
@@ -35344,7 +35723,7 @@ class AreaWrangler {
 
 let _ScreenArea$1 = undefined;
 
-let UIBase$g = UIBase$1;
+let UIBase$f = UIBase$1;
 
 let Vector2$b = Vector2;
 let Screen$1 = undefined;
@@ -35412,7 +35791,7 @@ class Area$1 extends UIBase$1 {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$g) {
+      if (child instanceof UIBase$f) {
         child.parentWidget = this;
       }
     };
@@ -35421,7 +35800,7 @@ class Area$1 extends UIBase$1 {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$g) {
+      if (child instanceof UIBase$f) {
         child.parentWidget = this;
       }
     };
@@ -38356,7 +38735,7 @@ function registerToolStackGetter$1(func) {
 window._nstructjs = nstructjs;
 
 let Vector2$d = Vector2,
-  UIBase$h = UIBase$1,
+  UIBase$g = UIBase$1,
   styleScrollBars$1 = styleScrollBars;
 
 let update_stack = new Array(8192);
@@ -39059,7 +39438,7 @@ class Screen$2 extends UIBase$1 {
     let ratio = window.outerHeight / window.innerHeight;
     let scale = visualViewport.scale;
 
-    let pad = 10;// * scale / devicePixelRatio;
+    let pad = 4;
     width = visualViewport.width * scale - pad;
     height = visualViewport.height * scale - pad;
 
@@ -39378,7 +39757,7 @@ class Screen$2 extends UIBase$1 {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-      bad = bad || !(n instanceof UIBase$h);
+      bad = bad || !(n instanceof UIBase$g);
       
       if (n._id in visit || n.hidden) {
         return;
@@ -39495,7 +39874,7 @@ class Screen$2 extends UIBase$1 {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$h) {
+      if (n instanceof UIBase$g) {
         n.ctx = val;
       }
 
@@ -39636,7 +40015,7 @@ class Screen$2 extends UIBase$1 {
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$h) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
           n._ctx = ctx;
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
@@ -39672,7 +40051,7 @@ class Screen$2 extends UIBase$1 {
           push(n2);
         }
 
-        if (n instanceof UIBase$h) {
+        if (n instanceof UIBase$g) {
           scopestack.push(n);
           push(SCOPE_POP);
         }
@@ -41719,5 +42098,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, warning, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, warning, web2color, write_scripts };
 //# sourceMappingURL=pathux.js.map

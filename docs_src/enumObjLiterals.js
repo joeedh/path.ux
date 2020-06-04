@@ -145,7 +145,11 @@ class Plugin {
     for (let doc of ev.data.docs) {
       if (doc.kind === "variable") {
         let n = ASTNodeContainer.getNode(doc.__docId__);
-
+        
+        if (!n || !n.declarations) {
+          continue;
+        }
+        
         let ok = n.declarations.length === 1;
         ok = ok && doc.export;
         ok = ok && n.declarations[0].id;
