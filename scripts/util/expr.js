@@ -24,7 +24,7 @@ let tokens = [
   tk("NUM", /[0-9]+(\.[0-9]*)?/),
   tk("LPAREN", /\(/),
   tk("RPAREN", /\)/),
-  tk("STRLIT", /".*(?<!\\)\"/, (t) => {
+  tk("STRLIT", /"[^"]*"/, (t) => { // /".*(?<!\\)"/ <- not working outside of Chrome
     let v = t.value;
     t.lexer.lineno += count(t.value, "\n");
     return t;
@@ -243,8 +243,6 @@ export function parseExpr(s) {
   function bin_next(depth=0) {
     let a = p.peek_i(0);
     let b = p.peek_i(1);
-
-    console.log(indent(depth) + "bin_next", a.toString(), b?.toString());
 
     if (b && b.value === ")") {
       b.type = a.type;
