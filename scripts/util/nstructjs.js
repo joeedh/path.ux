@@ -1794,6 +1794,8 @@ StructFieldType.register(StructDoubleField);
 
 class StructStringField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
+    val = !val ? "" : val;
+    
     pack_string$1(data, val);
   }
   
@@ -1810,6 +1812,8 @@ StructFieldType.register(StructStringField);
 
 class StructStaticStringField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
+    val = !val ? "" : val;
+    
     pack_static_string$1(data, val, type.data.maxlength);
   }
   
