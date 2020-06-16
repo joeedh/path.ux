@@ -19,6 +19,7 @@ let count = (str, match) => {
   return c;
 }
 
+
 let tokens = [
   tk("ID", /[a-zA-Z$_]+[a-zA-Z0-9$_]*/),
   tk("NUM", /[0-9]+(\.[0-9]*)?/),

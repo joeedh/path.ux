@@ -351,7 +351,7 @@ export function parseValue(string, baseUnit=undefined) {
     return f;
   }  
 
-  if (baseUnit) {
+  if (baseUnit && baseUnit !== "none") {
     base = Unit.getUnit(baseUnit);
     if (base === undefined) {
       console.warn("Unknown unit " + baseUnit);
