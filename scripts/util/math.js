@@ -13,9 +13,10 @@ export function aabb_overlap_area(pos1, size1, pos2, size2) {
     let b1 = pos1[i] + size1[i];
     let b2 = pos2[i] + size2[i];
 
-    if (b1 >= a2 && a1 <= b2) {
-      let r = a2 - b1;
-      
+    if (b1 >= a2 && b2 >= a1) {
+      let r = Math.abs(a2 - b1);
+      r = Math.min(r, Math.abs(a1 - b2));
+
       if (i) {
         r2 = r;
       } else {

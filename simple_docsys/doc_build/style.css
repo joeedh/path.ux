@@ -11,6 +11,17 @@ body {
     --c7 : #efefef;
 }
 
+span.hotkey {
+    background-color : #dbdbdb;
+    font-family: "Courier New";
+    font-weight: bold;
+    color : #282828;
+    padding-left  : 2px;
+    padding-right : 2px;
+    border-radius: 5px;
+    border: 1px solid white;
+}
+
 p.notebox {
     background-color: #ead094;
     font-family: "Times New Roman";
@@ -51,7 +62,7 @@ h2 {
 
 
 .contents {
-    width : auto;
+    width : 70%;
 }
 
 a {

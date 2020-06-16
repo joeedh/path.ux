@@ -635,8 +635,9 @@ export class DocsBrowser extends UIBase {
         base_url: base_url,
         paste_data_images : true,
         allow_html_data_urls : true,
-        plugins: [ 'quickbars', 'paste' ],
-        toolbar: true,
+        plugins: [ 'quickbars', 'paste', 'toc', "imagetools", "importcss" ],
+        content_css : this._prefix + "style.css",
+        toolbar: "toc",
         menubar: true,
         inline: true,
         images_upload_handler : (blobInfo, success, onError) => {
@@ -675,12 +676,12 @@ export class DocsBrowser extends UIBase {
   }
 
   undoPre() {
-    let undo = this.tinymce.editors[0].undoManager;
+    let undo = this.tinymce.undoManager;
     undo.beforeChange();
   }
 
   undoPost(label) {
-    let undo = this.tinymce.editors[0].undoManager;
+    let undo = this.tinymce.undoManager;
     undo.add();
   }
 

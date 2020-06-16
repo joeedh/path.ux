@@ -670,7 +670,22 @@ class DocGenerator {
       this.readDocument(doc);
     }
   }
-
+  
+  getTitle(doc) {
+    if (doc.title) {
+      return doc.title;
+    }
+    
+    let node = parse5.parse(fs.readFileSync(doc.path, "utf8"));
+    let title = this.findTitle(node);
+    
+    if (title) {
+      doc.title = title;
+    }
+    
+    return doc.title;
+  }
+  
   findTitle(node) {
     let found = 0;
     let ret = undefined;
@@ -824,6 +839,8 @@ class DocGenerator {
     let s = ``;
 
     for (let ch of siblings) {
+      this.getTitle(ch);
+      
       let url = this.getHref(doc, ch);
       //console.log(doc.path, url, ch.path)
       s += `<a href="${url}" class="nav-item">${ch.title}</a>\n`;
@@ -831,6 +848,9 @@ class DocGenerator {
 
     for (let k in children) {
       let ch = children[k];
+      
+      this.getTitle(ch);
+      
       let url = this.getHref(doc, ch);
       //console.log(doc.path, url, ch.path)
       s += `<div class="nav-folder"><a href="${url}" class="nav-item">${ch.title}</a></div>\n`;
