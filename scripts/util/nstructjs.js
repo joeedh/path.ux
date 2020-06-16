@@ -1572,6 +1572,7 @@ var struct_parser = /*#__PURE__*/Object.freeze({
   struct_parse: _export_struct_parse_
 });
 
+let _export_StructFieldTypeMap_;
 let warninglvl = 1;
 let debug = 0;
 
@@ -1655,7 +1656,11 @@ const _export_setDebugMode_ = (t) => {
 _export_setDebugMode_(debug);
 
 const _export_StructFieldTypes_ = [];
-const _export_StructFieldTypeMap_ = {};
+let StructFieldTypeMap = _export_StructFieldTypeMap_ = {};
+
+let packNull = function(manager, data, field, type) {
+  StructFieldTypeMap[type.type].packNull(manager, data, field, type);
+};
 
 function unpack_field(manager, data, type, uctx) {
   let name;
@@ -1713,15 +1718,40 @@ let StructFieldType = class StructFieldType {
   static unpack(manager, data, type, uctx) {
   }
   
+  static packNull(manager, data, field, type) {
+    this.pack(manager, data, 0, 0, field, type);
+  }
+  
   static format(type) {
     return this.define().name;
   }
   
+  /**
+  return false to override default
+  helper js for packing
+  */
+  static useHelperJS(field) {
+    return true;
+  }
+  /**
+  Define field class info.
+  
+  Example:
+  <pre>
+  static define() {return {
+    type : StructEnum.T_INT,
+    name : "int"
+  }}
+  </pre>
+  */
   static define() {return {
     type : -1,
     name : "(error)"
   }}
   
+  /**
+  Register field packer/unpacker class.  Will throw an error if define() method is bad.
+  */
   static register(cls) {
     if (_export_StructFieldTypes_.indexOf(cls) >= 0) {
       throw new Error("class already registered");
@@ -1799,6 +1829,10 @@ class StructStringField extends StructFieldType {
     pack_string$1(data, val);
   }
   
+  static packNull(manager, data, field, type) {
+    this.pack(manager, data, "", 0, field, type);
+  }
+  
   static unpack(manager, data, type, uctx) {
     return unpack_string(data, uctx);
   }   
@@ -1821,6 +1855,10 @@ class StructStaticStringField extends StructFieldType {
     return `static_string[${type.data.maxlength}]`;
   }
  
+  static packNull(manager, data, field, type) {
+    this.pack(manager, data, "", 0, field, type);
+  }
+
   static unpack(manager, data, type, uctx) {
     return unpack_static_string(data, uctx, type.data.maxlength);
   }   
@@ -1839,6 +1877,16 @@ class StructStructField extends StructFieldType {
   
   static format(type) {
     return type.data;
+  }
+  
+  static packNull(manager, data, field, type) {
+    let stt = manager.get_struct(type.data);
+    
+    for (let field2 of stt.fields) {
+      let type2 = field2.type;
+      
+      packNull(manager, data, field2, type2);
+    }
   }
   
   static unpack(manager, data, type, uctx) {
@@ -1873,10 +1921,17 @@ class StructTStructField extends StructFieldType {
 
     packer_debug("int " + stt.id);
 
-    _module_exports_.pack_int(data, stt.id);
+    pack_int$1(data, stt.id);
     manager.write_struct(data, val, stt);
   }
   
+  static packNull(manager, data, field, type) {
+    let stt = manager.get_struct(type.data);
+    
+    pack_int$1(data, stt.id);
+    packNull(manager, data, field, {type : STructEnum.T_STRUCT, data : type.data});
+  }
+
   static format(type) {
     return "abstract(" + type.data + ")";
   }
@@ -1949,6 +2004,10 @@ class StructArrayField extends StructFieldType {
     }
   }
   
+  static packNull(manager, data, field, type) {
+    pack_int$1(data, 0);
+  }
+  
   static format(type) {
     if (type.data.iname != "" && type.data.iname != undefined) {
       return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
@@ -1956,6 +2015,10 @@ class StructArrayField extends StructFieldType {
     else {
       return "array(" + fmt_type(type.data.type) + ")";
     }
+  }
+
+  static useHelperJS(field) {
+    return !field.type.data.iname;
   }
   
   static unpack(manager, data, type, uctx) {
@@ -2030,6 +2093,14 @@ class StructIterField extends StructFieldType {
 
       i++;
     }, this);
+  }
+  
+  static packNull(manager, data, field, type) {
+    pack_int$1(data, 0);
+  }
+
+  static useHelperJS(field) {
+    return !field.type.data.iname;
   }
   
   static format(type) {
@@ -2157,6 +2228,14 @@ class StructIterKeysField extends StructFieldType {
     }
   }
   
+  static packNull(manager, data, field, type) {
+    pack_int$1(data, 0);
+  }
+  
+  static useHelperJS(field) {
+    return !field.type.data.iname;
+  }
+
   static format(type) {
     if (type.data.iname != "" && type.data.iname != undefined) {
       return "iterkeys(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
@@ -2218,11 +2297,49 @@ class StructUshortField extends StructFieldType {
 }
 StructFieldType.register(StructUshortField);
 
+//let writeEmpty = exports.writeEmpty = function writeEmpty(stt) {
+//}
+
 class StructStaticArrayField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
-    pack_int$1(data, 1);
+    if (type.data.size === undefined) {
+      throw new Error("type.data.size was undefined");
+    }
+    
+    let itername = type.data.iname;
+    
+    if (val === undefined || !val.length) {
+      this.packNull(manager, data, field, type);
+      return;
+    }
+    
+    for (let i=0; i<type.data.size; i++) {
+      let i2 = Math.min(i, Math.min(val.length-1, type.data.size));
+      let val2 = val[i2];
+      
+      //*
+      if (itername != "" && itername != undefined && field.get) {
+        let env = _ws_env;
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = manager._env_call(field.get, obj, env);
+      }
+      
+      do_pack(manager, data, val2, val, field, type.data.type);
+    }
+  }
+
+  static useHelperJS(field) {
+    return !field.type.data.iname;
   }
   
+  static packNull(manager, data, field, type) {
+    let size = type.data.size;
+    for (let i=0; i<size; i++) {
+      packNull(manager, data, field, type.data.type);
+    }
+  }
+
   static format(type) {
     let type2 = _export_StructFieldTypeMap_[type.data.type.type].format(type.data.type);
     
@@ -2237,7 +2354,15 @@ class StructStaticArrayField extends StructFieldType {
   }
   
   static unpack(manager, data, type, uctx) {
-    return unpack_int$1(data, uctx);
+    packer_debug("-size: " + type.data.size);
+    
+    let ret = [];
+    
+    for (let i=0; i<type.data.size; i++) {
+      ret.push(unpack_field(manager, data, type.data.type, uctx));
+    }
+    
+    return ret;
   }   
   
   static define() {return {
@@ -2249,7 +2374,7 @@ StructFieldType.register(StructStaticArrayField);
 
 let _export_manager_;
 "use strict";
-let StructFieldTypeMap = _export_StructFieldTypeMap_;
+let StructFieldTypeMap$1 = _export_StructFieldTypeMap_;
 
 let warninglvl$1 = 2;
 
@@ -2377,7 +2502,7 @@ const _export_setDebugMode_$1 = (t) => {
 var _ws_env$1 = [[undefined, undefined]];
 
 function do_pack$1(data, val, obj, thestruct, field, type) {
-  StructFieldTypeMap[field.type.type].pack(manager, data, val, obj, field, type);
+  StructFieldTypeMap$1[field.type.type].pack(manager, data, val, obj, field, type);
 }
 
 function define_empty_class(name) {
@@ -2694,7 +2819,7 @@ var STRUCT = class STRUCT {
     var tab = "  ";
 
     function fmt_type(type) {
-      return StructFieldTypeMap[type.type].format(type);
+      return StructFieldTypeMap$1[type.type].format(type);
       
       if (type.type == StructEnum$2.T_ARRAY || type.type == StructEnum$2.T_ITER || type.type === StructEnum$2.T_ITERKEYS) {
         if (type.data.iname != "" && type.data.iname != undefined) {
@@ -2777,10 +2902,9 @@ var STRUCT = class STRUCT {
 
   write_struct(data, obj, stt) {
     function use_helper_js(field) {
-      if (field.type.type == StructEnum$2.T_ARRAY || field.type.type == StructEnum$2.T_ITER || field.type.type == StructEnum$2.T_ITERKEYS) {
-        return field.type.data.iname == undefined || field.type.data.iname == "";
-      }
-      return true;
+      let type = field.type.type;
+      let cls = StructFieldTypeMap$1[type];
+      return cls.useHelperJS(field);
     }
 
     var fields = stt.fields;
@@ -2799,6 +2923,11 @@ var STRUCT = class STRUCT {
         else {
           val = obj[f.name];
         }
+        
+        if (_nGlobal.DEBUG && _nGlobal.DEBUG.tinyeval) { 
+          console.log("\n\n\n", f.get, "Helper JS Ret", val, "\n\n\n");
+        }
+        
         do_pack$1(data, val, obj, thestruct, f, t1);
       }
       else {
@@ -2808,6 +2937,10 @@ var STRUCT = class STRUCT {
     }
   }
 
+  /**
+  @param data : array to write data into,
+  @param obj  : structable object
+  */
   write_object(data, obj) {
     var cls = obj.constructor.structName;
     var stt = this.get_struct(cls);
@@ -2819,15 +2952,32 @@ var STRUCT = class STRUCT {
     this.write_struct(data, obj, stt);
     return data;
   }
+
+  /**
+  Read an object from binary data
   
-  readObject() {
-    return this.read_object(...arguments);
+  @param data : DataView or Uint8Array instance
+  @param cls_or_struct_id : Structable class
+  @param uctx : internal parameter
+  @return {cls_or_struct_id} Instance of cls_or_struct_id
+  */
+  readObject(data, cls_or_struct_id, uctx) {
+    return this.read_object(data, cls_or_struct_id, uctx);
   }
   
+  /**
+  @param data array to write data into,
+  @param obj structable object
+  */
   writeObject() {
-    return this.write_object(...arguments);
+    return this.write_object(data, obj);
   }
 
+  /**
+  @param data : DataView or Uint8Array instance
+  @param cls_or_struct_id : Structable class
+  @param uctx : internal parameter
+  */
   read_object(data, cls_or_struct_id, uctx) {
     var cls, stt;
 
@@ -2856,7 +3006,7 @@ var STRUCT = class STRUCT {
 
     let this2  = this;
     function unpack_field(type) {
-      return StructFieldTypeMap[type.type].unpack(this2, data, type, uctx);
+      return StructFieldTypeMap$1[type.type].unpack(this2, data, type, uctx);
     }
 
     let was_run = false;
@@ -3238,6 +3388,11 @@ if (typeof window !== "undefined") {
 _nGlobal._structEval = eval;
 
 const _module_exports_$1 = {};
+_module_exports_$1.unpack_context = _module_exports_.unpack_context;
+
+/**
+true means little endian, false means big endian
+*/
 Object.defineProperty(_module_exports_$1, "STRUCT_ENDIAN", {
   get: function () {
     return _module_exports_.STRUCT_ENDIAN;
