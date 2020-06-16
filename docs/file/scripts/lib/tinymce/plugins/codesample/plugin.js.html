@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../../../../">
+  <title data-ice="title">scripts/lib/tinymce/plugins/codesample/plugin.js | path.ux</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="this is awesome library"><meta property="twitter:card" content="summary"><meta property="twitter:title" content="path.ux"><meta property="twitter:description" content="this is awesome library"></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/joeedh/path.ux.git"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconMap">setIconMap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Icons">Icons</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-cconst">cconst</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-electron_api">electron_api</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-html5_fileapi">html5_fileapi</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-math">math</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-parseutil">parseutil</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-solver">solver</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-toolprop_abstract">toolprop_abstract</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-util">util</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-vectormath">vectormath</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#config">config</a><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-exports">exports</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#controller">controller</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/context.js~Context.html">Context</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/context.js~ContextOverlay.html">ContextOverlay</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/context.js~LockedContext.html">LockedContext</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~DataPathError.html">DataPathError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~ListIface.html">ListIface</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~ModelInterface.html">ModelInterface</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~ToolOpIface.html">ToolOpIface</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller_ops.js~DataPathSetOp.html">DataPathSetOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataAPI.html">DataAPI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataList.html">DataList</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getDataPathToolOp">getDataPathToolOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initSimpleController">initSimpleController</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-popReportName">popReportName</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushReportName">pushReportName</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setDataPathToolOp">setDataPathToolOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ContextFlags">ContextFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-OverlayClasses">OverlayClasses</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-excludedKeys">excludedKeys</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataFlags">DataFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataTypes">DataTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-StructFlags">StructFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-pathParser">pathParser</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#core">core</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~AbstractCommand.html">AbstractCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~AnimManager.html">AnimManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~Animator.html">Animator</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~Command.html">Command</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~GoToCommand.html">GoToCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~SetCommand.html">SetCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~WaitCommand.html">WaitCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/aspect.js~AfterAspect.html">AfterAspect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/safeobservable.js~AbstractObservable.html">AbstractObservable</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/safeobservable.js~Observable.html">Observable</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/safeobservable.js~ObserveManger.html">ObserveManger</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~ColumnFrame.html">ColumnFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~Container.html">Container</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~Label.html">Label</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~FootUnit.html">FootUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~InchUnit.html">InchUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~MeterUnit.html">MeterUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~MileUnit.html">MileUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~RadianUnit.html">RadianUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~Unit.html">Unit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_setUIBase">_setUIBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initAspectClass">initAspectClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-IsMobile">IsMobile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_ensureFont">_ensureFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_getFont">_getFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_getFont_new">_getFont_new</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_setAreaClass">_setAreaClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-drawRoundBox">drawRoundBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-drawRoundBox2">drawRoundBox2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-drawText">drawText</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getDefault">getDefault</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFont">getFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getIconManager">getIconManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadUIData">loadUIData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makeIconDiv">makeIconDiv</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-measureText">measureText</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-measureTextBlock">measureTextBlock</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-report">report</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-exportTheme">exportTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-invertTheme">invertTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsepx">parsepx</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setColorSchemeType">setColorSchemeType</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateWebColor">validateWebColor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-web2color">web2color</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildString">buildString</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convert">convert</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseValue">parseValue</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setBaseUnit">setBaseUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setMetric">setMetric</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-manager">manager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-UIBase">UIBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-manager">manager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DefaultTheme">DefaultTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataPathError">DataPathError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-EnumProperty">EnumProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Vector2">Vector2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ErrorColors">ErrorColors</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-IconSheets">IconSheets</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PackFlags">PackFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-UIFlags">UIFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Vector4">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-dpistack">dpistack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-iconmanager">iconmanager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-marginPaddingCSSKeys">marginPaddingCSSKeys</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ColorSchemeTypes">ColorSchemeTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-theme">theme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Units">Units</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#curve">curve</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d.js~Curve1D.html">Curve1D</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~BounceCurve.html">BounceCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~EaseCurve.html">EaseCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~ElasticCurve.html">ElasticCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~ParamKey.html">ParamKey</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~RandCurve.html">RandCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html">SimpleCurveBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_base.js~CurveTypeData.html">CurveTypeData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html">Curve1DPoint</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONParse">mySafeJSONParse</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONStringify">mySafeJSONStringify</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getCurve">getCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONParse">mySafeJSONParse</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONStringify">mySafeJSONStringify</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makeGenEnum">makeGenEnum</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-Ease">Ease</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CURVE_VERSION">CURVE_VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveConstructors">CurveConstructors</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveFlags">CurveFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TangentModes">TangentModes</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#docbrowser">docbrowser</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocHistory.html">DocHistory</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocHistoryItem.html">DocHistoryItem</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocsAPI.html">DocsAPI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocsBrowser.html">DocsBrowser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~ElectronAPI.html">ElectronAPI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~SavedDocument.html">SavedDocument</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~ServerAPI.html">ServerAPI</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#platforms-electron">platforms/electron</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildElectronHotkey">buildElectronHotkey</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildElectronMenu">buildElectronMenu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-checkInit">checkInit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getNativeIcon">getNativeIcon</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initMenuBar">initMenuBar</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-iconcache">iconcache</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#screen">screen</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/AreaDocker.js~AreaDocker.html">AreaDocker</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html">Screen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_mesh.js~ScreenBorder.html">ScreenBorder</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_mesh.js~ScreenHalfEdge.html">ScreenHalfEdge</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_mesh.js~ScreenVert.html">ScreenVert</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~AreaDragTool.html">AreaDragTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~AreaResizeTool.html">AreaResizeTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~SplitTool.html">SplitTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~ToolBase.html">ToolBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~ToolTipViewer.html">ToolTipViewer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/ScreenArea.js~Area.html">Area</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/ScreenArea.js~ScreenArea.html">ScreenArea</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/area_wrangler.js~AreaWrangler.html">AreaWrangler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerToolStackGetter">registerToolStackGetter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-startEvents">startEvents</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-snap">snap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-snapi">snapi</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerToolStackGetter">registerToolStackGetter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getAreaIntName">getAreaIntName</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setAreaTypes">setAreaTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setScreenClass">setScreenClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-SnapLimit">SnapLimit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-AreaFlags">AreaFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BorderMask">BorderMask</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BorderSides">BorderSides</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-AreaTypes">AreaTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-areaclasses">areaclasses</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#toolsys">toolsys</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/simple_toolsys.js~ToolMacro.html">ToolMacro</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/simple_toolsys.js~ToolOp.html">ToolOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/simple_toolsys.js~ToolStack.html">ToolStack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~BoolProperty.html">BoolProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Curve1DProperty.html">Curve1DProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~EnumProperty.html">EnumProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~FlagProperty.html">FlagProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~FloatProperty.html">FloatProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~IntProperty.html">IntProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~ListProperty.html">ListProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Mat4Property.html">Mat4Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~NumProperty.html">NumProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~QuatProperty.html">QuatProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~StringProperty.html">StringProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~StringSetProperty.html">StringSetProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~ToolProperty.html">ToolProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Vec2Property.html">Vec2Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Vec3Property.html">Vec3Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Vec4Property.html">Vec4Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~VecPropertyBase.html">VecPropertyBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html">_NumberPropertyBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html">Curve1DPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html">EnumPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~FlagPropertyIF.html">FlagPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~FloatPropertyIF.html">FloatPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~IntPropertyIF.html">IntPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html">ListPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~NumPropertyIF.html">NumPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~StringPropertyIF.html">StringPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html">StringSetPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html">ToolPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Vec2PropertyIF.html">Vec2PropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Vec3PropertyIF.html">Vec3PropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Vec4PropertyIF.html">Vec4PropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setContextClass">setContextClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildParser">buildParser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initToolPaths">initToolPaths</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseToolPath">parseToolPath</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-testToolParser">testToolParser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isNumber">isNumber</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setPropTypes">setPropTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ToolClasses">ToolClasses</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ToolFlags">ToolFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-UndoFlags">UndoFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Parser">Parser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ToolPaths">ToolPaths</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropClasses">PropClasses</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropSubTypes">PropSubTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-customPropertyTypes">customPropertyTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropFlags">PropFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropSubTypes">PropSubTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropTypes">PropTypes</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#util">util</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/ScreenOverdraw.js~Overdraw.html">Overdraw</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/events.js~EventDispatcher.html">EventDispatcher</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/events.js~EventHandler.html">EventHandler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/graphpack.js~PackNode.html">PackNode</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/graphpack.js~PackNodeVertex.html">PackNodeVertex</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~Mat4Stack.html">Mat4Stack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~MinMax.html">MinMax</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~PlaneOps.html">PlaneOps</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~PUTLParseError.html">PUTLParseError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~lexer.html">lexer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~parser.html">parser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~tokdef.html">tokdef</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~token.html">token</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/simple_events.js~DoubleClickHandler.html">DoubleClickHandler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/simple_events.js~HotKey.html">HotKey</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/simple_events.js~KeyMap.html">KeyMap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/solver.js~Constraint.html">Constraint</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/solver.js~Solver.html">Solver</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~FastHash.html">FastHash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~HashDigest.html">HashDigest</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~HashIter.html">HashIter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~IDGen.html">IDGen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~ImageReader.html">ImageReader</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~MersenneRandom.html">MersenneRandom</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~MovingAvg.html">MovingAvg</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~SetIter.html">SetIter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~SmartConsole.html">SmartConsole</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~SmartConsoleContext.html">SmartConsoleContext</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~cachering.html">cachering</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~hashtable.html">hashtable</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~set.html">set</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~BaseVector.html">BaseVector</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Matrix4.html">Matrix4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Quat.html">Quat</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2matrix">css2matrix</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-matrix2css">matrix2css</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-graphGetIslands">graphGetIslands</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-graphPack">graphPack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadFile">loadFile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveFile">saveFile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getImageData">getImageData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadImageFile">loadImageFile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_old_isect_ray_plane">_old_isect_ray_plane</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_intersect_2d">aabb_intersect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_isect_2d">aabb_isect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_isect_line_2d">aabb_isect_line_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_overlap_area">aabb_overlap_area</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_sphere_isect">aabb_sphere_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_sphere_isect_2d">aabb_sphere_isect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_union_2d">aabb_union_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-circ_from_line_tan">circ_from_line_tan</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-clip_line_w">clip_line_w</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-closest_point_on_line">closest_point_on_line</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-colinear">colinear</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convex_quad">convex_quad</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-corner_normal">corner_normal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-dist_to_line">dist_to_line</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-dist_to_line_2d">dist_to_line_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-expand_line">expand_line</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-expand_rect2d">expand_rect2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-gen_circle">gen_circle</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_boundary_winding">get_boundary_winding</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_rect_lines">get_rect_lines</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_rect_points">get_rect_points</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_tri_circ">get_tri_circ</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inrect_2d">inrect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isect_ray_plane">isect_ray_plane</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-line_isect">line_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-line_line_cross">line_line_cross</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-line_line_isect">line_line_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makeCircleMesh">makeCircleMesh</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mesh_find_tangent">mesh_find_tangent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-minmax_verts">minmax_verts</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-normal_quad">normal_quad</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-normal_tri">normal_tri</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-point_in_aabb">point_in_aabb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-point_in_aabb_2d">point_in_aabb_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-point_in_tri">point_in_tri</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-project">project</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rot2d">rot2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-simple_tri_aabb_isect">simple_tri_aabb_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-unproject">unproject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-winding">winding</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_setScreenClass">_setScreenClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyEvent">copyEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-eventWasTouch">eventWasTouch</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-haveModal">haveModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isLeftClick">isLeftClick</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isMouseDown">isMouseDown</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pathDebugEvent">pathDebugEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-popModalLight">popModalLight</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModalLight">pushModalLight</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-singleMouseEvent">singleMouseEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-register">register</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-atob">atob</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-btoa">btoa</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-fetch_file">fetch_file</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-formatNumberUI">formatNumberUI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getAllKeys">getAllKeys</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getClassParent">getClassParent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hashjoin">hashjoin</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isMobile">isMobile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-list">list</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-merge">merge</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pollTimer">pollTimer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-print_stack">print_stack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-modalStack">modalStack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-COLINEAR">COLINEAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-COLINEAR_ISECT">COLINEAR_ISECT</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FEPS">FEPS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FEPS_DATA">FEPS_DATA</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FLOAT_MAX">FLOAT_MAX</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FLOAT_MIN">FLOAT_MIN</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-LINECROSS">LINECROSS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Matrix4UI">Matrix4UI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-SQRT2">SQRT2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-feps">feps</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-keymap">keymap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-keymap_latin_1">keymap_latin_1</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-modalstack">modalstack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-reverse_keymap">reverse_keymap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-STRUCT">STRUCT</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-inherit">inherit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-manager">manager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-nstructjs">nstructjs</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-setDebugMode">setDebugMode</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-write_scripts">write_scripts</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-console">console</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-termColorMap">termColorMap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-timers">timers</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#widgets">widgets</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/dragbox.js~DragBox.html">DragBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/theme_editor.js~ThemeEditor.html">ThemeEditor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_button.js~Button.html">Button</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker.js~ColorField.html">ColorField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker.js~ColorPicker.html">ColorPicker</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker.js~SimpleBox.html">SimpleBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorField.html">ColorField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorPicker.html">ColorPicker</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html">ColorPickerButton</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~HueField.html">HueField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~SatValField.html">SatValField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~SimpleBox.html">SimpleBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_container.js~BuilderContainer.html">BuilderContainer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_container.js~BuilderRow.html">BuilderRow</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_container.js~ContainerIF.html">ContainerIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget.js~Curve1DWidget.html">Curve1DWidget</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget_old.js~Curve.html">Curve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget_old.js~CurvePoint.html">CurvePoint</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget_old.js~CurveWidget.html">CurveWidget</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_lasttool.js~LastToolPanel.html">LastToolPanel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_menu.js~DropBox.html">DropBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_menu.js~Menu.html">Menu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_menu.js~MenuWrangler.html">MenuWrangler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html">NumSliderWithTextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html">SliderWithTextbox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_table.js~TableFrame.html">TableFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_table.js~TableRow.html">TableRow</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~ModalTabMove.html">ModalTabMove</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabBar.html">TabBar</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_treeview.js~TreeItem.html">TreeItem</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_treeview.js~TreeView.html">TreeView</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconLabel.html">IconLabel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makePopupArea">makePopupArea</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMenu">createMenu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getWranglerScreen">getWranglerScreen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setWranglerScreen">setWranglerScreen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-startMenu">startMenu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-startMenuEventWrangling">startMenuEventWrangling</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-error">error</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getNoteFrames">getNoteFrames</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-message">message</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-progbarNote">progbarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sendNote">sendNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-warning">warning</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-checkForTextBox">checkForTextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-api">api</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveConstructors">CurveConstructors</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveFlags">CurveFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveTypes">CurveTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TangentModes">TangentModes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-menuWrangler">menuWrangler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-noteframes">noteframes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataPathError">DataPathError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-tab_idgen">tab_idgen</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">scripts/lib/tinymce/plugins/codesample/plugin.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.3.1 (2020-05-27)
+ */
+(function (domGlobals) {
+    &apos;use strict&apos;;
+
+    var global = tinymce.util.Tools.resolve(&apos;tinymce.PluginManager&apos;);
+
+    var noop = function () {
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var eq = function (o) {
+        return o.isNone();
+      };
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = function (n) {
+        return n;
+      };
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        is: never,
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || &apos;error: getOrDie called on none.&apos;);
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: none,
+        equals: eq,
+        equals_: eq,
+        toArray: function () {
+          return [];
+        },
+        toString: constant(&apos;none()&apos;)
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        is: function (v) {
+          return a === v;
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return &apos;some(&apos; + a + &apos;)&apos;;
+        },
+        equals: function (o) {
+          return o.is(a);
+        },
+        equals_: function (o, elementEq) {
+          return o.fold(never, function (b) {
+            return elementEq(a, b);
+          });
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Option = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var global$1 = tinymce.util.Tools.resolve(&apos;tinymce.dom.DOMUtils&apos;);
+
+    function isCodeSample(elm) {
+      return elm &amp;&amp; elm.nodeName === &apos;PRE&apos; &amp;&amp; elm.className.indexOf(&apos;language-&apos;) !== -1;
+    }
+    function trimArg(predicateFn) {
+      return function (arg1, arg2) {
+        return predicateFn(arg2);
+      };
+    }
+
+    var Global = typeof domGlobals.window !== &apos;undefined&apos; ? domGlobals.window : Function(&apos;return this;&apos;)();
+
+    var exports$1 = {}, module = { exports: exports$1 }, global$2 = {};
+    (function (define, exports, module, require) {
+      var oldprism = window.Prism;
+      window.Prism = { manual: true };
+      (function (f) {
+        if (typeof exports === &apos;object&apos; &amp;&amp; typeof module !== &apos;undefined&apos;) {
+          module.exports = f();
+        } else if (typeof define === &apos;function&apos; &amp;&amp; define.amd) {
+          define([], f);
+        } else {
+          var g;
+          if (typeof window !== &apos;undefined&apos;) {
+            g = window;
+          } else if (typeof global$2 !== &apos;undefined&apos;) {
+            g = global$2;
+          } else if (typeof self !== &apos;undefined&apos;) {
+            g = self;
+          } else {
+            g = this;
+          }
+          g.EphoxContactWrapper = f();
+        }
+      }(function () {
+        return function () {
+          function r(e, n, t) {
+            function o(i, f) {
+              if (!n[i]) {
+                if (!e[i]) {
+                  var c = &apos;function&apos; == typeof require &amp;&amp; require;
+                  if (!f &amp;&amp; c)
+                    return c(i, !0);
+                  if (u)
+                    return u(i, !0);
+                  var a = new Error(&apos;Cannot find module \&apos;&apos; + i + &apos;\&apos;&apos;);
+                  throw a.code = &apos;MODULE_NOT_FOUND&apos;, a;
+                }
+                var p = n[i] = { exports: {} };
+                e[i][0].call(p.exports, function (r) {
+                  var n = e[i][1][r];
+                  return o(n || r);
+                }, p, p.exports, r, e, n, t);
+              }
+              return n[i].exports;
+            }
+            for (var u = &apos;function&apos; == typeof require &amp;&amp; require, i = 0; i &lt; t.length; i++)
+              o(t[i]);
+            return o;
+          }
+          return r;
+        }()({
+          1: [
+            function (require, module, exports) {
+              Prism.languages.c = Prism.languages.extend(&apos;clike&apos;, {
+                &apos;class-name&apos;: {
+                  pattern: /(\b(?:enum|struct)\s+)\w+/,
+                  lookbehind: true
+                },
+                &apos;keyword&apos;: /\b(?:_Alignas|_Alignof|_Atomic|_Bool|_Complex|_Generic|_Imaginary|_Noreturn|_Static_assert|_Thread_local|asm|typeof|inline|auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while)\b/,
+                &apos;operator&apos;: /&gt;&gt;=?|&lt;&lt;=?|-&gt;|([-+&amp;|:])\1|[?:~]|[-+*/%&amp;|^!=&lt;&gt;]=?/,
+                &apos;number&apos;: /(?:\b0x(?:[\da-f]+\.?[\da-f]*|\.[\da-f]+)(?:p[+-]?\d+)?|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?)[ful]*/i
+              });
+              Prism.languages.insertBefore(&apos;c&apos;, &apos;string&apos;, {
+                &apos;macro&apos;: {
+                  pattern: /(^\s*)#\s*[a-z]+(?:[^\r\n\\]|\\(?:\r\n|[\s\S]))*/im,
+                  lookbehind: true,
+                  alias: &apos;property&apos;,
+                  inside: {
+                    &apos;string&apos;: {
+                      pattern: /(#\s*include\s*)(?:&lt;.+?&gt;|(&quot;|&apos;)(?:\\?.)+?\2)/,
+                      lookbehind: true
+                    },
+                    &apos;directive&apos;: {
+                      pattern: /(#\s*)\b(?:define|defined|elif|else|endif|error|ifdef|ifndef|if|import|include|line|pragma|undef|using)\b/,
+                      lookbehind: true,
+                      alias: &apos;keyword&apos;
+                    }
+                  }
+                },
+                &apos;constant&apos;: /\b(?:__FILE__|__LINE__|__DATE__|__TIME__|__TIMESTAMP__|__func__|EOF|NULL|SEEK_CUR|SEEK_END|SEEK_SET|stdin|stdout|stderr)\b/
+              });
+              delete Prism.languages.c[&apos;boolean&apos;];
+            },
+            {}
+          ],
+          2: [
+            function (require, module, exports) {
+              Prism.languages.clike = {
+                &apos;comment&apos;: [
+                  {
+                    pattern: /(^|[^\\])\/\*[\s\S]*?(?:\*\/|$)/,
+                    lookbehind: true
+                  },
+                  {
+                    pattern: /(^|[^\\:])\/\/.*/,
+                    lookbehind: true,
+                    greedy: true
+                  }
+                ],
+                &apos;string&apos;: {
+                  pattern: /([&quot;&apos;])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+                  greedy: true
+                },
+                &apos;class-name&apos;: {
+                  pattern: /(\b(?:class|interface|extends|implements|trait|instanceof|new)\s+|\bcatch\s+\()[\w.\\]+/i,
+                  lookbehind: true,
+                  inside: { &apos;punctuation&apos;: /[.\\]/ }
+                },
+                &apos;keyword&apos;: /\b(?:if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
+                &apos;boolean&apos;: /\b(?:true|false)\b/,
+                &apos;function&apos;: /\w+(?=\()/,
+                &apos;number&apos;: /\b0x[\da-f]+\b|(?:\b\d+\.?\d*|\B\.\d+)(?:e[+-]?\d+)?/i,
+                &apos;operator&apos;: /[&lt;&gt;]=?|[!=]=?=?|--?|\+\+?|&amp;&amp;?|\|\|?|[?*/~^%]/,
+                &apos;punctuation&apos;: /[{}[\];(),.:]/
+              };
+            },
+            {}
+          ],
+          3: [
+            function (require, module, exports) {
+              (function (global) {
+                var _self = typeof window !== &apos;undefined&apos; ? window : typeof WorkerGlobalScope !== &apos;undefined&apos; &amp;&amp; self instanceof WorkerGlobalScope ? self : {};
+                var Prism = function (_self) {
+                  var lang = /\blang(?:uage)?-([\w-]+)\b/i;
+                  var uniqueId = 0;
+                  var _ = {
+                    manual: _self.Prism &amp;&amp; _self.Prism.manual,
+                    disableWorkerMessageHandler: _self.Prism &amp;&amp; _self.Prism.disableWorkerMessageHandler,
+                    util: {
+                      encode: function (tokens) {
+                        if (tokens instanceof Token) {
+                          return new Token(tokens.type, _.util.encode(tokens.content), tokens.alias);
+                        } else if (Array.isArray(tokens)) {
+                          return tokens.map(_.util.encode);
+                        } else {
+                          return tokens.replace(/&amp;/g, &apos;&amp;amp;&apos;).replace(/&lt;/g, &apos;&amp;lt;&apos;).replace(/\u00a0/g, &apos; &apos;);
+                        }
+                      },
+                      type: function (o) {
+                        return Object.prototype.toString.call(o).slice(8, -1);
+                      },
+                      objId: function (obj) {
+                        if (!obj[&apos;__id&apos;]) {
+                          Object.defineProperty(obj, &apos;__id&apos;, { value: ++uniqueId });
+                        }
+                        return obj[&apos;__id&apos;];
+                      },
+                      clone: function deepClone(o, visited) {
+                        var clone, id, type = _.util.type(o);
+                        visited = visited || {};
+                        switch (type) {
+                        case &apos;Object&apos;:
+                          id = _.util.objId(o);
+                          if (visited[id]) {
+                            return visited[id];
+                          }
+                          clone = {};
+                          visited[id] = clone;
+                          for (var key in o) {
+                            if (o.hasOwnProperty(key)) {
+                              clone[key] = deepClone(o[key], visited);
+                            }
+                          }
+                          return clone;
+                        case &apos;Array&apos;:
+                          id = _.util.objId(o);
+                          if (visited[id]) {
+                            return visited[id];
+                          }
+                          clone = [];
+                          visited[id] = clone;
+                          o.forEach(function (v, i) {
+                            clone[i] = deepClone(v, visited);
+                          });
+                          return clone;
+                        default:
+                          return o;
+                        }
+                      },
+                      getLanguage: function (element) {
+                        while (element &amp;&amp; !lang.test(element.className)) {
+                          element = element.parentElement;
+                        }
+                        if (element) {
+                          return (element.className.match(lang) || [
+                            ,
+                            &apos;none&apos;
+                          ])[1].toLowerCase();
+                        }
+                        return &apos;none&apos;;
+                      },
+                      currentScript: function () {
+                        if (typeof document === &apos;undefined&apos;) {
+                          return null;
+                        }
+                        if (&apos;currentScript&apos; in document) {
+                          return document.currentScript;
+                        }
+                        try {
+                          throw new Error();
+                        } catch (err) {
+                          var src = (/at [^(\r\n]*\((.*):.+:.+\)$/i.exec(err.stack) || [])[1];
+                          if (src) {
+                            var scripts = document.getElementsByTagName(&apos;script&apos;);
+                            for (var i in scripts) {
+                              if (scripts[i].src == src) {
+                                return scripts[i];
+                              }
+                            }
+                          }
+                          return null;
+                        }
+                      }
+                    },
+                    languages: {
+                      extend: function (id, redef) {
+                        var lang = _.util.clone(_.languages[id]);
+                        for (var key in redef) {
+                          lang[key] = redef[key];
+                        }
+                        return lang;
+                      },
+                      insertBefore: function (inside, before, insert, root) {
+                        root = root || _.languages;
+                        var grammar = root[inside];
+                        var ret = {};
+                        for (var token in grammar) {
+                          if (grammar.hasOwnProperty(token)) {
+                            if (token == before) {
+                              for (var newToken in insert) {
+                                if (insert.hasOwnProperty(newToken)) {
+                                  ret[newToken] = insert[newToken];
+                                }
+                              }
+                            }
+                            if (!insert.hasOwnProperty(token)) {
+                              ret[token] = grammar[token];
+                            }
+                          }
+                        }
+                        var old = root[inside];
+                        root[inside] = ret;
+                        _.languages.DFS(_.languages, function (key, value) {
+                          if (value === old &amp;&amp; key != inside) {
+                            this[key] = ret;
+                          }
+                        });
+                        return ret;
+                      },
+                      DFS: function DFS(o, callback, type, visited) {
+                        visited = visited || {};
+                        var objId = _.util.objId;
+                        for (var i in o) {
+                          if (o.hasOwnProperty(i)) {
+                            callback.call(o, i, o[i], type || i);
+                            var property = o[i], propertyType = _.util.type(property);
+                            if (propertyType === &apos;Object&apos; &amp;&amp; !visited[objId(property)]) {
+                              visited[objId(property)] = true;
+                              DFS(property, callback, null, visited);
+                            } else if (propertyType === &apos;Array&apos; &amp;&amp; !visited[objId(property)]) {
+                              visited[objId(property)] = true;
+                              DFS(property, callback, i, visited);
+                            }
+                          }
+                        }
+                      }
+                    },
+                    plugins: {},
+                    highlightAll: function (async, callback) {
+                      _.highlightAllUnder(document, async, callback);
+                    },
+                    highlightAllUnder: function (container, async, callback) {
+                      var env = {
+                        callback: callback,
+                        container: container,
+                        selector: &apos;code[class*=&quot;language-&quot;], [class*=&quot;language-&quot;] code, code[class*=&quot;lang-&quot;], [class*=&quot;lang-&quot;] code&apos;
+                      };
+                      _.hooks.run(&apos;before-highlightall&apos;, env);
+                      env.elements = Array.prototype.slice.apply(env.container.querySelectorAll(env.selector));
+                      _.hooks.run(&apos;before-all-elements-highlight&apos;, env);
+                      for (var i = 0, element; element = env.elements[i++];) {
+                        _.highlightElement(element, async === true, env.callback);
+                      }
+                    },
+                    highlightElement: function (element, async, callback) {
+                      var language = _.util.getLanguage(element);
+                      var grammar = _.languages[language];
+                      element.className = element.className.replace(lang, &apos;&apos;).replace(/\s+/g, &apos; &apos;) + &apos; language-&apos; + language;
+                      var parent = element.parentNode;
+                      if (parent &amp;&amp; parent.nodeName.toLowerCase() === &apos;pre&apos;) {
+                        parent.className = parent.className.replace(lang, &apos;&apos;).replace(/\s+/g, &apos; &apos;) + &apos; language-&apos; + language;
+                      }
+                      var code = element.textContent;
+                      var env = {
+                        element: element,
+                        language: language,
+                        grammar: grammar,
+                        code: code
+                      };
+                      function insertHighlightedCode(highlightedCode) {
+                        env.highlightedCode = highlightedCode;
+                        _.hooks.run(&apos;before-insert&apos;, env);
+                        env.element.innerHTML = env.highlightedCode;
+                        _.hooks.run(&apos;after-highlight&apos;, env);
+                        _.hooks.run(&apos;complete&apos;, env);
+                        callback &amp;&amp; callback.call(env.element);
+                      }
+                      _.hooks.run(&apos;before-sanity-check&apos;, env);
+                      if (!env.code) {
+                        _.hooks.run(&apos;complete&apos;, env);
+                        callback &amp;&amp; callback.call(env.element);
+                        return;
+                      }
+                      _.hooks.run(&apos;before-highlight&apos;, env);
+                      if (!env.grammar) {
+                        insertHighlightedCode(_.util.encode(env.code));
+                        return;
+                      }
+                      if (async &amp;&amp; _self.Worker) {
+                        var worker = new Worker(_.filename);
+                        worker.onmessage = function (evt) {
+                          insertHighlightedCode(evt.data);
+                        };
+                        worker.postMessage(JSON.stringify({
+                          language: env.language,
+                          code: env.code,
+                          immediateClose: true
+                        }));
+                      } else {
+                        insertHighlightedCode(_.highlight(env.code, env.grammar, env.language));
+                      }
+                    },
+                    highlight: function (text, grammar, language) {
+                      var env = {
+                        code: text,
+                        grammar: grammar,
+                        language: language
+                      };
+                      _.hooks.run(&apos;before-tokenize&apos;, env);
+                      env.tokens = _.tokenize(env.code, env.grammar);
+                      _.hooks.run(&apos;after-tokenize&apos;, env);
+                      return Token.stringify(_.util.encode(env.tokens), env.language);
+                    },
+                    matchGrammar: function (text, strarr, grammar, index, startPos, oneshot, target) {
+                      for (var token in grammar) {
+                        if (!grammar.hasOwnProperty(token) || !grammar[token]) {
+                          continue;
+                        }
+                        var patterns = grammar[token];
+                        patterns = Array.isArray(patterns) ? patterns : [patterns];
+                        for (var j = 0; j &lt; patterns.length; ++j) {
+                          if (target &amp;&amp; target == token + &apos;,&apos; + j) {
+                            return;
+                          }
+                          var pattern = patterns[j], inside = pattern.inside, lookbehind = !!pattern.lookbehind, greedy = !!pattern.greedy, lookbehindLength = 0, alias = pattern.alias;
+                          if (greedy &amp;&amp; !pattern.pattern.global) {
+                            var flags = pattern.pattern.toString().match(/[imsuy]*$/)[0];
+                            pattern.pattern = RegExp(pattern.pattern.source, flags + &apos;g&apos;);
+                          }
+                          pattern = pattern.pattern || pattern;
+                          for (var i = index, pos = startPos; i &lt; strarr.length; pos += strarr[i].length, ++i) {
+                            var str = strarr[i];
+                            if (strarr.length &gt; text.length) {
+                              return;
+                            }
+                            if (str instanceof Token) {
+                              continue;
+                            }
+                            if (greedy &amp;&amp; i != strarr.length - 1) {
+                              pattern.lastIndex = pos;
+                              var match = pattern.exec(text);
+                              if (!match) {
+                                break;
+                              }
+                              var from = match.index + (lookbehind &amp;&amp; match[1] ? match[1].length : 0), to = match.index + match[0].length, k = i, p = pos;
+                              for (var len = strarr.length; k &lt; len &amp;&amp; (p &lt; to || !strarr[k].type &amp;&amp; !strarr[k - 1].greedy); ++k) {
+                                p += strarr[k].length;
+                                if (from &gt;= p) {
+                                  ++i;
+                                  pos = p;
+                                }
+                              }
+                              if (strarr[i] instanceof Token) {
+                                continue;
+                              }
+                              delNum = k - i;
+                              str = text.slice(pos, p);
+                              match.index -= pos;
+                            } else {
+                              pattern.lastIndex = 0;
+                              var match = pattern.exec(str), delNum = 1;
+                            }
+                            if (!match) {
+                              if (oneshot) {
+                                break;
+                              }
+                              continue;
+                            }
+                            if (lookbehind) {
+                              lookbehindLength = match[1] ? match[1].length : 0;
+                            }
+                            var from = match.index + lookbehindLength, match = match[0].slice(lookbehindLength), to = from + match.length, before = str.slice(0, from), after = str.slice(to);
+                            var args = [
+                              i,
+                              delNum
+                            ];
+                            if (before) {
+                              ++i;
+                              pos += before.length;
+                              args.push(before);
+                            }
+                            var wrapped = new Token(token, inside ? _.tokenize(match, inside) : match, alias, match, greedy);
+                            args.push(wrapped);
+                            if (after) {
+                              args.push(after);
+                            }
+                            Array.prototype.splice.apply(strarr, args);
+                            if (delNum != 1)
+                              _.matchGrammar(text, strarr, grammar, i, pos, true, token + &apos;,&apos; + j);
+                            if (oneshot)
+                              break;
+                          }
+                        }
+                      }
+                    },
+                    tokenize: function (text, grammar) {
+                      var strarr = [text];
+                      var rest = grammar.rest;
+                      if (rest) {
+                        for (var token in rest) {
+                          grammar[token] = rest[token];
+                        }
+                        delete grammar.rest;
+                      }
+                      _.matchGrammar(text, strarr, grammar, 0, 0, false);
+                      return strarr;
+                    },
+                    hooks: {
+                      all: {},
+                      add: function (name, callback) {
+                        var hooks = _.hooks.all;
+                        hooks[name] = hooks[name] || [];
+                        hooks[name].push(callback);
+                      },
+                      run: function (name, env) {
+                        var callbacks = _.hooks.all[name];
+                        if (!callbacks || !callbacks.length) {
+                          return;
+                        }
+                        for (var i = 0, callback; callback = callbacks[i++];) {
+                          callback(env);
+                        }
+                      }
+                    },
+                    Token: Token
+                  };
+                  _self.Prism = _;
+                  function Token(type, content, alias, matchedStr, greedy) {
+                    this.type = type;
+                    this.content = content;
+                    this.alias = alias;
+                    this.length = (matchedStr || &apos;&apos;).length | 0;
+                    this.greedy = !!greedy;
+                  }
+                  Token.stringify = function (o, language) {
+                    if (typeof o == &apos;string&apos;) {
+                      return o;
+                    }
+                    if (Array.isArray(o)) {
+                      return o.map(function (element) {
+                        return Token.stringify(element, language);
+                      }).join(&apos;&apos;);
+                    }
+                    var env = {
+                      type: o.type,
+                      content: Token.stringify(o.content, language),
+                      tag: &apos;span&apos;,
+                      classes: [
+                        &apos;token&apos;,
+                        o.type
+                      ],
+                      attributes: {},
+                      language: language
+                    };
+                    if (o.alias) {
+                      var aliases = Array.isArray(o.alias) ? o.alias : [o.alias];
+                      Array.prototype.push.apply(env.classes, aliases);
+                    }
+                    _.hooks.run(&apos;wrap&apos;, env);
+                    var attributes = Object.keys(env.attributes).map(function (name) {
+                      return name + &apos;=&quot;&apos; + (env.attributes[name] || &apos;&apos;).replace(/&quot;/g, &apos;&amp;quot;&apos;) + &apos;&quot;&apos;;
+                    }).join(&apos; &apos;);
+                    return &apos;&lt;&apos; + env.tag + &apos; class=&quot;&apos; + env.classes.join(&apos; &apos;) + &apos;&quot;&apos; + (attributes ? &apos; &apos; + attributes : &apos;&apos;) + &apos;&gt;&apos; + env.content + &apos;&lt;/&apos; + env.tag + &apos;&gt;&apos;;
+                  };
+                  if (!_self.document) {
+                    if (!_self.addEventListener) {
+                      return _;
+                    }
+                    if (!_.disableWorkerMessageHandler) {
+                      _self.addEventListener(&apos;message&apos;, function (evt) {
+                        var message = JSON.parse(evt.data), lang = message.language, code = message.code, immediateClose = message.immediateClose;
+                        _self.postMessage(_.highlight(code, _.languages[lang], lang));
+                        if (immediateClose) {
+                          _self.close();
+                        }
+                      }, false);
+                    }
+                    return _;
+                  }
+                  var script = _.util.currentScript();
+                  if (script) {
+                    _.filename = script.src;
+                    if (script.hasAttribute(&apos;data-manual&apos;)) {
+                      _.manual = true;
+                    }
+                  }
+                  if (!_.manual) {
+                    var highlightAutomaticallyCallback = function () {
+                      if (!_.manual) {
+                        _.highlightAll();
+                      }
+                    };
+                    var readyState = document.readyState;
+                    if (readyState === &apos;loading&apos; || readyState === &apos;interactive&apos; &amp;&amp; script &amp;&amp; script.defer) {
+                      document.addEventListener(&apos;DOMContentLoaded&apos;, highlightAutomaticallyCallback);
+                    } else {
+                      if (window.requestAnimationFrame) {
+                        window.requestAnimationFrame(highlightAutomaticallyCallback);
+                      } else {
+                        window.setTimeout(highlightAutomaticallyCallback, 16);
+                      }
+                    }
+                  }
+                  return _;
+                }(_self);
+                if (typeof module !== &apos;undefined&apos; &amp;&amp; module.exports) {
+                  module.exports = Prism;
+                }
+                if (typeof global !== &apos;undefined&apos;) {
+                  global.Prism = Prism;
+                }
+              }.call(this, typeof global$2 !== &apos;undefined&apos; ? global$2 : typeof self !== &apos;undefined&apos; ? self : typeof window !== &apos;undefined&apos; ? window : {}));
+            },
+            {}
+          ],
+          4: [
+            function (require, module, exports) {
+              Prism.languages.cpp = Prism.languages.extend(&apos;c&apos;, {
+                &apos;class-name&apos;: {
+                  pattern: /(\b(?:class|enum|struct)\s+)\w+/,
+                  lookbehind: true
+                },
+                &apos;keyword&apos;: /\b(?:alignas|alignof|asm|auto|bool|break|case|catch|char|char16_t|char32_t|class|compl|const|constexpr|const_cast|continue|decltype|default|delete|do|double|dynamic_cast|else|enum|explicit|export|extern|float|for|friend|goto|if|inline|int|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|long|mutable|namespace|new|noexcept|nullptr|operator|private|protected|public|register|reinterpret_cast|return|short|signed|sizeof|static|static_assert|static_cast|struct|switch|template|this|thread_local|throw|try|typedef|typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while)\b/,
+                &apos;number&apos;: {
+                  pattern: /(?:\b0b[01&apos;]+|\b0x(?:[\da-f&apos;]+\.?[\da-f&apos;]*|\.[\da-f&apos;]+)(?:p[+-]?[\d&apos;]+)?|(?:\b[\d&apos;]+\.?[\d&apos;]*|\B\.[\d&apos;]+)(?:e[+-]?[\d&apos;]+)?)[ful]*/i,
+                  greedy: true
+                },
+                &apos;operator&apos;: /&gt;&gt;=?|&lt;&lt;=?|-&gt;|([-+&amp;|:])\1|[?:~]|[-+*/%&amp;|^!=&lt;&gt;]=?|\b(?:and|and_eq|bitand|bitor|not|not_eq|or|or_eq|xor|xor_eq)\b/,
+                &apos;boolean&apos;: /\b(?:true|false)\b/
+              });
+              Prism.languages.insertBefore(&apos;cpp&apos;, &apos;string&apos;, {
+                &apos;raw-string&apos;: {
+                  pattern: /R&quot;([^()\\ ]{0,16})\([\s\S]*?\)\1&quot;/,
+                  alias: &apos;string&apos;,
+                  greedy: true
+                }
+              });
+            },
+            {}
+          ],
+          5: [
+            function (require, module, exports) {
+              Prism.languages.csharp = Prism.languages.extend(&apos;clike&apos;, {
+                &apos;keyword&apos;: /\b(?:abstract|add|alias|as|ascending|async|await|base|bool|break|byte|case|catch|char|checked|class|const|continue|decimal|default|delegate|descending|do|double|dynamic|else|enum|event|explicit|extern|false|finally|fixed|float|for|foreach|from|get|global|goto|group|if|implicit|in|int|interface|internal|into|is|join|let|lock|long|namespace|new|null|object|operator|orderby|out|override|params|partial|private|protected|public|readonly|ref|remove|return|sbyte|sealed|select|set|short|sizeof|stackalloc|static|string|struct|switch|this|throw|true|try|typeof|uint|ulong|unchecked|unsafe|ushort|using|value|var|virtual|void|volatile|where|while|yield)\b/,
+                &apos;string&apos;: [
+                  {
+                    pattern: /@(&quot;|&apos;)(?:\1\1|\\[\s\S]|(?!\1)[^\\])*\1/,
+                    greedy: true
+                  },
+                  {
+                    pattern: /(&quot;|&apos;)(?:\\.|(?!\1)[^\\\r\n])*?\1/,
+                    greedy: true
+                  }
+                ],
+                &apos;class-name&apos;: [
+                  {
+                    pattern: /\b[A-Z]\w*(?:\.\w+)*\b(?=\s+\w+)/,
+                    inside: { punctuation: /\./ }
+                  },
+                  {
+                    pattern: /(\[)[A-Z]\w*(?:\.\w+)*\b/,
+                    lookbehind: true,
+                    inside: { punctuation: /\./ }
+                  },
+                  {
+                    pattern: /(\b(?:class|interface)\s+[A-Z]\w*(?:\.\w+)*\s*:\s*)[A-Z]\w*(?:\.\w+)*\b/,
+                    lookbehind: true,
+                    inside: { punctuation: /\./ }
+                  },
+                  {
+                    pattern: /((?:\b(?:class|interface|new)\s+)|(?:catch\s+\())[A-Z]\w*(?:\.\w+)*\b/,
+                    lookbehind: true,
+                    inside: { punctuation: /\./ }
+                  }
+                ],
+                &apos;number&apos;: /\b0x[\da-f]+\b|(?:\b\d+\.?\d*|\B\.\d+)f?/i,
+                &apos;operator&apos;: /&gt;&gt;=?|&lt;&lt;=?|[-=]&gt;|([-+&amp;|?])\1|~|[-+*/%&amp;|^!=&lt;&gt;]=?/,
+                &apos;punctuation&apos;: /\?\.?|::|[{}[\];(),.:]/
+              });
+              Prism.languages.insertBefore(&apos;csharp&apos;, &apos;class-name&apos;, {
+                &apos;generic-method&apos;: {
+                  pattern: /\w+\s*&lt;[^&gt;\r\n]+?&gt;\s*(?=\()/,
+                  inside: {
+                    function: /^\w+/,
+                    &apos;class-name&apos;: {
+                      pattern: /\b[A-Z]\w*(?:\.\w+)*\b/,
+                      inside: { punctuation: /\./ }
+                    },
+                    keyword: Prism.languages.csharp.keyword,
+                    punctuation: /[&lt;&gt;(),.:]/
+                  }
+                },
+                &apos;preprocessor&apos;: {
+                  pattern: /(^\s*)#.*/m,
+                  lookbehind: true,
+                  alias: &apos;property&apos;,
+                  inside: {
+                    &apos;directive&apos;: {
+                      pattern: /(\s*#)\b(?:define|elif|else|endif|endregion|error|if|line|pragma|region|undef|warning)\b/,
+                      lookbehind: true,
+                      alias: &apos;keyword&apos;
+                    }
+                  }
+                }
+              });
+              Prism.languages.dotnet = Prism.languages.cs = Prism.languages.csharp;
+            },
+            {}
+          ],
+          6: [
+            function (require, module, exports) {
+              (function (Prism) {
+                var string = /(&quot;|&apos;)(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/;
+                Prism.languages.css = {
+                  &apos;comment&apos;: /\/\*[\s\S]*?\*\//,
+                  &apos;atrule&apos;: {
+                    pattern: /@[\w-]+[\s\S]*?(?:;|(?=\s*\{))/,
+                    inside: { &apos;rule&apos;: /@[\w-]+/ }
+                  },
+                  &apos;url&apos;: {
+                    pattern: RegExp(&apos;url\\((?:&apos; + string.source + &apos;|[^\n\r()]*)\\)&apos;, &apos;i&apos;),
+                    inside: {
+                      &apos;function&apos;: /^url/i,
+                      &apos;punctuation&apos;: /^\(|\)$/
+                    }
+                  },
+                  &apos;selector&apos;: RegExp(&apos;[^{}\\s](?:[^{};&quot;\&apos;]|&apos; + string.source + &apos;)*?(?=\\s*\\{)&apos;),
+                  &apos;string&apos;: {
+                    pattern: string,
+                    greedy: true
+                  },
+                  &apos;property&apos;: /[-_a-z\xA0-\uFFFF][-\w\xA0-\uFFFF]*(?=\s*:)/i,
+                  &apos;important&apos;: /!important\b/i,
+                  &apos;function&apos;: /[-a-z0-9]+(?=\()/i,
+                  &apos;punctuation&apos;: /[(){};:,]/
+                };
+                Prism.languages.css[&apos;atrule&apos;].inside.rest = Prism.languages.css;
+                var markup = Prism.languages.markup;
+                if (markup) {
+                  markup.tag.addInlined(&apos;style&apos;, &apos;css&apos;);
+                  Prism.languages.insertBefore(&apos;inside&apos;, &apos;attr-value&apos;, {
+                    &apos;style-attr&apos;: {
+                      pattern: /\s*style=(&quot;|&apos;)(?:\\[\s\S]|(?!\1)[^\\])*\1/i,
+                      inside: {
+                        &apos;attr-name&apos;: {
+                          pattern: /^\s*style/i,
+                          inside: markup.tag.inside
+                        },
+                        &apos;punctuation&apos;: /^\s*=\s*[&apos;&quot;]|[&apos;&quot;]\s*$/,
+                        &apos;attr-value&apos;: {
+                          pattern: /.+/i,
+                          inside: Prism.languages.css
+                        }
+                      },
+                      alias: &apos;language-css&apos;
+                    }
+                  }, markup.tag);
+                }
+              }(Prism));
+            },
+            {}
+          ],
+          7: [
+            function (require, module, exports) {
+              (function (Prism) {
+                var keywords = /\b(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|exports|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|module|native|new|null|open|opens|package|private|protected|provides|public|requires|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|to|transient|transitive|try|uses|var|void|volatile|while|with|yield)\b/;
+                var className = /\b[A-Z](?:\w*[a-z]\w*)?\b/;
+                Prism.languages.java = Prism.languages.extend(&apos;clike&apos;, {
+                  &apos;class-name&apos;: [
+                    className,
+                    /\b[A-Z]\w*(?=\s+\w+\s*[;,=())])/
+                  ],
+                  &apos;keyword&apos;: keywords,
+                  &apos;function&apos;: [
+                    Prism.languages.clike.function,
+                    {
+                      pattern: /(\:\:)[a-z_]\w*/,
+                      lookbehind: true
+                    }
+                  ],
+                  &apos;number&apos;: /\b0b[01][01_]*L?\b|\b0x[\da-f_]*\.?[\da-f_p+-]+\b|(?:\b\d[\d_]*\.?[\d_]*|\B\.\d[\d_]*)(?:e[+-]?\d[\d_]*)?[dfl]?/i,
+                  &apos;operator&apos;: {
+                    pattern: /(^|[^.])(?:&lt;&lt;=?|&gt;&gt;&gt;?=?|-&gt;|--|\+\+|&amp;&amp;|\|\||::|[?:~]|[-+*/%&amp;|^!=&lt;&gt;]=?)/m,
+                    lookbehind: true
+                  }
+                });
+                Prism.languages.insertBefore(&apos;java&apos;, &apos;string&apos;, {
+                  &apos;triple-quoted-string&apos;: {
+                    pattern: /&quot;&quot;&quot;[ \t]*[\r\n](?:(?:&quot;|&quot;&quot;)?(?:\\.|[^&quot;\\]))*&quot;&quot;&quot;/,
+                    greedy: true,
+                    alias: &apos;string&apos;
+                  }
+                });
+                Prism.languages.insertBefore(&apos;java&apos;, &apos;class-name&apos;, {
+                  &apos;annotation&apos;: {
+                    alias: &apos;punctuation&apos;,
+                    pattern: /(^|[^.])@\w+/,
+                    lookbehind: true
+                  },
+                  &apos;namespace&apos;: {
+                    pattern: /(\b(?:exports|import(?:\s+static)?|module|open|opens|package|provides|requires|to|transitive|uses|with)\s+)[a-z]\w*(?:\.[a-z]\w*)+/,
+                    lookbehind: true,
+                    inside: { &apos;punctuation&apos;: /\./ }
+                  },
+                  &apos;generics&apos;: {
+                    pattern: /&lt;(?:[\w\s,.&amp;?]|&lt;(?:[\w\s,.&amp;?]|&lt;(?:[\w\s,.&amp;?]|&lt;[\w\s,.&amp;?]*&gt;)*&gt;)*&gt;)*&gt;/,
+                    inside: {
+                      &apos;class-name&apos;: className,
+                      &apos;keyword&apos;: keywords,
+                      &apos;punctuation&apos;: /[&lt;&gt;(),.:]/,
+                      &apos;operator&apos;: /[?&amp;|]/
+                    }
+                  }
+                });
+              }(Prism));
+            },
+            {}
+          ],
+          8: [
+            function (require, module, exports) {
+              Prism.languages.javascript = Prism.languages.extend(&apos;clike&apos;, {
+                &apos;class-name&apos;: [
+                  Prism.languages.clike[&apos;class-name&apos;],
+                  {
+                    pattern: /(^|[^$\w\xA0-\uFFFF])[_$A-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\.(?:prototype|constructor))/,
+                    lookbehind: true
+                  }
+                ],
+                &apos;keyword&apos;: [
+                  {
+                    pattern: /((?:^|})\s*)(?:catch|finally)\b/,
+                    lookbehind: true
+                  },
+                  {
+                    pattern: /(^|[^.]|\.\.\.\s*)\b(?:as|async(?=\s*(?:function\b|\(|[$\w\xA0-\uFFFF]|$))|await|break|case|class|const|continue|debugger|default|delete|do|else|enum|export|extends|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|undefined|var|void|while|with|yield)\b/,
+                    lookbehind: true
+                  }
+                ],
+                &apos;number&apos;: /\b(?:(?:0[xX](?:[\dA-Fa-f](?:_[\dA-Fa-f])?)+|0[bB](?:[01](?:_[01])?)+|0[oO](?:[0-7](?:_[0-7])?)+)n?|(?:\d(?:_\d)?)+n|NaN|Infinity)\b|(?:\b(?:\d(?:_\d)?)+\.?(?:\d(?:_\d)?)*|\B\.(?:\d(?:_\d)?)+)(?:[Ee][+-]?(?:\d(?:_\d)?)+)?/,
+                &apos;function&apos;: /#?[_$a-zA-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*(?:\.\s*(?:apply|bind|call)\s*)?\()/,
+                &apos;operator&apos;: /--|\+\+|\*\*=?|=&gt;|&amp;&amp;|\|\||[!=]==|&lt;&lt;=?|&gt;&gt;&gt;?=?|[-+*/%&amp;|^!=&lt;&gt;]=?|\.{3}|\?[.?]?|[~:]/
+              });
+              Prism.languages.javascript[&apos;class-name&apos;][0].pattern = /(\b(?:class|interface|extends|implements|instanceof|new)\s+)[\w.\\]+/;
+              Prism.languages.insertBefore(&apos;javascript&apos;, &apos;keyword&apos;, {
+                &apos;regex&apos;: {
+                  pattern: /((?:^|[^$\w\xA0-\uFFFF.&quot;&apos;\])\s])\s*)\/(?:\[(?:[^\]\\\r\n]|\\.)*]|\\.|[^/\\\[\r\n])+\/[gimyus]{0,6}(?=(?:\s|\/\*[\s\S]*?\*\/)*(?:$|[\r\n,.;:})\]]|\/\/))/,
+                  lookbehind: true,
+                  greedy: true
+                },
+                &apos;function-variable&apos;: {
+                  pattern: /#?[_$a-zA-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*[=:]\s*(?:async\s*)?(?:\bfunction\b|(?:\((?:[^()]|\([^()]*\))*\)|[_$a-zA-Z\xA0-\uFFFF][$\w\xA0-\uFFFF]*)\s*=&gt;))/,
+                  alias: &apos;function&apos;
+                },
+                &apos;parameter&apos;: [
+                  {
+                    pattern: /(function(?:\s+[_$A-Za-z\xA0-\uFFFF][$\w\xA0-\uFFFF]*)?\s*\(\s*)(?!\s)(?:[^()]|\([^()]*\))+?(?=\s*\))/,
+                    lookbehind: true,
+                    inside: Prism.languages.javascript
+                  },
+                  {
+                    pattern: /[_$a-z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*=&gt;)/i,
+                    inside: Prism.languages.javascript
+                  },
+                  {
+                    pattern: /(\(\s*)(?!\s)(?:[^()]|\([^()]*\))+?(?=\s*\)\s*=&gt;)/,
+                    lookbehind: true,
+                    inside: Prism.languages.javascript
+                  },
+                  {
+                    pattern: /((?:\b|\s|^)(?!(?:as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|undefined|var|void|while|with|yield)(?![$\w\xA0-\uFFFF]))(?:[_$A-Za-z\xA0-\uFFFF][$\w\xA0-\uFFFF]*\s*)\(\s*)(?!\s)(?:[^()]|\([^()]*\))+?(?=\s*\)\s*\{)/,
+                    lookbehind: true,
+                    inside: Prism.languages.javascript
+                  }
+                ],
+                &apos;constant&apos;: /\b[A-Z](?:[A-Z_]|\dx?)*\b/
+              });
+              Prism.languages.insertBefore(&apos;javascript&apos;, &apos;string&apos;, {
+                &apos;template-string&apos;: {
+                  pattern: /`(?:\\[\s\S]|\${(?:[^{}]|{(?:[^{}]|{[^}]*})*})+}|(?!\${)[^\\`])*`/,
+                  greedy: true,
+                  inside: {
+                    &apos;template-punctuation&apos;: {
+                      pattern: /^`|`$/,
+                      alias: &apos;string&apos;
+                    },
+                    &apos;interpolation&apos;: {
+                      pattern: /((?:^|[^\\])(?:\\{2})*)\${(?:[^{}]|{(?:[^{}]|{[^}]*})*})+}/,
+                      lookbehind: true,
+                      inside: {
+                        &apos;interpolation-punctuation&apos;: {
+                          pattern: /^\${|}$/,
+                          alias: &apos;punctuation&apos;
+                        },
+                        rest: Prism.languages.javascript
+                      }
+                    },
+                    &apos;string&apos;: /[\s\S]+/
+                  }
+                }
+              });
+              if (Prism.languages.markup) {
+                Prism.languages.markup.tag.addInlined(&apos;script&apos;, &apos;javascript&apos;);
+              }
+              Prism.languages.js = Prism.languages.javascript;
+            },
+            {}
+          ],
+          9: [
+            function (require, module, exports) {
+              (function (Prism) {
+                function getPlaceholder(language, index) {
+                  return &apos;___&apos; + language.toUpperCase() + index + &apos;___&apos;;
+                }
+                Object.defineProperties(Prism.languages[&apos;markup-templating&apos;] = {}, {
+                  buildPlaceholders: {
+                    value: function (env, language, placeholderPattern, replaceFilter) {
+                      if (env.language !== language) {
+                        return;
+                      }
+                      var tokenStack = env.tokenStack = [];
+                      env.code = env.code.replace(placeholderPattern, function (match) {
+                        if (typeof replaceFilter === &apos;function&apos; &amp;&amp; !replaceFilter(match)) {
+                          return match;
+                        }
+                        var i = tokenStack.length;
+                        var placeholder;
+                        while (env.code.indexOf(placeholder = getPlaceholder(language, i)) !== -1)
+                          ++i;
+                        tokenStack[i] = match;
+                        return placeholder;
+                      });
+                      env.grammar = Prism.languages.markup;
+                    }
+                  },
+                  tokenizePlaceholders: {
+                    value: function (env, language) {
+                      if (env.language !== language || !env.tokenStack) {
+                        return;
+                      }
+                      env.grammar = Prism.languages[language];
+                      var j = 0;
+                      var keys = Object.keys(env.tokenStack);
+                      function walkTokens(tokens) {
+                        for (var i = 0; i &lt; tokens.length; i++) {
+                          if (j &gt;= keys.length) {
+                            break;
+                          }
+                          var token = tokens[i];
+                          if (typeof token === &apos;string&apos; || token.content &amp;&amp; typeof token.content === &apos;string&apos;) {
+                            var k = keys[j];
+                            var t = env.tokenStack[k];
+                            var s = typeof token === &apos;string&apos; ? token : token.content;
+                            var placeholder = getPlaceholder(language, k);
+                            var index = s.indexOf(placeholder);
+                            if (index &gt; -1) {
+                              ++j;
+                              var before = s.substring(0, index);
+                              var middle = new Prism.Token(language, Prism.tokenize(t, env.grammar), &apos;language-&apos; + language, t);
+                              var after = s.substring(index + placeholder.length);
+                              var replacement = [];
+                              if (before) {
+                                replacement.push.apply(replacement, walkTokens([before]));
+                              }
+                              replacement.push(middle);
+                              if (after) {
+                                replacement.push.apply(replacement, walkTokens([after]));
+                              }
+                              if (typeof token === &apos;string&apos;) {
+                                tokens.splice.apply(tokens, [
+                                  i,
+                                  1
+                                ].concat(replacement));
+                              } else {
+                                token.content = replacement;
+                              }
+                            }
+                          } else if (token.content) {
+                            walkTokens(token.content);
+                          }
+                        }
+                        return tokens;
+                      }
+                      walkTokens(env.tokens);
+                    }
+                  }
+                });
+              }(Prism));
+            },
+            {}
+          ],
+          10: [
+            function (require, module, exports) {
+              Prism.languages.markup = {
+                &apos;comment&apos;: /&lt;!--[\s\S]*?--&gt;/,
+                &apos;prolog&apos;: /&lt;\?[\s\S]+?\?&gt;/,
+                &apos;doctype&apos;: {
+                  pattern: /&lt;!DOCTYPE(?:[^&gt;&quot;&apos;[\]]|&quot;[^&quot;]*&quot;|&apos;[^&apos;]*&apos;)+(?:\[(?:(?!&lt;!--)[^&quot;&apos;\]]|&quot;[^&quot;]*&quot;|&apos;[^&apos;]*&apos;|&lt;!--[\s\S]*?--&gt;)*\]\s*)?&gt;/i,
+                  greedy: true
+                },
+                &apos;cdata&apos;: /&lt;!\[CDATA\[[\s\S]*?]]&gt;/i,
+                &apos;tag&apos;: {
+                  pattern: /&lt;\/?(?!\d)[^\s&gt;\/=$&lt;%]+(?:\s(?:\s*[^\s&gt;\/=]+(?:\s*=\s*(?:&quot;[^&quot;]*&quot;|&apos;[^&apos;]*&apos;|[^\s&apos;&quot;&gt;=]+(?=[\s&gt;]))|(?=[\s/&gt;])))+)?\s*\/?&gt;/i,
+                  greedy: true,
+                  inside: {
+                    &apos;tag&apos;: {
+                      pattern: /^&lt;\/?[^\s&gt;\/]+/i,
+                      inside: {
+                        &apos;punctuation&apos;: /^&lt;\/?/,
+                        &apos;namespace&apos;: /^[^\s&gt;\/:]+:/
+                      }
+                    },
+                    &apos;attr-value&apos;: {
+                      pattern: /=\s*(?:&quot;[^&quot;]*&quot;|&apos;[^&apos;]*&apos;|[^\s&apos;&quot;&gt;=]+)/i,
+                      inside: {
+                        &apos;punctuation&apos;: [
+                          /^=/,
+                          {
+                            pattern: /^(\s*)[&quot;&apos;]|[&quot;&apos;]$/,
+                            lookbehind: true
+                          }
+                        ]
+                      }
+                    },
+                    &apos;punctuation&apos;: /\/?&gt;/,
+                    &apos;attr-name&apos;: {
+                      pattern: /[^\s&gt;\/]+/,
+                      inside: { &apos;namespace&apos;: /^[^\s&gt;\/:]+:/ }
+                    }
+                  }
+                },
+                &apos;entity&apos;: /&amp;#?[\da-z]{1,8};/i
+              };
+              Prism.languages.markup[&apos;tag&apos;].inside[&apos;attr-value&apos;].inside[&apos;entity&apos;] = Prism.languages.markup[&apos;entity&apos;];
+              Prism.hooks.add(&apos;wrap&apos;, function (env) {
+                if (env.type === &apos;entity&apos;) {
+                  env.attributes[&apos;title&apos;] = env.content.replace(/&amp;amp;/, &apos;&amp;&apos;);
+                }
+              });
+              Object.defineProperty(Prism.languages.markup.tag, &apos;addInlined&apos;, {
+                value: function addInlined(tagName, lang) {
+                  var includedCdataInside = {};
+                  includedCdataInside[&apos;language-&apos; + lang] = {
+                    pattern: /(^&lt;!\[CDATA\[)[\s\S]+?(?=\]\]&gt;$)/i,
+                    lookbehind: true,
+                    inside: Prism.languages[lang]
+                  };
+                  includedCdataInside[&apos;cdata&apos;] = /^&lt;!\[CDATA\[|\]\]&gt;$/i;
+                  var inside = {
+                    &apos;included-cdata&apos;: {
+                      pattern: /&lt;!\[CDATA\[[\s\S]*?\]\]&gt;/i,
+                      inside: includedCdataInside
+                    }
+                  };
+                  inside[&apos;language-&apos; + lang] = {
+                    pattern: /[\s\S]+/,
+                    inside: Prism.languages[lang]
+                  };
+                  var def = {};
+                  def[tagName] = {
+                    pattern: RegExp(/(&lt;__[\s\S]*?&gt;)(?:&lt;!\[CDATA\[[\s\S]*?\]\]&gt;\s*|[\s\S])*?(?=&lt;\/__&gt;)/.source.replace(/__/g, tagName), &apos;i&apos;),
+                    lookbehind: true,
+                    greedy: true,
+                    inside: inside
+                  };
+                  Prism.languages.insertBefore(&apos;markup&apos;, &apos;cdata&apos;, def);
+                }
+              });
+              Prism.languages.xml = Prism.languages.extend(&apos;markup&apos;, {});
+              Prism.languages.html = Prism.languages.markup;
+              Prism.languages.mathml = Prism.languages.markup;
+              Prism.languages.svg = Prism.languages.markup;
+            },
+            {}
+          ],
+          11: [
+            function (require, module, exports) {
+              (function (Prism) {
+                Prism.languages.php = Prism.languages.extend(&apos;clike&apos;, {
+                  &apos;keyword&apos;: /\b(?:__halt_compiler|abstract|and|array|as|break|callable|case|catch|class|clone|const|continue|declare|default|die|do|echo|else|elseif|empty|enddeclare|endfor|endforeach|endif|endswitch|endwhile|eval|exit|extends|final|finally|for|foreach|function|global|goto|if|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|new|or|parent|print|private|protected|public|require|require_once|return|static|switch|throw|trait|try|unset|use|var|while|xor|yield)\b/i,
+                  &apos;boolean&apos;: {
+                    pattern: /\b(?:false|true)\b/i,
+                    alias: &apos;constant&apos;
+                  },
+                  &apos;constant&apos;: [
+                    /\b[A-Z_][A-Z0-9_]*\b/,
+                    /\b(?:null)\b/i
+                  ],
+                  &apos;comment&apos;: {
+                    pattern: /(^|[^\\])(?:\/\*[\s\S]*?\*\/|\/\/.*)/,
+                    lookbehind: true
+                  }
+                });
+                Prism.languages.insertBefore(&apos;php&apos;, &apos;string&apos;, {
+                  &apos;shell-comment&apos;: {
+                    pattern: /(^|[^\\])#.*/,
+                    lookbehind: true,
+                    alias: &apos;comment&apos;
+                  }
+                });
+                Prism.languages.insertBefore(&apos;php&apos;, &apos;comment&apos;, {
+                  &apos;delimiter&apos;: {
+                    pattern: /\?&gt;$|^&lt;\?(?:php(?=\s)|=)?/i,
+                    alias: &apos;important&apos;
+                  }
+                });
+                Prism.languages.insertBefore(&apos;php&apos;, &apos;keyword&apos;, {
+                  &apos;variable&apos;: /\$+(?:\w+\b|(?={))/i,
+                  &apos;package&apos;: {
+                    pattern: /(\\|namespace\s+|use\s+)[\w\\]+/,
+                    lookbehind: true,
+                    inside: { punctuation: /\\/ }
+                  }
+                });
+                Prism.languages.insertBefore(&apos;php&apos;, &apos;operator&apos;, {
+                  &apos;property&apos;: {
+                    pattern: /(-&gt;)[\w]+/,
+                    lookbehind: true
+                  }
+                });
+                var string_interpolation = {
+                  pattern: /{\$(?:{(?:{[^{}]+}|[^{}]+)}|[^{}])+}|(^|[^\\{])\$+(?:\w+(?:\[.+?]|-&gt;\w+)*)/,
+                  lookbehind: true,
+                  inside: Prism.languages.php
+                };
+                Prism.languages.insertBefore(&apos;php&apos;, &apos;string&apos;, {
+                  &apos;nowdoc-string&apos;: {
+                    pattern: /&lt;&lt;&lt;&apos;([^&apos;]+)&apos;(?:\r\n?|\n)(?:.*(?:\r\n?|\n))*?\1;/,
+                    greedy: true,
+                    alias: &apos;string&apos;,
+                    inside: {
+                      &apos;delimiter&apos;: {
+                        pattern: /^&lt;&lt;&lt;&apos;[^&apos;]+&apos;|[a-z_]\w*;$/i,
+                        alias: &apos;symbol&apos;,
+                        inside: { &apos;punctuation&apos;: /^&lt;&lt;&lt;&apos;?|[&apos;;]$/ }
+                      }
+                    }
+                  },
+                  &apos;heredoc-string&apos;: {
+                    pattern: /&lt;&lt;&lt;(?:&quot;([^&quot;]+)&quot;(?:\r\n?|\n)(?:.*(?:\r\n?|\n))*?\1;|([a-z_]\w*)(?:\r\n?|\n)(?:.*(?:\r\n?|\n))*?\2;)/i,
+                    greedy: true,
+                    alias: &apos;string&apos;,
+                    inside: {
+                      &apos;delimiter&apos;: {
+                        pattern: /^&lt;&lt;&lt;(?:&quot;[^&quot;]+&quot;|[a-z_]\w*)|[a-z_]\w*;$/i,
+                        alias: &apos;symbol&apos;,
+                        inside: { &apos;punctuation&apos;: /^&lt;&lt;&lt;&quot;?|[&quot;;]$/ }
+                      },
+                      &apos;interpolation&apos;: string_interpolation
+                    }
+                  },
+                  &apos;single-quoted-string&apos;: {
+                    pattern: /&apos;(?:\\[\s\S]|[^\\&apos;])*&apos;/,
+                    greedy: true,
+                    alias: &apos;string&apos;
+                  },
+                  &apos;double-quoted-string&apos;: {
+                    pattern: /&quot;(?:\\[\s\S]|[^\\&quot;])*&quot;/,
+                    greedy: true,
+                    alias: &apos;string&apos;,
+                    inside: { &apos;interpolation&apos;: string_interpolation }
+                  }
+                });
+                delete Prism.languages.php[&apos;string&apos;];
+                Prism.hooks.add(&apos;before-tokenize&apos;, function (env) {
+                  if (!/&lt;\?/.test(env.code)) {
+                    return;
+                  }
+                  var phpPattern = /&lt;\?(?:[^&quot;&apos;/#]|\/(?![*/])|(&quot;|&apos;)(?:\\[\s\S]|(?!\1)[^\\])*\1|(?:\/\/|#)(?:[^?\n\r]|\?(?!&gt;))*(?=$|\?&gt;|[\r\n])|\/\*[\s\S]*?(?:\*\/|$))*?(?:\?&gt;|$)/ig;
+                  Prism.languages[&apos;markup-templating&apos;].buildPlaceholders(env, &apos;php&apos;, phpPattern);
+                });
+                Prism.hooks.add(&apos;after-tokenize&apos;, function (env) {
+                  Prism.languages[&apos;markup-templating&apos;].tokenizePlaceholders(env, &apos;php&apos;);
+                });
+              }(Prism));
+            },
+            {}
+          ],
+          12: [
+            function (require, module, exports) {
+              Prism.languages.python = {
+                &apos;comment&apos;: {
+                  pattern: /(^|[^\\])#.*/,
+                  lookbehind: true
+                },
+                &apos;string-interpolation&apos;: {
+                  pattern: /(?:f|rf|fr)(?:(&quot;&quot;&quot;|&apos;&apos;&apos;)[\s\S]+?\1|(&quot;|&apos;)(?:\\.|(?!\2)[^\\\r\n])*\2)/i,
+                  greedy: true,
+                  inside: {
+                    &apos;interpolation&apos;: {
+                      pattern: /((?:^|[^{])(?:{{)*){(?!{)(?:[^{}]|{(?!{)(?:[^{}]|{(?!{)(?:[^{}])+})+})+}/,
+                      lookbehind: true,
+                      inside: {
+                        &apos;format-spec&apos;: {
+                          pattern: /(:)[^:(){}]+(?=}$)/,
+                          lookbehind: true
+                        },
+                        &apos;conversion-option&apos;: {
+                          pattern: /![sra](?=[:}]$)/,
+                          alias: &apos;punctuation&apos;
+                        },
+                        rest: null
+                      }
+                    },
+                    &apos;string&apos;: /[\s\S]+/
+                  }
+                },
+                &apos;triple-quoted-string&apos;: {
+                  pattern: /(?:[rub]|rb|br)?(&quot;&quot;&quot;|&apos;&apos;&apos;)[\s\S]+?\1/i,
+                  greedy: true,
+                  alias: &apos;string&apos;
+                },
+                &apos;string&apos;: {
+                  pattern: /(?:[rub]|rb|br)?(&quot;|&apos;)(?:\\.|(?!\1)[^\\\r\n])*\1/i,
+                  greedy: true
+                },
+                &apos;function&apos;: {
+                  pattern: /((?:^|\s)def[ \t]+)[a-zA-Z_]\w*(?=\s*\()/g,
+                  lookbehind: true
+                },
+                &apos;class-name&apos;: {
+                  pattern: /(\bclass\s+)\w+/i,
+                  lookbehind: true
+                },
+                &apos;decorator&apos;: {
+                  pattern: /(^\s*)@\w+(?:\.\w+)*/im,
+                  lookbehind: true,
+                  alias: [
+                    &apos;annotation&apos;,
+                    &apos;punctuation&apos;
+                  ],
+                  inside: { &apos;punctuation&apos;: /\./ }
+                },
+                &apos;keyword&apos;: /\b(?:and|as|assert|async|await|break|class|continue|def|del|elif|else|except|exec|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|print|raise|return|try|while|with|yield)\b/,
+                &apos;builtin&apos;: /\b(?:__import__|abs|all|any|apply|ascii|basestring|bin|bool|buffer|bytearray|bytes|callable|chr|classmethod|cmp|coerce|compile|complex|delattr|dict|dir|divmod|enumerate|eval|execfile|file|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|intern|isinstance|issubclass|iter|len|list|locals|long|map|max|memoryview|min|next|object|oct|open|ord|pow|property|range|raw_input|reduce|reload|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|unichr|unicode|vars|xrange|zip)\b/,
+                &apos;boolean&apos;: /\b(?:True|False|None)\b/,
+                &apos;number&apos;: /(?:\b(?=\d)|\B(?=\.))(?:0[bo])?(?:(?:\d|0x[\da-f])[\da-f]*\.?\d*|\.\d+)(?:e[+-]?\d+)?j?\b/i,
+                &apos;operator&apos;: /[-+%=]=?|!=|\*\*?=?|\/\/?=?|&lt;[&lt;=&gt;]?|&gt;[=&gt;]?|[&amp;|^~]/,
+                &apos;punctuation&apos;: /[{}[\];(),.:]/
+              };
+              Prism.languages.python[&apos;string-interpolation&apos;].inside[&apos;interpolation&apos;].inside.rest = Prism.languages.python;
+              Prism.languages.py = Prism.languages.python;
+            },
+            {}
+          ],
+          13: [
+            function (require, module, exports) {
+              (function (Prism) {
+                Prism.languages.ruby = Prism.languages.extend(&apos;clike&apos;, {
+                  &apos;comment&apos;: [
+                    /#.*/,
+                    {
+                      pattern: /^=begin\s[\s\S]*?^=end/m,
+                      greedy: true
+                    }
+                  ],
+                  &apos;class-name&apos;: {
+                    pattern: /(\b(?:class)\s+|\bcatch\s+\()[\w.\\]+/i,
+                    lookbehind: true,
+                    inside: { &apos;punctuation&apos;: /[.\\]/ }
+                  },
+                  &apos;keyword&apos;: /\b(?:alias|and|BEGIN|begin|break|case|class|def|define_method|defined|do|each|else|elsif|END|end|ensure|extend|for|if|in|include|module|new|next|nil|not|or|prepend|protected|private|public|raise|redo|require|rescue|retry|return|self|super|then|throw|undef|unless|until|when|while|yield)\b/
+                });
+                var interpolation = {
+                  pattern: /#\{[^}]+\}/,
+                  inside: {
+                    &apos;delimiter&apos;: {
+                      pattern: /^#\{|\}$/,
+                      alias: &apos;tag&apos;
+                    },
+                    rest: Prism.languages.ruby
+                  }
+                };
+                delete Prism.languages.ruby.function;
+                Prism.languages.insertBefore(&apos;ruby&apos;, &apos;keyword&apos;, {
+                  &apos;regex&apos;: [
+                    {
+                      pattern: /%r([^a-zA-Z0-9\s{(\[&lt;])(?:(?!\1)[^\\]|\\[\s\S])*\1[gim]{0,3}/,
+                      greedy: true,
+                      inside: { &apos;interpolation&apos;: interpolation }
+                    },
+                    {
+                      pattern: /%r\((?:[^()\\]|\\[\s\S])*\)[gim]{0,3}/,
+                      greedy: true,
+                      inside: { &apos;interpolation&apos;: interpolation }
+                    },
+                    {
+                      pattern: /%r\{(?:[^#{}\\]|#(?:\{[^}]+\})?|\\[\s\S])*\}[gim]{0,3}/,
+                      greedy: true,
+                      inside: { &apos;interpolation&apos;: interpolation }
+                    },
+                    {
+                      pattern: /%r\[(?:[^\[\]\\]|\\[\s\S])*\][gim]{0,3}/,
+                      greedy: true,
+                      inside: { &apos;interpolation&apos;: interpolation }
+                    },
+                    {
+                      pattern: /%r&lt;(?:[^&lt;&gt;\\]|\\[\s\S])*&gt;[gim]{0,3}/,
+                      greedy: true,
+                      inside: { &apos;interpolation&apos;: interpolation }
+                    },
+                    {
+                      pattern: /(^|[^/])\/(?!\/)(?:\[.+?]|\\.|[^/\\\r\n])+\/[gim]{0,3}(?=\s*(?:$|[\r\n,.;})]))/,
+                      lookbehind: true,
+                      greedy: true
+                    }
+                  ],
+                  &apos;variable&apos;: /[@$]+[a-zA-Z_]\w*(?:[?!]|\b)/,
+                  &apos;symbol&apos;: {
+                    pattern: /(^|[^:]):[a-zA-Z_]\w*(?:[?!]|\b)/,
+                    lookbehind: true
+                  },
+                  &apos;method-definition&apos;: {
+                    pattern: /(\bdef\s+)[\w.]+/,
+                    lookbehind: true,
+                    inside: {
+                      &apos;function&apos;: /\w+$/,
+                      rest: Prism.languages.ruby
+                    }
+                  }
+                });
+                Prism.languages.insertBefore(&apos;ruby&apos;, &apos;number&apos;, {
+                  &apos;builtin&apos;: /\b(?:Array|Bignum|Binding|Class|Continuation|Dir|Exception|FalseClass|File|Stat|Fixnum|Float|Hash|Integer|IO|MatchData|Method|Module|NilClass|Numeric|Object|Proc|Range|Regexp|String|Struct|TMS|Symbol|ThreadGroup|Thread|Time|TrueClass)\b/,
+                  &apos;constant&apos;: /\b[A-Z]\w*(?:[?!]|\b)/
+                });
+                Prism.languages.ruby.string = [
+                  {
+                    pattern: /%[qQiIwWxs]?([^a-zA-Z0-9\s{(\[&lt;])(?:(?!\1)[^\\]|\\[\s\S])*\1/,
+                    greedy: true,
+                    inside: { &apos;interpolation&apos;: interpolation }
+                  },
+                  {
+                    pattern: /%[qQiIwWxs]?\((?:[^()\\]|\\[\s\S])*\)/,
+                    greedy: true,
+                    inside: { &apos;interpolation&apos;: interpolation }
+                  },
+                  {
+                    pattern: /%[qQiIwWxs]?\{(?:[^#{}\\]|#(?:\{[^}]+\})?|\\[\s\S])*\}/,
+                    greedy: true,
+                    inside: { &apos;interpolation&apos;: interpolation }
+                  },
+                  {
+                    pattern: /%[qQiIwWxs]?\[(?:[^\[\]\\]|\\[\s\S])*\]/,
+                    greedy: true,
+                    inside: { &apos;interpolation&apos;: interpolation }
+                  },
+                  {
+                    pattern: /%[qQiIwWxs]?&lt;(?:[^&lt;&gt;\\]|\\[\s\S])*&gt;/,
+                    greedy: true,
+                    inside: { &apos;interpolation&apos;: interpolation }
+                  },
+                  {
+                    pattern: /(&quot;|&apos;)(?:#\{[^}]+\}|\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+                    greedy: true,
+                    inside: { &apos;interpolation&apos;: interpolation }
+                  }
+                ];
+                Prism.languages.rb = Prism.languages.ruby;
+              }(Prism));
+            },
+            {}
+          ],
+          14: [
+            function (require, module, exports) {
+              var Prism = require(&apos;prismjs/components/prism-core&apos;);
+              require(&apos;prismjs/components/prism-clike&apos;);
+              require(&apos;prismjs/components/prism-markup-templating&apos;);
+              require(&apos;prismjs/components/prism-c&apos;);
+              require(&apos;prismjs/components/prism-cpp&apos;);
+              require(&apos;prismjs/components/prism-csharp&apos;);
+              require(&apos;prismjs/components/prism-css&apos;);
+              require(&apos;prismjs/components/prism-java&apos;);
+              require(&apos;prismjs/components/prism-javascript&apos;);
+              require(&apos;prismjs/components/prism-markup&apos;);
+              require(&apos;prismjs/components/prism-php&apos;);
+              require(&apos;prismjs/components/prism-python&apos;);
+              require(&apos;prismjs/components/prism-ruby&apos;);
+              module.exports = { boltExport: Prism };
+            },
+            {
+              &apos;prismjs/components/prism-c&apos;: 1,
+              &apos;prismjs/components/prism-clike&apos;: 2,
+              &apos;prismjs/components/prism-core&apos;: 3,
+              &apos;prismjs/components/prism-cpp&apos;: 4,
+              &apos;prismjs/components/prism-csharp&apos;: 5,
+              &apos;prismjs/components/prism-css&apos;: 6,
+              &apos;prismjs/components/prism-java&apos;: 7,
+              &apos;prismjs/components/prism-javascript&apos;: 8,
+              &apos;prismjs/components/prism-markup&apos;: 10,
+              &apos;prismjs/components/prism-markup-templating&apos;: 9,
+              &apos;prismjs/components/prism-php&apos;: 11,
+              &apos;prismjs/components/prism-python&apos;: 12,
+              &apos;prismjs/components/prism-ruby&apos;: 13
+            }
+          ]
+        }, {}, [14])(14);
+      }));
+      var prism = window.Prism;
+      window.Prism = oldprism;
+      return prism;
+    }(undefined, exports$1, module, undefined));
+    var Prism$1 = module.exports.boltExport;
+
+    var getLanguages = function (editor) {
+      return editor.getParam(&apos;codesample_languages&apos;);
+    };
+    var useGlobalPrismJS = function (editor) {
+      return editor.getParam(&apos;codesample_global_prismjs&apos;, false, &apos;boolean&apos;);
+    };
+
+    var get = function (editor) {
+      return Global.Prism &amp;&amp; useGlobalPrismJS(editor) ? Global.Prism : Prism$1;
+    };
+
+    var getSelectedCodeSample = function (editor) {
+      var node = editor.selection ? editor.selection.getNode() : null;
+      if (isCodeSample(node)) {
+        return Option.some(node);
+      }
+      return Option.none();
+    };
+    var insertCodeSample = function (editor, language, code) {
+      editor.undoManager.transact(function () {
+        var node = getSelectedCodeSample(editor);
+        code = global$1.DOM.encode(code);
+        return node.fold(function () {
+          editor.insertContent(&apos;&lt;pre id=&quot;__new&quot; class=&quot;language-&apos; + language + &apos;&quot;&gt;&apos; + code + &apos;&lt;/pre&gt;&apos;);
+          editor.selection.select(editor.$(&apos;#__new&apos;).removeAttr(&apos;id&apos;)[0]);
+        }, function (n) {
+          editor.dom.setAttrib(n, &apos;class&apos;, &apos;language-&apos; + language);
+          n.innerHTML = code;
+          get(editor).highlightElement(n);
+          editor.selection.select(n);
+        });
+      });
+    };
+    var getCurrentCode = function (editor) {
+      var node = getSelectedCodeSample(editor);
+      return node.fold(function () {
+        return &apos;&apos;;
+      }, function (n) {
+        return n.textContent;
+      });
+    };
+
+    var getLanguages$1 = function (editor) {
+      var defaultLanguages = [
+        {
+          text: &apos;HTML/XML&apos;,
+          value: &apos;markup&apos;
+        },
+        {
+          text: &apos;JavaScript&apos;,
+          value: &apos;javascript&apos;
+        },
+        {
+          text: &apos;CSS&apos;,
+          value: &apos;css&apos;
+        },
+        {
+          text: &apos;PHP&apos;,
+          value: &apos;php&apos;
+        },
+        {
+          text: &apos;Ruby&apos;,
+          value: &apos;ruby&apos;
+        },
+        {
+          text: &apos;Python&apos;,
+          value: &apos;python&apos;
+        },
+        {
+          text: &apos;Java&apos;,
+          value: &apos;java&apos;
+        },
+        {
+          text: &apos;C&apos;,
+          value: &apos;c&apos;
+        },
+        {
+          text: &apos;C#&apos;,
+          value: &apos;csharp&apos;
+        },
+        {
+          text: &apos;C++&apos;,
+          value: &apos;cpp&apos;
+        }
+      ];
+      var customLanguages = getLanguages(editor);
+      return customLanguages ? customLanguages : defaultLanguages;
+    };
+    var getCurrentLanguage = function (editor, fallback) {
+      var node = getSelectedCodeSample(editor);
+      return node.fold(function () {
+        return fallback;
+      }, function (n) {
+        var matches = n.className.match(/language-(\w+)/);
+        return matches ? matches[1] : fallback;
+      });
+    };
+
+    var head = function (xs) {
+      return xs.length === 0 ? Option.none() : Option.some(xs[0]);
+    };
+
+    var open = function (editor) {
+      var languages = getLanguages$1(editor);
+      var defaultLanguage = head(languages).fold(function () {
+        return &apos;&apos;;
+      }, function (l) {
+        return l.value;
+      });
+      var currentLanguage = getCurrentLanguage(editor, defaultLanguage);
+      var currentCode = getCurrentCode(editor);
+      editor.windowManager.open({
+        title: &apos;Insert/Edit Code Sample&apos;,
+        size: &apos;large&apos;,
+        body: {
+          type: &apos;panel&apos;,
+          items: [
+            {
+              type: &apos;selectbox&apos;,
+              name: &apos;language&apos;,
+              label: &apos;Language&apos;,
+              items: languages
+            },
+            {
+              type: &apos;textarea&apos;,
+              name: &apos;code&apos;,
+              label: &apos;Code view&apos;
+            }
+          ]
+        },
+        buttons: [
+          {
+            type: &apos;cancel&apos;,
+            name: &apos;cancel&apos;,
+            text: &apos;Cancel&apos;
+          },
+          {
+            type: &apos;submit&apos;,
+            name: &apos;save&apos;,
+            text: &apos;Save&apos;,
+            primary: true
+          }
+        ],
+        initialData: {
+          language: currentLanguage,
+          code: currentCode
+        },
+        onSubmit: function (api) {
+          var data = api.getData();
+          insertCodeSample(editor, data.language, data.code);
+          api.close();
+        }
+      });
+    };
+
+    var register = function (editor) {
+      editor.addCommand(&apos;codesample&apos;, function () {
+        var node = editor.selection.getNode();
+        if (editor.selection.isCollapsed() || isCodeSample(node)) {
+          open(editor);
+        } else {
+          editor.formatter.toggle(&apos;code&apos;);
+        }
+      });
+    };
+
+    var setup = function (editor) {
+      var $ = editor.$;
+      editor.on(&apos;PreProcess&apos;, function (e) {
+        $(&apos;pre[contenteditable=false]&apos;, e.node).filter(trimArg(isCodeSample)).each(function (idx, elm) {
+          var $elm = $(elm), code = elm.textContent;
+          $elm.attr(&apos;class&apos;, $.trim($elm.attr(&apos;class&apos;)));
+          $elm.removeAttr(&apos;contentEditable&apos;);
+          $elm.empty().append($(&apos;&lt;code&gt;&lt;/code&gt;&apos;).each(function () {
+            this.textContent = code;
+          }));
+        });
+      });
+      editor.on(&apos;SetContent&apos;, function () {
+        var unprocessedCodeSamples = $(&apos;pre&apos;).filter(trimArg(isCodeSample)).filter(function (idx, elm) {
+          return elm.contentEditable !== &apos;false&apos;;
+        });
+        if (unprocessedCodeSamples.length) {
+          editor.undoManager.transact(function () {
+            unprocessedCodeSamples.each(function (idx, elm) {
+              $(elm).find(&apos;br&apos;).each(function (idx, elm) {
+                elm.parentNode.replaceChild(editor.getDoc().createTextNode(&apos;\n&apos;), elm);
+              });
+              elm.contentEditable = &apos;false&apos;;
+              elm.innerHTML = editor.dom.encode(elm.textContent);
+              get(editor).highlightElement(elm);
+              elm.className = $.trim(elm.className);
+            });
+          });
+        }
+      });
+    };
+
+    var isCodeSampleSelection = function (editor) {
+      var node = editor.selection.getStart();
+      return editor.dom.is(node, &apos;pre[class*=&quot;language-&quot;]&apos;);
+    };
+    var register$1 = function (editor) {
+      editor.ui.registry.addToggleButton(&apos;codesample&apos;, {
+        icon: &apos;code-sample&apos;,
+        tooltip: &apos;Insert/edit code sample&apos;,
+        onAction: function () {
+          return open(editor);
+        },
+        onSetup: function (api) {
+          var nodeChangeHandler = function () {
+            api.setActive(isCodeSampleSelection(editor));
+          };
+          editor.on(&apos;NodeChange&apos;, nodeChangeHandler);
+          return function () {
+            return editor.off(&apos;NodeChange&apos;, nodeChangeHandler);
+          };
+        }
+      });
+      editor.ui.registry.addMenuItem(&apos;codesample&apos;, {
+        text: &apos;Code sample...&apos;,
+        icon: &apos;code-sample&apos;,
+        onAction: function () {
+          return open(editor);
+        }
+      });
+    };
+
+    function Plugin () {
+      global.add(&apos;codesample&apos;, function (editor) {
+        setup(editor);
+        register$1(editor);
+        register(editor);
+        editor.on(&apos;dblclick&apos;, function (ev) {
+          if (isCodeSample(ev.target)) {
+            open(editor);
+          }
+        });
+      });
+    }
+
+    Plugin();
+
+}(window));
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

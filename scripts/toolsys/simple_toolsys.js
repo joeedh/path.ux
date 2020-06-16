@@ -34,6 +34,28 @@ class InheritFlag {
 let modalstack = [];
 
 export class ToolOp extends events.EventHandler {
+  /**
+  ToolOp definition.
+
+  An example:
+  <pre>
+  static tooldef() {return {
+      uiname   : "Tool Name",
+      toolpath : "logical_module.tool", //logical_module need not match up to a real module
+      icon     : -1, //tool's icon, or -1 if there is none
+      description : "tooltip",
+      is_modal : false, //tool is interactive and takes control of events
+      hotkey : undefined,
+      undoflag : 0, //see UndoFlags
+      flag     : 0,
+      inputs   : ToolOp.inherit({
+        f32val : new Float32Property(1.0),
+        path   : new StringProperty("./path");
+      }),
+      outputs  : {}
+  }}
+  </pre>
+  */
   static tooldef() {
     if (this === ToolOp) {
       throw new Error("Tools must implemented static tooldef() methods!");
@@ -42,33 +64,11 @@ export class ToolOp extends events.EventHandler {
     return {};
   }
 
-  /*
-  ToolOp definition.
-
-  An example:
-  <pre>
-  static tooldef() {return {
-    uiname   : "Tool Name",
-    toolpath : "logical_module.tool", //logical_module need not match up to a real module
-    icon     : -1, //tool's icon, or -1 if there is none
-    description : "tooltip",
-    is_modal : false, //tool is interactive and takes control of events
-    hotkey : undefined,
-    undoflag : 0, //see UndoFlags
-    flag     : 0,
-    inputs   : ToolOp.inherit({
-      f32val : new Float32Property(1.0),
-      path   : new StringProperty("./path");
-    }),
-    outputs  : {}
-  }}
-  </pre>
-  */
   static inherit(slots) {
     return new InheritFlag(slots);
   }
   
-  /*creates a new instance of this toolop from args*/
+  /**creates a new instance of this toolop from args*/
   static invoke(ctx, args) {
     let tool = new this();
 
@@ -234,8 +234,8 @@ export class ToolOp extends events.EventHandler {
 
   }
 
-  //default on_keydown implementation for modal tools,
-  //no need to call super() to execute this if you don't want to
+  /**default on_keydown implementation for modal tools,
+  no need to call super() to execute this if you don't want to*/
   on_keydown(e) {
     switch (e.keyCode) {
       case keymap["Enter"]:
@@ -281,7 +281,7 @@ export class ToolOp extends events.EventHandler {
 
   }
 
-  //for use in modal mode only
+  /**for use in modal mode only*/
   resetDrawLines() {
     var ctx = this.modal_ctx;
     
@@ -304,7 +304,8 @@ export class ToolOp extends events.EventHandler {
 
     return this._overdraw;
   }
-  //for use in modal mode only
+
+  /**for use in modal mode only*/
   addDrawLine(v1, v2, style) {
     let line = this.getOverdraw().line(v1, v2, style);
     this.drawlines.push(line);
@@ -319,7 +320,7 @@ export class ToolOp extends events.EventHandler {
     throw new Error("cannot call this; use modalEnd");
   }
 
-  //returns promise to be executed on modalEnd
+  /**returns promise to be executed on modalEnd*/
   modalStart(ctx) {
     if (this.modalRunning) {
       console.warn("Warning, tool is already in modal mode consuming events");

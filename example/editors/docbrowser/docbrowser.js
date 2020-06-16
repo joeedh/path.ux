@@ -1,6 +1,6 @@
 import {Editor} from "../editor_base.js";
 import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
-import '../../lib/tinymce/js/tinymce/tinymce.js';
+//import '../../lib/tinymce/js/tinymce/tinymce.js';
 
 let countstr = function(buf, s) {
   let count = 0;
@@ -1357,7 +1357,7 @@ export class DocsBrowserEditor extends Editor {
   }
 }
 
-Editor.register(DocsBrowserEditor);
+//Editor.register(DocsBrowserEditor);
 DocsBrowserEditor.STRUCT = nstructjs.inherit(DocsBrowserEditor, Editor) + `
   browser        : DocsBrowser;
   savedDocument  : SavedDocument;

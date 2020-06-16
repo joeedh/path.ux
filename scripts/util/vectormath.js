@@ -1459,33 +1459,110 @@ export class Matrix4 {
     return this
   }
 
-  euler_rotate(x, y, z, order) {
-    if (order == undefined) 
-      order = "xyz"
-    else
-      order = order.toLowerCase();
+  /*
+  on factor;
+  off period;
 
+  c1 := cx; comment: cos(thx);
+  s1 := sx; comment: sin(thx);
+
+  c2 := cy; comment: cos(thy);
+  s2 := sy; comment: sin(thy);
+
+  c3 := cz; comment: cos(thz);
+  s3 := sz; comment: sin(thz);
+
+  cx := cos(thx);
+  sx := sin(thx);
+  cy := cos(thy);
+  sy := sin(thy);
+  cz := cos(thz);
+  sz := sin(thz);
+
+  imat := mat((1, 0, 0, 0),
+              (0, 1, 0, 0),
+              (0, 0, 1, 0),
+              (0, 0, 0, 1));
+
+  xmat :=mat((1,  0,  0,  0),
+             (0, c1, -s1, 0),
+             (0, s1,  c1, 0),
+             (0,  0,  0,  0));
+
+  ymat :=mat((c2, 0, s2, 0),
+             (0,  1,  0,  0),
+             (-s2, 0,  c2, 0),
+             (0,  0,  0,  0));
+
+  zmat :=mat(( c3, -s3, 0, 0),
+             (s3, c3, 0, 0),
+             ( 0,  0,  1, 0),
+             ( 0,  0,  0, 0));
+
+  mmat := mat((m11, m21, m31, 0),
+              (m12, m22, m32, 0),
+              (m13, m23, m33, 0),
+              (0,   0,   0,   0));
+
+  fmat := zmat * ymat * xmat;
+
+  f1 := m11**2 + m12**2 + m13**2 - 1.0;
+  f2 := m21**2 + m22**2 + m23**2 - 1.0;
+  f3 := m31**2 + m32**2 + m33**2 - 1.0;
+
+  tmat := fmat * mmat;
+  f1 := tmat(1, 1) - 1.0;
+  f2 := tmat(2, 2) - 1.0;
+  f3 := tmat(3, 3) - 1.0;
+
+  operator myasin;
+
+  fthy := asin(mmat(3, 1));
+  f1 := mmat(3,1)**2 + mmat(2,1)**2 + mmat(1,1)**2 = 1.0;
+
+  fmat2 := sub(thy=fthy, fmat);
+
+  fmat3 := fmat2 * (tp mmat);
+  ffz := solve(fmat2(1, 1) - m11, thz);
+  ffx := solve(fmat2(3, 3) - m33, thx);
+
+  fthz := part(ffz, 1, 2);
+  fthx := part(ffx, 1, 2);
+
+  sub(thx=fthx, thy=fthy, thz=fthz, fmat);
+
+(cos(thy)*cos(thz),         cos(thx)*sin(thz)-cos(thz)*sin(thx)*sin(thy),  -(cos(thx)*cos(thz)*sin(thy)+sin(thx)*sin(thz)), 0),
+
+(-cos(thy)*sin(thz),        cos(thx)*cos(thz) + sin(thx)*sin(thy)*sin(thz),  cos(thx)*sin(thy)*sin(thz)-cos(thz)*sin(thx), 0),
+
+(sin(thy),                  cos(thy)*sin(thx),                               cos(thx)*cos(thy),  0),
+
+    (0,0,0,1))
+
+  */
+  euler_rotate(x, y, z) {
     if (y === undefined) {
       y = 0.0;
     }
     if (z === undefined) {
       z = 0.0;
     }
+    window.Matrix4 = Matrix4;
 
     var xmat = new Matrix4();
     var m = xmat.$matrix;
     
     var c = Math.cos(x), s = Math.sin(x);
     
-    m.m22 = c; m.m23 = s;
-    m.m32 = -s; m.m33 = c;
+    m.m22 =  c;  m.m23 = s;
+    m.m32 = -s;  m.m33 = c;
     
     var ymat = new Matrix4();
     c = Math.cos(y); s = Math.sin(y);
     var m = ymat.$matrix;
     
-    m.m11 = c;  m.m13 = s;
-    m.m31 = -s; m.m33 = c;
+    m.m11 = c;  m.m13 = -s;
+    m.m31 = s;  m.m33 =  c;
     
     ymat.multiply(xmat);
 
@@ -1493,12 +1570,13 @@ export class Matrix4 {
     c = Math.cos(z); s = Math.sin(z);
     var m = zmat.$matrix;
     
-    m.m11 = c;  m.m12 = -s;
-    m.m21 = s;  m.m22 = c;
+    m.m11 = c;  m.m12 = s;
+    m.m21 =-s;  m.m22 = c;
     
     zmat.multiply(ymat);
-    
+
     //console.log(""+ymat);
+    //this.multiply(zmat);
     this.preMultiply(zmat);
 
     return this;
@@ -1892,6 +1970,7 @@ export class Matrix4 {
   
     this.multiply(matrix);
 
+
     return this;
   }
 
@@ -1900,7 +1979,29 @@ export class Matrix4 {
     
     m.m41 = m.m42 = m.m43 = 0.0;
     m.m44 = 1.0;
-    
+
+    let l1 = Math.sqrt(m.m11*m.m11 + m.m12*m.m12 + m.m13*m.m13);
+    let l2 = Math.sqrt(m.m21*m.m21 + m.m22*m.m22 + m.m23*m.m23);
+    let l3 = Math.sqrt(m.m31*m.m31 + m.m32*m.m32 + m.m33*m.m33);
+
+    if (l1) {
+      m.m11 /= l1;
+      m.m12 /= l1;
+      m.m13 /= l1;
+    }
+
+    if (l2) {
+      m.m21 /= l2;
+      m.m22 /= l2;
+      m.m23 /= l2;
+    }
+
+    if (l3) {
+      m.m31 /= l3;
+      m.m32 /= l3;
+      m.m33 /= l3;
+    }
+
     return this;
   }
 
@@ -1908,98 +2009,47 @@ export class Matrix4 {
     if (this.$matrix.m44 == 0)
       return false;
 
-    let translate = (_translate == undefined || !("length" in _translate)) ? new Vector3() : _translate;
-    let rotate = (_rotate == undefined || !("length" in _rotate)) ? new Vector3() : _rotate;
-    let scale = (_scale == undefined || !("length" in _scale)) ? new Vector3() : _scale;
-    let skew = (_skew == undefined || !("length" in _skew)) ? new Vector3() : _skew;
-    let perspective = (_perspective == undefined || !("length" in _perspective)) ? new Array(4) : _perspective;
-    let matrix = new Matrix4(this);
+    let mat = new Matrix4(this);
+    let m = mat.$matrix;
 
-    matrix.divide(matrix.$matrix.m44);
-    let perspectiveMatrix = new Matrix4(matrix);
-    perspectiveMatrix.$matrix.m14 = 0;
-    perspectiveMatrix.$matrix.m24 = 0;
-    perspectiveMatrix.$matrix.m34 = 0;
-    perspectiveMatrix.$matrix.m44 = 1;
-    if (perspectiveMatrix._determinant4x4() == 0)
-      return false;
-
-    if (matrix.$matrix.m14 != 0 || matrix.$matrix.m24 != 0 || matrix.$matrix.m34 != 0) {
-      let rightHandSide = [matrix.$matrix.m14, matrix.$matrix.m24, matrix.$matrix.m34, matrix.$matrix.m44];
-      let inversePerspectiveMatrix = new Matrix4(perspectiveMatrix);
-      inversePerspectiveMatrix.invert();
-      let transposedInversePerspectiveMatrix = new Matrix4(inversePerspectiveMatrix);
-      transposedInversePerspectiveMatrix.transpose();
-
-      let v4 = new Vector3(rightHandSide);
-      v4.multVecMatrix(transposedInversePerspectiveMatrix)
-
-      perspective[0] = v4[0];
-      perspective[1] = v4[1];
-      perspective[2] = v4[2];
-      perspective[3] = v4[3];
-
-      matrix.$matrix.m14 = matrix.$matrix.m24 = matrix.$matrix.m34 = 0;
-      matrix.$matrix.m44 = 1;
-    } else {
-      perspective[0] = perspective[1] = perspective[2] = 0;
-      perspective[3] = 1;
+    let t = _translate, r = _rotate, s = _scale;
+    if (t) {
+      t[0] = m.m41;
+      t[1] = m.m42;
+      t[2] = m.m43;
     }
 
-    translate[0] = matrix.$matrix.m41;
-    matrix.$matrix.m41 = 0;
-    translate[1] = matrix.$matrix.m42;
-    matrix.$matrix.m42 = 0;
-    translate[2] = matrix.$matrix.m43;
-    matrix.$matrix.m43 = 0;
+    let l1 = Math.sqrt(m.m11*m.m11 + m.m12*m.m12 + m.m13*m.m13);
+    let l2 = Math.sqrt(m.m21*m.m21 + m.m22*m.m22 + m.m23*m.m23);
+    let l3 = Math.sqrt(m.m31*m.m31 + m.m32*m.m32 + m.m33*m.m33);
 
-    let row0 = new Vector3([matrix.$matrix.m11, matrix.$matrix.m12, matrix.$matrix.m13]);
-    let row1 = new Vector3([matrix.$matrix.m21, matrix.$matrix.m22, matrix.$matrix.m23]);
-    let row2 = new Vector3([matrix.$matrix.m31, matrix.$matrix.m32, matrix.$matrix.m33]);
-
-    scale[0] = row0.vectorLength();
-    row0.div(scale[0]);
-    skew[0] = row0.dot(row1);
-    row1.combine(row0, 1.0, -skew[0]);
-    scale[1] = row1.vectorLength();
-    row1.div(scale[1]);
-    skew[0] /= scale[1];
-    skew[1] = row1.dot(row2);
-    row2.combine(row0, 1.0, -skew[1]);
-    skew[2] = row1.dot(row2);
-    row2.combine(row1, 1.0, -skew[2]);
-    scale[2] = row2.vectorLength();
-    row2.div(scale[2]);
-    skew[1] /= scale[2];
-    skew[2] /= scale[2];
-
-    let pdum3 = new Vector3(row1);
-    pdum3.cross(row2);
-
-    if (row0.dot(pdum3) < 0) {
-      for (let i = 0; i < 3; i++) {
-        scale[i] *= -1;
-        row[0][i] *= -1;
-        row[1][i] *= -1;
-        row[2][i] *= -1;
-      }
+    if (l1) {
+      m.m11 /= l1;
+      m.m12 /= l1;
+      m.m13 /= l1;
+    }
+    if (l2) {
+      m.m21 /= l2;
+      m.m22 /= l2;
+      m.m23 /= l2;
+    }
+    if (l3) {
+      m.m31 /= l3;
+      m.m32 /= l3;
+      m.m33 /= l3;
     }
 
-    rotate[1] = Math.asin(-row0[2]);
-    if (Math.cos(rotate[1]) != 0) {
-      rotate[0] = Math.atan2(row1[2], row2[2]);
-      rotate[2] = Math.atan2(row0[1], row0[0]);
-    } else {
-      rotate[0] = Math.atan2(-row2[0], row1[1]);
-      rotate[2] = 0;
+    if (s) {
+      s[0] = l1;
+      s[1] = l2;
+      s[2] = l3;
     }
 
-    let rad2deg = 180 / Math.PI;
-    rotate[0] *= rad2deg;
-    rotate[1] *= rad2deg;
-    rotate[2] *= rad2deg;
-
-    return true;
+    if (r) {
+      r[0] = Math.atan2(m.m23, m.m33);
+      r[1] = Math.atan2(-m.m13, Math.sqrt(m.m23*m.m23 + m.m33*m.m33));
+      r[2] = Math.atan2(m.m12, m.m11);
+    }
   }
 
   _determinant2x2(a, b, c, d) {
@@ -2086,3 +2136,27 @@ mat4 {
 }
 `;
 nstructjs.register(Matrix4);
+
+
+window.testmat = (x=0, y=0, z=Math.PI*0.5) => {
+  let m1 = new Matrix4();
+  m1.euler_rotate(x, y, z);
+  //m1.scale(2.0, 0.5, 3.0);
+
+  let t = [0, 0, 0], r = [0, 0, 0], s = [0,0 ,0]
+
+  m1.decompose(t, r, s);
+
+  window.console.log("\n");
+  window.console.log(t);
+  window.console.log(r);
+  window.console.log(s);
+
+
+  let mat = m1.clone();
+  mat.transpose();
+  mat.multiply(m1);
+
+  console.log(mat.toString());
+  return r;
+}

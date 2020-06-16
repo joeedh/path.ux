@@ -140,7 +140,7 @@ export class LastToolPanel extends ColumnFrame {
     }
 
     let tool = ctx.toolstack[ctx.toolstack.cur];
-    if (!(LastKey in tool) || tool[LastKey] !== this._tool_id) {
+    if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
       tool[LastKey] = tool_idgen++;
       this._tool_id = tool[LastKey];
 

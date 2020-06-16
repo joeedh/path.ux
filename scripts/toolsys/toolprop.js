@@ -221,12 +221,19 @@ export class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
+  noUnits() {
+    this.baseUnit = this.displayUnit = "none";
+    return this;
+  }
+
   setBaseUnit(unit) {
     this.baseUnit = unit;
+    return this;
   }
 
   setDisplayUnit(unit) {
     this.displayUnit = unit;
+    return this;
   }
 
   setUIRange(min, max) {
@@ -410,6 +417,10 @@ export class _NumberPropertyBase extends ToolProperty {
   }
 
   copyTo(b) {
+    super.copyTo(b);
+
+    b.displayUnit = this.displayUnit;
+    b.baseUnit = this.baseUnit;
     b.data = this.data;
     b.expRate = this.expRate;
     b.step = this.step;
@@ -864,6 +875,30 @@ FlagProperty.STRUCT = nstructjs.inherit(FlagProperty, EnumProperty) + `
 `;
 nstructjs.register(FlagProperty);
 
+
+export class VecPropertyBase extends FloatProperty {
+  constructor(data, apiname, uiname, description) {
+    super(undefined, apiname, uiname, description);
+
+    this.hasUniformSlider = false;
+  }
+
+  uniformSlider(state=true) {
+    this.hasUniformSlider = state;
+    return this;
+  }
+
+  copyTo(b) {
+    super.copyTo(b);
+    b.hasUniformSlider = this.hasUniformSlider;
+  }
+}
+VecPropertyBase.STRUCT = nstructjs.inherit(VecPropertyBase, FloatProperty) + `
+  hasUniformSlider : bool;
+}
+`;
+
+
 export class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
@@ -896,7 +931,7 @@ export class Vec2Property extends FloatProperty {
     return ret;
   }
 }
-Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, FloatProperty) + `
+Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, VecPropertyBase) + `
   data : vec2;
 }
 `;
@@ -904,7 +939,7 @@ nstructjs.register(Vec2Property);
 
 _addClass(Vec2Property);
 
-export class Vec3Property extends FloatProperty {
+export class Vec3Property extends VecPropertyBase {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
@@ -936,7 +971,7 @@ export class Vec3Property extends FloatProperty {
     return ret;
   }
 }
-Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, FloatProperty) + `
+Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, VecPropertyBase) + `
   data : vec3;
 }
 `;
@@ -975,7 +1010,7 @@ export class Vec4Property extends FloatProperty {
     return ret;
   }
 }
-Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, FloatProperty) + `
+Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, VecPropertyBase) + `
   data : vec4;
 }
 `;
@@ -1009,7 +1044,7 @@ export class QuatProperty extends ToolProperty {
     return ret;
   }
 }
-QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, FloatProperty) + `
+QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, VecPropertyBase) + `
   data : vec4;
 }
 `;

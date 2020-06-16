@@ -764,7 +764,7 @@ export class Screen extends ui_base.UIBase {
     let ratio = window.outerHeight / window.innerHeight;
     let scale = visualViewport.scale;
 
-    let pad = 10;// * scale / devicePixelRatio;
+    let pad = 4;
     width = visualViewport.width * scale - pad;
     height = visualViewport.height * scale - pad;
 

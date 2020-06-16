@@ -6,7 +6,7 @@
 var _ui = undefined;
 
 import * as util from '../util/util.js';
-import * as vectormath from '../util/util.js';
+import * as vectormath from '../util/vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as ui_widgets from '../widgets/ui_widgets.js';
 import * as toolprop from '../toolsys/toolprop.js';
@@ -26,7 +26,6 @@ let Vector2 = vectormath.Vector2,
   PackFlags = ui_base.PackFlags,
   PropTypes = toolprop.PropTypes;
 
-export const SimpleContext = ui_base.SimpleContext;
 export const DataPathError = ui_base.DataPathError;
 import cconst from '../config/const.js';
 
@@ -877,9 +876,9 @@ export class Container extends ui_base.UIBase {
     } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
       let ret;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
-        ret = this.simpleslider(inpath);
+        ret = this.simpleslider(inpath, {packflag : packflag});
       } else {
-        ret = this.slider(inpath);
+        ret = this.slider(inpath, {packflag : packflag});
       }
 
       ret.packflag |= packflag;
@@ -924,7 +923,13 @@ export class Container extends ui_base.UIBase {
       }
     } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
       if (rdef.subkey !== undefined) {
-        let ret = (packflag & PackFlags.SIMPLE_NUMSLIDERS) ? this.simpleslider(path) : this.slider(path);
+        let ret;
+
+        if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
+          ret = this.simpleslider(path, {packflag : packflag});
+        else
+          ret = this.slider(path, {packflag : packflag});
+
         ret.packflag |= packflag;
         return ret;
       } else if (prop.subtype === PropSubTypes.COLOR) {
@@ -932,6 +937,7 @@ export class Container extends ui_base.UIBase {
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
         let ret = document.createElement("vector-panel-x");
+        ret.packflag |= packflag;
 
         if (inpath) {
           ret.setAttribute("datapath", inpath);
@@ -945,13 +951,22 @@ export class Container extends ui_base.UIBase {
 
         return ret;
       }
-    } else if (prop.type == PropTypes.FLAG) {
+    } else if (prop.type === PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
 
+        if (typeof rdef.subkey === "number") {
+          name = rdef.prop.keys[rdef.subkey];
+          if (name && name in rdef.prop.ui_value_names) {
+            name = rdef.prop.ui_value_names[name];
+          } else {
+            name = makeUIName(name ? name : "(error)");
+          }
+        }
+
         if (name === undefined) {
-          name = makeUIName(rdef.subkey);
+          name = "(error)";
         }
 
         let ret = this.check(inpath, name, packflag, mass_set_path);
@@ -1034,7 +1049,23 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  /*
+  *
+  * new (optional) form: checkenum(inpath, args)
+  * */
   checkenum(inpath, name, packflag, enummap, defaultval, callback, iconmap, mass_set_path) {
+    if (typeof name === "object" && name !== null) {
+      let args = name;
+
+      name = args.name;
+      packflag = args.packflag;
+      enummap = args.enummap;
+      defaultval = args.defaultval;
+      callback = args.callback;
+      iconmap = args.iconmap;
+      mass_set_path = args.mass_set_path;
+    }
+
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag;
 
@@ -1320,7 +1351,7 @@ export class Container extends ui_base.UIBase {
     throw new Error("implement me!");
   }
 
-    simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
+  simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
 
@@ -1343,7 +1374,7 @@ export class Container extends ui_base.UIBase {
       min = args.min;
       max = args.max;
       step = args.step;
-      is_int = args.is_int;
+      is_int = args.is_int || args.isInt;
       do_redraw = args.do_redraw;
       callback = args.callback;
       packflag = args.packflag || 0;
@@ -1364,7 +1395,7 @@ export class Container extends ui_base.UIBase {
 
     if (packflag & PackFlags.SIMPLE_NUMSLIDERS && !(packflag & PackFlags.FORCE_ROLLER_SLIDER)) {
       ret = document.createElement("numslider-simple-x");
-    } else if (cconst.useNumSliderTextboxes) {
+    } else if (cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX)) {
       ret = document.createElement("numslider-textbox-x");
     } else {
       ret = document.createElement("numslider-x");
@@ -1632,29 +1663,31 @@ export class RowFrame extends Container {
   connectedCallback() {
     super.connectedCallback();
 
-    this.style["display"] = "flex";
-    this.style["flex-direction"] = "row";
+    this.style['display'] = 'flex';
+    this.style['flex-direction'] = 'row';
   }
 
   init() {
     super.init();
 
-    //this.style["flex-direction"] = "row";
-    this.style["display"] = "flex";
-    this.style["flex-direction"] = "row";
-    this.style["align-items"] = "center";
+    this.style['display'] = 'flex';
+    this.style['flex-direction'] = 'row';
+
+    if (!this.style['align-items'] || this.style['align-items'] == '') {
+      this.style['align-items'] = 'center';
+    }
   }
 
-  oneAxisMargin(m = this.getDefault("oneAxisMargin"), m2 = 0) {
-    this.style["margin-left"] = this.style["margin-right"] = m + "px";
-    this.style["margin-top"] = this.style["margin-bottom"] = "" + m2 + "px";
+  oneAxisMargin(m = this.getDefault('oneAxisMargin'), m2 = 0) {
+    this.style['margin-left'] = this.style['margin-right'] = m + 'px';
+    this.style['margin-top'] = this.style['margin-bottom'] = '' + m2 + 'px';
 
     return this;
   }
 
-  oneAxisPadding(m = this.getDefault("oneAxisPadding"), m2 = 0) {
-    this.style["padding-left"] = this.style["padding-right"] = "" + m + "px";
-    this.style["padding-top"] = this.style["padding-bottom"] = "" + m2 + "px";
+  oneAxisPadding(m = this.getDefault('oneAxisPadding'), m2 = 0) {
+    this.style['padding-left'] = this.style['padding-right'] = '' + m + 'px';
+    this.style['padding-top'] = this.style['padding-bottom'] = '' + m2 + 'px';
 
     return this;
   }
@@ -1665,7 +1698,7 @@ export class RowFrame extends Container {
 
   static define() {
     return {
-      tagname: "rowframe-x"
+      tagname: 'rowframe-x'
     };
   }
 }

@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../../../../">
+  <title data-ice="title">scripts/lib/tinymce/plugins/image/plugin.js | path.ux</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="this is awesome library"><meta property="twitter:card" content="summary"><meta property="twitter:title" content="path.ux"><meta property="twitter:description" content="this is awesome library"></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/joeedh/path.ux.git"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconMap">setIconMap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Icons">Icons</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-cconst">cconst</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-electron_api">electron_api</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-html5_fileapi">html5_fileapi</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-math">math</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-parseutil">parseutil</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-solver">solver</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-toolprop_abstract">toolprop_abstract</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-util">util</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-vectormath">vectormath</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#config">config</a><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-exports">exports</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#controller">controller</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/context.js~Context.html">Context</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/context.js~ContextOverlay.html">ContextOverlay</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/context.js~LockedContext.html">LockedContext</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~DataPathError.html">DataPathError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~ListIface.html">ListIface</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~ModelInterface.html">ModelInterface</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller.js~ToolOpIface.html">ToolOpIface</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/controller_ops.js~DataPathSetOp.html">DataPathSetOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataAPI.html">DataAPI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataList.html">DataList</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataPath.html">DataPath</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/controller/simple_controller.js~DataStruct.html">DataStruct</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test">test</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getVecClass">getVecClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isVecProperty">isVecProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setImplementationClass">setImplementationClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getDataPathToolOp">getDataPathToolOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initSimpleController">initSimpleController</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-popReportName">popReportName</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushReportName">pushReportName</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerTool">registerTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setDataPathToolOp">setDataPathToolOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ContextFlags">ContextFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-OverlayClasses">OverlayClasses</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-excludedKeys">excludedKeys</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataFlags">DataFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataTypes">DataTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-StructFlags">StructFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-pathParser">pathParser</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#core">core</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~AbstractCommand.html">AbstractCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~AnimManager.html">AnimManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~Animator.html">Animator</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~Command.html">Command</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~GoToCommand.html">GoToCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~SetCommand.html">SetCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/anim.js~WaitCommand.html">WaitCommand</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/aspect.js~AfterAspect.html">AfterAspect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/safeobservable.js~AbstractObservable.html">AbstractObservable</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/safeobservable.js~Observable.html">Observable</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/safeobservable.js~ObserveManger.html">ObserveManger</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~ColumnFrame.html">ColumnFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~Container.html">Container</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~Label.html">Label</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~IconManager.html">IconManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_base.js~UIBase.html">UIBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/ui_theme.js~CSSFont.html">CSSFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~FootUnit.html">FootUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~InchUnit.html">InchUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~MeterUnit.html">MeterUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~MileUnit.html">MileUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~RadianUnit.html">RadianUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/core/units.js~Unit.html">Unit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_setUIBase">_setUIBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initAspectClass">initAspectClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-IsMobile">IsMobile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_ensureFont">_ensureFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_getFont">_getFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_getFont_new">_getFont_new</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_setAreaClass">_setAreaClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-drawRoundBox">drawRoundBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-drawRoundBox2">drawRoundBox2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-drawText">drawText</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getDefault">getDefault</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFont">getFont</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getIconManager">getIconManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadUIData">loadUIData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makeIconDiv">makeIconDiv</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-measureText">measureText</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-measureTextBlock">measureTextBlock</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-report">report</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveUIData">saveUIData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setIconManager">setIconManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setTheme">setTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-styleScrollBars">styleScrollBars</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2web">color2web</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2color">css2color</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-exportTheme">exportTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-invertTheme">invertTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsepx">parsepx</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setColorSchemeType">setColorSchemeType</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateWebColor">validateWebColor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-web2color">web2color</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildString">buildString</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convert">convert</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseValue">parseValue</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setBaseUnit">setBaseUnit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setMetric">setMetric</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-manager">manager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-UIBase">UIBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-manager">manager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DefaultTheme">DefaultTheme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataPathError">DataPathError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-EnumProperty">EnumProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Vector2">Vector2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ErrorColors">ErrorColors</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-IconSheets">IconSheets</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PackFlags">PackFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-UIFlags">UIFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Vector4">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-dpistack">dpistack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-iconmanager">iconmanager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-marginPaddingCSSKeys">marginPaddingCSSKeys</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ColorSchemeTypes">ColorSchemeTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-theme">theme</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Units">Units</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#curve">curve</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d.js~Curve1D.html">Curve1D</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~BounceCurve.html">BounceCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~EaseCurve.html">EaseCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~ElasticCurve.html">ElasticCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~ParamKey.html">ParamKey</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~RandCurve.html">RandCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html">SimpleCurveBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_base.js~CurveTypeData.html">CurveTypeData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html">Curve1DPoint</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONParse">mySafeJSONParse</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONStringify">mySafeJSONStringify</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getCurve">getCurve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONParse">mySafeJSONParse</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mySafeJSONStringify">mySafeJSONStringify</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makeGenEnum">makeGenEnum</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-Ease">Ease</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CURVE_VERSION">CURVE_VERSION</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveConstructors">CurveConstructors</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveFlags">CurveFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TangentModes">TangentModes</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#docbrowser">docbrowser</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocHistory.html">DocHistory</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocHistoryItem.html">DocHistoryItem</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocsAPI.html">DocsAPI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~DocsBrowser.html">DocsBrowser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~ElectronAPI.html">ElectronAPI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~SavedDocument.html">SavedDocument</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/docbrowser/docbrowser.js~ServerAPI.html">ServerAPI</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#platforms-electron">platforms/electron</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildElectronHotkey">buildElectronHotkey</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildElectronMenu">buildElectronMenu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-checkInit">checkInit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getNativeIcon">getNativeIcon</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initMenuBar">initMenuBar</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-iconcache">iconcache</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#screen">screen</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/AreaDocker.js~AreaDocker.html">AreaDocker</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager.js~Screen.html">Screen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_mesh.js~ScreenBorder.html">ScreenBorder</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_mesh.js~ScreenHalfEdge.html">ScreenHalfEdge</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_mesh.js~ScreenVert.html">ScreenVert</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~AreaDragTool.html">AreaDragTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~AreaResizeTool.html">AreaResizeTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~SplitTool.html">SplitTool</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~ToolBase.html">ToolBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/FrameManager_ops.js~ToolTipViewer.html">ToolTipViewer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/ScreenArea.js~Area.html">Area</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/ScreenArea.js~ScreenArea.html">ScreenArea</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/screen/area_wrangler.js~AreaWrangler.html">AreaWrangler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerToolStackGetter">registerToolStackGetter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-startEvents">startEvents</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-snap">snap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-snapi">snapi</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-registerToolStackGetter">registerToolStackGetter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getAreaIntName">getAreaIntName</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setAreaTypes">setAreaTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setScreenClass">setScreenClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-SnapLimit">SnapLimit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-AreaFlags">AreaFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BorderMask">BorderMask</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BorderSides">BorderSides</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-AreaTypes">AreaTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-areaclasses">areaclasses</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#toolsys">toolsys</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/simple_toolsys.js~ToolMacro.html">ToolMacro</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/simple_toolsys.js~ToolOp.html">ToolOp</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/simple_toolsys.js~ToolStack.html">ToolStack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~BoolProperty.html">BoolProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Curve1DProperty.html">Curve1DProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~EnumProperty.html">EnumProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~FlagProperty.html">FlagProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~FloatProperty.html">FloatProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~IntProperty.html">IntProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~ListProperty.html">ListProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Mat4Property.html">Mat4Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~NumProperty.html">NumProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~QuatProperty.html">QuatProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~StringProperty.html">StringProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~StringSetProperty.html">StringSetProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~ToolProperty.html">ToolProperty</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Vec2Property.html">Vec2Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Vec3Property.html">Vec3Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~Vec4Property.html">Vec4Property</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~VecPropertyBase.html">VecPropertyBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html">_NumberPropertyBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html">Curve1DPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html">EnumPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~FlagPropertyIF.html">FlagPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~FloatPropertyIF.html">FloatPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~IntPropertyIF.html">IntPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html">ListPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~NumPropertyIF.html">NumPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~StringPropertyIF.html">StringPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html">StringSetPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html">ToolPropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Vec2PropertyIF.html">Vec2PropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Vec3PropertyIF.html">Vec3PropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/toolsys/toolprop_abstract.js~Vec4PropertyIF.html">Vec4PropertyIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setContextClass">setContextClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildParser">buildParser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-initToolPaths">initToolPaths</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseToolPath">parseToolPath</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-testToolParser">testToolParser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isNumber">isNumber</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setPropTypes">setPropTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ToolClasses">ToolClasses</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ToolFlags">ToolFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-UndoFlags">UndoFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Parser">Parser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-ToolPaths">ToolPaths</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropClasses">PropClasses</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropSubTypes">PropSubTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-customPropertyTypes">customPropertyTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropFlags">PropFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropSubTypes">PropSubTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-PropTypes">PropTypes</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#util">util</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/ScreenOverdraw.js~Overdraw.html">Overdraw</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/events.js~EventDispatcher.html">EventDispatcher</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/events.js~EventHandler.html">EventHandler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/graphpack.js~PackNode.html">PackNode</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/graphpack.js~PackNodeVertex.html">PackNodeVertex</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~Mat4Stack.html">Mat4Stack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~MinMax.html">MinMax</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~PlaneOps.html">PlaneOps</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~PUTLParseError.html">PUTLParseError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~lexer.html">lexer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~parser.html">parser</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~tokdef.html">tokdef</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/parseutil.js~token.html">token</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/simple_events.js~DoubleClickHandler.html">DoubleClickHandler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/simple_events.js~HotKey.html">HotKey</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/simple_events.js~KeyMap.html">KeyMap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/solver.js~Constraint.html">Constraint</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/solver.js~Solver.html">Solver</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~FastHash.html">FastHash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~HashDigest.html">HashDigest</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~HashIter.html">HashIter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~IDGen.html">IDGen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~ImageReader.html">ImageReader</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~MersenneRandom.html">MersenneRandom</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~MovingAvg.html">MovingAvg</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~SetIter.html">SetIter</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~SmartConsole.html">SmartConsole</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~SmartConsoleContext.html">SmartConsoleContext</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~cachering.html">cachering</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~hashtable.html">hashtable</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/util.js~set.html">set</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~BaseVector.html">BaseVector</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Matrix4.html">Matrix4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Quat.html">Quat</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector2.html">Vector2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector3.html">Vector3</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/vectormath.js~Vector4.html">Vector4</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-css2matrix">css2matrix</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-matrix2css">matrix2css</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-graphGetIslands">graphGetIslands</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-graphPack">graphPack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadFile">loadFile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-saveFile">saveFile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getImageData">getImageData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadImageFile">loadImageFile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_old_isect_ray_plane">_old_isect_ray_plane</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_intersect_2d">aabb_intersect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_isect_2d">aabb_isect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_isect_line_2d">aabb_isect_line_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_overlap_area">aabb_overlap_area</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_sphere_isect">aabb_sphere_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_sphere_isect_2d">aabb_sphere_isect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-aabb_union_2d">aabb_union_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-circ_from_line_tan">circ_from_line_tan</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-clip_line_w">clip_line_w</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-closest_point_on_line">closest_point_on_line</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-colinear">colinear</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convex_quad">convex_quad</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-corner_normal">corner_normal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-dist_to_line">dist_to_line</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-dist_to_line_2d">dist_to_line_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-expand_line">expand_line</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-expand_rect2d">expand_rect2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-gen_circle">gen_circle</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_boundary_winding">get_boundary_winding</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_rect_lines">get_rect_lines</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_rect_points">get_rect_points</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-get_tri_circ">get_tri_circ</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inrect_2d">inrect_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isect_ray_plane">isect_ray_plane</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-line_isect">line_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-line_line_cross">line_line_cross</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-line_line_isect">line_line_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makeCircleMesh">makeCircleMesh</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-mesh_find_tangent">mesh_find_tangent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-minmax_verts">minmax_verts</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-normal_quad">normal_quad</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-normal_tri">normal_tri</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-point_in_aabb">point_in_aabb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-point_in_aabb_2d">point_in_aabb_2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-point_in_tri">point_in_tri</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-project">project</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rot2d">rot2d</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-simple_tri_aabb_isect">simple_tri_aabb_isect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-unproject">unproject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-winding">winding</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-_setScreenClass">_setScreenClass</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyEvent">copyEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-eventWasTouch">eventWasTouch</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-haveModal">haveModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isLeftClick">isLeftClick</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isMouseDown">isMouseDown</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pathDebugEvent">pathDebugEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-popModalLight">popModalLight</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModalLight">pushModalLight</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-singleMouseEvent">singleMouseEvent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-register">register</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-atob">atob</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-btoa">btoa</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-color2css">color2css</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-fetch_file">fetch_file</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-formatNumberUI">formatNumberUI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getAllKeys">getAllKeys</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getClassParent">getClassParent</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hashjoin">hashjoin</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isMobile">isMobile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-list">list</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-merge">merge</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pollTimer">pollTimer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-print_stack">print_stack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-random">random</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-seed">seed</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-strhash">strhash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-termColor">termColor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-test_fasthash">test_fasthash</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-time_ms">time_ms</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DomEventTypes">DomEventTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-modalStack">modalStack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-COLINEAR">COLINEAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-COLINEAR_ISECT">COLINEAR_ISECT</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FEPS">FEPS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FEPS_DATA">FEPS_DATA</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FLOAT_MAX">FLOAT_MAX</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-FLOAT_MIN">FLOAT_MIN</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-LINECROSS">LINECROSS</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-Matrix4UI">Matrix4UI</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-SQRT2">SQRT2</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-feps">feps</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-keymap">keymap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-keymap_latin_1">keymap_latin_1</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-modalstack">modalstack</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-reverse_keymap">reverse_keymap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-STRUCT">STRUCT</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-inherit">inherit</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-manager">manager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-nstructjs">nstructjs</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-setDebugMode">setDebugMode</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-write_scripts">write_scripts</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-console">console</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-termColorMap">termColorMap</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-timers">timers</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#widgets">widgets</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/dragbox.js~DragBox.html">DragBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/theme_editor.js~ThemeEditor.html">ThemeEditor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_button.js~Button.html">Button</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker.js~ColorField.html">ColorField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker.js~ColorPicker.html">ColorPicker</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker.js~SimpleBox.html">SimpleBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorField.html">ColorField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorPicker.html">ColorPicker</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html">ColorPickerButton</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~HueField.html">HueField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~SatValField.html">SatValField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_colorpicker2.js~SimpleBox.html">SimpleBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_container.js~BuilderContainer.html">BuilderContainer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_container.js~BuilderRow.html">BuilderRow</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_container.js~ContainerIF.html">ContainerIF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget.js~Curve1DWidget.html">Curve1DWidget</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget_old.js~Curve.html">Curve</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget_old.js~CurvePoint.html">CurvePoint</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_curvewidget_old.js~CurveWidget.html">CurveWidget</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_lasttool.js~LastToolPanel.html">LastToolPanel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_menu.js~DropBox.html">DropBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_menu.js~Menu.html">Menu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_menu.js~MenuWrangler.html">MenuWrangler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~Note.html">Note</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~NoteFrame.html">NoteFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_noteframe.js~ProgBarNote.html">ProgBarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSlider.html">NumSlider</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimple.html">NumSliderSimple</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html">NumSliderSimpleBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~NumSliderWithTextBox.html">NumSliderWithTextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html">SliderWithTextbox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_panel.js~PanelFrame.html">PanelFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichEditor.html">RichEditor</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_richedit.js~RichViewer.html">RichViewer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_table.js~TableFrame.html">TableFrame</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_table.js~TableRow.html">TableRow</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~ModalTabMove.html">ModalTabMove</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabBar.html">TabBar</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabContainer.html">TabContainer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_tabs.js~TabItem.html">TabItem</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBox.html">TextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_textbox.js~TextBoxBase.html">TextBoxBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_treeview.js~TreeItem.html">TreeItem</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_treeview.js~TreeView.html">TreeView</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check.html">Check</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~Check1.html">Check1</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconButton.html">IconButton</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconCheck.html">IconCheck</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~IconLabel.html">IconLabel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets.js~ValueButtonBase.html">ValueButtonBase</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~ToolTip.html">ToolTip</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/widgets/ui_widgets2.js~VectorPanel.html">VectorPanel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-hsv_to_rgb">hsv_to_rgb</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-rgb_to_hsv">rgb_to_hsv</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getFieldImage">getFieldImage</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getHueField">getHueField</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-inv_sample">inv_sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sample">sample</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setRootStruct">setRootStruct</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-binomial">binomial</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-makePopupArea">makePopupArea</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMenu">createMenu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getWranglerScreen">getWranglerScreen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-setWranglerScreen">setWranglerScreen</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-startMenu">startMenu</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-startMenuEventWrangling">startMenuEventWrangling</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-error">error</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-getNoteFrames">getNoteFrames</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-message">message</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-progbarNote">progbarNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-sendNote">sendNote</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-warning">warning</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-checkForTextBox">checkForTextBox</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-api">api</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveConstructors">CurveConstructors</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveFlags">CurveFlags</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-CurveTypes">CurveTypes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-TangentModes">TangentModes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-menuWrangler">menuWrangler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-noteframes">noteframes</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-DataPathError">DataPathError</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-tab_idgen">tab_idgen</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">scripts/lib/tinymce/plugins/image/plugin.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.3.1 (2020-05-27)
+ */
+(function (domGlobals) {
+    &apos;use strict&apos;;
+
+    var global = tinymce.util.Tools.resolve(&apos;tinymce.PluginManager&apos;);
+
+    var noop = function () {
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var eq = function (o) {
+        return o.isNone();
+      };
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = function (n) {
+        return n;
+      };
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        is: never,
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || &apos;error: getOrDie called on none.&apos;);
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: none,
+        equals: eq,
+        equals_: eq,
+        toArray: function () {
+          return [];
+        },
+        toString: constant(&apos;none()&apos;)
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        is: function (v) {
+          return a === v;
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return &apos;some(&apos; + a + &apos;)&apos;;
+        },
+        equals: function (o) {
+          return o.is(a);
+        },
+        equals_: function (o, elementEq) {
+          return o.fold(never, function (b) {
+            return elementEq(a, b);
+          });
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Option = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var typeOf = function (x) {
+      var t = typeof x;
+      if (x === null) {
+        return &apos;null&apos;;
+      } else if (t === &apos;object&apos; &amp;&amp; (Array.prototype.isPrototypeOf(x) || x.constructor &amp;&amp; x.constructor.name === &apos;Array&apos;)) {
+        return &apos;array&apos;;
+      } else if (t === &apos;object&apos; &amp;&amp; (String.prototype.isPrototypeOf(x) || x.constructor &amp;&amp; x.constructor.name === &apos;String&apos;)) {
+        return &apos;string&apos;;
+      } else {
+        return t;
+      }
+    };
+    var isType = function (type) {
+      return function (value) {
+        return typeOf(value) === type;
+      };
+    };
+    var isSimpleType = function (type) {
+      return function (value) {
+        return typeof value === type;
+      };
+    };
+    var eq = function (t) {
+      return function (a) {
+        return t === a;
+      };
+    };
+    var isString = isType(&apos;string&apos;);
+    var isObject = isType(&apos;object&apos;);
+    var isArray = isType(&apos;array&apos;);
+    var isNull = eq(null);
+    var isBoolean = isSimpleType(&apos;boolean&apos;);
+    var isNumber = isSimpleType(&apos;number&apos;);
+
+    var nativePush = Array.prototype.push;
+    var flatten = function (xs) {
+      var r = [];
+      for (var i = 0, len = xs.length; i &lt; len; ++i) {
+        if (!isArray(xs[i])) {
+          throw new Error(&apos;Arr.flatten item &apos; + i + &apos; was not an array, input: &apos; + xs);
+        }
+        nativePush.apply(r, xs[i]);
+      }
+      return r;
+    };
+    var head = function (xs) {
+      return xs.length === 0 ? Option.none() : Option.some(xs[0]);
+    };
+    var findMap = function (arr, f) {
+      for (var i = 0; i &lt; arr.length; i++) {
+        var r = f(arr[i], i);
+        if (r.isSome()) {
+          return r;
+        }
+      }
+      return Option.none();
+    };
+
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+    var deep = function (old, nu) {
+      var bothObjects = isObject(old) &amp;&amp; isObject(nu);
+      return bothObjects ? deepMerge(old, nu) : nu;
+    };
+    var baseMerge = function (merger) {
+      return function () {
+        var objects = new Array(arguments.length);
+        for (var i = 0; i &lt; objects.length; i++) {
+          objects[i] = arguments[i];
+        }
+        if (objects.length === 0) {
+          throw new Error(&apos;Can\&apos;t merge zero objects&apos;);
+        }
+        var ret = {};
+        for (var j = 0; j &lt; objects.length; j++) {
+          var curObject = objects[j];
+          for (var key in curObject) {
+            if (hasOwnProperty.call(curObject, key)) {
+              ret[key] = merger(ret[key], curObject[key]);
+            }
+          }
+        }
+        return ret;
+      };
+    };
+    var deepMerge = baseMerge(deep);
+
+    var __assign = function () {
+      __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i &lt; n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+        }
+        return t;
+      };
+      return __assign.apply(this, arguments);
+    };
+
+    var Global = typeof domGlobals.window !== &apos;undefined&apos; ? domGlobals.window : Function(&apos;return this;&apos;)();
+
+    var rawSet = function (dom, key, value) {
+      if (isString(value) || isBoolean(value) || isNumber(value)) {
+        dom.setAttribute(key, value + &apos;&apos;);
+      } else {
+        domGlobals.console.error(&apos;Invalid call to Attr.set. Key &apos;, key, &apos;:: Value &apos;, value, &apos;:: Element &apos;, dom);
+        throw new Error(&apos;Attribute value was not simple&apos;);
+      }
+    };
+    var set = function (element, key, value) {
+      rawSet(element.dom(), key, value);
+    };
+    var remove = function (element, key) {
+      element.dom().removeAttribute(key);
+    };
+
+    var fromHtml = function (html, scope) {
+      var doc = scope || domGlobals.document;
+      var div = doc.createElement(&apos;div&apos;);
+      div.innerHTML = html;
+      if (!div.hasChildNodes() || div.childNodes.length &gt; 1) {
+        domGlobals.console.error(&apos;HTML does not have a single root node&apos;, html);
+        throw new Error(&apos;HTML must have a single root node&apos;);
+      }
+      return fromDom(div.childNodes[0]);
+    };
+    var fromTag = function (tag, scope) {
+      var doc = scope || domGlobals.document;
+      var node = doc.createElement(tag);
+      return fromDom(node);
+    };
+    var fromText = function (text, scope) {
+      var doc = scope || domGlobals.document;
+      var node = doc.createTextNode(text);
+      return fromDom(node);
+    };
+    var fromDom = function (node) {
+      if (node === null || node === undefined) {
+        throw new Error(&apos;Node cannot be null or undefined&apos;);
+      }
+      return { dom: constant(node) };
+    };
+    var fromPoint = function (docElm, x, y) {
+      var doc = docElm.dom();
+      return Option.from(doc.elementFromPoint(x, y)).map(fromDom);
+    };
+    var Element = {
+      fromHtml: fromHtml,
+      fromTag: fromTag,
+      fromText: fromText,
+      fromDom: fromDom,
+      fromPoint: fromPoint
+    };
+
+    var global$1 = tinymce.util.Tools.resolve(&apos;tinymce.dom.DOMUtils&apos;);
+
+    var global$2 = tinymce.util.Tools.resolve(&apos;tinymce.util.Promise&apos;);
+
+    var global$3 = tinymce.util.Tools.resolve(&apos;tinymce.util.XHR&apos;);
+
+    var hasDimensions = function (editor) {
+      return editor.getParam(&apos;image_dimensions&apos;, true, &apos;boolean&apos;);
+    };
+    var hasAdvTab = function (editor) {
+      return editor.getParam(&apos;image_advtab&apos;, false, &apos;boolean&apos;);
+    };
+    var hasUploadTab = function (editor) {
+      return editor.getParam(&apos;image_uploadtab&apos;, true, &apos;boolean&apos;);
+    };
+    var getPrependUrl = function (editor) {
+      return editor.getParam(&apos;image_prepend_url&apos;, &apos;&apos;, &apos;string&apos;);
+    };
+    var getClassList = function (editor) {
+      return editor.getParam(&apos;image_class_list&apos;);
+    };
+    var hasDescription = function (editor) {
+      return editor.getParam(&apos;image_description&apos;, true, &apos;boolean&apos;);
+    };
+    var hasImageTitle = function (editor) {
+      return editor.getParam(&apos;image_title&apos;, false, &apos;boolean&apos;);
+    };
+    var hasImageCaption = function (editor) {
+      return editor.getParam(&apos;image_caption&apos;, false, &apos;boolean&apos;);
+    };
+    var getImageList = function (editor) {
+      return editor.getParam(&apos;image_list&apos;, false);
+    };
+    var hasUploadUrl = function (editor) {
+      return !!getUploadUrl(editor);
+    };
+    var hasUploadHandler = function (editor) {
+      return !!getUploadHandler(editor);
+    };
+    var getUploadUrl = function (editor) {
+      return editor.getParam(&apos;images_upload_url&apos;, &apos;&apos;, &apos;string&apos;);
+    };
+    var getUploadHandler = function (editor) {
+      return editor.getParam(&apos;images_upload_handler&apos;, undefined, &apos;function&apos;);
+    };
+    var getUploadBasePath = function (editor) {
+      return editor.getParam(&apos;images_upload_base_path&apos;, undefined, &apos;string&apos;);
+    };
+    var getUploadCredentials = function (editor) {
+      return editor.getParam(&apos;images_upload_credentials&apos;, false, &apos;boolean&apos;);
+    };
+    var showAccessibilityOptions = function (editor) {
+      return editor.getParam(&apos;a11y_advanced_options&apos;, false, &apos;boolean&apos;);
+    };
+    var isAutomaticUploadsEnabled = function (editor) {
+      return editor.getParam(&apos;automatic_uploads&apos;, true, &apos;boolean&apos;);
+    };
+
+    var parseIntAndGetMax = function (val1, val2) {
+      return Math.max(parseInt(val1, 10), parseInt(val2, 10));
+    };
+    var getImageSize = function (url) {
+      return new global$2(function (callback) {
+        var img = domGlobals.document.createElement(&apos;img&apos;);
+        var done = function (dimensions) {
+          if (img.parentNode) {
+            img.parentNode.removeChild(img);
+          }
+          callback(dimensions);
+        };
+        img.onload = function () {
+          var width = parseIntAndGetMax(img.width, img.clientWidth);
+          var height = parseIntAndGetMax(img.height, img.clientHeight);
+          var dimensions = {
+            width: width,
+            height: height
+          };
+          done(global$2.resolve(dimensions));
+        };
+        img.onerror = function () {
+          done(global$2.reject(&apos;Failed to get image dimensions for: &apos; + url));
+        };
+        var style = img.style;
+        style.visibility = &apos;hidden&apos;;
+        style.position = &apos;fixed&apos;;
+        style.bottom = style.left = &apos;0px&apos;;
+        style.width = style.height = &apos;auto&apos;;
+        domGlobals.document.body.appendChild(img);
+        img.src = url;
+      });
+    };
+    var removePixelSuffix = function (value) {
+      if (value) {
+        value = value.replace(/px$/, &apos;&apos;);
+      }
+      return value;
+    };
+    var addPixelSuffix = function (value) {
+      if (value.length &gt; 0 &amp;&amp; /^[0-9]+$/.test(value)) {
+        value += &apos;px&apos;;
+      }
+      return value;
+    };
+    var mergeMargins = function (css) {
+      if (css.margin) {
+        var splitMargin = String(css.margin).split(&apos; &apos;);
+        switch (splitMargin.length) {
+        case 1:
+          css[&apos;margin-top&apos;] = css[&apos;margin-top&apos;] || splitMargin[0];
+          css[&apos;margin-right&apos;] = css[&apos;margin-right&apos;] || splitMargin[0];
+          css[&apos;margin-bottom&apos;] = css[&apos;margin-bottom&apos;] || splitMargin[0];
+          css[&apos;margin-left&apos;] = css[&apos;margin-left&apos;] || splitMargin[0];
+          break;
+        case 2:
+          css[&apos;margin-top&apos;] = css[&apos;margin-top&apos;] || splitMargin[0];
+          css[&apos;margin-right&apos;] = css[&apos;margin-right&apos;] || splitMargin[1];
+          css[&apos;margin-bottom&apos;] = css[&apos;margin-bottom&apos;] || splitMargin[0];
+          css[&apos;margin-left&apos;] = css[&apos;margin-left&apos;] || splitMargin[1];
+          break;
+        case 3:
+          css[&apos;margin-top&apos;] = css[&apos;margin-top&apos;] || splitMargin[0];
+          css[&apos;margin-right&apos;] = css[&apos;margin-right&apos;] || splitMargin[1];
+          css[&apos;margin-bottom&apos;] = css[&apos;margin-bottom&apos;] || splitMargin[2];
+          css[&apos;margin-left&apos;] = css[&apos;margin-left&apos;] || splitMargin[1];
+          break;
+        case 4:
+          css[&apos;margin-top&apos;] = css[&apos;margin-top&apos;] || splitMargin[0];
+          css[&apos;margin-right&apos;] = css[&apos;margin-right&apos;] || splitMargin[1];
+          css[&apos;margin-bottom&apos;] = css[&apos;margin-bottom&apos;] || splitMargin[2];
+          css[&apos;margin-left&apos;] = css[&apos;margin-left&apos;] || splitMargin[3];
+        }
+        delete css.margin;
+      }
+      return css;
+    };
+    var createImageList = function (editor, callback) {
+      var imageList = getImageList(editor);
+      if (typeof imageList === &apos;string&apos;) {
+        global$3.send({
+          url: imageList,
+          success: function (text) {
+            callback(JSON.parse(text));
+          }
+        });
+      } else if (typeof imageList === &apos;function&apos;) {
+        imageList(callback);
+      } else {
+        callback(imageList);
+      }
+    };
+    var waitLoadImage = function (editor, data, imgElm) {
+      var selectImage = function () {
+        imgElm.onload = imgElm.onerror = null;
+        if (editor.selection) {
+          editor.selection.select(imgElm);
+          editor.nodeChanged();
+        }
+      };
+      imgElm.onload = function () {
+        if (!data.width &amp;&amp; !data.height &amp;&amp; hasDimensions(editor)) {
+          editor.dom.setAttribs(imgElm, {
+            width: String(imgElm.clientWidth),
+            height: String(imgElm.clientHeight)
+          });
+        }
+        selectImage();
+      };
+      imgElm.onerror = selectImage;
+    };
+    var blobToDataUri = function (blob) {
+      return new global$2(function (resolve, reject) {
+        var reader = new domGlobals.FileReader();
+        reader.onload = function () {
+          resolve(reader.result);
+        };
+        reader.onerror = function () {
+          reject(reader.error.message);
+        };
+        reader.readAsDataURL(blob);
+      });
+    };
+    var isPlaceholderImage = function (imgElm) {
+      return imgElm.nodeName === &apos;IMG&apos; &amp;&amp; (imgElm.hasAttribute(&apos;data-mce-object&apos;) || imgElm.hasAttribute(&apos;data-mce-placeholder&apos;));
+    };
+
+    var DOM = global$1.DOM;
+    var getHspace = function (image) {
+      if (image.style.marginLeft &amp;&amp; image.style.marginRight &amp;&amp; image.style.marginLeft === image.style.marginRight) {
+        return removePixelSuffix(image.style.marginLeft);
+      } else {
+        return &apos;&apos;;
+      }
+    };
+    var getVspace = function (image) {
+      if (image.style.marginTop &amp;&amp; image.style.marginBottom &amp;&amp; image.style.marginTop === image.style.marginBottom) {
+        return removePixelSuffix(image.style.marginTop);
+      } else {
+        return &apos;&apos;;
+      }
+    };
+    var getBorder = function (image) {
+      if (image.style.borderWidth) {
+        return removePixelSuffix(image.style.borderWidth);
+      } else {
+        return &apos;&apos;;
+      }
+    };
+    var getAttrib = function (image, name) {
+      if (image.hasAttribute(name)) {
+        return image.getAttribute(name);
+      } else {
+        return &apos;&apos;;
+      }
+    };
+    var getStyle = function (image, name) {
+      return image.style[name] ? image.style[name] : &apos;&apos;;
+    };
+    var hasCaption = function (image) {
+      return image.parentNode !== null &amp;&amp; image.parentNode.nodeName === &apos;FIGURE&apos;;
+    };
+    var updateAttrib = function (image, name, value) {
+      if (value === &apos;&apos;) {
+        image.removeAttribute(name);
+      } else {
+        image.setAttribute(name, value);
+      }
+    };
+    var wrapInFigure = function (image) {
+      var figureElm = DOM.create(&apos;figure&apos;, { class: &apos;image&apos; });
+      DOM.insertAfter(figureElm, image);
+      figureElm.appendChild(image);
+      figureElm.appendChild(DOM.create(&apos;figcaption&apos;, { contentEditable: &apos;true&apos; }, &apos;Caption&apos;));
+      figureElm.contentEditable = &apos;false&apos;;
+    };
+    var removeFigure = function (image) {
+      var figureElm = image.parentNode;
+      DOM.insertAfter(image, figureElm);
+      DOM.remove(figureElm);
+    };
+    var toggleCaption = function (image) {
+      if (hasCaption(image)) {
+        removeFigure(image);
+      } else {
+        wrapInFigure(image);
+      }
+    };
+    var normalizeStyle = function (image, normalizeCss) {
+      var attrValue = image.getAttribute(&apos;style&apos;);
+      var value = normalizeCss(attrValue !== null ? attrValue : &apos;&apos;);
+      if (value.length &gt; 0) {
+        image.setAttribute(&apos;style&apos;, value);
+        image.setAttribute(&apos;data-mce-style&apos;, value);
+      } else {
+        image.removeAttribute(&apos;style&apos;);
+      }
+    };
+    var setSize = function (name, normalizeCss) {
+      return function (image, name, value) {
+        if (image.style[name]) {
+          image.style[name] = addPixelSuffix(value);
+          normalizeStyle(image, normalizeCss);
+        } else {
+          updateAttrib(image, name, value);
+        }
+      };
+    };
+    var getSize = function (image, name) {
+      if (image.style[name]) {
+        return removePixelSuffix(image.style[name]);
+      } else {
+        return getAttrib(image, name);
+      }
+    };
+    var setHspace = function (image, value) {
+      var pxValue = addPixelSuffix(value);
+      image.style.marginLeft = pxValue;
+      image.style.marginRight = pxValue;
+    };
+    var setVspace = function (image, value) {
+      var pxValue = addPixelSuffix(value);
+      image.style.marginTop = pxValue;
+      image.style.marginBottom = pxValue;
+    };
+    var setBorder = function (image, value) {
+      var pxValue = addPixelSuffix(value);
+      image.style.borderWidth = pxValue;
+    };
+    var setBorderStyle = function (image, value) {
+      image.style.borderStyle = value;
+    };
+    var getBorderStyle = function (image) {
+      return getStyle(image, &apos;borderStyle&apos;);
+    };
+    var isFigure = function (elm) {
+      return elm.nodeName === &apos;FIGURE&apos;;
+    };
+    var isImage = function (elm) {
+      return elm.nodeName === &apos;IMG&apos;;
+    };
+    var getIsDecorative = function (image) {
+      return DOM.getAttrib(image, &apos;alt&apos;).length === 0 &amp;&amp; DOM.getAttrib(image, &apos;role&apos;) === &apos;presentation&apos;;
+    };
+    var getAlt = function (image) {
+      if (getIsDecorative(image)) {
+        return &apos;&apos;;
+      } else {
+        return getAttrib(image, &apos;alt&apos;);
+      }
+    };
+    var defaultData = function () {
+      return {
+        src: &apos;&apos;,
+        alt: &apos;&apos;,
+        title: &apos;&apos;,
+        width: &apos;&apos;,
+        height: &apos;&apos;,
+        class: &apos;&apos;,
+        style: &apos;&apos;,
+        caption: false,
+        hspace: &apos;&apos;,
+        vspace: &apos;&apos;,
+        border: &apos;&apos;,
+        borderStyle: &apos;&apos;,
+        isDecorative: false
+      };
+    };
+    var getStyleValue = function (normalizeCss, data) {
+      var image = domGlobals.document.createElement(&apos;img&apos;);
+      updateAttrib(image, &apos;style&apos;, data.style);
+      if (getHspace(image) || data.hspace !== &apos;&apos;) {
+        setHspace(image, data.hspace);
+      }
+      if (getVspace(image) || data.vspace !== &apos;&apos;) {
+        setVspace(image, data.vspace);
+      }
+      if (getBorder(image) || data.border !== &apos;&apos;) {
+        setBorder(image, data.border);
+      }
+      if (getBorderStyle(image) || data.borderStyle !== &apos;&apos;) {
+        setBorderStyle(image, data.borderStyle);
+      }
+      return normalizeCss(image.getAttribute(&apos;style&apos;));
+    };
+    var create = function (normalizeCss, data) {
+      var image = domGlobals.document.createElement(&apos;img&apos;);
+      write(normalizeCss, __assign(__assign({}, data), { caption: false }), image);
+      setAlt(image, data.alt, data.isDecorative);
+      if (data.caption) {
+        var figure = DOM.create(&apos;figure&apos;, { class: &apos;image&apos; });
+        figure.appendChild(image);
+        figure.appendChild(DOM.create(&apos;figcaption&apos;, { contentEditable: &apos;true&apos; }, &apos;Caption&apos;));
+        figure.contentEditable = &apos;false&apos;;
+        return figure;
+      } else {
+        return image;
+      }
+    };
+    var read = function (normalizeCss, image) {
+      return {
+        src: getAttrib(image, &apos;src&apos;),
+        alt: getAlt(image),
+        title: getAttrib(image, &apos;title&apos;),
+        width: getSize(image, &apos;width&apos;),
+        height: getSize(image, &apos;height&apos;),
+        class: getAttrib(image, &apos;class&apos;),
+        style: normalizeCss(getAttrib(image, &apos;style&apos;)),
+        caption: hasCaption(image),
+        hspace: getHspace(image),
+        vspace: getVspace(image),
+        border: getBorder(image),
+        borderStyle: getStyle(image, &apos;borderStyle&apos;),
+        isDecorative: getIsDecorative(image)
+      };
+    };
+    var updateProp = function (image, oldData, newData, name, set) {
+      if (newData[name] !== oldData[name]) {
+        set(image, name, newData[name]);
+      }
+    };
+    var setAlt = function (image, alt, isDecorative) {
+      if (isDecorative) {
+        DOM.setAttrib(image, &apos;role&apos;, &apos;presentation&apos;);
+        var sugarImage = Element.fromDom(image);
+        set(sugarImage, &apos;alt&apos;, &apos;&apos;);
+      } else {
+        if (isNull(alt)) {
+          var sugarImage = Element.fromDom(image);
+          remove(sugarImage, &apos;alt&apos;);
+        } else {
+          var sugarImage = Element.fromDom(image);
+          set(sugarImage, &apos;alt&apos;, alt);
+        }
+        if (DOM.getAttrib(image, &apos;role&apos;) === &apos;presentation&apos;) {
+          DOM.setAttrib(image, &apos;role&apos;, &apos;&apos;);
+        }
+      }
+    };
+    var updateAlt = function (image, oldData, newData) {
+      if (newData.alt !== oldData.alt || newData.isDecorative !== oldData.isDecorative) {
+        setAlt(image, newData.alt, newData.isDecorative);
+      }
+    };
+    var normalized = function (set, normalizeCss) {
+      return function (image, name, value) {
+        set(image, value);
+        normalizeStyle(image, normalizeCss);
+      };
+    };
+    var write = function (normalizeCss, newData, image) {
+      var oldData = read(normalizeCss, image);
+      updateProp(image, oldData, newData, &apos;caption&apos;, function (image, _name, _value) {
+        return toggleCaption(image);
+      });
+      updateProp(image, oldData, newData, &apos;src&apos;, updateAttrib);
+      updateProp(image, oldData, newData, &apos;title&apos;, updateAttrib);
+      updateProp(image, oldData, newData, &apos;width&apos;, setSize(&apos;width&apos;, normalizeCss));
+      updateProp(image, oldData, newData, &apos;height&apos;, setSize(&apos;height&apos;, normalizeCss));
+      updateProp(image, oldData, newData, &apos;class&apos;, updateAttrib);
+      updateProp(image, oldData, newData, &apos;style&apos;, normalized(function (image, value) {
+        return updateAttrib(image, &apos;style&apos;, value);
+      }, normalizeCss));
+      updateProp(image, oldData, newData, &apos;hspace&apos;, normalized(setHspace, normalizeCss));
+      updateProp(image, oldData, newData, &apos;vspace&apos;, normalized(setVspace, normalizeCss));
+      updateProp(image, oldData, newData, &apos;border&apos;, normalized(setBorder, normalizeCss));
+      updateProp(image, oldData, newData, &apos;borderStyle&apos;, normalized(setBorderStyle, normalizeCss));
+      updateAlt(image, oldData, newData);
+    };
+
+    var normalizeCss = function (editor, cssText) {
+      var css = editor.dom.styles.parse(cssText);
+      var mergedCss = mergeMargins(css);
+      var compressed = editor.dom.styles.parse(editor.dom.styles.serialize(mergedCss));
+      return editor.dom.styles.serialize(compressed);
+    };
+    var getSelectedImage = function (editor) {
+      var imgElm = editor.selection.getNode();
+      var figureElm = editor.dom.getParent(imgElm, &apos;figure.image&apos;);
+      if (figureElm) {
+        return editor.dom.select(&apos;img&apos;, figureElm)[0];
+      }
+      if (imgElm &amp;&amp; (imgElm.nodeName !== &apos;IMG&apos; || isPlaceholderImage(imgElm))) {
+        return null;
+      }
+      return imgElm;
+    };
+    var splitTextBlock = function (editor, figure) {
+      var dom = editor.dom;
+      var textBlock = dom.getParent(figure.parentNode, function (node) {
+        return !!editor.schema.getTextBlockElements()[node.nodeName];
+      }, editor.getBody());
+      if (textBlock) {
+        return dom.split(textBlock, figure);
+      } else {
+        return figure;
+      }
+    };
+    var readImageDataFromSelection = function (editor) {
+      var image = getSelectedImage(editor);
+      return image ? read(function (css) {
+        return normalizeCss(editor, css);
+      }, image) : defaultData();
+    };
+    var insertImageAtCaret = function (editor, data) {
+      var elm = create(function (css) {
+        return normalizeCss(editor, css);
+      }, data);
+      editor.dom.setAttrib(elm, &apos;data-mce-id&apos;, &apos;__mcenew&apos;);
+      editor.focus();
+      editor.selection.setContent(elm.outerHTML);
+      var insertedElm = editor.dom.select(&apos;*[data-mce-id=&quot;__mcenew&quot;]&apos;)[0];
+      editor.dom.setAttrib(insertedElm, &apos;data-mce-id&apos;, null);
+      if (isFigure(insertedElm)) {
+        var figure = splitTextBlock(editor, insertedElm);
+        editor.selection.select(figure);
+      } else {
+        editor.selection.select(insertedElm);
+      }
+    };
+    var syncSrcAttr = function (editor, image) {
+      editor.dom.setAttrib(image, &apos;src&apos;, image.getAttribute(&apos;src&apos;));
+    };
+    var deleteImage = function (editor, image) {
+      if (image) {
+        var elm = editor.dom.is(image.parentNode, &apos;figure.image&apos;) ? image.parentNode : image;
+        editor.dom.remove(elm);
+        editor.focus();
+        editor.nodeChanged();
+        if (editor.dom.isEmpty(editor.getBody())) {
+          editor.setContent(&apos;&apos;);
+          editor.selection.setCursorLocation();
+        }
+      }
+    };
+    var writeImageDataToSelection = function (editor, data) {
+      var image = getSelectedImage(editor);
+      write(function (css) {
+        return normalizeCss(editor, css);
+      }, data, image);
+      syncSrcAttr(editor, image);
+      if (isFigure(image.parentNode)) {
+        var figure = image.parentNode;
+        splitTextBlock(editor, figure);
+        editor.selection.select(image.parentNode);
+      } else {
+        editor.selection.select(image);
+        waitLoadImage(editor, data, image);
+      }
+    };
+    var insertOrUpdateImage = function (editor, partialData) {
+      var image = getSelectedImage(editor);
+      if (image) {
+        var selectedImageData = read(function (css) {
+          return normalizeCss(editor, css);
+        }, image);
+        var data = __assign(__assign({}, selectedImageData), partialData);
+        if (data.src) {
+          writeImageDataToSelection(editor, data);
+        } else {
+          deleteImage(editor, image);
+        }
+      } else if (partialData.src) {
+        insertImageAtCaret(editor, __assign(__assign({}, defaultData()), partialData));
+      }
+    };
+
+    var global$4 = tinymce.util.Tools.resolve(&apos;tinymce.util.Tools&apos;);
+
+    var getValue = function (item) {
+      return isString(item.value) ? item.value : &apos;&apos;;
+    };
+    var sanitizeList = function (list, extractValue) {
+      var out = [];
+      global$4.each(list, function (item) {
+        var text = isString(item.text) ? item.text : isString(item.title) ? item.title : &apos;&apos;;
+        if (item.menu !== undefined) {
+          var items = sanitizeList(item.menu, extractValue);
+          out.push({
+            text: text,
+            items: items
+          });
+        } else {
+          var value = extractValue(item);
+          out.push({
+            text: text,
+            value: value
+          });
+        }
+      });
+      return out;
+    };
+    var sanitizer = function (extracter) {
+      if (extracter === void 0) {
+        extracter = getValue;
+      }
+      return function (list) {
+        if (list) {
+          return Option.from(list).map(function (list) {
+            return sanitizeList(list, extracter);
+          });
+        } else {
+          return Option.none();
+        }
+      };
+    };
+    var sanitize = function (list) {
+      return sanitizer(getValue)(list);
+    };
+    var isGroup = function (item) {
+      return Object.prototype.hasOwnProperty.call(item, &apos;items&apos;);
+    };
+    var findEntryDelegate = function (list, value) {
+      return findMap(list, function (item) {
+        if (isGroup(item)) {
+          return findEntryDelegate(item.items, value);
+        } else if (item.value === value) {
+          return Option.some(item);
+        } else {
+          return Option.none();
+        }
+      });
+    };
+    var findEntry = function (optList, value) {
+      return optList.bind(function (list) {
+        return findEntryDelegate(list, value);
+      });
+    };
+    var ListUtils = {
+      sanitizer: sanitizer,
+      sanitize: sanitize,
+      findEntry: findEntry
+    };
+
+    var pathJoin = function (path1, path2) {
+      if (path1) {
+        return path1.replace(/\/$/, &apos;&apos;) + &apos;/&apos; + path2.replace(/^\//, &apos;&apos;);
+      }
+      return path2;
+    };
+    function Uploader (settings) {
+      var defaultHandler = function (blobInfo, success, failure, progress) {
+        var xhr, formData;
+        xhr = new domGlobals.XMLHttpRequest();
+        xhr.open(&apos;POST&apos;, settings.url);
+        xhr.withCredentials = settings.credentials;
+        xhr.upload.onprogress = function (e) {
+          progress(e.loaded / e.total * 100);
+        };
+        xhr.onerror = function () {
+          failure(&apos;Image upload failed due to a XHR Transport error. Code: &apos; + xhr.status);
+        };
+        xhr.onload = function () {
+          var json;
+          if (xhr.status &lt; 200 || xhr.status &gt;= 300) {
+            failure(&apos;HTTP Error: &apos; + xhr.status);
+            return;
+          }
+          json = JSON.parse(xhr.responseText);
+          if (!json || typeof json.location !== &apos;string&apos;) {
+            failure(&apos;Invalid JSON: &apos; + xhr.responseText);
+            return;
+          }
+          success(pathJoin(settings.basePath, json.location));
+        };
+        formData = new domGlobals.FormData();
+        formData.append(&apos;file&apos;, blobInfo.blob(), blobInfo.filename());
+        xhr.send(formData);
+      };
+      var uploadBlob = function (blobInfo, handler) {
+        return new global$2(function (resolve, reject) {
+          try {
+            handler(blobInfo, resolve, reject, noop);
+          } catch (ex) {
+            reject(ex.message);
+          }
+        });
+      };
+      var isDefaultHandler = function (handler) {
+        return handler === defaultHandler;
+      };
+      var upload = function (blobInfo) {
+        return !settings.url &amp;&amp; isDefaultHandler(settings.handler) ? global$2.reject(&apos;Upload url missing from the settings.&apos;) : uploadBlob(blobInfo, settings.handler);
+      };
+      settings = global$4.extend({
+        credentials: false,
+        handler: defaultHandler
+      }, settings);
+      return { upload: upload };
+    }
+
+    var makeTab = function (_info) {
+      return {
+        title: &apos;Advanced&apos;,
+        name: &apos;advanced&apos;,
+        items: [
+          {
+            type: &apos;input&apos;,
+            label: &apos;Style&apos;,
+            name: &apos;style&apos;
+          },
+          {
+            type: &apos;grid&apos;,
+            columns: 2,
+            items: [
+              {
+                type: &apos;input&apos;,
+                label: &apos;Vertical space&apos;,
+                name: &apos;vspace&apos;,
+                inputMode: &apos;numeric&apos;
+              },
+              {
+                type: &apos;input&apos;,
+                label: &apos;Horizontal space&apos;,
+                name: &apos;hspace&apos;,
+                inputMode: &apos;numeric&apos;
+              },
+              {
+                type: &apos;input&apos;,
+                label: &apos;Border width&apos;,
+                name: &apos;border&apos;,
+                inputMode: &apos;numeric&apos;
+              },
+              {
+                type: &apos;selectbox&apos;,
+                name: &apos;borderstyle&apos;,
+                label: &apos;Border style&apos;,
+                items: [
+                  {
+                    text: &apos;Select...&apos;,
+                    value: &apos;&apos;
+                  },
+                  {
+                    text: &apos;Solid&apos;,
+                    value: &apos;solid&apos;
+                  },
+                  {
+                    text: &apos;Dotted&apos;,
+                    value: &apos;dotted&apos;
+                  },
+                  {
+                    text: &apos;Dashed&apos;,
+                    value: &apos;dashed&apos;
+                  },
+                  {
+                    text: &apos;Double&apos;,
+                    value: &apos;double&apos;
+                  },
+                  {
+                    text: &apos;Groove&apos;,
+                    value: &apos;groove&apos;
+                  },
+                  {
+                    text: &apos;Ridge&apos;,
+                    value: &apos;ridge&apos;
+                  },
+                  {
+                    text: &apos;Inset&apos;,
+                    value: &apos;inset&apos;
+                  },
+                  {
+                    text: &apos;Outset&apos;,
+                    value: &apos;outset&apos;
+                  },
+                  {
+                    text: &apos;None&apos;,
+                    value: &apos;none&apos;
+                  },
+                  {
+                    text: &apos;Hidden&apos;,
+                    value: &apos;hidden&apos;
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+    };
+    var AdvTab = { makeTab: makeTab };
+
+    var collect = function (editor) {
+      var urlListSanitizer = ListUtils.sanitizer(function (item) {
+        return editor.convertURL(item.value || item.url, &apos;src&apos;);
+      });
+      var futureImageList = new global$2(function (completer) {
+        createImageList(editor, function (imageList) {
+          completer(urlListSanitizer(imageList).map(function (items) {
+            return flatten([
+              [{
+                  text: &apos;None&apos;,
+                  value: &apos;&apos;
+                }],
+              items
+            ]);
+          }));
+        });
+      });
+      var classList = ListUtils.sanitize(getClassList(editor));
+      var hasAdvTab$1 = hasAdvTab(editor);
+      var hasUploadTab$1 = hasUploadTab(editor);
+      var hasUploadUrl$1 = hasUploadUrl(editor);
+      var hasUploadHandler$1 = hasUploadHandler(editor);
+      var image = readImageDataFromSelection(editor);
+      var hasDescription$1 = hasDescription(editor);
+      var hasImageTitle$1 = hasImageTitle(editor);
+      var hasDimensions$1 = hasDimensions(editor);
+      var hasImageCaption$1 = hasImageCaption(editor);
+      var hasAccessibilityOptions = showAccessibilityOptions(editor);
+      var url = getUploadUrl(editor);
+      var basePath = getUploadBasePath(editor);
+      var credentials = getUploadCredentials(editor);
+      var handler = getUploadHandler(editor);
+      var automaticUploads = isAutomaticUploadsEnabled(editor);
+      var prependURL = Option.some(getPrependUrl(editor)).filter(function (preUrl) {
+        return isString(preUrl) &amp;&amp; preUrl.length &gt; 0;
+      });
+      return futureImageList.then(function (imageList) {
+        return {
+          image: image,
+          imageList: imageList,
+          classList: classList,
+          hasAdvTab: hasAdvTab$1,
+          hasUploadTab: hasUploadTab$1,
+          hasUploadUrl: hasUploadUrl$1,
+          hasUploadHandler: hasUploadHandler$1,
+          hasDescription: hasDescription$1,
+          hasImageTitle: hasImageTitle$1,
+          hasDimensions: hasDimensions$1,
+          hasImageCaption: hasImageCaption$1,
+          url: url,
+          basePath: basePath,
+          credentials: credentials,
+          handler: handler,
+          prependURL: prependURL,
+          hasAccessibilityOptions: hasAccessibilityOptions,
+          automaticUploads: automaticUploads
+        };
+      });
+    };
+
+    var makeItems = function (info) {
+      var imageUrl = {
+        name: &apos;src&apos;,
+        type: &apos;urlinput&apos;,
+        filetype: &apos;image&apos;,
+        label: &apos;Source&apos;
+      };
+      var imageList = info.imageList.map(function (items) {
+        return {
+          name: &apos;images&apos;,
+          type: &apos;selectbox&apos;,
+          label: &apos;Image list&apos;,
+          items: items
+        };
+      });
+      var imageDescription = {
+        name: &apos;alt&apos;,
+        type: &apos;input&apos;,
+        label: &apos;Alternative description&apos;,
+        disabled: info.hasAccessibilityOptions &amp;&amp; info.image.isDecorative
+      };
+      var imageTitle = {
+        name: &apos;title&apos;,
+        type: &apos;input&apos;,
+        label: &apos;Image title&apos;
+      };
+      var imageDimensions = {
+        name: &apos;dimensions&apos;,
+        type: &apos;sizeinput&apos;
+      };
+      var isDecorative = {
+        type: &apos;label&apos;,
+        label: &apos;Accessibility&apos;,
+        items: [{
+            name: &apos;isDecorative&apos;,
+            type: &apos;checkbox&apos;,
+            label: &apos;Image is decorative&apos;
+          }]
+      };
+      var classList = info.classList.map(function (items) {
+        return {
+          name: &apos;classes&apos;,
+          type: &apos;selectbox&apos;,
+          label: &apos;Class&apos;,
+          items: items
+        };
+      });
+      var caption = {
+        type: &apos;label&apos;,
+        label: &apos;Caption&apos;,
+        items: [{
+            type: &apos;checkbox&apos;,
+            name: &apos;caption&apos;,
+            label: &apos;Show caption&apos;
+          }]
+      };
+      return flatten([
+        [imageUrl],
+        imageList.toArray(),
+        info.hasAccessibilityOptions &amp;&amp; info.hasDescription ? [isDecorative] : [],
+        info.hasDescription ? [imageDescription] : [],
+        info.hasImageTitle ? [imageTitle] : [],
+        info.hasDimensions ? [imageDimensions] : [],
+        [{
+            type: &apos;grid&apos;,
+            columns: 2,
+            items: flatten([
+              classList.toArray(),
+              info.hasImageCaption ? [caption] : []
+            ])
+          }]
+      ]);
+    };
+    var makeTab$1 = function (info) {
+      return {
+        title: &apos;General&apos;,
+        name: &apos;general&apos;,
+        items: makeItems(info)
+      };
+    };
+    var MainTab = {
+      makeTab: makeTab$1,
+      makeItems: makeItems
+    };
+
+    var makeTab$2 = function (_info) {
+      var items = [{
+          type: &apos;dropzone&apos;,
+          name: &apos;fileinput&apos;
+        }];
+      return {
+        title: &apos;Upload&apos;,
+        name: &apos;upload&apos;,
+        items: items
+      };
+    };
+    var UploadTab = { makeTab: makeTab$2 };
+
+    var createState = function (info) {
+      return {
+        prevImage: ListUtils.findEntry(info.imageList, info.image.src),
+        prevAlt: info.image.alt,
+        open: true
+      };
+    };
+    var fromImageData = function (image) {
+      return {
+        src: {
+          value: image.src,
+          meta: {}
+        },
+        images: image.src,
+        alt: image.alt,
+        title: image.title,
+        dimensions: {
+          width: image.width,
+          height: image.height
+        },
+        classes: image.class,
+        caption: image.caption,
+        style: image.style,
+        vspace: image.vspace,
+        border: image.border,
+        hspace: image.hspace,
+        borderstyle: image.borderStyle,
+        fileinput: [],
+        isDecorative: image.isDecorative
+      };
+    };
+    var toImageData = function (data, removeEmptyAlt) {
+      return {
+        src: data.src.value,
+        alt: data.alt.length === 0 &amp;&amp; removeEmptyAlt ? null : data.alt,
+        title: data.title,
+        width: data.dimensions.width,
+        height: data.dimensions.height,
+        class: data.classes,
+        style: data.style,
+        caption: data.caption,
+        hspace: data.hspace,
+        vspace: data.vspace,
+        border: data.border,
+        borderStyle: data.borderstyle,
+        isDecorative: data.isDecorative
+      };
+    };
+    var addPrependUrl2 = function (info, srcURL) {
+      if (!/^(?:[a-zA-Z]+:)?\/\//.test(srcURL)) {
+        return info.prependURL.bind(function (prependUrl) {
+          if (srcURL.substring(0, prependUrl.length) !== prependUrl) {
+            return Option.some(prependUrl + srcURL);
+          }
+          return Option.none();
+        });
+      }
+      return Option.none();
+    };
+    var addPrependUrl = function (info, api) {
+      var data = api.getData();
+      addPrependUrl2(info, data.src.value).each(function (srcURL) {
+        api.setData({
+          src: {
+            value: srcURL,
+            meta: data.src.meta
+          }
+        });
+      });
+    };
+    var formFillFromMeta2 = function (info, data, meta) {
+      if (info.hasDescription &amp;&amp; isString(meta.alt)) {
+        data.alt = meta.alt;
+      }
+      if (info.hasAccessibilityOptions) {
+        data.isDecorative = meta.isDecorative || data.isDecorative || false;
+      }
+      if (info.hasImageTitle &amp;&amp; isString(meta.title)) {
+        data.title = meta.title;
+      }
+      if (info.hasDimensions) {
+        if (isString(meta.width)) {
+          data.dimensions.width = meta.width;
+        }
+        if (isString(meta.height)) {
+          data.dimensions.height = meta.height;
+        }
+      }
+      if (isString(meta.class)) {
+        ListUtils.findEntry(info.classList, meta.class).each(function (entry) {
+          data.classes = entry.value;
+        });
+      }
+      if (info.hasImageCaption) {
+        if (isBoolean(meta.caption)) {
+          data.caption = meta.caption;
+        }
+      }
+      if (info.hasAdvTab) {
+        if (isString(meta.style)) {
+          data.style = meta.style;
+        }
+        if (isString(meta.vspace)) {
+          data.vspace = meta.vspace;
+        }
+        if (isString(meta.border)) {
+          data.border = meta.border;
+        }
+        if (isString(meta.hspace)) {
+          data.hspace = meta.hspace;
+        }
+        if (isString(meta.borderstyle)) {
+          data.borderstyle = meta.borderstyle;
+        }
+      }
+    };
+    var formFillFromMeta = function (info, api) {
+      var data = api.getData();
+      var meta = data.src.meta;
+      if (meta !== undefined) {
+        var newData = deepMerge({}, data);
+        formFillFromMeta2(info, newData, meta);
+        api.setData(newData);
+      }
+    };
+    var calculateImageSize = function (helpers, info, state, api) {
+      var data = api.getData();
+      var url = data.src.value;
+      var meta = data.src.meta || {};
+      if (!meta.width &amp;&amp; !meta.height &amp;&amp; info.hasDimensions) {
+        helpers.imageSize(url).then(function (size) {
+          if (state.open) {
+            api.setData({ dimensions: size });
+          }
+        });
+      }
+    };
+    var updateImagesDropdown = function (info, state, api) {
+      var data = api.getData();
+      var image = ListUtils.findEntry(info.imageList, data.src.value);
+      state.prevImage = image;
+      api.setData({
+        images: image.map(function (entry) {
+          return entry.value;
+        }).getOr(&apos;&apos;)
+      });
+    };
+    var changeSrc = function (helpers, info, state, api) {
+      addPrependUrl(info, api);
+      formFillFromMeta(info, api);
+      calculateImageSize(helpers, info, state, api);
+      updateImagesDropdown(info, state, api);
+    };
+    var changeImages = function (helpers, info, state, api) {
+      var data = api.getData();
+      var image = ListUtils.findEntry(info.imageList, data.images);
+      image.each(function (img) {
+        var updateAlt = data.alt === &apos;&apos; || state.prevImage.map(function (image) {
+          return image.text === data.alt;
+        }).getOr(false);
+        if (updateAlt) {
+          if (img.value === &apos;&apos;) {
+            api.setData({
+              src: img,
+              alt: state.prevAlt
+            });
+          } else {
+            api.setData({
+              src: img,
+              alt: img.text
+            });
+          }
+        } else {
+          api.setData({ src: img });
+        }
+      });
+      state.prevImage = image;
+      changeSrc(helpers, info, state, api);
+    };
+    var calcVSpace = function (css) {
+      var matchingTopBottom = css[&apos;margin-top&apos;] &amp;&amp; css[&apos;margin-bottom&apos;] &amp;&amp; css[&apos;margin-top&apos;] === css[&apos;margin-bottom&apos;];
+      return matchingTopBottom ? removePixelSuffix(String(css[&apos;margin-top&apos;])) : &apos;&apos;;
+    };
+    var calcHSpace = function (css) {
+      var matchingLeftRight = css[&apos;margin-right&apos;] &amp;&amp; css[&apos;margin-left&apos;] &amp;&amp; css[&apos;margin-right&apos;] === css[&apos;margin-left&apos;];
+      return matchingLeftRight ? removePixelSuffix(String(css[&apos;margin-right&apos;])) : &apos;&apos;;
+    };
+    var calcBorderWidth = function (css) {
+      return css[&apos;border-width&apos;] ? removePixelSuffix(String(css[&apos;border-width&apos;])) : &apos;&apos;;
+    };
+    var calcBorderStyle = function (css) {
+      return css[&apos;border-style&apos;] ? String(css[&apos;border-style&apos;]) : &apos;&apos;;
+    };
+    var calcStyle = function (parseStyle, serializeStyle, css) {
+      return serializeStyle(parseStyle(serializeStyle(css)));
+    };
+    var changeStyle2 = function (parseStyle, serializeStyle, data) {
+      var css = mergeMargins(parseStyle(data.style));
+      var dataCopy = deepMerge({}, data);
+      dataCopy.vspace = calcVSpace(css);
+      dataCopy.hspace = calcHSpace(css);
+      dataCopy.border = calcBorderWidth(css);
+      dataCopy.borderstyle = calcBorderStyle(css);
+      dataCopy.style = calcStyle(parseStyle, serializeStyle, css);
+      return dataCopy;
+    };
+    var changeStyle = function (helpers, api) {
+      var data = api.getData();
+      var newData = changeStyle2(helpers.parseStyle, helpers.serializeStyle, data);
+      api.setData(newData);
+    };
+    var changeAStyle = function (helpers, info, api) {
+      var data = deepMerge(fromImageData(info.image), api.getData());
+      var style = getStyleValue(helpers.normalizeCss, toImageData(data, false));
+      api.setData({ style: style });
+    };
+    var changeFileInput = function (helpers, info, state, api) {
+      var data = api.getData();
+      api.block(&apos;Uploading image&apos;);
+      head(data.fileinput).fold(function () {
+        api.unblock();
+      }, function (file) {
+        var blobUri = domGlobals.URL.createObjectURL(file);
+        var uploader = Uploader({
+          url: info.url,
+          basePath: info.basePath,
+          credentials: info.credentials,
+          handler: info.handler
+        });
+        var finalize = function () {
+          api.unblock();
+          domGlobals.URL.revokeObjectURL(blobUri);
+        };
+        var updateSrcAndSwitchTab = function (url) {
+          api.setData({
+            src: {
+              value: url,
+              meta: {}
+            }
+          });
+          api.showTab(&apos;general&apos;);
+          changeSrc(helpers, info, state, api);
+        };
+        blobToDataUri(file).then(function (dataUrl) {
+          var blobInfo = helpers.createBlobCache(file, blobUri, dataUrl);
+          if (info.automaticUploads) {
+            uploader.upload(blobInfo).then(function (url) {
+              updateSrcAndSwitchTab(url);
+              finalize();
+            }).catch(function (err) {
+              finalize();
+              helpers.alertErr(err);
+            });
+          } else {
+            helpers.addToBlobCache(blobInfo);
+            updateSrcAndSwitchTab(blobInfo.blobUri());
+            api.unblock();
+          }
+        });
+      });
+    };
+    var changeHandler = function (helpers, info, state) {
+      return function (api, evt) {
+        if (evt.name === &apos;src&apos;) {
+          changeSrc(helpers, info, state, api);
+        } else if (evt.name === &apos;images&apos;) {
+          changeImages(helpers, info, state, api);
+        } else if (evt.name === &apos;alt&apos;) {
+          state.prevAlt = api.getData().alt;
+        } else if (evt.name === &apos;style&apos;) {
+          changeStyle(helpers, api);
+        } else if (evt.name === &apos;vspace&apos; || evt.name === &apos;hspace&apos; || evt.name === &apos;border&apos; || evt.name === &apos;borderstyle&apos;) {
+          changeAStyle(helpers, info, api);
+        } else if (evt.name === &apos;fileinput&apos;) {
+          changeFileInput(helpers, info, state, api);
+        } else if (evt.name === &apos;isDecorative&apos;) {
+          if (api.getData().isDecorative) {
+            api.disable(&apos;alt&apos;);
+          } else {
+            api.enable(&apos;alt&apos;);
+          }
+        }
+      };
+    };
+    var closeHandler = function (state) {
+      return function () {
+        state.open = false;
+      };
+    };
+    var makeDialogBody = function (info) {
+      if (info.hasAdvTab || info.hasUploadUrl || info.hasUploadHandler) {
+        var tabPanel = {
+          type: &apos;tabpanel&apos;,
+          tabs: flatten([
+            [MainTab.makeTab(info)],
+            info.hasAdvTab ? [AdvTab.makeTab(info)] : [],
+            info.hasUploadTab &amp;&amp; (info.hasUploadUrl || info.hasUploadHandler) ? [UploadTab.makeTab(info)] : []
+          ])
+        };
+        return tabPanel;
+      } else {
+        var panel = {
+          type: &apos;panel&apos;,
+          items: MainTab.makeItems(info)
+        };
+        return panel;
+      }
+    };
+    var makeDialog = function (helpers) {
+      return function (info) {
+        var state = createState(info);
+        return {
+          title: &apos;Insert/Edit Image&apos;,
+          size: &apos;normal&apos;,
+          body: makeDialogBody(info),
+          buttons: [
+            {
+              type: &apos;cancel&apos;,
+              name: &apos;cancel&apos;,
+              text: &apos;Cancel&apos;
+            },
+            {
+              type: &apos;submit&apos;,
+              name: &apos;save&apos;,
+              text: &apos;Save&apos;,
+              primary: true
+            }
+          ],
+          initialData: fromImageData(info.image),
+          onSubmit: helpers.onSubmit(info),
+          onChange: changeHandler(helpers, info, state),
+          onClose: closeHandler(state)
+        };
+      };
+    };
+    var submitHandler = function (editor) {
+      return function (info) {
+        return function (api) {
+          var data = deepMerge(fromImageData(info.image), api.getData());
+          editor.execCommand(&apos;mceUpdateImage&apos;, false, toImageData(data, info.hasAccessibilityOptions));
+          editor.editorUpload.uploadImagesAuto();
+          api.close();
+        };
+      };
+    };
+    var imageSize = function (editor) {
+      return function (url) {
+        return getImageSize(editor.documentBaseURI.toAbsolute(url)).then(function (dimensions) {
+          return {
+            width: String(dimensions.width),
+            height: String(dimensions.height)
+          };
+        });
+      };
+    };
+    var createBlobCache = function (editor) {
+      return function (file, blobUri, dataUrl) {
+        return editor.editorUpload.blobCache.create({
+          blob: file,
+          blobUri: blobUri,
+          name: file.name ? file.name.replace(/\.[^\.]+$/, &apos;&apos;) : null,
+          base64: dataUrl.split(&apos;,&apos;)[1]
+        });
+      };
+    };
+    var addToBlobCache = function (editor) {
+      return function (blobInfo) {
+        editor.editorUpload.blobCache.add(blobInfo);
+      };
+    };
+    var alertErr = function (editor) {
+      return function (message) {
+        editor.windowManager.alert(message);
+      };
+    };
+    var normalizeCss$1 = function (editor) {
+      return function (cssText) {
+        return normalizeCss(editor, cssText);
+      };
+    };
+    var parseStyle = function (editor) {
+      return function (cssText) {
+        return editor.dom.parseStyle(cssText);
+      };
+    };
+    var serializeStyle = function (editor) {
+      return function (stylesArg, name) {
+        return editor.dom.serializeStyle(stylesArg, name);
+      };
+    };
+    var Dialog = function (editor) {
+      var helpers = {
+        onSubmit: submitHandler(editor),
+        imageSize: imageSize(editor),
+        addToBlobCache: addToBlobCache(editor),
+        createBlobCache: createBlobCache(editor),
+        alertErr: alertErr(editor),
+        normalizeCss: normalizeCss$1(editor),
+        parseStyle: parseStyle(editor),
+        serializeStyle: serializeStyle(editor)
+      };
+      var open = function () {
+        return collect(editor).then(makeDialog(helpers)).then(function (spec) {
+          return editor.windowManager.open(spec);
+        });
+      };
+      var openLater = function () {
+        open();
+      };
+      return {
+        open: open,
+        openLater: openLater
+      };
+    };
+
+    var register = function (editor) {
+      editor.addCommand(&apos;mceImage&apos;, Dialog(editor).openLater);
+      editor.addCommand(&apos;mceUpdateImage&apos;, function (_ui, data) {
+        editor.undoManager.transact(function () {
+          return insertOrUpdateImage(editor, data);
+        });
+      });
+    };
+
+    var hasImageClass = function (node) {
+      var className = node.attr(&apos;class&apos;);
+      return className &amp;&amp; /\bimage\b/.test(className);
+    };
+    var toggleContentEditableState = function (state) {
+      return function (nodes) {
+        var i = nodes.length;
+        var toggleContentEditable = function (node) {
+          node.attr(&apos;contenteditable&apos;, state ? &apos;true&apos; : null);
+        };
+        while (i--) {
+          var node = nodes[i];
+          if (hasImageClass(node)) {
+            node.attr(&apos;contenteditable&apos;, state ? &apos;false&apos; : null);
+            global$4.each(node.getAll(&apos;figcaption&apos;), toggleContentEditable);
+          }
+        }
+      };
+    };
+    var setup = function (editor) {
+      editor.on(&apos;PreInit&apos;, function () {
+        editor.parser.addNodeFilter(&apos;figure&apos;, toggleContentEditableState(true));
+        editor.serializer.addNodeFilter(&apos;figure&apos;, toggleContentEditableState(false));
+      });
+    };
+
+    var register$1 = function (editor) {
+      editor.ui.registry.addToggleButton(&apos;image&apos;, {
+        icon: &apos;image&apos;,
+        tooltip: &apos;Insert/edit image&apos;,
+        onAction: Dialog(editor).openLater,
+        onSetup: function (buttonApi) {
+          return editor.selection.selectorChangedWithUnbind(&apos;img:not([data-mce-object],[data-mce-placeholder]),figure.image&apos;, buttonApi.setActive).unbind;
+        }
+      });
+      editor.ui.registry.addMenuItem(&apos;image&apos;, {
+        icon: &apos;image&apos;,
+        text: &apos;Image...&apos;,
+        onAction: Dialog(editor).openLater
+      });
+      editor.ui.registry.addContextMenu(&apos;image&apos;, {
+        update: function (element) {
+          return isFigure(element) || isImage(element) &amp;&amp; !isPlaceholderImage(element) ? [&apos;image&apos;] : [];
+        }
+      });
+    };
+
+    function Plugin () {
+      global.add(&apos;image&apos;, function (editor) {
+        setup(editor);
+        register$1(editor);
+        register(editor);
+      });
+    }
+
+    Plugin();
+
+}(window));
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

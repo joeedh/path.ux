@@ -554,7 +554,7 @@ export class set {
       input = new String(input);
     }
 
-    if (input != undefined) {
+    if (input !== undefined) {
       if (Symbol.iterator in input) {
         for (var item of input) {
           this.add(item);
@@ -643,7 +643,7 @@ export class set {
       if (item === EmptySlot)
         continue;
 
-      thisvar != undefined ? func.call(thisvar, item) : func(item);
+      thisvar !== undefined ? func.call(thisvar, item) : func(item);
     }
   }
 }
@@ -1209,3 +1209,87 @@ export class ImageReader {
     });
   }
 };
+
+let digestcache;
+
+//NOT CRYPTOGRAPHIC
+export class HashDigest {
+  constructor() {
+    this.i = 0;
+    this.hash = 0;
+  }
+
+  static cachedDigest() {
+    return digestcache.next().reset();
+  }
+
+  reset() {
+    this.i = 0;
+    this.hash = 0;
+
+    return this;
+  }
+
+  get() {
+    return this.hash;
+  }
+
+  add(v) {
+    //glibc linear congruel generator
+    this.i = (this.i*1103515245 + 12345) & ((1<<30)-1);
+    //according to wikipedia only the top 16 bits are random
+    //this.i = this.i>>16;
+
+    if (v < 5.0 && v > -5.0) {
+      v *= 1024;
+    } else if (v < 15 && v >= -15) {
+      v *= 512;
+    } else if (v < 30 && v >= -30) {
+      v *= 256;
+    }
+
+    this.hash ^= v^this.i;
+  }
+}
+
+window._test_hash2 = () => {
+  let h = new HashDigest();
+
+  let tests = [
+    [0, 0, 0, 0],
+    [0, 0, 0],
+    [0, 0],
+    [0],
+    [1],
+    [2],
+    [3],
+    [strhash("yay")],
+    [strhash("yay"), strhash("yay")],
+    [strhash("yay"), strhash("yay"), strhash("yay")]
+  ]
+
+  for (let test of tests) {
+    let h = new HashDigest();
+    for (let f of test) {
+      h.add(f);
+    }
+
+    window.console.log(h.get());
+  }
+  for (let i=0; i<50; i++) {
+    h.add(0);
+    //window.console.log(h.i/((1<<30)-1), h.hash);
+  }
+}
+
+digestcache = cachering.fromConstructor(HashDigest, 512);
+
+window._HashDigest = HashDigest;
+
+export function hashjoin(hash, val) {
+  let sum = 0;
+  let mul = (1<<19)-1, off = (1<<27)-1;
+  let i = 0;
+
+  h = (h*mul + off + i*mul*0.25) & mul;
+}
