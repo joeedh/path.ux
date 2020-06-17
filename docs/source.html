@@ -266,6 +266,7 @@
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#util">util</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/ScreenOverdraw.js~Overdraw.html">Overdraw</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/events.js~EventDispatcher.html">EventDispatcher</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/events.js~EventHandler.html">EventHandler</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/expr.js~Node.html">Node</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/graphpack.js~PackNode.html">PackNode</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/graphpack.js~PackNodeVertex.html">PackNodeVertex</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/scripts/util/math.js~Mat4Stack.html">Mat4Stack</a></span></span></li>
@@ -307,6 +308,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-copyMouseEvent">copyMouseEvent</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-isModalHead">isModalHead</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-pushModal">pushModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseExpr">parseExpr</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-graphGetIslands">graphGetIslands</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-graphPack">graphPack</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadFile">loadFile</a></span></span></li>
@@ -498,7 +500,7 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1>Source <img data-ice="coverageBadge" src="./badge.svg"><span data-ice="totalCoverageCount" class="total-coverage-count">82/3743</span></h1>
+<div class="content" data-ice="content"><h1>Source <img data-ice="coverageBadge" src="./badge.svg"><span data-ice="totalCoverageCount" class="total-coverage-count">82/3760</span></h1>
 
 <table class="files-summary" data-ice="files" data-use-coverage="true">
   <thead>
@@ -634,9 +636,9 @@
 <span><a href="class/scripts/core/ui.js~RowFrame.html">RowFrame</a></span>
 <span><a href="variable/index.html#static-variable-Vector2">Vector2</a></span></td>
       <td class="coverage"><span data-ice="coverage">5 %</span><span data-ice="coverageCount" class="coverage-count">6/113</span></td>
-      <td style="display: none;" data-ice="size">41242 byte</td>
+      <td style="display: none;" data-ice="size">41248 byte</td>
       <td style="display: none;" data-ice="lines">1732</td>
-      <td style="display: none;" data-ice="updated">2020-06-03 11:25:05 (UTC)</td>
+      <td style="display: none;" data-ice="updated">2020-06-05 22:52:36 (UTC)</td>
     </tr>
 <tr data-ice="file">
       <td data-ice="filePath"><span><a href="file/scripts/core/ui_base.js.html#errorLines=1,100,1011,1018,1037,105,1061,1065,1073,110,1121,113,1130,1134,1138,114,1144,115,116,1164,117,119,122,1317,133,1398,1402,1406,1418,1428,1432,146,1480,1481,1524,1527,1530,1534,1544,1550,1559,1589,1595,1600,1642,1646,165,1654,1675,1680,1722,174,175,1763,1771,1784,1802,1816,1830,1893,1901,1905,1909,1917,1938,194,1954,1977,2002,2007,201,206,2077,2099,211,2181,2188,2193,222,2222,2232,2245,2276,2332,2372,2374,241,2430,265,270,277,292,307,317,323,327,33,337,356,357,359,361,365,383,406,416,418,43,436,46,486,487,490,494,495,499,50,502,519,521,523,542,545,547,548,550,562,563,564,565,566,568,577,58,625,626,638,651,655,660,663,677,689,737,759,763,768,785,792,80,81,819,825,831,835,836,842,883,89,918,939,949,999">scripts/core/ui_base.js</a></span></td>
@@ -695,7 +697,7 @@
       <td style="display: none;" data-ice="updated">2020-05-02 07:16:24 (UTC)</td>
     </tr>
 <tr data-ice="file">
-      <td data-ice="filePath"><span><a href="file/scripts/core/units.js.html#errorLines=101,105,109,116,117,125,138,14,142,146,152,154,155,163,189,193,197,216,217,225,233,237,241,247,248,25,256,269,27,273,277,28,283,284,292,303,307,311,318,321,328,329,330,331,332,334,343,379,38,43,51,55,68,72,76,8,81,82,90">scripts/core/units.js</a></span></td>
+      <td data-ice="filePath"><span><a href="file/scripts/core/units.js.html#errorLines=105,109,113,120,121,129,14,142,146,150,156,158,159,167,193,197,201,220,221,229,237,241,245,251,252,260,273,277,281,287,288,29,296,307,31,311,315,32,322,325,332,333,334,335,336,338,347,383,42,47,55,59,72,76,8,80,85,86,94">scripts/core/units.js</a></span></td>
       <td data-ice="identifier" class="identifiers"><span><a href="class/scripts/core/units.js~DegreeUnit.html">DegreeUnit</a></span>
 <span><a href="class/scripts/core/units.js~FootUnit.html">FootUnit</a></span>
 <span><a href="class/scripts/core/units.js~InchUnit.html">InchUnit</a></span>
@@ -710,9 +712,9 @@
 <span><a href="function/index.html#static-function-setBaseUnit">setBaseUnit</a></span>
 <span><a href="function/index.html#static-function-setMetric">setMetric</a></span></td>
       <td class="coverage"><span data-ice="coverage">1 %</span><span data-ice="coverageCount" class="coverage-count">1/60</span></td>
-      <td style="display: none;" data-ice="size">9046 byte</td>
-      <td style="display: none;" data-ice="lines">415</td>
-      <td style="display: none;" data-ice="updated">2020-05-03 07:01:15 (UTC)</td>
+      <td style="display: none;" data-ice="size">9140 byte</td>
+      <td style="display: none;" data-ice="lines">419</td>
+      <td style="display: none;" data-ice="updated">2020-06-04 07:00:31 (UTC)</td>
     </tr>
 <tr data-ice="file">
       <td data-ice="filePath"><span><a href="file/scripts/curve/curve1d.js.html#errorLines=102,119,123,124,131,14,146,169,184,199,20,203,236,240,244,248,252,256,260,319,35,46,47,50,52,53,65,69,88,94,98">scripts/curve/curve1d.js</a></span></td>
@@ -1827,6 +1829,15 @@
       <td style="display: none;" data-ice="updated">2020-05-05 03:13:23 (UTC)</td>
     </tr>
 <tr data-ice="file">
+      <td data-ice="filePath"><span><a href="file/scripts/util/expr.js.html#errorLines=101,110,111,113,114,117,122,131,141,155,160,165,172,193,23,4,6,63,68,70">scripts/util/expr.js</a></span></td>
+      <td data-ice="identifier" class="identifiers"><span><a href="class/scripts/util/expr.js~Node.html">Node</a></span>
+<span><a href="function/index.html#static-function-parseExpr">parseExpr</a></span></td>
+      <td class="coverage"><span data-ice="coverage">0 %</span><span data-ice="coverageCount" class="coverage-count">0/20</span></td>
+      <td style="display: none;" data-ice="size">7297 byte</td>
+      <td style="display: none;" data-ice="lines">390</td>
+      <td style="display: none;" data-ice="updated">2020-06-03 02:12:18 (UTC)</td>
+    </tr>
+<tr data-ice="file">
       <td data-ice="filePath"><span><a href="file/scripts/util/graphpack.js.html#errorLines=109,11,12,140,15,16,17,18,21,26,31,32,33,34,35,36,37,38,41,46,84,9,99">scripts/util/graphpack.js</a></span></td>
       <td data-ice="identifier" class="identifiers"><span><a href="class/scripts/util/graphpack.js~PackNode.html">PackNode</a></span>
 <span><a href="class/scripts/util/graphpack.js~PackNodeVertex.html">PackNodeVertex</a></span>
@@ -1944,9 +1955,9 @@
       <td data-ice="filePath"><span><a href="file/scripts/util/nstructjs.js.html">scripts/util/nstructjs.js</a></span></td>
       <td data-ice="identifier" class="identifiers">-</td>
       <td class="coverage"><span data-ice="coverage">-</span></td>
-      <td style="display: none;" data-ice="size">71224 byte</td>
-      <td style="display: none;" data-ice="lines">2845</td>
-      <td style="display: none;" data-ice="updated">2020-05-06 11:18:03 (UTC)</td>
+      <td style="display: none;" data-ice="size">86145 byte</td>
+      <td style="display: none;" data-ice="lines">3473</td>
+      <td style="display: none;" data-ice="updated">2020-06-03 08:02:23 (UTC)</td>
     </tr>
 <tr data-ice="file">
       <td data-ice="filePath"><span><a href="file/scripts/util/parseutil.js.html#errorLines=1,105,108,119,12,130,140,144,2,208,209,210,211,212,215,231,235,25,26,269,27,277,28,285,289,29,297,3,310,314,328,33,4,41,42,43,44,45,46,47,48,49,5,55,56,57,6,61,69,7,75,8,85,9,94">scripts/util/parseutil.js</a></span></td>
@@ -1961,12 +1972,12 @@
       <td style="display: none;" data-ice="updated">2020-05-06 11:18:03 (UTC)</td>
     </tr>
 <tr data-ice="file">
-      <td data-ice="filePath"><span><a href="file/scripts/util/polyfill.js.html#errorLines=274,294,300,304,380,388">scripts/util/polyfill.js</a></span></td>
+      <td data-ice="filePath"><span><a href="file/scripts/util/polyfill.js.html#errorLines=274,382,390">scripts/util/polyfill.js</a></span></td>
       <td data-ice="identifier" class="identifiers">-</td>
-      <td class="coverage"><span data-ice="coverage">0 %</span><span data-ice="coverageCount" class="coverage-count">0/6</span></td>
-      <td style="display: none;" data-ice="size">9246 byte</td>
-      <td style="display: none;" data-ice="lines">395</td>
-      <td style="display: none;" data-ice="updated">2020-05-03 07:01:15 (UTC)</td>
+      <td class="coverage"><span data-ice="coverage">0 %</span><span data-ice="coverageCount" class="coverage-count">0/3</span></td>
+      <td style="display: none;" data-ice="size">9256 byte</td>
+      <td style="display: none;" data-ice="lines">397</td>
+      <td style="display: none;" data-ice="updated">2020-06-04 07:00:31 (UTC)</td>
     </tr>
 <tr data-ice="file">
       <td data-ice="filePath"><span><a href="file/scripts/util/simple_events.js.html#errorLines=103,111,112,113,114,115,117,123,125,128,146,156,200,204,216,221,235,253,261,295,299,321,494,5,522,527,583,588,589,591,594,595,596,597,6,600,608,632,633,641,686,690,8">scripts/util/simple_events.js</a></span></td>

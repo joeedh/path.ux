@@ -792,6 +792,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/util/expr.js~node",
+    "class/scripts/util/expr.js~Node.html",
+    "<span>Node</span> <span class=\"search-result-import-path\">./scripts/util/expr.js</span>",
+    "class"
+  ],
+  [
     "./scripts/widgets/ui_noteframe.js~note",
     "class/scripts/widgets/ui_noteframe.js~Note.html",
     "<span>Note</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_noteframe.js</span>",
@@ -2296,6 +2302,12 @@ window.esdocSearchIndex = [
     "variable/index.html#static-variable-nstructjs",
     "<span>nstructjs</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/util/expr.js~parseexpr",
+    "function/index.html#static-function-parseExpr",
+    "<span>parseExpr</span> <span class=\"search-result-import-path\">./scripts/util/expr.js</span>",
+    "function"
   ],
   [
     "./scripts/toolsys/toolpath.js~parsetoolpath",
@@ -12424,6 +12436,78 @@ window.esdocSearchIndex = [
     "class/scripts/util/events.js~EventHandler.html#instance-method-pushModal",
     "scripts/util/events.js~EventHandler#pushModal",
     "method"
+  ],
+  [
+    "scripts/util/expr.js",
+    "file/scripts/util/expr.js.html",
+    "scripts/util/expr.js",
+    "file"
+  ],
+  [
+    "scripts/util/expr.js~node#[.indexof(n)]",
+    "class/scripts/util/expr.js~Node.html#instance-member-[.indexOf(n)]",
+    "scripts/util/expr.js~Node#[.indexOf(n)]",
+    "member"
+  ],
+  [
+    "scripts/util/expr.js~node#[i]",
+    "class/scripts/util/expr.js~Node.html#instance-member-[i]",
+    "scripts/util/expr.js~Node#[i]",
+    "member"
+  ],
+  [
+    "scripts/util/expr.js~node#[starti]",
+    "class/scripts/util/expr.js~Node.html#instance-member-[starti]",
+    "scripts/util/expr.js~Node#[starti]",
+    "member"
+  ],
+  [
+    "scripts/util/expr.js~node#constructor",
+    "class/scripts/util/expr.js~Node.html#instance-constructor-constructor",
+    "scripts/util/expr.js~Node#constructor",
+    "method"
+  ],
+  [
+    "scripts/util/expr.js~node#insert",
+    "class/scripts/util/expr.js~Node.html#instance-method-insert",
+    "scripts/util/expr.js~Node#insert",
+    "method"
+  ],
+  [
+    "scripts/util/expr.js~node#parent",
+    "class/scripts/util/expr.js~Node.html#instance-member-parent",
+    "scripts/util/expr.js~Node#parent",
+    "member"
+  ],
+  [
+    "scripts/util/expr.js~node#push",
+    "class/scripts/util/expr.js~Node.html#instance-method-push",
+    "scripts/util/expr.js~Node#push",
+    "method"
+  ],
+  [
+    "scripts/util/expr.js~node#remove",
+    "class/scripts/util/expr.js~Node.html#instance-method-remove",
+    "scripts/util/expr.js~Node#remove",
+    "method"
+  ],
+  [
+    "scripts/util/expr.js~node#replace",
+    "class/scripts/util/expr.js~Node.html#instance-method-replace",
+    "scripts/util/expr.js~Node#replace",
+    "method"
+  ],
+  [
+    "scripts/util/expr.js~node#tostring",
+    "class/scripts/util/expr.js~Node.html#instance-method-toString",
+    "scripts/util/expr.js~Node#toString",
+    "method"
+  ],
+  [
+    "scripts/util/expr.js~node#type",
+    "class/scripts/util/expr.js~Node.html#instance-member-type",
+    "scripts/util/expr.js~Node#type",
+    "member"
   ],
   [
     "scripts/util/graphpack.js",
