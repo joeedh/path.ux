@@ -291,6 +291,10 @@ window.list = function list(iter) {
   return ret;
 };
 
+//XXX surely browser vendors have fixed this by now. . .
+/*Override array iterator to not allocate too much*/
+
+/*
 function ArrayIter(array) {
   this.array = array;
   this.i = 0;
@@ -312,10 +316,8 @@ ArrayIter.prototype.next = function() {
   
   ret.value = this.array[this.i++];
   return ret;
-};
+};//*/
 
-//XXX surely browser vendors have fixed this by now. . .
-/*Override array iterator to not allocate too much*/
 
 //Array.prototype[Symbol.iterator] = function() {
 //  return new ArrayIter(this);

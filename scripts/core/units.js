@@ -13,11 +13,15 @@ function normString(s) {
 
 function myToFixed(f, decimals) {
   f = f.toFixed(decimals);
-  while (f.endsWith("0") || f.endsWith(".")) {
+  while (f.endsWith("0") && f.search(/\./) >= 0) {
     f = f.slice(0, f.length-1);
   }
 
-  if (f.length == 0)
+  if (f.endsWith(".")) {
+    f = f.slice(0, f.length-1);
+  }
+
+  if (f.length === 0)
     f = "0";
 
   return f.trim();
