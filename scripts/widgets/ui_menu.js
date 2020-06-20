@@ -447,8 +447,8 @@ export class Menu extends UIBase {
       hotkey_span.style["font"] = ui_base.getFont(this, undefined, "HotkeyText");
       hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
 
-      hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
-      //hotkey_span.style["width"] = "100%";
+      //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
+      hotkey_span.style["width"] = "min-content";
 
       //hotkey_span.style["background-color"] = "rgba(0,0,0,0)";
 
