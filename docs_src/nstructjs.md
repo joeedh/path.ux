@@ -31,8 +31,8 @@ my_module.SomeClass {
   data2 : array;
   obj   : int | this.obj.id;
 }
-nstructjs.manager.add_class(SomeClass);
 `;
+nstructjs.manager.add_class(SomeClass);
 ```
 
 ## Control How Fields Are Saved

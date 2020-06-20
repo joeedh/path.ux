@@ -39,7 +39,7 @@ classes in toolprop.js).  The included implementation can be found in
 
 Path.ux is roughly based on [Blender's](http://www.blender.org) architecture.
 
-[Main page](manual/controller.html)
+[Main page](controller.html)
 
 The Blender 2.5 project refactored the internal architecture into a rough MVC pattern.  The model is the core code, the view is the UI, and the controller is the glue between them.
 

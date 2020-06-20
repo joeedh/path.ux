@@ -915,7 +915,7 @@ export class Menu extends UIBase {
     if (hotkey) {
       dom.hotkey = hotkey;
       g.font = ui_base.getFont(this, undefined, &quot;HotkeyText&quot;);
-      hwid = Math.ceil(g.measureText(hotkey).width);
+      hwid = Math.ceil(g.measureText(hotkey).width / UIBase.getDPI());
       twid += hwid + 8;
     }
 
@@ -940,24 +940,30 @@ export class Menu extends UIBase {
     if (hotkey) {
       let hotkey_span = document.createElement(&quot;span&quot;);
       hotkey_span.innerText = hotkey;
-      hotkey_span.style[&quot;margin-left&quot;] = &quot;0px&quot;;
-      hotkey_span.style[&quot;margin-right&quot;] = &quot;0px&quot;;
-      hotkey_span.style[&quot;margin&quot;] = &quot;0px&quot;;
-      hotkey_span.style[&quot;padding&quot;] = &quot;0px&quot;;
+      hotkey_span.style[&quot;display&quot;] = &quot;inline-flex&quot;;
 
-      let al = &quot;right&quot;;
+      hotkey_span.style[&quot;margin&quot;] = &quot;0px&quot;;
+      hotkey_span.style[&quot;margin-left&quot;] = &quot;auto&quot;;
+      hotkey_span.style[&quot;margin-right&quot;] = &quot;0px&quot;;
+      hotkey_span.style[&quot;padding&quot;] = &quot;0px&quot;;
 
       hotkey_span.style[&quot;font&quot;] = ui_base.getFont(this, undefined, &quot;HotkeyText&quot;);
       hotkey_span.style[&quot;color&quot;] = this.getDefault(&quot;HotkeyTextColor&quot;);
 
       //hotkey_span.style[&quot;width&quot;] = ~~((hwid + 7)) + &quot;px&quot;;
-      hotkey_span.style[&quot;width&quot;] = &quot;100%&quot;;
+      hotkey_span.style[&quot;width&quot;] = &quot;max-content&quot;;
 
-      hotkey_span.style[&quot;text-align&quot;] = al;
-      hotkey_span.style[&quot;flex-align&quot;] = al;
-      //hotkey_span.style[&quot;display&quot;] = &quot;inline&quot;;
-      hotkey_span.style[&quot;float&quot;] = &quot;right&quot;;
+      //hotkey_span.style[&quot;background-color&quot;] = &quot;rgba(0,0,0,0)&quot;;
+
+      hotkey_span.style[&quot;text-align&quot;] = &quot;right&quot;;
+      hotkey_span.style[&quot;justify-content&quot;] = &quot;right&quot;;
       hotkey_span[&quot;flex-wrap&quot;] = &quot;nowrap&quot;;
+      hotkey_span[&quot;text-wrap&quot;] = &quot;nowrap&quot;;
+
+      //hotkey_span.style[&quot;border&quot;] = &quot;1px solid red&quot;;
+
+      //hotkey_span.style[&quot;display&quot;] = &quot;inline&quot;;
+      //hotkey_span.style[&quot;float&quot;] = &quot;right&quot;;
 
       dom.appendChild(hotkey_span);
     }
@@ -1233,8 +1239,6 @@ export class DropBox extends Button {
 
   set searchMenuMode(v) {
     this._searchMenuMode = v;
-
-    console.warn(&quot;searchMenuMode was set&quot;, this);
   }
 
 
@@ -1886,7 +1890,7 @@ export function createMenu(ctx, title, templ) {
     if (item !== undefined &amp;&amp; item instanceof Menu) {
       menu.addItem(item);
     } else if (typeof item == &quot;string&quot;) {
-      let def;
+      let def, hotkey;
       try {
         def = ctx.api.getToolDef(item);
       } catch (error) {
@@ -1895,7 +1899,21 @@ export function createMenu(ctx, title, templ) {
       }
 
       //3Extra(text, id=undefined, hotkey, icon=-1, add=true) {
-      menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
+      if (!def.hotkey) {
+        try {
+          hotkey = ctx.api.getToolPathHotkey(ctx, item);
+        } catch (error) {
+          util.print_stack(error);
+          console.warn(&quot;error getting hotkey for tool &quot; + item);
+          hotkey = undefined;
+        }
+      } else {
+        hotkey = def.hotkey;
+      }
+
+      console.warn(&quot;HOTKEY&quot;, hotkey, def.hotkey);
+
+      menu.addItemExtra(def.uiname, id, hotkey, def.icon);
 
       cbs[id] = (function (toolpath) {
         return function () {

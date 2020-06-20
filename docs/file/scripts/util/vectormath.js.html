@@ -897,7 +897,8 @@ export class BaseVector extends Array {
     var f;
     var vectorDistance = &quot;f = function vectorDistance(b) {\n&quot;;
     for (var i=0; i&lt;vectorsize; i++) {
-      vectorDistance += &quot;  let d&quot;+i+&quot; = this[&quot;+i+&quot;]-b[&quot;+i+&quot;];\n\n  &quot;;
+      vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+      //vectorDistance += &quot;  let d&quot;+i+&quot; = this[&quot;+i+&quot;]-(b[&quot;+i+&quot;]||0);\n\n  &quot;;
     }
     
     vectorDistance += &quot;  return Math.sqrt(&quot;
