@@ -132,31 +132,31 @@
     "filePath": "scripts/core/units.js",
     "lines": [
       {
-        "lineNumber": 388,
+        "lineNumber": 392,
         "line": "/**\r"
       },
       {
-        "lineNumber": 389,
+        "lineNumber": 393,
         "line": " *\r"
       },
       {
-        "lineNumber": 390,
+        "lineNumber": 394,
         "line": " * @param value Note: is not converted to internal unit\r"
       },
       {
-        "lineNumber": 391,
+        "lineNumber": 395,
         "line": " * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name\r"
       },
       {
-        "lineNumber": 392,
+        "lineNumber": 396,
         "line": " * @returns {*}\r"
       },
       {
-        "lineNumber": 393,
+        "lineNumber": 397,
         "line": " */\r"
       },
       {
-        "lineNumber": 394,
+        "lineNumber": 398,
         "line": "export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {\r"
       }
     ],

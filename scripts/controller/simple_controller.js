@@ -1420,7 +1420,7 @@ export class DataAPI extends ModelInterface {
       }
     }
 
-    if (screen.sareas.length == 0) {
+    if (screen.sareas.length === 0) {
       return searchKeymap(screen.keymap);
     }
 
@@ -1435,6 +1435,19 @@ export class DataAPI extends ModelInterface {
 
       if (ret !== undefined) {
         return ret;
+      }
+    }
+
+    //search all other areas
+    for (let sarea of screen.sareas) {
+      if (!sarea.area) continue;
+
+      for (let keymap of sarea.area.getKeyMaps()) {
+        let ret = searchKeymap(keymap);
+
+        if (ret) {
+          return ret;
+        }
       }
     }
 

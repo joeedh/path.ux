@@ -394,7 +394,8 @@ export class BaseVector extends Array {
     var f;
     var vectorDistance = "f = function vectorDistance(b) {\n";
     for (var i=0; i<vectorsize; i++) {
-      vectorDistance += "  let d"+i+" = this["+i+"]-b["+i+"];\n\n  ";
+      vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+      //vectorDistance += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
     }
     
     vectorDistance += "  return Math.sqrt("
