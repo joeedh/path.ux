@@ -454,11 +454,13 @@ export class Menu extends UIBase {
 
       hotkey_span.style["text-align"] = "right";
       hotkey_span.style["justify-content"] = "right";
+      hotkey_span["flex-wrap"] = "nowrap";
+      hotkey_span["text-wrap"] = "nowrap";
+
       //hotkey_span.style["border"] = "1px solid red";
 
       //hotkey_span.style["display"] = "inline";
       //hotkey_span.style["float"] = "right";
-      hotkey_span["flex-wrap"] = "nowrap";
 
       dom.appendChild(hotkey_span);
     }
