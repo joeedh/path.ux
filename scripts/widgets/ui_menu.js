@@ -736,8 +736,6 @@ export class DropBox extends Button {
 
   set searchMenuMode(v) {
     this._searchMenuMode = v;
-
-    console.warn("searchMenuMode was set", this);
   }
 
 
