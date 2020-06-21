@@ -134,9 +134,11 @@ export class DrawOp extends ToolOp {
         size2 = Math.max(size2, 1);
 
         let steps = Math.floor(len / size2);
-        steps = Math.min(Math.max(steps, 2), 1024); //1024*32);
 
-        let dt = 1.0 / (steps - 1);
+        //steps = Math.min(Math.max(steps, 2), 1024); //1024*32);
+
+        let dt = 1.0 / (steps-1);
+
         for (let j=1, t=dt; j<steps; j++, t += dt) {
           dst.load(lastdstate).interp(ds, t);
           co2.load(lastpoint).interp(co, t);

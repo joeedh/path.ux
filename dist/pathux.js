@@ -6622,7 +6622,8 @@ class BaseVector extends Array {
     var f;
     var vectorDistance = "f = function vectorDistance(b) {\n";
     for (var i=0; i<vectorsize; i++) {
-      vectorDistance += "  let d"+i+" = this["+i+"]-b["+i+"];\n\n  ";
+      vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+      //vectorDistance += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
     }
     
     vectorDistance += "  return Math.sqrt(";
@@ -8409,9 +8410,10 @@ function aabb_overlap_area(pos1, size1, pos2, size2) {
     let b1 = pos1[i] + size1[i];
     let b2 = pos2[i] + size2[i];
 
-    if (b1 >= a2 && a1 <= b2) {
-      let r = a2 - b1;
-      
+    if (b1 >= a2 && b2 >= a1) {
+      let r = Math.abs(a2 - b1);
+      r = Math.min(r, Math.abs(a1 - b2));
+
       if (i) {
         r2 = r;
       } else {
@@ -19887,7 +19889,7 @@ class DataAPI extends ModelInterface {
       }
     }
 
-    if (screen.sareas.length == 0) {
+    if (screen.sareas.length === 0) {
       return searchKeymap(screen.keymap);
     }
 
@@ -19902,6 +19904,19 @@ class DataAPI extends ModelInterface {
 
       if (ret !== undefined) {
         return ret;
+      }
+    }
+
+    //search all other areas
+    for (let sarea of screen.sareas) {
+      if (!sarea.area) continue;
+
+      for (let keymap of sarea.area.getKeyMaps()) {
+        let ret = searchKeymap(keymap);
+
+        if (ret) {
+          return ret;
+        }
       }
     }
 
@@ -25067,7 +25082,7 @@ class Menu extends UIBase$5 {
     if (hotkey) {
       dom.hotkey = hotkey;
       g.font = getFont(this, undefined, "HotkeyText");
-      hwid = Math.ceil(g.measureText(hotkey).width);
+      hwid = Math.ceil(g.measureText(hotkey).width / UIBase$5.getDPI());
       twid += hwid + 8;
     }
 
@@ -25092,24 +25107,30 @@ class Menu extends UIBase$5 {
     if (hotkey) {
       let hotkey_span = document.createElement("span");
       hotkey_span.innerText = hotkey;
-      hotkey_span.style["margin-left"] = "0px";
-      hotkey_span.style["margin-right"] = "0px";
-      hotkey_span.style["margin"] = "0px";
-      hotkey_span.style["padding"] = "0px";
+      hotkey_span.style["display"] = "inline-flex";
 
-      let al = "right";
+      hotkey_span.style["margin"] = "0px";
+      hotkey_span.style["margin-left"] = "auto";
+      hotkey_span.style["margin-right"] = "0px";
+      hotkey_span.style["padding"] = "0px";
 
       hotkey_span.style["font"] = getFont(this, undefined, "HotkeyText");
       hotkey_span.style["color"] = this.getDefault("HotkeyTextColor");
 
       //hotkey_span.style["width"] = ~~((hwid + 7)) + "px";
-      hotkey_span.style["width"] = "100%";
+      hotkey_span.style["width"] = "max-content";
 
-      hotkey_span.style["text-align"] = al;
-      hotkey_span.style["flex-align"] = al;
-      //hotkey_span.style["display"] = "inline";
-      hotkey_span.style["float"] = "right";
+      //hotkey_span.style["background-color"] = "rgba(0,0,0,0)";
+
+      hotkey_span.style["text-align"] = "right";
+      hotkey_span.style["justify-content"] = "right";
       hotkey_span["flex-wrap"] = "nowrap";
+      hotkey_span["text-wrap"] = "nowrap";
+
+      //hotkey_span.style["border"] = "1px solid red";
+
+      //hotkey_span.style["display"] = "inline";
+      //hotkey_span.style["float"] = "right";
 
       dom.appendChild(hotkey_span);
     }
@@ -25385,8 +25406,6 @@ class DropBox extends Button {
 
   set searchMenuMode(v) {
     this._searchMenuMode = v;
-
-    console.warn("searchMenuMode was set", this);
   }
 
 
@@ -26038,7 +26057,7 @@ function createMenu(ctx, title, templ) {
     if (item !== undefined && item instanceof Menu) {
       menu.addItem(item);
     } else if (typeof item == "string") {
-      let def;
+      let def, hotkey;
       try {
         def = ctx.api.getToolDef(item);
       } catch (error) {
@@ -26047,7 +26066,21 @@ function createMenu(ctx, title, templ) {
       }
 
       //3Extra(text, id=undefined, hotkey, icon=-1, add=true) {
-      menu.addItemExtra(def.uiname, id, def.hotkey, def.icon);
+      if (!def.hotkey) {
+        try {
+          hotkey = ctx.api.getToolPathHotkey(ctx, item);
+        } catch (error) {
+          print_stack$1(error);
+          console.warn("error getting hotkey for tool " + item);
+          hotkey = undefined;
+        }
+      } else {
+        hotkey = def.hotkey;
+      }
+
+      console.warn("HOTKEY", hotkey, def.hotkey);
+
+      menu.addItemExtra(def.uiname, id, hotkey, def.icon);
 
       cbs[id] = (function (toolpath) {
         return function () {
