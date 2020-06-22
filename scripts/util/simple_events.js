@@ -422,7 +422,7 @@ export function pushModalLight(obj, autoStopPropagation=true) {
       }
 
       if (typeof key !== "string") {
-        console.warn("key was undefined", key);
+        //console.warn("key was undefined", key, type);
         return;
       }
 

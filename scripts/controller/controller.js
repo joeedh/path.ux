@@ -176,6 +176,7 @@ export class ModelInterface {
     throw new Error("implement me");
   }
 
+  /** takes a mass_set_path and returns an array of individual paths */
   resolveMassSetPaths(ctx, mass_set_path) {
     throw new Error("implement me");
   }

@@ -240,6 +240,8 @@ export class Button extends UIBase {
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
       }
+
+      this.undoBreakPoint();
     }
 
     this.addEventListener("mousedown", press, {captured : true, passive : false});

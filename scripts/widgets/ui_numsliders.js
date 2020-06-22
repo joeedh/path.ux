@@ -385,6 +385,8 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseup: (e) => {
+        console.warn("MOUSEUP");
+        this.undoBreakPoint();
         cancel(false);
         e.preventDefault();
         e.stopPropagation();
@@ -803,6 +805,7 @@ export class NumSliderSimpleBase extends UIBase {
       focus : (e) => {},
 
       mouseup: (e) => {
+        this.undoBreakPoint();
         end();
       },
 

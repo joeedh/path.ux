@@ -77,7 +77,9 @@ export class DataPathSetOp extends ToolOp {
     massSetPath = massSetPath === undefined ? "" : massSetPath;
     massSetPath = massSetPath === null ? "" : massSetPath;
 
-    return ""+massSetPath+":"+dataPath+":"+prop+":"+id;
+    let ret = ""+massSetPath+":"+dataPath+":"+prop+":"+id;
+
+    return ret;
   }
 
   hashThis() {
@@ -148,12 +150,13 @@ export class DataPathSetOp extends ToolOp {
 
         rdef.prop.dataref = rdef.obj;
         rdef.prop._fire("change", rdef.obj[rdef.key], old);
-      }
-      try {
-        ctx.api.setValue(ctx, path, this._undo[path]);
-      } catch (error) {
-        util.print_stack(error);
-        console.warn("Failed to set property in undo for DataPathSetOp");
+      } else {
+        try {
+          ctx.api.setValue(ctx, path, this._undo[path]);
+        } catch (error) {
+          util.print_stack(error);
+          console.warn("Failed to set property in undo for DataPathSetOp");
+        }
       }
     }
   }

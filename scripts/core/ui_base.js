@@ -487,6 +487,9 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this.pathUndoGen = 0;
+    this._lastPathUndoGen = 0;
+
     this._active_animations = [];
 
     //ref to Link element referencing Screen style node
@@ -1556,20 +1559,25 @@ export class UIBase extends HTMLElement {
     }
   }
 
+  undoBreakPoint() {
+    this.pathUndoGen++;
+  }
+
   setPathValueUndo(ctx, path, val) {
     let mass_set_path = this.getAttribute("mass_set_path");
     let rdef = ctx.api.resolvePath(ctx, path);
     let prop = rdef.prop;
 
-    if (ctx.api.getValue(ctx, path) == val) {
+    if (ctx.api.getValue(ctx, path) === val) {
       return;
     }
 
     let toolstack = this.ctx.toolstack;
-    let head = toolstack[toolstack.cur];
+    let head = toolstack.head;
 
     let bad = head === undefined || !(head instanceof getDataPathToolOp());
     bad = bad || head.hashThis() !== head.hash(mass_set_path, path, prop.type, this._id);
+    bad = bad || this.pathUndoGen !== this._lastPathUndoGen;
 
     //if (head !== undefined && head instanceof getDataPathToolOp()) {
       //console.log("===>", bad, head.hashThis());
@@ -1581,6 +1589,8 @@ export class UIBase extends HTMLElement {
       head.setValue(ctx, val, rdef.obj);
       toolstack.redo();
     } else {
+      this._lastPathUndoGen = this.pathUndoGen;
+      
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
       ctx.toolstack.execTool(this.ctx, toolop);
     }

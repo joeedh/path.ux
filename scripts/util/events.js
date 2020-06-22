@@ -170,34 +170,11 @@ export class EventHandler {
     */
   }
   
-  popModal(dom) {
+  popModal() {
     if (this._modalstate !== undefined) {
       simple_events.popModalLight(this._modalstate);
       this._modalstate = undefined;
     }
-    return;
-    console.trace("popModal called");
-    
-    var ok = modalStack[modalStack.length-1] === this;
-    ok = ok && this.modal_pushed;
-    
-    if (!ok) {
-      console.trace("Error: popModal called but pushModal wasn't", this, dom);
-      return;
-    }
-    
-    modalStack.pop();
-    
-    for (var k in DomEventTypes) {
-      if (this["__"+k] === undefined)
-        continue;
-
-      var type = DomEventTypes[k];
-      
-      getDom(dom, type).removeEventListener(type, this["__"+k], true);
-    }
-    
-    this.modal_pushed = false;
   }
 }
 

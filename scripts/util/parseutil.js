@@ -10,7 +10,7 @@ export class token {
   }
 
   toString() {
-    if (this.value != undefined)
+    if (this.value !== undefined)
       return "token(type=" + this.type + ", value='" + this.value + "')"
     else
       return "token(type=" + this.type + ")"
@@ -59,7 +59,7 @@ export class lexer {
 
 //errfunc is optional, defines state-specific error function
   add_state(name, tokdef, errfunc) {
-    if (errfunc == undefined) {
+    if (errfunc === undefined) {
       errfunc = function(lexer) { return true; };
     }
 
@@ -106,7 +106,7 @@ export class lexer {
   }
 
   error() {
-    if (this.errfunc != undefined && !this.errfunc(this))
+    if (this.errfunc !== undefined && !this.errfunc(this))
       return;
 
     console.log("Syntax error near line " + this.lineno);
@@ -119,7 +119,7 @@ export class lexer {
   peek() {
     var tok = this.next(true);
 
-    if (tok == undefined)
+    if (tok === undefined)
       return undefined;
 
     this.peeked_tokens.push(tok);
@@ -130,7 +130,7 @@ export class lexer {
   peek_i(i) {
     while (this.peeked_tokens.length <= i) {
       var t = this.peek();
-      if (t == undefined)
+      if (t === undefined)
         return undefined;
     }
 
@@ -142,7 +142,7 @@ export class lexer {
   }
 
   next(ignore_peek) {
-    if (ignore_peek != true && this.peeked_tokens.length > 0) {
+    if (ignore_peek !== true && this.peeked_tokens.length > 0) {
       var tok = this.peeked_tokens[0];
       this.peeked_tokens.shift();
 
@@ -162,12 +162,12 @@ export class lexer {
     for (var i=0; i<tlen; i++) {
       var t = ts[i];
 
-      if (t.re == undefined)
+      if (t.re === undefined)
         continue;
 
       var res = t.re.exec(lexdata);
 
-      if (res != null && res != undefined && res.index == 0) {
+      if (res !== null && res !== undefined && res.index === 0) {
         results.push([t, res]);
       }
     }
@@ -183,7 +183,7 @@ export class lexer {
       }
     }
 
-    if (theres == undefined) {
+    if (theres === undefined) {
       this.error();
       return;
     }
@@ -196,7 +196,7 @@ export class lexer {
 
     if (def.func) {
       tok = def.func(tok)
-      if (tok == undefined) {
+      if (tok === undefined) {
         return this.next();
       }
     }
@@ -213,14 +213,14 @@ export class parser {
   }
 
   parse(data, err_on_unconsumed) {
-    if (err_on_unconsumed == undefined)
+    if (err_on_unconsumed === undefined)
       err_on_unconsumed = true;
 
-    if (data != undefined)
+    if (data !== undefined)
       this.lexer.input(data);
 
     var ret = this.start(this);
-    if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() != undefined) {
+    if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== undefined) {
       //console.log(this.lexer.lexdata.slice(this.lexer.lexpos-1, this.lexer.lexdata.length));
       this.error(undefined, "parser did not consume entire input");
     }
@@ -276,7 +276,7 @@ export class parser {
 
   peek_i(i) {
     var tok = this.lexer.peek_i(i);
-    if (tok != undefined)
+    if (tok !== undefined)
       tok.parser = this;
 
     return tok;
@@ -288,7 +288,7 @@ export class parser {
 
   next() {
     var tok = this.lexer.next();
-    if (tok != undefined)
+    if (tok !== undefined)
       tok.parser = this;
 
     return tok;
@@ -297,9 +297,9 @@ export class parser {
   optional(type) {
     var tok = this.peek_i(0);
 
-    if (tok == undefined) return false;
+    if (tok === undefined) return false;
 
-    if (tok.type == type) {
+    if (tok.type === type) {
       this.next();
       return true;
     }

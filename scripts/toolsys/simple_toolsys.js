@@ -377,7 +377,7 @@ export class ToolOp extends events.EventHandler {
     this.modalRunning = false;
     this.is_modal = false;
     
-    super.popModal(_appstate._modal_dom_root);
+    super.popModal();
     
     this._promise = undefined;
     this._accept(ctx, false); //Context, was_cancelled
@@ -523,6 +523,10 @@ export class ToolStack extends Array {
     this.cur = -1;
     this.ctx = ctx;
     this.modalRunning = 0;
+  }
+
+  get head() {
+    return this[this.cur];
   }
 
   setRestrictedToolContext(ctx) {
