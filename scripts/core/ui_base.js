@@ -1590,7 +1590,7 @@ export class UIBase extends HTMLElement {
       toolstack.redo();
     } else {
       this._lastPathUndoGen = this.pathUndoGen;
-      
+
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
       ctx.toolstack.execTool(this.ctx, toolop);
     }
