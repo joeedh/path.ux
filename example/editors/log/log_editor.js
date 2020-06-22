@@ -75,7 +75,14 @@ export class LogEditor extends Editor {
   }
 
   update() {
-    this.rebuild();
+    if (!this.ctx) return;
+    let toolstack = this.ctx.toolstack;
+
+    let key = "" + toolstack.length + ":" + toolstack.cur;
+    if (key !== this._last_key) {
+      this._last_key = key;
+      this.rebuild();
+    }
   }
 
   static define() {return {

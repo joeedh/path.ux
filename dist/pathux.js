@@ -11002,7 +11002,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
       }
 
       if (typeof key !== "string") {
-        console.warn("key was undefined", key);
+        //console.warn("key was undefined", key, type);
         return;
       }
 
@@ -11439,34 +11439,11 @@ class EventHandler {
     */
   }
   
-  popModal(dom) {
+  popModal() {
     if (this._modalstate !== undefined) {
       popModalLight(this._modalstate);
       this._modalstate = undefined;
     }
-    return;
-    console.trace("popModal called");
-    
-    var ok = modalStack[modalStack.length-1] === this;
-    ok = ok && this.modal_pushed;
-    
-    if (!ok) {
-      console.trace("Error: popModal called but pushModal wasn't", this, dom);
-      return;
-    }
-    
-    modalStack.pop();
-    
-    for (var k in DomEventTypes) {
-      if (this["__"+k] === undefined)
-        continue;
-
-      var type = DomEventTypes[k];
-      
-      getDom(dom, type).removeEventListener(type, this["__"+k], true);
-    }
-    
-    this.modal_pushed = false;
   }
 }
 
@@ -17071,7 +17048,7 @@ class ToolOp extends EventHandler {
     this.modalRunning = false;
     this.is_modal = false;
     
-    super.popModal(_appstate._modal_dom_root);
+    super.popModal();
     
     this._promise = undefined;
     this._accept(ctx, false); //Context, was_cancelled
@@ -17217,6 +17194,10 @@ class ToolStack extends Array {
     this.cur = -1;
     this.ctx = ctx;
     this.modalRunning = 0;
+  }
+
+  get head() {
+    return this[this.cur];
   }
 
   setRestrictedToolContext(ctx) {
@@ -17471,6 +17452,7 @@ class ModelInterface {
     throw new Error("implement me");
   }
 
+  /** takes a mass_set_path and returns an array of individual paths */
   resolveMassSetPaths(ctx, mass_set_path) {
     throw new Error("implement me");
   }
@@ -17632,7 +17614,7 @@ class token {
   }
 
   toString() {
-    if (this.value != undefined)
+    if (this.value !== undefined)
       return "token(type=" + this.type + ", value='" + this.value + "')"
     else
       return "token(type=" + this.type + ")"
@@ -17681,7 +17663,7 @@ class lexer {
 
 //errfunc is optional, defines state-specific error function
   add_state(name, tokdef, errfunc) {
-    if (errfunc == undefined) {
+    if (errfunc === undefined) {
       errfunc = function(lexer) { return true; };
     }
 
@@ -17728,7 +17710,7 @@ class lexer {
   }
 
   error() {
-    if (this.errfunc != undefined && !this.errfunc(this))
+    if (this.errfunc !== undefined && !this.errfunc(this))
       return;
 
     console.log("Syntax error near line " + this.lineno);
@@ -17741,7 +17723,7 @@ class lexer {
   peek() {
     var tok = this.next(true);
 
-    if (tok == undefined)
+    if (tok === undefined)
       return undefined;
 
     this.peeked_tokens.push(tok);
@@ -17752,7 +17734,7 @@ class lexer {
   peek_i(i) {
     while (this.peeked_tokens.length <= i) {
       var t = this.peek();
-      if (t == undefined)
+      if (t === undefined)
         return undefined;
     }
 
@@ -17764,7 +17746,7 @@ class lexer {
   }
 
   next(ignore_peek) {
-    if (ignore_peek != true && this.peeked_tokens.length > 0) {
+    if (ignore_peek !== true && this.peeked_tokens.length > 0) {
       var tok = this.peeked_tokens[0];
       this.peeked_tokens.shift();
 
@@ -17784,12 +17766,12 @@ class lexer {
     for (var i=0; i<tlen; i++) {
       var t = ts[i];
 
-      if (t.re == undefined)
+      if (t.re === undefined)
         continue;
 
       var res = t.re.exec(lexdata);
 
-      if (res != null && res != undefined && res.index == 0) {
+      if (res !== null && res !== undefined && res.index === 0) {
         results.push([t, res]);
       }
     }
@@ -17805,7 +17787,7 @@ class lexer {
       }
     }
 
-    if (theres == undefined) {
+    if (theres === undefined) {
       this.error();
       return;
     }
@@ -17818,7 +17800,7 @@ class lexer {
 
     if (def.func) {
       tok = def.func(tok);
-      if (tok == undefined) {
+      if (tok === undefined) {
         return this.next();
       }
     }
@@ -17835,14 +17817,14 @@ class parser {
   }
 
   parse(data, err_on_unconsumed) {
-    if (err_on_unconsumed == undefined)
+    if (err_on_unconsumed === undefined)
       err_on_unconsumed = true;
 
-    if (data != undefined)
+    if (data !== undefined)
       this.lexer.input(data);
 
     var ret = this.start(this);
-    if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() != undefined) {
+    if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== undefined) {
       //console.log(this.lexer.lexdata.slice(this.lexer.lexpos-1, this.lexer.lexdata.length));
       this.error(undefined, "parser did not consume entire input");
     }
@@ -17898,7 +17880,7 @@ class parser {
 
   peek_i(i) {
     var tok = this.lexer.peek_i(i);
-    if (tok != undefined)
+    if (tok !== undefined)
       tok.parser = this;
 
     return tok;
@@ -17910,7 +17892,7 @@ class parser {
 
   next() {
     var tok = this.lexer.next();
-    if (tok != undefined)
+    if (tok !== undefined)
       tok.parser = this;
 
     return tok;
@@ -17919,9 +17901,9 @@ class parser {
   optional(type) {
     var tok = this.peek_i(0);
 
-    if (tok == undefined) return false;
+    if (tok === undefined) return false;
 
-    if (tok.type == type) {
+    if (tok.type === type) {
       this.next();
       return true;
     }
@@ -18368,7 +18350,9 @@ class DataPathSetOp extends ToolOp {
     massSetPath = massSetPath === undefined ? "" : massSetPath;
     massSetPath = massSetPath === null ? "" : massSetPath;
 
-    return ""+massSetPath+":"+dataPath+":"+prop+":"+id;
+    let ret = ""+massSetPath+":"+dataPath+":"+prop+":"+id;
+
+    return ret;
   }
 
   hashThis() {
@@ -18439,12 +18423,13 @@ class DataPathSetOp extends ToolOp {
 
         rdef.prop.dataref = rdef.obj;
         rdef.prop._fire("change", rdef.obj[rdef.key], old);
-      }
-      try {
-        ctx.api.setValue(ctx, path, this._undo[path]);
-      } catch (error) {
-        print_stack$1(error);
-        console.warn("Failed to set property in undo for DataPathSetOp");
+      } else {
+        try {
+          ctx.api.setValue(ctx, path, this._undo[path]);
+        } catch (error) {
+          print_stack$1(error);
+          console.warn("Failed to set property in undo for DataPathSetOp");
+        }
       }
     }
   }
@@ -21025,6 +21010,10 @@ class UIBase$1 extends HTMLElement {
   constructor() {
     super();
 
+    this.pathUndoGen = 0;
+    this._lastPathUndoGen = 0;
+    this._useDataPathUndo = undefined;
+
     this._active_animations = [];
 
     //ref to Link element referencing Screen style node
@@ -21077,9 +21066,7 @@ class UIBase$1 extends HTMLElement {
     };
     //*/
 
-    this._useDataPathUndo = undefined;
     let tagname = this.constructor.define().tagname;
-    
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
 
     this.default_overrides = {};
@@ -21203,6 +21190,7 @@ class UIBase$1 extends HTMLElement {
 
     while (p) {
       if (p._useDataPathUndo !== undefined) {
+        console.log(p._useDataPathUndo, p.tagName);
         return p._useDataPathUndo;
       }
 
@@ -22094,20 +22082,25 @@ class UIBase$1 extends HTMLElement {
     }
   }
 
+  undoBreakPoint() {
+    this.pathUndoGen++;
+  }
+
   setPathValueUndo(ctx, path, val) {
     let mass_set_path = this.getAttribute("mass_set_path");
     let rdef = ctx.api.resolvePath(ctx, path);
     let prop = rdef.prop;
 
-    if (ctx.api.getValue(ctx, path) == val) {
+    if (ctx.api.getValue(ctx, path) === val) {
       return;
     }
 
     let toolstack = this.ctx.toolstack;
-    let head = toolstack[toolstack.cur];
+    let head = toolstack.head;
 
     let bad = head === undefined || !(head instanceof getDataPathToolOp());
     bad = bad || head.hashThis() !== head.hash(mass_set_path, path, prop.type, this._id);
+    bad = bad || this.pathUndoGen !== this._lastPathUndoGen;
 
     //if (head !== undefined && head instanceof getDataPathToolOp()) {
       //console.log("===>", bad, head.hashThis());
@@ -22119,6 +22112,8 @@ class UIBase$1 extends HTMLElement {
       head.setValue(ctx, val, rdef.obj);
       toolstack.redo();
     } else {
+      this._lastPathUndoGen = this.pathUndoGen;
+      
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
       ctx.toolstack.execTool(this.ctx, toolop);
     }
@@ -23248,6 +23243,8 @@ class Button extends UIBase$2 {
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);
       }
+
+      this.undoBreakPoint();
     };
 
     this.addEventListener("mousedown", press, {captured : true, passive : false});
@@ -26657,6 +26654,7 @@ class Container extends UIBase$1 {
 
     child.ctx = this.ctx;
     child.parentWidget = this;
+    child._useDataPathUndo = this._useDataPathUndo;
 
     if (prepend) {
       this.shadow.prepend(child);
@@ -31804,6 +31802,10 @@ class TableFrame extends Container {
     child.onadd();
   }
 
+  add(child) {
+    this._add(child);
+  }
+
   row() {
     let tr = document.createElement("tr");
     let cls = "table-tr";
@@ -31822,14 +31824,10 @@ class TableFrame extends Container {
       let container = document.createElement("rowframe-x");
 
       container.ctx = this2.ctx;
+      container.parentWidget = this2;
       container.setAttribute("class", cls);
+
       td.setAttribute("class", cls);
-
-      //let div2 = document.createElement("div");
-      //div2.setAttribute("class", cls);
-      //div2.innerHTML = "sdfsdf";
-
-      //td.appendChild(div2);
       td.appendChild(container);
 
       return container;
@@ -32897,6 +32895,8 @@ class NumSlider extends ValueButtonBase {
       },
 
       on_mouseup: (e) => {
+        console.warn("MOUSEUP");
+        this.undoBreakPoint();
         cancel(false);
         e.preventDefault();
         e.stopPropagation();
@@ -33315,6 +33315,7 @@ class NumSliderSimpleBase extends UIBase$1 {
       focus : (e) => {},
 
       mouseup: (e) => {
+        this.undoBreakPoint();
         end();
       },
 

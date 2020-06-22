@@ -489,6 +489,7 @@ export class UIBase extends HTMLElement {
 
     this.pathUndoGen = 0;
     this._lastPathUndoGen = 0;
+    this._useDataPathUndo = undefined;
 
     this._active_animations = [];
 
@@ -542,9 +543,7 @@ export class UIBase extends HTMLElement {
     };
     //*/
 
-    this._useDataPathUndo = undefined;
     let tagname = this.constructor.define().tagname;
-    
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
 
     this.default_overrides = {};
@@ -668,6 +667,7 @@ export class UIBase extends HTMLElement {
 
     while (p) {
       if (p._useDataPathUndo !== undefined) {
+        console.log(p._useDataPathUndo, p.tagName);
         return p._useDataPathUndo;
       }
 

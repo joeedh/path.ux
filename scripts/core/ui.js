@@ -529,6 +529,7 @@ export class Container extends ui_base.UIBase {
 
     child.ctx = this.ctx;
     child.parentWidget = this;
+    child._useDataPathUndo = this._useDataPathUndo;
 
     if (prepend) {
       this.shadow.prepend(child);

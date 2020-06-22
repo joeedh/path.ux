@@ -88,6 +88,10 @@ export class TableFrame extends Container {
     child.onadd();
   }
 
+  add(child) {
+    this._add(child);
+  }
+
   row() {
     let tr = document.createElement("tr");
     let cls = "table-tr";
@@ -106,14 +110,10 @@ export class TableFrame extends Container {
       let container = document.createElement("rowframe-x");
 
       container.ctx = this2.ctx;
+      container.parentWidget = this2;
       container.setAttribute("class", cls);
+
       td.setAttribute("class", cls);
-
-      //let div2 = document.createElement("div");
-      //div2.setAttribute("class", cls);
-      //div2.innerHTML = "sdfsdf";
-
-      //td.appendChild(div2);
       td.appendChild(container);
 
       return container;

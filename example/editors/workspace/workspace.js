@@ -8,7 +8,9 @@ import {Dynamics} from "../../core/dynamics.js";
 export class WorkspaceEditor extends Editor {
   constructor() {
     super();
-    
+
+    this.useDataPathUndo = true;
+
     this.minSize = [75, 75];
 
     this._last_dpi = undefined;
@@ -88,6 +90,11 @@ export class WorkspaceEditor extends Editor {
     super.init();
 
     let header = this.header;
+    this.useDataPathUndo = true;
+    this.container.parentWidget = this;
+    this.container.useDataPathUndo = true;
+
+    this.container._useDataPathUndo = true;
 
     let row = this.container.row();
     row.background = row.getDefault("AreaHeaderBG");
@@ -107,15 +114,17 @@ export class WorkspaceEditor extends Editor {
 
     let row2 = table.row();
 
-
-    row2.prop("workspace.brush.size", PackFlags.SIMPLE_NUMSLIDERS);
+    row2._useDataPathUndo = true;
+    row2.prop("workspace.brush.size"); //, PackFlags.SIMPLE_NUMSLIDERS);
     row2.prop("workspace.brush.soft");
 
     row2 = table.row();
+    row2._useDataPathUndo = true;
     row2.prop("workspace.brush.spacing")
     row2.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
 
     row2 = table.row()
+    row2._useDataPathUndo = true;
     row2.prop("workspace.brush.color");
 
     this.setCSS();
