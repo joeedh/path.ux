@@ -348,7 +348,10 @@ export class Button extends UIBase {
     let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
     
-    let tw = ui_base.measureText(this, this._genLabel()).width/dpi + 8 + pad;
+    let tw = ui_base.measureText(this, this._genLabel(),{
+      size : ts,
+      font : this.getDefault("DefaultText")
+    }).width/dpi + 18 + pad;
 
     if (this._namePad !== undefined) {
       tw += this._namePad;
@@ -402,7 +405,7 @@ export class Button extends UIBase {
   updateDPI() {
     let dpi = this.getDPI();
 
-    if (this._last_dpi != dpi) {
+    if (this._last_dpi !== dpi) {
       //console.log("update dpi", dpi);
 
       this._last_dpi = dpi;
@@ -424,9 +427,7 @@ export class Button extends UIBase {
   }
 
   _genLabel() {
-    let text = "" + this._name;
-
-    return text;
+    return "" + this._name;
   }
 
   _redraw(draw_text=true) {
@@ -481,7 +482,7 @@ export class Button extends UIBase {
 
     let tw = ui_base.measureText(this, text, undefined, undefined, ts, font).width;
 
-    let cx = pad*0.5;
+    let cx = pad*0.5 + 5*dpi;
     let cy = h*0.5 + ts*0.5;
 
     let g = this.g;

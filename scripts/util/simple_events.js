@@ -630,7 +630,11 @@ export class HotKey {
 }
 
 export class KeyMap extends Array {
-  constructor(hotkeys=[]) {
+  /**
+   *
+   * @param pathid{string} Id of keymap, used when patching hotkeys
+   * */
+  constructor(hotkeys=[], pathid="undefined") {
     super();
 
     for (let hk of hotkeys) {

@@ -27,6 +27,8 @@ export class PanelFrame extends ColumnFrame {
   constructor() {
     super();
 
+    this.titleframe = this.row();
+
     this.contents = document.createElement("colframe-x");
     this.iconcheck = document.createElement("iconcheck-x");
 
@@ -40,9 +42,16 @@ export class PanelFrame extends ColumnFrame {
       }
     })
 
+    Object.defineProperty(this.contents, "title", {
+      get : () => this.getAttribute("title"),
+      set : (v) => this.setAttribute("title", v)
+    });
+
     this.packflag = this.inherit_packflag = 0;
 
     this._closed = false;
+
+    this.makeHeader();
   }
 
   saveData() {
@@ -82,18 +91,10 @@ export class PanelFrame extends ColumnFrame {
     this.contents.packflag = val;
   }
 
-  init() {
-    super.init();
-
-    //con.style["margin-left"] = "5px";
-    let con = this.titleframe = this.row();
-
-    this.setCSS();
-
-    let row = con;
+  makeHeader() {
+    let row = this.titleframe;
 
     let iconcheck = this.iconcheck;
-    this.style["width"] = "100%";
 
     this.overrideDefault("BoxMargin", 0);
     iconcheck.overrideDefault("BoxMargin", 0);
@@ -140,18 +141,25 @@ export class PanelFrame extends ColumnFrame {
     row.style["border-radius"] = this.getDefault("BoxRadius") + "px";
     row.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
 
-    this.background = this.getDefault("Background");
-
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
     row.style["padding-top"] = this.getDefault("padding-top") + "px";
     row.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
+  }
+
+  init() {
+    super.init();
+
+    this.background = this.getDefault("Background");
+    this.style["width"] = "100%";
 
     this.contents.ctx = this.ctx;
     if (!this._closed) {
       this.add(this.contents);
       this.contents.flushUpdate();
     }
+
+    //con.style["margin-left"] = "5px";
 
     this.setCSS();
   }
@@ -218,8 +226,13 @@ export class PanelFrame extends ColumnFrame {
     key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
     key += this.getDefault("Background") + this.getDefault("border-style");
+    key += this.getAttribute("title");
 
     if (key !== this._last_key) {
+      if (this.getAttribute("title")) {
+        this.label = this.getAttribute("title")
+      }
+
       this._last_key = key;
       this.setCSS();
     }

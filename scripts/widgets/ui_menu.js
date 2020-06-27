@@ -1408,8 +1408,6 @@ export function createMenu(ctx, title, templ) {
         hotkey = def.hotkey;
       }
 
-      console.warn("HOTKEY", hotkey, def.hotkey);
-
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
 
       cbs[id] = (function (toolpath) {

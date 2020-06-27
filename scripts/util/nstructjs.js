@@ -77,16 +77,16 @@ var Class = function Class(methods) {
   for (var i = 0; i < methods.length; i++) {
     var f = methods[i];
 
-    if (f.name == "constructor") {
+    if (f.name === "constructor") {
       construct = f;
       break;
     }
   }
 
-  if (construct == undefined) {
+  if (construct === undefined) {
     console.trace("Warning, constructor was not defined", methods);
 
-    if (parent != undefined) {
+    if (parent !== undefined) {
       construct = function () {
         parent.apply(this, arguments);
       };
@@ -96,7 +96,7 @@ var Class = function Class(methods) {
     }
   }
 
-  if (parent != undefined) {
+  if (parent !== undefined) {
     construct.prototype = Object.create(parent.prototype);
   }
 
@@ -2554,11 +2554,82 @@ var STRUCT = class STRUCT {
     define_null_native.call(this, "Object", Object);
   }
 
+  validateStructs(onerror) {
+    function getType(type) {
+      switch (type.type) {
+        case StructEnum$2.T_ITERKEYS:
+        case StructEnum$2.T_ITER:
+        case StructEnum$2.T_STATIC_ARRAY:
+        case StructEnum$2.T_ARRAY:
+          return getType(type.data.type);
+        case StructEnum$2.T_TSTRUCT:
+          return type;
+        case StructEnum$2.T_STRUCT:
+        default:
+          return type;
+      }
+    }
+
+    function formatType(type) {
+      let ret = {};
+
+      ret.type = type.type;
+
+      if (typeof ret.type === "number") {
+        for (let k in StructEnum$2) {
+          if (StructEnum$2[k] === ret.type) {
+            ret.type = k;
+            break;
+          }
+        }
+      } else if (typeof ret.type === "object") {
+        ret.type = formatType(ret.type);
+      }
+
+      if (typeof type.data === "object") {
+        ret.data = formatType(type.data);
+      } else {
+        ret.data = type.data;
+      }
+
+      return ret;
+    }
+
+    for (let k in this.structs) {
+      let stt = this.structs[k];
+
+      for (let field of stt.fields) {
+        let type = getType(field.type);
+
+        //console.log(formatType(type));
+
+        if (type.type !== StructEnum$2.T_STRUCT && type.type !== StructEnum$2.T_TSTRUCT) {
+          continue;
+        }
+
+        if (!(type.data in this.structs)) {
+
+          let msg = stt.name + ":" + field.name + ": Unknown struct " + type.data + ".";
+          let buf = STRUCT.formatStruct(stt);
+
+          console.error(buf + "\n\n" + msg);
+
+          if (onerror) {
+            onerror(msg, stt, field);
+          } else {
+            throw new Error(msg);
+          }
+        }
+        //console.log(formatType(field.type));
+      }
+    }
+  }
+
   forEach(func, thisvar) {
     for (var k in this.structs) {
       var stt = this.structs[k];
 
-      if (thisvar != undefined)
+      if (thisvar !== undefined)
         func.call(thisvar, stt);
       else
         func(stt);
@@ -2583,8 +2654,9 @@ var STRUCT = class STRUCT {
       }
     }
 
-    if (defined_classes == undefined) {
+    if (defined_classes === undefined) {
       defined_classes = [];
+
       for (var k in _export_manager_.struct_cls) {
         defined_classes.push(_export_manager_.struct_cls[k]);
       }
@@ -2595,10 +2667,10 @@ var STRUCT = class STRUCT {
     for (var i = 0; i < defined_classes.length; i++) {
       var cls = defined_classes[i];
 
-      if (cls.structName == undefined && cls.STRUCT != undefined) {
+      if (!cls.structName && cls.STRUCT) {
         var stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
-      } else if (cls.structName == undefined && cls.name != "Object") {
+      } else if (!cls.structName && cls.name !== "Object") {
         if (warninglvl$1 > 0) 
           console.log("Warning, bad class in registered class list", cls.name, cls);
         continue;
@@ -2627,18 +2699,18 @@ var STRUCT = class STRUCT {
         this.struct_cls[dummy.structName] = dummy;
         this.structs[dummy.structName] = stt;
 
-        if (stt.id != -1)
+        if (stt.id !== -1)
           this.struct_ids[stt.id] = stt;
       } else {
         this.struct_cls[stt.name] = clsmap[stt.name];
         this.structs[stt.name] = stt;
 
-        if (stt.id != -1)
+        if (stt.id !== -1)
           this.struct_ids[stt.id] = stt;
       }
 
       var tok = struct_parse.peek();
-      while (tok != undefined && (tok.value == "\n" || tok.value == "\r" || tok.value == "\t" || tok.value == " ")) {
+      while (tok && (tok.value === "\n" || tok.value === "\r" || tok.value === "\t" || tok.value === " ")) {
         tok = struct_parse.peek();
       }
     }
@@ -2697,7 +2769,7 @@ var STRUCT = class STRUCT {
       throw new Error("Missing structName parameter");
     }
 
-    if (stt.id == -1)
+    if (stt.id === -1)
       stt.id = this.idgen.gen_id();
 
     this.structs[cls.structName] = stt;
@@ -2821,18 +2893,18 @@ var STRUCT = class STRUCT {
     function fmt_type(type) {
       return StructFieldTypeMap$1[type.type].format(type);
       
-      if (type.type == StructEnum$2.T_ARRAY || type.type == StructEnum$2.T_ITER || type.type === StructEnum$2.T_ITERKEYS) {
-        if (type.data.iname != "" && type.data.iname != undefined) {
+      if (type.type === StructEnum$2.T_ARRAY || type.type === StructEnum$2.T_ITER || type.type === StructEnum$2.T_ITERKEYS) {
+        if (type.data.iname !== "" && type.data.iname !== undefined) {
           return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
         }
         else {
           return "array(" + fmt_type(type.data.type) + ")";
         }
-      } else if (type.type == StructEnum$2.T_STATIC_STRING) {
+      } else if (type.type === StructEnum$2.T_STATIC_STRING) {
         return "static_string[" + type.data.maxlength + "]";
-      } else if (type.type == StructEnum$2.T_STRUCT) {
+      } else if (type.type === StructEnum$2.T_STRUCT) {
         return type.data;
-      } else if (type.type == StructEnum$2.T_TSTRUCT) {
+      } else if (type.type === StructEnum$2.T_TSTRUCT) {
         return "abstract(" + type.data + ")";
       } else {
         return StructTypeMap$1[type.type];
@@ -3414,6 +3486,10 @@ var Class$5 = Class;
 for (var k$1 in struct_intern) {
   _module_exports_$1[k$1] = struct_intern[k$1];
 }
+
+_module_exports_$1.validateStructs = function validateStructs(onerror) {
+  return _module_exports_$1.manager.validateStructs(onerror);
+};
 
 /** Register a class with nstructjs **/
 _module_exports_$1.register = function register(cls, structName) {

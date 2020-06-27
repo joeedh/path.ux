@@ -746,9 +746,22 @@ export class Vector2 extends BaseVector {
     this.length = 2;
     this[0] = this[1] = 0.0;
     
-    if (data != undefined) {
+    if (data !== undefined) {
       this.load(data);
     }
+  }
+
+  initVector2(co) {
+    this.length = 2;
+
+    if (co !== undefined) {
+      this[0] = co[0];
+      this[1] = co[1];
+    } else {
+      this[0] = this[1] = 0.0;
+    }
+
+    return this;
   }
 
   loadXY(x, y) {
@@ -807,7 +820,7 @@ export class Vector2 extends BaseVector {
     if (matrix.isPersp) {
       let w2 = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24;
 
-      if (w2 != 0.0) {
+      if (w2 !== 0.0) {
         this[0] /= w2;
         this[1] /= w2;
       }
