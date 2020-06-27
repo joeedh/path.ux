@@ -632,10 +632,13 @@ export class HotKey {
 export class KeyMap extends Array {
   /**
    *
-   * @param pathid{string} Id of keymap, used when patching hotkeys
+   * @param pathid{string} Id of keymap, used when patching hotkeys, when
+   *                       that is implemented
    * */
   constructor(hotkeys=[], pathid="undefined") {
     super();
+
+    this.pathid = pathid;
 
     for (let hk of hotkeys) {
       this.add(hk);

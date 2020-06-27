@@ -487,16 +487,16 @@ var Class = function Class(methods) {
   for (var i = 0; i < methods.length; i++) {
     var f = methods[i];
 
-    if (f.name == "constructor") {
+    if (f.name === "constructor") {
       construct = f;
       break;
     }
   }
 
-  if (construct == undefined) {
+  if (construct === undefined) {
     console.trace("Warning, constructor was not defined", methods);
 
-    if (parent != undefined) {
+    if (parent !== undefined) {
       construct = function () {
         parent.apply(this, arguments);
       };
@@ -506,7 +506,7 @@ var Class = function Class(methods) {
     }
   }
 
-  if (parent != undefined) {
+  if (parent !== undefined) {
     construct.prototype = Object.create(parent.prototype);
   }
 
@@ -2964,11 +2964,82 @@ var STRUCT = class STRUCT {
     define_null_native.call(this, "Object", Object);
   }
 
+  validateStructs(onerror) {
+    function getType(type) {
+      switch (type.type) {
+        case StructEnum$2.T_ITERKEYS:
+        case StructEnum$2.T_ITER:
+        case StructEnum$2.T_STATIC_ARRAY:
+        case StructEnum$2.T_ARRAY:
+          return getType(type.data.type);
+        case StructEnum$2.T_TSTRUCT:
+          return type;
+        case StructEnum$2.T_STRUCT:
+        default:
+          return type;
+      }
+    }
+
+    function formatType(type) {
+      let ret = {};
+
+      ret.type = type.type;
+
+      if (typeof ret.type === "number") {
+        for (let k in StructEnum$2) {
+          if (StructEnum$2[k] === ret.type) {
+            ret.type = k;
+            break;
+          }
+        }
+      } else if (typeof ret.type === "object") {
+        ret.type = formatType(ret.type);
+      }
+
+      if (typeof type.data === "object") {
+        ret.data = formatType(type.data);
+      } else {
+        ret.data = type.data;
+      }
+
+      return ret;
+    }
+
+    for (let k in this.structs) {
+      let stt = this.structs[k];
+
+      for (let field of stt.fields) {
+        let type = getType(field.type);
+
+        //console.log(formatType(type));
+
+        if (type.type !== StructEnum$2.T_STRUCT && type.type !== StructEnum$2.T_TSTRUCT) {
+          continue;
+        }
+
+        if (!(type.data in this.structs)) {
+
+          let msg = stt.name + ":" + field.name + ": Unknown struct " + type.data + ".";
+          let buf = STRUCT.formatStruct(stt);
+
+          console.error(buf + "\n\n" + msg);
+
+          if (onerror) {
+            onerror(msg, stt, field);
+          } else {
+            throw new Error(msg);
+          }
+        }
+        //console.log(formatType(field.type));
+      }
+    }
+  }
+
   forEach(func, thisvar) {
     for (var k in this.structs) {
       var stt = this.structs[k];
 
-      if (thisvar != undefined)
+      if (thisvar !== undefined)
         func.call(thisvar, stt);
       else
         func(stt);
@@ -2993,8 +3064,9 @@ var STRUCT = class STRUCT {
       }
     }
 
-    if (defined_classes == undefined) {
+    if (defined_classes === undefined) {
       defined_classes = [];
+
       for (var k in _export_manager_.struct_cls) {
         defined_classes.push(_export_manager_.struct_cls[k]);
       }
@@ -3005,10 +3077,10 @@ var STRUCT = class STRUCT {
     for (var i = 0; i < defined_classes.length; i++) {
       var cls = defined_classes[i];
 
-      if (cls.structName == undefined && cls.STRUCT != undefined) {
+      if (!cls.structName && cls.STRUCT) {
         var stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
-      } else if (cls.structName == undefined && cls.name != "Object") {
+      } else if (!cls.structName && cls.name !== "Object") {
         if (warninglvl$1 > 0) 
           console.log("Warning, bad class in registered class list", cls.name, cls);
         continue;
@@ -3037,18 +3109,18 @@ var STRUCT = class STRUCT {
         this.struct_cls[dummy.structName] = dummy;
         this.structs[dummy.structName] = stt;
 
-        if (stt.id != -1)
+        if (stt.id !== -1)
           this.struct_ids[stt.id] = stt;
       } else {
         this.struct_cls[stt.name] = clsmap[stt.name];
         this.structs[stt.name] = stt;
 
-        if (stt.id != -1)
+        if (stt.id !== -1)
           this.struct_ids[stt.id] = stt;
       }
 
       var tok = struct_parse.peek();
-      while (tok != undefined && (tok.value == "\n" || tok.value == "\r" || tok.value == "\t" || tok.value == " ")) {
+      while (tok && (tok.value === "\n" || tok.value === "\r" || tok.value === "\t" || tok.value === " ")) {
         tok = struct_parse.peek();
       }
     }
@@ -3107,7 +3179,7 @@ var STRUCT = class STRUCT {
       throw new Error("Missing structName parameter");
     }
 
-    if (stt.id == -1)
+    if (stt.id === -1)
       stt.id = this.idgen.gen_id();
 
     this.structs[cls.structName] = stt;
@@ -3231,18 +3303,18 @@ var STRUCT = class STRUCT {
     function fmt_type(type) {
       return StructFieldTypeMap$1[type.type].format(type);
       
-      if (type.type == StructEnum$2.T_ARRAY || type.type == StructEnum$2.T_ITER || type.type === StructEnum$2.T_ITERKEYS) {
-        if (type.data.iname != "" && type.data.iname != undefined) {
+      if (type.type === StructEnum$2.T_ARRAY || type.type === StructEnum$2.T_ITER || type.type === StructEnum$2.T_ITERKEYS) {
+        if (type.data.iname !== "" && type.data.iname !== undefined) {
           return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
         }
         else {
           return "array(" + fmt_type(type.data.type) + ")";
         }
-      } else if (type.type == StructEnum$2.T_STATIC_STRING) {
+      } else if (type.type === StructEnum$2.T_STATIC_STRING) {
         return "static_string[" + type.data.maxlength + "]";
-      } else if (type.type == StructEnum$2.T_STRUCT) {
+      } else if (type.type === StructEnum$2.T_STRUCT) {
         return type.data;
-      } else if (type.type == StructEnum$2.T_TSTRUCT) {
+      } else if (type.type === StructEnum$2.T_TSTRUCT) {
         return "abstract(" + type.data + ")";
       } else {
         return StructTypeMap$1[type.type];
@@ -3825,6 +3897,10 @@ for (var k$1 in struct_intern) {
   _module_exports_$1[k$1] = struct_intern[k$1];
 }
 
+_module_exports_$1.validateStructs = function validateStructs(onerror) {
+  return _module_exports_$1.manager.validateStructs(onerror);
+};
+
 /** Register a class with nstructjs **/
 _module_exports_$1.register = function register(cls, structName) {
   return _module_exports_$1.manager.register(cls, structName);
@@ -3888,9 +3964,17 @@ const manager = nstructjs$1.manager;
 const write_scripts = nstructjs$1.write_scripts;
 const inherit = nstructjs$1.inherit;
 const setDebugMode = nstructjs$1.setDebugMode;
+const validateStructs = nstructjs$1.validateStructs;
+const readObject = nstructjs$1.readObject;
+const writeObject = nstructjs$1.writeObject;
+const _nstructjs = nstructjs$1;
 
 function register(cls) {
   manager.add_class(cls);
+}
+
+function setEndian(little_endian=true) {
+  nstructjs$1.STRUCT_ENDIAN = little_endian;
 }
 
 // THIS FILE IS GENERATED - DO NOT EDIT!
@@ -6974,9 +7058,22 @@ class Vector2 extends BaseVector {
     this.length = 2;
     this[0] = this[1] = 0.0;
     
-    if (data != undefined) {
+    if (data !== undefined) {
       this.load(data);
     }
+  }
+
+  initVector2(co) {
+    this.length = 2;
+
+    if (co !== undefined) {
+      this[0] = co[0];
+      this[1] = co[1];
+    } else {
+      this[0] = this[1] = 0.0;
+    }
+
+    return this;
   }
 
   loadXY(x, y) {
@@ -7035,7 +7132,7 @@ class Vector2 extends BaseVector {
     if (matrix.isPersp) {
       let w2 = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24;
 
-      if (w2 != 0.0) {
+      if (w2 !== 0.0) {
         this[0] /= w2;
         this[1] /= w2;
       }
@@ -11210,8 +11307,15 @@ class HotKey {
 }
 
 class KeyMap extends Array {
-  constructor(hotkeys=[]) {
+  /**
+   *
+   * @param pathid{string} Id of keymap, used when patching hotkeys, when
+   *                       that is implemented
+   * */
+  constructor(hotkeys=[], pathid="undefined") {
     super();
+
+    this.pathid = pathid;
 
     for (let hk of hotkeys) {
       this.add(hk);
@@ -23351,7 +23455,10 @@ class Button extends UIBase$2 {
     let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
     
-    let tw = measureText(this, this._genLabel()).width/dpi + 8 + pad;
+    let tw = measureText(this, this._genLabel(),{
+      size : ts,
+      font : this.getDefault("DefaultText")
+    }).width/dpi + 18 + pad;
 
     if (this._namePad !== undefined) {
       tw += this._namePad;
@@ -23405,7 +23512,7 @@ class Button extends UIBase$2 {
   updateDPI() {
     let dpi = this.getDPI();
 
-    if (this._last_dpi != dpi) {
+    if (this._last_dpi !== dpi) {
       //console.log("update dpi", dpi);
 
       this._last_dpi = dpi;
@@ -23427,9 +23534,7 @@ class Button extends UIBase$2 {
   }
 
   _genLabel() {
-    let text = "" + this._name;
-
-    return text;
+    return "" + this._name;
   }
 
   _redraw(draw_text=true) {
@@ -23484,7 +23589,7 @@ class Button extends UIBase$2 {
 
     let tw = measureText(this, text, undefined, undefined, ts, font).width;
 
-    let cx = pad*0.5;
+    let cx = pad*0.5 + 5*dpi;
     let cy = h*0.5 + ts*0.5;
 
     let g = this.g;
@@ -26074,8 +26179,6 @@ function createMenu(ctx, title, templ) {
       } else {
         hotkey = def.hotkey;
       }
-
-      console.warn("HOTKEY", hotkey, def.hotkey);
 
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
 
@@ -28983,6 +29086,8 @@ class PanelFrame extends ColumnFrame {
   constructor() {
     super();
 
+    this.titleframe = this.row();
+
     this.contents = document.createElement("colframe-x");
     this.iconcheck = document.createElement("iconcheck-x");
 
@@ -28996,9 +29101,16 @@ class PanelFrame extends ColumnFrame {
       }
     });
 
+    Object.defineProperty(this.contents, "title", {
+      get : () => this.getAttribute("title"),
+      set : (v) => this.setAttribute("title", v)
+    });
+
     this.packflag = this.inherit_packflag = 0;
 
     this._closed = false;
+
+    this.makeHeader();
   }
 
   saveData() {
@@ -29038,18 +29150,10 @@ class PanelFrame extends ColumnFrame {
     this.contents.packflag = val;
   }
 
-  init() {
-    super.init();
-
-    //con.style["margin-left"] = "5px";
-    let con = this.titleframe = this.row();
-
-    this.setCSS();
-
-    let row = con;
+  makeHeader() {
+    let row = this.titleframe;
 
     let iconcheck = this.iconcheck;
-    this.style["width"] = "100%";
 
     this.overrideDefault("BoxMargin", 0);
     iconcheck.overrideDefault("BoxMargin", 0);
@@ -29096,18 +29200,25 @@ class PanelFrame extends ColumnFrame {
     row.style["border-radius"] = this.getDefault("BoxRadius") + "px";
     row.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
 
-    this.background = this.getDefault("Background");
-
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
     row.style["padding-top"] = this.getDefault("padding-top") + "px";
     row.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
+  }
+
+  init() {
+    super.init();
+
+    this.background = this.getDefault("Background");
+    this.style["width"] = "100%";
 
     this.contents.ctx = this.ctx;
     if (!this._closed) {
       this.add(this.contents);
       this.contents.flushUpdate();
     }
+
+    //con.style["margin-left"] = "5px";
 
     this.setCSS();
   }
@@ -29174,8 +29285,13 @@ class PanelFrame extends ColumnFrame {
     key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
     key += this.getDefault("Background") + this.getDefault("border-style");
+    key += this.getAttribute("title");
 
     if (key !== this._last_key) {
+      if (this.getAttribute("title")) {
+        this.label = this.getAttribute("title");
+      }
+
       this._last_key = key;
       this.setCSS();
     }
@@ -42766,5 +42882,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateWebColor, vectormath, warning, web2color, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
