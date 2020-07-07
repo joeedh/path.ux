@@ -1212,7 +1212,7 @@ export class ImageReader {
 
 let digestcache;
 
-//NOT CRYPTOGRAPHIC
+/** NOT CRYPTOGRAPHIC */
 export class HashDigest {
   constructor() {
     this.i = 0;
