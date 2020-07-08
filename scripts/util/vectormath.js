@@ -1742,6 +1742,10 @@ export class Matrix4 {
 
   //this is really like the lookAt method, isn't it.
   makeNormalMatrix(normal, up=undefined) {
+    if (normal === undefined) {
+      throw new Error("normal cannot be undefined");
+    }
+
     let n = makenormalcache.next().load(normal).normalize();
 
     if (up === undefined) {
@@ -1752,6 +1756,19 @@ export class Matrix4 {
       } else {
         up[2] = 1.0;
       }
+    }
+
+    up = makenormalcache.next().load(up);
+
+    up.normalize();
+
+    if (up.dot(normal) > 0.99) {
+      this.makeIdentity();
+      return this;
+    } else if (up.dot(normal) < -0.99) {
+      this.makeIdentity();
+      this.scale(1.0, 1.0, -1.0);
+      return this;
     }
 
     let x = makenormalcache.next();
