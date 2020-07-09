@@ -267,7 +267,7 @@ if (window.Symbol == undefined) { //eek!
     iterator : "$__iterator__$",
     keystr   : "$__keystr__$"
   };
-} else {
+} else if (Symbol.keystr === undefined) {
   Symbol.keystr = Symbol("keystr");
 }
 

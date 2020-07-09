@@ -584,6 +584,48 @@ export class set {
     return this;
   }
 
+  filter(f, thisvar) {
+    let i = 0;
+    let ret = new set();
+
+    for (let item of this) {
+      if (f.call(thisvar, item, i++, this)) {
+        ret.add(item);
+      }
+    }
+
+    return ret;
+
+  }
+
+  map(f, thisvar) {
+    let ret = new set();
+
+    let i = 0;
+
+    for (let item of this) {
+      ret.add(f.call(thisvar, item, i++, this));
+    }
+
+    return ret;
+  }
+
+  reduce(f, initial) {
+    if (initial === undefined) {
+      for (let item of this) {
+        initial = item;
+        break;
+      }
+    }
+
+    let i = 0;
+    for (let item of this) {
+      initial = f(initial, item, i++, this);
+    }
+
+    return initial;
+  }
+
   copy() {
     let ret = new set();
     for (let item of this) {
@@ -1212,7 +1254,7 @@ export class ImageReader {
 
 let digestcache;
 
-//NOT CRYPTOGRAPHIC
+/** NOT CRYPTOGRAPHIC */
 export class HashDigest {
   constructor() {
     this.i = 0;
