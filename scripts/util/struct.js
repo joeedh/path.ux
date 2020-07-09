@@ -11,6 +11,8 @@ export const validateStructs = nstructjs.validateStructs;
 export const readObject = nstructjs.readObject;
 export const writeObject = nstructjs.writeObject;
 export const _nstructjs = nstructjs;
+export const readJSON = nstructjs.readJSON;
+export const writeJSON = nstructjs.writeJSON;
 
 export function register(cls) {
   manager.add_class(cls);
@@ -19,3 +21,4 @@ export function register(cls) {
 export function setEndian(little_endian=true) {
   nstructjs.STRUCT_ENDIAN = little_endian;
 }
+
