@@ -5564,6 +5564,48 @@ class set$1 {
     return this;
   }
 
+  filter(f, thisvar) {
+    let i = 0;
+    let ret = new set$1();
+
+    for (let item of this) {
+      if (f.call(thisvar, item, i++, this)) {
+        ret.add(item);
+      }
+    }
+
+    return ret;
+
+  }
+
+  map(f, thisvar) {
+    let ret = new set$1();
+
+    let i = 0;
+
+    for (let item of this) {
+      ret.add(f.call(thisvar, item, i++, this));
+    }
+
+    return ret;
+  }
+
+  reduce(f, initial) {
+    if (initial === undefined) {
+      for (let item of this) {
+        initial = item;
+        break;
+      }
+    }
+
+    let i = 0;
+    for (let item of this) {
+      initial = f(initial, item, i++, this);
+    }
+
+    return initial;
+  }
+
   copy() {
     let ret = new set$1();
     for (let item of this) {
@@ -6192,7 +6234,7 @@ class ImageReader {
 
 let digestcache;
 
-//NOT CRYPTOGRAPHIC
+/** NOT CRYPTOGRAPHIC */
 class HashDigest {
   constructor() {
     this.i = 0;
@@ -8054,6 +8096,10 @@ class Matrix4 {
 
   //this is really like the lookAt method, isn't it.
   makeNormalMatrix(normal, up=undefined) {
+    if (normal === undefined) {
+      throw new Error("normal cannot be undefined");
+    }
+
     let n = makenormalcache.next().load(normal).normalize();
 
     if (up === undefined) {
@@ -8064,6 +8110,19 @@ class Matrix4 {
       } else {
         up[2] = 1.0;
       }
+    }
+
+    up = makenormalcache.next().load(up);
+
+    up.normalize();
+
+    if (up.dot(normal) > 0.99) {
+      this.makeIdentity();
+      return this;
+    } else if (up.dot(normal) < -0.99) {
+      this.makeIdentity();
+      this.scale(1.0, 1.0, -1.0);
+      return this;
     }
 
     let x = makenormalcache.next();
