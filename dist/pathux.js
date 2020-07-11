@@ -487,16 +487,16 @@ var Class = function Class(methods) {
   for (var i = 0; i < methods.length; i++) {
     var f = methods[i];
 
-    if (f.name === "constructor") {
+    if (f.name == "constructor") {
       construct = f;
       break;
     }
   }
 
-  if (construct === undefined) {
+  if (construct == undefined) {
     console.trace("Warning, constructor was not defined", methods);
 
-    if (parent !== undefined) {
+    if (parent != undefined) {
       construct = function () {
         parent.apply(this, arguments);
       };
@@ -506,7 +506,7 @@ var Class = function Class(methods) {
     }
   }
 
-  if (parent !== undefined) {
+  if (parent != undefined) {
     construct.prototype = Object.create(parent.prototype);
   }
 
@@ -2089,6 +2089,23 @@ function unpack_field(manager, data, type, uctx) {
   return ret;
 }
 
+let fromJSON = function fromJSON(manager, data, owner, type) {
+  let name;
+
+  if (debug) {
+    name = _export_StructFieldTypeMap_[type.type].define().name;
+    packer_debug_start("R start " + name);
+  }
+
+  let ret = _export_StructFieldTypeMap_[type.type].readJSON(manager, data, owner, type);
+
+  if (debug) {
+    packer_debug_end("R end " + name);
+  }
+
+  return ret;
+};
+
 let fakeFields = new _export_cachering_(() => {return {type : undefined, get : undefined, set : undefined}}, 256);
 
 function fmt_type(type) {
@@ -2117,6 +2134,32 @@ function do_pack(manager, data, val, obj, field, type) {
   return ret;
 }
 
+
+let toJSON = function toJSON(manager, val, obj, field, type) {
+  let name;
+
+  if (debug) {
+    name = _export_StructFieldTypeMap_[type.type].define().name;
+    packer_debug_start("W start " + name);
+  }
+
+  let typeid = type;
+  if (typeof typeid !== "number") {
+    typeid = typeid.type;
+  }
+  if (typeof typeid !== "number") {
+    typeid = typeid.type;
+  }
+
+  let ret = _export_StructFieldTypeMap_[typeid].toJSON(manager, val, obj, field, type);
+
+  if (debug) {
+    packer_debug_end("W end " + name);
+  }
+
+  return ret;
+};
+
 let StructEnum$1 = StructEnum;
 
 var _ws_env = [[undefined, undefined]];
@@ -2127,7 +2170,15 @@ let StructFieldType = class StructFieldType {
   
   static unpack(manager, data, type, uctx) {
   }
-  
+
+  static toJSON(manager, val, obj, field, type) {
+    return val;
+  }
+
+  static readJSON(manager, data, owner, type) {
+    return data;
+  }
+
   static packNull(manager, data, field, type) {
     this.pack(manager, data, 0, 0, field, type);
   }
@@ -2288,7 +2339,11 @@ class StructStructField extends StructFieldType {
   static format(type) {
     return type.data;
   }
-  
+
+  static toJSON(manager, val, obj, field, type) {
+    return manager.writeJSON(val);
+  }
+
   static packNull(manager, data, field, type) {
     let stt = manager.get_struct(type.data);
     
@@ -2302,8 +2357,13 @@ class StructStructField extends StructFieldType {
   static unpack(manager, data, type, uctx) {
     var cls2 = manager.get_struct_cls(type.data);
     return manager.read_object(data, cls2, uctx);
-  }   
-  
+  }
+
+  static readJSON(manager, data, owner, type) {
+    var cls2 = manager.get_struct_cls(type.data);
+    return manager.readJSON(data, cls2);
+  }
+
   static define() {return {
     type : StructEnum$1.T_STRUCT,
     name : "struct"
@@ -2334,7 +2394,32 @@ class StructTStructField extends StructFieldType {
     pack_int$1(data, stt.id);
     manager.write_struct(data, val, stt);
   }
-  
+
+  static toJSON(manager, val, obj, field, type) {
+    var cls = manager.get_struct_cls(type.data);
+    var stt = manager.get_struct(type.data);
+
+    //make sure inheritance is correct
+    if (val.constructor.structName !== type.data && (val instanceof cls)) {
+      //if (DEBUG.Struct) {
+      //    console.log(val.constructor.structName+" inherits from "+cls.structName);
+      //}
+      stt = manager.get_struct(val.constructor.structName);
+    } else if (val.constructor.structName === type.data) {
+      stt = manager.get_struct(type.data);
+    } else {
+      console.trace();
+      throw new Error("Bad struct " + val.constructor.structName + " passed to write_struct");
+    }
+
+    packer_debug("int " + stt.id);
+
+    return {
+      type : stt.name,
+      data : manager.writeJSON(val, stt)
+    }
+  }
+
   static packNull(manager, data, field, type) {
     let stt = manager.get_struct(type.data);
     
@@ -2368,8 +2453,32 @@ class StructTStructField extends StructFieldType {
     //packer_debug("ret", ret);
 
     return ret;
-  }   
-  
+  }
+
+  static readJSON(manager, data, owner, type) {
+    var sttname = data.type;
+
+    packer_debug("-int " + sttname);
+    if (sttname === undefined || !(sttname in manager.structs)) {
+      packer_debug("struct name: " + sttname);
+      console.trace();
+      console.log(sttname);
+      console.log(manager.struct_ids);
+      packer_debug_end("tstruct");
+      throw new Error("Unknown struct " + sttname + ".");
+    }
+
+    var cls2 = manager.structs[sttname];
+
+    packer_debug("struct class name: " + cls2.name);
+    cls2 = manager.struct_cls[cls2.name];
+
+    let ret = manager.readJSON(data.data, cls2);
+    //packer_debug("ret", ret);
+
+    return ret;
+  }
+
   static define() {return {
     type : StructEnum$1.T_TSTRUCT,
     name : "tstruct"
@@ -2379,7 +2488,7 @@ StructFieldType.register(StructTStructField);
 
 class StructArrayField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
-    if (val == undefined) {
+    if (!val) {
       console.trace();
       console.log("Undefined array fed to struct struct packer!");
       console.log("Field: ", field);
@@ -2401,7 +2510,7 @@ class StructArrayField extends StructFieldType {
     var env = _ws_env;
     for (var i = 0; i < val.length; i++) {
       var val2 = val[i];
-      if (itername != "" && itername != undefined && field.get) {
+      if (itername !== "" && itername !== undefined && field.get) {
         env[0][0] = itername;
         env[0][1] = val2;
         val2 = manager._env_call(field.get, obj, env);
@@ -2410,16 +2519,56 @@ class StructArrayField extends StructFieldType {
       //XXX not sure I really need this fakeField stub here. . .
       let fakeField = fakeFields.next();
       fakeField.type = type2;
-      do_pack(manager, data, val2, obj, fakeField, type2);
+      do_pack(manager, data, val2, val, fakeField, type2);
     }
   }
-  
+
+  static toJSON(manager, val, obj, field, type) {
+    if (!val) {
+      console.trace();
+      console.log("Undefined array fed to struct struct packer!");
+      console.log("Field: ", field);
+      console.log("Type: ", type);
+      console.log("");
+      packer_debug("int 0");
+      _module_exports_.pack_int(data, 0);
+      return;
+    }
+
+    packer_debug("int " + val.length);
+
+    var d = type.data;
+
+    var itername = d.iname;
+    var type2 = d.type;
+
+    var env = _ws_env;
+    var ret = [];
+
+    for (var i = 0; i < val.length; i++) {
+      var val2 = val[i];
+      if (itername !== "" && itername !== undefined && field.get) {
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = manager._env_call(field.get, obj, env);
+      }
+
+      //XXX not sure I really need this fakeField stub here. . .
+      let fakeField = fakeFields.next();
+      fakeField.type = type2;
+
+      ret.push(toJSON(manager, val2, val, fakeField, type2));
+    }
+
+    return ret;
+  }
+
   static packNull(manager, data, field, type) {
     pack_int$1(data, 0);
   }
   
   static format(type) {
-    if (type.data.iname != "" && type.data.iname != undefined) {
+    if (type.data.iname !== "" && type.data.iname != undefined) {
       return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
     }
     else {
@@ -2441,8 +2590,24 @@ class StructArrayField extends StructFieldType {
     }
     
     return arr;
-  }   
-  
+  }
+
+  static readJSON(manager, data, owner, type) {
+    let ret = [];
+    let type2 = type.data.type;
+
+    if (!data) {
+      console.warn("Corrupted json data", owner);
+      return [];
+    }
+
+    for (let item of data) {
+      ret.push(fromJSON(manager, item, data, type2));
+    }
+
+    return ret;
+  }
+
   static define() {return {
     type : StructEnum$1.T_ARRAY,
     name : "array"
@@ -2499,12 +2664,69 @@ class StructIterField extends StructFieldType {
       //XXX not sure I really need this fakeField stub here. . .
       let fakeField = fakeFields.next();
       fakeField.type = type2;
-      do_pack(manager, data, val2, obj, fakeField, type2);
+      do_pack(manager, data, val2, val, fakeField, type2);
 
       i++;
     }, this);
   }
-  
+
+  static toJSON(manager, val, obj, field, type) {
+    //this was originally implemented to use ES6 iterators.
+    function forEach(cb, thisvar) {
+      if (val && val[Symbol.iterator]) {
+        for (let item of val) {
+          cb.call(thisvar, item);
+        }
+      } else if (val && val.forEach) {
+        val.forEach(function(item) {
+          cb.call(thisvar, item);
+        });
+      } else {
+        console.trace();
+        console.log("Undefined iterable list fed to struct struct packer!", val);
+        console.log("Field: ", field);
+        console.log("Type: ", type);
+        console.log("");
+      }
+    }
+
+    let len = 0.0;
+    let ret = [];
+
+    forEach(() => {
+      len++;
+    });
+
+    packer_debug("int " + len);
+
+    var d = type.data, itername = d.iname, type2 = d.type;
+    var env = _ws_env;
+
+    var i = 0;
+    forEach(function(val2) {
+      if (i >= len) {
+        if (warninglvl > 0)
+          console.trace("Warning: iterator returned different length of list!", val, i);
+        return;
+      }
+
+      if (itername !== "" && itername !== undefined && field.get) {
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = manager._env_call(field.get, obj, env);
+      }
+
+      //XXX not sure I really need this fakeField stub here. . .
+      let fakeField = fakeFields.next();
+      fakeField.type = type2;
+      ret.push(toJSON(manager, val2, val, fakeField, type2));
+
+      i++;
+    }, this);
+
+    return ret;
+  }
+
   static packNull(manager, data, field, type) {
     pack_int$1(data, 0);
   }
@@ -2532,8 +2754,24 @@ class StructIterField extends StructFieldType {
     }
 
     return arr;
-  }   
-  
+  }
+
+  static readJSON(manager, data, owner, type) {
+    let ret = [];
+    let type2 = type.data.type;
+
+    if (!data) {
+      console.warn("Corrupted json data", owner);
+      return [];
+    }
+
+    for (let item of data) {
+      ret.push(fromJSON(manager, item, data, type2));
+    }
+
+    return ret;
+  }
+
   static define() {return {
     type : StructEnum$1.T_ITER,
     name : "iter"
@@ -2632,12 +2870,63 @@ class StructIterKeysField extends StructFieldType {
       }
 
       var f2 = {type: type2, get: undefined, set: undefined};
-      do_pack(manager, data, val2, obj, f2, type2);
+      do_pack(manager, data, val2, val, f2, type2);
 
       i++;
     }
   }
-  
+
+  static toJSON(manager, val, obj, field, type) {
+    //this was originally implemented to use ES6 iterators.
+    if ((typeof val !== "object" && typeof val !== "function") || val === null) {
+      console.warn("Bad object fed to iterkeys in struct packer!", val);
+      console.log("Field: ", field);
+      console.log("Type: ", type);
+      console.log("");
+
+      _module_exports_.pack_int(data, 0);
+
+      packer_debug_end("iterkeys");
+      return;
+    }
+
+    let len = 0.0;
+    for (let k in val) {
+      len++;
+    }
+
+    packer_debug("int " + len);
+
+    var d = type.data, itername = d.iname, type2 = d.type;
+    var env = _ws_env;
+    var ret = [];
+
+    var i = 0;
+    for (let val2 in val) {
+      if (i >= len) {
+        if (warninglvl > 0)
+          console.warn("Warning: object keys magically replaced on us", val, i);
+        return;
+      }
+
+      if (itername && itername.trim().length > 0 && field.get) {
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = manager._env_call(field.get, obj, env);
+      } else {
+        val2 = val[val2]; //fetch value
+      }
+
+      var f2 = {type: type2, get: undefined, set: undefined};
+      ret.push(toJSON(manager, val2, val, f2, type2));
+
+      i++;
+    }
+
+    return ret;
+  }
+
+
   static packNull(manager, data, field, type) {
     pack_int$1(data, 0);
   }
@@ -2665,8 +2954,24 @@ class StructIterKeysField extends StructFieldType {
     }
 
     return arr;
-  }   
-  
+  }
+
+  static readJSON(manager, data, owner, type) {
+    let ret = [];
+    let type2 = type.data.type;
+
+    if (!data) {
+      console.warn("Corrupted json data", owner);
+      return [];
+    }
+
+    for (let item of data) {
+      ret.push(fromJSON(manager, item, data, type2));
+    }
+
+    return ret;
+  }
+
   static define() {return {
     type : StructEnum$1.T_ITERKEYS,
     name : "iterkeys"
@@ -2739,6 +3044,38 @@ class StructStaticArrayField extends StructFieldType {
     }
   }
 
+  static toJSON(manager, val, obj, field, type) {
+    if (type.data.size === undefined) {
+      throw new Error("type.data.size was undefined");
+    }
+
+    let itername = type.data.iname;
+
+    if (val === undefined || !val.length) {
+      this.packNull(manager, data, field, type);
+      return;
+    }
+
+    let ret = [];
+
+    for (let i=0; i<type.data.size; i++) {
+      let i2 = Math.min(i, Math.min(val.length-1, type.data.size));
+      let val2 = val[i2];
+
+      //*
+      if (itername !== "" && itername !== undefined && field.get) {
+        let env = _ws_env;
+        env[0][0] = itername;
+        env[0][1] = val2;
+        val2 = manager._env_call(field.get, obj, env);
+      }
+
+      ret.push(toJSON(manager, val2, val, field, type.data.type));
+    }
+
+    return ret;
+  }
+
   static useHelperJS(field) {
     return !field.type.data.iname;
   }
@@ -2773,8 +3110,24 @@ class StructStaticArrayField extends StructFieldType {
     }
     
     return ret;
-  }   
-  
+  }
+
+  static readJSON(manager, data, owner, type) {
+    let ret = [];
+    let type2 = type.data.type;
+
+    if (!data) {
+      console.warn("Corrupted json data", owner);
+      return [];
+    }
+
+    for (let item of data) {
+      ret.push(fromJSON(manager, item, data, type2));
+    }
+
+    return ret;
+  }
+
   static define() {return {
     type : StructEnum$1.T_STATIC_ARRAY,
     name : "static_array"
@@ -3337,7 +3690,7 @@ var STRUCT = class STRUCT {
 
   _env_call(code, obj, env) {
     var envcode = _static_envcode_null$1;
-    if (env != undefined) {
+    if (env !== undefined) {
       envcode = "";
       for (var i = 0; i < env.length; i++) {
         envcode = "var " + env[i][0] + " = env[" + i.toString() + "][1];\n" + envcode;
@@ -3409,7 +3762,7 @@ var STRUCT = class STRUCT {
         if (_nGlobal.DEBUG && _nGlobal.DEBUG.tinyeval) { 
           console.log("\n\n\n", f.get, "Helper JS Ret", val, "\n\n\n");
         }
-        
+
         do_pack$1(data, val, obj, thestruct, f, t1);
       }
       else {
@@ -3451,8 +3804,54 @@ var STRUCT = class STRUCT {
   @param data array to write data into,
   @param obj structable object
   */
-  writeObject() {
+  writeObject(data, obj) {
     return this.write_object(data, obj);
+  }
+
+  writeJSON(obj, stt=undefined) {
+    var cls = obj.constructor.structName;
+    stt = stt || this.get_struct(cls);
+
+    function use_helper_js(field) {
+      let type = field.type.type;
+      let cls = StructFieldTypeMap$1[type];
+      return cls.useHelperJS(field);
+    }
+
+    let toJSON$1 = toJSON;
+
+    var fields = stt.fields;
+    var thestruct = this;
+    let json = {};
+
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      var t1 = f.type;
+      var t2 = t1.type;
+      var val;
+
+      if (use_helper_js(f)) {
+        var type = t2;
+        if (f.get !== undefined) {
+          val = thestruct._env_call(f.get, obj);
+        }
+        else {
+          val = obj[f.name];
+        }
+
+        if (_nGlobal.DEBUG && _nGlobal.DEBUG.tinyeval) {
+          console.log("\n\n\n", f.get, "Helper JS Ret", val, "\n\n\n");
+        }
+
+        json[f.name] = toJSON$1(this, val, obj, f, t1);
+      }
+      else {
+        val = obj[f.name];
+        json[f.name] = toJSON$1(this, val, obj, f, t1);
+      }
+    }
+
+    return json;
   }
 
   /**
@@ -3533,6 +3932,76 @@ var STRUCT = class STRUCT {
       }
 
       load(obj);
+
+      return obj;
+    }
+  }
+
+  readJSON(data, cls_or_struct_id) {
+    var cls, stt;
+
+    if (typeof cls_or_struct_id === "number") {
+      cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
+    } else {
+      cls = cls_or_struct_id;
+    }
+
+    if (cls === undefined) {
+      throw new Error("bad cls_or_struct_id " + cls_or_struct_id);
+    }
+
+    stt = this.structs[cls.structName];
+
+    let fromJSON$1 = fromJSON;
+    var thestruct = this;
+
+    let this2  = this;
+
+    let was_run = false;
+
+    function reader(obj) {
+      if (was_run) {
+        return;
+      }
+
+      was_run = true;
+
+      var fields = stt.fields;
+      var flen = fields.length;
+      for (var i = 0; i < flen; i++) {
+        var f = fields[i];
+
+        packer_debug$1("Load field " + f.name);
+        obj[f.name] = fromJSON$1(thestruct, data[f.name], data, f.type);
+      }
+    }
+
+    if (cls.prototype.loadSTRUCT !== undefined) {
+      let obj;
+
+      if (cls.newSTRUCT !== undefined) {
+        obj = cls.newSTRUCT();
+      } else {
+        obj = new cls();
+      }
+
+      obj.loadSTRUCT(reader);
+
+      return obj;
+    } else if (cls.fromSTRUCT !== undefined) {
+      if (warninglvl$1 > 1)
+        console.warn("Warning: class " + cls.name + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
+
+      return cls.fromSTRUCT(reader);
+    } else { //default case, make new instance and then call reader() on it
+      let obj;
+      if (cls.newSTRUCT !== undefined) {
+        obj = cls.newSTRUCT();
+      } else {
+        obj = new cls();
+      }
+
+      reader(obj);
 
       return obj;
     }
@@ -3923,6 +4392,14 @@ _module_exports_$1.writeObject = function(data, obj) {
   return _module_exports_$1.manager.writeObject(data.obj);
 };
 
+_module_exports_$1.writeJSON = function(obj) {
+  return _module_exports_$1.manager.writeJSON(obj);
+};
+
+_module_exports_$1.readJSON = function(json, class_or_struct_id) {
+  return _module_exports_$1.manager.readJSON(json, class_or_struct_id);
+};
+
 _module_exports_$1.setDebugMode = _export_setDebugMode_$1;
 _module_exports_$1.setWarningMode = _export_setWarningMode_$1;
 
@@ -3968,6 +4445,8 @@ const validateStructs = nstructjs$1.validateStructs;
 const readObject = nstructjs$1.readObject;
 const writeObject = nstructjs$1.writeObject;
 const _nstructjs = nstructjs$1;
+const readJSON = nstructjs$1.readJSON;
+const writeJSON = nstructjs$1.writeJSON;
 
 function register(cls) {
   manager.add_class(cls);
@@ -17642,6 +18121,7 @@ class ModelInterface {
     let prop = res.prop;
 
     if (prop !== undefined && (prop.flag & PropFlags$1.USE_CUSTOM_GETSET)) {
+      prop.dataref = res.obj;
       prop.setValue(val);
       return;
     }
@@ -17729,6 +18209,19 @@ class ModelInterface {
     }
 
     return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
+  }
+
+  validPath(ctx, path) {
+    try {
+      this.getValue(ctx, path);
+      return true;
+    } catch (error) {
+      if (!(error instanceof DataPathError)) {
+        throw error;
+      }
+    }
+
+    return false;
   }
 
   getValue(ctx, path) {
@@ -19499,7 +19992,7 @@ class DataAPI extends ModelInterface {
 
     function p_key() {
       let t = p.peeknext();
-      if (t.type == "NUM" || t.type == "STRLIT") {
+      if (t.type === "NUM" || t.type === "STRLIT") {
         p.next();
         return t.value;
       } else {
@@ -19615,13 +20108,13 @@ class DataAPI extends ModelInterface {
         break;
       }
 
-      if (t.type == "DOT") {
+      if (t.type === "DOT") {
         p.next();
-      } else if (t.type == "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("EQUALS");
 
         let t2 = p.peeknext();
-        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+        let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
 
@@ -19641,11 +20134,11 @@ class DataAPI extends ModelInterface {
 
         key = path.path;
         obj = !!(lastobj[key] == val);
-      } else if (t.type == "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("AND");
 
         let t2 = p.peeknext();
-        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+        let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
 
@@ -19665,11 +20158,11 @@ class DataAPI extends ModelInterface {
 
         key = path.path;
         obj = !!(lastobj[key] & val);
-      } else if (t.type == "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("LSBRACKET");
 
         let t2 = p.peeknext();
-        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+        let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
 
@@ -19688,14 +20181,23 @@ class DataAPI extends ModelInterface {
           subkey = prop.keys[val];
         }
 
+        let bitfield;
         key = path.path;
+
+        if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+          bitfield = lastobj[key];
+        } else {
+          prop.dataref = lastobj;
+          bitfield = prop.getValue();
+        }
+
         if (lastobj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for path " + inpath);
         } else if (lastobj !== undefined) {
-          if (prop.type == PropTypes.ENUM) {
-            obj = !!(lastobj[key] == val);
+          if (prop.type === PropTypes.ENUM) {
+            obj = !!(bitfield == val);
           } else {
-            obj = !!(lastobj[key] & val);
+            obj = !!(bitfield & val);
           }
         }
 
@@ -19726,7 +20228,7 @@ class DataAPI extends ModelInterface {
         obj = prop.get(this, lastobj, lastkey);
         dstruct = prop.getStruct(this, lastobj, lastkey);
 
-        if (p.peeknext() !== undefined && p.peeknext().type == "DOT") {
+        if (p.peeknext() !== undefined && p.peeknext().type === "DOT") {
           p.next();
         }
       }
@@ -42941,5 +43443,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
