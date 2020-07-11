@@ -882,7 +882,7 @@ export class DataAPI extends ModelInterface {
 
     function p_key() {
       let t = p.peeknext();
-      if (t.type == "NUM" || t.type == "STRLIT") {
+      if (t.type === "NUM" || t.type === "STRLIT") {
         p.next();
         return t.value;
       } else {
@@ -998,13 +998,13 @@ export class DataAPI extends ModelInterface {
         break;
       }
 
-      if (t.type == "DOT") {
+      if (t.type === "DOT") {
         p.next();
-      } else if (t.type == "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("EQUALS");
 
         let t2 = p.peeknext();
-        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+        let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
 
@@ -1024,11 +1024,11 @@ export class DataAPI extends ModelInterface {
 
         key = path.path;
         obj = !!(lastobj[key] == val);
-      } else if (t.type == "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("AND");
 
         let t2 = p.peeknext();
-        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+        let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
 
@@ -1048,11 +1048,11 @@ export class DataAPI extends ModelInterface {
 
         key = path.path;
         obj = !!(lastobj[key] & val);
-      } else if (t.type == "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("LSBRACKET");
 
         let t2 = p.peeknext();
-        let type = t2 && t2.type == "ID" ? "ID" : "NUM";
+        let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
 
@@ -1071,14 +1071,23 @@ export class DataAPI extends ModelInterface {
           subkey = prop.keys[val];
         }
 
+        let bitfield;
         key = path.path;
+
+        if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+          bitfield = lastobj[key];
+        } else {
+          prop.dataref = lastobj;
+          bitfield = prop.getValue();
+        }
+
         if (lastobj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for path " + inpath);
         } else if (lastobj !== undefined) {
-          if (prop.type == PropTypes.ENUM) {
-            obj = !!(lastobj[key] == val);
+          if (prop.type === PropTypes.ENUM) {
+            obj = !!(bitfield == val);
           } else {
-            obj = !!(lastobj[key] & val);
+            obj = !!(bitfield & val);
           }
         }
 
@@ -1109,7 +1118,7 @@ export class DataAPI extends ModelInterface {
         obj = prop.get(this, lastobj, lastkey);
         dstruct = prop.getStruct(this, lastobj, lastkey);
 
-        if (p.peeknext() !== undefined && p.peeknext().type == "DOT") {
+        if (p.peeknext() !== undefined && p.peeknext().type === "DOT") {
           p.next();
         }
       }

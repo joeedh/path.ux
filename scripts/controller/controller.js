@@ -203,6 +203,7 @@ export class ModelInterface {
     let prop = res.prop;
 
     if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+      prop.dataref = res.obj;
       prop.setValue(val);
       return;
     }
@@ -290,6 +291,19 @@ export class ModelInterface {
     }
 
     return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
+  }
+
+  validPath(ctx, path) {
+    try {
+      this.getValue(ctx, path);
+      return true;
+    } catch (error) {
+      if (!(error instanceof DataPathError)) {
+        throw error;
+      }
+    }
+
+    return false;
   }
 
   getValue(ctx, path) {
