@@ -6,4 +6,5 @@ git commit -a
 git push
 
 git tag -a $VERSION -m "Release $VERSION"
-git push
+git push origin $VERSION
+
