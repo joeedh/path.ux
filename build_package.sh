@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git commit -a
+
 mkdir -p package
 mkdir -p _package
 
