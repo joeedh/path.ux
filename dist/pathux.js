@@ -3217,7 +3217,6 @@ else {
   };
 }
 
-
 const _export_setWarningMode_$1 = (t) => {
   _export_setWarningMode_(t);
   
@@ -3292,6 +3291,7 @@ function define_empty_class(name) {
 var STRUCT = class STRUCT {
   constructor() {
     this.idgen = new IDGen();
+    this.allowOverriding = true;
 
     this.structs = {};
     this.struct_cls = {};
@@ -3530,6 +3530,16 @@ var STRUCT = class STRUCT {
       stt.name = cls.structName;
     } else {
       throw new Error("Missing structName parameter");
+    }
+
+    if (cls.structName in this.structs) {
+      console.warn("Struct " + cls.structName + " is already registered", cls);
+
+      if (!this.allowOverriding) {
+        throw new Error("Struct " + cls.structName + " is already registered");
+      }
+
+      return;
     }
 
     if (stt.id === -1)
@@ -4370,6 +4380,10 @@ _module_exports_$1.validateStructs = function validateStructs(onerror) {
   return _module_exports_$1.manager.validateStructs(onerror);
 };
 
+_module_exports_$1.setAllowOverriding = function setAllowOverriding(t) {
+  return _module_exports_$1.manager.allowOverriding = !!t;
+};
+
 /** Register a class with nstructjs **/
 _module_exports_$1.register = function register(cls, structName) {
   return _module_exports_$1.manager.register(cls, structName);
@@ -4447,6 +4461,7 @@ const writeObject = nstructjs$1.writeObject;
 const _nstructjs = nstructjs$1;
 const readJSON = nstructjs$1.readJSON;
 const writeJSON = nstructjs$1.writeJSON;
+const setAllowOverriding = nstructjs$1.setAllowOverriding;
 
 function register(cls) {
   manager.add_class(cls);
@@ -6737,17 +6752,14 @@ class HashDigest {
 
   add(v) {
     //glibc linear congruel generator
-    this.i = (this.i*1103515245 + 12345) & ((1<<30)-1);
+    this.i = ((this.i+(~~v))*1103515245 + 12345) & ((1<<29)-1);
     //according to wikipedia only the top 16 bits are random
     //this.i = this.i>>16;
 
-    if (v < 5.0 && v > -5.0) {
-      v *= 1024;
-    } else if (v < 15 && v >= -15) {
-      v *= 512;
-    } else if (v < 30 && v >= -30) {
-      v *= 256;
-    }
+    let v2 = (v*1024*1024) & ((1<<29)-1);
+    v = v | v2;
+
+    v = ~~v;
 
     this.hash ^= v^this.i;
   }
@@ -8149,6 +8161,8 @@ class Matrix4 {
     Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
     
     ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+
+    return this;
   }
 
   makeIdentity() {
@@ -8171,6 +8185,8 @@ class Matrix4 {
 
     //drop isPersp
     this.isPersp = false;
+
+    return this;
   }
 
   transpose() {
@@ -8192,6 +8208,8 @@ class Matrix4 {
     tmp = this.$matrix.m34;
     this.$matrix.m34 = this.$matrix.m43;
     this.$matrix.m43 = tmp;
+
+    return this;
   }
 
   determinant() {
@@ -15375,8 +15393,8 @@ class FootUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    let vft = ~~(value / 12);
-    let vin = value % 12;
+    let vft = ~~(value);
+    let vin = (value*12) % 12;
 
     if (vft === 0.0) {
       return myToFixed(value, decimals) + " in";
@@ -15498,6 +15516,9 @@ Unit.register(RadianUnit);
 function setBaseUnit(unit) {
   Unit.baseUnit = unit;
 }
+
+window._getBaseUnit = () => Unit.baseUnit;
+
 function setMetric(val) {
   Unit.isMetric = val;
 }
@@ -17032,9 +17053,7 @@ class ListProperty extends ToolProperty {
   }
 
   copy() {
-    let ret = new ListProperty(this.prop.copy());
-    this.copyTo(ret);
-    return ret;
+    return this.copyTo(new ListProperty(this.prop.copy()));
   }
 
   push(item=undefined) {
@@ -17595,7 +17614,7 @@ class ToolOp extends EventHandler {
   }
 
   /**for use in modal mode only*/
-  resetDrawLines() {
+  resetTempGeom() {
     var ctx = this.modal_ctx;
     
     for (var dl of this.drawlines) {
@@ -17619,7 +17638,7 @@ class ToolOp extends EventHandler {
   }
 
   /**for use in modal mode only*/
-  addDrawLine(v1, v2, style) {
+  makeTempLine(v1, v2, style) {
     let line = this.getOverdraw().line(v1, v2, style);
     this.drawlines.push(line);
     return line;
@@ -17682,7 +17701,7 @@ class ToolOp extends EventHandler {
       this._on_cancel(this);
     }
     
-    this.resetDrawLines();
+    this.resetTempGeom();
     
     var ctx = this.modal_ctx;
     
@@ -27678,9 +27697,9 @@ class Container extends UIBase$1 {
       }
 
       return ret;
-    } else if (prop.type == PropTypes$6.BOOL) {
-      this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$6.ENUM) {
+    } else if (prop.type === PropTypes$6.BOOL) {
+      return this.check(inpath, prop.uiname, packflag, mass_set_path);
+    } else if (prop.type === PropTypes$6.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -43443,5 +43462,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map

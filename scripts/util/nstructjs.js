@@ -2807,7 +2807,6 @@ else {
   };
 }
 
-
 const _export_setWarningMode_$1 = (t) => {
   _export_setWarningMode_(t);
   
@@ -2882,6 +2881,7 @@ function define_empty_class(name) {
 var STRUCT = class STRUCT {
   constructor() {
     this.idgen = new IDGen();
+    this.allowOverriding = true;
 
     this.structs = {};
     this.struct_cls = {};
@@ -3120,6 +3120,16 @@ var STRUCT = class STRUCT {
       stt.name = cls.structName;
     } else {
       throw new Error("Missing structName parameter");
+    }
+
+    if (cls.structName in this.structs) {
+      console.warn("Struct " + cls.structName + " is already registered", cls);
+
+      if (!this.allowOverriding) {
+        throw new Error("Struct " + cls.structName + " is already registered");
+      }
+
+      return;
     }
 
     if (stt.id === -1)
@@ -3958,6 +3968,10 @@ for (var k$1 in struct_intern) {
 
 _module_exports_$1.validateStructs = function validateStructs(onerror) {
   return _module_exports_$1.manager.validateStructs(onerror);
+};
+
+_module_exports_$1.setAllowOverriding = function setAllowOverriding(t) {
+  return _module_exports_$1.manager.allowOverriding = !!t;
 };
 
 /** Register a class with nstructjs **/

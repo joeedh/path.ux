@@ -1142,9 +1142,7 @@ export class ListProperty extends ToolProperty {
   }
 
   copy() {
-    let ret = new ListProperty(this.prop.copy());
-    this.copyTo(ret);
-    return ret;
+    return this.copyTo(new ListProperty(this.prop.copy()));
   }
 
   push(item=undefined) {

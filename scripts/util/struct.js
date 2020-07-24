@@ -13,6 +13,7 @@ export const writeObject = nstructjs.writeObject;
 export const _nstructjs = nstructjs;
 export const readJSON = nstructjs.readJSON;
 export const writeJSON = nstructjs.writeJSON;
+export const setAllowOverriding = nstructjs.setAllowOverriding;
 
 export function register(cls) {
   manager.add_class(cls);

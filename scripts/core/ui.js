@@ -889,9 +889,9 @@ export class Container extends ui_base.UIBase {
       }
 
       return ret;
-    } else if (prop.type == PropTypes.BOOL) {
-      this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes.ENUM) {
+    } else if (prop.type === PropTypes.BOOL) {
+      return this.check(inpath, prop.uiname, packflag, mass_set_path);
+    } else if (prop.type === PropTypes.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];

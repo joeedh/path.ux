@@ -1316,6 +1316,8 @@ export class Matrix4 {
     Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
     
     ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+
+    return this;
   }
 
   makeIdentity() {
@@ -1338,6 +1340,8 @@ export class Matrix4 {
 
     //drop isPersp
     this.isPersp = false;
+
+    return this;
   }
 
   transpose() {
@@ -1359,6 +1363,8 @@ export class Matrix4 {
     tmp = this.$matrix.m34;
     this.$matrix.m34 = this.$matrix.m43;
     this.$matrix.m43 = tmp;
+
+    return this;
   }
 
   determinant() {

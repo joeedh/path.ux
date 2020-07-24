@@ -1278,17 +1278,14 @@ export class HashDigest {
 
   add(v) {
     //glibc linear congruel generator
-    this.i = (this.i*1103515245 + 12345) & ((1<<30)-1);
+    this.i = ((this.i+(~~v))*1103515245 + 12345) & ((1<<29)-1);
     //according to wikipedia only the top 16 bits are random
     //this.i = this.i>>16;
 
-    if (v < 5.0 && v > -5.0) {
-      v *= 1024;
-    } else if (v < 15 && v >= -15) {
-      v *= 512;
-    } else if (v < 30 && v >= -30) {
-      v *= 256;
-    }
+    let v2 = (v*1024*1024) & ((1<<29)-1)
+    v = v | v2;
+
+    v = ~~v;
 
     this.hash ^= v^this.i;
   }

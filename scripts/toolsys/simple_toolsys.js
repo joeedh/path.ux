@@ -282,7 +282,7 @@ export class ToolOp extends events.EventHandler {
   }
 
   /**for use in modal mode only*/
-  resetDrawLines() {
+  resetTempGeom() {
     var ctx = this.modal_ctx;
     
     for (var dl of this.drawlines) {
@@ -306,7 +306,7 @@ export class ToolOp extends events.EventHandler {
   }
 
   /**for use in modal mode only*/
-  addDrawLine(v1, v2, style) {
+  makeTempLine(v1, v2, style) {
     let line = this.getOverdraw().line(v1, v2, style);
     this.drawlines.push(line);
     return line;
@@ -369,7 +369,7 @@ export class ToolOp extends events.EventHandler {
       this._on_cancel(this);
     }
     
-    this.resetDrawLines();
+    this.resetTempGeom();
     
     var ctx = this.modal_ctx;
     
