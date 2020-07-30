@@ -128,14 +128,15 @@ export class DataPath {
     return this;
   }
 
-  //XXX this doesn't appear to be implemented
-  //
-  //get/set will be called
-  //like other callbacks,
-  //e.g. the real object owning the property
-  //will be stored in this.dataref
+  /**
+   *
+   * For the callbacks 'this' points to an internal ToolProperty;
+   * Owning object in 'this.dataref'; calling context in 'this.ctx';
+   * and the datapath is 'this.datapath'
+   **/
   customGetSet(get, set) {
     this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
+    this.flag |= DataFlags.USE_CUSTOM_GETSET;
 
     this.data._getValue = this.data.getValue;
     this.data._setValue = this.data.setValue;
@@ -241,6 +242,18 @@ export class DataPath {
 
   step(s) {
     this.data.setStep(s);
+    return this;
+  }
+
+  /**
+   *
+   * Tell DataPathSetOp to save/load entire app state for undo/redo
+   *
+   * */
+  fullSaveUndo() {
+    this.flag |= DataFlags.USE_FULL_UNDO;
+    this.data.flag |= PropFlags.USE_BASE_UNDO;
+
     return this;
   }
 
@@ -677,7 +690,21 @@ export class DataStruct {
     return dpath;
   }
 
+  remove(m) {
+    if (!(m.apiname in this.pathmap)) {
+      throw new Error("Member not in struct " + m.apiname);
+    }
+
+    delete this.pathmap[m.apiname];
+    this.members.remove(m);
+  }
+
   add(m) {
+    if (m.apiname in this.pathmap) {
+      console.warn("Overriding existing member in datapath struct", m.apiname);
+      this.remove(this.pathmap[m.apiname]);
+    }
+
     this.members.push(m);
     m.parent = this;
 
@@ -893,9 +920,9 @@ export class DataAPI extends ModelInterface {
     let _i = 0;
     while (!p.at_end()) {
       let key = p.expect("ID");
-      let path = dstruct.pathmap[key];
+      let dpath = dstruct.pathmap[key];
 
-      if (path === undefined) {
+      if (dpath === undefined) {
         if (prop !== undefined && prop instanceof DataList && key === "length") {
           prop.getLength(this, obj);
           key = "length";
@@ -905,12 +932,12 @@ export class DataAPI extends ModelInterface {
           prop.name = "length";
           prop.flag = PropFlags.READ_ONLY;
 
-          path = _dummypath;
-          path.type = DataTypes.PROP;
-          path.data = prop;
-          path.struct = path.parent = dstruct;
-          path.flag = DataFlags.READ_ONLY;
-          path.path = "length";
+          dpath = _dummypath;
+          dpath.type = DataTypes.PROP;
+          dpath.data = prop;
+          dpath.struct = dpath.parent = dstruct;
+          dpath.flag = DataFlags.READ_ONLY;
+          dpath.path = "length";
 
           /*
           parent: lastobj2,
@@ -930,31 +957,39 @@ export class DataAPI extends ModelInterface {
             throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
           }
 
-          path = _dummypath;
+          _dummypath.parent = dpath;
+          dpath = _dummypath;
 
-          path.type = DataTypes.STRUCT;
-          path.data = dstruct;
-          path.path = key;
+          lastobj = obj;
+          obj = act;
+
+          dpath.type = DataTypes.STRUCT;
+          dpath.data = dstruct;
+          dpath.path = key;
+
+          p.optional("DOT");
+
+          continue;
         } else {
           throw new DataPathError(inpath + ": unknown property " + key);
         }
       }
 
-      if (path.type === DataTypes.STRUCT) {
-        dstruct = path.data;
-      } else if (path.type === DataTypes.DYNAMIC_STRUCT) {
+      if (dpath.type === DataTypes.STRUCT) {
+        dstruct = dpath.data;
+      } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
         let ok = false;
 
         if (obj !== undefined) {
-          let obj2 = obj[path.path];
+          let obj2 = obj[dpath.path];
           if (obj2 !== undefined) {
             dstruct = this.mapStruct(obj2.constructor, false);
           } else {
-            dstruct = path.data;
+            dstruct = dpath.data;
           }
 
           if (dstruct === undefined) {
-            dstruct = path.data;
+            dstruct = dpath.data;
           }
 
           ok = dstruct !== undefined;
@@ -964,11 +999,11 @@ export class DataAPI extends ModelInterface {
           throw new DataPathError("dynamic struct error for path: " + inpath);
         }
       } else {
-        prop = path.data;
+        prop = dpath.data;
       }
 
-      if (path.path.search(/\./) >= 0) {
-        let keys = path.path.split(/\./);
+      if (dpath.path.search(/\./) >= 0) {
+        let keys = dpath.path.split(/\./);
 
         for (let key of keys) {
           lastobj2 = lastobj;
@@ -985,11 +1020,11 @@ export class DataAPI extends ModelInterface {
         lastobj2 = lastobj;
         lastobj = obj;
 
-        lastkey = path.path;
+        lastkey = dpath.path;
         if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
-        } else if (obj !== undefined && path.path !== "") {
-          obj = obj[path.path];
+        } else if (obj !== undefined && dpath.path !== "") {
+          obj = obj[dpath.path];
         }
       }
 
@@ -1022,7 +1057,7 @@ export class DataAPI extends ModelInterface {
           subkey = prop.keys[val];
         }
 
-        key = path.path;
+        key = dpath.path;
         obj = !!(lastobj[key] == val);
       } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("AND");
@@ -1046,7 +1081,7 @@ export class DataAPI extends ModelInterface {
           subkey = prop.keys[val];
         }
 
-        key = path.path;
+        key = dpath.path;
         obj = !!(lastobj[key] & val);
       } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("LSBRACKET");
@@ -1072,12 +1107,15 @@ export class DataAPI extends ModelInterface {
         }
 
         let bitfield;
-        key = path.path;
+        key = dpath.path;
 
         if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
           bitfield = lastobj[key];
         } else {
           prop.dataref = lastobj;
+          prop.datapath = inpath;
+          prop.ctx = ctx;
+
           bitfield = prop.getValue();
         }
 
@@ -1153,7 +1191,7 @@ export class DataAPI extends ModelInterface {
       let s = path[i];
 
       if (splitchars.has(s)) {
-        if (s != "]") {
+        if (s !== "]") {
           p.push(s);
         }
 
@@ -1167,7 +1205,7 @@ export class DataAPI extends ModelInterface {
     for (let i = 0; i < p.length; i++) {
       p[i] = p[i].trim();
 
-      if (p[i].length == 0) {
+      if (p[i].length === 0) {
         p.remove(p[i]);
         i--;
       }
@@ -1204,7 +1242,7 @@ export class DataAPI extends ModelInterface {
       let b = p[i + 1];
 
       //check for enum/flag propertys with [] form
-      if (a == "[") {
+      if (a === "[") {
         let ok = false;
 
         key = b;
@@ -1213,12 +1251,12 @@ export class DataAPI extends ModelInterface {
         if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
           let dpath = dstruct.pathmap[lastkey];
 
-          if (dpath.type == DataTypes.PROP) {
+          if (dpath.type === DataTypes.PROP) {
             prop = dpath.data;
           }
         }
 
-        if (prop !== undefined && (prop.type == PropTypes.ENUM || prop.type == PropTypes.FLAG)) {
+        if (prop !== undefined && (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG)) {
           util.console.context("api").log("found flag/enum property");
           ok = true;
         }
@@ -1235,7 +1273,7 @@ export class DataAPI extends ModelInterface {
             value = prop.values[key];
           }
 
-          if (prop.type == PropTypes.ENUM) {
+          if (prop.type === PropTypes.ENUM) {
             value = !!(value == key);
           } else { //flag
             value = !!(value & key);
@@ -1259,7 +1297,7 @@ export class DataAPI extends ModelInterface {
         }
       }
 
-      if (a == "." || a == "[") {
+      if (a === "." || a === "[") {
         key = b;
 
         parent2 = parent1;
@@ -1276,7 +1314,7 @@ export class DataAPI extends ModelInterface {
 
         i += 2;
         continue;
-      } else if (a == "&") {
+      } else if (a === "&") {
         obj &= b;
         arg = b;
 
@@ -1287,7 +1325,7 @@ export class DataAPI extends ModelInterface {
         i += 2;
         type = "flag";
         continue;
-      } else if (a == "=") {
+      } else if (a === "=") {
         obj = obj == b;
         arg = b;
 

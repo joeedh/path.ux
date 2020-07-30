@@ -14,6 +14,10 @@ class EquationCurve extends CurveTypeData {
     name   : "equation"
   }}
 
+  equals(b) {
+    return super.equals(b) && this.equation === b.equation;
+  }
+
   toJSON() {
     let ret = super.toJSON();
 
@@ -194,6 +198,10 @@ class GuassianCurve extends CurveTypeData {
     this.height = 1.0;
     this.offset = 1.0;
     this.deviation = 0.3; //standard deviation
+  }
+
+  equals(b) {
+    return super.equals(b) && this.height === b.height && this.offset === b.offset && this.deviation === b.deviation;
   }
 
   static define() {return {

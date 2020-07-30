@@ -40,7 +40,8 @@ export const PropFlags = {
   SAVE_LAST_VALUE   : 256,
   READ_ONLY         : 512,
   SIMPLE_SLIDER     : 1024,
-  FORCE_ROLLER_SLIDER : 2048
+  FORCE_ROLLER_SLIDER : 2048,
+  USE_BASE_UNDO     : 1<<12 //internal to simple_controller.js
 };
 
 export class ToolPropertyIF {
@@ -55,6 +56,10 @@ export class ToolPropertyIF {
     this.description = description;
     this.flag = flag;
     this.icon = icon;
+  }
+
+  equals(b) {
+    throw new Error("implement me");
   }
 
   copyTo(b) {

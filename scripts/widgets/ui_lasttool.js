@@ -45,6 +45,7 @@ export class LastToolPanel extends ColumnFrame {
 
     //don't process the root toolop
     let bad = ctx.toolstack.length === 0;
+    bad = bad || !ctx.toolstack[ctx.toolstack.cur];
     bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
 
     if (bad) {
@@ -102,7 +103,6 @@ export class LastToolPanel extends ColumnFrame {
     for (let k in tool.inputs) {
       let prop = tool.inputs[k];
 
-      console.log("PROP FLAG", prop.flag, k);
       if (prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY)) {
         continue;
       }
@@ -128,7 +128,7 @@ export class LastToolPanel extends ColumnFrame {
     }
     this.setCSS();
 
-    console.log("Building last tool settings");
+    //console.log("Building last tool settings");
   }
 
   update() {

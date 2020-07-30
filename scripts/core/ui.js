@@ -1392,6 +1392,14 @@ export class Container extends ui_base.UIBase {
     }
   }
 
+  /**
+   *
+   * usage: .slider(inpath, {
+   *  name : bleh,
+   *  defaultval : number,
+   *  etc...
+   * });
+   * */
   slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       //new-style api call

@@ -335,6 +335,50 @@ export class BaseVector extends Array {
     //this.xy = this.init_swizzle(2);
   }
 
+  static Angle3(a, b, c) {
+    let dx1, dy1, dz1=0.0, dw1=0.0;
+    let dx2, dy2, dz2=0.0, dw2=0.0;
+
+    dx1 = a[0] - b[0];
+    dy1 = a[1] - b[1];
+    if (a.length > 2 && b.length > 2)
+      dz1 = a[2] - b[2];
+    if (a.length > 3 && b.length > 3)
+      dw1 = a[3] - b[3];
+
+    dx2 = c[0] - b[0];
+    dy2 = c[1] - b[1];
+    if (c.length > 2 && b.length > 2)
+      dz2 = c[2] - b[2];
+    if (c.length > 3 && b.length > 3)
+      dw2 = c[3] - b[3];
+
+
+    let l1 = Math.sqrt(dx1*dx1 + dy1*dy1 + dz1*dz1 + dw1*dw1);
+    let l2 = Math.sqrt(dx2*dx2 + dy2*dy2 + dz2*dz2 + dw2*dw2);
+
+    let eps = 0.00001;
+
+    if (l1 == 0.0 || l2 == 0.0) {
+      return 0.0;
+    }
+
+    l1 = (1.0-eps) / l1;
+    l2 = (1.0-eps) / l2;
+
+    dx1 *= l1;
+    dy1 *= l1;
+    dz1 *= l1;
+    dw1 *= l1;
+
+    dx2 *= l2;
+    dy2 *= l2;
+    dz2 *= l2;
+    dw2 *= l2;
+
+    return Math.acos(dx1*dx2 + dy1*dy2 + dz1*dz2 + dw1*dw2);
+  }
+
   copy() {
     return new this.constructor(this);
   }

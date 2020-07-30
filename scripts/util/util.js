@@ -575,6 +575,22 @@ export class set {
     return new SetIter(this);
   }
 
+  equals(setb) {
+    for (let item of this) {
+      if (!setb.has(item)) {
+        return false;
+      }
+    }
+
+    for (let item of setb) {
+      if (!this.has(item)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   clear() {
     this.items.length = 0;
     this.keys = {};
