@@ -620,7 +620,7 @@ export class Vector4 extends BaseVector {
 };
 Vector4.STRUCT = `
 vec4 {
-  vec : array(float) | obj;
+  vec : array(float) | this;
 }
 `;
 nstructjs.manager.add_class(Vector4);
@@ -1798,24 +1798,33 @@ export class Matrix4 {
 
     let n = makenormalcache.next().load(normal).normalize();
 
+    //try to guess an up axis
     if (up === undefined) {
       up = makenormalcache.next().zero();
 
-      if (Math.abs(n[2]) > 0.95) {
-        up[1] = 1.0;
+      let ax = Math.abs(n[0]), ay = Math.abs(n[1]), az = Math.abs(n[2]);
+      let axis;
+
+      if (ax > ay && ax > az) {
+        axis = 2;
+      } else if (ay >= ax && ay >= az) {
+        axis = 0;
       } else {
-        up[2] = 1.0;
+        axis = 1;
       }
+
+      up[axis] = 1;
+
+      up.cross(n).normalize();
+    } else {
+      up = makenormalcache.next().load(up).normalize();
     }
 
-    up = makenormalcache.next().load(up);
 
-    up.normalize();
-
-    if (up.dot(normal) > 0.99) {
+    if (up.dot(normal) > 0.999) {
       this.makeIdentity();
       return this;
-    } else if (up.dot(normal) < -0.99) {
+    } else if (up.dot(normal) < -0.999) {
       this.makeIdentity();
       this.scale(1.0, 1.0, -1.0);
       return this;
@@ -1834,10 +1843,12 @@ export class Matrix4 {
     m.m11 = x[0];
     m.m12 = x[1];
     m.m13 = x[2];
+    m.m14 = 0.0;
 
     m.m21 = y[0];
     m.m22 = y[1];
     m.m23 = y[2];
+    m.m24 = 0.0;
 
     m.m31 = n[0];
     m.m32 = n[1];

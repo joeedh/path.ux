@@ -266,6 +266,9 @@ export class ModelInterface {
       prop.set(this, res.obj, res.key, val);
     } else if (prop !== undefined) {
       prop.dataref = res.obj;
+      prop.datapath = path;
+      prop.ctx = ctx;
+
       prop._fire("change", res.obj[res.key], old);
     }
   }

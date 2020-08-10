@@ -846,10 +846,30 @@ export class hashtable {
   }
 }
 
+let IDGenInternalIDGen = 0;
+
 export class IDGen {
   constructor() {
     this._cur = 1;
+
+    this._debug = false;
+    this._internalID = IDGenInternalIDGen++;
   }
+
+  /*
+  get _cur() {
+    return this.__cur;
+  }
+
+  set _cur(v) {
+    if (this._debug && pollTimer("_idgen_debug", 450)) {
+      window.console.warn("_cur access", v);
+    }
+
+    this.__cur = v;
+  }
+
+  // */
 
   next() {
     return this._cur++;
@@ -858,6 +878,7 @@ export class IDGen {
   copy() {
     let ret = new IDGen();
     ret._cur = this._cur;
+
     return ret;
   }
 
@@ -876,6 +897,10 @@ export class IDGen {
     ret._cur = obj._cur;
     return ret;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
 }
 
 IDGen.STRUCT = `
@@ -883,7 +908,7 @@ IDGen {
   _cur : int;
 }
 `;
-nstructjs.manager.add_class(IDGen);
+nstructjs.register(IDGen);
 
 
 function get_callstack(err) {

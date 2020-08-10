@@ -575,7 +575,7 @@ export class ToolStack extends Array {
     let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
 
     if (ok) {
-      console.warn("Same tool detected");
+      //console.warn("Same tool detected");
 
       this.undo();
 
