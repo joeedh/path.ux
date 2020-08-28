@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "If publishing a new version in npm, make sure to run publish.sh instead of build_package.sh"
+echo "If publishing a new version in npm make sure to run publish.sh instead of build_package.sh"
 
 git commit -a
 

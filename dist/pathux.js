@@ -13475,8 +13475,8 @@ class BSplineCurve extends CurveTypeData {
       ctrlKey    : e.ctrlKey,
       isTouch    : true,
       commandKey : e.commandKey,
-      stopPropagation : e.stopPropagation(),
-      preventDefault : e.preventDefault()
+      stopPropagation : () => e.stopPropagation(),
+      preventDefault : () => e.preventDefault()
     };
   }
 
@@ -20431,7 +20431,9 @@ class DataAPI extends ModelInterface {
             throw new DataPathError("no active elem ent for list");
           }
 
-          dstruct = prop.getStruct(this, obj, prop.getKey(this, obj, act));
+          let actkey = obj !== undefined && act !== undefined ? prop.getKey(this, obj, act) : undefined;
+
+          dstruct = prop.getStruct(this, obj, actkey);
           if (dstruct === undefined) {
             throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
           }
