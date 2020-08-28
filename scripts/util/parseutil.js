@@ -297,10 +297,9 @@ export class parser {
   optional(type) {
     var tok = this.peek_i(0);
 
-    if (tok === undefined) return false;
-
-    if (tok.type === type) {
+    if (tok && tok.type === type) {
       this.next();
+
       return true;
     }
 

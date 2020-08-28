@@ -47,6 +47,20 @@ export class SimpleCurveBase extends CurveTypeData {
     }
   }
 
+  equals(b) {
+    if (this.type !== b.type) {
+      return false;
+    }
+
+    for (let k in this.params) {
+      if (this.params[k] !== b.params[k]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   redraw() {
     if (this.parent)
       this.parent.redraw();

@@ -1,5 +1,5 @@
 import {ToolOp, ToolFlags} from "../toolsys/simple_toolsys.js";
-import {PropTypes, BoolProperty, IntProperty, FloatProperty, FlagProperty,
+import {PropTypes, PropFlags, BoolProperty, IntProperty, FloatProperty, FlagProperty,
         EnumProperty, StringProperty, Vec3Property, Vec2Property, Vec4Property,
         QuatProperty, Mat4Property} from "../toolsys/toolprop.js";
 
@@ -27,6 +27,9 @@ export class DataPathSetOp extends ToolOp {
     }
 
     prop.dataref = object;
+    prop.ctx = ctx;
+    prop.datapath = path;
+
     prop.setValue(val);
   }
 
@@ -42,6 +45,10 @@ export class DataPathSetOp extends ToolOp {
     let tool = new DataPathSetOp();
 
     tool.propType = prop.type;
+
+    if (prop && (prop.flag & PropFlags.USE_BASE_UNDO)) {
+      tool.inputs.fullSaveUndo.setValue(true);
+    }
 
     let mask = PropTypes.FLAG|PropTypes.ENUM;
     mask |= PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT;
@@ -90,6 +97,10 @@ export class DataPathSetOp extends ToolOp {
   }
 
   undoPre(ctx) {
+    if (this.inputs.fullSaveUndo.getValue()) {
+      return super.undoPre(ctx);
+    }
+
     if (this.__ctx)
       ctx = this.__ctx;
 
@@ -106,6 +117,11 @@ export class DataPathSetOp extends ToolOp {
 
     paths.add(this.inputs.dataPath.getValue());
 
+    for (let path of paths) {
+      this._undo[path] = ctx.api.getValue(ctx, path);
+    }
+
+    /*
     for (let path of paths) {
       let rdef = ctx.api.resolvePath(ctx, path);
 
@@ -128,17 +144,25 @@ export class DataPathSetOp extends ToolOp {
         }
       } else {
         let prop2 = prop.copy();
+
         prop2.dataref = rdef.obj;
+        prop2.datapath = path;
+        prop2.ctx = ctx;
+
         prop2.setValue(value);
 
         this._undo[path] = prop2.getValue();
       }
-    }
+    }*/
   }
 
   undo(ctx) {
     if (this.__ctx)
       ctx = this.__ctx;
+
+    if (this.inputs.fullSaveUndo.getValue()) {
+      return super.undo(ctx);
+    }
 
     for (let path in this._undo) {
       let rdef = ctx.api.resolvePath(ctx, path);
@@ -149,6 +173,9 @@ export class DataPathSetOp extends ToolOp {
         rdef.obj[rdef.key] = this._undo[path];
 
         rdef.prop.dataref = rdef.obj;
+        rdef.prop.datapath = path;
+        rdef.prop.ctx = ctx;
+
         rdef.prop._fire("change", rdef.obj[rdef.key], old);
       } else {
         try {
@@ -194,7 +221,8 @@ export class DataPathSetOp extends ToolOp {
     is_modal : true,
     inputs : {
       dataPath : new StringProperty(),
-      massSetPath : new StringProperty()
+      massSetPath : new StringProperty(),
+      fullSaveUndo : new BoolProperty(false)
     }
   }}
 }

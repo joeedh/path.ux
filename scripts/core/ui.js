@@ -13,6 +13,7 @@ import * as toolprop from '../toolsys/toolprop.js';
 import '../util/html5_fileapi.js';
 import {HotKey} from '../util/simple_events.js';
 import {CSSFont} from './ui_theme.js';
+import {theme} from './ui_base.js';
 
 import {createMenu, startMenu} from "../widgets/ui_menu.js";
 
@@ -254,8 +255,27 @@ export class Container extends ui_base.UIBase {
   }
 
   setCSS() {
+    let rest = '';
+
+    let add = (style) => {
+      let val = this.getDefault(style);
+
+      if (val !== undefined) {
+        rest += `  ${style} = ${val};\n`;
+        this.style[style] = val;
+      }
+    }
+
+    add("border-radius");
+    add("border");
+    add("border-top");
+    add("border-bottom");
+    add("border-left");
+    add("border-right");
+
     this.styletag.textContent = `div.containerx {
         background-color : ${this.getDefault("DefaultPanelBG")};
+        ${rest}
       }
       `;
   }
@@ -272,15 +292,23 @@ export class Container extends ui_base.UIBase {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(m = this.getDefault("oneAxisPadding"), m2 = 0) {
+  strip(m = this.getDefault("oneAxisPadding"), m2 = 1, themeClass="strip") {
     let horiz = this instanceof RowFrame;
     horiz = horiz || this.style["flex-direction"] === "row";
 
     let flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
 
     let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
+
     strip.packflag |= flag;
 
+    if (themeClass in theme) {
+      strip.overrideClass(themeClass);
+      strip.background = strip.getDefault("DefaultPanelBG");
+      strip.setCSS();
+    }
+
+    /*
     let prev = strip.previousElementSibling;
     if (prev !== undefined && (prev.packflag & flag)) {
       if (horiz) {
@@ -288,7 +316,7 @@ export class Container extends ui_base.UIBase {
       } else {
         prev.style["padding-top"] = "0px";
       }
-    }
+    }//*/
 
     return strip;
   }
@@ -889,9 +917,9 @@ export class Container extends ui_base.UIBase {
       }
 
       return ret;
-    } else if (prop.type == PropTypes.BOOL) {
-      this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes.ENUM) {
+    } else if (prop.type === PropTypes.BOOL) {
+      return this.check(inpath, prop.uiname, packflag, mass_set_path);
+    } else if (prop.type === PropTypes.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -1364,6 +1392,14 @@ export class Container extends ui_base.UIBase {
     }
   }
 
+  /**
+   *
+   * usage: .slider(inpath, {
+   *  name : bleh,
+   *  defaultval : number,
+   *  etc...
+   * });
+   * */
   slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       //new-style api call

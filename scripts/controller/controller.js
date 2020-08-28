@@ -45,7 +45,9 @@ export function isVecProperty(prop) {
 }
 
 export const DataFlags = {
-  READ_ONLY : 1
+  READ_ONLY         : 1,
+  USE_CUSTOM_GETSET : 2,
+  USE_FULL_UNDO     : 4 //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
 };
 
 export class DataPathError extends Error {
@@ -125,7 +127,18 @@ export class ModelInterface {
   parseToolPath(path) {
     throw new Error("implement me");
   }
-  
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, toolop, compareInputs=false) {
+    return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
+  }
+
   execTool(ctx, path, inputs={}, constructor_argument=undefined) {
     return new Promise((accept, reject) => {
       let tool = path;
@@ -145,7 +158,7 @@ export class ModelInterface {
       
       //execute
       try {
-        ctx.state.toolstack.execTool(ctx, tool);
+        ctx.toolstack.execTool(ctx, tool);
       } catch (error) { //for some reason chrome is suppressing errors
         print_stack(error);
         throw error;
@@ -204,6 +217,9 @@ export class ModelInterface {
 
     if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
       prop.dataref = res.obj;
+      prop.ctx = ctx;
+      prop.datapath = path;
+
       prop.setValue(val);
       return;
     }
@@ -250,6 +266,9 @@ export class ModelInterface {
       prop.set(this, res.obj, res.key, val);
     } else if (prop !== undefined) {
       prop.dataref = res.obj;
+      prop.datapath = path;
+      prop.ctx = ctx;
+
       prop._fire("change", res.obj[res.key], old);
     }
   }
@@ -319,6 +338,8 @@ export class ModelInterface {
     
     if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
       ret.prop.dataref = ret.obj;
+      ret.prop.datapath = path;
+      ret.prop.ctx = ctx;
       
       return ret.prop.getValue();
     }

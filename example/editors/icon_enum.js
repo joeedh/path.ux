@@ -1,19 +1,19 @@
 "use strict";
 
 export const Icons = {
-  FOLDER         : 0,
+  FOLDER         : 0, //file folder
   FILE           : 1,
-  TINY_X         : 2,
+  TINY_X         : 2, //'x' in bottom left corner
   SMALL_PLUS     : 3,
   SMALL_MINUS    : 4,
   UNDO           : 5,
   REDO           : 6,
   HELP           : 7,
-  ENUM_UNCHECKED : 8,
-  ENUM_CHECKED   : 9,
-  LARGE_CHECK    : 10,
+  ENUM_UNCHECKED : 8, //overlaid on icon checkboxes when unchecked
+  ENUM_CHECKED   : 9, //overlaid on icon checkboxes when checked
+  LARGE_CHECK    : 10, //default check mark for non-icon checkboxes
   CURSOR_ARROW   : 11,
-  NOTE_EXCL      : 12,
+  NOTE_EXCL      : 12, //notification exclamation mark
   SCROLL_DOWN    : 13,
   SCROLL_UP      : 14,
   BACKSPACE      : 15,

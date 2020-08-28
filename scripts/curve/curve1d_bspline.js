@@ -191,6 +191,32 @@ class BSplineCurve extends CurveTypeData {
     this.on_touchcancel = this.on_touchcancel.bind(this);
   }
 
+  equals(b) {
+    if (b.type !== this.type) {
+      return false;
+    }
+
+    let bad = this.points.length !== b.points.length;
+
+    bad = bad || this.deg !== b.deg;
+    bad = bad || this.interpolating !== b.interpolating;
+
+    if (bad) {
+      return false;
+    }
+
+    for (let i=0; i<this.points.length; i++) {
+      let p1 = this.points[i];
+      let p2 = b.points[i];
+
+      if (p1.vectorDistance(p2) > 0.00001) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   static define() {return {
     uiname : "B-Spline",
     name   : "bspline"

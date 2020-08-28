@@ -10434,9 +10434,9 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/toolsys/simple_toolsys.js~toolop#adddrawline",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-addDrawLine",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#addDrawLine",
+    "scripts/toolsys/simple_toolsys.js~toolop#makeTempLine",
+    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-makeTempLine",
+    "scripts/toolsys/simple_toolsys.js~ToolOp#makeTempLine",
     "method"
   ],
   [
@@ -10566,9 +10566,9 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/toolsys/simple_toolsys.js~toolop#resetdrawlines",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-resetDrawLines",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#resetDrawLines",
+    "scripts/toolsys/simple_toolsys.js~toolop#resetTempGeom",
+    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-resetTempGeom",
+    "scripts/toolsys/simple_toolsys.js~ToolOp#resetTempGeom",
     "method"
   ],
   [

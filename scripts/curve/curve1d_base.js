@@ -44,6 +44,10 @@ export class CurveTypeData {
     }
   }
 
+  equals(b) {
+    return this.type === b.type;
+  }
+
   loadJSON(obj) {
     this.type = obj.type;
 

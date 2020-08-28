@@ -3217,7 +3217,6 @@ else {
   };
 }
 
-
 const _export_setWarningMode_$1 = (t) => {
   _export_setWarningMode_(t);
   
@@ -3292,6 +3291,7 @@ function define_empty_class(name) {
 var STRUCT = class STRUCT {
   constructor() {
     this.idgen = new IDGen();
+    this.allowOverriding = true;
 
     this.structs = {};
     this.struct_cls = {};
@@ -3530,6 +3530,16 @@ var STRUCT = class STRUCT {
       stt.name = cls.structName;
     } else {
       throw new Error("Missing structName parameter");
+    }
+
+    if (cls.structName in this.structs) {
+      console.warn("Struct " + cls.structName + " is already registered", cls);
+
+      if (!this.allowOverriding) {
+        throw new Error("Struct " + cls.structName + " is already registered");
+      }
+
+      return;
     }
 
     if (stt.id === -1)
@@ -4370,6 +4380,10 @@ _module_exports_$1.validateStructs = function validateStructs(onerror) {
   return _module_exports_$1.manager.validateStructs(onerror);
 };
 
+_module_exports_$1.setAllowOverriding = function setAllowOverriding(t) {
+  return _module_exports_$1.manager.allowOverriding = !!t;
+};
+
 /** Register a class with nstructjs **/
 _module_exports_$1.register = function register(cls, structName) {
   return _module_exports_$1.manager.register(cls, structName);
@@ -4447,6 +4461,7 @@ const writeObject = nstructjs$1.writeObject;
 const _nstructjs = nstructjs$1;
 const readJSON = nstructjs$1.readJSON;
 const writeJSON = nstructjs$1.writeJSON;
+const setAllowOverriding = nstructjs$1.setAllowOverriding;
 
 function register(cls) {
   manager.add_class(cls);
@@ -6034,6 +6049,22 @@ class set$1 {
     return new SetIter(this);
   }
 
+  equals(setb) {
+    for (let item of this) {
+      if (!setb.has(item)) {
+        return false;
+      }
+    }
+
+    for (let item of setb) {
+      if (!this.has(item)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   clear() {
     this.items.length = 0;
     this.keys = {};
@@ -6289,10 +6320,30 @@ class hashtable {
   }
 }
 
+let IDGenInternalIDGen = 0;
+
 class IDGen {
   constructor() {
     this._cur = 1;
+
+    this._debug = false;
+    this._internalID = IDGenInternalIDGen++;
   }
+
+  /*
+  get _cur() {
+    return this.__cur;
+  }
+
+  set _cur(v) {
+    if (this._debug && pollTimer("_idgen_debug", 450)) {
+      window.console.warn("_cur access", v);
+    }
+
+    this.__cur = v;
+  }
+
+  // */
 
   next() {
     return this._cur++;
@@ -6301,6 +6352,7 @@ class IDGen {
   copy() {
     let ret = new IDGen();
     ret._cur = this._cur;
+
     return ret;
   }
 
@@ -6319,6 +6371,10 @@ class IDGen {
     ret._cur = obj._cur;
     return ret;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
 }
 
 IDGen.STRUCT = `
@@ -6326,7 +6382,7 @@ IDGen {
   _cur : int;
 }
 `;
-nstructjs.manager.add_class(IDGen);
+nstructjs.register(IDGen);
 
 
 function get_callstack(err) {
@@ -6737,17 +6793,14 @@ class HashDigest {
 
   add(v) {
     //glibc linear congruel generator
-    this.i = (this.i*1103515245 + 12345) & ((1<<30)-1);
+    this.i = ((this.i+(~~v))*1103515245 + 12345) & ((1<<29)-1);
     //according to wikipedia only the top 16 bits are random
     //this.i = this.i>>16;
 
-    if (v < 5.0 && v > -5.0) {
-      v *= 1024;
-    } else if (v < 15 && v >= -15) {
-      v *= 512;
-    } else if (v < 30 && v >= -30) {
-      v *= 256;
-    }
+    let v2 = (v*1024*1024) & ((1<<29)-1);
+    v = v | v2;
+
+    v = ~~v;
 
     this.hash ^= v^this.i;
   }
@@ -7168,6 +7221,50 @@ class BaseVector extends Array {
     //this.xy = this.init_swizzle(2);
   }
 
+  static Angle3(a, b, c) {
+    let dx1, dy1, dz1=0.0, dw1=0.0;
+    let dx2, dy2, dz2=0.0, dw2=0.0;
+
+    dx1 = a[0] - b[0];
+    dy1 = a[1] - b[1];
+    if (a.length > 2 && b.length > 2)
+      dz1 = a[2] - b[2];
+    if (a.length > 3 && b.length > 3)
+      dw1 = a[3] - b[3];
+
+    dx2 = c[0] - b[0];
+    dy2 = c[1] - b[1];
+    if (c.length > 2 && b.length > 2)
+      dz2 = c[2] - b[2];
+    if (c.length > 3 && b.length > 3)
+      dw2 = c[3] - b[3];
+
+
+    let l1 = Math.sqrt(dx1*dx1 + dy1*dy1 + dz1*dz1 + dw1*dw1);
+    let l2 = Math.sqrt(dx2*dx2 + dy2*dy2 + dz2*dz2 + dw2*dw2);
+
+    let eps = 0.00001;
+
+    if (l1 == 0.0 || l2 == 0.0) {
+      return 0.0;
+    }
+
+    l1 = (1.0-eps) / l1;
+    l2 = (1.0-eps) / l2;
+
+    dx1 *= l1;
+    dy1 *= l1;
+    dz1 *= l1;
+    dw1 *= l1;
+
+    dx2 *= l2;
+    dy2 *= l2;
+    dz2 *= l2;
+    dw2 *= l2;
+
+    return Math.acos(dx1*dx2 + dy1*dy2 + dz1*dz2 + dw1*dw2);
+  }
+
   copy() {
     return new this.constructor(this);
   }
@@ -7409,7 +7506,7 @@ class Vector4 extends BaseVector {
 };
 Vector4.STRUCT = `
 vec4 {
-  vec : array(float) | obj;
+  vec : array(float) | this;
 }
 `;
 nstructjs.manager.add_class(Vector4);
@@ -8149,6 +8246,8 @@ class Matrix4 {
     Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
     
     ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+
+    return this;
   }
 
   makeIdentity() {
@@ -8171,6 +8270,8 @@ class Matrix4 {
 
     //drop isPersp
     this.isPersp = false;
+
+    return this;
   }
 
   transpose() {
@@ -8192,6 +8293,8 @@ class Matrix4 {
     tmp = this.$matrix.m34;
     this.$matrix.m34 = this.$matrix.m43;
     this.$matrix.m43 = tmp;
+
+    return this;
   }
 
   determinant() {
@@ -8581,24 +8684,33 @@ class Matrix4 {
 
     let n = makenormalcache.next().load(normal).normalize();
 
+    //try to guess an up axis
     if (up === undefined) {
       up = makenormalcache.next().zero();
 
-      if (Math.abs(n[2]) > 0.95) {
-        up[1] = 1.0;
+      let ax = Math.abs(n[0]), ay = Math.abs(n[1]), az = Math.abs(n[2]);
+      let axis;
+
+      if (ax > ay && ax > az) {
+        axis = 2;
+      } else if (ay >= ax && ay >= az) {
+        axis = 0;
       } else {
-        up[2] = 1.0;
+        axis = 1;
       }
+
+      up[axis] = 1;
+
+      up.cross(n).normalize();
+    } else {
+      up = makenormalcache.next().load(up).normalize();
     }
 
-    up = makenormalcache.next().load(up);
 
-    up.normalize();
-
-    if (up.dot(normal) > 0.99) {
+    if (up.dot(normal) > 0.999) {
       this.makeIdentity();
       return this;
-    } else if (up.dot(normal) < -0.99) {
+    } else if (up.dot(normal) < -0.999) {
       this.makeIdentity();
       this.scale(1.0, 1.0, -1.0);
       return this;
@@ -8617,10 +8729,12 @@ class Matrix4 {
     m.m11 = x[0];
     m.m12 = x[1];
     m.m13 = x[2];
+    m.m14 = 0.0;
 
     m.m21 = y[0];
     m.m22 = y[1];
     m.m23 = y[2];
+    m.m24 = 0.0;
 
     m.m31 = n[0];
     m.m32 = n[1];
@@ -12150,6 +12264,10 @@ class CurveTypeData {
     }
   }
 
+  equals(b) {
+    return this.type === b.type;
+  }
+
   loadJSON(obj) {
     this.type = obj.type;
 
@@ -12284,6 +12402,10 @@ class EquationCurve extends CurveTypeData {
     uiname : "Equation",
     name   : "equation"
   }}
+
+  equals(b) {
+    return super.equals(b) && this.equation === b.equation;
+  }
 
   toJSON() {
     let ret = super.toJSON();
@@ -12465,6 +12587,10 @@ class GuassianCurve extends CurveTypeData {
     this.height = 1.0;
     this.offset = 1.0;
     this.deviation = 0.3; //standard deviation
+  }
+
+  equals(b) {
+    return super.equals(b) && this.height === b.height && this.offset === b.offset && this.deviation === b.deviation;
   }
 
   static define() {return {
@@ -12794,6 +12920,32 @@ class BSplineCurve extends CurveTypeData {
     this.on_touchmove = this.on_touchmove.bind(this);
     this.on_touchend = this.on_touchend.bind(this);
     this.on_touchcancel = this.on_touchcancel.bind(this);
+  }
+
+  equals(b) {
+    if (b.type !== this.type) {
+      return false;
+    }
+
+    let bad = this.points.length !== b.points.length;
+
+    bad = bad || this.deg !== b.deg;
+    bad = bad || this.interpolating !== b.interpolating;
+
+    if (bad) {
+      return false;
+    }
+
+    for (let i=0; i<this.points.length; i++) {
+      let p1 = this.points[i];
+      let p2 = b.points[i];
+
+      if (p1.vectorDistance(p2) > 0.00001) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static define() {return {
@@ -14198,6 +14350,20 @@ class SimpleCurveBase extends CurveTypeData {
     }
   }
 
+  equals(b) {
+    if (this.type !== b.type) {
+      return false;
+    }
+
+    for (let k in this.params) {
+      if (this.params[k] !== b.params[k]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   redraw() {
     if (this.parent)
       this.parent.redraw();
@@ -14551,6 +14717,17 @@ class Curve1D extends EventDispatcher {
     }
 
     this.generators.active = this.generators[0];
+  }
+
+  equals(b) {
+    let gen1 = this.generators.active;
+    let gen2 = b.generators.active;
+
+    if (!gen1 || !gen2 || gen1.constructor !== gen2.constructor) {
+      return false;
+    }
+
+    return gen1.equals(gen2);
   }
 
   get generatorType() {
@@ -15375,8 +15552,8 @@ class FootUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    let vft = ~~(value / 12);
-    let vin = value % 12;
+    let vft = ~~(value);
+    let vin = (value*12) % 12;
 
     if (vft === 0.0) {
       return myToFixed(value, decimals) + " in";
@@ -15498,6 +15675,9 @@ Unit.register(RadianUnit);
 function setBaseUnit(unit) {
   Unit.baseUnit = unit;
 }
+
+window._getBaseUnit = () => Unit.baseUnit;
+
 function setMetric(val) {
   Unit.isMetric = val;
 }
@@ -15628,7 +15808,8 @@ const PropFlags = {
   SAVE_LAST_VALUE   : 256,
   READ_ONLY         : 512,
   SIMPLE_SLIDER     : 1024,
-  FORCE_ROLLER_SLIDER : 2048
+  FORCE_ROLLER_SLIDER : 2048,
+  USE_BASE_UNDO     : 1<<12 //internal to simple_controller.js
 };
 
 class ToolPropertyIF {
@@ -15643,6 +15824,10 @@ class ToolPropertyIF {
     this.description = description;
     this.flag = flag;
     this.icon = icon;
+  }
+
+  equals(b) {
+    throw new Error("implement me");
   }
 
   copyTo(b) {
@@ -15963,6 +16148,10 @@ class ToolProperty extends ToolPropertyIF {
     this.callbacks = {};
   }
 
+  equals(b) {
+    throw new Error("implement me");
+  }
+
   static register(cls) {
     cls.PROP_TYPE_ID = (1<<customPropTypeBase);
     PropTypes[cls.name] = cls.PROP_TYPE_ID;
@@ -16176,6 +16365,10 @@ class StringProperty extends ToolProperty {
 
     this.wasSet = false;
   }
+
+  equals(b) {
+    return this.data === b.data;
+  }
   
   copyTo(b) {
     super.copyTo(b);
@@ -16249,6 +16442,10 @@ class NumProperty extends ToolProperty {
     this.range = [0, 0];
   }
 
+  equals(b) {
+    return this.data == b.data;
+  }
+
   loadSTRUCT(reader) {
     reader(this);
     super.loadSTRUCT(reader);
@@ -16276,6 +16473,10 @@ class _NumberPropertyBase extends ToolProperty {
       this.setValue(value);
       this.wasSet = false;
     }
+  }
+
+  equals(b) {
+    return this.data == b.data;
   }
 
   get ui_range() {
@@ -16423,6 +16624,10 @@ class BoolProperty extends ToolProperty {
     super(PropTypes.BOOL, undefined, apiname, uiname, description, flag, icon);
 
     this.data = !!value;
+  }
+
+  equals(b) {
+    return this.data == b.data;
   }
 
   copyTo(b) {
@@ -16606,6 +16811,10 @@ class EnumProperty extends ToolProperty {
     this.wasSet = false;
   }
 
+  equals(b) {
+    return this.getValue() === b.getValue();
+  }
+
   addUINames(map) {
     for (let k in map) {
       this.ui_value_names[k] = map[k];
@@ -16773,6 +16982,10 @@ class VecPropertyBase extends FloatProperty {
     this.hasUniformSlider = false;
   }
 
+  equals(b) {
+    return this.data.vectorDistance(b.data) < 0.00001;
+  }
+
   uniformSlider(state=true) {
     this.hasUniformSlider = state;
     return this;
@@ -16913,6 +17126,10 @@ class QuatProperty extends ToolProperty {
     this.data = new Quat(data);
   }
 
+  equals(b) {
+    return this.data.vectorDistance(b.data) < 0.00001;
+  }
+
   setValue(v) {
     this.data.load(v);
     super.setValue(v);
@@ -16946,6 +17163,23 @@ class Mat4Property extends ToolProperty {
   constructor(data, apiname, uiname, description) {
     super(PropTypes.MATRIX4, undefined, apiname, uiname, description);
     this.data = new Matrix4(data);
+  }
+
+  equals(b) {
+    let m1 = this.data.$matrix;
+    let m2 = b.data.$matrix;
+
+    for (let i=1; i<=4; i++) {
+      for (let j=1; j<=4; j++) {
+        let key = `m${i}${j}`;
+
+        if (Math.abs(m1[key] - m2[key]) > 0.00001) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   setValue(v) {
@@ -17019,6 +17253,29 @@ class ListProperty extends ToolProperty {
     this.wasSet = false;
   }
 
+  equals(b) {
+    let l1 = this.value ? this.value.length : 0;
+    let l2 = b.value ? b.value.length : 0;
+
+    if (l1 !== l2) {
+      return false;
+    }
+
+    for (let i=0; i<l1; i++) {
+      let prop1 = this.value[i];
+      let prop2 = b.value[i];
+
+      let bad = prop1.constructor !== prop2.constructor;
+      bad = bad || !prop1.equals(prop2);
+
+      if (bad) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   copyTo(b) {
     super.copyTo(b);
 
@@ -17032,9 +17289,7 @@ class ListProperty extends ToolProperty {
   }
 
   copy() {
-    let ret = new ListProperty(this.prop.copy());
-    this.copyTo(ret);
-    return ret;
+    return this.copyTo(new ListProperty(this.prop.copy()));
   }
 
   push(item=undefined) {
@@ -17054,6 +17309,14 @@ class ListProperty extends ToolProperty {
 
   clear() {
     this.value.length = 0;
+  }
+
+  getListItem(i) {
+    return this.value[i].getValue();
+  }
+
+  setListItem(i, val) {
+    this.value[i].setValue(val);
   }
 
   setValue(value) {
@@ -17142,6 +17405,10 @@ class StringSetProperty extends ToolProperty {
     }
 
     this.wasSet = false;
+  }
+
+  equals(b) {
+    return this.value.equals(b.value);
   }
 
   /*
@@ -17289,6 +17556,10 @@ class Curve1DProperty extends ToolPropertyIF {
     this.wasSet = false;
   }
 
+  equals(b) {
+
+  }
+
   getValue() {
     return this.data;
   }
@@ -17375,6 +17646,25 @@ class ToolOp extends EventHandler {
     }
     
     return {};
+  }
+
+  static Equals(a, b) {
+    if (!a || !b) return false;
+    if (a.constructor !== b.constructor) return false;
+
+    let bad = false;
+
+    for (let k in a.inputs) {
+      bad = bad || !(k in b.inputs);
+      bad = bad || a.inputs[k].constructor !== b.inputs[k];
+      bad = bad || !a.inputs[k].equals(b.inputs[k]);
+
+      if (bad) {
+        break;
+      }
+    }
+
+    return !bad;
   }
 
   static inherit(slots) {
@@ -17595,7 +17885,7 @@ class ToolOp extends EventHandler {
   }
 
   /**for use in modal mode only*/
-  resetDrawLines() {
+  resetTempGeom() {
     var ctx = this.modal_ctx;
     
     for (var dl of this.drawlines) {
@@ -17619,7 +17909,7 @@ class ToolOp extends EventHandler {
   }
 
   /**for use in modal mode only*/
-  addDrawLine(v1, v2, style) {
+  makeTempLine(v1, v2, style) {
     let line = this.getOverdraw().line(v1, v2, style);
     this.drawlines.push(line);
     return line;
@@ -17682,7 +17972,7 @@ class ToolOp extends EventHandler {
       this._on_cancel(this);
     }
     
-    this.resetDrawLines();
+    this.resetTempGeom();
     
     var ctx = this.modal_ctx;
     
@@ -17856,6 +18146,37 @@ class ToolStack extends Array {
     this.length = 0;
   }
 
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, tool, compareInputs=false) {
+    let head = this.head;
+
+    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
+
+    if (ok) {
+      //console.warn("Same tool detected");
+
+      this.undo();
+
+      //can inputs differ? in that case, execute new tool
+      if (!compareInputs) {
+        this.execTool(ctx, tool);
+      } else {
+        this.redo();
+      }
+
+      return false;
+    } else {
+      this.execTool(ctx, tool);
+      return true;
+    }
+  }
+
   execTool(ctx, toolop) {
     if (this.ctx === undefined) {
       this.ctx = ctx;
@@ -17963,7 +18284,9 @@ function isVecProperty(prop) {
 }
 
 const DataFlags = {
-  READ_ONLY : 1
+  READ_ONLY         : 1,
+  USE_CUSTOM_GETSET : 2,
+  USE_FULL_UNDO     : 4 //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
 };
 
 class DataPathError extends Error {
@@ -18043,7 +18366,18 @@ class ModelInterface {
   parseToolPath(path) {
     throw new Error("implement me");
   }
-  
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, toolop, compareInputs=false) {
+    return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
+  }
+
   execTool(ctx, path, inputs={}, constructor_argument=undefined) {
     return new Promise((accept, reject) => {
       let tool = path;
@@ -18063,7 +18397,7 @@ class ModelInterface {
       
       //execute
       try {
-        ctx.state.toolstack.execTool(ctx, tool);
+        ctx.toolstack.execTool(ctx, tool);
       } catch (error) { //for some reason chrome is suppressing errors
         print_stack$1(error);
         throw error;
@@ -18122,6 +18456,9 @@ class ModelInterface {
 
     if (prop !== undefined && (prop.flag & PropFlags$1.USE_CUSTOM_GETSET)) {
       prop.dataref = res.obj;
+      prop.ctx = ctx;
+      prop.datapath = path;
+
       prop.setValue(val);
       return;
     }
@@ -18168,6 +18505,9 @@ class ModelInterface {
       prop.set(this, res.obj, res.key, val);
     } else if (prop !== undefined) {
       prop.dataref = res.obj;
+      prop.datapath = path;
+      prop.ctx = ctx;
+
       prop._fire("change", res.obj[res.key], old);
     }
   }
@@ -18237,6 +18577,8 @@ class ModelInterface {
     
     if (ret.prop !== undefined && (ret.prop.flag & PropFlags$1.USE_CUSTOM_GETSET)) {
       ret.prop.dataref = ret.obj;
+      ret.prop.datapath = path;
+      ret.prop.ctx = ctx;
       
       return ret.prop.getValue();
     }
@@ -18557,10 +18899,9 @@ class parser {
   optional(type) {
     var tok = this.peek_i(0);
 
-    if (tok === undefined) return false;
-
-    if (tok.type === type) {
+    if (tok && tok.type === type) {
       this.next();
+
       return true;
     }
 
@@ -18956,6 +19297,9 @@ class DataPathSetOp extends ToolOp {
     }
 
     prop.dataref = object;
+    prop.ctx = ctx;
+    prop.datapath = path;
+
     prop.setValue(val);
   }
 
@@ -18971,6 +19315,10 @@ class DataPathSetOp extends ToolOp {
     let tool = new DataPathSetOp();
 
     tool.propType = prop.type;
+
+    if (prop && (prop.flag & PropFlags.USE_BASE_UNDO)) {
+      tool.inputs.fullSaveUndo.setValue(true);
+    }
 
     let mask = PropTypes.FLAG|PropTypes.ENUM;
     mask |= PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT;
@@ -19019,6 +19367,10 @@ class DataPathSetOp extends ToolOp {
   }
 
   undoPre(ctx) {
+    if (this.inputs.fullSaveUndo.getValue()) {
+      return super.undoPre(ctx);
+    }
+
     if (this.__ctx)
       ctx = this.__ctx;
 
@@ -19035,6 +19387,11 @@ class DataPathSetOp extends ToolOp {
 
     paths.add(this.inputs.dataPath.getValue());
 
+    for (let path of paths) {
+      this._undo[path] = ctx.api.getValue(ctx, path);
+    }
+
+    /*
     for (let path of paths) {
       let rdef = ctx.api.resolvePath(ctx, path);
 
@@ -19057,17 +19414,25 @@ class DataPathSetOp extends ToolOp {
         }
       } else {
         let prop2 = prop.copy();
+
         prop2.dataref = rdef.obj;
+        prop2.datapath = path;
+        prop2.ctx = ctx;
+
         prop2.setValue(value);
 
         this._undo[path] = prop2.getValue();
       }
-    }
+    }*/
   }
 
   undo(ctx) {
     if (this.__ctx)
       ctx = this.__ctx;
+
+    if (this.inputs.fullSaveUndo.getValue()) {
+      return super.undo(ctx);
+    }
 
     for (let path in this._undo) {
       let rdef = ctx.api.resolvePath(ctx, path);
@@ -19078,6 +19443,9 @@ class DataPathSetOp extends ToolOp {
         rdef.obj[rdef.key] = this._undo[path];
 
         rdef.prop.dataref = rdef.obj;
+        rdef.prop.datapath = path;
+        rdef.prop.ctx = ctx;
+
         rdef.prop._fire("change", rdef.obj[rdef.key], old);
       } else {
         try {
@@ -19123,7 +19491,8 @@ class DataPathSetOp extends ToolOp {
     is_modal : true,
     inputs : {
       dataPath : new StringProperty(),
-      massSetPath : new StringProperty()
+      massSetPath : new StringProperty(),
+      fullSaveUndo : new BoolProperty(false)
     }
   }}
 }
@@ -19238,14 +19607,15 @@ class DataPath {
     return this;
   }
 
-  //XXX this doesn't appear to be implemented
-  //
-  //get/set will be called
-  //like other callbacks,
-  //e.g. the real object owning the property
-  //will be stored in this.dataref
+  /**
+   *
+   * For the callbacks 'this' points to an internal ToolProperty;
+   * Owning object in 'this.dataref'; calling context in 'this.ctx';
+   * and the datapath is 'this.datapath'
+   **/
   customGetSet(get, set) {
     this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
+    this.flag |= DataFlags.USE_CUSTOM_GETSET;
 
     this.data._getValue = this.data.getValue;
     this.data._setValue = this.data.setValue;
@@ -19351,6 +19721,18 @@ class DataPath {
 
   step(s) {
     this.data.setStep(s);
+    return this;
+  }
+
+  /**
+   *
+   * Tell DataPathSetOp to save/load entire app state for undo/redo
+   *
+   * */
+  fullSaveUndo() {
+    this.flag |= DataFlags.USE_FULL_UNDO;
+    this.data.flag |= PropFlags.USE_BASE_UNDO;
+
     return this;
   }
 
@@ -19787,7 +20169,21 @@ class DataStruct {
     return dpath;
   }
 
+  remove(m) {
+    if (!(m.apiname in this.pathmap)) {
+      throw new Error("Member not in struct " + m.apiname);
+    }
+
+    delete this.pathmap[m.apiname];
+    this.members.remove(m);
+  }
+
   add(m) {
+    if (m.apiname in this.pathmap) {
+      console.warn("Overriding existing member in datapath struct", m.apiname);
+      this.remove(this.pathmap[m.apiname]);
+    }
+
     this.members.push(m);
     m.parent = this;
 
@@ -20003,9 +20399,9 @@ class DataAPI extends ModelInterface {
     let _i = 0;
     while (!p.at_end()) {
       let key = p.expect("ID");
-      let path = dstruct.pathmap[key];
+      let dpath = dstruct.pathmap[key];
 
-      if (path === undefined) {
+      if (dpath === undefined) {
         if (prop !== undefined && prop instanceof DataList && key === "length") {
           prop.getLength(this, obj);
           key = "length";
@@ -20015,12 +20411,12 @@ class DataAPI extends ModelInterface {
           prop.name = "length";
           prop.flag = PropFlags.READ_ONLY;
 
-          path = _dummypath;
-          path.type = DataTypes.PROP;
-          path.data = prop;
-          path.struct = path.parent = dstruct;
-          path.flag = DataFlags.READ_ONLY;
-          path.path = "length";
+          dpath = _dummypath;
+          dpath.type = DataTypes.PROP;
+          dpath.data = prop;
+          dpath.struct = dpath.parent = dstruct;
+          dpath.flag = DataFlags.READ_ONLY;
+          dpath.path = "length";
 
           /*
           parent: lastobj2,
@@ -20040,31 +20436,39 @@ class DataAPI extends ModelInterface {
             throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
           }
 
-          path = _dummypath;
+          _dummypath.parent = dpath;
+          dpath = _dummypath;
 
-          path.type = DataTypes.STRUCT;
-          path.data = dstruct;
-          path.path = key;
+          lastobj = obj;
+          obj = act;
+
+          dpath.type = DataTypes.STRUCT;
+          dpath.data = dstruct;
+          dpath.path = key;
+
+          p.optional("DOT");
+
+          continue;
         } else {
           throw new DataPathError(inpath + ": unknown property " + key);
         }
       }
 
-      if (path.type === DataTypes.STRUCT) {
-        dstruct = path.data;
-      } else if (path.type === DataTypes.DYNAMIC_STRUCT) {
+      if (dpath.type === DataTypes.STRUCT) {
+        dstruct = dpath.data;
+      } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
         let ok = false;
 
         if (obj !== undefined) {
-          let obj2 = obj[path.path];
+          let obj2 = obj[dpath.path];
           if (obj2 !== undefined) {
             dstruct = this.mapStruct(obj2.constructor, false);
           } else {
-            dstruct = path.data;
+            dstruct = dpath.data;
           }
 
           if (dstruct === undefined) {
-            dstruct = path.data;
+            dstruct = dpath.data;
           }
 
           ok = dstruct !== undefined;
@@ -20074,11 +20478,11 @@ class DataAPI extends ModelInterface {
           throw new DataPathError("dynamic struct error for path: " + inpath);
         }
       } else {
-        prop = path.data;
+        prop = dpath.data;
       }
 
-      if (path.path.search(/\./) >= 0) {
-        let keys = path.path.split(/\./);
+      if (dpath.path.search(/\./) >= 0) {
+        let keys = dpath.path.split(/\./);
 
         for (let key of keys) {
           lastobj2 = lastobj;
@@ -20095,11 +20499,11 @@ class DataAPI extends ModelInterface {
         lastobj2 = lastobj;
         lastobj = obj;
 
-        lastkey = path.path;
+        lastkey = dpath.path;
         if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
-        } else if (obj !== undefined && path.path !== "") {
-          obj = obj[path.path];
+        } else if (obj !== undefined && dpath.path !== "") {
+          obj = obj[dpath.path];
         }
       }
 
@@ -20132,7 +20536,7 @@ class DataAPI extends ModelInterface {
           subkey = prop.keys[val];
         }
 
-        key = path.path;
+        key = dpath.path;
         obj = !!(lastobj[key] == val);
       } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("AND");
@@ -20156,7 +20560,7 @@ class DataAPI extends ModelInterface {
           subkey = prop.keys[val];
         }
 
-        key = path.path;
+        key = dpath.path;
         obj = !!(lastobj[key] & val);
       } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
         p.expect("LSBRACKET");
@@ -20182,12 +20586,15 @@ class DataAPI extends ModelInterface {
         }
 
         let bitfield;
-        key = path.path;
+        key = dpath.path;
 
         if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
           bitfield = lastobj[key];
         } else {
           prop.dataref = lastobj;
+          prop.datapath = inpath;
+          prop.ctx = ctx;
+
           bitfield = prop.getValue();
         }
 
@@ -20263,7 +20670,7 @@ class DataAPI extends ModelInterface {
       let s = path[i];
 
       if (splitchars.has(s)) {
-        if (s != "]") {
+        if (s !== "]") {
           p.push(s);
         }
 
@@ -20277,7 +20684,7 @@ class DataAPI extends ModelInterface {
     for (let i = 0; i < p.length; i++) {
       p[i] = p[i].trim();
 
-      if (p[i].length == 0) {
+      if (p[i].length === 0) {
         p.remove(p[i]);
         i--;
       }
@@ -20314,7 +20721,7 @@ class DataAPI extends ModelInterface {
       let b = p[i + 1];
 
       //check for enum/flag propertys with [] form
-      if (a == "[") {
+      if (a === "[") {
         let ok = false;
 
         key = b;
@@ -20323,12 +20730,12 @@ class DataAPI extends ModelInterface {
         if (dstruct !== undefined && dstruct.pathmap[lastkey]) {
           let dpath = dstruct.pathmap[lastkey];
 
-          if (dpath.type == DataTypes.PROP) {
+          if (dpath.type === DataTypes.PROP) {
             prop = dpath.data;
           }
         }
 
-        if (prop !== undefined && (prop.type == PropTypes.ENUM || prop.type == PropTypes.FLAG)) {
+        if (prop !== undefined && (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG)) {
           console$1.context("api").log("found flag/enum property");
           ok = true;
         }
@@ -20345,7 +20752,7 @@ class DataAPI extends ModelInterface {
             value = prop.values[key];
           }
 
-          if (prop.type == PropTypes.ENUM) {
+          if (prop.type === PropTypes.ENUM) {
             value = !!(value == key);
           } else { //flag
             value = !!(value & key);
@@ -20369,7 +20776,7 @@ class DataAPI extends ModelInterface {
         }
       }
 
-      if (a == "." || a == "[") {
+      if (a === "." || a === "[") {
         key = b;
 
         parent2 = parent1;
@@ -20386,7 +20793,7 @@ class DataAPI extends ModelInterface {
 
         i += 2;
         continue;
-      } else if (a == "&") {
+      } else if (a === "&") {
         obj &= b;
         arg = b;
 
@@ -20397,7 +20804,7 @@ class DataAPI extends ModelInterface {
         i += 2;
         type = "flag";
         continue;
-      } else if (a == "=") {
+      } else if (a === "=") {
         obj = obj == b;
         arg = b;
 
@@ -27043,8 +27450,27 @@ class Container extends UIBase$1 {
   }
 
   setCSS() {
+    let rest = '';
+
+    let add = (style) => {
+      let val = this.getDefault(style);
+
+      if (val !== undefined) {
+        rest += `  ${style} = ${val};\n`;
+        this.style[style] = val;
+      }
+    };
+
+    add("border-radius");
+    add("border");
+    add("border-top");
+    add("border-bottom");
+    add("border-left");
+    add("border-right");
+
     this.styletag.textContent = `div.containerx {
         background-color : ${this.getDefault("DefaultPanelBG")};
+        ${rest}
       }
       `;
   }
@@ -27061,15 +27487,23 @@ class Container extends UIBase$1 {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(m = this.getDefault("oneAxisPadding"), m2 = 0) {
+  strip(m = this.getDefault("oneAxisPadding"), m2 = 1, themeClass="strip") {
     let horiz = this instanceof RowFrame;
     horiz = horiz || this.style["flex-direction"] === "row";
 
     let flag = horiz ? PackFlags$5.STRIP_HORIZ : PackFlags$5.STRIP_VERT;
 
     let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
+
     strip.packflag |= flag;
 
+    if (themeClass in theme) {
+      strip.overrideClass(themeClass);
+      strip.background = strip.getDefault("DefaultPanelBG");
+      strip.setCSS();
+    }
+
+    /*
     let prev = strip.previousElementSibling;
     if (prev !== undefined && (prev.packflag & flag)) {
       if (horiz) {
@@ -27077,7 +27511,7 @@ class Container extends UIBase$1 {
       } else {
         prev.style["padding-top"] = "0px";
       }
-    }
+    }//*/
 
     return strip;
   }
@@ -27678,9 +28112,9 @@ class Container extends UIBase$1 {
       }
 
       return ret;
-    } else if (prop.type == PropTypes$6.BOOL) {
-      this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type == PropTypes$6.ENUM) {
+    } else if (prop.type === PropTypes$6.BOOL) {
+      return this.check(inpath, prop.uiname, packflag, mass_set_path);
+    } else if (prop.type === PropTypes$6.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -28153,6 +28587,14 @@ class Container extends UIBase$1 {
     }
   }
 
+  /**
+   *
+   * usage: .slider(inpath, {
+   *  name : bleh,
+   *  defaultval : number,
+   *  etc...
+   * });
+   * */
   slider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       //new-style api call
@@ -34717,6 +35159,7 @@ class LastToolPanel extends ColumnFrame {
 
     //don't process the root toolop
     let bad = ctx.toolstack.length === 0;
+    bad = bad || !ctx.toolstack[ctx.toolstack.cur];
     bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
 
     if (bad) {
@@ -34774,7 +35217,6 @@ class LastToolPanel extends ColumnFrame {
     for (let k in tool.inputs) {
       let prop = tool.inputs[k];
 
-      console.log("PROP FLAG", prop.flag, k);
       if (prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY)) {
         continue;
       }
@@ -34800,7 +35242,7 @@ class LastToolPanel extends ColumnFrame {
     }
     this.setCSS();
 
-    console.log("Building last tool settings");
+    //console.log("Building last tool settings");
   }
 
   update() {
@@ -43443,5 +43885,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map

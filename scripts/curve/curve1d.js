@@ -62,6 +62,17 @@ export class Curve1D extends EventDispatcher {
     this.generators.active = this.generators[0];
   }
 
+  equals(b) {
+    let gen1 = this.generators.active;
+    let gen2 = b.generators.active;
+
+    if (!gen1 || !gen2 || gen1.constructor !== gen2.constructor) {
+      return false;
+    }
+
+    return gen1.equals(gen2);
+  }
+
   get generatorType() {
     return this.generators.active ? this.generators.active.type : undefined;
   }

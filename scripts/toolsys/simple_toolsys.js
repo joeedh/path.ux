@@ -64,6 +64,25 @@ export class ToolOp extends events.EventHandler {
     return {};
   }
 
+  static Equals(a, b) {
+    if (!a || !b) return false;
+    if (a.constructor !== b.constructor) return false;
+
+    let bad = false;
+
+    for (let k in a.inputs) {
+      bad = bad || !(k in b.inputs);
+      bad = bad || a.inputs[k].constructor !== b.inputs[k];
+      bad = bad || !a.inputs[k].equals(b.inputs[k]);
+
+      if (bad) {
+        break;
+      }
+    }
+
+    return !bad;
+  }
+
   static inherit(slots) {
     return new InheritFlag(slots);
   }
@@ -282,7 +301,7 @@ export class ToolOp extends events.EventHandler {
   }
 
   /**for use in modal mode only*/
-  resetDrawLines() {
+  resetTempGeom() {
     var ctx = this.modal_ctx;
     
     for (var dl of this.drawlines) {
@@ -306,7 +325,7 @@ export class ToolOp extends events.EventHandler {
   }
 
   /**for use in modal mode only*/
-  addDrawLine(v1, v2, style) {
+  makeTempLine(v1, v2, style) {
     let line = this.getOverdraw().line(v1, v2, style);
     this.drawlines.push(line);
     return line;
@@ -369,7 +388,7 @@ export class ToolOp extends events.EventHandler {
       this._on_cancel(this);
     }
     
-    this.resetDrawLines();
+    this.resetTempGeom();
     
     var ctx = this.modal_ctx;
     
@@ -541,6 +560,37 @@ export class ToolStack extends Array {
     this.modalRunning = 0;
     this.cur = -1;
     this.length = 0;
+  }
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, tool, compareInputs=false) {
+    let head = this.head;
+
+    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
+
+    if (ok) {
+      //console.warn("Same tool detected");
+
+      this.undo();
+
+      //can inputs differ? in that case, execute new tool
+      if (!compareInputs) {
+        this.execTool(ctx, tool);
+      } else {
+        this.redo();
+      }
+
+      return false;
+    } else {
+      this.execTool(ctx, tool);
+      return true;
+    }
   }
 
   execTool(ctx, toolop) {

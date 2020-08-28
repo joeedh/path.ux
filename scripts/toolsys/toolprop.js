@@ -73,6 +73,10 @@ export class ToolProperty extends ToolPropertyIF {
     this.callbacks = {};
   }
 
+  equals(b) {
+    throw new Error("implement me");
+  }
+
   static register(cls) {
     cls.PROP_TYPE_ID = (1<<customPropTypeBase);
     PropTypes[cls.name] = cls.PROP_TYPE_ID;
@@ -286,6 +290,10 @@ export class StringProperty extends ToolProperty {
 
     this.wasSet = false;
   }
+
+  equals(b) {
+    return this.data === b.data;
+  }
   
   copyTo(b) {
     super.copyTo(b);
@@ -359,6 +367,10 @@ export class NumProperty extends ToolProperty {
     this.range = [0, 0];
   }
 
+  equals(b) {
+    return this.data == b.data;
+  }
+
   loadSTRUCT(reader) {
     reader(this);
     super.loadSTRUCT(reader);
@@ -386,6 +398,10 @@ export class _NumberPropertyBase extends ToolProperty {
       this.setValue(value);
       this.wasSet = false;
     }
+  }
+
+  equals(b) {
+    return this.data == b.data;
   }
 
   get ui_range() {
@@ -533,6 +549,10 @@ export class BoolProperty extends ToolProperty {
     super(PropTypes.BOOL, undefined, apiname, uiname, description, flag, icon);
 
     this.data = !!value;
+  }
+
+  equals(b) {
+    return this.data == b.data;
   }
 
   copyTo(b) {
@@ -716,6 +736,10 @@ export class EnumProperty extends ToolProperty {
     this.wasSet = false;
   }
 
+  equals(b) {
+    return this.getValue() === b.getValue();
+  }
+
   addUINames(map) {
     for (let k in map) {
       this.ui_value_names[k] = map[k];
@@ -883,6 +907,10 @@ export class VecPropertyBase extends FloatProperty {
     this.hasUniformSlider = false;
   }
 
+  equals(b) {
+    return this.data.vectorDistance(b.data) < 0.00001;
+  }
+
   uniformSlider(state=true) {
     this.hasUniformSlider = state;
     return this;
@@ -1023,6 +1051,10 @@ export class QuatProperty extends ToolProperty {
     this.data = new Quat(data);
   }
 
+  equals(b) {
+    return this.data.vectorDistance(b.data) < 0.00001;
+  }
+
   setValue(v) {
     this.data.load(v);
     super.setValue(v);
@@ -1056,6 +1088,23 @@ export class Mat4Property extends ToolProperty {
   constructor(data, apiname, uiname, description) {
     super(PropTypes.MATRIX4, undefined, apiname, uiname, description);
     this.data = new Matrix4(data);
+  }
+
+  equals(b) {
+    let m1 = this.data.$matrix;
+    let m2 = b.data.$matrix;
+
+    for (let i=1; i<=4; i++) {
+      for (let j=1; j<=4; j++) {
+        let key = `m${i}${j}`;
+
+        if (Math.abs(m1[key] - m2[key]) > 0.00001) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   setValue(v) {
@@ -1129,6 +1178,29 @@ export class ListProperty extends ToolProperty {
     this.wasSet = false;
   }
 
+  equals(b) {
+    let l1 = this.value ? this.value.length : 0;
+    let l2 = b.value ? b.value.length : 0;
+
+    if (l1 !== l2) {
+      return false;
+    }
+
+    for (let i=0; i<l1; i++) {
+      let prop1 = this.value[i];
+      let prop2 = b.value[i];
+
+      let bad = prop1.constructor !== prop2.constructor;
+      bad = bad || !prop1.equals(prop2);
+
+      if (bad) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   copyTo(b) {
     super.copyTo(b);
 
@@ -1142,9 +1214,7 @@ export class ListProperty extends ToolProperty {
   }
 
   copy() {
-    let ret = new ListProperty(this.prop.copy());
-    this.copyTo(ret);
-    return ret;
+    return this.copyTo(new ListProperty(this.prop.copy()));
   }
 
   push(item=undefined) {
@@ -1164,6 +1234,14 @@ export class ListProperty extends ToolProperty {
 
   clear() {
     this.value.length = 0;
+  }
+
+  getListItem(i) {
+    return this.value[i].getValue();
+  }
+
+  setListItem(i, val) {
+    this.value[i].setValue(val);
   }
 
   setValue(value) {
@@ -1252,6 +1330,10 @@ export class StringSetProperty extends ToolProperty {
     }
 
     this.wasSet = false;
+  }
+
+  equals(b) {
+    return this.value.equals(b.value);
   }
 
   /*
@@ -1399,6 +1481,10 @@ export class Curve1DProperty extends ToolPropertyIF {
     }
 
     this.wasSet = false;
+  }
+
+  equals(b) {
+
   }
 
   getValue() {

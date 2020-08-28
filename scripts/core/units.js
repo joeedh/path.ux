@@ -199,8 +199,8 @@ export class FootUnit extends Unit {
   }
 
   static buildString(value, decimals=2) {
-    let vft = ~~(value / 12);
-    let vin = value % 12;
+    let vft = ~~(value);
+    let vin = (value*12) % 12;
 
     if (vft === 0.0) {
       return myToFixed(value, decimals) + " in";
@@ -322,6 +322,9 @@ Unit.register(RadianUnit);
 export function setBaseUnit(unit) {
   Unit.baseUnit = unit;
 }
+
+window._getBaseUnit = () => Unit.baseUnit;
+
 export function setMetric(val) {
   Unit.isMetric = val;
 }

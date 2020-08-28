@@ -575,6 +575,22 @@ export class set {
     return new SetIter(this);
   }
 
+  equals(setb) {
+    for (let item of this) {
+      if (!setb.has(item)) {
+        return false;
+      }
+    }
+
+    for (let item of setb) {
+      if (!this.has(item)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   clear() {
     this.items.length = 0;
     this.keys = {};
@@ -830,10 +846,30 @@ export class hashtable {
   }
 }
 
+let IDGenInternalIDGen = 0;
+
 export class IDGen {
   constructor() {
     this._cur = 1;
+
+    this._debug = false;
+    this._internalID = IDGenInternalIDGen++;
   }
+
+  /*
+  get _cur() {
+    return this.__cur;
+  }
+
+  set _cur(v) {
+    if (this._debug && pollTimer("_idgen_debug", 450)) {
+      window.console.warn("_cur access", v);
+    }
+
+    this.__cur = v;
+  }
+
+  // */
 
   next() {
     return this._cur++;
@@ -842,6 +878,7 @@ export class IDGen {
   copy() {
     let ret = new IDGen();
     ret._cur = this._cur;
+
     return ret;
   }
 
@@ -860,6 +897,10 @@ export class IDGen {
     ret._cur = obj._cur;
     return ret;
   }
+
+  loadSTRUCT(reader) {
+    reader(this);
+  }
 }
 
 IDGen.STRUCT = `
@@ -867,7 +908,7 @@ IDGen {
   _cur : int;
 }
 `;
-nstructjs.manager.add_class(IDGen);
+nstructjs.register(IDGen);
 
 
 function get_callstack(err) {
@@ -1278,17 +1319,14 @@ export class HashDigest {
 
   add(v) {
     //glibc linear congruel generator
-    this.i = (this.i*1103515245 + 12345) & ((1<<30)-1);
+    this.i = ((this.i+(~~v))*1103515245 + 12345) & ((1<<29)-1);
     //according to wikipedia only the top 16 bits are random
     //this.i = this.i>>16;
 
-    if (v < 5.0 && v > -5.0) {
-      v *= 1024;
-    } else if (v < 15 && v >= -15) {
-      v *= 512;
-    } else if (v < 30 && v >= -30) {
-      v *= 256;
-    }
+    let v2 = (v*1024*1024) & ((1<<29)-1)
+    v = v | v2;
+
+    v = ~~v;
 
     this.hash ^= v^this.i;
   }
