@@ -59,7 +59,8 @@ export class Curve1D extends EventDispatcher {
       this.generators.push(gen);
     }
 
-    this.generators.active = this.generators[0];
+    //this.generators.active = this.generators[0];
+    this.setGenerator("bspline");
   }
 
   equals(b) {
@@ -112,7 +113,7 @@ export class Curve1D extends EventDispatcher {
 
   setGenerator(type) {
     for (let gen of this.generators) {
-      if (gen.type === type || gen.constructor.name === type || gen.constructor === type) {
+      if (gen.constructor.define().name === type || gen.type === type || gen.constructor.name === type || gen.constructor === type) {
         if (this.generators.active) {
           this.generators.active.onInactive();
         }
@@ -124,7 +125,7 @@ export class Curve1D extends EventDispatcher {
       }
     }
 
-    throw new Error("unknown curve type" + type);
+    throw new Error("unknown curve type " + type);
   }
 
   get fastmode() {

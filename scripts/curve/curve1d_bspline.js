@@ -1,6 +1,5 @@
 "use strict";
 
-/*FIXME: not sure this works anymore*/
 import {nstructjs} from "../util/struct.js";
 import {Icons} from "../icon_enum.js";
 

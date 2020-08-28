@@ -12255,6 +12255,16 @@ class CurveTypeData {
   }
 
   static register(cls) {
+    if (cls.define === CurveTypeData.define) {
+      throw new Error("missing define() static method");
+    }
+
+    let def = cls.define();
+    if (!def.name) {
+      throw new Error(cls.name + ".define() result is missing 'name' field");
+    }
+
+
     CurveConstructors.push(cls);
   }
 
@@ -14558,6 +14568,7 @@ class ElasticCurve extends SimpleCurveBase {
 
     if (hash !== this._last_hash || !this._func) {
       this._last_hash = hash;
+
       if (this.params.mode) {
         this._func = Ease.getElasticOut(this.params.amplitude, this.params.period);
       } else {
@@ -14590,8 +14601,8 @@ class EaseCurve extends SimpleCurveBase {
 
   evaluate(t) {
     let amp = this.params.amplitude;
-    let a1 = this.params.mode_in ? 1.0-amp : 0.0;
-    let a2 = this.params.mode_out ? amp : 0.0;
+    let a1 = this.params.mode_in ? 1.0-amp : 1.0/3.0;
+    let a2 = this.params.mode_out ? amp : 2.0/3.0;
 
     return bez4$1(0.0, a1, a2, 1.0, t);
   }
@@ -14716,7 +14727,8 @@ class Curve1D extends EventDispatcher {
       this.generators.push(gen);
     }
 
-    this.generators.active = this.generators[0];
+    //this.generators.active = this.generators[0];
+    this.setGenerator("bspline");
   }
 
   equals(b) {
@@ -14769,7 +14781,7 @@ class Curve1D extends EventDispatcher {
 
   setGenerator(type) {
     for (let gen of this.generators) {
-      if (gen.type === type || gen.constructor.name === type || gen.constructor === type) {
+      if (gen.constructor.define().name === type || gen.type === type || gen.constructor.name === type || gen.constructor === type) {
         if (this.generators.active) {
           this.generators.active.onInactive();
         }
@@ -14781,7 +14793,7 @@ class Curve1D extends EventDispatcher {
       }
     }
 
-    throw new Error("unknown curve type" + type);
+    throw new Error("unknown curve type " + type);
   }
 
   get fastmode() {

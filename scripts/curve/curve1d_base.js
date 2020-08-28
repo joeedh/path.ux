@@ -35,6 +35,16 @@ export class CurveTypeData {
   }
 
   static register(cls) {
+    if (cls.define === CurveTypeData.define) {
+      throw new Error("missing define() static method");
+    }
+
+    let def = cls.define();
+    if (!def.name) {
+      throw new Error(cls.name + ".define() result is missing 'name' field");
+    }
+
+
     CurveConstructors.push(cls);
   }
 

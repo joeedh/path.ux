@@ -255,6 +255,7 @@ export class ElasticCurve extends SimpleCurveBase {
 
     if (hash !== this._last_hash || !this._func) {
       this._last_hash = hash;
+
       if (this.params.mode) {
         this._func = Ease.getElasticOut(this.params.amplitude, this.params.period);
       } else {
@@ -287,8 +288,8 @@ export class EaseCurve extends SimpleCurveBase {
 
   evaluate(t) {
     let amp = this.params.amplitude;
-    let a1 = this.params.mode_in ? 1.0-amp : 0.0;
-    let a2 = this.params.mode_out ? amp : 0.0;
+    let a1 = this.params.mode_in ? 1.0-amp : 1.0/3.0;
+    let a2 = this.params.mode_out ? amp : 2.0/3.0;
 
     return bez4(0.0, a1, a2, 1.0, t);
   }
