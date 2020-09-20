@@ -143,6 +143,26 @@ export function validateWebColor(str) {
   return str.trim().search(validate_pat) === 0;
 }
 
+let num = "([0-9]+\.[0-9]+)|[0-9a-f]+";
+
+let validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
+let validate_rgb = new RegExp(`rgb\\(${num},${num},${num},${num}\\)$`);
+
+export function validateCSSColor(color) {
+  if (color.toLowerCase() in cmap) {
+    return true;
+  }
+
+  let rgba = color.toLowerCase().replace(/[ \t]/g, "");
+  if (validate_rgba.exec(rgba) || validate_rgb.exec(rgba)) {
+    return true;
+  }
+
+  return validateWebColor(color);
+}
+
+window.validateCSSColor = validateCSSColor;
+
 export let theme = {};
 
 export function invertTheme() {

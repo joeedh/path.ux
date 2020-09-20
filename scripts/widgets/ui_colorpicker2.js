@@ -868,7 +868,7 @@ export class ColorPicker extends ui.ColumnFrame {
       }
 
       let val = this.field.rgba;
-      if (prop !== undefined && prop.type == PropTypes.VEC3) {
+      if (prop !== undefined && prop.type === PropTypes.VEC3) {
         val = new Vector3();
         val.load(this.field.rgba);
       }
@@ -931,17 +931,31 @@ export class ColorPickerButton extends UIBase {
     this._font = "DefaultText"; //this.getDefault("defaultFont");
 
     let enter = (e) => {
-      console.log(e.type);
+      console.log(e.type, this._id);
+
+      this._keyhandler_add();
       this._highlight = true;
       this._redraw();
     };
 
     let leave = (e) => {
-      console.log(e.type);
+      console.log(e.type, this._id);
+
+      this._keyhandler_remove();
       this._highlight = false;
       this._redraw();
     };
 
+    this.tabIndex = 0;
+
+    this._has_keyhandler = false;
+    this._keyhandler_timeout = -1;
+    this._last_keyevt = undefined;
+
+    this._keydown = this._keydown.bind(this);
+    this.addEventListener("keydown", (e) => {
+      return this._keydown(e, true);
+    });
 
     this.addEventListener("mousedown", (e) => {
       this.click(e);
@@ -955,6 +969,166 @@ export class ColorPickerButton extends UIBase {
     this.addEventListener("blur", leave);
 
     this.setCSS();
+  }
+
+  _keyhandler_remove() {
+    if (this._has_keyhandler) {
+      window.removeEventListener("keydown", this._keydown, {
+        capture : true, passive : false
+      });
+      this._has_keyhandler = false;
+    }
+  }
+
+  _keyhandler_add() {
+    if (!this._has_keyhandler) {
+      window.addEventListener("keydown", this._keydown, {
+        capture : true, passive : false
+      });
+      this._has_keyhandler = true;
+    }
+
+    this._keyhandler_timeout = util.time_ms();
+  }
+
+  _keydown(e, internal_mode=false) {
+    console.log(this._id);
+
+    if (internal_mode && !this._highlight) {
+      return;
+    }
+
+    console.warn(this._id, "COLOR", e.keyCode);
+
+    if (e === this._last_keyevt) {
+      return; //prevent double event procesing
+    }
+
+    this._last_keyevt = e;
+
+    if (e.keyCode === 67 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
+      console.log("yay copy");
+      console.log(document.activeElement);
+      this.clipboardCopy();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (e.keyCode === 86 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
+      console.log("yay paste");
+      this.clipboardPaste();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  clipboardCopy() {
+    console.log("color copy");
+
+    if (!cconst.setClipboardData) {
+      console.log("no clipboard api");
+      return;
+    }
+
+    let r = this.rgba[0]*255;
+    let g = this.rgba[1]*255;
+    let b = this.rgba[2]*255;
+    let a = this.rgba[3];
+
+    let data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
+    //cconst.setClipboardData("color", "text/css", data);
+
+    cconst.setClipboardData("color", "text/plain", data);
+
+    /*
+    function makehex(c) {
+      c = (~~c).toString(16);
+      while (c.length < 2) {
+        c = "0" + c;
+      }
+
+      if (c.length > 2) {
+        return "FF";
+      }
+
+      return c.toUpperCase();
+    }
+
+    r = makehex(r);
+    g = makehex(g);
+    b = makehex(b);
+    a = makehex(a*255);
+
+    data = "#" + r + g + b + a;
+
+    cconst.setClipboardData("color", "text/plain", data);
+
+     */
+  }
+
+  clipboardPaste() {
+    if (!cconst.getClipboardData) {
+      return;
+    }
+
+    console.log("color paste");
+
+    let data = cconst.getClipboardData("text/plain");
+
+    if (!data || !validateCSSColor(""+data.data)) {// || data.mime !== "text/css") {
+      return;
+    }
+
+    let color;
+
+    try {
+      color = css2color(data.data);
+    } catch (error) {
+      //not a color
+      console.log(error.stack);
+      console.log(error.message);
+    }
+
+    if (color) {
+      if (color.length < 4) {
+        color.push(1.0);
+      }
+
+      this.setRGBA(color);
+    }
+
+    /*
+    console.log("data:", data);
+    data = data.data.trim();
+    if (data.startsWith("{")) {
+      data = data.slice(1, data.length-1).split(";");
+      for (let arg of data) {
+        arg = arg.trim().split(":");
+
+        if (arg.length < 2) {
+          continue;
+        }
+
+        arg[0] = arg[0].trim().toLowerCase();
+        arg[1] = arg[1].trim().toLowerCase();
+
+        if (arg[0] === "color") {
+          data = arg[1];
+          break;
+        }
+      }
+    }
+
+    console.log("DATA", data);
+    let color = css2color(data);
+
+    if (color.length < 3) {
+      color.push(1.0);
+    }
+    console.log("COLOR", color);
+
+    this.setRGBA(color);
+
+     */
   }
 
   click(e) {
@@ -1000,6 +1174,15 @@ export class ColorPickerButton extends UIBase {
       this.rgba[3] = a;
     }
 
+    if (this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
+    }
+
+    if (this.onchange) {
+      this.onchange();
+    }
+
+    this._redraw();
     return this;
   }
 
@@ -1179,7 +1362,7 @@ export class ColorPickerButton extends UIBase {
     }
 
     if (this.rgba.vectorDistance(val) > 0.0001) {
-      if (prop.type == PropTypes.VEC3) {
+      if (prop.type === PropTypes.VEC3) {
         this.rgba.load(val);
         this.rgba[3] = 1.0;
       } else {
@@ -1192,6 +1375,12 @@ export class ColorPickerButton extends UIBase {
 
   update() {
     super.update();
+
+    //remove keyhandler after timeout in case something kept it from happening automatically
+    if (this._has_keyhandler && util.time_ms() - this._keyhandler_timeout > 3500) {
+      console.log("keyhandler auto remove");
+      this._keyhandler_remove();
+    }
 
     let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
     if (key !== this._last_key) {

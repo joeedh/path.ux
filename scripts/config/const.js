@@ -4,22 +4,93 @@ let _clipdata = {
   data : undefined
 };
 
+let _clipboards = {};
+
+window.setInterval(() => {
+  let cb = navigator.clipboard;
+
+  if (!cb) {
+    return;
+  }
+
+  cb.read().then((data) => {
+    console.log(data);
+    for (let item of data) {
+      console.log("CLIP ITEM", item);
+
+      for (let i=0; i<item.types.length; i++) {
+        let type = item.types[i];
+
+        if (!(type in _clipboards)) {
+          _clipboards[type] = {
+            name : type,
+            mime : type,
+            data : undefined
+          };
+        };
+
+        item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
+          _clipboards[type].data = text;
+        });
+      }
+
+      //item.getType("text/css").then((blob) => blob.text()).then((text) => {
+      //  console.log("text", text);
+      //});
+    }
+    //_clipdata.mime =
+  }).catch(function() {});
+}, 400);
+
 let exports = {
   /*client code can override this using .loadConstants, here is a simple implementation
     that just handles color data
+
+    desiredMimes is either a string, or an array of strings
    */
-  getClipboardData() {
-    return _clipdata.mime === "nothing" ? undefined : _clipdata;
+  getClipboardData(desiredMimes="text/plain") {
+    if (typeof desiredMimes === "string") {
+      desiredMimes = [desiredMimes];
+    }
+
+    for (let m of desiredMimes) {
+      let cb = _clipboards[m];
+
+      if (cb && cb.data) {
+        return cb;
+      }
+    }
   },
   /*client code can override this, here is a simple implementation
     that just handles color data
    */
   setClipboardData(name, mime, data) {
-    _clipdata = {
+    _clipboards[mime] = {
       name : name,
       mime : mime,
       data : data
     };
+
+    let clipboard = navigator.clipboard;
+    if (!clipboard) {
+      return;
+    }
+
+    try {
+      clipboard.write([new ClipboardItem({
+        [mime] : new Blob([data], {type : mime})
+      })]).catch((error) => {
+        //try pushing through text/plain
+        if (mime.startsWith("text") && mime !== "text/plain") {
+          this.setClipboardData(name, "text/plain", data);
+        } else {
+          console.error(error);
+        }
+      });
+    } catch (error) {
+      console.log(error.stack);
+      console.log("failed to write to system clipboard");
+    }
   },
   colorSchemeType : "light",
   docManualPath : "../simple_docsys/doc_build/",
