@@ -32,6 +32,19 @@ export class LastToolPanel extends ColumnFrame {
     this.rebuild();
   }
 
+  /** client code can subclass and override this method */
+  getToolStackHead(ctx) {
+    //don't process the root toolop
+    let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
+    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+
+    if (bad) {
+      return undefined;
+    }
+
+    return ctx.toolstack[ctx.toolstack.cur];
+  }
+
   rebuild() {
     let ctx = this.ctx;
     if (ctx === undefined) {
@@ -43,22 +56,23 @@ export class LastToolPanel extends ColumnFrame {
 
     this.label("Recent Command Settings");
 
-    //don't process the root toolop
-    let bad = ctx.toolstack.length === 0;
-    bad = bad || !ctx.toolstack[ctx.toolstack.cur];
-    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+    let tool = this.getToolStackHead(ctx);
 
-    if (bad) {
+    if (!tool) {
       this.setCSS();
       return;
     }
 
-    let tool = ctx.toolstack[ctx.toolstack.cur];
     let def = tool.constructor.tooldef();
     let name = def.uiname !== undefined ? def.uiname : def.name;
 
     let panel = this.panel(def.uiname);
 
+    this.buildTool(ctx, tool, panel);
+  }
+
+  /** client code can subclass and override this method */
+  buildTool(ctx, tool, panel) {
     let fakecls = {};
     fakecls.constructor = fakecls;
 
@@ -135,11 +149,12 @@ export class LastToolPanel extends ColumnFrame {
     super.update();
     let ctx = this.ctx;
 
-    if (ctx.toolstack.length == 0) {
+    if (!ctx) {
       return;
     }
 
-    let tool = ctx.toolstack[ctx.toolstack.cur];
+    let tool = this.getToolStackHead(ctx);
+
     if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
       tool[LastKey] = tool_idgen++;
       this._tool_id = tool[LastKey];

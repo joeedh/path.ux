@@ -240,6 +240,11 @@ export class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
+  setFlag(f, combine=false) {
+    this.flag = combine ? this.flag | f : f;
+    return this;
+  }
+
   setUIRange(min, max) {
     if (min === undefined || max === undefined) {
       throw new Error("min and/or max cannot be undefined");

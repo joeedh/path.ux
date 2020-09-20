@@ -1,4 +1,26 @@
+let _clipdata = {
+  name : "nothing",
+  mime : "nothing",
+  data : undefined
+};
+
 let exports = {
+  /*client code can override this using .loadConstants, here is a simple implementation
+    that just handles color data
+   */
+  getClipboardData() {
+    return _clipdata.mime === "nothing" ? undefined : _clipdata;
+  },
+  /*client code can override this, here is a simple implementation
+    that just handles color data
+   */
+  setClipboardData(name, mime, data) {
+    _clipdata = {
+      name : name,
+      mime : mime,
+      data : data
+    };
+  },
   colorSchemeType : "light",
   docManualPath : "../simple_docsys/doc_build/",
   
@@ -8,7 +30,7 @@ let exports = {
   useNumSliderTextboxes : true,
 
   menu_close_time : 500,
-  doubleClickTime : 500,
+  doubleClickTime : ui_last500,
   //timeout for press-and-hold (touch) version of double clicking
   doubleClickHoldTime : 750,
   DEBUG : {
