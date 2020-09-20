@@ -30,7 +30,7 @@ let exports = {
   useNumSliderTextboxes : true,
 
   menu_close_time : 500,
-  doubleClickTime : ui_last500,
+  doubleClickTime : 500,
   //timeout for press-and-hold (touch) version of double clicking
   doubleClickHoldTime : 750,
   DEBUG : {
