@@ -283,8 +283,11 @@ export class Button extends UIBase {
 
   updateDefaultSize() {
     let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
-
     let size = this.getDefault("DefaultText").size * 1.33;
+
+    if (height === undefined || size === undefined || isNaN(height) || isNaN(size)) {
+      return;
+    }
 
     height = ~~Math.max(height, size);
     height = height + "px";

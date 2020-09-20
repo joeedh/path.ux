@@ -1168,12 +1168,18 @@ export class ColorPickerButton extends UIBase {
   setRGBA(val) {
     let a = this.rgba[3];
 
+    let old = new Vector4(this.rgba);
+
     this.rgba.load(val);
 
     if (val.length < 4) {
       this.rgba[3] = a;
     }
 
+    if (this.rgba.vectorDistance(old) < 0.001) {
+      return;
+    }
+    
     if (this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
     }

@@ -541,21 +541,6 @@ export class NumSlider extends ValueButtonBase {
     return text;
   }
 
-  updateDefaultSize() {
-    let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
-
-    let size = this.getDefault("DefaultText").size * 1.33;
-
-    height = ~~Math.max(height, size);
-    height = height + "px";
-
-    if (height !== this.style["height"]) {
-      this.setCSS();
-      this._repos_canvas();
-      this._redraw();
-    }
-  }
-
   _redraw() {
     let g = this.g;
     let canvas = this.dom;

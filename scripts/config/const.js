@@ -14,10 +14,7 @@ window.setInterval(() => {
   }
 
   cb.read().then((data) => {
-    console.log(data);
     for (let item of data) {
-      console.log("CLIP ITEM", item);
-
       for (let i=0; i<item.types.length; i++) {
         let type = item.types[i];
 
@@ -40,7 +37,7 @@ window.setInterval(() => {
     }
     //_clipdata.mime =
   }).catch(function() {});
-}, 400);
+}, 200);
 
 let exports = {
   /*client code can override this using .loadConstants, here is a simple implementation

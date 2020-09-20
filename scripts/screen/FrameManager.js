@@ -730,6 +730,10 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
+  get listening() {
+    return this.listen_timer !== undefined;
+  }
+
   unlisten() {
     if (this.listen_timer !== undefined) {
       window.clearInterval(this.listen_timer);
