@@ -1179,7 +1179,7 @@ export class ColorPickerButton extends UIBase {
     if (this.rgba.vectorDistance(old) < 0.001) {
       return;
     }
-    
+
     if (this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
     }
@@ -1332,9 +1332,17 @@ export class ColorPickerButton extends UIBase {
       console.log("bad path", path);
       return;
     } else if (prop === undefined) {
+      let redraw = !this.disabled;
+
       this.disabled = true;
+
+      if (redraw) {
+        this._redraw();
+      }
       return;
     }
+
+    let redraw = this.disabled;
 
     this.disabled = false;
 
@@ -1348,7 +1356,7 @@ export class ColorPickerButton extends UIBase {
     let val = this.getPathValue(this.ctx, path);
 
     if (val === undefined) {
-      let redraw = this.disabled !== true;
+      redraw = redraw || this.disabled !== true;
 
       this.disabled = true;
 
@@ -1356,26 +1364,23 @@ export class ColorPickerButton extends UIBase {
         this._redraw();
       }
 
-      return;
     } else {
-      let redraw = this.disabled;
-
       this.disabled = false;
+
+      if (this.rgba.vectorDistance(val) > 0.0001) {
+        if (prop.type === PropTypes.VEC3) {
+          this.rgba.load(val);
+          this.rgba[3] = 1.0;
+        } else {
+          this.rgba.load(val);
+        }
+
+        redraw = true;
+      }
 
       if (redraw) {
         this._redraw();
       }
-    }
-
-    if (this.rgba.vectorDistance(val) > 0.0001) {
-      if (prop.type === PropTypes.VEC3) {
-        this.rgba.load(val);
-        this.rgba[3] = 1.0;
-      } else {
-        this.rgba.load(val);
-      }
-
-      this._redraw();
     }
   }
 
