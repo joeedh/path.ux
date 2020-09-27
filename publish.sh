@@ -7,7 +7,7 @@ git push
 
 echo Publishing $VERSION
 bash build.sh && \
-bash build_docs.sh && \
+#bash build_docs.sh && \
 bash build_package.sh && \
 cd package && \
 npm publish
