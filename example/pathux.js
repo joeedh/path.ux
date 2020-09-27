@@ -6887,13 +6887,22 @@ var util1 = /*#__PURE__*/Object.freeze({
   hashjoin: hashjoin
 });
 
+const EulerOrders = {
+  XYZ : 0,
+  XZY : 1,
+  YXZ : 2,
+  YZX : 3,
+  ZXY : 4,
+  ZYX : 5
+};
+
 /**
  * @param mode one of 'es', 'commonjs', 'rjs'
-*/
+ */
 window.makeCompiledVectormathCode = function(mode="es") {
   let s = "";
   let es6exports = mode === "es";
-  
+
   function doExports(name) {
     if (es6exports) {
       return "export";
@@ -6943,10 +6952,10 @@ window.makeCompiledVectormathCode = function(mode="es") {
     s += `{
       ${nstructjscode}
     ${modecode}
-  }`;  
+  }`;
   }
 
-s += `
+  s += `
 class cachering extends Array {
   constructor(func, size) {
     super()
@@ -6974,7 +6983,7 @@ class cachering extends Array {
   }
 }
 `;
-s += `
+  s += `
 
 var M_SQRT2 = Math.sqrt(2.0);
 var FLT_EPSILON = 2.22e-16;  
@@ -7014,7 +7023,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
 }
   
 `;
-  
+
   function indent(s, pad="  ") {
     let l = s.split("\n");
     let s2 = "";
@@ -7038,7 +7047,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
       if (typeof v !== "function") {
         continue;
       }
-      
+
       if (typeof k === "symbol") {
         k = "  [" + k.toString() + "]";
       }
@@ -7053,7 +7062,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
       if (v.endsWith(";}")) {
         v = v.slice(0, v.length-1) + "\n  }\n";
       }
-      
+
       let zero = "";
       let l = lens[cls.name];
 
@@ -7067,7 +7076,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
       zero += " = 0.0";
 
       if (k === "constructor") {
-s += `  constructor(data) {
+        s += `  constructor(data) {
     super();
         
     if (arguments.length > 1) {
@@ -7091,7 +7100,7 @@ s += `  constructor(data) {
     }
     s += "}\n\n";
 
-    s += `${cls.name}.STRUCT = \`${cls.STRUCT}\`;\n`; 
+    s += `${cls.name}.STRUCT = \`${cls.STRUCT}\`;\n`;
     s += `nstructjs.register(${cls.name});\n\n`;
   }
 
@@ -7139,10 +7148,10 @@ s += `  constructor(data) {
 };
 
 var sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
-    asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,
-    sign=Math.sign, tent=Math.tent, atan2=Math.atan2, atan=Math.atan,
-    pow=Math.pow, sqrt=Math.sqrt, floor=Math.floor, ceil=Math.ceil,
-    min=Math.min, max=Math.max, PI=Math.PI, E=2.718281828459045;
+  asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,
+  sign=Math.sign, tent=Math.tent, atan2=Math.atan2, atan=Math.atan,
+  pow=Math.pow, sqrt=Math.sqrt, floor=Math.floor, ceil=Math.ceil,
+  min=Math.min, max=Math.max, PI=Math.PI, E=2.718281828459045;
 
 var DOT_NORM_SNAP_LIMIT = 0.00000000001;
 var M_SQRT2=Math.sqrt(2.0);
@@ -7178,36 +7187,36 @@ var basic_funcs = {
 function bounded_acos(fac) {
   if (fac<=-1.0)
     return Math.pi;
-  else 
-    if (fac>=1.0)
+  else
+  if (fac>=1.0)
     return 0.0;
-  else 
+  else
     return Math.acos(fac);
 }
 
 function saasin(fac) {
   if (fac<=-1.0)
     return -Math.pi/2.0;
-  else 
-    if (fac>=1.0)
+  else
+  if (fac>=1.0)
     return Math.pi/2.0;
-  else 
+  else
     return Math.asin(fac);
 }
 
 
 function make_norm_safe_dot(cls) {
   var _dot = cls.prototype.dot;
-  
+
   cls.prototype._dot = _dot;
   cls.prototype.dot = function(b) {
     var ret = _dot.call(this, b);
-    
+
     if (ret >= 1.0-DOT_NORM_SNAP_LIMIT && ret <= 1.0+DOT_NORM_SNAP_LIMIT)
       return 1.0;
     if (ret >= -1.0-DOT_NORM_SNAP_LIMIT && ret <= -1.0+DOT_NORM_SNAP_LIMIT)
       return -1.0;
-      
+
     return ret;
   };
 }
@@ -7215,54 +7224,10 @@ function make_norm_safe_dot(cls) {
 class BaseVector extends Array {
   constructor() {
     super();
-    
+
     //this.xyzw = this.init_swizzle(4);
     //this.xyz = this.init_swizzle(3);
     //this.xy = this.init_swizzle(2);
-  }
-
-  static Angle3(a, b, c) {
-    let dx1, dy1, dz1=0.0, dw1=0.0;
-    let dx2, dy2, dz2=0.0, dw2=0.0;
-
-    dx1 = a[0] - b[0];
-    dy1 = a[1] - b[1];
-    if (a.length > 2 && b.length > 2)
-      dz1 = a[2] - b[2];
-    if (a.length > 3 && b.length > 3)
-      dw1 = a[3] - b[3];
-
-    dx2 = c[0] - b[0];
-    dy2 = c[1] - b[1];
-    if (c.length > 2 && b.length > 2)
-      dz2 = c[2] - b[2];
-    if (c.length > 3 && b.length > 3)
-      dw2 = c[3] - b[3];
-
-
-    let l1 = Math.sqrt(dx1*dx1 + dy1*dy1 + dz1*dz1 + dw1*dw1);
-    let l2 = Math.sqrt(dx2*dx2 + dy2*dy2 + dz2*dz2 + dw2*dw2);
-
-    let eps = 0.00001;
-
-    if (l1 == 0.0 || l2 == 0.0) {
-      return 0.0;
-    }
-
-    l1 = (1.0-eps) / l1;
-    l2 = (1.0-eps) / l2;
-
-    dx1 *= l1;
-    dy1 *= l1;
-    dz1 *= l1;
-    dw1 *= l1;
-
-    dx2 *= l2;
-    dy2 *= l2;
-    dz2 *= l2;
-    dw2 *= l2;
-
-    return Math.acos(dx1*dx2 + dy1*dy2 + dz1*dz2 + dw1*dw2);
   }
 
   copy() {
@@ -7272,45 +7237,45 @@ class BaseVector extends Array {
   load(data) {
     throw new Error("Implement me!");
   }
-  
+
   init_swizzle(size) {
     var ret = {};
     var cls = size == 4 ? Vector4 : (size == 3 ? Vector3 : Vector2);
-    
+
     for (var k in cls.prototype) {
       var v = cls.prototype[k];
       if (typeof v != "function" && !(v instanceof Function))
         continue;
-      
+
       ret[k] = v.bind(this);
     }
-    
+
     return ret;
   }
-  
+
   vectorLength() {
     return sqrt(this.dot(this));
   }
-  
+
   normalize() {
     var l = this.vectorLength();
     if (l > 0.00000001) {
       this.mulScalar(1.0/l);
     }
-    
+
     return this;
   }
-  
+
   static inherit(cls, vectorsize) {
     make_norm_safe_dot(cls);
-   
+
     var f;
 
     var vectorDotDistance = "f = function vectorDotDistance(b) {\n";
     for (var i=0; i<vectorsize; i++) {
       vectorDotDistance += "  let d"+i+" = this["+i+"]-b["+i+"];\n\n  ";
     }
-    
+
     vectorDotDistance += "  return ";
     for (var i=0; i<vectorsize; i++) {
       if (i > 0)
@@ -7320,14 +7285,14 @@ class BaseVector extends Array {
     vectorDotDistance += ";\n";
     vectorDotDistance += "};";
     cls.prototype.vectorDotDistance = eval(vectorDotDistance);
-    
+
     var f;
     var vectorDistance = "f = function vectorDistance(b) {\n";
     for (var i=0; i<vectorsize; i++) {
       vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
       //vectorDistance += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
     }
-    
+
     vectorDistance += "  return Math.sqrt(";
     for (var i=0; i<vectorsize; i++) {
       if (i > 0)
@@ -7337,19 +7302,19 @@ class BaseVector extends Array {
     vectorDistance += ");\n";
     vectorDistance += "};";
     cls.prototype.vectorDistance = eval(vectorDistance);
-    
-    
+
+
     for (var k in basic_funcs) {
       var func = basic_funcs[k];
       var args = func[0];
       var line = func[1];
       var f;
-      
+
       var code = "f = function " + k + "(";
       for (var i=0; i<args.length; i++) {
         if (i > 0)
           code += ", ";
-        
+
         line = line.replace(args[i], args[i].toLowerCase());
         code += args[i].toLowerCase();
       }
@@ -7373,29 +7338,33 @@ class BaseVector extends Array {
         }
         code += "  return this;\n";
       }
-      
+
       code += "}\n";
-      
+
       //console.log(code);
       var f = eval(code);
-      
+
       cls.prototype[k] = f;
       //console.log(k, f);
     }
   }
 }
 
+function myclamp(f, a, b) {
+  return Math.min(Math.max(f, a), b);
+}
+
 class Vector4 extends BaseVector {
   constructor(data) {
     super();
-    
+
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
-    
+
     this.length = 4;
     this[0] = this[1] = this[2] = this[3] = 0.0;
-    
+
     if (data != undefined) {
       this.load(data);
     }
@@ -7408,7 +7377,7 @@ class Vector4 extends BaseVector {
     let a = this[3];
     return `rgba(${r},${g},${b},${a})`
   }
-  
+
   loadXYZW(x, y, z, w) {
     this[0] = x;
     this[1] = y;
@@ -7427,17 +7396,17 @@ class Vector4 extends BaseVector {
   }
 
   load(data) {
-    if (data == undefined) 
+    if (data == undefined)
       return this;
-    
+
     this[0] = data[0];
     this[1] = data[1];
     this[2] = data[2];
     this[3] = data[3];
-    
+
     return this;
   }
-  
+
   dot(b) {
     return this[0]*b[0] + this[1]*b[1] + this[2]*b[2] + this[3]*b[3];
   }
@@ -7454,7 +7423,7 @@ class Vector4 extends BaseVector {
     this[2] = t0*-this[3]+this[2]*this[0]-this[0]*this[2]+this[1]*this[1];
     this[0] = t1;
     this[1] = t2;
-    
+
     return this;
   }
 
@@ -7468,32 +7437,32 @@ class Vector4 extends BaseVector {
     this[1] = w*matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22+z*matrix.$matrix.m32;
     this[2] = w*matrix.$matrix.m43+x*matrix.$matrix.m13+y*matrix.$matrix.m23+z*matrix.$matrix.m33;
     this[3] = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24+z*matrix.$matrix.m34;
-    
+
     return this[3];
   }
-  
+
   cross(v) {
     var x = this[1]*v[2] - this[2]*v[1];
     var y = this[2]*v[0] - this[0]*v[2];
     var z = this[0]*v[1] - this[1]*v[0];
-    
+
     this[0] = x;
     this[1] = y;
     this[2] = z;
-    
+
     return this;
   }
-  
+
   preNormalizedAngle(v2) {
     if (this.dot(v2)<0.0) {
-        var vec=new Vector4();
-        vec[0] = -v2[0];
-        vec[1] = -v2[1];
-        vec[2] = -v2[2];
-        vec[3] = -v2[3];
-        return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
+      var vec=new Vector4();
+      vec[0] = -v2[0];
+      vec[1] = -v2[1];
+      vec[2] = -v2[2];
+      vec[3] = -v2[3];
+      return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
     }
-    else 
+    else
       return 2.0*saasin(v2.vectorDistance(this)/2.0);
   }
 
@@ -7506,7 +7475,7 @@ class Vector4 extends BaseVector {
 };
 Vector4.STRUCT = `
 vec4 {
-  vec : array(float) | this;
+  vec : array(float) | obj;
 }
 `;
 nstructjs.manager.add_class(Vector4);
@@ -7519,14 +7488,14 @@ var _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
 class Vector3 extends BaseVector {
   constructor(data) {
     super();
-    
+
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
-    
+
     this.length = 3;
     this[0] = this[1] = this[2] = 0.0;
-    
+
     if (data != undefined) {
       this.load(data);
     }
@@ -7550,28 +7519,28 @@ class Vector3 extends BaseVector {
   toJSON() {
     return [this[0], this[1], this[2]];
   }
-  
+
   loadJSON(obj) {
     return this.load(obj);
   }
-  
+
   initVector3() {
     this.length = 3;
     this[0] = this[1] = this[2] = 0;
     return this;
   }
-  
+
   load(data) {
-    if (data == undefined) 
+    if (data == undefined)
       return this;
-    
+
     this[0] = data[0];
     this[1] = data[1];
     this[2] = data[2];
-    
+
     return this;
   }
-  
+
   dot(b) {
     return this[0]*b[0] + this[1]*b[1] + this[2]*b[2];
   }
@@ -7588,13 +7557,13 @@ class Vector3 extends BaseVector {
   static normalizedDot4(v1, v2, v3, v4) {
     $_v3nd4_n1_normalizedDot4.load(v2).sub(v1).normalize();
     $_v3nd4_n2_normalizedDot4.load(v4).sub(v3).normalize();
-    
+
     return $_v3nd4_n1_normalizedDot4.dot($_v3nd4_n2_normalizedDot4);
   }
 
   multVecMatrix(matrix, ignore_w) {
     if (ignore_w==undefined) {
-        ignore_w = false;
+      ignore_w = false;
     }
     var x=this[0];
     var y=this[1];
@@ -7604,22 +7573,22 @@ class Vector3 extends BaseVector {
     this[2] = matrix.$matrix.m43+x*matrix.$matrix.m13+y*matrix.$matrix.m23+z*matrix.$matrix.m33;
     var w=matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24+z*matrix.$matrix.m34;
     if (!ignore_w&&w!=1&&w!=0&&matrix.isPersp) {
-        this[0]/=w;
-        this[1]/=w;
-        this[2]/=w;
+      this[0]/=w;
+      this[1]/=w;
+      this[2]/=w;
     }
     return w;
   }
-  
+
   cross(v) {
     var x = this[1]*v[2] - this[2]*v[1];
     var y = this[2]*v[0] - this[0]*v[2];
     var z = this[0]*v[1] - this[1]*v[0];
-    
+
     this[0] = x;
     this[1] = y;
     this[2] = z;
-    
+
     return this;
   }
 
@@ -7627,7 +7596,7 @@ class Vector3 extends BaseVector {
   rot2d(A, axis) {
     var x = this[0];
     var y = this[1];
-    
+
     if (axis == 1) {
       this[0] = x * cos(A) + y*sin(A);
       this[1] = y * cos(A) - x*sin(A);
@@ -7635,19 +7604,19 @@ class Vector3 extends BaseVector {
       this[0] = x * cos(A) - y*sin(A);
       this[1] = y * cos(A) + x*sin(A);
     }
-    
+
     return this;
   }
- 
+
   preNormalizedAngle(v2) {
     if (this.dot(v2)<0.0) {
-        var vec=new Vector3();
-        vec[0] = -v2[0];
-        vec[1] = -v2[1];
-        vec[2] = -v2[2];
-        return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
+      var vec=new Vector3();
+      vec[0] = -v2[0];
+      vec[1] = -v2[1];
+      vec[2] = -v2[2];
+      return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
     }
-    else 
+    else
       return 2.0*saasin(v2.vectorDistance(this)/2.0);
   }
 
@@ -7668,14 +7637,14 @@ nstructjs.manager.add_class(Vector3);
 class Vector2 extends BaseVector {
   constructor(data) {
     super();
-    
+
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
-    
+
     this.length = 2;
     this[0] = this[1] = 0.0;
-    
+
     if (data !== undefined) {
       this.load(data);
     }
@@ -7704,26 +7673,26 @@ class Vector2 extends BaseVector {
   toJSON() {
     return [this[0], this[1]];
   }
-  
+
   loadJSON(obj) {
     return this.load(obj);
   }
-  
+
   load(data) {
-    if (data == undefined) 
+    if (data == undefined)
       return this;
-    
+
     this[0] = data[0];
     this[1] = data[1];
-    
+
     return this;
   }
-  
+
   //axis is optional, 0
   rot2d(A, axis) {
     var x = this[0];
     var y = this[1];
-    
+
     if (axis == 1) {
       this[0] = x * cos(A) + y*sin(A);
       this[1] = y * cos(A) - x*sin(A);
@@ -7731,10 +7700,10 @@ class Vector2 extends BaseVector {
       this[0] = x * cos(A) - y*sin(A);
       this[1] = y * cos(A) + x*sin(A);
     }
-    
+
     return this;
   }
-  
+
   dot(b) {
     return this[0]*b[0] + this[1]*b[1];
   }
@@ -7778,7 +7747,7 @@ class Vector2 extends BaseVector {
 
     this[0] = t1;
     this[1] = t2;
-    
+
     return this;
   }
 
@@ -7830,22 +7799,22 @@ class Quat extends Vector4 {
 
   invert() {
     var f= this.dot(this);
-    
+
     if (f==0.0)
       return;
-      
+
     conjugate_qt(q);
     this.mulscalar(1.0/f);
   }
 
   sub(q2) {
     var nq2=new Quat();
-    
+
     nq2[0] = -q2[0];
     nq2[1] = q2[1];
     nq2[2] = q2[2];
     nq2[3] = q2[3];
-    
+
     this.mul(nq2);
   }
 
@@ -7853,9 +7822,9 @@ class Quat extends Vector4 {
     var angle=fac*bounded_acos(this[0]);
     var co=Math.cos(angle);
     var si=Math.sin(angle);
-    
+
     this[0] = co;
-    
+
     var last3=Vector3([this[1], this[2], this[3]]);
     last3.normalize();
     last3.mulScalar(si);
@@ -7869,7 +7838,7 @@ class Quat extends Vector4 {
     if (m == undefined) {
       m=new Matrix4();
     }
-    
+
     var q0=M_SQRT2*this[0];
     var q1=M_SQRT2*this[1];
     var q2=M_SQRT2*this[2];
@@ -7897,24 +7866,24 @@ class Quat extends Vector4 {
     m.$matrix.m34 = 0.0;
     m.$matrix.m41 = m.$matrix.m42 = m.$matrix.m43 = 0.0;
     m.$matrix.m44 = 1.0;
-    
+
     return m;
   }
 
   matrixToQuat(wmat) {
     var mat=new Matrix4(wmat);
-    
+
     mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
     mat.$matrix.m44 = 1.0;
-    
+
     var r1=new Vector3([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
     var r2=new Vector3([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
     var r3=new Vector3([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
-    
+
     r1.normalize();
     r2.normalize();
     r3.normalize();
-    
+
     mat.$matrix.m11 = r1[0];
     mat.$matrix.m12 = r1[1];
     mat.$matrix.m13 = r1[2];
@@ -7927,30 +7896,30 @@ class Quat extends Vector4 {
     var tr=0.25*(1.0+mat.$matrix.m11+mat.$matrix.m22+mat.$matrix.m33);
     var s=0;
     if (tr>FLT_EPSILON) {
-        s = Math.sqrt(tr);
-        this[0] = s;
-        s = 1.0/(4.0*s);
-        this[1] = ((mat.$matrix.m23-mat.$matrix.m32)*s);
-        this[2] = ((mat.$matrix.m31-mat.$matrix.m13)*s);
-        this[3] = ((mat.$matrix.m12-mat.$matrix.m21)*s);
+      s = Math.sqrt(tr);
+      this[0] = s;
+      s = 1.0/(4.0*s);
+      this[1] = ((mat.$matrix.m23-mat.$matrix.m32)*s);
+      this[2] = ((mat.$matrix.m31-mat.$matrix.m13)*s);
+      this[3] = ((mat.$matrix.m12-mat.$matrix.m21)*s);
     }
     else {
       if (mat.$matrix.m11>mat.$matrix.m22&&mat.$matrix.m11>mat.$matrix.m33) {
-          s = 2.0*Math.sqrt(1.0+mat.$matrix.m11-mat.$matrix.m22-mat.$matrix.m33);
-          this[1] = (0.25*s);
-          s = 1.0/s;
-          this[0] = ((mat.$matrix.m32-mat.$matrix.m23)*s);
-          this[2] = ((mat.$matrix.m21+mat.$matrix.m12)*s);
-          this[3] = ((mat.$matrix.m31+mat.$matrix.m13)*s);
+        s = 2.0*Math.sqrt(1.0+mat.$matrix.m11-mat.$matrix.m22-mat.$matrix.m33);
+        this[1] = (0.25*s);
+        s = 1.0/s;
+        this[0] = ((mat.$matrix.m32-mat.$matrix.m23)*s);
+        this[2] = ((mat.$matrix.m21+mat.$matrix.m12)*s);
+        this[3] = ((mat.$matrix.m31+mat.$matrix.m13)*s);
       }
-      else 
-        if (mat.$matrix.m22>mat.$matrix.m33) {
-          s = 2.0*Math.sqrt(1.0+mat.$matrix.m22-mat.$matrix.m11-mat.$matrix.m33);
-          this[2] = (0.25*s);
-          s = 1.0/s;
-          this[0] = ((mat.$matrix.m31-mat.$matrix.m13)*s);
-          this[1] = ((mat.$matrix.m21+mat.$matrix.m12)*s);
-          this[3] = ((mat.$matrix.m32+mat.$matrix.m23)*s);
+      else
+      if (mat.$matrix.m22>mat.$matrix.m33) {
+        s = 2.0*Math.sqrt(1.0+mat.$matrix.m22-mat.$matrix.m11-mat.$matrix.m33);
+        this[2] = (0.25*s);
+        s = 1.0/s;
+        this[0] = ((mat.$matrix.m31-mat.$matrix.m13)*s);
+        this[1] = ((mat.$matrix.m21+mat.$matrix.m12)*s);
+        this[3] = ((mat.$matrix.m32+mat.$matrix.m23)*s);
       }
       else {
         s = 2.0*Math.sqrt(1.0+mat.$matrix.m33-mat.$matrix.m11-mat.$matrix.m22);
@@ -7966,9 +7935,9 @@ class Quat extends Vector4 {
 
   normalize() {
     var len=Math.sqrt(this.dot(this));
-    
+
     if (len!=0.0) {
-        this.mulScalar(1.0/len);
+      this.mulScalar(1.0/len);
     }
     else {
       this[1] = 1.0;
@@ -7982,12 +7951,12 @@ class Quat extends Vector4 {
     nor.normalize();
 
     if (nor.dot(nor) != 0.0) {
-        var phi=angle/2.0;
-        var si=Math.sin(phi);
-        this[0] = Math.cos(phi);
-        this[1] = nor[0]*si;
-        this[2] = nor[1]*si;
-        this[3] = nor[2]*si;
+      var phi=angle/2.0;
+      var si=Math.sin(phi);
+      this[0] = Math.cos(phi);
+      this[1] = nor[0]*si;
+      this[2] = nor[1]*si;
+      this[3] = nor[2]*si;
     } else {
       this.makeUnitQuat();
     }
@@ -8010,11 +7979,11 @@ class Quat extends Vector4 {
     var quat=new Quat();
     var cosom=this[0]*quat2[0]+this[1]*quat2[1]+this[2]*quat2[2]+this[3]*quat2[3];
     if (cosom<0.0) {
-        cosom = -cosom;
-        quat[0] = -this[0];
-        quat[1] = -this[1];
-        quat[2] = -this[2];
-        quat[3] = -this[3];
+      cosom = -cosom;
+      quat[0] = -this[0];
+      quat[1] = -this[1];
+      quat[2] = -this[2];
+      quat[3] = -this[3];
     }
     else {
       quat[0] = this[0];
@@ -8024,10 +7993,10 @@ class Quat extends Vector4 {
     }
     var omega, sinom, sc1, sc2;
     if ((1.0-cosom)>0.0001) {
-        omega = Math.acos(cosom);
-        sinom = Math.sin(omega);
-        sc1 = Math.sin((1.0-t)*omega)/sinom;
-        sc2 = Math.sin(t*omega)/sinom;
+      omega = Math.acos(cosom);
+      sinom = Math.sin(omega);
+      sc1 = Math.sin((1.0-t)*omega)/sinom;
+      sc2 = Math.sin(t*omega)/sinom;
     }
     else {
       sc1 = 1.0-t;
@@ -8037,7 +8006,7 @@ class Quat extends Vector4 {
     this[1] = sc1*quat[1]+sc2*quat2[1];
     this[2] = sc1*quat[2]+sc2*quat2[2];
     this[3] = sc1*quat[3]+sc2*quat2[3];
-    
+
     return this;
   }
 
@@ -8095,7 +8064,7 @@ class internal_matrix {
     this.m42 = 0.0;
     this.m43 = 0.0;
     this.m44 = 1.0;
-    }
+  }
 }
 
 var lookat_cache_vs3;
@@ -8103,7 +8072,7 @@ var lookat_cache_vs4;
 var makenormalcache;
 
 class Matrix4 {
-    constructor(m) {
+  constructor(m) {
     this.$matrix = new internal_matrix();
     this.isPersp = false;
 
@@ -8111,7 +8080,7 @@ class Matrix4 {
       if ("length" in m && m.length >= 16) {
         this.load(m);
       } else if (m instanceof Matrix4) {
-          this.load(m);
+        this.load(m);
       }
     }
   }
@@ -8151,53 +8120,53 @@ class Matrix4 {
 
   load() {
     if (arguments.length==1&&typeof arguments[0]=='object') {
-        var matrix;
-        if (arguments[0] instanceof Matrix4) {
-            matrix = arguments[0].$matrix;
-            this.isPersp = arguments[0].isPersp;
-            this.$matrix.m11 = matrix.m11;
-            this.$matrix.m12 = matrix.m12;
-            this.$matrix.m13 = matrix.m13;
-            this.$matrix.m14 = matrix.m14;
-            this.$matrix.m21 = matrix.m21;
-            this.$matrix.m22 = matrix.m22;
-            this.$matrix.m23 = matrix.m23;
-            this.$matrix.m24 = matrix.m24;
-            this.$matrix.m31 = matrix.m31;
-            this.$matrix.m32 = matrix.m32;
-            this.$matrix.m33 = matrix.m33;
-            this.$matrix.m34 = matrix.m34;
-            this.$matrix.m41 = matrix.m41;
-            this.$matrix.m42 = matrix.m42;
-            this.$matrix.m43 = matrix.m43;
-            this.$matrix.m44 = matrix.m44;
-            return this;
-        }
-        else 
-          matrix = arguments[0];
-        if ("length" in matrix&&matrix.length>=16) {
-            this.$matrix.m11 = matrix[0];
-            this.$matrix.m12 = matrix[1];
-            this.$matrix.m13 = matrix[2];
-            this.$matrix.m14 = matrix[3];
-            this.$matrix.m21 = matrix[4];
-            this.$matrix.m22 = matrix[5];
-            this.$matrix.m23 = matrix[6];
-            this.$matrix.m24 = matrix[7];
-            this.$matrix.m31 = matrix[8];
-            this.$matrix.m32 = matrix[9];
-            this.$matrix.m33 = matrix[10];
-            this.$matrix.m34 = matrix[11];
-            this.$matrix.m41 = matrix[12];
-            this.$matrix.m42 = matrix[13];
-            this.$matrix.m43 = matrix[14];
-            this.$matrix.m44 = matrix[15];
-            return this;
-        }
+      var matrix;
+      if (arguments[0] instanceof Matrix4) {
+        matrix = arguments[0].$matrix;
+        this.isPersp = arguments[0].isPersp;
+        this.$matrix.m11 = matrix.m11;
+        this.$matrix.m12 = matrix.m12;
+        this.$matrix.m13 = matrix.m13;
+        this.$matrix.m14 = matrix.m14;
+        this.$matrix.m21 = matrix.m21;
+        this.$matrix.m22 = matrix.m22;
+        this.$matrix.m23 = matrix.m23;
+        this.$matrix.m24 = matrix.m24;
+        this.$matrix.m31 = matrix.m31;
+        this.$matrix.m32 = matrix.m32;
+        this.$matrix.m33 = matrix.m33;
+        this.$matrix.m34 = matrix.m34;
+        this.$matrix.m41 = matrix.m41;
+        this.$matrix.m42 = matrix.m42;
+        this.$matrix.m43 = matrix.m43;
+        this.$matrix.m44 = matrix.m44;
+        return this;
+      }
+      else
+        matrix = arguments[0];
+      if ("length" in matrix&&matrix.length>=16) {
+        this.$matrix.m11 = matrix[0];
+        this.$matrix.m12 = matrix[1];
+        this.$matrix.m13 = matrix[2];
+        this.$matrix.m14 = matrix[3];
+        this.$matrix.m21 = matrix[4];
+        this.$matrix.m22 = matrix[5];
+        this.$matrix.m23 = matrix[6];
+        this.$matrix.m24 = matrix[7];
+        this.$matrix.m31 = matrix[8];
+        this.$matrix.m32 = matrix[9];
+        this.$matrix.m33 = matrix[10];
+        this.$matrix.m34 = matrix[11];
+        this.$matrix.m41 = matrix[12];
+        this.$matrix.m42 = matrix[13];
+        this.$matrix.m43 = matrix[14];
+        this.$matrix.m44 = matrix[15];
+        return this;
+      }
     }
-    
+
     this.makeIdentity();
-    
+
     return this;
   }
 
@@ -8222,8 +8191,8 @@ class Matrix4 {
 
   setUniform(ctx, loc, transpose) {
     if (Matrix4.setUniformArray==undefined) {
-        Matrix4.setUniformWebGLArray = new Float32Array(16);
-        Matrix4.setUniformArray = new Array(16);
+      Matrix4.setUniformWebGLArray = new Float32Array(16);
+      Matrix4.setUniformArray = new Array(16);
     }
 
     Matrix4.setUniformArray[0] = this.$matrix.m11;
@@ -8242,12 +8211,10 @@ class Matrix4 {
     Matrix4.setUniformArray[13] = this.$matrix.m42;
     Matrix4.setUniformArray[14] = this.$matrix.m43;
     Matrix4.setUniformArray[15] = this.$matrix.m44;
-    
-    Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
-    
-    ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
 
-    return this;
+    Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
+
+    ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
   }
 
   makeIdentity() {
@@ -8270,8 +8237,6 @@ class Matrix4 {
 
     //drop isPersp
     this.isPersp = false;
-
-    return this;
   }
 
   transpose() {
@@ -8293,8 +8258,6 @@ class Matrix4 {
     tmp = this.$matrix.m34;
     this.$matrix.m34 = this.$matrix.m43;
     this.$matrix.m43 = tmp;
-
-    return this;
   }
 
   determinant() {
@@ -8371,21 +8334,21 @@ class Matrix4 {
 
   scale(x, y, z, w=1.0) {
     if (typeof x=='object'&&"length" in x) {
-        var t=x;
-        x = t[0];
-        y = t[1];
-        z = t[2];
+      var t=x;
+      x = t[0];
+      y = t[1];
+      z = t[2];
     } else {
       if (x===undefined)
         x = 1;
 
       if (z===undefined) {
-          if (y===undefined) {
-              y = x;
-              z = x;
-          } else {
-            z = x;
-          }
+        if (y===undefined) {
+          y = x;
+          z = x;
+        } else {
+          z = x;
+        }
       } else if (y===undefined) {
         y = x;
       }
@@ -8400,7 +8363,7 @@ class Matrix4 {
     this.multiply(matrix);
     return this
   }
-  
+
   preScale(x, y, z, w=1.0) {
     let mat = new Matrix4();
     mat.scale(x, y, z, w);
@@ -8490,6 +8453,77 @@ class Matrix4 {
     (0,0,0,1))
 
   */
+
+  euler_rotate_order(x, y, z, order=EulerOrders.XYZ) {
+    if (y === undefined) {
+      y = 0.0;
+    }
+    if (z === undefined) {
+      z = 0.0;
+    }
+
+    let xmat = new Matrix4();
+    let m = xmat.$matrix;
+
+    let c = Math.cos(x), s = Math.sin(x);
+
+    m.m22 =  c;  m.m23 = s;
+    m.m32 = -s;  m.m33 = c;
+
+    let ymat = new Matrix4();
+    c = Math.cos(y); s = Math.sin(y);
+    m = ymat.$matrix;
+
+    m.m11 = c;  m.m13 = -s;
+    m.m31 = s;  m.m33 =  c;
+
+    let zmat = new Matrix4();
+    c = Math.cos(z); s = Math.sin(z);
+    m = zmat.$matrix;
+
+    m.m11 = c;  m.m12 = s;
+    m.m21 =-s;  m.m22 = c;
+
+    let a, b;
+
+    switch (order) {
+      case EulerOrders.XYZ:
+        a = xmat;
+        b = ymat;
+        c = zmat;
+        break;
+      case EulerOrders.XZY:
+        a = xmat;
+        b = zmat;
+        c = ymat;
+        break;
+      case EulerOrders.YXZ:
+        a = ymat;
+        b = xmat;
+        c = zmat;
+        break;
+      case EulerOrders.YZX:
+        a = ymat;
+        b = zmat;
+        c = xmat;
+        break;
+      case EulerOrders.ZXY:
+        a = zmat;
+        b = xmat;
+        c = ymat;
+        break;
+      case EulerOrders.ZYX:
+        a = zmat;
+        b = ymat;
+        c = xmat;
+        break;
+    }
+
+    a.multiply(b);
+    b.multiply(c);
+    this.preMultiply(b);
+  }
+
   euler_rotate(x, y, z) {
     if (y === undefined) {
       y = 0.0;
@@ -8501,28 +8535,28 @@ class Matrix4 {
 
     var xmat = new Matrix4();
     var m = xmat.$matrix;
-    
+
     var c = Math.cos(x), s = Math.sin(x);
-    
+
     m.m22 =  c;  m.m23 = s;
     m.m32 = -s;  m.m33 = c;
-    
+
     var ymat = new Matrix4();
     c = Math.cos(y); s = Math.sin(y);
     var m = ymat.$matrix;
-    
+
     m.m11 = c;  m.m13 = -s;
     m.m31 = s;  m.m33 =  c;
-    
+
     ymat.multiply(xmat);
 
     var zmat = new Matrix4();
     c = Math.cos(z); s = Math.sin(z);
     var m = zmat.$matrix;
-    
+
     m.m11 = c;  m.m12 = s;
     m.m21 =-s;  m.m22 = c;
-    
+
     zmat.multiply(ymat);
 
     //console.log(""+ymat);
@@ -8531,31 +8565,31 @@ class Matrix4 {
 
     return this;
   }
-  
+
   toString() {
     var s = "";
     var m = this.$matrix;
-    
+
     function dec(d) {
       var ret = d.toFixed(3);
-      
+
       if (ret[0] != "-") //make room for negative signs
         ret = " " + ret;
-      return ret 
+      return ret
     }
-    
+
     s  = dec(m.m11) +", " + dec(m.m12) + ", " + dec(m.m13) + ", " + dec(m.m14) + "\n";
     s += dec(m.m21) +", " + dec(m.m22) + ", " + dec(m.m23) + ", " + dec(m.m24) + "\n";
     s += dec(m.m31) +", " + dec(m.m32) + ", " + dec(m.m33) + ", " + dec(m.m34) + "\n";
     s += dec(m.m41) +", " + dec(m.m42) + ", " + dec(m.m43) + ", " + dec(m.m44) + "\n";
-    
+
     return s
   }
-  
+
   rotate(angle, x, y, z) {
     if (typeof x=='object'&&"length" in x) {
-        var t=x;
-        x = t[0]; y = t[1]; z = t[2];
+      var t=x;
+      x = t[0]; y = t[1]; z = t[2];
     } else {
       if (arguments.length==1) {
         x = y = 0;
@@ -8575,55 +8609,55 @@ class Matrix4 {
     var len=Math.sqrt(x*x+y*y+z*z);
 
     if (len==0) {
-        x = 0;
-        y = 0;
-        z = 1;
+      x = 0;
+      y = 0;
+      z = 1;
     } else if (len!=1) {
-        x/=len;
-        y/=len;
-        z/=len;
+      x/=len;
+      y/=len;
+      z/=len;
     }
 
     var mat=new Matrix4();
     if (x==1&&y==0&&z==0) {
-        mat.$matrix.m11 = 1;
-        mat.$matrix.m12 = 0;
-        mat.$matrix.m13 = 0;
-        mat.$matrix.m21 = 0;
-        mat.$matrix.m22 = 1-2*sinA2;
-        mat.$matrix.m23 = 2*sinA*cosA;
-        mat.$matrix.m31 = 0;
-        mat.$matrix.m32 = -2*sinA*cosA;
-        mat.$matrix.m33 = 1-2*sinA2;
-        mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
-        mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
-        mat.$matrix.m44 = 1;
+      mat.$matrix.m11 = 1;
+      mat.$matrix.m12 = 0;
+      mat.$matrix.m13 = 0;
+      mat.$matrix.m21 = 0;
+      mat.$matrix.m22 = 1-2*sinA2;
+      mat.$matrix.m23 = 2*sinA*cosA;
+      mat.$matrix.m31 = 0;
+      mat.$matrix.m32 = -2*sinA*cosA;
+      mat.$matrix.m33 = 1-2*sinA2;
+      mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
+      mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
+      mat.$matrix.m44 = 1;
     } else if (x==0&&y==1&&z==0) {
-        mat.$matrix.m11 = 1-2*sinA2;
-        mat.$matrix.m12 = 0;
-        mat.$matrix.m13 = -2*sinA*cosA;
-        mat.$matrix.m21 = 0;
-        mat.$matrix.m22 = 1;
-        mat.$matrix.m23 = 0;
-        mat.$matrix.m31 = 2*sinA*cosA;
-        mat.$matrix.m32 = 0;
-        mat.$matrix.m33 = 1-2*sinA2;
-        mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
-        mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
-        mat.$matrix.m44 = 1;
+      mat.$matrix.m11 = 1-2*sinA2;
+      mat.$matrix.m12 = 0;
+      mat.$matrix.m13 = -2*sinA*cosA;
+      mat.$matrix.m21 = 0;
+      mat.$matrix.m22 = 1;
+      mat.$matrix.m23 = 0;
+      mat.$matrix.m31 = 2*sinA*cosA;
+      mat.$matrix.m32 = 0;
+      mat.$matrix.m33 = 1-2*sinA2;
+      mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
+      mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
+      mat.$matrix.m44 = 1;
     } else if (x==0&&y==0&&z==1) {
-        mat.$matrix.m11 = 1-2*sinA2;
-        mat.$matrix.m12 = 2*sinA*cosA;
-        mat.$matrix.m13 = 0;
-        mat.$matrix.m21 = -2*sinA*cosA;
-        mat.$matrix.m22 = 1-2*sinA2;
-        mat.$matrix.m23 = 0;
-        mat.$matrix.m31 = 0;
-        mat.$matrix.m32 = 0;
-        mat.$matrix.m33 = 1;
-        mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
-        mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
-        mat.$matrix.m44 = 1;
+      mat.$matrix.m11 = 1-2*sinA2;
+      mat.$matrix.m12 = 2*sinA*cosA;
+      mat.$matrix.m13 = 0;
+      mat.$matrix.m21 = -2*sinA*cosA;
+      mat.$matrix.m22 = 1-2*sinA2;
+      mat.$matrix.m23 = 0;
+      mat.$matrix.m31 = 0;
+      mat.$matrix.m32 = 0;
+      mat.$matrix.m33 = 1;
+      mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
+      mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
+      mat.$matrix.m44 = 1;
     } else {
       var x2=x*x;
       var y2=y*y;
@@ -8684,33 +8718,24 @@ class Matrix4 {
 
     let n = makenormalcache.next().load(normal).normalize();
 
-    //try to guess an up axis
     if (up === undefined) {
       up = makenormalcache.next().zero();
 
-      let ax = Math.abs(n[0]), ay = Math.abs(n[1]), az = Math.abs(n[2]);
-      let axis;
-
-      if (ax > ay && ax > az) {
-        axis = 2;
-      } else if (ay >= ax && ay >= az) {
-        axis = 0;
+      if (Math.abs(n[2]) > 0.95) {
+        up[1] = 1.0;
       } else {
-        axis = 1;
+        up[2] = 1.0;
       }
-
-      up[axis] = 1;
-
-      up.cross(n).normalize();
-    } else {
-      up = makenormalcache.next().load(up).normalize();
     }
 
+    up = makenormalcache.next().load(up);
 
-    if (up.dot(normal) > 0.999) {
+    up.normalize();
+
+    if (up.dot(normal) > 0.99) {
       this.makeIdentity();
       return this;
-    } else if (up.dot(normal) < -0.999) {
+    } else if (up.dot(normal) < -0.99) {
       this.makeIdentity();
       this.scale(1.0, 1.0, -1.0);
       return this;
@@ -8729,12 +8754,10 @@ class Matrix4 {
     m.m11 = x[0];
     m.m12 = x[1];
     m.m13 = x[2];
-    m.m14 = 0.0;
 
     m.m21 = y[0];
     m.m22 = y[1];
     m.m23 = y[2];
-    m.m24 = 0.0;
 
     m.m31 = n[0];
     m.m32 = n[1];
@@ -8746,15 +8769,15 @@ class Matrix4 {
 
   preMultiply(mat) {
     var tmp = new Matrix4();
-    
+
     tmp.load(mat);
     tmp.multiply(this);
-    
+
     this.load(tmp);
 
     return this;
   }
-  
+
   multiply(mat) {
     let mm = this.$matrix;
     let mm2 = mat.$matrix;
@@ -8904,17 +8927,17 @@ class Matrix4 {
 
   lookat(pos, target, up) {
     var matrix=new Matrix4();
-    
+
     var vec = lookat_cache_vs3.next().load(pos).sub(target);
     var len = vec.vectorLength();
     vec.normalize();
-    
+
     var zvec = vec;
     var yvec = lookat_cache_vs3.next().load(up).normalize();
     var xvec = lookat_cache_vs3.next().load(yvec).cross(zvec).normalize();
-    
+
     let mm = matrix.$matrix;
-    
+
     mm.m11 = xvec[0];
     mm.m12 = yvec[0];
     mm.m13 = zvec[0];
@@ -8945,7 +8968,7 @@ class Matrix4 {
     mm.m43 = pos[2];
     mm.m44 = 1;
     //*/
-  
+
     this.multiply(matrix);
 
 
@@ -8954,7 +8977,7 @@ class Matrix4 {
 
   makeRotationOnly() {
     var m = this.$matrix;
-    
+
     m.m41 = m.m42 = m.m43 = 0.0;
     m.m44 = 1.0;
 
@@ -8983,8 +9006,8 @@ class Matrix4 {
     return this;
   }
 
-  decompose(_translate, _rotate, _scale, _skew, _perspective) {
-    if (this.$matrix.m44 == 0)
+  decompose(_translate, _rotate, _scale, _skew, _perspective, order=EulerOrders.XYZ) {
+    if (this.$matrix.m44 === 0)
       return false;
 
     let mat = new Matrix4(this);
@@ -9023,10 +9046,124 @@ class Matrix4 {
       s[2] = l3;
     }
 
-    if (r) {
-      r[0] = Math.atan2(m.m23, m.m33);
-      r[1] = Math.atan2(-m.m13, Math.sqrt(m.m23*m.m23 + m.m33*m.m33));
-      r[2] = Math.atan2(m.m12, m.m11);
+    if (r) { //THREE.js code
+      let clamp = myclamp;
+
+      let rmat = new Matrix4(this);
+      rmat.normalize();
+      rmat.transpose();
+
+      m = rmat.$matrix;
+
+      // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+
+      let m11 = m.m11, m12 = m.m12, m13 = m.m13, m14 = m.m14;
+      let m21 = m.m21, m22 = m.m22, m23 = m.m23, m24 = m.m24;
+      let m31 = m.m31, m32 = m.m32, m33 = m.m33, m34 = m.m34;
+      //let m41 = m.m41, m42 = m.m42, m43 = m.m43, m44 = m.m44;
+
+      if ( order === EulerOrders.XYZ ) {
+
+        r[1] = Math.asin( clamp( m13, - 1, 1 ) );
+
+        if ( Math.abs( m13 ) < 0.9999999 ) {
+
+          r[0] = Math.atan2( - m23, m33 );
+          r[2] = Math.atan2( - m12, m11 );
+
+        } else {
+
+          r[0] = Math.atan2( m32, m22 );
+          r[2] = 0;
+
+        }
+
+      } else if ( order === EulerOrders.YXZ ) {
+
+        r[0] = Math.asin( - clamp( m23, - 1, 1 ) );
+
+        if ( Math.abs( m23 ) < 0.9999999 ) {
+
+          r[1] = Math.atan2( m13, m33 );
+          r[2] = Math.atan2( m21, m22 );
+
+        } else {
+
+          r[1] = Math.atan2( - m31, m11 );
+          r[2] = 0;
+
+        }
+
+      } else if ( order === EulerOrders.ZXY ) {
+
+        r[0] = Math.asin( clamp( m32, - 1, 1 ) );
+
+        if ( Math.abs( m32 ) < 0.9999999 ) {
+
+          r[1] = Math.atan2( - m31, m33 );
+          r[2] = Math.atan2( - m12, m22 );
+
+        } else {
+
+          r[1] = 0;
+          r[2] = Math.atan2( m21, m11 );
+
+        }
+
+      } else if ( order === EulerOrders.ZYX ) {
+
+        r[1] = Math.asin( - clamp( m31, - 1, 1 ) );
+
+        if ( Math.abs( m31 ) < 0.9999999 ) {
+
+          r[0] = Math.atan2( m32, m33 );
+          r[2] = Math.atan2( m21, m11 );
+
+        } else {
+
+          r[0] = 0;
+          r[2] = Math.atan2( - m12, m22 );
+
+        }
+
+      } else if ( order === EulerOrders.YZX ) {
+
+        r[2] = Math.asin( clamp( m21, - 1, 1 ) );
+
+        if ( Math.abs( m21 ) < 0.9999999 ) {
+
+          r[0] = Math.atan2( - m23, m22 );
+          r[1] = Math.atan2( - m31, m11 );
+
+        } else {
+
+          r[0] = 0;
+          r[1] = Math.atan2( m13, m33 );
+
+        }
+
+      } else if ( order === EulerOrders.XZY ) {
+
+        r[2] = Math.asin(-clamp(m12, -1, 1));
+
+        if (Math.abs(m12) < 0.9999999) {
+
+          r[0] = Math.atan2(m32, m22);
+          r[1] = Math.atan2(m13, m11);
+
+        } else {
+
+          r[0] = Math.atan2(-m23, m33);
+          r[1] = 0;
+
+        }
+
+      } else {
+        console.warn( 'unsupported euler order:', order);
+      }
+      //r[0] = Math.atan2(m.m23, m.m33);
+      //r[1] = Math.atan2(-m.m13, Math.sqrt(m.m23*m.m23 + m.m33*m.m33));
+      //r[2] = Math.atan2(m.m12, m.m11);
     }
   }
 
@@ -9100,7 +9237,7 @@ class Matrix4 {
 
   loadSTRUCT(reader) {
     reader(this);
-    
+
     this.load(this.mat);
     this.__mat = this.mat;
     //delete this.mat;
@@ -9141,6 +9278,7 @@ window.testmat = (x=0, y=0, z=Math.PI*0.5) => {
 
 var vectormath1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  EulerOrders: EulerOrders,
   BaseVector: BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
@@ -10834,7 +10972,97 @@ var math1 = /*#__PURE__*/Object.freeze({
   Mat4Stack: Mat4Stack
 });
 
+let _clipdata = {
+  name : "nothing",
+  mime : "nothing",
+  data : undefined
+};
+
+let _clipboards = {};
+
+window.setInterval(() => {
+  let cb = navigator.clipboard;
+
+  if (!cb) {
+    return;
+  }
+
+  cb.read().then((data) => {
+    for (let item of data) {
+      for (let i=0; i<item.types.length; i++) {
+        let type = item.types[i];
+
+        if (!(type in _clipboards)) {
+          _clipboards[type] = {
+            name : type,
+            mime : type,
+            data : undefined
+          };
+        };
+
+        item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
+          _clipboards[type].data = text;
+        });
+      }
+
+      //item.getType("text/css").then((blob) => blob.text()).then((text) => {
+      //  console.log("text", text);
+      //});
+    }
+    //_clipdata.mime =
+  }).catch(function() {});
+}, 200);
+
 let exports = {
+  /*client code can override this using .loadConstants, here is a simple implementation
+    that just handles color data
+
+    desiredMimes is either a string, or an array of strings
+   */
+  getClipboardData(desiredMimes="text/plain") {
+    if (typeof desiredMimes === "string") {
+      desiredMimes = [desiredMimes];
+    }
+
+    for (let m of desiredMimes) {
+      let cb = _clipboards[m];
+
+      if (cb && cb.data) {
+        return cb;
+      }
+    }
+  },
+  /*client code can override this, here is a simple implementation
+    that just handles color data
+   */
+  setClipboardData(name, mime, data) {
+    _clipboards[mime] = {
+      name : name,
+      mime : mime,
+      data : data
+    };
+
+    let clipboard = navigator.clipboard;
+    if (!clipboard) {
+      return;
+    }
+
+    try {
+      clipboard.write([new ClipboardItem({
+        [mime] : new Blob([data], {type : mime})
+      })]).catch((error) => {
+        //try pushing through text/plain
+        if (mime.startsWith("text") && mime !== "text/plain") {
+          this.setClipboardData(name, "text/plain", data);
+        } else {
+          console.error(error);
+        }
+      });
+    } catch (error) {
+      console.log(error.stack);
+      console.log("failed to write to system clipboard");
+    }
+  },
   colorSchemeType : "light",
   docManualPath : "../simple_docsys/doc_build/",
   
@@ -11028,6 +11256,26 @@ function validateWebColor(str) {
 
   return str.trim().search(validate_pat) === 0;
 }
+
+let num = "([0-9]+\.[0-9]+)|[0-9a-f]+";
+
+let validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
+let validate_rgb = new RegExp(`rgb\\(${num},${num},${num},${num}\\)$`);
+
+function validateCSSColor$1(color) {
+  if (color.toLowerCase() in cmap) {
+    return true;
+  }
+
+  let rgba = color.toLowerCase().replace(/[ \t]/g, "");
+  if (validate_rgba.exec(rgba) || validate_rgb.exec(rgba)) {
+    return true;
+  }
+
+  return validateWebColor(color);
+}
+
+window.validateCSSColor = validateCSSColor$1;
 
 let theme = {};
 
@@ -16324,6 +16572,11 @@ class ToolProperty extends ToolPropertyIF {
 
   setDisplayUnit(unit) {
     this.displayUnit = unit;
+    return this;
+  }
+
+  setFlag(f, combine=false) {
+    this.flag = combine ? this.flag | f : f;
     return this;
   }
 
@@ -24372,8 +24625,11 @@ class Button extends UIBase$2 {
 
   updateDefaultSize() {
     let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
-
     let size = this.getDefault("DefaultText").size * 1.33;
+
+    if (height === undefined || size === undefined || isNaN(height) || isNaN(size)) {
+      return;
+    }
 
     height = ~~Math.max(height, size);
     height = height + "px";
@@ -31220,7 +31476,7 @@ class ColorPicker extends ColumnFrame {
       }
 
       let val = this.field.rgba;
-      if (prop !== undefined && prop.type == PropTypes.VEC3) {
+      if (prop !== undefined && prop.type === PropTypes.VEC3) {
         val = new Vector3$1();
         val.load(this.field.rgba);
       }
@@ -31283,17 +31539,31 @@ class ColorPickerButton extends UIBase$9 {
     this._font = "DefaultText"; //this.getDefault("defaultFont");
 
     let enter = (e) => {
-      console.log(e.type);
+      console.log(e.type, this._id);
+
+      this._keyhandler_add();
       this._highlight = true;
       this._redraw();
     };
 
     let leave = (e) => {
-      console.log(e.type);
+      console.log(e.type, this._id);
+
+      this._keyhandler_remove();
       this._highlight = false;
       this._redraw();
     };
 
+    this.tabIndex = 0;
+
+    this._has_keyhandler = false;
+    this._keyhandler_timeout = -1;
+    this._last_keyevt = undefined;
+
+    this._keydown = this._keydown.bind(this);
+    this.addEventListener("keydown", (e) => {
+      return this._keydown(e, true);
+    });
 
     this.addEventListener("mousedown", (e) => {
       this.click(e);
@@ -31307,6 +31577,166 @@ class ColorPickerButton extends UIBase$9 {
     this.addEventListener("blur", leave);
 
     this.setCSS();
+  }
+
+  _keyhandler_remove() {
+    if (this._has_keyhandler) {
+      window.removeEventListener("keydown", this._keydown, {
+        capture : true, passive : false
+      });
+      this._has_keyhandler = false;
+    }
+  }
+
+  _keyhandler_add() {
+    if (!this._has_keyhandler) {
+      window.addEventListener("keydown", this._keydown, {
+        capture : true, passive : false
+      });
+      this._has_keyhandler = true;
+    }
+
+    this._keyhandler_timeout = time_ms();
+  }
+
+  _keydown(e, internal_mode=false) {
+    console.log(this._id);
+
+    if (internal_mode && !this._highlight) {
+      return;
+    }
+
+    console.warn(this._id, "COLOR", e.keyCode);
+
+    if (e === this._last_keyevt) {
+      return; //prevent double event procesing
+    }
+
+    this._last_keyevt = e;
+
+    if (e.keyCode === 67 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
+      console.log("yay copy");
+      console.log(document.activeElement);
+      this.clipboardCopy();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (e.keyCode === 86 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
+      console.log("yay paste");
+      this.clipboardPaste();
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  clipboardCopy() {
+    console.log("color copy");
+
+    if (!exports.setClipboardData) {
+      console.log("no clipboard api");
+      return;
+    }
+
+    let r = this.rgba[0]*255;
+    let g = this.rgba[1]*255;
+    let b = this.rgba[2]*255;
+    let a = this.rgba[3];
+
+    let data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
+    //cconst.setClipboardData("color", "text/css", data);
+
+    exports.setClipboardData("color", "text/plain", data);
+
+    /*
+    function makehex(c) {
+      c = (~~c).toString(16);
+      while (c.length < 2) {
+        c = "0" + c;
+      }
+
+      if (c.length > 2) {
+        return "FF";
+      }
+
+      return c.toUpperCase();
+    }
+
+    r = makehex(r);
+    g = makehex(g);
+    b = makehex(b);
+    a = makehex(a*255);
+
+    data = "#" + r + g + b + a;
+
+    cconst.setClipboardData("color", "text/plain", data);
+
+     */
+  }
+
+  clipboardPaste() {
+    if (!exports.getClipboardData) {
+      return;
+    }
+
+    console.log("color paste");
+
+    let data = exports.getClipboardData("text/plain");
+
+    if (!data || !validateCSSColor(""+data.data)) {// || data.mime !== "text/css") {
+      return;
+    }
+
+    let color;
+
+    try {
+      color = css2color(data.data);
+    } catch (error) {
+      //not a color
+      console.log(error.stack);
+      console.log(error.message);
+    }
+
+    if (color) {
+      if (color.length < 4) {
+        color.push(1.0);
+      }
+
+      this.setRGBA(color);
+    }
+
+    /*
+    console.log("data:", data);
+    data = data.data.trim();
+    if (data.startsWith("{")) {
+      data = data.slice(1, data.length-1).split(";");
+      for (let arg of data) {
+        arg = arg.trim().split(":");
+
+        if (arg.length < 2) {
+          continue;
+        }
+
+        arg[0] = arg[0].trim().toLowerCase();
+        arg[1] = arg[1].trim().toLowerCase();
+
+        if (arg[0] === "color") {
+          data = arg[1];
+          break;
+        }
+      }
+    }
+
+    console.log("DATA", data);
+    let color = css2color(data);
+
+    if (color.length < 3) {
+      color.push(1.0);
+    }
+    console.log("COLOR", color);
+
+    this.setRGBA(color);
+
+     */
   }
 
   click(e) {
@@ -31346,12 +31776,27 @@ class ColorPickerButton extends UIBase$9 {
   setRGBA(val) {
     let a = this.rgba[3];
 
+    let old = new Vector4$2(this.rgba);
+
     this.rgba.load(val);
 
     if (val.length < 4) {
       this.rgba[3] = a;
     }
 
+    if (this.rgba.vectorDistance(old) < 0.001) {
+      return;
+    }
+
+    if (this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.rgba);
+    }
+
+    if (this.onchange) {
+      this.onchange();
+    }
+
+    this._redraw();
     return this;
   }
 
@@ -31495,9 +31940,17 @@ class ColorPickerButton extends UIBase$9 {
       console.log("bad path", path);
       return;
     } else if (prop === undefined) {
+      let redraw = !this.disabled;
+
       this.disabled = true;
+
+      if (redraw) {
+        this._redraw();
+      }
       return;
     }
+
+    let redraw = this.disabled;
 
     this.disabled = false;
 
@@ -31511,7 +31964,7 @@ class ColorPickerButton extends UIBase$9 {
     let val = this.getPathValue(this.ctx, path);
 
     if (val === undefined) {
-      let redraw = this.disabled !== true;
+      redraw = redraw || this.disabled !== true;
 
       this.disabled = true;
 
@@ -31519,31 +31972,34 @@ class ColorPickerButton extends UIBase$9 {
         this._redraw();
       }
 
-      return;
     } else {
-      let redraw = this.disabled;
-
       this.disabled = false;
+
+      if (this.rgba.vectorDistance(val) > 0.0001) {
+        if (prop.type === PropTypes.VEC3) {
+          this.rgba.load(val);
+          this.rgba[3] = 1.0;
+        } else {
+          this.rgba.load(val);
+        }
+
+        redraw = true;
+      }
 
       if (redraw) {
         this._redraw();
       }
     }
-
-    if (this.rgba.vectorDistance(val) > 0.0001) {
-      if (prop.type == PropTypes.VEC3) {
-        this.rgba.load(val);
-        this.rgba[3] = 1.0;
-      } else {
-        this.rgba.load(val);
-      }
-
-      this._redraw();
-    }
   }
 
   update() {
     super.update();
+
+    //remove keyhandler after timeout in case something kept it from happening automatically
+    if (this._has_keyhandler && time_ms() - this._keyhandler_timeout > 3500) {
+      console.log("keyhandler auto remove");
+      this._keyhandler_remove();
+    }
 
     let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
     if (key !== this._last_key) {
@@ -34184,21 +34640,6 @@ class NumSlider extends ValueButtonBase {
     return text;
   }
 
-  updateDefaultSize() {
-    let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
-
-    let size = this.getDefault("DefaultText").size * 1.33;
-
-    height = ~~Math.max(height, size);
-    height = height + "px";
-
-    if (height !== this.style["height"]) {
-      this.setCSS();
-      this._repos_canvas();
-      this._redraw();
-    }
-  }
-
   _redraw() {
     let g = this.g;
     let canvas = this.dom;
@@ -35160,6 +35601,19 @@ class LastToolPanel extends ColumnFrame {
     this.rebuild();
   }
 
+  /** client code can subclass and override this method */
+  getToolStackHead(ctx) {
+    //don't process the root toolop
+    let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
+    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+
+    if (bad) {
+      return undefined;
+    }
+
+    return ctx.toolstack[ctx.toolstack.cur];
+  }
+
   rebuild() {
     let ctx = this.ctx;
     if (ctx === undefined) {
@@ -35171,22 +35625,23 @@ class LastToolPanel extends ColumnFrame {
 
     this.label("Recent Command Settings");
 
-    //don't process the root toolop
-    let bad = ctx.toolstack.length === 0;
-    bad = bad || !ctx.toolstack[ctx.toolstack.cur];
-    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+    let tool = this.getToolStackHead(ctx);
 
-    if (bad) {
+    if (!tool) {
       this.setCSS();
       return;
     }
 
-    let tool = ctx.toolstack[ctx.toolstack.cur];
     let def = tool.constructor.tooldef();
     let name = def.uiname !== undefined ? def.uiname : def.name;
 
     let panel = this.panel(def.uiname);
 
+    this.buildTool(ctx, tool, panel);
+  }
+
+  /** client code can subclass and override this method */
+  buildTool(ctx, tool, panel) {
     let fakecls = {};
     fakecls.constructor = fakecls;
 
@@ -35263,11 +35718,12 @@ class LastToolPanel extends ColumnFrame {
     super.update();
     let ctx = this.ctx;
 
-    if (ctx.toolstack.length == 0) {
+    if (!ctx) {
       return;
     }
 
-    let tool = ctx.toolstack[ctx.toolstack.cur];
+    let tool = this.getToolStackHead(ctx);
+
     if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
       tool[LastKey] = tool_idgen$1++;
       this._tool_id = tool[LastKey];
@@ -41205,6 +41661,10 @@ class Screen$2 extends UIBase$1 {
     }
   }
 
+  get listening() {
+    return this.listen_timer !== undefined;
+  }
+
   unlisten() {
     if (this.listen_timer !== undefined) {
       window.clearInterval(this.listen_timer);
@@ -43899,5 +44359,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
