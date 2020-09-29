@@ -174,6 +174,11 @@ export const DefaultTheme = {
     defaultHeight : 24,
     BoxMargin     : 10
   },
+  vecPopupButton : {
+    defaultWidth : 100,
+    defaultHeight : 18,
+    BoxMargin     : 3
+  },
   iconcheck : {
 
   },

@@ -17,6 +17,88 @@ import {UIBase, PackFlags, IconSheets, parsepx} from '../core/ui_base.js';
 
 import * as units from '../core/units.js';
 import {ToolProperty} from '../toolsys/toolprop.js';
+import {Button} from "./ui_button.js";
+
+export class VectorPopupButton extends Button {
+  constructor() {
+    super();
+
+    this.value = new Vector4();
+  }
+
+  static define() {return {
+    tagname : "vector-popup-button-x",
+    style : "vecPopupButton"
+  }}
+
+  _onpress(e) {
+    if (e.button && e.button !== 0) {
+      return;
+    }
+
+    let panel = document.createElement("vector-panel-x");
+    let screen = this.ctx.screen;
+
+    let popup = screen.popup(this, this);
+
+    popup.add(panel);
+    popup.button("ok", () => {
+      popup.end();
+    })
+
+    if (this.hasAttribute("datapath")) {
+      panel.setAttribute("datapath", this.getAttribute("datapath"));
+    }
+    if (this.hasAttribute("mass_set_path")) {
+      panel.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
+    }
+
+    popup.flushUpdate();
+  }
+
+  updateDataPath() {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let value = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (!value) {
+      this.disabled = true;
+      return;
+    }
+
+    if (this.disabled) {
+      this.disabled = false;
+    }
+
+    if (this.value.length !== value.length) {
+      switch (value.length) {
+        case 2:
+          this.value = new Vector2();
+          break;
+        case 3:
+          this.value = new Vector3();
+          break;
+        case 4:
+          this.value = new Vector4();
+          break;
+      }
+    }
+
+    if (this.value.vectorDistance(value) > 0.0001) {
+      this.value.load(value);
+      console.log("updated vector popup button value");
+    }
+  }
+
+  update() {
+    super.update();
+    this.updateDataPath();
+  }
+
+}
+UIBase.register(VectorPopupButton);
 
 export class VectorPanel extends ColumnFrame {
   constructor() {

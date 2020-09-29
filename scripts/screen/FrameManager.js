@@ -794,7 +794,7 @@ export class Screen extends ui_base.UIBase {
     //document.body.style["transform"] = `scale(${1.0 / scale}, ${1.0 / scale})`; // translate(${ox*scale2}px, ${oy*scale2}px)`;
 
     if (key !== this._last_ckey1) {
-      console.log("resizing", key, this._last_ckey1);
+      //console.log("resizing", key, this._last_ckey1);
       this._last_ckey1 = key;
 
       this.on_resize(this.size, [width, height], false);
@@ -2229,7 +2229,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   on_resize(oldsize, newsize=this.size, _set_key=true) {
-    console.warn("resizing");
+    //console.warn("resizing");
 
     if (_set_key) {
       this._last_ckey1 = this._calcSizeKey(newsize[0], newsize[1], this.pos[0], this.pos[1], devicePixelRatio, visualViewport.scale);

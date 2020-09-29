@@ -1186,7 +1186,6 @@ export class SliderWithTextbox extends ColumnFrame {
     this.numslider.baseUnit = this.textbox.baseUnit = val;
 
     if (update) {
-      console.log(this.slider);
       //this.slider._redraw();
       this.updateTextBox();
     }

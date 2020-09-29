@@ -135,17 +135,27 @@ export class DataPath {
    * and the datapath is 'this.datapath'
    **/
   customGetSet(get, set) {
-    this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
     this.flag |= DataFlags.USE_CUSTOM_GETSET;
 
-    this.data._getValue = this.data.getValue;
-    this.data._setValue = this.data.setValue;
+    if (this.type !== DataTypes.DYNAMIC_STRUCT) {
+      this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
+      this.data._getValue = this.data.getValue;
+      this.data._setValue = this.data.setValue;
 
-    if (get)
-      this.data.getValue = get;
+      if (get)
+        this.data.getValue = get;
 
-    if (set)
-      this.data.setValue = set;
+      if (set)
+        this.data.setValue = set;
+    } else {
+      this.customGetSet = {
+        get, set
+      };
+
+      this.customGetSet.dataref = undefined;
+      this.customGetSet.datapath = undefined;
+      this.customGetSet.ctx = undefined;
+    }
 
     return this;
   }
@@ -190,6 +200,12 @@ export class DataPath {
     this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
     this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
 
+    return this;
+  }
+
+  noUnits() {
+    this.baseUnit("none");
+    this.displayUnit("none");
     return this;
   }
 
@@ -273,7 +289,7 @@ export class DataPath {
   }
 
   uiNames(uinames) {
-    this.data.setUINames(uinames);
+    this.data.addUINames(uinames);
     return this;
   }
 
@@ -977,13 +993,31 @@ export class DataAPI extends ModelInterface {
         }
       }
 
+      let dynstructobj = undefined;
+
       if (dpath.type === DataTypes.STRUCT) {
         dstruct = dpath.data;
       } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
         let ok = false;
 
         if (obj !== undefined) {
-          let obj2 = obj[dpath.path];
+          let obj2;
+
+          if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
+            let fakeprop = dpath.customGetSet;
+            fakeprop.ctx = ctx;
+            fakeprop.dataref = obj;
+            fakeprop.datapath = inpath;
+
+            obj2 = fakeprop.get();
+
+            fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
+          } else {
+            obj2 = obj[dpath.path];
+          }
+
+          dynstructobj = obj2;
+
           if (obj2 !== undefined) {
             dstruct = this.mapStruct(obj2.constructor, false);
           } else {
@@ -1025,6 +1059,8 @@ export class DataAPI extends ModelInterface {
         lastkey = dpath.path;
         if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
+        } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
+          obj = dynstructobj;
         } else if (obj !== undefined && dpath.path !== "") {
           obj = obj[dpath.path];
         }

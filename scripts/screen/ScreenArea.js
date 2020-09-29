@@ -31,7 +31,7 @@ export const AreaFlags = {
 export * from './area_wrangler.js';
 import {getAreaIntName, setAreaTypes, AreaWrangler, areaclasses} from './area_wrangler.js';
 
-let contextWrangler = new AreaWrangler();
+export let contextWrangler = new AreaWrangler();
 
 window._contextWrangler = contextWrangler;
 
@@ -653,7 +653,6 @@ export class Area extends ui_base.UIBase {
       }
 
       try {
-        console.log("load ui data");
         ui_base.loadUIData(this, this.saved_uidata);
         this.saved_uidata = undefined;
       } catch (error) {

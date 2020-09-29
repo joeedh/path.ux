@@ -188,6 +188,19 @@ export class Container extends ui_base.UIBase {
     `;
 
     this.shadow.appendChild(style);
+
+    this._prefixstack = [];
+  }
+
+  pushDataPrefix(val) {
+    this._prefixstack.push(this.dataPrefix);
+    this.dataPrefix = val;
+    return this;
+  }
+
+  popDataPrefix() {
+    this.dataPrefix = this._prefixstack.pop();
+    return this;
   }
 
   saveData() {
@@ -722,8 +735,10 @@ export class Container extends ui_base.UIBase {
 
   pathlabel(inpath, label = "") {
     let path;
-    if (inpath)
+
+    if (inpath) {
       path = this._joinPrefix(inpath);
+    }
 
     let ret = document.createElement("label-x");
 
@@ -798,7 +813,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
 
     ret.setAttribute("name", label);
-    ret.setAttribute("buttonid", id);
+    ret.setAttribute("buttonid", id); //XXX no longer used?
     ret.onclick = cb;
 
     this._add(ret);
@@ -818,6 +833,7 @@ export class Container extends ui_base.UIBase {
     let ret = document.createElement("color-picker-button-x");
 
     if (inpath !== undefined) {
+      inpath = this._joinPrefix(inpath);
       ret.setAttribute("datapath", inpath);
     }
 
@@ -848,8 +864,11 @@ export class Container extends ui_base.UIBase {
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
 
-    if (inpath)
+    if (inpath) {
+      inpath = this._joinPrefix(inpath);
       ret.setAttribute("datapath", inpath);
+    }
+
     if (mass_set_path)
       ret.setAttribute("mass_set_path", mass_set_path);
 
@@ -858,15 +877,40 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  vecpopup(inpath, packflag=0, mass_set_path=undefined) {
+    let button = document.createElement("vector-popup-button-x");
+
+    packflag |= this.inherit_packflag;
+    let name = "vector";
+
+    if (inpath) {
+      inpath = this._joinPrefix(inpath);
+
+      button.setAttribute("datapath", inpath);
+      if (mass_set_path) {
+        button.setAttribute("mass_set_path", mass_set_path);
+      }
+
+      let rdef = this.ctx.api.resolvePath(this.ctx, inpath);
+      if (rdef && rdef.prop) {
+        name = rdef.prop.uiname || rdef.prop.name;
+      }
+    }
+
+    button.setAttribute("name", name);
+    button.packflag |= packflag;
+
+    this.add(button);
+    return button;
+  }
+
   prop(inpath, packflag = 0, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
-    let path = this._joinPrefix(inpath);
-
-    let rdef = this.ctx.api.resolvePath(this.ctx, path, true);
+    let rdef = this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath), true);
 
     if (rdef === undefined || rdef.prop === undefined) {
-      console.warn("Unknown property at path", path, this.ctx.api.resolvePath(this.ctx, path, true));
+      console.warn("Unknown property at path", this._joinPrefix(inpath), this.ctx.api.resolvePath(this.ctx, this._joinPrefix(inpath), true));
       return;
     }
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
@@ -901,7 +945,7 @@ export class Container extends ui_base.UIBase {
       ret.packflag |= packflag;
       return ret;
     } else if (prop.type === PropTypes.CURVE) {
-      return this.curve1d(path, packflag, mass_set_path);
+      return this.curve1d(inpath, packflag, mass_set_path);
     } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
       let ret;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
@@ -955,9 +999,9 @@ export class Container extends ui_base.UIBase {
         let ret;
 
         if (packflag & PackFlags.SIMPLE_NUMSLIDERS)
-          ret = this.simpleslider(path, {packflag : packflag});
+          ret = this.simpleslider(inpath, {packflag : packflag});
         else
-          ret = this.slider(path, {packflag : packflag});
+          ret = this.slider(inpath, {packflag : packflag});
 
         ret.packflag |= packflag;
         return ret;
@@ -1421,6 +1465,8 @@ export class Container extends ui_base.UIBase {
     let ret;
 
     if (inpath) {
+      inpath = this._joinPrefix(inpath);
+
       let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       if (rdef && rdef.prop && (rdef.prop.flag & PropFlags.SIMPLE_SLIDER)) {
         packflag |= PackFlags.SIMPLE_NUMSLIDERS;
@@ -1443,17 +1489,15 @@ export class Container extends ui_base.UIBase {
     let decimals;
 
     if (inpath) {
-      let path = this._joinPrefix(inpath);
-
-      ret.setAttribute("datapath", path);
+      ret.setAttribute("datapath", inpath);
 
       let rdef;
       try {
-        rdef = this.ctx.api.resolvePath(this.ctx, path, true);
+        rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       } catch (error) {
         if (error instanceof DataPathError) {
           util.print_stack(error);
-          console.warn("Error resolving property", path);
+          console.warn("Error resolving property", inpath);
         } else {
           throw error;
         }
@@ -1472,7 +1516,7 @@ export class Container extends ui_base.UIBase {
         step = step === undefined ? (is_int ? 1 : 0.1) : step;
         decimals = decimals === undefined ? prop.decimalPlaces : decimals;
       } else {
-        console.warn("warning, failed to lookup property info for path", path);
+        console.warn("warning, failed to lookup property info for path", inpath);
       }
     }
 
@@ -1587,8 +1631,9 @@ export class Container extends ui_base.UIBase {
   colorPicker(inpath, packflag = 0, mass_set_path = undefined) {
     let path;
 
-    if (inpath)
+    if (inpath) {
       path = this._joinPrefix(inpath);
+    }
 
     packflag |= this.inherit_packflag;
 
