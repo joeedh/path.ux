@@ -717,7 +717,8 @@ export class DataStruct {
 
   add(m) {
     if (m.apiname in this.pathmap) {
-      console.warn("Overriding existing member in datapath struct", m.apiname);
+
+      console.warn("Overriding existing member '"+m.apiname+"' in datapath struct", this.name);
       this.remove(this.pathmap[m.apiname]);
     }
 
