@@ -1,5 +1,18 @@
 "use strict";
 
+/*
+* wrap require to keep angular from auto-importing
+* this api in browsers
+* */
+function getElectron() {
+  throw new Error("eek!");
+  //return require('electro');
+}
+
+function myRequire(mod) {
+  return globalThis.require(mod);
+}
+
 import {Menu, DropBox} from '../../widgets/ui_menu.js';
 import {getIconManager} from "../../core/ui_base.js";
 import cconst from "../../config/const.js";
@@ -21,7 +34,7 @@ function patchDropBox() {
 
     this._build_menu();
 
-    let {getCurrentWindow, Menu, MenuItem} = require("electron").remote;
+    let {getCurrentWindow, Menu, MenuItem} = getElectron().remote;
 
     let emenu = buildElectronMenu(this._menu);
 
@@ -86,7 +99,7 @@ function patchDropBox() {
 }
 
 let on_tick = () => {
-  let nativeTheme = require("electron").remote.nativeTheme;
+  let nativeTheme = getElectron().remote.nativeTheme;
 
   let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
@@ -116,10 +129,10 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   //  return iconcache[key];
   //}
 
-  let icongen = require("./icogen.js");
+  let icongen = myRequire("./icogen.js");
 
   window.icongen = icongen;
-  let nativeImage = require("electron").nativeImage;
+  let nativeImage = getElectron().nativeImage;
 
   let manager = getIconManager();
   let sheet = manager.findSheet(iconsheet);
@@ -152,7 +165,7 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
     data = data.slice(header.length, data.length);
     data = Buffer.from(data, "base64");
 
-    require("fs").writeFileSync("myicon2.png", data);
+    myRequire("fs").writeFileSync("myicon2.png", data);
     images.push(data);
   }
   //}
@@ -160,7 +173,7 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   //let ico = icongen.GenerateICO(images);
   //icon = nativeImage.createFromBuffer(ico);
   //icon = nativeImage.createFromBitmap(ico);
-  //require("fs").writeFileSync("myicon2.ico", ico);
+  //myRequire("fs").writeFileSync("myicon2.ico", ico);
   return "myicon2.png"
   return icon;
   return undefined
@@ -186,7 +199,7 @@ export function buildElectronHotkey(hk) {
 }
 
 export function buildElectronMenu(menu) {
-  let electron = require("electron").remote;
+  let electron = getElectron().remote;
 
   let ElectronMenu = electron.Menu;
   let ElectronMenuItem = electron.MenuItem;
@@ -255,7 +268,7 @@ export function initMenuBar(menuEditor) {
 
   _menu_init = true;
 
-  let electron = require("electron").remote;
+  let electron = getElectron().remote;
 
   let win = electron.getCurrentWindow();
   let ElectronMenu = electron.Menu;

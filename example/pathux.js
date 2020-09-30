@@ -36410,6 +36410,19 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
 
 "use strict";
 
+/*
+* wrap require to keep angular from auto-importing
+* this api in browsers
+* */
+function getElectron() {
+  throw new Error("eek!");
+  //return require('electro');
+}
+
+function myRequire(mod) {
+  return globalThis.require(mod);
+}
+
 let _menu_init = false;
 let _init = false;
 
@@ -36427,7 +36440,7 @@ function patchDropBox() {
 
     this._build_menu();
 
-    let {getCurrentWindow, Menu, MenuItem} = require("electron").remote;
+    let {getCurrentWindow, Menu, MenuItem} = getElectron().remote;
 
     let emenu = buildElectronMenu(this._menu);
 
@@ -36492,7 +36505,7 @@ function patchDropBox() {
 }
 
 let on_tick = () => {
-  let nativeTheme = require("electron").remote.nativeTheme;
+  let nativeTheme = getElectron().remote.nativeTheme;
 
   let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
@@ -36522,10 +36535,10 @@ function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   //  return iconcache[key];
   //}
 
-  let icongen = require("./icogen.js");
+  let icongen = myRequire("./icogen.js");
 
   window.icongen = icongen;
-  let nativeImage = require("electron").nativeImage;
+  let nativeImage = getElectron().nativeImage;
 
   let manager = getIconManager();
   let sheet = manager.findSheet(iconsheet);
@@ -36558,7 +36571,7 @@ function getNativeIcon(icon, iconsheet=0, invertColors=false) {
     data = data.slice(header.length, data.length);
     data = Buffer.from(data, "base64");
 
-    require("fs").writeFileSync("myicon2.png", data);
+    myRequire("fs").writeFileSync("myicon2.png", data);
     images.push(data);
   }
   //}
@@ -36566,7 +36579,7 @@ function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   //let ico = icongen.GenerateICO(images);
   //icon = nativeImage.createFromBuffer(ico);
   //icon = nativeImage.createFromBitmap(ico);
-  //require("fs").writeFileSync("myicon2.ico", ico);
+  //myRequire("fs").writeFileSync("myicon2.ico", ico);
   return "myicon2.png"
   return icon;
   return undefined
@@ -36592,7 +36605,7 @@ function buildElectronHotkey(hk) {
 }
 
 function buildElectronMenu(menu) {
-  let electron = require("electron").remote;
+  let electron = getElectron().remote;
 
   let ElectronMenu = electron.Menu;
   let ElectronMenuItem = electron.MenuItem;
@@ -36661,7 +36674,7 @@ function initMenuBar(menuEditor) {
 
   _menu_init = true;
 
-  let electron = require("electron").remote;
+  let electron = getElectron().remote;
 
   let win = electron.getCurrentWindow();
   let ElectronMenu = electron.Menu;
