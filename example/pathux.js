@@ -6911,7 +6911,7 @@ window.makeCompiledVectormathCode = function(mode="es") {
     }
   }
 
-  let classes = [Vector2, Vector3, Vector4, Quat];
+  let classes = [Vector2, Vector3, Vector4, a];
   let lens = {
     Vector2 : 2,
     Vector3 : 3,
@@ -8089,31 +8089,57 @@ class Matrix4 {
     return new Matrix4(this);
   }
 
+  addToHashDigest(hash) {
+    let m = this.$matrix;
+
+    hash.add(m.m11);
+    hash.add(m.m12);
+    hash.add(m.m13);
+    hash.add(m.m14);
+
+    hash.add(m.m21);
+    hash.add(m.m22);
+    hash.add(m.m23);
+    hash.add(m.m24);
+
+    hash.add(m.m31);
+    hash.add(m.m32);
+    hash.add(m.m33);
+    hash.add(m.m34);
+
+    hash.add(m.m41);
+    hash.add(m.m42);
+    hash.add(m.m43);
+    hash.add(m.m44);
+
+    return this;
+  }
+
   equals(m) {
     let m1 = this.$matrix;
     let m2 = m.$matrix;
 
     let ok = 1;
 
-    ok = ok && m1.m11 == m2.m11;
-    ok = ok && m1.m12 == m2.m12;
-    ok = ok && m1.m13 == m2.m13;
-    ok = ok && m1.m14 == m2.m14;
+    ok = ok && m1.m11 === m2.m11;
+    ok = ok && m1.m12 === m2.m12;
+    ok = ok && m1.m13 === m2.m13;
+    ok = ok && m1.m14 === m2.m14;
 
-    ok = ok && m1.m21 == m2.m21;
-    ok = ok && m1.m22 == m2.m22;
-    ok = ok && m1.m23 == m2.m23;
-    ok = ok && m1.m24 == m2.m24;
+    ok = ok && m1.m21 === m2.m21;
+    ok = ok && m1.m22 === m2.m22;
+    ok = ok && m1.m23 === m2.m23;
+    ok = ok && m1.m24 === m2.m24;
 
-    ok = ok && m1.m31 == m2.m31;
-    ok = ok && m1.m32 == m2.m32;
-    ok = ok && m1.m33 == m2.m33;
-    ok = ok && m1.m34 == m2.m34;
+    ok = ok && m1.m31 === m2.m31;
+    ok = ok && m1.m32 === m2.m32;
+    ok = ok && m1.m33 === m2.m33;
+    ok = ok && m1.m34 === m2.m34;
 
-    ok = ok && m1.m41 == m2.m41;
-    ok = ok && m1.m42 == m2.m42;
-    ok = ok && m1.m43 == m2.m43;
-    ok = ok && m1.m44 == m2.m44;
+    ok = ok && m1.m41 === m2.m41;
+    ok = ok && m1.m42 === m2.m42;
+    ok = ok && m1.m43 === m2.m43;
+    ok = ok && m1.m44 === m2.m44;
 
     return ok;
   }
@@ -8462,6 +8488,10 @@ class Matrix4 {
       z = 0.0;
     }
 
+    x = -x;
+    y = -y;
+    z = -z;
+
     let xmat = new Matrix4();
     let m = xmat.$matrix;
 
@@ -8519,8 +8549,9 @@ class Matrix4 {
         break;
     }
 
-    a.multiply(b);
-    b.multiply(c);
+    b.preMultiply(c);
+    b.multiply(a);
+
     this.preMultiply(b);
   }
 
@@ -9051,7 +9082,6 @@ class Matrix4 {
 
       let rmat = new Matrix4(this);
       rmat.normalize();
-      rmat.transpose();
 
       m = rmat.$matrix;
 
@@ -17155,7 +17185,7 @@ class EnumProperty extends ToolProperty {
 
   _loadMap(obj) {
     if (!obj) {
-      return;
+      return {};
     }
 
     let ret = {};
@@ -18837,7 +18867,7 @@ class ModelInterface {
     let ret = this.resolvePath(ctx, path);
     
     if (ret === undefined) {
-      throw new DataPathError("invalid path", path);
+      throw new DataPathError("invalid path " + path);
     }
     
     if (ret.prop !== undefined && (ret.prop.flag & PropFlags$1.USE_CUSTOM_GETSET)) {
@@ -21289,7 +21319,7 @@ class DataAPI extends ModelInterface {
       return parseToolPath(path).toolclass;
     } catch (error) {
       if (error instanceof DataPathError) {
-        console.warn("warning, bad tool path", path);
+        console.warn("warning, bad tool path " + path);
         return undefined;
       } else {
         throw error;
@@ -24285,6 +24315,13 @@ function drawText(elem, x, y, text, args={}) {
 
 let PIDX=0, PSHADOW=1, PTOT=2;
 
+/**
+
+ Saves UI layout data, like panel layouts, active tabs, etc.
+ Uses the UIBase.prototype.[save/load]Data interface.
+
+ Note that this is error-tolerant.
+ */
 function saveUIData(node, key) {
   if (key === undefined) {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
@@ -26948,7 +26985,17 @@ class DropBox extends Button {
       //console.trace("got click!", id, ":::");
 
       this._menu = undefined;
-      this.prop.setValue(id);
+
+      //check if datapath system will be calling .prop.setValue instead of us
+      let callProp = true;
+      if (this.hasAttribute("datapath")) {
+        let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+        callProp = !prop || prop !== this.prop;
+      }
+
+      if (callProp) {
+        this.prop.setValue(id);
+      }
 
       this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
       if (this.onselect) {
@@ -28490,14 +28537,14 @@ class Container extends UIBase$1 {
       if (!(packflag & PackFlags$5.USE_ICONS)) {
         let val;
         try {
-          val = this.ctx.api.getValue(this.ctx, path);
+          val = this.ctx.api.getValue(this.ctx, this._joinPrefix(inpath));
         } catch (error) {
           if (!(error instanceof DataPathError$1)) {
             throw error;
           }
         }
 
-        this.listenum(inpath, undefined, undefined, undefined, undefined, undefined, packflag);
+        this.listenum(inpath, {packflag, mass_set_path});
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
@@ -28856,6 +28903,7 @@ class Container extends UIBase$1 {
   */
   listenum(inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
     packflag |= this.inherit_packflag;
+    let mass_set_path;
 
     if (name && typeof name === "object") {
       let args = name;
@@ -28866,6 +28914,7 @@ class Container extends UIBase$1 {
       callback = args.callback;
       iconmap = args.iconmap;
       packflag = args.packflag || 0;
+      mass_set_path = args.mass_set_path;
     }
 
     let path;
@@ -28897,6 +28946,9 @@ class Container extends UIBase$1 {
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
+    }
+    if (mass_set_path !== undefined) {
+      ret.setAttribute("mass_set_path", mass_set_path);
     }
 
     ret.setAttribute("name", name);
@@ -44159,7 +44211,8 @@ class Context {
     this._inside_map = {};
   }
 
-  //chrome's debug console is weirdly messing with this
+  /** chrome's debug console corrupts this._inside_map,
+      this method fixes it*/
   _fix() {
     this._inside_map = {};
   }
@@ -44539,5 +44592,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
