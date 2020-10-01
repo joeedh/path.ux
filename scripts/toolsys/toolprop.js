@@ -692,18 +692,18 @@ EnumKeyPair {
 nstructjs.register(EnumKeyPair);
 
 export class EnumProperty extends ToolProperty {
-  constructor(string, valid_values, apiname, 
+  constructor(string_or_int, valid_values, apiname,
               uiname, description, flag, icon) 
   {
     super(PropTypes.ENUM, undefined, apiname, uiname, description, flag, icon);
-    
+
     this.values = {};
     this.keys = {};
     this.ui_value_names = {};
     this.descriptions = {};
 
     if (valid_values === undefined) return this;
-    
+
     if (valid_values instanceof Array || valid_values instanceof String) {
       for (var i=0; i<valid_values.length; i++) {
         this.values[valid_values[i]] = valid_values[i];
@@ -715,13 +715,13 @@ export class EnumProperty extends ToolProperty {
         this.keys[valid_values[k]] = k;
       }
     }
-    
-    if (string === undefined) {
+
+    if (string_or_int === undefined) {
       this.data = first(valid_values);
     } else {
-      this.setValue(string);
+      this.setValue(string_or_int);
     }
-    
+
     for (var k in this.values) {
       let uin = k.replace(/[_-]/g, " ").trim();
       uin = uin.split(" ")
@@ -736,7 +736,7 @@ export class EnumProperty extends ToolProperty {
       this.ui_value_names[k] = uiname;
       this.descriptions[k] = uiname;
     }
-    
+
     this.iconmap = {};
     this.wasSet = false;
   }
