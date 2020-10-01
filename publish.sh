@@ -11,7 +11,5 @@ bash build.sh && \
 #bash build_docs.sh && \
 bash build_package.sh && \
 cd package && git commit -a && git push && \
-echo "npm publish" && npm publish
-
-git tag -a $VERSION -m "Release $VERSION"
-git push
+echo "npm publish" && npm publish && git tag -a $VERSION -m "Release $VERSION" \
+&& git push
