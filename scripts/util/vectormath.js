@@ -1602,6 +1602,10 @@ export class Matrix4 {
       z = 0.0;
     }
 
+    x = -x;
+    y = -y;
+    z = -z;
+
     let xmat = new Matrix4();
     let m = xmat.$matrix;
 
