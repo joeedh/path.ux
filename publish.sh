@@ -23,6 +23,7 @@ echo $?
 
 git commit -a
 echo $?
+echo "Git sucks"
 git push
 echo $?
 
