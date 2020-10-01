@@ -25,7 +25,7 @@ window.makeCompiledVectormathCode = function(mode="es") {
     }
   }
 
-  let classes = [Vector2, Vector3, Vector4, Quat];
+  let classes = [Vector2, Vector3, Vector4, a];
   let lens = {
     Vector2 : 2,
     Vector3 : 3,
@@ -1203,31 +1203,57 @@ export class Matrix4 {
     return new Matrix4(this);
   }
 
+  addToHashDigest(hash) {
+    let m = this.$matrix;
+
+    hash.add(m.m11);
+    hash.add(m.m12);
+    hash.add(m.m13);
+    hash.add(m.m14);
+
+    hash.add(m.m21);
+    hash.add(m.m22);
+    hash.add(m.m23);
+    hash.add(m.m24);
+
+    hash.add(m.m31);
+    hash.add(m.m32);
+    hash.add(m.m33);
+    hash.add(m.m34);
+
+    hash.add(m.m41);
+    hash.add(m.m42);
+    hash.add(m.m43);
+    hash.add(m.m44);
+
+    return this;
+  }
+
   equals(m) {
     let m1 = this.$matrix;
     let m2 = m.$matrix;
 
     let ok = 1;
 
-    ok = ok && m1.m11 == m2.m11;
-    ok = ok && m1.m12 == m2.m12;
-    ok = ok && m1.m13 == m2.m13;
-    ok = ok && m1.m14 == m2.m14;
+    ok = ok && m1.m11 === m2.m11;
+    ok = ok && m1.m12 === m2.m12;
+    ok = ok && m1.m13 === m2.m13;
+    ok = ok && m1.m14 === m2.m14;
 
-    ok = ok && m1.m21 == m2.m21;
-    ok = ok && m1.m22 == m2.m22;
-    ok = ok && m1.m23 == m2.m23;
-    ok = ok && m1.m24 == m2.m24;
+    ok = ok && m1.m21 === m2.m21;
+    ok = ok && m1.m22 === m2.m22;
+    ok = ok && m1.m23 === m2.m23;
+    ok = ok && m1.m24 === m2.m24;
 
-    ok = ok && m1.m31 == m2.m31;
-    ok = ok && m1.m32 == m2.m32;
-    ok = ok && m1.m33 == m2.m33;
-    ok = ok && m1.m34 == m2.m34;
+    ok = ok && m1.m31 === m2.m31;
+    ok = ok && m1.m32 === m2.m32;
+    ok = ok && m1.m33 === m2.m33;
+    ok = ok && m1.m34 === m2.m34;
 
-    ok = ok && m1.m41 == m2.m41;
-    ok = ok && m1.m42 == m2.m42;
-    ok = ok && m1.m43 == m2.m43;
-    ok = ok && m1.m44 == m2.m44;
+    ok = ok && m1.m41 === m2.m41;
+    ok = ok && m1.m42 === m2.m42;
+    ok = ok && m1.m43 === m2.m43;
+    ok = ok && m1.m44 === m2.m44;
 
     return ok;
   }
@@ -1633,8 +1659,9 @@ export class Matrix4 {
         break;
     }
 
-    a.multiply(b);
-    b.multiply(c);
+    b.preMultiply(c);
+    b.multiply(a);
+
     this.preMultiply(b);
   }
 
@@ -2165,7 +2192,6 @@ export class Matrix4 {
 
       let rmat = new Matrix4(this);
       rmat.normalize();
-      rmat.transpose();
 
       m = rmat.$matrix;
 

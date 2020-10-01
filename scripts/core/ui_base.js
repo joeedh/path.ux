@@ -2381,6 +2381,13 @@ export function drawText(elem, x, y, text, args={}) {
 
 let PIDX=0, PSHADOW=1, PTOT=2;
 
+/**
+
+ Saves UI layout data, like panel layouts, active tabs, etc.
+ Uses the UIBase.prototype.[save/load]Data interface.
+
+ Note that this is error-tolerant.
+ */
 export function saveUIData(node, key) {
   if (key === undefined) {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");

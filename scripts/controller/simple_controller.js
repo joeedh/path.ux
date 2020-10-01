@@ -1545,7 +1545,7 @@ export class DataAPI extends ModelInterface {
       return parseToolPath(path).toolclass;
     } catch (error) {
       if (error instanceof DataPathError) {
-        console.warn("warning, bad tool path", path);
+        console.warn("warning, bad tool path " + path);
         return undefined;
       } else {
         throw error;

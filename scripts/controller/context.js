@@ -244,7 +244,8 @@ export class Context {
     this._inside_map = {};
   }
 
-  //chrome's debug console is weirdly messing with this
+  /** chrome's debug console corrupts this._inside_map,
+      this method fixes it*/
   _fix() {
     this._inside_map = {};
   }

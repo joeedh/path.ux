@@ -333,7 +333,7 @@ export class ModelInterface {
     let ret = this.resolvePath(ctx, path);
     
     if (ret === undefined) {
-      throw new DataPathError("invalid path", path);
+      throw new DataPathError("invalid path " + path);
     }
     
     if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
