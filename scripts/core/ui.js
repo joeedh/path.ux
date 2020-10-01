@@ -983,14 +983,14 @@ export class Container extends ui_base.UIBase {
       if (!(packflag & PackFlags.USE_ICONS)) {
         let val;
         try {
-          val = this.ctx.api.getValue(this.ctx, path);
+          val = this.ctx.api.getValue(this.ctx, this._joinPrefix(inpath));
         } catch (error) {
           if (!(error instanceof DataPathError)) {
             throw error;
           }
         }
 
-        this.listenum(inpath, undefined, undefined, undefined, undefined, undefined, packflag);
+        this.listenum(inpath, {packflag, mass_set_path});
       } else {
         this.checkenum(inpath, undefined, packflag);
       }
@@ -1349,6 +1349,7 @@ export class Container extends ui_base.UIBase {
   */
   listenum(inpath, name, enumDef, defaultval, callback, iconmap, packflag = 0) {
     packflag |= this.inherit_packflag;
+    let mass_set_path;
 
     if (name && typeof name === "object") {
       let args = name;
@@ -1359,6 +1360,7 @@ export class Container extends ui_base.UIBase {
       callback = args.callback;
       iconmap = args.iconmap;
       packflag = args.packflag || 0;
+      mass_set_path = args.mass_set_path;
     }
 
     let path;
@@ -1390,6 +1392,9 @@ export class Container extends ui_base.UIBase {
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
+    }
+    if (mass_set_path !== undefined) {
+      ret.setAttribute("mass_set_path", mass_set_path);
     }
 
     ret.setAttribute("name", name);

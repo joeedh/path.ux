@@ -896,7 +896,17 @@ export class DropBox extends Button {
       //console.trace("got click!", id, ":::");
 
       this._menu = undefined;
-      this.prop.setValue(id);
+
+      //check if datapath system will be calling .prop.setValue instead of us
+      let callProp = true;
+      if (this.hasAttribute("datapath")) {
+        let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+        callProp = !prop || prop !== this.prop;
+      }
+
+      if (callProp) {
+        this.prop.setValue(id);
+      }
 
       this.setAttribute("name", this.prop.ui_value_names[valmap[id]]);
       if (this.onselect) {

@@ -661,7 +661,7 @@ FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
 }
 `;
 
-class EnumKeyPair {
+export class EnumKeyPair {
   constructor(key, val) {
     this.key = "" + key;
     this.val = "" + val;
@@ -820,7 +820,7 @@ export class EnumProperty extends ToolProperty {
 
   _loadMap(obj) {
     if (!obj) {
-      return;
+      return {};
     }
 
     let ret = {};
