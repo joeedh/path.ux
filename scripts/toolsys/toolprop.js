@@ -326,17 +326,19 @@ StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty) + `
 }
 `;  
 nstructjs.register(StringProperty);
+_addClass(StringProperty);
 
 let num_res =[
   /([0-9]+)/,
   /((0x)?[0-9a-fA-F]+(h?))/,
   /([0-9]+\.[0-9]*)/,
-  /([0-9]*\.[0-9]+)/
+  /([0-9]*\.[0-9]+)/,
+  /(\.[0-9]+)/
 ];
 //num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
 
 export function isNumber(f) {
-  if (f == "NaN" || (typeof f == "number" && isNaN(f))) {
+  if (f === "NaN" || (typeof f == "number" && isNaN(f))) {
     return false;
   }
   
@@ -351,7 +353,7 @@ export function isNumber(f) {
       continue;
     }
     
-    ok = ret[0].length == f.length;
+    ok = ret[0].length === f.length;
     if (ok) {
       break;
     }
@@ -359,7 +361,6 @@ export function isNumber(f) {
   
   return ok;
 }
-_addClass(StringProperty);
 
 window.isNumber = isNumber;
 

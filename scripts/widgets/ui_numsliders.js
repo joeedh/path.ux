@@ -5,7 +5,7 @@ import * as units from "../core/units.js";
 import {Vector2} from "../util/vectormath.js";
 import {ColumnFrame} from "../core/ui.js";
 import * as util from "../util/util.js";
-import {PropTypes, PropSubTypes, PropFlags} from "../toolsys/toolprop.js";
+import {PropTypes, isNumber, PropSubTypes, PropFlags} from "../toolsys/toolprop.js";
 import {pushModalLight, popModalLight} from "../util/simple_events.js";
 import {KeyMap, keymap} from "../util/simple_events.js";
 
@@ -128,7 +128,7 @@ export class NumSlider extends ValueButtonBase {
         }
 
         if (isNaN(val)) {
-          console.log("EEK!");
+          console.log("EEK!", val, tbox.text.trim(), this.isInt);
           this.flash(ui_base.ErrorColors.ERROR);
         } else {
           this.setValue(val);

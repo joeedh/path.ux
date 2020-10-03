@@ -350,6 +350,11 @@ function isNumber(s) {
 export function parseValue(string, baseUnit=undefined) {
   let base;
 
+  string = string.trim();
+  if (string[0] === ".") {
+    string = "0" + string;
+  }
+
   //unannotated string?
   if (isNumber(string)) {
     //assume base unit

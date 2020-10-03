@@ -2602,7 +2602,10 @@ export class Screen extends ui_base.UIBase {
   }
 
   loadSTRUCT(reader) {
+    this.clear();
+
     reader(this);
+    console.log("SAREAS", this.sareas.concat([]));
 
     //handle old files that might have saved as simple arrays
     this.size = new Vector2(this.size);
