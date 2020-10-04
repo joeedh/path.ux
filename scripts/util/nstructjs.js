@@ -501,6 +501,8 @@ var struct_util = /*#__PURE__*/Object.freeze({
   IDGen: IDGen
 });
 
+"use strict";
+
 const _module_exports_ = {};
 _module_exports_.STRUCT_ENDIAN = true; //little endian
 
@@ -614,7 +616,7 @@ var decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
       sum |= c;
     }
 
-    if (sum == 0) break;
+    if (sum === 0) break;
 
     str += String.fromCharCode(sum);
     i++;
@@ -740,34 +742,38 @@ _module_exports_.unpack_short = function (dview, uctx) {
   return dview.getInt16(uctx.i - 2, _module_exports_.STRUCT_ENDIAN);
 };
 
-var _static_arr_us = new Array(32);
+let _static_arr_us = new Array(32);
 _module_exports_.unpack_string = function (data, uctx) {
-  var str = "";
+  let slen = unpack_int(data, uctx);
 
-  var slen = unpack_int(data, uctx);
-  var arr = slen < 2048 ? _static_arr_us : new Array(slen);
+  if (!slen) {
+    return "";
+  }
+
+  let str = "";
+  let arr = slen < 2048 ? _static_arr_us : new Array(slen);
 
   arr.length = slen;
-  for (var i = 0; i < slen; i++) {
+  for (let i = 0; i < slen; i++) {
     arr[i] = unpack_byte(data, uctx);
   }
 
   return decode_utf8(arr);
 };
 
-var _static_arr_uss = new Array(2048);
+let _static_arr_uss = new Array(2048);
 _module_exports_.unpack_static_string = function unpack_static_string(data, uctx, length) {
-  var str = "";
+  let str = "";
 
   if (length == undefined)
     throw new Error("'length' cannot be undefined in unpack_static_string()");
 
-  var arr = length < 2048 ? _static_arr_uss : new Array(length);
+  let arr = length < 2048 ? _static_arr_uss : new Array(length);
   arr.length = 0;
 
-  var done = false;
-  for (var i = 0; i < length; i++) {
-    var c = unpack_byte(data, uctx);
+  let done = false;
+  for (let i = 0; i < length; i++) {
+    let c = unpack_byte(data, uctx);
 
     if (c == 0) {
       done = true;
@@ -1879,9 +1885,13 @@ class StructStringField extends StructFieldType {
     
     pack_string$1(data, val);
   }
-  
+
   static packNull(manager, data, field, type) {
     this.pack(manager, data, "", 0, field, type);
+  }
+
+  static toJSON(manager, val, obj, field, type) {
+    return "" + val;
   }
   
   static unpack(manager, data, type, uctx) {
@@ -2641,9 +2651,8 @@ class StructStaticArrayField extends StructFieldType {
 
     let itername = type.data.iname;
 
-    if (val === undefined || !val.length) {
-      this.packNull(manager, data, field, type);
-      return;
+    if (val === undefined || !val.length) {;
+      return [];
     }
 
     let ret = [];
@@ -2756,21 +2765,21 @@ SomeClass {
 nstructjs.manager.add_class(SomeClass);
 
 */
-var StructTypeMap$1 = StructTypeMap;
-var StructTypes$1 = StructTypes;
-var Class$4 = Class;
+let StructTypeMap$1 = StructTypeMap;
+let StructTypes$1 = StructTypes;
+let Class$4 = Class;
 
-var struct_parse = _export_struct_parse_;
-var StructEnum$2 = StructEnum;
+let struct_parse = _export_struct_parse_;
+let StructEnum$2 = StructEnum;
 
-var _static_envcode_null$1 = "";
-var debug_struct = 0;
-var packdebug_tablevel$1 = 0;
+let _static_envcode_null$1 = "";
+let debug_struct = 0;
+let packdebug_tablevel$1 = 0;
 
 function gen_tabstr$2(tot) {
   var ret = "";
 
-  for (var i = 0; i < tot; i++) {
+  for (let i = 0; i < tot; i++) {
     ret += " ";
   }
 
@@ -2782,7 +2791,7 @@ let packer_debug$1, packer_debug_start$1, packer_debug_end$1;
 if (debug_struct) {
   packer_debug$1 = function (msg) {
     if (msg !== undefined) {
-      var t = gen_tabstr$2(packdebug_tablevel$1);
+      let t = gen_tabstr$2(packdebug_tablevel$1);
       console.log(t + msg);
     } else {
       console.log("Warning: undefined msg");
@@ -2825,7 +2834,7 @@ const _export_setDebugMode_$1 = (t) => {
   if (debug_struct) {
     packer_debug$1 = function (msg) {
       if (msg != undefined) {
-        var t = gen_tabstr$2(packdebug_tablevel$1);
+        let t = gen_tabstr$2(packdebug_tablevel$1);
         console.log(t + msg);
       } else {
         console.log("Warning: undefined msg");
@@ -2851,14 +2860,14 @@ const _export_setDebugMode_$1 = (t) => {
   }
 };
 
-var _ws_env$1 = [[undefined, undefined]];
+let _ws_env$1 = [[undefined, undefined]];
 
 function do_pack$1(data, val, obj, thestruct, field, type) {
   StructFieldTypeMap$1[field.type.type].pack(manager, data, val, obj, field, type);
 }
 
 function define_empty_class(name) {
-  var cls = function () {
+  let cls = function () {
   };
 
   cls.prototype = Object.create(Object.prototype);
@@ -2878,7 +2887,7 @@ function define_empty_class(name) {
   return cls;
 }
 
-var STRUCT = class STRUCT {
+let STRUCT = class STRUCT {
   constructor() {
     this.idgen = new IDGen();
     this.allowOverriding = true;
@@ -2891,9 +2900,9 @@ var STRUCT = class STRUCT {
     this.null_natives = {};
 
     function define_null_native(name, cls) {
-      var obj = define_empty_class(name);
+      let obj = define_empty_class(name);
 
-      var stt = struct_parse.parse(obj.STRUCT);
+      let stt = struct_parse.parse(obj.STRUCT);
 
       stt.id = this.idgen.gen_id();
 
@@ -2979,8 +2988,8 @@ var STRUCT = class STRUCT {
   }
 
   forEach(func, thisvar) {
-    for (var k in this.structs) {
-      var stt = this.structs[k];
+    for (let k in this.structs) {
+      let stt = this.structs[k];
 
       if (thisvar !== undefined)
         func.call(thisvar, stt);
@@ -2999,10 +3008,10 @@ var STRUCT = class STRUCT {
     }
 
     if (defined_classes instanceof STRUCT) {
-      var struct2 = defined_classes;
+      let struct2 = defined_classes;
       defined_classes = [];
 
-      for (var k in struct2.struct_cls) {
+      for (let k in struct2.struct_cls) {
         defined_classes.push(struct2.struct_cls[k]);
       }
     }
@@ -3010,18 +3019,18 @@ var STRUCT = class STRUCT {
     if (defined_classes === undefined) {
       defined_classes = [];
 
-      for (var k in _export_manager_.struct_cls) {
+      for (let k in _export_manager_.struct_cls) {
         defined_classes.push(_export_manager_.struct_cls[k]);
       }
     }
 
-    var clsmap = {};
+    let clsmap = {};
 
-    for (var i = 0; i < defined_classes.length; i++) {
-      var cls = defined_classes[i];
+    for (let i = 0; i < defined_classes.length; i++) {
+      let cls = defined_classes[i];
 
       if (!cls.structName && cls.STRUCT) {
-        var stt = struct_parse.parse(cls.STRUCT.trim());
+        let stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
       } else if (!cls.structName && cls.name !== "Object") {
         if (warninglvl$1 > 0) 
@@ -3035,14 +3044,14 @@ var STRUCT = class STRUCT {
     struct_parse.input(buf);
 
     while (!struct_parse.at_end()) {
-      var stt = struct_parse.parse(undefined, false);
+      let stt = struct_parse.parse(undefined, false);
 
       if (!(stt.name in clsmap)) {
         if (!(stt.name in this.null_natives))
         if (warninglvl$1 > 0) 
           console.log("WARNING: struct " + stt.name + " is missing from class list.");
 
-        var dummy = define_empty_class(stt.name);
+        let dummy = define_empty_class(stt.name);
 
         dummy.STRUCT = STRUCT.fmt_struct(stt);
         dummy.structName = stt.name;
@@ -3062,7 +3071,7 @@ var STRUCT = class STRUCT {
           this.struct_ids[stt.id] = stt;
       }
 
-      var tok = struct_parse.peek();
+      let tok = struct_parse.peek();
       while (tok && (tok.value === "\n" || tok.value === "\r" || tok.value === "\t" || tok.value === " ")) {
         tok = struct_parse.peek();
       }
@@ -3101,7 +3110,7 @@ var STRUCT = class STRUCT {
       throw new Error("class " + cls.name + " has no STRUCT script");
     }
 
-    var stt = struct_parse.parse(cls.STRUCT);
+    let stt = struct_parse.parse(cls.STRUCT);
 
     cls.structName = stt.name;
 
@@ -3165,8 +3174,8 @@ var STRUCT = class STRUCT {
       return structName + "{\n";
     }
 
-    var stt = struct_parse.parse(parent.STRUCT);
-    var code = structName + "{\n";
+    let stt = struct_parse.parse(parent.STRUCT);
+    let code = structName + "{\n";
     code += STRUCT.fmt_struct(stt, true);
     return code;
   }
@@ -3202,16 +3211,16 @@ var STRUCT = class STRUCT {
     if (warninglvl$1 > 0) 
       console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
 
-    var proto = cls.prototype;
-    var parent = cls.prototype.prototype.constructor;
+    let proto = cls.prototype;
+    let parent = cls.prototype.prototype.constructor;
 
-    var obj = parent.fromSTRUCT(reader);
+    let obj = parent.fromSTRUCT(reader);
     let obj2 = new cls();
 
     let keys = Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
-    //var keys=Object.keys(proto);
+    //let keys=Object.keys(proto);
 
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       let k = keys[i];
 
       try {
@@ -3220,7 +3229,7 @@ var STRUCT = class STRUCT {
         if (warninglvl$1 > 0) 
           console.warn("  failed to set property", k);
       }
-      //var k=keys[i];
+      //let k=keys[i];
       //if (k=="__proto__")
       // continue;
       //obj[k] = proto[k];
@@ -3244,14 +3253,14 @@ var STRUCT = class STRUCT {
     if (no_helper_js == undefined)
       no_helper_js = false;
 
-    var s = "";
+    let s = "";
     if (!internal_only) {
       s += stt.name;
       if (stt.id != -1)
         s += " id=" + stt.id;
       s += " {\n";
     }
-    var tab = "  ";
+    let tab = "  ";
 
     function fmt_type(type) {
       return StructFieldTypeMap$1[type.type].format(type);
@@ -3274,9 +3283,9 @@ var STRUCT = class STRUCT {
       }
     }
 
-    var fields = stt.fields;
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
+    let fields = stt.fields;
+    for (let i = 0; i < fields.length; i++) {
+      let f = fields[i];
       s += tab + f.name + " : " + fmt_type(f.type);
       if (!no_helper_js && f.get != undefined) {
         s += " | " + f.get.trim();
@@ -3289,24 +3298,24 @@ var STRUCT = class STRUCT {
   }
 
   _env_call(code, obj, env) {
-    var envcode = _static_envcode_null$1;
+    let envcode = _static_envcode_null$1;
     if (env !== undefined) {
       envcode = "";
-      for (var i = 0; i < env.length; i++) {
+      for (let i = 0; i < env.length; i++) {
         envcode = "var " + env[i][0] + " = env[" + i.toString() + "][1];\n" + envcode;
       }
     }
-    var fullcode = "";
+    let fullcode = "";
     if (envcode !== _static_envcode_null$1)
       fullcode = envcode + code;
     else
       fullcode = code;
-    var func;
+    let func;
 
     //fullcode = fullcode.replace(/\bthis\b/, "obj");
 
     if (!(fullcode in this.compiled_code)) {
-      var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
+      let code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       try {
         func = _structEval(code2);
       }
@@ -3328,7 +3337,7 @@ var STRUCT = class STRUCT {
     catch (err) {
       _export_print_stack_(err);
 
-      var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
+      let code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       console.log(code2);
       console.log(" ");
       throw err;
@@ -3460,7 +3469,7 @@ var STRUCT = class STRUCT {
   @param uctx : internal parameter
   */
   read_object(data, cls_or_struct_id, uctx) {
-    var cls, stt;
+    let cls, stt;
 
     if (data instanceof Array) {
       data = new DataView(new Uint8Array(data).buffer);
@@ -3483,7 +3492,7 @@ var STRUCT = class STRUCT {
 
       packer_debug$1("\n\n=Begin reading " + cls.structName + "=");
     }
-    var thestruct = this;
+    let thestruct = this;
 
     let this2  = this;
     function unpack_field(type) {
@@ -3499,11 +3508,11 @@ var STRUCT = class STRUCT {
 
       was_run = true;
 
-      var fields = stt.fields;
-      var flen = fields.length;
-      for (var i = 0; i < flen; i++) {
-        var f = fields[i];
-        var val = unpack_field(f.type);
+      let fields = stt.fields;
+      let flen = fields.length;
+      for (let i = 0; i < flen; i++) {
+        let f = fields[i];
+        let val = unpack_field(f.type);
         obj[f.name] = val;
       }
     }
@@ -3538,7 +3547,7 @@ var STRUCT = class STRUCT {
   }
 
   readJSON(data, cls_or_struct_id) {
-    var cls, stt;
+    let cls, stt;
 
     if (typeof cls_or_struct_id === "number") {
       cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
@@ -3553,7 +3562,7 @@ var STRUCT = class STRUCT {
     stt = this.structs[cls.structName];
 
     let fromJSON$1 = fromJSON;
-    var thestruct = this;
+    let thestruct = this;
 
     let this2  = this;
 
@@ -3566,10 +3575,10 @@ var STRUCT = class STRUCT {
 
       was_run = true;
 
-      var fields = stt.fields;
-      var flen = fields.length;
-      for (var i = 0; i < flen; i++) {
-        var f = fields[i];
+      let fields = stt.fields;
+      let flen = fields.length;
+      for (let i = 0; i < flen; i++) {
+        let f = fields[i];
 
         packer_debug$1("Load field " + f.name);
         obj[f.name] = fromJSON$1(thestruct, data[f.name], data, f.type);
@@ -3609,7 +3618,7 @@ var STRUCT = class STRUCT {
 };
 
 //main struct script manager
-var manager = _export_manager_ = new STRUCT();
+let manager = _export_manager_ = new STRUCT();
 
 /**
  * Write all defined structs out to a string.
@@ -3617,24 +3626,24 @@ var manager = _export_manager_ = new STRUCT();
  * @param manager STRUCT instance, defaults to nstructjs.manager
  * @param include_code include save code snippets
  * */
-var write_scripts = function write_scripts(manager, include_code = false) {
+let write_scripts = function write_scripts(manager, include_code = false) {
   if (manager === undefined)
     manager = _export_manager_;
 
-  var buf = "";
+  let buf = "";
 
   manager.forEach(function (stt) {
     buf += STRUCT.fmt_struct(stt, false, !include_code) + "\n";
   });
 
-  var buf2 = buf;
+  let buf2 = buf;
   buf = "";
 
-  for (var i = 0; i < buf2.length; i++) {
-    var c = buf2[i];
+  for (let i = 0; i < buf2.length; i++) {
+    let c = buf2[i];
     if (c === "\n") {
       buf += "\n";
-      var i2 = i;
+      let i2 = i;
       while (i < buf2.length && (buf2[i] === " " || buf2[i] === "\t" || buf2[i] === "\n")) {
         i++;
       }
@@ -4013,7 +4022,7 @@ _module_exports_.tinyeval = _require___$tinyeval$tinyeval_js_;
 
 _module_exports_.useTinyEval = function() {
   _nGlobal._structEval = (buf) => {
-    return _module_exports_.tinyeval.eval(buf);
+    return _module_exports_.tinyeval.eval(buf, _nGlobal);
   }
 };
 */
