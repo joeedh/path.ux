@@ -551,6 +551,22 @@ export class MinMax {
 };
 MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
 
+export function winding_axis(a, b, c, up_axis) {
+  let xaxis = (up_axis+1) % 3;
+  let yaxis = (up_axis+2) % 3;
+
+  let x1 = a[xaxis], y1 = a[yaxis];
+  let x2 = b[xaxis], y2 = b[yaxis];
+  let x3 = c[xaxis], y3 = c[yaxis];
+
+  let dx1 = x1-x2, dy1 = y1-y2;
+  let dx2 = x3-x2, dy2 = y3-y2;
+
+  let f = dx1*dy2 - dy1*dx2;
+  return f >= 0.0;
+}
+
+//wow this is a truly ancient version of winding
 export function winding(a, b, c, zero_z, tol) {
   if (tol == undefined) tol = 0.0;
   
@@ -1481,6 +1497,8 @@ off fort;
 
 * */
 var _isrp_ret=new Vector3();
+let isect_ray_plane_rets = util.cachering.fromConstructor(Vector3, 256);
+
 export function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
   
@@ -1493,7 +1511,7 @@ export function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) 
   let t = ((po[1]-ro[1])*pn[1]+(po[2]-ro[2])*pn[2]+(po[0]-ro[0])*pn[0])/div;
   _isrp_ret.load(ro).addFac(rn, t);
 
-  return _isrp_ret;
+  return isect_ray_plane_rets.next().load(_isrp_ret);
 }
 
 export function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {

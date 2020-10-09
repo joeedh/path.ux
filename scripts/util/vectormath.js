@@ -1185,6 +1185,8 @@ var lookat_cache_vs3;
 var lookat_cache_vs4;
 var makenormalcache;
 
+let preMultTemp;
+
 export class Matrix4 {
   constructor(m) {
     this.$matrix = new internal_matrix();
@@ -1913,12 +1915,10 @@ export class Matrix4 {
   }
 
   preMultiply(mat) {
-    var tmp = new Matrix4();
+    preMultTemp.load(mat);
+    preMultTemp.multiply(this);
 
-    tmp.load(mat);
-    tmp.multiply(this);
-
-    this.load(tmp);
+    this.load(preMultTemp);
 
     return this;
   }
@@ -2396,6 +2396,7 @@ mat4 {
 `;
 nstructjs.register(Matrix4);
 
+preMultTemp = new Matrix4();
 
 window.testmat = (x=0, y=0, z=Math.PI*0.5) => {
   let m1 = new Matrix4();
