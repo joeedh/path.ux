@@ -893,13 +893,13 @@ export class DataAPI extends ModelInterface {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
         util.print_stack(error);
+        report("error while evaluating path " + inpath);
       }
 
       if (cconst.DEBUG.datapaths) {
         util.print_stack(error);
       }
 
-      report("bad path " + inpath);
       return undefined;
     }
   }
