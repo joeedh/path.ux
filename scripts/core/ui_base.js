@@ -127,6 +127,11 @@ class _IconManager {
     let ts = this.tilesize;
     let ds = this.drawsize;
 
+    if (!this.image) {
+      console.warn("Failed to render an iconsheet");
+      return;
+    }
+
     g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
   }
 

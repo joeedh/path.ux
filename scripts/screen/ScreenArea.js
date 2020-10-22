@@ -621,7 +621,7 @@ export class Area extends ui_base.UIBase {
   }
 
   static define() {return {
-    tagname  : undefined, // e.g. "areadata-x",
+    tagname  : "pathux-editor-x", // tag name, e.g. editor-x
     areaname : undefined, //api name for area type
     uiname   : undefined,
     icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
@@ -684,8 +684,8 @@ pathux.Area {
 }
 `
 
-nstructjs.manager.add_class(Area);  
-//ui_base.UIBase.register(Area);
+nstructjs.register(Area);
+ui_base.UIBase.register(Area);
 
 export class ScreenArea extends ui_base.UIBase {
   constructor() {
@@ -1200,6 +1200,9 @@ export class ScreenArea extends ui_base.UIBase {
       }
       
       child.owning_sarea = undefined;
+      if (this.area === undefined) {
+        this.area = child;
+      }
     }
     
     super.appendChild(child);

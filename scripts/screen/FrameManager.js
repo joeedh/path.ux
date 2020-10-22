@@ -144,7 +144,14 @@ export class Screen extends ui_base.UIBase {
     });
 
   }
-  
+
+  init() {
+    super.init();
+
+    if (this.hasAttribute("listen")) {
+      this.listen();
+    }
+  }
   /**
    * 
    * @param {*} style May be a string, a CSSStyleSheet instance, or a style tag
@@ -1077,7 +1084,7 @@ export class Screen extends ui_base.UIBase {
 
   static define() {
     return {
-      tagname: "screen-x"
+      tagname: "pathux-screen-x"
     };
   }
 
