@@ -197,7 +197,7 @@ class Plugin {
 
           s += line + ",";
 
-          let cmt = map[prop.value.loc.start.line];
+          let cmt = prop.value ? map[prop.value.loc.start.line] : undefined;
           if (cmt) {
             s += "  //" + cmt.value + "";
           }

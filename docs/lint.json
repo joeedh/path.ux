@@ -1,42 +1,88 @@
 [
   {
+    "name": "ModelInterface#execOrRedo",
+    "filePath": "scripts/controller/controller.js",
+    "lines": [
+      {
+        "lineNumber": 130,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 131,
+        "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
+      },
+      {
+        "lineNumber": 132,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 133,
+        "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
+      },
+      {
+        "lineNumber": 134,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 135,
+        "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
+      },
+      {
+        "lineNumber": 136,
+        "line": "   * */\r"
+      },
+      {
+        "lineNumber": 137,
+        "line": "  execOrRedo(ctx, toolop, compareInputs=false) {\r"
+      }
+    ],
+    "codeParams": [
+      "ctx",
+      "toolop",
+      "compareInputs"
+    ],
+    "docParams": [
+      "compareInputs"
+    ]
+  },
+  {
     "name": "DataAPI#_addClass",
     "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 741,
+        "lineNumber": 785,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 742,
+        "lineNumber": 786,
         "line": "   * Look up struct definition for a class.\r"
       },
       {
-        "lineNumber": 743,
+        "lineNumber": 787,
         "line": "   *\r"
       },
       {
-        "lineNumber": 744,
+        "lineNumber": 788,
         "line": "   * @param cls: the class\r"
       },
       {
-        "lineNumber": 745,
+        "lineNumber": 789,
         "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
       },
       {
-        "lineNumber": 746,
+        "lineNumber": 790,
         "line": "   * @returns {IterableIterator<*>}\r"
       },
       {
-        "lineNumber": 747,
+        "lineNumber": 791,
         "line": "   */\r"
       },
       {
-        "lineNumber": 748,
+        "lineNumber": 792,
         "line": "\r"
       },
       {
-        "lineNumber": 749,
+        "lineNumber": 793,
         "line": "  _addClass(cls, dstruct) {\r"
       }
     ],
@@ -54,31 +100,31 @@
     "filePath": "scripts/controller/simple_controller.js",
     "lines": [
       {
-        "lineNumber": 862,
+        "lineNumber": 906,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 863,
+        "lineNumber": 907,
         "line": "   get meta information for a datapath.\r"
       },
       {
-        "lineNumber": 864,
+        "lineNumber": 908,
         "line": "\r"
       },
       {
-        "lineNumber": 865,
+        "lineNumber": 909,
         "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
       },
       {
-        "lineNumber": 866,
+        "lineNumber": 910,
         "line": "   just want meta information\r"
       },
       {
-        "lineNumber": 867,
+        "lineNumber": 911,
         "line": "   */\r"
       },
       {
-        "lineNumber": 868,
+        "lineNumber": 912,
         "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false) {\r"
       }
     ],
@@ -96,27 +142,27 @@
     "filePath": "scripts/core/ui.js",
     "lines": [
       {
-        "lineNumber": 232,
+        "lineNumber": 246,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 233,
+        "lineNumber": 247,
         "line": "   *\r"
       },
       {
-        "lineNumber": 234,
+        "lineNumber": 248,
         "line": "   * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse\r"
       },
       {
-        "lineNumber": 235,
+        "lineNumber": 249,
         "line": "   * @returns {Container}\r"
       },
       {
-        "lineNumber": 236,
+        "lineNumber": 250,
         "line": "   */\r"
       },
       {
-        "lineNumber": 237,
+        "lineNumber": 251,
         "line": "  wrap(mode=\"wrap\") {\r"
       }
     ],
@@ -132,31 +178,31 @@
     "filePath": "scripts/core/units.js",
     "lines": [
       {
-        "lineNumber": 392,
+        "lineNumber": 400,
         "line": "/**\r"
       },
       {
-        "lineNumber": 393,
+        "lineNumber": 401,
         "line": " *\r"
       },
       {
-        "lineNumber": 394,
+        "lineNumber": 402,
         "line": " * @param value Note: is not converted to internal unit\r"
       },
       {
-        "lineNumber": 395,
+        "lineNumber": 403,
         "line": " * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name\r"
       },
       {
-        "lineNumber": 396,
+        "lineNumber": 404,
         "line": " * @returns {*}\r"
       },
       {
-        "lineNumber": 397,
+        "lineNumber": 405,
         "line": " */\r"
       },
       {
-        "lineNumber": 398,
+        "lineNumber": 406,
         "line": "export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {\r"
       }
     ],
@@ -176,27 +222,27 @@
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 322,
+        "lineNumber": 329,
         "line": "  /** \r"
       },
       {
-        "lineNumber": 323,
+        "lineNumber": 330,
         "line": "   * @param x\r"
       },
       {
-        "lineNumber": 324,
+        "lineNumber": 331,
         "line": "   * @param y\r"
       },
       {
-        "lineNumber": 325,
+        "lineNumber": 332,
         "line": "   * @param args arguments : {sx, sy, nodeclass, excluded_classes}\r"
       },
       {
-        "lineNumber": 326,
+        "lineNumber": 333,
         "line": "  */\r"
       },
       {
-        "lineNumber": 327,
+        "lineNumber": 334,
         "line": "  pickElement(x, y, args, sy, nodeclass, excluded_classes) {\r"
       }
     ],
@@ -219,31 +265,31 @@
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 401,
+        "lineNumber": 408,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 402,
+        "lineNumber": 409,
         "line": "   *\r"
       },
       {
-        "lineNumber": 403,
+        "lineNumber": 410,
         "line": "   * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,\r"
       },
       {
-        "lineNumber": 404,
+        "lineNumber": 411,
         "line": "   *                     then move the popup so it's fully inside the window (if it's outsize).\r"
       },
       {
-        "lineNumber": 405,
+        "lineNumber": 412,
         "line": "   *\r"
       },
       {
-        "lineNumber": 406,
+        "lineNumber": 413,
         "line": "    * */\r"
       },
       {
-        "lineNumber": 407,
+        "lineNumber": 414,
         "line": "  popup(owning_node, elem_or_x, y, closeOnMouseOut=true, popupDelay=250) {\r"
       }
     ],
@@ -256,6 +302,52 @@
     ],
     "docParams": [
       "popupDelay"
+    ]
+  },
+  {
+    "name": "ToolStack#execOrRedo",
+    "filePath": "scripts/toolsys/simple_toolsys.js",
+    "lines": [
+      {
+        "lineNumber": 564,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 565,
+        "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
+      },
+      {
+        "lineNumber": 566,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 567,
+        "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
+      },
+      {
+        "lineNumber": 568,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 569,
+        "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
+      },
+      {
+        "lineNumber": 570,
+        "line": "   * */\r"
+      },
+      {
+        "lineNumber": 571,
+        "line": "  execOrRedo(ctx, tool, compareInputs=false) {\r"
+      }
+    ],
+    "codeParams": [
+      "ctx",
+      "tool",
+      "compareInputs"
+    ],
+    "docParams": [
+      "compareInputs"
     ]
   },
   {

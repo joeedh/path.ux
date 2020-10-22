@@ -468,6 +468,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/toolsys/toolprop.js~enumkeypair",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html",
+    "<span>EnumKeyPair</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "class"
+  ],
+  [
     "./scripts/core/ui.js~enumproperty",
     "variable/index.html#static-variable-EnumProperty",
     "<span>EnumProperty</span> <span class=\"search-result-import-path\">./scripts/core/ui.js</span>",
@@ -489,6 +495,12 @@ window.esdocSearchIndex = [
     "./scripts/core/ui_base.js~errorcolors",
     "variable/index.html#static-variable-ErrorColors",
     "<span>ErrorColors</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/util/vectormath.js~eulerorders",
+    "variable/index.html#static-variable-EulerOrders",
+    "<span>EulerOrders</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
     "variable"
   ],
   [
@@ -1416,6 +1428,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/widgets/ui_widgets2.js~vectorpopupbutton",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html",
+    "<span>VectorPopupButton</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_widgets2.js</span>",
+    "class"
+  ],
+  [
     "./scripts/core/anim.js~waitcommand",
     "class/scripts/core/anim.js~WaitCommand.html",
     "<span>WaitCommand</span> <span class=\"search-result-import-path\">./scripts/core/anim.js</span>",
@@ -1444,6 +1462,12 @@ window.esdocSearchIndex = [
     "function/index.html#static-function-_getFont_new",
     "<span>_getFont_new</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
     "function"
+  ],
+  [
+    "./scripts/util/struct.js~_nstructjs",
+    "variable/index.html#static-variable-_nstructjs",
+    "<span>_nstructjs</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
   ],
   [
     "./scripts/util/math.js~_old_isect_ray_plane",
@@ -1641,6 +1665,12 @@ window.esdocSearchIndex = [
     "./scripts/util/util.js~console",
     "variable/index.html#static-variable-console",
     "<span>console</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/screen/screenarea.js~contextwrangler",
+    "variable/index.html#static-variable-contextWrangler",
+    "<span>contextWrangler</span> <span class=\"search-result-import-path\">./scripts/screen/ScreenArea.js</span>",
     "variable"
   ],
   [
@@ -1887,6 +1917,12 @@ window.esdocSearchIndex = [
     "./scripts/widgets/ui_noteframe.js~getnoteframes",
     "function/index.html#static-function-getNoteFrames",
     "<span>getNoteFrames</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_noteframe.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/core/ui_base.js~gettagprefix",
+    "function/index.html#static-function-getTagPrefix",
+    "<span>getTagPrefix</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
     "function"
   ],
   [
@@ -2430,6 +2466,18 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/util/struct.js~readjson",
+    "variable/index.html#static-variable-readJSON",
+    "<span>readJSON</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/util/struct.js~readobject",
+    "variable/index.html#static-variable-readObject",
+    "<span>readObject</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/util/struct.js~register",
     "function/index.html#static-function-register",
     "<span>register</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
@@ -2532,6 +2580,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/util/struct.js~setallowoverriding",
+    "variable/index.html#static-variable-setAllowOverriding",
+    "<span>setAllowOverriding</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/screen/area_wrangler.js~setareatypes",
     "function/index.html#static-function-setAreaTypes",
     "<span>setAreaTypes</span> <span class=\"search-result-import-path\">./scripts/screen/area_wrangler.js</span>",
@@ -2566,6 +2620,12 @@ window.esdocSearchIndex = [
     "variable/index.html#static-variable-setDebugMode",
     "<span>setDebugMode</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/util/struct.js~setendian",
+    "function/index.html#static-function-setEndian",
+    "<span>setEndian</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "function"
   ],
   [
     "./scripts/core/ui_base.js~seticonmanager",
@@ -2607,6 +2667,12 @@ window.esdocSearchIndex = [
     "./scripts/screen/area_wrangler.js~setscreenclass",
     "function/index.html#static-function-setScreenClass",
     "<span>setScreenClass</span> <span class=\"search-result-import-path\">./scripts/screen/area_wrangler.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/core/ui_base.js~settagprefix",
+    "function/index.html#static-function-setTagPrefix",
+    "<span>setTagPrefix</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
     "function"
   ],
   [
@@ -2766,6 +2832,18 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/core/ui_theme.js~validatecsscolor",
+    "function/index.html#static-function-validateCSSColor",
+    "<span>validateCSSColor</span> <span class=\"search-result-import-path\">./scripts/core/ui_theme.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/util/struct.js~validatestructs",
+    "variable/index.html#static-variable-validateStructs",
+    "<span>validateStructs</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/core/ui_theme.js~validatewebcolor",
     "function/index.html#static-function-validateWebColor",
     "<span>validateWebColor</span> <span class=\"search-result-import-path\">./scripts/core/ui_theme.js</span>",
@@ -2794,6 +2872,24 @@ window.esdocSearchIndex = [
     "function/index.html#static-function-winding",
     "<span>winding</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
     "function"
+  ],
+  [
+    "./scripts/util/math.js~winding_axis",
+    "function/index.html#static-function-winding_axis",
+    "<span>winding_axis</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/util/struct.js~writejson",
+    "variable/index.html#static-variable-writeJSON",
+    "<span>writeJSON</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/util/struct.js~writeobject",
+    "variable/index.html#static-variable-writeObject",
+    "<span>writeObject</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "variable"
   ],
   [
     "./scripts/util/struct.js~write_scripts",
@@ -3462,6 +3558,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/controller/controller.js~modelinterface#execorredo",
+    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-execOrRedo",
+    "scripts/controller/controller.js~ModelInterface#execOrRedo",
+    "method"
+  ],
+  [
     "scripts/controller/controller.js~modelinterface#exectool",
     "class/scripts/controller/controller.js~ModelInterface.html#instance-method-execTool",
     "scripts/controller/controller.js~ModelInterface#execTool",
@@ -3543,6 +3645,12 @@ window.esdocSearchIndex = [
     "scripts/controller/controller.js~modelinterface#setvalue",
     "class/scripts/controller/controller.js~ModelInterface.html#instance-method-setValue",
     "scripts/controller/controller.js~ModelInterface#setValue",
+    "method"
+  ],
+  [
+    "scripts/controller/controller.js~modelinterface#validpath",
+    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-validPath",
+    "scripts/controller/controller.js~ModelInterface#validPath",
     "method"
   ],
   [
@@ -3978,6 +4086,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/controller/simple_controller.js~datapath#fullsaveundo",
+    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-fullSaveUndo",
+    "scripts/controller/simple_controller.js~DataPath#fullSaveUndo",
+    "method"
+  ],
+  [
     "scripts/controller/simple_controller.js~datapath#icon",
     "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-icon",
     "scripts/controller/simple_controller.js~DataPath#icon",
@@ -3987,6 +4101,12 @@ window.esdocSearchIndex = [
     "scripts/controller/simple_controller.js~datapath#icons",
     "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-icons",
     "scripts/controller/simple_controller.js~DataPath#icons",
+    "method"
+  ],
+  [
+    "scripts/controller/simple_controller.js~datapath#nounits",
+    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-noUnits",
+    "scripts/controller/simple_controller.js~DataPath#noUnits",
     "method"
   ],
   [
@@ -4192,6 +4312,12 @@ window.esdocSearchIndex = [
     "class/scripts/controller/simple_controller.js~DataStruct.html#instance-member-pathmap",
     "scripts/controller/simple_controller.js~DataStruct#pathmap",
     "member"
+  ],
+  [
+    "scripts/controller/simple_controller.js~datastruct#remove",
+    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-remove",
+    "scripts/controller/simple_controller.js~DataStruct#remove",
+    "method"
   ],
   [
     "scripts/controller/simple_controller.js~datastruct#string",
@@ -4830,6 +4956,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui.js~container#_prefixstack",
+    "class/scripts/core/ui.js~Container.html#instance-member-_prefixstack",
+    "scripts/core/ui.js~Container#_prefixstack",
+    "member"
+  ],
+  [
     "scripts/core/ui.js~container#_prepend",
     "class/scripts/core/ui.js~Container.html#instance-method-_prepend",
     "scripts/core/ui.js~Container#_prepend",
@@ -5082,6 +5214,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui.js~container#popdataprefix",
+    "class/scripts/core/ui.js~Container.html#instance-method-popDataPrefix",
+    "scripts/core/ui.js~Container#popDataPrefix",
+    "method"
+  ],
+  [
     "scripts/core/ui.js~container#prepend",
     "class/scripts/core/ui.js~Container.html#instance-method-prepend",
     "scripts/core/ui.js~Container#prepend",
@@ -5091,6 +5229,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~container#prop",
     "class/scripts/core/ui.js~Container.html#instance-method-prop",
     "scripts/core/ui.js~Container#prop",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~container#pushdataprefix",
+    "class/scripts/core/ui.js~Container.html#instance-method-pushDataPrefix",
+    "scripts/core/ui.js~Container#pushDataPrefix",
     "method"
   ],
   [
@@ -5223,6 +5367,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~container#useicons",
     "class/scripts/core/ui.js~Container.html#instance-method-useIcons",
     "scripts/core/ui.js~Container#useIcons",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~container#vecpopup",
+    "class/scripts/core/ui.js~Container.html#instance-method-vecpopup",
+    "scripts/core/ui.js~Container#vecpopup",
     "method"
   ],
   [
@@ -5559,6 +5709,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase#_init_done",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-_init_done",
     "scripts/core/ui_base.js~UIBase#_init_done",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#_lastpathundogen",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_lastPathUndoGen",
+    "scripts/core/ui_base.js~UIBase#_lastPathUndoGen",
     "member"
   ],
   [
@@ -5970,6 +6126,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_base.js~uibase#pathundogen",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-pathUndoGen",
+    "scripts/core/ui_base.js~UIBase#pathUndoGen",
+    "member"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#pickelement",
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-pickElement",
     "scripts/core/ui_base.js~UIBase#pickElement",
@@ -6072,6 +6234,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_base.js~uibase#undobreakpoint",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-undoBreakPoint",
+    "scripts/core/ui_base.js~UIBase#undoBreakPoint",
+    "method"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#unhide",
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-unhide",
     "scripts/core/ui_base.js~UIBase#unhide",
@@ -6102,6 +6270,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/core/ui_base.js~uibase.createelement",
+    "class/scripts/core/ui_base.js~UIBase.html#static-method-createElement",
+    "scripts/core/ui_base.js~UIBase.createElement",
+    "method"
+  ],
+  [
     "scripts/core/ui_base.js~uibase.define",
     "class/scripts/core/ui_base.js~UIBase.html#static-method-define",
     "scripts/core/ui_base.js~UIBase.define",
@@ -6111,6 +6285,18 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase.getdpi",
     "class/scripts/core/ui_base.js~UIBase.html#static-method-getDPI",
     "scripts/core/ui_base.js~UIBase.getDPI",
+    "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase.internalregister",
+    "class/scripts/core/ui_base.js~UIBase.html#static-method-internalRegister",
+    "scripts/core/ui_base.js~UIBase.internalRegister",
+    "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase.prefix",
+    "class/scripts/core/ui_base.js~UIBase.html#static-method-prefix",
+    "scripts/core/ui_base.js~UIBase.prefix",
     "method"
   ],
   [
@@ -6510,6 +6696,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/curve/curve1d.js~curve1d#equals",
+    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-equals",
+    "scripts/curve/curve1d.js~Curve1D#equals",
+    "method"
+  ],
+  [
     "scripts/curve/curve1d.js~curve1d#evaluate",
     "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-evaluate",
     "scripts/curve/curve1d.js~Curve1D#evaluate",
@@ -6762,6 +6954,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/curve/curve1d_anim.js~simplecurvebase#equals",
+    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-equals",
+    "scripts/curve/curve1d_anim.js~SimpleCurveBase#equals",
+    "method"
+  ],
+  [
     "scripts/curve/curve1d_anim.js~simplecurvebase#evaluate",
     "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-evaluate",
     "scripts/curve/curve1d_anim.js~SimpleCurveBase#evaluate",
@@ -6867,6 +7065,12 @@ window.esdocSearchIndex = [
     "scripts/curve/curve1d_base.js~curvetypedata#draw",
     "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-draw",
     "scripts/curve/curve1d_base.js~CurveTypeData#draw",
+    "method"
+  ],
+  [
+    "scripts/curve/curve1d_base.js~curvetypedata#equals",
+    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-equals",
+    "scripts/curve/curve1d_base.js~CurveTypeData#equals",
     "method"
   ],
   [
@@ -8532,6 +8736,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/screen/framemanager.js~screen#init",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-init",
+    "scripts/screen/FrameManager.js~Screen#init",
+    "method"
+  ],
+  [
     "scripts/screen/framemanager.js~screen#isbordermovable",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-isBorderMovable",
     "scripts/screen/FrameManager.js~Screen#isBorderMovable",
@@ -8571,6 +8781,12 @@ window.esdocSearchIndex = [
     "scripts/screen/framemanager.js~screen#listen_timer",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-member-listen_timer",
     "scripts/screen/FrameManager.js~Screen#listen_timer",
+    "member"
+  ],
+  [
+    "scripts/screen/framemanager.js~screen#listening",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-get-listening",
+    "scripts/screen/FrameManager.js~Screen#listening",
     "member"
   ],
   [
@@ -10434,12 +10650,6 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/toolsys/simple_toolsys.js~toolop#makeTempLine",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-makeTempLine",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#makeTempLine",
-    "method"
-  ],
-  [
     "scripts/toolsys/simple_toolsys.js~toolop#constructor",
     "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-constructor-constructor",
     "scripts/toolsys/simple_toolsys.js~ToolOp#constructor",
@@ -10512,6 +10722,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/simple_toolsys.js~toolop#maketempline",
+    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-makeTempLine",
+    "scripts/toolsys/simple_toolsys.js~ToolOp#makeTempLine",
+    "method"
+  ],
+  [
     "scripts/toolsys/simple_toolsys.js~toolop#modalend",
     "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-modalEnd",
     "scripts/toolsys/simple_toolsys.js~ToolOp#modalEnd",
@@ -10566,7 +10782,7 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/toolsys/simple_toolsys.js~toolop#resetTempGeom",
+    "scripts/toolsys/simple_toolsys.js~toolop#resettempgeom",
     "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-resetTempGeom",
     "scripts/toolsys/simple_toolsys.js~ToolOp#resetTempGeom",
     "method"
@@ -10594,6 +10810,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-undoflag",
     "scripts/toolsys/simple_toolsys.js~ToolOp#undoflag",
     "member"
+  ],
+  [
+    "scripts/toolsys/simple_toolsys.js~toolop.equals",
+    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-Equals",
+    "scripts/toolsys/simple_toolsys.js~ToolOp.Equals",
+    "method"
   ],
   [
     "scripts/toolsys/simple_toolsys.js~toolop.canrun",
@@ -10674,10 +10896,22 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/simple_toolsys.js~toolstack#execorredo",
+    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-execOrRedo",
+    "scripts/toolsys/simple_toolsys.js~ToolStack#execOrRedo",
+    "method"
+  ],
+  [
     "scripts/toolsys/simple_toolsys.js~toolstack#exectool",
     "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-execTool",
     "scripts/toolsys/simple_toolsys.js~ToolStack#execTool",
     "method"
+  ],
+  [
+    "scripts/toolsys/simple_toolsys.js~toolstack#head",
+    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-get-head",
+    "scripts/toolsys/simple_toolsys.js~ToolStack#head",
+    "member"
   ],
   [
     "scripts/toolsys/simple_toolsys.js~toolstack#length",
@@ -10758,6 +10992,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop.js~boolproperty#equals",
+    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~BoolProperty#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~boolproperty#getvalue",
     "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-getValue",
     "scripts/toolsys/toolprop.js~BoolProperty#getValue",
@@ -10806,6 +11046,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop.js~curve1dproperty#equals",
+    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~Curve1DProperty#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~curve1dproperty#evaluate",
     "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-evaluate",
     "scripts/toolsys/toolprop.js~Curve1DProperty#evaluate",
@@ -10827,6 +11073,42 @@ window.esdocSearchIndex = [
     "scripts/toolsys/toolprop.js~curve1dproperty#wasset",
     "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-member-wasSet",
     "scripts/toolsys/toolprop.js~Curve1DProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumkeypair#constructor",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-constructor-constructor",
+    "scripts/toolsys/toolprop.js~EnumKeyPair#constructor",
+    "method"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumkeypair#key",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-key",
+    "scripts/toolsys/toolprop.js~EnumKeyPair#key",
+    "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumkeypair#key_is_int",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-key_is_int",
+    "scripts/toolsys/toolprop.js~EnumKeyPair#key_is_int",
+    "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumkeypair#loadstruct",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-method-loadSTRUCT",
+    "scripts/toolsys/toolprop.js~EnumKeyPair#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumkeypair#val",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-val",
+    "scripts/toolsys/toolprop.js~EnumKeyPair#val",
+    "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumkeypair#val_is_int",
+    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-val_is_int",
+    "scripts/toolsys/toolprop.js~EnumKeyPair#val_is_int",
     "member"
   ],
   [
@@ -10894,6 +11176,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-descriptions",
     "scripts/toolsys/toolprop.js~EnumProperty#descriptions",
     "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~enumproperty#equals",
+    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~EnumProperty#equals",
+    "method"
   ],
   [
     "scripts/toolsys/toolprop.js~enumproperty#getvalue",
@@ -11112,6 +11400,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolsys/toolprop.js~listproperty#equals",
+    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~ListProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~listproperty#getlistitem",
+    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-getListItem",
+    "scripts/toolsys/toolprop.js~ListProperty#getListItem",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~listproperty#getvalue",
     "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-getValue",
     "scripts/toolsys/toolprop.js~ListProperty#getValue",
@@ -11139,6 +11439,12 @@ window.esdocSearchIndex = [
     "scripts/toolsys/toolprop.js~listproperty#push",
     "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-push",
     "scripts/toolsys/toolprop.js~ListProperty#push",
+    "method"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~listproperty#setlistitem",
+    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-setListItem",
+    "scripts/toolsys/toolprop.js~ListProperty#setListItem",
     "method"
   ],
   [
@@ -11190,6 +11496,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop.js~mat4property#equals",
+    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~Mat4Property#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~mat4property#getvalue",
     "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-getValue",
     "scripts/toolsys/toolprop.js~Mat4Property#getValue",
@@ -11218,6 +11530,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-member-data",
     "scripts/toolsys/toolprop.js~NumProperty#data",
     "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~numproperty#equals",
+    "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~NumProperty#equals",
+    "method"
   ],
   [
     "scripts/toolsys/toolprop.js~numproperty#loadstruct",
@@ -11256,6 +11574,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop.js~quatproperty#equals",
+    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~QuatProperty#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~quatproperty#getvalue",
     "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-getValue",
     "scripts/toolsys/toolprop.js~QuatProperty#getValue",
@@ -11290,6 +11614,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-member-data",
     "scripts/toolsys/toolprop.js~StringProperty#data",
     "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~stringproperty#equals",
+    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~StringProperty#equals",
+    "method"
   ],
   [
     "scripts/toolsys/toolprop.js~stringproperty#multiline",
@@ -11350,6 +11680,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-descriptions",
     "scripts/toolsys/toolprop.js~StringSetProperty#descriptions",
     "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~stringsetproperty#equals",
+    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~StringSetProperty#equals",
+    "method"
   ],
   [
     "scripts/toolsys/toolprop.js~stringsetproperty#getvalue",
@@ -11460,6 +11796,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop.js~toolproperty#equals",
+    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~ToolProperty#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~toolproperty#flag",
     "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-flag",
     "scripts/toolsys/toolprop.js~ToolProperty#flag",
@@ -11547,6 +11889,12 @@ window.esdocSearchIndex = [
     "scripts/toolsys/toolprop.js~toolproperty#setdisplayunit",
     "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setDisplayUnit",
     "scripts/toolsys/toolprop.js~ToolProperty#setDisplayUnit",
+    "method"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~toolproperty#setflag",
+    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setFlag",
+    "scripts/toolsys/toolprop.js~ToolProperty#setFlag",
     "method"
   ],
   [
@@ -11784,6 +12132,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/toolsys/toolprop.js~vecpropertybase#equals",
+    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~VecPropertyBase#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop.js~vecpropertybase#hasuniformslider",
     "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-member-hasUniformSlider",
     "scripts/toolsys/toolprop.js~VecPropertyBase#hasUniformSlider",
@@ -11818,6 +12172,12 @@ window.esdocSearchIndex = [
     "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-data",
     "scripts/toolsys/toolprop.js~_NumberPropertyBase#data",
     "member"
+  ],
+  [
+    "scripts/toolsys/toolprop.js~_numberpropertybase#equals",
+    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-equals",
+    "scripts/toolsys/toolprop.js~_NumberPropertyBase#equals",
+    "method"
   ],
   [
     "scripts/toolsys/toolprop.js~_numberpropertybase#exprate",
@@ -12144,6 +12504,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#equals",
+    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-equals",
+    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#equals",
+    "method"
+  ],
+  [
     "scripts/toolsys/toolprop_abstract.js~toolpropertyif#flag",
     "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-flag",
     "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#flag",
@@ -12417,12 +12783,6 @@ window.esdocSearchIndex = [
     "scripts/util/events.js~eventhandler#_modalstate",
     "class/scripts/util/events.js~EventHandler.html#instance-member-_modalstate",
     "scripts/util/events.js~EventHandler#_modalstate",
-    "member"
-  ],
-  [
-    "scripts/util/events.js~eventhandler#modal_pushed",
-    "class/scripts/util/events.js~EventHandler.html#instance-member-modal_pushed",
-    "scripts/util/events.js~EventHandler#modal_pushed",
     "member"
   ],
   [
@@ -13296,6 +13656,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/util/simple_events.js~keymap#pathid",
+    "class/scripts/util/simple_events.js~KeyMap.html#instance-member-pathid",
+    "scripts/util/simple_events.js~KeyMap#pathid",
+    "member"
+  ],
+  [
     "scripts/util/simple_events.js~keymap#push",
     "class/scripts/util/simple_events.js~KeyMap.html#instance-method-push",
     "scripts/util/simple_events.js~KeyMap#push",
@@ -13572,6 +13938,18 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/util/util.js~idgen#_debug",
+    "class/scripts/util/util.js~IDGen.html#instance-member-_debug",
+    "scripts/util/util.js~IDGen#_debug",
+    "member"
+  ],
+  [
+    "scripts/util/util.js~idgen#_internalid",
+    "class/scripts/util/util.js~IDGen.html#instance-member-_internalID",
+    "scripts/util/util.js~IDGen#_internalID",
+    "member"
+  ],
+  [
     "scripts/util/util.js~idgen#constructor",
     "class/scripts/util/util.js~IDGen.html#instance-constructor-constructor",
     "scripts/util/util.js~IDGen#constructor",
@@ -13581,6 +13959,12 @@ window.esdocSearchIndex = [
     "scripts/util/util.js~idgen#copy",
     "class/scripts/util/util.js~IDGen.html#instance-method-copy",
     "scripts/util/util.js~IDGen#copy",
+    "method"
+  ],
+  [
+    "scripts/util/util.js~idgen#loadstruct",
+    "class/scripts/util/util.js~IDGen.html#instance-method-loadSTRUCT",
+    "scripts/util/util.js~IDGen#loadSTRUCT",
     "method"
   ],
   [
@@ -14022,6 +14406,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/util/util.js~set#equals",
+    "class/scripts/util/util.js~set.html#instance-method-equals",
+    "scripts/util/util.js~set#equals",
+    "method"
+  ],
+  [
+    "scripts/util/util.js~set#filter",
+    "class/scripts/util/util.js~set.html#instance-method-filter",
+    "scripts/util/util.js~set#filter",
+    "method"
+  ],
+  [
     "scripts/util/util.js~set#foreach",
     "class/scripts/util/util.js~set.html#instance-method-forEach",
     "scripts/util/util.js~set#forEach",
@@ -14056,6 +14452,18 @@ window.esdocSearchIndex = [
     "class/scripts/util/util.js~set.html#instance-member-length",
     "scripts/util/util.js~set#length",
     "member"
+  ],
+  [
+    "scripts/util/util.js~set#map",
+    "class/scripts/util/util.js~set.html#instance-method-map",
+    "scripts/util/util.js~set#map",
+    "method"
+  ],
+  [
+    "scripts/util/util.js~set#reduce",
+    "class/scripts/util/util.js~set.html#instance-method-reduce",
+    "scripts/util/util.js~set#reduce",
+    "method"
   ],
   [
     "scripts/util/util.js~set#remove",
@@ -14148,6 +14556,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/util/vectormath.js~matrix4#addtohashdigest",
+    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-addToHashDigest",
+    "scripts/util/vectormath.js~Matrix4#addToHashDigest",
+    "method"
+  ],
+  [
     "scripts/util/vectormath.js~matrix4#cleartranslation",
     "class/scripts/util/vectormath.js~Matrix4.html#instance-method-clearTranslation",
     "scripts/util/vectormath.js~Matrix4#clearTranslation",
@@ -14199,6 +14613,12 @@ window.esdocSearchIndex = [
     "scripts/util/vectormath.js~matrix4#euler_rotate",
     "class/scripts/util/vectormath.js~Matrix4.html#instance-method-euler_rotate",
     "scripts/util/vectormath.js~Matrix4#euler_rotate",
+    "method"
+  ],
+  [
+    "scripts/util/vectormath.js~matrix4#euler_rotate_order",
+    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-euler_rotate_order",
+    "scripts/util/vectormath.js~Matrix4#euler_rotate_order",
     "method"
   ],
   [
@@ -14499,6 +14919,12 @@ window.esdocSearchIndex = [
     "scripts/util/vectormath.js~vector2#dot",
     "class/scripts/util/vectormath.js~Vector2.html#instance-method-dot",
     "scripts/util/vectormath.js~Vector2#dot",
+    "method"
+  ],
+  [
+    "scripts/util/vectormath.js~vector2#initvector2",
+    "class/scripts/util/vectormath.js~Vector2.html#instance-method-initVector2",
+    "scripts/util/vectormath.js~Vector2#initVector2",
     "method"
   ],
   [
@@ -15666,9 +16092,39 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_has_keyhandler",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-_has_keyhandler",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_has_keyhandler",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_highlight",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-_highlight",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_highlight",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_keydown",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-_keydown",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_keydown",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_keyhandler_add",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-_keyhandler_add",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_keyhandler_add",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_keyhandler_remove",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-_keyhandler_remove",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_keyhandler_remove",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_keyhandler_timeout",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-_keyhandler_timeout",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_keyhandler_timeout",
     "member"
   ],
   [
@@ -15684,6 +16140,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_last_keyevt",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-_last_keyevt",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_last_keyevt",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#_redraw",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-_redraw",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#_redraw",
@@ -15693,6 +16155,18 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#click",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-click",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#click",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#clipboardcopy",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-clipboardCopy",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#clipboardCopy",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#clipboardpaste",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-clipboardPaste",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#clipboardPaste",
     "method"
   ],
   [
@@ -15784,6 +16258,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-setRGBA",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#setRGBA",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#tabindex",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-tabIndex",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#tabIndex",
+    "member"
   ],
   [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#update",
@@ -16830,9 +17310,21 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_lasttool.js~lasttoolpanel#buildtool",
+    "class/scripts/widgets/ui_lasttool.js~LastToolPanel.html#instance-method-buildTool",
+    "scripts/widgets/ui_lasttool.js~LastToolPanel#buildTool",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_lasttool.js~lasttoolpanel#constructor",
     "class/scripts/widgets/ui_lasttool.js~LastToolPanel.html#instance-constructor-constructor",
     "scripts/widgets/ui_lasttool.js~LastToolPanel#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_lasttool.js~lasttoolpanel#gettoolstackhead",
+    "class/scripts/widgets/ui_lasttool.js~LastToolPanel.html#instance-method-getToolStackHead",
+    "scripts/widgets/ui_lasttool.js~LastToolPanel#getToolStackHead",
     "method"
   ],
   [
@@ -17670,12 +18162,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_numsliders.js~numslider#updatedefaultsize",
-    "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-method-updateDefaultSize",
-    "scripts/widgets/ui_numsliders.js~NumSlider#updateDefaultSize",
-    "method"
-  ],
-  [
     "scripts/widgets/ui_numsliders.js~numslider#updatename",
     "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-method-updateName",
     "scripts/widgets/ui_numsliders.js~NumSlider#updateName",
@@ -18300,6 +18786,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_panel.js~panelframe#makeheader",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-makeHeader",
+    "scripts/widgets/ui_panel.js~PanelFrame#makeHeader",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_panel.js~panelframe#on_disabled",
     "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-on_disabled",
     "scripts/widgets/ui_panel.js~PanelFrame#on_disabled",
@@ -18334,6 +18826,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-setCSS",
     "scripts/widgets/ui_panel.js~PanelFrame#setCSS",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#titleframe",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-member-titleframe",
+    "scripts/widgets/ui_panel.js~PanelFrame#titleframe",
+    "member"
   ],
   [
     "scripts/widgets/ui_panel.js~panelframe#update",
@@ -18555,6 +19053,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_table.js~tableframe#_add",
     "class/scripts/widgets/ui_table.js~TableFrame.html#instance-method-_add",
     "scripts/widgets/ui_table.js~TableFrame#_add",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_table.js~tableframe#add",
+    "class/scripts/widgets/ui_table.js~TableFrame.html#instance-method-add",
+    "scripts/widgets/ui_table.js~TableFrame#add",
     "method"
   ],
   [
@@ -20367,6 +20871,48 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_widgets2.js~vectorpanel.define",
     "class/scripts/widgets/ui_widgets2.js~VectorPanel.html#static-method-define",
     "scripts/widgets/ui_widgets2.js~VectorPanel.define",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#_onpress",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-method-_onpress",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#_onpress",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#constructor",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-constructor-constructor",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#disabled",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-member-disabled",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#disabled",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#update",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-method-update",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#update",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#updatedatapath",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-method-updateDataPath",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#updateDataPath",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#value",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-member-value",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#value",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton.define",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#static-method-define",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton.define",
     "method"
   ]
 ]
