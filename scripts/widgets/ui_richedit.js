@@ -33,7 +33,7 @@ export class RichEditor extends TextBoxBase {
 
     this.shadow.appendChild(this.styletag);
 
-    let controls = this.controls = document.createElement("rowframe-x");
+    let controls = this.controls = UIBase.createElement("rowframe-x");
 
 
     let makeicon = (icon, description, cb) => {
@@ -289,7 +289,7 @@ export class RichEditor extends TextBoxBase {
     style   : "richtext"
   }}
 }
-UIBase.register(RichEditor);
+UIBase.internalRegister(RichEditor);
 
 export class RichViewer extends UIBase {
   constructor() {
@@ -361,4 +361,4 @@ export class RichViewer extends UIBase {
     style   : "html_viewer"
   }}
 }
-UIBase.register(RichViewer);
+UIBase.internalRegister(RichViewer);

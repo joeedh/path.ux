@@ -41,7 +41,7 @@ export class TreeItem extends Container {
     if (this._icon2) {
       this._icon2 = id;
     } else {
-      this._icon2 = document.createElement("icon-label-x");
+      this._icon2 = UIBase.createElement("icon-label-x");
       this._icon2.icon = id;
       this._icon2.iconsheet = 0;
 
@@ -101,7 +101,7 @@ export class TreeItem extends Container {
     style   : "treeview"
   }}
 }
-UIBase.register(TreeItem);
+UIBase.internalRegister(TreeItem);
 
 export class TreeView extends Container {
   constructor() {
@@ -119,7 +119,7 @@ export class TreeView extends Container {
 
     //this.shadow.appendChild(this.overdraw);
 
-    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw = UIBase.createElement("overdraw-x");
     console.log(this.overdraw.startNode);
     this.overdraw.startNode(this);
 
@@ -313,7 +313,7 @@ export class TreeView extends Container {
   }
 
   item(name, args={icon : undefined}) {
-    let ret = document.createElement("tree-item-x");
+    let ret = UIBase.createElement("tree-item-x");
     this.add(ret);
     ret._init();
 
@@ -357,5 +357,5 @@ export class TreeView extends Container {
     style   : "treeview"
   }}
 }
-UIBase.register(TreeView);
+UIBase.internalRegister(TreeView);
 

@@ -26,7 +26,7 @@ export class PropsEditor extends Editor {
     this.buildMassSetExample(tab1);
 
     tab1 = tabs.tab("Theme");
-    let th = document.createElement("theme-editor-x");
+    let th = UIBase.createElement("theme-editor-x");
     this.style["overflow-y"] = "scroll";
     tab1.add(th);
 
@@ -81,7 +81,7 @@ export class PropsEditor extends Editor {
     t = t.item("Four", {icon : Icons.FILE});
     t.item("4.5");
 
-    let row = document.createElement("rowframe-x");
+    let row = UIBase.createElement("rowframe-x");
     row.ctx = this.ctx;
 
     let icon = row.check()
@@ -97,7 +97,7 @@ export class PropsEditor extends Editor {
   }
 
   copy() {
-    let ret = document.createElement(this.constructor.define().tagname);
+    let ret = UIBase.createElement(this.constructor.define().tagname);
     ret.ctx = this.ctx;
     return ret;
   }

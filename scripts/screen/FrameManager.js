@@ -258,7 +258,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   newScreenArea() {
-    let ret = document.createElement("screenarea-x");
+    let ret = UIBase.createElement("screenarea-x");
     ret.ctx = this.ctx;
 
     if (ret.ctx) {
@@ -269,7 +269,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   copy() {
-    let ret = document.createElement(this.constructor.define().tagname);
+    let ret = UIBase.createElement(this.constructor.define().tagname);
     ret.ctx = this.ctx;
     ret._init();
 
@@ -456,7 +456,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   draggablePopup(x, y) {
-    let ret = document.createElement("drag-box-x");
+    let ret = UIBase.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -503,7 +503,7 @@ export class Screen extends ui_base.UIBase {
       x = elem_or_x;
     }
 
-    let container = document.createElement("container-x");
+    let container = UIBase.createElement("container-x");
 
     container.ctx = this.ctx;
     container._init();
@@ -939,7 +939,7 @@ export class Screen extends ui_base.UIBase {
     super.loadJSON();
 
     for (let sarea of obj.sareas) {
-      let sarea2 = document.createElement("screenarea-x");
+      let sarea2 = UIBase.createElement("screenarea-x");
 
       sarea2.ctx = this.ctx;
       sarea2.screen = this;
@@ -960,7 +960,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   static fromJSON(obj, schedule_resize = false) {
-    let ret = document.createElement(this.define().tagname);
+    let ret = UIBase.createElement(this.define().tagname);
     return ret.loadJSON(obj, schedule_resize);
   }
 
@@ -1673,7 +1673,7 @@ export class Screen extends ui_base.UIBase {
 
   _get_debug_overlay() {
     if (!this._debug_overlay) {
-      this._debug_overlay = document.createElement("overdraw-x");
+      this._debug_overlay = UIBase.createElement("overdraw-x");
       let s = this._debug_overlay;
 
       s.startNode(this, this);
@@ -1707,7 +1707,7 @@ export class Screen extends ui_base.UIBase {
         x = Math.min(Math.max(x, 0.0), this.size[0]-s);
         y = Math.min(Math.max(y, 0.0), this.size[1]-s);
 
-        let ret = document.createElement("div");
+        let ret = UIBase.createElement("div");
         ret.setAttribute("class", "__debug");
 
 
@@ -1730,7 +1730,7 @@ export class Screen extends ui_base.UIBase {
         ];
 
         for (let i=2; i>=0; i--) {
-          ret = document.createElement("div");
+          ret = UIBase.createElement("div");
 
           ret.setAttribute("class", "__debug");
 
@@ -2370,7 +2370,7 @@ export class Screen extends ui_base.UIBase {
     let hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      let sb = this._edgemap[hash] = document.createElement("screenborder-x");
+      let sb = this._edgemap[hash] = UIBase.createElement("screenborder-x");
 
       sb.screen = this;
       sb.v1 = v1;
@@ -2598,7 +2598,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   static newSTRUCT() {
-    return document.createElement(this.define().tagname);
+    return UIBase.createElement(this.define().tagname);
   }
 
   afterSTRUCT() {
@@ -2703,7 +2703,7 @@ pathux.Screen {
 `;
 
 nstructjs.manager.add_class(Screen);
-ui_base.UIBase.register(Screen);
+ui_base.UIBase.internalRegister(Screen);
 
 ScreenArea.setScreenClass(Screen);
 

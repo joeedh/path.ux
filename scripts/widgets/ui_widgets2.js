@@ -36,7 +36,7 @@ export class VectorPopupButton extends Button {
       return;
     }
 
-    let panel = document.createElement("vector-panel-x");
+    let panel = UIBase.createElement("vector-panel-x");
     let screen = this.ctx.screen;
 
     let popup = screen.popup(this, this);
@@ -98,7 +98,7 @@ export class VectorPopupButton extends Button {
   }
 
 }
-UIBase.register(VectorPopupButton);
+UIBase.internalRegister(VectorPopupButton);
 
 export class VectorPanel extends ColumnFrame {
   constructor() {
@@ -249,7 +249,7 @@ export class VectorPanel extends ColumnFrame {
     }
 
     if (this.hasUniformSlider) {
-      let uslider = this.uslider = document.createElement("numslider-x");
+      let uslider = this.uslider = UIBase.createElement("numslider-x");
       row._prepend(uslider);
 
       uslider.range = this.range;
@@ -484,7 +484,7 @@ export class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase.register(VectorPanel);
+UIBase.internalRegister(VectorPanel);
 
 export class ToolTip extends UIBase {
   constructor() {
@@ -505,7 +505,7 @@ export class ToolTip extends UIBase {
   }
 
   static show(message, screen, x, y) {
-    let ret = document.createElement(this.define().tagname);
+    let ret = UIBase.createElement(this.define().tagname);
 
     ret.text = message;
     let size = ret._estimateSize();
@@ -561,4 +561,4 @@ export class ToolTip extends UIBase {
     style   : "tooltip"
   }}
 };
-UIBase.register(ToolTip);
+UIBase.internalRegister(ToolTip);

@@ -2,7 +2,7 @@ import {AreaFlags} from "../screen/ScreenArea.js";
 import {keymap} from "../util/simple_events.js";
 
 export function makePopupArea(area_class, screen, args={}) {
-  let sarea = document.createElement("screenarea-x");
+  let sarea = UIBase.createElement("screenarea-x");
 
   let width = args.width || (screen.size[0]*0.7);
   let height = args.height || (screen.size[1]*0.7);

@@ -1024,7 +1024,7 @@ export class TabBar extends UIBase {
     style   : "tabs"
   };}
 }
-UIBase.register(TabBar);
+UIBase.internalRegister(TabBar);
 
 export class TabContainer extends UIBase {
   constructor() {
@@ -1033,7 +1033,7 @@ export class TabContainer extends UIBase {
     this.inherit_packflag = 0;
     this.packflag = 0;
 
-    this.tbar = document.createElement("tabbar-x");
+    this.tbar = UIBase.createElement("tabbar-x");
     this.tbar.parentWidget = this;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
     this.tbar.constructor.setDefault(this.tbar);
@@ -1190,7 +1190,7 @@ export class TabContainer extends UIBase {
       id = tab_idgen++;
     }
 
-    let col = document.createElement("colframe-x");
+    let col = UIBase.createElement("colframe-x");
 
     this.tabs[id] = col;
 
@@ -1297,4 +1297,4 @@ export class TabContainer extends UIBase {
   };}
 }
 
-UIBase.register(TabContainer);
+UIBase.internalRegister(TabContainer);

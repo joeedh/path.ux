@@ -502,4 +502,4 @@ export class Button extends UIBase {
     style : "button"
   };}
 }
-UIBase.register(Button);
+UIBase.internalRegister(Button);

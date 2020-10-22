@@ -166,4 +166,4 @@ export class ThemeEditor extends Container {
     style   : "theme-editor"
   }}
 }
-UIBase.register(ThemeEditor);
+UIBase.internalRegister(ThemeEditor);

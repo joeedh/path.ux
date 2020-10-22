@@ -89,7 +89,7 @@ export class NumSlider extends ValueButtonBase {
   }
 
   swapWithTextbox() {
-    let tbox = document.createElement("textbox-x");
+    let tbox = UIBase.createElement("textbox-x");
 
     tbox.ctx = this.ctx;
     tbox._init();
@@ -635,7 +635,7 @@ export class NumSlider extends ValueButtonBase {
     style : "numslider"
   };}
 }
-UIBase.register(NumSlider);
+UIBase.internalRegister(NumSlider);
 
 
 export class NumSliderSimpleBase extends UIBase {
@@ -1073,7 +1073,7 @@ export class NumSliderSimpleBase extends UIBase {
     style : "numslider_simple"
   }}
 }
-UIBase.register(NumSliderSimpleBase);
+UIBase.internalRegister(NumSliderSimpleBase);
 
 export class SliderWithTextbox extends ColumnFrame {
   constructor() {
@@ -1096,7 +1096,7 @@ export class SliderWithTextbox extends ColumnFrame {
 
     this.container = this;
 
-    this.textbox = document.createElement("textbox-x");
+    this.textbox = UIBase.createElement("textbox-x");
     this.textbox.width = 55;
     this._numslider = undefined;
 
@@ -1448,7 +1448,7 @@ export class NumSliderSimple extends SliderWithTextbox {
   constructor() {
     super();
 
-    this.numslider = document.createElement("numslider-simple-base-x");
+    this.numslider = UIBase.createElement("numslider-simple-base-x");
   }
 
   static define() {return {
@@ -1456,13 +1456,13 @@ export class NumSliderSimple extends SliderWithTextbox {
     style : "numslider_simple"
   }}
 }
-UIBase.register(NumSliderSimple);
+UIBase.internalRegister(NumSliderSimple);
 
 export class NumSliderWithTextBox extends SliderWithTextbox {
   constructor() {
     super();
 
-    this.numslider = document.createElement("numslider-x");
+    this.numslider = UIBase.createElement("numslider-x");
 
   }
 
@@ -1475,5 +1475,5 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
     style : "numslider-textbox-x"
   }}
 }
-UIBase.register(NumSliderWithTextBox);
+UIBase.internalRegister(NumSliderWithTextBox);
 

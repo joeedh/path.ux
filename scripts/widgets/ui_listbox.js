@@ -87,7 +87,7 @@ class ListItem extends RowFrame {
     style : "listbox"
   }}
 }
-UIBase.register(ListItem);
+UIBase.internalRegister(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -157,7 +157,7 @@ class ListBox extends Container {
   }
 
   addItem(name, id) {
-    let item = document.createElement("listitem-x");
+    let item = UIBase.createElement("listitem-x");
 
     item._id = id === undefined ? this.items.length : id;
     this.idmap[item._id] = item;
@@ -229,4 +229,4 @@ class ListBox extends Container {
     style : "listbox"
   }}
 }
-UIBase.register(ListBox);
+UIBase.internalRegister(ListBox);

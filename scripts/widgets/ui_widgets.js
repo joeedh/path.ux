@@ -79,7 +79,7 @@ export class IconLabel extends UIBase {
     tagname : "icon-label-x"
   }}
 }
-UIBase.register(IconLabel);
+UIBase.internalRegister(IconLabel);
 
 export class ValueButtonBase extends Button {
   constructor() {
@@ -441,7 +441,7 @@ export class Check extends UIBase {
     style   : "checkbox"
   };}
 }
-UIBase.register(Check);
+UIBase.internalRegister(Check);
 
 export class IconCheck extends Button {
   constructor() {
@@ -656,7 +656,7 @@ export class IconCheck extends Button {
   };}
 }
 
-UIBase.register(IconCheck);
+UIBase.internalRegister(IconCheck);
 
 export class IconButton extends Button {
   constructor() {
@@ -746,7 +746,7 @@ export class IconButton extends Button {
   };}
 }
 
-UIBase.register(IconButton);
+UIBase.internalRegister(IconButton);
 
 export class Check1 extends Button {
   constructor() {
@@ -786,6 +786,6 @@ export class Check1 extends Button {
   };}
 }
 
-UIBase.register(Check1);
+UIBase.internalRegister(Check1);
 
 export {checkForTextBox} from './ui_textbox.js';

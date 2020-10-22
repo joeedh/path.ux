@@ -93,7 +93,7 @@ export class Note extends ui_base.UIBase {
     tagname : "note-x"
   }}
 }
-UIBase.register(Note);
+UIBase.internalRegister(Note);
 
 export class ProgBarNote extends Note {
   constructor() {
@@ -152,7 +152,7 @@ export class ProgBarNote extends Note {
     tagname : "note-progress-x"
   }}
 }
-UIBase.register(ProgBarNote);
+UIBase.internalRegister(ProgBarNote);
 
 export class NoteFrame extends ui.RowFrame {
   constructor() {
@@ -216,7 +216,7 @@ export class NoteFrame extends ui.RowFrame {
   }
 
   addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
-    //let note = document.createElement("note-x");
+    //let note = UIBase.createElement("note-x");
 
     //note.ctx = this.ctx;
     //note.background = "red";
@@ -224,7 +224,7 @@ export class NoteFrame extends ui.RowFrame {
 
     //this._add(note);
 
-    let note = document.createElement(tagname);
+    let note = UIBase.createElement(tagname);
 
     note.color = color;
     note.setLabel(msg);
@@ -263,7 +263,7 @@ export class NoteFrame extends ui.RowFrame {
     tagname : "noteframe-x"
   }}
 }
-UIBase.register(NoteFrame);
+UIBase.internalRegister(NoteFrame);
 
 export function getNoteFrames(screen) {
   let ret = [];

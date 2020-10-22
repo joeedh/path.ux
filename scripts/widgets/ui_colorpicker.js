@@ -679,13 +679,13 @@ export class ColorField extends UIBase {
   };}
 }
 
-UIBase.register(ColorField);
+UIBase.internalRegister(ColorField);
 
 export class ColorPicker extends ui.ColumnFrame {
   constructor() {
     super();
     
-    this.field = document.createElement("colorfield-x");
+    this.field = UIBase.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
     
     this.field.onchange = (hsva, rgba) => {
@@ -845,4 +845,4 @@ export class ColorPicker extends ui.ColumnFrame {
   };}
 }
 
-UIBase.register(ColorPicker);
+UIBase.internalRegister(ColorPicker);

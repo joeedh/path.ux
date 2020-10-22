@@ -167,4 +167,4 @@ export class LastToolPanel extends ColumnFrame {
     tagname : "last-tool-panel-x"
   }}
 }
-UIBase.register(LastToolPanel);
+UIBase.internalRegister(LastToolPanel);

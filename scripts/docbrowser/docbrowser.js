@@ -1309,5 +1309,5 @@ DocsBrowser {
 }
 `;
 
-UIBase.register(DocsBrowser);
+UIBase.internalRegister(DocsBrowser);
 nstructjs.register(DocsBrowser);

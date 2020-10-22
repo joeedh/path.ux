@@ -74,8 +74,8 @@ export class DragBox extends Container {
     super();
 
     this._done = false;
-    this.header = document.createElement("rowframe-x");
-    this.contents = document.createElement("container-x");
+    this.header = UIBase.createElement("rowframe-x");
+    this.contents = UIBase.createElement("container-x");
 
     this.header.style["border-radius"] = "20px";
 
@@ -218,4 +218,4 @@ export class DragBox extends Container {
     style   : "panel"
   }}
 }
-UIBase.register(DragBox);
+UIBase.internalRegister(DragBox);

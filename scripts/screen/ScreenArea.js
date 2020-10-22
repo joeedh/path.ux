@@ -245,7 +245,7 @@ export class Area extends ui_base.UIBase {
   
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
-    let ret = document.createElement(this.constructor.define().tagname);
+    let ret = UIBase.createElement(this.constructor.define().tagname);
     return ret;
   }
   
@@ -314,7 +314,7 @@ export class Area extends ui_base.UIBase {
     
     areaclasses[def.areaname] = cls;
     
-    ui_base.UIBase.register(cls);
+    ui_base.UIBase.internalRegister(cls);
   }
   
   getScreen() {
@@ -372,7 +372,7 @@ export class Area extends ui_base.UIBase {
 
   makeAreaSwitcher(container) {
     if (cconst.useAreaTabSwitcher) {
-      let ret = document.createElement("area-docker-x");
+      let ret = UIBase.createElement("area-docker-x");
       container.add(ret);
       return ret;
     }
@@ -581,7 +581,7 @@ export class Area extends ui_base.UIBase {
     }
 
     if (add_note_area) {
-      let notef = document.createElement("noteframe-x");
+      let notef = UIBase.createElement("noteframe-x");
       notef.ctx = this.ctx;
       row._add(notef);
     }
@@ -665,7 +665,7 @@ export class Area extends ui_base.UIBase {
   }
 
   static newSTRUCT(reader) {
-    return document.createElement(this.define().tagname);
+    return UIBase.createElement(this.define().tagname);
   }
 
   loadSTRUCT(reader) {
@@ -685,7 +685,7 @@ pathux.Area {
 `
 
 nstructjs.register(Area);
-ui_base.UIBase.register(Area);
+ui_base.UIBase.internalRegister(Area);
 
 export class ScreenArea extends ui_base.UIBase {
   constructor() {
@@ -906,7 +906,7 @@ export class ScreenArea extends ui_base.UIBase {
       //console.log(editor);
       
       let tagname = areaclasses[areaname].define().tagname;
-      let area = document.createElement(tagname);
+      let area = UIBase.createElement(tagname);
       
       area.owning_sarea = this;
       this.editormap[areaname] = area;
@@ -978,7 +978,7 @@ export class ScreenArea extends ui_base.UIBase {
   }
   
   copy(screen) {
-    let ret = document.createElement("screenarea-x");
+    let ret = UIBase.createElement("screenarea-x");
     
     ret.screen = screen;
     ret.ctx = this.ctx;
@@ -1223,7 +1223,7 @@ export class ScreenArea extends ui_base.UIBase {
     
     //areaclasses[name]
     if (!(name in this.editormap)) {
-      this.editormap[name] = document.createElement(def.tagname);
+      this.editormap[name] = UIBase.createElement(def.tagname);
       this.editormap[name].ctx = this.ctx;
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
@@ -1364,7 +1364,7 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   static newSTRUCT() {
-    return document.createElement("screenarea-x");
+    return UIBase.createElement("screenarea-x");
   }
 
 
@@ -1457,7 +1457,7 @@ export class ScreenArea extends ui_base.UIBase {
       if (typeof area !== "object") {
         for (let k in areaclasses) {
           area = areaclasses[k].define().tagname;
-          area = document.createElement(area);
+          area = UIBase.createElement(area);
           let areaname = area.constructor.define().areaname;
 
           this.editors.push(area);
@@ -1523,6 +1523,6 @@ pathux.ScreenArea {
 `;
 
 nstructjs.manager.add_class(ScreenArea);  
-ui_base.UIBase.register(ScreenArea);
+ui_base.UIBase.internalRegister(ScreenArea);
 
 ui_base._setAreaClass(Area);

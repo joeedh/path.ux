@@ -266,7 +266,7 @@ export class Menu extends UIBase {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = this.textbox = document.createElement("textbox-x");
+    let sbox = this.textbox = UIBase.createElement("textbox-x");
     this.textbox.parentWidget = this;
     
     dom2.appendChild(sbox);
@@ -694,7 +694,7 @@ export class Menu extends UIBase {
   }
 
   menu(title) {
-    let ret = document.createElement("menu-x");
+    let ret = UIBase.createElement("menu-x");
 
     ret.setAttribute("title", title);
     this.addItem(ret);
@@ -708,7 +708,7 @@ export class Menu extends UIBase {
 }
 
 Menu.SEP = Symbol("menu seperator");
-UIBase.register(Menu);
+UIBase.internalRegister(Menu);
 
 export class DropBox extends Button {
   constructor() {
@@ -858,7 +858,7 @@ export class DropBox extends Button {
       this._menu.remove();
     }
 
-    let menu = this._menu = document.createElement("menu-x");
+    let menu = this._menu = UIBase.createElement("menu-x");
     menu.setAttribute("title", name);
 
     menu._dropbox = this;
@@ -1111,7 +1111,7 @@ export class DropBox extends Button {
   };}
 }
 
-UIBase.register(DropBox);
+UIBase.internalRegister(DropBox);
 
 export class MenuWrangler {
   constructor() {
@@ -1385,7 +1385,7 @@ export function getWranglerScreen() {
 }
 
 export function createMenu(ctx, title, templ) {
-  let menu = document.createElement("menu-x");
+  let menu = UIBase.createElement("menu-x");
   menu.ctx = ctx;
   menu.setAttribute("name", title);
 

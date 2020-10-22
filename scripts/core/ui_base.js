@@ -55,6 +55,35 @@ export const ErrorColors = {
 
 window.__theme = theme;
 
+let registered_has_happened = false;
+let tagPrefix = "";
+
+/**
+* Sets tag prefix for pathux html elements.
+ * Must be called prior to loading other modules.
+ * Since this is tricky, you can alternatively
+ * add a script tag with the prefix with the id "pathux-tag-prefix",
+ * e.g.<pre> <script type="text/plain" id="pathux-tag-prefix">prefix</script> </pre>
+* */
+export function setTagPrefix(prefix) {
+  if (registered_has_happened) {
+    throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
+  }
+
+  tagPrefix = ""+prefix;
+}
+
+export function getTagPrefix(prefix) {
+  return tagPrefix;
+}
+
+let prefix = document.getElementById("pathux-tag-prefix");
+if (prefix) {
+  console.log("Found pathux-tag-prefix element");
+  prefix = prefix.innerText.trim();
+  setTagPrefix(prefix);
+}
+
 export function setTheme(theme2) {
   //merge theme
   for (let k in theme2) {
@@ -366,6 +395,9 @@ export let dpistack = [];
 export const UIFlags = {
 
 };
+
+const internalElementNames = {};
+const externalElementNames = {};
 
 export const PackFlags = {
   INHERIT_WIDTH  : 1,
@@ -1903,14 +1935,33 @@ export class UIBase extends HTMLElement {
   loadData(obj) {
     return this;
   }
-  
-  //parent_cls is a string, tagname of element to extend
+
+  static prefix(name) {
+    return tagPrefix + name;
+  }
+
+  static internalRegister(cls) {
+    registered_has_happened = true;
+
+    internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
+    customElements.define(this.prefix(cls.define().tagname), cls);
+  }
+
+  static createElement(name, internal=false) {
+    if (!internal && name in externalElementNames) {
+      return document.createElement(name);
+    } else if (name in internalElementNames) {
+      return document.createElement(internalElementNames[name]);
+    } else {
+      return document.createElement(name)
+    }
+  }
+
   static register(cls) {
-    //if (parent_cls !== undefined) {
-    // customElements.define(cls.define().tagname, cls, {extends : "div"});
-    //} else {
-      customElements.define(cls.define().tagname, cls);
-    //}
+    registered_has_happened = true;
+
+    externalElementNames[cls.define().tagname] = cls.define().tagname;
+    customElements.define(cls.define().tagname, cls);
   }
 
   overrideDefault(key, val) {

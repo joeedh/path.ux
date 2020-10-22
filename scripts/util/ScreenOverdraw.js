@@ -372,4 +372,4 @@ export class Overdraw extends ui_base.UIBase {
   };}
 }
 
-ui_base.UIBase.register(Overdraw);
+ui_base.UIBase.internalRegister(Overdraw);

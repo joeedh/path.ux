@@ -63,7 +63,7 @@ export class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase.register(TableRow);
+UIBase.internalRegister(TableRow);
 
 export class TableFrame extends Container {
   constructor() {
@@ -107,7 +107,7 @@ export class TableFrame extends Container {
       td.style["margin"] = tr.style["margin"];
       td.style["padding"] = tr.style["padding"];
 
-      let container = document.createElement("rowframe-x");
+      let container = UIBase.createElement("rowframe-x");
 
       container.ctx = this2.ctx;
       container.parentWidget = this2;
@@ -251,5 +251,5 @@ export class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase.register(TableFrame);
+UIBase.internalRegister(TableFrame);
 

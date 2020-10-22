@@ -343,7 +343,7 @@ export class TextBox extends TextBoxBase {
   }
 }
 
-UIBase.register(TextBox);
+UIBase.internalRegister(TextBox);
 
 export function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);

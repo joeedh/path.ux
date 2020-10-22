@@ -333,7 +333,7 @@ export class DocsBrowser extends UIBase {
     this.saveReqStart = util.time_ms();
     this._last_save = util.time_ms();
 
-    this.header = document.createElement("rowframe-x");
+    this.header = UIBase.createElement("rowframe-x");
     this.shadow.appendChild(this.header);
     this.makeHeader()
 
@@ -1277,7 +1277,7 @@ export class DocsBrowser extends UIBase {
   }
 
   static newSTRUCT() {
-    return document.createElement("docs-browser-x");
+    return UIBase.createElement("docs-browser-x");
   }
 
   loadSTRUCT(reader) {
@@ -1310,7 +1310,7 @@ export class DocsBrowserEditor extends Editor {
   constructor() {
     super();
 
-    this._browser = document.createElement("docs-browser-x");
+    this._browser = UIBase.createElement("docs-browser-x");
     this.savedDocument = new SavedDocument();
   }
 

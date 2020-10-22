@@ -348,4 +348,4 @@ export class ScreenBorder extends ui_base.UIBase {
   }
 }
 
-ui_base.UIBase.register(ScreenBorder);
+ui_base.UIBase.internalRegister(ScreenBorder);

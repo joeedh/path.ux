@@ -174,7 +174,7 @@ export class Label extends ui_base.UIBase {
   }
 }
 
-ui_base.UIBase.register(Label);
+ui_base.UIBase.internalRegister(Label);
 
 export class Container extends ui_base.UIBase {
   constructor() {
@@ -605,7 +605,7 @@ export class Container extends ui_base.UIBase {
   }
 
   menu(title, list, packflag = 0) {
-    let dbox = document.createElement("dropbox-x");
+    let dbox = UIBase.createElement("dropbox-x");
 
     dbox._name = title;
     dbox.setAttribute("simple", true);
@@ -713,7 +713,7 @@ export class Container extends ui_base.UIBase {
 
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("textbox-x");
+    let ret = UIBase.createElement("textbox-x");
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
@@ -740,7 +740,7 @@ export class Container extends ui_base.UIBase {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = document.createElement("label-x");
+    let ret = UIBase.createElement("label-x");
 
     ret.text = label;
     ret.setAttribute("datapath", path);
@@ -751,7 +751,7 @@ export class Container extends ui_base.UIBase {
   }
 
   label(text) {
-    let ret = document.createElement("label-x");
+    let ret = UIBase.createElement("label-x");
     ret.text = text;
 
     this._add(ret);
@@ -784,7 +784,7 @@ export class Container extends ui_base.UIBase {
   iconbutton(icon, description, cb, thisvar, packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("iconbutton-x")
+    let ret = UIBase.createElement("iconbutton-x")
 
     ret.packflag |= packflag;
 
@@ -808,7 +808,7 @@ export class Container extends ui_base.UIBase {
   button(label, cb, thisvar, id, packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("button-x")
+    let ret = UIBase.createElement("button-x")
 
     ret.packflag |= packflag;
 
@@ -830,7 +830,7 @@ export class Container extends ui_base.UIBase {
   colorbutton(inpath, packflag, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("color-picker-button-x");
+    let ret = UIBase.createElement("color-picker-button-x");
 
     if (inpath !== undefined) {
       inpath = this._joinPrefix(inpath);
@@ -848,7 +848,7 @@ export class Container extends ui_base.UIBase {
   }
 
   noteframe(packflag = 0) {
-    let ret = document.createElement("noteframe-x");
+    let ret = UIBase.createElement("noteframe-x");
 
     ret.packflag |= this.inherit_packflag | packflag;
 
@@ -859,7 +859,7 @@ export class Container extends ui_base.UIBase {
   curve1d(inpath, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("curve-widget-x");
+    let ret = UIBase.createElement("curve-widget-x");
 
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
@@ -878,7 +878,7 @@ export class Container extends ui_base.UIBase {
   }
 
   vecpopup(inpath, packflag=0, mass_set_path=undefined) {
-    let button = document.createElement("vector-popup-button-x");
+    let button = UIBase.createElement("vector-popup-button-x");
 
     packflag |= this.inherit_packflag;
     let name = "vector";
@@ -1009,7 +1009,7 @@ export class Container extends ui_base.UIBase {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
-        let ret = document.createElement("vector-panel-x");
+        let ret = UIBase.createElement("vector-panel-x");
         ret.packflag |= packflag;
 
         if (inpath) {
@@ -1069,7 +1069,7 @@ export class Container extends ui_base.UIBase {
   }
 
   iconcheck(inpath, icon, name, mass_set_path) {
-    ret = document.createElement("iconcheck-x");
+    ret = UIBase.createElement("iconcheck-x");
     ret.icon = icon;
     ret.description = name;
 
@@ -1094,13 +1094,13 @@ export class Container extends ui_base.UIBase {
     //let prop = this.ctx.getProp(path);
     let ret;
     if (packflag & PackFlags.USE_ICONS) {
-      ret = document.createElement("iconcheck-x");
+      ret = UIBase.createElement("iconcheck-x");
 
       if (packflag & PackFlags.SMALL_ICON) {
         ret.iconsheet = ui_base.IconSheets.SMALL;
       }
     } else {
-      ret = document.createElement("check-x");
+      ret = UIBase.createElement("check-x");
     }
 
     ret.packflag |= packflag;
@@ -1369,7 +1369,7 @@ export class Container extends ui_base.UIBase {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = document.createElement("dropbox-x")
+    let ret = UIBase.createElement("dropbox-x")
     if (enumDef !== undefined) {
       if (enumDef instanceof toolprop.EnumProperty) {
         ret.prop = enumDef;
@@ -1482,11 +1482,11 @@ export class Container extends ui_base.UIBase {
     }
 
     if (packflag & PackFlags.SIMPLE_NUMSLIDERS && !(packflag & PackFlags.FORCE_ROLLER_SLIDER)) {
-      ret = document.createElement("numslider-simple-x");
+      ret = UIBase.createElement("numslider-simple-x");
     } else if (cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX)) {
-      ret = document.createElement("numslider-textbox-x");
+      ret = UIBase.createElement("numslider-textbox-x");
     } else {
-      ret = document.createElement("numslider-x");
+      ret = UIBase.createElement("numslider-x");
     }
     
     ret.packflag |= packflag;
@@ -1558,7 +1558,7 @@ export class Container extends ui_base.UIBase {
   }
 
   treeview() {
-    let ret = document.createElement("tree-view-x");
+    let ret = UIBase.createElement("tree-view-x");
     ret.ctx = this.ctx;
     this.add(ret);
 
@@ -1569,7 +1569,7 @@ export class Container extends ui_base.UIBase {
     id = id === undefined ? name : id;
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("panelframe-x");
+    let ret = UIBase.createElement("panelframe-x");
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
@@ -1588,7 +1588,7 @@ export class Container extends ui_base.UIBase {
   row(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("rowframe-x");
+    let ret = UIBase.createElement("rowframe-x");
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
@@ -1603,7 +1603,7 @@ export class Container extends ui_base.UIBase {
   listbox(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("listbox-x");
+    let ret = UIBase.createElement("listbox-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
 
@@ -1614,7 +1614,7 @@ export class Container extends ui_base.UIBase {
   table(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("tableframe-x");
+    let ret = UIBase.createElement("tableframe-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
 
@@ -1625,7 +1625,7 @@ export class Container extends ui_base.UIBase {
   col(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("colframe-x");
+    let ret = UIBase.createElement("colframe-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
 
@@ -1642,7 +1642,7 @@ export class Container extends ui_base.UIBase {
 
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("colorpicker-x");
+    let ret = UIBase.createElement("colorpicker-x");
 
     packflag |= PackFlags.SIMPLE_NUMSLIDERS;
 
@@ -1675,7 +1675,7 @@ export class Container extends ui_base.UIBase {
   textarea(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("rich-text-editor-x");
+    let ret = UIBase.createElement("rich-text-editor-x");
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -1699,7 +1699,7 @@ export class Container extends ui_base.UIBase {
   viewer(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("html-viewer-x");
+    let ret = UIBase.createElement("html-viewer-x");
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -1721,7 +1721,7 @@ export class Container extends ui_base.UIBase {
   tabs(position = "top", packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("tabcontainer-x");
+    let ret = UIBase.createElement("tabcontainer-x");
 
     ret.constructor.setDefault(ret);
     ret.setAttribute("bar_pos", position);
@@ -1734,14 +1734,14 @@ export class Container extends ui_base.UIBase {
   }
 };
 
-ui_base.UIBase.register(Container, "div");
+ui_base.UIBase.internalRegister(Container, "div");
 
 
 export class RowFrame extends Container {
   constructor() {
     super();
 
-    let style = document.createElement("style");
+    let style = UIBase.createElement("style");
 
     this.shadow.appendChild(style);
   }
@@ -1790,7 +1790,7 @@ export class RowFrame extends Container {
   }
 }
 
-UIBase.register(RowFrame);
+UIBase.internalRegister(RowFrame);
 
 export class ColumnFrame extends Container {
   constructor() {
@@ -1815,5 +1815,5 @@ export class ColumnFrame extends Container {
   }
 }
 
-UIBase.register(ColumnFrame);
+UIBase.internalRegister(ColumnFrame);
 

@@ -73,7 +73,7 @@ export class ToolBase extends simple_toolsys.ToolOp {
       popModalLight(this.modaldata);
     }
 
-    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw = ui_base.UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
     let handlers = {};
@@ -337,7 +337,7 @@ export class SplitTool extends ToolBase {
       return;
     }
     
-    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw = ui_base.UIBase.createElement("overdraw-x");
     this.overdraw.start(this.screen);
     
     super.modalStart(ctx);

@@ -1,4 +1,4 @@
-import {Area, nstructjs} from '../pathux.js';
+import {Area, UIBase, nstructjs} from '../pathux.js';
 
 export class Editor extends Area {
   constructor() {
@@ -18,7 +18,7 @@ export class Editor extends Area {
   init() {
     super.init();
 
-    this.container = document.createElement("colframe-x");
+    this.container = UIBase.createElement("colframe-x");
     this.container.ctx = this.ctx;
     this.shadow.appendChild(this.container);
 

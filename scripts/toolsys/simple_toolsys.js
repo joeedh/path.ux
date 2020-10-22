@@ -317,7 +317,7 @@ export class ToolOp extends events.EventHandler {
 
   getOverdraw() {
     if (this._overdraw === undefined) {
-      this._overdraw = document.createElement("overdraw-x");
+      this._overdraw = UIBase.createElement("overdraw-x");
       this._overdraw.start(this.modal_ctx.screen);
     }
 

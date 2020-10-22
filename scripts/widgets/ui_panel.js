@@ -29,8 +29,8 @@ export class PanelFrame extends ColumnFrame {
 
     this.titleframe = this.row();
 
-    this.contents = document.createElement("colframe-x");
-    this.iconcheck = document.createElement("iconcheck-x");
+    this.contents = UIBase.createElement("colframe-x", true);
+    this.iconcheck = UIBase.createElement("iconcheck-x");
 
     Object.defineProperty(this.contents, "closed", {
       get : () => {
@@ -285,4 +285,4 @@ export class PanelFrame extends ColumnFrame {
   }
 }
 
-UIBase.register(PanelFrame);
+UIBase.internalRegister(PanelFrame);

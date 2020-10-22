@@ -283,7 +283,7 @@ export class HueField extends UIBase {
   };}
 }
 
-UIBase.register(HueField);
+UIBase.internalRegister(HueField);
 
 export class SatValField extends UIBase {
   constructor() {
@@ -504,7 +504,7 @@ export class SatValField extends UIBase {
   };}
 }
 
-UIBase.register(SatValField);
+UIBase.internalRegister(SatValField);
 
 export class ColorField extends ui.ColumnFrame {
   constructor() {
@@ -522,10 +522,10 @@ export class ColorField extends ui.ColumnFrame {
 
     this._last_dpi = undefined;
 
-    let satvalfield = this.satvalfield = document.createElement("satvalfield-x");
+    let satvalfield = this.satvalfield = UIBase.createElement("satvalfield-x");
     satvalfield.hsva = this.hsva;
 
-    let huefield = this.huefield = document.createElement("huefield-x");
+    let huefield = this.huefield = UIBase.createElement("huefield-x");
     huefield.hsva = this.hsva;
 
     huefield.onchange = (e) => {
@@ -655,7 +655,7 @@ export class ColorField extends ui.ColumnFrame {
     this.huefield._redraw();
   }
 }
-UIBase.register(ColorField);
+UIBase.internalRegister(ColorField);
 
 export class ColorPicker extends ui.ColumnFrame {
   constructor() {
@@ -665,7 +665,7 @@ export class ColorPicker extends ui.ColumnFrame {
   init() {
     super.init();
 
-    this.field = document.createElement("colorfield-x");
+    this.field = UIBase.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
 
     this.field.packflag |= this.inherit_packflag;
@@ -895,7 +895,7 @@ export class ColorPicker extends ui.ColumnFrame {
   };}
 }
 
-UIBase.register(ColorPicker);
+UIBase.internalRegister(ColorPicker);
 
 
 export class ColorPickerButton extends UIBase {
@@ -1408,4 +1408,4 @@ export class ColorPickerButton extends UIBase {
     this._redraw();
   }
 };
-UIBase.register(ColorPickerButton);
+UIBase.internalRegister(ColorPickerButton);

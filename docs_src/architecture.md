@@ -32,7 +32,14 @@ Path.ux allows different controller implementations (though they must all pass t
 classes in toolprop.js).  The included implementation can be found in 
 "simple_controller.js", and the abstract interface in "controller.js".
 
-# Context
+# Setting Pathux API prefix
+
+To avoid conflicting with other custom HTML elements, you can add a 
+prefix to pathux element tag names.  To do so, add a script tag like so:
+
+`<script type="text-plain" id="pathux-tag-prefix">desired-prefix-</script>`
+
+
 
 
 # History

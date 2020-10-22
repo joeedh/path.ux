@@ -263,4 +263,4 @@ export class Curve1DWidget extends ColumnFrame {
     style   : "curvewidget"
   }}
 }
-UIBase.register(Curve1DWidget);
+UIBase.internalRegister(Curve1DWidget);

@@ -273,4 +273,4 @@ export class BuilderRow extends BuilderContainer {
     tagname : "row-builder-x"
   }}
 }
-UIBase.register(BuilderRow);
+UIBase.internalRegister(BuilderRow);

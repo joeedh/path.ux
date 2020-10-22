@@ -62,7 +62,7 @@ export class WorkspaceEditor extends Editor {
   }
 
   copy() {
-    let ret = document.createElement(this.constructor.define().tagname);
+    let ret = UIBase.createElement(this.constructor.define().tagname);
     ret.ctx = this.ctx;
     return ret;
   }

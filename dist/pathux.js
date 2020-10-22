@@ -911,6 +911,8 @@ var struct_util = /*#__PURE__*/Object.freeze({
   IDGen: IDGen
 });
 
+"use strict";
+
 const _module_exports_ = {};
 _module_exports_.STRUCT_ENDIAN = true; //little endian
 
@@ -1024,7 +1026,7 @@ var decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
       sum |= c;
     }
 
-    if (sum == 0) break;
+    if (sum === 0) break;
 
     str += String.fromCharCode(sum);
     i++;
@@ -1150,34 +1152,38 @@ _module_exports_.unpack_short = function (dview, uctx) {
   return dview.getInt16(uctx.i - 2, _module_exports_.STRUCT_ENDIAN);
 };
 
-var _static_arr_us = new Array(32);
+let _static_arr_us = new Array(32);
 _module_exports_.unpack_string = function (data, uctx) {
-  var str = "";
+  let slen = unpack_int(data, uctx);
 
-  var slen = unpack_int(data, uctx);
-  var arr = slen < 2048 ? _static_arr_us : new Array(slen);
+  if (!slen) {
+    return "";
+  }
+
+  let str = "";
+  let arr = slen < 2048 ? _static_arr_us : new Array(slen);
 
   arr.length = slen;
-  for (var i = 0; i < slen; i++) {
+  for (let i = 0; i < slen; i++) {
     arr[i] = unpack_byte(data, uctx);
   }
 
   return decode_utf8(arr);
 };
 
-var _static_arr_uss = new Array(2048);
+let _static_arr_uss = new Array(2048);
 _module_exports_.unpack_static_string = function unpack_static_string(data, uctx, length) {
-  var str = "";
+  let str = "";
 
   if (length == undefined)
     throw new Error("'length' cannot be undefined in unpack_static_string()");
 
-  var arr = length < 2048 ? _static_arr_uss : new Array(length);
+  let arr = length < 2048 ? _static_arr_uss : new Array(length);
   arr.length = 0;
 
-  var done = false;
-  for (var i = 0; i < length; i++) {
-    var c = unpack_byte(data, uctx);
+  let done = false;
+  for (let i = 0; i < length; i++) {
+    let c = unpack_byte(data, uctx);
 
     if (c == 0) {
       done = true;
@@ -2289,9 +2295,13 @@ class StructStringField extends StructFieldType {
     
     pack_string$1(data, val);
   }
-  
+
   static packNull(manager, data, field, type) {
     this.pack(manager, data, "", 0, field, type);
+  }
+
+  static toJSON(manager, val, obj, field, type) {
+    return "" + val;
   }
   
   static unpack(manager, data, type, uctx) {
@@ -3051,9 +3061,8 @@ class StructStaticArrayField extends StructFieldType {
 
     let itername = type.data.iname;
 
-    if (val === undefined || !val.length) {
-      this.packNull(manager, data, field, type);
-      return;
+    if (val === undefined || !val.length) {;
+      return [];
     }
 
     let ret = [];
@@ -3166,21 +3175,21 @@ SomeClass {
 nstructjs.manager.add_class(SomeClass);
 
 */
-var StructTypeMap$1 = StructTypeMap;
-var StructTypes$1 = StructTypes;
-var Class$4 = Class;
+let StructTypeMap$1 = StructTypeMap;
+let StructTypes$1 = StructTypes;
+let Class$4 = Class;
 
-var struct_parse = _export_struct_parse_;
-var StructEnum$2 = StructEnum;
+let struct_parse = _export_struct_parse_;
+let StructEnum$2 = StructEnum;
 
-var _static_envcode_null$1 = "";
-var debug_struct = 0;
-var packdebug_tablevel$1 = 0;
+let _static_envcode_null$1 = "";
+let debug_struct = 0;
+let packdebug_tablevel$1 = 0;
 
 function gen_tabstr$2(tot) {
   var ret = "";
 
-  for (var i = 0; i < tot; i++) {
+  for (let i = 0; i < tot; i++) {
     ret += " ";
   }
 
@@ -3192,7 +3201,7 @@ let packer_debug$1, packer_debug_start$1, packer_debug_end$1;
 if (debug_struct) {
   packer_debug$1 = function (msg) {
     if (msg !== undefined) {
-      var t = gen_tabstr$2(packdebug_tablevel$1);
+      let t = gen_tabstr$2(packdebug_tablevel$1);
       console.log(t + msg);
     } else {
       console.log("Warning: undefined msg");
@@ -3235,7 +3244,7 @@ const _export_setDebugMode_$1 = (t) => {
   if (debug_struct) {
     packer_debug$1 = function (msg) {
       if (msg != undefined) {
-        var t = gen_tabstr$2(packdebug_tablevel$1);
+        let t = gen_tabstr$2(packdebug_tablevel$1);
         console.log(t + msg);
       } else {
         console.log("Warning: undefined msg");
@@ -3261,14 +3270,14 @@ const _export_setDebugMode_$1 = (t) => {
   }
 };
 
-var _ws_env$1 = [[undefined, undefined]];
+let _ws_env$1 = [[undefined, undefined]];
 
 function do_pack$1(data, val, obj, thestruct, field, type) {
   StructFieldTypeMap$1[field.type.type].pack(manager, data, val, obj, field, type);
 }
 
 function define_empty_class(name) {
-  var cls = function () {
+  let cls = function () {
   };
 
   cls.prototype = Object.create(Object.prototype);
@@ -3288,7 +3297,7 @@ function define_empty_class(name) {
   return cls;
 }
 
-var STRUCT = class STRUCT {
+let STRUCT = class STRUCT {
   constructor() {
     this.idgen = new IDGen();
     this.allowOverriding = true;
@@ -3301,9 +3310,9 @@ var STRUCT = class STRUCT {
     this.null_natives = {};
 
     function define_null_native(name, cls) {
-      var obj = define_empty_class(name);
+      let obj = define_empty_class(name);
 
-      var stt = struct_parse.parse(obj.STRUCT);
+      let stt = struct_parse.parse(obj.STRUCT);
 
       stt.id = this.idgen.gen_id();
 
@@ -3389,8 +3398,8 @@ var STRUCT = class STRUCT {
   }
 
   forEach(func, thisvar) {
-    for (var k in this.structs) {
-      var stt = this.structs[k];
+    for (let k in this.structs) {
+      let stt = this.structs[k];
 
       if (thisvar !== undefined)
         func.call(thisvar, stt);
@@ -3409,10 +3418,10 @@ var STRUCT = class STRUCT {
     }
 
     if (defined_classes instanceof STRUCT) {
-      var struct2 = defined_classes;
+      let struct2 = defined_classes;
       defined_classes = [];
 
-      for (var k in struct2.struct_cls) {
+      for (let k in struct2.struct_cls) {
         defined_classes.push(struct2.struct_cls[k]);
       }
     }
@@ -3420,18 +3429,18 @@ var STRUCT = class STRUCT {
     if (defined_classes === undefined) {
       defined_classes = [];
 
-      for (var k in _export_manager_.struct_cls) {
+      for (let k in _export_manager_.struct_cls) {
         defined_classes.push(_export_manager_.struct_cls[k]);
       }
     }
 
-    var clsmap = {};
+    let clsmap = {};
 
-    for (var i = 0; i < defined_classes.length; i++) {
-      var cls = defined_classes[i];
+    for (let i = 0; i < defined_classes.length; i++) {
+      let cls = defined_classes[i];
 
       if (!cls.structName && cls.STRUCT) {
-        var stt = struct_parse.parse(cls.STRUCT.trim());
+        let stt = struct_parse.parse(cls.STRUCT.trim());
         cls.structName = stt.name;
       } else if (!cls.structName && cls.name !== "Object") {
         if (warninglvl$1 > 0) 
@@ -3445,14 +3454,14 @@ var STRUCT = class STRUCT {
     struct_parse.input(buf);
 
     while (!struct_parse.at_end()) {
-      var stt = struct_parse.parse(undefined, false);
+      let stt = struct_parse.parse(undefined, false);
 
       if (!(stt.name in clsmap)) {
         if (!(stt.name in this.null_natives))
         if (warninglvl$1 > 0) 
           console.log("WARNING: struct " + stt.name + " is missing from class list.");
 
-        var dummy = define_empty_class(stt.name);
+        let dummy = define_empty_class(stt.name);
 
         dummy.STRUCT = STRUCT.fmt_struct(stt);
         dummy.structName = stt.name;
@@ -3472,7 +3481,7 @@ var STRUCT = class STRUCT {
           this.struct_ids[stt.id] = stt;
       }
 
-      var tok = struct_parse.peek();
+      let tok = struct_parse.peek();
       while (tok && (tok.value === "\n" || tok.value === "\r" || tok.value === "\t" || tok.value === " ")) {
         tok = struct_parse.peek();
       }
@@ -3511,7 +3520,7 @@ var STRUCT = class STRUCT {
       throw new Error("class " + cls.name + " has no STRUCT script");
     }
 
-    var stt = struct_parse.parse(cls.STRUCT);
+    let stt = struct_parse.parse(cls.STRUCT);
 
     cls.structName = stt.name;
 
@@ -3575,8 +3584,8 @@ var STRUCT = class STRUCT {
       return structName + "{\n";
     }
 
-    var stt = struct_parse.parse(parent.STRUCT);
-    var code = structName + "{\n";
+    let stt = struct_parse.parse(parent.STRUCT);
+    let code = structName + "{\n";
     code += STRUCT.fmt_struct(stt, true);
     return code;
   }
@@ -3612,16 +3621,16 @@ var STRUCT = class STRUCT {
     if (warninglvl$1 > 0) 
       console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
 
-    var proto = cls.prototype;
-    var parent = cls.prototype.prototype.constructor;
+    let proto = cls.prototype;
+    let parent = cls.prototype.prototype.constructor;
 
-    var obj = parent.fromSTRUCT(reader);
+    let obj = parent.fromSTRUCT(reader);
     let obj2 = new cls();
 
     let keys = Object.keys(obj).concat(Object.getOwnPropertySymbols(obj));
-    //var keys=Object.keys(proto);
+    //let keys=Object.keys(proto);
 
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       let k = keys[i];
 
       try {
@@ -3630,7 +3639,7 @@ var STRUCT = class STRUCT {
         if (warninglvl$1 > 0) 
           console.warn("  failed to set property", k);
       }
-      //var k=keys[i];
+      //let k=keys[i];
       //if (k=="__proto__")
       // continue;
       //obj[k] = proto[k];
@@ -3654,14 +3663,14 @@ var STRUCT = class STRUCT {
     if (no_helper_js == undefined)
       no_helper_js = false;
 
-    var s = "";
+    let s = "";
     if (!internal_only) {
       s += stt.name;
       if (stt.id != -1)
         s += " id=" + stt.id;
       s += " {\n";
     }
-    var tab = "  ";
+    let tab = "  ";
 
     function fmt_type(type) {
       return StructFieldTypeMap$1[type.type].format(type);
@@ -3684,9 +3693,9 @@ var STRUCT = class STRUCT {
       }
     }
 
-    var fields = stt.fields;
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
+    let fields = stt.fields;
+    for (let i = 0; i < fields.length; i++) {
+      let f = fields[i];
       s += tab + f.name + " : " + fmt_type(f.type);
       if (!no_helper_js && f.get != undefined) {
         s += " | " + f.get.trim();
@@ -3699,24 +3708,24 @@ var STRUCT = class STRUCT {
   }
 
   _env_call(code, obj, env) {
-    var envcode = _static_envcode_null$1;
+    let envcode = _static_envcode_null$1;
     if (env !== undefined) {
       envcode = "";
-      for (var i = 0; i < env.length; i++) {
+      for (let i = 0; i < env.length; i++) {
         envcode = "var " + env[i][0] + " = env[" + i.toString() + "][1];\n" + envcode;
       }
     }
-    var fullcode = "";
+    let fullcode = "";
     if (envcode !== _static_envcode_null$1)
       fullcode = envcode + code;
     else
       fullcode = code;
-    var func;
+    let func;
 
     //fullcode = fullcode.replace(/\bthis\b/, "obj");
 
     if (!(fullcode in this.compiled_code)) {
-      var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
+      let code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       try {
         func = _structEval(code2);
       }
@@ -3738,7 +3747,7 @@ var STRUCT = class STRUCT {
     catch (err) {
       _export_print_stack_(err);
 
-      var code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
+      let code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       console.log(code2);
       console.log(" ");
       throw err;
@@ -3870,7 +3879,7 @@ var STRUCT = class STRUCT {
   @param uctx : internal parameter
   */
   read_object(data, cls_or_struct_id, uctx) {
-    var cls, stt;
+    let cls, stt;
 
     if (data instanceof Array) {
       data = new DataView(new Uint8Array(data).buffer);
@@ -3893,7 +3902,7 @@ var STRUCT = class STRUCT {
 
       packer_debug$1("\n\n=Begin reading " + cls.structName + "=");
     }
-    var thestruct = this;
+    let thestruct = this;
 
     let this2  = this;
     function unpack_field(type) {
@@ -3909,11 +3918,11 @@ var STRUCT = class STRUCT {
 
       was_run = true;
 
-      var fields = stt.fields;
-      var flen = fields.length;
-      for (var i = 0; i < flen; i++) {
-        var f = fields[i];
-        var val = unpack_field(f.type);
+      let fields = stt.fields;
+      let flen = fields.length;
+      for (let i = 0; i < flen; i++) {
+        let f = fields[i];
+        let val = unpack_field(f.type);
         obj[f.name] = val;
       }
     }
@@ -3948,7 +3957,7 @@ var STRUCT = class STRUCT {
   }
 
   readJSON(data, cls_or_struct_id) {
-    var cls, stt;
+    let cls, stt;
 
     if (typeof cls_or_struct_id === "number") {
       cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
@@ -3963,7 +3972,7 @@ var STRUCT = class STRUCT {
     stt = this.structs[cls.structName];
 
     let fromJSON$1 = fromJSON;
-    var thestruct = this;
+    let thestruct = this;
 
     let this2  = this;
 
@@ -3976,10 +3985,10 @@ var STRUCT = class STRUCT {
 
       was_run = true;
 
-      var fields = stt.fields;
-      var flen = fields.length;
-      for (var i = 0; i < flen; i++) {
-        var f = fields[i];
+      let fields = stt.fields;
+      let flen = fields.length;
+      for (let i = 0; i < flen; i++) {
+        let f = fields[i];
 
         packer_debug$1("Load field " + f.name);
         obj[f.name] = fromJSON$1(thestruct, data[f.name], data, f.type);
@@ -4019,7 +4028,7 @@ var STRUCT = class STRUCT {
 };
 
 //main struct script manager
-var manager = _export_manager_ = new STRUCT();
+let manager = _export_manager_ = new STRUCT();
 
 /**
  * Write all defined structs out to a string.
@@ -4027,24 +4036,24 @@ var manager = _export_manager_ = new STRUCT();
  * @param manager STRUCT instance, defaults to nstructjs.manager
  * @param include_code include save code snippets
  * */
-var write_scripts = function write_scripts(manager, include_code = false) {
+let write_scripts = function write_scripts(manager, include_code = false) {
   if (manager === undefined)
     manager = _export_manager_;
 
-  var buf = "";
+  let buf = "";
 
   manager.forEach(function (stt) {
     buf += STRUCT.fmt_struct(stt, false, !include_code) + "\n";
   });
 
-  var buf2 = buf;
+  let buf2 = buf;
   buf = "";
 
-  for (var i = 0; i < buf2.length; i++) {
-    var c = buf2[i];
+  for (let i = 0; i < buf2.length; i++) {
+    let c = buf2[i];
     if (c === "\n") {
       buf += "\n";
-      var i2 = i;
+      let i2 = i;
       while (i < buf2.length && (buf2[i] === " " || buf2[i] === "\t" || buf2[i] === "\n")) {
         i++;
       }
@@ -4423,7 +4432,7 @@ _module_exports_.tinyeval = _require___$tinyeval$tinyeval_js_;
 
 _module_exports_.useTinyEval = function() {
   _nGlobal._structEval = (buf) => {
-    return _module_exports_.tinyeval.eval(buf);
+    return _module_exports_.tinyeval.eval(buf, _nGlobal);
   }
 };
 */
@@ -8071,6 +8080,8 @@ var lookat_cache_vs3;
 var lookat_cache_vs4;
 var makenormalcache;
 
+let preMultTemp;
+
 class Matrix4 {
   constructor(m) {
     this.$matrix = new internal_matrix();
@@ -8799,12 +8810,10 @@ class Matrix4 {
   }
 
   preMultiply(mat) {
-    var tmp = new Matrix4();
+    preMultTemp.load(mat);
+    preMultTemp.multiply(this);
 
-    tmp.load(mat);
-    tmp.multiply(this);
-
-    this.load(tmp);
+    this.load(preMultTemp);
 
     return this;
   }
@@ -9282,6 +9291,7 @@ mat4 {
 `;
 nstructjs.register(Matrix4);
 
+preMultTemp = new Matrix4();
 
 window.testmat = (x=0, y=0, z=Math.PI*0.5) => {
   let m1 = new Matrix4();
@@ -9865,6 +9875,22 @@ class MinMax {
 };
 MinMax.STRUCT = "\n  math.MinMax {\n    min     : vec3;\n    max     : vec3;\n    _min    : vec3;\n    _max    : vec3;\n    totaxis : int;\n  }\n";
 
+function winding_axis(a, b, c, up_axis) {
+  let xaxis = (up_axis+1) % 3;
+  let yaxis = (up_axis+2) % 3;
+
+  let x1 = a[xaxis], y1 = a[yaxis];
+  let x2 = b[xaxis], y2 = b[yaxis];
+  let x3 = c[xaxis], y3 = c[yaxis];
+
+  let dx1 = x1-x2, dy1 = y1-y2;
+  let dx2 = x3-x2, dy2 = y3-y2;
+
+  let f = dx1*dy2 - dy1*dx2;
+  return f >= 0.0;
+}
+
+//wow this is a truly ancient version of winding
 function winding(a, b, c, zero_z, tol) {
   if (tol == undefined) tol = 0.0;
   
@@ -10795,6 +10821,8 @@ off fort;
 
 * */
 var _isrp_ret=new Vector3();
+let isect_ray_plane_rets = cachering.fromConstructor(Vector3, 256);
+
 function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
   
@@ -10807,7 +10835,7 @@ function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   let t = ((po[1]-ro[1])*pn[1]+(po[2]-ro[2])*pn[2]+(po[0]-ro[0])*pn[0])/div;
   _isrp_ret.load(ro).addFac(rn, t);
 
-  return _isrp_ret;
+  return isect_ray_plane_rets.next().load(_isrp_ret);
 }
 
 function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
@@ -10964,6 +10992,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   get_rect_lines: get_rect_lines,
   simple_tri_aabb_isect: simple_tri_aabb_isect,
   MinMax: MinMax,
+  winding_axis: winding_axis,
   winding: winding,
   inrect_2d: inrect_2d,
   aabb_isect_line_2d: aabb_isect_line_2d,
@@ -15981,7 +16010,7 @@ let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
 let binre = /[+\-]?0b[01]+$/;
 let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
 
-function isNumber$1(s) {
+function isNumber(s) {
   s = (""+s).trim();
   function test(re) {
     return s.search(re) == 0;
@@ -15993,8 +16022,13 @@ function isNumber$1(s) {
 function parseValue(string, baseUnit=undefined) {
   let base;
 
+  string = string.trim();
+  if (string[0] === ".") {
+    string = "0" + string;
+  }
+
   //unannotated string?
-  if (isNumber$1(string)) {
+  if (isNumber(string)) {
     //assume base unit
     let f = parseFloat(string);
     
@@ -16691,17 +16725,19 @@ StringProperty.STRUCT = inherit(StringProperty, ToolProperty) + `
 }
 `;  
 register(StringProperty);
+_addClass(StringProperty);
 
 let num_res =[
   /([0-9]+)/,
   /((0x)?[0-9a-fA-F]+(h?))/,
   /([0-9]+\.[0-9]*)/,
-  /([0-9]*\.[0-9]+)/
+  /([0-9]*\.[0-9]+)/,
+  /(\.[0-9]+)/
 ];
 //num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
 
-function isNumber$2(f) {
-  if (f == "NaN" || (typeof f == "number" && isNaN(f))) {
+function isNumber$1(f) {
+  if (f === "NaN" || (typeof f == "number" && isNaN(f))) {
     return false;
   }
   
@@ -16716,7 +16752,7 @@ function isNumber$2(f) {
       continue;
     }
     
-    ok = ret[0].length == f.length;
+    ok = ret[0].length === f.length;
     if (ok) {
       break;
     }
@@ -16724,9 +16760,8 @@ function isNumber$2(f) {
   
   return ok;
 }
-_addClass(StringProperty);
 
-window.isNumber = isNumber$2;
+window.isNumber = isNumber$1;
 
 class NumProperty extends ToolProperty {
   constructor(type, value, apiname, 
@@ -17057,18 +17092,18 @@ EnumKeyPair {
 register(EnumKeyPair);
 
 class EnumProperty extends ToolProperty {
-  constructor(string, valid_values, apiname, 
+  constructor(string_or_int, valid_values, apiname,
               uiname, description, flag, icon) 
   {
     super(PropTypes.ENUM, undefined, apiname, uiname, description, flag, icon);
-    
+
     this.values = {};
     this.keys = {};
     this.ui_value_names = {};
     this.descriptions = {};
 
     if (valid_values === undefined) return this;
-    
+
     if (valid_values instanceof Array || valid_values instanceof String) {
       for (var i=0; i<valid_values.length; i++) {
         this.values[valid_values[i]] = valid_values[i];
@@ -17080,13 +17115,13 @@ class EnumProperty extends ToolProperty {
         this.keys[valid_values[k]] = k;
       }
     }
-    
-    if (string === undefined) {
+
+    if (string_or_int === undefined) {
       this.data = first(valid_values);
     } else {
-      this.setValue(string);
+      this.setValue(string_or_int);
     }
-    
+
     for (var k in this.values) {
       let uin = k.replace(/[_-]/g, " ").trim();
       uin = uin.split(" ");
@@ -17101,7 +17136,7 @@ class EnumProperty extends ToolProperty {
       this.ui_value_names[k] = uiname;
       this.descriptions[k] = uiname;
     }
-    
+
     this.iconmap = {};
     this.wasSet = false;
   }
@@ -18196,7 +18231,7 @@ class ToolOp extends EventHandler {
 
   getOverdraw() {
     if (this._overdraw === undefined) {
-      this._overdraw = document.createElement("overdraw-x");
+      this._overdraw = UIBase.createElement("overdraw-x");
       this._overdraw.start(this.modal_ctx.screen);
     }
 
@@ -20667,13 +20702,13 @@ class DataAPI extends ModelInterface {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
         print_stack$1(error);
+        report("error while evaluating path " + inpath);
       }
 
       if (exports.DEBUG.datapaths) {
         print_stack$1(error);
       }
 
-      report("bad path " + inpath);
       return undefined;
     }
   }
@@ -21795,11 +21830,11 @@ let exclude = new Set([
   "hasOwnProperty", "shadow"
 ]);
 
-let UIBase = undefined;
+let UIBase$1 = undefined;
 
 //deal with circular module refrence
 function _setUIBase(uibase) {
-  UIBase = uibase;
+  UIBase$1 = uibase;
 }
 
 function initAspectClass(object, blacklist=new Set()) {
@@ -21880,7 +21915,7 @@ class AfterAspect {
         if (node) {
           let isDead = !node.isConnected;
 
-          if (node instanceof UIBase) {
+          if (node instanceof UIBase$1) {
             isDead = isDead || node.isDead();
           }
 
@@ -21993,6 +22028,35 @@ const ErrorColors = {
 
 window.__theme = theme;
 
+let registered_has_happened = false;
+let tagPrefix = "";
+
+/**
+* Sets tag prefix for pathux html elements.
+ * Must be called prior to loading other modules.
+ * Since this is tricky, you can alternatively
+ * add a script tag with the prefix with the id "pathux-tag-prefix",
+ * e.g.<pre> <script type="text/plain" id="pathux-tag-prefix">prefix</script> </pre>
+* */
+function setTagPrefix(prefix) {
+  if (registered_has_happened) {
+    throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
+  }
+
+  tagPrefix = ""+prefix;
+}
+
+function getTagPrefix(prefix) {
+  return tagPrefix;
+}
+
+let prefix = document.getElementById("pathux-tag-prefix");
+if (prefix) {
+  console.log("Found pathux-tag-prefix element");
+  prefix = prefix.innerText.trim();
+  setTagPrefix(prefix);
+}
+
 function setTheme(theme2) {
   //merge theme
   for (let k in theme2) {
@@ -22064,6 +22128,11 @@ class _IconManager {
     let dpi = elem.getDPI();
     let ts = this.tilesize;
     let ds = this.drawsize;
+
+    if (!this.image) {
+      console.warn("Failed to render an iconsheet");
+      return;
+    }
 
     g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
   }
@@ -22185,7 +22254,7 @@ class IconManager {
     let base = this.iconsheets[sheet];
 
     /**sigh**/
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let minsheet = undefined;
     let goal = dpi*base.drawsize;
 
@@ -22299,6 +22368,9 @@ let dpistack = [];
 const UIFlags = {
 
 };
+
+const internalElementNames = {};
+const externalElementNames = {};
 
 const PackFlags = {
   INHERIT_WIDTH  : 1,
@@ -22417,7 +22489,7 @@ ${selector}::-webkit-scrollbar-thumb {
 
 window.styleScrollBars = styleScrollBars;
 
-class UIBase$1 extends HTMLElement {
+class UIBase$2 extends HTMLElement {
   constructor() {
     super();
 
@@ -22446,7 +22518,7 @@ class UIBase$1 extends HTMLElement {
     ///*
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
-      if (child && typeof child === "object" && child instanceof UIBase$1) {
+      if (child && typeof child === "object" && child instanceof UIBase$2) {
         child.parentWidget = this;
       }
 
@@ -22934,7 +23006,7 @@ class UIBase$1 extends HTMLElement {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase$1) {
+    if (child instanceof UIBase$2) {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
@@ -23027,7 +23099,7 @@ class UIBase$1 extends HTMLElement {
    **/
   _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
-      if (n instanceof UIBase$1) {
+      if (n instanceof UIBase$2) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
         } else {
@@ -23098,14 +23170,14 @@ class UIBase$1 extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase$1, excluded_classes=undefined) {
+  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase$2, excluded_classes=undefined) {
     let marginx;
     let clip;
 
     if (typeof args === "object") {
       marginx = args.sx || 0;
       marginy = args.sy || 0;
-      nodeclass = args.nodeclass || UIBase$1;
+      nodeclass = args.nodeclass || UIBase$2;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
     } else {
@@ -23114,7 +23186,7 @@ class UIBase$1 extends HTMLElement {
       args = {
         marginx : marginx || 0,
         marginy : marginy || 0,
-        nodeclass : nodeclass || UIBase$1,
+        nodeclass : nodeclass || UIBase$2,
         excluded_classes : excluded_classes,
         clip : clip
       };
@@ -23144,7 +23216,7 @@ class UIBase$1 extends HTMLElement {
 
     let rec = (n, widget, widget_zindex, zindex, clip, depth=0) => {
       if (n.style && n.style["z-index"]) {
-        if (!(n instanceof UIBase$1) || n.visibleToPick) {
+        if (!(n instanceof UIBase$2) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
         }
       }
@@ -23169,7 +23241,7 @@ class UIBase$1 extends HTMLElement {
 
         let ok = true;
 
-        if (n instanceof UIBase$1) {
+        if (n instanceof UIBase$2) {
           ok = ok && n.visibleToPick;
         }
 
@@ -23211,7 +23283,7 @@ class UIBase$1 extends HTMLElement {
         isleaf = isleaf && (n.shadow.childNodes.length === 0);
       }
 
-      if (typeof n === "object" && n instanceof UIBase$1 && !n.visibleToPick) {
+      if (typeof n === "object" && n instanceof UIBase$2 && !n.visibleToPick) {
         return;
       }
 
@@ -23307,7 +23379,7 @@ class UIBase$1 extends HTMLElement {
     this._disabled = val;
 
     let rec = (n) => {
-      if (n instanceof UIBase$1) {
+      if (n instanceof UIBase$2) {
         let changed = !!n.disabled != !!val;
 
         n.disabled = val;
@@ -23789,7 +23861,7 @@ class UIBase$1 extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return UIBase$1.getDPI();
+    return UIBase$2.getDPI();
   }
 
   /**DEPRECATED
@@ -23832,14 +23904,33 @@ class UIBase$1 extends HTMLElement {
   loadData(obj) {
     return this;
   }
-  
-  //parent_cls is a string, tagname of element to extend
+
+  static prefix(name) {
+    return tagPrefix + name;
+  }
+
+  static internalRegister(cls) {
+    registered_has_happened = true;
+
+    internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
+    customElements.define(this.prefix(cls.define().tagname), cls);
+  }
+
+  static createElement(name, internal=false) {
+    if (!internal && name in externalElementNames) {
+      return document.createElement(name);
+    } else if (name in internalElementNames) {
+      return document.createElement(internalElementNames[name]);
+    } else {
+      return document.createElement(name)
+    }
+  }
+
   static register(cls) {
-    //if (parent_cls !== undefined) {
-    // customElements.define(cls.define().tagname, cls, {extends : "div"});
-    //} else {
-      customElements.define(cls.define().tagname, cls);
-    //}
+    registered_has_happened = true;
+
+    externalElementNames[cls.define().tagname] = cls.define().tagname;
+    customElements.define(cls.define().tagname, cls);
   }
 
   overrideDefault(key, val) {
@@ -23902,7 +23993,7 @@ class UIBase$1 extends HTMLElement {
 
     let p = this.constructor, lastp = undefined;
 
-    while (p && p !== lastp && p !== UIBase$1 && p !== Object) {
+    while (p && p !== lastp && p !== UIBase$2 && p !== Object) {
       let def = p.define();
 
       if (def.style) {
@@ -24248,7 +24339,7 @@ function measureText(elem, text, canvas=undefined,
 
   if (ret && isMobile()) {
     let ret2 = {};
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
 
     for (let k in ret) {
       let v = ret[k];
@@ -24285,7 +24376,7 @@ function drawText(elem, x, y, text, args={}) {
     }
   }
 
-  size *= UIBase$1.getDPI();
+  size *= UIBase$2.getDPI();
 
   if (font === undefined) {
     _ensureFont(elem, canvas, g, size);
@@ -24340,7 +24431,7 @@ function saveUIData(node, key) {
     path[pi] = ni;
     path[pi+1] = is_shadow;
     
-    if (n instanceof UIBase$1) {
+    if (n instanceof UIBase$2) {
       let path2 = path.slice(0, path.length);
       path2.push(n.saveData());
       
@@ -24416,7 +24507,7 @@ function loadUIData(node, buf) {
       n = list[ni];
     }
     
-    if (n !== undefined && n instanceof UIBase$1) {
+    if (n !== undefined && n instanceof UIBase$2) {
       n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
       
@@ -24427,7 +24518,7 @@ function loadUIData(node, buf) {
 
 window._loadUIData = loadUIData;
 
-_setUIBase(UIBase$1);
+_setUIBase(UIBase$2);
 
 "use strict";
 
@@ -24436,14 +24527,14 @@ let keymap$1 = keymap;
 let EnumProperty$2 = EnumProperty,
   PropTypes$2 = PropTypes;
 
-let UIBase$2 = UIBase$1,
+let UIBase$3 = UIBase$2,
   PackFlags$1 = PackFlags,
   IconSheets$1 = IconSheets;
 
 let parsepx$1 = parsepx;
 
 //use .setAttribute("linear") to disable nonlinear sliding
-class Button extends UIBase$2 {
+class Button extends UIBase$3 {
   constructor() {
     super();
 
@@ -24923,7 +25014,7 @@ class Button extends UIBase$2 {
     style : "button"
   };}
 }
-UIBase$2.register(Button);
+UIBase$3.internalRegister(Button);
 
 "use strict";
 
@@ -24945,13 +25036,13 @@ let keymap$2 = keymap;
 let EnumProperty$3 = EnumProperty,
   PropTypes$3 = PropTypes;
 
-let UIBase$3 = UIBase$1,
+let UIBase$4 = UIBase$2,
   PackFlags$2 = PackFlags,
   IconSheets$2 = IconSheets;
 
 let parsepx$2 = parsepx;
 
-class TextBoxBase extends UIBase$3 {
+class TextBoxBase extends UIBase$4 {
   static define() {return {
 
   }}
@@ -25218,7 +25309,7 @@ class TextBox extends TextBoxBase {
     if ((prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT)) {
       let val = parseValue(this.text, this.baseUnit);
 
-      if (!isNumber$2(this.text.trim())) {
+      if (!isNumber$1(this.text.trim())) {
         this.flash(ErrorColors.ERROR, this.dom);
         this.focus();
         this.dom.focus();
@@ -25255,7 +25346,7 @@ class TextBox extends TextBoxBase {
   }
 }
 
-UIBase$3.register(TextBox);
+UIBase$4.internalRegister(TextBox);
 
 function checkForTextBox(screen, x, y) {
   let elem = screen.pickElement(x, y);
@@ -25288,13 +25379,13 @@ let keymap$3 = keymap;
 let EnumProperty$4 = EnumProperty,
     PropTypes$4 = PropTypes;
 
-let UIBase$4 = UIBase$1, 
+let UIBase$5 = UIBase$2, 
     PackFlags$3 = PackFlags,
     IconSheets$3 = IconSheets;
 
 let parsepx$3 = parsepx;
 
-class IconLabel extends UIBase$4 {
+class IconLabel extends UIBase$5 {
   constructor() {
     super();
     this._icon = -1;
@@ -25333,7 +25424,7 @@ class IconLabel extends UIBase$4 {
     tagname : "icon-label-x"
   }}
 }
-UIBase$4.register(IconLabel);
+UIBase$5.internalRegister(IconLabel);
 
 class ValueButtonBase extends Button {
   constructor() {
@@ -25389,7 +25480,7 @@ class ValueButtonBase extends Button {
   }
 }
 
-class Check extends UIBase$4 {
+class Check extends UIBase$5 {
   constructor() {
     super();
     
@@ -25591,7 +25682,7 @@ class Check extends UIBase$4 {
       return;
 
     let canvas = this.canvas, g = this.g;
-    let dpi = UIBase$4.getDPI();
+    let dpi = UIBase$5.getDPI();
     let tilesize = iconmanager.getTileSize(0);
     let pad = this.getDefault("BoxMargin");
 
@@ -25657,7 +25748,7 @@ class Check extends UIBase$4 {
   }
 
   updateDPI() {
-    let dpi = UIBase$4.getDPI();
+    let dpi = UIBase$5.getDPI();
 
     if (dpi !== this._last_dpi) {
       this._last_dpi = dpi;
@@ -25695,7 +25786,7 @@ class Check extends UIBase$4 {
     style   : "checkbox"
   };}
 }
-UIBase$4.register(Check);
+UIBase$5.internalRegister(Check);
 
 class IconCheck extends Button {
   constructor() {
@@ -25832,7 +25923,7 @@ class IconCheck extends Button {
   }
   
   _repos_canvas() {
-    let dpi = UIBase$4.getDPI();
+    let dpi = UIBase$5.getDPI();
 
     let w = (~~(this._getsize()*dpi))/dpi;
     let h = (~~(this._getsize()*dpi))/dpi;
@@ -25910,7 +26001,7 @@ class IconCheck extends Button {
   };}
 }
 
-UIBase$4.register(IconCheck);
+UIBase$5.internalRegister(IconCheck);
 
 class IconButton extends Button {
   constructor() {
@@ -25951,7 +26042,7 @@ class IconButton extends Button {
   }
   
   _repos_canvas() {
-    let dpi = UIBase$4.getDPI();
+    let dpi = UIBase$5.getDPI();
 
     let w = (~~(this._getsize()*dpi))/dpi;
     let h = (~~(this._getsize()*dpi))/dpi;
@@ -25985,7 +26076,7 @@ class IconButton extends Button {
     let tsize = iconmanager.getTileSize(this.iconsheet);
     let size = this._getsize();
 
-    let dpi = UIBase$4.getDPI();
+    let dpi = UIBase$5.getDPI();
     let off = size > tsize ? (size - tsize)*0.5*dpi : 0.0;
 
     this.g.save();
@@ -26000,7 +26091,7 @@ class IconButton extends Button {
   };}
 }
 
-UIBase$4.register(IconButton);
+UIBase$5.internalRegister(IconButton);
 
 class Check1 extends Button {
   constructor() {
@@ -26040,7 +26131,7 @@ class Check1 extends Button {
   };}
 }
 
-UIBase$4.register(Check1);
+UIBase$5.internalRegister(Check1);
 
 function saveFile(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
   let blob = new Blob([data], {type : mime});
@@ -26104,7 +26195,7 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
 let EnumProperty$5 = EnumProperty,
   PropTypes$5 = PropTypes;
 
-let UIBase$5 = UIBase$1,
+let UIBase$6 = UIBase$2,
   PackFlags$4 = PackFlags,
   IconSheets$4 = IconSheets;
 
@@ -26112,7 +26203,7 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
-class Menu extends UIBase$5 {
+class Menu extends UIBase$6 {
   constructor() {
     super();
 
@@ -26355,7 +26446,7 @@ class Menu extends UIBase$5 {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = this.textbox = document.createElement("textbox-x");
+    let sbox = this.textbox = UIBase$6.createElement("textbox-x");
     this.textbox.parentWidget = this;
     
     dom2.appendChild(sbox);
@@ -26501,7 +26592,7 @@ class Menu extends UIBase$5 {
     if (hotkey) {
       dom.hotkey = hotkey;
       g.font = getFont(this, undefined, "HotkeyText");
-      hwid = Math.ceil(g.measureText(hotkey).width / UIBase$5.getDPI());
+      hwid = Math.ceil(g.measureText(hotkey).width / UIBase$6.getDPI());
       twid += hwid + 8;
     }
 
@@ -26783,7 +26874,7 @@ class Menu extends UIBase$5 {
   }
 
   menu(title) {
-    let ret = document.createElement("menu-x");
+    let ret = UIBase$6.createElement("menu-x");
 
     ret.setAttribute("title", title);
     this.addItem(ret);
@@ -26797,7 +26888,7 @@ class Menu extends UIBase$5 {
 }
 
 Menu.SEP = Symbol("menu seperator");
-UIBase$5.register(Menu);
+UIBase$6.internalRegister(Menu);
 
 class DropBox extends Button {
   constructor() {
@@ -26947,7 +27038,7 @@ class DropBox extends Button {
       this._menu.remove();
     }
 
-    let menu = this._menu = document.createElement("menu-x");
+    let menu = this._menu = UIBase$6.createElement("menu-x");
     menu.setAttribute("title", name);
 
     menu._dropbox = this;
@@ -27200,7 +27291,7 @@ class DropBox extends Button {
   };}
 }
 
-UIBase$5.register(DropBox);
+UIBase$6.internalRegister(DropBox);
 
 class MenuWrangler {
   constructor() {
@@ -27474,7 +27565,7 @@ function getWranglerScreen() {
 }
 
 function createMenu(ctx, title, templ) {
-  let menu = document.createElement("menu-x");
+  let menu = UIBase$6.createElement("menu-x");
   menu.ctx = ctx;
   menu.setAttribute("name", title);
 
@@ -27578,7 +27669,7 @@ let PropSubTypes$2 = PropSubTypes$1;
 let EnumProperty$6 = EnumProperty;
 
 let Vector2$4 = Vector2,
-  UIBase$6 = UIBase$1,
+  UIBase$7 = UIBase$2,
   PackFlags$5 = PackFlags,
   PropTypes$6 = PropTypes;
 
@@ -27594,7 +27685,7 @@ var list$2 = function list(iter) {
   return ret;
 };
 
-class Label extends UIBase$1 {
+class Label extends UIBase$2 {
   constructor() {
     super();
 
@@ -27728,9 +27819,9 @@ class Label extends UIBase$1 {
   }
 }
 
-UIBase$1.register(Label);
+UIBase$2.internalRegister(Label);
 
-class Container extends UIBase$1 {
+class Container extends UIBase$2 {
   constructor() {
     super();
 
@@ -28045,7 +28136,7 @@ class Container extends UIBase$1 {
   //}
 
   appendChild(child) {
-    if (child instanceof UIBase$1) {
+    if (child instanceof UIBase$2) {
       child.ctx = this.ctx;
       child.parentWidget = this;
       this.shadow.appendChild(child);
@@ -28062,7 +28153,7 @@ class Container extends UIBase$1 {
 
   clear(trigger_on_destroy=true) {
     for (let child of this.children) {
-      if (child instanceof UIBase$1) {
+      if (child instanceof UIBase$2) {
         child.remove(trigger_on_destroy);
       }
     }
@@ -28085,7 +28176,7 @@ class Container extends UIBase$1 {
   }
 
   prepend(child) {
-    if (child instanceof UIBase$6) {
+    if (child instanceof UIBase$7) {
       this._prepend(child);
     } else {
       super.prepend(child);
@@ -28159,7 +28250,7 @@ class Container extends UIBase$1 {
   }
 
   menu(title, list, packflag = 0) {
-    let dbox = document.createElement("dropbox-x");
+    let dbox = UIBase$7.createElement("dropbox-x");
 
     dbox._name = title;
     dbox.setAttribute("simple", true);
@@ -28267,7 +28358,7 @@ class Container extends UIBase$1 {
 
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("textbox-x");
+    let ret = UIBase$7.createElement("textbox-x");
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
@@ -28294,7 +28385,7 @@ class Container extends UIBase$1 {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = document.createElement("label-x");
+    let ret = UIBase$7.createElement("label-x");
 
     ret.text = label;
     ret.setAttribute("datapath", path);
@@ -28305,7 +28396,7 @@ class Container extends UIBase$1 {
   }
 
   label(text) {
-    let ret = document.createElement("label-x");
+    let ret = UIBase$7.createElement("label-x");
     ret.text = text;
 
     this._add(ret);
@@ -28338,7 +28429,7 @@ class Container extends UIBase$1 {
   iconbutton(icon, description, cb, thisvar, packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("iconbutton-x");
+    let ret = UIBase$7.createElement("iconbutton-x");
 
     ret.packflag |= packflag;
 
@@ -28362,7 +28453,7 @@ class Container extends UIBase$1 {
   button(label, cb, thisvar, id, packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("button-x");
+    let ret = UIBase$7.createElement("button-x");
 
     ret.packflag |= packflag;
 
@@ -28384,7 +28475,7 @@ class Container extends UIBase$1 {
   colorbutton(inpath, packflag, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("color-picker-button-x");
+    let ret = UIBase$7.createElement("color-picker-button-x");
 
     if (inpath !== undefined) {
       inpath = this._joinPrefix(inpath);
@@ -28402,7 +28493,7 @@ class Container extends UIBase$1 {
   }
 
   noteframe(packflag = 0) {
-    let ret = document.createElement("noteframe-x");
+    let ret = UIBase$7.createElement("noteframe-x");
 
     ret.packflag |= this.inherit_packflag | packflag;
 
@@ -28413,7 +28504,7 @@ class Container extends UIBase$1 {
   curve1d(inpath, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("curve-widget-x");
+    let ret = UIBase$7.createElement("curve-widget-x");
 
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
@@ -28432,7 +28523,7 @@ class Container extends UIBase$1 {
   }
 
   vecpopup(inpath, packflag=0, mass_set_path=undefined) {
-    let button = document.createElement("vector-popup-button-x");
+    let button = UIBase$7.createElement("vector-popup-button-x");
 
     packflag |= this.inherit_packflag;
     let name = "vector";
@@ -28563,7 +28654,7 @@ class Container extends UIBase$1 {
         return this.colorbutton(inpath, packflag, mass_set_path);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
-        let ret = document.createElement("vector-panel-x");
+        let ret = UIBase$7.createElement("vector-panel-x");
         ret.packflag |= packflag;
 
         if (inpath) {
@@ -28623,7 +28714,7 @@ class Container extends UIBase$1 {
   }
 
   iconcheck(inpath, icon, name, mass_set_path) {
-    ret = document.createElement("iconcheck-x");
+    ret = UIBase$7.createElement("iconcheck-x");
     ret.icon = icon;
     ret.description = name;
 
@@ -28648,13 +28739,13 @@ class Container extends UIBase$1 {
     //let prop = this.ctx.getProp(path);
     let ret;
     if (packflag & PackFlags$5.USE_ICONS) {
-      ret = document.createElement("iconcheck-x");
+      ret = UIBase$7.createElement("iconcheck-x");
 
       if (packflag & PackFlags$5.SMALL_ICON) {
         ret.iconsheet = IconSheets.SMALL;
       }
     } else {
-      ret = document.createElement("check-x");
+      ret = UIBase$7.createElement("check-x");
     }
 
     ret.packflag |= packflag;
@@ -28923,7 +29014,7 @@ class Container extends UIBase$1 {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = document.createElement("dropbox-x");
+    let ret = UIBase$7.createElement("dropbox-x");
     if (enumDef !== undefined) {
       if (enumDef instanceof EnumProperty) {
         ret.prop = enumDef;
@@ -29036,11 +29127,11 @@ class Container extends UIBase$1 {
     }
 
     if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER)) {
-      ret = document.createElement("numslider-simple-x");
+      ret = UIBase$7.createElement("numslider-simple-x");
     } else if (exports.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX)) {
-      ret = document.createElement("numslider-textbox-x");
+      ret = UIBase$7.createElement("numslider-textbox-x");
     } else {
-      ret = document.createElement("numslider-x");
+      ret = UIBase$7.createElement("numslider-x");
     }
     
     ret.packflag |= packflag;
@@ -29112,7 +29203,7 @@ class Container extends UIBase$1 {
   }
 
   treeview() {
-    let ret = document.createElement("tree-view-x");
+    let ret = UIBase$7.createElement("tree-view-x");
     ret.ctx = this.ctx;
     this.add(ret);
 
@@ -29123,7 +29214,7 @@ class Container extends UIBase$1 {
     id = id === undefined ? name : id;
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("panelframe-x");
+    let ret = UIBase$7.createElement("panelframe-x");
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
@@ -29142,7 +29233,7 @@ class Container extends UIBase$1 {
   row(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("rowframe-x");
+    let ret = UIBase$7.createElement("rowframe-x");
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
@@ -29157,7 +29248,7 @@ class Container extends UIBase$1 {
   listbox(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("listbox-x");
+    let ret = UIBase$7.createElement("listbox-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
 
@@ -29168,7 +29259,7 @@ class Container extends UIBase$1 {
   table(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("tableframe-x");
+    let ret = UIBase$7.createElement("tableframe-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
 
@@ -29179,7 +29270,7 @@ class Container extends UIBase$1 {
   col(packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("colframe-x");
+    let ret = UIBase$7.createElement("colframe-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
 
@@ -29196,7 +29287,7 @@ class Container extends UIBase$1 {
 
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("colorpicker-x");
+    let ret = UIBase$7.createElement("colorpicker-x");
 
     packflag |= PackFlags$5.SIMPLE_NUMSLIDERS;
 
@@ -29229,7 +29320,7 @@ class Container extends UIBase$1 {
   textarea(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("rich-text-editor-x");
+    let ret = UIBase$7.createElement("rich-text-editor-x");
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -29253,7 +29344,7 @@ class Container extends UIBase$1 {
   viewer(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("html-viewer-x");
+    let ret = UIBase$7.createElement("html-viewer-x");
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -29275,7 +29366,7 @@ class Container extends UIBase$1 {
   tabs(position = "top", packflag = 0) {
     packflag |= this.inherit_packflag;
 
-    let ret = document.createElement("tabcontainer-x");
+    let ret = UIBase$7.createElement("tabcontainer-x");
 
     ret.constructor.setDefault(ret);
     ret.setAttribute("bar_pos", position);
@@ -29288,14 +29379,14 @@ class Container extends UIBase$1 {
   }
 };
 
-UIBase$1.register(Container, "div");
+UIBase$2.internalRegister(Container, "div");
 
 
 class RowFrame extends Container {
   constructor() {
     super();
 
-    let style = document.createElement("style");
+    let style = UIBase$7.createElement("style");
 
     this.shadow.appendChild(style);
   }
@@ -29344,7 +29435,7 @@ class RowFrame extends Container {
   }
 }
 
-UIBase$6.register(RowFrame);
+UIBase$7.internalRegister(RowFrame);
 
 class ColumnFrame extends Container {
   constructor() {
@@ -29369,9 +29460,9 @@ class ColumnFrame extends Container {
   }
 }
 
-UIBase$6.register(ColumnFrame);
+UIBase$7.internalRegister(ColumnFrame);
 
-let UIBase$7 = UIBase$1, Icons$1 = Icons;
+let UIBase$8 = UIBase$2, Icons$1 = Icons;
 
 class RichEditor extends TextBoxBase {
   constructor() {
@@ -29401,7 +29492,7 @@ class RichEditor extends TextBoxBase {
 
     this.shadow.appendChild(this.styletag);
 
-    let controls = this.controls = document.createElement("rowframe-x");
+    let controls = this.controls = UIBase$8.createElement("rowframe-x");
 
 
     let makeicon = (icon, description, cb) => {
@@ -29657,9 +29748,9 @@ class RichEditor extends TextBoxBase {
     style   : "richtext"
   }}
 }
-UIBase$7.register(RichEditor);
+UIBase$8.internalRegister(RichEditor);
 
-class RichViewer extends UIBase$7 {
+class RichViewer extends UIBase$8 {
   constructor() {
     super();
 
@@ -29729,7 +29820,7 @@ class RichViewer extends UIBase$7 {
     style   : "html_viewer"
   }}
 }
-UIBase$7.register(RichViewer);
+UIBase$8.internalRegister(RichViewer);
 
 "use strict";
 
@@ -29752,7 +29843,7 @@ class VectorPopupButton extends Button {
       return;
     }
 
-    let panel = document.createElement("vector-panel-x");
+    let panel = UIBase$2.createElement("vector-panel-x");
     let screen = this.ctx.screen;
 
     let popup = screen.popup(this, this);
@@ -29814,7 +29905,7 @@ class VectorPopupButton extends Button {
   }
 
 }
-UIBase$1.register(VectorPopupButton);
+UIBase$2.internalRegister(VectorPopupButton);
 
 class VectorPanel extends ColumnFrame {
   constructor() {
@@ -29965,7 +30056,7 @@ class VectorPanel extends ColumnFrame {
     }
 
     if (this.hasUniformSlider) {
-      let uslider = this.uslider = document.createElement("numslider-x");
+      let uslider = this.uslider = UIBase$2.createElement("numslider-x");
       row._prepend(uslider);
 
       uslider.range = this.range;
@@ -30200,9 +30291,9 @@ class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase$1.register(VectorPanel);
+UIBase$2.internalRegister(VectorPanel);
 
-class ToolTip extends UIBase$1 {
+class ToolTip extends UIBase$2 {
   constructor() {
     super();
 
@@ -30221,7 +30312,7 @@ class ToolTip extends UIBase$1 {
   }
 
   static show(message, screen, x, y) {
-    let ret = document.createElement(this.define().tagname);
+    let ret = UIBase$2.createElement(this.define().tagname);
 
     ret.text = message;
     let size = ret._estimateSize();
@@ -30277,7 +30368,7 @@ class ToolTip extends UIBase$1 {
     style   : "tooltip"
   }}
 };
-UIBase$1.register(ToolTip);
+UIBase$2.internalRegister(ToolTip);
 
 function makeGenEnum() {
   let enumdef = {};
@@ -30428,7 +30519,7 @@ class Curve1DWidget extends ColumnFrame {
   }
 
   updateSize() {
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let w = ~~(this.getDefault("CanvasWidth")*dpi);
     let h = ~~(this.getDefault("CanvasHeight")*dpi);
 
@@ -30556,7 +30647,7 @@ class Curve1DWidget extends ColumnFrame {
     style   : "curvewidget"
   }}
 }
-UIBase$1.register(Curve1DWidget);
+UIBase$2.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
 //
@@ -30571,7 +30662,7 @@ let PropSubTypes$3 = PropSubTypes$1;
 let EnumProperty$7 = EnumProperty;
 
 let Vector2$5 = Vector2,
-  UIBase$8 = UIBase$1,
+  UIBase$9 = UIBase$2,
   PackFlags$6 = PackFlags,
   PropTypes$7 = PropTypes;
 
@@ -30581,8 +30672,8 @@ class PanelFrame extends ColumnFrame {
 
     this.titleframe = this.row();
 
-    this.contents = document.createElement("colframe-x");
-    this.iconcheck = document.createElement("iconcheck-x");
+    this.contents = UIBase$9.createElement("colframe-x", true);
+    this.iconcheck = UIBase$9.createElement("iconcheck-x");
 
     Object.defineProperty(this.contents, "closed", {
       get : () => {
@@ -30837,7 +30928,7 @@ class PanelFrame extends ColumnFrame {
   }
 }
 
-UIBase$8.register(PanelFrame);
+UIBase$9.internalRegister(PanelFrame);
 
 "use strict";
 
@@ -30846,7 +30937,7 @@ let Vector2$6 = Vector2,
   Vector4$2 = Vector4,
   Matrix4$2 = Matrix4;
 
-let UIBase$9 = UIBase$1,
+let UIBase$a = UIBase$2,
   PackFlags$7 = PackFlags,
   IconSheets$5 = IconSheets;
 
@@ -31001,7 +31092,7 @@ class SimpleBox {
   }
 }
 
-class HueField extends UIBase$9 {
+class HueField extends UIBase$a {
   constructor() {
     super();
 
@@ -31111,9 +31202,9 @@ class HueField extends UIBase$9 {
   };}
 }
 
-UIBase$9.register(HueField);
+UIBase$a.internalRegister(HueField);
 
-class SatValField extends UIBase$9 {
+class SatValField extends UIBase$a {
   constructor() {
     super();
 
@@ -31332,7 +31423,7 @@ class SatValField extends UIBase$9 {
   };}
 }
 
-UIBase$9.register(SatValField);
+UIBase$a.internalRegister(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
@@ -31350,10 +31441,10 @@ class ColorField extends ColumnFrame {
 
     this._last_dpi = undefined;
 
-    let satvalfield = this.satvalfield = document.createElement("satvalfield-x");
+    let satvalfield = this.satvalfield = UIBase$a.createElement("satvalfield-x");
     satvalfield.hsva = this.hsva;
 
-    let huefield = this.huefield = document.createElement("huefield-x");
+    let huefield = this.huefield = UIBase$a.createElement("huefield-x");
     huefield.hsva = this.hsva;
 
     huefield.onchange = (e) => {
@@ -31483,7 +31574,7 @@ class ColorField extends ColumnFrame {
     this.huefield._redraw();
   }
 }
-UIBase$9.register(ColorField);
+UIBase$a.internalRegister(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -31493,7 +31584,7 @@ class ColorPicker extends ColumnFrame {
   init() {
     super.init();
 
-    this.field = document.createElement("colorfield-x");
+    this.field = UIBase$a.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
 
     this.field.packflag |= this.inherit_packflag;
@@ -31723,10 +31814,10 @@ class ColorPicker extends ColumnFrame {
   };}
 }
 
-UIBase$9.register(ColorPicker);
+UIBase$a.internalRegister(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$9 {
+class ColorPickerButton extends UIBase$a {
   constructor() {
     super();
 
@@ -32236,11 +32327,11 @@ class ColorPickerButton extends UIBase$9 {
     this._redraw();
   }
 };
-UIBase$9.register(ColorPickerButton);
+UIBase$a.internalRegister(ColorPickerButton);
 
 "use strict";
 
-let UIBase$a = UIBase$1, 
+let UIBase$b = UIBase$2, 
     PackFlags$8 = PackFlags,
     IconSheets$6 = IconSheets,
   iconmanager$1 = iconmanager;
@@ -32385,7 +32476,7 @@ class ModalTabMove extends EventHandler {
 
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$a.getDPI();
+    let dpi = UIBase$b.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -32502,7 +32593,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$a {
+class TabBar extends UIBase$b {
   constructor() {
     super();
     
@@ -33258,16 +33349,16 @@ class TabBar extends UIBase$a {
     style   : "tabs"
   };}
 }
-UIBase$a.register(TabBar);
+UIBase$b.internalRegister(TabBar);
 
-class TabContainer extends UIBase$a {
+class TabContainer extends UIBase$b {
   constructor() {
     super();
 
     this.inherit_packflag = 0;
     this.packflag = 0;
 
-    this.tbar = document.createElement("tabbar-x");
+    this.tbar = UIBase$b.createElement("tabbar-x");
     this.tbar.parentWidget = this;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
     this.tbar.constructor.setDefault(this.tbar);
@@ -33424,7 +33515,7 @@ class TabContainer extends UIBase$a {
       id = tab_idgen++;
     }
 
-    let col = document.createElement("colframe-x");
+    let col = UIBase$b.createElement("colframe-x");
 
     this.tabs[id] = col;
 
@@ -33531,7 +33622,7 @@ class TabContainer extends UIBase$a {
   };}
 }
 
-UIBase$a.register(TabContainer);
+UIBase$b.internalRegister(TabContainer);
 
 //bind module to global var to get at it in console.
 
@@ -33543,7 +33634,7 @@ let PropSubTypes$4 = PropSubTypes$1;
 let EnumProperty$8 = EnumProperty;
 
 let Vector2$8 = Vector2,
-  UIBase$b = UIBase$1,
+  UIBase$c = UIBase$2,
   PackFlags$9 = PackFlags,
   PropTypes$8 = PropTypes;
 
@@ -33586,7 +33677,7 @@ class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase$b.register(TableRow);
+UIBase$c.internalRegister(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -33630,7 +33721,7 @@ class TableFrame extends Container {
       td.style["margin"] = tr.style["margin"];
       td.style["padding"] = tr.style["padding"];
 
-      let container = document.createElement("rowframe-x");
+      let container = UIBase$c.createElement("rowframe-x");
 
       container.ctx = this2.ctx;
       container.parentWidget = this2;
@@ -33774,14 +33865,14 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$b.register(TableFrame);
+UIBase$c.internalRegister(TableFrame);
 
 "use strict";
 
 let EnumProperty$9 = EnumProperty,
   PropTypes$9 = PropTypes;
 
-let UIBase$c = UIBase$1,
+let UIBase$d = UIBase$2,
   PackFlags$a = PackFlags,
   IconSheets$7 = IconSheets;
 
@@ -33854,7 +33945,7 @@ class ListItem extends RowFrame {
     style : "listbox"
   }}
 }
-UIBase$c.register(ListItem);
+UIBase$d.internalRegister(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -33924,7 +34015,7 @@ class ListBox extends Container {
   }
 
   addItem(name, id) {
-    let item = document.createElement("listitem-x");
+    let item = UIBase$d.createElement("listitem-x");
 
     item._id = id === undefined ? this.items.length : id;
     this.idmap[item._id] = item;
@@ -33996,11 +34087,11 @@ class ListBox extends Container {
     style : "listbox"
   }}
 }
-UIBase$c.register(ListBox);
+UIBase$d.internalRegister(ListBox);
 
-let UIBase$d = UIBase$1;
+let UIBase$e = UIBase$2;
 
-class Note extends UIBase$1 {
+class Note extends UIBase$2 {
   constructor() {
     super();
 
@@ -34088,7 +34179,7 @@ class Note extends UIBase$1 {
     tagname : "note-x"
   }}
 }
-UIBase$d.register(Note);
+UIBase$e.internalRegister(Note);
 
 class ProgBarNote extends Note {
   constructor() {
@@ -34147,7 +34238,7 @@ class ProgBarNote extends Note {
     tagname : "note-progress-x"
   }}
 }
-UIBase$d.register(ProgBarNote);
+UIBase$e.internalRegister(ProgBarNote);
 
 class NoteFrame extends RowFrame {
   constructor() {
@@ -34211,7 +34302,7 @@ class NoteFrame extends RowFrame {
   }
 
   addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
-    //let note = document.createElement("note-x");
+    //let note = UIBase.createElement("note-x");
 
     //note.ctx = this.ctx;
     //note.background = "red";
@@ -34219,7 +34310,7 @@ class NoteFrame extends RowFrame {
 
     //this._add(note);
 
-    let note = document.createElement(tagname);
+    let note = UIBase$e.createElement(tagname);
 
     note.color = color;
     note.setLabel(msg);
@@ -34258,7 +34349,7 @@ class NoteFrame extends RowFrame {
     tagname : "noteframe-x"
   }}
 }
-UIBase$d.register(NoteFrame);
+UIBase$e.internalRegister(NoteFrame);
 
 function getNoteFrames(screen) {
   let ret = [];
@@ -34275,7 +34366,7 @@ function getNoteFrames(screen) {
       }
     }
 
-    if (n instanceof UIBase$1 && n.shadow !== undefined && n.shadow.childNodes) {
+    if (n instanceof UIBase$2 && n.shadow !== undefined && n.shadow.childNodes) {
       for (let node of n.shadow.childNodes) {
         rec(node);
       }
@@ -34408,7 +34499,7 @@ class NumSlider extends ValueButtonBase {
   }
 
   swapWithTextbox() {
-    let tbox = document.createElement("textbox-x");
+    let tbox = UIBase$2.createElement("textbox-x");
 
     tbox.ctx = this.ctx;
     tbox._init();
@@ -34447,7 +34538,7 @@ class NumSlider extends ValueButtonBase {
         }
 
         if (isNaN(val)) {
-          console.log("EEK!");
+          console.log("EEK!", val, tbox.text.trim(), this.isInt);
           this.flash(ErrorColors.ERROR);
         } else {
           this.setValue(val);
@@ -34791,7 +34882,7 @@ class NumSlider extends ValueButtonBase {
     //do not call parent class implementation
     let dpi = this.getDPI();
 
-    let ts = this.getDefault("DefaultText").size*UIBase$1.getDPI();
+    let ts = this.getDefault("DefaultText").size*UIBase$2.getDPI();
 
     let dd = this.isInt ? 5 : this.decimalPlaces + 8;
 
@@ -34947,17 +35038,17 @@ class NumSlider extends ValueButtonBase {
   }
 
   _getArrowSize() {
-    return UIBase$1.getDPI()*10;
+    return UIBase$2.getDPI()*10;
   }
   static define() {return {
     tagname : "numslider-x",
     style : "numslider"
   };}
 }
-UIBase$1.register(NumSlider);
+UIBase$2.internalRegister(NumSlider);
 
 
-class NumSliderSimpleBase extends UIBase$1 {
+class NumSliderSimpleBase extends UIBase$2 {
   constructor() {
     super();
 
@@ -35061,7 +35152,7 @@ class NumSliderSimpleBase extends UIBase$1 {
     }
 
     let x = e.x - rect.left;
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let co = this._getButtonPos();
 
     let val = this._invertButtonX(x*dpi);
@@ -35224,7 +35315,7 @@ class NumSliderSimpleBase extends UIBase$1 {
   _redraw() {
     let g = this.g, canvas = this.canvas;
     let w = canvas.width, h = canvas.height;
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
 
     let color = this.getDefault("BoxBG");
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
@@ -35299,7 +35390,7 @@ class NumSliderSimpleBase extends UIBase$1 {
 
     let co = this._getButtonPos();
 
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
     let dis = dv.vectorLength();
 
@@ -35309,7 +35400,7 @@ class NumSliderSimpleBase extends UIBase$1 {
 
   _invertButtonX(x) {
     let w = this.canvas.width;
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
@@ -35322,7 +35413,7 @@ class NumSliderSimpleBase extends UIBase$1 {
 
   _getButtonPos() {
     let w = this.canvas.width;
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let x = this._value;
     x = (x - this.range[0]) / (this.range[1] - this.range[0]);
@@ -35355,7 +35446,7 @@ class NumSliderSimpleBase extends UIBase$1 {
       return;
     }
 
-    let dpi = UIBase$1.getDPI();
+    let dpi = UIBase$2.getDPI();
     let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
     let canvas = this.canvas;
 
@@ -35392,7 +35483,7 @@ class NumSliderSimpleBase extends UIBase$1 {
     style : "numslider_simple"
   }}
 }
-UIBase$1.register(NumSliderSimpleBase);
+UIBase$2.internalRegister(NumSliderSimpleBase);
 
 class SliderWithTextbox extends ColumnFrame {
   constructor() {
@@ -35415,7 +35506,7 @@ class SliderWithTextbox extends ColumnFrame {
 
     this.container = this;
 
-    this.textbox = document.createElement("textbox-x");
+    this.textbox = UIBase$2.createElement("textbox-x");
     this.textbox.width = 55;
     this._numslider = undefined;
 
@@ -35561,7 +35652,7 @@ class SliderWithTextbox extends ColumnFrame {
     textbox.onchange = () => {
       let text = textbox.text;
 
-      if (!isNumber(text)) {
+      if (!isNumber$1(text)) {
         textbox.flash("red");
         return;
       } else {
@@ -35767,7 +35858,7 @@ class NumSliderSimple extends SliderWithTextbox {
   constructor() {
     super();
 
-    this.numslider = document.createElement("numslider-simple-base-x");
+    this.numslider = UIBase$2.createElement("numslider-simple-base-x");
   }
 
   static define() {return {
@@ -35775,13 +35866,13 @@ class NumSliderSimple extends SliderWithTextbox {
     style : "numslider_simple"
   }}
 }
-UIBase$1.register(NumSliderSimple);
+UIBase$2.internalRegister(NumSliderSimple);
 
 class NumSliderWithTextBox extends SliderWithTextbox {
   constructor() {
     super();
 
-    this.numslider = document.createElement("numslider-x");
+    this.numslider = UIBase$2.createElement("numslider-x");
 
   }
 
@@ -35794,7 +35885,7 @@ class NumSliderWithTextBox extends SliderWithTextbox {
     style : "numslider-textbox-x"
   }}
 }
-UIBase$1.register(NumSliderWithTextBox);
+UIBase$2.internalRegister(NumSliderWithTextBox);
 
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen$1 = 0;
@@ -35955,7 +36046,7 @@ class LastToolPanel extends ColumnFrame {
     tagname : "last-tool-panel-x"
   }}
 }
-UIBase$1.register(LastToolPanel);
+UIBase$2.internalRegister(LastToolPanel);
 
 class Constraint {
   constructor(name, func, klst, params, k=1.0) {
@@ -36873,7 +36964,7 @@ class ToolBase extends ToolOp {
       popModalLight(this.modaldata);
     }
 
-    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw = UIBase$2.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
     let handlers = {};
@@ -37137,7 +37228,7 @@ class SplitTool extends ToolBase {
       return;
     }
     
-    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw = UIBase$2.createElement("overdraw-x");
     this.overdraw.start(this.screen);
     
     super.modalStart(ctx);
@@ -37814,7 +37905,7 @@ class ScreenHalfEdge {
 
 }
 
-class ScreenBorder extends UIBase$1 {
+class ScreenBorder extends UIBase$2 {
   constructor() {
     super();
 
@@ -38069,11 +38160,11 @@ class ScreenBorder extends UIBase$1 {
   }
 }
 
-UIBase$1.register(ScreenBorder);
+UIBase$2.internalRegister(ScreenBorder);
 
 let _ScreenArea = undefined;
 
-let UIBase$e = UIBase$1;
+let UIBase$f = UIBase$2;
 let Vector2$a = Vector2;
 let ScreenClass = undefined;
 
@@ -38212,7 +38303,7 @@ class AreaWrangler {
 
 let _ScreenArea$1 = undefined;
 
-let UIBase$f = UIBase$1;
+let UIBase$g = UIBase$2;
 
 let Vector2$b = Vector2;
 let Screen$1 = undefined;
@@ -38246,7 +38337,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-class Area$1 extends UIBase$1 {
+class Area$1 extends UIBase$2 {
   constructor() {
     super();
 
@@ -38280,7 +38371,7 @@ class Area$1 extends UIBase$1 {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$f) {
+      if (child instanceof UIBase$g) {
         child.parentWidget = this;
       }
     };
@@ -38289,7 +38380,7 @@ class Area$1 extends UIBase$1 {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$f) {
+      if (child instanceof UIBase$g) {
         child.parentWidget = this;
       }
     };
@@ -38438,7 +38529,7 @@ class Area$1 extends UIBase$1 {
   
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
-    let ret = document.createElement(this.constructor.define().tagname);
+    let ret = UIBase$g.createElement(this.constructor.define().tagname);
     return ret;
   }
   
@@ -38507,7 +38598,7 @@ class Area$1 extends UIBase$1 {
     
     areaclasses[def.areaname] = cls;
     
-    UIBase$1.register(cls);
+    UIBase$2.internalRegister(cls);
   }
   
   getScreen() {
@@ -38565,7 +38656,7 @@ class Area$1 extends UIBase$1 {
 
   makeAreaSwitcher(container) {
     if (exports.useAreaTabSwitcher) {
-      let ret = document.createElement("area-docker-x");
+      let ret = UIBase$g.createElement("area-docker-x");
       container.add(ret);
       return ret;
     }
@@ -38774,7 +38865,7 @@ class Area$1 extends UIBase$1 {
     }
 
     if (add_note_area) {
-      let notef = document.createElement("noteframe-x");
+      let notef = UIBase$g.createElement("noteframe-x");
       notef.ctx = this.ctx;
       row._add(notef);
     }
@@ -38814,7 +38905,7 @@ class Area$1 extends UIBase$1 {
   }
 
   static define() {return {
-    tagname  : undefined, // e.g. "areadata-x",
+    tagname  : "pathux-editor-x", // tag name, e.g. editor-x
     areaname : undefined, //api name for area type
     uiname   : undefined,
     icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
@@ -38858,7 +38949,7 @@ class Area$1 extends UIBase$1 {
   }
 
   static newSTRUCT(reader) {
-    return document.createElement(this.define().tagname);
+    return UIBase$g.createElement(this.define().tagname);
   }
 
   loadSTRUCT(reader) {
@@ -38877,10 +38968,10 @@ pathux.Area {
 }
 `;
 
-nstructjs.manager.add_class(Area$1);  
-//ui_base.UIBase.register(Area);
+nstructjs.register(Area$1);
+UIBase$2.internalRegister(Area$1);
 
-class ScreenArea extends UIBase$1 {
+class ScreenArea extends UIBase$2 {
   constructor() {
     super();
     
@@ -39099,7 +39190,7 @@ class ScreenArea extends UIBase$1 {
       //console.log(editor);
       
       let tagname = areaclasses[areaname].define().tagname;
-      let area = document.createElement(tagname);
+      let area = UIBase$g.createElement(tagname);
       
       area.owning_sarea = this;
       this.editormap[areaname] = area;
@@ -39171,7 +39262,7 @@ class ScreenArea extends UIBase$1 {
   }
   
   copy(screen) {
-    let ret = document.createElement("screenarea-x");
+    let ret = UIBase$g.createElement("screenarea-x");
     
     ret.screen = screen;
     ret.ctx = this.ctx;
@@ -39393,11 +39484,14 @@ class ScreenArea extends UIBase$1 {
       }
       
       child.owning_sarea = undefined;
+      if (this.area === undefined) {
+        this.area = child;
+      }
     }
     
     super.appendChild(child);
     
-    if (child instanceof UIBase$1) {
+    if (child instanceof UIBase$2) {
       child.parentWidget = this;
       child.onadd();
     }
@@ -39413,7 +39507,7 @@ class ScreenArea extends UIBase$1 {
     
     //areaclasses[name]
     if (!(name in this.editormap)) {
-      this.editormap[name] = document.createElement(def.tagname);
+      this.editormap[name] = UIBase$g.createElement(def.tagname);
       this.editormap[name].ctx = this.ctx;
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
@@ -39554,7 +39648,7 @@ class ScreenArea extends UIBase$1 {
   }
 
   static newSTRUCT() {
-    return document.createElement("screenarea-x");
+    return UIBase$g.createElement("screenarea-x");
   }
 
 
@@ -39647,7 +39741,7 @@ class ScreenArea extends UIBase$1 {
       if (typeof area !== "object") {
         for (let k in areaclasses) {
           area = areaclasses[k].define().tagname;
-          area = document.createElement(area);
+          area = UIBase$g.createElement(area);
           let areaname = area.constructor.define().areaname;
 
           this.editors.push(area);
@@ -39713,7 +39807,7 @@ pathux.ScreenArea {
 `;
 
 nstructjs.manager.add_class(ScreenArea);  
-UIBase$1.register(ScreenArea);
+UIBase$2.internalRegister(ScreenArea);
 
 _setAreaClass(Area$1);
 
@@ -39895,14 +39989,14 @@ class ThemeEditor extends Container {
     style   : "theme-editor"
   }}
 }
-UIBase$1.register(ThemeEditor);
+UIBase$2.internalRegister(ThemeEditor);
 
 "use strict";
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
 let Vector2$c = Vector2;
 
-class Overdraw extends UIBase$1 {
+class Overdraw extends UIBase$2 {
   constructor() {
     super();
 
@@ -40264,7 +40358,7 @@ class Overdraw extends UIBase$1 {
   };}
 }
 
-UIBase$1.register(Overdraw);
+UIBase$2.internalRegister(Overdraw);
 
 class TreeItem extends Container {
   constructor() {
@@ -40301,7 +40395,7 @@ class TreeItem extends Container {
     if (this._icon2) {
       this._icon2 = id;
     } else {
-      this._icon2 = document.createElement("icon-label-x");
+      this._icon2 = UIBase$2.createElement("icon-label-x");
       this._icon2.icon = id;
       this._icon2.iconsheet = 0;
 
@@ -40361,7 +40455,7 @@ class TreeItem extends Container {
     style   : "treeview"
   }}
 }
-UIBase$1.register(TreeItem);
+UIBase$2.internalRegister(TreeItem);
 
 class TreeView extends Container {
   constructor() {
@@ -40379,7 +40473,7 @@ class TreeView extends Container {
 
     //this.shadow.appendChild(this.overdraw);
 
-    this.overdraw = document.createElement("overdraw-x");
+    this.overdraw = UIBase$2.createElement("overdraw-x");
     console.log(this.overdraw.startNode);
     this.overdraw.startNode(this);
 
@@ -40573,7 +40667,7 @@ class TreeView extends Container {
   }
 
   item(name, args={icon : undefined}) {
-    let ret = document.createElement("tree-item-x");
+    let ret = UIBase$2.createElement("tree-item-x");
     this.add(ret);
     ret._init();
 
@@ -40617,7 +40711,7 @@ class TreeView extends Container {
     style   : "treeview"
   }}
 }
-UIBase$1.register(TreeView);
+UIBase$2.internalRegister(TreeView);
 
 function startDrag(box) {
   if (box._modal) {
@@ -40690,8 +40784,8 @@ class DragBox extends Container {
     super();
 
     this._done = false;
-    this.header = document.createElement("rowframe-x");
-    this.contents = document.createElement("container-x");
+    this.header = UIBase$2.createElement("rowframe-x");
+    this.contents = UIBase$2.createElement("container-x");
 
     this.header.style["border-radius"] = "20px";
 
@@ -40834,7 +40928,7 @@ class DragBox extends Container {
     style   : "panel"
   }}
 }
-UIBase$1.register(DragBox);
+UIBase$2.internalRegister(DragBox);
 
 let ignore = 0;
 
@@ -40982,7 +41076,7 @@ class AreaDocker extends Container {
     let rect = tab.getClientRects()[0];
     let mpos = this.ctx.screen.mpos;
 
-    let menu = document.createElement("menu-x");
+    let menu = UIBase$2.createElement("menu-x");
 
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
@@ -41158,10 +41252,10 @@ class AreaDocker extends Container {
     tagname : "area-docker-x"
   }}
 }
-UIBase$1.register(AreaDocker);
+UIBase$2.internalRegister(AreaDocker);
 
 function makePopupArea(area_class, screen, args={}) {
-  let sarea = document.createElement("screenarea-x");
+  let sarea = UIBase.createElement("screenarea-x");
 
   let width = args.width || (screen.size[0]*0.7);
   let height = args.height || (screen.size[1]*0.7);
@@ -41224,7 +41318,7 @@ function registerToolStackGetter$1(func) {
 window._nstructjs = nstructjs;
 
 let Vector2$d = Vector2,
-  UIBase$g = UIBase$1,
+  UIBase$h = UIBase$2,
   styleScrollBars$1 = styleScrollBars;
 
 let update_stack = new Array(8192);
@@ -41232,7 +41326,7 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
-class Screen$2 extends UIBase$1 {
+class Screen$2 extends UIBase$2 {
   constructor() {
     super();
 
@@ -41307,7 +41401,14 @@ class Screen$2 extends UIBase$1 {
     });
 
   }
-  
+
+  init() {
+    super.init();
+
+    if (this.hasAttribute("listen")) {
+      this.listen();
+    }
+  }
   /**
    * 
    * @param {*} style May be a string, a CSSStyleSheet instance, or a style tag
@@ -41414,7 +41515,7 @@ class Screen$2 extends UIBase$1 {
   }
 
   newScreenArea() {
-    let ret = document.createElement("screenarea-x");
+    let ret = UIBase$h.createElement("screenarea-x");
     ret.ctx = this.ctx;
 
     if (ret.ctx) {
@@ -41425,7 +41526,7 @@ class Screen$2 extends UIBase$1 {
   }
 
   copy() {
-    let ret = document.createElement(this.constructor.define().tagname);
+    let ret = UIBase$h.createElement(this.constructor.define().tagname);
     ret.ctx = this.ctx;
     ret._init();
 
@@ -41612,7 +41713,7 @@ class Screen$2 extends UIBase$1 {
   }
 
   draggablePopup(x, y) {
-    let ret = document.createElement("drag-box-x");
+    let ret = UIBase$h.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -41659,7 +41760,7 @@ class Screen$2 extends UIBase$1 {
       x = elem_or_x;
     }
 
-    let container = document.createElement("container-x");
+    let container = UIBase$h.createElement("container-x");
 
     container.ctx = this.ctx;
     container._init();
@@ -42095,7 +42196,7 @@ class Screen$2 extends UIBase$1 {
     super.loadJSON();
 
     for (let sarea of obj.sareas) {
-      let sarea2 = document.createElement("screenarea-x");
+      let sarea2 = UIBase$h.createElement("screenarea-x");
 
       sarea2.ctx = this.ctx;
       sarea2.screen = this;
@@ -42116,7 +42217,7 @@ class Screen$2 extends UIBase$1 {
   }
 
   static fromJSON(obj, schedule_resize = false) {
-    let ret = document.createElement(this.define().tagname);
+    let ret = UIBase$h.createElement(this.define().tagname);
     return ret.loadJSON(obj, schedule_resize);
   }
 
@@ -42240,7 +42341,7 @@ class Screen$2 extends UIBase$1 {
 
   static define() {
     return {
-      tagname: "screen-x"
+      tagname: "pathux-screen-x"
     };
   }
 
@@ -42250,7 +42351,7 @@ class Screen$2 extends UIBase$1 {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-      bad = bad || !(n instanceof UIBase$g);
+      bad = bad || !(n instanceof UIBase$h);
       
       if (n._id in visit || n.hidden) {
         return;
@@ -42367,7 +42468,7 @@ class Screen$2 extends UIBase$1 {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$g) {
+      if (n instanceof UIBase$h) {
         n.ctx = val;
       }
 
@@ -42508,7 +42609,7 @@ class Screen$2 extends UIBase$1 {
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$h) {
           n._ctx = ctx;
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
@@ -42544,7 +42645,7 @@ class Screen$2 extends UIBase$1 {
           push(n2);
         }
 
-        if (n instanceof UIBase$g) {
+        if (n instanceof UIBase$h) {
           scopestack.push(n);
           push(SCOPE_POP);
         }
@@ -42829,7 +42930,7 @@ class Screen$2 extends UIBase$1 {
 
   _get_debug_overlay() {
     if (!this._debug_overlay) {
-      this._debug_overlay = document.createElement("overdraw-x");
+      this._debug_overlay = UIBase$h.createElement("overdraw-x");
       let s = this._debug_overlay;
 
       s.startNode(this, this);
@@ -42863,7 +42964,7 @@ class Screen$2 extends UIBase$1 {
         x = Math.min(Math.max(x, 0.0), this.size[0]-s);
         y = Math.min(Math.max(y, 0.0), this.size[1]-s);
 
-        let ret = document.createElement("div");
+        let ret = UIBase$h.createElement("div");
         ret.setAttribute("class", "__debug");
 
 
@@ -42886,7 +42987,7 @@ class Screen$2 extends UIBase$1 {
         ];
 
         for (let i=2; i>=0; i--) {
-          ret = document.createElement("div");
+          ret = UIBase$h.createElement("div");
 
           ret.setAttribute("class", "__debug");
 
@@ -43526,7 +43627,7 @@ class Screen$2 extends UIBase$1 {
     let hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      let sb = this._edgemap[hash] = document.createElement("screenborder-x");
+      let sb = this._edgemap[hash] = UIBase$h.createElement("screenborder-x");
 
       sb.screen = this;
       sb.v1 = v1;
@@ -43754,7 +43855,7 @@ class Screen$2 extends UIBase$1 {
   }
 
   static newSTRUCT() {
-    return document.createElement(this.define().tagname);
+    return UIBase$h.createElement(this.define().tagname);
   }
 
   afterSTRUCT() {
@@ -43765,7 +43866,10 @@ class Screen$2 extends UIBase$1 {
   }
 
   loadSTRUCT(reader) {
+    this.clear();
+
     reader(this);
+    console.log("SAREAS", this.sareas.concat([]));
 
     //handle old files that might have saved as simple arrays
     this.size = new Vector2$d(this.size);
@@ -43856,7 +43960,7 @@ pathux.Screen {
 `;
 
 nstructjs.manager.add_class(Screen$2);
-UIBase$1.register(Screen$2);
+UIBase$2.internalRegister(Screen$2);
 
 setScreenClass(Screen$2);
 
@@ -44592,5 +44696,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$1 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$2 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map

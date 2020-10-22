@@ -157,7 +157,7 @@ export class AreaDocker extends Container {
     let rect = tab.getClientRects()[0];
     let mpos = this.ctx.screen.mpos;
 
-    let menu = document.createElement("menu-x");
+    let menu = UIBase.createElement("menu-x");
 
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
@@ -333,4 +333,4 @@ export class AreaDocker extends Container {
     tagname : "area-docker-x"
   }}
 }
-UIBase.register(AreaDocker);
+UIBase.internalRegister(AreaDocker);

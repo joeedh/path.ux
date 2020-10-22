@@ -66,7 +66,7 @@ export class AppState {
   }
 
   genScreen() {
-    let screen = this.screen = document.createElement("app-screen-x");
+    let screen = this.screen = UIBase.createElement("app-screen-x");
     screen.ctx = this.viewctx;
 
     if (cconst.DEBUG.customWindowSize) {
