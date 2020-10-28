@@ -73,6 +73,8 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
+    this.fullScreen = true;
+
     //all widget shadow DOMs reference this style tag,
     //or rather they copy it
     this.globalCSS = document.createElement("style");
@@ -748,29 +750,30 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
+  checkCSSSize() {
+    let w = this.style.width.toLowerCase().trim();
+    let h = this.style.height.toLowerCase().trim();
+
+    if (w.endsWith("px") && h.endsWith("px")) {
+      w = parseFloat(w.slice(0, w.length-2).trim());
+      h = parseFloat(h.slice(0, h.length-2).trim());
+
+      if (w !== this.size[0] || h !== this.size[1]) {
+        this.on_resize([this.size[0], this.size[1]], [w, h]);
+        this.size[0] = w;
+        this.size[1] = h;
+      }
+    }
+  }
+
   updateSize() {
-    if (!cconst.autoSizeUpdate) {
+    if (!this.fullScreen || !cconst.autoSizeUpdate) {
+      this.checkCSSSize();
       return;
     }
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-
-    if (0) {//util.isMobile()) {
-      width = window.screen.availWidth || window.screen.width;
-      height = window.screen.availHeight || window.screen.height;
-
-      //let dpi = UIBase.getDPI();
-      let dpi = 0.985 / visualViewport.scale;
-
-      width *= dpi*0.985;
-      height *= dpi;
-      width = ~~width;
-      height = ~~height;
-    } else {
-      //width /= visualViewport.scale;
-      //height /= visualViewport.scale;
-    }
 
     let ratio = window.outerHeight / window.innerHeight;
     let scale = visualViewport.scale;
@@ -809,14 +812,8 @@ export class Screen extends ui_base.UIBase {
 
       let scale = visualViewport.scale;
 
-      //for (let sarea of this.sareas) {
-      //  sarea.style["transform"] = `translate(${ox}px, ${oy}px)`;// scale(${1.0 / scale})`;
-      //  console.log(sarea.style["transform"]);
-      //}
 
       this.regenBorders();
-      //this.pos[0] = visualViewport.offsetLeft * visualViewport.scale;
-      //this.pos[1] = visualViewport.offsetTop * visualViewport.scale;
 
       this.setCSS();
       this.completeUpdate();
