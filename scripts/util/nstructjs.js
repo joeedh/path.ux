@@ -1,4 +1,4 @@
-(function () {
+let nexports = (function () {
   if (typeof window === "undefined" && typeof global != "undefined") {
     global._nGlobal = global;
   } else if (typeof self !== "undefined") {
@@ -8,15 +8,15 @@
   }
   
   let exports;
-  
+  let module = {};
+
   //nodejs?
   if (typeof window === "undefined" && typeof global !== "undefined") {
     console.log("Nodejs!");
   } else {
     exports = {};
-    _nGlobal.module = {};
+    _nGlobal.module = {exports : exports};
   }
-  
   
 'use strict';
 
@@ -4044,6 +4044,10 @@ module.exports = _module_exports_$1;
     _nGlobal.module = undefined;
   }
   
-  return exports;
+  return module.exports;
 })();
 
+if (typeof window === "undefined" && typeof global !== "undefined" && typeof module !== "undefined") {
+  console.log("Nodejs!", nexports);
+  module.exports = exports = nexports;
+}

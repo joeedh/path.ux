@@ -111,6 +111,7 @@ export class Screen extends ui_base.UIBase {
 
     this.size = new Vector2([window.innerWidth, window.innerHeight]);
     this.pos = new Vector2();
+    this.oldpos = new Vector2();
 
     this.idgen = 0;
     this.sareas = [];
@@ -2220,7 +2221,12 @@ export class Screen extends ui_base.UIBase {
         //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
 
-      this.pos.zero();
+      for (let v of screenverts()) {
+        v[0] += this.pos[0];
+        v[1] += this.pos[1];
+      }
+
+      //this.pos.zero();
     } else {
       for (let v of screenverts()) {
         //snap(v);
@@ -2232,7 +2238,7 @@ export class Screen extends ui_base.UIBase {
       //snapi(max);
 
       this.size.load(max).sub(min);
-      this.pos.zero();
+      //this.pos.zero();
       //this.pos.load(min);
     }
 
@@ -2268,11 +2274,18 @@ export class Screen extends ui_base.UIBase {
 
     let ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
 
+    let offx = this.pos[0] - this.oldpos[0];
+    let offy = this.pos[1] - this.oldpos[1];
+
+    this.oldpos.load(this.pos);
+
     //console.log("resize!", ratio);
 
     for (let v of this.screenverts) {
       v[0] *= ratio[0];
       v[1] *= ratio[1];
+      v[0] += offx;
+      v[1] += offy;
     }
 
     let min = [1e17, 1e17], max = [-1e17, -1e17];

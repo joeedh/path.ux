@@ -144,3 +144,8 @@ let exports = {
 
 export default exports;
 window.DEBUG = exports.DEBUG;
+
+let cfg = document.getElementById("pathux-config");
+if (cfg) {
+  console.error("CONFIG CONFIG", cfg.innerText);
+}

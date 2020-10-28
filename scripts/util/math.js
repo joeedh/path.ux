@@ -207,6 +207,24 @@ test_aabb_intersect_2d.timer = function timer(rate=500) {
   }, rate);
 };
 
+/**
+ * AABB union of a and b.
+ * Result is in a.
+ *
+ * @param a List of two vectors
+ * @param b List of two vectors
+ * @returns a
+ */
+export function aabb_union(a, b) {
+  for (let i=0; i<2; i++) {
+    for (let j=0; j<a[i].length; j++) {
+      a[i][j] = i ? Math.max(a[i][j], b[i][j]) : Math.min(a[i][j], b[i][j]);
+    }
+  }
+
+  return a;
+}
+
 export function aabb_union_2d(pos1, size1, pos2, size2) {
   let v1 = aabb_intersect_vs.next();
   let v2 = aabb_intersect_vs.next();
