@@ -69,6 +69,14 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
+/**
+ * Base class for app workspaces
+ *
+ attributes:
+
+ inherit-scale : don't resize to fit whole screen, use cssbox scaling
+
+ */
 export class Screen extends ui_base.UIBase {
   constructor() {
     super();
@@ -766,8 +774,25 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
+  getBoolAttribute(attr, defaultval=false) {
+    if (!this.hasAttribute(attr)) {
+      return defaultval;
+    }
+
+    let ret = this.getAttribute(attr);
+
+    if (typeof ret === "number") {
+      return !!ret;
+    } else if (typeof ret === "string") {
+      ret = ret.toLowerCase().trim();
+      ret = ret === "true" || ret === "1" || ret === "yes";
+    }
+
+    return !!ret;
+  }
+
   updateSize() {
-    if (!this.fullScreen || !cconst.autoSizeUpdate) {
+    if (this.getBoolAttribute("inherit-scale") || !this.fullScreen || !cconst.autoSizeUpdate) {
       this.checkCSSSize();
       return;
     }
@@ -1459,8 +1484,10 @@ export class Screen extends ui_base.UIBase {
   }
 
   setCSS() {
-    this.style["width"] = this.size[0] + "px";
-    this.style["height"] = this.size[1] + "px";
+    if (!this.getBoolAttribute("inherit-scale")) {
+      this.style["width"] = this.size[0] + "px";
+      this.style["height"] = this.size[1] + "px";
+    }
 
     //call setCSS on borders
     for (let key in this._edgemap) {
