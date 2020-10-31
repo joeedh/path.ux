@@ -157,7 +157,7 @@ class _IconManager {
     let ds = this.drawsize;
 
     if (!this.image) {
-      console.warn("Failed to render an iconsheet");
+      //console.warn("Failed to render an iconsheet");
       return;
     }
 
