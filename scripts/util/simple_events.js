@@ -659,7 +659,7 @@ export class KeyMap extends Array {
     }
 
     for (let hk of this) {
-      let ok = e.keyCode == hk.key;
+      let ok = e.keyCode === hk.key;
       if (!ok) continue;
 
       let count = 0;
@@ -674,11 +674,13 @@ export class KeyMap extends Array {
         count++;
       }
 
-      if (count != mods.length) {
+      if (count !== mods.length) {
         ok = false;
       }
 
       if (ok) {
+        console.log("handling hotkey", hk, this);
+
         try {
           hk.exec(ctx);
         } catch (error) {

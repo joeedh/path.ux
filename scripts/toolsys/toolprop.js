@@ -1020,9 +1020,17 @@ export class Vec4Property extends FloatProperty {
     this.data = new Vector4(data);
   }
 
-  setValue(v) {
+  setValue(v, w=1.0) {
     this.data.load(v);
     ToolProperty.prototype.setValue.call(this, v);
+
+    if (v.length < 3) {
+      this.data[2] = 0.0;
+    }
+    if (v.length < 4) {
+      this.data[3] = w;
+    }
+
     return this;
   }
 
