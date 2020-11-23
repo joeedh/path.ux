@@ -1069,7 +1069,7 @@ export class Container extends ui_base.UIBase {
   }
 
   iconcheck(inpath, icon, name, mass_set_path) {
-    ret = UIBase.createElement("iconcheck-x");
+    let ret = UIBase.createElement("iconcheck-x");
     ret.icon = icon;
     ret.description = name;
 

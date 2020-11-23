@@ -911,27 +911,85 @@ export function point_in_aabb(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1]
          && p[2] >= min[2] && p[2] <= max[2];
 }
+let asi_rect = new Array(8);
+for (let i = 0; i < 8; i++) {
+  asi_rect[i] = new Vector3();
+}
+
+let aabb_sphere_isect_vs = util.cachering.fromConstructor(Vector3, 64);
+
 export function aabb_sphere_isect(p, r, min, max) {
-  var v1 = _asi_v1, v2 = _asi_v2, v3 = _asi_v3, mvec = _asi_v4;
-  min = _asi_v5.load(min);
-  max = _asi_v6.load(max);
-  
-  if (min.length == 2) {
-    min[2] = max[2] = 0.0;
+  {
+    let p1 = aabb_sphere_isect_vs.next().load(p);
+    let min1 = aabb_sphere_isect_vs.next().load(min);
+    let max1 = aabb_sphere_isect_vs.next().load(max);
+    if (p.length === 2) {
+      p1[2] = 0.0;
+    }
+    if (min1.length === 2) {
+      min1[2] = 0.0;
+    }
+    if (max.length === 2) {
+      max1[2] = 0.0;
+    }
+
+    p = p1;
+    min = min1;
+    max = max1;
   }
-  
-  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
-  v1.sub(mvec);
-  v2.add(mvec);
-  v3.load(p);
-  
-  //prevent NaN on 2d vecs
-  if (p.length == 2) {
-      mvec[2] = v1[2] = v2[2] = v3[2] = 0.0;
+
+  let cent = aabb_sphere_isect_vs.next().load(min).interp(max, 0.5);
+  p.sub(cent);
+  min.sub(cent);
+  max.sub(cent);
+
+  r *= r;
+
+  let isect = point_in_aabb(p, min, max);
+
+  if (isect) {
+    return true;
   }
-  
-  return point_in_aabb(v1, min, max) || point_in_aabb(v2, min, max) ||
-         point_in_aabb(v3, min, max);
+
+  let rect = asi_rect;
+
+  rect[0].loadXYZ(min[0], min[1], min[2]);
+  rect[1].loadXYZ(min[0], max[1], min[2]);
+  rect[2].loadXYZ(max[0], max[1], min[2]);
+  rect[3].loadXYZ(max[0], min[1], min[2]);
+
+  rect[4].loadXYZ(min[0], min[1], max[2]);
+  rect[5].loadXYZ(min[0], max[1], max[2]);
+  rect[6].loadXYZ(max[0], max[1], max[2]);
+  rect[7].loadXYZ(max[0], min[1], max[2]);
+
+  for (let i = 0; i < 8; i++) {
+    if (p.vectorDistanceSqr(rect[i]) < r) {
+      return true;
+    }
+  }
+
+  let p2 = aabb_sphere_isect_vs.next().load(p);
+
+  for (let i = 0; i < 3; i++) {
+    p2.load(p);
+
+    let i2 = (i + 1) % 3;
+    let i3 = (i + 2) % 3;
+
+    p2[i] = p2[i] < 0.0 ? min[i] : max[i];
+
+    p2[i2] = Math.min(Math.max(p2[i2], min[i2]), max[i2]);
+    p2[i3] = Math.min(Math.max(p2[i3], min[i3]), max[i3]);
+
+    let isect = p2.vectorDistanceSqr(p) <= r;
+
+    if (isect) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 export function point_in_tri(p, v1, v2, v3) {

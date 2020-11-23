@@ -290,8 +290,11 @@ export class StringProperty extends ToolProperty {
 
     this.multiLine = false;
 
-    if (value)
+    if (value) {
       this.setValue(value);
+    } else {
+      this.setValue("");
+    }
 
     this.wasSet = false;
   }
@@ -302,12 +305,16 @@ export class StringProperty extends ToolProperty {
   
   copyTo(b) {
     super.copyTo(b);
+
     b.data = this.data;
     b.multiLine = this.multiLine;
 
     return this;
   }
 
+  getValue() {
+    return this.data;
+  }
 
   copy() {
     let ret = new StringProperty();
@@ -1484,7 +1491,7 @@ _addClass(StringSetProperty);
 
 import {Curve1D} from '../curve/curve1d.js';
 
-export class Curve1DProperty extends ToolPropertyIF {
+export class Curve1DProperty extends ToolProperty {
   constructor(curve, apiname, uiname, description, flag, icon) {
     super(PropTypes.CURVE, undefined, apiname, uiname, description, flag, icon);
 
@@ -1529,4 +1536,11 @@ export class Curve1DProperty extends ToolPropertyIF {
     return ret;
   }
 }
+Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty) + `
+  data : Curve1D;
+}
+`;
+
+nstructjs.register(Curve1DProperty);
+_addClass(Curve1DProperty);
 

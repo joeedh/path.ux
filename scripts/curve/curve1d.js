@@ -166,6 +166,7 @@ export class Curve1D extends EventDispatcher {
     for (let cls of CurveConstructors) {
       if (cls.name === type) {
         let gen = new cls();
+        gen.type = type;
         this.generators.push(gen);
         return gen;
       }

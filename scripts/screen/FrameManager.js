@@ -1065,7 +1065,7 @@ export class Screen extends ui_base.UIBase {
   execKeyMap(e) {
     let handled = false;
 
-    console.warn("execKeyMap called", document.activeElement.tagName);
+    console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;

@@ -417,6 +417,22 @@ export class BaseVector extends Array {
     vectorDistance += "};";
     cls.prototype.vectorDistance = eval(vectorDistance);
 
+    var vectorDistanceSqr = "f = function vectorDistanceSqr(b) {\n";
+    for (var i=0; i<vectorsize; i++) {
+      vectorDistanceSqr += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+      //vectorDistanceSqr += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
+    }
+
+    vectorDistanceSqr += "  return ("
+    for (var i=0; i<vectorsize; i++) {
+      if (i > 0)
+        vectorDistanceSqr += " + ";
+      vectorDistanceSqr += "d"+i+"*d"+i;
+    }
+    vectorDistanceSqr += ");\n"
+    vectorDistanceSqr += "};";
+    cls.prototype.vectorDistanceSqr = eval(vectorDistanceSqr);
+
 
     for (var k in basic_funcs) {
       var func = basic_funcs[k];
