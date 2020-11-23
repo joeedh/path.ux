@@ -408,7 +408,7 @@ function matrix2css(m) {
   return `matrix(${m.m11},${m.m12},${m.m21},${m.m22},${m.m41},${m.m42})`
 }
 
-(function () {
+let nexports = (function () {
   if (typeof window === "undefined" && typeof global != "undefined") {
     global._nGlobal = global;
   } else if (typeof self !== "undefined") {
@@ -418,15 +418,15 @@ function matrix2css(m) {
   }
   
   let exports;
-  
+  let module = {};
+
   //nodejs?
   if (typeof window === "undefined" && typeof global !== "undefined") {
     console.log("Nodejs!");
   } else {
     exports = {};
-    _nGlobal.module = {};
+    _nGlobal.module = {exports : exports};
   }
-  
   
 'use strict';
 
@@ -4454,8 +4454,13 @@ module.exports = _module_exports_$1;
     _nGlobal.module = undefined;
   }
   
-  return exports;
+  return module.exports;
 })();
+
+if (typeof window === "undefined" && typeof global !== "undefined" && typeof module !== "undefined") {
+  console.log("Nodejs!", nexports);
+  module.exports = exports = nexports;
+}
 
 let nstructjs$1 = window.nstructjs;
 
@@ -7312,6 +7317,22 @@ class BaseVector extends Array {
     vectorDistance += "};";
     cls.prototype.vectorDistance = eval(vectorDistance);
 
+    var vectorDistanceSqr = "f = function vectorDistanceSqr(b) {\n";
+    for (var i=0; i<vectorsize; i++) {
+      vectorDistanceSqr += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+      //vectorDistanceSqr += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
+    }
+
+    vectorDistanceSqr += "  return (";
+    for (var i=0; i<vectorsize; i++) {
+      if (i > 0)
+        vectorDistanceSqr += " + ";
+      vectorDistanceSqr += "d"+i+"*d"+i;
+    }
+    vectorDistanceSqr += ");\n";
+    vectorDistanceSqr += "};";
+    cls.prototype.vectorDistanceSqr = eval(vectorDistanceSqr);
+
 
     for (var k in basic_funcs) {
       var func = basic_funcs[k];
@@ -9531,6 +9552,24 @@ test_aabb_intersect_2d.timer = function timer(rate=500) {
   }, rate);
 };
 
+/**
+ * AABB union of a and b.
+ * Result is in a.
+ *
+ * @param a List of two vectors
+ * @param b List of two vectors
+ * @returns a
+ */
+function aabb_union(a, b) {
+  for (let i=0; i<2; i++) {
+    for (let j=0; j<a[i].length; j++) {
+      a[i][j] = i ? Math.max(a[i][j], b[i][j]) : Math.min(a[i][j], b[i][j]);
+    }
+  }
+
+  return a;
+}
+
 function aabb_union_2d(pos1, size1, pos2, size2) {
   let v1 = aabb_intersect_vs.next();
   let v2 = aabb_intersect_vs.next();
@@ -10217,27 +10256,85 @@ function point_in_aabb(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1]
          && p[2] >= min[2] && p[2] <= max[2];
 }
+let asi_rect = new Array(8);
+for (let i = 0; i < 8; i++) {
+  asi_rect[i] = new Vector3();
+}
+
+let aabb_sphere_isect_vs = cachering.fromConstructor(Vector3, 64);
+
 function aabb_sphere_isect(p, r, min, max) {
-  var v1 = _asi_v1, v2 = _asi_v2, v3 = _asi_v3, mvec = _asi_v4;
-  min = _asi_v5.load(min);
-  max = _asi_v6.load(max);
-  
-  if (min.length == 2) {
-    min[2] = max[2] = 0.0;
+  {
+    let p1 = aabb_sphere_isect_vs.next().load(p);
+    let min1 = aabb_sphere_isect_vs.next().load(min);
+    let max1 = aabb_sphere_isect_vs.next().load(max);
+    if (p.length === 2) {
+      p1[2] = 0.0;
+    }
+    if (min1.length === 2) {
+      min1[2] = 0.0;
+    }
+    if (max.length === 2) {
+      max1[2] = 0.0;
+    }
+
+    p = p1;
+    min = min1;
+    max = max1;
   }
-  
-  mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
-  v1.sub(mvec);
-  v2.add(mvec);
-  v3.load(p);
-  
-  //prevent NaN on 2d vecs
-  if (p.length == 2) {
-      mvec[2] = v1[2] = v2[2] = v3[2] = 0.0;
+
+  let cent = aabb_sphere_isect_vs.next().load(min).interp(max, 0.5);
+  p.sub(cent);
+  min.sub(cent);
+  max.sub(cent);
+
+  r *= r;
+
+  let isect = point_in_aabb(p, min, max);
+
+  if (isect) {
+    return true;
   }
-  
-  return point_in_aabb(v1, min, max) || point_in_aabb(v2, min, max) ||
-         point_in_aabb(v3, min, max);
+
+  let rect = asi_rect;
+
+  rect[0].loadXYZ(min[0], min[1], min[2]);
+  rect[1].loadXYZ(min[0], max[1], min[2]);
+  rect[2].loadXYZ(max[0], max[1], min[2]);
+  rect[3].loadXYZ(max[0], min[1], min[2]);
+
+  rect[4].loadXYZ(min[0], min[1], max[2]);
+  rect[5].loadXYZ(min[0], max[1], max[2]);
+  rect[6].loadXYZ(max[0], max[1], max[2]);
+  rect[7].loadXYZ(max[0], min[1], max[2]);
+
+  for (let i = 0; i < 8; i++) {
+    if (p.vectorDistanceSqr(rect[i]) < r) {
+      return true;
+    }
+  }
+
+  let p2 = aabb_sphere_isect_vs.next().load(p);
+
+  for (let i = 0; i < 3; i++) {
+    p2.load(p);
+
+    let i2 = (i + 1) % 3;
+    let i3 = (i + 2) % 3;
+
+    p2[i] = p2[i] < 0.0 ? min[i] : max[i];
+
+    p2[i2] = Math.min(Math.max(p2[i2], min[i2]), max[i2]);
+    p2[i3] = Math.min(Math.max(p2[i3], min[i3]), max[i3]);
+
+    let isect = p2.vectorDistanceSqr(p) <= r;
+
+    if (isect) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 function point_in_tri(p, v1, v2, v3) {
@@ -10977,6 +11074,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   aabb_overlap_area: aabb_overlap_area,
   aabb_isect_2d: aabb_isect_2d,
   aabb_intersect_2d: aabb_intersect_2d,
+  aabb_union: aabb_union,
   aabb_union_2d: aabb_union_2d,
   feps: feps,
   COLINEAR: COLINEAR,
@@ -11072,7 +11170,7 @@ window.setInterval(() => {
   }).catch(function() {});
 }, 200);
 
-let exports = {
+let exports$1 = {
   /*client code can override this using .loadConstants, here is a simple implementation
     that just handles color data
 
@@ -11174,7 +11272,12 @@ let exports = {
     }
   }
 };
-window.DEBUG = exports.DEBUG;
+window.DEBUG = exports$1.DEBUG;
+
+let cfg = document.getElementById("pathux-config");
+if (cfg) {
+  console.error("CONFIG CONFIG", cfg.innerText);
+}
 
 let ColorSchemeTypes = {
   LIGHT : "light",
@@ -11339,7 +11442,7 @@ window.validateCSSColor = validateCSSColor$1;
 let theme = {};
 
 function invertTheme() {
-  exports.colorSchemeType = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+  exports$1.colorSchemeType = exports$1.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
 
   function inverted(color) {
     if (Array.isArray(color)) {
@@ -11356,7 +11459,7 @@ function invertTheme() {
 
   let bg = document.body.style["background-color"];
   //if (!bg) {
-    bg = exports.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+    bg = exports$1.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
   //} else {
   //  bg = inverted(bg);
   //}
@@ -11389,9 +11492,9 @@ function invertTheme() {
 window.invertTheme = invertTheme;
 
 function setColorSchemeType(mode) {
-  if (!!mode !== exports.colorSchemeType) {
+  if (!!mode !== exports$1.colorSchemeType) {
     invertTheme();
-    exports.colorSchemeType = mode;
+    exports$1.colorSchemeType = mode;
   }
 
 }
@@ -11819,7 +11922,7 @@ class DoubleClickHandler {
       this.last = this.down;
       this.down = time_ms();
 
-      if (this.down - this.last < exports.doubleClickTime) {
+      if (this.down - this.last < exports$1.doubleClickTime) {
         this.mdown = false;
         this.ondblclick(this.dblEvent);
 
@@ -11843,7 +11946,7 @@ class DoubleClickHandler {
       this.mdown = false;
     }
 
-    if (this.mdown && time_ms() - this.down > exports.doubleClickHoldTime) {
+    if (this.mdown && time_ms() - this.down > exports$1.doubleClickHoldTime) {
       this.mdown = false;
       this.ondblclick(this.dblEvent);
     }
@@ -11955,7 +12058,7 @@ window._findScreen = findScreen;
 
 
 function pushModalLight(obj, autoStopPropagation=true) {
-  if (exports.DEBUG.modalEvents) {
+  if (exports$1.DEBUG.modalEvents) {
     console.warn("pushModalLight");
   }
 
@@ -12002,7 +12105,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
   function make_default_touchhandler(type, state) {
     return function(e) {
       //console.warn("touch event!", type, touchmap[type], e.touches.length);
-      if (exports.DEBUG.domEvents) {
+      if (exports$1.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -12053,7 +12156,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
 
   function make_handler(type, key) {
     return function(e) {
-      if (exports.DEBUG.domEvents) {
+      if (exports$1.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -12128,7 +12231,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
 }
 
 function popModalLight(state) {
-  if (exports.DEBUG.modalEvents) {
+  if (exports$1.DEBUG.modalEvents) {
     console.warn("popModalLight");
   }
 
@@ -12295,7 +12398,7 @@ class KeyMap extends Array {
     }
 
     for (let hk of this) {
-      let ok = e.keyCode == hk.key;
+      let ok = e.keyCode === hk.key;
       if (!ok) continue;
 
       let count = 0;
@@ -12310,11 +12413,13 @@ class KeyMap extends Array {
         count++;
       }
 
-      if (count != mods.length) {
+      if (count !== mods.length) {
         ok = false;
       }
 
       if (ok) {
+        console.log("handling hotkey", hk, this);
+
         try {
           hk.exec(ctx);
         } catch (error) {
@@ -15141,6 +15246,7 @@ class Curve1D extends EventDispatcher {
     for (let cls of CurveConstructors) {
       if (cls.name === type) {
         let gen = new cls();
+        gen.type = type;
         this.generators.push(gen);
         return gen;
       }
@@ -16689,8 +16795,11 @@ class StringProperty extends ToolProperty {
 
     this.multiLine = false;
 
-    if (value)
+    if (value) {
       this.setValue(value);
+    } else {
+      this.setValue("");
+    }
 
     this.wasSet = false;
   }
@@ -16701,12 +16810,16 @@ class StringProperty extends ToolProperty {
   
   copyTo(b) {
     super.copyTo(b);
+
     b.data = this.data;
     b.multiLine = this.multiLine;
 
     return this;
   }
 
+  getValue() {
+    return this.data;
+  }
 
   copy() {
     let ret = new StringProperty();
@@ -17419,9 +17532,17 @@ class Vec4Property extends FloatProperty {
     this.data = new Vector4(data);
   }
 
-  setValue(v) {
+  setValue(v, w=1.0) {
     this.data.load(v);
     ToolProperty.prototype.setValue.call(this, v);
+
+    if (v.length < 3) {
+      this.data[2] = 0.0;
+    }
+    if (v.length < 4) {
+      this.data[3] = w;
+    }
+
     return this;
   }
 
@@ -17873,7 +17994,7 @@ class StringSetProperty extends ToolProperty {
 
 _addClass(StringSetProperty);
 
-class Curve1DProperty extends ToolPropertyIF {
+class Curve1DProperty extends ToolProperty {
   constructor(curve, apiname, uiname, description, flag, icon) {
     super(PropTypes.CURVE, undefined, apiname, uiname, description, flag, icon);
 
@@ -17918,6 +18039,13 @@ class Curve1DProperty extends ToolPropertyIF {
     return ret;
   }
 }
+Curve1DProperty.STRUCT = inherit(Curve1DProperty, ToolProperty) + `
+  data : Curve1D;
+}
+`;
+
+register(Curve1DProperty);
+_addClass(Curve1DProperty);
 
 "use strict";
 
@@ -18231,7 +18359,7 @@ class ToolOp extends EventHandler {
 
   getOverdraw() {
     if (this._overdraw === undefined) {
-      this._overdraw = UIBase.createElement("overdraw-x");
+      this._overdraw = document.createElement("overdraw-x");
       this._overdraw.start(this.modal_ctx.screen);
     }
 
@@ -20705,7 +20833,7 @@ class DataAPI extends ModelInterface {
         report("error while evaluating path " + inpath);
       }
 
-      if (exports.DEBUG.datapaths) {
+      if (exports$1.DEBUG.datapaths) {
         print_stack$1(error);
       }
 
@@ -22009,7 +22137,7 @@ if (window.document && document.body) {
   document.body.style["padding"] = "0px";
 }
 
-window.__cconst = exports;
+window.__cconst = exports$1;
 
 let Vector4$1 = Vector4;
 
@@ -22130,7 +22258,7 @@ class _IconManager {
     let ds = this.drawsize;
 
     if (!this.image) {
-      console.warn("Failed to render an iconsheet");
+      //console.warn("Failed to render an iconsheet");
       return;
     }
 
@@ -22508,7 +22636,7 @@ class UIBase$2 extends HTMLElement {
 
     this.shadow = this.attachShadow({mode : 'open'});
 
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       this.__cbs = [];
     }
 
@@ -22696,19 +22824,19 @@ class UIBase$2 extends HTMLElement {
   }
 
   addEventListener(type, cb, options) {
-    if (exports.DEBUG.domEventAddRemove) {
+    if (exports$1.DEBUG.domEventAddRemove) {
       console.log("addEventListener", type, this._id, options);
     }
 
     let cb2 = (e) => {
-      if (exports.DEBUG.paranoidEvents) {
+      if (exports$1.DEBUG.paranoidEvents) {
         if (this.isDead()) {
           this.removeEventListener(type, cb, options);
           return;
         }
       }
 
-      if (exports.DEBUG.domEvents) {
+      if (exports$1.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
       
@@ -22725,7 +22853,7 @@ class UIBase$2 extends HTMLElement {
           throw error;
         }
       } else {
-        if (exports.DEBUG.areaContextPushes) {
+        if (exports$1.DEBUG.areaContextPushes) {
           console.warn("Element is not part of an area?", element);
         }
 
@@ -22735,7 +22863,7 @@ class UIBase$2 extends HTMLElement {
 
     cb._cb = cb2;
 
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       this.__cbs.push([type, cb2, options]);
     }
 
@@ -22745,7 +22873,7 @@ class UIBase$2 extends HTMLElement {
 
   removeEventListener(type, cb, options)
   {
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       for (let item of this.__cbs) {
         if (item[0] == type && item[1] === cb._cb2 && ("" + item[2]) === ("" + options)) {
           this.__cbs.remove(item);
@@ -22754,7 +22882,7 @@ class UIBase$2 extends HTMLElement {
       }
     }
 
-    if (exports.DEBUG.domEventAddRemove) {
+    if (exports$1.DEBUG.domEventAddRemove) {
       console.log("removeEventListener", type, this._id, options);
     }
 
@@ -22781,7 +22909,7 @@ class UIBase$2 extends HTMLElement {
       return;
     }
 
-    if (exports.showPathsInToolTips && this.hasAttribute("datapath")) {
+    if (exports$1.showPathsInToolTips && this.hasAttribute("datapath")) {
       let s = "" + this._description;
 
       let path = this.getAttribute("datapath");
@@ -23029,7 +23157,7 @@ class UIBase$2 extends HTMLElement {
       this.regenTabOrder();
     }
 
-    if (exports.DEBUG.paranoidEvents) {
+    if (exports$1.DEBUG.paranoidEvents) {
       for (let item of this.__cbs) {
         this.removeEventListener(item[0], item[1], item[2]);
       }
@@ -23747,7 +23875,7 @@ class UIBase$2 extends HTMLElement {
         func._doOnce_reqs.add(thisvar._id);
         let f = () => {
           if (this.isDead()) {
-            if (func === this._init || !exports.DEBUG.doOnce) {
+            if (func === this._init || !exports$1.DEBUG.doOnce) {
               return;
             }
 
@@ -23756,7 +23884,7 @@ class UIBase$2 extends HTMLElement {
           }
 
           if (!this.ctx) {
-            if (exports.DEBUG.doOnce) {
+            if (exports$1.DEBUG.doOnce) {
               console.warn("doOnce call is waiting for context...", this._id, func);
             }
 
@@ -24564,7 +24692,7 @@ class Button extends UIBase$3 {
     this.addEventListener("keydown", (e) => {
       if (this.disabled) return;
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log(e.keyCode);
 
       switch (e.keyCode) {
@@ -24705,7 +24833,7 @@ class Button extends UIBase$3 {
     let press = (e) => {
       e.stopPropagation();
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("button press", this._pressed, this.disabled, e.button);
 
       if (this.disabled) return;
@@ -24726,7 +24854,7 @@ class Button extends UIBase$3 {
     };
 
     let depress = (e) => {
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("button depress", e.button, e.was_touch);
 
       if (this._auto_depress) {
@@ -24746,7 +24874,7 @@ class Button extends UIBase$3 {
 
       this._redraw();
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
       if (this.onclick && e.touches !== undefined) {
@@ -24787,7 +24915,7 @@ class Button extends UIBase$3 {
       this._repos_canvas();
       this._redraw();
 
-      if (exports.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents)
         console.log("disabled update!", this.disabled, this.style["background-color"]);
       //}, 100);
     }
@@ -27523,7 +27651,7 @@ class MenuWrangler {
       w = w.parentWidget;
     }
 
-    if (!ok && (time_ms() - this.closetimer > exports.menu_close_time)) {
+    if (!ok && (time_ms() - this.closetimer > exports$1.menu_close_time)) {
       this.endMenus();
     } else if (ok) {
       this.closetimer = time_ms();
@@ -28714,7 +28842,7 @@ class Container extends UIBase$2 {
   }
 
   iconcheck(inpath, icon, name, mass_set_path) {
-    ret = UIBase$7.createElement("iconcheck-x");
+    let ret = UIBase$7.createElement("iconcheck-x");
     ret.icon = icon;
     ret.description = name;
 
@@ -29128,7 +29256,7 @@ class Container extends UIBase$2 {
 
     if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER)) {
       ret = UIBase$7.createElement("numslider-simple-x");
-    } else if (exports.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX)) {
+    } else if (exports$1.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX)) {
       ret = UIBase$7.createElement("numslider-textbox-x");
     } else {
       ret = UIBase$7.createElement("numslider-x");
@@ -31943,7 +32071,7 @@ class ColorPickerButton extends UIBase$a {
   clipboardCopy() {
     console.log("color copy");
 
-    if (!exports.setClipboardData) {
+    if (!exports$1.setClipboardData) {
       console.log("no clipboard api");
       return;
     }
@@ -31956,7 +32084,7 @@ class ColorPickerButton extends UIBase$a {
     let data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
     //cconst.setClipboardData("color", "text/css", data);
 
-    exports.setClipboardData("color", "text/plain", data);
+    exports$1.setClipboardData("color", "text/plain", data);
 
     /*
     function makehex(c) {
@@ -31985,13 +32113,13 @@ class ColorPickerButton extends UIBase$a {
   }
 
   clipboardPaste() {
-    if (!exports.getClipboardData) {
+    if (!exports$1.getClipboardData) {
       return;
     }
 
     console.log("color paste");
 
-    let data = exports.getClipboardData("text/plain");
+    let data = exports$1.getClipboardData("text/plain");
 
     if (!data || !validateCSSColor(""+data.data)) {// || data.mime !== "text/css") {
       return;
@@ -32247,7 +32375,7 @@ class ColorPickerButton extends UIBase$a {
     let path = this.getAttribute("datapath");
     let prop = this.getPathMeta(this.ctx, path);
 
-    if ((prop === undefined || prop.data === undefined) && exports.DEBUG.verboseDataPath) {
+    if ((prop === undefined || prop.data === undefined) && exports$1.DEBUG.verboseDataPath) {
       console.log("bad path", path);
       return;
     } else if (prop === undefined) {
@@ -36653,8 +36781,8 @@ let on_tick = () => {
 
   let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
-  if (mode !== exports.colorSchemeType) {
-    nativeTheme.themeSource = exports.colorSchemeType;
+  if (mode !== exports$1.colorSchemeType) {
+    nativeTheme.themeSource = exports$1.colorSchemeType;
   }
 };
 
@@ -37119,7 +37247,7 @@ class AreaResizeTool extends ToolBase {
     let visit = new Set();
     let borders = this.getBorders();
 
-    let color = exports.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
+    let color = exports$1.DEBUG.screenborders ? "rgba(1.0, 0.5, 0.0, 0.1)" : "rgba(1.0, 0.5, 0.0, 1.0)";
 
     let bad = false;
 
@@ -38070,7 +38198,7 @@ class ScreenBorder extends UIBase$2 {
 
 
     let color = this.getDefault("ScreenBorderOuter");
-    let debug = exports.DEBUG.screenborders;
+    let debug = exports$1.DEBUG.screenborders;
 
     if (debug) {
       wid = 4;
@@ -38655,7 +38783,7 @@ class Area$1 extends UIBase$2 {
   }
 
   makeAreaSwitcher(container) {
-    if (exports.useAreaTabSwitcher) {
+    if (exports$1.useAreaTabSwitcher) {
       let ret = UIBase$g.createElement("area-docker-x");
       container.add(ret);
       return ret;
@@ -38859,7 +38987,7 @@ class Area$1 extends UIBase$2 {
       this.switcher = this.makeAreaSwitcher(row);
     }
 
-    if (isMobile()||exports.addHelpPickers) {
+    if (isMobile()||exports$1.addHelpPickers) {
       this.helppicker = row.helppicker();
       this.helppicker.iconsheet = 0;
     }
@@ -38984,7 +39112,7 @@ class ScreenArea extends UIBase$2 {
     this._pos = new Vector2$b();
     this._size = new Vector2$b([512, 512]);
 
-    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+    if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
         Object.defineProperty(this[name], axis, {
           get: function () {
@@ -39588,7 +39716,7 @@ class ScreenArea extends UIBase$2 {
       let moved = screen ? screen.checkAreaConstraint(this, true) : 0;
       //*
       if (moved) {
-        if (exports.DEBUG.areaConstraintSolver) {
+        if (exports$1.DEBUG.areaConstraintSolver) {
           console.log("screen constraint solve", moved, this.area.minSize, this.area.maxSize, this.area.tagName, this.size);
         }
 
@@ -39670,7 +39798,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   set pos(val) {
-    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+    if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       console.log("ScreenArea set pos", val);
     }
     this._pos.load(val);
@@ -39681,7 +39809,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   set size(val) {
-    if (exports.DEBUG.screenAreaPosSizeAccesses) {
+    if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       console.log("ScreenArea set size", val);
     }
     this._size.load(val);
@@ -41326,6 +41454,14 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
+/**
+ * Base class for app workspaces
+ *
+ attributes:
+
+ inherit-scale : don't resize to fit whole screen, use cssbox scaling
+
+ */
 class Screen$2 extends UIBase$2 {
   constructor() {
     super();
@@ -41340,7 +41476,7 @@ class Screen$2 extends UIBase$2 {
     this._do_updateSize = true;
     this._resize_callbacks = [];
 
-    this.allBordersMovable = exports.DEBUG.allBordersMovable;
+    this.allBordersMovable = exports$1.DEBUG.allBordersMovable;
     this.needsBorderRegen = true;
 
     this._popup_safe = 0;
@@ -41360,6 +41496,7 @@ class Screen$2 extends UIBase$2 {
 
     this.size = new Vector2$d([window.innerWidth, window.innerHeight]);
     this.pos = new Vector2$d();
+    this.oldpos = new Vector2$d();
 
     this.idgen = 0;
     this.sareas = [];
@@ -42023,8 +42160,25 @@ class Screen$2 extends UIBase$2 {
     }
   }
 
+  getBoolAttribute(attr, defaultval=false) {
+    if (!this.hasAttribute(attr)) {
+      return defaultval;
+    }
+
+    let ret = this.getAttribute(attr);
+
+    if (typeof ret === "number") {
+      return !!ret;
+    } else if (typeof ret === "string") {
+      ret = ret.toLowerCase().trim();
+      ret = ret === "true" || ret === "1" || ret === "yes";
+    }
+
+    return !!ret;
+  }
+
   updateSize() {
-    if (!this.fullScreen || !exports.autoSizeUpdate) {
+    if (this.getBoolAttribute("inherit-scale") || !this.fullScreen || !exports$1.autoSizeUpdate) {
       this.checkCSSSize();
       return;
     }
@@ -42042,13 +42196,13 @@ class Screen$2 extends UIBase$2 {
     let ox = visualViewport.offsetLeft;
     let oy = visualViewport.offsetTop;
 
-    if (exports.DEBUG.customWindowSize) {
-      let s = exports.DEBUG.customWindowSize;
+    if (exports$1.DEBUG.customWindowSize) {
+      let s = exports$1.DEBUG.customWindowSize;
       width = s.width;
       height = s.height;
       ox = 0;
       oy = 0;
-      window._DEBUG = exports.DEBUG;
+      window._DEBUG = exports$1.DEBUG;
     }
 
     let key = this._calcSizeKey(width, height, ox, oy, devicePixelRatio, scale);
@@ -42296,7 +42450,7 @@ class Screen$2 extends UIBase$2 {
   execKeyMap(e) {
     let handled = false;
 
-    console.warn("execKeyMap called", document.activeElement.tagName);
+    console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -42716,8 +42870,10 @@ class Screen$2 extends UIBase$2 {
   }
 
   setCSS() {
-    this.style["width"] = this.size[0] + "px";
-    this.style["height"] = this.size[1] + "px";
+    if (!this.getBoolAttribute("inherit-scale")) {
+      this.style["width"] = this.size[0] + "px";
+      this.style["height"] = this.size[1] + "px";
+    }
 
     //call setCSS on borders
     for (let key in this._edgemap) {
@@ -42937,7 +43093,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   updateDebugBoxes() {
-    if (exports.DEBUG.screenborders) {
+    if (exports$1.DEBUG.screenborders) {
       let overlay = this._get_debug_overlay();
       overlay.clear();
 
@@ -43400,7 +43556,7 @@ class Screen$2 extends UIBase$2 {
 
     if (found) {
       this.snapScreenVerts(snapArgument);
-      if (exports.DEBUG.areaConstraintSolver) {
+      if (exports$1.DEBUG.areaConstraintSolver) {
         time = time_ms() - time;
 
         console.log(`enforced area constraint ${time.toFixed(2)}ms`);
@@ -43450,7 +43606,12 @@ class Screen$2 extends UIBase$2 {
         //snap(v.sub(min).mul(sz));//.add(this.pos);
       }
 
-      this.pos.zero();
+      for (let v of screenverts()) {
+        v[0] += this.pos[0];
+        v[1] += this.pos[1];
+      }
+
+      //this.pos.zero();
     } else {
       for (let v of screenverts()) {
         //snap(v);
@@ -43462,7 +43623,7 @@ class Screen$2 extends UIBase$2 {
       //snapi(max);
 
       this.size.load(max).sub(min);
-      this.pos.zero();
+      //this.pos.zero();
       //this.pos.load(min);
     }
 
@@ -43498,11 +43659,18 @@ class Screen$2 extends UIBase$2 {
 
     let ratio = [newsize[0] / oldsize[0], newsize[1] / oldsize[1]];
 
+    let offx = this.pos[0] - this.oldpos[0];
+    let offy = this.pos[1] - this.oldpos[1];
+
+    this.oldpos.load(this.pos);
+
     //console.log("resize!", ratio);
 
     for (let v of this.screenverts) {
       v[0] *= ratio[0];
       v[1] *= ratio[1];
+      v[0] += offx;
+      v[1] += offy;
     }
 
     let min = [1e17, 1e17], max = [-1e17, -1e17];
@@ -44074,7 +44242,7 @@ function loadImageFile() {
 /*
 see doc_src/context.md
 */
-window.ccosnt = exports;
+window.ccosnt = exports$1;
 
 const ContextFlags = {
   IS_VIEW : 1
@@ -44241,7 +44409,7 @@ class LockedContext {
       try {
         v = ctx[k];
       } catch (error) {
-        if (exports.DEBUG.contextSystem) {
+        if (exports$1.DEBUG.contextSystem) {
           console.warn("failed to look up property in context: ", k);
         }
         continue;
@@ -44464,7 +44632,7 @@ class Context {
     let inside_map = this._inside_map;
     let stack = this._stack;
 
-    if (exports.DEBUG.contextSystem) {
+    if (exports$1.DEBUG.contextSystem) {
       console.log(name, inside_map);
     }
 
@@ -44478,7 +44646,7 @@ class Context {
       
       let ikey = overlay[Symbol.ContextID];
       
-      if (exports.DEBUG.contextSystem) {
+      if (exports$1.DEBUG.contextSystem) {
         console.log(ikey, overlay);
       }
 
@@ -44488,7 +44656,7 @@ class Context {
       }
 
       if (overlay.__allKeys.has(name)) {
-        if (exports.DEBUG.contextSystem) {
+        if (exports$1.DEBUG.contextSystem) {
           console.log("getting value");
         }
 
@@ -44691,7 +44859,7 @@ const vectormath = vectormath1;
 const toolprop_abstract = toolprop_abstract1;
 const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
-const cconst$1 = exports;
+const cconst$1 = exports$1;
 
 export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
