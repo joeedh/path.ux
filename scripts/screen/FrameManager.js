@@ -2657,6 +2657,15 @@ export class Screen extends ui_base.UIBase {
     let sareas = this.sareas;
     this.sareas = [];
 
+    /*
+    let push = this.sareas.push;
+
+    this.sareas.push = function(item) {
+      console.error("this.sareas.push", item);
+      push.call(this, item);
+    }
+    */
+
     for (let sarea of sareas) {
       sarea.screen = this;
       sarea.parentWidget = this;
@@ -2675,7 +2684,7 @@ export class Screen extends ui_base.UIBase {
     return this;
   }
 
-  test_struct() {
+  test_struct(appstate=_appstate) {
     let data = [];
     //let scripts = nstructjs.write_scripts();
     nstructjs.manager.write_object(data, this);
@@ -2693,7 +2702,7 @@ export class Screen extends ui_base.UIBase {
     let parent = this.parentElement;
     this.remove();
 
-    this.ctx.screen = screen2;
+    appstate.screen = screen2;
 
     parent.appendChild(screen2);
 

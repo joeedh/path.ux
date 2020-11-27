@@ -1149,7 +1149,7 @@ export class DataAPI extends ModelInterface {
         key = dpath.path;
 
         if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
-          bitfield = lastobj[key];
+          bitfield = lastobj ? lastobj[key] : 0;
         } else {
           prop.dataref = lastobj;
           prop.datapath = inpath;

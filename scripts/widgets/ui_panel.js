@@ -30,6 +30,7 @@ export class PanelFrame extends ColumnFrame {
     this.titleframe = this.row();
 
     this.contents = UIBase.createElement("colframe-x", true);
+    this.contents._panel = this;
     this.iconcheck = UIBase.createElement("iconcheck-x");
 
     Object.defineProperty(this.contents, "closed", {
@@ -183,7 +184,7 @@ export class PanelFrame extends ColumnFrame {
 
     this.titleframe.background = this.getDefault("TitleBackground");
     this.titleframe.style["border-radius"] = this.getDefault("BoxRadius") + "px";
-    this.titleframe.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
+    this.titleframe.style["border"] = `${this.getDefault( "BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
     this.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
     this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
     this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
@@ -192,6 +193,7 @@ export class PanelFrame extends ColumnFrame {
     
     this.background = bg;
     this.contents.background = bg;
+    this.contents.parentWidget = this;
     this.contents.style["background-color"] = bg;
     this.style["background-color"] = bg;
 

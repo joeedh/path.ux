@@ -704,7 +704,7 @@ export class UIBase extends HTMLElement {
 
     while (p) {
       if (p._useDataPathUndo !== undefined) {
-        console.log(p._useDataPathUndo, p.tagName);
+        //console.log(p._useDataPathUndo, p.tagName);
         return p._useDataPathUndo;
       }
 

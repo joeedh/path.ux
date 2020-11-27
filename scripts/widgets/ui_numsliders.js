@@ -545,8 +545,6 @@ export class NumSlider extends ValueButtonBase {
     let g = this.g;
     let canvas = this.dom;
 
-    //console.log("numslider draw");
-
     let dpi = this.getDPI();
     let disabled = this.disabled; //this.hasAttribute("disabled");
 
@@ -1416,7 +1414,6 @@ export class SliderWithTextbox extends ColumnFrame {
     }
 
     if (redraw) {
-      console.log("numslider draw");
       this.setCSS();
       this.numslider.setCSS();
       this.numslider._redraw();

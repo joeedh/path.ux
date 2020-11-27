@@ -10,6 +10,7 @@ import * as vectormath from '../util/vectormath.js';
 import {EventDispatcher} from "../util/events.js";
 
 export {getCurve} from './curve1d_base.js';
+export {SplineTemplates} from './curve1d_bspline.js';
 
 var Vector2 = vectormath.Vector2;
 
@@ -152,6 +153,8 @@ export class Curve1D extends EventDispatcher {
       ret.generators.push(gen.toJSON());
     }
 
+    ret.generators.sort((a, b) => a.type.localeCompare(b.type));
+
     return ret;
   }
 
@@ -195,16 +198,8 @@ export class Curve1D extends EventDispatcher {
   }
 
   equals(b) {
-    //console.log(mySafeJSONStringify(this));
-    //console.log(mySafeJSONStringify(b));
-
     let a = mySafeJSONStringify(this).trim();
     let b2 = mySafeJSONStringify(b).trim();
-
-    if (a !== b2) {
-      console.log(a);
-      console.log(b2);
-    }
 
     return a === b2;
   }
@@ -333,7 +328,7 @@ export class Curve1D extends EventDispatcher {
     this.generators = [];
     reader(this);
 
-    console.log("VERSION", this.VERSION);
+    //console.log("VERSION", this.VERSION);
 
     if (this.VERSION <= 0.75) {
       this.generators = [];
@@ -345,8 +340,6 @@ export class Curve1D extends EventDispatcher {
       this.generators.active = this.getGenerator("BSplineCurve");
     }
 
-    console.log("ACTIVE", this._active);
-
     for (let gen of this.generators.concat([])) {
       if (!(gen instanceof CurveTypeData)) {
         console.warn("Bad generator data found:", gen);
@@ -355,7 +348,6 @@ export class Curve1D extends EventDispatcher {
       }
 
       if (gen.type === this._active) {
-        console.log("found active", this._active);
         this.generators.active = gen;
       }
     }
