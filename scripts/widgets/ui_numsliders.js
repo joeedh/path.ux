@@ -1015,7 +1015,8 @@ export class NumSliderSimpleBase extends UIBase {
     return [x, boxw*0.5, boxw*0.5];
   }
   setCSS() {
-    super.setCSS();
+    //UIBase.setCSS does annoying thing with background-color
+    //super.setCSS();
 
     this.canvas.style["width"] = "min-contents";
     this.canvas.style["min-width"] = this.getDefault("DefaultWidth") + "px";
@@ -1080,7 +1081,7 @@ export class SliderWithTextbox extends ColumnFrame {
     this._value = 0;
     this._name = undefined;
     this._lock_textbox = false;
-    this.labelOnTop = undefined;
+    this._labelOnTop = undefined;
 
     this._last_label_on_top = undefined;
 
@@ -1101,6 +1102,36 @@ export class SliderWithTextbox extends ColumnFrame {
     this.textbox.setAttribute("class", "numslider_simple_textbox");
   }
 
+  /**
+   * whether to put label on top or to the left of sliders
+   *
+   * If undefined value will be either this.getAtttribute("labelOnTop"),
+   * if "labelOnTop" attribute exists, or it will be this.getDefault("labelOnTop")
+   * (theme default)
+   **/
+  get labelOnTop() {
+    let ret = this._labelOnTop;
+
+    if (ret === undefined && this.hasAttribute("labelOnTop")) {
+      let val = this.getAttribute("labelOnTop");
+      if (typeof val === "string") {
+        val = val.toLowerCase();
+        ret = val === "true" || val === "yes";
+      } else {
+        ret = !!val;
+      }
+    }
+
+    if (ret === undefined) {
+      ret = this.getDefault("labelOnTop");
+    }
+
+    return !!ret;
+  }
+
+  set labelOnTop(v) {
+    this._labelOnTop = v;
+  }
 
   get numslider() {
     return this._numslider;
@@ -1192,12 +1223,6 @@ export class SliderWithTextbox extends ColumnFrame {
   init() {
     super.init();
 
-    if (this.hasAttribute("labelOnTop")) {
-      this.labelOnTop = this.getAttribute("labelOnTop");
-    } else {
-      this.labelOnTop = this.getDefault("labelOnTop");
-    }
-
     this.rebuild();
   }
 
@@ -1220,8 +1245,8 @@ export class SliderWithTextbox extends ColumnFrame {
 
 
     this.l = this.container.label(this._name);
+    this.l.overrideClass("numslider_textbox");
     this.l.font = "TitleText";
-    this.l.overrideClass("numslider_simple");
     this.l.style["display"] = "float";
     this.l.style["position"] = "relative";
 
@@ -1460,7 +1485,6 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
     super();
 
     this.numslider = UIBase.createElement("numslider-x");
-
   }
 
   _redraw() {
@@ -1469,7 +1493,7 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
   
   static define() {return {
     tagname : "numslider-textbox-x",
-    style : "numslider-textbox-x"
+    style : "numslider_textbox"
   }}
 }
 UIBase.internalRegister(NumSliderWithTextBox);

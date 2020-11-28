@@ -93,12 +93,23 @@ export class ThemeEditor extends Container {
       } else if (typeof v === "number") {
         let slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
 
+        slider.baseUnit = slider.displayUnit = "none";
+
         ok = true;
         _i++;
 
         slider.onchange = () => {
           theme[key][k] = slider.value;
 
+          do_onchange(key, k);
+        }
+      } else if (typeof v === "boolean") {
+        let check = col.check(undefined, k);
+
+        check.value = theme[key][k];
+
+        check.onchange = () => {
+          theme[key][k] = !!check.value;
           do_onchange(key, k);
         }
       } else if (typeof v === "object" && v instanceof CSSFont) {
@@ -132,6 +143,10 @@ export class ThemeEditor extends Container {
           v.size = slider.value;
           do_onchange(key, k);
         }
+
+        slider.baseUnit = slider.displayUnit = "none";
+
+        panel2.closed = true;
       }
     };
 

@@ -195,8 +195,6 @@ export class VectorPanel extends ColumnFrame {
       frame = this;
     }
 
-    console.warn("rebuilding");
-
     this.sliders = [];
 
     for (let i=0; i<this.value.length; i++) {

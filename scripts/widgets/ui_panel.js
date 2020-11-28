@@ -3,6 +3,8 @@
 //note that require has an api for handling circular
 //module refs, in such cases do not use these vars.
 
+import {CSSFont} from "../core/ui_base.js";
+
 var _ui = undefined;
 
 import * as util from '../util/util.js';
@@ -129,7 +131,9 @@ export class PanelFrame extends ColumnFrame {
 
     let label = this.__label = row.label(this.getAttribute("title"));
 
+    this.__label.overrideClass("panel");
     this.__label.font = "TitleText";
+
     label._updateFont();
 
     label.noMarginsOrPadding();
@@ -182,10 +186,16 @@ export class PanelFrame extends ColumnFrame {
 
     let bs = this.getDefault("border-style");
 
+    let header_radius = this.getDefault("HeaderRadius");
+    if (header_radius === undefined) {
+      header_radius = this.getDefault("BoxRadius");
+    }
+
     this.titleframe.background = this.getDefault("TitleBackground");
-    this.titleframe.style["border-radius"] = this.getDefault("BoxRadius") + "px";
+    this.titleframe.style["border-radius"] = header_radius + "px";
     this.titleframe.style["border"] = `${this.getDefault( "BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
     this.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+    this.style["border-radius"] = this.getDefault("BoxRadius") + "px";
     this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
     this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
 
@@ -228,13 +238,24 @@ export class PanelFrame extends ColumnFrame {
     key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
     key += this.getDefault("Background") + this.getDefault("border-style");
+    key += this.getDefault("HeaderRadius");
     key += this.getAttribute("title");
+
+    let font = this.__label.getDefault("TitleText");
+    if (font) {
+      if (typeof font === "string") {
+        key += font;
+      } else if (font instanceof CSSFont) {
+        key += font.genKey();
+      }
+    }
 
     if (key !== this._last_key) {
       if (this.getAttribute("title")) {
         this.label = this.getAttribute("title")
       }
 
+      this.__label._updateFont();
       this._last_key = key;
       this.setCSS();
     }

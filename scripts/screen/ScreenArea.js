@@ -623,8 +623,9 @@ export class Area extends ui_base.UIBase {
   static define() {return {
     tagname  : "pathux-editor-x", // tag name, e.g. editor-x
     areaname : undefined, //api name for area type
+    flag     : 0, //see AreaFlags
     uiname   : undefined,
-    icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
+    icon     : undefined //icon representing area in MakeHeader's area switching menu. Integer.
   };}
 
   _isDead() {

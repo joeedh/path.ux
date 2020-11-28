@@ -9,7 +9,7 @@ let _clipboards = {};
 window.setInterval(() => {
   let cb = navigator.clipboard;
 
-  if (!cb) {
+  if (!cb || !cb.read) {
     return;
   }
 
@@ -99,6 +99,7 @@ let exports = {
 
   menu_close_time : 500,
   doubleClickTime : 500,
+
   //timeout for press-and-hold (touch) version of double clicking
   doubleClickHoldTime : 750,
   DEBUG : {
@@ -148,4 +149,5 @@ window.DEBUG = exports.DEBUG;
 let cfg = document.getElementById("pathux-config");
 if (cfg) {
   console.error("CONFIG CONFIG", cfg.innerText);
+  exports.loadConstants(JSON.parse(cfg.innerText));
 }

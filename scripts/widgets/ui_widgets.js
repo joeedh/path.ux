@@ -296,6 +296,8 @@ export class Check extends UIBase {
     this._label.style["color"] = this.getDefault("DefaultText").color;
 
     super.setCSS();
+    //force clear background
+    this.style["background-color"] = "rgba(0,0,0,0)";
   }
 
   updateDataPath() {
@@ -449,7 +451,7 @@ export class IconCheck extends Button {
 
     this._checked = undefined;
 
-    this._drawCheck = true;
+    this._drawCheck = undefined;
     this._icon = -1;
     this._icon_pressed = undefined;
     this.iconsheet = ui_base.IconSheets.LARGE;
@@ -464,7 +466,12 @@ export class IconCheck extends Button {
   }
 
   get drawCheck() {
-    return this._drawCheck;
+    let ret = this._drawCheck;
+
+    ret = ret === undefined ? this.getDefault("drawCheck") : ret;
+    ret = ret === undefined ? true : ret;
+
+    return ret;
   }
 
   set drawCheck(val) {

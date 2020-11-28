@@ -142,8 +142,14 @@ export class Label extends ui_base.UIBase {
   }
 
   update() {
-    if (this.font !== this._last_font) {
-      this._last_font = this.font;
+    let key = "";
+
+    if (this._font !== undefined && this._font instanceof CSSFont) {
+      key += this._font.genKey();
+    }
+
+    if (key !== this._last_font) {
+      this._last_font = key;
       this._updateFont();
     }
     
@@ -305,20 +311,63 @@ export class Container extends ui_base.UIBase {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(m = this.getDefault("oneAxisPadding"), m2 = 1, themeClass="strip") {
+  strip(themeClass="strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1) {
     let horiz = this instanceof RowFrame;
     horiz = horiz || this.style["flex-direction"] === "row";
 
     let flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
 
-    let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
+    let strip = (horiz ? this.row() : this.col());
+
+    if (typeof margin1 !== "number") {
+      throw new Error("margin1 was not a number");
+    }
+    if (typeof margin2 !== "number") {
+      throw new Error("margin2 was not a number");
+    }
 
     strip.packflag |= flag;
 
     if (themeClass in theme) {
       strip.overrideClass(themeClass);
-      strip.background = strip.getDefault("DefaultPanelBG");
+      strip.background = strip.getDefault("background");
       strip.setCSS();
+      strip.overrideClass(themeClass);
+
+      let lastkey;
+
+      strip.update.after(function() {
+        let bradius = strip.getDefault("BoxRadius");
+        let bline = strip.getDefault("BoxLineWidth");
+        let bstyle = strip.getDefault("border-style") || 'solid';
+        let padding = strip.getDefault("BoxMargin");
+        let bcolor = strip.getDefault("BoxBorder") || "rgba(0,0,0,0)";
+        let margin = strip.getDefault("margin") || 0;
+
+        bline = bline === undefined ? 0 : bline;
+        bradius = bradius === undefined ? 0 : bradius;
+        padding = padding === undefined ? 5 : padding;
+
+        let bg = strip.getDefault("background");
+
+        let key = "" + bradius + ":" + bline + ":" + bg + ":" + padding + ":";
+        key += bstyle + ":" + padding + ":" + bcolor + ":" + margin;
+
+        if (key !== lastkey) {
+          lastkey = key;
+
+          strip.oneAxisPadding(margin1+padding, margin2+padding);
+          strip.setCSS();
+
+          strip.background = bg;
+
+          strip.style["margin"] = "" + margin + "px";
+          strip.style["border"] = `${bline}px ${bstyle} ${bcolor}`;
+          strip.style["border-radius"] = "" + bradius + "px";
+        }
+      })
+    } else {
+      console.warn(this.constructor.name + ".strip(): unknown theme class " + themeClass);
     }
 
     /*
@@ -347,9 +396,9 @@ export class Container extends ui_base.UIBase {
   /**
    * tries to set padding along one axis only in smart manner
    * */
-  oneAxisPadding(m = this.getDefault("oneAxisPadding"), m2 = 0) {
-    this.style["padding-top"] = this.style["padding-bottom"] = "" + m + "px";
-    this.style["padding-left"] = this.style["padding-right"] = "" + m2 + "px";
+  oneAxisPadding(axisPadding = this.getDefault("oneAxisPadding"), otherPadding = 0) {
+    this.style["padding-top"] = this.style["padding-bottom"] = "" + axisPadding + "px";
+    this.style["padding-left"] = this.style["padding-right"] = "" + otherPadding + "px";
 
     return this;
   }
@@ -1481,14 +1530,23 @@ export class Container extends ui_base.UIBase {
       }
     }
 
-    if (packflag & PackFlags.SIMPLE_NUMSLIDERS && !(packflag & PackFlags.FORCE_ROLLER_SLIDER)) {
-      ret = UIBase.createElement("numslider-simple-x");
-    } else if (cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX)) {
-      ret = UIBase.createElement("numslider-textbox-x");
+    let simple = packflag & PackFlags.SIMPLE_NUMSLIDERS && !(packflag & PackFlags.FORCE_ROLLER_SLIDER);
+    let extraTextBox = cconst.useNumSliderTextboxes && !(packflag & PackFlags.NO_NUMSLIDER_TEXTBOX);
+
+    if (extraTextBox) {
+      if (simple) {
+        ret = UIBase.createElement("numslider-simple-x");
+      } else {
+        ret = UIBase.createElement("numslider-textbox-x");
+      }
     } else {
-      ret = UIBase.createElement("numslider-x");
+      if (simple) {
+        ret = UIBase.createElement("numslider-simple-x");
+      } else {
+        ret = UIBase.createElement("numslider-x");
+      }
     }
-    
+
     ret.packflag |= packflag;
 
     let decimals;
@@ -1806,6 +1864,21 @@ export class ColumnFrame extends Container {
 
   update() {
     super.update();
+  }
+
+
+  oneAxisMargin(m = this.getDefault('oneAxisMargin'), m2 = 0) {
+    this.style['margin-top'] = this.style['margin-bottom'] = '' + m + 'px';
+    this.style['margin-left'] = this.style['margin-right'] = m2 + 'px';
+
+    return this;
+  }
+
+  oneAxisPadding(m = this.getDefault('oneAxisPadding'), m2 = 0) {
+    this.style['padding-top'] = this.style['padding-bottom'] = '' + m + 'px';
+    this.style['padding-left'] = this.style['padding-right'] = '' + m2 + 'px';
+
+    return this;
   }
 
   static define() {

@@ -6159,6 +6159,14 @@ class set$1 {
     this.length++;
   }
 
+  get size() {
+    return this.length;
+  }
+
+  delete(item, ignore_existence=true) {
+    this.remove(item, ignore_existence);
+  }
+
   remove(item, ignore_existence) {
     var key = item[Symbol.keystr]();
 
@@ -9552,6 +9560,24 @@ test_aabb_intersect_2d.timer = function timer(rate=500) {
   }, rate);
 };
 
+let aabb_intersect_vs3 = cachering.fromConstructor(Vector3, 64);
+
+function aabb_intersect_3d(min1, max1, min2, max2) {
+  let tot=0;
+
+  for (let i=0; i<2; i++) {
+    if (max1[i] >= min2[i] && min1[i] <= max2[i]) {
+      tot++;
+    }
+  }
+
+  if (tot !== 3) {
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * AABB union of a and b.
  * Result is in a.
@@ -10337,6 +10363,81 @@ function aabb_sphere_isect(p, r, min, max) {
   return false;
 };
 
+function aabb_sphere_dist(p, min, max) {
+  {
+    let p1 = aabb_sphere_isect_vs.next().load(p);
+    let min1 = aabb_sphere_isect_vs.next().load(min);
+    let max1 = aabb_sphere_isect_vs.next().load(max);
+    if (p.length === 2) {
+      p1[2] = 0.0;
+    }
+    if (min1.length === 2) {
+      min1[2] = 0.0;
+    }
+    if (max.length === 2) {
+      max1[2] = 0.0;
+    }
+
+    p = p1;
+    min = min1;
+    max = max1;
+  }
+
+  let cent = aabb_sphere_isect_vs.next().load(min).interp(max, 0.5);
+  p.sub(cent);
+  min.sub(cent);
+  max.sub(cent);
+
+  let isect = point_in_aabb(p, min, max);
+
+  if (isect) {
+    return 0.0;
+  }
+
+  let rect = asi_rect;
+
+  rect[0].loadXYZ(min[0], min[1], min[2]);
+  rect[1].loadXYZ(min[0], max[1], min[2]);
+  rect[2].loadXYZ(max[0], max[1], min[2]);
+  rect[3].loadXYZ(max[0], min[1], min[2]);
+
+  rect[4].loadXYZ(min[0], min[1], max[2]);
+  rect[5].loadXYZ(min[0], max[1], max[2]);
+  rect[6].loadXYZ(max[0], max[1], max[2]);
+  rect[7].loadXYZ(max[0], min[1], max[2]);
+
+  let mindis;
+
+  for (let i = 0; i < 8; i++) {
+    let dis = p.vectorDistanceSqr(rect[i]);
+
+    if (mindis === undefined || dis < mindis) {
+      mindis = dis;
+    }
+  }
+
+  let p2 = aabb_sphere_isect_vs.next().load(p);
+
+  for (let i = 0; i < 3; i++) {
+    p2.load(p);
+
+    let i2 = (i + 1) % 3;
+    let i3 = (i + 2) % 3;
+
+    p2[i] = p2[i] < 0.0 ? min[i] : max[i];
+
+    p2[i2] = Math.min(Math.max(p2[i2], min[i2]), max[i2]);
+    p2[i3] = Math.min(Math.max(p2[i3], min[i3]), max[i3]);
+
+    let dis = p2.vectorDistanceSqr(p);
+    if (mindis === undefined || dis < mindis) {
+      mindis = dis;
+    }
+  }
+
+  return mindis === undefined ? 1e17 : mindis;
+};
+
 function point_in_tri(p, v1, v2, v3) {
   var w1=winding(p, v1, v2);
   var w2=winding(p, v2, v3);
@@ -11074,6 +11175,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   aabb_overlap_area: aabb_overlap_area,
   aabb_isect_2d: aabb_isect_2d,
   aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
   aabb_union: aabb_union,
   aabb_union_2d: aabb_union_2d,
   feps: feps,
@@ -11104,6 +11206,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   aabb_sphere_isect_2d: aabb_sphere_isect_2d,
   point_in_aabb: point_in_aabb,
   aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_dist: aabb_sphere_dist,
   point_in_tri: point_in_tri,
   convex_quad: convex_quad,
   normal_tri: normal_tri,
@@ -11140,7 +11243,7 @@ let _clipboards = {};
 window.setInterval(() => {
   let cb = navigator.clipboard;
 
-  if (!cb) {
+  if (!cb || !cb.read) {
     return;
   }
 
@@ -11230,6 +11333,7 @@ let exports$1 = {
 
   menu_close_time : 500,
   doubleClickTime : 500,
+
   //timeout for press-and-hold (touch) version of double clicking
   doubleClickHoldTime : 750,
   DEBUG : {
@@ -11277,6 +11381,7 @@ window.DEBUG = exports$1.DEBUG;
 let cfg = document.getElementById("pathux-config");
 if (cfg) {
   console.error("CONFIG CONFIG", cfg.innerText);
+  exports$1.loadConstants(JSON.parse(cfg.innerText));
 }
 
 let ColorSchemeTypes = {
@@ -11544,8 +11649,19 @@ class CSSFont {
     return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
   }
 
+  //deprecated, use genKey()
   hash() {
-    return this.genCSS + ":" + this.size + ":" + this.color;
+    return this.genKey();
+  }
+
+  genKey() {
+    let color = this.color;
+
+    if (typeof this.color === "object" || typeof this.color === "function") {
+      color = JSON.stringify(color);
+    }
+
+    return this.genCSS() + ":" + this.size + ":" + color;
   }
 }
 CSSFont.STRUCT = `
@@ -12813,6 +12929,1179 @@ CurveTypeData {
 `;
 nstructjs$1.register(CurveTypeData);
 
+"use strict";
+//import {EventDispatcher} from "../util/events.js";
+
+var Vector2$1 = Vector2;
+
+const SplineTemplates = {
+  CONSTANT: 0,
+  LINEAR: 1,
+  SHARP : 2,
+  SQRT: 3,
+  SMOOTH: 4,
+  SMOOTHER: 5,
+  SHARPER: 6,
+  SPHERE: 7
+};
+
+const templates = {
+  [SplineTemplates.CONSTANT]: [
+    [1, 1], [1, 1]
+  ],
+  [SplineTemplates.LINEAR]: [
+    [0, 0], [1, 1]
+  ],
+  [SplineTemplates.SHARP]: [
+    [0, 0], [0.9999, 0.0001], [1, 1]
+  ],
+  [SplineTemplates.SQRT]: [
+    [0, 0], [0.05, 0.25], [0.33, 0.65], [1, 1]
+  ],
+  [SplineTemplates.SMOOTH]: [
+    [0, 0], [0.5, 0], [0.5, 1.0], [1, 1]
+  ],
+  [SplineTemplates.SMOOTHER]: [
+    [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
+  ],
+  [SplineTemplates.SHARPER]: [
+    [0, 0], [0.3, 0.03], [0.7, 0.065], [0.9, 0.16], [1, 1]
+  ]
+};
+
+let RecalcFlags = {
+  BASIS: 1,
+  FULL: 2,
+  ALL: 3,
+
+  //private flag
+  FULL_BASIS: 4
+};
+
+function mySafeJSONStringify(obj) {
+  return JSON.stringify(obj.toJSON(), function (key) {
+    let v = this[key];
+
+    if (typeof v === "number") {
+      if (v !== Math.floor(v)) {
+        v = parseFloat(v.toFixed(5));
+      } else {
+        v = v;
+      }
+    }
+
+    return v;
+  });
+}
+
+function mySafeJSONParse(buf) {
+  return JSON.parse(buf, (key, val) => {
+
+  });
+};
+
+window.mySafeJSONStringify = mySafeJSONStringify;
+
+
+var bin_cache = {};
+window._bin_cache = bin_cache;
+
+var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
+
+/*
+  I hate these stupid curve widgets.  This horrible one here works by
+  root-finding the x axis on a two dimensional b-spline (which works
+  surprisingly well).
+*/
+
+function bez3(a, b, c, t) {
+  var r1 = a + (b - a) * t;
+  var r2 = b + (c - b) * t;
+
+  return r1 + (r2 - r1) * t;
+}
+
+function bez4(a, b, c, d, t) {
+  var r1 = bez3(a, b, c, t);
+  var r2 = bez3(b, c, d, t);
+
+  return r1 + (r2 - r1) * t;
+}
+
+function binomial(n, i) {
+  if (i > n) {
+    throw new Error("Bad call to binomial(n, i), i was > than n");
+  }
+
+  if (i == 0 || i == n) {
+    return 1;
+  }
+
+  var key = "" + n + "," + i;
+
+  if (key in bin_cache)
+    return bin_cache[key];
+
+  var ret = binomial(n - 1, i - 1) + bin(n - 1, i);
+  bin_cache[key] = ret;
+
+  return ret;
+}
+
+window.bin = binomial;
+
+class Curve1DPoint extends Vector2$1 {
+  constructor(co) {
+    super(co);
+
+    this.rco = new Vector2$1(co);
+    this.sco = new Vector2$1(co);
+
+    //for transform
+    this.startco = new Vector2$1();
+    this.eid = -1;
+    this.flag = 0;
+
+    this.tangent = TangentModes.SMOOTH;
+  }
+
+  copy() {
+    var ret = new Curve1DPoint(this);
+
+    ret.tangent = this.tangent;
+    ret.rco.load(ret);
+
+    return ret;
+  }
+
+  toJSON() {
+    return {
+      0: this[0],
+      1: this[1],
+      eid: this.eid,
+      flag: this.flag,
+      tangent: this.tangent
+    };
+  }
+
+  static fromJSON(obj) {
+    var ret = new Curve1DPoint(obj);
+
+    ret.eid = obj.eid;
+    ret.flag = obj.flag;
+    ret.tangent = obj.tangent;
+
+    return ret;
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    this.sco.load(this);
+    this.rco.load(this);
+    this.recalc = RecalcFlags.ALL;
+  }
+};
+Curve1DPoint.STRUCT = `
+Curve1DPoint {
+  0       : float;
+  1       : float;
+  eid     : int;
+  flag    : int;
+  deg     : int;
+  tangent : int;
+  rco     : vec2;
+}
+`;
+nstructjs$1.register(Curve1DPoint);
+
+class BSplineCurve extends CurveTypeData {
+  constructor() {
+    super();
+
+    this.fastmode = false;
+    this.points = [];
+    this.length = 0;
+    this.interpolating = false;
+
+    this._ps = [];
+    this.hermite = [];
+    this.fastmode = false;
+
+    this.deg = 6;
+    this.recalc = RecalcFlags.ALL;
+    this.basis_tables = [];
+    this.eidgen = new IDGen();
+
+    this.add(0, 0);
+    this.add(1, 1);
+
+    this.mpos = new Vector2$1();
+
+    this.on_mousedown = this.on_mousedown.bind(this);
+    this.on_mousemove = this.on_mousemove.bind(this);
+    this.on_mouseup = this.on_mouseup.bind(this);
+    this.on_keydown = this.on_keydown.bind(this);
+    this.on_touchstart = this.on_touchstart.bind(this);
+    this.on_touchmove = this.on_touchmove.bind(this);
+    this.on_touchend = this.on_touchend.bind(this);
+    this.on_touchcancel = this.on_touchcancel.bind(this);
+  }
+
+  equals(b) {
+    if (b.type !== this.type) {
+      return false;
+    }
+
+    let bad = this.points.length !== b.points.length;
+
+    bad = bad || this.deg !== b.deg;
+    bad = bad || this.interpolating !== b.interpolating;
+
+    if (bad) {
+      return false;
+    }
+
+    for (let i = 0; i < this.points.length; i++) {
+      let p1 = this.points[i];
+      let p2 = b.points[i];
+
+      if (p1.vectorDistance(p2) > 0.00001) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  static define() {
+    return {
+      uiname: "B-Spline",
+      name: "bspline"
+    }
+  }
+
+  remove(p) {
+    let ret = this.points.remove(p);
+    this.length = this.points.length;
+
+    return ret;
+  }
+
+  add(x, y, no_update = false) {
+    var p = new Curve1DPoint();
+    this.recalc = RecalcFlags.ALL;
+
+    p.eid = this.eidgen.next();
+
+    p[0] = x;
+    p[1] = y;
+
+    p.sco.load(p);
+    p.rco.load(p);
+
+    this.points.push(p);
+    if (!no_update) {
+      this.update();
+    }
+
+    this.length = this.points.length;
+
+    return p;
+  }
+
+  update() {
+    super.update();
+  }
+
+  updateKnots(recalc = true) {
+    if (recalc) {
+      this.recalc = RecalcFlags.ALL;
+    }
+
+    if (!this.interpolating) {
+      for (var i = 0; i < this.points.length; i++) {
+        this.points[i].rco.load(this.points[i]);
+      }
+    }
+
+    this.points.sort(function (a, b) {
+      return a[0] - b[0];
+    });
+
+    this._ps = [];
+    if (this.points.length < 2) {
+      return;
+    }
+    var a = this.points[0][0], b = this.points[this.points.length - 1][0];
+
+    for (var i = 0; i < this.points.length - 1; i++) {
+      this._ps.push(this.points[i]);
+    }
+
+    if (this.points.length < 3) {
+      return;
+    }
+
+    var l1 = this.points[this.points.length - 1];
+    var l2 = this.points[this.points.length - 2];
+
+    var p = l1.copy();
+    p.rco[0] = l1.rco[0] - 0.00004;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1]) * 1.0 / 3.0;
+    //this._ps.push(p);
+
+    var p = l1.copy();
+    p.rco[0] = l1.rco[0] - 0.00003;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1]) * 1.0 / 3.0;
+    //this._ps.push(p);
+
+    var p = l1.copy();
+    p.rco[0] = l1.rco[0] - 0.00001;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1]) * 1.0 / 3.0;
+    this._ps.push(p);
+
+    var p = l1.copy();
+    p.rco[0] = l1.rco[0] - 0.00001;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1]) * 2.0 / 3.0;
+    this._ps.push(p);
+
+    this._ps.push(l1);
+
+    if (!this.interpolating) {
+      for (var i = 0; i < this._ps.length; i++) {
+        this._ps[i].rco.load(this._ps[i]);
+      }
+    }
+
+    for (var i = 0; i < this.points.length; i++) {
+      var p = this.points[i];
+      var x = p[0], y = p[1];//this.evaluate(x);
+
+      p.sco[0] = x;
+      p.sco[1] = y;
+    }
+  }
+
+  toJSON() {
+    let ret = super.toJSON();
+
+    var ps = [];
+    for (var i = 0; i < this.points.length; i++) {
+      ps.push(this.points[i].toJSON());
+    }
+
+    ret = Object.assign(ret, {
+      points: ps,
+      deg: this.deg,
+      interpolating: this.interpolating,
+      eidgen: this.eidgen.toJSON()
+    });
+
+    return ret;
+  }
+
+  loadJSON(obj) {
+    super.loadJSON(obj);
+
+    this.interpolating = obj.interpolating;
+    this.length = 0;
+    this.points = [];
+    this._ps = [];
+
+    this.hightlight = undefined;
+    this.eidgen = IDGen.fromJSON(obj.eidgen);
+    this.recalc = RecalcFlags.ALL;
+    this.mpos = [0, 0];
+
+    for (var i = 0; i < obj.points.length; i++) {
+      this.points.push(Curve1DPoint.fromJSON(obj.points[i]));
+    }
+
+    this.deg = obj.deg;
+
+    this.updateKnots();
+    this.redraw();
+    return this;
+  }
+
+  basis(t, i) {
+    if (this.recalc & RecalcFlags.FULL_BASIS) {
+      return this._basis(t, i);
+    }
+
+    if (this.recalc & RecalcFlags.BASIS) {
+      this.regen_basis();
+      this.recalc &= ~RecalcFlags.BASIS;
+    }
+
+    i = Math.min(Math.max(i, 0), this._ps.length - 1);
+    t = Math.min(Math.max(t, 0.0), 1.0) * 0.999999999;
+
+    var table = this.basis_tables[i];
+
+    var s = t * (table.length / 4) * 0.99999;
+
+    var j = ~~s;
+    s -= j;
+
+    j *= 4;
+    return table[j] + (table[j + 3] - table[j]) * s;
+
+    return bez4(table[j], table[j + 1], table[j + 2], table[j + 3], s);
+  }
+
+  reset(empty = false) {
+    this.length = 0;
+    this.points = [];
+    this._ps = [];
+
+    if (!empty) {
+      this.add(0, 0, true);
+      this.add(1, 1, true);
+    }
+
+    this.recalc = 1;
+    this.updateKnots();
+    this.update();
+
+    return this;
+  }
+
+  regen_hermite(steps) {
+    //console.log("building spline approx");
+
+    if (steps === undefined) {
+      steps = this.fastmode ? 180 : 340;
+    }
+
+    if (this.interpolating) {
+      steps *= 2;
+    }
+
+    this.hermite = new Array(steps);
+    var table = this.hermite;
+
+    var eps = 0.00001;
+    var dt = (1.0 - eps * 4.001) / (steps - 1);
+    var t = eps * 4;
+    var lastdv1, lastf3;
+
+    for (var j = 0; j < steps; j++, t += dt) {
+      var f1 = this._evaluate(t - eps * 2);
+      var f2 = this._evaluate(t - eps);
+      var f3 = this._evaluate(t);
+      var f4 = this._evaluate(t + eps);
+      var f5 = this._evaluate(t + eps * 2);
+
+      var dv1 = (f4 - f2) / (eps * 2);
+      dv1 /= steps;
+
+      if (j > 0) {
+        var j2 = j - 1;
+
+        table[j2 * 4] = lastf3;
+        table[j2 * 4 + 1] = lastf3 + lastdv1 / 3.0;
+        table[j2 * 4 + 2] = f3 - dv1 / 3.0;
+        table[j2 * 4 + 3] = f3;
+      }
+
+      lastdv1 = dv1;
+      lastf3 = f3;
+    }
+  }
+
+  solve_interpolating() {
+    //this.recalc |= RecalcFlags.FULL_BASIS;
+
+    for (let p of this._ps) {
+      p.rco.load(p);
+    }
+
+    this._evaluate2(0.5);
+
+    let error1 = (p) => {
+      //return p.vectorDistance(this._evaluate2(p[0]));
+      return this._evaluate(p[0]) - p[1];
+    };
+
+    let error = (p) => {
+      return error1(p);
+
+      /*
+      let err = 0.0;
+      for (let p of this.points) {
+        //err += error1(p)**2;
+        err += Math.abs(error1(p));
+      }
+
+      //return Math.sqrt(err);
+      return err;
+      //*/
+    };
+
+    let err = 0.0;
+    let g = new Vector2$1();
+
+    for (let step = 0; step < 25; step++) {
+      err = 0.0;
+
+      for (let p of this._ps) {
+        let r1 = error(p);
+        const df = 0.00001;
+
+        err += Math.abs(r1);
+
+        if (p === this._ps[0] || p === this._ps[this._ps.length - 1]) {
+          //  continue;
+        }
+
+        g.zero();
+
+        for (let i = 0; i < 2; i++) {
+          let orig = p.rco[i];
+          p.rco[i] += df;
+          let r2 = error(p);
+          p.rco[i] = orig;
+
+          g[i] = (r2 - r1) / df;
+        }
+
+        let totgs = g.dot(g);
+        //console.log(totgs);
+
+        if (totgs < 0.00000001) {
+          continue;
+        }
+
+        r1 /= totgs;
+        let k = 0.5;
+
+        p.rco[0] += -r1 * g[0] * k;
+        p.rco[1] += -r1 * g[1] * k;
+      }
+
+      //console.log("ERR", err);
+
+      this.updateKnots(false);
+
+      let th = this.fastmode ? 0.001 : 0.00005;
+      if (err < th) {
+        break;
+      }
+    }
+
+    //this.recalc &= ~RecalcFlags.FULL_BASIS;
+  }
+
+  regen_basis() {
+    //console.log("building basis functions");
+    //var steps = this.fastmode && !this.interpolating ? 64 : 128;
+    var steps = this.fastmode ? 64 : 128;
+
+    if (this.interpolating) {
+      steps *= 2;
+    }
+
+    this.basis_tables = new Array(this._ps.length);
+
+    for (var i = 0; i < this._ps.length; i++) {
+      var table = this.basis_tables[i] = new Array((steps - 1) * 4);
+
+      var eps = 0.00001;
+      var dt = (1.0 - eps * 8) / (steps - 1);
+      var t = eps * 4;
+      var lastdv1, lastf3;
+
+      for (var j = 0; j < steps; j++, t += dt) {
+        var f1 = this._basis(t - eps * 2, i);
+        var f2 = this._basis(t - eps, i);
+        var f3 = this._basis(t, i);
+        var f4 = this._basis(t + eps, i);
+        var f5 = this._basis(t + eps * 2, i);
+
+        var dv1 = (f4 - f2) / (eps * 2);
+        dv1 /= steps;
+
+        if (j > 0) {
+          var j2 = j - 1;
+
+          table[j2 * 4] = lastf3;
+          table[j2 * 4 + 1] = lastf3 + lastdv1 / 3.0;
+          table[j2 * 4 + 2] = f3 - dv1 / 3.0;
+          table[j2 * 4 + 3] = f3;
+        }
+
+        lastdv1 = dv1;
+        lastf3 = f3;
+      }
+    }
+  }
+
+  _basis(t, i) {
+    var len = this._ps.length;
+    var ps = this._ps;
+
+    function safe_inv(n) {
+      return n == 0 ? 0 : 1.0 / n;
+    }
+
+    function bas(s, i, n) {
+      var kp = Math.min(Math.max(i - 1, 0), len - 1);
+      var kn = Math.min(Math.max(i + 1, 0), len - 1);
+      var knn = Math.min(Math.max(i + n, 0), len - 1);
+      var knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
+      var ki = Math.min(Math.max(i, 0), len - 1);
+
+      if (n == 0) {
+        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
+      } else {
+
+        var a = (s - ps[ki].rco[0]) * safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        var b = (ps[knn1].rco[0] - s) * safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
+
+        var ret = a * bas(s, i, n - 1) + b * bas(s, i + 1, n - 1);
+
+        /*
+        if (isNaN(ret)) {
+          console.log(a, b, s, i, n, len);
+          throw new Error();
+        }
+        //*/
+
+        //if (Math.random() > 0.99) {
+        //console.log(ret, a, b, n, i);
+        //}
+        return ret;
+      }
+    }
+
+    var p = this._ps[i].rco, nk, pk;
+    var deg = this.deg;
+
+    var b = bas(t, i - deg, deg);
+
+    return b;
+  }
+
+  evaluate(t) {
+    var a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
+
+    if (t < a[0]) return a[1];
+    if (t > b[0]) return b[1];
+
+    if (this.points.length == 2) {
+      t = (t - a[0]) / (b[0] - a[0]);
+      return a[1] + (b[1] - a[1]) * t;
+    }
+
+    if (this.recalc) {
+      this.regen_basis();
+
+      if (this.interpolating) {
+        this.solve_interpolating();
+      }
+
+      this.regen_hermite();
+      this.recalc = 0;
+    }
+
+    t *= 0.999999;
+
+    var table = this.hermite;
+    var s = t * (table.length / 4);
+
+    var i = Math.floor(s);
+    s -= i;
+
+    i *= 4;
+
+    return table[i] + (table[i + 3] - table[i]) * s;
+  }
+
+  _evaluate(t) {
+    var start_t = t;
+
+    if (this.points.length > 1) {
+      var a = this.points[0], b = this.points[this.points.length - 1];
+
+      if (t < a[0]) return a[1];
+      if (t >= b[0]) return b[1];
+    }
+
+    for (var i = 0; i < 35; i++) {
+      var df = 0.0001;
+      var ret1 = this._evaluate2(t < 0.5 ? t : t - df);
+      var ret2 = this._evaluate2(t < 0.5 ? t + df : t);
+
+      var f1 = Math.abs(ret1[0] - start_t);
+      var f2 = Math.abs(ret2[0] - start_t);
+      var g = (f2 - f1) / df;
+
+      if (f1 == f2) break;
+
+      //if (f1 < 0.0005) break;
+
+      if (f1 == 0.0 || g == 0.0)
+        return this._evaluate2(t)[1];
+
+      var fac = -(f1 / g) * 0.5;
+      if (fac == 0.0) {
+        fac = 0.01;
+      } else if (Math.abs(fac) > 0.1) {
+        fac = 0.1 * Math.sign(fac);
+      }
+
+      t += fac;
+      var eps = 0.00001;
+      t = Math.min(Math.max(t, eps), 1.0 - eps);
+    }
+
+    return this._evaluate2(t)[1];
+  }
+
+  _evaluate2(t) {
+    var ret = eval2_rets.next();
+
+    t *= 0.9999999;
+
+    var totbasis = 0;
+    var sumx = 0;
+    var sumy = 0;
+
+    for (var i = 0; i < this._ps.length; i++) {
+      var p = this._ps[i].rco;
+      var b = this.basis(t, i);
+
+      sumx += b * p[0];
+      sumy += b * p[1];
+
+      totbasis += b;
+    }
+
+    if (totbasis != 0.0) {
+      sumx /= totbasis;
+      sumy /= totbasis;
+    }
+
+    ret[0] = sumx;
+    ret[1] = sumy;
+
+    return ret;
+  }
+
+  get hasGUI() {
+    return this.uidata !== undefined;
+  }
+
+  _wrapTouchEvent(e) {
+    return {
+      x: e.touches.length ? e.touches[0].pageX : this.mpos[0],
+      y: e.touches.length ? e.touches[0].pageY : this.mpos[1],
+      button: 0,
+      shiftKey: e.shiftKey,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      isTouch: true,
+      commandKey: e.commandKey,
+      stopPropagation: () => e.stopPropagation(),
+      preventDefault: () => e.preventDefault()
+    };
+  }
+
+  on_touchstart(e) {
+    this.mpos[0] = e.touches[0].pageX;
+    this.mpos[1] = e.touches[0].pageY;
+
+    let e2 = this._wrapTouchEvent(e);
+
+    this.on_mousemove(e2);
+    this.on_mousedown(e2);
+  }
+
+  loadTemplate(templ) {
+    if (templ === undefined || !templates[templ]) {
+      console.warn("Unknown bspline template", templ);
+      return;
+    }
+
+    templ = templates[templ];
+
+    this.reset(true);
+    for (let p of templ) {
+      this.add(p[0], p[1], true);
+    }
+
+    this.deg = 3.0;
+    this.recalc = 1;
+    this.updateKnots();
+    this.update();
+  }
+
+  on_touchmove(e) {
+    this.mpos[0] = e.touches[0].pageX;
+    this.mpos[1] = e.touches[0].pageY;
+
+    let e2 = this._wrapTouchEvent(e);
+    this.on_mousemove(e2);
+  }
+
+  on_touchend(e) {
+    this.on_mouseup(this._wrapTouchEvent(e));
+  }
+
+  on_touchcancel(e) {
+    this.on_touchend(e);
+  }
+
+  makeGUI(container, canvas, drawTransform) {
+    this.uidata = {
+      start_mpos: new Vector2$1(),
+      transpoints: [],
+
+      dom: container,
+      canvas: canvas,
+      g: canvas.g,
+      transforming: false,
+      draw_trans: drawTransform
+    };
+
+    canvas.addEventListener("touchstart", this.on_touchstart);
+    canvas.addEventListener("touchmove", this.on_touchmove);
+    canvas.addEventListener("touchend", this.on_touchend);
+    canvas.addEventListener("touchcancel", this.on_touchcancel);
+
+    canvas.addEventListener("mousedown", this.on_mousedown);
+    canvas.addEventListener("mousemove", this.on_mousemove);
+    canvas.addEventListener("mouseup", this.on_mouseup);
+    canvas.addEventListener("keydown", this.on_keydown);
+
+    let row = container.row();
+
+    let fullUpdate = () => {
+      this.updateKnots();
+      this.update();
+      this.regen_basis();
+      this.recalc = RecalcFlags.ALL;
+      this.redraw();
+    };
+
+    row.iconbutton(Icons.TINY_X, "Delete Point", () => {
+      console.log("delete point");
+
+      for (var i = 0; i < this.points.length; i++) {
+        var p = this.points[i];
+
+        if (p.flag & CurveFlags.SELECT) {
+          this.points.remove(p);
+          i--;
+        }
+      }
+
+      fullUpdate();
+    });
+
+    row.button("Reset", () => {
+      this.reset();
+    });
+
+    let slider = row.simpleslider(undefined, "Degree", this.deg, 1, 6, 1, true, true, (slider) => {
+      this.deg = Math.floor(slider.value);
+
+      fullUpdate();
+      console.log(this.deg);
+
+    });
+
+    slider.baseUnit = "none";
+    slider.displayUnit = "none";
+
+    row = container.row();
+    let check = row.check(undefined, "Interpolating");
+    check.checked = this.interpolating;
+
+    check.onchange = () => {
+      this.interpolating = check.value;
+      console.log(check.value);
+      fullUpdate();
+    };
+
+    return this;
+  }
+
+  killGUI(container, canvas) {
+    if (this.uidata !== undefined) {
+      let ud = this.uidata;
+      this.uidata = undefined;
+
+      console.log("removing event handlers for bspline curve");
+
+      canvas.removeEventListener("touchstart", this.on_touchstart);
+      canvas.removeEventListener("touchmove", this.on_touchmove);
+      canvas.removeEventListener("touchend", this.on_touchend);
+      canvas.removeEventListener("touchcancel", this.on_touchcancel);
+
+      canvas.removeEventListener("mousedown", this.on_mousedown);
+      canvas.removeEventListener("mousemove", this.on_mousemove);
+      canvas.removeEventListener("mouseup", this.on_mouseup);
+      canvas.removeEventListener("keydown", this.on_keydown);
+    }
+
+    return this;
+  }
+
+  start_transform() {
+    this.uidata.transpoints = [];
+
+    for (let p of this.points) {
+      if (p.flag & CurveFlags.SELECT) {
+        this.uidata.transpoints.push(p);
+        p.startco.load(p);
+      }
+    }
+  }
+
+  on_mousedown(e) {
+    console.log("bspline mdown", e.x, e.y);
+
+    this.uidata.start_mpos.load(this.transform_mpos(e.x, e.y));
+    this.fastmode = true;
+
+    console.log(this.uidata.start_mpos, this.uidata.draw_trans);
+
+    var mpos = this.transform_mpos(e.x, e.y);
+    var x = mpos[0], y = mpos[1];
+    this.do_highlight(x, y);
+
+    if (this.points.highlight != undefined) {
+      if (!e.shiftKey) {
+        for (var i = 0; i < this.points.length; i++) {
+          this.points[i].flag &= ~CurveFlags.SELECT;
+        }
+
+        this.points.highlight.flag |= CurveFlags.SELECT;
+      } else {
+        this.points.highlight.flag ^= CurveFlags.SELECT;
+      }
+
+
+      this.uidata.transforming = true;
+
+      this.start_transform();
+
+      this.updateKnots();
+      this.update();
+      this.redraw();
+      return;
+    } else if (!e.isTouch) {
+      var p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
+      this.points.highlight = p;
+
+      this.updateKnots();
+      this.update();
+      this.redraw();
+
+      this.points.highlight.flag |= CurveFlags.SELECT;
+
+      this.uidata.transforming = true;
+      this.uidata.transpoints = [this.points.highlight];
+      this.uidata.transpoints[0].startco.load(this.uidata.transpoints[0]);
+    }
+  }
+
+  do_highlight(x, y) {
+    var trans = this.uidata.draw_trans;
+    var mindis = 1e17, minp = undefined;
+    var limit = 19 / trans[0], limitsqr = limit * limit;
+
+    for (var i = 0; i < this.points.length; i++) {
+      var p = this.points[i];
+      var dx = x - p.sco[0], dy = y - p.sco[1], dis = dx * dx + dy * dy;
+
+      if (dis < mindis && dis < limitsqr) {
+        mindis = dis;
+        minp = p;
+      }
+    }
+
+    if (this.points.highlight !== minp) {
+      this.points.highlight = minp;
+      this.redraw();
+    }
+    //console.log(x, y, minp);
+  }
+
+  do_transform(x, y) {
+    var off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
+
+    for (var i = 0; i < this.uidata.transpoints.length; i++) {
+      var p = this.uidata.transpoints[i];
+      p.load(p.startco).add(off);
+
+      p[0] = Math.min(Math.max(p[0], 0), 1);
+      p[1] = Math.min(Math.max(p[1], 0), 1);
+    }
+
+    this.updateKnots();
+    this.update();
+    this.redraw();
+  }
+
+  transform_mpos(x, y) {
+    var r = this.uidata.canvas.getClientRects()[0];
+    let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
+
+    x -= parseInt(r.left);
+    y -= parseInt(r.top);
+
+    x *= dpi;
+    y *= dpi;
+
+    var trans = this.uidata.draw_trans;
+
+    x = x / trans[0] - trans[1][0];
+    y = -y / trans[0] - trans[1][1];
+
+    return [x, y];
+  }
+
+  on_mousemove(e) {
+    if (e.isTouch && this.uidata.transforming) {
+      e.preventDefault();
+    }
+
+    var mpos = this.transform_mpos(e.x, e.y);
+    var x = mpos[0], y = mpos[1];
+
+    if (this.uidata.transforming) {
+      this.do_transform(x, y);
+      this.evaluate(0.5);
+      //this.update();
+      //this.doSave();
+    } else {
+      this.do_highlight(x, y);
+    }
+  }
+
+  on_mouseup(e) {
+    this.uidata.transforming = false;
+    this.fastmode = false;
+    this.updateKnots();
+    this.update();
+  }
+
+  on_keydown(e) {
+    console.log(e.keyCode);
+
+    switch (e.keyCode) {
+      case 88: //xkeey
+      case 46: //delete
+        if (this.points.highlight != undefined) {
+          this.points.remove(this.points.highlight);
+          this.recalc = RecalcFlags.ALL;
+
+          this.points.highlight = undefined;
+          this.updateKnots();
+          this.update();
+
+          if (this._save_hook !== undefined) {
+            this._save_hook();
+          }
+        }
+        break;
+    }
+  }
+
+  draw(canvas, g, draw_trans) {
+    g.save();
+
+    if (this.uidata === undefined) {
+      return;
+    }
+
+    this.uidata.canvas = canvas;
+    this.uidata.g = g;
+    this.uidata.draw_trans = draw_trans;
+
+    let sz = draw_trans[0], pan = draw_trans[1];
+    g.lineWidth *= 3.0;
+
+    for (var ssi = 0; ssi < 2; ssi++) {
+      break; //uncomment to draw basis functions
+      for (var si = 0; si < this.points.length; si++) {
+        g.beginPath();
+
+        var f = 0;
+        for (var i = 0; i < steps; i++, f += df) {
+          var totbasis = 0;
+
+          for (var j = 0; j < this.points.length; j++) {
+            totbasis += this.basis(f, j);
+          }
+
+          var val = this.basis(f, si);
+
+          if (ssi)
+            val /= (totbasis == 0 ? 1 : totbasis);
+
+          (i == 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val * 0.5, w, w);
+        }
+
+        var color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
+
+        if (ssi) {
+          color = "rgba(105, 25, 5," + alpha + ")";
+        } else {
+          color = "rgba(25, 145, 45," + alpha + ")";
+        }
+        g.strokeStyle = color;
+        g.stroke();
+      }
+    }
+
+    g.lineWidth /= 3.0;
+
+    let w = 0.03;
+
+    for (let p of this.points) {
+      g.beginPath();
+
+      if (p === this.points.highlight) {
+        g.fillStyle = "green";
+      } else if (p.flag & CurveFlags.SELECT) {
+        g.fillStyle = "red";
+      } else {
+        g.fillStyle = "orange";
+      }
+
+      g.rect(p.sco[0] - w / 2, p.sco[1] - w / 2, w, w);
+
+      g.fill();
+    }
+
+    g.restore();
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+    super.loadSTRUCT(reader);
+
+    this.updateKnots();
+    this.regen_basis();
+    this.recalc = RecalcFlags.ALL;
+  }
+}
+
+BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
+  points        : array(Curve1DPoint);
+  deg           : int;
+  eidgen        : IDGen;
+  interpolating : bool;
+}
+`;
+nstructjs$1.register(BSplineCurve);
+CurveTypeData.register(BSplineCurve);
+
 class EquationCurve extends CurveTypeData {
   constructor(type) {
     super();
@@ -13160,1118 +14449,6 @@ GuassianCurve.STRUCT = nstructjs$1.inherit(GuassianCurve, CurveTypeData) + `
 `;
 nstructjs$1.register(GuassianCurve);
 CurveTypeData.register(GuassianCurve);
-
-"use strict";
-//import {EventDispatcher} from "../util/events.js";
-
-var Vector2$1 = Vector2;
-
-let RecalcFlags = {
-  BASIS : 1,
-  FULL  : 2,
-  ALL   : 3,
-
-  //private flag
-  FULL_BASIS : 4
-};
-
-function mySafeJSONStringify(obj) {
-  return JSON.stringify(obj.toJSON(), function(key) {
-    let v = this[key];
-
-    if (typeof v === "number") {
-      if (v !== Math.floor(v)) {
-        v = parseFloat(v.toFixed(5));
-      } else {
-        v = v;
-      }
-    }
-
-    return v;
-  });
-}
-function mySafeJSONParse(buf) {
-  return JSON.parse(buf, (key, val) => {
-
-  });
-};
-
-window.mySafeJSONStringify = mySafeJSONStringify;
-
-
-var bin_cache = {};
-window._bin_cache = bin_cache;
-
-var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
-
-/*
-  I hate these stupid curve widgets.  This horrible one here works by
-  root-finding the x axis on a two dimensional b-spline (which works
-  surprisingly well).
-*/
-
-function bez3(a, b, c, t) {
-  var r1 = a + (b - a)*t;
-  var r2 = b + (c - b)*t;
-
-  return r1 + (r2 - r1)*t;
-}
-
-function bez4(a, b, c, d, t) {
-  var r1 = bez3(a, b, c, t);
-  var r2 = bez3(b, c, d, t);
-
-  return r1 + (r2 - r1)*t;
-}
-
-function binomial(n, i) {
-  if (i > n) {
-    throw new Error("Bad call to binomial(n, i), i was > than n");
-  }
-
-  if (i == 0 || i == n) {
-    return 1;
-  }
-
-  var key = "" + n + "," + i;
-
-  if (key in bin_cache)
-    return bin_cache[key];
-
-  var ret = binomial(n-1, i-1) + bin(n-1, i);
-  bin_cache[key] = ret;
-
-  return ret;
-}
-window.bin = binomial;
-
-
-class Curve1DPoint extends Vector2$1 {
-  constructor(co) {
-    super(co);
-
-    this.rco = new Vector2$1(co);
-    this.sco = new Vector2$1(co);
-
-    //for transform
-    this.startco = new Vector2$1();
-    this.eid = -1;
-    this.flag = 0;
-
-    this.tangent = TangentModes.SMOOTH;
-  }
-
-  copy() {
-    var ret = new Curve1DPoint(this);
-
-    ret.tangent = this.tangent;
-    ret.rco.load(ret);
-
-    return ret;
-  }
-
-  toJSON() {
-    return {
-      0       : this[0],
-      1       : this[1],
-      eid     : this.eid,
-      flag    : this.flag,
-      tangent : this.tangent
-    };
-  }
-
-  static fromJSON(obj) {
-    var ret = new Curve1DPoint(obj);
-
-    ret.eid = obj.eid;
-    ret.flag = obj.flag;
-    ret.tangent = obj.tangent;
-
-    return ret;
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    this.sco.load(this);
-    this.rco.load(this);
-    this.recalc = RecalcFlags.ALL;
-  }
-};
-Curve1DPoint.STRUCT = `
-Curve1DPoint {
-  0       : float;
-  1       : float;
-  eid     : int;
-  flag    : int;
-  deg     : int;
-  tangent : int;
-  rco     : vec2;
-}
-`;
-nstructjs$1.register(Curve1DPoint);
-
-class BSplineCurve extends CurveTypeData {
-  constructor() {
-    super();
-
-    this.fastmode = false;
-    this.points = [];
-    this.length = 0;
-    this.interpolating = false;
-
-    this._ps = [];
-    this.hermite = [];
-    this.fastmode = false;
-
-    this.deg = 6;
-    this.recalc = RecalcFlags.ALL;
-    this.basis_tables = [];
-    this.eidgen = new IDGen();
-
-    this.add(0, 0);
-    this.add(1, 1);
-
-    this.mpos = new Vector2$1();
-
-    this.on_mousedown = this.on_mousedown.bind(this);
-    this.on_mousemove = this.on_mousemove.bind(this);
-    this.on_mouseup = this.on_mouseup.bind(this);
-    this.on_keydown = this.on_keydown.bind(this);
-    this.on_touchstart = this.on_touchstart.bind(this);
-    this.on_touchmove = this.on_touchmove.bind(this);
-    this.on_touchend = this.on_touchend.bind(this);
-    this.on_touchcancel = this.on_touchcancel.bind(this);
-  }
-
-  equals(b) {
-    if (b.type !== this.type) {
-      return false;
-    }
-
-    let bad = this.points.length !== b.points.length;
-
-    bad = bad || this.deg !== b.deg;
-    bad = bad || this.interpolating !== b.interpolating;
-
-    if (bad) {
-      return false;
-    }
-
-    for (let i=0; i<this.points.length; i++) {
-      let p1 = this.points[i];
-      let p2 = b.points[i];
-
-      if (p1.vectorDistance(p2) > 0.00001) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  static define() {return {
-    uiname : "B-Spline",
-    name   : "bspline"
-  }}
-
-  remove(p) {
-    let ret = this.points.remove(p);
-    this.length = this.points.length;
-
-    return ret;
-  }
-
-  add(x, y, no_update=false) {
-    var p = new Curve1DPoint();
-    this.recalc = RecalcFlags.ALL;
-
-    p.eid = this.eidgen.next();
-
-    p[0] = x;
-    p[1] = y;
-
-    p.sco.load(p);
-    p.rco.load(p);
-
-    this.points.push(p);
-    if (!no_update) {
-      this.update();
-    }
-
-    this.length = this.points.length;
-
-    return p;
-  }
-
-  update() {
-    super.update();
-  }
-
-  updateKnots(recalc=true) {
-    if (recalc) {
-      this.recalc = RecalcFlags.ALL;
-    }
-
-    if (!this.interpolating) {
-      for (var i = 0; i < this.points.length; i++) {
-        this.points[i].rco.load(this.points[i]);
-      }
-    }
-
-    this.points.sort(function(a, b) {
-      return a[0] - b[0];
-    });
-
-    this._ps = [];
-    if (this.points.length < 2) {
-      return;
-    }
-    var a = this.points[0][0], b = this.points[this.points.length-1][0];
-
-    for (var i=0; i<this.points.length-1; i++) {
-      this._ps.push(this.points[i]);
-    }
-
-    if (this.points.length < 3) {
-      return;
-    }
-
-    var l1 = this.points[this.points.length-1];
-    var l2 = this.points[this.points.length-2];
-
-    var p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00004;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*1.0/3.0;
-    //this._ps.push(p);
-
-    var p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00003;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*1.0/3.0;
-    //this._ps.push(p);
-
-    var p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00001;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*1.0/3.0;
-    this._ps.push(p);
-
-    var p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00001;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*2.0/3.0;
-    this._ps.push(p);
-
-    this._ps.push(l1);
-
-    if (!this.interpolating) {
-      for (var i = 0; i < this._ps.length; i++) {
-        this._ps[i].rco.load(this._ps[i]);
-      }
-    }
-
-    for (var i=0; i<this.points.length; i++) {
-      var p = this.points[i];
-      var x = p[0], y = p[1];//this.evaluate(x);
-
-      p.sco[0] = x;
-      p.sco[1] = y;
-    }
-  }
-
-  toJSON() {
-    let ret = super.toJSON();
-
-    ret.interpolating = this.interpolating;
-
-    var ps = [];
-    for (var i=0; i<this.points.length; i++) {
-      ps.push(this.points[i].toJSON());
-    }
-
-    ret = Object.assign(ret, {
-      points : ps,
-      deg    : this.deg,
-      eidgen : this.eidgen.toJSON()
-    });
-
-    return ret;
-  }
-
-  loadJSON(obj) {
-    super.loadJSON(obj);
-
-    this.interpolating = obj.interpolating;
-    this.length = 0;
-    this.points = [];
-    this._ps = [];
-
-    this.hightlight = undefined;
-    this.eidgen = IDGen.fromJSON(obj.eidgen);
-    this.recalc = RecalcFlags.ALL;
-    this.mpos = [0, 0];
-
-    for (var i=0; i<obj.points.length; i++) {
-      this.points.push(Curve1DPoint.fromJSON(obj.points[i]));
-    }
-
-    this.deg = obj.deg;
-
-    this.updateKnots();
-    this.redraw();
-    return this;
-  }
-
-  basis(t, i) {
-    if (this.recalc & RecalcFlags.FULL_BASIS) {
-      return this._basis(t, i);
-    }
-
-    if (this.recalc & RecalcFlags.BASIS) {
-      this.regen_basis();
-      this.recalc &= ~RecalcFlags.BASIS;
-    }
-
-    i = Math.min(Math.max(i, 0), this._ps.length-1);
-    t = Math.min(Math.max(t, 0.0), 1.0)*0.999999999;
-
-    var table = this.basis_tables[i];
-
-    var s = t*(table.length/4)*0.99999;
-
-    var j = ~~s;
-    s -= j;
-
-    j *= 4;
-    return table[j] + (table[j+3] - table[j])*s;
-
-    return bez4(table[j], table[j+1], table[j+2], table[j+3], s);
-  }
-
-  reset() {
-    this.length = 0;
-    this.points = [];
-    this._ps = [];
-
-    this.add(0, 0, true);
-    this.add(1, 1, true);
-
-    this.recalc = 1;
-    this.updateKnots();
-    this.update();
-
-    return this;
-  }
-
-  regen_hermite(steps) {
-    //console.log("building spline approx");
-
-    if (steps === undefined) {
-      steps = this.fastmode ? 180 : 340;
-    }
-
-    if (this.interpolating) {
-      steps *= 2;
-    }
-
-    this.hermite = new Array(steps);
-    var table =this.hermite;
-
-    var eps = 0.00001;
-    var dt = (1.0-eps*4.001)/(steps-1);
-    var t=eps*4;
-    var lastdv1, lastf3;
-
-    for (var j=0; j<steps; j++, t += dt) {
-      var f1 = this._evaluate(t-eps*2);
-      var f2 = this._evaluate(t-eps);
-      var f3 = this._evaluate(t);
-      var f4 = this._evaluate(t+eps);
-      var f5 = this._evaluate(t+eps*2);
-
-      var dv1 = (f4-f2) / (eps*2);
-      dv1 /= steps;
-
-      if (j > 0) {
-        var j2 = j-1;
-
-        table[j2*4]   = lastf3;
-        table[j2*4+1] = lastf3 + lastdv1/3.0;
-        table[j2*4+2] = f3 - dv1/3.0;
-        table[j2*4+3] = f3;
-      }
-
-      lastdv1 = dv1;
-      lastf3 = f3;
-    }
-  }
-
-  solve_interpolating() {
-    //this.recalc |= RecalcFlags.FULL_BASIS;
-
-    for (let p of this._ps) {
-      p.rco.load(p);
-    }
-
-    this._evaluate2(0.5);
-
-    let error1 = (p) => {
-      //return p.vectorDistance(this._evaluate2(p[0]));
-      return this._evaluate(p[0]) - p[1];
-    };
-
-    let error = (p) => {
-      return error1(p);
-
-      /*
-      let err = 0.0;
-      for (let p of this.points) {
-        //err += error1(p)**2;
-        err += Math.abs(error1(p));
-      }
-
-      //return Math.sqrt(err);
-      return err;
-      //*/
-    };
-
-    let err = 0.0;
-    let g = new Vector2$1();
-
-    for (let step=0; step<25; step++) {
-      err = 0.0;
-
-      for (let p of this._ps) {
-        let r1 = error(p);
-        const df = 0.00001;
-
-        err += Math.abs(r1);
-
-        if (p === this._ps[0] || p === this._ps[this._ps.length-1]) {
-        //  continue;
-        }
-
-        g.zero();
-
-        for (let i = 0; i < 2; i++) {
-          let orig = p.rco[i];
-          p.rco[i] += df;
-          let r2 = error(p);
-          p.rco[i] = orig;
-
-          g[i] = (r2 - r1) / df;
-        }
-
-        let totgs = g.dot(g);
-        //console.log(totgs);
-
-        if (totgs < 0.00000001) {
-          continue;
-        }
-
-        r1 /= totgs;
-        let k = 0.5;
-
-        p.rco[0] += -r1*g[0]*k;
-        p.rco[1] += -r1*g[1]*k;
-      }
-
-      //console.log("ERR", err);
-
-      this.updateKnots(false);
-
-      let th = this.fastmode ? 0.001 : 0.00005;
-      if (err < th) {
-        break;
-      }
-    }
-
-    //this.recalc &= ~RecalcFlags.FULL_BASIS;
-  }
-
-  regen_basis() {
-    //console.log("building basis functions");
-    //var steps = this.fastmode && !this.interpolating ? 64 : 128;
-    var steps = this.fastmode ? 64 : 128;
-
-    if (this.interpolating) {
-      steps *= 2;
-    }
-
-    this.basis_tables = new Array(this._ps.length);
-
-    for (var i=0; i<this._ps.length; i++) {
-      var table = this.basis_tables[i] = new Array((steps-1)*4);
-
-      var eps = 0.00001;
-      var dt = (1.0-eps*8)/(steps-1);
-      var t=eps*4;
-      var lastdv1, lastf3;
-
-      for (var j=0; j<steps; j++, t += dt) {
-        var f1 = this._basis(t-eps*2, i);
-        var f2 = this._basis(t-eps, i);
-        var f3 = this._basis(t, i);
-        var f4 = this._basis(t+eps, i);
-        var f5 = this._basis(t+eps*2, i);
-
-        var dv1 = (f4-f2) / (eps*2);
-        dv1 /= steps;
-
-        if (j > 0) {
-          var j2 = j-1;
-
-          table[j2*4]   = lastf3;
-          table[j2*4+1] = lastf3 + lastdv1/3.0;
-          table[j2*4+2] = f3 - dv1/3.0;
-          table[j2*4+3] = f3;
-        }
-
-        lastdv1 = dv1;
-        lastf3 = f3;
-      }
-    }
-  }
-
-  _basis(t, i) {
-    var len = this._ps.length;
-    var ps = this._ps;
-
-    function safe_inv(n) {
-      return n == 0 ? 0 : 1.0 / n;
-    }
-
-    function bas(s, i, n) {
-      var kp = Math.min(Math.max(i-1, 0), len-1);
-      var kn = Math.min(Math.max(i+1, 0), len-1);
-      var knn = Math.min(Math.max(i+n, 0), len-1);
-      var knn1 = Math.min(Math.max(i+n+1, 0), len-1);
-      var ki = Math.min(Math.max(i, 0), len-1);
-
-      if (n == 0) {
-        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
-      } else {
-
-        var a = (s-ps[ki].rco[0]) * safe_inv(ps[knn].rco[0]-ps[ki].rco[0]+0.0001);
-        var b = (ps[knn1].rco[0] - s) * safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
-
-        var ret = a*bas(s, i, n-1) + b*bas(s, i+1, n-1);
-
-        /*
-        if (isNaN(ret)) {
-          console.log(a, b, s, i, n, len);
-          throw new Error();
-        }
-        //*/
-
-        //if (Math.random() > 0.99) {
-        //console.log(ret, a, b, n, i);
-        //}
-        return ret;
-      }
-    }
-
-    var p = this._ps[i].rco, nk, pk;
-    var deg = this.deg;
-
-    var b = bas(t, i-deg, deg);
-
-    return b;
-  }
-
-  evaluate(t) {
-    var a = this.points[0].rco, b = this.points[this.points.length-1].rco;
-
-    if (t < a[0]) return a[1];
-    if (t > b[0]) return b[1];
-
-    if (this.points.length == 2) {
-      t = (t - a[0]) / (b[0] - a[0]);
-      return a[1] + (b[1] - a[1])*t;
-    }
-
-    if (this.recalc) {
-      this.regen_basis();
-
-      if (this.interpolating) {
-        this.solve_interpolating();
-      }
-
-      this.regen_hermite();
-      this.recalc = 0;
-    }
-
-    t *= 0.999999;
-
-    var table = this.hermite;
-    var s = t*(table.length/4);
-
-    var i = Math.floor(s);
-    s -= i;
-
-    i *= 4;
-
-    return table[i] + (table[i+3] - table[i])*s;
-  }
-
-  _evaluate(t) {
-    var start_t = t;
-
-    if (this.points.length > 1) {
-      var a = this.points[0], b = this.points[this.points.length-1];
-
-      if (t < a[0]) return a[1];
-      if (t >= b[0]) return b[1];
-    }
-
-    for (var i=0; i<35; i++) {
-      var df = 0.0001;
-      var ret1 = this._evaluate2(t < 0.5 ? t : t-df);
-      var ret2 = this._evaluate2(t < 0.5 ? t+df : t);
-
-      var f1 = Math.abs(ret1[0]-start_t);
-      var f2 = Math.abs(ret2[0]-start_t);
-      var g = (f2-f1) / df;
-
-      if (f1 == f2) break;
-
-      //if (f1 < 0.0005) break;
-
-      if (f1 == 0.0 || g == 0.0)
-        return this._evaluate2(t)[1];
-
-      var fac = -(f1/g)*0.5;
-      if (fac == 0.0) {
-        fac = 0.01;
-      } else if (Math.abs(fac) > 0.1) {
-        fac = 0.1*Math.sign(fac);
-      }
-
-      t += fac;
-      var eps = 0.00001;
-      t = Math.min(Math.max(t, eps), 1.0-eps);
-    }
-
-    return this._evaluate2(t)[1];
-  }
-
-  _evaluate2(t) {
-    var ret = eval2_rets.next();
-
-    t *= 0.9999999;
-
-    var totbasis = 0;
-    var sumx = 0;
-    var sumy = 0;
-
-    for (var i=0; i<this._ps.length; i++) {
-      var p = this._ps[i].rco;
-      var b = this.basis(t, i);
-
-      sumx += b*p[0];
-      sumy += b*p[1];
-
-      totbasis += b;
-    }
-
-    if (totbasis != 0.0) {
-      sumx /= totbasis;
-      sumy /= totbasis;
-    }
-
-    ret[0] = sumx;
-    ret[1] = sumy;
-
-    return ret;
-  }
-
-  get hasGUI() {
-    return this.uidata !== undefined;
-  }
-
-  _wrapTouchEvent(e) {
-    return {
-      x          : e.touches.length ? e.touches[0].pageX : this.mpos[0],
-      y          : e.touches.length ? e.touches[0].pageY : this.mpos[1],
-      button     : 0,
-      shiftKey   : e.shiftKey,
-      altKey     : e.altKey,
-      ctrlKey    : e.ctrlKey,
-      isTouch    : true,
-      commandKey : e.commandKey,
-      stopPropagation : () => e.stopPropagation(),
-      preventDefault : () => e.preventDefault()
-    };
-  }
-
-  on_touchstart(e) {
-    this.mpos[0] = e.touches[0].pageX;
-    this.mpos[1] = e.touches[0].pageY;
-
-    let e2 = this._wrapTouchEvent(e);
-
-    this.on_mousemove(e2);
-    this.on_mousedown(e2);
-  }
-
-  on_touchmove(e) {
-    this.mpos[0] = e.touches[0].pageX;
-    this.mpos[1] = e.touches[0].pageY;
-
-    let e2 = this._wrapTouchEvent(e);
-    this.on_mousemove(e2);
-  }
-
-  on_touchend(e) {
-    this.on_mouseup(this._wrapTouchEvent(e));
-  }
-
-  on_touchcancel(e) {
-    this.on_touchend(e);
-  }
-
-  makeGUI(container, canvas, drawTransform) {
-    this.uidata = {
-      start_mpos  : new Vector2$1(),
-      transpoints : [],
-
-      dom         : container,
-      canvas      : canvas,
-      g           : canvas.g,
-      transforming: false,
-      draw_trans  : drawTransform
-    };
-
-    canvas.addEventListener("touchstart", this.on_touchstart);
-    canvas.addEventListener("touchmove", this.on_touchmove);
-    canvas.addEventListener("touchend", this.on_touchend);
-    canvas.addEventListener("touchcancel", this.on_touchcancel);
-
-    canvas.addEventListener("mousedown", this.on_mousedown);
-    canvas.addEventListener("mousemove", this.on_mousemove);
-    canvas.addEventListener("mouseup", this.on_mouseup);
-    canvas.addEventListener("keydown", this.on_keydown);
-
-    let row = container.row();
-
-    let fullUpdate = () => {
-      this.updateKnots();
-      this.update();
-      this.regen_basis();
-      this.recalc = RecalcFlags.ALL;
-      this.redraw();
-    };
-
-    row.iconbutton(Icons.TINY_X, "Delete Point", () => {
-      console.log("delete point");
-
-      for (var i=0; i<this.points.length; i++) {
-        var p = this.points[i];
-
-        if (p.flag & CurveFlags.SELECT) {
-          this.points.remove(p);
-          i--;
-        }
-      }
-
-      fullUpdate();
-    });
-
-    row.button("Reset", () => {
-      this.reset();
-    });
-
-    row.simpleslider(undefined, "Degree", this.deg, 1, 6, 1, true, true, (slider) => {
-      this.deg = Math.floor(slider.value);
-
-      fullUpdate();
-      console.log(this.deg);
-
-    });
-
-    row = container.row();
-    let check = row.check(undefined, "Interpolating");
-    check.checked = this.interpolating;
-
-    check.onchange = () => {
-      this.interpolating = check.value;
-      console.log(check.value);
-      fullUpdate();
-    };
-
-    return this;
-  }
-
-  killGUI(container, canvas) {
-    if (this.uidata !== undefined) {
-      let ud = this.uidata;
-      this.uidata = undefined;
-
-      console.log("removing event handlers for bspline curve");
-
-      canvas.removeEventListener("touchstart", this.on_touchstart);
-      canvas.removeEventListener("touchmove", this.on_touchmove);
-      canvas.removeEventListener("touchend", this.on_touchend);
-      canvas.removeEventListener("touchcancel", this.on_touchcancel);
-
-      canvas.removeEventListener("mousedown", this.on_mousedown);
-      canvas.removeEventListener("mousemove", this.on_mousemove);
-      canvas.removeEventListener("mouseup", this.on_mouseup);
-      canvas.removeEventListener("keydown", this.on_keydown);
-    }
-
-    return this;
-  }
-
-  start_transform() {
-    this.uidata.transpoints = [];
-
-    for (let p of this.points) {
-      if (p.flag & CurveFlags.SELECT) {
-        this.uidata.transpoints.push(p);
-        p.startco.load(p);
-      }
-    }
-  }
-
-  on_mousedown(e) {
-    console.log("bspline mdown", e.x, e.y);
-
-    this.uidata.start_mpos.load(this.transform_mpos(e.x, e.y));
-    this.fastmode = true;
-
-    console.log(this.uidata.start_mpos, this.uidata.draw_trans);
-
-    var mpos = this.transform_mpos(e.x, e.y);
-    var x=mpos[0], y = mpos[1];
-    this.do_highlight(x, y);
-
-    if (this.points.highlight != undefined) {
-      if (!e.shiftKey) {
-        for (var i=0; i<this.points.length; i++) {
-          this.points[i].flag &= ~CurveFlags.SELECT;
-        }
-
-        this.points.highlight.flag |= CurveFlags.SELECT;
-      } else {
-        this.points.highlight.flag ^= CurveFlags.SELECT;
-      }
-
-
-      this.uidata.transforming = true;
-
-      this.start_transform();
-
-      this.updateKnots();
-      this.update();
-      this.redraw();
-      return;
-    } else if (!e.isTouch) {
-      var p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
-      this.points.highlight = p;
-
-      this.updateKnots();
-      this.update();
-      this.redraw();
-
-      this.points.highlight.flag |= CurveFlags.SELECT;
-
-      this.uidata.transforming = true;
-      this.uidata.transpoints = [this.points.highlight];
-      this.uidata.transpoints[0].startco.load(this.uidata.transpoints[0]);
-    }
-  }
-
-  do_highlight(x, y) {
-    var trans = this.uidata.draw_trans;
-    var mindis = 1e17, minp=undefined;
-    var limit = 19/trans[0], limitsqr = limit*limit;
-
-    for (var i=0; i<this.points.length; i++) {
-      var p = this.points[i];
-      var dx = x-p.sco[0], dy = y-p.sco[1], dis = dx*dx + dy*dy;
-
-      if (dis < mindis && dis < limitsqr) {
-        mindis = dis;
-        minp = p;
-      }
-    }
-
-    if (this.points.highlight !== minp) {
-      this.points.highlight = minp;
-      this.redraw();
-    }
-    //console.log(x, y, minp);
-  }
-
-  do_transform(x, y) {
-    var off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
-
-    for (var i=0; i<this.uidata.transpoints.length; i++) {
-      var p = this.uidata.transpoints[i];
-      p.load(p.startco).add(off);
-
-      p[0] = Math.min(Math.max(p[0], 0), 1);
-      p[1] = Math.min(Math.max(p[1], 0), 1);
-    }
-
-    this.updateKnots();
-    this.update();
-    this.redraw();
-  }
-
-  transform_mpos(x, y){
-    var r = this.uidata.canvas.getClientRects()[0];
-    let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
-
-    x -= parseInt(r.left);
-    y -= parseInt(r.top);
-
-    x *= dpi;
-    y *= dpi;
-
-    var trans = this.uidata.draw_trans;
-
-    x = x/trans[0] - trans[1][0];
-    y = -y/trans[0] - trans[1][1];
-
-    return [x, y];
-  }
-
-  on_mousemove(e) {
-    if (e.isTouch && this.uidata.transforming) {
-      e.preventDefault();
-    }
-
-    var mpos = this.transform_mpos(e.x, e.y);
-    var x=mpos[0], y = mpos[1];
-
-    if (this.uidata.transforming) {
-      this.do_transform(x, y);
-      this.evaluate(0.5);
-      //this.update();
-      //this.doSave();
-    } else {
-      this.do_highlight(x, y);
-    }
-  }
-
-  on_mouseup(e) {
-    this.uidata.transforming = false;
-    this.fastmode = false;
-    this.updateKnots();
-    this.update();
-  }
-
-  on_keydown(e) {
-    console.log(e.keyCode);
-
-    switch (e.keyCode) {
-      case 88: //xkeey
-      case 46: //delete
-        if (this.points.highlight != undefined) {
-          this.points.remove(this.points.highlight);
-          this.recalc = RecalcFlags.ALL;
-
-          this.points.highlight = undefined;
-          this.updateKnots();
-          this.update();
-
-          if (this._save_hook !== undefined) {
-            this._save_hook();
-          }
-        }
-        break;
-    }
-  }
-
-  draw(canvas, g, draw_trans) {
-    g.save();
-
-    if (this.uidata === undefined) {
-      return;
-    }
-
-    this.uidata.canvas = canvas;
-    this.uidata.g = g;
-    this.uidata.draw_trans = draw_trans;
-
-    let sz = draw_trans[0], pan = draw_trans[1];
-    g.lineWidth *= 3.0;
-
-    for (var ssi=0; ssi<2; ssi++) {
-      break; //uncomment to draw basis functions
-      for (var si=0; si<this.points.length; si++) {
-        g.beginPath();
-
-        var f = 0;
-        for (var i=0; i<steps; i++, f += df) {
-          var totbasis = 0;
-
-          for (var j=0; j<this.points.length; j++) {
-            totbasis += this.basis(f, j);
-          }
-
-          var val = this.basis(f, si);
-
-          if (ssi)
-            val /= (totbasis == 0 ? 1 : totbasis);
-
-          (i==0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5, w, w);
-        }
-
-        var color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
-
-        if (ssi) {
-          color = "rgba(105, 25, 5,"+alpha+")";
-        } else {
-          color = "rgba(25, 145, 45,"+alpha+")";
-        }
-        g.strokeStyle = color;
-        g.stroke();
-      }
-    }
-
-    g.lineWidth /= 3.0;
-
-    let w = 0.03;
-
-    for (let p of this.points) {
-      g.beginPath();
-
-      if (p === this.points.highlight) {
-        g.fillStyle = "green";
-      } else if (p.flag & CurveFlags.SELECT) {
-        g.fillStyle = "red";
-      } else {
-        g.fillStyle = "orange";
-      }
-
-      g.rect(p.sco[0]-w/2, p.sco[1]-w/2, w, w);
-
-      g.fill();
-    }
-
-    g.restore();
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-    super.loadSTRUCT(reader);
-
-    this.updateKnots();
-    this.regen_basis();
-    this.recalc = RecalcFlags.ALL;
-  }
-}
-
-BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
-  points        : array(Curve1DPoint);
-  deg           : int;
-  eidgen        : IDGen;
-  interpolating : bool;
-}
-`;
-nstructjs$1.register(BSplineCurve);
-CurveTypeData.register(BSplineCurve);
 
 /*
 * Ease
@@ -14903,7 +15080,6 @@ class SimpleCurveBase extends CurveTypeData {
       console.warn("Missing define function for curve", this.constructor.name);
       return;
     }
-    console.log(this.constructor.define(), this, "<-----");
 
     for (let pair of ps) {
       if (pair.key in pdef) {
@@ -15232,6 +15408,8 @@ class Curve1D extends EventDispatcher {
       ret.generators.push(gen.toJSON());
     }
 
+    ret.generators.sort((a, b) => a.type.localeCompare(b.type));
+
     return ret;
   }
 
@@ -15275,16 +15453,8 @@ class Curve1D extends EventDispatcher {
   }
 
   equals(b) {
-    //console.log(mySafeJSONStringify(this));
-    //console.log(mySafeJSONStringify(b));
-
     let a = mySafeJSONStringify$1(this).trim();
     let b2 = mySafeJSONStringify$1(b).trim();
-
-    if (a !== b2) {
-      console.log(a);
-      console.log(b2);
-    }
 
     return a === b2;
   }
@@ -15413,7 +15583,7 @@ class Curve1D extends EventDispatcher {
     this.generators = [];
     reader(this);
 
-    console.log("VERSION", this.VERSION);
+    //console.log("VERSION", this.VERSION);
 
     if (this.VERSION <= 0.75) {
       this.generators = [];
@@ -15425,8 +15595,6 @@ class Curve1D extends EventDispatcher {
       this.generators.active = this.getGenerator("BSplineCurve");
     }
 
-    console.log("ACTIVE", this._active);
-
     for (let gen of this.generators.concat([])) {
       if (!(gen instanceof CurveTypeData)) {
         console.warn("Bad generator data found:", gen);
@@ -15435,7 +15603,6 @@ class Curve1D extends EventDispatcher {
       }
 
       if (gen.type === this._active) {
-        console.log("found active", this._active);
         this.generators.active = gen;
       }
     }
@@ -21086,7 +21253,7 @@ class DataAPI extends ModelInterface {
         key = dpath.path;
 
         if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
-          bitfield = lastobj[key];
+          bitfield = lastobj ? lastobj[key] : 0;
         } else {
           prop.dataref = lastobj;
           prop.datapath = inpath;
@@ -21667,50 +21834,40 @@ function rgb_to_hsv (r,g,b) {
   }
 
 const DefaultTheme = {
-  base : {
-    themeVersion : 0.1,
-    mobileTextSizeMultiplier : 1.0,
-    mobileSizeMultiplier : 1, //does not include text
-
-    //used for by icon strips and the like
-    "oneAxisPadding" : 6,
-    "oneAxisMargin" : 6,
-
-    "FocusOutline" : "rgba(100, 150, 255, 1.0)",
-
-    "BasePackFlag" : 0,
-    "ScreenBorderOuter" : "rgba(120, 120, 120, 1.0)",
-    "ScreenBorderInner" : "rgba(170, 170, 170, 1.0)",
-    "ScreenBorderWidth" : isMobile() ? 5 : 2,
-    "ScreenBorderMousePadding" : isMobile() ? 6 : 5,
-
-    "numslider_width" : 24,
-    "numslider_height" : 24,
-
-    "defaultWidth" : 32,
-    "defaultHeight" : 32,
-    
-    "ProgressBarBG" : "rgba(110, 110, 110, 1.0)",
-    "ProgressBar" : "rgba(75, 175, 255, 1.0)",
-
-    "NoteBG" : "rgba(220, 220, 220, 0.0)",
-    "NoteText" : new CSSFont({
-      font  : "sans-serif",
-      size  : 12,
-      color :  "rgba(135, 135, 135, 1.0)",
-      weight : "bold"
+  base:  {
+    mobileSizeMultiplier    : 1, //does not include text
+    mobileTextSizeMultiplier: 1,
+    AreaHeaderBG            : 'rgba(205, 205, 205, 1.0)',
+    BasePackFlag            : 0,
+    BoxBG                   : 'rgba(204,204,204, 1)',
+    BoxBorder               : 'rgba(255, 255, 255, 1.0)',
+    BoxDepressed            : 'rgba(130, 130, 130, 1.0)',
+    BoxDrawMargin           : 2, //how much to shrink rects drawn by drawRoundBox
+    BoxHighlight            : 'rgba(155, 220, 255, 1.0)',
+    BoxMargin               : 4,
+    BoxRadius               : 7.482711108656741,
+    BoxSub2BG               : 'rgba(125, 125, 125, 1.0)',
+    BoxSubBG                : 'rgba(175, 175, 175, 1.0)',
+    DefaultPanelBG          : 'rgba(225, 225, 225, 1.0)',
+    DefaultText             : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
-
-    "DefaultPanelBG" : "rgba(225, 225, 225, 1.0)",
-    "InnerPanelBG" : "rgba(195, 195, 195, 1.0)",
-    "AreaHeaderBG" : "rgba(205, 205, 205, 1.0)",
-
-    "BoxRadius" : 12,
-    "BoxMargin" : 4,
-    "BoxDrawMargin" : 2, //how much to shrink rects drawn by drawRoundBox
-    "BoxHighlight" : "rgba(155, 220, 255, 1.0)",
-    "BoxDepressed" : "rgba(130, 130, 130, 1.0)",
-    "BoxBG" : "rgba(170, 170, 170, 1.0)",
+    Disabled  : { //keys here are treated as both css and theme keys
+      AreaHeaderBG : 'rgb(72, 72, 72)',
+      BoxBG : 'rgb(50, 50, 50)',
+      BoxSub2BG : 'rgb(50, 50, 50)',
+      BoxSubBG : 'rgb(50, 50, 50)',
+      DefaultPanelBG : 'rgb(72, 72, 72)',
+      InnerPanelBG : 'rgb(72, 72, 72)',
+      'background-color' : 'rgb(72, 72, 72)',
+      'background-size' : '5px 3px',
+      'border-radius' : '15px',
+    },
     /*
     "Disabled": { //https://leaverou.github.io/css3patterns/#zig-zag
       background: "linear-gradient(135deg, rgb(100,0,0) 25%, transparent 25%) -50px 0,"+
@@ -21732,77 +21889,126 @@ const DefaultTheme = {
       "background-size": "15px 20px",
       "border-radius" : "15px",
     },//*/
-
-    Disabled : { //keys here are treated as both css and theme keys
-      "background-size": "5px 3px",
-      "background-color": "rgb(72, 72, 72)",
-      "border-radius" : "15px",
-      BoxBG : "rgb(50, 50, 50)",
-      BoxSubBG : "rgb(50, 50, 50)",
-      BoxSub2BG : "rgb(50, 50, 50)",
-      AreaHeaderBG  : "rgb(72, 72, 72)",
-      DefaultPanelBG : "rgb(72, 72, 72)",
-      InnerPanelBG:  "rgb(72, 72, 72)"
-    },
-
-    "BoxSubBG" : "rgba(175, 175, 175, 1.0)",
-    "BoxSub2BG" : "rgba(125, 125, 125, 1.0)",
-    "BoxBorder" : "rgba(255, 255, 255, 1.0)",
-
-    //fonts
-    "DefaultText" : new CSSFont({
-      font  : "sans-serif",
-      size  : 12,
-      color :  "rgba(35, 35, 35, 1.0)",
-      weight : "bold"
+    FocusOutline            : 'rgba(100, 150, 255, 1.0)',
+    HotkeyText              : new CSSFont({
+      font    : 'courier',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(130, 130, 130, 1.0)'
     }),
-
-    "ToolTipText" : new CSSFont({
-      font  : "sans-serif",
-      size  : 12,
-      color :  "rgba(35, 35, 35, 1.0)",
-      weight : "bold"
+    InnerPanelBG            : 'rgba(195, 195, 195, 1.0)',
+    LabelText               : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 13,
+      color   : 'rgba(75, 75, 75, 1.0)'
     }),
-
-    "LabelText" : new CSSFont({
-      size     : 13,
-      color    : "rgba(75, 75, 75, 1.0)",
-      font     : "sans-serif",
-      weight   : "bold"
+    NoteBG                  : 'rgba(220, 220, 220, 0.0)',
+    NoteText                : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(135, 135, 135, 1.0)'
     }),
-
-    "HotkeyText" : new CSSFont({
-      size     : 12,
-      color    : "rgba(130, 130, 130, 1.0)",
-      font     : "courier"
-      //weight   : "bold"
+    ProgressBar             : 'rgba(75, 175, 255, 1.0)',
+    ProgressBarBG           : 'rgba(110, 110, 110, 1.0)',
+    ScreenBorderInner       : 'rgba(170, 170, 170, 1.0)',
+    ScreenBorderMousePadding: 5,
+    ScreenBorderOuter       : 'rgba(120, 120, 120, 1.0)',
+    ScreenBorderWidth       : 2,
+    TitleText               : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 16,
+      color   : 'rgba(0,0,0, 1)'
     }),
-
-    "TitleText" : new CSSFont({
-      size     : 16,
-      color    : "rgba(55, 55, 55, 1.0)",
-      font     : "sans-serif",
-      weight   : "bold"
+    ToolTipText             : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
+    defaultHeight           : 32,
+    defaultWidth            : 32,
+    numslider_height        : 24,
+    numslider_width         : 24,
+
+    //used for by icon strips and the like
+    oneAxisMargin           : 6,
+    oneAxisPadding          : 6,
+    themeVersion            : 0.1,
   },
 
-  treeview : {
-    itemIndent : 10,
-    rowHeight  : 18
+  button:  {
+    BoxMargin    : 2.8251749218092415,
+    defaultHeight: 22.965012641773395,
+    defaultWidth : 100,
   },
 
-  menu : {
-    MenuBG : "rgba(250, 250, 250, 1.0)",
-    MenuHighlight : "rgba(155, 220, 255, 1.0)",
-    MenuSpacing : 0,
-    MenuText : new CSSFont({
-      size     : 12,
-      color    : "rgba(25, 25, 25, 1.0)",
-      font     : "sans-serif"
-      //weight   : "bold"
-    }),
+  checkbox:  {
+    BoxuMargin: 2,
+    CheckSide: 'left',
+    "background-color" : "orange",
+    "background" : "blue"
+  },
 
-    MenuSeparator : `
+  colorfield:  {
+    circleSize    : 4,
+    colorBoxHeight: 24,
+    defaultHeight : 200,
+    defaultWidth  : 200,
+    fieldsize     : 32,
+    hueheight     : 24,
+  },
+
+  colorpickerbutton:  {
+    defaultFont  : 'LabelText',
+    defaultHeight: 25,
+    defaultWidth : 100,
+  },
+
+  curvewidget:  {
+    CanvasBG    : 'rgba(50, 50, 50, 0.75)',
+    CanvasHeight: 256,
+    CanvasWidth : 256,
+  },
+
+  dropbox:  {
+    BoxHighlight : 'rgba(155, 220, 255, 0.4)',
+    defaultHeight: 24,
+    dropTextBG   : 'rgba(250, 250, 250, 0.7)', //if undefined, will use BoxBG
+  },
+
+  iconbutton:  {
+  },
+
+  iconcheck:  {
+    drawCheck: true
+  },
+
+  listbox:  {
+    DefaultPanelBG: 'rgba(230, 230, 230, 1.0)',
+    ListActive    : 'rgba(200, 205, 215, 1.0)',
+    ListHighlight : 'rgba(155, 220, 255, 0.5)',
+    height        : 200,
+    width         : 110,
+  },
+
+  menu:  {
+    MenuBG       : 'rgba(250, 250, 250, 1.0)',
+    MenuBorder   : '1px solid grey',
+    MenuHighlight: 'rgba(155, 220, 255, 1.0)',
+    MenuSeparator: `
       width : 100%;
       height : 2px;
       padding : 0px;
@@ -21810,147 +22016,148 @@ const DefaultTheme = {
       border : none;
       background-color : grey; 
     `,
-
-    MenuBorder : "1px solid grey",
-  },
-
-
-  tooltip : {
-    "BoxBG" : "rgb(245, 245, 245, 1.0)",
-    "BoxBorder" : "rgb(145, 145, 145, 1.0)"
-  },
-
-  textbox : {
-    "background-color" : "rgb(255, 255, 255, 1.0)",
-  },
-
-  richtext : {
-    "background-color" : "rgb(245, 245, 245)",
-    "DefaultText" : new CSSFont({
-      font  : "sans-serif",
-      size  : 16,
-      color :  "rgba(35, 35, 35, 1.0)",
-      weight : "normal"
-    })
-  },
-
-  button : {
-    defaultWidth : 100,
-    defaultHeight : 24,
-    BoxMargin     : 10
-  },
-  vecPopupButton : {
-    defaultWidth : 100,
-    defaultHeight : 18,
-    BoxMargin     : 3
-  },
-  iconcheck : {
-
-  },
-
-  checkbox : {
-    BoxMargin : 2,
-    CheckSide : "left"
-  },
-
-  iconbutton : {
-
-  },
-
-  scrollbars : {
-    color : undefined,
-    color2: undefined, //if undefined, will be derived from .color shaded with .contrast
-    width : undefined,
-    border : undefined,
-    contrast : undefined,
-  },
-
-  numslider : {
-    DefaultText : new CSSFont({
-      font   : "sans-serif",
-      color  : "black",
-      size   : 16,
-      weight : 'bold'
+    MenuSpacing  : 0,
+    MenuText     : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(25, 25, 25, 1.0)'
     }),
-    defaultWidth : 100,
-    defaultHeight : 29
   },
 
-  curvewidget : {
-    CanvasWidth : 256,
-    CanvasHeight : 256,
-    CanvasBG : "rgba(50, 50, 50, 0.75)"
-  },
-
-  numslider_simple : {
-    labelOnTop : false,
-    TitleText : new CSSFont({
-      size : 14
+  numslider:  {
+    DefaultText  : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14.204297767377387,
+      color   : 'black'
     }),
-    BoxBG : "rgb(225, 225, 225)",
-    BoxBorder : "rgb(75, 75, 75)",
-    SlideHeight : 10,
+    defaultHeight: 16,
+    defaultWidth : 100,
+    labelOnTop   : true,
+  },
+
+  numslider_simple:  {
+    BoxBG        : 'rgb(225, 225, 225)',
+    BoxBorder    : 'rgb(75, 75, 75)',
+    BoxRadius    : 5,
+    DefaultHeight: 18,
     DefaultWidth : 135,
-    DefaultHeight : 18,
-    BoxRadius : 5,
-    TextBoxWidth : 45
+    SlideHeight  : 10,
+    TextBoxWidth : 45,
+    TitleText    : new CSSFont({
+      font    : undefined,
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14,
+      color   : undefined
+    }),
+    labelOnTop   : true,
   },
 
-  tabs : {
-    TabStrokeStyle1 : "rgba(200, 200, 200, 1.0)",
-    TabStrokeStyle2 : "rgba(255, 255, 255, 1.0)",
-    TabInactive : "rgba(150, 150, 150, 1.0)",
-    TabHighlight : "rgba(50, 50, 50, 0.2)",
-    TabText : new CSSFont({
-      size     : 18,
-      color    : "rgba(35, 35, 35, 1.0)",
-      font     : "sans-serif",
-      //weight   : "bold"
+  numslider_textbox:  {
+    TitleText : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14,
+      color   : undefined
+    }),
+    labelOnTop: true,
+  },
+
+  panel:  {
+    Background      : 'rgba(156,156,156, 0.17586212158203124)',
+    BoxBorder       : 'rgba(0,0,0, 0.5598061397157866)',
+    BoxLineWidth    : 1.140988342674589,
+    BoxRadius       : 7.243125760182565,
+    HeaderRadius    : 5.829650280441558,
+    TitleBackground : 'rgba(197,197,197, 1)',
+    TitleBorder     : 'rgba(209,209,209, 1)',
+    TitleText       : new CSSFont({
+      font    : 'sans-serif',
+      weight  : '550',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14,
+      color   : 'rgba(50,50,50, 1)'
+    }),
+    'border-style'  : 'inset',
+    'padding-bottom': 0,
+    'padding-top'   : 0.9665377430621097,
+  },
+
+  richtext:  {
+    DefaultText       : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 16,
+      color   : 'rgba(35, 35, 35, 1.0)'
+    }),
+    'background-color': 'rgb(245, 245, 245)',
+  },
+
+  scrollbars:  {
+    border  : undefined,
+    color   : undefined,
+    color2  : undefined, //if undefined, will be derived from .color shaded with .contrast
+    contrast: undefined,
+    width   : undefined,
+  },
+
+  strip:  {
+    BoxBorder     : 'rgba(0,0,0, 0.31325409987877156)',
+    BoxLineWidth  : 1,
+    BoxMargin     : 1,
+    margin        : 2,
+    BoxRadius     : 8.76503417507447,
+    background    : 'rgba(90,90,90, 0.22704720332704742)',
+    'border-style': 'solid',
+  },
+
+  tabs:  {
+    TabHighlight   : 'rgba(50, 50, 50, 0.2)',
+    TabInactive    : 'rgba(150, 150, 150, 1.0)',
+    TabStrokeStyle1: 'rgba(200, 200, 200, 1.0)',
+    TabStrokeStyle2: 'rgba(255, 255, 255, 1.0)',
+    TabText        : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 18,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
   },
 
-  colorfield : {
-    fieldsize : 32,
-    defaultWidth : 200,
-    defaultHeight : 200,
-    hueheight : 24,
-    colorBoxHeight : 24,
-    circleSize : 4,
-    //DefaultPanelBG : "rgba(170, 170, 170, 1.0)"
+  textbox:  {
+    'background-color': 'rgb(255, 255, 255, 1.0)',
   },
 
-  panel : { 
-    "Background" : "rgba(175, 175, 175, 1.0)",
-    "TitleBackground" : "rgba(125, 125, 125, 1.0)", //for panels
-    "BoxBorder" : "rgba(255, 255, 255, 0.0)",
-    "TitleBorder" : "rgba(255, 255, 255, 0.0)",
-    "BoxRadius" : 5,
-    "BoxLineWidth"  : 1,
-    "padding-top" : 7,
-    "padding-bottom" : 5,
-    "border-style" : "solid"
+  tooltip:  {
+    BoxBG    : 'rgb(245, 245, 245, 1.0)',
+    BoxBorder: 'rgb(145, 145, 145, 1.0)',
   },
 
-  listbox : {
-    DefaultPanelBG : "rgba(230, 230, 230, 1.0)",
-    ListHighlight : "rgba(155, 220, 255, 0.5)",
-    ListActive : "rgba(200, 205, 215, 1.0)",
-    width : 110,
-    height : 200
+  treeview:  {
+    itemIndent: 10,
+    rowHeight : 18,
   },
 
-  colorpickerbutton : {
-    defaultWidth  : 100,
-    defaultHeight : 25,
-    defaultFont   : "LabelText",
-    
+  vecPopupButton:  {
+    BoxMargin    : 3,
+    defaultHeight: 18,
+    defaultWidth : 100,
   },
 
-  dropbox : {
-    dropTextBG : "rgba(250, 250, 250, 0.7)", //if undefined, will use BoxBG
-    BoxHighlight : "rgba(155, 220, 255, 0.4)",
-    defaultHeight : 24
-  }
 };
 
 let exclude = new Set([
@@ -22801,7 +23008,7 @@ class UIBase$2 extends HTMLElement {
 
     while (p) {
       if (p._useDataPathUndo !== undefined) {
-        console.log(p._useDataPathUndo, p.tagName);
+        //console.log(p._useDataPathUndo, p.tagName);
         return p._useDataPathUndo;
       }
 
@@ -24668,10 +24875,12 @@ class Button extends UIBase$3 {
 
     let dpi = this.getDPI();
 
-    this._last_update_key = "";
-
+    this._last_but_update_key = "";
+    
     this._name = "";
     this._namePad = undefined;
+    this._leftPad = 5; //extra pad before text
+    this._rightPad = 5; //extra pad after text
 
     this._last_w = 0;
     this._last_h = 0;
@@ -24947,6 +25156,13 @@ class Button extends UIBase$3 {
     ret += this.getDefault("BoxRadius") + ":" + this.getDefault("BoxMargin") + ":";
     ret += this.getAttribute("name") + ":";
 
+    let font = this.getDefault("DefaultText");
+    if (font && typeof font === "string") {
+      ret += font;
+    } else if (font && font instanceof CSSFont) {
+      ret += font.genKey();
+    }
+
     return ret;
   }
 
@@ -24969,8 +25185,8 @@ class Button extends UIBase$3 {
     }
 
     let key = this._calcUpdateKey();
-    if (key !== this._last_update_key) {
-      this._last_update_key = key;
+    if (key !== this._last_but_update_key) {
+      this._last_but_update_key = key;
 
       this.setCSS();
       this._repos_canvas();
@@ -24994,7 +25210,7 @@ class Button extends UIBase$3 {
     let tw = measureText(this, this._genLabel(),{
       size : ts,
       font : this.getDefault("DefaultText")
-    }).width/dpi + 18 + pad;
+    }).width + 2.0*pad + this._leftPad + this._rightPad;
 
     if (this._namePad !== undefined) {
       tw += this._namePad;
@@ -25125,8 +25341,8 @@ class Button extends UIBase$3 {
 
     let tw = measureText(this, text, undefined, undefined, ts, font).width;
 
-    let cx = pad*0.5 + 5*dpi;
-    let cy = h*0.5 + ts*0.5;
+    let cx = pad*0.5 + this._leftPad*dpi;
+    let cy = ts + (h-ts)/3.0;
 
     let g = this.g;
     drawText(this, ~~cx, ~~cy, text, {
@@ -25769,6 +25985,8 @@ class Check extends UIBase$5 {
     this._label.style["color"] = this.getDefault("DefaultText").color;
 
     super.setCSS();
+    //force clear background
+    this.style["background-color"] = "rgba(0,0,0,0)";
   }
 
   updateDataPath() {
@@ -25922,7 +26140,7 @@ class IconCheck extends Button {
 
     this._checked = undefined;
 
-    this._drawCheck = true;
+    this._drawCheck = undefined;
     this._icon = -1;
     this._icon_pressed = undefined;
     this.iconsheet = IconSheets.LARGE;
@@ -25937,7 +26155,12 @@ class IconCheck extends Button {
   }
 
   get drawCheck() {
-    return this._drawCheck;
+    let ret = this._drawCheck;
+
+    ret = ret === undefined ? this.getDefault("drawCheck") : ret;
+    ret = ret === undefined ? true : ret;
+
+    return ret;
   }
 
   set drawCheck(val) {
@@ -27915,8 +28138,14 @@ class Label extends UIBase$2 {
   }
 
   update() {
-    if (this.font !== this._last_font) {
-      this._last_font = this.font;
+    let key = "";
+
+    if (this._font !== undefined && this._font instanceof CSSFont) {
+      key += this._font.genKey();
+    }
+
+    if (key !== this._last_font) {
+      this._last_font = key;
       this._updateFont();
     }
     
@@ -28078,20 +28307,63 @@ class Container extends UIBase$2 {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(m = this.getDefault("oneAxisPadding"), m2 = 1, themeClass="strip") {
+  strip(themeClass="strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1) {
     let horiz = this instanceof RowFrame;
     horiz = horiz || this.style["flex-direction"] === "row";
 
     let flag = horiz ? PackFlags$5.STRIP_HORIZ : PackFlags$5.STRIP_VERT;
 
-    let strip = (horiz ? this.row() : this.col()).oneAxisPadding(m, m2);
+    let strip = (horiz ? this.row() : this.col());
+
+    if (typeof margin1 !== "number") {
+      throw new Error("margin1 was not a number");
+    }
+    if (typeof margin2 !== "number") {
+      throw new Error("margin2 was not a number");
+    }
 
     strip.packflag |= flag;
 
     if (themeClass in theme) {
       strip.overrideClass(themeClass);
-      strip.background = strip.getDefault("DefaultPanelBG");
+      strip.background = strip.getDefault("background");
       strip.setCSS();
+      strip.overrideClass(themeClass);
+
+      let lastkey;
+
+      strip.update.after(function() {
+        let bradius = strip.getDefault("BoxRadius");
+        let bline = strip.getDefault("BoxLineWidth");
+        let bstyle = strip.getDefault("border-style") || 'solid';
+        let padding = strip.getDefault("BoxMargin");
+        let bcolor = strip.getDefault("BoxBorder") || "rgba(0,0,0,0)";
+        let margin = strip.getDefault("margin") || 0;
+
+        bline = bline === undefined ? 0 : bline;
+        bradius = bradius === undefined ? 0 : bradius;
+        padding = padding === undefined ? 5 : padding;
+
+        let bg = strip.getDefault("background");
+
+        let key = "" + bradius + ":" + bline + ":" + bg + ":" + padding + ":";
+        key += bstyle + ":" + padding + ":" + bcolor + ":" + margin;
+
+        if (key !== lastkey) {
+          lastkey = key;
+
+          strip.oneAxisPadding(margin1+padding, margin2+padding);
+          strip.setCSS();
+
+          strip.background = bg;
+
+          strip.style["margin"] = "" + margin + "px";
+          strip.style["border"] = `${bline}px ${bstyle} ${bcolor}`;
+          strip.style["border-radius"] = "" + bradius + "px";
+        }
+      });
+    } else {
+      console.warn(this.constructor.name + ".strip(): unknown theme class " + themeClass);
     }
 
     /*
@@ -28120,9 +28392,9 @@ class Container extends UIBase$2 {
   /**
    * tries to set padding along one axis only in smart manner
    * */
-  oneAxisPadding(m = this.getDefault("oneAxisPadding"), m2 = 0) {
-    this.style["padding-top"] = this.style["padding-bottom"] = "" + m + "px";
-    this.style["padding-left"] = this.style["padding-right"] = "" + m2 + "px";
+  oneAxisPadding(axisPadding = this.getDefault("oneAxisPadding"), otherPadding = 0) {
+    this.style["padding-top"] = this.style["padding-bottom"] = "" + axisPadding + "px";
+    this.style["padding-left"] = this.style["padding-right"] = "" + otherPadding + "px";
 
     return this;
   }
@@ -29254,14 +29526,23 @@ class Container extends UIBase$2 {
       }
     }
 
-    if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER)) {
-      ret = UIBase$7.createElement("numslider-simple-x");
-    } else if (exports$1.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX)) {
-      ret = UIBase$7.createElement("numslider-textbox-x");
+    let simple = packflag & PackFlags$5.SIMPLE_NUMSLIDERS && !(packflag & PackFlags$5.FORCE_ROLLER_SLIDER);
+    let extraTextBox = exports$1.useNumSliderTextboxes && !(packflag & PackFlags$5.NO_NUMSLIDER_TEXTBOX);
+
+    if (extraTextBox) {
+      if (simple) {
+        ret = UIBase$7.createElement("numslider-simple-x");
+      } else {
+        ret = UIBase$7.createElement("numslider-textbox-x");
+      }
     } else {
-      ret = UIBase$7.createElement("numslider-x");
+      if (simple) {
+        ret = UIBase$7.createElement("numslider-simple-x");
+      } else {
+        ret = UIBase$7.createElement("numslider-x");
+      }
     }
-    
+
     ret.packflag |= packflag;
 
     let decimals;
@@ -29579,6 +29860,21 @@ class ColumnFrame extends Container {
 
   update() {
     super.update();
+  }
+
+
+  oneAxisMargin(m = this.getDefault('oneAxisMargin'), m2 = 0) {
+    this.style['margin-top'] = this.style['margin-bottom'] = '' + m + 'px';
+    this.style['margin-left'] = this.style['margin-right'] = m2 + 'px';
+
+    return this;
+  }
+
+  oneAxisPadding(m = this.getDefault('oneAxisPadding'), m2 = 0) {
+    this.style['padding-top'] = this.style['padding-bottom'] = '' + m + 'px';
+    this.style['padding-left'] = this.style['padding-right'] = '' + m2 + 'px';
+
+    return this;
   }
 
   static define() {
@@ -30129,8 +30425,6 @@ class VectorPanel extends ColumnFrame {
     } else {
       frame = this;
     }
-
-    console.warn("rebuilding");
 
     this.sliders = [];
 
@@ -30778,9 +31072,6 @@ class Curve1DWidget extends ColumnFrame {
 UIBase$2.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
-//
-//note that require has an api for handling circular
-//module refs, in such cases do not use these vars.
 
 var _ui$1 = undefined;
 
@@ -30801,6 +31092,7 @@ class PanelFrame extends ColumnFrame {
     this.titleframe = this.row();
 
     this.contents = UIBase$9.createElement("colframe-x", true);
+    this.contents._panel = this;
     this.iconcheck = UIBase$9.createElement("iconcheck-x");
 
     Object.defineProperty(this.contents, "closed", {
@@ -30899,7 +31191,9 @@ class PanelFrame extends ColumnFrame {
 
     let label = this.__label = row.label(this.getAttribute("title"));
 
+    this.__label.overrideClass("panel");
     this.__label.font = "TitleText";
+
     label._updateFont();
 
     label.noMarginsOrPadding();
@@ -30952,10 +31246,16 @@ class PanelFrame extends ColumnFrame {
 
     let bs = this.getDefault("border-style");
 
+    let header_radius = this.getDefault("HeaderRadius");
+    if (header_radius === undefined) {
+      header_radius = this.getDefault("BoxRadius");
+    }
+
     this.titleframe.background = this.getDefault("TitleBackground");
-    this.titleframe.style["border-radius"] = this.getDefault("BoxRadius") + "px";
-    this.titleframe.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
+    this.titleframe.style["border-radius"] = header_radius + "px";
+    this.titleframe.style["border"] = `${this.getDefault( "BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
     this.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+    this.style["border-radius"] = this.getDefault("BoxRadius") + "px";
     this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
     this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
 
@@ -30963,6 +31263,7 @@ class PanelFrame extends ColumnFrame {
     
     this.background = bg;
     this.contents.background = bg;
+    this.contents.parentWidget = this;
     this.contents.style["background-color"] = bg;
     this.style["background-color"] = bg;
 
@@ -30997,13 +31298,24 @@ class PanelFrame extends ColumnFrame {
     key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
     key += this.getDefault("Background") + this.getDefault("border-style");
+    key += this.getDefault("HeaderRadius");
     key += this.getAttribute("title");
+
+    let font = this.__label.getDefault("TitleText");
+    if (font) {
+      if (typeof font === "string") {
+        key += font;
+      } else if (font instanceof CSSFont) {
+        key += font.genKey();
+      }
+    }
 
     if (key !== this._last_key) {
       if (this.getAttribute("title")) {
         this.label = this.getAttribute("title");
       }
 
+      this.__label._updateFont();
       this._last_key = key;
       this.setCSS();
     }
@@ -35083,8 +35395,6 @@ class NumSlider extends ValueButtonBase {
     let g = this.g;
     let canvas = this.dom;
 
-    //console.log("numslider draw");
-
     let dpi = this.getDPI();
     let disabled = this.disabled; //this.hasAttribute("disabled");
 
@@ -35555,7 +35865,8 @@ class NumSliderSimpleBase extends UIBase$2 {
     return [x, boxw*0.5, boxw*0.5];
   }
   setCSS() {
-    super.setCSS();
+    //UIBase.setCSS does annoying thing with background-color
+    //super.setCSS();
 
     this.canvas.style["width"] = "min-contents";
     this.canvas.style["min-width"] = this.getDefault("DefaultWidth") + "px";
@@ -35620,7 +35931,7 @@ class SliderWithTextbox extends ColumnFrame {
     this._value = 0;
     this._name = undefined;
     this._lock_textbox = false;
-    this.labelOnTop = undefined;
+    this._labelOnTop = undefined;
 
     this._last_label_on_top = undefined;
 
@@ -35641,6 +35952,36 @@ class SliderWithTextbox extends ColumnFrame {
     this.textbox.setAttribute("class", "numslider_simple_textbox");
   }
 
+  /**
+   * whether to put label on top or to the left of sliders
+   *
+   * If undefined value will be either this.getAtttribute("labelOnTop"),
+   * if "labelOnTop" attribute exists, or it will be this.getDefault("labelOnTop")
+   * (theme default)
+   **/
+  get labelOnTop() {
+    let ret = this._labelOnTop;
+
+    if (ret === undefined && this.hasAttribute("labelOnTop")) {
+      let val = this.getAttribute("labelOnTop");
+      if (typeof val === "string") {
+        val = val.toLowerCase();
+        ret = val === "true" || val === "yes";
+      } else {
+        ret = !!val;
+      }
+    }
+
+    if (ret === undefined) {
+      ret = this.getDefault("labelOnTop");
+    }
+
+    return !!ret;
+  }
+
+  set labelOnTop(v) {
+    this._labelOnTop = v;
+  }
 
   get numslider() {
     return this._numslider;
@@ -35732,12 +36073,6 @@ class SliderWithTextbox extends ColumnFrame {
   init() {
     super.init();
 
-    if (this.hasAttribute("labelOnTop")) {
-      this.labelOnTop = this.getAttribute("labelOnTop");
-    } else {
-      this.labelOnTop = this.getDefault("labelOnTop");
-    }
-
     this.rebuild();
   }
 
@@ -35760,8 +36095,8 @@ class SliderWithTextbox extends ColumnFrame {
 
 
     this.l = this.container.label(this._name);
+    this.l.overrideClass("numslider_textbox");
     this.l.font = "TitleText";
-    this.l.overrideClass("numslider_simple");
     this.l.style["display"] = "float";
     this.l.style["position"] = "relative";
 
@@ -35954,7 +36289,6 @@ class SliderWithTextbox extends ColumnFrame {
     }
 
     if (redraw) {
-      console.log("numslider draw");
       this.setCSS();
       this.numslider.setCSS();
       this.numslider._redraw();
@@ -36001,7 +36335,6 @@ class NumSliderWithTextBox extends SliderWithTextbox {
     super();
 
     this.numslider = UIBase$2.createElement("numslider-x");
-
   }
 
   _redraw() {
@@ -36010,7 +36343,7 @@ class NumSliderWithTextBox extends SliderWithTextbox {
   
   static define() {return {
     tagname : "numslider-textbox-x",
-    style : "numslider-textbox-x"
+    style : "numslider_textbox"
   }}
 }
 UIBase$2.internalRegister(NumSliderWithTextBox);
@@ -39035,8 +39368,9 @@ class Area$1 extends UIBase$2 {
   static define() {return {
     tagname  : "pathux-editor-x", // tag name, e.g. editor-x
     areaname : undefined, //api name for area type
+    flag     : 0, //see AreaFlags
     uiname   : undefined,
-    icon : undefined //icon representing area in MakeHeader's area switching menu. Integer.
+    icon     : undefined //icon representing area in MakeHeader's area switching menu. Integer.
   };}
 
   _isDead() {
@@ -40044,12 +40378,23 @@ class ThemeEditor extends Container {
       } else if (typeof v === "number") {
         let slider = col.slider(undefined, k, v, 0, 256, 0.01, false);
 
+        slider.baseUnit = slider.displayUnit = "none";
+
         ok = true;
         _i++;
 
         slider.onchange = () => {
           theme[key][k] = slider.value;
 
+          do_onchange(key, k);
+        };
+      } else if (typeof v === "boolean") {
+        let check = col.check(undefined, k);
+
+        check.value = theme[key][k];
+
+        check.onchange = () => {
+          theme[key][k] = !!check.value;
           do_onchange(key, k);
         };
       } else if (typeof v === "object" && v instanceof CSSFont) {
@@ -40083,6 +40428,10 @@ class ThemeEditor extends Container {
           v.size = slider.value;
           do_onchange(key, k);
         };
+
+        slider.baseUnit = slider.displayUnit = "none";
+
+        panel2.closed = true;
       }
     };
 
@@ -44042,6 +44391,15 @@ class Screen$2 extends UIBase$2 {
     let sareas = this.sareas;
     this.sareas = [];
 
+    /*
+    let push = this.sareas.push;
+
+    this.sareas.push = function(item) {
+      console.error("this.sareas.push", item);
+      push.call(this, item);
+    }
+    */
+
     for (let sarea of sareas) {
       sarea.screen = this;
       sarea.parentWidget = this;
@@ -44060,7 +44418,7 @@ class Screen$2 extends UIBase$2 {
     return this;
   }
 
-  test_struct() {
+  test_struct(appstate=_appstate) {
     let data = [];
     //let scripts = nstructjs.write_scripts();
     nstructjs.manager.write_object(data, this);
@@ -44078,7 +44436,7 @@ class Screen$2 extends UIBase$2 {
     let parent = this.parentElement;
     this.remove();
 
-    this.ctx.screen = screen2;
+    appstate.screen = screen2;
 
     parent.appendChild(screen2);
 
@@ -44861,5 +45219,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports$1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map

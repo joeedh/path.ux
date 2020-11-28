@@ -268,8 +268,19 @@ export class CSSFont {
     return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
   }
 
+  //deprecated, use genKey()
   hash() {
-    return this.genCSS + ":" + this.size + ":" + this.color;
+    return this.genKey();
+  }
+
+  genKey() {
+    let color = this.color;
+
+    if (typeof this.color === "object" || typeof this.color === "function") {
+      color = JSON.stringify(color);
+    }
+
+    return this.genCSS() + ":" + this.size + ":" + color;
   }
 }
 CSSFont.STRUCT = `

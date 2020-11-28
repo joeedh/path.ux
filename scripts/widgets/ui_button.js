@@ -9,6 +9,7 @@ import * as toolprop from '../toolsys/toolprop.js';
 import {DataPathError} from '../controller/simple_controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
 import cconst from '../config/const.js';
+import {CSSFont} from "../core/ui_base.js";
 
 let keymap = events.keymap;
 
@@ -28,10 +29,12 @@ export class Button extends UIBase {
 
     let dpi = this.getDPI();
 
-    this._last_update_key = "";
-
+    this._last_but_update_key = "";
+    
     this._name = "";
     this._namePad = undefined;
+    this._leftPad = 5; //extra pad before text
+    this._rightPad = 5; //extra pad after text
 
     this._last_w = 0;
     this._last_h = 0;
@@ -307,6 +310,13 @@ export class Button extends UIBase {
     ret += this.getDefault("BoxRadius") + ":" + this.getDefault("BoxMargin") + ":";
     ret += this.getAttribute("name") + ":";
 
+    let font = this.getDefault("DefaultText");
+    if (font && typeof font === "string") {
+      ret += font;
+    } else if (font && font instanceof CSSFont) {
+      ret += font.genKey();
+    }
+
     return ret;
   }
 
@@ -329,8 +339,8 @@ export class Button extends UIBase {
     }
 
     let key = this._calcUpdateKey();
-    if (key !== this._last_update_key) {
-      this._last_update_key = key;
+    if (key !== this._last_but_update_key) {
+      this._last_but_update_key = key;
 
       this.setCSS();
       this._repos_canvas();
@@ -354,7 +364,7 @@ export class Button extends UIBase {
     let tw = ui_base.measureText(this, this._genLabel(),{
       size : ts,
       font : this.getDefault("DefaultText")
-    }).width/dpi + 18 + pad;
+    }).width + 2.0*pad + this._leftPad + this._rightPad;
 
     if (this._namePad !== undefined) {
       tw += this._namePad;
@@ -485,8 +495,8 @@ export class Button extends UIBase {
 
     let tw = ui_base.measureText(this, text, undefined, undefined, ts, font).width;
 
-    let cx = pad*0.5 + 5*dpi;
-    let cy = h*0.5 + ts*0.5;
+    let cx = pad*0.5 + this._leftPad*dpi;
+    let cy = ts + (h-ts)/3.0;
 
     let g = this.g;
     ui_base.drawText(this, ~~cx, ~~cy, text, {
