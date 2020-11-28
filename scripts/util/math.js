@@ -207,6 +207,24 @@ test_aabb_intersect_2d.timer = function timer(rate=500) {
   }, rate);
 };
 
+let aabb_intersect_vs3 = util.cachering.fromConstructor(Vector3, 64);
+
+export function aabb_intersect_3d(min1, max1, min2, max2) {
+  let tot=0;
+
+  for (let i=0; i<2; i++) {
+    if (max1[i] >= min2[i] && min1[i] <= max2[i]) {
+      tot++;
+    }
+  }
+
+  if (tot !== 3) {
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * AABB union of a and b.
  * Result is in a.
@@ -990,6 +1008,81 @@ export function aabb_sphere_isect(p, r, min, max) {
   }
 
   return false;
+};
+
+export function aabb_sphere_dist(p, min, max) {
+  {
+    let p1 = aabb_sphere_isect_vs.next().load(p);
+    let min1 = aabb_sphere_isect_vs.next().load(min);
+    let max1 = aabb_sphere_isect_vs.next().load(max);
+    if (p.length === 2) {
+      p1[2] = 0.0;
+    }
+    if (min1.length === 2) {
+      min1[2] = 0.0;
+    }
+    if (max.length === 2) {
+      max1[2] = 0.0;
+    }
+
+    p = p1;
+    min = min1;
+    max = max1;
+  }
+
+  let cent = aabb_sphere_isect_vs.next().load(min).interp(max, 0.5);
+  p.sub(cent);
+  min.sub(cent);
+  max.sub(cent);
+
+  let isect = point_in_aabb(p, min, max);
+
+  if (isect) {
+    return 0.0;
+  }
+
+  let rect = asi_rect;
+
+  rect[0].loadXYZ(min[0], min[1], min[2]);
+  rect[1].loadXYZ(min[0], max[1], min[2]);
+  rect[2].loadXYZ(max[0], max[1], min[2]);
+  rect[3].loadXYZ(max[0], min[1], min[2]);
+
+  rect[4].loadXYZ(min[0], min[1], max[2]);
+  rect[5].loadXYZ(min[0], max[1], max[2]);
+  rect[6].loadXYZ(max[0], max[1], max[2]);
+  rect[7].loadXYZ(max[0], min[1], max[2]);
+
+  let mindis;
+
+  for (let i = 0; i < 8; i++) {
+    let dis = p.vectorDistanceSqr(rect[i]);
+
+    if (mindis === undefined || dis < mindis) {
+      mindis = dis;
+    }
+  }
+
+  let p2 = aabb_sphere_isect_vs.next().load(p);
+
+  for (let i = 0; i < 3; i++) {
+    p2.load(p);
+
+    let i2 = (i + 1) % 3;
+    let i3 = (i + 2) % 3;
+
+    p2[i] = p2[i] < 0.0 ? min[i] : max[i];
+
+    p2[i2] = Math.min(Math.max(p2[i2], min[i2]), max[i2]);
+    p2[i3] = Math.min(Math.max(p2[i3], min[i3]), max[i3]);
+
+    let dis = p2.vectorDistanceSqr(p);
+    if (mindis === undefined || dis < mindis) {
+      mindis = dis;
+    }
+  }
+
+  return mindis === undefined ? 1e17 : mindis;
 };
 
 export function point_in_tri(p, v1, v2, v3) {

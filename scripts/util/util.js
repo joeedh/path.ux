@@ -671,6 +671,14 @@ export class set {
     this.length++;
   }
 
+  get size() {
+    return this.length;
+  }
+
+  delete(item, ignore_existence=true) {
+    this.remove(item, ignore_existence);
+  }
+
   remove(item, ignore_existence) {
     var key = item[Symbol.keystr]();
 
