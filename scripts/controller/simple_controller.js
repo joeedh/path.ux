@@ -123,9 +123,14 @@ export class DataPath {
     this.data = prop;
   }
 
-  read_only() {
+  readOnly() {
     this.flag |= DataFlags.READ_ONLY;
     return this;
+  }
+
+  read_only() {
+    console.warn("DataPath.read_only is deprecated; use readOnly");
+    return this.readOnly();
   }
 
   /**
