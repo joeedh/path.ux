@@ -5,8 +5,7 @@
 * this api in browsers
 * */
 function getElectron() {
-  throw new Error("eek!");
-  //return require('electro');
+  return require('electron');
 }
 
 function myRequire(mod) {
