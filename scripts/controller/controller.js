@@ -89,7 +89,7 @@ export class ListIface {
 export class ToolOpIface {
   constructor() {
   }
-  
+
   static tooldef() {return {
     uiname      : "!untitled tool",
     icon        : -1,
@@ -105,7 +105,7 @@ export class ModelInterface {
   constructor() {
     this.prefix = "";
   }
-  
+
   getToolDef(path) {
     throw new Error("implement me");
   }
@@ -122,7 +122,7 @@ export class ModelInterface {
   createTool(path, inputs={}, constructor_argument=undefined) {
     throw new Error("implement me");
   }
-  
+
   //returns tool class, or undefined if one cannot be found for path
   parseToolPath(path) {
     throw new Error("implement me");
@@ -142,7 +142,7 @@ export class ModelInterface {
   execTool(ctx, path, inputs={}, constructor_argument=undefined) {
     return new Promise((accept, reject) => {
       let tool = path;
-      
+
       try {
         if (typeof tool == "string" || !(tool instanceof ToolOp)) {
           tool = this.createTool(ctx, path, inputs, constructor_argument);
@@ -152,10 +152,10 @@ export class ModelInterface {
         reject(error);
         return;
       }
-      
+
       //give client a chance to change tool instance directly
       accept(tool);
-      
+
       //execute
       try {
         ctx.toolstack.execTool(ctx, tool);
@@ -179,11 +179,11 @@ export class ModelInterface {
   static toolRegistered(tool) {
     throw new Error("implement me");
   }
-  
+
   static registerTool(tool) {
     throw new Error("implement me");
   }
-  
+
   //not yet supported by path.ux's controller implementation
   massSetProp(ctx, mass_set_path, value) {
     throw new Error("implement me");
@@ -193,7 +193,7 @@ export class ModelInterface {
   resolveMassSetPaths(ctx, mass_set_path) {
     throw new Error("implement me");
   }
-  
+
   /**
    * @example
    *
@@ -210,7 +210,7 @@ export class ModelInterface {
    */
   resolvePath(ctx, path, ignoreExistence) {
   }
-  
+
   setValue(ctx, path, val) {
     let res = this.resolvePath(ctx, path);
     let prop = res.prop;
@@ -242,19 +242,27 @@ export class ModelInterface {
 
     let old = res.obj[res.key];
 
-    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type == PropTypes.ENUM) {
+    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes.ENUM) {
       let ival = res.prop.values[res.subkey];
 
       if (val) {
         res.obj[res.key] = ival;
       }
-    } else if (res.prop !== undefined && res.prop.type == PropTypes.FLAG) {
-      let ival = res.prop.values[res.subkey];
+    } else if (res.prop !== undefined && res.prop.type === PropTypes.FLAG) {
+      if (res.subkey !== undefined) {
+        let ival = res.prop.values[res.subkey];
 
-      if (val) {
-        res.obj[res.key] |= ival;
+        if (val) {
+          res.obj[res.key] |= ival;
+        } else {
+          res.obj[res.key] &= ~ival;
+        }
+      } else if (typeof val === "number" || typeof val === "boolean") {
+        val = typeof val === "boolean" ? (val & 1) : val;
+
+        res.obj[res.key] = val;
       } else {
-        res.obj[res.key] &= ~ival;
+        throw new DataPathError("Expected a number for a bitmask property");
       }
     } else if (res.subkey !== undefined && isVecProperty(res.prop)) {
       res.obj[res.subkey] = val;
@@ -331,19 +339,19 @@ export class ModelInterface {
     }
 
     let ret = this.resolvePath(ctx, path);
-    
+
     if (ret === undefined) {
       throw new DataPathError("invalid path " + path);
     }
-    
+
     if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
       ret.prop.dataref = ret.obj;
       ret.prop.datapath = path;
       ret.prop.ctx = ctx;
-      
+
       return ret.prop.getValue();
     }
-    
+
     return this.resolvePath(ctx, path).value;
   }
 }
@@ -357,6 +365,6 @@ export function registerTool(cls) {
   if (DataAPIClass === undefined) {
     throw new Error("data api not initialized properly; call setImplementationClass");
   }
-  
+
   return DataAPIClass.registerTool(cls);
 }

@@ -1,7 +1,7 @@
 import {ToolOp, ToolFlags} from "../toolsys/simple_toolsys.js";
 import {PropTypes, PropFlags, BoolProperty, IntProperty, FloatProperty, FlagProperty,
-        EnumProperty, StringProperty, Vec3Property, Vec2Property, Vec4Property,
-        QuatProperty, Mat4Property} from "../toolsys/toolprop.js";
+  EnumProperty, StringProperty, Vec3Property, Vec2Property, Vec4Property,
+  QuatProperty, Mat4Property} from "../toolsys/toolprop.js";
 
 import * as util from '../util/util.js';
 import {isVecProperty, getVecClass} from "./controller.js";
@@ -18,12 +18,12 @@ export class DataPathSetOp extends ToolOp {
     let prop = this.inputs.prop;
     let path = this.inputs.dataPath.getValue();
 
-    if (path.type & (PropTypes.ENUM|PropTypes.FLAG)) {
-      let rdef = ctx.api.resolvePath(ctx, path);
-      if (rdef.subkey !== undefined) {
+    if (prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
+      //let rdef = ctx.api.resolvePath(ctx, path);
+      //if (rdef.subkey !== undefined) {
       //  val = rdef.value;
-        //val = !!val;
-      }
+      //val = !!val;
+      //}
     }
 
     prop.dataref = object;
@@ -53,12 +53,47 @@ export class DataPathSetOp extends ToolOp {
     let mask = PropTypes.FLAG|PropTypes.ENUM;
     mask |= PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT;
 
-    if (rdef.subkey !== undefined && (prop.type & mask)) {
-      if (prop.type & (PropTypes.ENUM|PropTypes.FLAG))
-        tool.inputs.prop = new IntProperty();
-      else
-        tool.inputs.prop = new FloatProperty();
 
+    if (rdef.subkey !== undefined && (prop.type & mask)) {
+      if (prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
+        let i = datapath.length-1;
+
+        //chope off enum selector
+        while (i >= 0 && datapath[i] !== '[') {
+          i--;
+        }
+
+        if (i >= 0) {
+          datapath = datapath.slice(0, i);
+        }
+
+        tool.inputs.prop = new IntProperty();
+      } else {
+        tool.inputs.prop = new FloatProperty();
+      }
+
+      let subkey = rdef.subkey;
+      if (typeof subkey !== "number") {
+        subkey = rdef.prop.values[subkey];
+      }
+
+      if (prop.type === PropTypes.ENUM) {
+        value = subkey;
+      } else {
+        let value2 = ctx.api.getValue(ctx, datapath);
+
+        if (typeof value2 !== "number") {
+          value2 = typeof value2 === "boolean" ? (value & 1) : 0;
+        }
+
+        if (value) {
+          value2 |= subkey;
+        } else {
+          value2 &= ~subkey;
+        }
+
+        value = value2;
+      }
       //value = rdef.obj[rdef.key];
       //console.log("rdef.value", value);
     } else {
@@ -91,9 +126,9 @@ export class DataPathSetOp extends ToolOp {
 
   hashThis() {
     return this.hash(this.inputs.massSetPath.getValue(),
-                     this.inputs.dataPath.getValue(),
-                     this.propType,
-                     this.id);
+      this.inputs.dataPath.getValue(),
+      this.propType,
+      this.id);
   }
 
   undoPre(ctx) {
@@ -106,12 +141,12 @@ export class DataPathSetOp extends ToolOp {
 
     this._undo = {};
 
-    let paths = new util.set();
+    let paths = new Set();
 
     if (this.inputs.massSetPath.getValue().trim()) {
       let massSetPath = this.inputs.massSetPath.getValue().trim();
 
-      paths = new util.set(ctx.api.resolveMassSetPaths(ctx, massSetPath));
+      paths = new Set(ctx.api.resolveMassSetPaths(ctx, massSetPath));
 
     }
 
@@ -170,7 +205,25 @@ export class DataPathSetOp extends ToolOp {
       if (rdef.prop !== undefined && (rdef.prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
         let old = rdef.obj[rdef.key];
 
-        rdef.obj[rdef.key] = this._undo[path];
+        if (rdef.subkey) {
+          let key = rdef.subkey;
+
+          if (typeof key !== "number") {
+            key = rdef.prop.values[key];
+          }
+
+          if (rdef.prop.type === PropTypes.FLAG) {
+            if (this._undo[path]) {
+              rdef.obj[rdef.key] |= key;
+            } else {
+              rdef.obj[rdef.key] &= ~key;
+            }
+          } else {
+            rdef.obj[rdef.key] = key;
+          }
+        } else {
+          rdef.obj[rdef.key] = this._undo[path];
+        }
 
         rdef.prop.dataref = rdef.obj;
         rdef.prop.datapath = path;
