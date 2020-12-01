@@ -136,13 +136,13 @@ export class DataPath {
   /**
    *
    * For the callbacks 'this' points to an internal ToolProperty;
-   * Owning object in 'this.dataref'; calling context in 'this.ctx';
+   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
    * and the datapath is 'this.datapath'
    **/
   customGetSet(get, set) {
     this.flag |= DataFlags.USE_CUSTOM_GETSET;
 
-    if (this.type !== DataTypes.DYNAMIC_STRUCT) {
+    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
       this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
       this.data._getValue = this.data.getValue;
       this.data._setValue = this.data.setValue;
@@ -153,13 +153,13 @@ export class DataPath {
       if (set)
         this.data.setValue = set;
     } else {
-      this.customGetSet = {
+      this.getSet = {
         get, set
       };
 
-      this.customGetSet.dataref = undefined;
-      this.customGetSet.datapath = undefined;
-      this.customGetSet.ctx = undefined;
+      this.getSet.dataref = undefined;
+      this.getSet.datapath = undefined;
+      this.getSet.ctx = undefined;
     }
 
     return this;
@@ -945,7 +945,7 @@ export class DataAPI extends ModelInterface {
       let dpath = dstruct.pathmap[key];
 
       if (dpath === undefined) {
-        if (prop !== undefined && prop instanceof DataList && key === "length") {
+        if (key === "length" && prop !== undefined && prop instanceof DataList) {
           prop.getLength(this, obj);
           key = "length";
 
@@ -967,7 +967,7 @@ export class DataAPI extends ModelInterface {
             value: obj,
             key: lastkey,
             //*/
-        } else if (prop !== undefined && prop instanceof DataList && key === "active") {
+        } else if (key === "active" && prop !== undefined && prop instanceof DataList) {
           let act = prop.getActive(this, obj);
 
           if (act === undefined && !ignoreExistence) {
@@ -1010,7 +1010,7 @@ export class DataAPI extends ModelInterface {
           let obj2;
 
           if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
-            let fakeprop = dpath.customGetSet;
+            let fakeprop = dpath.getSet;
             fakeprop.ctx = ctx;
             fakeprop.dataref = obj;
             fakeprop.datapath = inpath;
@@ -1063,7 +1063,16 @@ export class DataAPI extends ModelInterface {
         lastobj = obj;
 
         lastkey = dpath.path;
-        if (obj === undefined && !ignoreExistence) {
+
+        if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
+          let fakeprop = dpath.getSet;
+          fakeprop.ctx = ctx;
+          fakeprop.dataref = obj;
+          fakeprop.datapath = inpath;
+
+          obj = fakeprop.get();
+          fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
+        } else if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
         } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
           obj = dynstructobj;

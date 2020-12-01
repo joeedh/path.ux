@@ -134,7 +134,7 @@ export class SmartConsoleContext {
     this.color = `rgb(${r},${g},${b})`;
     this.__console = console;
 
-    this.timeInterval = 1500;
+    this.timeInterval = 375;
 
     this._last = undefined;
     this._data = {};
@@ -244,15 +244,14 @@ export class SmartConsoleContext {
     }
 
     if (time_ms() - d.time > this.timeInterval) {
-      //d.time = time_ms();
-      //return true;
+      d.time = time_ms();
+      return true;
     }
 
     return false;
   }
 
   log() {
-
     if (this._check(arguments)) {
       window.console.log("%c", "color:"+this.color, ...arguments);
     }
@@ -1380,4 +1379,192 @@ export function hashjoin(hash, val) {
   let i = 0;
 
   h = (h*mul + off + i*mul*0.25) & mul;
+}
+
+let NullItem = {};
+
+export class MapIter {
+  constructor(ownermap) {
+    this.ret = {done : true, value : undefined};
+    this.value = new Array(2);
+    this.i = 0;
+    this.map = ownermap;
+    this.done = true;
+  }
+
+  finish() {
+    if (!this.done) {
+      this.done = true;
+      this.map.itercur--;
+    }
+  }
+
+  next() {
+    let ret = this.ret;
+    let i = this.i;
+    let map = this.map, list = map._list;
+    //window.console.log(this)
+
+    while (i < list.length && list[i] === NullItem) {
+      i += 2;
+    }
+
+    //window.console.log("  --", i, list[i], list[i+1]);
+
+    if (i >= list.length) {
+      ret.done = true;
+      ret.value = undefined;
+
+      this.finish();
+      return ret;
+    }
+
+    this.i = i + 2;
+
+    ret.value = this.value;
+    ret.value[0] = list[i];
+    ret.value[1] = list[i+1];
+    ret.done = false;
+
+    return ret;
+  }
+
+  return() {
+    this.finish();
+
+    return this.ret;
+  }
+
+  reset() {
+    this.i = 0;
+    this.value[0] = undefined;
+    this.value[1] = undefined;
+    this.done = false;
+
+    return this;
+  }
+}
+
+export class map {
+  constructor() {
+    this._items = {};
+    this._list = [];
+
+    this.size = 0;
+
+    this.iterstack = new Array(8);
+    this.itercur = 0;
+    for (let i=0; i<this.iterstack.length; i++) {
+      this.iterstack[i] = new MapIter(this);
+    }
+
+    this.freelist = [];
+  }
+
+  has(key) {
+    return key[Symbol.keystr]() in this._items;
+  }
+
+  set(key, v) {
+    let k = key[Symbol.keystr]();
+
+    let i = this._items[k];
+
+    if (i === undefined) {
+      if (this.freelist.length > 0) {
+        i = this.freelist.pop();
+      } else {
+        i = this._list.length;
+        this._list.length += 2;
+      }
+
+      this.size++;
+    }
+
+    this._list[i] = key;
+    this._list[i+1] = v;
+
+    this._items[k] = i;
+  }
+
+  keys() {
+    let this2 = this;
+    return (function*() {
+      for (let [key, val] of this2) {
+        yield key;
+      }
+    })()
+  }
+
+  values() {
+    let this2 = this;
+    return (function*() {
+      for (let [key, val] of this2) {
+        yield val;
+      }
+    })()
+  }
+
+  get(k) {
+    k = k[Symbol.keystr]();
+
+    let i = this._items[k];
+    if (i !== undefined) {
+      return this._list[i+1];
+    }
+  }
+
+  delete(k) {
+    k = k[Symbol.keystr]();
+
+    if (!(k in this._items)) {
+      return false;
+    }
+
+    let i = this._items[k];
+
+    this.freelist.push(i);
+
+    this._list[i] = NullItem;
+    this._list[i+1] = NullItem;
+
+    delete this._items[k];
+    this.size--;
+
+    return true;
+  }
+
+  [Symbol.iterator]() {
+    let ret = this.iterstack[this.itercur].reset();
+    this.itercur++;
+
+    if (this.itercur === this.iterstack.length) {
+      this.iterstack.push(new MapIter(this));
+    }
+
+    return ret;
+  }
+
+}
+
+window._test_map = function() {
+  let m = new map();
+
+  m.set("1", 2);
+  m.set(11, 3);
+  m.set("5", 4);
+  m.set("3", 5);
+  m.set("3", 6);
+  m.delete("3");
+
+  for (let [key, item] of m) {
+    for (let [key2, item2] of m) {
+      window.console.log(key, item, key2, item2);
+    }
+    break;
+  }
+
+  console.log("itercur", m.itercur);
+
+  return m;
 }
