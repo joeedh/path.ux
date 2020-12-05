@@ -5472,19 +5472,117 @@ function termColor(s, c) {
 
   if (c in colormap)
     c = colormap[c];
-  
+
   if (c > 107) {
-    s2 = '\u001b[38;5;' + str(c) + "m";
+    let s2 = '\u001b[38;5;' + c + "m";
     return s2 + s + '\u001b[0m'
   }
 
   return '\u001b[' + c + 'm' + s + '\u001b[0m'
 };
 
+function termPrint() {
+  //let console = window.console;
+
+  let s = '';
+  for (let i = 0; i < arguments.length; i++) {
+    if (i > 0) {
+      s += ' ';
+    }
+    s += arguments[i];
+  }
+
+  let re1a = /\u001b\[[1-9][0-9]?m/;
+  let re1b = /\u001b\[[1-9][0-9];[0-9][0-9]?;[0-9]+m/;
+  let re2 = /\u001b\[0m/;
+
+  let endtag = '\u001b[0m';
+
+  function tok(s, type) {
+    return {
+      type : type,
+      value: s
+    }
+  }
+
+  let tokdef = [
+    [re1a, "start"],
+    [re1b, "start"],
+    [re2, "end"]
+  ];
+
+  let s2 = s;
+
+  let i = 0;
+  let tokens = [];
+
+  while (s2.length > 0) {
+    let ok = false;
+
+    let mintk = undefined, mini = undefined;
+    let minslice = undefined, mintype = undefined;
+
+    for (let tk of tokdef) {
+      let i = s2.search(tk[0]);
+
+      if (i >= 0 && (mini === undefined || i < mini)) {
+        minslice = s2.slice(i, s2.length).match(tk[0])[0];
+        mini = i;
+        mintype = tk[1];
+        mintk = tk;
+        ok = true;
+      }
+    }
+
+    if (!ok) {
+      break;
+    }
+
+    if (mini > 0) {
+      let chunk = s2.slice(0, mini);
+      tokens.push(tok(chunk, "chunk"));
+    }
+
+    s2 = s2.slice(mini+minslice.length, s2.length);
+    let t = tok(minslice, mintype);
+
+    tokens.push(t);
+  }
+
+  if (s2.length > 0) {
+    tokens.push(tok(s2, "chunk"));
+  }
+
+  let stack = [];
+  let cur;
+
+  let out = '';
+
+  for (let t of tokens) {
+    if (t.type === "chunk") {
+      out += t.value;
+    } else if (t.type === "start") {
+      stack.push(cur);
+      cur = t.value;
+
+      out += t.value;
+    } else if (t.type === "end") {
+      cur = stack.pop();
+      if (cur) {
+        out += cur;
+      } else {
+        out += endtag;
+      }
+    }
+  }
+
+  return out;
+}
+
 window.termColor = termColor;
 
 class MovingAvg extends Array {
-  constructor(size=64) {
+  constructor(size = 64) {
     super();
 
     this.length = size;
@@ -5503,13 +5601,13 @@ class MovingAvg extends Array {
     }
 
     this.sum += val;
-    this.cur = (this.cur + 1) % this.length;
+    this.cur = (this.cur + 1)%this.length;
 
     return this.sample();
   }
 
   sample() {
-    return this.used ? this.sum / this.used : 0.0;
+    return this.used ? this.sum/this.used : 0.0;
   }
 }
 
@@ -5527,6 +5625,7 @@ function pollTimer(id, interval) {
 
   return false;
 }
+
 window._pollTimer = pollTimer;
 
 let mdetect = undefined;
@@ -5562,7 +5661,7 @@ class SmartConsoleContext {
 
     let c = [random(), random(), random()];
     let sum = Math.sqrt(c[0]*c[0] + c[1]*c[1] + c[2]*c[2]);
-    sum = 255 / sum;
+    sum = 255/sum;
 
     let r = ~~(c[0]*sum);
     let g = ~~(c[1]*sum);
@@ -5571,9 +5670,15 @@ class SmartConsoleContext {
     this.color = `rgb(${r},${g},${b})`;
     this.__console = console;
 
+    //minimum time between prints of same message
     this.timeInterval = 375;
 
-    this._last = undefined;
+    //minimum time in general
+    this.timeIntervalAll = 0;
+
+    this._last = 0;
+    this.last = 0;
+    this.last2 = 0;
     this._data = {};
     this._data_length = 0;
     this.maxCache = 256;
@@ -5582,7 +5687,7 @@ class SmartConsoleContext {
 
   hash(args) {
     let sum = 0;
-    let mul = (1<<19)-1, off = (1<<27)-1;
+    let mul = (1<<19) - 1, off = (1<<27) - 1;
     let i = 0;
 
     function dohash(h) {
@@ -5628,13 +5733,13 @@ class SmartConsoleContext {
           recurse(v);
         }
       } else if (typeof n === "function") {
-        dohash(strhash(""+n.name));
+        dohash(strhash("" + n.name));
       }
     };
 
     //let str = "";
 
-    for (let i=0; i<args.length; i++) {
+    for (let i = 0; i < args.length; i++) {
       recurse(args[i]);
       //str += args[i] + " ";
     }
@@ -5658,8 +5763,8 @@ class SmartConsoleContext {
       }
 
       this._data[key] = {
-        time    : 0,
-        count   : 0
+        time : 0,
+        count: 0
       };
 
       this._data_length++;
@@ -5669,6 +5774,12 @@ class SmartConsoleContext {
   }
 
   _check(args) {
+    if (this.timeIntervalAll > 0 && time_ms() - this.last2 < this.timeIntervalAll) {
+      return false;
+    }
+
+    this.last2 = time_ms();
+
     let d = this._getData(args);
     let last = this.last;
 
@@ -5690,13 +5801,13 @@ class SmartConsoleContext {
 
   log() {
     if (this._check(arguments)) {
-      window.console.log("%c", "color:"+this.color, ...arguments);
+      window.console.log("%c", "color:" + this.color, ...arguments);
     }
   }
 
   warn() {
     if (this._check(arguments)) {
-      window.console.log("%c"+this.name, "color : "+this.color, ...arguments);
+      window.console.log("%c" + this.name, "color : " + this.color, ...arguments);
     }
   }
 
@@ -5725,14 +5836,17 @@ class SmartConsole {
     let c = this.context("default");
     return c.log(...arguments);
   }
+
   warn() {
     let c = this.context("default");
     return c.warn(...arguments);
   }
+
   trace() {
     let c = this.context("default");
     return c.trace(...arguments);
   }
+
   error() {
     let c = this.context("default");
     return c.error(...arguments);
@@ -5832,14 +5946,14 @@ function btoa$1(buf) {
   }
 
   var ret = "";
-  for (var i=0; i<buf.length; i++) {
+  for (var i = 0; i < buf.length; i++) {
     ret += String.fromCharCode(buf[i]);
   }
 
   return btoa$1(ret);
 };
 
-function formatNumberUI(val, isInt=false, decimals=5) {
+function formatNumberUI(val, isInt = false, decimals = 5) {
   if (val === undefined || val === null) {
     val = "0";
   } else if (isNaN(val)) {
@@ -5851,7 +5965,7 @@ function formatNumberUI(val, isInt=false, decimals=5) {
   } else if (!isInt) {
     val = val.toFixed(decimals);
   } else {
-    val = ""+Math.floor(val);
+    val = "" + Math.floor(val);
   }
 
   return val;
@@ -5863,7 +5977,7 @@ function atob$1(buf) {
   let data = window.atob(buf);
   let ret = [];
 
-  for (let i=0; i<data.length; i++) {
+  for (let i = 0; i < data.length; i++) {
     ret.push(data.charCodeAt(i));
   }
 
@@ -5880,7 +5994,7 @@ function time_ms() {
 function color2css$1(c) {
   var ret = c.length == 3 ? "rgb(" : "rgba(";
 
-  for (var i=0; i<3; i++) {
+  for (var i = 0; i < 3; i++) {
     if (i > 0)
       ret += ",";
 
@@ -5911,28 +6025,115 @@ function merge(obja, objb) {
   //*/
 };
 
+let debug_cacherings = false;
+
+if (debug_cacherings) {
+  window._cacherings = [];
+
+  window._clear_all_cacherings = function(kill_all=false) {
+    function copy(obj) {
+      if (typeof obj.copy === "function") {
+        return obj.copy();
+      } else if (obj.constructor === Object) {
+        let ret = {};
+
+        for (let k of Reflect.ownKeys(obj)) {
+          let v;
+
+          try {
+            v = obj[k];
+          } catch (error) {
+            continue;
+          }
+
+          if (typeof v !== "object") {
+            ret[k] = v;
+          } else {
+            ret[k] = copy(v);
+          }
+        }
+
+        return ret;
+      } else {
+        return new obj.constructor();
+      }
+    }
+
+    for (let ch of window._cacherings) {
+      let obj = ch[0];
+      let len = ch.length;
+
+      ch.length = 0;
+      ch.cur = 0;
+
+      if (kill_all) {
+        continue;
+      }
+
+      for (let i=0; i<len; i++) {
+        ch.push(copy(obj));
+      }
+    }
+  };
+
+  window._nonvector_cacherings = function() {
+    for (let ch of window._cacherings) {
+      if (ch.length === 0) {
+        continue;
+      }
+
+      let name = ch[0].constructor.name;
+      let ok = !name.startsWith("Vector") && !name.startsWith("Quat");
+      ok = ok && !name.startsWith("TriEditor");
+      ok = ok && !name.startsWith("QuadEditor");
+      ok = ok && !name.startsWith("PointEditor");
+      ok = ok && !name.startsWith("LineEditor");
+
+      if (ok) {
+        console$1.log(name, ch);
+      }
+    }
+  };
+
+  window._stale_cacherings = function() {
+    let ret = _cacherings.concat([]);
+
+    ret.sort((a, b) => a.gen - b.gen);
+    return ret;
+  };
+}
+
 class cachering extends Array {
-  constructor(func, size) {
+  constructor(func, size, isprivate=false) {
     super();
 
+    this.private = isprivate;
     this.cur = 0;
 
-    for (var i=0; i<size; i++) {
+    if (!isprivate && debug_cacherings) {
+      this.gen = 0;
+      window._cacherings.push(this);
+    }
+
+    for (var i = 0; i < size; i++) {
       this.push(func());
     }
   }
 
-  static fromConstructor(cls, size) {
-    var func = function() {
+  static fromConstructor(cls, size, isprivate=false) {
+    var func = function () {
       return new cls();
     };
 
-    return new cachering(func, size);
+    return new cachering(func, size, isprivate);
   }
 
   next() {
+    if (debug_cacherings) {
+      this.gen++;
+    }
     var ret = this[this.cur];
-    this.cur = (this.cur+1)%this.length;
+    this.cur = (this.cur + 1)%this.length;
 
     return ret;
   }
@@ -5941,8 +6142,8 @@ class cachering extends Array {
 class SetIter$1 {
   constructor(set) {
     this.set = set;
-    this.i   = 0;
-    this.ret = {done : false, value : undefined};
+    this.i = 0;
+    this.ret = {done: false, value: undefined};
   }
 
   [Symbol.iterator]() {
@@ -5977,7 +6178,7 @@ class SetIter$1 {
  then the object is not added.
 
 
-* */
+ * */
 class set$1 {
   constructor(input) {
     this.items = [];
@@ -5996,18 +6197,18 @@ class set$1 {
           this.add(item);
         }
       } else if ("forEach" in input) {
-        input.forEach(function(item) {
+        input.forEach(function (item) {
           this.add(item);
         }, this);
       } else if (input instanceof Array) {
-        for (var i=0; i<input.length; i++) {
+        for (var i = 0; i < input.length; i++) {
           this.add(input[i]);
         }
       }
     }
   }
 
-  [Symbol.iterator] () {
+  [Symbol.iterator]() {
     return new SetIter$1(this);
   }
 
@@ -6111,7 +6312,7 @@ class set$1 {
     return this.length;
   }
 
-  delete(item, ignore_existence=true) {
+  delete(item, ignore_existence = true) {
     this.remove(item, ignore_existence);
   }
 
@@ -6139,7 +6340,7 @@ class set$1 {
   }
 
   forEach(func, thisvar) {
-    for (var i=0; i<this.items.length; i++) {
+    for (var i = 0; i < this.items.length; i++) {
       var item = this.items[i];
 
       if (item === EmptySlot)
@@ -6154,7 +6355,7 @@ class HashIter {
   constructor(hash) {
     this.hash = hash;
     this.i = 0;
-    this.ret = {done : false, value : undefined};
+    this.ret = {done: false, value: undefined};
   }
 
   next() {
@@ -6176,6 +6377,7 @@ class HashIter {
 }
 
 var _hash_null = {};
+
 class hashtable {
   constructor() {
     this._items = [];
@@ -6197,7 +6399,7 @@ class hashtable {
       try {
         this._items.push(0);
         this._items.push(0);
-      } catch(error) {
+      } catch (error) {
         console$1.log(":::", this._items.length, key, key2, val);
         throw error;
       }
@@ -6209,7 +6411,7 @@ class hashtable {
     }
 
     this._items[i] = key;
-    this._items[i+1] = val;
+    this._items[i + 1] = val;
   }
 
   remove(key) {
@@ -6223,7 +6425,7 @@ class hashtable {
     var i = this._keys[key2];
 
     this._items[i] = _hash_null;
-    this._items[i+1] = _hash_null;
+    this._items[i + 1] = _hash_null;
 
     delete this._keys[key2];
     this.length--;
@@ -6243,7 +6445,7 @@ class hashtable {
       return undefined;
     }
 
-    return this._items[this._keys[key2]+1];
+    return this._items[this._keys[key2] + 1];
   }
 
   add(key, val) {
@@ -6253,7 +6455,7 @@ class hashtable {
   keys() {
     var ret = [];
 
-    for (var i=0; i<this._items.length; i += 2) {
+    for (var i = 0; i < this._items.length; i += 2) {
       var key = this._items[i];
 
       if (key !== _hash_null) {
@@ -6267,8 +6469,8 @@ class hashtable {
   values() {
     var ret = [];
 
-    for (var i=0; i<this._items.length; i += 2) {
-      var item = this._items[i+1];
+    for (var i = 0; i < this._items.length; i += 2) {
+      var item = this._items[i + 1];
 
       if (item !== _hash_null) {
         ret.push(item);
@@ -6327,12 +6529,12 @@ class IDGen {
   }
 
   max_cur(id) {
-    this._cur = Math.max(this._cur, id+1);
+    this._cur = Math.max(this._cur, id + 1);
   }
 
   toJSON() {
     return {
-      _cur : this._cur
+      _cur: this._cur
     };
   }
 
@@ -6363,8 +6565,8 @@ function get_callstack(err) {
 
   if (err == undefined) {
     try {
-      _idontexist.idontexist+=0; //doesn't exist- that's the point
-    } catch(err1) {
+      _idontexist.idontexist += 0; //doesn't exist- that's the point
+    } catch (err1) {
       err = err1;
     }
   }
@@ -6372,8 +6574,8 @@ function get_callstack(err) {
   if (err != undefined) {
     if (err.stack) { //Firefox
       var lines = err.stack.split('\n');
-      var len=lines.length;
-      for (var i=0; i<len; i++) {
+      var len = lines.length;
+      for (var i = 0; i < len; i++) {
         if (1) {
           lines[i] = lines[i].replace(/@http\:\/\/.*\//, "|");
           var l = lines[i].split("|");
@@ -6388,16 +6590,15 @@ function get_callstack(err) {
         //callstack.shift();
       }
       isCallstackPopulated = true;
-    }
-    else if (window.opera && e.message) { //Opera
+    } else if (window.opera && e.message) { //Opera
       var lines = err.message.split('\n');
-      var len=lines.length;
-      for (var i=0; i<len; i++) {
+      var len = lines.length;
+      for (var i = 0; i < len; i++) {
         if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
           var entry = lines[i];
           //Append next line also since it has the file info
-          if (lines[i+1]) {
-            entry += ' at ' + lines[i+1];
+          if (lines[i + 1]) {
+            entry += ' at ' + lines[i + 1];
             i++;
           }
           callstack.push(entry);
@@ -6409,21 +6610,21 @@ function get_callstack(err) {
       }
       isCallstackPopulated = true;
     }
-   }
+  }
 
-    var limit = 24;
-    if (!isCallstackPopulated) { //IE and Safari
-      var currentFunction = arguments.callee.caller;
-      var i = 0;
-      while (currentFunction && i < 24) {
-        var fn = currentFunction.toString();
-        var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
-        callstack.push(fname);
-        currentFunction = currentFunction.caller;
+  var limit = 24;
+  if (!isCallstackPopulated) { //IE and Safari
+    var currentFunction = arguments.callee.caller;
+    var i = 0;
+    while (currentFunction && i < 24) {
+      var fn = currentFunction.toString();
+      var fname = fn.substring(fn.indexOf("function") + 8, fn.indexOf('')) || 'anonymous';
+      callstack.push(fname);
+      currentFunction = currentFunction.caller;
 
-        i++;
-      }
+      i++;
     }
+  }
 
   return callstack;
 }
@@ -6437,7 +6638,7 @@ function print_stack$1(err) {
   }
 
   console$1.log("Callstack:");
-  for (var i=0; i<cs.length; i++) {
+  for (var i = 0; i < cs.length; i++) {
     console$1.log(cs[i]);
   }
 }
@@ -6446,28 +6647,28 @@ window.get_callstack = get_callstack;
 window.print_stack = print_stack$1;
 
 function fetch_file(path) {
-    var url = location.origin + "/" + path;
+  var url = location.origin + "/" + path;
 
-    var req = new XMLHttpRequest(
-    );
+  var req = new XMLHttpRequest(
+  );
 
-    return new Promise(function(accept, reject) {
-      req.open("GET", url);
-      req.onreadystatechange = function(e) {
-        if (req.status == 200 && req.readyState == 4) {
-            accept(req.response);
-        } else if (req.status >= 400) {
-          reject(req.status, req.statusText);
-        }
-      };
-      req.send();
-    });
+  return new Promise(function (accept, reject) {
+    req.open("GET", url);
+    req.onreadystatechange = function (e) {
+      if (req.status == 200 && req.readyState == 4) {
+        accept(req.response);
+      } else if (req.status >= 400) {
+        reject(req.status, req.statusText);
+      }
+    };
+    req.send();
+  });
 }
 
 //from:https://en.wikipedia.org/wiki/Mersenne_Twister
 function _int32(x) {
   // Get the 31 least significant bits.
-  return ~~(((1<<30)-1) & (~~x))
+  return ~~(((1<<30) - 1) & (~~x))
 }
 
 class MersenneRandom {
@@ -6480,7 +6681,7 @@ class MersenneRandom {
   }
 
   random() {
-    return this.extract_number() / (1<<30);
+    return this.extract_number()/(1<<30);
   }
 
   seed(seed) {
@@ -6492,9 +6693,9 @@ class MersenneRandom {
 
     this.mt[0] = seed;  // Initialize the initial state to the seed
 
-    for (var i=1; i<624; i++) {
+    for (var i = 1; i < 624; i++) {
       this.mt[i] = _int32(
-        1812433253 * (this.mt[i - 1] ^ this.mt[i - 1] >> 30) + i);
+        1812433253*(this.mt[i - 1] ^ this.mt[i - 1]>>30) + i);
     }
   }
 
@@ -6505,13 +6706,13 @@ class MersenneRandom {
     var y = this.mt[this.index];
 
     // Right shift by 11 bits
-    y = y ^ y >> 11;
+    y = y ^ y>>11;
     // Shift y left by 7 and take the bitwise and of 2636928640
-    y = y ^ y << 7 & 2636928640;
+    y = y ^ y<<7 & 2636928640;
     // Shift y left by 15 and take the bitwise and of y and 4022730752
-    y = y ^ y << 15 & 4022730752;
+    y = y ^ y<<15 & 4022730752;
     // Right shift by 18 bits
-    y = y ^ y >> 18;
+    y = y ^ y>>18;
 
     this.index = this.index + 1;
 
@@ -6519,14 +6720,14 @@ class MersenneRandom {
   }
 
   twist() {
-    for (var i=0; i<624; i++) {
+    for (var i = 0; i < 624; i++) {
       // Get the most significant bit and add it to the less significant
       // bits of the next number
       var y = _int32((this.mt[i] & 0x80000000) +
-        (this.mt[(i + 1) % 624] & 0x7fffffff));
-      this.mt[i] = this.mt[(i + 397) % 624] ^ y >> 1;
+        (this.mt[(i + 1)%624] & 0x7fffffff));
+      this.mt[i] = this.mt[(i + 397)%624] ^ y>>1;
 
-      if (y % 2 != 0)
+      if (y%2 != 0)
         this.mt[i] = this.mt[i] ^ 0x9908b0df;
     }
 
@@ -6535,8 +6736,9 @@ class MersenneRandom {
 }
 
 var _mt = new MersenneRandom(0);
+
 function random() {
-  return _mt.extract_number() / (1<<30);
+  return _mt.extract_number()/(1<<30);
 }
 
 function seed(n) {
@@ -6547,12 +6749,12 @@ function seed(n) {
 function strhash(str) {
   var hash = 0;
 
-  for (var i=0; i<str.length; i++) {
+  for (var i = 0; i < str.length; i++) {
     var ch = str.charCodeAt(i);
 
     hash = hash < 0 ? -hash : hash;
 
-    hash ^= (ch*524287 + 4323543) & ((1<<19)-1);
+    hash ^= (ch*524287 + 4323543) & ((1<<19) - 1);
   }
 
   return hash;
@@ -6560,12 +6762,12 @@ function strhash(str) {
 
 var hashsizes = [
   /*2, 5, 11, 19, 37, 67, 127, */223, 383, 653, 1117, 1901, 3251,
-   5527, 9397, 15991, 27191, 46229, 78593, 133631, 227177, 38619,
-  656587, 1116209, 1897561, 3225883, 5484019, 9322861, 15848867,
-  26943089, 45803279, 77865577, 132371489, 225031553
+                                 5527, 9397, 15991, 27191, 46229, 78593, 133631, 227177, 38619,
+                                 656587, 1116209, 1897561, 3225883, 5484019, 9322861, 15848867,
+                                 26943089, 45803279, 77865577, 132371489, 225031553
 ];
 
-var FTAKEN=0, FKEY= 1, FVAL= 2, FTOT=3;
+var FTAKEN = 0, FKEY = 1, FVAL = 2, FTOT = 3;
 
 class FastHash extends Array {
   constructor() {
@@ -6586,10 +6788,10 @@ class FastHash extends Array {
     this.size = size;
     this.fill(0, 0, this.length);
 
-    for (var i=0; i<table.length; i += FTOT) {
-      if (!table[i+FTAKEN]) continue;
+    for (var i = 0; i < table.length; i += FTOT) {
+      if (!table[i + FTAKEN]) continue;
 
-      var key = table[i+FKEY], val = table[i+FVAL];
+      var key = table[i + FKEY], val = table[i + FVAL];
       this.set(key, val);
     }
 
@@ -6602,16 +6804,16 @@ class FastHash extends Array {
 
     var probe = 0;
 
-    var h = (hash + probe) % this.size;
+    var h = (hash + probe)%this.size;
 
     var _i = 0;
-    while (_i++ < 50000 && this[h*FTOT+FTAKEN]) {
-      if (this[h*FTOT+FKEY] ==  key) {
-        return this[h*FTOT+FVAL];
+    while (_i++ < 50000 && this[h*FTOT + FTAKEN]) {
+      if (this[h*FTOT + FKEY] == key) {
+        return this[h*FTOT + FVAL];
       }
 
-      probe = (probe+1)*2;
-      h = (hash + probe) % this.size;
+      probe = (probe + 1)*2;
+      h = (hash + probe)%this.size;
     }
 
     return undefined;
@@ -6623,16 +6825,16 @@ class FastHash extends Array {
 
     var probe = 0;
 
-    var h = (hash + probe) % this.size;
+    var h = (hash + probe)%this.size;
 
     var _i = 0;
-    while (_i++ < 50000 && this[h*FTOT+FTAKEN]) {
-      if (this[h*FTOT+FKEY] ==  key) {
+    while (_i++ < 50000 && this[h*FTOT + FTAKEN]) {
+      if (this[h*FTOT + FKEY] == key) {
         return true;
       }
 
-      probe = (probe+1)*2;
-      h = (hash + probe) % this.size;
+      probe = (probe + 1)*2;
+      h = (hash + probe)%this.size;
     }
 
     return false;
@@ -6648,22 +6850,22 @@ class FastHash extends Array {
 
     var probe = 0;
 
-    var h = (hash + probe) % this.size;
+    var h = (hash + probe)%this.size;
 
     var _i = 0;
-    while (_i++ < 50000 && this[h*FTOT+FTAKEN]) {
-      if (this[h*FTOT+FKEY] ==  key) {
-        this[h*FTOT+FVAL] = val;
+    while (_i++ < 50000 && this[h*FTOT + FTAKEN]) {
+      if (this[h*FTOT + FKEY] == key) {
+        this[h*FTOT + FVAL] = val;
         return;
       }
 
-      probe = (probe+1)*2;
-      h = (hash + probe) % this.size;
+      probe = (probe + 1)*2;
+      h = (hash + probe)%this.size;
     }
 
-    this[h*FTOT+FTAKEN] = 1;
-    this[h*FTOT+FKEY] = key;
-    this[h*FTOT+FVAL] = val;
+    this[h*FTOT + FTAKEN] = 1;
+    this[h*FTOT + FKEY] = key;
+    this[h*FTOT + FVAL] = val;
 
     this.used++;
   }
@@ -6693,7 +6895,7 @@ class ImageReader {
       doaccept = accept;
     });
 
-    input.addEventListener("change", function(e) {
+    input.addEventListener("change", function (e) {
       let files = this.files;
       console$1.log("got file", e, files);
 
@@ -6763,16 +6965,16 @@ class HashDigest {
 
   add(v) {
     //glibc linear congruel generator
-    this.i = ((this.i+(~~v))*1103515245 + 12345) & ((1<<29)-1);
+    this.i = ((this.i + (~~v))*1103515245 + 12345) & ((1<<29) - 1);
     //according to wikipedia only the top 16 bits are random
     //this.i = this.i>>16;
 
-    let v2 = (v*1024*1024) & ((1<<29)-1);
+    let v2 = (v*1024*1024) & ((1<<29) - 1);
     v = v | v2;
 
     v = ~~v;
 
-    this.hash ^= v^this.i;
+    this.hash ^= v ^ this.i;
   }
 }
 
@@ -6800,7 +7002,7 @@ window._test_hash2 = () => {
 
     window.console.log(h.get());
   }
-  for (let i=0; i<50; i++) {
+  for (let i = 0; i < 50; i++) {
     h.add(0);
     //window.console.log(h.i/((1<<30)-1), h.hash);
   }
@@ -6812,7 +7014,7 @@ window._HashDigest = HashDigest;
 
 function hashjoin(hash, val) {
   let sum = 0;
-  let mul = (1<<19)-1, off = (1<<27)-1;
+  let mul = (1<<19) - 1, off = (1<<27) - 1;
   let i = 0;
 
   h = (h*mul + off + i*mul*0.25) & mul;
@@ -6822,7 +7024,7 @@ let NullItem = {};
 
 class MapIter {
   constructor(ownermap) {
-    this.ret = {done : true, value : undefined};
+    this.ret = {done: true, value: undefined};
     this.value = new Array(2);
     this.i = 0;
     this.map = ownermap;
@@ -6860,7 +7062,7 @@ class MapIter {
 
     ret.value = this.value;
     ret.value[0] = list[i];
-    ret.value[1] = list[i+1];
+    ret.value[1] = list[i + 1];
     ret.done = false;
 
     return ret;
@@ -6891,7 +7093,7 @@ class map {
 
     this.iterstack = new Array(8);
     this.itercur = 0;
-    for (let i=0; i<this.iterstack.length; i++) {
+    for (let i = 0; i < this.iterstack.length; i++) {
       this.iterstack[i] = new MapIter(this);
     }
 
@@ -6919,14 +7121,14 @@ class map {
     }
 
     this._list[i] = key;
-    this._list[i+1] = v;
+    this._list[i + 1] = v;
 
     this._items[k] = i;
   }
 
   keys() {
     let this2 = this;
-    return (function*() {
+    return (function* () {
       for (let [key, val] of this2) {
         yield key;
       }
@@ -6935,7 +7137,7 @@ class map {
 
   values() {
     let this2 = this;
-    return (function*() {
+    return (function* () {
       for (let [key, val] of this2) {
         yield val;
       }
@@ -6947,7 +7149,7 @@ class map {
 
     let i = this._items[k];
     if (i !== undefined) {
-      return this._list[i+1];
+      return this._list[i + 1];
     }
   }
 
@@ -6963,7 +7165,7 @@ class map {
     this.freelist.push(i);
 
     this._list[i] = NullItem;
-    this._list[i+1] = NullItem;
+    this._list[i + 1] = NullItem;
 
     delete this._items[k];
     this.size--;
@@ -6984,7 +7186,7 @@ class map {
 
 }
 
-window._test_map = function() {
+window._test_map = function () {
   let m = new map();
 
   m.set("1", 2);
@@ -7006,10 +7208,153 @@ window._test_map = function() {
   return m;
 };
 
+function validateId(id) {
+  let bad = typeof id !== "number";
+  bad = bad || id !== ~~id;
+  bad = bad || isNaN(id);
+
+  if (bad) {
+    throw new Error("bad number " + id);
+  }
+
+  return bad;
+}
+
+let UndefinedTag = {};
+
+class IDMap extends Array {
+  constructor() {
+    super();
+
+    this._keys = new Set();
+    this.size = 0;
+  }
+
+  has(id) {
+    validateId(id);
+
+    if (id < 0 || id >= this.length) {
+      return false;
+    }
+
+    return this[id] !== undefined;
+  }
+
+  set(id, val) {
+    validateId(id);
+
+    if (id < 0) {
+      console$1.warn("got -1 id in IDMap");
+      return;
+    }
+
+    if (id >= this.length) {
+      this.length = id + 1;
+    }
+
+    if (val === undefined) {
+      val = UndefinedTag;
+    }
+
+    let ret = false;
+
+    if (this[id] === undefined) {
+      this.size++;
+      this._keys.add(id);
+      ret = true;
+    }
+
+    this[id] = val;
+    return ret;
+  }
+
+  /* we allow -1, which always returns undefined*/
+  get(id) {
+    validateId(id);
+
+    if (id === -1) {
+      return undefined;
+    } else if (id < 0) {
+      console$1.warn("id was negative");
+      return undefined;
+    }
+
+    let ret = id < this.length ? this[id] : undefined;
+    ret = ret === UndefinedTag ? undefined : ret;
+
+    return ret;
+  }
+
+  delete(id) {
+    if (!this.has(id)) {
+      return false;
+    }
+
+    this._keys.remove(id);
+    this[id] = undefined;
+    this.size--;
+
+    return true;
+  }
+
+  keys() {
+    let this2 = this;
+    return (function*() {
+      for (let id of this2._keys) {
+        yield id;
+      }
+    })();
+  }
+
+  values() {
+    let this2 = this;
+    return (function*() {
+      for (let id of this2._keys) {
+        yield this2[id];
+      }
+    })();
+  }
+
+  [Symbol.iterator]() {
+    let this2 = this;
+    let iteritem = [0, 0];
+
+    return (function*() {
+      for (let id of this2._keys) {
+        iteritem[0] = id;
+        iteritem[1] = this2[id];
+
+        if (iteritem[1] === UndefinedTag) {
+          iteritem[1] = undefined;
+        }
+
+        yield iteritem;
+      }
+    })();
+  }
+}
+
+window._test_idmap = function() {
+  let map = new IDMap();
+
+  for (let i=0; i<5; i++) {
+    let id = ~~(Math.random()*55);
+
+    map.set(id, "yay" + i);
+  }
+
+  for (let [key, val] of map) {
+    console$1.log(key, val, map.has(key), map.get(key));
+  }
+
+  return map;
+};
+
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   termColorMap: termColorMap,
   termColor: termColor,
+  termPrint: termPrint,
   MovingAvg: MovingAvg,
   timers: timers,
   pollTimer: pollTimer,
@@ -7044,7 +7389,8 @@ var util1 = /*#__PURE__*/Object.freeze({
   HashDigest: HashDigest,
   hashjoin: hashjoin,
   MapIter: MapIter,
-  map: map
+  map: map,
+  IDMap: IDMap
 });
 
 const EulerOrders = {
@@ -8322,6 +8668,94 @@ class Matrix4 {
     return ok;
   }
 
+  loadColumn(i, vec) {
+    let m = this.$matrix;
+    let have4 = vec.length > 3;
+
+    switch (i) {
+      case 0:
+        m.m11 = vec[0];
+        m.m21 = vec[1];
+        m.m31 = vec[2];
+        if (have4) {
+          m.m41 = vec[3];
+        }
+        break;
+      case 1:
+        m.m12 = vec[0];
+        m.m22 = vec[1];
+        m.m32 = vec[2];
+        if (have4) {
+          m.m42 = vec[3];
+        }
+        break;
+      case 2:
+        m.m13 = vec[0];
+        m.m23 = vec[1];
+        m.m33 = vec[2];
+        if (have4) {
+          m.m43 = vec[3];
+        }
+        break;
+      case 3:
+        m.m14 = vec[0];
+        m.m24 = vec[1];
+        m.m34 = vec[2];
+        if (have4) {
+          m.m44 = vec[3];
+        }
+        break;
+    }
+
+    return this;
+  }
+
+  copyColumnTo(i, vec) {
+    let m = this.$matrix;
+    let have4 = vec.length > 3;
+
+    switch (i) {
+      case 0:
+        vec[0] = m.m11;
+        vec[1] = m.m21;
+        vec[2] = m.m31;
+        if (have4) {
+          vec[3] = m.m41;
+        }
+        break;
+      case 1:
+        vec[0] = m.m12;
+        vec[1] = m.m22;
+        vec[2] = m.m32;
+        if (have4) {
+          vec[3] = m.m42;
+        }
+        break;
+      case 2:
+        vec[0] = m.m13;
+        vec[1] = m.m23;
+        vec[2] = m.m33;
+        if (have4) {
+          vec[3] = m.m43;
+        }
+        break;
+      case 3:
+        vec[0] = m.m14;
+        vec[1] = m.m24;
+        vec[2] = m.m34;
+        if (have4) {
+          vec[3] = m.m44;
+        }
+        break;
+    }
+
+    return vec;
+  }
+
+  copyColumn(i) {
+    return this.copyColumnTo(i, new Vector3());
+  }
+
   load() {
     if (arguments.length==1&&typeof arguments[0]=='object') {
       var matrix;
@@ -8419,6 +8853,8 @@ class Matrix4 {
     Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
 
     ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+
+    return this;
   }
 
   makeIdentity() {
@@ -8441,6 +8877,8 @@ class Matrix4 {
 
     //drop isPersp
     this.isPersp = false;
+
+    return this;
   }
 
   transpose() {
@@ -8462,6 +8900,8 @@ class Matrix4 {
     tmp = this.$matrix.m34;
     this.$matrix.m34 = this.$matrix.m43;
     this.$matrix.m43 = tmp;
+
+    return this;
   }
 
   determinant() {
@@ -8492,6 +8932,8 @@ class Matrix4 {
     this.$matrix.m42 /= det;
     this.$matrix.m43 /= det;
     this.$matrix.m44 /= det;
+
+    return this;
   }
 
   translate(x, y, z) {
@@ -8731,6 +9173,8 @@ class Matrix4 {
     b.multiply(a);
 
     this.preMultiply(b);
+
+    return this;
   }
 
   euler_rotate(x, y, z) {
@@ -9496,6 +9940,15 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
 
 "use strict";
 
+let tri_area_temps = cachering.fromConstructor(Vector3, 64);
+function tri_area(v1, v2, v3) {
+  let l1 = v1.vectorDistance(v2);
+  let l2 = v2.vectorDistance(v3);
+  let l3 = v3.vectorDistance(v1);
+
+  let s = (l1+l2+l3)/2.0;
+  return Math.sqrt(s*(s-l1)*(s-l2)*(s-l3))
+}
 function aabb_overlap_area(pos1, size1, pos2, size2) {
   let r1=0.0, r2=0.0;
 
@@ -11310,6 +11763,7 @@ class Mat4Stack {
 
 var math1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  tri_area: tri_area,
   aabb_overlap_area: aabb_overlap_area,
   aabb_isect_2d: aabb_isect_2d,
   aabb_intersect_2d: aabb_intersect_2d,
@@ -12484,11 +12938,56 @@ function pushModalLight(obj, autoStopPropagation=true) {
   return ret;
 }
 
-function popModalLight(state) {
-  if (exports$1.DEBUG.modalEvents) {
-    console.warn("popModalLight");
-  }
+if (0) {
+  let addevent = EventTarget.prototype.addEventListener;
+  let remevent = EventTarget.prototype.removeEventListener;
 
+  const funckey = Symbol("eventfunc");
+
+  EventTarget.prototype.addEventListener = function (name, func, args) {
+    //if (name.startsWith("key")) {
+    console.warn("listener added", name, func, args);
+    //}
+
+    let func2 = function (e) {
+      let proxy = new Proxy(e, {
+        get(target, p, receiver) {
+          if (p === "preventDefault") {
+            return function () {
+              console.warn("preventDefault", name, arguments);
+              return e.preventDefault(...arguments);
+            }
+          } else if (p === "stopPropagation") {
+            return function () {
+              console.warn("stopPropagation", name, arguments);
+              return e.preventDefault(...arguments);
+            }
+          }
+
+          return e[p];
+        }
+      });
+
+      return func.call(this, proxy);
+    };
+
+    func[funckey] = func2;
+
+    return addevent.call(this, name, func2, args);
+  };
+
+  EventTarget.prototype.removeEventListener = function (name, func, args) {
+    //if (name.startsWith("key")) {
+    console.warn("listener removed", name, func, args);
+    //}
+
+    func = func[funckey];
+
+    return remevent.call(this, name, func, args);
+  };
+}
+
+function popModalLight(state) {
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");
     return;
@@ -12510,6 +13009,10 @@ function popModalLight(state) {
 
   state.handlers = {};
   modalstack.remove(state);
+
+  if (exports$1.DEBUG.modalEvents) {
+    console.warn("popModalLight", modalstack);
+  }
 }
 
 function haveModal() {
@@ -12863,7 +13366,12 @@ class EventHandler {
   
   popModal() {
     if (this._modalstate !== undefined) {
-      popModalLight(this._modalstate);
+      let modalstate = this._modalstate;
+
+      //window.setTimeout(() => {
+        popModalLight(modalstate);
+      //});
+
       this._modalstate = undefined;
     }
   }
@@ -23178,6 +23686,16 @@ class UIBase$2 extends HTMLElement {
     }, {passive : false});
   }
 
+  /*
+  set default_overrides(v) {
+    console.error("default_overrides was set", v);
+    this._default_overrides = v;
+  }
+
+  get default_overrides() {
+    return this._default_overrides;
+  }//*/
+
   hide(sethide=true) {
     this.hidden = sethide;
 
@@ -23665,13 +24183,15 @@ class UIBase$2 extends HTMLElement {
         }
       }
     };
-    
+
     for (let n of this.childNodes) {
       rec(n);
     }
 
-    for (let n of this.shadow.childNodes) {
-      rec(n);
+    if (this.shadow) {
+      for (let n of this.shadow.childNodes) {
+        rec(n);
+      }
     }
   }
   
@@ -25696,7 +26216,6 @@ class TextBox extends TextBoxBase {
     this._modal = true;
     this.pushModal({
       on_mousemove : (e) => {
-        console.log(e.x, e.y);
         e.stopPropagation();
       },
 
@@ -25770,6 +26289,7 @@ class TextBox extends TextBoxBase {
       this.dom.style["font"] = this.style["font"];
     } else {
       this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
+      this.dom.style["color"] = this.getDefault("DefaultText").color;
     }
 
     this.dom.style["width"] = this.style["width"];
@@ -26145,6 +26665,7 @@ class Check extends UIBase$5 {
     let label = this._label = document.createElement("label");
     label.setAttribute("class", "checkx");
     span.setAttribute("class", "checkx");
+    label.style["align-self"] = "center";
 
     let side = this.getDefault("CheckSide");
     if (side === "right") {
@@ -26198,6 +26719,7 @@ class Check extends UIBase$5 {
     this._label.style["color"] = this.getDefault("DefaultText").color;
 
     super.setCSS();
+
     //force clear background
     this.style["background-color"] = "rgba(0,0,0,0)";
   }
@@ -31372,7 +31894,6 @@ class PanelFrame extends ColumnFrame {
 
     let iconcheck = this.iconcheck;
 
-    this.overrideDefault("BoxMargin", 0);
     iconcheck.overrideDefault("BoxMargin", 0);
 
     iconcheck.noMarginsOrPadding();
@@ -31920,7 +32441,6 @@ class SatValField extends UIBase$a {
     });
 
     this.canvas.addEventListener("touchstart", (e) => {
-      console.log("touch start");
       let rect = this.canvas.getClientRects()[0];
       let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
 
@@ -32304,10 +32824,7 @@ class ColorPicker extends ColumnFrame {
 
       let color = web2color(val);
 
-      console.log(color);
-
       node._no_update_textbox = true;
-      console.log(color);
       node.field.setRGBA(color[0], color[1], color[2], color[3]);
       node._setSliders();
 
@@ -32503,16 +33020,12 @@ class ColorPickerButton extends UIBase$a {
     this._font = "DefaultText"; //this.getDefault("defaultFont");
 
     let enter = (e) => {
-      console.log(e.type, this._id);
-
       this._keyhandler_add();
       this._highlight = true;
       this._redraw();
     };
 
     let leave = (e) => {
-      console.log(e.type, this._id);
-
       this._keyhandler_remove();
       this._highlight = false;
       this._redraw();
@@ -32564,13 +33077,9 @@ class ColorPickerButton extends UIBase$a {
   }
 
   _keydown(e, internal_mode=false) {
-    console.log(this._id);
-
     if (internal_mode && !this._highlight) {
       return;
     }
-
-    console.warn(this._id, "COLOR", e.keyCode);
 
     if (e === this._last_keyevt) {
       return; //prevent double event procesing
@@ -32579,14 +33088,11 @@ class ColorPickerButton extends UIBase$a {
     this._last_keyevt = e;
 
     if (e.keyCode === 67 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
-      console.log("yay copy");
-      console.log(document.activeElement);
       this.clipboardCopy();
       e.preventDefault();
       e.stopPropagation();
     }
     if (e.keyCode === 86 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
-      console.log("yay paste");
       this.clipboardPaste();
       e.preventDefault();
       e.stopPropagation();
@@ -32594,8 +33100,6 @@ class ColorPickerButton extends UIBase$a {
   }
 
   clipboardCopy() {
-    console.log("color copy");
-
     if (!exports$1.setClipboardData) {
       console.log("no clipboard api");
       return;
@@ -32641,8 +33145,6 @@ class ColorPickerButton extends UIBase$a {
     if (!exports$1.getClipboardData) {
       return;
     }
-
-    console.log("color paste");
 
     let data = exports$1.getClipboardData("text/plain");
 
@@ -32704,8 +33206,6 @@ class ColorPickerButton extends UIBase$a {
   }
 
   click(e) {
-    //console.log("click!", this.getAttribute("mass_set_path"));
-
     if (this.onclick) {
       this.onclick(e);
     }
@@ -32822,8 +33322,6 @@ class ColorPickerButton extends UIBase$a {
     let cellsize = 10;
     let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
 
-    //console.log("TOTX, TOTY", totx, toty);
-
     drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
     g.clip();
 
@@ -32847,7 +33345,6 @@ class ColorPickerButton extends UIBase$a {
     //g.fill();
 
     let color = color2css(this.rgba);
-    //console.log(color);
     drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
@@ -32921,7 +33418,6 @@ class ColorPickerButton extends UIBase$a {
     prop = prop;
 
     if (prop.uiname !== this._label) {
-      //console.log(prop);
       this.label = prop.uiname;
     }
 
@@ -35251,16 +35747,18 @@ class NumSlider extends ValueButtonBase {
           step *= 5.0;
         }
 
+        let szmargin = Math.min(sz*8.0, r.width*0.4);
+
         //console.log("D", x, "S", step, "V", v);
 
-        if (x < sz*1.5) {
+        if (x < szmargin) {
            this.setValue(v - step);
-        } else if (x > r.width - sz*1.5) {
+        } else if (x > r.width - szmargin) {
           this.setValue(v + step);
         }
       }
 
-      if (e.button == 0 && e.shiftKey) {
+      if (e.button === 0 && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -36589,6 +37087,7 @@ class LastToolPanel extends ColumnFrame {
   getToolStackHead(ctx) {
     //don't process the root toolop
     let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
+    bad = bad || ctx.toolstack.cur < 0;
     bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
 
     if (bad) {
@@ -39413,7 +39912,10 @@ class Area$1 extends UIBase$2 {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
-      
+      if (haveModal()) {
+        return;
+      }
+
       let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
 
       //console.log("area drag?", e, mdown2, e.pageX, e.pageY, mpre(e, pageX, pageY), e.was_touch);
@@ -40372,7 +40874,7 @@ class ScreenArea extends UIBase$2 {
     let editors = [];
 
     for (let area of this.editors) {
-      if (!area.constructor || !area.constructor.define) {
+      if (!area.constructor || !area.constructor.define || area.constructor === Area$1) {
         //failed to load this area
         continue;
       }
@@ -42073,12 +42575,12 @@ class Screen$2 extends UIBase$2 {
     //effective bounds of screen
     this._aabb = [new Vector2$d(), new Vector2$d()];
 
-    this.shadow.addEventListener("mousemove", (e) => {
-      let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea);
+    let on_mousemove = (e, x, y) => {
+      let elem = this.pickElement(x, y, 1, 1, ScreenArea);
 
       if (0) {
-        let elem2 = this.pickElement(e.x, e.y);
-        console.log(elem2 ? elem2.tagName : undefined);
+        let elem2 = this.pickElement(x, y, 1, 1);
+        console.log(""+this.sareas.active, elem2 ? elem2.tagName : undefined, elem !== undefined);
       }
 
       if (elem !== undefined) {
@@ -42091,13 +42593,19 @@ class Screen$2 extends UIBase$2 {
         this.sareas.active = elem;
       }
 
-      this.mpos[0] = e.x;
-      this.mpos[1] = e.y;
+      this.mpos[0] = x;
+      this.mpos[1] = y;
+    };
+    this.shadow.addEventListener("mousemove", (e) => {
+      return on_mousemove(e, e.x, e.y);
     });
 
     this.shadow.addEventListener("touchmove", (e) => {
-      this.mpos[0] = e.touches[0].pageX;
-      this.mpos[1] = e.touches[0].pageY;
+      if (e.touches.length === 0) {
+        return;
+      }
+
+      return on_mousemove(e, e.touches[0].pageX, e.touches[0].pagesY);
     });
 
   }
@@ -43015,15 +43523,16 @@ class Screen$2 extends UIBase$2 {
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
-      //console.log(area.getKeyMaps());
+
       if (!area) {
-        console.warn("eek");
         return;
       }
+
       for (let keymap of area.getKeyMaps()) {
         if (keymap === undefined) {
-          console.warn("eek!");
+          continue;
         }
+
         if (keymap.handle(this.ctx, e)) {
           handled = true;
           break;
@@ -44493,9 +45002,11 @@ class Screen$2 extends UIBase$2 {
         };
 
         let onblur = (e) => {
-          if (this.sareas.active === child) {
-            this.sareas.active = undefined;
-          }
+          //XXX this is causing bugs
+
+          //if (this.sareas.active === child) {
+          //  this.sareas.active = undefined;
+          //}
         };
 
         child.addEventListener("focus", onfocus);
@@ -44551,6 +45062,8 @@ class Screen$2 extends UIBase$2 {
   }
 
   on_keydown(e) {
+    console.warn(e.keyCode, haveModal());
+
     if (!haveModal() && this.execKeyMap(e)) {
       e.preventDefault();
       return;
