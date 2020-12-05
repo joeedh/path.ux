@@ -5,6 +5,15 @@ import * as vectormath from './vectormath.js';
 
 import {Vector2, Vector3, Vector4, Matrix4, Quat} from './vectormath.js';
 
+let tri_area_temps = util.cachering.fromConstructor(Vector3, 64);
+export function tri_area(v1, v2, v3) {
+  let l1 = v1.vectorDistance(v2);
+  let l2 = v2.vectorDistance(v3);
+  let l3 = v3.vectorDistance(v1);
+
+  let s = (l1+l2+l3)/2.0;
+  return Math.sqrt(s*(s-l1)*(s-l2)*(s-l3))
+}
 export function aabb_overlap_area(pos1, size1, pos2, size2) {
   let r1=0.0, r2=0.0;
 

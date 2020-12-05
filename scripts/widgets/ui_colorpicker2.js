@@ -348,7 +348,6 @@ export class SatValField extends UIBase {
     });
 
     this.canvas.addEventListener("touchstart", (e) => {
-      console.log("touch start");
       let rect = this.canvas.getClientRects()[0];
       let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
 
@@ -732,10 +731,7 @@ export class ColorPicker extends ui.ColumnFrame {
 
       let color = web2color(val);
 
-      console.log(color);
-
       node._no_update_textbox = true;
-      console.log(color);
       node.field.setRGBA(color[0], color[1], color[2], color[3]);
       node._setSliders();
 
@@ -931,16 +927,12 @@ export class ColorPickerButton extends UIBase {
     this._font = "DefaultText"; //this.getDefault("defaultFont");
 
     let enter = (e) => {
-      console.log(e.type, this._id);
-
       this._keyhandler_add();
       this._highlight = true;
       this._redraw();
     };
 
     let leave = (e) => {
-      console.log(e.type, this._id);
-
       this._keyhandler_remove();
       this._highlight = false;
       this._redraw();
@@ -992,13 +984,9 @@ export class ColorPickerButton extends UIBase {
   }
 
   _keydown(e, internal_mode=false) {
-    console.log(this._id);
-
     if (internal_mode && !this._highlight) {
       return;
     }
-
-    console.warn(this._id, "COLOR", e.keyCode);
 
     if (e === this._last_keyevt) {
       return; //prevent double event procesing
@@ -1007,14 +995,11 @@ export class ColorPickerButton extends UIBase {
     this._last_keyevt = e;
 
     if (e.keyCode === 67 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
-      console.log("yay copy");
-      console.log(document.activeElement);
       this.clipboardCopy();
       e.preventDefault();
       e.stopPropagation();
     }
     if (e.keyCode === 86 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
-      console.log("yay paste");
       this.clipboardPaste();
       e.preventDefault();
       e.stopPropagation();
@@ -1022,8 +1007,6 @@ export class ColorPickerButton extends UIBase {
   }
 
   clipboardCopy() {
-    console.log("color copy");
-
     if (!cconst.setClipboardData) {
       console.log("no clipboard api");
       return;
@@ -1069,8 +1052,6 @@ export class ColorPickerButton extends UIBase {
     if (!cconst.getClipboardData) {
       return;
     }
-
-    console.log("color paste");
 
     let data = cconst.getClipboardData("text/plain");
 
@@ -1132,8 +1113,6 @@ export class ColorPickerButton extends UIBase {
   }
 
   click(e) {
-    //console.log("click!", this.getAttribute("mass_set_path"));
-
     if (this.onclick) {
       this.onclick(e);
     }
@@ -1250,8 +1229,6 @@ export class ColorPickerButton extends UIBase {
     let cellsize = 10;
     let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
 
-    //console.log("TOTX, TOTY", totx, toty);
-
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
     g.clip();
 
@@ -1275,7 +1252,6 @@ export class ColorPickerButton extends UIBase {
     //g.fill();
 
     let color = color2css(this.rgba);
-    //console.log(color);
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color, undefined, true);
     //drawRoundBox(elem, canvas, g, width, height, r=undefined, op="fill", color=undefined, pad=undefined) {
 
@@ -1349,7 +1325,6 @@ export class ColorPickerButton extends UIBase {
     prop = prop;
 
     if (prop.uiname !== this._label) {
-      //console.log(prop);
       this.label = prop.uiname;
     }
 

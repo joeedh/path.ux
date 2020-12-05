@@ -172,7 +172,12 @@ export class EventHandler {
   
   popModal() {
     if (this._modalstate !== undefined) {
-      simple_events.popModalLight(this._modalstate);
+      let modalstate = this._modalstate;
+
+      //window.setTimeout(() => {
+        simple_events.popModalLight(modalstate);
+      //});
+
       this._modalstate = undefined;
     }
   }

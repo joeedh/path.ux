@@ -243,6 +243,7 @@ export class Check extends UIBase {
     let label = this._label = document.createElement("label");
     label.setAttribute("class", "checkx");
     span.setAttribute("class", "checkx");
+    label.style["align-self"] = "center";
 
     let side = this.getDefault("CheckSide");
     if (side === "right") {
@@ -296,6 +297,7 @@ export class Check extends UIBase {
     this._label.style["color"] = this.getDefault("DefaultText").color;
 
     super.setCSS();
+
     //force clear background
     this.style["background-color"] = "rgba(0,0,0,0)";
   }

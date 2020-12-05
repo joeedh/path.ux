@@ -491,11 +491,56 @@ export function pushModalLight(obj, autoStopPropagation=true) {
   return ret;
 }
 
-export function popModalLight(state) {
-  if (cconst.DEBUG.modalEvents) {
-    console.warn("popModalLight");
+if (0) {
+  let addevent = EventTarget.prototype.addEventListener;
+  let remevent = EventTarget.prototype.removeEventListener;
+
+  const funckey = Symbol("eventfunc");
+
+  EventTarget.prototype.addEventListener = function (name, func, args) {
+    //if (name.startsWith("key")) {
+    console.warn("listener added", name, func, args);
+    //}
+
+    let func2 = function (e) {
+      let proxy = new Proxy(e, {
+        get(target, p, receiver) {
+          if (p === "preventDefault") {
+            return function () {
+              console.warn("preventDefault", name, arguments);
+              return e.preventDefault(...arguments);
+            }
+          } else if (p === "stopPropagation") {
+            return function () {
+              console.warn("stopPropagation", name, arguments);
+              return e.preventDefault(...arguments);
+            }
+          }
+
+          return e[p];
+        }
+      });
+
+      return func.call(this, proxy);
+    }
+
+    func[funckey] = func2;
+
+    return addevent.call(this, name, func2, args);
   }
 
+  EventTarget.prototype.removeEventListener = function (name, func, args) {
+    //if (name.startsWith("key")) {
+    console.warn("listener removed", name, func, args);
+    //}
+
+    func = func[funckey];
+
+    return remevent.call(this, name, func, args);
+  }
+}
+
+export function popModalLight(state) {
   if (state === undefined) {
     console.warn("Bad call to popModalLight: state was undefined");
     return;
@@ -517,6 +562,10 @@ export function popModalLight(state) {
 
   state.handlers = {};
   modalstack.remove(state);
+
+  if (cconst.DEBUG.modalEvents) {
+    console.warn("popModalLight", modalstack);
+  }
 }
 
 export function haveModal() {

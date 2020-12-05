@@ -188,16 +188,18 @@ export class NumSlider extends ValueButtonBase {
           step *= 5.0;
         }
 
+        let szmargin = Math.min(sz*8.0, r.width*0.4);
+
         //console.log("D", x, "S", step, "V", v);
 
-        if (x < sz*1.5) {
+        if (x < szmargin) {
            this.setValue(v - step);
-        } else if (x > r.width - sz*1.5) {
+        } else if (x > r.width - szmargin) {
           this.setValue(v + step);
         }
       }
 
-      if (e.button == 0 && e.shiftKey) {
+      if (e.button === 0 && e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
 

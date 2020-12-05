@@ -99,7 +99,6 @@ export class PanelFrame extends ColumnFrame {
 
     let iconcheck = this.iconcheck;
 
-    this.overrideDefault("BoxMargin", 0);
     iconcheck.overrideDefault("BoxMargin", 0);
 
     iconcheck.noMarginsOrPadding();

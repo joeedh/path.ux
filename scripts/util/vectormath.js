@@ -1276,6 +1276,94 @@ export class Matrix4 {
     return ok;
   }
 
+  loadColumn(i, vec) {
+    let m = this.$matrix;
+    let have4 = vec.length > 3;
+
+    switch (i) {
+      case 0:
+        m.m11 = vec[0];
+        m.m21 = vec[1];
+        m.m31 = vec[2];
+        if (have4) {
+          m.m41 = vec[3];
+        }
+        break;
+      case 1:
+        m.m12 = vec[0];
+        m.m22 = vec[1];
+        m.m32 = vec[2];
+        if (have4) {
+          m.m42 = vec[3];
+        }
+        break;
+      case 2:
+        m.m13 = vec[0];
+        m.m23 = vec[1];
+        m.m33 = vec[2];
+        if (have4) {
+          m.m43 = vec[3];
+        }
+        break;
+      case 3:
+        m.m14 = vec[0];
+        m.m24 = vec[1];
+        m.m34 = vec[2];
+        if (have4) {
+          m.m44 = vec[3];
+        }
+        break;
+    }
+
+    return this;
+  }
+
+  copyColumnTo(i, vec) {
+    let m = this.$matrix;
+    let have4 = vec.length > 3;
+
+    switch (i) {
+      case 0:
+        vec[0] = m.m11;
+        vec[1] = m.m21;
+        vec[2] = m.m31;
+        if (have4) {
+          vec[3] = m.m41;
+        }
+        break;
+      case 1:
+        vec[0] = m.m12;
+        vec[1] = m.m22;
+        vec[2] = m.m32;
+        if (have4) {
+          vec[3] = m.m42;
+        }
+        break;
+      case 2:
+        vec[0] = m.m13;
+        vec[1] = m.m23;
+        vec[2] = m.m33;
+        if (have4) {
+          vec[3] = m.m43;
+        }
+        break;
+      case 3:
+        vec[0] = m.m14;
+        vec[1] = m.m24;
+        vec[2] = m.m34;
+        if (have4) {
+          vec[3] = m.m44;
+        }
+        break;
+    }
+
+    return vec;
+  }
+
+  copyColumn(i) {
+    return this.copyColumnTo(i, new Vector3());
+  }
+
   load() {
     if (arguments.length==1&&typeof arguments[0]=='object') {
       var matrix;
@@ -1373,6 +1461,8 @@ export class Matrix4 {
     Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
 
     ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+
+    return this;
   }
 
   makeIdentity() {
@@ -1395,6 +1485,8 @@ export class Matrix4 {
 
     //drop isPersp
     this.isPersp = false;
+
+    return this;
   }
 
   transpose() {
@@ -1416,6 +1508,8 @@ export class Matrix4 {
     tmp = this.$matrix.m34;
     this.$matrix.m34 = this.$matrix.m43;
     this.$matrix.m43 = tmp;
+
+    return this;
   }
 
   determinant() {
@@ -1446,6 +1540,8 @@ export class Matrix4 {
     this.$matrix.m42 /= det;
     this.$matrix.m43 /= det;
     this.$matrix.m44 /= det;
+
+    return this;
   }
 
   translate(x, y, z) {
@@ -1685,6 +1781,8 @@ export class Matrix4 {
     b.multiply(a);
 
     this.preMultiply(b);
+
+    return this;
   }
 
   euler_rotate(x, y, z) {

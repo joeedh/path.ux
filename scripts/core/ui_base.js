@@ -661,6 +661,16 @@ export class UIBase extends HTMLElement {
     }, {passive : false});
   }
 
+  /*
+  set default_overrides(v) {
+    console.error("default_overrides was set", v);
+    this._default_overrides = v;
+  }
+
+  get default_overrides() {
+    return this._default_overrides;
+  }//*/
+
   hide(sethide=true) {
     this.hidden = sethide;
 
@@ -1148,13 +1158,15 @@ export class UIBase extends HTMLElement {
         }
       }
     };
-    
+
     for (let n of this.childNodes) {
       rec(n);
     }
 
-    for (let n of this.shadow.childNodes) {
-      rec(n);
+    if (this.shadow) {
+      for (let n of this.shadow.childNodes) {
+        rec(n);
+      }
     }
   }
   

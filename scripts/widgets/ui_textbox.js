@@ -136,7 +136,6 @@ export class TextBox extends TextBoxBase {
     this._modal = true;
     this.pushModal({
       on_mousemove : (e) => {
-        console.log(e.x, e.y);
         e.stopPropagation();
       },
 
@@ -210,6 +209,7 @@ export class TextBox extends TextBoxBase {
       this.dom.style["font"] = this.style["font"];
     } else {
       this.dom.style["font"] = this.getDefault("DefaultText").genCSS();
+      this.dom.style["color"] = this.getDefault("DefaultText").color;
     }
 
     this.dom.style["width"] = this.style["width"];

@@ -456,7 +456,10 @@ export class Area extends ui_base.UIBase {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
-      
+      if (haveModal()) {
+        return;
+      }
+
       let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
 
       //console.log("area drag?", e, mdown2, e.pageX, e.pageY, mpre(e, pageX, pageY), e.was_touch);
@@ -1415,7 +1418,7 @@ export class ScreenArea extends ui_base.UIBase {
     let editors = [];
 
     for (let area of this.editors) {
-      if (!area.constructor || !area.constructor.define) {
+      if (!area.constructor || !area.constructor.define || area.constructor === Area) {
         //failed to load this area
         continue;
       }

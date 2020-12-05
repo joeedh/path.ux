@@ -36,6 +36,7 @@ export class LastToolPanel extends ColumnFrame {
   getToolStackHead(ctx) {
     //don't process the root toolop
     let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
+    bad = bad || ctx.toolstack.cur < 0;
     bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
 
     if (bad) {

@@ -127,12 +127,12 @@ export class Screen extends ui_base.UIBase {
     //effective bounds of screen
     this._aabb = [new Vector2(), new Vector2()];
 
-    this.shadow.addEventListener("mousemove", (e) => {
-      let elem = this.pickElement(e.x, e.y, 1, 1, ScreenArea.ScreenArea);
+    let on_mousemove = (e, x, y) => {
+      let elem = this.pickElement(x, y, 1, 1, ScreenArea.ScreenArea);
 
       if (0) {
-        let elem2 = this.pickElement(e.x, e.y);
-        console.log(elem2 ? elem2.tagName : undefined);
+        let elem2 = this.pickElement(x, y, 1, 1);
+        console.log(""+this.sareas.active, elem2 ? elem2.tagName : undefined, elem !== undefined);
       }
 
       if (elem !== undefined) {
@@ -145,13 +145,19 @@ export class Screen extends ui_base.UIBase {
         this.sareas.active = elem;
       }
 
-      this.mpos[0] = e.x;
-      this.mpos[1] = e.y;
+      this.mpos[0] = x;
+      this.mpos[1] = y;
+    }
+    this.shadow.addEventListener("mousemove", (e) => {
+      return on_mousemove(e, e.x, e.y);
     });
 
     this.shadow.addEventListener("touchmove", (e) => {
-      this.mpos[0] = e.touches[0].pageX;
-      this.mpos[1] = e.touches[0].pageY;
+      if (e.touches.length === 0) {
+        return;
+      }
+
+      return on_mousemove(e, e.touches[0].pageX, e.touches[0].pagesY);
     });
 
   }
@@ -1069,15 +1075,16 @@ export class Screen extends ui_base.UIBase {
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
-      //console.log(area.getKeyMaps());
+
       if (!area) {
-        console.warn("eek");
         return;
       }
+
       for (let keymap of area.getKeyMaps()) {
         if (keymap === undefined) {
-          console.warn("eek!");
+          continue;
         }
+
         if (keymap.handle(this.ctx, e)) {
           handled = true;
           break;
@@ -2547,9 +2554,11 @@ export class Screen extends ui_base.UIBase {
         }
 
         let onblur = (e) => {
-          if (this.sareas.active === child) {
-            this.sareas.active = undefined;
-          }
+          //XXX this is causing bugs
+
+          //if (this.sareas.active === child) {
+          //  this.sareas.active = undefined;
+          //}
         }
 
         child.addEventListener("focus", onfocus);
@@ -2605,6 +2614,8 @@ export class Screen extends ui_base.UIBase {
   }
 
   on_keydown(e) {
+    console.warn(e.keyCode, haveModal());
+
     if (!haveModal() && this.execKeyMap(e)) {
       e.preventDefault();
       return;
