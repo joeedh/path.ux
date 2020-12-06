@@ -28040,7 +28040,7 @@ class DropBox extends Button {
     this._searchMenuMode = false;
     this.altKey = undefined;
 
-    this._last_datapath = "";
+    this._last_datapath = undefined;
 
     this.r = 5;
     this._menu = undefined;
@@ -28130,18 +28130,23 @@ class DropBox extends Button {
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
+    if (!prop) {
+      return;
+    }
+
+    if (this.prop === undefined) {
+      this.prop = prop;
+    }
+
     if (val === undefined) {
       this.disabled = true;
+
       return;
     } else {
       this.disabled = false;
     }
 
-    if (this.prop !== undefined) {
-      prop = this.prop;
-    } else {
-      this.prop = prop;
-    }
+    prop = this.prop;
 
     let name = this.getAttribute("name");
 
@@ -28159,14 +28164,12 @@ class DropBox extends Button {
 
   update() {
     let path = this.getAttribute("datapath");
-    if (path !== this._last_datapath) {
-      console.log("datapath menu set detected");
 
-      this.updateDataPath();
-
+    if (path && path !== this._last_datapath) {
       this._last_datapath = path;
       this.prop = undefined;
-      this._build_menu();
+
+      this.updateDataPath();
     }
 
     super.update();
