@@ -13073,7 +13073,9 @@ for (var i$1=0; i$1<10; i$1++) {
 }
 
 for (var k in keymap_latin_1) {
-  keymap_latin_1[keymap_latin_1[k]] = k;
+  if (!(k in keymap_latin_1)) {
+    keymap_latin_1[keymap_latin_1[k]] = k;
+  }
 }
 
 var keymap_latin_1_rev = {};
@@ -13477,6 +13479,16 @@ class CurveTypeData {
 
   evaluate(s) {
     throw new Error("implement me!");
+  }
+
+  integrate(s1, quadSteps=64) {
+    let ret = 0.0, ds = s1 / quadSteps;
+
+    for (let i=0, s=0; i<quadSteps; i++, s += ds) {
+      ret += this.evaluate(s)*ds;
+    }
+
+    return ret;
   }
 
   derivative(s) {
@@ -14519,7 +14531,7 @@ class BSplineCurve extends CurveTypeData {
     var x = mpos[0], y = mpos[1];
     this.do_highlight(x, y);
 
-    if (this.points.highlight != undefined) {
+    if (this.points.highlight !== undefined) {
       if (!e.shiftKey) {
         for (var i = 0; i < this.points.length; i++) {
           this.points[i].flag &= ~CurveFlags.SELECT;
@@ -14539,7 +14551,7 @@ class BSplineCurve extends CurveTypeData {
       this.update();
       this.redraw();
       return;
-    } else if (!e.isTouch) {
+    } else { //if (!e.isTouch) {
       var p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
       this.points.highlight = p;
 
@@ -16144,6 +16156,10 @@ class Curve1D extends EventDispatcher {
 
   evaluate(s) {
     return this.generators.active.evaluate(s);
+  }
+
+  integrate(s, quadSteps) {
+    return this.generators.active.integrate(s, quadSteps);
   }
 
   derivative(s) {
@@ -19859,7 +19875,14 @@ class ModelInterface {
       ret.prop.datapath = path;
       ret.prop.ctx = ctx;
 
-      return ret.prop.getValue();
+      let val = ret.prop.getValue();
+
+      if (typeof val === "string" && (ret.prop.type & (PropTypes$1.FLAG|PropTypes$1.ENUM))) {
+        val = ret.prop.values[val];
+      }
+
+      return val;
+
     }
 
     return this.resolvePath(ctx, path).value;
@@ -19936,6 +19959,21 @@ class lexer {
     this.statestack = [["__main__", 0]];
     this.states = {"__main__" : [tokdef, errfunc]};
     this.statedata = 0; //public variable
+  }
+
+  copy() {
+    let ret = new lexer(this.tokdef, this.errfunc);
+
+    for (let k in this.states) {
+      let state = this.states[k];
+
+      state = [state[0], state[1]];
+      ret.states[k] = state;
+    }
+
+    ret.statedata = this.statedata;
+
+    return ret;
   }
 
 //errfunc is optional, defines state-specific error function
@@ -20092,6 +20130,14 @@ class parser {
     this.errfunc = errfunc;
     this.start = undefined;
   }
+
+  copy() {
+    let ret = new parser(this.lexer.copy(), this.errfunc);
+    ret.start = this.start;
+
+    return ret;
+  }
+
 
   parse(data, err_on_unconsumed) {
     if (err_on_unconsumed === undefined)
@@ -20861,6 +20907,12 @@ let lexer$1 = new lexer(tokens, (t) => {
 });
 
 let pathParser = new parser(lexer$1);
+
+let parserStack = new Array(32);
+for (let i=0; i<parserStack.length; i++) {
+  parserStack[i] = pathParser.copy();
+}
+parserStack.cur = 0;
 
 let tool_classes = ToolClasses;
 
@@ -21703,8 +21755,11 @@ class DataAPI extends ModelInterface {
   }
 
   resolvePath(ctx, inpath, ignoreExistence = false) {
+    let parser = parserStack[parserStack.cur++];
+    let ret = undefined;
+
     try {
-      return this.resolvePath_intern(ctx, inpath, ignoreExistence)
+      ret = this.resolvePath_intern(ctx, inpath, ignoreExistence, parser);
     } catch (error) {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
@@ -21716,8 +21771,11 @@ class DataAPI extends ModelInterface {
         print_stack$1(error);
       }
 
-      return undefined;
+      ret = undefined;
     }
+
+    parserStack.cur--;
+    return ret;
   }
 
   /**
@@ -21726,8 +21784,7 @@ class DataAPI extends ModelInterface {
    @param ignoreExistence: don't try to get actual data associated with path,
    just want meta information
    */
-  resolvePath_intern(ctx, inpath, ignoreExistence = false) {
-    let p = pathParser;
+  resolvePath_intern(ctx, inpath, ignoreExistence = false, p=pathParser) {
     inpath = inpath.replace("==", "=");
 
     p.input(inpath);
@@ -21877,12 +21934,28 @@ class DataAPI extends ModelInterface {
 
         if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
           let fakeprop = dpath.getSet;
-          fakeprop.ctx = ctx;
-          fakeprop.dataref = obj;
-          fakeprop.datapath = inpath;
 
-          obj = fakeprop.get();
-          fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
+          if (!fakeprop && dpath.type === DataTypes.PROP) {
+            let prop = dpath.data;
+
+            prop.ctx = ctx;
+            prop.dataref = obj;
+            prop.datapath = inpath;
+
+            obj = prop.getValue();
+            if (typeof obj === "string" && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+              obj = prop.values[obj];
+            }
+
+            prop.ctx = prop.dataref = prop.datapath = undefined;
+          } else {
+            fakeprop.ctx = ctx;
+            fakeprop.dataref = obj;
+            fakeprop.datapath = inpath;
+
+            obj = fakeprop.get();
+            fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
+          }
         } else if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
         } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
@@ -24146,6 +24219,9 @@ class UIBase$2 extends HTMLElement {
   }
 
   flushUpdate() {
+    //check init
+    this._init();
+
     this.update();
 
     this._forEachChildWidget((c) => {
@@ -26702,6 +26778,10 @@ class Check extends UIBase$5 {
   }
 
   set disabled(val) {
+    if (!!this.disabled === !!val) {
+      return;
+    }
+
     super.disabled = val;
     this._redraw();
   }
@@ -26903,8 +26983,11 @@ class IconCheck extends Button {
       this.packflag &= ~PackFlags$3.HIDE_CHECK_MARKS;
     }
 
+    if (!!val !== !!this._drawCheck) {
+      this._redraw();
+    }
+
     this._drawCheck = val;
-    this._redraw();
   }
 
   get icon() {
@@ -27344,7 +27427,6 @@ class Menu extends UIBase$6 {
     //let's have the menu wrangler handle key events
 
     this.container.addEventListener("mouseleave", (e) => {
-      console.log("menu out");
       this.close();
     }, false);
 
@@ -27355,25 +27437,18 @@ class Menu extends UIBase$6 {
   }
 
   float(x, y, zindex=undefined) {
-    console.log("menu test!");
-
     let dpi = this.getDPI();
     let rect = this.dom.getClientRects();
     let maxx = this.getWinWidth()-10;
     let maxy = this.getWinHeight()-10;
 
-    console.log(rect.length > 0 ? rect[0] : undefined);
-
     if (rect.length > 0) {
       rect = rect[0];
-      console.log(y + rect.height);
       if (y + rect.height > maxy) {
-        console.log("greater");
         y = maxy - rect.height - 1;
       }
 
       if (x + rect.width > maxx) {
-        console.log("greater");
         x = maxx - rect.width - 1;
       }
     }
@@ -27391,7 +27466,6 @@ class Menu extends UIBase$6 {
 
     if (this.onselect) {
       try {
-        console.log(this.activeItem._id, "-----");
         this.onselect(this.activeItem._id);
       } catch (error) {
         print_stack$1(error);
@@ -27399,7 +27473,6 @@ class Menu extends UIBase$6 {
       }
     }
 
-    console.log("menu select");
     this.close();
   }
 
@@ -27520,8 +27593,6 @@ class Menu extends UIBase$6 {
   }
 
   startFancy(prepend, setActive=true) {
-    console.warn("menu searchbox mode start");
-
     this.hasSearchBox = true;
     this.started = true;
     menuWrangler.pushMenu(this);
@@ -27554,8 +27625,6 @@ class Menu extends UIBase$6 {
     sbox.onchange = () => {
       let t = sbox.text.trim().toLowerCase();
 
-      console.log("applying search", t);
-
       for (let item of this.items) {
         item.hidden = true;
         item.remove();
@@ -27576,7 +27645,6 @@ class Menu extends UIBase$6 {
     };
 
     sbox.addEventListener("keydown", (e) => {
-      console.log(e.keyCode);
       switch (e.keyCode) {
         case 27: //escape key
           this.close();
@@ -27607,7 +27675,6 @@ class Menu extends UIBase$6 {
     if (!setActive)
       return;
 
-    console.log(this.container, "container?");
     this.setCSS();
     this.flushUpdate();
 
@@ -27764,8 +27831,6 @@ class Menu extends UIBase$6 {
     li.setAttribute("class", "menuitem");
 
     if (item instanceof Menu) {
-      console.log("submenu!");
-
       let dom = this.addItemExtra(""+item.title, id, "", -1, false);
 
       //dom = document.createElement("div");
@@ -27793,10 +27858,7 @@ class Menu extends UIBase$6 {
 
     if (add) {
       li.addEventListener("click", (e) => {
-        //console.log("menu click!");
-
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          //console.log("menu ignore");
           //ignore
           return n;
         }
@@ -27809,7 +27871,6 @@ class Menu extends UIBase$6 {
           return;
         }
 
-        //console.log("blur", li.getAttribute("tabindex"));
         if (this.activeItem && !this.activeItem._isMenu) {
           this.setActive(undefined, false);
         }
@@ -27831,7 +27892,6 @@ class Menu extends UIBase$6 {
         }
         if (li._isMenu) {
           li._menu.onselect = (item) => {
-            //console.log("submenu select", item);
             this.onselect(item);
             this.close();
           };
@@ -27846,7 +27906,6 @@ class Menu extends UIBase$6 {
         onfocus(e);
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          console.log("menu ignore");
           //ignore
           return;
         }
@@ -27859,13 +27918,11 @@ class Menu extends UIBase$6 {
       });
 
       li.addEventListener("touchmove", (e) => {
-        //console.log("menu touchmove");
         onfocus(e);
         li.focus();
       });
 
       li.addEventListener("mouseenter", (e) => {
-        //console.log("menu mouse enter");
         li.focus();
       });
 
@@ -27983,6 +28040,8 @@ class DropBox extends Button {
     this._searchMenuMode = false;
     this.altKey = undefined;
 
+    this._last_datapath = "";
+
     this.r = 5;
     this._menu = undefined;
     this._auto_depress = false;
@@ -28080,6 +28139,8 @@ class DropBox extends Button {
 
     if (this.prop !== undefined) {
       prop = this.prop;
+    } else {
+      this.prop = prop;
     }
 
     let name = this.getAttribute("name");
@@ -28090,15 +28151,24 @@ class DropBox extends Button {
       name = ""+val;
     }
 
-    if (name != this.getAttribute("name")) {
+    if (name !== this.getAttribute("name")) {
       this.setAttribute("name", name);
       this.updateName();
     }
-
-    //console.log(name, val);
   }
 
   update() {
+    let path = this.getAttribute("datapath");
+    if (path !== this._last_datapath) {
+      console.log("datapath menu set detected");
+
+      this.updateDataPath();
+
+      this._last_datapath = path;
+      this.prop = undefined;
+      this._build_menu();
+    }
+
     super.update();
 
     let key = this.getDefault("dropTextBG");
@@ -28134,8 +28204,6 @@ class DropBox extends Button {
     let iconmap = prop.iconmap;
     let uimap = prop.ui_value_names;
 
-    //console.log("   UIMAP", uimap);
-
     for (let k in enummap) {
       let uk = k;
 
@@ -28156,10 +28224,8 @@ class DropBox extends Button {
     menu.onselect = (id) => {
       this._pressed = false;
 
-      //console.log("dropbox select");
       this._pressed = false;
       this._redraw();
-      //console.trace("got click!", id, ":::");
 
       this._menu = undefined;
 
@@ -28187,8 +28253,6 @@ class DropBox extends Button {
   }
 
   _onpress(e) {
-    console.warn("menu dropbox click", this._menu, e);
-
     if (this._menu !== undefined) {
       this._pressed = false;
       this._redraw();
@@ -28216,8 +28280,6 @@ class DropBox extends Button {
 
     let onclose = this._menu.onclose;
     this._menu.onclose = () => {
-      console.log("menu onclose");
-
       this._pressed = false;
       this._redraw();
 
@@ -28414,9 +28476,7 @@ class MenuWrangler {
 
   searchKeyDown(e) {
     let menu = this.menu;
-    
-    console.log("s", e.keyCode);
-    
+
     e.stopPropagation();
     menu._ignoreFocusEvents = true;
     menu.textbox.focus();
@@ -28434,11 +28494,9 @@ class MenuWrangler {
         menu.close();
         break;
       case keymap["Up"]:
-        console.log("Up");
         menu.selectPrev(false);
         break;
       case keymap["Down"]:
-        console.log("Down");
         menu.selectNext(false);
         break;
     }
@@ -28446,7 +28504,6 @@ class MenuWrangler {
 
   on_keydown(e) {
     window.menu = this.menu;
-    //console.log("M", e.keyCode, this.menu !== undefined);
 
     if (this.menu === undefined) {
       return;
@@ -28456,7 +28513,6 @@ class MenuWrangler {
       return this.searchKeyDown(e);
     }
 
-    console.log("key", e.keyCode);
     let menu = this.menu;
 
     switch (e.keyCode) {
@@ -28528,7 +28584,6 @@ class MenuWrangler {
     let x = e.pageX, y = e.pageY;
 
     let element = screen.pickElement(x, y);
-    console.log("wrangler mousedown", element);
 
     if (element !== undefined && (element instanceof DropBox || isMobile())) {
       this.endMenus();
@@ -28777,6 +28832,8 @@ class Label extends UIBase$2 {
 
     this._label = "";
 
+    this._lastText = "";
+
     this.dom = document.createElement("div");
     this.dom.setAttribute("class", "_labelx");
 
@@ -28854,22 +28911,26 @@ class Label extends UIBase$2 {
     if (val === undefined) {
       return;
     }
+
     //console.log(path);
-    if (prop !== undefined && prop.type == PropTypes$6.INT) {
+    if (prop !== undefined && prop.type === PropTypes$6.INT) {
       val = val.toString(prop.radix);
 
-      if (prop.radix == 2) {
+      if (prop.radix === 2) {
         val = "0b" + val;
-      } else if (prop.radix == 16) {
+      } else if (prop.radix === 16) {
         val += "h";
       }
-    } else if (prop !== undefined && prop.type == PropTypes$6.FLOAT && val !== Math.floor(val)) {
+    } else if (prop !== undefined && prop.type === PropTypes$6.FLOAT && val !== Math.floor(val)) {
       val = val.toFixed(prop.decimalPlaces);
     }
 
-    val = "" + val;
+    val = "" + this._label + " " + val;
 
-    this.dom.innerText = this._label + val;
+    if (val !== this._lastText) {
+      this._lastText = val;
+      this.dom.innerText = val;
+    }
   }
 
   update() {
@@ -29602,7 +29663,17 @@ class Container extends UIBase$2 {
   }
 
   _joinPrefix(path) {
+    if (path === undefined) {
+      return undefined;
+    }
+
     let prefix = this.dataPrefix.trim();
+
+    path = path.trim();
+
+    if (prefix.length > 0 && !prefix.endsWith(".") && !path.startsWith(".")) {
+      path = "." + path;
+    }
 
     return prefix + path;
   }
@@ -29869,7 +29940,7 @@ class Container extends UIBase$2 {
   check(inpath, name, packflag = 0, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
-    let path = this._joinPrefix(inpath);
+    let path = inpath !== undefined ? this._joinPrefix(inpath) : undefined;
 
     //let prop = this.ctx.getProp(path);
     let ret;
@@ -31827,6 +31898,11 @@ class PanelFrame extends ColumnFrame {
     this.titleframe = this.row();
 
     this.contents = UIBase$9.createElement("colframe-x", true);
+    this.contents._remove = this.contents.remove;
+    this.contents.remove = () => {
+      this.remove();
+    };
+
     this.contents._panel = this;
     this.iconcheck = UIBase$9.createElement("iconcheck-x");
 
@@ -32001,6 +32077,29 @@ class PanelFrame extends ColumnFrame {
     this.contents.style["background-color"] = bg;
     this.style["background-color"] = bg;
 
+    let margintop, marginbottom;
+
+    if (this._closed) {
+      margintop = this.getDefault('margin-top-closed') ?? 0;
+      marginbottom = this.getDefault('margin-bottom-closed') ?? 5;
+    } else {
+      margintop = this.getDefault('margin-top') ?? 0;
+      marginbottom = this.getDefault('margin-bottom') ?? 0;
+    }
+
+    this.style['margin-top'] = margintop + "px";
+    this.style['margin-bottom'] = marginbottom + "px";
+
+    let boxmargin = this.getDefault("BoxMargin") ?? 0;
+    let paddingleft  = this.getDefault("padding-left") ?? 0;
+    let paddingright  = this.getDefault("padding-right") ?? 0;
+
+    paddingleft += boxmargin;
+    paddingright += boxmargin;
+
+    this.style["padding-left"] = paddingleft + "px";
+    this.style["padding-right"] = paddingright + "px";
+
     this.__label._updateFont();
   }
 
@@ -32033,7 +32132,14 @@ class PanelFrame extends ColumnFrame {
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
     key += this.getDefault("Background") + this.getDefault("border-style");
     key += this.getDefault("HeaderRadius");
+    key += this.getDefault("margin-top");
+    key += this.getDefault("margin-bottom");
     key += this.getAttribute("title");
+    key += this.getDefault("padding-left");
+    key += this.getDefault("padding-right");
+    key += this.getDefault("margin-bottom-closed");
+    key += this.getDefault("margin-top-closed");
+    key += !!this._closed;
 
     let font = this.__label.getDefault("TitleText");
     if (font) {
@@ -32059,7 +32165,7 @@ class PanelFrame extends ColumnFrame {
 
   _setVisible(state) {
     if (state) {
-      this.contents.remove();
+      this.contents._remove();
     } else {
       this.add(this.contents, false);
       this.contents.parentWidget = this;
@@ -33415,8 +33521,6 @@ class ColorPickerButton extends UIBase$a {
 
     this.disabled = false;
 
-    prop = prop;
-
     if (prop.uiname !== this._label) {
       this.label = prop.uiname;
     }
@@ -33435,7 +33539,15 @@ class ColorPickerButton extends UIBase$a {
     } else {
       this.disabled = false;
 
-      if (this.rgba.vectorDistance(val) > 0.0001) {
+      let dis;
+
+      if (val.length === 3) {
+        dis = Vector3$1.prototype.vectorDistance.call(val, this.rgba);
+      } else {
+        dis = this.rgba.vectorDistance(val);
+      }
+
+      if (dis > 0.0001) {
         if (prop.type === PropTypes.VEC3) {
           this.rgba.load(val);
           this.rgba[3] = 1.0;
