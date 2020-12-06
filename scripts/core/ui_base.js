@@ -1121,6 +1121,9 @@ export class UIBase extends HTMLElement {
   }
 
   flushUpdate() {
+    //check init
+    this._init();
+
     this.update();
 
     this._forEachChildWidget((c) => {

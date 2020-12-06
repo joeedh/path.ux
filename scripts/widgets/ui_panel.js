@@ -32,6 +32,11 @@ export class PanelFrame extends ColumnFrame {
     this.titleframe = this.row();
 
     this.contents = UIBase.createElement("colframe-x", true);
+    this.contents._remove = this.contents.remove;
+    this.contents.remove = () => {
+      this.remove();
+    };
+
     this.contents._panel = this;
     this.iconcheck = UIBase.createElement("iconcheck-x");
 
@@ -206,6 +211,29 @@ export class PanelFrame extends ColumnFrame {
     this.contents.style["background-color"] = bg;
     this.style["background-color"] = bg;
 
+    let margintop, marginbottom;
+
+    if (this._closed) {
+      margintop = this.getDefault('margin-top-closed') ?? 0;
+      marginbottom = this.getDefault('margin-bottom-closed') ?? 5;
+    } else {
+      margintop = this.getDefault('margin-top') ?? 0;
+      marginbottom = this.getDefault('margin-bottom') ?? 0;
+    }
+
+    this.style['margin-top'] = margintop + "px";
+    this.style['margin-bottom'] = marginbottom + "px";
+
+    let boxmargin = this.getDefault("BoxMargin") ?? 0;
+    let paddingleft  = this.getDefault("padding-left") ?? 0;
+    let paddingright  = this.getDefault("padding-right") ?? 0;
+
+    paddingleft += boxmargin;
+    paddingright += boxmargin;
+
+    this.style["padding-left"] = paddingleft + "px";
+    this.style["padding-right"] = paddingright + "px";
+
     this.__label._updateFont();
   }
 
@@ -238,7 +266,14 @@ export class PanelFrame extends ColumnFrame {
     key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
     key += this.getDefault("Background") + this.getDefault("border-style");
     key += this.getDefault("HeaderRadius");
+    key += this.getDefault("margin-top");
+    key += this.getDefault("margin-bottom");
     key += this.getAttribute("title");
+    key += this.getDefault("padding-left");
+    key += this.getDefault("padding-right");
+    key += this.getDefault("margin-bottom-closed");
+    key += this.getDefault("margin-top-closed");
+    key += !!this._closed;
 
     let font = this.__label.getDefault("TitleText");
     if (font) {
@@ -264,7 +299,7 @@ export class PanelFrame extends ColumnFrame {
 
   _setVisible(state) {
     if (state) {
-      this.contents.remove();
+      this.contents._remove();
     } else {
       this.add(this.contents, false);
       this.contents.parentWidget = this;

@@ -124,21 +124,21 @@ export class Label extends ui_base.UIBase {
       return;
     }
     //console.log(path);
-    if (prop !== undefined && prop.type == PropTypes.INT) {
+    if (prop !== undefined && prop.type === PropTypes.INT) {
       val = val.toString(prop.radix);
 
-      if (prop.radix == 2) {
+      if (prop.radix === 2) {
         val = "0b" + val;
-      } else if (prop.radix == 16) {
+      } else if (prop.radix === 16) {
         val += "h";
       }
-    } else if (prop !== undefined && prop.type == PropTypes.FLOAT && val !== Math.floor(val)) {
+    } else if (prop !== undefined && prop.type === PropTypes.FLOAT && val !== Math.floor(val)) {
       val = val.toFixed(prop.decimalPlaces);
     }
 
     val = "" + val;
 
-    this.dom.innerText = this._label + val;
+    this.dom.innerText = this._label + " " + val;
   }
 
   update() {
@@ -871,7 +871,17 @@ export class Container extends ui_base.UIBase {
   }
 
   _joinPrefix(path) {
+    if (path === undefined) {
+      return undefined;
+    }
+
     let prefix = this.dataPrefix.trim();
+
+    path = path.trim();
+
+    if (prefix.length > 0 && !prefix.endsWith(".") && !path.startsWith(".")) {
+      path = "." + path;
+    }
 
     return prefix + path;
   }
@@ -1138,7 +1148,7 @@ export class Container extends ui_base.UIBase {
   check(inpath, name, packflag = 0, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
 
-    let path = this._joinPrefix(inpath);
+    let path = inpath !== undefined ? this._joinPrefix(inpath) : undefined;
 
     //let prop = this.ctx.getProp(path);
     let ret;
