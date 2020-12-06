@@ -1322,8 +1322,6 @@ export class ColorPickerButton extends UIBase {
 
     this.disabled = false;
 
-    prop = prop;
-
     if (prop.uiname !== this._label) {
       this.label = prop.uiname;
     }
@@ -1342,7 +1340,15 @@ export class ColorPickerButton extends UIBase {
     } else {
       this.disabled = false;
 
-      if (this.rgba.vectorDistance(val) > 0.0001) {
+      let dis;
+
+      if (val.length === 3) {
+        dis = Vector3.prototype.vectorDistance.call(val, this.rgba);
+      } else {
+        dis = this.rgba.vectorDistance(val);
+      }
+
+      if (dis > 0.0001) {
         if (prop.type === PropTypes.VEC3) {
           this.rgba.load(val);
           this.rgba[3] = 1.0;

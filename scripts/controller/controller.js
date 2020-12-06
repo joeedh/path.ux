@@ -349,7 +349,14 @@ export class ModelInterface {
       ret.prop.datapath = path;
       ret.prop.ctx = ctx;
 
-      return ret.prop.getValue();
+      let val = ret.prop.getValue();
+
+      if (typeof val === "string" && (ret.prop.type & (PropTypes.FLAG|PropTypes.ENUM))) {
+        val = ret.prop.values[val];
+      }
+
+      return val;
+
     }
 
     return this.resolvePath(ctx, path).value;

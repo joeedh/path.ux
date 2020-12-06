@@ -1077,12 +1077,28 @@ export class DataAPI extends ModelInterface {
 
         if (dpath.flag & DataFlags.USE_CUSTOM_GETSET) {
           let fakeprop = dpath.getSet;
-          fakeprop.ctx = ctx;
-          fakeprop.dataref = obj;
-          fakeprop.datapath = inpath;
 
-          obj = fakeprop.get();
-          fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
+          if (!fakeprop && dpath.type === DataTypes.PROP) {
+            let prop = dpath.data;
+
+            prop.ctx = ctx;
+            prop.dataref = obj;
+            prop.datapath = inpath;
+
+            obj = prop.getValue();
+            if (typeof obj === "string" && (prop.type & (PropTypes.ENUM|PropTypes.FLAG))) {
+              obj = prop.values[obj];
+            }
+
+            prop.ctx = prop.dataref = prop.datapath = undefined;
+          } else {
+            fakeprop.ctx = ctx;
+            fakeprop.dataref = obj;
+            fakeprop.datapath = inpath;
+
+            obj = fakeprop.get();
+            fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
+          }
         } else if (obj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for " + inpath);
         } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {

@@ -280,6 +280,10 @@ export class Check extends UIBase {
   }
 
   set disabled(val) {
+    if (!!this.disabled === !!val) {
+      return;
+    }
+
     super.disabled = val;
     this._redraw();
   }
@@ -481,8 +485,11 @@ export class IconCheck extends Button {
       this.packflag &= ~PackFlags.HIDE_CHECK_MARKS;
     }
 
+    if (!!val !== !!this._drawCheck) {
+      this._redraw();
+    }
+
     this._drawCheck = val;
-    this._redraw();
   }
 
   get icon() {

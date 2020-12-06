@@ -691,6 +691,8 @@ export class DropBox extends Button {
     this._searchMenuMode = false;
     this.altKey = undefined;
 
+    this._last_datapath = "";
+
     this.r = 5;
     this._menu = undefined;
     this._auto_depress = false;
@@ -788,6 +790,8 @@ export class DropBox extends Button {
 
     if (this.prop !== undefined) {
       prop = this.prop;
+    } else {
+      this.prop = prop;
     }
 
     let name = this.getAttribute("name");
@@ -798,13 +802,24 @@ export class DropBox extends Button {
       name = ""+val;
     }
 
-    if (name != this.getAttribute("name")) {
+    if (name !== this.getAttribute("name")) {
       this.setAttribute("name", name);
       this.updateName();
     }
   }
 
   update() {
+    let path = this.getAttribute("datapath");
+    if (path !== this._last_datapath) {
+      console.log("datapath menu set detected");
+
+      this.updateDataPath();
+
+      this._last_datapath = path;
+      this.prop = undefined;
+      this._build_menu();
+    }
+
     super.update();
 
     let key = this.getDefault("dropTextBG");

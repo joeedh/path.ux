@@ -626,7 +626,9 @@ for (var i=0; i<10; i++) {
 }
 
 for (var k in keymap_latin_1) {
-  keymap_latin_1[keymap_latin_1[k]] = k;
+  if (!(k in keymap_latin_1)) {
+    keymap_latin_1[keymap_latin_1[k]] = k;
+  }
 }
 
 var keymap_latin_1_rev = {}

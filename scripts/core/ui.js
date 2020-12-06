@@ -46,6 +46,8 @@ export class Label extends ui_base.UIBase {
 
     this._label = "";
 
+    this._lastText = "";
+
     this.dom = document.createElement("div");
     this.dom.setAttribute("class", "_labelx");
 
@@ -123,6 +125,7 @@ export class Label extends ui_base.UIBase {
     if (val === undefined) {
       return;
     }
+
     //console.log(path);
     if (prop !== undefined && prop.type === PropTypes.INT) {
       val = val.toString(prop.radix);
@@ -136,9 +139,12 @@ export class Label extends ui_base.UIBase {
       val = val.toFixed(prop.decimalPlaces);
     }
 
-    val = "" + val;
+    val = "" + this._label + " " + val;
 
-    this.dom.innerText = this._label + " " + val;
+    if (val !== this._lastText) {
+      this._lastText = val;
+      this.dom.innerText = val;
+    }
   }
 
   update() {
