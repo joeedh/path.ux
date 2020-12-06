@@ -951,7 +951,7 @@ class BSplineCurve extends CurveTypeData {
     var x = mpos[0], y = mpos[1];
     this.do_highlight(x, y);
 
-    if (this.points.highlight != undefined) {
+    if (this.points.highlight !== undefined) {
       if (!e.shiftKey) {
         for (var i = 0; i < this.points.length; i++) {
           this.points[i].flag &= ~CurveFlags.SELECT;
@@ -971,7 +971,7 @@ class BSplineCurve extends CurveTypeData {
       this.update();
       this.redraw();
       return;
-    } else if (!e.isTouch) {
+    } else { //if (!e.isTouch) {
       var p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
       this.points.highlight = p;
 

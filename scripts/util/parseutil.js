@@ -57,6 +57,21 @@ export class lexer {
     this.statedata = 0; //public variable
   }
 
+  copy() {
+    let ret = new lexer(this.tokdef, this.errfunc);
+
+    for (let k in this.states) {
+      let state = this.states[k];
+
+      state = [state[0], state[1]];
+      ret.states[k] = state;
+    }
+
+    ret.statedata = this.statedata;
+
+    return ret;
+  }
+
 //errfunc is optional, defines state-specific error function
   add_state(name, tokdef, errfunc) {
     if (errfunc === undefined) {
@@ -211,6 +226,14 @@ export class parser {
     this.errfunc = errfunc;
     this.start = undefined;
   }
+
+  copy() {
+    let ret = new parser(this.lexer.copy(), this.errfunc);
+    ret.start = this.start;
+
+    return ret;
+  }
+
 
   parse(data, err_on_unconsumed) {
     if (err_on_unconsumed === undefined)

@@ -85,6 +85,16 @@ export class CurveTypeData {
     throw new Error("implement me!");
   }
 
+  integrate(s1, quadSteps=64) {
+    let ret = 0.0, ds = s1 / quadSteps;
+
+    for (let i=0, s=0; i<quadSteps; i++, s += ds) {
+      ret += this.evaluate(s)*ds;
+    }
+
+    return ret;
+  }
+
   derivative(s) {
     let df = 0.0001;
 

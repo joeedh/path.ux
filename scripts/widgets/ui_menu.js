@@ -78,7 +78,6 @@ export class Menu extends UIBase {
     //let's have the menu wrangler handle key events
 
     this.container.addEventListener("mouseleave", (e) => {
-      console.log("menu out");
       this.close();
     }, false);
 
@@ -89,25 +88,18 @@ export class Menu extends UIBase {
   }
 
   float(x, y, zindex=undefined) {
-    console.log("menu test!");
-
     let dpi = this.getDPI();
     let rect = this.dom.getClientRects();
     let maxx = this.getWinWidth()-10;
     let maxy = this.getWinHeight()-10;
 
-    console.log(rect.length > 0 ? rect[0] : undefined)
-
     if (rect.length > 0) {
       rect = rect[0];
-      console.log(y + rect.height);
       if (y + rect.height > maxy) {
-        console.log("greater");
         y = maxy - rect.height - 1;
       }
 
       if (x + rect.width > maxx) {
-        console.log("greater");
         x = maxx - rect.width - 1;
       }
     }
@@ -125,7 +117,6 @@ export class Menu extends UIBase {
 
     if (this.onselect) {
       try {
-        console.log(this.activeItem._id, "-----");
         this.onselect(this.activeItem._id);
       } catch (error) {
         util.print_stack(error);
@@ -133,7 +124,6 @@ export class Menu extends UIBase {
       }
     }
 
-    console.log("menu select");
     this.close();
   }
 
@@ -254,8 +244,6 @@ export class Menu extends UIBase {
   }
 
   startFancy(prepend, setActive=true) {
-    console.warn("menu searchbox mode start");
-
     this.hasSearchBox = true;
     this.started = true;
     menuWrangler.pushMenu(this);
@@ -288,8 +276,6 @@ export class Menu extends UIBase {
     sbox.onchange = () => {
       let t = sbox.text.trim().toLowerCase();
 
-      console.log("applying search", t);
-
       for (let item of this.items) {
         item.hidden = true;
         item.remove();
@@ -310,7 +296,6 @@ export class Menu extends UIBase {
     }
 
     sbox.addEventListener("keydown", (e) => {
-      console.log(e.keyCode);
       switch (e.keyCode) {
         case 27: //escape key
           this.close();
@@ -341,7 +326,6 @@ export class Menu extends UIBase {
     if (!setActive)
       return;
 
-    console.log(this.container, "container?");
     this.setCSS();
     this.flushUpdate();
 
@@ -498,8 +482,6 @@ export class Menu extends UIBase {
     li.setAttribute("class", "menuitem");
 
     if (item instanceof Menu) {
-      console.log("submenu!");
-
       let dom = this.addItemExtra(""+item.title, id, "", -1, false);
 
       //dom = document.createElement("div");
@@ -527,10 +509,7 @@ export class Menu extends UIBase {
 
     if (add) {
       li.addEventListener("click", (e) => {
-        //console.log("menu click!");
-
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          //console.log("menu ignore");
           //ignore
           return n;
         }
@@ -543,7 +522,6 @@ export class Menu extends UIBase {
           return;
         }
 
-        //console.log("blur", li.getAttribute("tabindex"));
         if (this.activeItem && !this.activeItem._isMenu) {
           this.setActive(undefined, false);
         }
@@ -565,7 +543,6 @@ export class Menu extends UIBase {
         }
         if (li._isMenu) {
           li._menu.onselect = (item) => {
-            //console.log("submenu select", item);
             this.onselect(item);
             this.close();
           };
@@ -580,7 +557,6 @@ export class Menu extends UIBase {
         onfocus(e);
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          console.log("menu ignore");
           //ignore
           return;
         }
@@ -593,13 +569,11 @@ export class Menu extends UIBase {
       })
 
       li.addEventListener("touchmove", (e) => {
-        //console.log("menu touchmove");
         onfocus(e);
         li.focus();
       });
 
       li.addEventListener("mouseenter", (e) => {
-        //console.log("menu mouse enter");
         li.focus();
       });
 
@@ -828,8 +802,6 @@ export class DropBox extends Button {
       this.setAttribute("name", name);
       this.updateName();
     }
-
-    //console.log(name, val);
   }
 
   update() {
@@ -868,8 +840,6 @@ export class DropBox extends Button {
     let iconmap = prop.iconmap;
     let uimap = prop.ui_value_names;
 
-    //console.log("   UIMAP", uimap);
-
     for (let k in enummap) {
       let uk = k;
 
@@ -890,10 +860,8 @@ export class DropBox extends Button {
     menu.onselect = (id) => {
       this._pressed = false;
 
-      //console.log("dropbox select");
       this._pressed = false;
       this._redraw();
-      //console.trace("got click!", id, ":::");
 
       this._menu = undefined;
 
@@ -921,8 +889,6 @@ export class DropBox extends Button {
   }
 
   _onpress(e) {
-    console.warn("menu dropbox click", this._menu, e);
-
     if (this._menu !== undefined) {
       this._pressed = false;
       this._redraw();
@@ -950,8 +916,6 @@ export class DropBox extends Button {
 
     let onclose = this._menu.onclose;
     this._menu.onclose = () => {
-      console.log("menu onclose");
-
       this._pressed = false;
       this._redraw();
 
@@ -1148,9 +1112,7 @@ export class MenuWrangler {
 
   searchKeyDown(e) {
     let menu = this.menu;
-    
-    console.log("s", e.keyCode);
-    
+
     e.stopPropagation();
     menu._ignoreFocusEvents = true;
     menu.textbox.focus();
@@ -1168,11 +1130,9 @@ export class MenuWrangler {
         menu.close();
         break;
       case keymap["Up"]:
-        console.log("Up");
         menu.selectPrev(false);
         break;
       case keymap["Down"]:
-        console.log("Down");
         menu.selectNext(false);
         break;
     }
@@ -1180,7 +1140,6 @@ export class MenuWrangler {
 
   on_keydown(e) {
     window.menu = this.menu;
-    //console.log("M", e.keyCode, this.menu !== undefined);
 
     if (this.menu === undefined) {
       return;
@@ -1190,7 +1149,6 @@ export class MenuWrangler {
       return this.searchKeyDown(e);
     }
 
-    console.log("key", e.keyCode);
     let menu = this.menu;
 
     switch (e.keyCode) {
@@ -1262,7 +1220,6 @@ export class MenuWrangler {
     let x = e.pageX, y = e.pageY;
 
     let element = screen.pickElement(x, y);
-    console.log("wrangler mousedown", element);
 
     if (element !== undefined && (element instanceof DropBox || util.isMobile())) {
       this.endMenus();

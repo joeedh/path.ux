@@ -39,6 +39,12 @@ let lexer = new parseutil.lexer(tokens, (t) => {
 
 export let pathParser = new parseutil.parser(lexer);
 
+let parserStack = new Array(32);
+for (let i=0; i<parserStack.length; i++) {
+  parserStack[i] = pathParser.copy();
+}
+parserStack.cur = 0;
+
 import {
   ModelInterface, ToolOpIface,
   DataFlags, DataPathError, setImplementationClass,
@@ -892,8 +898,11 @@ export class DataAPI extends ModelInterface {
   }
 
   resolvePath(ctx, inpath, ignoreExistence = false) {
+    let parser = parserStack[parserStack.cur++];
+    let ret = undefined;
+
     try {
-      return this.resolvePath_intern(ctx, inpath, ignoreExistence)
+      ret = this.resolvePath_intern(ctx, inpath, ignoreExistence, parser)
     } catch (error) {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
@@ -905,8 +914,11 @@ export class DataAPI extends ModelInterface {
         util.print_stack(error);
       }
 
-      return undefined;
+      ret = undefined;
     }
+
+    parserStack.cur--;
+    return ret;
   }
 
   /**
@@ -915,8 +927,7 @@ export class DataAPI extends ModelInterface {
    @param ignoreExistence: don't try to get actual data associated with path,
    just want meta information
    */
-  resolvePath_intern(ctx, inpath, ignoreExistence = false) {
-    let p = pathParser;
+  resolvePath_intern(ctx, inpath, ignoreExistence = false, p=pathParser) {
     inpath = inpath.replace("==", "=");
 
     p.input(inpath);

@@ -245,6 +245,10 @@ export class Curve1D extends EventDispatcher {
     return this.generators.active.evaluate(s);
   }
 
+  integrate(s, quadSteps) {
+    return this.generators.active.integrate(s, quadSteps);
+  }
+
   derivative(s) {
     return this.generators.active.derivative(s);
   }
