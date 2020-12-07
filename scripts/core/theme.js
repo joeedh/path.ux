@@ -241,25 +241,32 @@ export const DefaultTheme = {
   },
 
   panel:  {
-    Background      : 'rgba(156,156,156, 0.17586212158203124)',
-    BoxBorder       : 'rgba(0,0,0, 0.5598061397157866)',
-    BoxLineWidth    : 1.140988342674589,
-    BoxRadius       : 7.243125760182565,
-    HeaderRadius    : 5.829650280441558,
-    TitleBackground : 'rgba(197,197,197, 1)',
-    TitleBorder     : 'rgba(209,209,209, 1)',
-    TitleText       : new CSSFont({
+    Background            : 'rgba(33,33,33, 0.23771520154229525)',
+    BoxBorder             : 'rgba(0,0,0, 0.5598061397157866)',
+    BoxLineWidth          : 1.141,
+    BoxRadius             : 7.243125760182565,
+    HeaderRadius          : 5.829650280441558,
+    TitleBackground       : 'rgba(89,89,89, 0.7980600291285022)',
+    TitleBorder           : 'rgba(93,93,93, 1)',
+    TitleText             : new CSSFont({
       font    : 'sans-serif',
-      weight  : '550',
+      weight  : 'normal',
       variant : 'normal',
       style   : 'normal',
       size    : 14,
-      color   : 'rgba(50,50,50, 1)'
+      color   : 'rgba(225,225,225, 1)'
     }),
-    'border-style'  : 'inset',
-    'padding-bottom': 0,
-    'padding-top'   : 0.9665377430621097,
+    'border-style'        : 'groove',
+    'margin-bottom'       : 15.762442435166511,
+    'margin-bottom-closed': 0,
+    'margin-top'          : 0.2606556353343805,
+    'margin-top-closed'   : 0,
+    'padding-bottom'      : 0.8561244078997758,
+    'padding-left'        : 0,
+    'padding-right'       : 0,
+    'padding-top'         : 0.9665377430621097,
   },
+
 
   richtext:  {
     DefaultText       : new CSSFont({

@@ -25,6 +25,8 @@ export class PropsEditor extends Editor {
     let tab1 = tabs.tab("Mass Set Example");
     this.buildMassSetExample(tab1);
 
+    tabs.style["overflow"] = "scroll";
+
     tab1 = tabs.tab("Theme");
     let th = UIBase.createElement("theme-editor-x");
     this.style["overflow-y"] = "scroll";
@@ -61,8 +63,6 @@ export class PropsEditor extends Editor {
     col.pathlabel("data.vector_test[1]");
     col.pathlabel("data.vector_test[2]");
     col.pathlabel("data.vector_test[3]");
-
-    tabs.setActive(tab1);
 
     this.buildCurve(tabs.tab("Curve Mapping"));
     this.buildGraphPack(tabs.tab("Graph Packing"));
@@ -257,7 +257,7 @@ export class PropsEditor extends Editor {
     let ret = col.prop(path, undefined, massSetPath);
     ret.style["padding"] = "10px";
 
-    col.viewer(undefined, `
+    let viewer = col.viewer(undefined, `
       <h2>Mass Paths Example</h2>
       <p>This is an example of setting multiple items in a list at once.</p>
       <p>Path.ux reads properties from a single datapath, but writes to multiple
@@ -275,6 +275,7 @@ let massSetPath
 
 col.prop(path, undefined, massSetPath);</pre>
     `);
+
   }
 
   static define() {return {

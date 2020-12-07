@@ -1284,7 +1284,8 @@ export class Screen extends ui_base.UIBase {
 
   updateScrollStyling() {
     let s = theme.scrollbars;
-    if (!s) return;
+
+    if (!s || !s.color) return;
 
     let key = "" + s.color + ":" + s.color2 + ":" + s.border + ":" + s.contrast + ":" + s.width;
 

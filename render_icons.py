@@ -142,7 +142,8 @@ sizes = [16, 24, 32, 40, 50, 64, 80, 128]
 paths = []
 
 start_dir = os.getcwd()
-basepath = "./"
+basepath = ""
+
 dir = np(os.getcwd())
 if not dir.endswith(os.path.sep):
     dir += os.path.sep
@@ -168,6 +169,9 @@ def main():
 
         height = int(dimen * OUTPUT_HEIGHT_SCALE)
 
+        fpath = os.path.join(dir, "assets")
+        os.chdir(fpath)
+        
         if inkscape_1:
             y1 = 0
             y2 =  int(SVG_SIZE * OUTPUT_HEIGHT_SCALE)

@@ -618,6 +618,8 @@ export class AreaDragTool extends ToolBase {
       //console.log(x, y, sz);
       
       let b = this.overdraw.rect([x-sz[0]*0.5, y-sz[1]*0.5], sz, color);
+      b.style["border-radius"] = "14px";
+
       boxes.push(b);
 
       b.sarea = sa;

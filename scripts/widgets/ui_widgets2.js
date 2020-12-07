@@ -513,6 +513,9 @@ export class ToolTip extends UIBase {
     y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
 
     ret._popup = screen.popup(ret, x, y);
+    ret._popup.background = "rgba(0,0,0,0)";
+    ret._popup.style["border"] = "none";
+    
     ret._popup.add(ret);
 
     return ret;
@@ -548,8 +551,12 @@ export class ToolTip extends UIBase {
     let color = this.getDefault("BoxBG");
     let bcolor = this.getDefault("BoxBorder");
 
-    this.div.style["background-color"] = color;
+    this.background = color;
+
+    this.div.style["background-color"] = "rgba(0,0,0,0)";
     this.div.style["border"] = "2px solid " + bcolor;
+    this.div.style["border-radius"] = "10px";
+    this.style["border-radius"] = "10px";
 
     this.div.style["font"] = this.getDefault("ToolTipText").genCSS();
   }

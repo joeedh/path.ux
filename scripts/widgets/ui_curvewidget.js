@@ -19,8 +19,6 @@ export class Curve1DWidget extends ColumnFrame {
     this._value.on("draw", this._on_draw);
 
     this._value._on_change = (msg) => {
-      console.warn("value on change");
-
       if (this.onchange) {
         this.onchange(this._value);
       }

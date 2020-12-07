@@ -121,7 +121,7 @@ export class AreaDocker extends Container {
         return;
       }
 
-      console.warn("CHANGE AREA", tab.id);
+      console.warn("CHANGE AREA", tab.id, this.id);
 
       let sarea = this.getArea().parentWidget;
       if (!sarea) {
@@ -133,18 +133,25 @@ export class AreaDocker extends Container {
           let ud = saveUIData(this.tbar, "tabs");
 
           sarea.switch_editor(area.constructor);
+          area._init();
+          area.flushUpdate();
 
           //load tabs order
           if (area.switcher) {
             ignore++;
             area.switcher.update();
+
+            area.switcher.tbar.setActive(area._id);
+
             try {
               loadUIData(sarea.area.switcher.tbar, ud);
             } finally {
               ignore = Math.max(ignore - 1, 0);
             }
 
-            area.switcher.rebuild();
+            //window.setTimeout(() => {
+              area.switcher.rebuild();
+            //});
           }
         }
       }
@@ -227,6 +234,7 @@ export class AreaDocker extends Container {
 
             console.log("loading data", ud);
             loadUIData(area.switcher.tbar, ud);
+
             area.switcher.rebuild(); //make sure plus tab is at end
             area.flushUpdate();
           } catch (error) {
@@ -320,8 +328,10 @@ export class AreaDocker extends Container {
       this.rebuild();
     }
 
-    if (this._last_hash) {
+    if (this.isDead() || !this.getArea()) {
+      ignore++;
       this.tbar.setActive(this.getArea()._id);
+      ignore--;
     }
   }
 

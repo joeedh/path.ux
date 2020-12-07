@@ -17036,39 +17036,40 @@ window._buildStringTest = buildString;
 "use strict";
 
 let PropTypes = {
-  INT : 1,
-  STRING : 2,
-  BOOL : 4,
-  ENUM : 8,
-  FLAG : 16,
-  FLOAT : 32,
-  VEC2 : 64,
-  VEC3 : 128,
-  VEC4 : 256,
-  MATRIX4 : 512,
-  QUAT : 1024,
-  PROPLIST : 4096,
-  STRSET : 8192,
-  CURVE  : 8192<<1
+  INT        : 1,
+  STRING     : 2,
+  BOOL       : 4,
+  ENUM       : 8,
+  FLAG       : 16,
+  FLOAT      : 32,
+  VEC2       : 64,
+  VEC3       : 128,
+  VEC4       : 256,
+  MATRIX4    : 512,
+  QUAT       : 1024,
+  PROPLIST   : 4096,
+  STRSET     : 8192,
+  CURVE      : 8192<<1,
+  FLOAT_ARRAY: 8192<<2
   //ITER : 8192<<1
 };
 
 const PropSubTypes = {
-  COLOR : 1
+  COLOR: 1
 };
 
 //flags
 const PropFlags = {
-  SELECT            : 1,
-  PRIVATE           : 2,
-  LABEL             : 4,
-  USE_ICONS         : 64,
-  USE_CUSTOM_GETSET : 128, //used by controller.js interface
-  SAVE_LAST_VALUE   : 256,
-  READ_ONLY         : 512,
-  SIMPLE_SLIDER     : 1024,
-  FORCE_ROLLER_SLIDER : 2048,
-  USE_BASE_UNDO     : 1<<12 //internal to simple_controller.js
+  SELECT             : 1,
+  PRIVATE            : 2,
+  LABEL              : 4,
+  USE_ICONS          : 64,
+  USE_CUSTOM_GETSET  : 128, //used by controller.js interface
+  SAVE_LAST_VALUE    : 256,
+  READ_ONLY          : 512,
+  SIMPLE_SLIDER      : 1024,
+  FORCE_ROLLER_SLIDER: 2048,
+  USE_BASE_UNDO      : 1<<12 //internal to simple_controller.js
 };
 
 class ToolPropertyIF {
@@ -17169,7 +17170,7 @@ class EnumPropertyIF extends ToolPropertyIF {
     if (valid_values === undefined) return this;
 
     if (valid_values instanceof Array || valid_values instanceof String) {
-      for (var i=0; i<valid_values.length; i++) {
+      for (var i = 0; i < valid_values.length; i++) {
         this.values[valid_values[i]] = valid_values[i];
         this.keys[valid_values[i]] = valid_values[i];
       }
@@ -17248,7 +17249,7 @@ class ListPropertyIF extends ToolPropertyIF {
 
   }
 
-  push(item=this.prop.copy()) {
+  push(item = this.prop.copy()) {
   }
 
   [Symbol.iterator]() {
@@ -17263,7 +17264,7 @@ class ListPropertyIF extends ToolPropertyIF {
 
 //like FlagsProperty but uses strings
 class StringSetPropertyIF extends ToolPropertyIF {
-  constructor(value=undefined, definition=[]) {
+  constructor(value = undefined, definition = []) {
     super(PropTypes.STRSET);
   }
 
@@ -17271,7 +17272,7 @@ class StringSetPropertyIF extends ToolPropertyIF {
   * Values can be a string, undefined/null, or a list/set/object-literal of strings.
   * If destructive is true, then existing set will be cleared.
   * */
-  setValue(values, destructive=true, soft_fail=true) {
+  setValue(values, destructive = true, soft_fail = true) {
   }
 
   getValue() {
@@ -17617,6 +17618,64 @@ ToolProperty {
 }
 `;
 register(ToolProperty);
+
+class FloatArrayProperty extends ToolProperty {
+  constructor(value, apiname, uiname, description, flag, icon) {
+    super(PropTypes.FLOAT_ARRAY, undefined, apiname, uiname, description, flag, icon);
+
+    this.value = [];
+
+    if (value !== undefined) {
+      this.setValue(value);
+    }
+  }
+
+  [Symbol.iterator]() {
+    return this.value[Symbol.iterator]();
+  }
+
+  setValue(value) {
+    super.setValue();
+
+    if (value === undefined) {
+      throw new Error("value was undefined in FloatArrayProperty's setValue method");
+    }
+
+    this.value.length = 0;
+
+    for (let item of value) {
+      if (typeof item !== "number" && typeof item !== "boolean") {
+        console.log(value);
+        throw new Error("bad item for FloatArrayProperty " + item);
+      }
+
+      this.value.push(item);
+    }
+  }
+
+  push(item) {
+    if (typeof item !== "number" && typeof item !== "boolean") {
+      console.log(value);
+      throw new Error("bad item for FloatArrayProperty " + item);
+    }
+
+    this.value.push(item);
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  clear() {
+    this.value.length = 0;
+    return this;
+  }
+}
+
+FloatArrayProperty.STRUCT = inherit(FloatArrayProperty, ToolProperty) + `
+  value : array(float);
+}`;
+register(FloatArrayProperty);
 
 class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
@@ -22867,25 +22926,32 @@ const DefaultTheme = {
   },
 
   panel:  {
-    Background      : 'rgba(156,156,156, 0.17586212158203124)',
-    BoxBorder       : 'rgba(0,0,0, 0.5598061397157866)',
-    BoxLineWidth    : 1.140988342674589,
-    BoxRadius       : 7.243125760182565,
-    HeaderRadius    : 5.829650280441558,
-    TitleBackground : 'rgba(197,197,197, 1)',
-    TitleBorder     : 'rgba(209,209,209, 1)',
-    TitleText       : new CSSFont({
+    Background            : 'rgba(33,33,33, 0.23771520154229525)',
+    BoxBorder             : 'rgba(0,0,0, 0.5598061397157866)',
+    BoxLineWidth          : 1.141,
+    BoxRadius             : 7.243125760182565,
+    HeaderRadius          : 5.829650280441558,
+    TitleBackground       : 'rgba(89,89,89, 0.7980600291285022)',
+    TitleBorder           : 'rgba(93,93,93, 1)',
+    TitleText             : new CSSFont({
       font    : 'sans-serif',
-      weight  : '550',
+      weight  : 'normal',
       variant : 'normal',
       style   : 'normal',
       size    : 14,
-      color   : 'rgba(50,50,50, 1)'
+      color   : 'rgba(225,225,225, 1)'
     }),
-    'border-style'  : 'inset',
-    'padding-bottom': 0,
-    'padding-top'   : 0.9665377430621097,
+    'border-style'        : 'groove',
+    'margin-bottom'       : 15.762442435166511,
+    'margin-bottom-closed': 0,
+    'margin-top'          : 0.2606556353343805,
+    'margin-top-closed'   : 0,
+    'padding-bottom'      : 0.8561244078997758,
+    'padding-left'        : 0,
+    'padding-right'       : 0,
+    'padding-top'         : 0.9665377430621097,
   },
+
 
   richtext:  {
     DefaultText       : new CSSFont({
@@ -31553,6 +31619,9 @@ class ToolTip extends UIBase$2 {
     y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
 
     ret._popup = screen.popup(ret, x, y);
+    ret._popup.background = "rgba(0,0,0,0)";
+    ret._popup.style["border"] = "none";
+    
     ret._popup.add(ret);
 
     return ret;
@@ -31588,8 +31657,12 @@ class ToolTip extends UIBase$2 {
     let color = this.getDefault("BoxBG");
     let bcolor = this.getDefault("BoxBorder");
 
-    this.div.style["background-color"] = color;
+    this.background = color;
+
+    this.div.style["background-color"] = "rgba(0,0,0,0)";
     this.div.style["border"] = "2px solid " + bcolor;
+    this.div.style["border-radius"] = "10px";
+    this.style["border-radius"] = "10px";
 
     this.div.style["font"] = this.getDefault("ToolTipText").genCSS();
   }
@@ -31634,8 +31707,6 @@ class Curve1DWidget extends ColumnFrame {
     this._value.on("draw", this._on_draw);
 
     this._value._on_change = (msg) => {
-      console.warn("value on change");
-
       if (this.onchange) {
         this.onchange(this._value);
       }
@@ -38796,6 +38867,8 @@ class AreaDragTool extends ToolBase {
       //console.log(x, y, sz);
       
       let b = this.overdraw.rect([x-sz[0]*0.5, y-sz[1]*0.5], sz, color);
+      b.style["border-radius"] = "14px";
+
       boxes.push(b);
 
       b.sarea = sa;
@@ -41302,6 +41375,95 @@ let SVG_URL = 'http://www.w3.org/2000/svg';
 
 let Vector2$c = Vector2;
 
+class CanvasOverdraw extends UIBase$2 {
+  constructor() {
+    super();
+
+    this.canvas = document.createElement("canvas");
+    this.shadow.appendChild(this.canvas);
+    this.g = this.canvas.getContext("2d");
+
+    this.screen = undefined;
+    this.shapes = [];
+    this.otherChildren = []; //non-svg elements
+    this.font = undefined;
+
+    let style = document.createElement("style");
+    style.textContent = `
+      .overdrawx {
+        pointer-events : none;
+      }
+    `;
+
+    this.shadow.appendChild(style);
+  }
+
+  static define() {
+    return {
+      tagname : 'screen-overdraw-canvas-x'
+    }
+  }
+
+  startNode(node, screen) {
+    if (screen) {
+      this.screen = screen;
+      this.ctx = screen.ctx;
+    }
+
+    if (!this.parentNode) {
+      node.appendChild(this);
+    }
+
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+
+    this.style["width"] = "100%"; //screen.size[0] + "px";
+    this.style["height"] = "100%"; //screen.size[1] + "px";
+
+    this.style["pointer-events"] = "none";
+
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+
+    this.svg.style["pointer-events"] = "none";
+
+    this.shadow.appendChild(this.svg);
+    //this.style["background-color"] = "green";
+  }
+
+  start(screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
+
+    screen.parentNode.appendChild(this);
+
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+
+    this.style["width"] = screen.size[0] + "px";
+    this.style["height"] = screen.size[1] + "px";
+
+    this.style["pointer-events"] = "none";
+
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+
+    this.shadow.appendChild(this.svg);
+
+    //this.style["background-color"] = "green";
+  }
+}
+
 class Overdraw extends UIBase$2 {
   constructor() {
     super();
@@ -42346,7 +42508,7 @@ class AreaDocker extends Container {
         return;
       }
 
-      console.warn("CHANGE AREA", tab.id);
+      console.warn("CHANGE AREA", tab.id, this.id);
 
       let sarea = this.getArea().parentWidget;
       if (!sarea) {
@@ -42358,18 +42520,25 @@ class AreaDocker extends Container {
           let ud = saveUIData(this.tbar, "tabs");
 
           sarea.switch_editor(area.constructor);
+          area._init();
+          area.flushUpdate();
 
           //load tabs order
           if (area.switcher) {
             ignore++;
             area.switcher.update();
+
+            area.switcher.tbar.setActive(area._id);
+
             try {
               loadUIData(sarea.area.switcher.tbar, ud);
             } finally {
               ignore = Math.max(ignore - 1, 0);
             }
 
-            area.switcher.rebuild();
+            //window.setTimeout(() => {
+              area.switcher.rebuild();
+            //});
           }
         }
       }
@@ -42452,6 +42621,7 @@ class AreaDocker extends Container {
 
             console.log("loading data", ud);
             loadUIData(area.switcher.tbar, ud);
+
             area.switcher.rebuild(); //make sure plus tab is at end
             area.flushUpdate();
           } catch (error) {
@@ -42545,8 +42715,10 @@ class AreaDocker extends Container {
       this.rebuild();
     }
 
-    if (this._last_hash) {
+    if (this.isDead() || !this.getArea()) {
+      ignore++;
       this.tbar.setActive(this.getArea()._id);
+      ignore--;
     }
   }
 
@@ -43847,7 +44019,8 @@ class Screen$2 extends UIBase$2 {
 
   updateScrollStyling() {
     let s = theme.scrollbars;
-    if (!s) return;
+
+    if (!s || !s.color) return;
 
     let key = "" + s.color + ":" + s.color2 + ":" + s.border + ":" + s.contrast + ":" + s.width;
 
@@ -46059,5 +46232,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports$1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
