@@ -284,6 +284,64 @@ ToolProperty {
 `;
 nstructjs.register(ToolProperty);
 
+export class FloatArrayProperty extends ToolProperty {
+  constructor(value, apiname, uiname, description, flag, icon) {
+    super(PropTypes.FLOAT_ARRAY, undefined, apiname, uiname, description, flag, icon);
+
+    this.value = [];
+
+    if (value !== undefined) {
+      this.setValue(value);
+    }
+  }
+
+  [Symbol.iterator]() {
+    return this.value[Symbol.iterator]();
+  }
+
+  setValue(value) {
+    super.setValue();
+
+    if (value === undefined) {
+      throw new Error("value was undefined in FloatArrayProperty's setValue method");
+    }
+
+    this.value.length = 0;
+
+    for (let item of value) {
+      if (typeof item !== "number" && typeof item !== "boolean") {
+        console.log(value);
+        throw new Error("bad item for FloatArrayProperty " + item);
+      }
+
+      this.value.push(item);
+    }
+  }
+
+  push(item) {
+    if (typeof item !== "number" && typeof item !== "boolean") {
+      console.log(value);
+      throw new Error("bad item for FloatArrayProperty " + item);
+    }
+
+    this.value.push(item);
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  clear() {
+    this.value.length = 0;
+    return this;
+  }
+}
+
+FloatArrayProperty.STRUCT = nstructjs.inherit(FloatArrayProperty, ToolProperty) + `
+  value : array(float);
+}`;
+nstructjs.register(FloatArrayProperty);
+
 export class StringProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);

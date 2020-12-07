@@ -10,6 +10,95 @@ import * as math from './math.js';
 
 let Vector2 = vectormath.Vector2;
 
+export class CanvasOverdraw extends ui_base.UIBase {
+  constructor() {
+    super();
+
+    this.canvas = document.createElement("canvas");
+    this.shadow.appendChild(this.canvas);
+    this.g = this.canvas.getContext("2d");
+
+    this.screen = undefined;
+    this.shapes = [];
+    this.otherChildren = []; //non-svg elements
+    this.font = undefined;
+
+    let style = document.createElement("style")
+    style.textContent = `
+      .overdrawx {
+        pointer-events : none;
+      }
+    `;
+
+    this.shadow.appendChild(style);
+  }
+
+  static define() {
+    return {
+      tagname : 'screen-overdraw-canvas-x'
+    }
+  }
+
+  startNode(node, screen) {
+    if (screen) {
+      this.screen = screen;
+      this.ctx = screen.ctx;
+    }
+
+    if (!this.parentNode) {
+      node.appendChild(this);
+    }
+
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+
+    this.style["width"] = "100%" //screen.size[0] + "px";
+    this.style["height"] = "100%" //screen.size[1] + "px";
+
+    this.style["pointer-events"] = "none";
+
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+
+    this.svg.style["pointer-events"] = "none";
+
+    this.shadow.appendChild(this.svg);
+    //this.style["background-color"] = "green";
+  }
+
+  start(screen) {
+    this.screen = screen;
+    this.ctx = screen.ctx;
+
+    screen.parentNode.appendChild(this);
+
+    this.style["display"] = "float";
+    this.style["z-index"] = this.zindex_base;
+
+    this.style["position"] = "absolute";
+    this.style["left"] = "0px";
+    this.style["top"] = "0px";
+
+    this.style["width"] = screen.size[0] + "px";
+    this.style["height"] = screen.size[1] + "px";
+
+    this.style["pointer-events"] = "none";
+
+    this.svg = document.createElementNS(SVG_URL, "svg");
+    this.svg.style["width"] = "100%";
+    this.svg.style["height"] = "100%";
+
+    this.shadow.appendChild(this.svg);
+
+    //this.style["background-color"] = "green";
+  }
+}
+
 export class Overdraw extends ui_base.UIBase {
   constructor() {
     super();

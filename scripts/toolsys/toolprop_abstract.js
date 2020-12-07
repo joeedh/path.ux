@@ -9,39 +9,40 @@ that any tool property library must implement to interface with path.ux.
 import * as util from "../util/util.js";
 
 export let PropTypes = {
-  INT : 1,
-  STRING : 2,
-  BOOL : 4,
-  ENUM : 8,
-  FLAG : 16,
-  FLOAT : 32,
-  VEC2 : 64,
-  VEC3 : 128,
-  VEC4 : 256,
-  MATRIX4 : 512,
-  QUAT : 1024,
-  PROPLIST : 4096,
-  STRSET : 8192,
-  CURVE  : 8192<<1
+  INT        : 1,
+  STRING     : 2,
+  BOOL       : 4,
+  ENUM       : 8,
+  FLAG       : 16,
+  FLOAT      : 32,
+  VEC2       : 64,
+  VEC3       : 128,
+  VEC4       : 256,
+  MATRIX4    : 512,
+  QUAT       : 1024,
+  PROPLIST   : 4096,
+  STRSET     : 8192,
+  CURVE      : 8192<<1,
+  FLOAT_ARRAY: 8192<<2
   //ITER : 8192<<1
 };
 
 export const PropSubTypes = {
-  COLOR : 1
+  COLOR: 1
 };
 
 //flags
 export const PropFlags = {
-  SELECT            : 1,
-  PRIVATE           : 2,
-  LABEL             : 4,
-  USE_ICONS         : 64,
-  USE_CUSTOM_GETSET : 128, //used by controller.js interface
-  SAVE_LAST_VALUE   : 256,
-  READ_ONLY         : 512,
-  SIMPLE_SLIDER     : 1024,
-  FORCE_ROLLER_SLIDER : 2048,
-  USE_BASE_UNDO     : 1<<12 //internal to simple_controller.js
+  SELECT             : 1,
+  PRIVATE            : 2,
+  LABEL              : 4,
+  USE_ICONS          : 64,
+  USE_CUSTOM_GETSET  : 128, //used by controller.js interface
+  SAVE_LAST_VALUE    : 256,
+  READ_ONLY          : 512,
+  SIMPLE_SLIDER      : 1024,
+  FORCE_ROLLER_SLIDER: 2048,
+  USE_BASE_UNDO      : 1<<12 //internal to simple_controller.js
 };
 
 export class ToolPropertyIF {
@@ -142,7 +143,7 @@ export class EnumPropertyIF extends ToolPropertyIF {
     if (valid_values === undefined) return this;
 
     if (valid_values instanceof Array || valid_values instanceof String) {
-      for (var i=0; i<valid_values.length; i++) {
+      for (var i = 0; i < valid_values.length; i++) {
         this.values[valid_values[i]] = valid_values[i];
         this.keys[valid_values[i]] = valid_values[i];
       }
@@ -221,7 +222,7 @@ export class ListPropertyIF extends ToolPropertyIF {
 
   }
 
-  push(item=this.prop.copy()) {
+  push(item = this.prop.copy()) {
   }
 
   [Symbol.iterator]() {
@@ -236,7 +237,7 @@ export class ListPropertyIF extends ToolPropertyIF {
 
 //like FlagsProperty but uses strings
 export class StringSetPropertyIF extends ToolPropertyIF {
-  constructor(value=undefined, definition=[]) {
+  constructor(value = undefined, definition = []) {
     super(PropTypes.STRSET);
   }
 
@@ -244,7 +245,7 @@ export class StringSetPropertyIF extends ToolPropertyIF {
   * Values can be a string, undefined/null, or a list/set/object-literal of strings.
   * If destructive is true, then existing set will be cleared.
   * */
-  setValue(values, destructive=true, soft_fail=true) {
+  setValue(values, destructive = true, soft_fail = true) {
   }
 
   getValue() {
