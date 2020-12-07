@@ -3951,7 +3951,7 @@ _module_exports_$2.readObject = function(data, cls, __uctx=undefined) {
 @param data : Array instance to write bytes to
 */
 _module_exports_$2.writeObject = function(data, obj) {
-  return _module_exports_$2.manager.writeObject(data.obj);
+  return _module_exports_$2.manager.writeObject(data, obj);
 };
 
 _module_exports_$2.writeJSON = function(obj) {

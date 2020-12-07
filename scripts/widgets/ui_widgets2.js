@@ -515,7 +515,7 @@ export class ToolTip extends UIBase {
     ret._popup = screen.popup(ret, x, y);
     ret._popup.background = "rgba(0,0,0,0)";
     ret._popup.style["border"] = "none";
-    
+
     ret._popup.add(ret);
 
     return ret;
