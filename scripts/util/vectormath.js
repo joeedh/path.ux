@@ -308,17 +308,6 @@ function bounded_acos(fac) {
     return Math.acos(fac);
 }
 
-function saasin(fac) {
-  if (fac<=-1.0)
-    return -Math.pi/2.0;
-  else
-  if (fac>=1.0)
-    return Math.pi/2.0;
-  else
-    return Math.asin(fac);
-}
-
-
 function make_norm_safe_dot(cls) {
   var _dot = cls.prototype.dot;
 
@@ -584,16 +573,8 @@ export class Vector4 extends BaseVector {
   }
 
   preNormalizedAngle(v2) {
-    if (this.dot(v2)<0.0) {
-      var vec=new Vector4();
-      vec[0] = -v2[0];
-      vec[1] = -v2[1];
-      vec[2] = -v2[2];
-      vec[3] = -v2[3];
-      return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
-    }
-    else
-      return 2.0*saasin(v2.vectorDistance(this)/2.0);
+    let th = this.dot(v2)*0.99999;
+    return Math.acos(th);
   }
 
   loadSTRUCT(reader) {
@@ -739,15 +720,8 @@ export class Vector3 extends BaseVector {
   }
 
   preNormalizedAngle(v2) {
-    if (this.dot(v2)<0.0) {
-      var vec=new Vector3();
-      vec[0] = -v2[0];
-      vec[1] = -v2[1];
-      vec[2] = -v2[2];
-      return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
-    }
-    else
-      return 2.0*saasin(v2.vectorDistance(this)/2.0);
+    let th = this.dot(v2)*0.99999;
+    return Math.acos(th);
   }
 
   loadSTRUCT(reader) {
@@ -1094,20 +1068,30 @@ export class Quat extends Vector4 {
     return this;
   }
 
-  rotationBetweenVecs(v1, v2) {
+  rotationBetweenVecs(v1, v2, fac=1.0) {
     v1 = new Vector3(v1);
     v2 = new Vector3(v2);
     v1.normalize();
     v2.normalize();
-    var axis=new Vector3(v1);
+
+    if (Math.abs(v1.dot(v2)) > 0.9999) {
+      this.makeUnitQuat();
+      return this;
+    }
+
+    let axis=new Vector3(v1);
     axis.cross(v2);
-    var angle=v1.preNormalizedAngle(v2);
+
+    let angle = v1.preNormalizedAngle(v2)*fac;
+
     this.axisAngleToQuat(axis, angle);
+
+    return this;
   }
 
   quatInterp(quat2, t) {
-    var quat=new Quat();
-    var cosom=this[0]*quat2[0]+this[1]*quat2[1]+this[2]*quat2[2]+this[3]*quat2[3];
+    let quat=new Quat();
+    let cosom=this[0]*quat2[0]+this[1]*quat2[1]+this[2]*quat2[2]+this[3]*quat2[3];
     if (cosom<0.0) {
       cosom = -cosom;
       quat[0] = -this[0];
@@ -1121,7 +1105,8 @@ export class Quat extends Vector4 {
       quat[2] = this[2];
       quat[3] = this[3];
     }
-    var omega, sinom, sc1, sc2;
+
+    let omega, sinom, sc1, sc2;
     if ((1.0-cosom)>0.0001) {
       omega = Math.acos(cosom);
       sinom = Math.sin(omega);

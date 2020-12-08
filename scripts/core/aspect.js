@@ -22,6 +22,29 @@ export function initAspectClass(object, blacklist=new Set()) {
   }
   keys = new Set(keys);
 
+  function validProperty(obj, key) {
+    let descr = Object.getOwnPropertyDescriptor(obj, key);
+
+    if (descr && (descr.get || descr.set)) {
+      return false;
+    }
+
+    let p = obj.constructor;
+    do {
+      if (p.prototype) {
+        let descr = Object.getOwnPropertyDescriptor(p.prototype, key);
+
+        if (descr && (descr.set || descr.get)) {
+          return false;
+        }
+      }
+
+      p = p.__proto__;
+    } while (p && p !== p.__proto__);
+
+    return true;
+  }
+
   for (let k of keys) {
     let v;
 
@@ -34,6 +57,10 @@ export function initAspectClass(object, blacklist=new Set()) {
     }
 
     if (blacklist.has(k) || exclude.has(k)) {
+      continue;
+    }
+
+    if (!validProperty(object, k)) {
       continue;
     }
 
