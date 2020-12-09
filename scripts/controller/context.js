@@ -250,6 +250,10 @@ export class Context {
     this._inside_map = {};
   }
 
+  fix() {
+    this._fix();
+  }
+
   error(message, timeout=1500) {
     let state = this.state;
 

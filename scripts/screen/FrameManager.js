@@ -1080,6 +1080,8 @@ export class Screen extends ui_base.UIBase {
         return;
       }
 
+      area.push_ctx_active();
+
       for (let keymap of area.getKeyMaps()) {
         if (keymap === undefined) {
           continue;
@@ -1090,6 +1092,8 @@ export class Screen extends ui_base.UIBase {
           break;
         }
       }
+
+      area.pop_ctx_active();
     }
 
     handled = handled || this.keymap.handle(this.ctx, e);
@@ -1100,12 +1104,16 @@ export class Screen extends ui_base.UIBase {
           break;
         }
 
+        sarea.area.push_ctx_active();
+
         for (let keymap of sarea.area.getKeyMaps()) {
           if (keymap.handle(this.ctx, e)) {
             handled = true;
             break;
           }
         }
+
+        sarea.area.pop_ctx_active();
       }
     }
 

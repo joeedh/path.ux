@@ -815,6 +815,7 @@ export class Vector2 extends BaseVector {
   multVecMatrix(matrix) {
     var x=this[0];
     var y=this[1];
+
     var w = 1.0;
 
     this[0] = w*matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21;

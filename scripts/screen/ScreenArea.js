@@ -1371,7 +1371,6 @@ export class ScreenArea extends ui_base.UIBase {
     return UIBase.createElement("screenarea-x");
   }
 
-
   afterSTRUCT() {
     for (let area of this.editors) {
       area.pos = this.pos;
