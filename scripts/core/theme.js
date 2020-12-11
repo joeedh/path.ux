@@ -8,6 +8,7 @@ export const DefaultTheme = {
     AreaHeaderBG            : 'rgba(205, 205, 205, 1.0)',
     BasePackFlag            : 0,
     BoxBG                   : 'rgba(204,204,204, 1)',
+    DisabledBG              : 'rgba(25,25,25,1.0)',
     BoxBorder               : 'rgba(255, 255, 255, 1.0)',
     BoxDepressed            : 'rgba(130, 130, 130, 1.0)',
     BoxDrawMargin           : 2, //how much to shrink rects drawn by drawRoundBox

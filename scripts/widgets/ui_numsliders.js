@@ -86,8 +86,10 @@ export class NumSlider extends ValueButtonBase {
 
   update() {
     if (!!this._last_disabled !== !!this.disabled) {
+      console.log("NUMSLIDER disabled update!", this.disabled);
       this._last_disabled = !!this.disabled;
       this._redraw();
+      this.setCSS();
     }
 
     super.update();
@@ -554,36 +556,36 @@ export class NumSlider extends ValueButtonBase {
     let canvas = this.dom;
 
     let dpi = this.getDPI();
-    let disabled = this.disabled; //this.hasAttribute("disabled");
+    let disabled = this.disabled;
 
     let r = this.getDefault("BoxRadius");
     if (this.isInt) {
       r *= 0.25;
     }
 
+    let boxbg = this.getDefault("BoxBG");
+
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
+      r, undefined, disabled ? this.getDefault("DisabledBG") : boxbg);
 
     r *= dpi;
     let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
 
-    //if (this.value !== undefined) {
     let text = this._genLabel();
 
     let tw = ui_base.measureText(this, text, this.dom, this.g).width;
-    let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
+    let cx = ts + this._getArrowSize();
     let cy = this.dom.height/2;
 
     this.dom.font = undefined;
 
     g.save();
-    if (!window._d) {
-      window._d = Math.PI*0.5;
-    }
+
+    let th = Math.PI*0.5;
 
     if (this.vertical) {
-      g.rotate(_d);
+      g.rotate(th);
 
       ui_base.drawText(this, cx, -ts*0.5, text, {
         canvas: this.dom,
