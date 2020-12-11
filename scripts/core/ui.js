@@ -1641,8 +1641,8 @@ export class Container extends ui_base.UIBase {
     ret.ctx = this.ctx;
     this.add(ret);
 
-    ret.packflag |= packflag;
-    ret.inherit_packflag |= packflag;
+    ret.packflag |= this.inherit_packflag;
+    ret.inherit_packflag |= this.inherit_packflag;
     ret.dataPrefix = this.dataPrefix;
 
     return ret;

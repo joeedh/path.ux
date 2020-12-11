@@ -1065,7 +1065,12 @@ export class TabContainer extends UIBase {
       //this._tab.innerText = "SDfdsfsdyay";
 
       this._tab.parentWidget = this;
-      this._tab.update();
+
+      //ensure we get full update convergence when switching
+      //tabs
+      for (let i=0; i<2; i++) {
+        this._tab.flushUpdate();
+      }
 
       let div = document.createElement("div");
 

@@ -94,6 +94,12 @@ export class PropsEditor extends Editor {
     tview.item("Six", {icon : Icons.UNDO});
     tview.item("Six", {icon : Icons.REDO});
     tview.item("Six", {icon : Icons.UNDO});
+
+    if (this.ctx) {
+      this.flushUpdate();
+    } else {
+      this.doOnce(this.flushUpdate);
+    }
   }
 
   copy() {

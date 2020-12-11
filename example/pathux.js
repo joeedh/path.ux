@@ -4361,7 +4361,7 @@ _module_exports_$2.readObject = function(data, cls, __uctx=undefined) {
 @param data : Array instance to write bytes to
 */
 _module_exports_$2.writeObject = function(data, obj) {
-  return _module_exports_$2.manager.writeObject(data.obj);
+  return _module_exports_$2.manager.writeObject(data, obj);
 };
 
 _module_exports_$2.writeJSON = function(obj) {
@@ -7700,17 +7700,6 @@ function bounded_acos(fac) {
     return Math.acos(fac);
 }
 
-function saasin(fac) {
-  if (fac<=-1.0)
-    return -Math.pi/2.0;
-  else
-  if (fac>=1.0)
-    return Math.pi/2.0;
-  else
-    return Math.asin(fac);
-}
-
-
 function make_norm_safe_dot(cls) {
   var _dot = cls.prototype.dot;
 
@@ -7976,16 +7965,8 @@ class Vector4 extends BaseVector {
   }
 
   preNormalizedAngle(v2) {
-    if (this.dot(v2)<0.0) {
-      var vec=new Vector4();
-      vec[0] = -v2[0];
-      vec[1] = -v2[1];
-      vec[2] = -v2[2];
-      vec[3] = -v2[3];
-      return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
-    }
-    else
-      return 2.0*saasin(v2.vectorDistance(this)/2.0);
+    let th = this.dot(v2)*0.99999;
+    return Math.acos(th);
   }
 
   loadSTRUCT(reader) {
@@ -8131,15 +8112,8 @@ class Vector3 extends BaseVector {
   }
 
   preNormalizedAngle(v2) {
-    if (this.dot(v2)<0.0) {
-      var vec=new Vector3();
-      vec[0] = -v2[0];
-      vec[1] = -v2[1];
-      vec[2] = -v2[2];
-      return Math.pi-2.0*saasin(vec.vectorDistance(this)/2.0);
-    }
-    else
-      return 2.0*saasin(v2.vectorDistance(this)/2.0);
+    let th = this.dot(v2)*0.99999;
+    return Math.acos(th);
   }
 
   loadSTRUCT(reader) {
@@ -8200,6 +8174,13 @@ class Vector2 extends BaseVector {
     return this.load(obj);
   }
 
+  loadXY(x, y) {
+    this[0] = x;
+    this[1] = y;
+
+    return this;
+  }
+
   load(data) {
     if (data == undefined)
       return this;
@@ -8233,6 +8214,7 @@ class Vector2 extends BaseVector {
   multVecMatrix(matrix) {
     var x=this[0];
     var y=this[1];
+
     var w = 1.0;
 
     this[0] = w*matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21;
@@ -8486,20 +8468,30 @@ class Quat extends Vector4 {
     return this;
   }
 
-  rotationBetweenVecs(v1, v2) {
+  rotationBetweenVecs(v1, v2, fac=1.0) {
     v1 = new Vector3(v1);
     v2 = new Vector3(v2);
     v1.normalize();
     v2.normalize();
-    var axis=new Vector3(v1);
+
+    if (Math.abs(v1.dot(v2)) > 0.9999) {
+      this.makeUnitQuat();
+      return this;
+    }
+
+    let axis=new Vector3(v1);
     axis.cross(v2);
-    var angle=v1.preNormalizedAngle(v2);
+
+    let angle = v1.preNormalizedAngle(v2)*fac;
+
     this.axisAngleToQuat(axis, angle);
+
+    return this;
   }
 
   quatInterp(quat2, t) {
-    var quat=new Quat();
-    var cosom=this[0]*quat2[0]+this[1]*quat2[1]+this[2]*quat2[2]+this[3]*quat2[3];
+    let quat=new Quat();
+    let cosom=this[0]*quat2[0]+this[1]*quat2[1]+this[2]*quat2[2]+this[3]*quat2[3];
     if (cosom<0.0) {
       cosom = -cosom;
       quat[0] = -this[0];
@@ -8513,7 +8505,8 @@ class Quat extends Vector4 {
       quat[2] = this[2];
       quat[3] = this[3];
     }
-    var omega, sinom, sc1, sc2;
+
+    let omega, sinom, sc1, sc2;
     if ((1.0-cosom)>0.0001) {
       omega = Math.acos(cosom);
       sinom = Math.sin(omega);
@@ -16505,8 +16498,8 @@ class Animator {
     return this;
   }
 
-  goto(key, val, time, curve = "ease") {
-    let cmd = new GoToCommand(this.owner, key, val, time, curve);
+  goto(key, val, timeMs, curve = "ease") {
+    let cmd = new GoToCommand(this.owner, key, val, timeMs, curve);
     this.commands.push(cmd);
     return this;
   }
@@ -19013,7 +19006,7 @@ class ToolOp extends EventHandler {
     return !bad;
   }
 
-  static inherit(slots) {
+  static inherit(slots={}) {
     return new InheritFlag(slots);
   }
   
@@ -21417,7 +21410,7 @@ class DataStruct {
     return ret;
   }
 
-  color4(path, apiname, uiname, description) {
+  color4(path, apiname, uiname, description=uiname) {
     let ret = this.vec4(path, apiname, uiname, description);
 
     ret.data.subtype = PropSubTypes$1.COLOR;
@@ -22693,6 +22686,7 @@ const DefaultTheme = {
     AreaHeaderBG            : 'rgba(205, 205, 205, 1.0)',
     BasePackFlag            : 0,
     BoxBG                   : 'rgba(204,204,204, 1)',
+    DisabledBG              : 'rgba(25,25,25,1.0)',
     BoxBorder               : 'rgba(255, 255, 255, 1.0)',
     BoxDepressed            : 'rgba(130, 130, 130, 1.0)',
     BoxDrawMargin           : 2, //how much to shrink rects drawn by drawRoundBox
@@ -23044,6 +23038,29 @@ function initAspectClass(object, blacklist=new Set()) {
   }
   keys = new Set(keys);
 
+  function validProperty(obj, key) {
+    let descr = Object.getOwnPropertyDescriptor(obj, key);
+
+    if (descr && (descr.get || descr.set)) {
+      return false;
+    }
+
+    let p = obj.constructor;
+    do {
+      if (p.prototype) {
+        let descr = Object.getOwnPropertyDescriptor(p.prototype, key);
+
+        if (descr && (descr.set || descr.get)) {
+          return false;
+        }
+      }
+
+      p = p.__proto__;
+    } while (p && p !== p.__proto__);
+
+    return true;
+  }
+
   for (let k of keys) {
     let v;
 
@@ -23056,6 +23073,10 @@ function initAspectClass(object, blacklist=new Set()) {
     }
 
     if (blacklist.has(k) || exclude.has(k)) {
+      continue;
+    }
+
+    if (!validProperty(object, k)) {
       continue;
     }
 
@@ -23688,6 +23709,9 @@ class UIBase$2 extends HTMLElement {
   constructor() {
     super();
 
+    this._client_disabled_set = undefined;
+    //this._parent_disabled_set = 0;
+
     this.pathUndoGen = 0;
     this._lastPathUndoGen = 0;
     this._useDataPathUndo = undefined;
@@ -23764,7 +23788,8 @@ class UIBase$2 extends HTMLElement {
 
     this._modaldata = undefined;
     this.packflag = this.getDefault("BasePackFlag");
-    this._disabled = false;
+    this._internalDisabled = false;
+    this.__disabledState = false;
     this._disdata = undefined;
     this._ctx = undefined;
     
@@ -24533,13 +24558,23 @@ class UIBase$2 extends HTMLElement {
     return ret;
   }
 
-  set disabled(val) {
-    if (!!this._disabled == !!val)
+
+  set internalDisabled(val) {
+    this._internalDisabled = !!val;
+
+    this.__updateDisable(this.disabled);
+  }
+
+  __updateDisable(val) {
+    if (!!val === !!this.__disabledState) {
       return;
+    }
+
+    this.__disabledState = !!val;
 
     if (val && !this._disdata) {
-      let style = this.getDefault("Disabled") || {
-        "background-color" : "black"
+      let style = this.getDefault("internalDisabled") || {
+        "background-color" : this.getDefault("DisabledBG")
       };
 
       this._disdata = {
@@ -24562,7 +24597,7 @@ class UIBase$2 extends HTMLElement {
         }
       }
 
-      this._disabled = val;
+      this.__disabledState = !!val;
       this.on_disabled();
     } else if (!val && this._disdata) {
       for (let k in this._disdata.style) {
@@ -24582,36 +24617,34 @@ class UIBase$2 extends HTMLElement {
       this.background = this.style["background-color"];
       this._disdata = undefined;
 
-      this._disabled = val;
+      this.__disabledState = !!val;
       this.on_enabled();
     }
 
-    this._disabled = val;
+    this.__disabledState = !!val;
 
-    let rec = (n) => {
+    let visit = (n) => {
       if (n instanceof UIBase$2) {
-        let changed = !!n.disabled != !!val;
+        let changed = !!n.__disabledState;
 
-        n.disabled = val;
+        /*
+        if (val) {
+          n._parent_disabled_set = Math.max(n._parent_disabled_set + 1, 0);
+        } else {
+          n._parent_disabled_set = Math.max(n._parent_disabled_set - 1, 0);
+        }//*/
 
+        n.__updateDisable(n.disabled);
+
+        changed = changed !== !!n.__disabledState;
         if (changed) {
           n.update();
           n.setCSS();
         }
       }
-
-      for (let c of n.childNodes) {
-        rec(c);
-      }
-
-      if (!n.shadow) return;
-
-      for (let c of n.shadow.childNodes) {
-        rec(c);
-      }
     };
 
-    rec(this);
+    this._forEachChildWidget(visit);
   }
 
   on_disabled() {
@@ -24644,12 +24677,27 @@ class UIBase$2 extends HTMLElement {
     this._modaldata = undefined;
   }
 
+  set disabled(v) {
+    this._client_disabled_set = v;
+    this.__updateDisable(this.disabled);
+  }
+
   get disabled() {
-    return this._disabled;
+    //hrm, I could just propegate checks upward. . .
+
+    if (this.parentWidget && this.parentWidget.disabled) {
+      return true;
+    }
+
+    return !!this._client_disabled_set || !!this._internalDisabled;// || !!this._parent_disabled_set;
+  }
+
+  get internalDisabled() {
+    return this._internalDisabled;
   }
 
   flash(color, rect_element=this, timems=355) {
-    //console.warn("flash disabled due to bug");
+    //console.warn("flash internalDisabled due to bug");
     //return;
     
     console.warn("flash");
@@ -25249,6 +25297,7 @@ class UIBase$2 extends HTMLElement {
     return this.getStyleClass();
   }
 
+  /** returns a new Animator instance */
   animate(_extra_handlers={}) {
     let transform = new DOMMatrix(this.style["transform"]);
 
@@ -25917,8 +25966,9 @@ class Button extends UIBase$3 {
     let press = (e) => {
       e.stopPropagation();
 
-      if (exports$1.DEBUG.buttonEvents)
+      if (exports$1.DEBUG.buttonEvents) {
         console.log("button press", this._pressed, this.disabled, e.button);
+      }
 
       if (this.disabled) return;
 
@@ -25990,7 +26040,7 @@ class Button extends UIBase$3 {
   }
 
   updateDisabled() {
-    if (this._last_disabled != this.disabled) {
+    if (this._last_disabled !== this.disabled) {
       this._last_disabled = this.disabled;
 
       //setTimeout(() => {
@@ -26448,10 +26498,10 @@ class TextBox extends TextBoxBase {
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === undefined || val === null) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
 
@@ -26671,7 +26721,7 @@ class ValueButtonBase extends Button {
     if (val === undefined) {
       let redraw = !this.disabled;
 
-      this.disabled = true;
+      this.internalDisabled = true;
 
       if (redraw) this._redraw();
 
@@ -26679,7 +26729,7 @@ class ValueButtonBase extends Button {
     } else {
       let redraw = this.disabled;
 
-      this.disabled = false;
+      this.internalDisabled = false;
       if (redraw) this._redraw();
     }
 
@@ -26839,16 +26889,16 @@ class Check extends UIBase$5 {
     this.prepend(style);
   }
 
-  get disabled() {
-    return super.disabled;
+  get internalDisabled() {
+    return super.internalDisabled;
   }
 
-  set disabled(val) {
-    if (!!this.disabled === !!val) {
+  set internalDisabled(val) {
+    if (!!this.internalDisabled === !!val) {
       return;
     }
 
-    super.disabled = val;
+    super.internalDisabled = val;
     this._redraw();
   }
 
@@ -26878,15 +26928,15 @@ class Check extends UIBase$5 {
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
     val = !!val;
 
-    if (!!this._checked != !!val) {
+    if (!!this._checked !== !!val) {
       this._checked = val;
       this._redraw();
     }
@@ -27126,10 +27176,10 @@ class IconCheck extends Button {
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
     val = !!val;
@@ -28205,11 +28255,11 @@ class DropBox extends Button {
     }
 
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
 
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
     prop = this.prop;
@@ -29188,6 +29238,7 @@ class Container extends UIBase$2 {
     }
 
     strip.packflag |= flag;
+    strip.dataPrefix = this.dataPrefix;
 
     if (themeClass in theme) {
       strip.overrideClass(themeClass);
@@ -29537,7 +29588,7 @@ class Container extends UIBase$2 {
     return dbox;
   }
 
-  tool(path_or_cls, packflag = 0, create_cb = undefined) {
+  tool(path_or_cls, packflag = 0, create_cb = undefined, label=undefined) {
     let cls;
 
     if (typeof path_or_cls == "string") {
@@ -29596,7 +29647,9 @@ class Container extends UIBase$2 {
 
     if (def.icon !== undefined && (packflag & PackFlags$5.USE_ICONS)) {
       //console.log("iconbutton!");
-      ret = this.iconbutton(def.icon, tooltip, cb);
+      label = label ?? tooltip;
+
+      ret = this.iconbutton(def.icon, label, cb);
 
       if (packflag & PackFlags$5.SMALL_ICON) {
         ret.iconsheet = IconSheets.SMALL;
@@ -29606,7 +29659,9 @@ class Container extends UIBase$2 {
 
       ret.packflag |= packflag;
     } else {
-      ret = this.button(def.uiname, cb);
+      label = label ?? def.uiname;
+
+      ret = this.button(label, cb);
       ret.description = tooltip;
       ret.packflag |= packflag;
     }
@@ -30491,6 +30546,10 @@ class Container extends UIBase$2 {
     ret.ctx = this.ctx;
     this.add(ret);
 
+    ret.packflag |= this.inherit_packflag;
+    ret.inherit_packflag |= this.inherit_packflag;
+    ret.dataPrefix = this.dataPrefix;
+
     return ret;
   }
 
@@ -30502,6 +30561,7 @@ class Container extends UIBase$2 {
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     ret.setAttribute("title", name);
     ret.setAttribute("id", id);
@@ -30510,6 +30570,7 @@ class Container extends UIBase$2 {
 
     ret.ctx = this.ctx;
     ret.contents.ctx = ret.ctx;
+    ret.contents.dataPrefix = this.dataPrefix;
 
     return ret.contents;
   }
@@ -30521,6 +30582,7 @@ class Container extends UIBase$2 {
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
 
@@ -30533,8 +30595,10 @@ class Container extends UIBase$2 {
     packflag |= this.inherit_packflag;
 
     let ret = UIBase$7.createElement("listbox-x");
+
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
     return ret;
@@ -30546,6 +30610,7 @@ class Container extends UIBase$2 {
     let ret = UIBase$7.createElement("tableframe-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
     return ret;
@@ -30555,8 +30620,10 @@ class Container extends UIBase$2 {
     packflag |= this.inherit_packflag;
 
     let ret = UIBase$7.createElement("colframe-x");
+
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
     return ret;
@@ -30577,6 +30644,7 @@ class Container extends UIBase$2 {
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     ret.ctx = this.ctx;
     ret.parentWidget = this;
@@ -30767,7 +30835,7 @@ class RichEditor extends TextBoxBase {
   constructor() {
     super();
 
-    this._disabled = false;
+    this._internalDisabled = false;
     this._value = "";
 
     this.textOnlyMode = false;
@@ -30858,7 +30926,7 @@ class RichEditor extends TextBoxBase {
     });
 
     this.textarea.addEventListener("input", (e) => {
-      if (this.disabled) {
+      if (this.internalDisabled) {
         return;
       }
 
@@ -30946,18 +31014,18 @@ class RichEditor extends TextBoxBase {
     this.setCSS();
   }
 
-  get disabled() {
-    return this._disabled;
+  get internalDisabled() {
+    return this._internalDisabled;
   }
 
-  set disabled(val) {
-    let changed = !!this._disabled != !!val;
+  set internalDisabled(val) {
+    let changed = !!this._internalDisabled !== !!val;
 
     if (changed || 1) {
-      this._disabled = !!val;
-      super.disabled = val;
+      this._internalDisabled = !!val;
+      super.internalDisabled = val;
 
-      this.textarea.disabled = val;
+      this.textarea.internalDisabled = val;
       this.textarea.contentEditable = !val;
       this.setCSS();
     }
@@ -31023,11 +31091,11 @@ class RichEditor extends TextBoxBase {
     if (prop === undefined) {
       console.warn("invalid datapath " + path);
 
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
     let value = this.getPathValue(this.ctx, path);
 
     if (value !== this._value) {
@@ -31096,11 +31164,11 @@ class RichViewer extends UIBase$8 {
     if (prop === undefined) {
       console.warn("invalid datapath " + path);
 
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
     let value = this.getPathValue(this.ctx, path);
 
     if (value !== this.value) {
@@ -31170,12 +31238,12 @@ class VectorPopupButton extends Button {
     let value = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (!value) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    if (this.disabled) {
-      this.disabled = false;
+    if (this.internalDisabled) {
+      this.internalDisabled = false;
     }
 
     if (this.value.length !== value.length) {
@@ -31471,7 +31539,7 @@ class VectorPanel extends ColumnFrame {
 
     let val = this.getPathValue(this.ctx, path);
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
@@ -31518,7 +31586,7 @@ class VectorPanel extends ColumnFrame {
       this.range[1] = meta.range[1];
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     let length = val.length;
 
@@ -31621,7 +31689,7 @@ class ToolTip extends UIBase$2 {
     ret._popup = screen.popup(ret, x, y);
     ret._popup.background = "rgba(0,0,0,0)";
     ret._popup.style["border"] = "none";
-    
+
     ret._popup.add(ret);
 
     return ret;
@@ -32107,6 +32175,8 @@ class PanelFrame extends ColumnFrame {
       this.add(this.contents);
       this.contents.flushUpdate();
     }
+
+    this.contents.dataPrefix = this.dataPrefix;
 
     //con.style["margin-left"] = "5px";
 
@@ -33101,15 +33171,15 @@ class ColorPicker extends ColumnFrame {
 
     if (val === undefined) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     _update_temp.load(val);
 
-    if (prop.type == PropTypes.VEC3) {
+    if (prop.type === PropTypes.VEC3) {
       _update_temp[3] = 1.0;
     }
 
@@ -33583,7 +33653,7 @@ class ColorPickerButton extends UIBase$a {
     } else if (prop === undefined) {
       let redraw = !this.disabled;
 
-      this.disabled = true;
+      this.internalDisabled = true;
 
       if (redraw) {
         this._redraw();
@@ -33593,7 +33663,7 @@ class ColorPickerButton extends UIBase$a {
 
     let redraw = this.disabled;
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     if (prop.uiname !== this._label) {
       this.label = prop.uiname;
@@ -33604,14 +33674,14 @@ class ColorPickerButton extends UIBase$a {
     if (val === undefined) {
       redraw = redraw || this.disabled !== true;
 
-      this.disabled = true;
+      this.internalDisabled = true;
 
       if (redraw) {
         this._redraw();
       }
 
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
 
       let dis;
 
@@ -33648,6 +33718,8 @@ class ColorPickerButton extends UIBase$a {
     }
 
     let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
+    key += this.disabled;
+
     if (key !== this._last_key) {
       this._last_key = key;
       this.redraw();
@@ -34690,6 +34762,8 @@ class TabContainer extends UIBase$b {
   constructor() {
     super();
 
+    this.dataPrefix = "";
+
     this.inherit_packflag = 0;
     this.packflag = 0;
 
@@ -34723,7 +34797,12 @@ class TabContainer extends UIBase$b {
       //this._tab.innerText = "SDfdsfsdyay";
 
       this._tab.parentWidget = this;
-      this._tab.update();
+
+      //ensure we get full update convergence when switching
+      //tabs
+      for (let i=0; i<2; i++) {
+        this._tab.flushUpdate();
+      }
 
       let div = document.createElement("div");
 
@@ -34853,6 +34932,8 @@ class TabContainer extends UIBase$b {
     let col = UIBase$b.createElement("colframe-x");
 
     this.tabs[id] = col;
+
+    col.dataPrefix = this.dataPrefix;
 
     col.ctx = this.ctx;
     col._tab = this.tbar.addTab(name, id, tooltip, movable);
@@ -35769,6 +35850,7 @@ class NumSlider extends ValueButtonBase {
     this.radix = 10;
 
     this.vertical = false;
+    this._last_disabled = false;
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
@@ -35829,6 +35911,13 @@ class NumSlider extends ValueButtonBase {
   }
 
   update() {
+    if (!!this._last_disabled !== !!this.disabled) {
+      console.log("NUMSLIDER disabled update!", this.disabled);
+      this._last_disabled = !!this.disabled;
+      this._redraw();
+      this.setCSS();
+    }
+
     super.update();
     this.updateDataPath();
   }
@@ -36293,36 +36382,36 @@ class NumSlider extends ValueButtonBase {
     let canvas = this.dom;
 
     let dpi = this.getDPI();
-    let disabled = this.disabled; //this.hasAttribute("disabled");
+    let disabled = this.disabled;
 
     let r = this.getDefault("BoxRadius");
     if (this.isInt) {
       r *= 0.25;
     }
 
+    let boxbg = this.getDefault("BoxBG");
+
     drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, undefined, disabled ? this.getDefault("DisabledBG") : undefined);
+      r, undefined, disabled ? this.getDefault("DisabledBG") : boxbg);
 
     r *= dpi;
     let pad = this.getDefault("BoxMargin");
     let ts = this.getDefault("DefaultText").size;
 
-    //if (this.value !== undefined) {
     let text = this._genLabel();
 
     let tw = measureText(this, text, this.dom, this.g).width;
-    let cx = ts + this._getArrowSize();//this.dom.width/2 - tw/2;
+    let cx = ts + this._getArrowSize();
     let cy = this.dom.height/2;
 
     this.dom.font = undefined;
 
     g.save();
-    if (!window._d) {
-      window._d = Math.PI*0.5;
-    }
+
+    let th = Math.PI*0.5;
 
     if (this.vertical) {
-      g.rotate(_d);
+      g.rotate(th);
 
       drawText(this, cx, -ts*0.5, text, {
         canvas: this.dom,
@@ -36495,6 +36584,10 @@ class NumSliderSimpleBase extends UIBase$2 {
   }
 
   _startModal(e) {
+    if (this.disabled) {
+      return;
+    }
+
     if (e !== undefined) {
       this._setFromMouse(e);
     }
@@ -36606,6 +36699,9 @@ class NumSliderSimpleBase extends UIBase$2 {
     });
 
     this.addEventListener("mousedown", (e) => {
+      if (this.disabled) {
+        return;
+      }
       this._startModal(e);
     });
 
@@ -37336,6 +37432,9 @@ class LastToolPanel extends ColumnFrame {
         get : function() {
           let tool = getTool();
           if (tool) {
+            if (!tool.inputs[k]) {
+              console.error("Missing property " + k, tool);
+            }
             return tool.inputs[k].getValue();
           }
         },
@@ -37422,10 +37521,17 @@ class Constraint {
     this.df = 0.0005;
     this.threshold = 0.0001;
     this.func = func;
+
+    this.funcDv = null;
   }
 
   evaluate(no_dvs=false) {
     let r1 = this.func(this.params);
+
+    if (this.funcDv) {
+      this.funcDv(this.params, this.glst);
+      return r1;
+    }
 
     if (Math.abs(r1) < this.threshold)
       return 0.0;
@@ -37454,10 +37560,11 @@ class Constraint {
 }
 
 class Solver {
-
   constructor() {
     this.constraints = [];
     this.gk = 0.99;
+    this.simple = false;
+    this.randCons = false;
   }
 
   add(con) {
@@ -37467,7 +37574,15 @@ class Solver {
   solveStep(gk=this.gk) {
     let err = 0.0;
 
-    for (let con of this.constraints) {
+    let cons = this.constraints;
+    for (let ci=0; ci<cons.length; ci++ ){
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
       let r1 = con.evaluate();
 
       if (r1 === 0.0)
@@ -37500,12 +37615,64 @@ class Solver {
     return err;
   }
 
-  solve(steps, gk=this.gk) {
+  solveStepSimple(gk=this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci=0; ci<cons.length; ci++ ){
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0)  {
+        continue;
+      }
+
+      totgs = 0.0001 / Math.sqrt(totgs);
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          ks[j] += -totgs*gs[j]*con.k*gk;
+        }
+      }
+    }
+
+    return err;
+  }
+
+  solve(steps, gk=this.gk, printError=false) {
     let err = 0.0;
 
     for (let i=0; i<steps; i++) {
-      err = this.solveStep(gk);
+      if (this.simple) {
+        err = this.solveStepSimple(gk);
+      } else {
+        err = this.solveStep(gk);
+      }
 
+
+      if (printError) {
+        console.warn("average error:", (err/this.constraints.length).toFixed(4));
+      }
       if (err < 0.01 / this.constraints.length) {
         break;
       }
@@ -41015,7 +41182,6 @@ class ScreenArea extends UIBase$2 {
     return UIBase$g.createElement("screenarea-x");
   }
 
-
   afterSTRUCT() {
     for (let area of this.editors) {
       area.pos = this.pos;
@@ -43815,6 +43981,8 @@ class Screen$2 extends UIBase$2 {
         return;
       }
 
+      area.push_ctx_active();
+
       for (let keymap of area.getKeyMaps()) {
         if (keymap === undefined) {
           continue;
@@ -43825,6 +43993,8 @@ class Screen$2 extends UIBase$2 {
           break;
         }
       }
+
+      area.pop_ctx_active();
     }
 
     handled = handled || this.keymap.handle(this.ctx, e);
@@ -43835,12 +44005,16 @@ class Screen$2 extends UIBase$2 {
           break;
         }
 
+        sarea.area.push_ctx_active();
+
         for (let keymap of sarea.area.getKeyMaps()) {
           if (keymap.handle(this.ctx, e)) {
             handled = true;
             break;
           }
         }
+
+        sarea.area.pop_ctx_active();
       }
     }
 
@@ -45855,6 +46029,10 @@ class Context {
       this method fixes it*/
   _fix() {
     this._inside_map = {};
+  }
+
+  fix() {
+    this._fix();
   }
 
   error(message, timeout=1500) {

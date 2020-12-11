@@ -1376,7 +1376,7 @@ export class ColorPickerButton extends UIBase {
 
     let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
     key += this.disabled;
-    
+
     if (key !== this._last_key) {
       this._last_key = key;
       this.redraw();
