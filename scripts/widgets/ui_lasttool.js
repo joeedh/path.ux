@@ -99,6 +99,9 @@ export class LastToolPanel extends ColumnFrame {
         get : function() {
           let tool = getTool();
           if (tool) {
+            if (!tool.inputs[k]) {
+              console.error("Missing property " + k, tool);
+            }
             return tool.inputs[k].getValue();
           }
         },

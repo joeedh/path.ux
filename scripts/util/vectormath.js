@@ -782,6 +782,13 @@ export class Vector2 extends BaseVector {
     return this.load(obj);
   }
 
+  loadXY(x, y) {
+    this[0] = x;
+    this[1] = y;
+
+    return this;
+  }
+
   load(data) {
     if (data == undefined)
       return this;

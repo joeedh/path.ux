@@ -9,7 +9,7 @@ export class RichEditor extends TextBoxBase {
   constructor() {
     super();
 
-    this._disabled = false;
+    this._internalDisabled = false;
     this._value = "";
 
     this.textOnlyMode = false;
@@ -100,7 +100,7 @@ export class RichEditor extends TextBoxBase {
     });
 
     this.textarea.addEventListener("input", (e) => {
-      if (this.disabled) {
+      if (this.internalDisabled) {
         return;
       }
 
@@ -188,18 +188,18 @@ export class RichEditor extends TextBoxBase {
     this.setCSS();
   }
 
-  get disabled() {
-    return this._disabled;
+  get internalDisabled() {
+    return this._internalDisabled;
   }
 
-  set disabled(val) {
-    let changed = !!this._disabled != !!val;
+  set internalDisabled(val) {
+    let changed = !!this._internalDisabled !== !!val;
 
     if (changed || 1) {
-      this._disabled = !!val;
-      super.disabled = val;
+      this._internalDisabled = !!val;
+      super.internalDisabled = val;
 
-      this.textarea.disabled = val;
+      this.textarea.internalDisabled = val;
       this.textarea.contentEditable = !val;
       this.setCSS();
     }
@@ -265,11 +265,11 @@ export class RichEditor extends TextBoxBase {
     if (prop === undefined) {
       console.warn("invalid datapath " + path);
 
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
     let value = this.getPathValue(this.ctx, path);
 
     if (value !== this._value) {
@@ -338,11 +338,11 @@ export class RichViewer extends UIBase {
     if (prop === undefined) {
       console.warn("invalid datapath " + path);
 
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
     let value = this.getPathValue(this.ctx, path);
 
     if (value !== this.value) {

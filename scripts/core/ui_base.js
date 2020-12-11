@@ -524,6 +524,9 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this._client_disabled_set = undefined;
+    //this._parent_disabled_set = 0;
+
     this.pathUndoGen = 0;
     this._lastPathUndoGen = 0;
     this._useDataPathUndo = undefined;
@@ -600,7 +603,8 @@ export class UIBase extends HTMLElement {
 
     this._modaldata = undefined;
     this.packflag = this.getDefault("BasePackFlag");
-    this._disabled = false;
+    this._internalDisabled = false;
+    this.__disabledState = false;
     this._disdata = undefined;
     this._ctx = undefined;
     
@@ -1369,12 +1373,22 @@ export class UIBase extends HTMLElement {
     return ret;
   }
 
-  set disabled(val) {
-    if (!!this._disabled == !!val)
+
+  set internalDisabled(val) {
+    this._internalDisabled = !!val;
+
+    this.__updateDisable(this.disabled);
+  }
+
+  __updateDisable(val) {
+    if (!!val === !!this.__disabledState) {
       return;
+    }
+
+    this.__disabledState = !!val;
 
     if (val && !this._disdata) {
-      let style = this.getDefault("Disabled") || {
+      let style = this.getDefault("internalDisabled") || {
         "background-color" : "black"
       };
 
@@ -1398,7 +1412,7 @@ export class UIBase extends HTMLElement {
         }
       }
 
-      this._disabled = val;
+      this.__disabledState = !!val;
       this.on_disabled();
     } else if (!val && this._disdata) {
       for (let k in this._disdata.style) {
@@ -1418,36 +1432,34 @@ export class UIBase extends HTMLElement {
       this.background = this.style["background-color"];
       this._disdata = undefined;
 
-      this._disabled = val;
+      this.__disabledState = !!val;
       this.on_enabled();
     }
 
-    this._disabled = val;
+    this.__disabledState = !!val;
 
-    let rec = (n) => {
+    let visit = (n) => {
       if (n instanceof UIBase) {
-        let changed = !!n.disabled != !!val;
+        let changed = !!n.__disabledState;
 
-        n.disabled = val;
+        /*
+        if (val) {
+          n._parent_disabled_set = Math.max(n._parent_disabled_set + 1, 0);
+        } else {
+          n._parent_disabled_set = Math.max(n._parent_disabled_set - 1, 0);
+        }//*/
 
+        n.__updateDisable(n.disabled);
+
+        changed = changed !== !!n.__disabledState;
         if (changed) {
           n.update();
           n.setCSS();
         }
       }
-
-      for (let c of n.childNodes) {
-        rec(c);
-      }
-
-      if (!n.shadow) return;
-
-      for (let c of n.shadow.childNodes) {
-        rec(c);
-      }
     };
 
-    rec(this);
+    this._forEachChildWidget(visit);
   }
 
   on_disabled() {
@@ -1480,12 +1492,27 @@ export class UIBase extends HTMLElement {
     this._modaldata = undefined;
   }
 
+  set disabled(v) {
+    this._client_disabled_set = v;
+    this.__updateDisable(this.disabled);
+  }
+
   get disabled() {
-    return this._disabled;
+    //hrm, I could just propegate checks upward. . .
+
+    if (this.parentWidget && this.parentWidget.disabled) {
+      return true;
+    }
+
+    return !!this._client_disabled_set || !!this._internalDisabled;// || !!this._parent_disabled_set;
+  }
+
+  get internalDisabled() {
+    return this._internalDisabled;
   }
 
   flash(color, rect_element=this, timems=355) {
-    //console.warn("flash disabled due to bug");
+    //console.warn("flash internalDisabled due to bug");
     //return;
     
     console.warn("flash");
@@ -2085,6 +2112,7 @@ export class UIBase extends HTMLElement {
     return this.getStyleClass();
   }
 
+  /** returns a new Animator instance */
   animate(_extra_handlers={}) {
     let transform = new DOMMatrix(this.style["transform"]);
 

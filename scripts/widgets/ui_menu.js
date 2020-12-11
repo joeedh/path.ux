@@ -790,11 +790,11 @@ export class DropBox extends Button {
     }
 
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
 
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
     prop = this.prop;

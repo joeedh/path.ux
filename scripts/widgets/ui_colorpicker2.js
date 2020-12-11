@@ -828,15 +828,15 @@ export class ColorPicker extends ui.ColumnFrame {
 
     if (val === undefined) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     _update_temp.load(val);
 
-    if (prop.type == PropTypes.VEC3) {
+    if (prop.type === PropTypes.VEC3) {
       _update_temp[3] = 1.0;
     }
 
@@ -1310,7 +1310,7 @@ export class ColorPickerButton extends UIBase {
     } else if (prop === undefined) {
       let redraw = !this.disabled;
 
-      this.disabled = true;
+      this.internalDisabled = true;
 
       if (redraw) {
         this._redraw();
@@ -1320,7 +1320,7 @@ export class ColorPickerButton extends UIBase {
 
     let redraw = this.disabled;
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     if (prop.uiname !== this._label) {
       this.label = prop.uiname;
@@ -1331,14 +1331,14 @@ export class ColorPickerButton extends UIBase {
     if (val === undefined) {
       redraw = redraw || this.disabled !== true;
 
-      this.disabled = true;
+      this.internalDisabled = true;
 
       if (redraw) {
         this._redraw();
       }
 
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
 
       let dis;
 

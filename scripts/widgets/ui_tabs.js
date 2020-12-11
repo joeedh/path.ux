@@ -1030,6 +1030,8 @@ export class TabContainer extends UIBase {
   constructor() {
     super();
 
+    this.dataPrefix = "";
+
     this.inherit_packflag = 0;
     this.packflag = 0;
 
@@ -1193,6 +1195,8 @@ export class TabContainer extends UIBase {
     let col = UIBase.createElement("colframe-x");
 
     this.tabs[id] = col;
+
+    col.dataPrefix = this.dataPrefix;
 
     col.ctx = this.ctx;
     col._tab = this.tbar.addTab(name, id, tooltip, movable);

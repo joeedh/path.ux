@@ -107,7 +107,7 @@ export class ValueButtonBase extends Button {
     if (val === undefined) {
       let redraw = !this.disabled;
 
-      this.disabled = true;
+      this.internalDisabled = true;
 
       if (redraw) this._redraw();
 
@@ -115,7 +115,7 @@ export class ValueButtonBase extends Button {
     } else {
       let redraw = this.disabled;
 
-      this.disabled = false;
+      this.internalDisabled = false;
       if (redraw) this._redraw();
     }
 
@@ -275,16 +275,16 @@ export class Check extends UIBase {
     this.prepend(style);
   }
 
-  get disabled() {
-    return super.disabled;
+  get internalDisabled() {
+    return super.internalDisabled;
   }
 
-  set disabled(val) {
-    if (!!this.disabled === !!val) {
+  set internalDisabled(val) {
+    if (!!this.internalDisabled === !!val) {
       return;
     }
 
-    super.disabled = val;
+    super.internalDisabled = val;
     this._redraw();
   }
 
@@ -314,15 +314,15 @@ export class Check extends UIBase {
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
     val = !!val;
 
-    if (!!this._checked != !!val) {
+    if (!!this._checked !== !!val) {
       this._checked = val;
       this._redraw();
     }
@@ -562,10 +562,10 @@ export class IconCheck extends Button {
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     } else {
-      this.disabled = false;
+      this.internalDisabled = false;
     }
 
     val = !!val;

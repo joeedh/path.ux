@@ -226,8 +226,8 @@ export class Animator {
     return this;
   }
 
-  goto(key, val, time, curve = "ease") {
-    let cmd = new GoToCommand(this.owner, key, val, time, curve);
+  goto(key, val, timeMs, curve = "ease") {
+    let cmd = new GoToCommand(this.owner, key, val, timeMs, curve);
     this.commands.push(cmd);
     return this;
   }

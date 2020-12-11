@@ -168,6 +168,8 @@ export class PanelFrame extends ColumnFrame {
       this.contents.flushUpdate();
     }
 
+    this.contents.dataPrefix = this.dataPrefix;
+
     //con.style["margin-left"] = "5px";
 
     this.setCSS();

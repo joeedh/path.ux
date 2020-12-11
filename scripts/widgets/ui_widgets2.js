@@ -64,12 +64,12 @@ export class VectorPopupButton extends Button {
     let value = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (!value) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    if (this.disabled) {
-      this.disabled = false;
+    if (this.internalDisabled) {
+      this.internalDisabled = false;
     }
 
     if (this.value.length !== value.length) {
@@ -365,7 +365,7 @@ export class VectorPanel extends ColumnFrame {
 
     let val = this.getPathValue(this.ctx, path);
     if (val === undefined) {
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
@@ -412,7 +412,7 @@ export class VectorPanel extends ColumnFrame {
       this.range[1] = meta.range[1];
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     let length = val.length;
 

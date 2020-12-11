@@ -797,11 +797,11 @@ export class ColorPicker extends ui.ColumnFrame {
 
     if (val === undefined) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
-      this.disabled = true;
+      this.internalDisabled = true;
       return;
     }
 
-    this.disabled = false;
+    this.internalDisabled = false;
 
     _update_temp.load(val);
 

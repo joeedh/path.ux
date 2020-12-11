@@ -17,10 +17,17 @@ export class Constraint {
     this.df = 0.0005;
     this.threshold = 0.0001;
     this.func = func;
+
+    this.funcDv = null;
   }
 
   evaluate(no_dvs=false) {
     let r1 = this.func(this.params);
+
+    if (this.funcDv) {
+      this.funcDv(this.params, this.glst);
+      return r1;
+    }
 
     if (Math.abs(r1) < this.threshold)
       return 0.0;
@@ -49,10 +56,11 @@ export class Constraint {
 }
 
 export class Solver {
-
   constructor() {
     this.constraints = [];
     this.gk = 0.99;
+    this.simple = false;
+    this.randCons = false;
   }
 
   add(con) {
@@ -62,7 +70,15 @@ export class Solver {
   solveStep(gk=this.gk) {
     let err = 0.0;
 
-    for (let con of this.constraints) {
+    let cons = this.constraints;
+    for (let ci=0; ci<cons.length; ci++ ){
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
       let r1 = con.evaluate();
 
       if (r1 === 0.0)
@@ -95,12 +111,64 @@ export class Solver {
     return err;
   }
 
-  solve(steps, gk=this.gk) {
+  solveStepSimple(gk=this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci=0; ci<cons.length; ci++ ){
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0)  {
+        continue;
+      }
+
+      totgs = 0.0001 / Math.sqrt(totgs);
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          ks[j] += -totgs*gs[j]*con.k*gk;
+        }
+      }
+    }
+
+    return err;
+  }
+
+  solve(steps, gk=this.gk, printError=false) {
     let err = 0.0;
 
     for (let i=0; i<steps; i++) {
-      err = this.solveStep(gk);
+      if (this.simple) {
+        err = this.solveStepSimple(gk);
+      } else {
+        err = this.solveStep(gk);
+      }
 
+
+      if (printError) {
+        console.warn("average error:", (err/this.constraints.length).toFixed(4));
+      }
       if (err < 0.01 / this.constraints.length) {
         break;
       }

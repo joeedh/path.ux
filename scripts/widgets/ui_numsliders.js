@@ -24,6 +24,7 @@ export class NumSlider extends ValueButtonBase {
     this.radix = 10;
 
     this.vertical = false;
+    this._last_disabled = false;
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
@@ -84,6 +85,11 @@ export class NumSlider extends ValueButtonBase {
   }
 
   update() {
+    if (!!this._last_disabled !== !!this.disabled) {
+      this._last_disabled = !!this.disabled;
+      this._redraw();
+    }
+
     super.update();
     this.updateDataPath();
   }
@@ -750,6 +756,10 @@ export class NumSliderSimpleBase extends UIBase {
   }
 
   _startModal(e) {
+    if (this.disabled) {
+      return;
+    }
+
     if (e !== undefined) {
       this._setFromMouse(e);
     }
@@ -861,6 +871,9 @@ export class NumSliderSimpleBase extends UIBase {
     });
 
     this.addEventListener("mousedown", (e) => {
+      if (this.disabled) {
+        return;
+      }
       this._startModal(e);
     });
 

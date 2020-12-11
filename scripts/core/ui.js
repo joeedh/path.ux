@@ -333,6 +333,7 @@ export class Container extends ui_base.UIBase {
     }
 
     strip.packflag |= flag;
+    strip.dataPrefix = this.dataPrefix;
 
     if (themeClass in theme) {
       strip.overrideClass(themeClass);
@@ -682,7 +683,7 @@ export class Container extends ui_base.UIBase {
     return dbox;
   }
 
-  tool(path_or_cls, packflag = 0, create_cb = undefined) {
+  tool(path_or_cls, packflag = 0, create_cb = undefined, label=undefined) {
     let cls;
 
     if (typeof path_or_cls == "string") {
@@ -741,7 +742,9 @@ export class Container extends ui_base.UIBase {
 
     if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
       //console.log("iconbutton!");
-      ret = this.iconbutton(def.icon, tooltip, cb);
+      label = label ?? tooltip;
+
+      ret = this.iconbutton(def.icon, label, cb);
 
       if (packflag & PackFlags.SMALL_ICON) {
         ret.iconsheet = ui_base.IconSheets.SMALL;
@@ -751,7 +754,9 @@ export class Container extends ui_base.UIBase {
 
       ret.packflag |= packflag;
     } else {
-      ret = this.button(def.uiname, cb);
+      label = label ?? def.uiname;
+
+      ret = this.button(label, cb);
       ret.description = tooltip;
       ret.packflag |= packflag;
     }
@@ -1636,6 +1641,10 @@ export class Container extends ui_base.UIBase {
     ret.ctx = this.ctx;
     this.add(ret);
 
+    ret.packflag |= packflag;
+    ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
+
     return ret;
   }
 
@@ -1647,6 +1656,7 @@ export class Container extends ui_base.UIBase {
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     ret.setAttribute("title", name);
     ret.setAttribute("id", id);
@@ -1655,6 +1665,7 @@ export class Container extends ui_base.UIBase {
 
     ret.ctx = this.ctx;
     ret.contents.ctx = ret.ctx;
+    ret.contents.dataPrefix = this.dataPrefix;
 
     return ret.contents;
   }
@@ -1666,6 +1677,7 @@ export class Container extends ui_base.UIBase {
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
 
@@ -1678,8 +1690,10 @@ export class Container extends ui_base.UIBase {
     packflag |= this.inherit_packflag;
 
     let ret = UIBase.createElement("listbox-x");
+
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
     return ret;
@@ -1691,6 +1705,7 @@ export class Container extends ui_base.UIBase {
     let ret = UIBase.createElement("tableframe-x");
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
     return ret;
@@ -1700,8 +1715,10 @@ export class Container extends ui_base.UIBase {
     packflag |= this.inherit_packflag;
 
     let ret = UIBase.createElement("colframe-x");
+
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     this._add(ret);
     return ret;
@@ -1722,6 +1739,7 @@ export class Container extends ui_base.UIBase {
 
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
 
     ret.ctx = this.ctx;
     ret.parentWidget = this;

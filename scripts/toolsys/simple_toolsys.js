@@ -83,7 +83,7 @@ export class ToolOp extends events.EventHandler {
     return !bad;
   }
 
-  static inherit(slots) {
+  static inherit(slots={}) {
     return new InheritFlag(slots);
   }
   

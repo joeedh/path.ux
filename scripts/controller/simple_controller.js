@@ -501,7 +501,7 @@ export class DataStruct {
     return ret;
   }
 
-  color4(path, apiname, uiname, description) {
+  color4(path, apiname, uiname, description=uiname) {
     let ret = this.vec4(path, apiname, uiname, description);
 
     ret.data.subtype = toolprop.PropSubTypes.COLOR;

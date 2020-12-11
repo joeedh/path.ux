@@ -196,8 +196,9 @@ export class Button extends UIBase {
     let press = (e) => {
       e.stopPropagation();
 
-      if (cconst.DEBUG.buttonEvents)
+      if (cconst.DEBUG.buttonEvents) {
         console.log("button press", this._pressed, this.disabled, e.button);
+      }
 
       if (this.disabled) return;
 
@@ -269,7 +270,7 @@ export class Button extends UIBase {
   }
 
   updateDisabled() {
-    if (this._last_disabled != this.disabled) {
+    if (this._last_disabled !== this.disabled) {
       this._last_disabled = this.disabled;
 
       //setTimeout(() => {
