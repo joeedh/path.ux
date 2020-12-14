@@ -9,15 +9,15 @@ let first = (iter) => {
   if (iter === undefined) {
     return undefined;
   }
-  
+
   if (!(Symbol.iterator in iter)) {
     for (let item in iter) {
       return item;
     }
-    
+
     return undefined;
   }
-  
+
   for (let item of iter) {
     return item;
   }
@@ -31,24 +31,34 @@ export function setPropTypes(types) {
 }
 
 export const PropSubTypes = {
-  COLOR : 1
+  COLOR: 1
 };
 
 export let customPropertyTypes = [];
 
 export let PropClasses = {};
+
 function _addClass(cls) {
   PropClasses[new cls().type] = cls;
 }
 
 let customPropTypeBase = 17;
 
+let wordmap = {
+  sel  : "select",
+  unsel: "deselect",
+  eid  : "id",
+  props : "properties",
+  res : "resource",
+
+};
+
 export class ToolProperty extends ToolPropertyIF {
   constructor(type, subtype, apiname, uiname, description, flag, icon) {
     super();
 
     this.data = undefined;
-    
+
     if (type === undefined) {
       type = this.constructor.PROP_TYPE_ID;
     }
@@ -71,6 +81,59 @@ export class ToolProperty extends ToolPropertyIF {
     this.step = 0.05;
 
     this.callbacks = {};
+  }
+
+  static makeUIName(name) {
+    let parts = [""];
+    let lastc = undefined;
+
+    let ischar = (c) => {
+      c = c.charCodeAt(0);
+
+      let upper = c >= "A".charCodeAt(0);
+      upper = upper && c <= "Z".charCodeAt(0);
+
+      let lower = c >= "a".charCodeAt(0);
+      lower = lower && c <= "z".charCodeAt(0);
+
+      return upper || lower;
+    }
+
+    for (let i = 0; i < name.length; i++) {
+      let c = name[i];
+
+      if (c === '_' || c === '-' || c === '$') {
+        lastc = c;
+        c = ' ';
+        parts.push('');
+        continue;
+      }
+
+      if (i > 0 && c === c.toUpperCase() && lastc !== lastc.toUpperCase()) {
+        if (ischar(c) && ischar(lastc)) {
+          parts.push('');
+        }
+      }
+
+      parts[parts.length - 1] += c;
+      lastc = c;
+    }
+
+
+    let subst = (word) => {
+      if (word in wordmap) {
+        return wordmap[word];
+      } else {
+        return word;
+      }
+    }
+
+    parts = parts
+      .filter(f => f.trim().length > 0)
+      .map(f => subst(f))
+      .map(f => f[0].toUpperCase() + f.slice(1, f.length).toLowerCase())
+      .join(" ").trim();
+    return parts;
   }
 
   equals(b) {
@@ -125,17 +188,17 @@ export class ToolProperty extends ToolPropertyIF {
 
   toJSON() {
     return {
-      type        : this.type,
-      subtype     : this.subtype,
-      apiname     : this.apiname,
-      uiname      : this.uiname,
-      description : this.description,
-      flag        : this.flag,
-      icon        : this.icon,
-      data        : this.data,
-      range       : this.range,
-      uiRange     : this.uiRange,
-      step        : this.step
+      type       : this.type,
+      subtype    : this.subtype,
+      apiname    : this.apiname,
+      uiname     : this.uiname,
+      description: this.description,
+      flag       : this.flag,
+      icon       : this.icon,
+      data       : this.data,
+      range      : this.range,
+      uiRange    : this.uiRange,
+      step       : this.step
     };
   }
 
@@ -168,13 +231,16 @@ export class ToolProperty extends ToolPropertyIF {
 
   copyTo(b) {
     b.apiname = this.apiname;
+
     b.uiname = this.uiname;
     b.description = this.description;
-    b.flag = this.flag;
     b.icon = this.icon;
+
     b.baseUnit = this.baseUnit;
     b.subtype = this.subtype;
     b.displayUnit = this.displayUnit;
+
+    b.flag = this.flag;
 
     for (let k in this.callbacks) {
       b.callbacks[k] = this.callbacks[k];
@@ -185,7 +251,6 @@ export class ToolProperty extends ToolPropertyIF {
     let ret = new this.constructor();
 
     this.copyTo(ret);
-    ret.data = this.data;
 
     return ret;
   }
@@ -195,15 +260,15 @@ export class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
-  static calcRelativeStep(step, value, logBase=1.5) {
-    value = Math.log(Math.abs(value) + 1.0) / Math.log(logBase);
+  static calcRelativeStep(step, value, logBase = 1.5) {
+    value = Math.log(Math.abs(value) + 1.0)/Math.log(logBase);
     value = Math.max(value, step);
 
     this.report(util.termColor("STEP", "red"), value);
     return value;
   }
 
-  getStep(value=1.0) {
+  getStep(value = 1.0) {
     if (this.stepIsRelative) {
       return ToolProperty.calcRelativeStep(this.step, value);
     } else {
@@ -240,7 +305,7 @@ export class ToolProperty extends ToolPropertyIF {
     return this;
   }
 
-  setFlag(f, combine=false) {
+  setFlag(f, combine = false) {
     this.flag = combine ? this.flag | f : f;
     return this;
   }
@@ -264,6 +329,7 @@ export class ToolProperty extends ToolPropertyIF {
     reader(this);
   }
 }
+
 ToolProperty.STRUCT = `
 ToolProperty { 
   type           : int;
@@ -283,6 +349,8 @@ ToolProperty {
 }
 `;
 nstructjs.register(ToolProperty);
+
+window.ToolProperty = ToolProperty;
 
 export class FloatArrayProperty extends ToolProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
@@ -360,7 +428,7 @@ export class StringProperty extends ToolProperty {
   equals(b) {
     return this.data === b.data;
   }
-  
+
   copyTo(b) {
     super.copyTo(b);
 
@@ -374,66 +442,62 @@ export class StringProperty extends ToolProperty {
     return this.data;
   }
 
-  copy() {
-    let ret = new StringProperty();
-    this.copyTo(ret);
-    return ret;
-  }
-  
   setValue(val) {
     //fire events
     super.setValue(val);
     this.data = val;
   }
-}  
+}
+
 StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty) + `
   data : string;
 }
-`;  
+`;
 nstructjs.register(StringProperty);
 _addClass(StringProperty);
 
-let num_res =[
+let num_res = [
   /([0-9]+)/,
   /((0x)?[0-9a-fA-F]+(h?))/,
   /([0-9]+\.[0-9]*)/,
   /([0-9]*\.[0-9]+)/,
   /(\.[0-9]+)/
 ];
+
 //num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
 
 export function isNumber(f) {
   if (f === "NaN" || (typeof f == "number" && isNaN(f))) {
     return false;
   }
-  
-  f = (""+f).trim();
-  
+
+  f = ("" + f).trim();
+
   let ok = false;
-  
+
   for (let re of num_res) {
     let ret = f.match(re)
     if (!ret) {
       ok = false;
       continue;
     }
-    
+
     ok = ret[0].length === f.length;
     if (ok) {
       break;
     }
   }
-  
+
   return ok;
 }
 
 window.isNumber = isNumber;
 
 export class NumProperty extends ToolProperty {
-  constructor(type, value, apiname, 
+  constructor(type, value, apiname,
               uiname, description, flag, icon) {
     super(type, undefined, apiname, uiname, description, flag, icon);
-    
+
     this.data = 0;
     this.range = [0, 0];
   }
@@ -508,11 +572,12 @@ export class _NumberPropertyBase extends ToolProperty {
 
     b.displayUnit = this.displayUnit;
     b.baseUnit = this.baseUnit;
-    b.data = this.data;
     b.expRate = this.expRate;
     b.step = this.step;
     b.range = this.range;
     b.uiRange = this.uiRange;
+
+    b.data = this.data;
   }
 
 
@@ -566,11 +631,10 @@ _NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty
 nstructjs.register(_NumberPropertyBase);
 
 export class IntProperty extends _NumberPropertyBase {
-  constructor(value, apiname, 
-              uiname, description, flag, icon)  
-  {
+  constructor(value, apiname,
+              uiname, description, flag, icon) {
     super(PropTypes.INT, value, apiname, uiname, description, flag, icon);
-    
+
     this.radix = 10;
   }
 
@@ -606,6 +670,7 @@ export class IntProperty extends _NumberPropertyBase {
     super.loadSTRUCT(reader);
   }
 }
+
 IntProperty.STRUCT = nstructjs.inherit(IntProperty, _NumberPropertyBase) + `
   data : int;
 }`;
@@ -615,8 +680,7 @@ _addClass(IntProperty);
 
 export class BoolProperty extends ToolProperty {
   constructor(value, apiname,
-              uiname, description, flag, icon)
-  {
+              uiname, description, flag, icon) {
     super(PropTypes.BOOL, undefined, apiname, uiname, description, flag, icon);
 
     this.data = !!value;
@@ -631,13 +695,6 @@ export class BoolProperty extends ToolProperty {
     b.data = this.data;
 
     return this;
-  }
-
-  copy() {
-    let ret = new BoolProperty();
-    this.copyTo(ret);
-
-    return ret;
   }
 
   setValue(val) {
@@ -661,6 +718,7 @@ export class BoolProperty extends ToolProperty {
     return this;
   }
 }
+
 _addClass(BoolProperty);
 BoolProperty.STRUCT = nstructjs.inherit(BoolProperty, ToolProperty) + `
   data : bool;
@@ -669,11 +727,10 @@ BoolProperty.STRUCT = nstructjs.inherit(BoolProperty, ToolProperty) + `
 nstructjs.register(BoolProperty);
 
 export class FloatProperty extends _NumberPropertyBase {
-  constructor(value, apiname, 
-              uiname, description, flag, icon)  
-  {
+  constructor(value, apiname,
+              uiname, description, flag, icon) {
     super(PropTypes.FLOAT, value, apiname, uiname, description, flag, icon);
-    
+
     this.decimalPlaces = 4;
   }
 
@@ -690,10 +747,10 @@ export class FloatProperty extends _NumberPropertyBase {
 
   setValue(val) {
     this.data = val;
-    
+
     //fire events
     super.setValue(val);
-    
+
     return this;
   }
 
@@ -720,6 +777,7 @@ export class FloatProperty extends _NumberPropertyBase {
     super.loadSTRUCT(reader);
   }
 }
+
 _addClass(FloatProperty);
 FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
   decimalPlaces : int;
@@ -747,6 +805,7 @@ export class EnumKeyPair {
     }
   }
 }
+
 EnumKeyPair.STRUCT = `
 EnumKeyPair {
   key        : string;
@@ -759,8 +818,7 @@ nstructjs.register(EnumKeyPair);
 
 export class EnumProperty extends ToolProperty {
   constructor(string_or_int, valid_values, apiname,
-              uiname, description, flag, icon) 
-  {
+              uiname, description, flag, icon) {
     super(PropTypes.ENUM, undefined, apiname, uiname, description, flag, icon);
 
     this.values = {};
@@ -771,7 +829,7 @@ export class EnumProperty extends ToolProperty {
     if (valid_values === undefined) return this;
 
     if (valid_values instanceof Array || valid_values instanceof String) {
-      for (var i=0; i<valid_values.length; i++) {
+      for (var i = 0; i < valid_values.length; i++) {
         this.values[valid_values[i]] = valid_values[i];
         this.keys[valid_values[i]] = valid_values[i];
       }
@@ -791,13 +849,8 @@ export class EnumProperty extends ToolProperty {
     for (var k in this.values) {
       let uin = k.replace(/[_-]/g, " ").trim();
       uin = uin.split(" ")
-      let uiname = "";
 
-      for (let word of uin) {
-        uiname += word[0].toUpperCase() + word.slice(1, word.length).toLowerCase() + " ";
-      }
-
-      uiname = uiname.trim();
+      let uiname = ToolProperty.makeUIName(k);
 
       this.ui_value_names[k] = uiname;
       this.descriptions[k] = uiname;
@@ -841,21 +894,22 @@ export class EnumProperty extends ToolProperty {
   copyTo(p) {
     super.copyTo(p);
 
+    p.data = this.data;
+
     p.keys = Object.assign({}, this.keys);
     p.values = Object.assign({}, this.values);
-    p.data = this.data;
     p.ui_value_names = this.ui_value_names;
     p.update = this.update;
     p.api_update = this.api_update;
-    
+
     p.iconmap = this.iconmap;
     p.descriptions = this.descriptions;
-    
+
     return p;
   }
-  
+
   copy() {
-    var p = new EnumProperty("dummy", {"dummy" : 0}, this.apiname, this.uiname, this.description, this.flag)
+    var p = new this.constructor("dummy", {"dummy": 0}, this.apiname, this.uiname, this.description, this.flag)
 
     this.copyTo(p);
     return p;
@@ -876,9 +930,9 @@ export class EnumProperty extends ToolProperty {
       this.report("Invalid value for enum!", val, this.values);
       return;
     }
-    
+
     this.data = val;
-    
+
     //fire events
     super.setValue(val);
     return this;
@@ -896,6 +950,7 @@ export class EnumProperty extends ToolProperty {
 
     return ret;
   }
+
   _saveMap(obj) {
     obj = obj === undefined ? {} : obj;
     let ret = [];
@@ -923,9 +978,10 @@ export class EnumProperty extends ToolProperty {
   }
 
   _is_data_int() {
-    return typeof(this.data) !== "string";
+    return typeof (this.data) !== "string";
   }
 }
+
 _addClass(EnumProperty);
 EnumProperty.STRUCT = nstructjs.inherit(EnumProperty, ToolProperty) + `
   data            : string             | ""+this.data;
@@ -943,7 +999,7 @@ export class FlagProperty extends EnumProperty {
   constructor(string, valid_values, apiname,
               uiname, description, flag, icon) {
     super(string, valid_values, apiname,
-          uiname, description, flag, icon);
+      uiname, description, flag, icon);
 
     this.type = PropTypes.FLAG;
     this.wasSet = false;
@@ -956,14 +1012,8 @@ export class FlagProperty extends EnumProperty {
     ToolProperty.prototype.setValue.call(this, bitmask);
     return this;
   }
-
-  copy() {
-    let ret = new FlagProperty();
-    this.copyTo(ret);
-    
-    return ret;
-  }
 }
+
 _addClass(FlagProperty);
 FlagProperty.STRUCT = nstructjs.inherit(FlagProperty, EnumProperty) + `
 }
@@ -982,7 +1032,7 @@ export class VecPropertyBase extends FloatProperty {
     return this.data.vectorDistance(b.data) < 0.00001;
   }
 
-  uniformSlider(state=true) {
+  uniformSlider(state = true) {
     this.hasUniformSlider = state;
     return this;
   }
@@ -992,6 +1042,7 @@ export class VecPropertyBase extends FloatProperty {
     b.hasUniformSlider = this.hasUniformSlider;
   }
 }
+
 VecPropertyBase.STRUCT = nstructjs.inherit(VecPropertyBase, FloatProperty) + `
   hasUniformSlider : bool;
 }
@@ -1023,13 +1074,8 @@ export class Vec2Property extends FloatProperty {
     b.data = data;
     b.data.load(this.data);
   }
-
-  copy() {
-    let ret = new Vec2Property();
-    this.copyTo(ret);
-    return ret;
-  }
 }
+
 Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, VecPropertyBase) + `
   data : vec2;
 }
@@ -1063,13 +1109,8 @@ export class Vec3Property extends VecPropertyBase {
     b.data = data;
     b.data.load(this.data);
   }
-
-  copy() {
-    let ret = new Vec3Property();
-    this.copyTo(ret);
-    return ret;
-  }
 }
+
 Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, VecPropertyBase) + `
   data : vec3;
 }
@@ -1085,7 +1126,7 @@ export class Vec4Property extends FloatProperty {
     this.data = new Vector4(data);
   }
 
-  setValue(v, w=1.0) {
+  setValue(v, w = 1.0) {
     this.data.load(v);
     ToolProperty.prototype.setValue.call(this, v);
 
@@ -1110,13 +1151,8 @@ export class Vec4Property extends FloatProperty {
     b.data = data;
     b.data.load(this.data);
   }
-
-  copy() {
-    let ret = new Vec4Property();
-    this.copyTo(ret);
-    return ret;
-  }
 }
+
 Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, VecPropertyBase) + `
   data : vec4;
 }
@@ -1145,16 +1181,14 @@ export class QuatProperty extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+
+    b.data = data;
     b.data.load(this.data);
   }
-
-  copy() {
-    let ret = new QuatProperty();
-    this.copyTo(ret);
-    return ret;
-  }
 }
+
 QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, VecPropertyBase) + `
   data : vec4;
 }
@@ -1173,8 +1207,8 @@ export class Mat4Property extends ToolProperty {
     let m1 = this.data.$matrix;
     let m2 = b.data.$matrix;
 
-    for (let i=1; i<=4; i++) {
-      for (let j=1; j<=4; j++) {
+    for (let i = 1; i <= 4; i++) {
+      for (let j = 1; j <= 4; j++) {
         let key = `m${i}${j}`;
 
         if (Math.abs(m1[key] - m2[key]) > 0.00001) {
@@ -1197,15 +1231,11 @@ export class Mat4Property extends ToolProperty {
   }
 
   copyTo(b) {
+    let data = b.data;
     super.copyTo(b);
+    b.data = data;
 
     b.data.load(this.data);
-  }
-
-  copy() {
-    let ret = new Mat4Property();
-    this.copyTo(ret);
-    return ret;
   }
 
   loadSTRUCT(reader) {
@@ -1213,6 +1243,7 @@ export class Mat4Property extends ToolProperty {
     super.loadSTRUCT(reader);
   }
 }
+
 Mat4Property.STRUCT = nstructjs.inherit(Mat4Property, FloatProperty) + `
   data           : mat4;
 }
@@ -1227,7 +1258,7 @@ export class ListProperty extends ToolProperty {
   /*
   * Prop must be a ToolProperty subclass instance
   * */
-  constructor(prop, list=[], uiname="") {
+  constructor(prop, list = [], uiname = "") {
     super(PropTypes.PROPLIST);
 
     this.uiname = uiname;
@@ -1265,7 +1296,7 @@ export class ListProperty extends ToolProperty {
       return false;
     }
 
-    for (let i=0; i<l1; i++) {
+    for (let i = 0; i < l1; i++) {
       let prop1 = this.value[i];
       let prop2 = b.value[i];
 
@@ -1296,7 +1327,7 @@ export class ListProperty extends ToolProperty {
     return this.copyTo(new ListProperty(this.prop.copy()));
   }
 
-  push(item=undefined) {
+  push(item = undefined) {
     if (item === undefined) {
       item = this.prop.copy();
     }
@@ -1350,7 +1381,7 @@ export class ListProperty extends ToolProperty {
   [Symbol.iterator]() {
     let list = this.value;
 
-    return (function*() {
+    return (function* () {
       for (let item of list) {
         yield item.getValue();
       }
@@ -1370,7 +1401,7 @@ _addClass(ListProperty);
 
 //like FlagsProperty but uses strings
 export class StringSetProperty extends ToolProperty {
-  constructor(value=undefined, definition=[]) {
+  constructor(value = undefined, definition = []) {
     super(PropTypes.STRSET);
 
     let values = [];
@@ -1397,10 +1428,8 @@ export class StringSetProperty extends ToolProperty {
 
     for (let v of values) {
       this.values[v] = v;
-      
-      let uiname = v.replace(/\_/g, " ").trim();
-      uiname = uiname[0].toUpperCase() + uiname.slice(1, uiname.length);
 
+      let uiname = ToolProperty.makeUIName(v);
       this.ui_value_names[v] = uiname;
     }
 
@@ -1419,7 +1448,7 @@ export class StringSetProperty extends ToolProperty {
   * Values can be a string, undefined/null, or a list/set/object-literal of strings.
   * If destructive is true, then existing set will be cleared.
   * */
-  setValue(values, destructive=true, soft_fail=true) {
+  setValue(values, destructive = true, soft_fail = true) {
     let bad = typeof values !== "string";
     bad = bad && typeof values !== "object";
     bad = bad && values !== undefined && values !== null;
@@ -1501,7 +1530,7 @@ export class StringSetProperty extends ToolProperty {
     for (let k in map) {
       this.ui_value_names[k] = map[k];
     }
-    
+
     return this;
   }
 
@@ -1519,7 +1548,7 @@ export class StringSetProperty extends ToolProperty {
     for (let val of this.value) {
       b.value.add(val);
     }
-    
+
     b.values = {};
     for (let k in this.values) {
       b.values[k] = this.values[k];
@@ -1536,12 +1565,6 @@ export class StringSetProperty extends ToolProperty {
     for (let k in this.descriptions) {
       b.descriptions[k] = this.descriptions[k];
     }
-  }
-
-  copy() {
-    let ret = new StringSetProperty(undefined, {});
-    this.copyTo(ret);
-    return ret;
   }
 }
 
@@ -1587,13 +1610,8 @@ export class Curve1DProperty extends ToolProperty {
 
     b.setValue(this.data);
   }
-
-  copy() {
-    let ret = new Curve1DProperty();
-    this.copyTo(ret);
-    return ret;
-  }
 }
+
 Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty) + `
   data : Curve1D;
 }

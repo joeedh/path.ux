@@ -1478,7 +1478,7 @@ export class ScreenArea extends ui_base.UIBase {
     if (this.area !== undefined) {
       this.area.style["width"] = "100%";
       this.area.style["height"] = "100%";
-      this.area.owning_saea = this;
+      this.area.owning_sarea = this;
       this.area.parentWidget = this;
 
       this.area.pos = this.pos;

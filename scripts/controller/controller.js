@@ -9,49 +9,9 @@ import {Vector2, Vector3, Vector4, Quat} from '../util/vectormath.js';
 let PropFlags = toolprop.PropFlags,
     PropTypes = toolprop.PropTypes;
 
-export function getVecClass(proptype) {
-  switch (proptype) {
-    case PropTypes.VEC2:
-      return Vector2;
-    case PropTypes.VEC3:
-      return Vector3;
-    case PropTypes.VEC4:
-      return Vector4;
-    case PropTypes.QUAT:
-      return Quat;
-    default:
-      throw new Error("bad prop type " + proptype);
-  }
-}
-export function isVecProperty(prop) {
-  if (!prop || typeof prop !== "object" || prop === null)
-    return false;
+import {DataPathError, DataTypes, DataFlags} from './controller_base.js';
 
-  let ok = false;
-
-  ok = ok || prop instanceof toolprop_abstract.Vec2PropertyIF;
-  ok = ok || prop instanceof toolprop_abstract.Vec3PropertyIF;
-  ok = ok || prop instanceof toolprop_abstract.Vec4PropertyIF;
-  ok = ok || prop instanceof toolprop.Vec2Property;
-  ok = ok || prop instanceof toolprop.Vec3Property;
-  ok = ok || prop instanceof toolprop.Vec4Property;
-
-  ok = ok || prop.type === PropTypes.VEC2;
-  ok = ok || prop.type === PropTypes.VEC3;
-  ok = ok || prop.type === PropTypes.VEC4;
-  ok = ok || prop.type === PropTypes.QUAT;
-
-  return ok;
-}
-
-export const DataFlags = {
-  READ_ONLY         : 1,
-  USE_CUSTOM_GETSET : 2,
-  USE_FULL_UNDO     : 4 //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
-};
-
-export class DataPathError extends Error {
-};
+export * from './controller_base.js';
 
 export class ListIface {
   getStruct(api, list, key) {
@@ -214,6 +174,10 @@ export class ModelInterface {
   setValue(ctx, path, val) {
     let res = this.resolvePath(ctx, path);
     let prop = res.prop;
+
+    if (prop !== undefined && (prop.flag & PropFlags.READ_ONLY)) {
+      throw new DataPathError("Tried to set read only property");
+    }
 
     if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
       prop.dataref = res.obj;

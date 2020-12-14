@@ -407,6 +407,9 @@ export const PackFlags = {
   SMALL_ICON : 16,
   LARGE_ICON : 32,
 
+  FORCE_PROP_LABELS : 64, //force propeties (Container.prototype.prop()) to always have labels
+  PUT_FLAG_CHECKS_IN_COLUMNS : 128, //group flag property checkmarks in columns (doesn't apply to icons)
+
   //internal flags
   STRIP_HORIZ : 512,
   STRIP_VERT : 1024,
@@ -1812,25 +1815,28 @@ export class UIBase extends HTMLElement {
     if (func._doOnce === undefined) {
       func._doOnce_reqs = new Set();
       
-      func._doOnce = (thisvar) => {
+      func._doOnce = function (thisvar, trace) {
         if (func._doOnce_reqs.has(thisvar._id)) {
           return;
         }
-        
+
         func._doOnce_reqs.add(thisvar._id);
-        let f = () => {
-          if (this.isDead()) {
-            if (func === this._init || !cconst.DEBUG.doOnce) {
+
+        function f() {
+          if (thisvar.isDead()) {
+            func._doOnce_reqs.delete(thisvar._id);
+
+            if (func === thisvar._init || !cconst.DEBUG.doOnce) {
               return;
             }
 
-            console.warn("Ignoring doOnce call for dead element", this._id, func);
+            console.warn("Ignoring doOnce call for dead element", thisvar._id, func, trace);
             return;
           }
 
-          if (!this.ctx) {
+          if (!thisvar.ctx) {
             if (cconst.DEBUG.doOnce) {
-              console.warn("doOnce call is waiting for context...", this._id, func);
+              console.warn("doOnce call is waiting for context...", thisvar._id, func);
             }
 
             window.setTimeout(f, 0);
@@ -1844,8 +1850,9 @@ export class UIBase extends HTMLElement {
         window.setTimeout(f, timeout);
       }
     }
-    
-    func._doOnce(this);
+
+    let trace = new Error().stack;
+    func._doOnce(this, trace);
   }
 
   

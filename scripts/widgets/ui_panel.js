@@ -129,7 +129,6 @@ export class PanelFrame extends ColumnFrame {
     //stupid css, let's just hackishly put " " to create spacing2
 
     let onclick = (e) => {
-      console.log("panel header click");
       iconcheck.checked = !iconcheck.checked;
     };
 
@@ -299,8 +298,22 @@ export class PanelFrame extends ColumnFrame {
     super.update();
   }
 
-  _setVisible(state) {
-    if (state) {
+  _onchange(isClosed) {
+    if (this.onchange) {
+      this.onchange(isClosed);
+    }
+
+    if (this.contents.onchange) {
+      this.contents.onchange(isClosed);
+    }
+  }
+
+  _setVisible(isClosed, changed) {
+    changed = changed || !!isClosed !== !!this._closed;
+
+    this._state = isClosed;
+
+    if (isClosed) {
       this.contents._remove();
     } else {
       this.add(this.contents, false);
@@ -309,23 +322,28 @@ export class PanelFrame extends ColumnFrame {
       this.contents.flushUpdate();
     }
 
-    this.contents.hidden = state;
+    this.contents.hidden = isClosed;
 
     if (this.parentWidget) {
       this.parentWidget.flushUpdate();
     } else {
       this.flushUpdate();
     }
-    return;
+
+    if (changed) {
+      this._onchange(isClosed);
+    }
+
+    /*
     for (let c of this.shadow.childNodes) {
       if (c !== this.titleframe) {
         c.hidden = state;
       }
-    }
+    }*/
   }
 
-  _updateClosed() {
-    this._setVisible(this._closed);
+  _updateClosed(changed) {
+    this._setVisible(this._closed, changed);
     this.iconcheck.checked = this._closed;
   }
 
@@ -339,7 +357,7 @@ export class PanelFrame extends ColumnFrame {
 
     //console.log("closed set", update);
     if (update) {
-      this._updateClosed();
+      this._updateClosed(true);
     }
   }
 }

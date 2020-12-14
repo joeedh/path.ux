@@ -1002,10 +1002,19 @@ export class Container extends ui_base.UIBase {
 
     if (prop.type === PropTypes.STRING) {
       let ret;
-      if (prop.multiLine) {
+
+      if (prop.flag & PropFlags.READ_ONLY) {
+        ret = this.pathlabel(inpath, prop.uiname);
+      } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
       } else {
-        ret = this.textbox(inpath);
+        let strip = this.strip();
+
+        let uiname = prop.uiname ?? ToolProperty.makeUIName(prop.apiname);
+
+        strip.label(prop.uiname);
+
+        ret = strip.textbox(inpath);
 
         if (mass_set_path) {
           ret.setAttribute("mass_set_path", mass_set_path);
@@ -1050,6 +1059,7 @@ export class Container extends ui_base.UIBase {
 
         return check;
       }
+
       if (!(packflag & PackFlags.USE_ICONS)) {
         let val;
         try {
@@ -1060,9 +1070,24 @@ export class Container extends ui_base.UIBase {
           }
         }
 
-        this.listenum(inpath, {packflag, mass_set_path});
+        if (packflag & PackFlags.FORCE_PROP_LABELS) {
+          let strip = this.strip();
+          strip.label(prop.uiname);
+
+          return strip.listenum(inpath, {packflag, mass_set_path});
+        } else {
+          return this.listenum(inpath, {packflag, mass_set_path});
+        }
+
       } else {
-        this.checkenum(inpath, undefined, packflag);
+        if (packflag & PackFlags.FORCE_PROP_LABELS) {
+          let strip = this.strip();
+          strip.label(prop.uiname);
+
+          return strip.checkenum(inpath, undefined, packflag);
+        } else {
+          return this.checkenum(inpath, undefined, packflag);
+        }
       }
     } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
       if (rdef.subkey !== undefined) {
@@ -1120,6 +1145,41 @@ export class Container extends ui_base.UIBase {
           ret.description = tooltip;
         }
       } else {
+        let con = this;
+
+        if (packflag & PackFlags.FORCE_PROP_LABELS) {
+          con = this.strip();
+          con.label(prop.uiname);
+        }
+
+        if (packflag & PackFlags.PUT_FLAG_CHECKS_IN_COLUMNS) {
+          let i = 0;
+          let row = con.row();
+          let col1 = row.col();
+          let col2 = row.col();
+
+          for (let k in prop.values) {
+            let name = prop.ui_value_names[k];
+            let tooltip = prop.descriptions[k];
+
+            if (name === undefined) {
+              name = makeUIName(k);
+            }
+
+            let con2 = i & 1 ? col1 : col2;
+            let check = con2.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
+
+            if (tooltip) {
+              check.description = tooltip;
+            }
+
+            i++;
+          }
+
+
+          return;
+        }
+
         for (let k in prop.values) {
           let name = prop.ui_value_names[k];
           let tooltip = prop.descriptions[k];
@@ -1128,10 +1188,10 @@ export class Container extends ui_base.UIBase {
             name = makeUIName(k);
           }
 
-          let ret = this.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
+          let check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
 
           if (tooltip) {
-            ret.description = tooltip;
+            check.description = tooltip;
           }
         }
       }

@@ -112,6 +112,11 @@ export class AreaWrangler {
     this.stack.push(area);
   }
 
+  updateLastRef(type, area) {
+    this.lasts[type.name] = area;
+    this.lastArea = area;
+  }
+
   pop(type, area) {
     if (!(type.name in this.stacks)) {
       console.warn("pop_ctx_area called in error");

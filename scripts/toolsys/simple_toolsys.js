@@ -5,16 +5,18 @@ a basic, simple tool system implementation
 
 import * as events from '../util/events.js';
 import {keymap} from '../util/simple_events.js';
-import {PropTypes} from './toolprop.js';
+import {PropFlags, PropTypes} from './toolprop.js';
+import {DataPath} from '../controller/controller_base.js';
 
 export let ToolClasses = [];
-
+window._ToolClasses = ToolClasses;
 export function setContextClass(cls) {
   console.warn("setContextClass is deprecated");
 }
 
 export const ToolFlags = {
   PRIVATE : 1
+
 };
 
 
@@ -32,6 +34,151 @@ class InheritFlag {
 }
 
 let modalstack = [];
+
+export class ToolPropertyCache {
+  constructor() {
+    this.map = new Map();
+    this.pathmap = new Map();
+    this.accessors = {};
+
+    this.userSetMap = new Set();
+
+    this.api = undefined;
+    this.dstruct = undefined;
+  }
+
+  _buildAccessors(cls, key, prop, dstruct, api) {
+    let tdef = cls._getFinalToolDef();
+
+    this.api = api;
+    this.dstruct = dstruct;
+
+    if (!tdef.toolpath) {
+      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
+      return;
+    }
+
+    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
+    let obj = this.accessors;
+
+    let st = dstruct;
+    let partial = "";
+
+    for (let i=0; i<path.length; i++) {
+      let k = path[i];
+      let pathk = k;
+
+      if (i === 0) {
+        pathk = "accessors." + k;
+      }
+
+      if (i > 0) {
+        partial += ".";
+      }
+      partial += k;
+
+      if (!(k in obj)) {
+        obj[k] = {};
+      }
+
+      let st2 = api.mapStruct(obj[k], true, k);
+      if (!(k in st.pathmap)) {
+        st.struct(pathk, k, k, st2);
+      }
+      st = st2;
+
+      this.pathmap.set(partial, obj[k]);
+
+      obj = obj[k];
+    }
+
+    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
+    let prop2 = prop.copy()
+
+    let dpath = new DataPath(name, name, prop2);
+    let uiname = prop.uiname;
+
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = prop.apiname;
+    }
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = key;
+    }
+
+    uiname = ToolProperty.makeUIName(uiname);
+
+    prop2.uiname = uiname;
+    prop2.description = prop2.description ?? prop2.uiname;
+
+    st.add(dpath);
+
+    obj[name] = prop2.getValue();
+  }
+
+
+  _getAccessor(cls) {
+    let toolpath = cls.tooldef().toolpath.trim();
+    return this.pathmap.get(toolpath);
+  }
+
+  static getPropKey(cls, key, prop) {
+    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
+  }
+
+  useDefault(cls, key, prop) {
+    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
+    key = key.trim();
+
+    return key;
+  }
+
+  has(cls, key, prop) {
+    let obj = this._getAccessor(cls);
+
+    key = this.constructor.getPropKey(cls, key, prop);
+    return obj && key in obj;
+  }
+
+  get(cls, key, prop) {
+    let obj = this._getAccessor(cls);
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    if (obj) {
+      return obj[key];
+    }
+
+    return undefined;
+  }
+
+  set(cls, key, prop) {
+    let toolpath = cls.tooldef().toolpath.trim();
+    let obj = this._getAccessor(cls);
+
+    if (!obj) {
+      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
+      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
+
+      obj = this.pathmap.get(toolpath);
+    }
+
+    if (!obj) {
+      console.error("Malformed toolpath in toolop definition: " + toolpath);
+      return;
+    }
+
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
+    obj[key] = prop.copy().getValue();
+
+    let path = toolpath + "." + key;
+    this.userSetMap.add(path);
+
+    return this;
+  }
+}
+
+export const SavedToolDefaults = new ToolPropertyCache();
 
 export class ToolOp extends events.EventHandler {
   /**
@@ -64,6 +211,10 @@ export class ToolOp extends events.EventHandler {
     return {};
   }
 
+  getDefault(toolprop) {
+    //return SavedToolDefaults.get(this.constructor,
+  }
+
   static Equals(a, b) {
     if (!a || !b) return false;
     if (a.constructor !== b.constructor) return false;
@@ -83,11 +234,29 @@ export class ToolOp extends events.EventHandler {
     return !bad;
   }
 
+  saveDefaultInputs() {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
+        SavedToolDefaults.set(this.constructor, k, prop);
+      }
+    }
+
+    return this;
+  }
+
   static inherit(slots={}) {
     return new InheritFlag(slots);
   }
   
-  /**creates a new instance of this toolop from args*/
+  /**
+
+   Creates a new instance of this toolop from args and a context.
+   This is often use to fill properties with default arguments
+   stored somewhere in the context.
+
+   */
   static invoke(ctx, args) {
     let tool = new this();
 
@@ -158,6 +327,71 @@ export class ToolOp extends events.EventHandler {
       ToolClasses.remove(cls);
     }
   }
+
+  static _getFinalToolDef() {
+    let def = this.tooldef();
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this
+
+      while (p !== undefined && p !== Object && p !== ToolOp) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag);
+
+            if (slots2 instanceof InheritFlag) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+
+        }
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    def.inputs = dinputs;
+    def.outputs = doutputs;
+
+    return def;
+  }
+
+  /**
+   Main ToolOp constructor.  It reads the inputs/outputs properteis from
+   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
+   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
+   chain to fetch parent class properties.
+
+
+   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
+   has been called) SavedToolDefaults will have a copy of all the default
+   property values of all registered ToolOps.
+   **/
 
   constructor() {
     super();
@@ -230,13 +464,28 @@ export class ToolOp extends events.EventHandler {
     
     if (dinputs) {
       for (let k in dinputs) {
-        this.inputs[k] = dinputs[k].copy();
+        let prop = dinputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        if (SavedToolDefaults.has(this.constructor, k, prop)) {
+          try {
+            prop.setValue(SavedToolDefaults.get(this.constructor, k, prop));
+          } catch (error) {
+            console.log(error.stack);
+            console.log(error.message);
+          }
+        }
+
+        this.inputs[k] = prop;
       }
     }
     
     if (doutputs) {
       for (let k in doutputs) {
-        this.outputs[k] = doutputs[k].copy();
+        let prop = doutputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        this.outputs[k] = prop;
       }
     }
 
@@ -401,6 +650,8 @@ export class ToolOp extends events.EventHandler {
     this._promise = undefined;
     this._accept(ctx, false); //Context, was_cancelled
     this._accept = this._reject = undefined;
+
+    this.saveDefaultInputs();
   }
 }
 
@@ -634,6 +885,7 @@ export class ToolStack extends Array {
       toolop.execPre(tctx);
       toolop.exec(tctx);
       toolop.execPost(tctx);
+      toolop.saveDefaultInputs();
     }
   }
   
@@ -658,5 +910,22 @@ export class ToolStack extends Array {
       tool.exec(ctx);
       tool.execPost(ctx);
     }
+  }
+}
+
+export function buildToolSysAPI(api) {
+  let datastruct = api.mapStruct(ToolPropertyCache, true);
+
+  for (let cls of ToolClasses) {
+    let def = cls._getFinalToolDef();
+
+    for (let k in def.inputs) {
+      let prop = def.inputs[k];
+
+      if (!(prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY))) {
+        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
+      }
+    }
+
   }
 }

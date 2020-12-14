@@ -237,8 +237,8 @@ export class TextBox extends TextBoxBase {
 
     let text = this.text;
 
-    if (prop !== undefined && (prop.type == PropTypes.INT || prop.type == PropTypes.FLOAT)) {
-      let is_int = prop.type == PropTypes.INT;
+    if (prop !== undefined && (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT)) {
+      let is_int = prop.type === PropTypes.INT;
 
       this.radix = prop.radix;
 
@@ -254,7 +254,7 @@ export class TextBox extends TextBoxBase {
       text = val;
     }
 
-    if (this.text != text) {
+    if (this.text !== text) {
       this.text = text;
     }
   }

@@ -5,6 +5,243 @@ import * as vectormath from './vectormath.js';
 
 import {Vector2, Vector3, Vector4, Matrix4, Quat} from './vectormath.js';
 
+let dtvtmps = util.cachering.fromConstructor(Vector3, 32);
+
+/*
+on factor;
+off period;
+
+f1 := u*v1x + v*v2x + (1.0-u-v)*v3x - px;
+f2 := u*v1y + v*v2y + (1.0-u-v)*v3y - py;
+
+ff := solve({f1, f2}, {u, v});
+
+on fort;
+part(ff, 1, 1);
+part(ff, 1, 2);
+off fort;
+
+*/
+
+let barycentric_v2_rets = util.cachering.fromConstructor(Vector2, 2048);
+let calc_proj_refs = new util.cachering(() => [0, 0], 64);
+
+export function calc_projection_axes(no) {
+  let ax = Math.abs(no[0]), ay = Math.abs(no[1]), az = Math.abs(no[2]);
+
+  let ret = calc_proj_refs.next();
+
+  if (ax > ay && ax > az) {
+    ret[0] = 1;
+    ret[1] = 2;
+  } else if (ay > az && ay > ax) {
+    ret[0] = 0;
+    ret[1] = 2;
+  } else {
+    ret[0] = 0;
+    ret[1] = 1;
+  }
+
+  return ret;
+}
+
+export function barycentric_v2(p, v1, v2, v3, axis1=0, axis2=1, out=undefined) {
+  let div = (v2[axis1]*v3[axis2]-v2[axis2]*v3[axis1]+(v2[axis2]-v3[axis2])*v1[axis1]-(v2[axis1]-v3[axis1])*v1[axis2]);
+
+  if (Math.abs(div) < 0.000001) {
+    div = 0.00001;
+  }
+
+  let u=(v2[axis1]*v3[axis2]-v2[axis2]*v3[axis1]+(v2[axis2]-v3[axis2])*p[axis1]-(v2[axis1]-v3[axis1])*p[axis2])/div;
+  let v=(-(v1[axis1]*v3[axis2]-v1[axis2]*v3[axis1]+(v1[axis2]-v3[axis2])*p[axis1])+(v1[axis1]-v3[axis1])*p[axis2])/div;
+
+  if (!out) {
+    out = barycentric_v2_rets.next();
+  }
+  
+  out[0] = u;
+  out[1] = v;
+  
+  return out;
+}
+
+/*
+
+on factor;
+
+load_package "avector";
+
+px := 0;
+py := 0;
+pz := 0;
+
+v1 := avec(v1x, v1y, v1z);
+v2 := avec(v2x, v2y, v2z);
+p := avec(px, py, pz);
+
+t1 := p - v1;
+t2 := v2 - v1;
+
+l1 := t2 / VMOD t2;
+
+t := dot(t1, t2);
+
+p2 := v1 + t2*t;
+
+on fort;
+dot(p2, p2);
+off fort;
+
+**/
+
+function _linedis2(co, v1, v2) {
+  let v1x = v1[0] - co[0];
+  let v1y = v1[1] - co[1];
+  let v1z = v1[2] - co[2];
+
+  let v2x = v2[0] - co[0];
+  let v2y = v2[1] - co[1];
+  let v2z = v2[2] - co[2];
+
+  let dis = (((v1y-v2y)*v1y+(v1z-v2z)*v1z+(v1x-v2x)*v1x)*(v1y-v2y)-v1y)**2+
+    (((v1y-v2y)*v1y+(v1z-v2z)*v1z+(v1x-v2x)*v1x)*(v1z-v2z)-v1z)**2+
+    (((v1y-v2y)*v1y+(v1z-v2z)*v1z+(v1x-v2x)*v1x)*(v1x-v2x)-v1x)**2;
+
+  return dis;
+}
+
+export function dist_to_tri_v3(co, v1, v2, v3, no=undefined) {
+  if (!no) {
+    no = dtvtmps.next().load(normal_tri(v1, v2, v3));
+  }
+
+  let p = dtvtmps.next().load(co);
+  p.sub(v1);
+
+  let planedis = -p.dot(no);
+
+  let [axis, axis2] = calc_projection_axes(no);
+
+  let p1 = dtvtmps.next();
+  let p2 = dtvtmps.next();
+  let p3 = dtvtmps.next();
+
+  p1[0] = v1[axis];
+  p1[1] = v1[axis2];
+  p1[2] = 0.0;
+
+  p2[0] = v2[axis];
+  p2[1] = v2[axis2];
+  p2[2] = 0.0;
+
+  p3[0] = v3[axis];
+  p3[1] = v3[axis2];
+  p3[2] = 0.0;
+
+  let pp = dtvtmps.next();
+  pp[0] = co[axis];
+  pp[1] = co[axis2];
+  pp[2] = 0.0;
+
+  if (point_in_tri(pp, p1, p2, p3)) {
+    return Math.abs(planedis);
+  } else {
+    let dis = 1e17;
+
+    if (0) {
+      dis = Math.min(dis, _linedis2(co, v1, v2));
+      dis = Math.min(dis, _linedis2(co, v2, v3));
+      dis = Math.min(dis, _linedis2(co, v3, v1));
+      dis = Math.sqrt(dis);
+    } else {
+      dis = Math.min(dis, dist_to_line(co, v1, v2, true));
+      dis = Math.min(dis, dist_to_line(co, v2, v3, true));
+      dis = Math.min(dis, dist_to_line(co, v3, v1, true));
+    }
+
+    return dis;
+  }
+
+
+  if (0) {
+    p.add(a).addFac(no, planedis);
+
+    if (Math.abs(p.dot(no)) > 0.000001) {
+      console.log(p.dot(no), p, no);
+      throw new Error("");
+    }
+
+    a.add(co);
+    b.add(co);
+    c.add(co);
+
+    let ax = a[0], bx = b[0], cx = c[0];
+    let ay = a[1], by = b[1], cy = c[1];
+    let az = a[2], bz = b[2], cz = c[2];
+
+    let div = ((bx*cz - bz*cx)*ay - (by*cz - bz*cy)*ax - (bx*cy - by*cx)*az);
+    //let div2 = ((bx*cz-bz*cx)*ay - (by*cz-bz*cy)*ax - (bx*cy-by*cx)*az);
+    //let div3 = ((bx*cz-bz*cx)*ay - (by*cz-bz*cy)*ax - (bx*cy-by*cx)*az);
+
+    if (div === 0.0) {
+      return 0.0;
+    }
+
+    let x1 = co[0], y1 = co[1], z1 = co[2];
+
+    let u = ((cx*z1 - cz*x1)*by - (cy*z1 - cz*y1)*bx - (cx*y1 - cy*x1)*bz)/div;
+    let v = (-((cx*z1 - cz*x1)*ay - (cy*z1 - cz*y1)*ax) + (cx*y1 - cy*x1)*az)/div
+    let w = ((bx*z1 - bz*x1)*ay - (by*z1 - bz*y1)*ax - (bx*y1 - by*x1)*az)/div;
+
+    if (isNaN(u) || isNaN(v) || isNaN(w)) {
+      console.log(u, v, w, co, a, b, c, div);
+      throw new Error("NaN!");
+    }
+
+    //let p2 = dtvtmps.next();
+    u = Math.min(Math.max(u, 0), 1.0);
+    v = Math.min(Math.max(v, 0), 1.0);
+    w = Math.min(Math.max(w, 0), 1.0);
+
+    let tot = u + v + w;
+
+    if (tot > 0) {
+      tot = 1.0/tot;
+      u *= tot;
+      v *= tot;
+      w *= tot;
+    }
+
+    p2.addFac(v1, u);
+    p2.addFac(v2, v);
+    p2.addFac(v3, w);
+
+    return p2.vectorDistance(co);
+  }
+
+   /*
+  on factor;
+
+  x2 := ax*u + bx*v + cx*w;
+  y2 := ay*u + by*v + cy*w;
+  z2 := az*u + bz*v + cz*w;
+
+  f1 := x2 - x1;
+  f2 := y2 - y1;
+  f3 := z2 - z1;
+
+  ff := solve({f1, f2, f3}, {u, v, w});
+
+  on fort;
+  part(ff, 1, 1);
+  part(ff, 1, 2);
+  part(ff, 1, 3);
+  off fort;
+
+
+   */
+}
+
 let tri_area_temps = util.cachering.fromConstructor(Vector3, 64);
 export function tri_area(v1, v2, v3) {
   let l1 = v1.vectorDistance(v2);
@@ -39,10 +276,10 @@ export function aabb_overlap_area(pos1, size1, pos2, size2) {
 
 /**
  * Returns true if two aabbs intersect
- * @param {*} pos1 
- * @param {*} size1 
- * @param {*} pos2 
- * @param {*} size2 
+ * @param {*} pos1
+ * @param {*} size1
+ * @param {*} pos2
+ * @param {*} size2
  */
 
 export function aabb_isect_2d(pos1, size1, pos2, size2) {
@@ -62,16 +299,16 @@ let aabb_intersect_vs = util.cachering.fromConstructor(Vector2, 32);
 let aabb_intersect_rets = new util.cachering(() => {
   return {
     pos   : new Vector2(),
-    size  : new Vector2() 
+    size  : new Vector2()
   }
 }, 512);
 
 /**
  * Returns aabb that's the intersection of two aabbs
- * @param {*} pos1 
- * @param {*} size1 
- * @param {*} pos2 
- * @param {*} size2 
+ * @param {*} pos1
+ * @param {*} size1
+ * @param {*} pos2
+ * @param {*} size2
  */
 export function aabb_intersect_2d(pos1, size1, pos2, size2) {
   let v1 = aabb_intersect_vs.next().load(pos1);
@@ -130,7 +367,7 @@ window.test_aabb_intersect_2d = function() {
   let a2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
   let b1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
   let b2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
-  
+
   let p1 = new Vector2();
   let s1 = new Vector2();
   let p2 = new Vector2();
@@ -161,7 +398,7 @@ window.test_aabb_intersect_2d = function() {
   g.rect(p2[0], p2[1], s2[0], s2[1]);
   g.fillStyle = "rgba(75, 100, 255, 1.0)";
   g.fill();
-  
+
   let ret = aabb_intersect_2d(p1, s1, p2, s2);
 
   if (ret) {
@@ -187,7 +424,7 @@ window.test_aabb_intersect_2d = function() {
 test_aabb_intersect_2d.stop = function stop() {
   if (test_aabb_intersect_2d._timer) {
     console.log("stopping timer");
-    
+
     window.clearInterval(test_aabb_intersect_2d._timer);
     test_aabb_intersect_2d._timer = undefined;
   }
@@ -256,7 +493,7 @@ export function aabb_union_2d(pos1, size1, pos2, size2) {
   let v1 = aabb_intersect_vs.next();
   let v2 = aabb_intersect_vs.next();
   let min = aabb_intersect_vs.next();
-  let max = aabb_intersect_vs.next(); 
+  let max = aabb_intersect_vs.next();
   v1.load(pos1).add(size1);
   v2.load(pos2).add(size2);
 
@@ -278,17 +515,17 @@ function init_prototype(cls, proto) {
   for (var k in proto) {
     cls.prototype[k] = proto[k];
   }
-  
+
   return cls.prototype;
 }
 
 function inherit(cls, parent, proto) {
   cls.prototype = Object.create(parent.prototype);
-  
+
   for (var k in proto) {
     cls.prototype[k] = proto[k];
   }
-  
+
   return cls.prototype;
 }
 
@@ -407,7 +644,7 @@ export function get_rect_points(p, size) {
       cs[2] = [p[0]+size[0], p[1]+size[1]];
       cs[3] = [p[0], p[1]+size[1]];
   }
-  else 
+  else
     if (p.length==3) {
       cs = _static_grp_points8;
       cs[0] = p;
@@ -430,7 +667,7 @@ export function get_rect_lines(p, size) {
   if (p.length==2) {
       return [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
   }
-  else 
+  else
     if (p.length==3) {
       var l1=[[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
       var l2=[[ps[4], ps[5]], [ps[5], ps[6]], [ps[6], ps[7]], [ps[7], ps[4]]];
@@ -471,7 +708,7 @@ export class MinMax {
     this.totaxis = totaxis;
     if (totaxis!=1) {
         let cls;
-        
+
         switch (totaxis) {
           case 2:
             cls = Vector2;
@@ -486,7 +723,7 @@ export class MinMax {
             cls = Array;
             break;
         }
-        
+
         this._min = new cls(totaxis);
         this._max = new cls(totaxis);
         this.min = new cls(totaxis);
@@ -501,7 +738,7 @@ export class MinMax {
     this._static_mr_co = new Array(this.totaxis);
     this._static_mr_cs = new Array(this.totaxis*this.totaxis);
   }
-  
+
   load(mm) {
     if (this.totaxis==1) {
         this.min = mm.min;
@@ -516,7 +753,7 @@ export class MinMax {
       this._max = new Vector3(mm._max);
     }
   }
-  
+
   reset() {
     var totaxis=this.totaxis;
     if (totaxis==1) {
@@ -543,7 +780,7 @@ export class MinMax {
         cs[2] = [p[0]+size[0], p[1]+size[1]];
         cs[3] = [p[0], p[1]+size[1]];
     }
-    else 
+    else
       if (totaxis = 3) {
         cs[0] = p;
         cs[1] = [p[0]+size[0], p[1], p[2]];
@@ -564,7 +801,7 @@ export class MinMax {
 
   minmax(p) {
     var totaxis=this.totaxis;
-    
+
     if (totaxis==1) {
         this._min = this.min = Math.min(this._min, p);
         this._max = this.max = Math.max(this._max, p);
@@ -611,9 +848,20 @@ export function winding_axis(a, b, c, up_axis) {
   return f >= 0.0;
 }
 
-//wow this is a truly ancient version of winding
-export function winding(a, b, c, zero_z, tol) {
-  if (tol == undefined) tol = 0.0;
+export function winding(a, b, c, zero_z, tol=0.0) {
+  let t1 = _cross_vec1;
+  let t2 = _cross_vec2;
+
+  for (let i = 0; i < a.length; i++) {
+    t1[i] = b[i] - a[i];
+    t2[i] = c[i] - a[i];
+  }
+
+  return t1[0]*t2[1] - t1[1]*t2[0] > tol;
+  /*
+  t1.load(a).sub(b);
+  t2.load(c).sub(b);
+  return t[0]*
   
   for (var i=0; i<a.length; i++) {
       _cross_vec1[i] = b[i]-a[i];
@@ -625,7 +873,9 @@ export function winding(a, b, c, zero_z, tol) {
   }
   _cross_vec1.cross(_cross_vec2);
   return _cross_vec1[2]>tol;
-};
+*/
+}
+
 export function inrect_2d(p, pos, size) {
   if (p==undefined||pos==undefined||size==undefined) {
       console.trace();
@@ -795,7 +1045,7 @@ export function line_line_isect(v1, v2, v3, v4, test_segment) {
   if (!line_line_cross(v1, v2, v3, v4)) {
     return undefined;
   }
-  
+
   /*
   on factor;
   off period;
@@ -813,16 +1063,16 @@ export function line_line_isect(v1, v2, v3, v4, test_segment) {
   ft2 := part(f, 1, 2, 2);
   
   */
-  
+
   var xa1 = v1[0], xa2 = v2[0], ya1 = v1[1], ya2 = v2[1];
   var xb1 = v3[0], xb2 = v4[0], yb1 = v3[1], yb2 = v4[1];
-  
+
   var div = ((xa1-xa2)*(yb1-yb2)-(xb1-xb2)*(ya1-ya2));
   if (div < 0.00000001) { //parallel but intersecting lines.
     return COLINEAR_ISECT;
   } else { //intersection exists
     var t1 = (-((ya1-yb2)*xb1-(yb1-yb2)*xa1-(ya1-yb1)*xb2))/div;
-    
+
     return lli_v1.load(v1).interp(v2, t1);
   }
 }
@@ -830,7 +1080,7 @@ export function line_line_isect(v1, v2, v3, v4, test_segment) {
 export function line_line_cross(v1, v2, v3, v4) {
   var l1 = _llc_l3, l2 = _llc_l4;
   l1[0].load(v1), l1[1].load(v2), l2[0].load(v3), l2[1].load(v4);
-  
+
   /*
   var limit=feps*1000;
   if (Math.abs(l1[0].vectorDistance(l2[0])+l1[1].vectorDistance(l2[0])-l1[0].vectorDistance(l1[1]))<limit) {
@@ -846,7 +1096,7 @@ export function line_line_cross(v1, v2, v3, v4) {
       return true;
   }
   //*/
-  
+
   var a=l1[0];
   var b=l1[1];
   var c=l2[0];
@@ -878,26 +1128,26 @@ var _asi2d_v6 = new Vector2();
 export function aabb_sphere_isect_2d(p, r, min, max) {
   var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
   var v4 = _asi2d_v5;
-  
+
   p = _asi2d_v6.load(p);
   v1.load(p);
   v2.load(p);
-  
+
   min = _asi_v5.load(min);
   max = _asi_v6.load(max);
-  
+
   mvec.load(max).sub(min).normalize().mulScalar(r+0.0001);
-  
+
   v1.sub(mvec);
   v2.add(mvec);
   v3.load(p);
-  
+
   var ret = point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)
          || point_in_aabb_2d(v3, min, max);
-  
+
   if (ret)
       return ret;
-  
+
   /*
   v1.load(min).add(max).mulScalar(0.5);
   ret = ret || v1.vectorDistance(p) < r;
@@ -918,7 +1168,7 @@ export function aabb_sphere_isect_2d(p, r, min, max) {
   v1.load(min);
   v2[0] = min[0]; v2[1] = max[1];
   ret = ret || dist_to_line_2d(p, v1, v2) < r;
-  
+
   v1.load(max);
   v2[0] = max[0]; v2[1] = max[1];
   ret = ret || dist_to_line_2d(p, v1, v2) < r;
@@ -1118,7 +1368,7 @@ export function normal_tri(v1, v2, v3) {
   $e3_normal_tri[0] = $e1_normal_tri[1]*$e2_normal_tri[2]-$e1_normal_tri[2]*$e2_normal_tri[1];
   $e3_normal_tri[1] = $e1_normal_tri[2]*$e2_normal_tri[0]-$e1_normal_tri[0]*$e2_normal_tri[2];
   $e3_normal_tri[2] = $e1_normal_tri[0]*$e2_normal_tri[1]-$e1_normal_tri[1]*$e2_normal_tri[0];
-  
+
   var _len=Math.sqrt(($e3_normal_tri[0]*$e3_normal_tri[0]+$e3_normal_tri[1]*$e3_normal_tri[1]+$e3_normal_tri[2]*$e3_normal_tri[2]));
   if (_len>1e-05)
     _len = 1.0/_len;
@@ -1190,21 +1440,21 @@ export function dist_to_line_2d(p, v1, v2, clip, closest_co_out=undefined, t_out
   if (clip == undefined) {
       clip = true;
   }
-  
+
   v1 = dt2l_v4.load(v1);
   v2 = dt2l_v5.load(v2);
-  
+
   var n = dt2l_v1;
   var vec = dt2l_v3;
-  
+
   n.load(v2).sub(v1).normalize();
   vec.load(p).sub(v1);
-  
+
   var t = vec.dot(n);
   if (clip) {
     t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
   }
-  
+
   n.mulScalar(t).add(v1);
 
   if (closest_co_out) {
@@ -1229,23 +1479,23 @@ export function dist_to_line(p, v1, v2, clip) {
   if (clip == undefined) {
       clip = true;
   }
-  
+
   v1 = dt3l_v4.load(v1);
   v2 = dt3l_v5.load(v2);
-  
+
   var n = dt3l_v1;
   var vec = dt3l_v3;
-  
+
   n.load(v2).sub(v1).normalize();
   vec.load(p).sub(v1);
-  
+
   var t = vec.dot(n);
   if (clip) {
     t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
   }
-  
+
   n.mulScalar(t).add(v1);
-  
+
   return n.vectorDistance(p);
 }
 
@@ -1330,22 +1580,22 @@ export function closest_point_on_line(p, v1, v2, clip) {
   if (clip == undefined)
     clip = true;
   var l1 = _closest_tmps[0], l2 = _closest_tmps[1];
-  
+
   l1.load(v2).sub(v1).normalize();
   l2.load(p).sub(v1);
-  
+
   var t = l2.dot(l1);
   if (clip) {
     t = t*(t<0.0) + t*(t>1.0) + (t>1.0);
   }
-  
+
   var p = _closest_point_on_line_cache.next();
   p.load(l1).mulScalar(t).add(v1);
   var ret = _closest_point_rets.next();
-  
+
   ret[0] = p;
   ret[1] = t;
-  
+
   return ret;
 };
 
@@ -1364,18 +1614,18 @@ export function circ_from_line_tan(a, b, t) {
   var p1 = _circ_from_line_tan_vs.next();
   var t2 = _circ_from_line_tan_vs.next();
   var n1 = _circ_from_line_tan_vs.next();
-  
+
   p1.load(a).sub(b);
   t2.load(t).normalize();
   n1.load(p1).normalize().cross(t2).cross(t2).normalize();
-  
+
   var ax = p1[0], ay = p1[1], az=p1[2], nx = n1[0], ny=n1[1], nz=n1[2];
   var r = -(ax*ax + ay*ay + az*az) / (2*(ax*nx + ay*ny +az*nz));
-  
+
   var ret = _circ_from_line_tan_ret.next();
   ret[0].load(n1).mulScalar(r).add(a)
   ret[1] = r;
-  
+
   return ret;
 }
 
@@ -1398,20 +1648,20 @@ export function get_tri_circ(a, b, c) {
   var e3=_gtc_e3;
   var p1=_gtc_p1;
   var p2=_gtc_p2;
-  
+
   for (var i=0; i<3; i++) {
       e1[i] = b[i]-a[i];
       e2[i] = c[i]-b[i];
       e3[i] = a[i]-c[i];
   }
-  
+
   for (var i=0; i<3; i++) {
       p1[i] = (a[i]+b[i])*0.5;
       p2[i] = (c[i]+b[i])*0.5;
   }
-  
+
   e1.normalize();
-  
+
   v1[0] = -e1[1];
   v1[1] = e1[0];
   v1[2] = e1[2];
@@ -1443,11 +1693,11 @@ export function get_tri_circ(a, b, c) {
     r = e2.sub(cent).vectorLength();
   if (r<feps)
     r = e3.sub(cent).vectorLength();
-  
+
   var ret = _get_tri_circ_ret.next();
   ret[0] = cent;
   ret[1] = r;
-  
+
   return ret;
 };
 
@@ -1477,7 +1727,7 @@ var sin = Math.sin;
 export function rot2d(v1, A, axis) {
   var x = v1[0];
   var y = v1[1];
-  
+
   if (axis == 1) {
     v1[0] = x * cos(A) + y*sin(A);
     v1[2] = y * cos(A) - x*sin(A);
@@ -1570,7 +1820,7 @@ export class PlaneOps {
         ay = 1;
         az = 2;
     }
-    else 
+    else
       if (nx>ny&&nx>nz) {
         ax = 2;
         ay = 1;
@@ -1679,7 +1929,7 @@ let isect_ray_plane_rets = util.cachering.fromConstructor(Vector3, 256);
 
 export function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
-  
+
   let div = (pn[1]*rn[1]+pn[2]*rn[2]+pn[0]*rn[0]);
 
   if (Math.abs(div) < 0.000001) {

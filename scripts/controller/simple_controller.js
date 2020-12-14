@@ -1,3 +1,16 @@
+/*
+
+steps to build a datapath API:
+
+make a new DataAPI instance, e.g.:
+
+<pre>let api = new DataAPI();</pre>
+
+Call buildToolSysAPI:
+
+<pre>buildToolSysAPI(api);</pre>
+
+*/
 import * as toolprop from '../toolsys/toolprop.js';
 import * as parseutil from '../util/parseutil.js';
 import {print_stack} from '../util/util.js';
@@ -6,6 +19,9 @@ import {Vec2Property, Vec3Property, Vec4Property, PropTypes, PropFlags} from '..
 import * as toolprop_abstract from '../toolsys/toolprop_abstract.js';
 import * as util from '../util/util.js';
 import cconst from '../config/const.js';
+
+import {DataPath, DataFlags, DataTypes, DataPathError, StructFlags} from './controller_base.js';
+export * from './controller_base.js';
 
 let PUTLParseError = parseutil.PUTLParseError;
 
@@ -47,8 +63,7 @@ parserStack.cur = 0;
 
 import {
   ModelInterface, ToolOpIface,
-  DataFlags, DataPathError, setImplementationClass,
-  isVecProperty, ListIface
+  setImplementationClass, isVecProperty, ListIface
 } from './controller.js';
 import {initToolPaths, parseToolPath} from '../toolsys/toolpath.js';
 
@@ -95,224 +110,10 @@ export function popReportName() {
   reportstack.pop();
 }
 
-export const DataTypes = {
-  STRUCT: 0,
-  DYNAMIC_STRUCT: 1,
-  PROP: 2,
-  ARRAY: 3
-};
-
-export class DataPath {
-  constructor(path, apiname, prop, type = DataTypes.PROP) {
-    this.type = type;
-    this.data = prop;
-    this.apiname = apiname;
-    this.path = path;
-    this.flag = 0;
-    this.struct = undefined;
-  }
-
-  copy() {
-    let ret = new DataPath();
-
-    ret.flag = this.flag;
-    ret.type = this.type;
-    ret.data = this.data;
-    ret.apiname = this.apiname;
-    ret.path = this.path;
-    ret.struct = this.struct;
-
-    return ret;
-  }
-
-  setProp(prop) {
-    this.data = prop;
-  }
-
-  readOnly() {
-    this.flag |= DataFlags.READ_ONLY;
-    return this;
-  }
-
-  read_only() {
-    console.warn("DataPath.read_only is deprecated; use readOnly");
-    return this.readOnly();
-  }
-
-  /**
-   *
-   * For the callbacks 'this' points to an internal ToolProperty;
-   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
-   * and the datapath is 'this.datapath'
-   **/
-  customGetSet(get, set) {
-    this.flag |= DataFlags.USE_CUSTOM_GETSET;
-
-    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
-      this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
-      this.data._getValue = this.data.getValue;
-      this.data._setValue = this.data.setValue;
-
-      if (get)
-        this.data.getValue = get;
-
-      if (set)
-        this.data.setValue = set;
-    } else {
-      this.getSet = {
-        get, set
-      };
-
-      this.getSet.dataref = undefined;
-      this.getSet.datapath = undefined;
-      this.getSet.ctx = undefined;
-    }
-
-    return this;
-  }
-
-  customSet(set) {
-    this.customGetSet(undefined, set);
-    return this;
-  }
-
-  customGet(get) {
-    this.customGetSet(get, undefined);
-    return this;
-  }
-
-  /**db will be executed with underlying data object
-   that contains this path in 'this.dataref'
-
-   main event is 'change'
-   */
-  on(type, cb) {
-    if (this.type == DataTypes.PROP) {
-      this.data.on(type, cb);
-    } else {
-      throw new Error("invalid call to DataPath.on");
-    }
-
-    return this;
-  }
-
-  off(type, cb) {
-    if (this.type == DataTypes.PROP) {
-      this.data.off(type, cb);
-    }
-  }
-
-  simpleSlider() {
-    this.data.flag |= PropFlags.SIMPLE_SLIDER;
-    return this;
-  }
-
-  rollerSlider() {
-    this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
-    this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
-
-    return this;
-  }
-
-  noUnits() {
-    this.baseUnit("none");
-    this.displayUnit("none");
-    return this;
-  }
-
-  baseUnit(unit) {
-    this.data.setBaseUnit(unit);
-    return this;
-  }
-
-  displayUnit(unit) {
-    this.data.setDisplayUnit(unit);
-    return this;
-  }
-
-  range(min, max) {
-    this.data.setRange(min, max);
-    return this;
-  }
-
-  uiRange(min, max) {
-    this.data.setUIRange(min, max);
-    return this;
-  }
-
-  decimalPlaces(n) {
-    this.data.setDecimalPlaces(n);
-    return this;
-  }
-
-  expRate(exp) {
-    this.data.setExpRate(exp);
-    return this;
-  }
-
-  /**adds a slider for moving vector component sliders simultaneously*/
-  uniformSlider(state=true) {
-    this.data.uniformSlider(state);
-
-    return this;
-  }
-
-  radix(r) {
-    this.data.setRadix(r);
-    return this;
-  }
-
-  relativeStep(s) {
-    this.data.setRelativeStep(s);
-    return this;
-  }
-
-  step(s) {
-    this.data.setStep(s);
-    return this;
-  }
-
-  /**
-   *
-   * Tell DataPathSetOp to save/load entire app state for undo/redo
-   *
-   * */
-  fullSaveUndo() {
-    this.flag |= DataFlags.USE_FULL_UNDO;
-    this.data.flag |= PropFlags.USE_BASE_UNDO;
-
-    return this;
-  }
-
-  icon(i) {
-    this.data.setIcon(i);
-    return this;
-  }
-
-  icons(icons) { //for enum/flag properties
-    this.data.addIcons(icons);
-    return this;
-  }
-
-  descriptions(description_map) { //for enum/flag properties
-    this.data.addDescriptions(description_map);
-    return this;
-  }
-
-  uiNames(uinames) {
-    this.data.addUINames(uinames);
-    return this;
-  }
-
-  description(d) {
-    this.data.description = d;
-    return this;
-  }
-}
 
 export class  DataList extends ListIface {
   /**
-   Okay, this is a simple interface for the controller to access lists,
+   Okay, this is a simple interface for the controller api to access lists,
    whether it's {} object maps, [] arrays, util.set's, or whatever.
 
    In fairmotion I used a lambda-type filter system, but that was problematic as it
@@ -423,11 +224,6 @@ export class  DataList extends ListIface {
     return api.getStruct(obj.constructor);
   }
 }
-
-export const StructFlags = {
-  NO_UNDO: 1 //struct and its child structs can't participate in undo
-             //via the DataPathToolOp
-};
 
 export class DataStruct {
   constructor(members = [], name = "unnamed") {
@@ -750,7 +546,7 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 let _dummypath = new DataPath();
 
 let DummyIntProperty = new IntProperty();
-const CLS_API_KEY = "__dp_map_id";
+const CLS_API_KEY = Symbol("__dp_map_id");
 
 export class DataAPI extends ModelInterface {
   constructor() {
@@ -809,7 +605,7 @@ export class DataAPI extends ModelInterface {
     _map_structs[key] = dstruct;
   }
 
-  mapStruct(cls, auto_create = true) {
+  mapStruct(cls, auto_create = true, name=cls.name) {
     let key;
 
     if (!cls.hasOwnProperty(CLS_API_KEY)) {
@@ -819,11 +615,11 @@ export class DataAPI extends ModelInterface {
     }
 
     if (key === undefined && auto_create) {
-      let dstruct = new DataStruct(undefined, cls.name);
+      let dstruct = new DataStruct(undefined, name);
       this._addClass(cls, dstruct);
       return dstruct;
     } else if (key === undefined) {
-      throw new Error("class does not have a struct definition: " + cls.name);
+      throw new Error("class does not have a struct definition: " + name);
     }
 
     return _map_structs[key];

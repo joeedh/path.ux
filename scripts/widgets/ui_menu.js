@@ -691,6 +691,8 @@ export class DropBox extends Button {
     this._searchMenuMode = false;
     this.altKey = undefined;
 
+    this._value = 0;
+
     this._last_datapath = undefined;
 
     this.r = 5;
@@ -890,6 +892,8 @@ export class DropBox extends Button {
         callProp = !prop || prop !== this.prop;
       }
 
+      this._value = this._convertVal(id);
+
       if (callProp) {
         this.prop.setValue(id);
       }
@@ -1058,7 +1062,38 @@ export class DropBox extends Button {
     }
   }
 
+  _convertVal(val) {
+    if (typeof val === "string" && this.prop) {
+      if (val in this.prop.values) {
+        return this.prop.values[val];
+      } else if (val in this.prop.keys) {
+        return this.prop.keys[val];
+      } else {
+        return undefined;
+      }
+    }
+
+    return val;
+  }
+
+  get value() {
+    return this._value;
+  }
+
   setValue(val) {
+    if (val === undefined || val === this._value) {
+      return;
+    }
+
+    val = this._convertVal(val);
+
+    if (val === undefined) {
+      console.warn("Bad val", arguments[0]);
+      return;
+    }
+
+    this._value = val;
+
     if (this.prop !== undefined) {
       this.prop.setValue(val);
       let val2=val;
@@ -1079,7 +1114,7 @@ export class DropBox extends Button {
     }
 
     this.setCSS();
-    this.update();
+    this.updateDataPath();
     this._redraw();
   }
 

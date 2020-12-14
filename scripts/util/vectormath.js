@@ -290,6 +290,8 @@ var basic_funcs = {
   divScalar : [["b"], "this[X] / b;"],
   addScalar : [["b"], "this[X] + b;"],
   subScalar : [["b"], "this[X] - b;"],
+  minScalar : [["b"], "Math.min(this[X], b);"],
+  maxScalar : [["b"], "Math.max(this[X], b);"],
   ceil      : [[], "Math.ceil(this[X])"],
   floor     : [[], "Math.floor(this[X])"],
   abs       : [[], "Math.abs(this[X])"],

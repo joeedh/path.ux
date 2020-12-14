@@ -373,9 +373,9 @@ if (Array.prototype.remove === undefined) {
   }
 }
 
-if (String.prototype.contains == undefined) {
+if (String.prototype.contains === undefined) {
   String.prototype.contains = function(substr) {
-    return String.search(substr) != null;
+    return String.search(substr) >= 0;
   }
 }
 

@@ -626,7 +626,6 @@ export class IconCheck extends Button {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
     }
 
-    console.log("click!", this.checked);
     this._redraw();
   }
   
