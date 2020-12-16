@@ -254,14 +254,14 @@ export function buildElectronMenu(menu) {
   return emenu;
 }
 
-export function initMenuBar(menuEditor) {
+export function initMenuBar(menuEditor, override=false) {
   checkInit();
 
   if (!window.haveElectron) {
     return;
   }
 
-  if (_menu_init) {
+  if (_menu_init && !override) {
     return;
   }
 
