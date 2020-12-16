@@ -205,6 +205,20 @@ export class DataPath {
     return this;
   }
 
+  /**
+   * like other callbacks (until I refactor it),
+   * func will be called with a mysterious object that stores
+   * the following properties:
+   *
+   * this.dataref  : owning object reference
+   * this.datactx  : ctx
+   * this.datapath : datapath
+   * */
+  uiNameGetter(func) {
+    this.ui_name_get = func;
+    return this;
+  }
+
   expRate(exp) {
     this.data.setExpRate(exp);
     return this;

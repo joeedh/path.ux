@@ -143,8 +143,7 @@ export class Menu extends UIBase {
   }
 
   close() {
-    //XXX
-    //return;
+    console.warn("menu closed");
     if (this.closed) {
       return;
     }
@@ -157,9 +156,6 @@ export class Menu extends UIBase {
 
     this.started = false;
 
-    //if (this._popup.parentNode !== undefined) {
-    //  this._popup.remove();
-    //}
     if (this._popup) {
       this._popup.end();
       this._popup = undefined;
@@ -482,7 +478,11 @@ export class Menu extends UIBase {
     li.setAttribute("class", "menuitem");
 
     if (item instanceof Menu) {
-      let dom = this.addItemExtra(""+item.title, id, "", -1, false);
+      //let dom = this.addItemExtra(""+item.title, id, "", -1, false);
+      let dom = document.createElement("span");
+      dom.innerHTML = "" + item.title;
+      dom._id = dom.id = id;
+      dom.setAttribute("class", "menu")
 
       //dom = document.createElement("div");
       //dom.innerText = ""+item.title;
@@ -1305,7 +1305,6 @@ export class MenuWrangler {
   }
 
   on_mousemove(e) {
-    //XXX
     if (this.menu && this.menu.hasSearchBox) {
       this.closetimer = util.time_ms();
       return;
@@ -1325,6 +1324,11 @@ export class MenuWrangler {
       return;
     }
 
+    if (element instanceof Menu) {
+      this.closetimer = util.time_ms();
+      return;
+    }
+
     if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
       //destroy entire menu stack
       this.endMenus();
@@ -1340,7 +1344,7 @@ export class MenuWrangler {
 
     let w = element;
     while (w) {
-      if (w === this.menu) {
+      if (w instanceof Menu) {//w === this.menu) {
         ok = true;
         break;
       }
@@ -1408,6 +1412,7 @@ export function createMenu(ctx, title, templ) {
       menu.addItem(item);
     } else if (typeof item == "string") {
       let def, hotkey;
+
       try {
         def = ctx.api.getToolDef(item);
       } catch (error) {

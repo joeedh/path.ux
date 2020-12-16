@@ -714,6 +714,19 @@ export class DataAPI extends ModelInterface {
     }
 
     parserStack.cur--;
+
+    if (ret !== undefined && ret.prop && ret.dpath && ret.dpath.ui_name_get) {
+      let dummy = {
+        datactx  : ctx,
+        datapath : inpath,
+        dataref  : ret.obj
+      };
+
+      let name = ret.dpath.ui_name_get.call(dummy);
+
+      ret.prop.uiname = "" + name;
+    }
+
     return ret;
   }
 
@@ -735,6 +748,7 @@ export class DataAPI extends ModelInterface {
     let lastobj2 = undefined;
     let lastkey = undefined;
     let prop = undefined;
+    let lastdpath = undefined;
 
     function p_key() {
       let t = p.peeknext();
@@ -750,6 +764,8 @@ export class DataAPI extends ModelInterface {
     while (!p.at_end()) {
       let key = p.expect("ID");
       let dpath = dstruct.pathmap[key];
+
+      lastdpath = dpath;
 
       if (dpath === undefined) {
         if (key === "length" && prop !== undefined && prop instanceof DataList) {
@@ -1044,6 +1060,7 @@ export class DataAPI extends ModelInterface {
     }
 
     return {
+      dpath : lastdpath,
       parent: lastobj2,
       obj: lastobj,
       value: obj,
@@ -1308,16 +1325,39 @@ export class DataAPI extends ModelInterface {
     };
   }
 
+  _stripToolUIName(path, uiNameOut=undefined) {
+    if (path.search(/\|/) >= 0) {
+      if (uiNameOut) {
+        uiNameOut[0] = path.slice(path.search(/\|/)+1, path.length).trim();
+      }
+      path = path.slice(0, path.search(/\|/)).trim();
+    }
+
+    return path.trim();
+  }
+
   getToolDef(path) {
+    let uiname = [undefined];
+
+    path = this._stripToolUIName(path, uiname);
+    uiname = uiname[0];
+
     let cls = this.parseToolPath(path);
     if (cls === undefined) {
       throw new DataPathError("unknown path \"" + path + "\"");
     }
 
-    return cls.tooldef();
+    let def = cls.tooldef();
+    if (uiname) {
+      def.uiname = uiname;
+    }
+
+    return def;
   }
 
   getToolPathHotkey(ctx, path) {
+    path = this._stripToolUIName(path);
+
     try {
       return this.getToolPathHotkey_intern(ctx, path);
     } catch (error) {
@@ -1330,6 +1370,7 @@ export class DataAPI extends ModelInterface {
 
   getToolPathHotkey_intern(ctx, path) {
     let screen = ctx.screen;
+    let this2 = this;
 
     function searchKeymap(keymap) {
       if (keymap === undefined) {
@@ -1337,7 +1378,12 @@ export class DataAPI extends ModelInterface {
       }
 
       for (let hk of keymap) {
-        if (typeof hk.action == "string" && hk.action == path) {
+        if (typeof hk.action !== "string") {
+          continue;
+        }
+
+        let tool = this2._stripToolUIName(hk.action);
+        if (tool === path) {
           return hk.buildString();
         }
       }

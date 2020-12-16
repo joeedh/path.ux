@@ -645,21 +645,22 @@ export class Container extends ui_base.UIBase {
     return child;
   }
 
-  /*
-  .menu([
-    "some_tool_path.tool",
-    ui_widgets.Menu.SEP,
-    "some_tool_path.another_tool",
-    ["Name", () => {console.log("do something")}]
-  ])
-  */
-
   //TODO: make sure this works on Electron?
   dynamicMenu(title, list, packflag=0) {
     //actually, .menu works for now
     return this.menu(title, list, packflag);
   }
 
+  /**example usage:
+
+   .menu([
+     "some_tool_path.tool()|CustomLabel",
+     ui_widgets.Menu.SEP,
+     "some_tool_path.another_tool()",
+     ["Name", () => {console.log("do something")}]
+   ])
+
+   **/
   menu(title, list, packflag = 0) {
     let dbox = UIBase.createElement("dropbox-x");
 
