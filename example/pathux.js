@@ -19403,6 +19403,20 @@ class DataPath {
     return this;
   }
 
+  /**
+   * like other callbacks (until I refactor it),
+   * func will be called with a mysterious object that stores
+   * the following properties:
+   *
+   * this.dataref  : owning object reference
+   * this.datactx  : ctx
+   * this.datapath : datapath
+   * */
+  uiNameGetter(func) {
+    this.ui_name_get = func;
+    return this;
+  }
+
   expRate(exp) {
     this.data.setExpRate(exp);
     return this;
@@ -22395,6 +22409,19 @@ class DataAPI extends ModelInterface {
     }
 
     parserStack.cur--;
+
+    if (ret !== undefined && ret.prop && ret.dpath && ret.dpath.ui_name_get) {
+      let dummy = {
+        datactx  : ctx,
+        datapath : inpath,
+        dataref  : ret.obj
+      };
+
+      let name = ret.dpath.ui_name_get.call(dummy);
+
+      ret.prop.uiname = "" + name;
+    }
+
     return ret;
   }
 
@@ -22416,6 +22443,7 @@ class DataAPI extends ModelInterface {
     let lastobj2 = undefined;
     let lastkey = undefined;
     let prop = undefined;
+    let lastdpath = undefined;
 
     function p_key() {
       let t = p.peeknext();
@@ -22431,6 +22459,8 @@ class DataAPI extends ModelInterface {
     while (!p.at_end()) {
       let key = p.expect("ID");
       let dpath = dstruct.pathmap[key];
+
+      lastdpath = dpath;
 
       if (dpath === undefined) {
         if (key === "length" && prop !== undefined && prop instanceof DataList) {
@@ -22725,6 +22755,7 @@ class DataAPI extends ModelInterface {
     }
 
     return {
+      dpath : lastdpath,
       parent: lastobj2,
       obj: lastobj,
       value: obj,
@@ -22989,16 +23020,39 @@ class DataAPI extends ModelInterface {
     };
   }
 
+  _stripToolUIName(path, uiNameOut=undefined) {
+    if (path.search(/\|/) >= 0) {
+      if (uiNameOut) {
+        uiNameOut[0] = path.slice(path.search(/\|/)+1, path.length).trim();
+      }
+      path = path.slice(0, path.search(/\|/)).trim();
+    }
+
+    return path.trim();
+  }
+
   getToolDef(path) {
+    let uiname = [undefined];
+
+    path = this._stripToolUIName(path, uiname);
+    uiname = uiname[0];
+
     let cls = this.parseToolPath(path);
     if (cls === undefined) {
       throw new DataPathError("unknown path \"" + path + "\"");
     }
 
-    return cls.tooldef();
+    let def = cls.tooldef();
+    if (uiname) {
+      def.uiname = uiname;
+    }
+
+    return def;
   }
 
   getToolPathHotkey(ctx, path) {
+    path = this._stripToolUIName(path);
+
     try {
       return this.getToolPathHotkey_intern(ctx, path);
     } catch (error) {
@@ -23011,6 +23065,7 @@ class DataAPI extends ModelInterface {
 
   getToolPathHotkey_intern(ctx, path) {
     let screen = ctx.screen;
+    let this2 = this;
 
     function searchKeymap(keymap) {
       if (keymap === undefined) {
@@ -23018,7 +23073,12 @@ class DataAPI extends ModelInterface {
       }
 
       for (let hk of keymap) {
-        if (typeof hk.action == "string" && hk.action == path) {
+        if (typeof hk.action !== "string") {
+          continue;
+        }
+
+        let tool = this2._stripToolUIName(hk.action);
+        if (tool === path) {
           return hk.buildString();
         }
       }
@@ -24174,7 +24234,7 @@ const PackFlags = {
   SIMPLE_NUMSLIDERS : 2048,
   FORCE_ROLLER_SLIDER : 4096,
   HIDE_CHECK_MARKS : (1<<13),
-  NO_NUMSLIDER_TEXTBOX : (1<<14)
+  NO_NUMSLIDER_TEXTBOX : (1<<14),
 };
  
 let first$1 = (iter) => {
@@ -28182,8 +28242,7 @@ class Menu extends UIBase$6 {
   }
 
   close() {
-    //XXX
-    //return;
+    console.warn("menu closed");
     if (this.closed) {
       return;
     }
@@ -28196,9 +28255,6 @@ class Menu extends UIBase$6 {
 
     this.started = false;
 
-    //if (this._popup.parentNode !== undefined) {
-    //  this._popup.remove();
-    //}
     if (this._popup) {
       this._popup.end();
       this._popup = undefined;
@@ -28521,7 +28577,11 @@ class Menu extends UIBase$6 {
     li.setAttribute("class", "menuitem");
 
     if (item instanceof Menu) {
-      let dom = this.addItemExtra(""+item.title, id, "", -1, false);
+      //let dom = this.addItemExtra(""+item.title, id, "", -1, false);
+      let dom = document.createElement("span");
+      dom.innerHTML = "" + item.title;
+      dom._id = dom.id = id;
+      dom.setAttribute("class", "menu");
 
       //dom = document.createElement("div");
       //dom.innerText = ""+item.title;
@@ -29344,7 +29404,6 @@ class MenuWrangler {
   }
 
   on_mousemove(e) {
-    //XXX
     if (this.menu && this.menu.hasSearchBox) {
       this.closetimer = time_ms();
       return;
@@ -29364,6 +29423,11 @@ class MenuWrangler {
       return;
     }
 
+    if (element instanceof Menu) {
+      this.closetimer = time_ms();
+      return;
+    }
+
     if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
       //destroy entire menu stack
       this.endMenus();
@@ -29379,7 +29443,7 @@ class MenuWrangler {
 
     let w = element;
     while (w) {
-      if (w === this.menu) {
+      if (w instanceof Menu) {//w === this.menu) {
         ok = true;
         break;
       }
@@ -29447,6 +29511,7 @@ function createMenu(ctx, title, templ) {
       menu.addItem(item);
     } else if (typeof item == "string") {
       let def, hotkey;
+
       try {
         def = ctx.api.getToolDef(item);
       } catch (error) {
@@ -30159,21 +30224,22 @@ class Container extends UIBase$2 {
     return child;
   }
 
-  /*
-  .menu([
-    "some_tool_path.tool",
-    ui_widgets.Menu.SEP,
-    "some_tool_path.another_tool",
-    ["Name", () => {console.log("do something")}]
-  ])
-  */
-
   //TODO: make sure this works on Electron?
   dynamicMenu(title, list, packflag=0) {
     //actually, .menu works for now
     return this.menu(title, list, packflag);
   }
 
+  /**example usage:
+
+   .menu([
+     "some_tool_path.tool()|CustomLabel",
+     ui_widgets.Menu.SEP,
+     "some_tool_path.another_tool()",
+     ["Name", () => {console.log("do something")}]
+   ])
+
+   **/
   menu(title, list, packflag = 0) {
     let dbox = UIBase$7.createElement("dropbox-x");
 
