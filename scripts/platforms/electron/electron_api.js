@@ -16,6 +16,8 @@ import {Menu, DropBox} from '../../widgets/ui_menu.js';
 import {getIconManager} from "../../core/ui_base.js";
 import cconst from "../../config/const.js";
 
+import {FileDialogArgs, FilePath} from '../platform_base.js';
+
 let _menu_init = false;
 let _init = false;
 
@@ -342,4 +344,92 @@ export function initMenuBar(menuEditor, override=false) {
 
   ElectronMenu.setApplicationMenu(menu);
   //win.setMenu(menu);
+}
+
+import {PlatformAPI, isMimeText} from '../platform_base.js';
+
+export class platform extends PlatformAPI {
+  static showOpenDialog(title, args = new FileDialogArgs()) {
+    const {dialog} = require('electron').remote
+
+    console.log(args.filters);
+
+    let eargs = {
+      defaultPath: args.defaultPath,
+      filters    : args.filters,
+      properties : [
+        "openFile", "showHiddenFiles", "createDirectory"
+      ]
+    }
+
+    if (args.multi) {
+      eargs.properties.push("multiSelections");
+    }
+
+    if (!args.addToRecentList) {
+      eargs.properties.push("dontAddToRecent");
+    }
+
+    return new Promise((accept, reject) => {
+      dialog.showOpenDialog(undefined, eargs).then((ret) => {
+        if (ret.canceled) {
+          reject("cancel");
+        } else {
+          accept(ret.filePaths.map(f => new FilePath(f)));
+        }
+      });
+    });
+  }
+
+  static showSaveDialog(title, filedata, args = new FileDialogArgs()) {
+    const {dialog} = require('electron').remote
+
+    console.log(args.filters);
+
+    let eargs = {
+      defaultPath: args.defaultPath,
+      filters    : args.filters,
+      properties : [
+        "openFile", "showHiddenFiles", "createDirectory"
+      ]
+    }
+
+    if (args.multi) {
+      eargs.properties.push("multiSelections");
+    }
+
+    if (!args.addToRecentList) {
+      eargs.properties.push("dontAddToRecent");
+    }
+
+    return new Promise((accept, reject) => {
+      dialog.showSaveDialog(undefined, eargs).then((ret) => {
+        if (ret.canceled) {
+          reject("cancel");
+        } else {
+          let path = ret.filePath;
+
+          if (filedata instanceof ArrayBuffer) {
+            filedata = new Uint8Array(filedata);
+          }
+
+          require('fs').writeFileSync(path, filedata);
+          console.log("saved file", filedata);
+          accept(path);
+        }
+      });
+    });
+  }
+
+  static readFile(path, mime) {
+    return new Promise((accept, reject) => {
+      let fs = require('fs');
+
+      if (isMimeText(mime)) {
+        accept(fs.readFileSync(path.data, "utf8"));
+      } else {
+        accept(fs.readFileSync(path.data).buffer);
+      }
+    });
+  }
 }
