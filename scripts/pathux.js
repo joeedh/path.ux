@@ -13,6 +13,7 @@ export * from './widgets/ui_colorpicker2.js';
 export * from './widgets/ui_tabs.js';
 export * from './widgets/ui_listbox.js';
 export * from './widgets/ui_menu.js';
+export * from './widgets/ui_progress.js';
 export * from './widgets/ui_table.js';
 export * from './widgets/ui_noteframe.js';
 export * from './widgets/ui_numsliders.js';

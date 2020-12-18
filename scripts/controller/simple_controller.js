@@ -522,6 +522,18 @@ export class DataStruct {
     this.members.remove(m);
   }
 
+  fromToolProp(path, prop, apiname) {
+    if (apiname === undefined) {
+      apiname = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : k;
+    }
+
+    let dpath = new DataPath(path, apiname, prop);
+
+    this.add(dpath);
+
+    return dpath;
+  }
+
   add(m) {
     if (m.apiname in this.pathmap) {
 
