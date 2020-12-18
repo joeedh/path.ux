@@ -1,40 +1,18 @@
-let colormap = {
-  black   : 30,
-  red     : 31,
-  green   : 32,
-  yellow  : 33,
-  blue    : 34,
-  magenta : 35,
-  cyan    : 36,
-  white   : 37,
-  reset   : 0
-};
-
-function termColor(s, color = colormap.reset) {
-  if (typeof color === "string") {
-    color = colormap[color] || colormap.reset;
-  }
-
-  return `\u001b[${color}m${s}\u001b[0m`;
-}
-
-const url = require('url');
 const PORT = 5002;
 const HOST = "localhost"
 
-const rpc = require('./rpc.js')
+import * as rpc from './rpc.js';
 
 const debug_prevent_default = false;
 const debug_disable_all_listeners = false;
 const debug_listeners = false; //parse code with babel and activates functionaltiy in scripts/util/polyfill.js
 
-const net = require('net');
-const fs = require('fs');
-const http = require('http');
-const path = require('path');
+import fs from 'fs';
+import http from 'http';
+import path from 'path';
 
-const INDEX = "index.html";
-const basedir = process.cwd();
+const INDEX = "servers/index.html";
+const BASEDIR = path.resolve(process.cwd() + "/../");
 
 let mimemap = {
   ".js" : "application/javascript",
@@ -67,6 +45,26 @@ let getMime = (p) => {
   return "text/plain";
 }
 
+let colormap = {
+  black   : 30,
+  red     : 31,
+  green   : 32,
+  yellow  : 33,
+  blue    : 34,
+  magenta : 35,
+  cyan    : 36,
+  white   : 37,
+  reset   : 0
+};
+
+function termColor(s, color = colormap.reset) {
+  if (typeof color === "string") {
+    color = colormap[color] || colormap.reset;
+  }
+
+  return `\u001b[${color}m${s}\u001b[0m`;
+}
+
 function disablePreventDefault(buf) {
   let lines = buf.split("\n");
   let out = "";
@@ -88,7 +86,7 @@ function disablePreventDefault(buf) {
   return out;
 }
 
-exports.ServerResponse = class ServerResponse extends http.ServerResponse {
+export class ServerResponse extends http.ServerResponse {
   _addHeaders() {
     this.setHeader("X-Content-Type-Options", "nosniff");
     this.setHeader("Access-Control-Allow-Origin", "*");
@@ -114,7 +112,7 @@ exports.ServerResponse = class ServerResponse extends http.ServerResponse {
 }
 
 const serv = http.createServer({
-  ServerResponse : exports.ServerResponse
+  ServerResponse
 }, (req, res) => {
   let p = req.url.trim();
   
@@ -159,14 +157,14 @@ const serv = http.createServer({
 
   console.log(termColor(req.method, "green"), p);
   
-  if (p == "/") {
+  if (p === "/") {
     p += INDEX
   }
   
   let relpath = p;
   
-  p = path.normalize(basedir + p);
-  if (p.search(/\.\./) >= 0 || !p.startsWith(basedir)) {
+  p = path.normalize(BASEDIR + p);
+  if (p.search(/\.\./) >= 0 || !p.startsWith(BASEDIR)) {
     //normalize failed
     return res.sendError(500, "malformed path");
   }

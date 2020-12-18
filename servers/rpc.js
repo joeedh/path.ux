@@ -1,14 +1,15 @@
-let docsys = require('./simple_docsys/docsys.js');
-let docsysConfig = docsys.readConfig("./simple_docsys/docs.config.js");
+import * as docsys from '../simple_docsys/docsys.js';
 
-exports.rpcMethods = {
+let docsysConfig = docsys.readConfig("../simple_docsys/docs.config.js");
+
+export const rpcMethods = {
   updateDoc : docsysConfig.updateDoc.bind(docsysConfig),
   newDoc : docsysConfig.newDoc.bind(docsysConfig),
   hasDoc : docsysConfig.hasDoc.bind(docsysConfig),
   uploadImage : docsysConfig.uploadImage.bind(docsysConfig)
 };
 
-exports.handle = function(method, args) {
+export function handle(method, args) {
   method = method.trim();
 
   return new Promise((accept, reject) => {

@@ -1,24 +1,26 @@
-let marked = require('marked');
-let fs = require('fs');
-let pathmod = require('path');
-let jsdiff = require('diff');
-let parse5 = require("parse5");
+import marked from 'marked';
+import fs from 'fs';
+import pathmod from 'path';
+import * as jsdiff from 'diff';
+import parse5 from 'parse5';
 
-Array.prototype.remove = function(item) {
-  let i = this.indexOf(item);
+if (!Array.prototype.remove) {
+  Array.prototype.remove = function (item) {
+    let i = this.indexOf(item);
 
-  if (i < 0) {
-    item = typeof item === "symbol" ? item.toString() : "" + item;
-    throw new Error("item " + item + " is not in array");
+    if (i < 0) {
+      item = typeof item === "symbol" ? item.toString() : "" + item;
+      throw new Error("item " + item + " is not in array");
+    }
+
+    while (i < this.length) {
+      this[i] = this[i + 1];
+      i++;
+    }
+
+    this.length--;
+    return this;
   }
-
-  while (i < this.length) {
-    this[i] = this[i+1];
-    i++;
-  }
-
-  this.length--;
-  return this;
 }
 
 function walkDir(path, cb) {
@@ -952,7 +954,7 @@ let normpath = (p) => {
   return pathmod.resolve(p).replace(/\\/g, "/").trim();
 }
 
-let readConfig = exports.readConfig = function(path) {
+export function readConfig(path) {
   let cwd = normpath(process.cwd())
   let base = pathmod.dirname(normpath(path))
   base = "./" + pathmod.relative(cwd, base).replace(/\\/g, "/");
@@ -971,7 +973,6 @@ let readConfig = exports.readConfig = function(path) {
 
   eval(buf);
 
-  console.log(config);
   config = new DocsConfig(config);
 
   config.basePath = normpath(rebasePath(config.basePath));
@@ -980,15 +981,9 @@ let readConfig = exports.readConfig = function(path) {
   config.gen = new DocGenerator(config);
 
   config.initCache();
-
-  console.log(config.basePath);
-  console.log(config.outPath, config.cssPath)
   config.loadCSS();
 
   path = pathmod.resolve(config.basePath + "/../")
-  console.log(path);
-  //console.log(pathmod, pathmod.relative(config.basePath, path))
-  console.log(config.basePath)
 
   walkDir(config.basePath, (root, dir, files) => {
     root = config.basePath + "/" + root
@@ -997,10 +992,9 @@ let readConfig = exports.readConfig = function(path) {
         f = normpath(root + "/" + f);
         f = pathmod.relative(config.basePath, f).replace(/\\/g, "/").trim();
 
-        d = new Document();
+        let d = new Document();
         d.path = normpath(f);
         d.relpath = d.path.slice(config.basePath.length, d.path.length);
-        console.log(d.relpath)
         config.docs.push(d);
       }
     }

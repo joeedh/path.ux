@@ -13320,15 +13320,15 @@ for (var i$1=0; i$1<10; i$1++) {
   keymap_latin_1[String.fromCharCode(i$1+48)] = i$1+48;
 }
 
-for (var k in keymap_latin_1) {
-  if (!(k in keymap_latin_1)) {
-    keymap_latin_1[keymap_latin_1[k]] = k;
+for (var k$1 in keymap_latin_1) {
+  if (!(k$1 in keymap_latin_1)) {
+    keymap_latin_1[keymap_latin_1[k$1]] = k$1;
   }
 }
 
 var keymap_latin_1_rev = {};
-for (var k in keymap_latin_1) {
-  keymap_latin_1_rev[keymap_latin_1[k]] = k;
+for (var k$1 in keymap_latin_1) {
+  keymap_latin_1_rev[keymap_latin_1[k$1]] = k$1;
 }
 
 var keymap = keymap_latin_1;
@@ -22215,6 +22215,18 @@ class DataStruct {
 
     delete this.pathmap[m.apiname];
     this.members.remove(m);
+  }
+
+  fromToolProp(path, prop, apiname) {
+    if (apiname === undefined) {
+      apiname = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : k;
+    }
+
+    let dpath = new DataPath(path, apiname, prop);
+
+    this.add(dpath);
+
+    return dpath;
   }
 
   add(m) {
@@ -36258,6 +36270,203 @@ class ListBox extends Container {
 }
 UIBase$d.internalRegister(ListBox);
 
+class ProgressCircle extends UIBase$2 {
+  constructor() {
+    super();
+
+    this.canvas = document.createElement("canvas");
+    this.g = this.canvas.getContext("2d");
+
+    this.shadow.appendChild(this.canvas);
+    this.size = 150;
+    this.animreq = undefined;
+    this._value = 0.0;
+    this.startTime = time_ms();
+  }
+
+  init() {
+    super.init();
+    this.flagRedraw();
+    this.update();
+  }
+
+  flagRedraw() {
+    if (this.animreq !== undefined) {
+      return;
+    }
+
+    this.animreq = requestAnimationFrame(() => {
+      this.animreq = undefined;
+      this.draw();
+    });
+  }
+
+  draw() {
+    console.log("draw!");
+    let c = this.canvas, g = this.g;
+
+    let clr1 = "rgb(68,69,83)";
+    let clr2 = "rgb(141,154,196)";
+    let clr3 = "rgb(214,110,54)";
+
+    let t = (time_ms() - this.startTime) / 1000.0;
+
+    g.save();
+    g.clearRect(0, 0, c.width, c.height);
+
+    g.lineWidth /= c.width*0.5;
+    g.scale(c.width, c.height);
+    g.translate(0.5, 0.5);
+
+    g.fillStyle = clr2;
+    g.strokeStyle = clr1;
+
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.arc(0, 0, 0.45, Math.PI, -Math.PI);
+    //g.closePath()
+
+    g.moveTo(0, 0);
+    g.arc(0, 0, 0.2, Math.PI, -Math.PI);
+    //g.closePath()
+
+    g.clip("evenodd");
+
+    g.beginPath();
+    g.arc(0, 0, 0.45, -Math.PI, Math.PI);
+    g.fill();
+    g.stroke();
+
+    g.beginPath();
+    g.arc(0, 0, 0.2, Math.PI, -Math.PI);
+    g.stroke();
+
+    g.beginPath();
+
+    let th = this._value*Math.PI*2.0;
+
+    let steps = 12;
+    let dth = (Math.PI*2.0) / steps;
+    let lwid = g.lineWidth;
+    g.lineWidth *= 3;
+
+    for (let i=0; i<steps; i++) {
+      let th1 = i * dth;
+      th1 += t;
+
+      let r1 = 0.2;
+      let r2 = 0.45;
+      let th2 = th1 + dth*0.5;
+
+      g.beginPath();
+      g.moveTo(Math.cos(th1)*r1, Math.sin(th1)*r1);
+      g.lineTo(Math.cos(th2)*r2, Math.sin(th2)*r2);
+      g.strokeStyle = "rgba(255,255,255,0.5)";
+      g.stroke();
+    }
+
+    g.lineWidth = lwid;
+
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.arc(0, 0, 0.4, Math.PI, -Math.PI);
+    //g.closePath()
+
+    g.clip("evenodd");
+
+    g.beginPath();
+    g.fillStyle = clr3;
+    g.moveTo(0, 0);
+    g.arc(0, 0, 0.45, 0, th);
+    g.lineTo(0, 0);
+    g.fill();
+
+    g.strokeStyle = "rgb(141,154,196)";
+    g.stroke();
+
+    g.restore();
+    this._value += 0.1;
+  }
+
+  set value(percent) {
+    this._value = percent;
+    this.flagRedraw();
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  startTimer() {
+    if (this.timer !== undefined) {
+      return;
+    }
+
+    window.setInterval(() => {
+      if (!this.isConnected) {
+        this.endTimer();
+        return;
+      }
+
+      this.flagRedraw();
+    }, 50);
+  }
+
+  endTimer() {
+    if (this.timer !== undefined) {
+      window.clearInterval(this.timer);
+    }
+    this.timer = undefined;
+  }
+
+  update() {
+    if (!this.isConnected && this.timer) {
+      this.endTimer();
+    }
+
+    let size = ~~(this.size*UIBase$2.getDPI());
+
+    if (size !== this.canvas.width) {
+      this.setCSS();
+    }
+  }
+
+  setCSS() {
+    let c = this.canvas;
+
+    let size = ~~(this.size*UIBase$2.getDPI());
+
+    if (c.width !== size) {
+      c.width = c.height = size;
+
+      size /= UIBase$2.getDPI();
+      c.style["width"] = size + "px";
+      c.style["height"] = size + "px";
+
+      c.style["display"] = "flex";
+
+      this.style["width"] = size + "px";
+      this.style["height"] = size + "px";
+
+      //forcibly redraw in this case, do not queue with flagRedraw
+      this.draw();
+    }
+
+    this.style["display"] = "flex";
+    this.style["align-items"] = "center";
+    this.style["justify-content"] = "center";
+    this.style["width"] = "100%";
+    this.style["height"] = "100%";
+  }
+
+  static define() {
+    return {
+      tagname : "progress-circle-x"
+    }
+  }
+}
+UIBase$2.register(ProgressCircle);
+
 let UIBase$e = UIBase$2;
 
 class Note extends UIBase$2 {
@@ -38831,6 +39040,63 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   }
 }
 
+var textMimes = new Set([
+  "application-javascript", "application-x-javscript",
+  "image/svg+xml"
+]);
+
+function isMimeText(mime) {
+  if (!mime) {
+    return false;
+  }
+  if (mime.startsWith("text")) {
+    return true;
+  }
+
+  return textMimes.has(mime);
+}
+
+class PlatformAPI {
+  //returns a promise
+  static showOpenDialog(title, args=new FileDialogArgs()) {
+    throw new Error("implement me");
+  }
+
+  //returns a promise
+  static showSaveDialog(title, savedata, args=new FileDialogArgs()) {
+    throw new Error("implement me");
+  }
+
+  //returns a promise.  if mime is a text type, a string will be fed to the promise,
+  //otherwise it will be an ArrayBuffer
+  static readFile(path, mime) {
+    throw new Error("implement me");
+  }
+}
+
+class FileDialogArgs {
+  constructor() {
+    this.multi = false; //allow selecting multiple files
+    this.addToRecentList = false; //update recent file list
+
+    /* example for filters:
+    [{
+      name : "Images",
+      mime : "image/png"
+      extensions : "["png", "jpg"]
+    }]
+    * */
+    this.filters = [];
+  }
+}
+
+/*a file path, some platforms may not return real payhs*/
+class FilePath {
+  constructor(data) {
+    this.data = data;
+  }
+}
+
 "use strict";
 
 /*
@@ -39083,14 +39349,14 @@ function buildElectronMenu(menu) {
   return emenu;
 }
 
-function initMenuBar(menuEditor) {
+function initMenuBar(menuEditor, override=false) {
   checkInit();
 
   if (!window.haveElectron) {
     return;
   }
 
-  if (_menu_init) {
+  if (_menu_init && !override) {
     return;
   }
 
@@ -39173,6 +39439,92 @@ function initMenuBar(menuEditor) {
   //win.setMenu(menu);
 }
 
+class platform extends PlatformAPI {
+  static showOpenDialog(title, args = new FileDialogArgs()) {
+    const {dialog} = require('electron').remote;
+
+    console.log(args.filters);
+
+    let eargs = {
+      defaultPath: args.defaultPath,
+      filters    : args.filters,
+      properties : [
+        "openFile", "showHiddenFiles", "createDirectory"
+      ]
+    };
+
+    if (args.multi) {
+      eargs.properties.push("multiSelections");
+    }
+
+    if (!args.addToRecentList) {
+      eargs.properties.push("dontAddToRecent");
+    }
+
+    return new Promise((accept, reject) => {
+      dialog.showOpenDialog(undefined, eargs).then((ret) => {
+        if (ret.canceled) {
+          reject("cancel");
+        } else {
+          accept(ret.filePaths.map(f => new FilePath(f)));
+        }
+      });
+    });
+  }
+
+  static showSaveDialog(title, filedata, args = new FileDialogArgs()) {
+    const {dialog} = require('electron').remote;
+
+    console.log(args.filters);
+
+    let eargs = {
+      defaultPath: args.defaultPath,
+      filters    : args.filters,
+      properties : [
+        "openFile", "showHiddenFiles", "createDirectory"
+      ]
+    };
+
+    if (args.multi) {
+      eargs.properties.push("multiSelections");
+    }
+
+    if (!args.addToRecentList) {
+      eargs.properties.push("dontAddToRecent");
+    }
+
+    return new Promise((accept, reject) => {
+      dialog.showSaveDialog(undefined, eargs).then((ret) => {
+        if (ret.canceled) {
+          reject("cancel");
+        } else {
+          let path = ret.filePath;
+
+          if (filedata instanceof ArrayBuffer) {
+            filedata = new Uint8Array(filedata);
+          }
+
+          require('fs').writeFileSync(path, filedata);
+          console.log("saved file", filedata);
+          accept(path);
+        }
+      });
+    });
+  }
+
+  static readFile(path, mime) {
+    return new Promise((accept, reject) => {
+      let fs = require('fs');
+
+      if (isMimeText(mime)) {
+        accept(fs.readFileSync(path.data, "utf8"));
+      } else {
+        accept(fs.readFileSync(path.data).buffer);
+      }
+    });
+  }
+}
+
 var electron_api1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   checkInit: checkInit,
@@ -39180,7 +39532,8 @@ var electron_api1 = /*#__PURE__*/Object.freeze({
   getNativeIcon: getNativeIcon,
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
-  initMenuBar: initMenuBar
+  initMenuBar: initMenuBar,
+  platform: platform
 });
 
 "use strict";
@@ -47168,5 +47521,5 @@ const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
 const cconst$1 = exports$1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, buildToolSysAPI, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty$1 as isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, buildToolSysAPI, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty$1 as isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, platform, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
 //# sourceMappingURL=pathux.js.map
