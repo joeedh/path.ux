@@ -1,6 +1,6 @@
 import json, sys
 
-file = open("package.json", "r")
+file = open("../package.json", "r")
 buf = file.read()
 file.close()
 

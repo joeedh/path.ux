@@ -1,12 +1,29 @@
 #!python3
 import os, os.path, sys, subprocess, time, math, random
 
+
+SIZES = [16, 24, 32, 40, 48, 50, 64, 80, 128]
+
 SHARPEN = True
 SVG_SIZE = 512
 SVG_DIVISIONS = 16
 OUTPUT_HEIGHT_SCALE = 0.5
 
-#sys.exit(0)
+BASEPATH="../assets"
+
+if len(sys.argv) > 1:
+  BASEPATH = sys.argv[1]
+
+def np(path):
+  return os.path.abspath(os.path.normpath(path))
+
+start_dir = os.getcwd()
+basepath = np(BASEPATH)
+
+basepath = np(BASEPATH)
+if not basepath.endswith(os.path.sep):
+    basepath += os.path.sep
+
 sep = os.path.sep
 
 env = os.environ
@@ -14,10 +31,7 @@ if "INKSCAPE_PATH" in env:
   inkscape_path = env["INKSCAPE_PATH"]
 else:
   inkscape_path = None
-  
-def np(path):
-  return os.path.abspath(os.path.normpath(path))
-  
+
 def find(old, path):
   path = np(path)
   
@@ -138,21 +152,14 @@ def sharpen_iconsheets(paths):
         sys.stdout.flush();
         im.save(f)
 
-sizes = [16, 24, 32, 40, 50, 64, 80, 128]
 paths = []
-
-start_dir = os.getcwd()
-basepath = "./"
-dir = np(os.getcwd())
-if not dir.endswith(os.path.sep):
-    dir += os.path.sep
-dir += basepath
 
 
 def main():
-  os.chdir(dir)
+  os.chdir(basepath)
+  print(basepath)
 
-  for s in sizes:
+  for s in SIZES:
       if have_pillow and SHARPEN: #render twice as big for downsampling
           dimen = s*SVG_DIVISIONS*oversample_fac
       else:
@@ -176,7 +183,8 @@ def main():
             cmd = [inkscape_path, "-C", "-e"+fname, "-w %i"%dimen, "-h %i"%height, "-z", "--export-area=%i:%i:%i:%i" % (x1,y1,x2,y2), f]
 
         print("- " + gen_cmdstr(cmd))
-        sys.stdout.flush();
+        sys.stdout.flush()
+        sys.stderr.flush()
 
         subprocess.call(cmd)
 

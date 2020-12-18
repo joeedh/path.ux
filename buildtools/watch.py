@@ -8,7 +8,7 @@ import time
 while 1:
     build = False
     files2 = []
-    for root, dir, files in os.walk('./scripts'):
+    for root, dir, files in os.walk('../scripts'):
         for f in files:
             if not f.lower().endswith(".js"): continue
             f = os.path.join(root, f)

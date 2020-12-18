@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#ensure we're in right working directory
+if [ ! -d "./buildtools" ]
+then
+cd ..
+fi
+
 VERSION=`cat package.json | grep version | sed 's/[" :,]//g' | sed 's/version//'`
 
 git commit -a
