@@ -21,6 +21,7 @@ export * from './widgets/ui_lasttool.js';
 export * from './widgets/ui_textbox.js';
 export * from './path-controller/util/graphpack.js';
 
+export * from './path-controller/util/html5_fileapi.js';
 export * from './path-controller/controller.js';
 
 import * as controller1 from './path-controller/controller.js';
