@@ -5,6 +5,7 @@ export * from './core/ui.js';
 export * from './widgets/ui_widgets.js';
 export * from './widgets/ui_widgets2.js';
 export * from './core/ui_theme.js';
+export * from './core/units.js';
 export * from './widgets/ui_button.js';
 export * from './widgets/ui_richedit.js';
 export * from './widgets/ui_curvewidget.js';

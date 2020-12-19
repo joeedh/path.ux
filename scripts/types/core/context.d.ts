@@ -1,11 +1,11 @@
 export as namespace context;
 
-import {ModalInterface} from "./ui_base";
+import {DataAPI} from '../path-controller/controller_base';
 
 interface Context {
     state     : any;
     toolstack : any;
-    api       : ModalInterface;
+    api       : DataAPI;
 
     //report(message : string, delayMs : number);
 
