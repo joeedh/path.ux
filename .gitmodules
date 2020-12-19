@@ -1,0 +1,3 @@
+[submodule "scripts/path-controller"]
+	path = scripts/path-controller
+	url = https://github.com/joeedh/path-controller.git

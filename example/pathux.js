@@ -12666,81 +12666,6 @@ ${indent}})`;
 }
 window._exportTheme = exportTheme;
 
-"use strict";
-
-/*
-Icons are defined in spritesheets that live in
-the iconsheet16/32 dom nodes.  Icons are numbered start from
-the upper left sprite tile.
-
-This function sets the mapping between icon numbers and names.
-
-The following icons should be in the icon sheet and in this map:
-
-RESIZE      :
-SMALL_PLUS  :
-TRANSLATE   : for moving things
-UI_EXPAND   : panel open icon
-UI_COLLAPSE : panel close icon
-NOTE_EXCL   : exclamation mark for notifications
-*/
-function setIconMap(icons) {
-  for (let k in icons) {
-    Icons[k] = icons[k];
-  }
-}
-
-let Icons = {
-  HFLIP          : 0,
-  TRANSLATE      : 1,
-  ROTATE         : 2,
-  HELP_PICKER    : 3,
-  UNDO           : 4,
-  REDO           : 5,
-  CIRCLE_SEL     : 6,
-  BACKSPACE      : 7,
-  LEFT_ARROW     : 8,
-  RIGHT_ARROW    : 9,
-  UI_EXPAND      : 10, //triangle
-  UI_COLLAPSE    : 11, //triangle
-  FILTER_SEL_OPS : 12,
-  SCROLL_DOWN    : 13,
-  SCROLL_UP      : 14,
-  NOTE_EXCL      : 15,
-  TINY_X         : 16,
-  FOLDER         : 17,
-  FILE           : 18,
-  SMALL_PLUS     : 19,
-  SMALL_MINUS    : 20,
-  MAKE_SEGMENT   : 21,
-  MAKE_POLYGON   : 22,
-  FACE_MODE      : 23,
-  EDGE_MODE      : 24,
-  VERT_MODE      : 25,
-  CURSOR_ARROW   : 26,
-  TOGGLE_SEL_ALL : 27,
-  DELETE         : 28,
-  RESIZE         : 29,
-  Z_UP           : 30,
-  Z_DOWN         : 31,
-  SPLIT_EDGE     : 32,
-  SHOW_ANIMPATHS : 33,
-  UNCHECKED      : 34,
-  CHECKED        : 35,
-  ENUM_UNCHECKED : 36,
-  ENUM_CHECKED   : 37,
-  APPEND_VERTEX  : 38,
-  LARGE_CHECK    : 39,
-  BOLD           : 40,
-  ITALIC         : 41,
-  UNDERLINE      : 42,
-  STRIKETHRU     : 43,
-  TREE_EXPAND    : 44,
-  TREE_COLLAPSE  : 45,
-  ZOOM_OUT       : 46,
-  ZOOM_IN        : 47
-};
-
 let modalstack = [];
 let singleMouseCBs = {};
 
@@ -14736,6 +14661,8 @@ class BSplineCurve extends CurveTypeData {
       this.redraw();
     };
 
+    let Icons = row.constructor.getIconEnum();
+    
     row.iconbutton(Icons.TINY_X, "Delete Point", () => {
       console.log("delete point");
 
@@ -23759,13 +23686,13 @@ UI_EXPAND   : panel open icon
 UI_COLLAPSE : panel close icon
 NOTE_EXCL   : exclamation mark for notifications
 */
-function setIconMap$1(icons) {
+function setIconMap(icons) {
   for (let k in icons) {
-    Icons$1[k] = icons[k];
+    Icons[k] = icons[k];
   }
 }
 
-let Icons$1 = {
+let Icons = {
   HFLIP          : 0,
   TRANSLATE      : 1,
   ROTATE         : 2,
@@ -24677,6 +24604,9 @@ class UIBase$2 extends HTMLElement {
     });
   }
 
+  static getIconEnum() {
+    return Icons;
+  }
 
   unhide() {
     this.hide(false);
@@ -27800,7 +27730,7 @@ class Check extends UIBase$5 {
     if (this._checked) {
       //canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
       let x=(csize-tilesize)*0.5, y=(csize-tilesize)*0.5;
-      iconmanager.canvasDraw(this, canvas, g, Icons$1.LARGE_CHECK, x, y);
+      iconmanager.canvasDraw(this, canvas, g, Icons.LARGE_CHECK, x, y);
     }
 
     if (this._focus) {
@@ -28081,7 +28011,7 @@ class IconCheck extends Button {
     iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
 
     if (this.drawCheck) {
-      let icon2 = this._checked ? Icons$1.CHECKED : Icons$1.UNCHECKED;
+      let icon2 = this._checked ? Icons.CHECKED : Icons.UNCHECKED;
       iconmanager.canvasDraw(this, this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
     }
 
@@ -28102,7 +28032,7 @@ class IconButton extends Button {
 
     this._icon = 0;
     this._icon_pressed = undefined;
-    this.iconsheet = Icons$1.LARGE;
+    this.iconsheet = Icons.LARGE;
     this.drawButtonBG = true;
   }
 
@@ -30579,7 +30509,7 @@ class Container extends UIBase$2 {
    * to view tooltips on mobile devices
    * */
   helppicker() {
-    let ret = this.iconbutton(Icons$1.HELP, "Help Picker", () => {
+    let ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
       this.getScreen().hintPickerTool();
     });
 
@@ -31738,7 +31668,7 @@ class ColumnFrame extends Container {
 
 UIBase$7.internalRegister(ColumnFrame);
 
-let UIBase$8 = UIBase$2, Icons$2 = Icons$1;
+let UIBase$8 = UIBase$2, Icons$1 = Icons;
 
 class RichEditor extends TextBoxBase {
   constructor() {
@@ -31779,16 +31709,16 @@ class RichEditor extends TextBoxBase {
       return icon;
     };
 
-    makeicon(Icons$2.BOLD, "Bold", () => {
+    makeicon(Icons$1.BOLD, "Bold", () => {
       document.execCommand("bold");
     });
-    makeicon(Icons$2.ITALIC, "Italic", () => {
+    makeicon(Icons$1.ITALIC, "Italic", () => {
       document.execCommand("italic");
     });
-    makeicon(Icons$2.UNDERLINE, "Underline", () => {
+    makeicon(Icons$1.UNDERLINE, "Underline", () => {
       document.execCommand("underline");
     });
-    makeicon(Icons$2.STRIKETHRU, "Strikethrough", () => {
+    makeicon(Icons$1.STRIKETHRU, "Strikethrough", () => {
       document.execCommand("strikeThrough");
     });
 
@@ -32758,7 +32688,7 @@ class Curve1DWidget extends ColumnFrame {
     });
     this.dropbox._init();
 
-    row.iconbutton(Icons$1.ZOOM_OUT, "Zoom Out", () => {
+    row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
       let curve = this._value;
       if (!curve) return;
       //if (isNaN(curve.uiZoom))
@@ -32771,7 +32701,7 @@ class Curve1DWidget extends ColumnFrame {
 
       this._redraw();
     }).iconsheet = 0;
-    row.iconbutton(Icons$1.ZOOM_IN, "Zoom In", () => {
+    row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
       let curve = this._value;
       if (!curve) return;
       //if (isNaN(curve.uiZoom))
@@ -33031,8 +32961,8 @@ class PanelFrame extends ColumnFrame {
     iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
 
     iconcheck.ctx = this.ctx;
-    iconcheck._icon_pressed = Icons$1.UI_EXPAND;
-    iconcheck._icon = Icons$1.UI_COLLAPSE;
+    iconcheck._icon_pressed = Icons.UI_EXPAND;
+    iconcheck._icon = Icons.UI_COLLAPSE;
     iconcheck.drawCheck = false;
     iconcheck.iconsheet = IconSheets.SMALL;
     iconcheck.checked = this._closed;
@@ -36684,7 +36614,7 @@ class Note extends UIBase$2 {
 
       this.dom.appendChild(this.ntext);
 
-      iconmanager.setCSS(Icons$1.NOTE_EXCL, this.mark, sheet);
+      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
 
       //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
       //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
@@ -40673,7 +40603,7 @@ class AreaResizeTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Resize Area",
     toolpath : "screen.area.resize",
-    icon     : Icons$1.RESIZE,
+    icon     : Icons.RESIZE,
     description : "change size of area",
     is_modal : true,
     hotkey : undefined,
@@ -40840,7 +40770,7 @@ class SplitTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Split Area",
     toolpath : "screen.area.split",
-    icon     : Icons$1.SMALL_PLUS,
+    icon     : Icons.SMALL_PLUS,
     description : "split an area in two",
     is_modal : true,
     hotkey   : "BLEH-B",
@@ -40973,7 +40903,7 @@ class AreaDragTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Drag Area",
     toolpath : "screen.area.drag",
-    icon     : Icons$1.TRANSLATE,
+    icon     : Icons.TRANSLATE,
     description : "move or duplicate area",
     is_modal : true,
     hotkey : undefined,
@@ -41388,7 +41318,7 @@ class ToolTipViewer extends ToolBase {
   static tooldef() {return {
     uiname   : "Help Tool",
     toolpath : "screen.help_picker",
-    icon     : Icons$1.HELP,
+    icon     : Icons.HELP,
     description : "view tooltips",
     is_modal : true,
     hotkey : undefined,
@@ -44113,7 +44043,7 @@ class TreeItem extends Container {
 
     this.header = this.row();
 
-    this._icon1 = this.header.iconbutton(Icons$1.TREE_COLLAPSE);
+    this._icon1 = this.header.iconbutton(Icons.TREE_COLLAPSE);
     this._icon1.iconsheet = 0;
     this._icon1.drawButtonBG = false;
 
@@ -44154,13 +44084,13 @@ class TreeItem extends Container {
   }
 
   open() {
-    this._icon1.icon = Icons$1.TREE_COLLAPSE;
+    this._icon1.icon = Icons.TREE_COLLAPSE;
     this.opened = true;
     this.treeView._open(this);
   }
 
   close() {
-    this._icon1.icon = Icons$1.TREE_EXPAND;
+    this._icon1.icon = Icons.TREE_EXPAND;
     this.opened = false;
     this.treeView._close(this);
   }
@@ -44551,7 +44481,7 @@ class DragBox extends Container {
     this.style["min-width"] = "350px";
     header.style["height"] = "35px";
 
-    let icon = header.iconbutton(Icons$1.DELETE, "Hide", () => {
+    let icon = header.iconbutton(Icons.DELETE, "Hide", () => {
       this.end();
     });
     icon.iconsheet = 0; //use small icons
@@ -44961,7 +44891,7 @@ class AreaDocker extends Container {
       let tab = this.tbar.tab(uiname, area._id);
     }
 
-    let tab = this.tbar.icontab(Icons$1.SMALL_PLUS, "add", "Add Editor", false);
+    let tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false);
 
     //load tab order
     loadUIData(this.tbar, ud);
@@ -47829,5 +47759,5 @@ setNotifier(ui_noteframe);
 const electron_api = electron_api1;
 const cconst$1 = exports$1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons$1 as Icons, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp$1 as ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildElectronHotkey, buildElectronMenu, buildParser, buildToolSysAPI, calc_projection_axes, cconst$1 as cconst, checkForTextBox, checkInit, circ_from_line_tan, clip_line_w, closest_point_on_line, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_tri_v3, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, initMenuBar, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parsepx, parseutil, pathDebugEvent, pathParser, platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap$1 as setIconMap, setImplementationClass, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp$1 as ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildElectronHotkey, buildElectronMenu, buildParser, buildToolSysAPI, calc_projection_axes, cconst$1 as cconst, checkForTextBox, checkInit, circ_from_line_tan, clip_line_w, closest_point_on_line, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_tri_v3, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, initMenuBar, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parsepx, parseutil, pathDebugEvent, pathParser, platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

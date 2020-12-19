@@ -690,6 +690,9 @@ export class UIBase extends HTMLElement {
     })
   }
 
+  static getIconEnum() {
+    return Icons;
+  }
 
   unhide() {
     this.hide(false);
