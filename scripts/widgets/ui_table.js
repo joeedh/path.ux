@@ -24,7 +24,6 @@ let Vector2 = vectormath.Vector2,
   PackFlags = ui_base.PackFlags,
   PropTypes = toolprop.PropTypes;
 
-export const DataPathError = ui_base.DataPathError;
 
 var list = function list(iter) {
   let ret = [];

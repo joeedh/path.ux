@@ -3,11 +3,18 @@
 Do:
 
 <pre>
+git submodule init
+git submodule update
+
 npm install
+
 cd simple_docsys
 npm install
+
 cd ../
-node http2.js
+
+node serv.js
+
 </pre>
 
 Then go to localhost:5002 in your browser

@@ -438,10 +438,7 @@ let first = (iter) => {
   }
 }
 
-
 import {DataPathError} from '../path-controller/controller/controller.js';
-export {DataPathError} from '../path-controller/controller/controller.js';
-
 
 let _mobile_theme_patterns = [
   /.*width.*/,
