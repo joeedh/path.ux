@@ -46,7 +46,7 @@ export class platform extends PlatformAPI {
       for (let ext of item.extensions) {
         ext = "." + ext;
         if (ext.toLowerCase() in mimemap) {
-          mime = mime ?? mimemap[ext.toLowerCase()];
+          mime = mime !== undefined ? mime : mimemap[ext.toLowerCase()];
         }
 
         exts.push(ext);

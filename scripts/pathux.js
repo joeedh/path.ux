@@ -31,10 +31,14 @@ export const controller = controller1;
 import * as ui_noteframe from './widgets/ui_noteframe.js';
 controller1.setNotifier(ui_noteframe);
 
+import * as platform1 from './platforms/platform.js';
+export const platform = platform1;
+
 import * as electron_api1 from './platforms/electron/electron_api.js';
 export const electron_api = electron_api1;
 
-export * from './platforms/electron/electron_api.js';
+export * from './platforms/platform.js';
+
 export * from './widgets/theme_editor.js';
 export * from './widgets/ui_treeview.js';
 

@@ -214,20 +214,25 @@ export class PanelFrame extends ColumnFrame {
 
     let margintop, marginbottom;
 
+    let getDefault = (key, defval) => {
+      let val = this.getDefault(key);
+      return val !== undefined ? val : defval;
+    };
+
     if (this._closed) {
-      margintop = this.getDefault('margin-top-closed') ?? 0;
-      marginbottom = this.getDefault('margin-bottom-closed') ?? 5;
+      margintop = getDefault('margin-top-closed', 0);
+      marginbottom = getDefault('margin-bottom-closed', 5);
     } else {
-      margintop = this.getDefault('margin-top') ?? 0;
-      marginbottom = this.getDefault('margin-bottom') ?? 0;
+      margintop = getDefault('margin-top', 0);
+      marginbottom = getDefault('margin-bottom', 0);
     }
 
     this.style['margin-top'] = margintop + "px";
     this.style['margin-bottom'] = marginbottom + "px";
 
-    let boxmargin = this.getDefault("BoxMargin") ?? 0;
-    let paddingleft  = this.getDefault("padding-left") ?? 0;
-    let paddingright  = this.getDefault("padding-right") ?? 0;
+    let boxmargin = getDefault("BoxMargin", 0);
+    let paddingleft  = getDefault("padding-left", 0);
+    let paddingright  = getDefault("padding-right", 0);
 
     paddingleft += boxmargin;
     paddingright += boxmargin;

@@ -2,6 +2,7 @@
 export default {
   input: 'scripts/pathux.js',
   treeshake: false,
+  inlineDynamicImports: true,
   output: {
     file: 'dist/pathux.js',
     format: 'es',

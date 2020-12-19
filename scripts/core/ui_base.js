@@ -1,10 +1,12 @@
 let _ui_base = undefined;
 
+/*
 if (window.document && document.body) {
   console.log("ensuring body.style.margin/padding are zero");
   document.body.style["margin"] = "0px";
   document.body.style["padding"] = "0px";
 }
+ */
 
 import * as cssutils from '../path-controller/util/cssutils.js';
 import {Animator} from "./anim.js";

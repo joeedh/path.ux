@@ -742,7 +742,7 @@ export class Container extends ui_base.UIBase {
 
     if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
       //console.log("iconbutton!");
-      label = label ?? tooltip;
+      label = label !== undefined ? label : tooltip;
 
       ret = this.iconbutton(def.icon, label, cb);
 
@@ -754,7 +754,7 @@ export class Container extends ui_base.UIBase {
 
       ret.packflag |= packflag;
     } else {
-      label = label ?? def.uiname;
+      label = label !== undefined ? label : def.uiname;
 
       ret = this.button(label, cb);
       ret.description = tooltip;
@@ -1010,7 +1010,7 @@ export class Container extends ui_base.UIBase {
       } else {
         let strip = this.strip();
 
-        let uiname = prop.uiname ?? ToolProperty.makeUIName(prop.apiname);
+        let uiname = prop.uiname !== undefined ? prop.uiname : ToolProperty.makeUIName(prop.apiname);
 
         strip.label(prop.uiname);
 

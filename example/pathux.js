@@ -10007,10 +10007,10 @@ function barycentric_v2(p, v1, v2, v3, axis1=0, axis2=1, out=undefined) {
   if (!out) {
     out = barycentric_v2_rets.next();
   }
-  
+
   out[0] = u;
   out[1] = v;
-  
+
   return out;
 }
 
@@ -10057,6 +10057,170 @@ function _linedis2(co, v1, v2) {
     (((v1y-v2y)*v1y+(v1z-v2z)*v1z+(v1x-v2x)*v1x)*(v1x-v2x)-v1x)**2;
 
   return dis;
+}
+
+let closest_p_tri_rets = new cachering(() => {return {
+  co : new Vector3(),
+  uv : new Vector2()
+}}, 512);
+
+let cpt_v1 = new Vector3();
+let cpt_v2 = new Vector3();
+let cpt_v3 = new Vector3();
+let cpt_v4 = new Vector3();
+let cpt_v5 = new Vector3();
+let cpt_v6 = new Vector3();
+let cpt_p = new Vector3();
+let cpt_n = new Vector3();
+
+function closest_point_on_tri(p, v1, v2, v3, n, uvw) {
+  let op = p;
+
+  if (uvw) {
+    uvw[0] = uvw[1] = 0.0;
+    if (uvw.length > 2) {
+      uvw[2] = 0.0;
+    }
+  }
+
+  v1 = cpt_v1.load(v1);
+  v2 = cpt_v2.load(v2);
+  v3 = cpt_v3.load(v3);
+  p = cpt_p.load(p);
+
+  if (n === undefined) {
+    n = cpt_n.load(normal_tri(v1, v2, v3));
+  }
+
+  v1.sub(p);
+  v2.sub(p);
+  v3.sub(p);
+  p.zero();
+
+
+  /*use least squares to solve for barycentric coordinates
+    then clip to triangle
+
+    we do this in 2d, as all solutions are coplanar anyway and that way we
+    can have one of the equations be "u+v+w = 1".
+    should investigate if this is really necassary.
+   */
+
+  let ax1, ax2;
+  let ax = Math.abs(n[0]), ay = Math.abs(n[1]), az = Math.abs(n[2]);
+  if (ax === 0.0 && ay === 0.0 && az === 0.0) {
+    console.log("eek1");
+    return cpt_rets.next().load(v1).add(v2).add(v3).mulScalar(1.0 / 3.0).add(op);
+  }
+
+  let ax3;
+  if (ax >= ay && ax >= az) {
+    ax1 = 1;
+    ax2 = 2;
+    ax3 = 0;
+  } else if (ay >= ax && ay >= az) {
+    ax1 = 0;
+    ax2 = 2;
+    ax3 = 1;
+  } else {
+    ax1 = 0;
+    ax2 = 1;
+    ax3 = 2;
+  }
+
+  let mat = cpt_mat;
+  let mat2 = cpt_mat2;
+  mat.makeIdentity();
+
+  let m = mat.$matrix;
+
+  m.m11 = v1[ax1];
+  m.m12 = v2[ax1];
+  m.m13 = v3[ax1];
+  m.m14 = 0.0;
+
+  m.m21 = v1[ax2];
+  m.m22 = v2[ax2];
+  m.m23 = v3[ax2];
+  m.m24 = 0.0;
+
+  /*
+  m.m31 = v1[ax3];
+  m.m32 = v2[ax3];
+  m.m33 = v3[ax3];
+  m.m34 = 0.0;
+  */
+
+  m.m31 = 1;
+  m.m32 = 1;
+  m.m33 = 1;
+  m.m34 = 0.0;
+
+  mat.transpose();
+
+  let b = cpt_b.zero();
+
+  b[0] = p[ax1];
+  b[1] = p[ax2];
+  //b[2] = p[ax3];
+  b[2] = 1.0;
+  b[3] = 0.0;
+
+  mat2.load(mat).transpose();
+
+  mat.preMultiply(mat2);
+
+  if (mat.invert() === null) {
+    console.log("eek2", mat.determinant(), ax1, ax2, n);
+    return cpt_rets.next().load(v1).add(v2).add(v3).mulScalar(1.0 / 3.0).add(op);
+  }
+
+  mat.multiply(mat2);
+
+
+  b.multVecMatrix(mat);
+
+  let u = b[0];
+  let v = b[1];
+  let w = b[2];
+
+  for (let i = 0; i < 1; i++) {
+    u = Math.min(Math.max(u, 0.0), 1.0);
+    v = Math.min(Math.max(v, 0.0), 1.0);
+    w = Math.min(Math.max(w, 0.0), 1.0);
+
+    let tot = u + v + w;
+
+    if (tot !== 0.0) {
+      tot = 1.0 / tot;
+      u *= tot;
+      v *= tot;
+      w *= tot;
+    }
+  }
+
+  if (uvw) {
+    uvw[0] = u;
+    uvw[1] = v;
+    if (uvw.length > 2) {
+      uvw[2] = w;
+    }
+  }
+
+  let x = v1[0] * u + v2[0] * v + v3[0] * w;
+  let y = v1[1] * u + v2[1] * v + v3[1] * w;
+  let z = v1[2] * u + v2[2] * v + v3[2] * w;
+
+  let ret = closest_p_tri_rets.next();
+
+  ret.p.loadXYZ(x, y, z);
+  ret.uv[0] = u;
+  ret.uv[1] = v;
+
+  ret.dist = ret.p.vectorLength();
+  ret.p.add(op);
+
+  return ret;
 }
 
 function dist_to_tri_v3(co, v1, v2, v3, no=undefined) {
@@ -12029,6 +12193,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   calc_projection_axes: calc_projection_axes,
   barycentric_v2: barycentric_v2,
+  closest_point_on_tri: closest_point_on_tri,
   dist_to_tri_v3: dist_to_tri_v3,
   tri_area: tri_area,
   aabb_overlap_area: aabb_overlap_area,
@@ -14662,7 +14827,7 @@ class BSplineCurve extends CurveTypeData {
     };
 
     let Icons = row.constructor.getIconEnum();
-    
+
     row.iconbutton(Icons.TINY_X, "Delete Point", () => {
       console.log("delete point");
 
@@ -19742,7 +19907,7 @@ const DataTypes = {
 };
 
 
-class DataPathError extends Error {
+class DataPathError$1 extends Error {
 };
 
 
@@ -20061,271 +20226,6 @@ class ToolOpIface {
   }}
 };
 
-class ModelInterface {
-  constructor() {
-    this.prefix = "";
-  }
-
-  getToolDef(path) {
-    throw new Error("implement me");
-  }
-
-  getToolPathHotkey(ctx, path) {
-    return undefined;
-  }
-
-  get list() {
-    throw new Error("implement me");
-    return ListIface;
-  }
-
-  createTool(path, inputs={}, constructor_argument=undefined) {
-    throw new Error("implement me");
-  }
-
-  //returns tool class, or undefined if one cannot be found for path
-  parseToolPath(path) {
-    throw new Error("implement me");
-  }
-
-  /**
-   * runs .undo,.redo if toolstack head is same as tool
-   *
-   * otherwise, .execTool(ctx, tool) is called.
-   *
-   * @param compareInputs : check if toolstack head has identical input values, defaults to false
-   * */
-  execOrRedo(ctx, toolop, compareInputs=false) {
-    return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
-  }
-
-  execTool(ctx, path, inputs={}, constructor_argument=undefined) {
-    return new Promise((accept, reject) => {
-      let tool = path;
-
-      try {
-        if (typeof tool == "string" || !(tool instanceof ToolOp)) {
-          tool = this.createTool(ctx, path, inputs, constructor_argument);
-        }
-      } catch (error) {
-        print_stack$1(error);
-        reject(error);
-        return;
-      }
-
-      //give client a chance to change tool instance directly
-      accept(tool);
-
-      //execute
-      try {
-        ctx.toolstack.execTool(ctx, tool);
-      } catch (error) { //for some reason chrome is suppressing errors
-        print_stack$1(error);
-        throw error;
-      }
-    });
-  }
-
-  //used by simple_controller.js for tagging error messages
-  pushReportContext(name) {
-
-  }
-
-  //used by simple_controller.js for tagging error messages
-  popReportContext() {
-
-  }
-
-  static toolRegistered(tool) {
-    throw new Error("implement me");
-  }
-
-  static registerTool(tool) {
-    throw new Error("implement me");
-  }
-
-  //not yet supported by path.ux's controller implementation
-  massSetProp(ctx, mass_set_path, value) {
-    throw new Error("implement me");
-  }
-
-  /** takes a mass_set_path and returns an array of individual paths */
-  resolveMassSetPaths(ctx, mass_set_path) {
-    throw new Error("implement me");
-  }
-
-  /**
-   * @example
-   *
-   * return {
-   *   obj      : [object owning property key]
-   *   parent   : [parent of obj]
-   *   key      : [property key]
-   *   subkey   : used by flag properties, represents a key within the property
-   *   value    : [value of property]
-   *   prop     : [optional toolprop.ToolProperty representing the property definition]
-   *   struct   : [optional datastruct representing the type, if value is an object]
-   *   mass_set : mass setter string, if controller implementation supports it
-   * }
-   */
-  resolvePath(ctx, path, ignoreExistence) {
-  }
-
-  setValue(ctx, path, val) {
-    let res = this.resolvePath(ctx, path);
-    let prop = res.prop;
-
-    if (prop !== undefined && (prop.flag & PropFlags.READ_ONLY)) {
-      throw new DataPathError("Tried to set read only property");
-    }
-
-    if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
-      prop.dataref = res.obj;
-      prop.ctx = ctx;
-      prop.datapath = path;
-
-      prop.setValue(val);
-      return;
-    }
-
-    if (prop !== undefined) {
-      if (prop.type === PropTypes.CURVE && !val) {
-        throw new DataPathError("can't set curve data to nothing");
-      }
-
-      let use_range = (prop.type & (PropTypes.INT | PropTypes.FLOAT));
-
-      use_range = use_range || (res.subkey && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)));
-      use_range = use_range && prop.range;
-      use_range = use_range && !(prop.range[0] === 0.0 && prop.range[1] === 0.0);
-
-      if (use_range) {
-        val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
-      }
-    }
-
-    let old = res.obj[res.key];
-
-    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes.ENUM) {
-      let ival = res.prop.values[res.subkey];
-
-      if (val) {
-        res.obj[res.key] = ival;
-      }
-    } else if (res.prop !== undefined && res.prop.type === PropTypes.FLAG) {
-      if (res.subkey !== undefined) {
-        let ival = res.prop.values[res.subkey];
-
-        if (val) {
-          res.obj[res.key] |= ival;
-        } else {
-          res.obj[res.key] &= ~ival;
-        }
-      } else if (typeof val === "number" || typeof val === "boolean") {
-        val = typeof val === "boolean" ? (val & 1) : val;
-
-        res.obj[res.key] = val;
-      } else {
-        throw new DataPathError("Expected a number for a bitmask property");
-      }
-    } else if (res.subkey !== undefined && isVecProperty(res.prop)) {
-      res.obj[res.subkey] = val;
-    } else if (!(prop !== undefined && prop instanceof ListIface)) {
-      res.obj[res.key] = val;
-    }
-
-    if (prop !== undefined && prop instanceof ListIface) {
-      prop.set(this, res.obj, res.key, val);
-    } else if (prop !== undefined) {
-      prop.dataref = res.obj;
-      prop.datapath = path;
-      prop.ctx = ctx;
-
-      prop._fire("change", res.obj[res.key], old);
-    }
-  }
-
-  getDescription(ctx, path) {
-    let rdef = this.resolvePath(ctx, path);
-    if (rdef === undefined) {
-      throw new DataPathError("invalid path " + path);
-    }
-
-    if (!rdef.prop || !(rdef.prop instanceof ToolProperty$1)) {
-      return "";
-    }
-
-    let type = rdef.prop.type;
-    let prop = rdef.prop;
-
-    if (rdef.subkey !== undefined) {
-      let subkey = rdef.subkey;
-
-      if (type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
-        if (prop.descriptions && subkey in prop.descriptions) {
-          return prop.descriptions[subkey];
-        }
-      } else if (type & (PropTypes.ENUM|PropTypes.FLAG)) {
-        if (!(subkey in prop.values) && subkey in prop.keys) {
-          subkey = prop.keys[subkey];
-        };
-
-        if (prop.descriptions && subkey in prop.descriptions) {
-          return prop.descriptions[subkey];
-        }
-      } else if (type === PropTypes.PROPLIST) {
-        let val = tdef.value;
-        if (typeof val === "object" && val instanceof ToolProperty$1) {
-          return val.description;
-        }
-      }
-    }
-
-    return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
-  }
-
-  validPath(ctx, path) {
-    try {
-      this.getValue(ctx, path);
-      return true;
-    } catch (error) {
-      if (!(error instanceof DataPathError)) {
-        throw error;
-      }
-    }
-
-    return false;
-  }
-
-  getValue(ctx, path) {
-    if (typeof ctx == "string") {
-      throw new Error("You forgot to pass context to getValue");
-    }
-
-    let ret = this.resolvePath(ctx, path);
-
-    if (ret === undefined) {
-      throw new DataPathError("invalid path " + path);
-    }
-
-    if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
-      ret.prop.dataref = ret.obj;
-      ret.prop.datapath = path;
-      ret.prop.ctx = ctx;
-
-      let val = ret.prop.getValue();
-
-      if (typeof val === "string" && (ret.prop.type & (PropTypes.FLAG|PropTypes.ENUM))) {
-        val = ret.prop.values[val];
-      }
-
-      return val;
-
-    }
-
-    return this.resolvePath(ctx, path).value;
-  }
-}
 
 let DataAPIClass = undefined;
 function setImplementationClass(cls) {
@@ -20460,7 +20360,7 @@ class ToolPropertyCache {
     uiname = ToolProperty.makeUIName(uiname);
 
     prop2.uiname = uiname;
-    prop2.description = prop2.description ?? prop2.uiname;
+    prop2.description = prop2.description || prop2.uiname;
 
     st.add(dpath);
 
@@ -20532,7 +20432,7 @@ class ToolPropertyCache {
 
 const SavedToolDefaults = new ToolPropertyCache();
 
-class ToolOp$1 extends EventHandler {
+class ToolOp extends EventHandler {
   /**
   ToolOp definition.
 
@@ -20556,7 +20456,7 @@ class ToolOp$1 extends EventHandler {
   </pre>
   */
   static tooldef() {
-    if (this === ToolOp$1) {
+    if (this === ToolOp) {
       throw new Error("Tools must implemented static tooldef() methods!");
     }
     
@@ -20694,7 +20594,7 @@ class ToolOp$1 extends EventHandler {
       slots = {};
       let p = this;
 
-      while (p !== undefined && p !== Object && p !== ToolOp$1) {
+      while (p !== undefined && p !== Object && p !== ToolOp) {
         if (p.tooldef) {
           let def = p.tooldef();
 
@@ -20778,7 +20678,7 @@ class ToolOp$1 extends EventHandler {
       slots = {};
       let p = this.constructor;
 
-      while (p !== undefined && p !== Object && p !== ToolOp$1) {
+      while (p !== undefined && p !== Object && p !== ToolOp) {
         if (p.tooldef) {
           let def = p.tooldef();
 
@@ -21007,7 +20907,7 @@ class ToolOp$1 extends EventHandler {
   }
 }
 
-class ToolMacro extends ToolOp$1 {
+class ToolMacro extends ToolOp {
   static tooldef() {return {
     uiname : "Tool Macro"
   }}
@@ -21175,7 +21075,7 @@ class ToolStack extends Array {
   execOrRedo(ctx, tool, compareInputs=false) {
     let head = this.head;
 
-    let ok = compareInputs ? ToolOp$1.Equals(head, tool) : head && head.constructor === tool.constructor;
+    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
 
     if (ok) {
       //console.warn("Same tool detected");
@@ -21385,7 +21285,7 @@ function parseToolPath(str, check_tool_exists=true) {
   }
 
   if (!(str in ToolPaths) && check_tool_exists) {
-    throw new DataPathError("unknown tool " + str);
+    throw new DataPathError$1("unknown tool " + str);
   }
 
   let ret;
@@ -21394,7 +21294,7 @@ function parseToolPath(str, check_tool_exists=true) {
     ret = Parser.parse(args);
   } catch (error) {
     console.log(error);
-    throw new DataPathError(`"${startstr}"\n  ${error.message}`);
+    throw new DataPathError$1(`"${startstr}"\n  ${error.message}`);
   }
 
   return {
@@ -21426,7 +21326,273 @@ function initToolPaths() {
   }
 }
 
-class DataPathSetOp extends ToolOp$1 {
+class ModelInterface {
+  constructor() {
+    this.prefix = "";
+  }
+
+  getToolDef(path) {
+    throw new Error("implement me");
+  }
+
+  getToolPathHotkey(ctx, path) {
+    return undefined;
+  }
+
+  get list() {
+    throw new Error("implement me");
+    return ListIface;
+  }
+
+  createTool(path, inputs={}, constructor_argument=undefined) {
+    throw new Error("implement me");
+  }
+
+  //returns tool class, or undefined if one cannot be found for path
+  parseToolPath(path) {
+    throw new Error("implement me");
+  }
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, toolop, compareInputs=false) {
+    return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
+  }
+
+  execTool(ctx, path, inputs={}, constructor_argument=undefined) {
+    return new Promise((accept, reject) => {
+      let tool = path;
+
+      try {
+        if (typeof tool == "string" || !(tool instanceof ToolOp)) {
+          tool = this.createTool(ctx, path, inputs, constructor_argument);
+        }
+      } catch (error) {
+        print_stack$1(error);
+        reject(error);
+        return;
+      }
+
+      //give client a chance to change tool instance directly
+      accept(tool);
+
+      //execute
+      try {
+        ctx.toolstack.execTool(ctx, tool);
+      } catch (error) { //for some reason chrome is suppressing errors
+        print_stack$1(error);
+        throw error;
+      }
+    });
+  }
+
+  //used by simple_controller.js for tagging error messages
+  pushReportContext(name) {
+
+  }
+
+  //used by simple_controller.js for tagging error messages
+  popReportContext() {
+
+  }
+
+  static toolRegistered(tool) {
+    throw new Error("implement me");
+  }
+
+  static registerTool(tool) {
+    throw new Error("implement me");
+  }
+
+  //not yet supported by path.ux's controller implementation
+  massSetProp(ctx, mass_set_path, value) {
+    throw new Error("implement me");
+  }
+
+  /** takes a mass_set_path and returns an array of individual paths */
+  resolveMassSetPaths(ctx, mass_set_path) {
+    throw new Error("implement me");
+  }
+
+  /**
+   * @example
+   *
+   * return {
+   *   obj      : [object owning property key]
+   *   parent   : [parent of obj]
+   *   key      : [property key]
+   *   subkey   : used by flag properties, represents a key within the property
+   *   value    : [value of property]
+   *   prop     : [optional toolprop.ToolProperty representing the property definition]
+   *   struct   : [optional datastruct representing the type, if value is an object]
+   *   mass_set : mass setter string, if controller implementation supports it
+   * }
+   */
+  resolvePath(ctx, path, ignoreExistence) {
+  }
+
+  setValue(ctx, path, val) {
+    let res = this.resolvePath(ctx, path);
+    let prop = res.prop;
+
+    if (prop !== undefined && (prop.flag & PropFlags.READ_ONLY)) {
+      throw new DataPathError$1("Tried to set read only property");
+    }
+
+    if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+      prop.dataref = res.obj;
+      prop.ctx = ctx;
+      prop.datapath = path;
+
+      prop.setValue(val);
+      return;
+    }
+
+    if (prop !== undefined) {
+      if (prop.type === PropTypes.CURVE && !val) {
+        throw new DataPathError$1("can't set curve data to nothing");
+      }
+
+      let use_range = (prop.type & (PropTypes.INT | PropTypes.FLOAT));
+
+      use_range = use_range || (res.subkey && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)));
+      use_range = use_range && prop.range;
+      use_range = use_range && !(prop.range[0] === 0.0 && prop.range[1] === 0.0);
+
+      if (use_range) {
+        val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
+      }
+    }
+
+    let old = res.obj[res.key];
+
+    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes.ENUM) {
+      let ival = res.prop.values[res.subkey];
+
+      if (val) {
+        res.obj[res.key] = ival;
+      }
+    } else if (res.prop !== undefined && res.prop.type === PropTypes.FLAG) {
+      if (res.subkey !== undefined) {
+        let ival = res.prop.values[res.subkey];
+
+        if (val) {
+          res.obj[res.key] |= ival;
+        } else {
+          res.obj[res.key] &= ~ival;
+        }
+      } else if (typeof val === "number" || typeof val === "boolean") {
+        val = typeof val === "boolean" ? (val & 1) : val;
+
+        res.obj[res.key] = val;
+      } else {
+        throw new DataPathError$1("Expected a number for a bitmask property");
+      }
+    } else if (res.subkey !== undefined && isVecProperty(res.prop)) {
+      res.obj[res.subkey] = val;
+    } else if (!(prop !== undefined && prop instanceof ListIface)) {
+      res.obj[res.key] = val;
+    }
+
+    if (prop !== undefined && prop instanceof ListIface) {
+      prop.set(this, res.obj, res.key, val);
+    } else if (prop !== undefined) {
+      prop.dataref = res.obj;
+      prop.datapath = path;
+      prop.ctx = ctx;
+
+      prop._fire("change", res.obj[res.key], old);
+    }
+  }
+
+  getDescription(ctx, path) {
+    let rdef = this.resolvePath(ctx, path);
+    if (rdef === undefined) {
+      throw new DataPathError$1("invalid path " + path);
+    }
+
+    if (!rdef.prop || !(rdef.prop instanceof ToolProperty$1)) {
+      return "";
+    }
+
+    let type = rdef.prop.type;
+    let prop = rdef.prop;
+
+    if (rdef.subkey !== undefined) {
+      let subkey = rdef.subkey;
+
+      if (type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type & (PropTypes.ENUM|PropTypes.FLAG)) {
+        if (!(subkey in prop.values) && subkey in prop.keys) {
+          subkey = prop.keys[subkey];
+        };
+
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type === PropTypes.PROPLIST) {
+        let val = tdef.value;
+        if (typeof val === "object" && val instanceof ToolProperty$1) {
+          return val.description;
+        }
+      }
+    }
+
+    return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
+  }
+
+  validPath(ctx, path) {
+    try {
+      this.getValue(ctx, path);
+      return true;
+    } catch (error) {
+      if (!(error instanceof DataPathError$1)) {
+        throw error;
+      }
+    }
+
+    return false;
+  }
+
+  getValue(ctx, path) {
+    if (typeof ctx == "string") {
+      throw new Error("You forgot to pass context to getValue");
+    }
+
+    let ret = this.resolvePath(ctx, path);
+
+    if (ret === undefined) {
+      throw new DataPathError$1("invalid path " + path);
+    }
+
+    if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+      ret.prop.dataref = ret.obj;
+      ret.prop.datapath = path;
+      ret.prop.ctx = ctx;
+
+      let val = ret.prop.getValue();
+
+      if (typeof val === "string" && (ret.prop.type & (PropTypes.FLAG|PropTypes.ENUM))) {
+        val = ret.prop.values[val];
+      }
+
+      return val;
+
+    }
+
+    return this.resolvePath(ctx, path).value;
+  }
+}
+
+class DataPathSetOp extends ToolOp {
   constructor() {
     super();
 
@@ -21699,7 +21865,7 @@ class DataPathSetOp extends ToolOp$1 {
     }
   }}
 }
-ToolOp$1.register(DataPathSetOp);
+ToolOp.register(DataPathSetOp);
 
 /**
 
@@ -21714,16 +21880,16 @@ ToolOp$1.register(DataPathSetOp);
  users who e.g. write python scripts, extend the UI, use advanced animation features, or anything else
  that uses RNA paths.
 
-## Contexts
+ ## Contexts
 
-The datapath system works in tandem with the context module.  Contexts are client-provided classes
-that the datapath API and ToolOps use to communicate with the application state.
+ The datapath system works in tandem with the context module.  Contexts are client-provided classes
+ that the datapath API and ToolOps use to communicate with the application state.
 
-## Example
+ ## Example
 
-<pre>
+ <pre>
 
-function initMyDataAPI() {
+ function initMyDataAPI() {
   let api = new DataAPI();
 
   //map MyContextClass to a struct, true tells mapStruct to auto-create
@@ -21740,8 +21906,8 @@ function initMyDataAPI() {
 
   return api;
 }
-</pre>
-*/
+ </pre>
+ */
 
 let PUTLParseError$1 = PUTLParseError;
 
@@ -21770,7 +21936,7 @@ let tokens = [
 
 let lexer$1 = new lexer(tokens, (t) => {
   console.warn("Parse error", t);
-  throw new DataPathError();
+  throw new DataPathError$1();
 });
 
 let pathParser = new parser(lexer$1);
@@ -21857,17 +22023,24 @@ class  DataList extends ListIface {
     super();
 
     if (callbacks === undefined) {
-      throw new DataPathError("missing callbacks argument to DataList");
+      throw new DataPathError$1("missing callbacks argument to DataList");
     }
 
     this.cb = {};
-    for (let cb of callbacks) {
-      this.cb[cb.name] = cb;
+
+    if (typeof callbacks === "object" && !Array.isArray(callbacks)) {
+      for (let k in callbacks) {
+        this.cb[k] = callbacks[k];
+      }
+    } else {
+      for (let cb of callbacks) {
+        this.cb[cb.name] = cb;
+      }
     }
 
     let check = (key) => {
       if (!(key in this.cbs)) {
-        throw new DataPathError(`Missing ${key} callback in DataList`);
+        throw new DataPathError$1(`Missing ${key} callback in DataList`);
       }
     };
   }
@@ -21883,7 +22056,7 @@ class  DataList extends ListIface {
 
   _check(cb) {
     if (!(cb in this.cb)) {
-      throw new DataPathError(cb + " not supported by this list");
+      throw new DataPathError$1(cb + " not supported by this list");
     }
   }
 
@@ -22033,7 +22206,7 @@ class DataStruct {
         }
 
         if (key < 0 || key >= list.length) {
-          throw new DataPathError("Invalid index " + key);
+          throw new DataPathError$1("Invalid index " + key);
         }
 
         list[key] = val;
@@ -22063,7 +22236,7 @@ class DataStruct {
     }
 
     if (type === undefined) {
-      throw new DataPathError("Invalid size for vectorList; expected 2 3 or 4");
+      throw new DataPathError$1("Invalid size for vectorList; expected 2 3 or 4");
     }
 
     let prop = new type(undefined, apiname, uiname, description);
@@ -22087,7 +22260,7 @@ class DataStruct {
         }
 
         if (key < 0 || key >= list.length) {
-          throw new DataPathError("Invalid index " + key);
+          throw new DataPathError$1("Invalid index " + key);
         }
 
         list[key] = val;
@@ -22376,7 +22549,7 @@ class DataAPI extends ModelInterface {
     let end = massSetPath.search("}");
 
     if (start < 0 || end < 0) {
-      throw new DataPathError("Invalid mass set datapath: " + massSetPath);
+      throw new DataPathError$1("Invalid mass set datapath: " + massSetPath);
       return;
     }
 
@@ -22387,7 +22560,7 @@ class DataAPI extends ModelInterface {
     let rdef = this.resolvePath(ctx, prefix);
 
     if (!(rdef.prop instanceof DataList)) {
-      throw new DataPathError("massSetPath expected a path resolving to a DataList: " + massSetPath);
+      throw new DataPathError$1("massSetPath expected a path resolving to a DataList: " + massSetPath);
     }
 
     let paths = [];
@@ -22422,7 +22595,7 @@ class DataAPI extends ModelInterface {
       ret = this.resolvePath_intern(ctx, inpath, ignoreExistence, parser);
     } catch (error) {
       //throw new DataPathError("bad path " + path);
-      if (!(error instanceof DataPathError)) {
+      if (!(error instanceof DataPathError$1)) {
         print_stack$1(error);
         report("error while evaluating path " + inpath);
       }
@@ -22515,14 +22688,14 @@ class DataAPI extends ModelInterface {
           let act = prop.getActive(this, obj);
 
           if (act === undefined && !ignoreExistence) {
-            throw new DataPathError("no active elem ent for list");
+            throw new DataPathError$1("no active elem ent for list");
           }
 
           let actkey = obj !== undefined && act !== undefined ? prop.getKey(this, obj, act) : undefined;
 
           dstruct = prop.getStruct(this, obj, actkey);
           if (dstruct === undefined) {
-            throw new DataPathError("couldn't get data type for " + inpath + "'s element '" + key + "'");
+            throw new DataPathError$1("couldn't get data type for " + inpath + "'s element '" + key + "'");
           }
 
           _dummypath.parent = dpath;
@@ -22539,7 +22712,7 @@ class DataAPI extends ModelInterface {
 
           continue;
         } else {
-          throw new DataPathError(inpath + ": unknown property " + key);
+          throw new DataPathError$1(inpath + ": unknown property " + key);
         }
       }
 
@@ -22582,7 +22755,7 @@ class DataAPI extends ModelInterface {
         }
 
         if (!ok) {
-          throw new DataPathError("dynamic struct error for path: " + inpath);
+          throw new DataPathError$1("dynamic struct error for path: " + inpath);
         }
       } else {
         prop = dpath.data;
@@ -22597,7 +22770,7 @@ class DataAPI extends ModelInterface {
           lastkey = key;
 
           if (obj === undefined && !ignoreExistence) {
-            throw new DataPathError("no data for " + inpath);
+            throw new DataPathError$1("no data for " + inpath);
           } else if (obj !== undefined) {
             obj = obj[key.trim()];
           }
@@ -22633,7 +22806,7 @@ class DataAPI extends ModelInterface {
             fakeprop.ctx = fakeprop.datapath = fakeprop.dataref = undefined;
           }
         } else if (obj === undefined && !ignoreExistence) {
-          throw new DataPathError("no data for " + inpath);
+          throw new DataPathError$1("no data for " + inpath);
         } else if (dpath.type === DataTypes.DYNAMIC_STRUCT) {
           obj = dynstructobj;
         } else if (obj !== undefined && dpath.path !== "") {
@@ -22663,7 +22836,7 @@ class DataAPI extends ModelInterface {
         }
 
         if (val === undefined) {
-          throw new DataPathError("unknown value " + val1);
+          throw new DataPathError$1("unknown value " + val1);
         }
 
         if (val in prop.keys) {
@@ -22687,7 +22860,7 @@ class DataAPI extends ModelInterface {
         }
 
         if (val === undefined) {
-          throw new DataPathError("unknown value " + val1);
+          throw new DataPathError$1("unknown value " + val1);
         }
 
         if (val in prop.keys) {
@@ -22712,7 +22885,7 @@ class DataAPI extends ModelInterface {
 
         if (val === undefined) {
           console.warn(inpath, prop.values, val1, prop);
-          throw new DataPathError("unknown value " + val1);
+          throw new DataPathError$1("unknown value " + val1);
         }
 
         if (val in prop.keys) {
@@ -22733,7 +22906,7 @@ class DataAPI extends ModelInterface {
         }
 
         if (lastobj === undefined && !ignoreExistence) {
-          throw new DataPathError("no data for path " + inpath);
+          throw new DataPathError$1("no data for path " + inpath);
         } else if (lastobj !== undefined) {
           if (prop.type === PropTypes.ENUM) {
             obj = !!(bitfield == val);
@@ -22763,7 +22936,7 @@ class DataAPI extends ModelInterface {
         p.expect("RSBRACKET");
 
         if (!(prop instanceof DataList)) {
-          throw new DataPathError("bad property, not a list");
+          throw new DataPathError$1("bad property, not a list");
         }
 
         obj = prop.get(this, lastobj, lastkey);
@@ -22951,7 +23124,7 @@ class DataAPI extends ModelInterface {
         type = "enum";
         continue;
       } else {
-        throw new DataPathError("bad path " + path);
+        throw new DataPathError$1("bad path " + path);
       }
 
       i++;
@@ -23065,7 +23238,7 @@ class DataAPI extends ModelInterface {
 
     let cls = this.parseToolPath(path);
     if (cls === undefined) {
-      throw new DataPathError("unknown path \"" + path + "\"");
+      throw new DataPathError$1("unknown path \"" + path + "\"");
     }
 
     let def = cls.tooldef();
@@ -23148,7 +23321,7 @@ class DataAPI extends ModelInterface {
     try {
       return parseToolPath(path).toolclass;
     } catch (error) {
-      if (error instanceof DataPathError) {
+      if (error instanceof DataPathError$1) {
         console.warn("warning, bad tool path " + path);
         return undefined;
       } else {
@@ -23193,7 +23366,7 @@ class DataAPI extends ModelInterface {
   }
 
   static toolRegistered(cls) {
-    return ToolOp$1.isRegistered(cls);
+    return ToolOp.isRegistered(cls);
     //let key = toolkey(cls);
     //return key in tool_classes;
   }
@@ -23201,7 +23374,7 @@ class DataAPI extends ModelInterface {
   static registerTool(cls) {
     console.warn("Outdated function simple_controller.DataAPI.registerTool called");
 
-    return ToolOp$1.register(cls);
+    return ToolOp.register(cls);
 
     //let key = toolkey(cls);
     //
@@ -23225,10 +23398,10 @@ function getDataPathToolOp() {
 }
 
 function setDataPathToolOp(cls) {
-  ToolOp$1.unregister(DataPathSetOp);
+  ToolOp.unregister(DataPathSetOp);
 
-  if (!ToolOp$1.isRegistered(cls)) {
-    ToolOp$1.register(cls);
+  if (!ToolOp.isRegistered(cls)) {
+    ToolOp.register(cls);
   }
 
   dpt = cls;
@@ -23948,12 +24121,6 @@ class AfterAspect {
 
 let _ui_base = undefined;
 
-if (window.document && document.body) {
-  console.log("ensuring body.style.margin/padding are zero");
-  document.body.style["margin"] = "0px";
-  document.body.style["padding"] = "0px";
-}
-
 window.__cconst = exports$1;
 
 let Vector4$1 = Vector4;
@@ -24355,7 +24522,6 @@ let first$1 = (iter) => {
     return item;
   }
 };
-
 
 let _mobile_theme_patterns = [
   /.*width.*/,
@@ -25615,7 +25781,7 @@ class UIBase$2 extends HTMLElement {
       } catch (error) {
         this.popReportContext();
 
-        if (!(error instanceof DataPathError)) {
+        if (!(error instanceof DataPathError$1)) {
           throw error;
         } else {
           return;
@@ -25638,7 +25804,7 @@ class UIBase$2 extends HTMLElement {
     } catch (error) {
       this.popReportContext();
 
-      if (!(error instanceof DataPathError)) {
+      if (!(error instanceof DataPathError$1)) {
         throw error;
       }
 
@@ -25669,7 +25835,7 @@ class UIBase$2 extends HTMLElement {
     } catch (error) {
       this.popReportContext();
 
-      if (error instanceof DataPathError) {
+      if (error instanceof DataPathError$1) {
         //console.warn("Invalid data path '" + path + "'");
         return undefined;
       } else {
@@ -27880,7 +28046,7 @@ class IconCheck extends Button {
       try {
         rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
       } catch(error) {
-        if (error instanceof DataPathError) {
+        if (error instanceof DataPathError$1) {
           return;
         } else {
           throw error;
@@ -29711,8 +29877,6 @@ let Vector2$4 = Vector2,
   PackFlags$5 = PackFlags,
   PropTypes$5 = PropTypes;
 
-const DataPathError$1 = DataPathError;
-
 var list$2 = function list(iter) {
   let ret = [];
 
@@ -30426,7 +30590,7 @@ class Container extends UIBase$2 {
 
     if (def.icon !== undefined && (packflag & PackFlags$5.USE_ICONS)) {
       //console.log("iconbutton!");
-      label = label ?? tooltip;
+      label = label !== undefined ? label : tooltip;
 
       ret = this.iconbutton(def.icon, label, cb);
 
@@ -30438,7 +30602,7 @@ class Container extends UIBase$2 {
 
       ret.packflag |= packflag;
     } else {
-      label = label ?? def.uiname;
+      label = label !== undefined ? label : def.uiname;
 
       ret = this.button(label, cb);
       ret.description = tooltip;
@@ -30694,7 +30858,7 @@ class Container extends UIBase$2 {
       } else {
         let strip = this.strip();
 
-        let uiname = prop.uiname ?? ToolProperty.makeUIName(prop.apiname);
+        let uiname = prop.uiname !== undefined ? prop.uiname : ToolProperty.makeUIName(prop.apiname);
 
         strip.label(prop.uiname);
 
@@ -30749,7 +30913,7 @@ class Container extends UIBase$2 {
         try {
           val = this.ctx.api.getValue(this.ctx, this._joinPrefix(inpath));
         } catch (error) {
-          if (!(error instanceof DataPathError$1)) {
+          if (!(error instanceof DataPathError)) {
             throw error;
           }
         }
@@ -31323,7 +31487,7 @@ class Container extends UIBase$2 {
       try {
         rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
       } catch (error) {
-        if (error instanceof DataPathError$1) {
+        if (error instanceof DataPathError) {
           print_stack$1(error);
           console.warn("Error resolving property", inpath);
         } else {
@@ -33061,20 +33225,25 @@ class PanelFrame extends ColumnFrame {
 
     let margintop, marginbottom;
 
+    let getDefault = (key, defval) => {
+      let val = this.getDefault(key);
+      return val !== undefined ? val : defval;
+    };
+
     if (this._closed) {
-      margintop = this.getDefault('margin-top-closed') ?? 0;
-      marginbottom = this.getDefault('margin-bottom-closed') ?? 5;
+      margintop = getDefault('margin-top-closed', 0);
+      marginbottom = getDefault('margin-bottom-closed', 5);
     } else {
-      margintop = this.getDefault('margin-top') ?? 0;
-      marginbottom = this.getDefault('margin-bottom') ?? 0;
+      margintop = getDefault('margin-top', 0);
+      marginbottom = getDefault('margin-bottom', 0);
     }
 
     this.style['margin-top'] = margintop + "px";
     this.style['margin-bottom'] = marginbottom + "px";
 
-    let boxmargin = this.getDefault("BoxMargin") ?? 0;
-    let paddingleft  = this.getDefault("padding-left") ?? 0;
-    let paddingright  = this.getDefault("padding-right") ?? 0;
+    let boxmargin = getDefault("BoxMargin", 0);
+    let paddingleft  = getDefault("padding-left", 0);
+    let paddingright  = getDefault("padding-right", 0);
 
     paddingleft += boxmargin;
     paddingright += boxmargin;
@@ -35911,7 +36080,6 @@ let Vector2$8 = Vector2,
   PackFlags$9 = PackFlags,
   PropTypes$7 = PropTypes;
 
-const DataPathError$2 = DataPathError;
 
 var list$3 = function list(iter) {
   let ret = [];
@@ -39795,7 +39963,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   LockedContext: LockedContext,
   Context: Context,
   test: test,
-  DataPathError: DataPathError,
+  DataPathError: DataPathError$1,
   DataFlags: DataFlags,
   DataTypes: DataTypes,
   getVecClass: getVecClass,
@@ -39804,7 +39972,6 @@ var controller1 = /*#__PURE__*/Object.freeze({
   StructFlags: StructFlags,
   ListIface: ListIface,
   ToolOpIface: ToolOpIface,
-  ModelInterface: ModelInterface,
   setImplementationClass: setImplementationClass,
   registerTool: registerTool$1,
   pathParser: pathParser,
@@ -39824,7 +39991,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   setDefaultUndoHandlers: setDefaultUndoHandlers,
   ToolPropertyCache: ToolPropertyCache,
   SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp$1,
+  ToolOp: ToolOp,
   ToolMacro: ToolMacro,
   ToolStack: ToolStack,
   buildToolSysAPI: buildToolSysAPI,
@@ -39880,6 +40047,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   Matrix4: Matrix4,
   calc_projection_axes: calc_projection_axes,
   barycentric_v2: barycentric_v2,
+  closest_point_on_tri: closest_point_on_tri,
   dist_to_tri_v3: dist_to_tri_v3,
   tri_area: tri_area,
   aabb_overlap_area: aabb_overlap_area,
@@ -39965,6 +40133,25 @@ var controller1 = /*#__PURE__*/Object.freeze({
   reverse_keymap: reverse_keymap,
   HotKey: HotKey,
   KeyMap: KeyMap
+});
+
+let promise;
+
+if (window.haveElectron) {
+  promise = Promise.resolve().then(function () { return electron_api1; });
+} else {
+  promise = Promise.resolve().then(function () { return web_api; });
+}
+
+var platform;
+
+promise.then((module) => {
+  platform = module.platform;
+});
+
+var platform1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get platform () { return platform; }
 });
 
 var textMimes = new Set([
@@ -40366,7 +40553,7 @@ function initMenuBar(menuEditor, override=false) {
   //win.setMenu(menu);
 }
 
-class platform extends PlatformAPI {
+class platform$1 extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
     const {dialog} = require('electron').remote;
 
@@ -40460,7 +40647,7 @@ var electron_api1 = /*#__PURE__*/Object.freeze({
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
   initMenuBar: initMenuBar,
-  platform: platform
+  platform: platform$1
 });
 
 "use strict";
@@ -40483,7 +40670,7 @@ let Vector2$9 = Vector2,
     ToolFlags$1 = ToolFlags;
 //import {keymap} from './events';
 
-class ToolBase extends ToolOp$1 {
+class ToolBase extends ToolOp {
   constructor(screen) {
     super();
     this.screen = screen;
@@ -47756,8 +47943,132 @@ document.addEventListener("pointermove", (e) => {
 
 const controller = controller1;
 setNotifier(ui_noteframe);
+const platform$2 = platform1;
 const electron_api = electron_api1;
 const cconst$1 = exports$1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp$1 as ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildElectronHotkey, buildElectronMenu, buildParser, buildToolSysAPI, calc_projection_axes, cconst$1 as cconst, checkForTextBox, checkInit, circ_from_line_tan, clip_line_w, closest_point_on_line, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_tri_v3, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, initMenuBar, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parsepx, parseutil, pathDebugEvent, pathParser, platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+let mimemap = {
+  ".js" : "application/javascript",
+  ".json" :"text/json",
+  ".html" : "text/html",
+  ".txt" :"text/plain",
+  ".jpg" : "image/jpeg",
+  ".png" : "image/png",
+  ".svg" : "image/svg+xml",
+  ".xml" : "text/xml"
+};
+
+class platform$3 extends PlatformAPI {
+  //returns a promise
+  static showOpenDialog(title, args=new FileDialogArgs()) {
+    let exts = [];
+
+    for (let list of args.filters) {
+      for (let ext of list.extensions) {
+        exts.push(ext);
+      }
+    }
+
+    return new Promise((accept, reject) => {
+      loadFile(args.defaultPath, exts).then((file) => {
+        accept([new FilePath(file)]);
+      });
+    });
+  }
+
+  static showSaveDialog(title, savedata, args=new FileDialogArgs()) {
+    if (!window.showSaveFilePicker) {
+      return this.showSaveDialog_old(...arguments);
+    }
+
+    let types = [];
+
+    for (let item of args.filters) {
+      let mime = item.mime;
+      let exts = [];
+
+      for (let ext of item.extensions) {
+        ext = "." + ext;
+        if (ext.toLowerCase() in mimemap) {
+          mime = mime !== undefined ? mime : mimemap[ext.toLowerCase()];
+        }
+
+        exts.push(ext);
+      }
+
+      if (!mime) {
+        mime = "application/x-octet-stream";
+      }
+
+      types.push({
+        description : item.name,
+        accept : {
+          [mime] : exts
+        }
+      });
+    }
+
+    return new Promise((accept, reject) => {
+      let fname;
+      let saveHandle = window.showSaveFilePicker(undefined, types);
+      saveHandle.then((handle) => {
+        fname = handle.name;
+        console.log("saveHandle", handle);
+        return handle.createWritable();
+      }).then((file) => {
+        file.write(savedata);
+        file.close();
+
+        accept(fname);
+      });
+    });
+  }
+
+  //returns a promise
+  static showSaveDialog_old(title, savedata, args=new FileDialogArgs()) {
+
+    let exts = [];
+
+    for (let list of args.filters) {
+      for (let ext of list) {
+        exts.push(ext);
+      }
+    }
+
+    return new Promise((accept, reject) => {
+      saveFile(savedata);
+
+      window.setTimeout(() => {
+        accept("undefined");
+      });
+    });
+  }
+
+  //path is a FilePath instance, for web this is the actual file data
+  static readFile(path, mime="") {
+    return new Promise((accept, reject) => {
+      let data = path.data;
+
+      if (isMimeText(mime)) {
+        let s = '';
+        data = new Uint8Array(data);
+
+        for (let i=0; i<data.length; i++) {
+          s += String.fromCharCode(data[i]);
+        }
+
+        data = s;
+      }
+
+      accept(data);
+    });
+  }
+}
+
+var web_api = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  platform: platform$3
+});
+
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError$1 as DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_tri_v3, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
