@@ -4,8 +4,8 @@ note that you must set window.TINYMCE_PATH
 */
 
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
-import {pushModalLight, popModalLight} from "../util/simple_events.js";
-import * as nstructjs from "../util/struct.js";
+import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
+import * as nstructjs from "../path-controller/util/struct.js";
 import {UIBase} from "../core/ui_base.js";
 //import '../../lib/tinymce/js/tinymce/tinymce.js';
 

@@ -1,5 +1,5 @@
-import * as util from '../util/util.js';
-import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 
 /*
 all units convert to meters

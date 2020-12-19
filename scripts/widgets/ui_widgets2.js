@@ -3,20 +3,20 @@ import './ui_richedit.js';
 
 import * as util from '../util/util.js';
 import * as ui_base from '../core/ui_base.js';
-import * as events from '../util/events.js';
-import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
+import * as events from '../path-controller/util/events.js';
+import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 import {RowFrame, ColumnFrame} from "../core/ui.js";
-import {isNumber} from "../toolsys/toolprop.js";
+import {isNumber} from "../path-controller/toolsys/toolprop.js";
 
 import './ui_widgets.js';
 
 let keymap = events.keymap;
 
-import {EnumProperty, PropTypes} from '../toolsys/toolprop.js';
+import {EnumProperty, PropTypes} from '../path-controller/toolsys/toolprop.js';
 import {UIBase, PackFlags, IconSheets, parsepx} from '../core/ui_base.js';
 
 import * as units from '../core/units.js';
-import {ToolProperty} from '../toolsys/toolprop.js';
+import {ToolProperty} from '../path-controller/toolsys/toolprop.js';
 import {Button} from "./ui_button.js";
 
 export class VectorPopupButton extends Button {

@@ -7,12 +7,12 @@ import {CSSFont} from "../core/ui_base.js";
 
 var _ui = undefined;
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as ui_widgets from './ui_widgets.js';
-import * as toolprop from '../toolsys/toolprop.js';
-import '../util/html5_fileapi.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
+import '../path-controller/util/html5_fileapi.js';
 import {ColumnFrame, RowFrame, Container} from "../core/ui.js";
 
 let PropFlags = toolprop.PropFlags;

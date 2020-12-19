@@ -1,6 +1,6 @@
 import {UIBase, Icons} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
-import {pushModalLight, popModalLight, keymap} from '../util/simple_events.js';
+import {pushModalLight, popModalLight, keymap} from '../path-controller/util/simple_events.js';
 import {parsepx} from '../core/ui_theme.js';
 
 function startDrag(box) {

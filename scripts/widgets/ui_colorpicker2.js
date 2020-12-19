@@ -1,12 +1,12 @@
 "use strict";
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
-import * as events from '../util/events.js';
+import * as events from '../path-controller/util/events.js';
 import * as ui from '../core/ui.js';
-import {PropTypes} from '../toolsys/toolprop.js';
-import {keymap} from '../util/simple_events.js';
+import {PropTypes} from '../path-controller/toolsys/toolprop.js';
+import {keymap} from '../path-controller/util/simple_events.js';
 import cconst from '../config/const.js';
 import {color2web, web2color, validateWebColor} from "../core/ui_base.js";
 
@@ -15,8 +15,8 @@ let Vector2 = vectormath.Vector2,
   Vector4 = vectormath.Vector4,
   Matrix4 = vectormath.Matrix4;
 
-export {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
-import {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
+export {rgb_to_hsv, hsv_to_rgb} from "../path-controller/util/colorutils.js";
+import {rgb_to_hsv, hsv_to_rgb} from "../path-controller/util/colorutils.js";
 
 let UIBase = ui_base.UIBase,
   PackFlags = ui_base.PackFlags,

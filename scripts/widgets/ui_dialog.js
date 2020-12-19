@@ -1,5 +1,5 @@
 import {AreaFlags} from "../screen/ScreenArea.js";
-import {keymap} from "../util/simple_events.js";
+import {keymap} from "../path-controller/util/simple_events.js";
 
 export function makePopupArea(area_class, screen, args={}) {
   let sarea = UIBase.createElement("screenarea-x");

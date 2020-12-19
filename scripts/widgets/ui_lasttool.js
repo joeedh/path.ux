@@ -1,11 +1,11 @@
 import {UIBase} from "../core/ui_base.js";
 import {ColumnFrame} from "../core/ui.js";
-import {PropTypes, PropFlags} from "../toolsys/toolprop.js";
+import {PropTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
 
-import {UndoFlags} from "../toolsys/simple_toolsys.js";
-import {DataPath, DataTypes} from "../controller/simple_controller.js";
+import {UndoFlags} from "../path-controller/toolsys/toolsys.js";
+import {DataPath, DataTypes} from "../path-controller/controller/controller.js";
 
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 import cconst from '../config/const.js';
 
 const LastKey = Symbol("LastToolPanelId");

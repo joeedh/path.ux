@@ -2,12 +2,12 @@ import {UIBase, drawText} from "../core/ui_base.js";
 import {ValueButtonBase} from "./ui_widgets.js";
 import * as ui_base from "../core/ui_base.js";
 import * as units from "../core/units.js";
-import {Vector2} from "../util/vectormath.js";
+import {Vector2} from "../path-controller/util/vectormath.js";
 import {ColumnFrame} from "../core/ui.js";
-import * as util from "../util/util.js";
-import {PropTypes, isNumber, PropSubTypes, PropFlags} from "../toolsys/toolprop.js";
-import {pushModalLight, popModalLight} from "../util/simple_events.js";
-import {KeyMap, keymap} from "../util/simple_events.js";
+import * as util from "../path-controller/util/util.js";
+import {PropTypes, isNumber, PropSubTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
+import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
+import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
 
 //use .setAttribute("linear") to disable nonlinear sliding
 export class NumSlider extends ValueButtonBase {

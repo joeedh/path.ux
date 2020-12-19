@@ -1,4 +1,4 @@
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 import * as ui from '../core/ui.js';
 import * as ui_base from '../core/ui_base.js';
 import {Icons, css2color, color2css} from '../core/ui_base.js';

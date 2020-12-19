@@ -1,14 +1,14 @@
 let _ScreenArea = undefined;
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as ui from '../core/ui.js';
 import * as ui_noteframe from '../widgets/ui_noteframe.js';
 //import * as nstructjs from './struct.js';
-import {haveModal} from '../util/simple_events.js';
+import {haveModal} from '../path-controller/util/simple_events.js';
 
-import '../util/struct.js';
+import '../path-controller/util/struct.js';
 
 let UIBase = ui_base.UIBase;
 let Vector2 = vectormath.Vector2;

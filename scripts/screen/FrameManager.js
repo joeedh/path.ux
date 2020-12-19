@@ -8,18 +8,18 @@ import '../widgets/ui_treeview.js';
 
 import '../util/ScreenOverdraw.js';
 import cconst from '../config/const.js';
-import {haveModal, pushModalLight, popModalLight, _setScreenClass} from '../util/simple_events.js';
-import * as util from '../util/util.js';
+import {haveModal, pushModalLight, popModalLight, _setScreenClass} from '../path-controller/util/simple_events.js';
+import * as util from '../path-controller/util/util.js';
 import '../widgets/ui_curvewidget.js';
-import * as vectormath from '../util/vectormath.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as ScreenArea from './ScreenArea.js';
 import * as FrameManager_ops from './FrameManager_ops.js';
-import * as math from '../util/math.js';
+import * as math from '../path-controller/util/math.js';
 import * as ui_menu from '../widgets/ui_menu.js';
-import '../util/struct.js';
-import {KeyMap, HotKey} from '../util/simple_events.js';
-import {keymap} from "../util/simple_events.js";
+import '../path-controller/util/struct.js';
+import {KeyMap, HotKey} from '../path-controller/util/simple_events.js';
+import {keymap} from "../path-controller/util/simple_events.js";
 
 import {AreaDocker} from './AreaDocker.js';
 

@@ -1,10 +1,10 @@
 import '../util/ScreenOverdraw.js';
 import {UIBase, Icons} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
-import {pushModalLight, popModalLight, keymap} from '../util/simple_events.js';
+import {pushModalLight, popModalLight, keymap} from '../path-controller/util/simple_events.js';
 import {parsepx} from '../core/ui_theme.js';
-import {Vector2} from '../util/vectormath.js';
-import * as math from '../util/math.js';
+import {Vector2} from '../path-controller/util/vectormath.js';
+import * as math from '../path-controller/util/math.js';
 
 export class TreeItem extends Container {
   constructor() {

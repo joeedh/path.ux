@@ -1,5 +1,5 @@
 import {UIBase} from '../core/ui_base.js';
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 
 export class ProgressCircle extends UIBase {
   constructor() {

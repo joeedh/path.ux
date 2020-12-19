@@ -5,7 +5,6 @@ import * as util from './util.js';
 import * as vectormath from './vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as ui from '../core/ui.js';
-import * as events from './events.js';
 import * as math from './math.js';
 
 let Vector2 = vectormath.Vector2;

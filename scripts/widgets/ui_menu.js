@@ -1,16 +1,13 @@
 "use strict";
 
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 import cconst from '../config/const.js';
-import * as vectormath from '../util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
-import * as events from '../util/events.js';
-import * as simple_toolsys from '../toolsys/simple_toolsys.js';
-import * as toolprop from '../toolsys/toolprop.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import {Button} from "./ui_button.js";
-import {DomEventTypes} from '../util/events.js';
+import {DomEventTypes} from '../path-controller/util/events.js';
 
-import {HotKey, keymap} from '../util/simple_events.js';
+import {HotKey, keymap} from '../path-controller/util/simple_events.js';
 
 let EnumProperty = toolprop.EnumProperty,
   PropTypes = toolprop.PropTypes;

@@ -1,13 +1,13 @@
 "use strict";
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
-import * as events from '../util/events.js';
-import * as simple_toolsys from '../toolsys/simple_toolsys.js';
-import * as toolprop from '../toolsys/toolprop.js';
-import {DataPathError} from '../controller/simple_controller.js';
-import {Vector3, Vector4, Quat, Matrix4} from '../util/vectormath.js';
+import * as events from '../path-controller/util/events.js';
+import * as simple_toolsys from '../path-controller/toolsys/toolsys.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
+import {DataPathError} from '../path-controller/controller/controller.js';
+import {Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 import cconst from '../config/const.js';
 import {CSSFont} from "../core/ui_base.js";
 

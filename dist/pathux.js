@@ -4434,6 +4434,25 @@ function setEndian(little_endian=true) {
   nstructjs$1.STRUCT_ENDIAN = little_endian;
 }
 
+var nstructjs1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  nstructjs: nstructjs$1,
+  STRUCT: STRUCT,
+  manager: manager,
+  write_scripts: write_scripts,
+  inherit: inherit,
+  setDebugMode: setDebugMode,
+  validateStructs: validateStructs,
+  readObject: readObject,
+  writeObject: writeObject,
+  _nstructjs: _nstructjs,
+  readJSON: readJSON,
+  writeJSON: writeJSON,
+  setAllowOverriding: setAllowOverriding,
+  register: register,
+  setEndian: setEndian
+});
+
 // THIS FILE IS GENERATED - DO NOT EDIT!
 /*!mobile-detect v1.4.4 2019-09-21*/
 /*global module:false, define:false*/
@@ -12072,6 +12091,29 @@ var math1 = /*#__PURE__*/Object.freeze({
   Mat4Stack: Mat4Stack
 });
 
+let config = {
+  doubleClickTime : 500,
+
+  //timeout for press-and-hold (touch) version of double clicking
+  doubleClickHoldTime : 750,
+  DEBUG : {
+
+  }
+};
+
+function setConfig(obj) {
+  for (let k in obj) {
+    config[k] = obj[k];
+  }
+}
+
+var config1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  config: config,
+  setConfig: setConfig,
+  'default': config
+});
+
 let _clipdata = {
   name : "nothing",
   mime : "nothing",
@@ -12214,6 +12256,8 @@ let exports$1 = {
 
       this[k] = args[k];
     }
+
+    setConfig(this);
   }
 };
 window.DEBUG = exports$1.DEBUG;
@@ -12878,7 +12922,7 @@ class DoubleClickHandler {
       this.last = this.down;
       this.down = time_ms();
 
-      if (this.down - this.last < exports$1.doubleClickTime) {
+      if (this.down - this.last < config.doubleClickTime) {
         this.mdown = false;
         this.ondblclick(this.dblEvent);
 
@@ -12902,7 +12946,7 @@ class DoubleClickHandler {
       this.mdown = false;
     }
 
-    if (this.mdown && time_ms() - this.down > exports$1.doubleClickHoldTime) {
+    if (this.mdown && time_ms() - this.down > config.doubleClickHoldTime) {
       this.mdown = false;
       this.ondblclick(this.dblEvent);
     }
@@ -13014,7 +13058,7 @@ window._findScreen = findScreen;
 
 
 function pushModalLight(obj, autoStopPropagation=true) {
-  if (exports$1.DEBUG.modalEvents) {
+  if (config.DEBUG.modalEvents) {
     console.warn("pushModalLight");
   }
 
@@ -13061,7 +13105,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
   function make_default_touchhandler(type, state) {
     return function(e) {
       //console.warn("touch event!", type, touchmap[type], e.touches.length);
-      if (exports$1.DEBUG.domEvents) {
+      if (config.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -13112,7 +13156,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
 
   function make_handler(type, key) {
     return function(e) {
-      if (exports$1.DEBUG.domEvents) {
+      if (config.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -13258,7 +13302,7 @@ function popModalLight(state) {
   state.handlers = {};
   modalstack.remove(state);
 
-  if (exports$1.DEBUG.modalEvents) {
+  if (config.DEBUG.modalEvents) {
     console.warn("popModalLight", modalstack);
   }
 }
@@ -19201,1546 +19245,6 @@ Curve1DProperty.STRUCT = inherit(Curve1DProperty, ToolProperty$1) + `
 register(Curve1DProperty);
 _addClass(Curve1DProperty);
 
-const DataFlags = {
-  READ_ONLY         : 1,
-  USE_CUSTOM_GETSET : 2,
-  USE_FULL_UNDO     : 4 //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
-};
-
-
-const DataTypes = {
-  STRUCT: 0,
-  DYNAMIC_STRUCT: 1,
-  PROP: 2,
-  ARRAY: 3
-};
-
-
-class DataPathError extends Error {
-};
-
-
-function getVecClass(proptype) {
-  switch (proptype) {
-    case PropTypes.VEC2:
-      return Vector2;
-    case PropTypes.VEC3:
-      return Vector3;
-    case PropTypes.VEC4:
-      return Vector4;
-    case PropTypes.QUAT:
-      return Quat;
-    default:
-      throw new Error("bad prop type " + proptype);
-  }
-}
-function isVecProperty$1(prop) {
-  if (!prop || typeof prop !== "object" || prop === null)
-    return false;
-
-  let ok = false;
-
-  ok = ok || prop instanceof Vec2PropertyIF;
-  ok = ok || prop instanceof Vec3PropertyIF;
-  ok = ok || prop instanceof Vec4PropertyIF;
-  ok = ok || prop instanceof Vec2Property;
-  ok = ok || prop instanceof Vec3Property;
-  ok = ok || prop instanceof Vec4Property;
-
-  ok = ok || prop.type === PropTypes.VEC2;
-  ok = ok || prop.type === PropTypes.VEC3;
-  ok = ok || prop.type === PropTypes.VEC4;
-  ok = ok || prop.type === PropTypes.QUAT;
-
-  return ok;
-}
-
-class DataPath {
-  constructor(path, apiname, prop, type = DataTypes.PROP) {
-    this.type = type;
-    this.data = prop;
-    this.apiname = apiname;
-    this.path = path;
-    this.flag = 0;
-    this.struct = undefined;
-  }
-
-  copy() {
-    let ret = new DataPath();
-
-    ret.flag = this.flag;
-    ret.type = this.type;
-    ret.data = this.data;
-    ret.apiname = this.apiname;
-    ret.path = this.path;
-    ret.struct = this.struct;
-
-    return ret;
-  }
-
-  setProp(prop) {
-    this.data = prop;
-  }
-
-  readOnly() {
-    this.flag |= DataFlags.READ_ONLY;
-
-    if (this.type === DataTypes.PROP) {
-      this.data.flag |= PropFlags.READ_ONLY;
-    }
-
-    return this;
-  }
-
-  read_only() {
-    console.warn("DataPath.read_only is deprecated; use readOnly");
-    return this.readOnly();
-  }
-
-  /**
-   *
-   * For the callbacks 'this' points to an internal ToolProperty;
-   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
-   * and the datapath is 'this.datapath'
-   **/
-  customGetSet(get, set) {
-    this.flag |= DataFlags.USE_CUSTOM_GETSET;
-
-    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
-      this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
-      this.data._getValue = this.data.getValue;
-      this.data._setValue = this.data.setValue;
-
-      if (get)
-        this.data.getValue = get;
-
-      if (set)
-        this.data.setValue = set;
-    } else {
-      this.getSet = {
-        get, set
-      };
-
-      this.getSet.dataref = undefined;
-      this.getSet.datapath = undefined;
-      this.getSet.ctx = undefined;
-    }
-
-    return this;
-  }
-
-  customSet(set) {
-    this.customGetSet(undefined, set);
-    return this;
-  }
-
-  customGet(get) {
-    this.customGetSet(get, undefined);
-    return this;
-  }
-
-  /**db will be executed with underlying data object
-   that contains this path in 'this.dataref'
-
-   main event is 'change'
-   */
-  on(type, cb) {
-    if (this.type == DataTypes.PROP) {
-      this.data.on(type, cb);
-    } else {
-      throw new Error("invalid call to DataPath.on");
-    }
-
-    return this;
-  }
-
-  off(type, cb) {
-    if (this.type == DataTypes.PROP) {
-      this.data.off(type, cb);
-    }
-  }
-
-  simpleSlider() {
-    this.data.flag |= PropFlags.SIMPLE_SLIDER;
-    return this;
-  }
-
-  rollerSlider() {
-    this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
-    this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
-
-    return this;
-  }
-
-  noUnits() {
-    this.baseUnit("none");
-    this.displayUnit("none");
-    return this;
-  }
-
-  baseUnit(unit) {
-    this.data.setBaseUnit(unit);
-    return this;
-  }
-
-  displayUnit(unit) {
-    this.data.setDisplayUnit(unit);
-    return this;
-  }
-
-  range(min, max) {
-    this.data.setRange(min, max);
-    return this;
-  }
-
-  uiRange(min, max) {
-    this.data.setUIRange(min, max);
-    return this;
-  }
-
-  decimalPlaces(n) {
-    this.data.setDecimalPlaces(n);
-    return this;
-  }
-
-  /**
-   * like other callbacks (until I refactor it),
-   * func will be called with a mysterious object that stores
-   * the following properties:
-   *
-   * this.dataref  : owning object reference
-   * this.datactx  : ctx
-   * this.datapath : datapath
-   * */
-  uiNameGetter(func) {
-    this.ui_name_get = func;
-    return this;
-  }
-
-  expRate(exp) {
-    this.data.setExpRate(exp);
-    return this;
-  }
-
-  /**adds a slider for moving vector component sliders simultaneously*/
-  uniformSlider(state=true) {
-    this.data.uniformSlider(state);
-
-    return this;
-  }
-
-  radix(r) {
-    this.data.setRadix(r);
-    return this;
-  }
-
-  relativeStep(s) {
-    this.data.setRelativeStep(s);
-    return this;
-  }
-
-  step(s) {
-    this.data.setStep(s);
-    return this;
-  }
-
-  /**
-   *
-   * Tell DataPathSetOp to save/load entire app state for undo/redo
-   *
-   * */
-  fullSaveUndo() {
-    this.flag |= DataFlags.USE_FULL_UNDO;
-    this.data.flag |= PropFlags.USE_BASE_UNDO;
-
-    return this;
-  }
-
-  icon(i) {
-    this.data.setIcon(i);
-    return this;
-  }
-
-  icons(icons) { //for enum/flag properties
-    this.data.addIcons(icons);
-    return this;
-  }
-
-  descriptions(description_map) { //for enum/flag properties
-    this.data.addDescriptions(description_map);
-    return this;
-  }
-
-  uiNames(uinames) {
-    this.data.addUINames(uinames);
-    return this;
-  }
-
-  description(d) {
-    this.data.description = d;
-    return this;
-  }
-}
-
-const StructFlags = {
-  NO_UNDO: 1 //struct and its child structs can't participate in undo
-             //via the DataPathToolOp
-};
-
-"use strict";
-
-let ToolClasses = [];
-window._ToolClasses = ToolClasses;
-function setContextClass(cls) {
-  console.warn("setContextClass is deprecated");
-}
-
-const ToolFlags = {
-  PRIVATE : 1
-
-};
-
-
-const UndoFlags = {
-  NO_UNDO       : 2,
-  IS_UNDO_ROOT  : 4,
-  UNDO_BARRIER  :  8,
-  HAS_UNDO_DATA : 16
-};
-
-class InheritFlag {
-  constructor(slots={}) {
-    this.slots = slots;
-  }
-}
-
-let modalstack$1 = [];
-
-class ToolPropertyCache {
-  constructor() {
-    this.map = new Map();
-    this.pathmap = new Map();
-    this.accessors = {};
-
-    this.userSetMap = new Set();
-
-    this.api = undefined;
-    this.dstruct = undefined;
-  }
-
-  _buildAccessors(cls, key, prop, dstruct, api) {
-    let tdef = cls._getFinalToolDef();
-
-    this.api = api;
-    this.dstruct = dstruct;
-
-    if (!tdef.toolpath) {
-      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
-      return;
-    }
-
-    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
-    let obj = this.accessors;
-
-    let st = dstruct;
-    let partial = "";
-
-    for (let i=0; i<path.length; i++) {
-      let k = path[i];
-      let pathk = k;
-
-      if (i === 0) {
-        pathk = "accessors." + k;
-      }
-
-      if (i > 0) {
-        partial += ".";
-      }
-      partial += k;
-
-      if (!(k in obj)) {
-        obj[k] = {};
-      }
-
-      let st2 = api.mapStruct(obj[k], true, k);
-      if (!(k in st.pathmap)) {
-        st.struct(pathk, k, k, st2);
-      }
-      st = st2;
-
-      this.pathmap.set(partial, obj[k]);
-
-      obj = obj[k];
-    }
-
-    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
-    let prop2 = prop.copy();
-
-    let dpath = new DataPath(name, name, prop2);
-    let uiname = prop.uiname;
-
-    if (!uiname || uiname.trim().length === 0) {
-      uiname = prop.apiname;
-    }
-    if (!uiname || uiname.trim().length === 0) {
-      uiname = key;
-    }
-
-    uiname = ToolProperty.makeUIName(uiname);
-
-    prop2.uiname = uiname;
-    prop2.description = prop2.description ?? prop2.uiname;
-
-    st.add(dpath);
-
-    obj[name] = prop2.getValue();
-  }
-
-
-  _getAccessor(cls) {
-    let toolpath = cls.tooldef().toolpath.trim();
-    return this.pathmap.get(toolpath);
-  }
-
-  static getPropKey(cls, key, prop) {
-    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
-  }
-
-  useDefault(cls, key, prop) {
-    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
-    key = key.trim();
-
-    return key;
-  }
-
-  has(cls, key, prop) {
-    let obj = this._getAccessor(cls);
-
-    key = this.constructor.getPropKey(cls, key, prop);
-    return obj && key in obj;
-  }
-
-  get(cls, key, prop) {
-    let obj = this._getAccessor(cls);
-    key = this.constructor.getPropKey(cls, key, prop);
-
-    if (obj) {
-      return obj[key];
-    }
-
-    return undefined;
-  }
-
-  set(cls, key, prop) {
-    let toolpath = cls.tooldef().toolpath.trim();
-    let obj = this._getAccessor(cls);
-
-    if (!obj) {
-      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
-      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
-
-      obj = this.pathmap.get(toolpath);
-    }
-
-    if (!obj) {
-      console.error("Malformed toolpath in toolop definition: " + toolpath);
-      return;
-    }
-
-    key = this.constructor.getPropKey(cls, key, prop);
-
-    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
-    obj[key] = prop.copy().getValue();
-
-    let path = toolpath + "." + key;
-    this.userSetMap.add(path);
-
-    return this;
-  }
-}
-
-const SavedToolDefaults = new ToolPropertyCache();
-
-class ToolOp extends EventHandler {
-  /**
-  ToolOp definition.
-
-  An example:
-  <pre>
-  static tooldef() {return {
-      uiname   : "Tool Name",
-      toolpath : "logical_module.tool", //logical_module need not match up to a real module
-      icon     : -1, //tool's icon, or -1 if there is none
-      description : "tooltip",
-      is_modal : false, //tool is interactive and takes control of events
-      hotkey : undefined,
-      undoflag : 0, //see UndoFlags
-      flag     : 0,
-      inputs   : ToolOp.inherit({
-        f32val : new Float32Property(1.0),
-        path   : new StringProperty("./path");
-      }),
-      outputs  : {}
-  }}
-  </pre>
-  */
-  static tooldef() {
-    if (this === ToolOp) {
-      throw new Error("Tools must implemented static tooldef() methods!");
-    }
-    
-    return {};
-  }
-
-  getDefault(toolprop) {
-    //return SavedToolDefaults.get(this.constructor,
-  }
-
-  static Equals(a, b) {
-    if (!a || !b) return false;
-    if (a.constructor !== b.constructor) return false;
-
-    let bad = false;
-
-    for (let k in a.inputs) {
-      bad = bad || !(k in b.inputs);
-      bad = bad || a.inputs[k].constructor !== b.inputs[k];
-      bad = bad || !a.inputs[k].equals(b.inputs[k]);
-
-      if (bad) {
-        break;
-      }
-    }
-
-    return !bad;
-  }
-
-  saveDefaultInputs() {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
-        SavedToolDefaults.set(this.constructor, k, prop);
-      }
-    }
-
-    return this;
-  }
-
-  static inherit(slots={}) {
-    return new InheritFlag(slots);
-  }
-  
-  /**
-
-   Creates a new instance of this toolop from args and a context.
-   This is often use to fill properties with default arguments
-   stored somewhere in the context.
-
-   */
-  static invoke(ctx, args) {
-    let tool = new this();
-
-    for (let k in args) {
-      if (!(k in tool.inputs)) {
-        console.warn("Unknown tool argument " + k);
-        continue;
-      }
-
-      let prop = tool.inputs[k];
-      let val = args[k];
-
-      if ((typeof val === "string") && prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
-        if (val in prop.values) {
-          val = prop.values[val];
-        } else {
-          console.warn("Possible invalid enum/flag:", val);
-          continue;
-        }
-      }
-
-      tool.inputs[k].setValue(val);
-    }
-
-    return tool;
-  }
-
-  genToolString() {
-    let def = this.constructor.tooldef();
-    let path = def.toolpath + "(";
-
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      path += k + "=";
-      if (prop.type === PropTypes.STRING)
-        path += "'";
-
-      if (prop.type === PropTypes.FLOAT) {
-        path += prop.getValue().toFixed(3);
-      } else {
-        path += prop.getValue();
-      }
-      
-      if (prop.type === PropTypes.STRING)
-        path += "'";
-      path += " ";
-    }
-    path +=")";
-    return path;
-  }
-  
-  static register(cls) {
-    if (ToolClasses.indexOf(cls) >= 0) {
-      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
-      return;
-    }
-
-    ToolClasses.push(cls);
-  }
-
-  static isRegistered(cls) {
-    return ToolClasses.indexOf(cls) >= 0;
-  }
-
-  static unregister(cls) {
-    if (ToolClasses.indexOf(cls) >= 0) {
-      ToolClasses.remove(cls);
-    }
-  }
-
-  static _getFinalToolDef() {
-    let def = this.tooldef();
-
-    let getSlots = (slots, key) => {
-      if (slots === undefined)
-        return {};
-
-      if (!(slots instanceof InheritFlag)) {
-        return slots;
-      }
-
-      slots = {};
-      let p = this;
-
-      while (p !== undefined && p !== Object && p !== ToolOp) {
-        if (p.tooldef) {
-          let def = p.tooldef();
-
-          if (def[key] !== undefined) {
-            let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag);
-
-            if (slots2 instanceof InheritFlag) {
-              slots2 = slots2.slots;
-            }
-
-            for (let k in slots2) {
-              if (!(k in slots)) {
-                slots[k] = slots2[k];
-              }
-            }
-
-            if (stop) {
-              break;
-            }
-          }
-
-        }
-        p = p.prototype.__proto__.constructor;
-      }
-
-      return slots;
-    };
-
-    let dinputs = getSlots(def.inputs, "inputs");
-    let doutputs = getSlots(def.outputs, "outputs");
-
-    def.inputs = dinputs;
-    def.outputs = doutputs;
-
-    return def;
-  }
-
-  /**
-   Main ToolOp constructor.  It reads the inputs/outputs properteis from
-   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
-   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
-   chain to fetch parent class properties.
-
-
-   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
-   has been called) SavedToolDefaults will have a copy of all the default
-   property values of all registered ToolOps.
-   **/
-
-  constructor() {
-    super();
-
-    this._overdraw = undefined;
-
-    var def = this.constructor.tooldef();
-
-    if (def.undoflag !== undefined) {
-      this.undoflag = def.undoflag;
-    }
-
-    if (def.flag !== undefined) {
-      this.flag = def.flag;
-    }
-
-    this._accept = this._reject = undefined;
-    this._promise = undefined;
-    
-    for (var k in def) {
-      this[k] = def[k];
-    }
-
-    let getSlots = (slots, key) => {
-      if (slots === undefined)
-        return {};
-
-      if (!(slots instanceof InheritFlag)) {
-        return slots;
-      }
-
-      slots = {};
-      let p = this.constructor;
-
-      while (p !== undefined && p !== Object && p !== ToolOp) {
-        if (p.tooldef) {
-          let def = p.tooldef();
-
-          if (def[key] !== undefined) {
-            let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag);
-
-            if (slots2 instanceof InheritFlag) {
-              slots2 = slots2.slots;
-            }
-
-            for (let k in slots2) {
-              if (!(k in slots)) {
-                slots[k] = slots2[k];
-              }
-            }
-
-            if (stop) {
-              break;
-            }
-          }
-
-        }
-        p = p.prototype.__proto__.constructor;
-      }
-
-      return slots;
-    };
-
-    let dinputs = getSlots(def.inputs, "inputs");
-    let doutputs = getSlots(def.outputs, "outputs");
-
-    this.inputs = {};
-    this.outputs = {};
-    
-    if (dinputs) {
-      for (let k in dinputs) {
-        let prop = dinputs[k].copy();
-        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
-
-        if (SavedToolDefaults.has(this.constructor, k, prop)) {
-          try {
-            prop.setValue(SavedToolDefaults.get(this.constructor, k, prop));
-          } catch (error) {
-            console.log(error.stack);
-            console.log(error.message);
-          }
-        }
-
-        this.inputs[k] = prop;
-      }
-    }
-    
-    if (doutputs) {
-      for (let k in doutputs) {
-        let prop = doutputs[k].copy();
-        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
-
-        this.outputs[k] = prop;
-      }
-    }
-
-    this.drawlines = [];
-  }
-
-  static onTick() {
-    for (let toolop of modalstack$1) {
-      toolop.on_tick();
-    }
-  }
-
-  on_tick() {
-
-  }
-
-  /**default on_keydown implementation for modal tools,
-  no need to call super() to execute this if you don't want to*/
-  on_keydown(e) {
-    switch (e.keyCode) {
-      case keymap["Enter"]:
-      case keymap["Space"]:
-        this.modalEnd(false);
-        break;
-      case keymap["Escape"]:
-        this.modalEnd(true);
-        break;
-    }
-  }
-
-  static searchBoxOk(ctx) {
-    let flag = this.tooldef().flag;
-    let ret = !(flag && (flag & ToolFlags.PRIVATE));
-    ret = ret && this.canRun(ctx);
-
-    return ret;
-  }
-
-  static canRun(ctx) {
-    return true;
-  }
-
-  undoPre(ctx) {
-    this._undo = _appstate.genUndoFile();
-  }
-  
-  undo(ctx) {
-    _appstate.loadUndoFile(this._undo);
-  }
-
-  //for compatibility with fairmotion
-  exec_pre(ctx) {
-    this.execPre(ctx);
-  }
-
-  execPre(ctx) {
-  }
-  exec(ctx) {
-  }
-  execPost(ctx) {
-
-  }
-
-  /**for use in modal mode only*/
-  resetTempGeom() {
-    var ctx = this.modal_ctx;
-    
-    for (var dl of this.drawlines) {
-      dl.remove();
-    }
-    
-    this.drawlines.length = 0;
-  }
-  
-  error(msg) {
-    console.warn(msg);
-  }
-
-  getOverdraw() {
-    if (this._overdraw === undefined) {
-      this._overdraw = document.createElement("overdraw-x");
-      this._overdraw.start(this.modal_ctx.screen);
-    }
-
-    return this._overdraw;
-  }
-
-  /**for use in modal mode only*/
-  makeTempLine(v1, v2, style) {
-    let line = this.getOverdraw().line(v1, v2, style);
-    this.drawlines.push(line);
-    return line;
-  }
-
-  pushModal(node) {
-    throw new Error("cannot call this; use modalStart")
-  }
-
-  popModal() {
-    throw new Error("cannot call this; use modalEnd");
-  }
-
-  /**returns promise to be executed on modalEnd*/
-  modalStart(ctx) {
-    if (this.modalRunning) {
-      console.warn("Warning, tool is already in modal mode consuming events");
-      return this._promise;
-    }
-    
-    //console.warn("tool modal start");
-    
-    this.modal_ctx = ctx;
-    this.modalRunning = true;
-
-    this._promise = new Promise((accept, reject) => {
-      this._accept = accept;
-      this._reject = reject;
-
-      modalstack$1.push(this);
-      super.pushModal(ctx.screen);
-    });
-
-    return this._promise;
-  }
-
-  /*eek, I've not been using this.
-    guess it's a non-enforced contract, I've been naming
-    cancel methods 'cancel' all this time.
-
-    XXX fix
-  */
-  toolCancel() {
-  }
-  
-  modalEnd(was_cancelled) {
-    if (this._modalstate) {
-      modalstack$1.pop();
-    }
-
-    if (this._overdraw !== undefined) {
-      this._overdraw.end();
-      this._overdraw = undefined;
-    }
-
-    //console.log("tool modal end");
-    
-    if (was_cancelled && this._on_cancel !== undefined) {
-      this._accept(this.modal_ctx, true);
-      this._on_cancel(this);
-    }
-    
-    this.resetTempGeom();
-    
-    var ctx = this.modal_ctx;
-    
-    this.modal_ctx = undefined;
-    this.modalRunning = false;
-    this.is_modal = false;
-    
-    super.popModal();
-    
-    this._promise = undefined;
-    this._accept(ctx, false); //Context, was_cancelled
-    this._accept = this._reject = undefined;
-
-    this.saveDefaultInputs();
-  }
-}
-
-class ToolMacro extends ToolOp {
-  static tooldef() {return {
-    uiname : "Tool Macro"
-  }}
-  
-  constructor() {
-    super();
-    
-    this.tools = [];
-    this.curtool = 0;
-    this.has_modal = false;
-    this.connects = [];
-  }
-  
-  connect(srctool, dsttool, callback, thisvar) {
-    this.connects.push({
-      srctool  : srctool,
-      dsttool  : dsttool,
-      callback : callback,
-      thisvar  : thisvar
-    });
-    
-    return this;
-  }
-  
-  add(tool) {
-    if (tool.is_modal) {
-      this.is_modal = true;
-    }
-    
-    this.tools.push(tool);
-    
-    return this;
-  }
-  
-  _do_connections(tool) {
-    for (var c of this.connects) {
-      if (c.srctool === tool) {
-        c.callback.call(c.thisvar, c.srctool, c.dsttool);
-      }
-    }
-  }
-
-  static canRun(ctx) {
-    return true;
-  }
-
-  /*
-  canRun(ctx) {
-    if (this.tools.length == 0)
-      return false;
-    
-    //poll first tool only in list
-    return this.tools[0].constructor.canRun(ctx);
-  }//*/
-  
-  modalStart(ctx) {
-    this._promise = new Promise((function(accept, reject) {
-      this._accept = accept;
-      this._reject = reject;
-    }).bind(this));
-    
-    this.curtool = 0;
-
-    let i;
-
-    for (i=0; i<this.tools.length; i++) {
-      if (this.tools[i].is_modal)
-        break;
-      
-      this.tools[i].undoPre(ctx);
-      this.tools[i].execPre(ctx);
-      this.tools[i].exec(ctx);
-      this.tools[i].execPost(ctx);
-      this._do_connections(this.tools[i]);
-    }
-    
-    var on_modal_end = (function on_modal_end() {
-        this._do_connections(this.tools[this.curtool]);
-        this.curtool++;
-        
-        while (this.curtool < this.tools.length && 
-               !this.tools[this.curtool].is_modal) 
-        {
-            this.tools[this.curtool].undoPre(ctx);
-            this.tools[this.curtool].execPre(ctx);
-            this.tools[this.curtool].exec(ctx);
-            this.tools[this.curtool].execPost(ctx);
-            this._do_connections(this.tools[this.curtool]);
-            
-            this.curtool++;
-        }
-        
-        if (this.curtool < this.tools.length) {
-          this.tools[this.curtool].undoPre(ctx);
-          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-        } else {
-          this._accept(this, false);
-        }
-    }).bind(this);
-    
-    if (i < this.tools.length) {
-      this.curtool = i;
-      this.tools[this.curtool].undoPre(ctx);
-      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-    }
-    
-    return this._promise;
-  }
-  
-  exec(ctx) {
-    for (var i=0; i<this.tools.length; i++) {
-      this.tools[i].undoPre(ctx);
-      this.tools[i].execPre(ctx);
-      this.tools[i].exec(ctx);
-      this.tools[i].execPost(ctx);
-      this._do_connections(this.tools[i]);
-    }
-  }
-  
-  undoPre() {
-    return; //undoPre is handled in exec() or modalStart()
-  }
-  
-  undo(ctx) {
-    for (var i=this.tools.length-1; i >= 0; i--) {
-      this.tools[i].undo(ctx);
-    }
-  }
-}
-
-class ToolStack extends Array {
-  constructor(ctx) {
-    super();
-
-    this.cur = -1;
-    this.ctx = ctx;
-    this.modalRunning = 0;
-  }
-
-  get head() {
-    return this[this.cur];
-  }
-
-  setRestrictedToolContext(ctx) {
-    this.toolctx = ctx;
-  }
-
-  reset(ctx) {
-    if (ctx !== undefined) {
-      this.ctx = ctx;
-    }
-
-    this.modalRunning = 0;
-    this.cur = -1;
-    this.length = 0;
-  }
-
-  /**
-   * runs .undo,.redo if toolstack head is same as tool
-   *
-   * otherwise, .execTool(ctx, tool) is called.
-   *
-   * @param compareInputs : check if toolstack head has identical input values, defaults to false
-   * */
-  execOrRedo(ctx, tool, compareInputs=false) {
-    let head = this.head;
-
-    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
-
-    if (ok) {
-      //console.warn("Same tool detected");
-
-      this.undo();
-
-      //can inputs differ? in that case, execute new tool
-      if (!compareInputs) {
-        this.execTool(ctx, tool);
-      } else {
-        this.redo();
-      }
-
-      return false;
-    } else {
-      this.execTool(ctx, tool);
-      return true;
-    }
-  }
-
-  execTool(ctx, toolop) {
-    if (this.ctx === undefined) {
-      this.ctx = ctx;
-    }
-
-    if (!toolop.constructor.canRun(ctx)) {
-      console.log("toolop.constructor.canRun returned false");
-      return;
-    }
-
-    let tctx = this.toolctx !== undefined ? this.toolctx : ctx;
-    tctx = tctx.toLocked();
-
-    toolop._execCtx = tctx;
-
-    if (!(toolop.undoflag & UndoFlags.NO_UNDO)) {
-      this.cur++;
-
-      //truncate
-      this.length = this.cur+1;
-      
-      this[this.cur] = toolop;
-      //let undoPre use full context
-      //needed by DataPathSetOp
-      toolop.undoPre(ctx.toLocked());
-    }
-    
-    if (toolop.is_modal) {
-      this.modalRunning = true;
-      
-      toolop._on_cancel = (function(toolop) {
-        this.pop_i(this.cur);
-        this.cur--;
-      }).bind(this);
-      
-      //will handle calling .exec itself
-      toolop.modalStart(ctx.toLocked());
-    } else {
-      toolop.execPre(tctx);
-      toolop.exec(tctx);
-      toolop.execPost(tctx);
-      toolop.saveDefaultInputs();
-    }
-  }
-  
-  undo() {
-    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
-      let tool = this[this.cur];
-      tool.undo(tool._execCtx);
-      this.cur--;
-    }
-  }
-  
-  redo() {
-    if (this.cur >= -1 && this.cur+1 < this.length) {
-      this.cur++;
-
-      let tool = this[this.cur];
-      let ctx = tool._execCtx;
-      //ctx = this.ctx;
-
-      tool.undoPre(ctx);
-      tool.execPre(ctx);
-      tool.exec(ctx);
-      tool.execPost(ctx);
-    }
-  }
-}
-
-function buildToolSysAPI(api) {
-  let datastruct = api.mapStruct(ToolPropertyCache, true);
-
-  for (let cls of ToolClasses) {
-    let def = cls._getFinalToolDef();
-
-    for (let k in def.inputs) {
-      let prop = def.inputs[k];
-
-      if (!(prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY))) {
-        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
-      }
-    }
-
-  }
-}
-
-let PropFlags$1 = PropFlags,
-    PropTypes$1 = PropTypes;
-
-class ListIface {
-  getStruct(api, list, key) {
-
-  }
-  get(api, list, key) {
-
-  }
-
-  getKey(api, list, obj) {
-
-  }
-
-  getActive(api, list) {
-
-  }
-
-  setActive(api, list, val) {
-
-  }
-
-  set(api, list, key, val) {
-    list[key] = val;
-  }
-
-  getIter() {
-
-  }
-
-  filter(api, list, filter) {
-
-  }
-}
-
-class ToolOpIface {
-  constructor() {
-  }
-
-  static tooldef() {return {
-    uiname      : "!untitled tool",
-    icon        : -1,
-    toolpath    : "logical_module.tool", //logical_module need not match up to real module name
-    description : undefined,
-    is_modal    : false,
-    inputs      : {}, //tool properties
-    outputs     : {}  //tool properties
-  }}
-};
-
-class ModelInterface {
-  constructor() {
-    this.prefix = "";
-  }
-
-  getToolDef(path) {
-    throw new Error("implement me");
-  }
-
-  getToolPathHotkey(ctx, path) {
-    return undefined;
-  }
-
-  get list() {
-    throw new Error("implement me");
-    return ListIface;
-  }
-
-  createTool(path, inputs={}, constructor_argument=undefined) {
-    throw new Error("implement me");
-  }
-
-  //returns tool class, or undefined if one cannot be found for path
-  parseToolPath(path) {
-    throw new Error("implement me");
-  }
-
-  /**
-   * runs .undo,.redo if toolstack head is same as tool
-   *
-   * otherwise, .execTool(ctx, tool) is called.
-   *
-   * @param compareInputs : check if toolstack head has identical input values, defaults to false
-   * */
-  execOrRedo(ctx, toolop, compareInputs=false) {
-    return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
-  }
-
-  execTool(ctx, path, inputs={}, constructor_argument=undefined) {
-    return new Promise((accept, reject) => {
-      let tool = path;
-
-      try {
-        if (typeof tool == "string" || !(tool instanceof ToolOp)) {
-          tool = this.createTool(ctx, path, inputs, constructor_argument);
-        }
-      } catch (error) {
-        print_stack$1(error);
-        reject(error);
-        return;
-      }
-
-      //give client a chance to change tool instance directly
-      accept(tool);
-
-      //execute
-      try {
-        ctx.toolstack.execTool(ctx, tool);
-      } catch (error) { //for some reason chrome is suppressing errors
-        print_stack$1(error);
-        throw error;
-      }
-    });
-  }
-
-  //used by simple_controller.js for tagging error messages
-  pushReportContext(name) {
-
-  }
-
-  //used by simple_controller.js for tagging error messages
-  popReportContext() {
-
-  }
-
-  static toolRegistered(tool) {
-    throw new Error("implement me");
-  }
-
-  static registerTool(tool) {
-    throw new Error("implement me");
-  }
-
-  //not yet supported by path.ux's controller implementation
-  massSetProp(ctx, mass_set_path, value) {
-    throw new Error("implement me");
-  }
-
-  /** takes a mass_set_path and returns an array of individual paths */
-  resolveMassSetPaths(ctx, mass_set_path) {
-    throw new Error("implement me");
-  }
-
-  /**
-   * @example
-   *
-   * return {
-   *   obj      : [object owning property key]
-   *   parent   : [parent of obj]
-   *   key      : [property key]
-   *   subkey   : used by flag properties, represents a key within the property
-   *   value    : [value of property]
-   *   prop     : [optional toolprop.ToolProperty representing the property definition]
-   *   struct   : [optional datastruct representing the type, if value is an object]
-   *   mass_set : mass setter string, if controller implementation supports it
-   * }
-   */
-  resolvePath(ctx, path, ignoreExistence) {
-  }
-
-  setValue(ctx, path, val) {
-    let res = this.resolvePath(ctx, path);
-    let prop = res.prop;
-
-    if (prop !== undefined && (prop.flag & PropFlags$1.READ_ONLY)) {
-      throw new DataPathError("Tried to set read only property");
-    }
-
-    if (prop !== undefined && (prop.flag & PropFlags$1.USE_CUSTOM_GETSET)) {
-      prop.dataref = res.obj;
-      prop.ctx = ctx;
-      prop.datapath = path;
-
-      prop.setValue(val);
-      return;
-    }
-
-    if (prop !== undefined) {
-      if (prop.type === PropTypes$1.CURVE && !val) {
-        throw new DataPathError("can't set curve data to nothing");
-      }
-
-      let use_range = (prop.type & (PropTypes$1.INT | PropTypes$1.FLOAT));
-
-      use_range = use_range || (res.subkey && (prop.type & (PropTypes$1.VEC2 | PropTypes$1.VEC3 | PropTypes$1.VEC4)));
-      use_range = use_range && prop.range;
-      use_range = use_range && !(prop.range[0] === 0.0 && prop.range[1] === 0.0);
-
-      if (use_range) {
-        val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
-      }
-    }
-
-    let old = res.obj[res.key];
-
-    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes$1.ENUM) {
-      let ival = res.prop.values[res.subkey];
-
-      if (val) {
-        res.obj[res.key] = ival;
-      }
-    } else if (res.prop !== undefined && res.prop.type === PropTypes$1.FLAG) {
-      if (res.subkey !== undefined) {
-        let ival = res.prop.values[res.subkey];
-
-        if (val) {
-          res.obj[res.key] |= ival;
-        } else {
-          res.obj[res.key] &= ~ival;
-        }
-      } else if (typeof val === "number" || typeof val === "boolean") {
-        val = typeof val === "boolean" ? (val & 1) : val;
-
-        res.obj[res.key] = val;
-      } else {
-        throw new DataPathError("Expected a number for a bitmask property");
-      }
-    } else if (res.subkey !== undefined && isVecProperty(res.prop)) {
-      res.obj[res.subkey] = val;
-    } else if (!(prop !== undefined && prop instanceof ListIface)) {
-      res.obj[res.key] = val;
-    }
-
-    if (prop !== undefined && prop instanceof ListIface) {
-      prop.set(this, res.obj, res.key, val);
-    } else if (prop !== undefined) {
-      prop.dataref = res.obj;
-      prop.datapath = path;
-      prop.ctx = ctx;
-
-      prop._fire("change", res.obj[res.key], old);
-    }
-  }
-
-  getDescription(ctx, path) {
-    let rdef = this.resolvePath(ctx, path);
-    if (rdef === undefined) {
-      throw new DataPathError("invalid path " + path);
-    }
-
-    if (!rdef.prop || !(rdef.prop instanceof ToolProperty$1)) {
-      return "";
-    }
-
-    let type = rdef.prop.type;
-    let prop = rdef.prop;
-
-    if (rdef.subkey !== undefined) {
-      let subkey = rdef.subkey;
-
-      if (type & (PropTypes$1.VEC2|PropTypes$1.VEC3|PropTypes$1.VEC4)) {
-        if (prop.descriptions && subkey in prop.descriptions) {
-          return prop.descriptions[subkey];
-        }
-      } else if (type & (PropTypes$1.ENUM|PropTypes$1.FLAG)) {
-        if (!(subkey in prop.values) && subkey in prop.keys) {
-          subkey = prop.keys[subkey];
-        };
-
-        if (prop.descriptions && subkey in prop.descriptions) {
-          return prop.descriptions[subkey];
-        }
-      } else if (type === PropTypes$1.PROPLIST) {
-        let val = tdef.value;
-        if (typeof val === "object" && val instanceof ToolProperty$1) {
-          return val.description;
-        }
-      }
-    }
-
-    return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
-  }
-
-  validPath(ctx, path) {
-    try {
-      this.getValue(ctx, path);
-      return true;
-    } catch (error) {
-      if (!(error instanceof DataPathError)) {
-        throw error;
-      }
-    }
-
-    return false;
-  }
-
-  getValue(ctx, path) {
-    if (typeof ctx == "string") {
-      throw new Error("You forgot to pass context to getValue");
-    }
-
-    let ret = this.resolvePath(ctx, path);
-
-    if (ret === undefined) {
-      throw new DataPathError("invalid path " + path);
-    }
-
-    if (ret.prop !== undefined && (ret.prop.flag & PropFlags$1.USE_CUSTOM_GETSET)) {
-      ret.prop.dataref = ret.obj;
-      ret.prop.datapath = path;
-      ret.prop.ctx = ctx;
-
-      let val = ret.prop.getValue();
-
-      if (typeof val === "string" && (ret.prop.type & (PropTypes$1.FLAG|PropTypes$1.ENUM))) {
-        val = ret.prop.values[val];
-      }
-
-      return val;
-
-    }
-
-    return this.resolvePath(ctx, path).value;
-  }
-}
-
-let DataAPIClass = undefined;
-function setImplementationClass(cls) {
-  DataAPIClass = cls;
-}
-
-function registerTool(cls) {
-  if (DataAPIClass === undefined) {
-    throw new Error("data api not initialized properly; call setImplementationClass");
-  }
-
-  return DataAPIClass.registerTool(cls);
-}
-
 class token {
   constructor(type, val, lexpos, lexlen, lineno, lexer, parser) {
     this.type = type;
@@ -21296,6 +19800,1561 @@ var parseutil1 = /*#__PURE__*/Object.freeze({
   parser: parser
 });
 
+const DataFlags = {
+  READ_ONLY         : 1,
+  USE_CUSTOM_GETSET : 2,
+  USE_FULL_UNDO     : 4 //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
+};
+
+
+const DataTypes = {
+  STRUCT: 0,
+  DYNAMIC_STRUCT: 1,
+  PROP: 2,
+  ARRAY: 3
+};
+
+
+class DataPathError extends Error {
+};
+
+
+function getVecClass(proptype) {
+  switch (proptype) {
+    case PropTypes.VEC2:
+      return Vector2;
+    case PropTypes.VEC3:
+      return Vector3;
+    case PropTypes.VEC4:
+      return Vector4;
+    case PropTypes.QUAT:
+      return Quat;
+    default:
+      throw new Error("bad prop type " + proptype);
+  }
+}
+function isVecProperty(prop) {
+  if (!prop || typeof prop !== "object" || prop === null)
+    return false;
+
+  let ok = false;
+
+  ok = ok || prop instanceof Vec2PropertyIF;
+  ok = ok || prop instanceof Vec3PropertyIF;
+  ok = ok || prop instanceof Vec4PropertyIF;
+  ok = ok || prop instanceof Vec2Property;
+  ok = ok || prop instanceof Vec3Property;
+  ok = ok || prop instanceof Vec4Property;
+
+  ok = ok || prop.type === PropTypes.VEC2;
+  ok = ok || prop.type === PropTypes.VEC3;
+  ok = ok || prop.type === PropTypes.VEC4;
+  ok = ok || prop.type === PropTypes.QUAT;
+
+  return ok;
+}
+
+class DataPath {
+  constructor(path, apiname, prop, type = DataTypes.PROP) {
+    this.type = type;
+    this.data = prop;
+    this.apiname = apiname;
+    this.path = path;
+    this.flag = 0;
+    this.struct = undefined;
+  }
+
+  copy() {
+    let ret = new DataPath();
+
+    ret.flag = this.flag;
+    ret.type = this.type;
+    ret.data = this.data;
+    ret.apiname = this.apiname;
+    ret.path = this.path;
+    ret.struct = this.struct;
+
+    return ret;
+  }
+
+  setProp(prop) {
+    this.data = prop;
+  }
+
+  readOnly() {
+    this.flag |= DataFlags.READ_ONLY;
+
+    if (this.type === DataTypes.PROP) {
+      this.data.flag |= PropFlags.READ_ONLY;
+    }
+
+    return this;
+  }
+
+  read_only() {
+    console.warn("DataPath.read_only is deprecated; use readOnly");
+    return this.readOnly();
+  }
+
+  /**
+   *
+   * For the callbacks 'this' points to an internal ToolProperty;
+   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
+   * and the datapath is 'this.datapath'
+   **/
+  customGetSet(get, set) {
+    this.flag |= DataFlags.USE_CUSTOM_GETSET;
+
+    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
+      this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
+      this.data._getValue = this.data.getValue;
+      this.data._setValue = this.data.setValue;
+
+      if (get)
+        this.data.getValue = get;
+
+      if (set)
+        this.data.setValue = set;
+    } else {
+      this.getSet = {
+        get, set
+      };
+
+      this.getSet.dataref = undefined;
+      this.getSet.datapath = undefined;
+      this.getSet.ctx = undefined;
+    }
+
+    return this;
+  }
+
+  customSet(set) {
+    this.customGetSet(undefined, set);
+    return this;
+  }
+
+  customGet(get) {
+    this.customGetSet(get, undefined);
+    return this;
+  }
+
+  /**db will be executed with underlying data object
+   that contains this path in 'this.dataref'
+
+   main event is 'change'
+   */
+  on(type, cb) {
+    if (this.type == DataTypes.PROP) {
+      this.data.on(type, cb);
+    } else {
+      throw new Error("invalid call to DataPath.on");
+    }
+
+    return this;
+  }
+
+  off(type, cb) {
+    if (this.type == DataTypes.PROP) {
+      this.data.off(type, cb);
+    }
+  }
+
+  simpleSlider() {
+    this.data.flag |= PropFlags.SIMPLE_SLIDER;
+    return this;
+  }
+
+  rollerSlider() {
+    this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
+    this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
+
+    return this;
+  }
+
+  noUnits() {
+    this.baseUnit("none");
+    this.displayUnit("none");
+    return this;
+  }
+
+  baseUnit(unit) {
+    this.data.setBaseUnit(unit);
+    return this;
+  }
+
+  displayUnit(unit) {
+    this.data.setDisplayUnit(unit);
+    return this;
+  }
+
+  range(min, max) {
+    this.data.setRange(min, max);
+    return this;
+  }
+
+  uiRange(min, max) {
+    this.data.setUIRange(min, max);
+    return this;
+  }
+
+  decimalPlaces(n) {
+    this.data.setDecimalPlaces(n);
+    return this;
+  }
+
+  /**
+   * like other callbacks (until I refactor it),
+   * func will be called with a mysterious object that stores
+   * the following properties:
+   *
+   * this.dataref  : owning object reference
+   * this.datactx  : ctx
+   * this.datapath : datapath
+   * */
+  uiNameGetter(func) {
+    this.ui_name_get = func;
+    return this;
+  }
+
+  expRate(exp) {
+    this.data.setExpRate(exp);
+    return this;
+  }
+
+  /**adds a slider for moving vector component sliders simultaneously*/
+  uniformSlider(state=true) {
+    this.data.uniformSlider(state);
+
+    return this;
+  }
+
+  radix(r) {
+    this.data.setRadix(r);
+    return this;
+  }
+
+  relativeStep(s) {
+    this.data.setRelativeStep(s);
+    return this;
+  }
+
+  step(s) {
+    this.data.setStep(s);
+    return this;
+  }
+
+  /**
+   *
+   * Tell DataPathSetOp to save/load entire app state for undo/redo
+   *
+   * */
+  fullSaveUndo() {
+    this.flag |= DataFlags.USE_FULL_UNDO;
+    this.data.flag |= PropFlags.USE_BASE_UNDO;
+
+    return this;
+  }
+
+  icon(i) {
+    this.data.setIcon(i);
+    return this;
+  }
+
+  icons(icons) { //for enum/flag properties
+    this.data.addIcons(icons);
+    return this;
+  }
+
+  descriptions(description_map) { //for enum/flag properties
+    this.data.addDescriptions(description_map);
+    return this;
+  }
+
+  uiNames(uinames) {
+    this.data.addUINames(uinames);
+    return this;
+  }
+
+  description(d) {
+    this.data.description = d;
+    return this;
+  }
+}
+
+const StructFlags = {
+  NO_UNDO: 1 //struct and its child structs can't participate in undo
+             //via the DataPathToolOp
+};
+
+class ListIface {
+  getStruct(api, list, key) {
+
+  }
+  get(api, list, key) {
+
+  }
+
+  getKey(api, list, obj) {
+
+  }
+
+  getActive(api, list) {
+
+  }
+
+  setActive(api, list, val) {
+
+  }
+
+  set(api, list, key, val) {
+    list[key] = val;
+  }
+
+  getIter() {
+
+  }
+
+  filter(api, list, filter) {
+
+  }
+}
+
+class ToolOpIface {
+  constructor() {
+  }
+
+  static tooldef() {return {
+    uiname      : "!untitled tool",
+    icon        : -1,
+    toolpath    : "logical_module.tool", //logical_module need not match up to real module name
+    description : undefined,
+    is_modal    : false,
+    inputs      : {}, //tool properties
+    outputs     : {}  //tool properties
+  }}
+};
+
+class ModelInterface {
+  constructor() {
+    this.prefix = "";
+  }
+
+  getToolDef(path) {
+    throw new Error("implement me");
+  }
+
+  getToolPathHotkey(ctx, path) {
+    return undefined;
+  }
+
+  get list() {
+    throw new Error("implement me");
+    return ListIface;
+  }
+
+  createTool(path, inputs={}, constructor_argument=undefined) {
+    throw new Error("implement me");
+  }
+
+  //returns tool class, or undefined if one cannot be found for path
+  parseToolPath(path) {
+    throw new Error("implement me");
+  }
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, toolop, compareInputs=false) {
+    return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
+  }
+
+  execTool(ctx, path, inputs={}, constructor_argument=undefined) {
+    return new Promise((accept, reject) => {
+      let tool = path;
+
+      try {
+        if (typeof tool == "string" || !(tool instanceof ToolOp)) {
+          tool = this.createTool(ctx, path, inputs, constructor_argument);
+        }
+      } catch (error) {
+        print_stack$1(error);
+        reject(error);
+        return;
+      }
+
+      //give client a chance to change tool instance directly
+      accept(tool);
+
+      //execute
+      try {
+        ctx.toolstack.execTool(ctx, tool);
+      } catch (error) { //for some reason chrome is suppressing errors
+        print_stack$1(error);
+        throw error;
+      }
+    });
+  }
+
+  //used by simple_controller.js for tagging error messages
+  pushReportContext(name) {
+
+  }
+
+  //used by simple_controller.js for tagging error messages
+  popReportContext() {
+
+  }
+
+  static toolRegistered(tool) {
+    throw new Error("implement me");
+  }
+
+  static registerTool(tool) {
+    throw new Error("implement me");
+  }
+
+  //not yet supported by path.ux's controller implementation
+  massSetProp(ctx, mass_set_path, value) {
+    throw new Error("implement me");
+  }
+
+  /** takes a mass_set_path and returns an array of individual paths */
+  resolveMassSetPaths(ctx, mass_set_path) {
+    throw new Error("implement me");
+  }
+
+  /**
+   * @example
+   *
+   * return {
+   *   obj      : [object owning property key]
+   *   parent   : [parent of obj]
+   *   key      : [property key]
+   *   subkey   : used by flag properties, represents a key within the property
+   *   value    : [value of property]
+   *   prop     : [optional toolprop.ToolProperty representing the property definition]
+   *   struct   : [optional datastruct representing the type, if value is an object]
+   *   mass_set : mass setter string, if controller implementation supports it
+   * }
+   */
+  resolvePath(ctx, path, ignoreExistence) {
+  }
+
+  setValue(ctx, path, val) {
+    let res = this.resolvePath(ctx, path);
+    let prop = res.prop;
+
+    if (prop !== undefined && (prop.flag & PropFlags.READ_ONLY)) {
+      throw new DataPathError("Tried to set read only property");
+    }
+
+    if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+      prop.dataref = res.obj;
+      prop.ctx = ctx;
+      prop.datapath = path;
+
+      prop.setValue(val);
+      return;
+    }
+
+    if (prop !== undefined) {
+      if (prop.type === PropTypes.CURVE && !val) {
+        throw new DataPathError("can't set curve data to nothing");
+      }
+
+      let use_range = (prop.type & (PropTypes.INT | PropTypes.FLOAT));
+
+      use_range = use_range || (res.subkey && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)));
+      use_range = use_range && prop.range;
+      use_range = use_range && !(prop.range[0] === 0.0 && prop.range[1] === 0.0);
+
+      if (use_range) {
+        val = Math.min(Math.max(val, prop.range[0]), prop.range[1]);
+      }
+    }
+
+    let old = res.obj[res.key];
+
+    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes.ENUM) {
+      let ival = res.prop.values[res.subkey];
+
+      if (val) {
+        res.obj[res.key] = ival;
+      }
+    } else if (res.prop !== undefined && res.prop.type === PropTypes.FLAG) {
+      if (res.subkey !== undefined) {
+        let ival = res.prop.values[res.subkey];
+
+        if (val) {
+          res.obj[res.key] |= ival;
+        } else {
+          res.obj[res.key] &= ~ival;
+        }
+      } else if (typeof val === "number" || typeof val === "boolean") {
+        val = typeof val === "boolean" ? (val & 1) : val;
+
+        res.obj[res.key] = val;
+      } else {
+        throw new DataPathError("Expected a number for a bitmask property");
+      }
+    } else if (res.subkey !== undefined && isVecProperty(res.prop)) {
+      res.obj[res.subkey] = val;
+    } else if (!(prop !== undefined && prop instanceof ListIface)) {
+      res.obj[res.key] = val;
+    }
+
+    if (prop !== undefined && prop instanceof ListIface) {
+      prop.set(this, res.obj, res.key, val);
+    } else if (prop !== undefined) {
+      prop.dataref = res.obj;
+      prop.datapath = path;
+      prop.ctx = ctx;
+
+      prop._fire("change", res.obj[res.key], old);
+    }
+  }
+
+  getDescription(ctx, path) {
+    let rdef = this.resolvePath(ctx, path);
+    if (rdef === undefined) {
+      throw new DataPathError("invalid path " + path);
+    }
+
+    if (!rdef.prop || !(rdef.prop instanceof ToolProperty$1)) {
+      return "";
+    }
+
+    let type = rdef.prop.type;
+    let prop = rdef.prop;
+
+    if (rdef.subkey !== undefined) {
+      let subkey = rdef.subkey;
+
+      if (type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type & (PropTypes.ENUM|PropTypes.FLAG)) {
+        if (!(subkey in prop.values) && subkey in prop.keys) {
+          subkey = prop.keys[subkey];
+        };
+
+        if (prop.descriptions && subkey in prop.descriptions) {
+          return prop.descriptions[subkey];
+        }
+      } else if (type === PropTypes.PROPLIST) {
+        let val = tdef.value;
+        if (typeof val === "object" && val instanceof ToolProperty$1) {
+          return val.description;
+        }
+      }
+    }
+
+    return rdef.prop.description ? rdef.prop.description : rdef.prop.uiname;
+  }
+
+  validPath(ctx, path) {
+    try {
+      this.getValue(ctx, path);
+      return true;
+    } catch (error) {
+      if (!(error instanceof DataPathError)) {
+        throw error;
+      }
+    }
+
+    return false;
+  }
+
+  getValue(ctx, path) {
+    if (typeof ctx == "string") {
+      throw new Error("You forgot to pass context to getValue");
+    }
+
+    let ret = this.resolvePath(ctx, path);
+
+    if (ret === undefined) {
+      throw new DataPathError("invalid path " + path);
+    }
+
+    if (ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+      ret.prop.dataref = ret.obj;
+      ret.prop.datapath = path;
+      ret.prop.ctx = ctx;
+
+      let val = ret.prop.getValue();
+
+      if (typeof val === "string" && (ret.prop.type & (PropTypes.FLAG|PropTypes.ENUM))) {
+        val = ret.prop.values[val];
+      }
+
+      return val;
+
+    }
+
+    return this.resolvePath(ctx, path).value;
+  }
+}
+
+let DataAPIClass = undefined;
+function setImplementationClass(cls) {
+  DataAPIClass = cls;
+}
+
+function registerTool(cls) {
+  if (DataAPIClass === undefined) {
+    throw new Error("data api not initialized properly; call setImplementationClass");
+  }
+
+  return DataAPIClass.registerTool(cls);
+}
+
+"use strict";
+
+let ToolClasses = [];
+window._ToolClasses = ToolClasses;
+function setContextClass(cls) {
+  console.warn("setContextClass is deprecated");
+}
+
+const ToolFlags = {
+  PRIVATE : 1
+
+};
+
+
+const UndoFlags = {
+  NO_UNDO       : 2,
+  IS_UNDO_ROOT  : 4,
+  UNDO_BARRIER  :  8,
+  HAS_UNDO_DATA : 16
+};
+
+class InheritFlag {
+  constructor(slots={}) {
+    this.slots = slots;
+  }
+}
+
+let modalstack$1 = [];
+
+let defaultUndoHandlers = {
+  undoPre(ctx) {
+    throw new Error("implement me");
+  },
+  undo(ctx) {
+    throw new Error("implement me");
+  }
+};
+
+function setDefaultUndoHandlers(undoPre, undo) {
+  if (!undoPre || !undo) {
+    throw new Error("invalid parameters to setDefaultUndoHandlers");
+  }
+
+  defaultUndoHandlers.undoPre = undoPre;
+  defaultUndoHandlers.undo = undo;
+}
+
+class ToolPropertyCache {
+  constructor() {
+    this.map = new Map();
+    this.pathmap = new Map();
+    this.accessors = {};
+
+    this.userSetMap = new Set();
+
+    this.api = undefined;
+    this.dstruct = undefined;
+  }
+
+  _buildAccessors(cls, key, prop, dstruct, api) {
+    let tdef = cls._getFinalToolDef();
+
+    this.api = api;
+    this.dstruct = dstruct;
+
+    if (!tdef.toolpath) {
+      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
+      return;
+    }
+
+    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
+    let obj = this.accessors;
+
+    let st = dstruct;
+    let partial = "";
+
+    for (let i=0; i<path.length; i++) {
+      let k = path[i];
+      let pathk = k;
+
+      if (i === 0) {
+        pathk = "accessors." + k;
+      }
+
+      if (i > 0) {
+        partial += ".";
+      }
+      partial += k;
+
+      if (!(k in obj)) {
+        obj[k] = {};
+      }
+
+      let st2 = api.mapStruct(obj[k], true, k);
+      if (!(k in st.pathmap)) {
+        st.struct(pathk, k, k, st2);
+      }
+      st = st2;
+
+      this.pathmap.set(partial, obj[k]);
+
+      obj = obj[k];
+    }
+
+    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
+    let prop2 = prop.copy();
+
+    let dpath = new DataPath(name, name, prop2);
+    let uiname = prop.uiname;
+
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = prop.apiname;
+    }
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = key;
+    }
+
+    uiname = ToolProperty.makeUIName(uiname);
+
+    prop2.uiname = uiname;
+    prop2.description = prop2.description ?? prop2.uiname;
+
+    st.add(dpath);
+
+    obj[name] = prop2.getValue();
+  }
+
+
+  _getAccessor(cls) {
+    let toolpath = cls.tooldef().toolpath.trim();
+    return this.pathmap.get(toolpath);
+  }
+
+  static getPropKey(cls, key, prop) {
+    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
+  }
+
+  useDefault(cls, key, prop) {
+    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
+    key = key.trim();
+
+    return key;
+  }
+
+  has(cls, key, prop) {
+    let obj = this._getAccessor(cls);
+
+    key = this.constructor.getPropKey(cls, key, prop);
+    return obj && key in obj;
+  }
+
+  get(cls, key, prop) {
+    let obj = this._getAccessor(cls);
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    if (obj) {
+      return obj[key];
+    }
+
+    return undefined;
+  }
+
+  set(cls, key, prop) {
+    let toolpath = cls.tooldef().toolpath.trim();
+    let obj = this._getAccessor(cls);
+
+    if (!obj) {
+      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
+      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
+
+      obj = this.pathmap.get(toolpath);
+    }
+
+    if (!obj) {
+      console.error("Malformed toolpath in toolop definition: " + toolpath);
+      return;
+    }
+
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
+    obj[key] = prop.copy().getValue();
+
+    let path = toolpath + "." + key;
+    this.userSetMap.add(path);
+
+    return this;
+  }
+}
+
+const SavedToolDefaults = new ToolPropertyCache();
+
+class ToolOp$1 extends EventHandler {
+  /**
+  ToolOp definition.
+
+  An example:
+  <pre>
+  static tooldef() {return {
+      uiname   : "Tool Name",
+      toolpath : "logical_module.tool", //logical_module need not match up to a real module
+      icon     : -1, //tool's icon, or -1 if there is none
+      description : "tooltip",
+      is_modal : false, //tool is interactive and takes control of events
+      hotkey : undefined,
+      undoflag : 0, //see UndoFlags
+      flag     : 0,
+      inputs   : ToolOp.inherit({
+        f32val : new Float32Property(1.0),
+        path   : new StringProperty("./path");
+      }),
+      outputs  : {}
+  }}
+  </pre>
+  */
+  static tooldef() {
+    if (this === ToolOp$1) {
+      throw new Error("Tools must implemented static tooldef() methods!");
+    }
+    
+    return {};
+  }
+
+  getDefault(toolprop) {
+    //return SavedToolDefaults.get(this.constructor,
+  }
+
+  static Equals(a, b) {
+    if (!a || !b) return false;
+    if (a.constructor !== b.constructor) return false;
+
+    let bad = false;
+
+    for (let k in a.inputs) {
+      bad = bad || !(k in b.inputs);
+      bad = bad || a.inputs[k].constructor !== b.inputs[k];
+      bad = bad || !a.inputs[k].equals(b.inputs[k]);
+
+      if (bad) {
+        break;
+      }
+    }
+
+    return !bad;
+  }
+
+  saveDefaultInputs() {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
+        SavedToolDefaults.set(this.constructor, k, prop);
+      }
+    }
+
+    return this;
+  }
+
+  static inherit(slots={}) {
+    return new InheritFlag(slots);
+  }
+  
+  /**
+
+   Creates a new instance of this toolop from args and a context.
+   This is often use to fill properties with default arguments
+   stored somewhere in the context.
+
+   */
+  static invoke(ctx, args) {
+    let tool = new this();
+
+    for (let k in args) {
+      if (!(k in tool.inputs)) {
+        console.warn("Unknown tool argument " + k);
+        continue;
+      }
+
+      let prop = tool.inputs[k];
+      let val = args[k];
+
+      if ((typeof val === "string") && prop.type & (PropTypes.ENUM|PropTypes.FLAG)) {
+        if (val in prop.values) {
+          val = prop.values[val];
+        } else {
+          console.warn("Possible invalid enum/flag:", val);
+          continue;
+        }
+      }
+
+      tool.inputs[k].setValue(val);
+    }
+
+    return tool;
+  }
+
+  genToolString() {
+    let def = this.constructor.tooldef();
+    let path = def.toolpath + "(";
+
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      path += k + "=";
+      if (prop.type === PropTypes.STRING)
+        path += "'";
+
+      if (prop.type === PropTypes.FLOAT) {
+        path += prop.getValue().toFixed(3);
+      } else {
+        path += prop.getValue();
+      }
+      
+      if (prop.type === PropTypes.STRING)
+        path += "'";
+      path += " ";
+    }
+    path +=")";
+    return path;
+  }
+  
+  static register(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
+      return;
+    }
+
+    ToolClasses.push(cls);
+  }
+
+  static isRegistered(cls) {
+    return ToolClasses.indexOf(cls) >= 0;
+  }
+
+  static unregister(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      ToolClasses.remove(cls);
+    }
+  }
+
+  static _getFinalToolDef() {
+    let def = this.tooldef();
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this;
+
+      while (p !== undefined && p !== Object && p !== ToolOp$1) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag);
+
+            if (slots2 instanceof InheritFlag) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+
+        }
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    def.inputs = dinputs;
+    def.outputs = doutputs;
+
+    return def;
+  }
+
+  /**
+   Main ToolOp constructor.  It reads the inputs/outputs properteis from
+   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
+   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
+   chain to fetch parent class properties.
+
+
+   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
+   has been called) SavedToolDefaults will have a copy of all the default
+   property values of all registered ToolOps.
+   **/
+
+  constructor() {
+    super();
+
+    this._overdraw = undefined;
+
+    var def = this.constructor.tooldef();
+
+    if (def.undoflag !== undefined) {
+      this.undoflag = def.undoflag;
+    }
+
+    if (def.flag !== undefined) {
+      this.flag = def.flag;
+    }
+
+    this._accept = this._reject = undefined;
+    this._promise = undefined;
+    
+    for (var k in def) {
+      this[k] = def[k];
+    }
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this.constructor;
+
+      while (p !== undefined && p !== Object && p !== ToolOp$1) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag);
+
+            if (slots2 instanceof InheritFlag) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+
+        }
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    this.inputs = {};
+    this.outputs = {};
+    
+    if (dinputs) {
+      for (let k in dinputs) {
+        let prop = dinputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        if (SavedToolDefaults.has(this.constructor, k, prop)) {
+          try {
+            prop.setValue(SavedToolDefaults.get(this.constructor, k, prop));
+          } catch (error) {
+            console.log(error.stack);
+            console.log(error.message);
+          }
+        }
+
+        this.inputs[k] = prop;
+      }
+    }
+    
+    if (doutputs) {
+      for (let k in doutputs) {
+        let prop = doutputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        this.outputs[k] = prop;
+      }
+    }
+
+    this.drawlines = [];
+  }
+
+  static onTick() {
+    for (let toolop of modalstack$1) {
+      toolop.on_tick();
+    }
+  }
+
+  on_tick() {
+
+  }
+
+  /**default on_keydown implementation for modal tools,
+  no need to call super() to execute this if you don't want to*/
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap["Enter"]:
+      case keymap["Space"]:
+        this.modalEnd(false);
+        break;
+      case keymap["Escape"]:
+        this.modalEnd(true);
+        break;
+    }
+  }
+
+  static searchBoxOk(ctx) {
+    let flag = this.tooldef().flag;
+    let ret = !(flag && (flag & ToolFlags.PRIVATE));
+    ret = ret && this.canRun(ctx);
+
+    return ret;
+  }
+
+  static canRun(ctx) {
+    return true;
+  }
+
+  undoPre(ctx) {
+    this._undo = _appstate.genUndoFile();
+  }
+  
+  undo(ctx) {
+    _appstate.loadUndoFile(this._undo);
+  }
+
+  //for compatibility with fairmotion
+  exec_pre(ctx) {
+    this.execPre(ctx);
+  }
+
+  execPre(ctx) {
+  }
+  exec(ctx) {
+  }
+  execPost(ctx) {
+
+  }
+
+  /**for use in modal mode only*/
+  resetTempGeom() {
+    var ctx = this.modal_ctx;
+    
+    for (var dl of this.drawlines) {
+      dl.remove();
+    }
+    
+    this.drawlines.length = 0;
+  }
+  
+  error(msg) {
+    console.warn(msg);
+  }
+
+  getOverdraw() {
+    if (this._overdraw === undefined) {
+      this._overdraw = document.createElement("overdraw-x");
+      this._overdraw.start(this.modal_ctx.screen);
+    }
+
+    return this._overdraw;
+  }
+
+  /**for use in modal mode only*/
+  makeTempLine(v1, v2, style) {
+    let line = this.getOverdraw().line(v1, v2, style);
+    this.drawlines.push(line);
+    return line;
+  }
+
+  pushModal(node) {
+    throw new Error("cannot call this; use modalStart")
+  }
+
+  popModal() {
+    throw new Error("cannot call this; use modalEnd");
+  }
+
+  /**returns promise to be executed on modalEnd*/
+  modalStart(ctx) {
+    if (this.modalRunning) {
+      console.warn("Warning, tool is already in modal mode consuming events");
+      return this._promise;
+    }
+    
+    //console.warn("tool modal start");
+    
+    this.modal_ctx = ctx;
+    this.modalRunning = true;
+
+    this._promise = new Promise((accept, reject) => {
+      this._accept = accept;
+      this._reject = reject;
+
+      modalstack$1.push(this);
+      super.pushModal(ctx.screen);
+    });
+
+    return this._promise;
+  }
+
+  /*eek, I've not been using this.
+    guess it's a non-enforced contract, I've been naming
+    cancel methods 'cancel' all this time.
+
+    XXX fix
+  */
+  toolCancel() {
+  }
+  
+  modalEnd(was_cancelled) {
+    if (this._modalstate) {
+      modalstack$1.pop();
+    }
+
+    if (this._overdraw !== undefined) {
+      this._overdraw.end();
+      this._overdraw = undefined;
+    }
+
+    //console.log("tool modal end");
+    
+    if (was_cancelled && this._on_cancel !== undefined) {
+      this._accept(this.modal_ctx, true);
+      this._on_cancel(this);
+    }
+    
+    this.resetTempGeom();
+    
+    var ctx = this.modal_ctx;
+    
+    this.modal_ctx = undefined;
+    this.modalRunning = false;
+    this.is_modal = false;
+    
+    super.popModal();
+    
+    this._promise = undefined;
+    this._accept(ctx, false); //Context, was_cancelled
+    this._accept = this._reject = undefined;
+
+    this.saveDefaultInputs();
+  }
+}
+
+class ToolMacro extends ToolOp$1 {
+  static tooldef() {return {
+    uiname : "Tool Macro"
+  }}
+  
+  constructor() {
+    super();
+    
+    this.tools = [];
+    this.curtool = 0;
+    this.has_modal = false;
+    this.connects = [];
+  }
+  
+  connect(srctool, dsttool, callback, thisvar) {
+    this.connects.push({
+      srctool  : srctool,
+      dsttool  : dsttool,
+      callback : callback,
+      thisvar  : thisvar
+    });
+    
+    return this;
+  }
+  
+  add(tool) {
+    if (tool.is_modal) {
+      this.is_modal = true;
+    }
+    
+    this.tools.push(tool);
+    
+    return this;
+  }
+  
+  _do_connections(tool) {
+    for (var c of this.connects) {
+      if (c.srctool === tool) {
+        c.callback.call(c.thisvar, c.srctool, c.dsttool);
+      }
+    }
+  }
+
+  static canRun(ctx) {
+    return true;
+  }
+
+  /*
+  canRun(ctx) {
+    if (this.tools.length == 0)
+      return false;
+    
+    //poll first tool only in list
+    return this.tools[0].constructor.canRun(ctx);
+  }//*/
+  
+  modalStart(ctx) {
+    this._promise = new Promise((function(accept, reject) {
+      this._accept = accept;
+      this._reject = reject;
+    }).bind(this));
+    
+    this.curtool = 0;
+
+    let i;
+
+    for (i=0; i<this.tools.length; i++) {
+      if (this.tools[i].is_modal)
+        break;
+      
+      this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
+      this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
+      this._do_connections(this.tools[i]);
+    }
+    
+    var on_modal_end = (function on_modal_end() {
+        this._do_connections(this.tools[this.curtool]);
+        this.curtool++;
+        
+        while (this.curtool < this.tools.length && 
+               !this.tools[this.curtool].is_modal) 
+        {
+            this.tools[this.curtool].undoPre(ctx);
+            this.tools[this.curtool].execPre(ctx);
+            this.tools[this.curtool].exec(ctx);
+            this.tools[this.curtool].execPost(ctx);
+            this._do_connections(this.tools[this.curtool]);
+            
+            this.curtool++;
+        }
+        
+        if (this.curtool < this.tools.length) {
+          this.tools[this.curtool].undoPre(ctx);
+          this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+        } else {
+          this._accept(this, false);
+        }
+    }).bind(this);
+    
+    if (i < this.tools.length) {
+      this.curtool = i;
+      this.tools[this.curtool].undoPre(ctx);
+      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+    }
+    
+    return this._promise;
+  }
+  
+  exec(ctx) {
+    for (var i=0; i<this.tools.length; i++) {
+      this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
+      this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
+      this._do_connections(this.tools[i]);
+    }
+  }
+  
+  undoPre() {
+    return; //undoPre is handled in exec() or modalStart()
+  }
+  
+  undo(ctx) {
+    for (var i=this.tools.length-1; i >= 0; i--) {
+      this.tools[i].undo(ctx);
+    }
+  }
+}
+
+class ToolStack extends Array {
+  constructor(ctx) {
+    super();
+
+    this.cur = -1;
+    this.ctx = ctx;
+    this.modalRunning = 0;
+  }
+
+  get head() {
+    return this[this.cur];
+  }
+
+  setRestrictedToolContext(ctx) {
+    this.toolctx = ctx;
+  }
+
+  reset(ctx) {
+    if (ctx !== undefined) {
+      this.ctx = ctx;
+    }
+
+    this.modalRunning = 0;
+    this.cur = -1;
+    this.length = 0;
+  }
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, tool, compareInputs=false) {
+    let head = this.head;
+
+    let ok = compareInputs ? ToolOp$1.Equals(head, tool) : head && head.constructor === tool.constructor;
+
+    if (ok) {
+      //console.warn("Same tool detected");
+
+      this.undo();
+
+      //can inputs differ? in that case, execute new tool
+      if (!compareInputs) {
+        this.execTool(ctx, tool);
+      } else {
+        this.redo();
+      }
+
+      return false;
+    } else {
+      this.execTool(ctx, tool);
+      return true;
+    }
+  }
+
+  execTool(ctx, toolop) {
+    if (this.ctx === undefined) {
+      this.ctx = ctx;
+    }
+
+    if (!toolop.constructor.canRun(ctx)) {
+      console.log("toolop.constructor.canRun returned false");
+      return;
+    }
+
+    let tctx = this.toolctx !== undefined ? this.toolctx : ctx;
+    tctx = tctx.toLocked();
+
+    toolop._execCtx = tctx;
+
+    if (!(toolop.undoflag & UndoFlags.NO_UNDO)) {
+      this.cur++;
+
+      //truncate
+      this.length = this.cur+1;
+      
+      this[this.cur] = toolop;
+      //let undoPre use full context
+      //needed by DataPathSetOp
+      toolop.undoPre(ctx.toLocked());
+    }
+    
+    if (toolop.is_modal) {
+      this.modalRunning = true;
+      
+      toolop._on_cancel = (function(toolop) {
+        this.pop_i(this.cur);
+        this.cur--;
+      }).bind(this);
+      
+      //will handle calling .exec itself
+      toolop.modalStart(ctx.toLocked());
+    } else {
+      toolop.execPre(tctx);
+      toolop.exec(tctx);
+      toolop.execPost(tctx);
+      toolop.saveDefaultInputs();
+    }
+  }
+  
+  undo() {
+    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
+      let tool = this[this.cur];
+      tool.undo(tool._execCtx);
+      this.cur--;
+    }
+  }
+  
+  redo() {
+    if (this.cur >= -1 && this.cur+1 < this.length) {
+      this.cur++;
+
+      let tool = this[this.cur];
+      let ctx = tool._execCtx;
+      //ctx = this.ctx;
+
+      tool.undoPre(ctx);
+      tool.execPre(ctx);
+      tool.exec(ctx);
+      tool.execPost(ctx);
+    }
+  }
+}
+
+function buildToolSysAPI(api) {
+  let datastruct = api.mapStruct(ToolPropertyCache, true);
+
+  for (let cls of ToolClasses) {
+    let def = cls._getFinalToolDef();
+
+    for (let k in def.inputs) {
+      let prop = def.inputs[k];
+
+      if (!(prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY))) {
+        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
+      }
+    }
+
+  }
+}
+
 let ToolPaths = {};
 
 var initToolPaths_run = false;
@@ -21440,7 +21499,7 @@ function initToolPaths() {
   }
 }
 
-class DataPathSetOp extends ToolOp {
+class DataPathSetOp extends ToolOp$1 {
   constructor() {
     super();
 
@@ -21713,20 +21772,48 @@ class DataPathSetOp extends ToolOp {
     }
   }}
 }
-ToolOp.register(DataPathSetOp);
+ToolOp$1.register(DataPathSetOp);
 
-/*
+/**
 
-steps to build a datapath API:
+ This is the main datapath controller module, inspired by Blender's RNA system.
 
-make a new DataAPI instance, e.g.:
+ Datapaths are special bindings for objects; they store types (e.g. float, int, enumeration, string),
+ as well as lots of UI-specific metadata (like human-readable names, tooltips, icons, numeric ranges, etc).
 
-<pre>let api = new DataAPI();</pre>
+ Controller bindings are intended to present a more unified and coherent model of the
+ application model than may actually exists.  This is inspired by Blender's RNA system, which
+ hides almost all of Blender's core data structure complexity (Blender is written in C) from
+ users who e.g. write python scripts, extend the UI, use advanced animation features, or anything else
+ that uses RNA paths.
 
-Call buildToolSysAPI:
+## Contexts
 
-<pre>buildToolSysAPI(api);</pre>
+The datapath system works in tandem with the context module.  Contexts are client-provided classes
+that the datapath API and ToolOps use to communicate with the application state.
 
+## Example
+
+<pre>
+
+function initMyDataAPI() {
+  let api = new DataAPI();
+
+  //map MyContextClass to a struct, true tells mapStruct to auto-create
+  //the struct if it doesn't already exist
+  let st = api.mapStruct(MyContextClass, true);
+
+  //set fields of struct, e.g. st.int, st.float, st.enum, st.struct, etc
+
+  //build toolsys api
+  buildToolSysAPI(api);
+
+  //create bindings for default tool operator settings
+  cstruct.struct("propCache", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
+
+  return api;
+}
+</pre>
 */
 
 let PUTLParseError$1 = PUTLParseError;
@@ -22332,12 +22419,12 @@ class DataAPI extends ModelInterface {
     return _map_structs[key];
   }
 
-  //used by simple_controller.js for tagging error messages
+  //used for tagging error messages
   pushReportContext(name) {
     pushReportName(name);
   }
 
-  //used by simple_controller.js for tagging error messages
+  //used for tagging error messages
   popReportContext() {
     popReportName();
   }
@@ -22413,7 +22500,7 @@ class DataAPI extends ModelInterface {
         report("error while evaluating path " + inpath);
       }
 
-      if (exports$1.DEBUG.datapaths) {
+      if (window.DEBUG && window.DEBUG.datapaths) {
         print_stack$1(error);
       }
 
@@ -22729,7 +22816,7 @@ class DataAPI extends ModelInterface {
         }
 
         p.expect("RSBRACKET");
-      } else if (t.type === "LSBRACKET" && prop !== undefined && isVecProperty$1(prop)) {
+      } else if (t.type === "LSBRACKET" && prop !== undefined && isVecProperty(prop)) {
         p.expect("LSBRACKET");
         let num = p.expect("NUM");
         p.expect("RSBRACKET");
@@ -23179,7 +23266,7 @@ class DataAPI extends ModelInterface {
   }
 
   static toolRegistered(cls) {
-    return ToolOp.isRegistered(cls);
+    return ToolOp$1.isRegistered(cls);
     //let key = toolkey(cls);
     //return key in tool_classes;
   }
@@ -23187,7 +23274,7 @@ class DataAPI extends ModelInterface {
   static registerTool(cls) {
     console.warn("Outdated function simple_controller.DataAPI.registerTool called");
 
-    return ToolOp.register(cls);
+    return ToolOp$1.register(cls);
 
     //let key = toolkey(cls);
     //
@@ -23211,10 +23298,10 @@ function getDataPathToolOp() {
 }
 
 function setDataPathToolOp(cls) {
-  ToolOp.unregister(DataPathSetOp);
+  ToolOp$1.unregister(DataPathSetOp);
 
-  if (!ToolOp.isRegistered(cls)) {
-    ToolOp.register(cls);
+  if (!ToolOp$1.isRegistered(cls)) {
+    ToolOp$1.register(cls);
   }
 
   dpt = cls;
@@ -23652,6 +23739,81 @@ const DefaultTheme = {
     defaultWidth : 100,
   },
 
+};
+
+"use strict";
+
+/*
+Icons are defined in spritesheets that live in
+the iconsheet16/32 dom nodes.  Icons are numbered start from
+the upper left sprite tile.
+
+This function sets the mapping between icon numbers and names.
+
+The following icons should be in the icon sheet and in this map:
+
+RESIZE      :
+SMALL_PLUS  :
+TRANSLATE   : for moving things
+UI_EXPAND   : panel open icon
+UI_COLLAPSE : panel close icon
+NOTE_EXCL   : exclamation mark for notifications
+*/
+function setIconMap$1(icons) {
+  for (let k in icons) {
+    Icons$1[k] = icons[k];
+  }
+}
+
+let Icons$1 = {
+  HFLIP          : 0,
+  TRANSLATE      : 1,
+  ROTATE         : 2,
+  HELP_PICKER    : 3,
+  UNDO           : 4,
+  REDO           : 5,
+  CIRCLE_SEL     : 6,
+  BACKSPACE      : 7,
+  LEFT_ARROW     : 8,
+  RIGHT_ARROW    : 9,
+  UI_EXPAND      : 10, //triangle
+  UI_COLLAPSE    : 11, //triangle
+  FILTER_SEL_OPS : 12,
+  SCROLL_DOWN    : 13,
+  SCROLL_UP      : 14,
+  NOTE_EXCL      : 15,
+  TINY_X         : 16,
+  FOLDER         : 17,
+  FILE           : 18,
+  SMALL_PLUS     : 19,
+  SMALL_MINUS    : 20,
+  MAKE_SEGMENT   : 21,
+  MAKE_POLYGON   : 22,
+  FACE_MODE      : 23,
+  EDGE_MODE      : 24,
+  VERT_MODE      : 25,
+  CURSOR_ARROW   : 26,
+  TOGGLE_SEL_ALL : 27,
+  DELETE         : 28,
+  RESIZE         : 29,
+  Z_UP           : 30,
+  Z_DOWN         : 31,
+  SPLIT_EDGE     : 32,
+  SHOW_ANIMPATHS : 33,
+  UNCHECKED      : 34,
+  CHECKED        : 35,
+  ENUM_UNCHECKED : 36,
+  ENUM_CHECKED   : 37,
+  APPEND_VERTEX  : 38,
+  LARGE_CHECK    : 39,
+  BOLD           : 40,
+  ITALIC         : 41,
+  UNDERLINE      : 42,
+  STRIKETHRU     : 43,
+  TREE_EXPAND    : 44,
+  TREE_COLLAPSE  : 45,
+  ZOOM_OUT       : 46,
+  ZOOM_IN        : 47
 };
 
 let exclude = new Set([
@@ -26431,7 +26593,7 @@ _setUIBase(UIBase$2);
 let keymap$1 = keymap;
 
 let EnumProperty$2 = EnumProperty,
-  PropTypes$2 = PropTypes;
+  PropTypes$1 = PropTypes;
 
 let UIBase$3 = UIBase$2,
   PackFlags$1 = PackFlags,
@@ -26950,7 +27112,7 @@ function myToFixed$1(s, n) {
 let keymap$2 = keymap;
 
 let EnumProperty$3 = EnumProperty,
-  PropTypes$3 = PropTypes;
+  PropTypes$2 = PropTypes;
 
 let UIBase$4 = UIBase$2,
   PackFlags$2 = PackFlags,
@@ -27156,8 +27318,8 @@ class TextBox extends TextBoxBase {
 
     let text = this.text;
 
-    if (prop !== undefined && (prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT)) {
-      let is_int = prop.type === PropTypes$3.INT;
+    if (prop !== undefined && (prop.type === PropTypes$2.INT || prop.type === PropTypes$2.FLOAT)) {
+      let is_int = prop.type === PropTypes$2.INT;
 
       this.radix = prop.radix;
 
@@ -27169,7 +27331,7 @@ class TextBox extends TextBoxBase {
       } else {
         text = buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
       }
-    } else if (prop !== undefined && prop.type === PropTypes$3.STRING) {
+    } else if (prop !== undefined && prop.type === PropTypes$2.STRING) {
       text = val;
     }
 
@@ -27222,7 +27384,7 @@ class TextBox extends TextBoxBase {
   }
 
   _prop_update(prop, text) {
-    if ((prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT)) {
+    if ((prop.type === PropTypes$2.INT || prop.type === PropTypes$2.FLOAT)) {
       let val = parseValue(this.text, this.baseUnit);
 
       if (!isNumber$1(this.text.trim())) {
@@ -27238,7 +27400,7 @@ class TextBox extends TextBoxBase {
         this._had_error = false;
         this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
       }
-    } else if (prop.type == PropTypes$3.STRING) {
+    } else if (prop.type == PropTypes$2.STRING) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
     }
   }
@@ -27293,7 +27455,7 @@ function myToFixed$2(s, n) {
 let keymap$3 = keymap;
 
 let EnumProperty$4 = EnumProperty,
-    PropTypes$4 = PropTypes;
+    PropTypes$3 = PropTypes;
 
 let UIBase$5 = UIBase$2, 
     PackFlags$3 = PackFlags,
@@ -27638,7 +27800,7 @@ class Check extends UIBase$5 {
     if (this._checked) {
       //canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
       let x=(csize-tilesize)*0.5, y=(csize-tilesize)*0.5;
-      iconmanager.canvasDraw(this, canvas, g, Icons.LARGE_CHECK, x, y);
+      iconmanager.canvasDraw(this, canvas, g, Icons$1.LARGE_CHECK, x, y);
     }
 
     if (this._focus) {
@@ -27800,7 +27962,7 @@ class IconCheck extends Button {
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
-        if (rdef.subkey && (rdef.prop.type == PropTypes$4.FLAG || rdef.prop.type == PropTypes$4.ENUM)) {
+        if (rdef.subkey && (rdef.prop.type == PropTypes$3.FLAG || rdef.prop.type == PropTypes$3.ENUM)) {
           icon = rdef.prop.iconmap[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
 
@@ -27919,7 +28081,7 @@ class IconCheck extends Button {
     iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
 
     if (this.drawCheck) {
-      let icon2 = this._checked ? Icons.CHECKED : Icons.UNCHECKED;
+      let icon2 = this._checked ? Icons$1.CHECKED : Icons$1.UNCHECKED;
       iconmanager.canvasDraw(this, this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
     }
 
@@ -27940,7 +28102,7 @@ class IconButton extends Button {
 
     this._icon = 0;
     this._icon_pressed = undefined;
-    this.iconsheet = Icons.LARGE;
+    this.iconsheet = Icons$1.LARGE;
     this.drawButtonBG = true;
   }
 
@@ -28124,7 +28286,7 @@ var html5_fileapi1 = /*#__PURE__*/Object.freeze({
 "use strict";
 
 let EnumProperty$5 = EnumProperty,
-  PropTypes$5 = PropTypes;
+  PropTypes$4 = PropTypes;
 
 let UIBase$6 = UIBase$2,
   PackFlags$4 = PackFlags,
@@ -28914,7 +29076,7 @@ class DropBox extends Button {
 
     let name = this.getAttribute("name");
 
-    if (prop.type & (PropTypes$5.ENUM|PropTypes$5.FLAG)) {
+    if (prop.type & (PropTypes$4.ENUM|PropTypes$4.FLAG)) {
       name = prop.ui_value_names[prop.keys[val]];
     } else {
       name = ""+val;
@@ -29609,7 +29771,7 @@ function startMenu(menu, x, y, searchMenuMode=false, safetyDelay=55) {
 
 var _ui = undefined;
 
-let PropFlags$2 = PropFlags;
+let PropFlags$1 = PropFlags;
 let PropSubTypes$2 = PropSubTypes$1;
 
 let EnumProperty$6 = EnumProperty;
@@ -29617,7 +29779,7 @@ let EnumProperty$6 = EnumProperty;
 let Vector2$4 = Vector2,
   UIBase$7 = UIBase$2,
   PackFlags$5 = PackFlags,
-  PropTypes$6 = PropTypes;
+  PropTypes$5 = PropTypes;
 
 const DataPathError$1 = DataPathError;
 
@@ -29718,7 +29880,7 @@ class Label extends UIBase$2 {
     }
 
     //console.log(path);
-    if (prop !== undefined && prop.type === PropTypes$6.INT) {
+    if (prop !== undefined && prop.type === PropTypes$5.INT) {
       val = val.toString(prop.radix);
 
       if (prop.radix === 2) {
@@ -29726,7 +29888,7 @@ class Label extends UIBase$2 {
       } else if (prop.radix === 16) {
         val += "h";
       }
-    } else if (prop !== undefined && prop.type === PropTypes$6.FLOAT && val !== Math.floor(val)) {
+    } else if (prop !== undefined && prop.type === PropTypes$5.FLOAT && val !== Math.floor(val)) {
       val = val.toFixed(prop.decimalPlaces);
     }
 
@@ -30417,7 +30579,7 @@ class Container extends UIBase$2 {
    * to view tooltips on mobile devices
    * */
   helppicker() {
-    let ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
+    let ret = this.iconbutton(Icons$1.HELP, "Help Picker", () => {
       this.getScreen().hintPickerTool();
     });
 
@@ -30592,10 +30754,10 @@ class Container extends UIBase$2 {
       return name;
     }
 
-    if (prop.type === PropTypes$6.STRING) {
+    if (prop.type === PropTypes$5.STRING) {
       let ret;
 
-      if (prop.flag & PropFlags$2.READ_ONLY) {
+      if (prop.flag & PropFlags$1.READ_ONLY) {
         ret = this.pathlabel(inpath, prop.uiname);
       } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
@@ -30615,9 +30777,9 @@ class Container extends UIBase$2 {
 
       ret.packflag |= packflag;
       return ret;
-    } else if (prop.type === PropTypes$6.CURVE) {
+    } else if (prop.type === PropTypes$5.CURVE) {
       return this.curve1d(inpath, packflag, mass_set_path);
-    } else if (prop.type === PropTypes$6.INT || prop.type === PropTypes$6.FLOAT) {
+    } else if (prop.type === PropTypes$5.INT || prop.type === PropTypes$5.FLOAT) {
       let ret;
       if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath, {packflag : packflag});
@@ -30632,9 +30794,9 @@ class Container extends UIBase$2 {
       }
 
       return ret;
-    } else if (prop.type === PropTypes$6.BOOL) {
+    } else if (prop.type === PropTypes$5.BOOL) {
       return this.check(inpath, prop.uiname, packflag, mass_set_path);
-    } else if (prop.type === PropTypes$6.ENUM) {
+    } else if (prop.type === PropTypes$5.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -30681,7 +30843,7 @@ class Container extends UIBase$2 {
           return this.checkenum(inpath, undefined, packflag);
         }
       }
-    } else if (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4)) {
+    } else if (prop.type & (PropTypes$5.VEC2|PropTypes$5.VEC3|PropTypes$5.VEC4)) {
       if (rdef.subkey !== undefined) {
         let ret;
 
@@ -30711,7 +30873,7 @@ class Container extends UIBase$2 {
 
         return ret;
       }
-    } else if (prop.type === PropTypes$6.FLAG) {
+    } else if (prop.type === PropTypes$5.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -31195,10 +31357,10 @@ class Container extends UIBase$2 {
       inpath = this._joinPrefix(inpath);
 
       let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
-      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.SIMPLE_SLIDER)) {
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$1.SIMPLE_SLIDER)) {
         packflag |= PackFlags$5.SIMPLE_NUMSLIDERS;
       }
-      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.FORCE_ROLLER_SLIDER)) {
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$1.FORCE_ROLLER_SLIDER)) {
         packflag |= PackFlags$5.FORCE_ROLLER_SLIDER;
       }
     }
@@ -31246,7 +31408,7 @@ class Container extends UIBase$2 {
 
         min = min === undefined ? range[0] : min;
         max = max === undefined ? range[1] : max;
-        is_int = is_int === undefined ? prop.type === PropTypes$6.INT : is_int;
+        is_int = is_int === undefined ? prop.type === PropTypes$5.INT : is_int;
         name = name === undefined ? prop.uiname : name;
         step = step === undefined ? prop.step : step;
         step = step === undefined ? (is_int ? 1 : 0.1) : step;
@@ -31576,7 +31738,7 @@ class ColumnFrame extends Container {
 
 UIBase$7.internalRegister(ColumnFrame);
 
-let UIBase$8 = UIBase$2, Icons$1 = Icons;
+let UIBase$8 = UIBase$2, Icons$2 = Icons$1;
 
 class RichEditor extends TextBoxBase {
   constructor() {
@@ -31617,16 +31779,16 @@ class RichEditor extends TextBoxBase {
       return icon;
     };
 
-    makeicon(Icons$1.BOLD, "Bold", () => {
+    makeicon(Icons$2.BOLD, "Bold", () => {
       document.execCommand("bold");
     });
-    makeicon(Icons$1.ITALIC, "Italic", () => {
+    makeicon(Icons$2.ITALIC, "Italic", () => {
       document.execCommand("italic");
     });
-    makeicon(Icons$1.UNDERLINE, "Underline", () => {
+    makeicon(Icons$2.UNDERLINE, "Underline", () => {
       document.execCommand("underline");
     });
-    makeicon(Icons$1.STRIKETHRU, "Strikethrough", () => {
+    makeicon(Icons$2.STRIKETHRU, "Strikethrough", () => {
       document.execCommand("strikeThrough");
     });
 
@@ -32596,7 +32758,7 @@ class Curve1DWidget extends ColumnFrame {
     });
     this.dropbox._init();
 
-    row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
+    row.iconbutton(Icons$1.ZOOM_OUT, "Zoom Out", () => {
       let curve = this._value;
       if (!curve) return;
       //if (isNaN(curve.uiZoom))
@@ -32609,7 +32771,7 @@ class Curve1DWidget extends ColumnFrame {
 
       this._redraw();
     }).iconsheet = 0;
-    row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
+    row.iconbutton(Icons$1.ZOOM_IN, "Zoom In", () => {
       let curve = this._value;
       if (!curve) return;
       //if (isNaN(curve.uiZoom))
@@ -32770,7 +32932,7 @@ UIBase$2.internalRegister(Curve1DWidget);
 
 var _ui$1 = undefined;
 
-let PropFlags$3 = PropFlags;
+let PropFlags$2 = PropFlags;
 let PropSubTypes$3 = PropSubTypes$1;
 
 let EnumProperty$7 = EnumProperty;
@@ -32778,7 +32940,7 @@ let EnumProperty$7 = EnumProperty;
 let Vector2$5 = Vector2,
   UIBase$9 = UIBase$2,
   PackFlags$6 = PackFlags,
-  PropTypes$7 = PropTypes;
+  PropTypes$6 = PropTypes;
 
 class PanelFrame extends ColumnFrame {
   constructor() {
@@ -32869,8 +33031,8 @@ class PanelFrame extends ColumnFrame {
     iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
 
     iconcheck.ctx = this.ctx;
-    iconcheck._icon_pressed = Icons.UI_EXPAND;
-    iconcheck._icon = Icons.UI_COLLAPSE;
+    iconcheck._icon_pressed = Icons$1.UI_EXPAND;
+    iconcheck._icon = Icons$1.UI_COLLAPSE;
     iconcheck.drawCheck = false;
     iconcheck.iconsheet = IconSheets.SMALL;
     iconcheck.checked = this._closed;
@@ -35809,7 +35971,7 @@ UIBase$b.internalRegister(TabContainer);
 
 var _ui$2 = undefined;
 
-let PropFlags$4 = PropFlags;
+let PropFlags$3 = PropFlags;
 let PropSubTypes$4 = PropSubTypes$1;
 
 let EnumProperty$8 = EnumProperty;
@@ -35817,7 +35979,7 @@ let EnumProperty$8 = EnumProperty;
 let Vector2$8 = Vector2,
   UIBase$c = UIBase$2,
   PackFlags$9 = PackFlags,
-  PropTypes$8 = PropTypes;
+  PropTypes$7 = PropTypes;
 
 const DataPathError$2 = DataPathError;
 
@@ -36051,7 +36213,7 @@ UIBase$c.internalRegister(TableFrame);
 "use strict";
 
 let EnumProperty$9 = EnumProperty,
-  PropTypes$9 = PropTypes;
+  PropTypes$8 = PropTypes;
 
 let UIBase$d = UIBase$2,
   PackFlags$a = PackFlags,
@@ -36522,7 +36684,7 @@ class Note extends UIBase$2 {
 
       this.dom.appendChild(this.ntext);
 
-      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
+      iconmanager.setCSS(Icons$1.NOTE_EXCL, this.mark, sheet);
 
       //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
       //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
@@ -36796,6 +36958,20 @@ function warning(screen, msg, timeout) {
 function message(screen, msg, timeout) {
   return sendNote(screen, msg, color2css$2([0.4, 1.0, 0.5, 1.0]), timeout);
 }
+
+var ui_noteframe = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  Note: Note,
+  ProgBarNote: ProgBarNote,
+  NoteFrame: NoteFrame,
+  getNoteFrames: getNoteFrames,
+  get noteframes () { return noteframes; },
+  progbarNote: progbarNote,
+  sendNote: sendNote,
+  error: error,
+  warning: warning,
+  message: message
+});
 
 //use .setAttribute("linear") to disable nonlinear sliding
 class NumSlider extends ValueButtonBase {
@@ -39040,6 +39216,827 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
   }
 }
 
+/**
+see doc_src/context.md
+*/
+
+let notifier = undefined;
+
+function setNotifier(cls) {
+  notifier = cls;
+}
+
+const ContextFlags = {
+  IS_VIEW : 1
+};
+
+class InheritFlag$1 {
+  constructor(data) {
+    this.data = data;
+  }
+}
+
+let __idgen = 1;
+
+if (Symbol.ContextID === undefined) {
+  Symbol.ContextID = Symbol("ContextID");
+}
+
+if (Symbol.CachedDef === undefined) {
+  Symbol.CachedDef = Symbol("CachedDef");
+}
+
+const _ret_tmp = [undefined];
+
+const OverlayClasses = [];
+
+class ContextOverlay {
+  constructor(appstate) {
+    this.ctx = undefined; //owning context
+    this._state = appstate;
+  }
+
+  get state() {
+    return this._state;
+  }
+
+  onRemove(have_new_file=false) {
+  }
+
+  copy() {
+    return new this.constructor(this._state);
+  }
+
+  validate() {
+    throw new Error("Implement me!");
+  }
+
+
+  //base classes override this
+  static contextDefine() {
+    throw new Error("implement me!");
+    return {
+      name   :   "",
+      flag   :   0
+    }
+  }
+
+  //don't override this
+  static resolveDef() {
+    if (this.hasOwnProperty(Symbol.CachedDef)) {
+      return this[Symbol.CachedDef];
+    }
+
+    let def2 = Symbol.CachedDef = {};
+
+    let def = this.contextDefine();
+
+    if (def === undefined) {
+      def = {};
+    }
+
+    for (let k in def) {
+      def2[k] = def[k];
+    }
+
+    if (!("flag") in def) {
+      def2.flag = Context.inherit(0);
+    }
+
+    let parents = [];
+    let p = getClassParent(this);
+
+    while (p && p !== ContextOverlay) {
+      parents.push(p);
+      p = getClassParent(p);
+    }
+
+    if (def2.flag instanceof InheritFlag$1) {
+      let flag = def2.flag.data;
+      for (let p of parents) {
+        let def = p.contextDefine();
+
+        if (!def.flag) {
+          continue;
+        }else if (def.flag instanceof InheritFlag$1) {
+          flag |= def.flag.data;
+        } else {
+          flag |= def.flag;
+          //don't go past non-inheritable parents
+          break;
+        }
+      }
+
+      def2.flag = flag;
+    }
+
+    return def2;
+  }
+}
+
+const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
+  "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
+  "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
+  "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
+
+class LockedContext {
+  constructor(ctx) {
+    this.props = {};
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+
+    this.load(ctx);
+  }
+
+  toLocked() {
+    //just return itself
+    return this;
+  }
+
+  error() {
+    return this.ctx.error(...arguments);
+  }
+  warning() {
+    return this.ctx.warning(...arguments);
+  }
+  message() {
+    return this.ctx.message(...arguments);
+  }
+  progbar() {
+    return this.ctx.progbar(...arguments);
+  }
+
+  load(ctx) {
+    //let keys = util.getAllKeys(ctx);
+    let keys = ctx._props;
+
+    function wrapget(name) {
+      return function(ctx2, data) {
+        return ctx.loadProperty(ctx2, name, data);
+      }
+    }
+
+    for (let k of keys) {
+      let v;
+      if (k === "state" || k === "toolstack" || k === "api") {
+        continue;
+      }
+
+      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
+        continue;
+      }
+
+      try {
+        v = ctx[k];
+      } catch (error) {
+        if (config.DEBUG.contextSystem) {
+          console.warn("failed to look up property in context: ", k);
+        }
+        continue;
+      }
+
+      let data, getter;
+      let overlay = ctx.getOwningOverlay(k);
+
+      if (overlay === undefined) {
+        //property must no longer be used?
+        continue;
+      }
+
+      try {
+        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
+          data = overlay[k + "_save"]();
+          getter = overlay[k + "_load"];
+        } else {
+          data = ctx.saveProperty(k);
+          getter = wrapget(k);
+        }
+      } catch (error) {
+        //util.print_stack(error);
+        console.warn("Failed to save context property", k);
+        continue;
+      }
+
+      this.props[k] = {
+        data : data,
+        get  : getter
+      };
+    }
+
+    let defineProp = (name) => {
+      Object.defineProperty(this, name, {
+        get : function() {
+          let def = this.props[name];
+          return def.get(this.ctx, def.data)
+        }
+      });
+    };
+
+    for (let k in this.props) {
+      defineProp(k);
+    }
+
+    this.ctx = ctx;
+  }
+
+  setContext(ctx) {
+    this.ctx = ctx;
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+  }
+}
+
+let next_key = {};
+let idgen$1 = 1;
+
+class Context {
+  constructor(appstate) {
+    this.state = appstate;
+
+    this._props = new Set();
+    this._stack = [];
+    this._inside_map = {};
+  }
+
+  /** chrome's debug console corrupts this._inside_map,
+      this method fixes it*/
+  _fix() {
+    this._inside_map = {};
+  }
+
+  fix() {
+    this._fix();
+  }
+
+  error(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return notifier.error(state.screen, message, timeout);
+    }
+  }
+
+  warning(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return notifier.warning(state.screen, message, timeout);
+    }
+  }
+
+  message(msg, timeout=1500) {
+    let state = this.state;
+
+    console.warn(msg);
+
+    if (state && state.screen) {
+      return notifier.message(state.screen, msg, timeout);
+    }
+  }
+
+  progbar(msg, perc=0.0, timeout=1500, id=msg) {
+    let state = this.state;
+
+    if (state && state.screen) {
+      //progbarNote(screen, msg, percent, color, timeout) {
+      return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
+    }
+  }
+
+  validateOverlays() {
+    let stack = this._stack;
+    let stack2 = [];
+
+    for (let i=0; i<stack.length; i++) {
+      if (stack[i].validate()) {
+        stack2.push(stack[i]);
+      }
+    }
+
+    this._stack = stack2;
+  }
+
+  hasOverlay(cls) {
+    return this.getOverlay(cls) !== undefined;
+  }
+
+  getOverlay(cls) {
+    for (let overlay of this._stack) {
+      if (overlay.constructor === cls) {
+        return overlay;
+      }
+    }
+  }
+
+  clear(have_new_file=false) {
+    for (let overlay of this._stack) {
+      overlay.onRemove(have_new_file);
+    }
+
+    this._stack = [];
+  }
+
+  //this is implemented by child classes
+  //it should load the same default overlays as in constructor
+  reset(have_new_file=false) {
+    this.clear(have_new_file);
+  }
+
+  //returns a new context with overriden properties
+  //unlike pushOverlay, overrides can be a simple object
+  override(overrides) {
+    if (overrides.copy === undefined) {
+      overrides.copy = function() {
+        return Object.assign({}, this);
+      };
+    }
+
+    let ctx = this.copy();
+    ctx.pushOverlay(overrides);
+    return ctx;
+  }
+
+  copy() {
+    let ret = new this.constructor(this.state);
+
+    for (let item of this._stack) {
+      ret.pushOverlay(item.copy());
+    }
+
+    return ret;
+  }
+
+  /**
+   Used by overlay property getters.  If returned,
+   the next overlay in the struct will have its getter used.
+
+   Example:
+
+   class overlay {
+      get scene() {
+        if (some_reason) {
+          return Context.super();
+        }
+
+        return something_else;
+      }
+    }
+   */
+  static super() {
+    return next_key;
+  }
+
+  /**
+   *
+   * saves a property into some kind of non-object-reference form
+   *
+   * */
+  saveProperty(key) {
+    console.warn("Missing saveProperty implementation in Context; passing through values...");
+    return this[key];
+  }
+
+  /**
+   *
+   * lookup property based on saved data
+   *
+   * */
+  loadProperty(ctx, key, data) {
+    console.warn("Missing loadProperty implementation in Context; passing through values...");
+    return data;
+  }
+
+  getOwningOverlay(name, _val_out) {
+    let inside_map = this._inside_map;
+    let stack = this._stack;
+
+    if (config.DEBUG.contextSystem) {
+      console.log(name, inside_map);
+    }
+
+    for (let i=stack.length-1; i >= 0; i--) {
+      let overlay = stack[i];
+      let ret = next_key;
+      
+      if (overlay[Symbol.ContextID] === undefined) {
+        throw new Error("context corruption");
+      }
+      
+      let ikey = overlay[Symbol.ContextID];
+      
+      if (config.DEBUG.contextSystem) {
+        console.log(ikey, overlay);
+      }
+
+      //prevent infinite recursion
+      if (inside_map[ikey]) {
+        continue;
+      }
+
+      if (overlay.__allKeys.has(name)) {
+        if (config.DEBUG.contextSystem) {
+          console.log("getting value");
+        }
+
+        //Chrome's console messes this up
+
+        inside_map[ikey] = 1;
+
+        try {
+          ret = overlay[name];
+        } catch (error) {
+
+          inside_map[ikey] = 0;
+          throw error;
+        }
+
+        inside_map[ikey] = 0;
+      }
+
+      if (ret !== next_key) {
+        if (_val_out !== undefined) {
+          _val_out[0] = ret;
+        }
+        return overlay;
+      }
+    }
+
+    if (_val_out !== undefined) {
+      _val_out[0] = undefined;
+    }
+
+    return undefined;
+  }
+
+  ensureProperty(name) {
+    if (this.hasOwnProperty(name)) {
+      return;
+    }
+
+    this._props.add(name);
+
+    Object.defineProperty(this, name, {
+      get : function() {
+        let ret = _ret_tmp;
+        _ret_tmp[0] = undefined;
+
+        this.getOwningOverlay(name, ret);
+        return ret[0];
+      }, set : function() {
+        throw new Error("Cannot set ctx properties")
+      }
+    });
+  }
+
+  /**
+   * Returns a new context that doesn't
+   * contain any direct object references
+   * except for .state .datalib and .api, but
+   * instead uses those three to look up references
+   * on property access.
+   * */
+  toLocked() {
+    return new LockedContext(this);
+  }
+
+  pushOverlay(overlay) {
+    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
+      overlay[Symbol.ContextID] = idgen$1++;
+    }
+
+    let keys = new Set();
+    for (let key of getAllKeys(overlay)) {
+      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
+        keys.add(key);
+      }
+    }
+
+    overlay.ctx = this;
+
+    if (overlay.__allKeys === undefined) {
+      overlay.__allKeys = keys;
+    }
+
+    for (let k of keys) {
+      let bad = typeof k === "symbol" || excludedKeys.has(k);
+      bad = bad || (typeof k === "string" && k[0] === "_");
+      bad = bad || (typeof k === "string" && k.endsWith("_save"));
+      bad = bad || (typeof k === "string" && k.endsWith("_load"));
+
+      if (bad) {
+        continue;
+      }
+
+      this.ensureProperty(k);
+    }
+
+    if (this._stack.indexOf(overlay) >= 0) {
+      console.warn("Overlay already added once");
+      if (this._stack[this._stack.length-1] === overlay) {
+        console.warn("  Definitely an error, overlay is already at top of stack");
+        return;
+      }
+    }
+
+    this._stack.push(overlay);
+  }
+
+  popOverlay(overlay) {
+    if (overlay !== this._stack[this._stack.length-1]) {
+      console.warn("Context.popOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.pop();
+  }
+
+  removeOverlay(overlay) {
+    if (this._stack.indexOf(overlay) < 0) {
+      console.warn("Context.removeOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.remove(overlay);
+  }
+
+  static inherit(data) {
+    return new InheritFlag$1(data);
+  }
+
+  static register(cls) {
+    if (cls[Symbol.ContextID]) {
+      console.warn("Tried to register same class twice:", cls);
+      return;
+    }
+
+    cls[Symbol.ContextID] = __idgen++;
+    OverlayClasses.push(cls);
+  }
+}
+
+function test() {
+  function testInheritance() {
+    class Test0 extends ContextOverlay {
+      static contextDefine() {
+        return {
+          flag: 1
+        }
+      }
+    }
+
+    class Test1 extends Test0 {
+      static contextDefine() {
+        return {
+          flag: 2
+        }
+      }
+    }
+
+    class Test2 extends Test1 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(4)
+        }
+      }
+    }
+
+    class Test3 extends Test2 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(8)
+        }
+      }
+    }
+
+    class Test4 extends Test3 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(16)
+        }
+      }
+    }
+
+    return Test4.resolveDef().flag === 30;
+  }
+
+  return testInheritance();
+}
+
+if (!test()) {
+  throw new Error("Context test failed");
+}
+
+const solver = solver1;
+const util = util1;
+const vectormath = vectormath1;
+const math = math1;
+const toolprop_abstract = toolprop_abstract1;
+const html5_fileapi = html5_fileapi1;
+const parseutil = parseutil1;
+const config$1 = config1;
+const nstructjs$2 = nstructjs1;
+
+var controller1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  solver: solver,
+  util: util,
+  vectormath: vectormath,
+  math: math,
+  toolprop_abstract: toolprop_abstract,
+  html5_fileapi: html5_fileapi,
+  parseutil: parseutil,
+  config: config$1,
+  nstructjs: nstructjs$2,
+  setNotifier: setNotifier,
+  ContextFlags: ContextFlags,
+  OverlayClasses: OverlayClasses,
+  ContextOverlay: ContextOverlay,
+  excludedKeys: excludedKeys,
+  LockedContext: LockedContext,
+  Context: Context,
+  test: test,
+  DataPathError: DataPathError,
+  DataFlags: DataFlags,
+  DataTypes: DataTypes,
+  getVecClass: getVecClass,
+  isVecProperty: isVecProperty,
+  DataPath: DataPath,
+  StructFlags: StructFlags,
+  ListIface: ListIface,
+  ToolOpIface: ToolOpIface,
+  ModelInterface: ModelInterface,
+  setImplementationClass: setImplementationClass,
+  registerTool: registerTool$1,
+  pathParser: pathParser,
+  pushReportName: pushReportName,
+  popReportName: popReportName,
+  DataList: DataList,
+  DataStruct: DataStruct,
+  DataAPI: DataAPI,
+  initSimpleController: initSimpleController,
+  getDataPathToolOp: getDataPathToolOp,
+  setDataPathToolOp: setDataPathToolOp,
+  DataPathSetOp: DataPathSetOp,
+  ToolClasses: ToolClasses,
+  setContextClass: setContextClass,
+  ToolFlags: ToolFlags,
+  UndoFlags: UndoFlags,
+  setDefaultUndoHandlers: setDefaultUndoHandlers,
+  ToolPropertyCache: ToolPropertyCache,
+  SavedToolDefaults: SavedToolDefaults,
+  ToolOp: ToolOp$1,
+  ToolMacro: ToolMacro,
+  ToolStack: ToolStack,
+  buildToolSysAPI: buildToolSysAPI,
+  PropTypes: PropTypes,
+  PropFlags: PropFlags,
+  setPropTypes: setPropTypes,
+  PropSubTypes: PropSubTypes$1,
+  customPropertyTypes: customPropertyTypes,
+  PropClasses: PropClasses,
+  ToolProperty: ToolProperty$1,
+  FloatArrayProperty: FloatArrayProperty,
+  StringProperty: StringProperty,
+  isNumber: isNumber$1,
+  NumProperty: NumProperty,
+  _NumberPropertyBase: _NumberPropertyBase,
+  IntProperty: IntProperty,
+  BoolProperty: BoolProperty,
+  FloatProperty: FloatProperty,
+  EnumKeyPair: EnumKeyPair,
+  EnumProperty: EnumProperty,
+  FlagProperty: FlagProperty,
+  VecPropertyBase: VecPropertyBase,
+  Vec2Property: Vec2Property,
+  Vec3Property: Vec3Property,
+  Vec4Property: Vec4Property,
+  QuatProperty: QuatProperty,
+  Mat4Property: Mat4Property,
+  ListProperty: ListProperty,
+  StringSetProperty: StringSetProperty,
+  Curve1DProperty: Curve1DProperty,
+  ToolPaths: ToolPaths,
+  buildParser: buildParser,
+  Parser: Parser,
+  parseToolPath: parseToolPath,
+  testToolParser: testToolParser,
+  initToolPaths: initToolPaths,
+  CurveConstructors: CurveConstructors,
+  CURVE_VERSION: CURVE_VERSION,
+  CurveFlags: CurveFlags,
+  TangentModes: TangentModes,
+  getCurve: getCurve,
+  CurveTypeData: CurveTypeData,
+  SplineTemplates: SplineTemplates,
+  mySafeJSONStringify: mySafeJSONStringify$1,
+  mySafeJSONParse: mySafeJSONParse$1,
+  Curve1D: Curve1D,
+  EulerOrders: EulerOrders,
+  BaseVector: BaseVector,
+  Vector4: Vector4,
+  Vector3: Vector3,
+  Vector2: Vector2,
+  Quat: Quat,
+  Matrix4: Matrix4,
+  calc_projection_axes: calc_projection_axes,
+  barycentric_v2: barycentric_v2,
+  dist_to_tri_v3: dist_to_tri_v3,
+  tri_area: tri_area,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
+  aabb_union: aabb_union,
+  aabb_union_2d: aabb_union_2d,
+  feps: feps,
+  COLINEAR: COLINEAR,
+  LINECROSS: LINECROSS,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  SQRT2: SQRT2,
+  FEPS_DATA: FEPS_DATA,
+  FEPS: FEPS,
+  get FLOAT_MIN () { return FLOAT_MIN; },
+  get FLOAT_MAX () { return FLOAT_MAX; },
+  Matrix4UI: Matrix4UI,
+  get_rect_points: get_rect_points,
+  get_rect_lines: get_rect_lines,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  MinMax: MinMax,
+  winding_axis: winding_axis,
+  winding: winding,
+  inrect_2d: inrect_2d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  expand_rect2d: expand_rect2d,
+  expand_line: expand_line,
+  colinear: colinear,
+  corner_normal: corner_normal,
+  line_line_isect: line_line_isect,
+  line_line_cross: line_line_cross,
+  point_in_aabb_2d: point_in_aabb_2d,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  point_in_aabb: point_in_aabb,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_dist: aabb_sphere_dist,
+  point_in_tri: point_in_tri,
+  convex_quad: convex_quad,
+  normal_tri: normal_tri,
+  normal_quad: normal_quad,
+  line_isect: line_isect,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line: dist_to_line,
+  clip_line_w: clip_line_w,
+  closest_point_on_line: closest_point_on_line,
+  circ_from_line_tan: circ_from_line_tan,
+  get_tri_circ: get_tri_circ,
+  gen_circle: gen_circle,
+  rot2d: rot2d,
+  makeCircleMesh: makeCircleMesh,
+  minmax_verts: minmax_verts,
+  unproject: unproject,
+  project: project,
+  get_boundary_winding: get_boundary_winding,
+  PlaneOps: PlaneOps,
+  isect_ray_plane: isect_ray_plane,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  mesh_find_tangent: mesh_find_tangent,
+  Mat4Stack: Mat4Stack,
+  rgb_to_hsv: rgb_to_hsv,
+  hsv_to_rgb: hsv_to_rgb,
+  PackNodeVertex: PackNodeVertex,
+  PackNode: PackNode,
+  graphGetIslands: graphGetIslands,
+  graphPack: graphPack,
+  Constraint: Constraint,
+  Solver: Solver,
+  modalstack: modalstack,
+  singleMouseEvent: singleMouseEvent,
+  isLeftClick: isLeftClick,
+  DoubleClickHandler: DoubleClickHandler,
+  isMouseDown: isMouseDown,
+  pathDebugEvent: pathDebugEvent,
+  eventWasTouch: eventWasTouch,
+  copyEvent: copyEvent,
+  _setScreenClass: _setScreenClass,
+  pushModalLight: pushModalLight,
+  popModalLight: popModalLight,
+  haveModal: haveModal,
+  keymap_latin_1: keymap_latin_1,
+  keymap: keymap,
+  reverse_keymap: reverse_keymap,
+  HotKey: HotKey,
+  KeyMap: KeyMap
+});
+
 var textMimes = new Set([
   "application-javascript", "application-x-javscript",
   "image/svg+xml"
@@ -39543,7 +40540,7 @@ why am I using a toolstack here at all?  time to remove!
 */
 
 let toolstack_getter = function() {
-  throw new Error("must pass a toolstack getter to registerToolStackGetter, I know it's dumb")
+  throw new Error("must pass a toolstack getter to registerToolStackGetter")
 };
 
 function registerToolStackGetter(func) {
@@ -39556,7 +40553,7 @@ let Vector2$9 = Vector2,
     ToolFlags$1 = ToolFlags;
 //import {keymap} from './events';
 
-class ToolBase extends ToolOp {
+class ToolBase extends ToolOp$1 {
   constructor(screen) {
     super();
     this.screen = screen;
@@ -39676,7 +40673,7 @@ class AreaResizeTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Resize Area",
     toolpath : "screen.area.resize",
-    icon     : Icons.RESIZE,
+    icon     : Icons$1.RESIZE,
     description : "change size of area",
     is_modal : true,
     hotkey : undefined,
@@ -39843,7 +40840,7 @@ class SplitTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Split Area",
     toolpath : "screen.area.split",
-    icon     : Icons.SMALL_PLUS,
+    icon     : Icons$1.SMALL_PLUS,
     description : "split an area in two",
     is_modal : true,
     hotkey   : "BLEH-B",
@@ -39976,7 +40973,7 @@ class AreaDragTool extends ToolBase {
   static tooldef() {return {
     uiname   : "Drag Area",
     toolpath : "screen.area.drag",
-    icon     : Icons.TRANSLATE,
+    icon     : Icons$1.TRANSLATE,
     description : "move or duplicate area",
     is_modal : true,
     hotkey : undefined,
@@ -40391,7 +41388,7 @@ class ToolTipViewer extends ToolBase {
   static tooldef() {return {
     uiname   : "Help Tool",
     toolpath : "screen.help_picker",
-    icon     : Icons.HELP,
+    icon     : Icons$1.HELP,
     description : "view tooltips",
     is_modal : true,
     hotkey : undefined,
@@ -43116,7 +44113,7 @@ class TreeItem extends Container {
 
     this.header = this.row();
 
-    this._icon1 = this.header.iconbutton(Icons.TREE_COLLAPSE);
+    this._icon1 = this.header.iconbutton(Icons$1.TREE_COLLAPSE);
     this._icon1.iconsheet = 0;
     this._icon1.drawButtonBG = false;
 
@@ -43157,13 +44154,13 @@ class TreeItem extends Container {
   }
 
   open() {
-    this._icon1.icon = Icons.TREE_COLLAPSE;
+    this._icon1.icon = Icons$1.TREE_COLLAPSE;
     this.opened = true;
     this.treeView._open(this);
   }
 
   close() {
-    this._icon1.icon = Icons.TREE_EXPAND;
+    this._icon1.icon = Icons$1.TREE_EXPAND;
     this.opened = false;
     this.treeView._close(this);
   }
@@ -43554,7 +44551,7 @@ class DragBox extends Container {
     this.style["min-width"] = "350px";
     header.style["height"] = "35px";
 
-    let icon = header.iconbutton(Icons.DELETE, "Hide", () => {
+    let icon = header.iconbutton(Icons$1.DELETE, "Hide", () => {
       this.end();
     });
     icon.iconsheet = 0; //use small icons
@@ -43964,7 +44961,7 @@ class AreaDocker extends Container {
       let tab = this.tbar.tab(uiname, area._id);
     }
 
-    let tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false);
+    let tab = this.tbar.icontab(Icons$1.SMALL_PLUS, "add", "Add Editor", false);
 
     //load tab order
     loadUIData(this.tbar, ud);
@@ -46827,699 +47824,10 @@ document.addEventListener("pointermove", (e) => {
 }, {capture : true});
 */
 
-function getImageData(image) {
-  if (typeof image == "string") {
-    let src = image;
-    
-    image = new Image();
-    image.src = src;
-  }
-  
-  function render() {
-    let canvas = document.createElement("canvas");
-    let g = canvas.getContext("2d");
-    
-    canvas.width = image.width;
-    canvas.height = image.height;
-    
-    g.drawImage(image, 0, 0);
-    return g.getImageData(0, 0, image.width, image.height);
-  }
-  
-  return new Promise((accept, reject) => {
-    if (!image.complete) {
-      image.onload = () => {
-        console.log("image loaded");
-        accept(render(image));
-      };
-    } else {
-      accept(render(image));
-    }
-  });
-}
-
-function loadImageFile() {
-  let this2 = this;
-  
-  return new Promise((accept, reject) => {
-    let input = document.createElement("input");
-    input.type = "file";
-    
-    input.addEventListener("change", function(e) {
-      let files = this.files;
-      console.log("file!", e, this.files);
-      
-      console.log("got file", e, files);
-      if (files.length == 0) return;
-      
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        var img = new Image();
-        
-        let dataurl = img.src = e.target.result;
-        
-        window._image_url = e.target.result;
-        
-        img.onload = (e) => {
-          this2.getImageData(img).then((data) => {
-            data.dataurl = dataurl;
-            accept(data);
-          });
-        };
-      };
-      
-      reader.readAsDataURL(files[0]);
-    });
-    
-    input.click();
-  });
-}
-
-/*
-see doc_src/context.md
-*/
-window.ccosnt = exports$1;
-
-const ContextFlags = {
-  IS_VIEW : 1
-};
-
-class InheritFlag$1 {
-  constructor(data) {
-    this.data = data;
-  }
-}
-
-let __idgen = 1;
-
-if (Symbol.ContextID === undefined) {
-  Symbol.ContextID = Symbol("ContextID");
-}
-
-if (Symbol.CachedDef === undefined) {
-  Symbol.CachedDef = Symbol("CachedDef");
-}
-
-const _ret_tmp = [undefined];
-
-const OverlayClasses = [];
-
-class ContextOverlay {
-  constructor(appstate) {
-    this.ctx = undefined; //owning context
-    this._state = appstate;
-  }
-
-  get state() {
-    return this._state;
-  }
-
-  onRemove(have_new_file=false) {
-  }
-
-  copy() {
-    return new this.constructor(this._state);
-  }
-
-  validate() {
-    throw new Error("Implement me!");
-  }
-
-
-  //base classes override this
-  static contextDefine() {
-    throw new Error("implement me!");
-    return {
-      name   :   "",
-      flag   :   0
-    }
-  }
-
-  //don't override this
-  static resolveDef() {
-    if (this.hasOwnProperty(Symbol.CachedDef)) {
-      return this[Symbol.CachedDef];
-    }
-
-    let def2 = Symbol.CachedDef = {};
-
-    let def = this.contextDefine();
-
-    if (def === undefined) {
-      def = {};
-    }
-
-    for (let k in def) {
-      def2[k] = def[k];
-    }
-
-    if (!("flag") in def) {
-      def2.flag = Context.inherit(0);
-    }
-
-    let parents = [];
-    let p = getClassParent(this);
-
-    while (p && p !== ContextOverlay) {
-      parents.push(p);
-      p = getClassParent(p);
-    }
-
-    if (def2.flag instanceof InheritFlag$1) {
-      let flag = def2.flag.data;
-      for (let p of parents) {
-        let def = p.contextDefine();
-
-        if (!def.flag) {
-          continue;
-        }else if (def.flag instanceof InheritFlag$1) {
-          flag |= def.flag.data;
-        } else {
-          flag |= def.flag;
-          //don't go past non-inheritable parents
-          break;
-        }
-      }
-
-      def2.flag = flag;
-    }
-
-    return def2;
-  }
-}
-
-const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
-  "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
-  "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
-  "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
-
-class LockedContext {
-  constructor(ctx) {
-    this.props = {};
-
-    this.state = ctx.state;
-    this.api = ctx.api;
-    this.toolstack = ctx.toolstack;
-
-    this.load(ctx);
-  }
-
-  toLocked() {
-    //just return itself
-    return this;
-  }
-
-  error() {
-    return this.ctx.error(...arguments);
-  }
-  warning() {
-    return this.ctx.warning(...arguments);
-  }
-  message() {
-    return this.ctx.message(...arguments);
-  }
-  progbar() {
-    return this.ctx.progbar(...arguments);
-  }
-
-  load(ctx) {
-    //let keys = util.getAllKeys(ctx);
-    let keys = ctx._props;
-
-    function wrapget(name) {
-      return function(ctx2, data) {
-        return ctx.loadProperty(ctx2, name, data);
-      }
-    }
-
-    for (let k of keys) {
-      let v;
-      if (k === "state" || k === "toolstack" || k === "api") {
-        continue;
-      }
-
-      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
-        continue;
-      }
-
-      try {
-        v = ctx[k];
-      } catch (error) {
-        if (exports$1.DEBUG.contextSystem) {
-          console.warn("failed to look up property in context: ", k);
-        }
-        continue;
-      }
-
-      let data, getter;
-      let overlay = ctx.getOwningOverlay(k);
-
-      if (overlay === undefined) {
-        //property must no longer be used?
-        continue;
-      }
-
-      try {
-        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
-          data = overlay[k + "_save"]();
-          getter = overlay[k + "_load"];
-        } else {
-          data = ctx.saveProperty(k);
-          getter = wrapget(k);
-        }
-      } catch (error) {
-        //util.print_stack(error);
-        console.warn("Failed to save context property", k);
-        continue;
-      }
-
-      this.props[k] = {
-        data : data,
-        get  : getter
-      };
-    }
-
-    let defineProp = (name) => {
-      Object.defineProperty(this, name, {
-        get : function() {
-          let def = this.props[name];
-          return def.get(this.ctx, def.data)
-        }
-      });
-    };
-
-    for (let k in this.props) {
-      defineProp(k);
-    }
-
-    this.ctx = ctx;
-  }
-
-  setContext(ctx) {
-    this.ctx = ctx;
-
-    this.state = ctx.state;
-    this.api = ctx.api;
-    this.toolstack = ctx.toolstack;
-  }
-}
-
-let next_key = {};
-let idgen$1 = 1;
-
-class Context {
-  constructor(appstate) {
-    this.state = appstate;
-
-    this._props = new Set();
-    this._stack = [];
-    this._inside_map = {};
-  }
-
-  /** chrome's debug console corrupts this._inside_map,
-      this method fixes it*/
-  _fix() {
-    this._inside_map = {};
-  }
-
-  fix() {
-    this._fix();
-  }
-
-  error(message, timeout=1500) {
-    let state = this.state;
-
-    console.warn(message);
-
-    if (state && state.screen) {
-      return error(state.screen, message, timeout);
-    }
-  }
-
-  warning(message, timeout=1500) {
-    let state = this.state;
-
-    console.warn(message);
-
-    if (state && state.screen) {
-      return warning(state.screen, message, timeout);
-    }
-  }
-
-  message(msg, timeout=1500) {
-    let state = this.state;
-
-    console.warn(msg);
-
-    if (state && state.screen) {
-      return message(state.screen, msg, timeout);
-    }
-  }
-
-  progbar(msg, perc=0.0, timeout=1500, id=msg) {
-    let state = this.state;
-
-    if (state && state.screen) {
-      //progbarNote(screen, msg, percent, color, timeout) {
-      return progbarNote(state.screen, msg, perc, "green", timeout, id);
-    }
-  }
-
-  validateOverlays() {
-    let stack = this._stack;
-    let stack2 = [];
-
-    for (let i=0; i<stack.length; i++) {
-      if (stack[i].validate()) {
-        stack2.push(stack[i]);
-      }
-    }
-
-    this._stack = stack2;
-  }
-
-  hasOverlay(cls) {
-    return this.getOverlay(cls) !== undefined;
-  }
-
-  getOverlay(cls) {
-    for (let overlay of this._stack) {
-      if (overlay.constructor === cls) {
-        return overlay;
-      }
-    }
-  }
-
-  clear(have_new_file=false) {
-    for (let overlay of this._stack) {
-      overlay.onRemove(have_new_file);
-    }
-
-    this._stack = [];
-  }
-
-  //this is implemented by child classes
-  //it should load the same default overlays as in constructor
-  reset(have_new_file=false) {
-    this.clear(have_new_file);
-  }
-
-  //returns a new context with overriden properties
-  //unlike pushOverlay, overrides can be a simple object
-  override(overrides) {
-    if (overrides.copy === undefined) {
-      overrides.copy = function() {
-        return Object.assign({}, this);
-      };
-    }
-
-    let ctx = this.copy();
-    ctx.pushOverlay(overrides);
-    return ctx;
-  }
-
-  copy() {
-    let ret = new this.constructor(this.state);
-
-    for (let item of this._stack) {
-      ret.pushOverlay(item.copy());
-    }
-
-    return ret;
-  }
-
-  /**
-   Used by overlay property getters.  If returned,
-   the next overlay in the struct will have its getter used.
-
-   Example:
-
-   class overlay {
-      get scene() {
-        if (some_reason) {
-          return Context.super();
-        }
-
-        return something_else;
-      }
-    }
-   */
-  static super() {
-    return next_key;
-  }
-
-  /**
-   *
-   * saves a property into some kind of non-object-reference form
-   *
-   * */
-  saveProperty(key) {
-    console.warn("Missing saveProperty implementation in Context; passing through values...");
-    return this[key];
-  }
-
-  /**
-   *
-   * lookup property based on saved data
-   *
-   * */
-  loadProperty(ctx, key, data) {
-    console.warn("Missing loadProperty implementation in Context; passing through values...");
-    return data;
-  }
-
-  getOwningOverlay(name, _val_out) {
-    let inside_map = this._inside_map;
-    let stack = this._stack;
-
-    if (exports$1.DEBUG.contextSystem) {
-      console.log(name, inside_map);
-    }
-
-    for (let i=stack.length-1; i >= 0; i--) {
-      let overlay = stack[i];
-      let ret = next_key;
-      
-      if (overlay[Symbol.ContextID] === undefined) {
-        throw new Error("context corruption");
-      }
-      
-      let ikey = overlay[Symbol.ContextID];
-      
-      if (exports$1.DEBUG.contextSystem) {
-        console.log(ikey, overlay);
-      }
-
-      //prevent infinite recursion
-      if (inside_map[ikey]) {
-        continue;
-      }
-
-      if (overlay.__allKeys.has(name)) {
-        if (exports$1.DEBUG.contextSystem) {
-          console.log("getting value");
-        }
-
-        //Chrome's console messes this up
-
-        inside_map[ikey] = 1;
-
-        try {
-          ret = overlay[name];
-        } catch (error) {
-
-          inside_map[ikey] = 0;
-          throw error;
-        }
-
-        inside_map[ikey] = 0;
-      }
-
-      if (ret !== next_key) {
-        if (_val_out !== undefined) {
-          _val_out[0] = ret;
-        }
-        return overlay;
-      }
-    }
-
-    if (_val_out !== undefined) {
-      _val_out[0] = undefined;
-    }
-
-    return undefined;
-  }
-
-  ensureProperty(name) {
-    if (this.hasOwnProperty(name)) {
-      return;
-    }
-
-    this._props.add(name);
-
-    Object.defineProperty(this, name, {
-      get : function() {
-        let ret = _ret_tmp;
-        _ret_tmp[0] = undefined;
-
-        this.getOwningOverlay(name, ret);
-        return ret[0];
-      }, set : function() {
-        throw new Error("Cannot set ctx properties")
-      }
-    });
-  }
-
-  /**
-   * Returns a new context that doesn't
-   * contain any direct object references
-   * except for .state .datalib and .api, but
-   * instead uses those three to look up references
-   * on property access.
-   * */
-  toLocked() {
-    return new LockedContext(this);
-  }
-
-  pushOverlay(overlay) {
-    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
-      overlay[Symbol.ContextID] = idgen$1++;
-    }
-
-    let keys = new Set();
-    for (let key of getAllKeys(overlay)) {
-      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
-        keys.add(key);
-      }
-    }
-
-    overlay.ctx = this;
-
-    if (overlay.__allKeys === undefined) {
-      overlay.__allKeys = keys;
-    }
-
-    for (let k of keys) {
-      let bad = typeof k === "symbol" || excludedKeys.has(k);
-      bad = bad || (typeof k === "string" && k[0] === "_");
-      bad = bad || (typeof k === "string" && k.endsWith("_save"));
-      bad = bad || (typeof k === "string" && k.endsWith("_load"));
-
-      if (bad) {
-        continue;
-      }
-
-      this.ensureProperty(k);
-    }
-
-    if (this._stack.indexOf(overlay) >= 0) {
-      console.warn("Overlay already added once");
-      if (this._stack[this._stack.length-1] === overlay) {
-        console.warn("  Definitely an error, overlay is already at top of stack");
-        return;
-      }
-    }
-
-    this._stack.push(overlay);
-  }
-
-  popOverlay(overlay) {
-    if (overlay !== this._stack[this._stack.length-1]) {
-      console.warn("Context.popOverlay called in error", overlay);
-      return;
-    }
-
-    overlay.onRemove();
-    this._stack.pop();
-  }
-
-  removeOverlay(overlay) {
-    if (this._stack.indexOf(overlay) < 0) {
-      console.warn("Context.removeOverlay called in error", overlay);
-      return;
-    }
-
-    overlay.onRemove();
-    this._stack.remove(overlay);
-  }
-
-  static inherit(data) {
-    return new InheritFlag$1(data);
-  }
-
-  static register(cls) {
-    if (cls[Symbol.ContextID]) {
-      console.warn("Tried to register same class twice:", cls);
-      return;
-    }
-
-    cls[Symbol.ContextID] = __idgen++;
-    OverlayClasses.push(cls);
-  }
-}
-
-function test() {
-  function testInheritance() {
-    class Test0 extends ContextOverlay {
-      static contextDefine() {
-        return {
-          flag: 1
-        }
-      }
-    }
-
-    class Test1 extends Test0 {
-      static contextDefine() {
-        return {
-          flag: 2
-        }
-      }
-    }
-
-    class Test2 extends Test1 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(4)
-        }
-      }
-    }
-
-    class Test3 extends Test2 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(8)
-        }
-      }
-    }
-
-    class Test4 extends Test3 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(16)
-        }
-      }
-    }
-
-    return Test4.resolveDef().flag === 30;
-  }
-
-  return testInheritance();
-}
-
-if (!test()) {
-  throw new Error("Context test failed");
-}
-
+const controller = controller1;
+setNotifier(ui_noteframe);
 const electron_api = electron_api1;
-
-const solver = solver1;
-const math = math1;
-const util = util1;
-const vectormath = vectormath1;
-const toolprop_abstract = toolprop_abstract1;
-const html5_fileapi = html5_fileapi1;
-const parseutil = parseutil1;
 const cconst$1 = exports$1;
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DomEventTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, EventDispatcher, EventHandler, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, IntProperty, IsMobile, KeyMap, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Matrix4, Menu, MenuWrangler, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, STRUCT, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _nstructjs, _setAreaClass, _setScreenClass, areaclasses, buildElectronHotkey, buildElectronMenu, buildToolSysAPI, cconst$1 as cconst, checkForTextBox, checkInit, color2css$2 as color2css, color2web, contextWrangler, copyEvent, copyMouseEvent, createMenu, css2color$1 as css2color, customPropertyTypes, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, exportTheme, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getImageData, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, inherit, initMenuBar, initSimpleController, inv_sample, invertTheme, isLeftClick, isModalHead, isMouseDown, isNumber$1 as isNumber, isVecProperty$1 as isVecProperty, keymap, keymap_latin_1, loadImageFile, loadUIData, makeIconDiv, manager, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, modalStack, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, noteframes, nstructjs$1 as nstructjs, parsepx, parseutil, pathDebugEvent, pathParser, platform, popModalLight, popReportName, progbarNote, pushModal, pushModalLight, pushReportName, readJSON, readObject, register, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, sample, saveUIData, sendNote, setAllowOverriding, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDebugMode, setEndian, setIconManager, setIconMap, setImplementationClass, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, theme, toolprop_abstract, util, validateCSSColor$1 as validateCSSColor, validateStructs, validateWebColor, vectormath, warning, web2color, writeJSON, writeObject, write_scripts };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons$1 as Icons, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp$1 as ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildElectronHotkey, buildElectronMenu, buildParser, buildToolSysAPI, calc_projection_axes, cconst$1 as cconst, checkForTextBox, checkInit, circ_from_line_tan, clip_line_w, closest_point_on_line, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_tri_v3, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNativeIcon, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconcache, iconmanager, initMenuBar, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parsepx, parseutil, pathDebugEvent, pathParser, platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveUIData, sendNote, setAreaTypes, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap$1 as setIconMap, setImplementationClass, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

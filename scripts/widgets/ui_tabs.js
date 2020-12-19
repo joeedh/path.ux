@@ -1,9 +1,9 @@
 "use strict";
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
-import * as events from '../util/events.js';
+import * as events from '../path-controller/util/events.js';
 import * as ui from '../core/ui.js';
 
 let UIBase = ui_base.UIBase, 

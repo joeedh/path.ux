@@ -5,13 +5,13 @@
 
 var _ui = undefined;
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as ui_widgets from '../widgets/ui_widgets.js';
-import * as toolprop from '../toolsys/toolprop.js';
-import '../util/html5_fileapi.js';
-import {HotKey} from '../util/simple_events.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
+import '../path-controller/util/html5_fileapi.js';
+import {HotKey} from '../path-controller/util/simple_events.js';
 import {CSSFont} from './ui_theme.js';
 import {theme} from './ui_base.js';
 

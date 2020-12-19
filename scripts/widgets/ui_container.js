@@ -1,6 +1,6 @@
 import {Container} from '../core/ui.js';
 import {UIBase} from '../core/ui_base.js';
-import {DataAPI} from "../controller/simple_controller.js";
+import {DataAPI} from "../path-controller/controller/simple_controller.js";
 
 export let api = new DataAPI();
 
@@ -16,7 +16,6 @@ export function setRootStruct(val) {
 
 Building the data api along with the UI will probably require
 patching widget objects in real-time.  The idea is to do something like this:
-
 
 layout.beginPath("object", SomeObjectClass)
 layout.slider("value").range(0, 1)

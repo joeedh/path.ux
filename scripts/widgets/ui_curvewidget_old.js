@@ -2,9 +2,9 @@
 
 /*FIXME: not sure this works anymore*/
 
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 import * as ui_base from '../core/ui_base.js';
-import * as vectormath from '../util/vectormath.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 
 var Vector2 = vectormath.Vector2;
 

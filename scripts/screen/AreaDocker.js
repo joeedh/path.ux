@@ -1,8 +1,8 @@
 import {UIBase, saveUIData, loadUIData} from '../core/ui_base.js';
 
-import * as util from "../util/util.js"
+import * as util from "../path-controller/util/util.js"
 import cconst from "../config/const.js";
-import * as nstructjs from "../util/struct.js";
+import * as nstructjs from "../path-controller/util/struct.js";
 
 import {Container} from "../core/ui.js";
 import {Area} from "./ScreenArea.js";

@@ -1,5 +1,5 @@
 import {CSSFont} from "./ui_theme.js";
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 
 export const DefaultTheme = {
   base:  {

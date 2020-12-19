@@ -1,17 +1,11 @@
 "use strict";
 
-//set default datapath controller implementation class
 import cconst from '../config/const.js';
 
-//XXX eek why was this here!
-//import {DataAPI} from './simple_controller.js';
-//import {setImplementationClass} from './controller.js';
-//setImplementationClass(DataAPI);
-
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
-import * as simple_toolsys from '../toolsys/simple_toolsys.js';
+import * as simple_toolsys from '../path-controller/toolsys/toolsys.js';
 import {ToolTip} from "../widgets/ui_widgets2.js";
 
 /*
@@ -19,7 +13,7 @@ why am I using a toolstack here at all?  time to remove!
 */
 
 let toolstack_getter = function() {
-  throw new Error("must pass a toolstack getter to registerToolStackGetter, I know it's dumb")
+  throw new Error("must pass a toolstack getter to registerToolStackGetter")
 }
 
 export function registerToolStackGetter(func) {

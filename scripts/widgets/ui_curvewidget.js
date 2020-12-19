@@ -1,10 +1,10 @@
-import {Curve1DProperty} from "../toolsys/toolprop.js";
+import {Curve1DProperty} from "../path-controller/toolsys/toolprop.js";
 import {UIBase, Icons} from '../core/ui_base.js';
 import {ColumnFrame, RowFrame} from "../core/ui.js";
-import * as util from '../util/util.js';
-import {Vector2, Vector3} from "../util/vectormath.js";
-import {Curve1D,  mySafeJSONStringify} from "../curve/curve1d.js";
-import {makeGenEnum} from '../curve/curve1d_utils.js';
+import * as util from '../path-controller/util/util.js';
+import {Vector2, Vector3} from "../path-controller/util/vectormath.js";
+import {Curve1D,  mySafeJSONStringify} from "../path-controller/curve/curve1d.js";
+import {makeGenEnum} from '../path-controller/curve/curve1d_utils.js';
 
 export class Curve1DWidget extends ColumnFrame {
   constructor() {

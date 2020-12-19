@@ -6,6 +6,8 @@ let _clipdata = {
 
 let _clipboards = {};
 
+import * as ctrlconfig from '../path-controller/config/config.js';
+
 window.setInterval(() => {
   let cb = navigator.clipboard;
 
@@ -140,6 +142,8 @@ let exports = {
 
       this[k] = args[k];
     }
+
+    ctrlconfig.setConfig(this);
   }
 };
 

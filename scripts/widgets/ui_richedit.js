@@ -1,9 +1,9 @@
 import * as ui_base from '../core/ui_base.js'
-import * as util from '../util/util.js';
+import * as util from '../path-controller/util/util.js';
 import {ColumnFrame, RowFrame, Container} from "../core/ui.js";
 let UIBase = ui_base.UIBase, Icons = ui_base.Icons;
 import {TextBoxBase} from './ui_textbox.js';
-import {keymap} from "../util/simple_events.js";
+import {keymap} from "../path-controller/util/simple_events.js";
 
 export class RichEditor extends TextBoxBase {
   constructor() {

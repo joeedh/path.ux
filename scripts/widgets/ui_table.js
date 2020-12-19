@@ -7,12 +7,12 @@ import {Container} from "../core/ui.js";
 
 var _ui = undefined;
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_curvewidget from './ui_curvewidget.js';
 import * as ui_base from '../core/ui_base.js';
 import * as ui_widgets from './ui_widgets.js';
-import * as toolprop from '../toolsys/toolprop.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
 
 let PropFlags = toolprop.PropFlags;
 let PropSubTypes = toolprop.PropSubTypes;

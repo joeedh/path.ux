@@ -1,9 +1,9 @@
-import * as nstructjs from '../util/struct.js';
+import * as nstructjs from '../path-controller/util/struct.js';
 import * as ui_base from "../core/ui_base.js";
 import * as FrameManager_ops from "./FrameManager_ops.js";
 import cconst from "../config/const.js";
 
-import {Vector2} from '../util/vectormath.js';
+import {Vector2} from '../path-controller/util/vectormath.js';
 
 export let SnapLimit = 1;
 

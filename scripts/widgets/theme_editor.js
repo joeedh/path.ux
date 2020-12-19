@@ -1,5 +1,5 @@
 import {Area} from '../screen/ScreenArea.js';
-import * as nstructjs from '../util/struct.js';
+import * as nstructjs from '../path-controller/util/struct.js';
 import {UIBase, theme} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
 import {color2css, css2color, CSSFont} from '../core/ui_theme.js';

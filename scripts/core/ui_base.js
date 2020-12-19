@@ -6,16 +6,16 @@ if (window.document && document.body) {
   document.body.style["padding"] = "0px";
 }
 
-import * as cssutils from '../util/cssutils.js';
+import * as cssutils from '../path-controller/util/cssutils.js';
 import {Animator} from "./anim.js";
 import './units.js';
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
-import * as math from '../util/math.js';
-import * as toolprop from '../toolsys/toolprop.js';
-import * as controller from '../controller/controller.js';
-import {pushModalLight, popModalLight, copyEvent, pathDebugEvent} from '../util/simple_events.js';
-import {getDataPathToolOp} from '../controller/simple_controller.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
+import * as math from '../path-controller/util/math.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
+import * as controller from '../path-controller/controller/controller.js';
+import {pushModalLight, popModalLight, copyEvent, pathDebugEvent} from '../path-controller/util/simple_events.js';
+import {getDataPathToolOp} from '../path-controller/controller/controller.js';
 import * as units from './units.js';
 import {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
 
@@ -439,8 +439,8 @@ let first = (iter) => {
 }
 
 
-import {DataPathError} from '../controller/controller.js';
-export {DataPathError} from '../controller/controller.js';
+import {DataPathError} from '../path-controller/controller/controller.js';
+export {DataPathError} from '../path-controller/controller/controller.js';
 
 
 let _mobile_theme_patterns = [

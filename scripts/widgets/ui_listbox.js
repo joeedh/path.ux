@@ -1,15 +1,15 @@
 "use strict";
 
-import * as util from '../util/util.js';
-import * as vectormath from '../util/vectormath.js';
+import * as util from '../path-controller/util/util.js';
+import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
-import * as events from '../util/events.js';
-import * as simple_toolsys from '../toolsys/simple_toolsys.js';
-import * as toolprop from '../toolsys/toolprop.js';
+import * as events from '../path-controller/util/events.js';
+import * as simple_toolsys from '../path-controller/toolsys/toolsys.js';
+import * as toolprop from '../path-controller/toolsys/toolprop.js';
 
 import {TableFrame} from './ui_table.js';
 import {Container, ColumnFrame, RowFrame} from '../core/ui.js';
-import {keymap} from '../util/events.js';
+import {keymap} from '../path-controller/util/events.js';
 
 let EnumProperty = toolprop.EnumProperty,
   PropTypes = toolprop.PropTypes;

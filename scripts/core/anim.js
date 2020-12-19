@@ -1,8 +1,8 @@
-import {Vector2, Matrix4, Quat, Vector3, Vector4} from '../util/vectormath.js';
-import * as math from '../util/math.js'
+import {Vector2, Matrix4, Quat, Vector3, Vector4} from '../path-controller/util/vectormath.js';
+import * as math from '../path-controller/util/math.js'
 import {color2css, css2color, parsepx} from './ui_theme.js';
-import {Curve1D, getCurve} from "../curve/curve1d.js";
-import * as util from '../util/util.js';
+import {Curve1D, getCurve} from "../path-controller/curve/curve1d.js";
+import * as util from '../path-controller/util/util.js';
 
 class Task {
   constructor(taskcb) {
