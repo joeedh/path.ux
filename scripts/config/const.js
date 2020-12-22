@@ -131,7 +131,7 @@ let exports = {
 
   addHelpPickers : true,
 
-  useAreaTabSwitcher: true,
+  useAreaTabSwitcher: false,
   autoSizeUpdate : true,
   showPathsInToolTips: true,
 
