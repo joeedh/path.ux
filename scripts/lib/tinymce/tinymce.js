@@ -27239,7 +27239,7 @@ window._tinymce = function (domGlobals) {
       https: 443,
       mailto: 25
     };
-    var URI = function () {
+    var URI = globalThis._tinyMCE_URI = function () {
       function URI(url, settings) {
         url = trim$4(url);
         this.settings = settings || {};

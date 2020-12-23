@@ -130,7 +130,13 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
   //  return iconcache[key];
   //}
 
-  let icongen = myRequire("./icogen.js");
+  let icongen;
+
+  try {
+    icongen = myRequire("./icogen.js");
+  } catch (error) {
+    icongen = myRequire("./icogen.cjs");
+  }
 
   window.icongen = icongen;
   let nativeImage = getElectron().nativeImage;

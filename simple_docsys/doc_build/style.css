@@ -131,4 +131,137 @@ div.page {
     padding : 4px;
     text-decoration : none;
     width : 100px
+}body {
+     background-color: grey;
+     font-size : 14px;
+
+     --c1 : #c2dbef;
+     --c2 : #d2e9ef;
+     --c3 : #727272;
+     --c4 : #2d2d2d;
+     --c5 : #6fcbfd;
+     --c6 : #7bb3d4;
+     --c7 : #efefef;
+ }
+
+span.hotkey {
+    background-color : #dbdbdb;
+    font-family: "Courier New";
+    font-weight: bold;
+    color : #282828;
+    padding-left  : 2px;
+    padding-right : 2px;
+    border-radius: 5px;
+    border: 1px solid white;
+}
+
+p.notebox {
+    background-color: #ead094;
+    font-family: "Times New Roman";
+    border-radius: 25px;
+    border-top : 15px solid orange;
+    padding : 10px;
+    font-size : 1.0em;
+    display : inline-flex;
+    flex-direction: column;
+    flex-wrap : wrap;
+    float : right;
+}
+
+p {
+    text-indent : 2em;
+}
+
+h1 {
+    background-color : var(--c1);
+    border-radius : 1px 13px 13px 1px;
+    border-left : 5px solid var(--c3);
+
+    padding-left : 15px;
+    padding-bottom : 0.1em;
+    padding-top : 0.1em;
+    color : #444444;
+
+    font-size: 2em;
+}
+
+h2 {
+    background-color : var(--c2);
+    border-radius : 15px;
+    padding-left : 15px;
+    font-size : 1.5em;
+    color : #3e3e3e;
+}
+
+
+.contents {
+    width : 70%;
+}
+
+a {
+    text-decoration : none;
+    font-weight : bold;
+    color : var(--c6);
+}
+a:hover {
+    text-decoration : none;
+    font-weight : bold;
+    color : var(--c5);
+}
+
+.navbar {
+    display : flex;
+    flex-direction : column;
+    flex-wrap : nowrap;
+    border : 2px solid var(--c7);
+    border-radius: 5px;
+    background-color: var(--c2);
+    margin : 2px;
+}
+
+pre {
+    font-family : Courier;
+    line-height : 0.95em;
+    color : #456f1b;
+    font-weight: bold;
+    background-color: #dedede;
+    padding-top : 5px;
+    padding-bottom : 5px;
+    border-radius : 15px;
+
+}
+
+div.page {
+    max-width : 600px;
+    display : flex;
+    flex-direction : row;
+    background-color: var(--c7);
+    border : 2px solid #efd4a2;
+    padding : 5px;
+    border-radius : 30px;
+}
+.nav-folder {
+    padding-left : 15px;
+}
+.nav-item {
+    display : inline-flex;
+    border-right : 2px solid var(--c3);
+    border-bottom : 1px solid var(--c3);
+    background-color : #c3d7e3;
+    color : #1c1c1c;
+    padding : 4px;
+    text-decoration : none;
+    width : 100px
+}
+
+.nav-item:hover {
+    display : inline-flex;
+    border : 1px solid rgba(2, 128, 191, 0.21);
+    border-radius : 5px;
+
+    background-color : #d7e8f3;
+    color : #1c1c1c;
+    padding : 4px;
+    text-decoration : none;
+    width : 100px
 }

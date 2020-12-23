@@ -6,8 +6,10 @@ note that you must set window.TINYMCE_PATH
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
 import * as nstructjs from "../path-controller/util/struct.js";
-import {UIBase} from "../core/ui_base.js";
-//import '../../lib/tinymce/js/tinymce/tinymce.js';
+import {UIBase, Icons} from "../core/ui_base.js";
+import '../lib/tinymce/tinymce.js';
+import * as cconst from '../config/const.js';
+import * as util from '../util/util.js';
 
 let countstr = function(buf, s) {
   let count = 0;
@@ -84,17 +86,6 @@ function relative(a1, b1) {
 
 window._relative = relative;
 
-export class SavedDocument {
-  constructor() {
-    this.data = "";
-  }
-}
-SavedDocument.STRUCT = `
-SavedDocument {
-  data : string;
-}`;
-nstructjs.register(SavedDocument);
-
 export class DocsAPI {
   updateDoc(relpath, data) {
     //returns a promise
@@ -115,30 +106,63 @@ export class DocsAPI {
 }
 
 
-window.PATHUX_DOCPATH = "../simple_docsys/docsys.js"
-window.PATHUX_DOC_CONFIG = "../simple_docsys/docs.config.js"
+window.PATHUX_DOCPATH = "../simple_docsys/docsys_base.js";
+window.PATHUX_DOC_CONFIG = "../simple_docsys/docs.config.js";
+window.PATHUX_DOCPATH_PREFIX = "../simple_docsys/doc_build";
+
 
 export class ElectronAPI extends DocsAPI {
   constructor() {
     super();
 
     this.first = true;
+    this.ready = false;
   }
 
   _doinit() {
     if (!this.first) {
-      return;
+      return this.ready;
     }
 
-    let docsys = require(PATHUX_DOCPATH);
-    this.config = docsys.readConfig(PATHUX_DOC_CONFIG);
-
     this.first = false;
+
+    import(PATHUX_DOCPATH).then(docsys => {
+      let fs = require('fs');
+      let marked = require('marked');
+      let parse5 = require('parse5');
+      let pathmod = require('path');
+      let jsdiff = require('diff');
+
+      docsys = docsys.default(fs, marked, parse5, pathmod, jsdiff);
+
+      this.config = docsys.readConfig(PATHUX_DOC_CONFIG);
+      this.ready = true;
+    });
+
+    return this.ready;
+  }
+
+  start() {
+    this._doinit();
+  }
+
+  checkInit() {
+    if (!this.ready) {
+      this._doinit();
+    }
+
+    if (!this.ready) {
+      console.warn("Could not connect to docs server");
+    }
+
+    return this.ready;
   }
 
   uploadImage(relpath, blobInfo, success, onError) {
     return new Promise((accept, reject) => {
-      this._doinit();
+      if (!this.checkInit()) {
+        return;
+      }
 
       let blob = blobInfo.blob();
 
@@ -152,14 +176,19 @@ export class ElectronAPI extends DocsAPI {
   }
 
   hasDoc(relpath) {
-    this._doinit();
+    if (!this.checkInit()) {
+      return;
+    }
+
     return new Promise((accept, reject) => {
       accept(this.config.hasDoc(relpath));
     });
   }
 
   updateDoc(relpath, data) {
-    this._doinit();
+    if (!this.checkInit()) {
+      return;
+    }
 
     return new Promise((accept, reject) => {
       accept(this.config.updateDoc(relpath, data));
@@ -167,7 +196,10 @@ export class ElectronAPI extends DocsAPI {
   }
 
   newDoc(relpath, data) {
-    this._doinit();
+    if (!this.checkInit()) {
+      return;
+    }
+
     return new Promise((accept, reject) => {
       accept(this.config.newDoc(relpath, data));
     });
@@ -177,6 +209,10 @@ export class ElectronAPI extends DocsAPI {
 export class ServerAPI extends DocsAPI {
   constructor() {
     super();
+  }
+
+  start() {
+
   }
 
   hasDoc(relpath) {
@@ -335,7 +371,9 @@ export class DocsBrowser extends UIBase {
 
     this.history = new DocHistory();
 
-    this._prefix = cconst.docManualPath; //"../simple_docsys/doc_build/";
+    //"../simple_docsys/doc_build/";
+    this._prefix = cconst.docManualPath || PATHUX_DOCPATH_PREFIX;
+
     this.saveReq = 0;
     this.saveReqStart = util.time_ms();
     this._last_save = util.time_ms();
@@ -358,6 +396,7 @@ export class DocsBrowser extends UIBase {
       this.serverapi = new ServerAPI();
     }
 
+    this.serverapi.start();
 
     this.root.style["margin"] = this.root.style["padding"] = this.root.style["border"] = "0px";
     this.root.style["width"] = "100%";
@@ -622,21 +661,70 @@ export class DocsBrowser extends UIBase {
       }
 
 
-      let base_url = "/example/lib/tinymce/js/tinymce";
+      let base_url;
 
       if (window.haveElectron) {
-        base_url = "lib/tinymce/js/tinymce";
-        let path = document.location.href;
-        path = path.slice(7, path.length);
+        let cwd = process.cwd();
 
-        path = "file://" + require('path').dirname(path);
-        console.log("%c" + path, "blue");
+        cwd = cwd.replace(/\\/g, '/');
+        if (!cwd.endsWith("/")) {
+          cwd += "/";
+        }
 
-        tinyMCEPreInit.baseURL = path;
-        tinyMCEPreInit.documentBaseURL = path;
+        base_url = require('path').resolve(cwd + "lib/tinymce");
+        base_url = base_url.replace(/\\/g, '/');
+        base_url = base_url.trim();
+
+        if (base_url[1] === ":") {
+          base_url = base_url[0].toLowerCase() + base_url.slice(1, base_url.length);
+        }
+
+        base_url = "file://" + base_url;
+
+        tinyMCEPreInit.baseURL = base_url;
+        tinyMCEPreInit.documentBaseURL = base_url;
+
+        console.warn(base_url);
+      } else {
+        base_url = document.location.href;
+        if (!base_url.endsWith("/")) {
+          base_url += "/";
+        }
+
+        base_url += "scripts/lib/tinymce";
       }
 
+      console.warn(window.haveElectron, "haveElectron", base_url);
+
       let tinymce = this.tinymce = globals.tinymce = window.tinymce = _tinymce(globals);
+
+      let fixletter = () => {
+        //fix drive letter on windows
+        if (window.haveElectron) {
+          if (process.platform === "win32") {
+            console.warn("Fixing drive letter", tinymce.baseURI);
+
+            tinymce.baseURI.host += ":";
+            tinymce.baseURL = tinymce.baseURI.source = tinymce.baseURI.toAbsolute();
+          }
+        }
+      }
+
+      let _baseuri = tinymce.baseURI;
+
+      Object.defineProperty(tinymce, "baseURI", {
+        get() {
+          return _baseuri;
+        },
+        set(v) {
+          _baseuri = v;
+          if (v) {
+            fixletter();
+          }
+        }
+      });
+
+      fixletter();
 
       tinymce.init({
         selector: "div.contents",
@@ -655,6 +743,8 @@ export class DocsBrowser extends UIBase {
           console.log("tinymce editor setup!", editor);
         }
       }).then((arg) => {
+        fixletter();
+
         this.tinymce = arg[0];
 
         if (!this.editMode) {
@@ -663,6 +753,8 @@ export class DocsBrowser extends UIBase {
           this.disableLinks();
         }
       });
+
+      fixletter();
 
       let onchange = (e) => {
         console.log("Input event!");
@@ -1160,13 +1252,15 @@ export class DocsBrowser extends UIBase {
 
     let href = this.root.contentDocument.location.href;
 
-    console.log(document.location.href, this.root.src);
+    //console.log(document.location.href, this.root.src);
+
     let path = relative(dirname(document.location.href), href).trim();
     while (path.startsWith("/")) {
       path = path.slice(1, path.length);
     }
 
-    console.log(path, this._prefix);
+    console.log("PATH", path, this._prefix);
+
     if (!path) return;
 
     if (path.startsWith(this._prefix)) {
