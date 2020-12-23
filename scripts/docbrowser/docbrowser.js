@@ -342,7 +342,8 @@ export class DocsBrowser extends UIBase {
 
     this.header = document.createElement("rowframe-x");
     this.shadow.appendChild(this.header);
-    this.makeHeader()
+
+    this.doOnce(this.makeHeader);
 
     this.root = document.createElement("iframe");
     this.shadow.appendChild(this.root);

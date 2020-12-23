@@ -667,7 +667,7 @@ export class Area extends ui_base.UIBase {
     this.doOnce(f);
   }
 
-  static newSTRUCT(reader) {
+  static newSTRUCT() {
     return UIBase.createElement(this.define().tagname);
   }
 

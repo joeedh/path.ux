@@ -1364,6 +1364,7 @@ DocsBrowserEditor.STRUCT = nstructjs.inherit(DocsBrowserEditor, Editor) + `
 }
 `;
 nstructjs.register(DocsBrowserEditor);
+Editor.register(DocsBrowserEditor);
 
 function oldSave() {
     let doc = this.browser.root.contentDocument;
