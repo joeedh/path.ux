@@ -677,6 +677,8 @@ export class IconButton extends Button {
   constructor() {
     super();
 
+    this._customIcon = undefined;
+
     this._icon = 0;
     this._icon_pressed = undefined;
     this.iconsheet = ui_base.Icons.LARGE;
@@ -685,6 +687,14 @@ export class IconButton extends Button {
 
   updateDefaultSize() {
 
+  }
+
+  set customIcon(domImage) {
+    this._customIcon = domImage;
+  }
+
+  get customIcon() {
+    return this._customIcon;
   }
 
   _calcUpdateKey() {
@@ -751,7 +761,13 @@ export class IconButton extends Button {
 
     this.g.save();
     this.g.translate(off, off);
-    ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
+
+    if (this.customIcon) {
+      this.g.drawImage(this.customIcon, 0, 0, this.customIcon.width, this.customIcon.height, 0, 0, size, size);
+    } else {
+      ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
+    }
+
     this.g.restore();
   }
   
