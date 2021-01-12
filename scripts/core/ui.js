@@ -27,6 +27,8 @@ let Vector2 = vectormath.Vector2,
   PackFlags = ui_base.PackFlags,
   PropTypes = toolprop.PropTypes;
 
+import {DataPathError} from '../path-controller/controller/controller_base.js';
+
 import cconst from '../config/const.js';
 
 var list = function list(iter) {

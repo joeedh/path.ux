@@ -32,6 +32,15 @@ export class platform extends PlatformAPI {
     });
   }
 
+  static writeFile(data, handle, mime) {
+    handle = handle.data;
+
+    return handle.createWritable().then((file) => {
+      file.write(data);
+      file.close();
+    });
+  }
+
   static showSaveDialog(title, savedata, args=new FileDialogArgs()) {
     if (!window.showSaveFilePicker) {
       return this.showSaveDialog_old(...arguments);
@@ -67,7 +76,11 @@ export class platform extends PlatformAPI {
     return new Promise((accept, reject) => {
       let fname;
       let saveHandle = window.showSaveFilePicker(undefined, types);
-      saveHandle.then((handle) => {
+      let handle;
+
+      saveHandle.then((handle1) => {
+        handle = handle1;
+
         fname = handle.name;
         console.log("saveHandle", handle);
         return handle.createWritable();
@@ -75,7 +88,8 @@ export class platform extends PlatformAPI {
         file.write(savedata);
         file.close();
 
-        accept(fname);
+        let path = new FilePath(handle, fname);
+        accept(path);
       });
     });
   }

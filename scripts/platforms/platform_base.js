@@ -15,7 +15,11 @@ export function isMimeText(mime) {
 }
 
 export class PlatformAPI {
-  //returns a promise
+  static writeFile(data, handle, mime) {
+    throw new Error("implement me");
+  }
+
+  //returns a promise that resolves to a FilePath that can be used for re-saving.
   static showOpenDialog(title, args=new FileDialogArgs()) {
     throw new Error("implement me");
   }
@@ -50,7 +54,8 @@ export class FileDialogArgs {
 
 /*a file path, some platforms may not return real payhs*/
 export class FilePath {
-  constructor(data) {
+  constructor(data, filename="unnamed") {
     this.data = data;
+    this.filename = filename;
   }
 }
