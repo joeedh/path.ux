@@ -995,10 +995,12 @@ export class UIBase extends HTMLElement {
     return units.buildString(value, baseUnit, decimalPlaces, displayUnit);
   }
 
-  setCSS() {
-    let bg = this.getDefault("background-color");
-    if (bg) {
-      this.style["background-color"] = bg;
+  setCSS(setBG=true) {
+    if (setBG) {
+      let bg = this.getDefault("background-color");
+      if (bg) {
+        this.style["background-color"] = bg;
+      }
     }
 
     let zoom = this.getZoom();

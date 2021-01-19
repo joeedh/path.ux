@@ -92,7 +92,11 @@ export class Label extends ui_base.UIBase {
 
     this._updateFont();
   }
-  
+
+  setCSS() {
+    super.setCSS(false);
+  }
+
   on_disabled() {
     super.on_disabled();
     this._enabled_font = this.font;
@@ -201,8 +205,14 @@ export class Container extends ui_base.UIBase {
     `;
 
     this.shadow.appendChild(style);
+    this.reversed = false;
 
     this._prefixstack = [];
+  }
+
+  reverse() {
+    this.reversed ^= true;
+    return this;
   }
 
   pushDataPrefix(val) {
@@ -237,7 +247,7 @@ export class Container extends ui_base.UIBase {
 
   init() {
     this.style["display"] = "flex";
-    this.style["flex-direction"] = "column";
+    this.style["flex-direction"] = this.reversed ? "column-reverse" : "column";
     this.style["flex-wrap"] = "nowrap";
 
     this.setCSS();
@@ -1296,11 +1306,7 @@ export class Container extends ui_base.UIBase {
 
       let frame;
 
-      if (packflag & PackFlags.VERTICAL) {
-        frame = this.col();
-      } else {
-        frame = this.row();
-      }
+      frame = this.strip();
 
       frame.oneAxisPadding();
       frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
@@ -1907,14 +1913,14 @@ export class RowFrame extends Container {
     super.connectedCallback();
 
     this.style['display'] = 'flex';
-    this.style['flex-direction'] = 'row';
+    this.style['flex-direction'] = this.reversed ? 'row-reverse' : 'row';
   }
 
   init() {
     super.init();
 
     this.style['display'] = 'flex';
-    this.style['flex-direction'] = 'row';
+    this.style['flex-direction'] = this.reversed ? 'row-reverse' : 'row';
 
     if (!this.style['align-items'] || this.style['align-items'] == '') {
       this.style['align-items'] = 'center';

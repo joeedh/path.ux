@@ -589,6 +589,8 @@ export class Menu extends UIBase {
           position:absolute;
           float:left;
           
+          border-radius : ${this.getDefault("MenuBorderRadius")}px;
+
           display: block;
           -moz-user-focus: normal;
         }
@@ -602,6 +604,7 @@ export class Menu extends UIBase {
           margin : 0px;
           padding : 0px;
           border : ${this.getDefault("MenuBorder")};
+          border-radius : ${this.getDefault("MenuBorderRadius")}px;
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
           color : ${this.getDefault("MenuText").color};
@@ -621,6 +624,9 @@ export class Menu extends UIBase {
           padding-left: 16px;
           padding-top : ${pad1}px;
           padding-bottom : ${pad1}px;
+          
+          border-radius : ${this.getDefault("MenuBorderRadius")}px;
+          
           color : ${this.getDefault("MenuText").color};
           font : ${this.getDefault("MenuText").genCSS()};
           background-color: ${this.getDefault("MenuBG")};
@@ -636,12 +642,14 @@ export class Menu extends UIBase {
           
           border : none;
           outline : none;
+          border-radius : ${this.getDefault("MenuBorderRadius")}px;
           
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${this.getDefault("MenuText").color};
           -moz-user-focus: normal;
         }
       `;
+
 
   }
 
