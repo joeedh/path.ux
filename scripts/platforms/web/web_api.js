@@ -41,7 +41,7 @@ export class platform extends PlatformAPI {
     });
   }
 
-  static showSaveDialog(title, savedata, args=new FileDialogArgs()) {
+  static showSaveDialog(title, savedata_cb, args=new FileDialogArgs()) {
     if (!window.showSaveFilePicker) {
       return this.showSaveDialog_old(...arguments);
     }
@@ -85,6 +85,8 @@ export class platform extends PlatformAPI {
         console.log("saveHandle", handle);
         return handle.createWritable();
       }).then((file) => {
+        let savedata = savedata_cb();
+
         file.write(savedata);
         file.close();
 

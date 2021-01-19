@@ -25,7 +25,7 @@ export class PlatformAPI {
   }
 
   //returns a promise
-  static showSaveDialog(title, savedata, args=new FileDialogArgs()) {
+  static showSaveDialog(title, savedata_cb, args=new FileDialogArgs()) {
     throw new Error("implement me");
   }
 

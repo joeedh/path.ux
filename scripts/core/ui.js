@@ -255,6 +255,8 @@ export class Container extends ui_base.UIBase {
       this.packflag &= ~PackFlags.USE_ICONS;
       this.inherit_packflag &= ~PackFlags.USE_ICONS;
     }
+
+    return this;
   }
 
   /**
@@ -720,7 +722,7 @@ export class Container extends ui_base.UIBase {
       this.ctx.api.execTool(this.ctx, toolob);
     }
 
-    let def = cls.tooldef();
+    let def = typeof path_or_cls === "string" ? this.ctx.api.getToolDef(path_or_cls) : cls.tooldef();
     let tooltip = def.description === undefined ? def.uiname : def.description;
 
     //is there a hotkey hardcoded in the class?

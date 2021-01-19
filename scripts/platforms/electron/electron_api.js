@@ -387,7 +387,7 @@ export class platform extends PlatformAPI {
     });
   }
 
-  static showSaveDialog(title, filedata, args = new FileDialogArgs()) {
+  static showSaveDialog(title, filedata_cb, args = new FileDialogArgs()) {
     const {dialog} = require('electron').remote
 
     console.log(args.filters);
@@ -414,6 +414,7 @@ export class platform extends PlatformAPI {
           reject("cancel");
         } else {
           let path = ret.filePath;
+          let filedata = filedata_cb();
 
           if (filedata instanceof ArrayBuffer) {
             filedata = new Uint8Array(filedata);
