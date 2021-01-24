@@ -73,9 +73,11 @@ export class platform extends PlatformAPI {
       });
     }
 
+    console.log(types);
+
     return new Promise((accept, reject) => {
       let fname;
-      let saveHandle = window.showSaveFilePicker(undefined, types);
+      let saveHandle = window.showSaveFilePicker({types});
       let handle;
 
       saveHandle.then((handle1) => {
@@ -86,6 +88,10 @@ export class platform extends PlatformAPI {
         return handle.createWritable();
       }).then((file) => {
         let savedata = savedata_cb();
+
+        if (savedata instanceof Uint8Array || savedata instanceof DataView) {
+          savedata = savedata.buffer;
+        }
 
         file.write(savedata);
         file.close();

@@ -157,7 +157,6 @@ export class VectorPanel extends ColumnFrame {
     this.setCSS();
 
     this.background = this.getDefault("InnerPanelBG");
-    this.style["padding"] = "5px";
   }
 
   _getNumParam(key) {
@@ -491,14 +490,6 @@ export class ToolTip extends UIBase {
     this.visibleToPick = false;
     this.div = document.createElement("div");
 
-    this.styletag = document.createElement("style");
-    this.styletag.textContent = `
-      div {
-        padding : 15px;
-      }
-    `;
-
-    this.shadow.appendChild(this.styletag);
     this.shadow.appendChild(this.div);
   }
 
@@ -553,12 +544,23 @@ export class ToolTip extends UIBase {
 
     this.background = color;
 
-    this.div.style["background-color"] = "rgba(0,0,0,0)";
-    this.div.style["border"] = "2px solid " + bcolor;
-    this.div.style["border-radius"] = "10px";
-    this.style["border-radius"] = "10px";
+    let radius = this.getDefault("BoxRadius", undefined, 5);
+    let bstyle = this.getDefault("border-style", undefined, "solid");
+    let bwidth = this.getDefault("BoxLineWidth", undefined, 1);
+    let padding = this.getDefault("padding", undefined, 5);
 
-    this.div.style["font"] = this.getDefault("ToolTipText").genCSS();
+    this.noMarginsOrPadding();
+
+    this.div.style["padding"] = padding + "px";
+
+    this.div.style["background-color"] = "rgba(0,0,0,0)";
+    this.div.style["border"] = `${bwidth}px ${bstyle} ${bcolor}`;
+    this.div.style["border-radius"] = radius + "px";
+    this.style["border-radius"] = radius + "px";
+
+    let font = this.getDefault("ToolTipText");
+    this.div.style["color"] = font.color;
+    this.div.style["font"] = font.genCSS();
   }
 
   static define() {return {

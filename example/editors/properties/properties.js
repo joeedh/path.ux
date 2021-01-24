@@ -1,5 +1,5 @@
 import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
-        PackNode, PackNodeVertex, Vector2, graphPack} from '../../pathux.js';
+        PackNode, PackNodeVertex, Vector2, graphPack, exportTheme} from '../../pathux.js';
 
 import {Editor} from "../editor_base.js";
 
@@ -28,6 +28,29 @@ export class PropsEditor extends Editor {
     tabs.style["overflow"] = "scroll";
 
     tab1 = tabs.tab("Theme");
+    tab1.button("Export Theme", () => {
+      let theme = exportTheme();
+
+      theme = theme.replace(/var theme/, "export const theme");
+
+      theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
+      theme = `
+/*
+ * WARNING: AUTO-GENERATED FILE
+ * 
+ * Copy to scripts/editors/theme.js
+ */
+      `.trim() + "\n\n" + theme + "\n";
+
+      console.log(theme);
+
+      let blob = new Blob([theme], {mime : "application/javascript"});
+      let url = URL.createObjectURL(blob);
+
+      console.log("url", url);
+      window.open(url);
+    });
+
     let th = UIBase.createElement("theme-editor-x");
     this.style["overflow-y"] = "scroll";
     tab1.add(th);

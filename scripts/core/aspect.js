@@ -22,6 +22,8 @@ export function initAspectClass(object, blacklist=new Set()) {
   }
   keys = new Set(keys);
 
+  object.__aspect_methods = new Set();
+
   function validProperty(obj, key) {
     let descr = Object.getOwnPropertyDescriptor(obj, key);
 
@@ -74,8 +76,13 @@ export function initAspectClass(object, blacklist=new Set()) {
       continue;
     }
 
-
     AfterAspect.bind(object, k);
+  }
+}
+
+export function clearAspectCallbacks(obj) {
+  for (let key of obj.__aspect_methods) {
+    obj[key].clear();
   }
 }
 
@@ -96,6 +103,8 @@ export class AfterAspect {
 
     this.chain = [[owner[key], false]];
     this.chain2 = [[owner[key], false]];
+
+    this.root = [[owner[key], false]];
 
     let this2 = this;
 
@@ -156,6 +165,8 @@ export class AfterAspect {
   }
 
   static bind(owner, key) {
+    owner.__aspect_methods.add(key);
+
     return new AfterAspect(owner, key);
   }
 
@@ -178,6 +189,14 @@ export class AfterAspect {
     if (!this._method_bound) {
       this.owner[this.key] = this._method;
     }
+  }
+
+  clear() {
+    this._checkbind();
+    this.chain = [[this.root[0][0], this.root[0][1]]];
+    this.chain2 = [[this.root[0][0], this.root[0][1]]];
+
+    return this;
   }
 
   before(cb, node, once) {

@@ -18,7 +18,7 @@ declare class DataAPI {
     hasStruct(cls: Function): Boolean;
     resolvePath(ctx: any, path: string): resolvePathRet;
     getValue(ctx: any, path: string): any;
-    setValue(ctx: any, path: string): void;
+    setValue(ctx: any, path: string, val: any): void;
     massSetProp(ctx: any, massSetPath: string, value: any): void;
     execTool(ctx: any, path: string, inputs: any): ToolOp;
     execTool(ctx: any, tool: ToolOp, inputs: any): ToolOp;

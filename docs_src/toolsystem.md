@@ -1,25 +1,39 @@
 # Tool System
 
-Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and 
-in general are foundational to path.ux and it's associated projects.  
+Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and
+in general are foundational to path.ux and it's associated projects.
 
-Tools all inherit from [ToolOp](@ToolOp), which roughly looks like this (see Context section for an 
+Tools all inherit from [ToolOp](@ToolOp), which roughly looks like this (see Context section for an
 explanation for what the "ctx" parameters are):
 
 ```
 class SomeTool extends ToolOp {
   static tooldef() {return {
     uiname   : "Tool",
-    path     : "module.tool"
-    inputs   : ToolOp.inherit({}), //inherit properties from base class
+    toolpath     : "module.tool"
+    inputs   : ToolOp.inherit({
+    }), //use ToolOp.inherit to flag inheritance
     outputs  : {}
   }}
+  
   static invoke(ctx, args) {
     /*create a new tool instance.
       args is simple key:val mapping
       where val is either a string, a number
       or a boolean.*/
-    return new ToolOp()
+    
+    //super.invoke will create tool and parse args
+    return super.invoke(ctx, args);
+  }
+  
+  //add a 2d line
+  makeDrawLine(v1, v2, css_color);
+  
+  //reset temporary drawing geometry
+  resetTempGeom();
+  
+  calcUndoMem(ctx) {
+    return size in bytes of stored undo data
   }
   undoPre(ctx) {
     //create undo data
@@ -31,13 +45,16 @@ class SomeTool extends ToolOp {
     //execute tool
   }
   modalStart(ctx) {
+    super.modalStart(ctx);
+    
     //start interactice mode
   }
-  modalEnd(ctx) {
+  modalEnd(was_cancelled) {
+    super.modalEnd(was_cancelled);
     //end interactive mode
   }
   on_[mousedown/mousemove/mouseup/keydown](ctx) {
-    //interactive mode event
+    //interactive mode event handler
   }
   
   ToolOp.register(SomeTool);
@@ -77,8 +94,8 @@ either override the following methods in ScreenArea.Area.prototype, or subclass 
 ```
 
 ## Undo
-Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the 
-entire application and then reloading it on undo).  Additionally to save on speed and memory subclasses 
+Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the
+entire application and then reloading it on undo).  Additionally to save on speed and memory subclasses
 can override undoPre and undo with their own implementation.
 
 
@@ -87,7 +104,7 @@ Tools have a special tooldef() static function that "defines" the tool.  It retu
 what properties the tool has, it's name, it's path in the data path system, etc.
 
 ## Tool Properties
-Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties, 
+Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties,
 various linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code
 may provide it's own property classes.
 

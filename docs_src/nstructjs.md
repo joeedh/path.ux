@@ -8,7 +8,7 @@ NStructJS arose out of the following shortcomings of JSON:
 - JSON allocates objects twice.
 - JSON is slow compared to what you can get with a structured binary format
 
-The idea of NStructJS is to attach little scripts to your classes that define that 
+The idea of NStructJS is to attach little scripts to your classes that define that
 class's data and how it is saved.  For example:
 
 ```
@@ -32,13 +32,13 @@ my_module.SomeClass {
   obj   : int | this.obj.id;
 }
 `;
-nstructjs.manager.add_class(SomeClass);
+nstructjs.register(SomeClass);
 ```
 
 ## Control How Fields Are Saved
 
 You can use little code snippets to control how fields are saved.
-For example, if you want to save an integer ID instead of a reference for an 
+For example, if you want to save an integer ID instead of a reference for an
 object property, you might do this:
 
 ```

@@ -2054,7 +2054,7 @@ export class UIBase extends HTMLElement {
     return val;
   }
 
-  getDefault(key, doMobile=true) {
+  getDefault(key, doMobile=true, defaultval=undefined) {
     let p = this;
 
     while (p) {
@@ -2067,7 +2067,7 @@ export class UIBase extends HTMLElement {
       p = p.parentWidget;
     }
 
-    return this.getClassDefault(key, doMobile);
+    return this.getClassDefault(key, doMobile, defaultval);
   }
 
   getStyleClass() {
@@ -2093,7 +2093,7 @@ export class UIBase extends HTMLElement {
     return "base";
   }
 
-  getClassDefault(key, doMobile=true) {
+  getClassDefault(key, doMobile=true, defaultval=undefined) {
     let style = this.getStyleClass();
 
     let val = undefined;
@@ -2111,6 +2111,8 @@ export class UIBase extends HTMLElement {
 
     if (val === undefined && style in theme && key in theme[style]) {
       val = theme[style][key];
+    } else if (defaultval !== undefined) {
+      val = defaultval;
     } else if (val === undefined) {
       val = theme.base[key];
     }

@@ -69,6 +69,12 @@ update_stack.cur = 0;
 
 let screen_idgen = 0;
 
+export function purgeUpdateStack() {
+  for (let i=0; i<update_stack.length; i++) {
+    update_stack[i] = undefined;
+  }
+}
+
 /**
  * Base class for app workspaces
  *
@@ -1240,6 +1246,11 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
+  purgeUpdateStack() {
+    this._update_gen = undefined;
+    purgeUpdateStack();
+  }
+
   get ctx() {
     return this._ctx;
   }
@@ -1448,6 +1459,18 @@ export class Screen extends ui_base.UIBase {
     }
 
     this.setCSS();
+  }
+
+  collapseArea(sarea) {
+    sarea.remove();
+
+    this.regenBorders();
+    this.snapScreenVerts(true);
+    this.solveAreaConstraints();
+    this.completeSetCSS();
+    this.completeUpdate();
+
+    return this;
   }
 
   splitArea(sarea, t = 0.5, horiz = true) {

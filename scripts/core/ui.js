@@ -1014,7 +1014,9 @@ export class Container extends ui_base.UIBase {
       return name;
     }
 
-    if (prop.type === PropTypes.STRING) {
+    if (prop.type === PropTypes.REPORT) {
+      return this.pathlabel(inpath, prop.uiname);
+    } else if (prop.type === PropTypes.STRING) {
       let ret;
 
       if (prop.flag & PropFlags.READ_ONLY) {
