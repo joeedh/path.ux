@@ -1,6 +1,6 @@
 import {Container} from '../core/ui.js';
 import {UIBase} from '../core/ui_base.js';
-import {DataAPI} from "../path-controller/controller/simple_controller.js";
+import {DataAPI} from "../path-controller/controller/controller.js";
 
 export let api = new DataAPI();
 
