@@ -167,7 +167,7 @@ export const theme = {
       border : none;
       background-color : grey; 
     `,
-    MenuSpacing  : 0,
+    MenuSpacing  : 5,
     MenuText     : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
