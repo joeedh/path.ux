@@ -3,13 +3,12 @@ documentation browser, with editing support
 note that you must set window.TINYMCE_PATH
 */
 
-//import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
+//import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
 import * as cconst from '../config/const.js';
 import * as nstructjs from "../path-controller/util/struct.js";
 import {UIBase, Icons} from "../core/ui_base.js";
 import '../lib/tinymce/tinymce.js';
-import * as cconst from '../config/const.js';
 import * as util from '../util/util.js';
 import {Vector2, Matrix4} from '../util/vectormath.js';
 

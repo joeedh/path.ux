@@ -7688,7 +7688,7 @@ window.makeCompiledVectormathCode = function(mode="es") {
     }
   }
 
-  let classes = [Vector2$1, Vector3, Vector4, a];
+  let classes = [Vector2, Vector3, Vector4, a];
   let lens = {
     Vector2 : 2,
     Vector3 : 3,
@@ -8008,7 +8008,7 @@ class BaseVector extends Array {
 
   init_swizzle(size) {
     var ret = {};
-    var cls = size == 4 ? Vector4 : (size == 3 ? Vector3 : Vector2$1);
+    var cls = size == 4 ? Vector4 : (size == 3 ? Vector3 : Vector2);
 
     for (var k in cls.prototype) {
       var v = cls.prototype[k];
@@ -8418,7 +8418,7 @@ vec3 {
 `;
 nstructjs.manager.add_class(Vector3);
 
-class Vector2$1 extends BaseVector {
+class Vector2 extends BaseVector {
   constructor(data) {
     super();
 
@@ -8550,12 +8550,12 @@ class Vector2$1 extends BaseVector {
     delete this.vec;
   }
 };
-Vector2$1.STRUCT = `
+Vector2.STRUCT = `
 vec2 {
   vec : array(float) | obj;
 }
 `;
-nstructjs.manager.add_class(Vector2$1);
+nstructjs.manager.add_class(Vector2);
 
 let _quat_vs3_temps = cachering.fromConstructor(Vector3, 64);
 
@@ -8835,7 +8835,7 @@ _v3nd_n2_normalizedDot = new Vector3();
 
 BaseVector.inherit(Vector4, 4);
 BaseVector.inherit(Vector3, 3);
-BaseVector.inherit(Vector2$1, 2);
+BaseVector.inherit(Vector2, 2);
 
 lookat_cache_vs3 = cachering.fromConstructor(Vector3, 64);
 lookat_cache_vs4 = cachering.fromConstructor(Vector4, 64);
@@ -10236,7 +10236,7 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
   BaseVector: BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
-  Vector2: Vector2$1,
+  Vector2: Vector2,
   Quat: Quat,
   Matrix4: Matrix4
 });
@@ -10261,7 +10261,7 @@ off fort;
 
 */
 
-let barycentric_v2_rets = cachering.fromConstructor(Vector2$1, 2048);
+let barycentric_v2_rets = cachering.fromConstructor(Vector2, 2048);
 let calc_proj_refs = new cachering(() => [0, 0], 64);
 
 function calc_projection_axes(no) {
@@ -10351,7 +10351,7 @@ function _linedis2(co, v1, v2) {
 let closest_p_tri_rets = new cachering(() => {
   return {
     co: new Vector3(),
-    uv: new Vector2$1()
+    uv: new Vector2()
   }
 }, 512);
 
@@ -11014,11 +11014,11 @@ function aabb_isect_2d(pos1, size1, pos2, size2) {
   return ret == 2;
 };
 
-let aabb_intersect_vs = cachering.fromConstructor(Vector2$1, 32);
+let aabb_intersect_vs = cachering.fromConstructor(Vector2, 32);
 let aabb_intersect_rets = new cachering(() => {
   return {
-    pos : new Vector2$1(),
-    size: new Vector2$1()
+    pos : new Vector2(),
+    size: new Vector2()
   }
 }, 512);
 
@@ -11082,15 +11082,15 @@ window.test_aabb_intersect_2d = function () {
   g.clearRect(0, 0, canvas.width, canvas.height);
 
   let sz = 800;
-  let a1 = new Vector2$1([Math.random()*sz, Math.random()*sz]).floor();
-  let a2 = new Vector2$1([Math.random()*sz, Math.random()*sz]).floor();
-  let b1 = new Vector2$1([Math.random()*sz, Math.random()*sz]).floor();
-  let b2 = new Vector2$1([Math.random()*sz, Math.random()*sz]).floor();
+  let a1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let a2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let b1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let b2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
 
-  let p1 = new Vector2$1();
-  let s1 = new Vector2$1();
-  let p2 = new Vector2$1();
-  let s2 = new Vector2$1();
+  let p1 = new Vector2();
+  let s1 = new Vector2();
+  let p2 = new Vector2();
+  let s2 = new Vector2();
 
   p1.load(a1).min(a2);
   s1.load(a1).max(a2);
@@ -11426,7 +11426,7 @@ class MinMax {
 
       switch (totaxis) {
         case 2:
-          cls = Vector2$1;
+          cls = Vector2;
           break;
         case 3:
           cls = Vector3;
@@ -11594,13 +11594,13 @@ function inrect_2d(p, pos, size) {
   }
   return p[0] >= pos[0] && p[0] <= pos[0] + size[0] && p[1] >= pos[1] && p[1] <= pos[1] + size[1];
 };
-var $smin_aabb_isect_line_2d = new Vector2$1();
-var $ssize_aabb_isect_line_2d = new Vector2$1();
-var $sv1_aabb_isect_line_2d = new Vector2$1();
-var $ps_aabb_isect_line_2d = [new Vector2$1(), new Vector2$1(), new Vector2$1()];
+var $smin_aabb_isect_line_2d = new Vector2();
+var $ssize_aabb_isect_line_2d = new Vector2();
+var $sv1_aabb_isect_line_2d = new Vector2();
+var $ps_aabb_isect_line_2d = [new Vector2(), new Vector2(), new Vector2()];
 var $l1_aabb_isect_line_2d = [0, 0];
-var $smax_aabb_isect_line_2d = new Vector2$1();
-var $sv2_aabb_isect_line_2d = new Vector2$1();
+var $smax_aabb_isect_line_2d = new Vector2();
+var $sv2_aabb_isect_line_2d = new Vector2();
 var $l2_aabb_isect_line_2d = [0, 0];
 
 function aabb_isect_line_2d(v1, v2, min, max) {
@@ -11829,12 +11829,12 @@ function point_in_aabb_2d(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
 }
 
-var _asi2d_v1 = new Vector2$1();
-var _asi2d_v2 = new Vector2$1();
-var _asi2d_v3 = new Vector2$1();
-var _asi2d_v4 = new Vector2$1();
-var _asi2d_v5 = new Vector2$1();
-var _asi2d_v6 = new Vector2$1();
+var _asi2d_v1 = new Vector2();
+var _asi2d_v2 = new Vector2();
+var _asi2d_v3 = new Vector2();
+var _asi2d_v4 = new Vector2();
+var _asi2d_v5 = new Vector2();
+var _asi2d_v6 = new Vector2();
 
 function aabb_sphere_isect_2d(p, r, min, max) {
   var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
@@ -12141,8 +12141,8 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   vi[0] = ((v3[0] - v4[0])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[0] - v2[0])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   vi[1] = ((v3[1] - v4[1])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[1] - v2[1])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   if (calc_t || v1.length == 3) {
-    var n1 = new Vector2$1(v2).sub(v1);
-    var n2 = new Vector2$1(vi).sub(v1);
+    var n1 = new Vector2(v2).sub(v1);
+    var n2 = new Vector2(vi).sub(v1);
     var t = n2.vectorLength()/n1.vectorLength();
     n1.normalize();
     n2.normalize();
@@ -12157,11 +12157,11 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   return [vi, LINECROSS];
 };
 
-var dt2l_v1 = new Vector2$1();
-var dt2l_v2 = new Vector2$1();
-var dt2l_v3 = new Vector2$1();
-var dt2l_v4 = new Vector2$1();
-var dt2l_v5 = new Vector2$1();
+var dt2l_v1 = new Vector2();
+var dt2l_v2 = new Vector2();
+var dt2l_v3 = new Vector2();
+var dt2l_v4 = new Vector2();
+var dt2l_v5 = new Vector2();
 
 function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = undefined) {
   if (clip == undefined) {
@@ -12243,7 +12243,7 @@ function dist_to_line(p, v1, v2, clip=true) {
 //p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
 var _cplw_vs4 = cachering.fromConstructor(Vector4, 64);
 var _cplw_vs3 = cachering.fromConstructor(Vector3, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$1, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2, 64);
 
 function wclip(x1, x2, w1, w2, near) {
   var r1 = near*w1 - x1;
@@ -13497,7 +13497,7 @@ function singletonMouseEvents() {
     }, type);
   };
 
-  let _mpos = new Vector2$1();
+  let _mpos = new Vector2();
 
   function doSingleCbs(e, type) {
     let list = singleMouseCBs[type];
@@ -13592,7 +13592,7 @@ class DoubleClickHandler {
     this.last = 0;
     this.dblEvent = undefined;
 
-    this.start_mpos = new Vector2$1();
+    this.start_mpos = new Vector2();
 
     this._on_mouseup = this._on_mouseup.bind(this);
     this._on_mousemove = this._on_mousemove.bind(this);
@@ -13604,7 +13604,7 @@ class DoubleClickHandler {
   }
 
   _on_mousemove(e) {
-    let mpos = new Vector2$1();
+    let mpos = new Vector2();
     mpos[0] = e.x; mpos[1] = e.y;
 
     let dist = mpos.vectorDistance(this.start_mpos) * devicePixelRatio;
@@ -14684,7 +14684,7 @@ function genHermiteTable(evaluate, steps) {
 "use strict";
 //import {EventDispatcher} from "../util/events.js";
 
-var Vector2$2 = Vector2$1;
+var Vector2$1 = Vector2;
 
 const SplineTemplates = {
   CONSTANT      : 0,
@@ -14768,7 +14768,7 @@ window.mySafeJSONStringify = mySafeJSONStringify;
 var bin_cache = {};
 window._bin_cache = bin_cache;
 
-var eval2_rets = cachering.fromConstructor(Vector2$2, 32);
+var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
 
 /*
   I hate these stupid curve widgets.  This horrible one here works by
@@ -14812,15 +14812,15 @@ function binomial(n, i) {
 
 window.bin = binomial;
 
-class Curve1DPoint extends Vector2$2 {
+class Curve1DPoint extends Vector2$1 {
   constructor(co) {
     super(co);
 
-    this.rco = new Vector2$2(co);
-    this.sco = new Vector2$2(co);
+    this.rco = new Vector2$1(co);
+    this.sco = new Vector2$1(co);
 
     //for transform
-    this.startco = new Vector2$2();
+    this.startco = new Vector2$1();
     this.eid = -1;
     this.flag = 0;
 
@@ -14906,7 +14906,7 @@ class BSplineCurve extends CurveTypeData {
     this.add(0, 0);
     this.add(1, 1);
 
-    this.mpos = new Vector2$2();
+    this.mpos = new Vector2$1();
 
     this.on_mousedown = this.on_mousedown.bind(this);
     this.on_mousemove = this.on_mousemove.bind(this);
@@ -15241,7 +15241,7 @@ class BSplineCurve extends CurveTypeData {
     };
 
     let err = 0.0;
-    let g = new Vector2$2();
+    let g = new Vector2$1();
 
     for (let step = 0; step < 25; step++) {
       err = 0.0;
@@ -15565,7 +15565,7 @@ class BSplineCurve extends CurveTypeData {
 
   makeGUI(container, canvas, drawTransform) {
     this.uidata = {
-      start_mpos : new Vector2$2(),
+      start_mpos : new Vector2$1(),
       transpoints: [],
 
       dom         : container,
@@ -15761,7 +15761,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   do_transform(x, y) {
-    var off = new Vector2$2([x, y]).sub(this.uidata.start_mpos);
+    var off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
 
     for (var i = 0; i < this.uidata.transpoints.length; i++) {
       var p = this.uidata.transpoints[i];
@@ -17230,7 +17230,7 @@ nstructjs$1.register(RandCurve);
 
 "use strict";
 
-var Vector2$3 = Vector2$1;
+var Vector2$2 = Vector2;
 
 function mySafeJSONStringify$1(obj) {
   return JSON.stringify(obj.toJSON(), function(key) {
@@ -19779,7 +19779,7 @@ class Vec2Property extends FloatProperty {
     super(undefined, apiname, uiname, description);
 
     this.type = PropTypes.VEC2;
-    this.data = new Vector2$1(data);
+    this.data = new Vector2(data);
   }
 
   setValue(v) {
@@ -20992,7 +20992,7 @@ class DataPathError extends Error {
 function getVecClass(proptype) {
   switch (proptype) {
     case PropTypes.VEC2:
-      return Vector2$1;
+      return Vector2;
     case PropTypes.VEC3:
       return Vector3;
     case PropTypes.VEC4:
@@ -26205,7 +26205,7 @@ function makeIconDiv(icon, sheet=0) {
     return icontest;
 }
 
-let Vector2$4 = Vector2$1;
+let Vector2$3 = Vector2;
 let Matrix4$1 = Matrix4;
 
 let dpistack = [];
@@ -26715,8 +26715,8 @@ class UIBase$2 extends HTMLElement {
   getTotalRect() {
     let found = false;
 
-    let min = new Vector2$4([1e17, 1e17]);
-    let max = new Vector2$4([-1e17, -1e17]);
+    let min = new Vector2$3([1e17, 1e17]);
+    let max = new Vector2$3([-1e17, -1e17]);
 
     let doaabb = (n) => {
       let rs = n.getClientRects();
@@ -27065,8 +27065,8 @@ class UIBase$2 extends HTMLElement {
 
     if (!clip) {
       clip = {
-        pos : new Vector2$4([-10000, 10000]),
-        size : new Vector2$4([20000, 10000])
+        pos : new Vector2$3([-10000, 10000]),
+        size : new Vector2$3([20000, 10000])
       };
     }
     
@@ -31633,7 +31633,7 @@ let PropSubTypes$2 = PropSubTypes$1;
 
 let EnumProperty$6 = EnumProperty;
 
-let Vector2$5 = Vector2$1,
+let Vector2$4 = Vector2,
   UIBase$7 = UIBase$2,
   PackFlags$5 = PackFlags,
   PropTypes$5 = PropTypes;
@@ -34023,7 +34023,7 @@ class VectorPopupButton extends Button {
     if (this.value.length !== value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2$1();
+          this.value = new Vector2();
           break;
         case 3:
           this.value = new Vector3();
@@ -34279,7 +34279,7 @@ class VectorPanel extends ColumnFrame {
     if (value.length !== this.value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2$1(value);
+          this.value = new Vector2(value);
           break;
         case 3:
           this.value = new Vector3(value);
@@ -34369,7 +34369,7 @@ class VectorPanel extends ColumnFrame {
     if (this.value.length !== length) {
       switch (length) {
         case 2:
-          val = new Vector2$1(val);
+          val = new Vector2(val);
           break;
         case 3:
           val = new Vector3(val);
@@ -34804,7 +34804,7 @@ let PropSubTypes$3 = PropSubTypes$1;
 
 let EnumProperty$7 = EnumProperty;
 
-let Vector2$6 = Vector2$1,
+let Vector2$5 = Vector2,
   UIBase$9 = UIBase$2,
   PackFlags$6 = PackFlags,
   PropTypes$6 = PropTypes;
@@ -35155,7 +35155,7 @@ UIBase$9.internalRegister(PanelFrame);
 
 "use strict";
 
-let Vector2$7 = Vector2$1,
+let Vector2$6 = Vector2,
   Vector3$1 = Vector3,
   Vector4$2 = Vector4,
   Matrix4$2 = Matrix4;
@@ -35309,8 +35309,8 @@ let _update_temp = new Vector4$2();
 
 class SimpleBox {
   constructor(pos=[0, 0], size=[1, 1]) {
-    this.pos = new Vector2$7(pos);
-    this.size = new Vector2$7(size);
+    this.pos = new Vector2$6(pos);
+    this.size = new Vector2$6(size);
     this.r = 0;
   }
 }
@@ -36544,7 +36544,7 @@ let UIBase$b      = UIBase$2,
 
 let tab_idgen = 1;
 let debug = false;
-let Vector2$8 = Vector2$1;
+let Vector2$7 = Vector2;
 
 function getpx$1(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -36565,11 +36565,11 @@ class TabItem {
     this.extra = undefined;
     this.extraSize = undefined;
 
-    this.size = new Vector2$8();
-    this.pos = new Vector2$8();
+    this.size = new Vector2$7();
+    this.pos = new Vector2$7();
 
-    this.abssize = new Vector2$8();
-    this.abspos = new Vector2$8();
+    this.abssize = new Vector2$7();
+    this.abspos = new Vector2$7();
   }
 
   getClientRects() {
@@ -36602,7 +36602,7 @@ class ModalTabMove extends EventHandler {
     this.first = true;
 
     this.droptarget = undefined;
-    this.start_mpos = new Vector2$8();
+    this.start_mpos = new Vector2$7();
     this.mpos = undefined;
 
     this.dragtab = undefined;
@@ -37899,7 +37899,7 @@ let PropSubTypes$4 = PropSubTypes$1;
 
 let EnumProperty$8 = EnumProperty;
 
-let Vector2$9 = Vector2$1,
+let Vector2$8 = Vector2,
   UIBase$c = UIBase$2,
   PackFlags$9 = PackFlags,
   PropTypes$7 = PropTypes;
@@ -39882,7 +39882,7 @@ class NumSliderSimpleBase extends UIBase$2 {
     let co = this._getButtonPos();
 
     let dpi = UIBase$2.getDPI();
-    let dv = new Vector2$1([co[0]/dpi-x, co[1]/dpi-y]);
+    let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
     let dis = dv.vectorLength();
 
     //console.log("dis", dis.toFixed(3));
@@ -40752,14 +40752,14 @@ var solver1 = /*#__PURE__*/Object.freeze({
 
 let idgen = 0;
 
-class PackNodeVertex extends Vector2$1 {
+class PackNodeVertex extends Vector2 {
   constructor(node, co) {
     super(co);
 
     this.node = node;
     this._id = idgen++;
     this.edges = [];
-    this._absPos = new Vector2$1();
+    this._absPos = new Vector2();
   }
 
   get absPos() {
@@ -40774,11 +40774,11 @@ class PackNodeVertex extends Vector2$1 {
 
 class PackNode {
   constructor() {
-    this.pos = new Vector2$1();
-    this.vel = new Vector2$1();
-    this.oldpos = new Vector2$1();
+    this.pos = new Vector2();
+    this.vel = new Vector2();
+    this.oldpos = new Vector2();
     this._id = idgen++;
-    this.size = new Vector2$1();
+    this.size = new Vector2();
     this.verts = [];
   }
 
@@ -40826,7 +40826,7 @@ function copyGraph(nodes) {
 }
 
 function getCenter(nodes) {
-  let cent = new Vector2$1();
+  let cent = new Vector2();
 
   for (let n of nodes) {
     cent.add(n.pos);
@@ -40913,10 +40913,10 @@ function graphPack(nodes, margin=15, steps=10, updateCb=undefined) {
     return v1.absPos.vectorDistance(v2.absPos);
   }
 
-  let p1 = new Vector2$1();
-  let p2 = new Vector2$1();
-  let s1 = new Vector2$1();
-  let s2 = new Vector2$1();
+  let p1 = new Vector2();
+  let p2 = new Vector2();
+  let s1 = new Vector2();
+  let s2 = new Vector2();
 
   function loadBoxes(n1, n2, margin1=margin) {
     p1.load(n1.pos);
@@ -70588,7 +70588,7 @@ class DocsBrowser extends UIBase$2 {
 
   makeHeader() {
     this.makeHeader_intern();
-    this.flushUpdate();
+    //this.flushUpdate();
   }
 
   makeHeader_intern() {
@@ -71515,6 +71515,10 @@ class DocsBrowser extends UIBase$2 {
   }
 
   setCSS() {
+    if (!this.root) {
+      return;
+    }
+
     this.style.width = "100%";
     this.style.height = "max-contents";
 
@@ -72220,8 +72224,8 @@ var controller1 = /*#__PURE__*/Object.freeze({
   initSimpleController: initSimpleController,
   getDataPathToolOp: getDataPathToolOp,
   setDataPathToolOp: setDataPathToolOp,
-  DataPathSetOp: DataPathSetOp,
   ModelInterface: ModelInterface,
+  DataPathSetOp: DataPathSetOp,
   ToolClasses: ToolClasses,
   setContextClass: setContextClass,
   ToolFlags: ToolFlags,
@@ -72286,7 +72290,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   BaseVector: BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
-  Vector2: Vector2$1,
+  Vector2: Vector2,
   Quat: Quat,
   Matrix4: Matrix4,
   calc_projection_axes: calc_projection_axes,
@@ -72924,7 +72928,7 @@ function registerToolStackGetter(func) {
   toolstack_getter = func;
 }
 
-let Vector2$a = Vector2$1,
+let Vector2$9 = Vector2,
     Vector3$2 = Vector3,
     UndoFlags$1 = UndoFlags,
     ToolFlags$1 = ToolFlags;
@@ -73030,7 +73034,7 @@ class AreaResizeTool extends ToolBase {
     
     super(screen);
     
-    this.start_mpos = new Vector2$a(mpos);
+    this.start_mpos = new Vector2$9(mpos);
 
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
@@ -73111,7 +73115,7 @@ class AreaResizeTool extends ToolBase {
     }
   }
   on_mousemove(e) {
-    let mpos = new Vector2$a([e.x, e.y]);
+    let mpos = new Vector2$9([e.x, e.y]);
     
     mpos.sub(this.start_mpos);
     
@@ -73131,8 +73135,8 @@ class AreaResizeTool extends ToolBase {
     for (let border of borders) {
       bad = bad || !this.screen.isBorderMovable(border);
 
-      border.oldv1 = new Vector2$a(border.v1);
-      border.oldv2 = new Vector2$a(border.v2);
+      border.oldv1 = new Vector2$9(border.v1);
+      border.oldv2 = new Vector2$9(border.v2);
     }
 
     if (bad) {
@@ -73343,7 +73347,7 @@ class AreaDragTool extends ToolBase {
     this.boxes.active = undefined;
 
     this.sarea = sarea;
-    this.start_mpos = new Vector2$a(mpos);
+    this.start_mpos = new Vector2$9(mpos);
     this.screen = screen;
   }
   
@@ -73852,7 +73856,7 @@ function snapi(c, snap_limit=SnapLimit) {
   return c;
 }
 
-class ScreenVert extends Vector2$1 {
+class ScreenVert extends Vector2 {
   constructor(pos, id, added_id) {
     super(pos);
 
@@ -74042,7 +74046,7 @@ class ScreenBorder extends UIBase$2 {
     let wid = this.getDefault("ScreenBorderWidth");
 
     let v1 = this.v1, v2 = this.v2;
-    let vec = new Vector2$1(v2).sub(v1);
+    let vec = new Vector2(v2).sub(v1);
 
     let x = Math.min(v1[0], v2[0]), y = Math.min(v1[1], v2[1]);
     let w, h;
@@ -74172,7 +74176,7 @@ UIBase$2.internalRegister(ScreenBorder);
 let _ScreenArea = undefined;
 
 let UIBase$f = UIBase$2;
-let Vector2$b = Vector2$1;
+let Vector2$a = Vector2;
 let ScreenClass = undefined;
 
 
@@ -74317,7 +74321,7 @@ let _ScreenArea$1 = undefined;
 
 let UIBase$g = UIBase$2;
 
-let Vector2$c = Vector2$1;
+let Vector2$b = Vector2;
 let Screen$1 = undefined;
 
 const AreaFlags = {
@@ -74709,7 +74713,7 @@ class Area$1 extends UIBase$2 {
     row.style["padding"] = "0px";
 
     let mdown = false;
-    let mpos = new Vector2$c();
+    let mpos = new Vector2$b();
     
     let mpre = (e, pageX, pageY) => {
       pageX = pageX === undefined ? e.pageX : pageX;
@@ -74997,8 +75001,8 @@ class ScreenArea extends UIBase$2 {
     
     this._sarea_id = contextWrangler.idgen++;
     
-    this._pos = new Vector2$c();
-    this._size = new Vector2$c([512, 512]);
+    this._pos = new Vector2$b();
+    this._size = new Vector2$b([512, 512]);
 
     if (exports$1.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -75212,8 +75216,8 @@ class ScreenArea extends UIBase$2 {
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$c(obj.pos);
-      area.size = new Vector2$c(obj.size);
+      area.pos = new Vector2$b(obj.pos);
+      area.size = new Vector2$b(obj.size);
       area.ctx = this.ctx;
       
       area.inactive = true;
@@ -75340,7 +75344,7 @@ class ScreenArea extends UIBase$2 {
 
   snapToScreenSize() {
     let screen = this.getScreen();
-    let co = new Vector2$c();
+    let co = new Vector2$b();
     let changed = 0;
 
     for (let v of this._verts) {
@@ -75387,8 +75391,8 @@ class ScreenArea extends UIBase$2 {
       return;
     }
 
-    let min = new Vector2$c([1e17, 1e17]);
-    let max = new Vector2$c([-1e17, -1e17]);
+    let min = new Vector2$b([1e17, 1e17]);
+    let max = new Vector2$b([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -75422,10 +75426,10 @@ class ScreenArea extends UIBase$2 {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$c([p[0],      p[1]]),
-      new Vector2$c([p[0],      p[1]+s[1]]),
-      new Vector2$c([p[0]+s[0], p[1]+s[1]]),
-      new Vector2$c([p[0]+s[0], p[1]])
+      new Vector2$b([p[0],      p[1]]),
+      new Vector2$b([p[0],      p[1]+s[1]]),
+      new Vector2$b([p[0]+s[0], p[1]+s[1]]),
+      new Vector2$b([p[0]+s[0], p[1]])
     ];
 
     for (let i=0; i<vs.length; i++) {
@@ -75535,8 +75539,8 @@ class ScreenArea extends UIBase$2 {
     //var finish = () => {
       if (this.area !== undefined) {
         //break direct pos/size references for old active area
-        this.area.pos = new Vector2$c(this.area.pos);
-        this.area.size = new Vector2$c(this.area.size);
+        this.area.pos = new Vector2$b(this.area.pos);
+        this.area.size = new Vector2$b(this.area.size);
         
         this.area.owning_sarea = undefined;
         this.area.inactive = true;
@@ -75705,8 +75709,8 @@ class ScreenArea extends UIBase$2 {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$c(this.pos);
-    this.size = new Vector2$c(this.size);
+    this.pos = new Vector2$b(this.pos);
+    this.size = new Vector2$b(this.size);
     
     //find active editor
     
@@ -76024,7 +76028,7 @@ UIBase$2.internalRegister(ThemeEditor);
 "use strict";
 let SVG_URL = 'http://www.w3.org/2000/svg';
 
-let Vector2$d = Vector2$1;
+let Vector2$c = Vector2;
 
 class CanvasOverdraw extends UIBase$2 {
   constructor() {
@@ -76213,7 +76217,7 @@ class Overdraw extends UIBase$2 {
     let boxes = [];
     let elems = [];
 
-    let cent = new Vector2$d();
+    let cent = new Vector2$c();
 
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
@@ -76258,7 +76262,7 @@ class Overdraw extends UIBase$2 {
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$d([x, y]);
+      box.startpos = new Vector2$c([x, y]);
 
       box.setCSS = function() {
         this.style["padding"] = "0px";
@@ -77446,7 +77450,7 @@ function registerToolStackGetter$1(func) {
 //XXX why!!!
 window._nstructjs = nstructjs;
 
-let Vector2$e = Vector2$1,
+let Vector2$d = Vector2,
   UIBase$h = UIBase$2,
   styleScrollBars$1 = styleScrollBars;
 
@@ -77501,9 +77505,9 @@ class Screen$2 extends UIBase$2 {
 
     this.keymap = new KeyMap();
 
-    this.size = new Vector2$e([window.innerWidth, window.innerHeight]);
-    this.pos = new Vector2$e();
-    this.oldpos = new Vector2$e();
+    this.size = new Vector2$d([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2$d();
+    this.oldpos = new Vector2$d();
 
     this.idgen = 0;
     this.sareas = [];
@@ -77517,7 +77521,7 @@ class Screen$2 extends UIBase$2 {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$e(), new Vector2$e()];
+    this._aabb = [new Vector2$d(), new Vector2$d()];
 
     let on_mousemove = (e, x, y) => {
       let elem = this.pickElement(x, y, 1, 1, ScreenArea);
@@ -77764,8 +77768,8 @@ class Screen$2 extends UIBase$2 {
 
     if (clip === undefined) {
       clip = args.clip = {
-        pos   : new Vector2$e(this.pos),
-        size  : new Vector2$e(this.size)
+        pos   : new Vector2$d(this.pos),
+        size  : new Vector2$d(this.size)
       };
     };
 
@@ -77936,7 +77940,7 @@ class Screen$2 extends UIBase$2 {
     container.parentWidget = this;
 
     let mm = new MinMax(2);
-    let p = new Vector2$e();
+    let p = new Vector2$d();
 
     let _update = container.update;
     /*causes weird bugs
@@ -78111,7 +78115,7 @@ class Screen$2 extends UIBase$2 {
       this._aabb[1].load(mm.max);
     }
 
-    return [new Vector2$e(mm.min), new Vector2$e(mm.max)];
+    return [new Vector2$d(mm.min), new Vector2$d(mm.max)];
   }
 
   get borders() {
@@ -79215,7 +79219,7 @@ class Screen$2 extends UIBase$2 {
       for (let b of this.screenborders) {
         for (let he of b.halfedges) {
           let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
-          let p = new Vector2$e(b.v1).add(b.v2).mulScalar(0.5);
+          let p = new Vector2$d(b.v1).add(b.v2).mulScalar(0.5);
           let size = 10 * b.halfedges.length;
 
           let wadd = 25+size*0.5;
@@ -79636,8 +79640,8 @@ class Screen$2 extends UIBase$2 {
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
-      let vec = new Vector2$e(max).sub(min);
-      let sz = new Vector2$e(this.size);
+      let vec = new Vector2$d(max).sub(min);
+      let sz = new Vector2$d(this.size);
 
       sz.div(vec);
 
@@ -79672,8 +79676,8 @@ class Screen$2 extends UIBase$2 {
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
-      let old = new Vector2$e(sarea.size);
-      let oldpos = new Vector2$e(sarea.pos);
+      let old = new Vector2$d(sarea.size);
+      let oldpos = new Vector2$d(sarea.pos);
 
       sarea.loadFromVerts();
 
@@ -80081,7 +80085,7 @@ class Screen$2 extends UIBase$2 {
     console.log("SAREAS", this.sareas.concat([]));
 
     //handle old files that might have saved as simple arrays
-    this.size = new Vector2$e(this.size);
+    this.size = new Vector2$d(this.size);
 
     let sareas = this.sareas;
     this.sareas = [];
@@ -80375,5 +80379,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform$3
 });
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DocHistory, DocHistoryItem, DocsAPI, DocsBrowser, DoubleClickHandler, DropBox, ElectronAPI, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, ServerAPI, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$1 as Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$2 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DocHistory, DocHistoryItem, DocsAPI, DocsBrowser, DoubleClickHandler, DropBox, ElectronAPI, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, ServerAPI, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$2 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
