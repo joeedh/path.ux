@@ -347,7 +347,29 @@ function isNumber(s) {
   return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
 }
 
-export function parseValue(string, baseUnit=undefined) {
+/* if displayUnit is undefined, final value will be converted from displayUnit to baseUnit */
+export function parseValue(string, baseUnit=undefined, displayUnit=undefined) {
+  let f = parseValueIntern(string, baseUnit);
+
+  let display, base;
+
+  if (displayUnit && displayUnit !== "none") {
+    display = Unit.getUnit(displayUnit);
+  }
+
+  if (baseUnit && baseUnit !== "none") {
+    base = Unit.getUnit(baseUnit);
+  }
+
+  if (display && base) {
+    f = display.toInternal(f);
+    f = base.fromInternal(f);
+  }
+
+  return f;
+}
+
+export function parseValueIntern(string, baseUnit=undefined) {
   let base;
 
   string = string.trim();

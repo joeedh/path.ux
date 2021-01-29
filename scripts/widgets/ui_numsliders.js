@@ -28,6 +28,7 @@ export class NumSlider extends ValueButtonBase {
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
+    this.editAsBaseUnit = undefined;
 
     this._redraw();
   }
@@ -77,6 +78,14 @@ export class NumSlider extends ValueButtonBase {
       this.baseUnit = prop.baseUnit;
     }
 
+    if (this.editAsBaseUnit === undefined) {
+      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+        this.editAsBaseUnit = true;
+      } else {
+        this.editAsBaseUnit = false;
+      }
+    }
+
     if (prop.displayUnit !== undefined) {
       this.displayUnit = prop.displayUnit;
     }
@@ -104,6 +113,7 @@ export class NumSlider extends ValueButtonBase {
 
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
+    tbox.editAsBaseUnit = this.editAsBaseUnit;
 
     if (this.isInt && this.radix != 10) {
       let text = this.value.toString(this.radix);
@@ -132,7 +142,9 @@ export class NumSlider extends ValueButtonBase {
         if (this.isInt && this.radix !== 10) {
           val = parseInt(val);
         } else {
-          val = units.parseValue(val, this.baseUnit);
+          let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+
+          val = units.parseValue(val, this.baseUnit, displayUnit);
         }
 
         if (isNaN(val)) {
@@ -652,6 +664,7 @@ export class NumSliderSimpleBase extends UIBase {
 
     this.baseUnit = undefined;
     this.displayUnit = undefined;
+    this.editAsBaseUnit = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -1288,7 +1301,9 @@ export class SliderWithTextbox extends ColumnFrame {
       } else {
         textbox.flash("green");
 
-        let f = units.parseValue(text, this.baseUnit);
+        let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+
+        let f = units.parseValue(text, this.baseUnit, displayUnit);
 
         if (isNaN(f)) {
           this.flash("red");
@@ -1416,11 +1431,27 @@ export class SliderWithTextbox extends ColumnFrame {
 
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"))
 
-    if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
+    if (!prop) {
+      return;
+    }
+
+    if (!this.baseUnit && prop.baseUnit) {
       this.baseUnit = prop.baseUnit;
     }
 
-    if (prop !== undefined && !this.displayUnit && prop.displayUnit) {
+    if (prop.decimalPlaces !== undefined) {
+      this.decimalPlaces = prop.decimalPlaces;
+    }
+
+    if (this.editAsBaseUnit === undefined) {
+      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+        this.editAsBaseUnit = true;
+      } else {
+        this.editAsBaseUnit = false;
+      }
+    }
+
+    if (!this.displayUnit && prop.displayUnit) {
       this.displayUnit = prop.displayUnit;
     }
   }
