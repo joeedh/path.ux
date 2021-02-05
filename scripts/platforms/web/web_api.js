@@ -3,20 +3,59 @@ import {saveFile, loadFile} from '../../path-controller/util/html5_fileapi.js';
 
 import {FileDialogArgs, FilePath} from '../platform_base.js';
 
-let mimemap = {
-  ".js" : "application/javascript",
-  ".json" :"text/json",
-  ".html" : "text/html",
-  ".txt" :"text/plain",
-  ".jpg" : "image/jpeg",
-  ".png" : "image/png",
-  ".svg" : "image/svg+xml",
-  ".xml" : "text/xml"
-};
+import {mimeMap} from '../platform_base.js';
+
+export function getWebFilters(filters=[]) {
+  let types = [];
+
+  for (let item of filters) {
+    let mime = item.mime;
+    let exts = [];
+
+    for (let ext of item.extensions) {
+      ext = "." + ext;
+      if (ext.toLowerCase() in mimeMap) {
+        mime = mime !== undefined ? mime : mimeMap[ext.toLowerCase()];
+      }
+
+      exts.push(ext);
+    }
+
+    if (!mime) {
+      mime = "application/x-octet-stream";
+    }
+
+    types.push({
+      description: item.name,
+      accept     : {
+        [mime]: exts
+      }
+    });
+  }
+
+  return types;
+}
 
 export class platform extends PlatformAPI {
   //returns a promise
-  static showOpenDialog(title, args=new FileDialogArgs()) {
+  static showOpenDialog(title, args = new FileDialogArgs()) {
+    let types = getWebFilters(args.filters);
+
+    return new Promise((accept, reject) => {
+      window.showOpenFilePicker({
+        multiple : args.multi,
+        types
+      }).then(arg => {
+        let paths = [];
+
+        for (let file of arg) {
+          paths.push(new FilePath(file, file.name));
+        }
+
+        accept(paths);
+      });
+    });
+    /*
     let exts = [];
 
     for (let list of args.filters) {
@@ -29,7 +68,7 @@ export class platform extends PlatformAPI {
       loadFile(args.defaultPath, exts).then((file) => {
         accept([new FilePath(file)]);
       });
-    });
+    });*/
   }
 
   static writeFile(data, handle, mime) {
@@ -41,39 +80,12 @@ export class platform extends PlatformAPI {
     });
   }
 
-  static showSaveDialog(title, savedata_cb, args=new FileDialogArgs()) {
+  static showSaveDialog(title, savedata_cb, args = new FileDialogArgs()) {
     if (!window.showSaveFilePicker) {
       return this.showSaveDialog_old(...arguments);
     }
 
-    let types = [];
-
-    for (let item of args.filters) {
-      let mime = item.mime;
-      let exts = [];
-
-      for (let ext of item.extensions) {
-        ext = "." + ext;
-        if (ext.toLowerCase() in mimemap) {
-          mime = mime !== undefined ? mime : mimemap[ext.toLowerCase()];
-        }
-
-        exts.push(ext);
-      }
-
-      if (!mime) {
-        mime = "application/x-octet-stream";
-      }
-
-      types.push({
-        description : item.name,
-        accept : {
-          [mime] : exts
-        }
-      });
-    }
-
-    console.log(types);
+    let types = getWebFilters(args.filters);
 
     return new Promise((accept, reject) => {
       let fname;
@@ -103,7 +115,7 @@ export class platform extends PlatformAPI {
   }
 
   //returns a promise
-  static showSaveDialog_old(title, savedata, args=new FileDialogArgs()) {
+  static showSaveDialog_old(title, savedata, args = new FileDialogArgs()) {
 
     let exts = [];
 
@@ -123,7 +135,39 @@ export class platform extends PlatformAPI {
   }
 
   //path is a FilePath instance, for web this is the actual file data
-  static readFile(path, mime="") {
+  static readFile(path, mime = "") {
+    if (mime === "") {
+      mime = path.filename;
+      let i = mime.length-1;
+
+      while (i > 0 && mime[i] !== ".") {
+        i--;
+      }
+
+      mime = mime.slice(i, mime.length).trim().toLowerCase();
+      if (mime in mimeMap) {
+        mime = mimeMap[mime];
+      }
+    }
+
+    return new Promise((accept, reject) => {
+      path.data.getFile().then((file) => {
+        console.log("file!", file);
+
+        let promise;
+
+        if (isMimeText(mime)) {
+          promise = file.text();
+        } else {
+          promise = file.arrayBuffer();
+        }
+
+        promise.then(data => {
+          accept(data);
+        });
+      });
+    });
+
     return new Promise((accept, reject) => {
       let data = path.data;
 
@@ -131,7 +175,7 @@ export class platform extends PlatformAPI {
         let s = '';
         data = new Uint8Array(data);
 
-        for (let i=0; i<data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
           s += String.fromCharCode(data[i]);
         }
 

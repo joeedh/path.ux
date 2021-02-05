@@ -1077,7 +1077,9 @@ export class Screen extends ui_base.UIBase {
   execKeyMap(e) {
     let handled = false;
 
-    console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
+    if (window.DEBUG && window.DEBUG.keymap) {
+      console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
+    }
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -2646,7 +2648,7 @@ export class Screen extends ui_base.UIBase {
   }
 
   on_keydown(e) {
-    console.warn(e.keyCode, haveModal());
+    console.log(e);
 
     if (!haveModal() && this.execKeyMap(e)) {
       e.preventDefault();
@@ -2806,6 +2808,7 @@ export function startEvents(getScreenFunc) {
   }
 
   _events_started = true;
+
   window.addEventListener("keydown", (e) => {
     let screen = get_screen_cb();
 

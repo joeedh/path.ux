@@ -456,7 +456,7 @@ export class Menu extends UIBase {
   }
 
   //item can be menu or text
-  addItem(item, id, add=true) {
+  addItem(item, id, add=true, tooltip=undefined) {
     id = id === undefined ? item : id;
     let text = item;
 
@@ -473,6 +473,10 @@ export class Menu extends UIBase {
 
     li.setAttribute("tabindex", this.itemindex++);
     li.setAttribute("class", "menuitem");
+
+    if (tooltip !== undefined) {
+      li.title = tooltip;
+    }
 
     if (item instanceof Menu) {
       //let dom = this.addItemExtra(""+item.title, id, "", -1, false);
@@ -864,6 +868,7 @@ export class DropBox extends Button {
     let enummap = prop.values;
     let iconmap = prop.iconmap;
     let uimap = prop.ui_value_names;
+    let desr = prop.descriptions || {};
 
     for (let k in enummap) {
       let uk = k;
@@ -874,11 +879,13 @@ export class DropBox extends Button {
         uk = uimap[k];
       }
 
+      let tooltip = desr[k];
+
       //menu.addItem(k, enummap[k], ":");
       if (iconmap && iconmap[k]) {
-        menu.addItemExtra(uk, enummap[k], undefined, iconmap[k]);
+        menu.addItemExtra(uk, enummap[k], undefined, iconmap[k], undefined, tooltip);
       } else {
-        menu.addItem(uk, enummap[k]);
+        menu.addItem(uk, enummap[k], undefined, tooltip);
       }
     }
 
@@ -909,7 +916,6 @@ export class DropBox extends Button {
       }
 
       if (this.hasAttribute("datapath") && this.ctx) {
-        console.log("setting data api value", id, this.getAttribute("datapath"));
         this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
       }
     };

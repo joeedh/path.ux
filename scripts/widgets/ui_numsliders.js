@@ -1,5 +1,6 @@
 import {UIBase, drawText} from "../core/ui_base.js";
 import {ValueButtonBase} from "./ui_widgets.js";
+import * as cconst from '../config/const.js';
 import * as ui_base from "../core/ui_base.js";
 import * as units from "../core/units.js";
 import {Vector2} from "../path-controller/util/vectormath.js";
@@ -15,6 +16,8 @@ export class NumSlider extends ValueButtonBase {
     super();
 
     this._last_label = undefined;
+
+    this.mdown = false;
 
     this._name = "";
     this._step = 0.1;
@@ -95,7 +98,6 @@ export class NumSlider extends ValueButtonBase {
 
   update() {
     if (!!this._last_disabled !== !!this.disabled) {
-      console.log("NUMSLIDER disabled update!", this.disabled);
       this._last_disabled = !!this.disabled;
       this._redraw();
       this.setCSS();
@@ -148,7 +150,7 @@ export class NumSlider extends ValueButtonBase {
         }
 
         if (isNaN(val)) {
-          console.log("EEK!", val, tbox.text.trim(), this.isInt);
+          console.log("Text input error", val, tbox.text.trim(), this.isInt);
           this.flash(ui_base.ErrorColors.ERROR);
         } else {
           this.setValue(val);
@@ -192,6 +194,30 @@ export class NumSlider extends ValueButtonBase {
         return;
       }
 
+      if (e.button === 0 && e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.swapWithTextbox();
+      } else if (!e.button) {
+        this.dragStart(e);
+        this.mdown = true;
+
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+
+    let onmouseup = this._on_click = (e) => {
+      this.mdown = false;
+
+      if (this.disabled) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return;
+      }
+
       let r = this.getClientRects()[0];
       let x = e.x;
 
@@ -210,25 +236,11 @@ export class NumSlider extends ValueButtonBase {
 
         let szmargin = Math.min(sz*8.0, r.width*0.4);
 
-        //console.log("D", x, "S", step, "V", v);
-
         if (x < szmargin) {
-           this.setValue(v - step);
+          this.setValue(v - step);
         } else if (x > r.width - szmargin) {
           this.setValue(v + step);
         }
-      }
-
-      if (e.button === 0 && e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.swapWithTextbox();
-      } else if (!e.button) {
-        this.dragStart(e);
-
-        e.preventDefault();
-        e.stopPropagation();
       }
     }
 
@@ -253,7 +265,6 @@ export class NumSlider extends ValueButtonBase {
     /*
     this.addEventListener("touchstart", (e) => {
       if (this.disabled) return;
-      console.log(e)
 
       e.x = e.touches[0].screenX;
       e.y = e.touches[0].screenY;
@@ -265,8 +276,8 @@ export class NumSlider extends ValueButtonBase {
     }, {passive : false});
     //*/
 
-    //this.addEventListener("touchstart", (e) => {
-    //  console.log(e);
+    //this.addEventListener("mouseup", (e) => {
+    //  return onmouseup(e);
     //});
 
     this.addEventListener("mouseover", (e) => {
@@ -275,8 +286,11 @@ export class NumSlider extends ValueButtonBase {
       this.dom._background = this.getDefault("BoxHighlight");
       this._repos_canvas();
       this._redraw();
-      //console.log("mouse enter");
     })
+
+    this.addEventListener("blur", (e) => {
+      this.mdown = false;
+    });
 
     this.addEventListener("mouseout", (e) => {
       if (this.disabled) return;
@@ -284,7 +298,6 @@ export class NumSlider extends ValueButtonBase {
       this.dom._background = this.getDefault("BoxBG");
       this._repos_canvas();
       this._redraw();
-      //console.log("mouse leave!");
     })
   }
 
@@ -341,6 +354,7 @@ export class NumSlider extends ValueButtonBase {
     let value = startvalue;
 
     let startx = this.vertical ? e.y : e.x, starty = this.vertical ? e.x : e.y;
+    let sumdelta = 0;
 
     this.dom._background = this.getDefault("BoxDepressed");
     let fire = () => {
@@ -379,6 +393,8 @@ export class NumSlider extends ValueButtonBase {
 
         dx *= this.vertical ? -1 : 1;
 
+        sumdelta += Math.abs(dx);
+
         value += dx * this._step * 0.1;
 
         let dvalue = value - startvalue;
@@ -407,15 +423,27 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseup: (e) => {
-        console.warn("MOUSEUP");
+        let dpi = UIBase.getDPI();
+
+        let limit = cconst.numSliderArrowLimit;
+        limit = limit === undefined ? 6 : limit;
+        limit *= dpi;
+
+        let dv = this.vertical ? starty - e.y : startx - e.x;
+
         this.undoBreakPoint();
         cancel(false);
+
+        //check for arrow click
+        if (sumdelta < limit) {
+          this._on_click(e);
+        }
+
         e.preventDefault();
         e.stopPropagation();
       },
 
       on_mouseout: (e) => {
-        //console.log("leave");
         last_background = this.getDefault("BoxBG");
 
         e.preventDefault();
@@ -423,7 +451,6 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseover: (e) => {
-        //console.log("over");
         last_background = this.getDefault("BoxHighlight");
 
         e.preventDefault();
@@ -447,8 +474,6 @@ export class NumSlider extends ValueButtonBase {
 
       this.dom._background = last_background; //ui_base.getDefault("BoxBG");
       this._redraw();
-
-      console.trace("end");
 
       this.popModal();
     }
@@ -750,8 +775,6 @@ export class NumSliderSimpleBase extends UIBase {
         this.uiRange[1] = prop.uiRange[1];
       }
 
-
-      //console.log("updating numsplider simple value", val);
       this.value = val;
     }
   }
@@ -786,13 +809,8 @@ export class NumSliderSimpleBase extends UIBase {
       return;
     }
 
-    console.log("start simple numslider modal");
-
     let end = () => {
-      console.log("end simple numslider modal");
-
       if (this._modal === undefined) {
-        console.warn("end called twiced");
         return;
       }
 
@@ -854,7 +872,6 @@ export class NumSliderSimpleBase extends UIBase {
     this.updateSize();
 
     this.addEventListener("keydown", (e) => {
-      console.log("yay keydown", e.keyCode);
       let dt = this.range[1] > this.range[0] ? 1 : -1;
 
       switch (e.keyCode) {
@@ -882,7 +899,6 @@ export class NumSliderSimpleBase extends UIBase {
       this._focus = 1;
       this._redraw();
       this.focus();
-      //console.log("focus2");
     });
 
     this.addEventListener("mousedown", (e) => {
@@ -893,17 +909,14 @@ export class NumSliderSimpleBase extends UIBase {
     });
 
     this.addEventListener("mousein", (e) => {
-      //console.log("mouse in");
       this.setHighlight(e);
       this._redraw();
     });
     this.addEventListener("mouseout", (e) => {
-      //console.log("mouse out");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("mouseover", (e) => {
-      //console.log("mouse over");
       this.setHighlight(e);
       this._redraw();
     });
@@ -912,12 +925,10 @@ export class NumSliderSimpleBase extends UIBase {
       this._redraw();
     });
     this.addEventListener("mouseleave", (e) => {
-      //console.log("mouse leave");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("blur", (e) => {
-      //console.log("blur");
       this._focus = 0;
       this.highlight = false;
       this._redraw();
@@ -940,7 +951,6 @@ export class NumSliderSimpleBase extends UIBase {
 
     g.clearRect(0, 0, canvas.width, canvas.height);
 
-    //console.log(color)
     g.fillStyle = color;
 
     let y = (h - sh)*0.5;
@@ -1012,7 +1022,6 @@ export class NumSliderSimpleBase extends UIBase {
     let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
     let dis = dv.vectorLength();
 
-    //console.log("dis", dis.toFixed(3));
     return dis < co[2]/dpi;
   }
 
@@ -1037,8 +1046,6 @@ export class NumSliderSimpleBase extends UIBase {
     x = (x - this.range[0]) / (this.range[1] - this.range[0]);
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
-
-    //console.log(x, this.range);
 
     x = x*w2 + boxw*0.5;
 
@@ -1070,7 +1077,6 @@ export class NumSliderSimpleBase extends UIBase {
     let canvas = this.canvas;
 
     if (w !== canvas.width || h !== canvas.height) {
-      //console.log("canvas size update", w, h);
       this.canvas.width = w;
       this.canvas.height = h;
 

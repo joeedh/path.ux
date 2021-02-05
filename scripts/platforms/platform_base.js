@@ -1,17 +1,55 @@
+export const mimeMap = {
+  ".js"  : "application/javascript",
+  ".json": "text/json",
+  ".html": "text/html",
+  ".txt" : "text/plain",
+  ".jpg" : "image/jpeg",
+  ".png" : "image/png",
+  ".tiff": "image/tiff",
+  ".gif" : "image/gif",
+  ".bmp" : "image/bitmap",
+  ".tga" : "image/targa",
+  ".svg" : "image/svg+xml",
+  ".xml" : "text/xml"
+};
+
 export var textMimes = new Set([
-  "application-javascript", "application-x-javscript",
-  "image/svg+xml"
+  "application/javascript", "application/x-javscript",
+  "image/svg+xml", "application/xml"
 ]);
 
 export function isMimeText(mime) {
   if (!mime) {
     return false;
   }
+
   if (mime.startsWith("text")) {
     return true;
   }
 
   return textMimes.has(mime);
+}
+
+export function getExtension(path) {
+  if (!path) {
+    return "";
+  }
+
+  let i = path.length;
+  while (i > 0 && path[i] !== ".") {
+    i--;
+  }
+
+  return path.slice(i, path.length).trim().toLowerCase();
+}
+
+export function getMime(path) {
+  let ext = getExtension(path);
+  if (ext in mimeMap) {
+    return mimeMap[ext];
+  }
+
+  return "application/x-octet-stream";
 }
 
 export class PlatformAPI {

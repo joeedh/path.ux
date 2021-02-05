@@ -46,6 +46,7 @@ export class TextBox extends TextBoxBase {
     super();
 
     this._width = "min-content";
+    this._textBoxEvents = true;
 
     let margin = Math.ceil(3 * this.getDPI());
 
@@ -141,7 +142,7 @@ export class TextBox extends TextBoxBase {
 
       on_mousedown : (e) => {
         e.stopPropagation();
-        console.log("mouse down", e.x, e.y);
+        console.log("mouse down", e, e.x, e.y);
       }
     }, false)
   }
@@ -151,6 +152,8 @@ export class TextBox extends TextBoxBase {
 
     this._modal = false;
     this.popModal();
+
+    this.blur();
 
     if (this.onend) {
       this.onend(ok);

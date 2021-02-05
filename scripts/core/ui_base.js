@@ -526,6 +526,8 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this._textBoxEvents = false;
+
     this._client_disabled_set = undefined;
     //this._parent_disabled_set = 0;
 
