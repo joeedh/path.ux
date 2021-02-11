@@ -20,6 +20,7 @@ export class PropsEditor extends Editor {
   init() {
     super.init();
 
+    return;
     let tabs = this.tabs = this.container.tabs("left");
 
     let tab1 = tabs.tab("Mass Set Example");

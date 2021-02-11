@@ -396,6 +396,41 @@ Array.prototype[Symbol.keystr] = function() {
   return key;
 };
 
+//stores xml sources
+let pagecache = new Map();
+
+
+function parseXML(xml) {
+  let parser = new DOMParser();
+}
+
+function initPage(ctx, xml) {
+
+}
+
+function loadPage(ctx, url) {
+  let source;
+
+  if (pagecache.has(url)) {
+    source = pagecache.get(url);
+    return new Promise((accept, reject) => {
+      let ret = initPage(ctx, source);
+
+      accept(ret);
+    });
+  } else {
+    return new Promise((accept, reject) => {
+      fetch(url).then(res => res.text()).then(data => {
+        pagecache.set(url, data);
+
+        let ret = initPage(ctx, data);
+
+        accept(ret);
+      });
+    });
+  }
+}
+
 function css2matrix(s) {
   return new DOMMatrix(s);
 }
@@ -857,26 +892,34 @@ var struct_util = /*#__PURE__*/Object.freeze({
 const _module_exports_ = {};
 _module_exports_.STRUCT_ENDIAN = true; //little endian
 
-var temp_dataview = new DataView(new ArrayBuffer(16));
-var uint8_view = new Uint8Array(temp_dataview.buffer);
+let temp_dataview = new DataView(new ArrayBuffer(16));
+let uint8_view = new Uint8Array(temp_dataview.buffer);
 
-var unpack_context = _module_exports_.unpack_context = class unpack_context {
+let unpack_context = _module_exports_.unpack_context = class unpack_context {
   constructor() {
     this.i = 0;
   }
 };
 
-var pack_byte = _module_exports_.pack_byte = function (array, val) {
+let pack_byte = _module_exports_.pack_byte = function (array, val) {
   array.push(val);
 };
 
-var pack_bytes = _module_exports_.pack_bytes = function (array, bytes) {
-  for (var i = 0; i < bytes.length; i++) {
+let pack_sbyte = _module_exports_.pack_sbyte = function (array, val) {
+  if (val < 0) {
+    val = 256 + val;
+  }
+
+  array.push(val);
+};
+
+let pack_bytes = _module_exports_.pack_bytes = function (array, bytes) {
+  for (let i = 0; i < bytes.length; i++) {
     array.push(bytes[i]);
   }
 };
 
-var pack_int = _module_exports_.pack_int = function (array, val) {
+let pack_int = _module_exports_.pack_int = function (array, val) {
   temp_dataview.setInt32(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
@@ -885,7 +928,7 @@ var pack_int = _module_exports_.pack_int = function (array, val) {
   array.push(uint8_view[3]);
 };
 
-var pack_uint = _module_exports_.pack_uint = function (array, val) {
+let pack_uint = _module_exports_.pack_uint = function (array, val) {
   temp_dataview.setUint32(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
@@ -894,7 +937,7 @@ var pack_uint = _module_exports_.pack_uint = function (array, val) {
   array.push(uint8_view[3]);
 };
 
-var pack_ushort = _module_exports_.pack_ushort = function (array, val) {
+let pack_ushort = _module_exports_.pack_ushort = function (array, val) {
   temp_dataview.setUint16(0, val, _module_exports_.STRUCT_ENDIAN);
 
   array.push(uint8_view[0]);
@@ -930,12 +973,12 @@ _module_exports_.pack_short = function (array, val) {
   array.push(uint8_view[1]);
 };
 
-var encode_utf8 = _module_exports_.encode_utf8 = function encode_utf8(arr, str) {
-  for (var i = 0; i < str.length; i++) {
-    var c = str.charCodeAt(i);
+let encode_utf8 = _module_exports_.encode_utf8 = function encode_utf8(arr, str) {
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charCodeAt(i);
 
     while (c != 0) {
-      var uc = c & 127;
+      let uc = c & 127;
       c = c >> 7;
 
       if (c != 0)
@@ -946,15 +989,15 @@ var encode_utf8 = _module_exports_.encode_utf8 = function encode_utf8(arr, str) 
   }
 };
 
-var decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
-  var str = "";
-  var i = 0;
+let decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
+  let str = "";
+  let i = 0;
 
   while (i < arr.length) {
-    var c = arr[i];
-    var sum = c & 127;
-    var j = 0;
-    var lasti = i;
+    let c = arr[i];
+    let sum = c & 127;
+    let j = 0;
+    let lasti = i;
 
     while (i < arr.length && (c & 128)) {
       j += 7;
@@ -974,12 +1017,12 @@ var decode_utf8 = _module_exports_.decode_utf8 = function decode_utf8(arr) {
   return str;
 };
 
-var test_utf8 = _module_exports_.test_utf8 = function test_utf8() {
-  var s = "a" + String.fromCharCode(8800) + "b";
-  var arr = [];
+let test_utf8 = _module_exports_.test_utf8 = function test_utf8() {
+  let s = "a" + String.fromCharCode(8800) + "b";
+  let arr = [];
 
   encode_utf8(arr, s);
-  var s2 = decode_utf8(arr);
+  let s2 = decode_utf8(arr);
 
   if (s != s2) {
     throw new Error("UTF-8 encoding/decoding test failed");
@@ -989,14 +1032,14 @@ var test_utf8 = _module_exports_.test_utf8 = function test_utf8() {
 };
 
 function truncate_utf8(arr, maxlen) {
-  var len = Math.min(arr.length, maxlen);
+  let len = Math.min(arr.length, maxlen);
 
-  var last_codepoint = 0;
-  var last2 = 0;
+  let last_codepoint = 0;
+  let last2 = 0;
 
-  var incode = false;
-  var i = 0;
-  var code = 0;
+  let incode = false;
+  let i = 0;
+  let code = 0;
   while (i < len) {
     incode = arr[i] & 128;
 
@@ -1016,18 +1059,18 @@ function truncate_utf8(arr, maxlen) {
   return arr;
 }
 
-var _static_sbuf_ss = new Array(2048);
-var pack_static_string = _module_exports_.pack_static_string = function pack_static_string(data, str, length) {
+let _static_sbuf_ss = new Array(2048);
+let pack_static_string = _module_exports_.pack_static_string = function pack_static_string(data, str, length) {
   if (length == undefined)
     throw new Error("'length' paremter is not optional for pack_static_string()");
 
-  var arr = length < 2048 ? _static_sbuf_ss : new Array();
+  let arr = length < 2048 ? _static_sbuf_ss : new Array();
   arr.length = 0;
 
   encode_utf8(arr, str);
   truncate_utf8(arr, length);
 
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     if (i >= arr.length) {
       data.push(0);
     } else {
@@ -1036,42 +1079,46 @@ var pack_static_string = _module_exports_.pack_static_string = function pack_sta
   }
 };
 
-var _static_sbuf = new Array(32);
+let _static_sbuf = new Array(32);
 
 /*strings are packed as 32-bit unicode codepoints*/
-var pack_string = _module_exports_.pack_string = function pack_string(data, str) {
+let pack_string = _module_exports_.pack_string = function pack_string(data, str) {
   _static_sbuf.length = 0;
   encode_utf8(_static_sbuf, str);
 
   pack_int(data, _static_sbuf.length);
 
-  for (var i = 0; i < _static_sbuf.length; i++) {
+  for (let i = 0; i < _static_sbuf.length; i++) {
     data.push(_static_sbuf[i]);
   }
 };
 
-var unpack_bytes = _module_exports_.unpack_bytes = function unpack_bytes(dview, uctx, len) {
-  var ret = new DataView(dview.buffer.slice(uctx.i, uctx.i + len));
+let unpack_bytes = _module_exports_.unpack_bytes = function unpack_bytes(dview, uctx, len) {
+  let ret = new DataView(dview.buffer.slice(uctx.i, uctx.i + len));
   uctx.i += len;
 
   return ret;
 };
 
-var unpack_byte = _module_exports_.unpack_byte = function (dview, uctx) {
+let unpack_byte = _module_exports_.unpack_byte = function (dview, uctx) {
   return dview.getUint8(uctx.i++);
 };
 
-var unpack_int = _module_exports_.unpack_int = function (dview, uctx) {
+let unpack_sbyte = _module_exports_.unpack_sbyte = function (dview, uctx) {
+  return dview.getInt8(uctx.i++);
+};
+
+let unpack_int = _module_exports_.unpack_int = function (dview, uctx) {
   uctx.i += 4;
   return dview.getInt32(uctx.i - 4, _module_exports_.STRUCT_ENDIAN);
 };
 
-var unpack_uint = _module_exports_.unpack_uint = function (dview, uctx) {
+let unpack_uint = _module_exports_.unpack_uint = function (dview, uctx) {
   uctx.i += 4;
   return dview.getUint32(uctx.i - 4, _module_exports_.STRUCT_ENDIAN);
 };
 
-var unpack_ushort = _module_exports_.unpack_ushort = function (dview, uctx) {
+let unpack_ushort = _module_exports_.unpack_ushort = function (dview, uctx) {
   uctx.i += 2;
   return dview.getUint16(uctx.i - 2, _module_exports_.STRUCT_ENDIAN);
 };
@@ -1597,7 +1644,7 @@ var struct_parseutil = /*#__PURE__*/Object.freeze({
 //the discontinuous id's are to make sure
 //the version I originally wrote (which had a few application-specific types)
 //and this one do not become totally incompatible.
-var StructEnum = {
+let StructEnum = {
   T_INT      : 0,
   T_FLOAT    : 1,
   T_DOUBLE   : 2,
@@ -1613,10 +1660,26 @@ var StructEnum = {
   T_ITERKEYS : 16,
   T_UINT     : 17,
   T_USHORT   : 18,
-  T_STATIC_ARRAY : 19
+  T_STATIC_ARRAY : 19,
+  T_SIGNED_BYTE : 20
 };
 
-var StructTypes = {
+let ValueTypes = new Set([
+  StructEnum.T_INT,
+  StructEnum.T_FLOAT,
+  StructEnum.T_DOUBLE,
+  StructEnum.T_STRING,
+  StructEnum.T_STATIC_STRING,
+  StructEnum.T_SHORT,
+  StructEnum.T_BYTE,
+  StructEnum.T_BOOL,
+  StructEnum.T_UINT,
+  StructEnum.T_USHORT,
+  StructEnum.T_SIGNED_BYTE
+
+]);
+
+let StructTypes = {
   "int": StructEnum.T_INT, 
   "uint": StructEnum.T_UINT, 
   "ushort": StructEnum.T_USHORT, 
@@ -1631,31 +1694,32 @@ var StructTypes = {
   "short": StructEnum.T_SHORT,
   "byte": StructEnum.T_BYTE,
   "bool": StructEnum.T_BOOL,
-  "iterkeys" : StructEnum.T_ITERKEYS
+  "iterkeys" : StructEnum.T_ITERKEYS,
+  "sbyte" : StructEnum.T_SIGNED_BYTE
 };
 
-var StructTypeMap = {};
+let StructTypeMap = {};
 
-for (var k in StructTypes) {
+for (let k in StructTypes) {
   StructTypeMap[StructTypes[k]] = k;
 }
 
 function gen_tabstr(t) {
-  var s="";
-  for (var i=0; i<t; i++) {
+  let s="";
+  for (let i=0; i<t; i++) {
       s+="  ";
   }
   return s;
 }
 
 function StructParser() {
-  var basic_types=new set$1([
-    "int", "float", "double", "string", "short", "byte", "bool", "uint", "ushort"
+  let basic_types=new set$1([
+    "int", "float", "double", "string", "short", "byte", "sbyte", "bool", "uint", "ushort"
   ]);
   
-  var reserved_tokens=new set$1([
+  let reserved_tokens=new set$1([
     "int", "float", "double", "string", "static_string", "array", 
-    "iter", "abstract", "short", "byte", "bool", "iterkeys", "uint", "ushort",
+    "iter", "abstract", "short", "byte", "sbyte", "bool", "iterkeys", "uint", "ushort",
     "static_array"
   ]);
 
@@ -1663,7 +1727,7 @@ function StructParser() {
     return new _export_tokdef_(name, re, func);
   }
   
-  var tokens=[
+  let tokens=[
     tk("ID", /[a-zA-Z_$]+[a-zA-Z0-9_\.$]*/, function(t) {
 
       if (reserved_tokens.has(t.value)) {
@@ -1678,10 +1742,10 @@ function StructParser() {
     tk("SOPEN", /\[/), 
     tk("SCLOSE", /\]/), 
     tk("JSCRIPT", /\|/, function(t) {
-      var js="";
-      var lexer=t.lexer;
+      let js="";
+      let lexer=t.lexer;
       while (lexer.lexpos<lexer.lexdata.length) {
-        var c=lexer.lexdata[lexer.lexpos];
+        let c=lexer.lexdata[lexer.lexpos];
         if (c=="\n")
           break;
         js+=c;
@@ -1715,13 +1779,13 @@ function StructParser() {
     return true;
   }
   
-  var lex=new _export_lexer_(tokens, errfunc);
-  var parser=new _export_parser_(lex);
+  let lex=new _export_lexer_(tokens, errfunc);
+  let parser=new _export_parser_(lex);
   
   function p_Static_String(p) {
     p.expect("STATIC_STRING");
     p.expect("SOPEN");
-    var num=p.expect("NUM");
+    let num=p.expect("NUM");
     p.expect("SCLOSE");
     return {type: StructEnum.T_STATIC_STRING, data: {maxlength: num}}
   }
@@ -1729,7 +1793,7 @@ function StructParser() {
   function p_DataRef(p) {
     p.expect("DATAREF");
     p.expect("LPARAM");
-    var tname=p.expect("ID");
+    let tname=p.expect("ID");
     p.expect("RPARAM");
     return {type: StructEnum.T_DATAREF, data: tname}
   }
@@ -1737,9 +1801,9 @@ function StructParser() {
   function p_Array(p) {
     p.expect("ARRAY");
     p.expect("LPARAM");
-    var arraytype=p_Type(p);
+    let arraytype=p_Type(p);
     
-    var itername="";
+    let itername="";
     if (p.optional("COMMA")) {
         itername = arraytype.data.replace(/"/g, "");
         arraytype = p_Type(p);
@@ -1752,8 +1816,8 @@ function StructParser() {
   function p_Iter(p) {
     p.expect("ITER");
     p.expect("LPARAM");
-    var arraytype=p_Type(p);
-    var itername="";
+    let arraytype=p_Type(p);
+    let itername="";
     
     if (p.optional("COMMA")) {
         itername = arraytype.data.replace(/"/g, "");
@@ -1767,11 +1831,11 @@ function StructParser() {
   function p_StaticArray(p) {
     p.expect("STATIC_ARRAY");
     p.expect("SOPEN");
-    var arraytype=p_Type(p);
-    var itername="";
+    let arraytype=p_Type(p);
+    let itername="";
     
     p.expect("COMMA");
-    var size = p.expect("NUM");
+    let size = p.expect("NUM");
     
     if (size < 0 || Math.abs(size - Math.floor(size)) > 0.000001) { 
       console.log(Math.abs(size - Math.floor(size)));
@@ -1792,8 +1856,8 @@ function StructParser() {
     p.expect("ITERKEYS");
     p.expect("LPARAM");
     
-    var arraytype=p_Type(p);
-    var itername="";
+    let arraytype=p_Type(p);
+    let itername="";
     
     if (p.optional("COMMA")) {
         itername = arraytype.data.replace(/"/g, "");
@@ -1807,13 +1871,13 @@ function StructParser() {
   function p_Abstract(p) {
     p.expect("ABSTRACT");
     p.expect("LPARAM");
-    var type=p.expect("ID");
+    let type=p.expect("ID");
     p.expect("RPARAM");
     return {type: StructEnum.T_TSTRUCT, data: type}
   }
   
   function p_Type(p) {
-    var tok=p.peek();
+    let tok=p.peek();
     
     if (tok.type=="ID") {
         p.next();
@@ -1852,7 +1916,7 @@ function StructParser() {
   }
   
   function p_Field(p) {
-    var field={};
+    let field={};
     
     field.name = p_ID_or_num(p);
     p.expect("COLON");
@@ -1863,7 +1927,7 @@ function StructParser() {
     
     let check = 0;
     
-    var tok=p.peek();
+    let tok=p.peek();
     if (tok.type=="JSCRIPT") {
         field.get = tok.value;
         check = 1;
@@ -1883,14 +1947,14 @@ function StructParser() {
   }
   
   function p_Struct(p) {
-    var st={};
+    let st={};
     
     st.name = p.expect("ID", "struct name");
     
     st.fields = [];
     st.id = -1;
-    var tok=p.peek();
-    var id=-1;
+    let tok=p.peek();
+    let id=-1;
     if (tok.type=="ID"&&tok.value=="id") {
         p.next();
         p.expect("EQUALS");
@@ -1921,6 +1985,7 @@ const _export_struct_parse_ = StructParser();
 var struct_parser = /*#__PURE__*/Object.freeze({
   __proto__: null,
   StructEnum: StructEnum,
+  ValueTypes: ValueTypes,
   StructTypes: StructTypes,
   StructTypeMap: StructTypeMap,
   struct_parse: _export_struct_parse_
@@ -1937,6 +2002,7 @@ let pack_ushort$1 = _module_exports_.pack_ushort;
 let pack_float = _module_exports_.pack_float;
 let pack_string$1 = _module_exports_.pack_string;
 let pack_byte$1 = _module_exports_.pack_byte;
+let pack_sbyte$1 = _module_exports_.pack_sbyte;
 let pack_double = _module_exports_.pack_double;
 let pack_static_string$1 = _module_exports_.pack_static_string;
 let pack_short = _module_exports_.pack_short;
@@ -1947,20 +2013,21 @@ let unpack_uint$1 = _module_exports_.unpack_uint;
 let unpack_ushort$1 = _module_exports_.unpack_ushort;
 let unpack_string = _module_exports_.unpack_string;
 let unpack_byte$1 = _module_exports_.unpack_byte;
+let unpack_sbyte$1 = _module_exports_.unpack_sbyte;
 let unpack_double = _module_exports_.unpack_double;
 let unpack_static_string = _module_exports_.unpack_static_string;
 let unpack_short = _module_exports_.unpack_short;
 
-var _static_envcode_null = "";
+let _static_envcode_null = "";
 
 let packer_debug, packer_debug_start, packer_debug_end;
 
-var packdebug_tablevel = 0;
+let packdebug_tablevel = 0;
 
 function gen_tabstr$1(tot) {
-  var ret = "";
+  let ret = "";
 
-  for (var i = 0; i < tot; i++) {
+  for (let i = 0; i < tot; i++) {
     ret += " ";
   }
 
@@ -1980,8 +2047,8 @@ const _export_setDebugMode_ = (t) => {
 
   if (debug) {
     packer_debug = function (msg) {
-      if (msg != undefined) {
-        var t = gen_tabstr$1(packdebug_tablevel);
+      if (msg !== undefined) {
+        let t = gen_tabstr$1(packdebug_tablevel);
         console.log(t + msg);
       } else {
         console.log("Warning: undefined msg");
@@ -2018,37 +2085,20 @@ let packNull = function(manager, data, field, type) {
 
 function unpack_field(manager, data, type, uctx) {
   let name;
-  
+
   if (debug) {
     name = _export_StructFieldTypeMap_[type.type].define().name;
     packer_debug_start("R start " + name);
   }
-  
+
   let ret = _export_StructFieldTypeMap_[type.type].unpack(manager, data, type, uctx);
-  
+
   if (debug) {
     packer_debug_end("R end " + name);
   }
-  
+
   return ret;
 }
-
-let fromJSON = function fromJSON(manager, data, owner, type) {
-  let name;
-
-  if (debug) {
-    name = _export_StructFieldTypeMap_[type.type].define().name;
-    packer_debug_start("R start " + name);
-  }
-
-  let ret = _export_StructFieldTypeMap_[type.type].readJSON(manager, data, owner, type);
-
-  if (debug) {
-    packer_debug_end("R end " + name);
-  }
-
-  return ret;
-};
 
 let fakeFields = new _export_cachering_(() => {return {type : undefined, get : undefined, set : undefined}}, 256);
 
@@ -2058,7 +2108,7 @@ function fmt_type(type) {
 
 function do_pack(manager, data, val, obj, field, type) {
   let name;
-  
+
   if (debug) {
     name = _export_StructFieldTypeMap_[type.type].define().name;
     packer_debug_start("W start " + name);
@@ -2068,112 +2118,78 @@ function do_pack(manager, data, val, obj, field, type) {
   if (typeof typeid !== "number") {
     typeid = typeid.type;
   }
-  
+
   let ret = _export_StructFieldTypeMap_[typeid].pack(manager, data, val, obj, field, type);
-  
+
   if (debug) {
     packer_debug_end("W end " + name);
-  } 
-  
+  }
+
   return ret;
 }
 
-
-let toJSON = function toJSON(manager, val, obj, field, type) {
-  let name;
-
-  if (debug) {
-    name = _export_StructFieldTypeMap_[type.type].define().name;
-    packer_debug_start("W start " + name);
-  }
-
-  let typeid = type;
-  if (typeof typeid !== "number") {
-    typeid = typeid.type;
-  }
-  if (typeof typeid !== "number") {
-    typeid = typeid.type;
-  }
-
-  let ret = _export_StructFieldTypeMap_[typeid].toJSON(manager, val, obj, field, type);
-
-  if (debug) {
-    packer_debug_end("W end " + name);
-  }
-
-  return ret;
-};
-
 let StructEnum$1 = StructEnum;
 
-var _ws_env = [[undefined, undefined]];
+let _ws_env = [[undefined, undefined]];
 
 let StructFieldType = class StructFieldType {
   static pack(manager, data, val, obj, field, type) {
   }
-  
+
   static unpack(manager, data, type, uctx) {
-  }
-
-  static toJSON(manager, val, obj, field, type) {
-    return val;
-  }
-
-  static readJSON(manager, data, owner, type) {
-    return data;
   }
 
   static packNull(manager, data, field, type) {
     this.pack(manager, data, 0, 0, field, type);
   }
-  
+
   static format(type) {
     return this.define().name;
   }
-  
+
   /**
-  return false to override default
-  helper js for packing
-  */
+   return false to override default
+   helper js for packing
+   */
   static useHelperJS(field) {
     return true;
   }
   /**
-  Define field class info.
-  
-  Example:
-  <pre>
-  static define() {return {
+   Define field class info.
+
+   Example:
+   <pre>
+   static define() {return {
     type : StructEnum.T_INT,
     name : "int"
   }}
-  </pre>
-  */
+   </pre>
+   */
   static define() {return {
     type : -1,
     name : "(error)"
   }}
-  
+
   /**
-  Register field packer/unpacker class.  Will throw an error if define() method is bad.
-  */
+   Register field packer/unpacker class.  Will throw an error if define() method is bad.
+   */
   static register(cls) {
     if (_export_StructFieldTypes_.indexOf(cls) >= 0) {
       throw new Error("class already registered");
     }
-    
+
     if (cls.define === StructFieldType.define) {
       throw new Error("you forgot to make a define() static method");
     }
-    
+
     if (cls.define().type === undefined) {
       throw new Error("cls.define().type was undefined!");
     }
-    
+
     if (cls.define().type in _export_StructFieldTypeMap_) {
       throw new Error("type " + cls.define().type + " is used by another StructFieldType subclass");
     }
-    
+
     _export_StructFieldTypes_.push(cls);
     _export_StructFieldTypeMap_[cls.define().type] = cls;
   }
@@ -2183,11 +2199,11 @@ class StructIntField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_int$1(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_int$1(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_INT,
     name : "int"
@@ -2199,11 +2215,11 @@ class StructFloatField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_float(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_float(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_FLOAT,
     name : "float"
@@ -2215,11 +2231,11 @@ class StructDoubleField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_double(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_double(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_DOUBLE,
     name : "double"
@@ -2230,7 +2246,7 @@ StructFieldType.register(StructDoubleField);
 class StructStringField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     val = !val ? "" : val;
-    
+
     pack_string$1(data, val);
   }
 
@@ -2238,14 +2254,10 @@ class StructStringField extends StructFieldType {
     this.pack(manager, data, "", 0, field, type);
   }
 
-  static toJSON(manager, val, obj, field, type) {
-    return "" + val;
-  }
-  
   static unpack(manager, data, type, uctx) {
     return unpack_string(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_STRING,
     name : "string"
@@ -2256,22 +2268,22 @@ StructFieldType.register(StructStringField);
 class StructStaticStringField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     val = !val ? "" : val;
-    
+
     pack_static_string$1(data, val, type.data.maxlength);
   }
-  
+
   static format(type) {
     return `static_string[${type.data.maxlength}]`;
   }
- 
+
   static packNull(manager, data, field, type) {
     this.pack(manager, data, "", 0, field, type);
   }
 
   static unpack(manager, data, type, uctx) {
     return unpack_static_string(data, uctx, type.data.maxlength);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_STATIC_STRING,
     name : "static_string"
@@ -2283,33 +2295,29 @@ class StructStructField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     manager.write_struct(data, val, manager.get_struct(type.data));
   }
-  
+
   static format(type) {
     return type.data;
   }
 
-  static toJSON(manager, val, obj, field, type) {
-    return manager.writeJSON(val);
+  static unpackInto(manager, data, type, uctx, dest) {
+    let cls2 = manager.get_struct_cls(type.data);
+    return manager.read_object(data, cls2, uctx, dest);
   }
 
   static packNull(manager, data, field, type) {
     let stt = manager.get_struct(type.data);
-    
+
     for (let field2 of stt.fields) {
       let type2 = field2.type;
-      
+
       packNull(manager, data, field2, type2);
     }
   }
-  
-  static unpack(manager, data, type, uctx) {
-    var cls2 = manager.get_struct_cls(type.data);
-    return manager.read_object(data, cls2, uctx);
-  }
 
-  static readJSON(manager, data, owner, type) {
-    var cls2 = manager.get_struct_cls(type.data);
-    return manager.readJSON(data, cls2);
+  static unpack(manager, data, type, uctx) {
+    let cls2 = manager.get_struct_cls(type.data);
+    return manager.read_object(data, cls2, uctx);
   }
 
   static define() {return {
@@ -2321,31 +2329,8 @@ StructFieldType.register(StructStructField);
 
 class StructTStructField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
-    var cls = manager.get_struct_cls(type.data);
-    var stt = manager.get_struct(type.data);
-
-    //make sure inheritance is correct
-    if (val.constructor.structName != type.data && (val instanceof cls)) {
-      //if (DEBUG.Struct) {
-      //    console.log(val.constructor.structName+" inherits from "+cls.structName);
-      //}
-      stt = manager.get_struct(val.constructor.structName);
-    } else if (val.constructor.structName == type.data) {
-      stt = manager.get_struct(type.data);
-    } else {
-      console.trace();
-      throw new Error("Bad struct " + val.constructor.structName + " passed to write_struct");
-    }
-
-    packer_debug("int " + stt.id);
-
-    pack_int$1(data, stt.id);
-    manager.write_struct(data, val, stt);
-  }
-
-  static toJSON(manager, val, obj, field, type) {
-    var cls = manager.get_struct_cls(type.data);
-    var stt = manager.get_struct(type.data);
+    let cls = manager.get_struct_cls(type.data);
+    let stt = manager.get_struct(type.data);
 
     //make sure inheritance is correct
     if (val.constructor.structName !== type.data && (val instanceof cls)) {
@@ -2362,15 +2347,13 @@ class StructTStructField extends StructFieldType {
 
     packer_debug("int " + stt.id);
 
-    return {
-      type : stt.name,
-      data : manager.writeJSON(val, stt)
-    }
+    pack_int$1(data, stt.id);
+    manager.write_struct(data, val, stt);
   }
 
   static packNull(manager, data, field, type) {
     let stt = manager.get_struct(type.data);
-    
+
     pack_int$1(data, stt.id);
     packNull(manager, data, field, {type : STructEnum.T_STRUCT, data : type.data});
   }
@@ -2378,9 +2361,9 @@ class StructTStructField extends StructFieldType {
   static format(type) {
     return "abstract(" + type.data + ")";
   }
-  
-  static unpack(manager, data, type, uctx) {
-    var id = _module_exports_.unpack_int(data, uctx);
+
+  static unpackInto(manager, data, type, uctx, dest) {
+    let id = _module_exports_.unpack_int(data, uctx);
 
     packer_debug("-int " + id);
     if (!(id in manager.struct_ids)) {
@@ -2392,39 +2375,36 @@ class StructTStructField extends StructFieldType {
       throw new Error("Unknown struct type " + id + ".");
     }
 
-    var cls2 = manager.get_struct_id(id);
+    let cls2 = manager.get_struct_id(id);
+
+    packer_debug("struct name: " + cls2.name);
+
+    cls2 = manager.struct_cls[cls2.name];
+
+    return manager.read_object(data, cls2, uctx, dest);
+    //packer_debug("ret", ret);
+  }
+
+  static unpack(manager, data, type, uctx) {
+    let id = _module_exports_.unpack_int(data, uctx);
+
+    packer_debug("-int " + id);
+    if (!(id in manager.struct_ids)) {
+      packer_debug("struct id: " + id);
+      console.trace();
+      console.log(id);
+      console.log(manager.struct_ids);
+      packer_debug_end("tstruct");
+      throw new Error("Unknown struct type " + id + ".");
+    }
+
+    let cls2 = manager.get_struct_id(id);
 
     packer_debug("struct name: " + cls2.name);
     cls2 = manager.struct_cls[cls2.name];
 
-    let ret =  manager.read_object(data, cls2, uctx);
+    return manager.read_object(data, cls2, uctx);
     //packer_debug("ret", ret);
-
-    return ret;
-  }
-
-  static readJSON(manager, data, owner, type) {
-    var sttname = data.type;
-
-    packer_debug("-int " + sttname);
-    if (sttname === undefined || !(sttname in manager.structs)) {
-      packer_debug("struct name: " + sttname);
-      console.trace();
-      console.log(sttname);
-      console.log(manager.struct_ids);
-      packer_debug_end("tstruct");
-      throw new Error("Unknown struct " + sttname + ".");
-    }
-
-    var cls2 = manager.structs[sttname];
-
-    packer_debug("struct class name: " + cls2.name);
-    cls2 = manager.struct_cls[cls2.name];
-
-    let ret = manager.readJSON(data.data, cls2);
-    //packer_debug("ret", ret);
-
-    return ret;
   }
 
   static define() {return {
@@ -2436,7 +2416,7 @@ StructFieldType.register(StructTStructField);
 
 class StructArrayField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
-    if (!val) {
+    if (val === undefined) {
       console.trace();
       console.log("Undefined array fed to struct struct packer!");
       console.log("Field: ", field);
@@ -2450,51 +2430,14 @@ class StructArrayField extends StructFieldType {
     packer_debug("int " + val.length);
     _module_exports_.pack_int(data, val.length);
 
-    var d = type.data;
+    let d = type.data;
 
-    var itername = d.iname;
-    var type2 = d.type;
+    let itername = d.iname;
+    let type2 = d.type;
 
-    var env = _ws_env;
-    for (var i = 0; i < val.length; i++) {
-      var val2 = val[i];
-      if (itername !== "" && itername !== undefined && field.get) {
-        env[0][0] = itername;
-        env[0][1] = val2;
-        val2 = manager._env_call(field.get, obj, env);
-      }
-      
-      //XXX not sure I really need this fakeField stub here. . .
-      let fakeField = fakeFields.next();
-      fakeField.type = type2;
-      do_pack(manager, data, val2, val, fakeField, type2);
-    }
-  }
-
-  static toJSON(manager, val, obj, field, type) {
-    if (!val) {
-      console.trace();
-      console.log("Undefined array fed to struct struct packer!");
-      console.log("Field: ", field);
-      console.log("Type: ", type);
-      console.log("");
-      packer_debug("int 0");
-      _module_exports_.pack_int(data, 0);
-      return;
-    }
-
-    packer_debug("int " + val.length);
-
-    var d = type.data;
-
-    var itername = d.iname;
-    var type2 = d.type;
-
-    var env = _ws_env;
-    var ret = [];
-
-    for (var i = 0; i < val.length; i++) {
-      var val2 = val[i];
+    let env = _ws_env;
+    for (let i = 0; i < val.length; i++) {
+      let val2 = val[i];
       if (itername !== "" && itername !== undefined && field.get) {
         env[0][0] = itername;
         env[0][1] = val2;
@@ -2504,19 +2447,16 @@ class StructArrayField extends StructFieldType {
       //XXX not sure I really need this fakeField stub here. . .
       let fakeField = fakeFields.next();
       fakeField.type = type2;
-
-      ret.push(toJSON(manager, val2, val, fakeField, type2));
+      do_pack(manager, data, val2, obj, fakeField, type2);
     }
-
-    return ret;
   }
 
   static packNull(manager, data, field, type) {
     pack_int$1(data, 0);
   }
-  
+
   static format(type) {
-    if (type.data.iname !== "" && type.data.iname != undefined) {
+    if (type.data.iname !== "" && type.data.iname !== undefined) {
       return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
     }
     else {
@@ -2527,33 +2467,26 @@ class StructArrayField extends StructFieldType {
   static useHelperJS(field) {
     return !field.type.data.iname;
   }
-  
-  static unpack(manager, data, type, uctx) {
-    var len = _module_exports_.unpack_int(data, uctx);
-    packer_debug("-int " + len);
 
-    var arr = new Array(len);
-    for (var i = 0; i < len; i++) {
-      arr[i] = unpack_field(manager, data, type.data.type, uctx);
+  static unpackInto(manager, data, type, uctx, dest) {
+    let len = _module_exports_.unpack_int(data, uctx);
+    dest.length = 0;
+
+    for (let i = 0; i < len; i++) {
+      dest.push(unpack_field(manager, data, type.data.type, uctx));
     }
-    
-    return arr;
   }
 
-  static readJSON(manager, data, owner, type) {
-    let ret = [];
-    let type2 = type.data.type;
+  static unpack(manager, data, type, uctx) {
+    let len = _module_exports_.unpack_int(data, uctx);
+    packer_debug("-int " + len);
 
-    if (!data) {
-      console.warn("Corrupted json data", owner);
-      return [];
+    let arr = new Array(len);
+    for (let i = 0; i < len; i++) {
+      arr[i] = unpack_field(manager, data, type.data.type, uctx);
     }
 
-    for (let item of data) {
-      ret.push(fromJSON(manager, item, data, type2));
-    }
-
-    return ret;
+    return arr;
   }
 
   static define() {return {
@@ -2583,7 +2516,7 @@ class StructIterField extends StructFieldType {
         console.log("");
       }
     }
-    
+
     let len = 0.0;
     forEach(() => {
       len++;
@@ -2592,65 +2525,10 @@ class StructIterField extends StructFieldType {
     packer_debug("int " + len);
     _module_exports_.pack_int(data, len);
 
-    var d = type.data, itername = d.iname, type2 = d.type;
-    var env = _ws_env;
+    let d = type.data, itername = d.iname, type2 = d.type;
+    let env = _ws_env;
 
-    var i = 0;
-    forEach(function(val2) {
-      if (i >= len) {
-        if (warninglvl > 0) 
-          console.trace("Warning: iterator returned different length of list!", val, i);
-        return;
-      }
-
-      if (itername != "" && itername != undefined && field.get) {
-        env[0][0] = itername;
-        env[0][1] = val2;
-        val2 = manager._env_call(field.get, obj, env);
-      }
-
-      //XXX not sure I really need this fakeField stub here. . .
-      let fakeField = fakeFields.next();
-      fakeField.type = type2;
-      do_pack(manager, data, val2, val, fakeField, type2);
-
-      i++;
-    }, this);
-  }
-
-  static toJSON(manager, val, obj, field, type) {
-    //this was originally implemented to use ES6 iterators.
-    function forEach(cb, thisvar) {
-      if (val && val[Symbol.iterator]) {
-        for (let item of val) {
-          cb.call(thisvar, item);
-        }
-      } else if (val && val.forEach) {
-        val.forEach(function(item) {
-          cb.call(thisvar, item);
-        });
-      } else {
-        console.trace();
-        console.log("Undefined iterable list fed to struct struct packer!", val);
-        console.log("Field: ", field);
-        console.log("Type: ", type);
-        console.log("");
-      }
-    }
-
-    let len = 0.0;
-    let ret = [];
-
-    forEach(() => {
-      len++;
-    });
-
-    packer_debug("int " + len);
-
-    var d = type.data, itername = d.iname, type2 = d.type;
-    var env = _ws_env;
-
-    var i = 0;
+    let i = 0;
     forEach(function(val2) {
       if (i >= len) {
         if (warninglvl > 0)
@@ -2667,12 +2545,10 @@ class StructIterField extends StructFieldType {
       //XXX not sure I really need this fakeField stub here. . .
       let fakeField = fakeFields.next();
       fakeField.type = type2;
-      ret.push(toJSON(manager, val2, val, fakeField, type2));
+      do_pack(manager, data, val2, obj, fakeField, type2);
 
       i++;
     }, this);
-
-    return ret;
   }
 
   static packNull(manager, data, field, type) {
@@ -2682,42 +2558,39 @@ class StructIterField extends StructFieldType {
   static useHelperJS(field) {
     return !field.type.data.iname;
   }
-  
+
   static format(type) {
-    if (type.data.iname != "" && type.data.iname != undefined) {
+    if (type.data.iname !== "" && type.data.iname !== undefined) {
       return "iter(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
     }
     else {
       return "iter(" + fmt_type(type.data.type) + ")";
     }
   }
-  
-  static unpack(manager, data, type, uctx) {
-    var len = _module_exports_.unpack_int(data, uctx);
+
+  static unpackInto(manager, data, type, uctx, arr) {
+    let len = _module_exports_.unpack_int(data, uctx);
     packer_debug("-int " + len);
 
-    var arr = new Array(len);
-    for (var i = 0; i < len; i++) {
-      arr[i] = unpack_field(manager, data, type.data.type, uctx);
+    arr.length = 0;
+
+    for (let i = 0; i < len; i++) {
+      arr.push(unpack_field(manager, data, type.data.type, uctx));
     }
 
     return arr;
   }
 
-  static readJSON(manager, data, owner, type) {
-    let ret = [];
-    let type2 = type.data.type;
+  static unpack(manager, data, type, uctx) {
+    let len = _module_exports_.unpack_int(data, uctx);
+    packer_debug("-int " + len);
 
-    if (!data) {
-      console.warn("Corrupted json data", owner);
-      return [];
+    let arr = new Array(len);
+    for (let i = 0; i < len; i++) {
+      arr[i] = unpack_field(manager, data, type.data.type, uctx);
     }
 
-    for (let item of data) {
-      ret.push(fromJSON(manager, item, data, type2));
-    }
-
-    return ret;
+    return arr;
   }
 
   static define() {return {
@@ -2731,11 +2604,11 @@ class StructShortField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_short(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_short(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_SHORT,
     name : "short"
@@ -2747,11 +2620,11 @@ class StructByteField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_byte$1(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_byte$1(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_BYTE,
     name : "byte"
@@ -2759,15 +2632,31 @@ class StructByteField extends StructFieldType {
 }
 StructFieldType.register(StructByteField);
 
+class StructSignedByteField extends StructFieldType {
+  static pack(manager, data, val, obj, field, type) {
+    pack_sbyte$1(data, val);
+  }
+
+  static unpack(manager, data, type, uctx) {
+    return unpack_sbyte$1(data, uctx);
+  }
+
+  static define() {return {
+    type : StructEnum$1.T_SIGNED_BYTE,
+    name : "sbyte"
+  }}
+}
+StructFieldType.register(StructSignedByteField);
+
 class StructBoolField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_byte$1(data, !!val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return !!unpack_byte$1(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_BOOL,
     name : "bool"
@@ -2777,54 +2666,6 @@ StructFieldType.register(StructBoolField);
 
 class StructIterKeysField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
-    //this was originally implemented to use ES6 iterators.
-    if ((typeof val !== "object" && typeof val !== "function") || val === null) {
-        console.warn("Bad object fed to iterkeys in struct packer!", val);
-        console.log("Field: ", field);
-        console.log("Type: ", type);
-        console.log("");
-        
-        _module_exports_.pack_int(data, 0);
-        
-        packer_debug_end("iterkeys");
-        return;
-    }
-
-    let len = 0.0;
-    for (let k in val) {
-      len++;
-    }
-
-    packer_debug("int " + len);
-    _module_exports_.pack_int(data, len);
-
-    var d = type.data, itername = d.iname, type2 = d.type;
-    var env = _ws_env;
-
-    var i = 0;
-    for (let val2 in val) {
-      if (i >= len) {
-        if (warninglvl > 0) 
-          console.warn("Warning: object keys magically replaced on us", val, i);
-        return;
-      }
-
-      if (itername && itername.trim().length > 0 && field.get) {
-        env[0][0] = itername;
-        env[0][1] = val2;
-        val2 = manager._env_call(field.get, obj, env);
-      } else {
-        val2 = val[val2]; //fetch value
-      }
-
-      var f2 = {type: type2, get: undefined, set: undefined};
-      do_pack(manager, data, val2, val, f2, type2);
-
-      i++;
-    }
-  }
-
-  static toJSON(manager, val, obj, field, type) {
     //this was originally implemented to use ES6 iterators.
     if ((typeof val !== "object" && typeof val !== "function") || val === null) {
       console.warn("Bad object fed to iterkeys in struct packer!", val);
@@ -2844,12 +2685,12 @@ class StructIterKeysField extends StructFieldType {
     }
 
     packer_debug("int " + len);
+    _module_exports_.pack_int(data, len);
 
-    var d = type.data, itername = d.iname, type2 = d.type;
-    var env = _ws_env;
-    var ret = [];
+    let d = type.data, itername = d.iname, type2 = d.type;
+    let env = _ws_env;
 
-    var i = 0;
+    let i = 0;
     for (let val2 in val) {
       if (i >= len) {
         if (warninglvl > 0)
@@ -2865,59 +2706,53 @@ class StructIterKeysField extends StructFieldType {
         val2 = val[val2]; //fetch value
       }
 
-      var f2 = {type: type2, get: undefined, set: undefined};
-      ret.push(toJSON(manager, val2, val, f2, type2));
+      let f2 = {type: type2, get: undefined, set: undefined};
+      do_pack(manager, data, val2, obj, f2, type2);
 
       i++;
     }
-
-    return ret;
   }
-
 
   static packNull(manager, data, field, type) {
     pack_int$1(data, 0);
   }
-  
+
   static useHelperJS(field) {
     return !field.type.data.iname;
   }
 
   static format(type) {
-    if (type.data.iname != "" && type.data.iname != undefined) {
+    if (type.data.iname !== "" && type.data.iname !== undefined) {
       return "iterkeys(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
     }
     else {
       return "iterkeys(" + fmt_type(type.data.type) + ")";
     }
   }
-  
-  static unpack(manager, data, type, uctx) {
-    var len = unpack_int$1(data, uctx);
+
+  static unpackInto(manager, data, type, uctx, arr) {
+    let len = unpack_int$1(data, uctx);
     packer_debug("-int " + len);
 
-    var arr = new Array(len);
-    for (var i = 0; i < len; i++) {
-      arr[i] = unpack_field(manager, data, type.data.type, uctx);
+    arr.length = 0;
+
+    for (let i = 0; i < len; i++) {
+      arr.push(unpack_field(manager, data, type.data.type, uctx));
     }
 
     return arr;
   }
 
-  static readJSON(manager, data, owner, type) {
-    let ret = [];
-    let type2 = type.data.type;
+  static unpack(manager, data, type, uctx) {
+    let len = unpack_int$1(data, uctx);
+    packer_debug("-int " + len);
 
-    if (!data) {
-      console.warn("Corrupted json data", owner);
-      return [];
+    let arr = new Array(len);
+    for (let i = 0; i < len; i++) {
+      arr[i] = unpack_field(manager, data, type.data.type, uctx);
     }
 
-    for (let item of data) {
-      ret.push(fromJSON(manager, item, data, type2));
-    }
-
-    return ret;
+    return arr;
   }
 
   static define() {return {
@@ -2931,11 +2766,11 @@ class StructUintField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_uint$1(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_uint$1(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_UINT,
     name : "uint"
@@ -2948,11 +2783,11 @@ class StructUshortField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     pack_ushort$1(data, val);
   }
-  
+
   static unpack(manager, data, type, uctx) {
     return unpack_ushort$1(data, uctx);
-  }   
-  
+  }
+
   static define() {return {
     type : StructEnum$1.T_USHORT,
     name : "ushort"
@@ -2968,42 +2803,13 @@ class StructStaticArrayField extends StructFieldType {
     if (type.data.size === undefined) {
       throw new Error("type.data.size was undefined");
     }
-    
+
     let itername = type.data.iname;
-    
+
     if (val === undefined || !val.length) {
       this.packNull(manager, data, field, type);
       return;
     }
-    
-    for (let i=0; i<type.data.size; i++) {
-      let i2 = Math.min(i, Math.min(val.length-1, type.data.size));
-      let val2 = val[i2];
-      
-      //*
-      if (itername != "" && itername != undefined && field.get) {
-        let env = _ws_env;
-        env[0][0] = itername;
-        env[0][1] = val2;
-        val2 = manager._env_call(field.get, obj, env);
-      }
-      
-      do_pack(manager, data, val2, val, field, type.data.type);
-    }
-  }
-
-  static toJSON(manager, val, obj, field, type) {
-    if (type.data.size === undefined) {
-      throw new Error("type.data.size was undefined");
-    }
-
-    let itername = type.data.iname;
-
-    if (val === undefined || !val.length) {;
-      return [];
-    }
-
-    let ret = [];
 
     for (let i=0; i<type.data.size; i++) {
       let i2 = Math.min(i, Math.min(val.length-1, type.data.size));
@@ -3017,16 +2823,14 @@ class StructStaticArrayField extends StructFieldType {
         val2 = manager._env_call(field.get, obj, env);
       }
 
-      ret.push(toJSON(manager, val2, val, field, type.data.type));
+      do_pack(manager, data, val2, val, field, type.data.type);
     }
-
-    return ret;
   }
 
   static useHelperJS(field) {
     return !field.type.data.iname;
   }
-  
+
   static packNull(manager, data, field, type) {
     let size = type.data.size;
     for (let i=0; i<size; i++) {
@@ -3036,40 +2840,36 @@ class StructStaticArrayField extends StructFieldType {
 
   static format(type) {
     let type2 = _export_StructFieldTypeMap_[type.data.type.type].format(type.data.type);
-    
+
     let ret = `static_array[${type2}, ${type.data.size}`;
-    
+
     if (type.data.iname) {
       ret += `, ${type.data.iname}`;
     }
     ret += `]`;
-    
+
     return ret;
   }
-  
-  static unpack(manager, data, type, uctx) {
+
+  static unpackInto(manager, data, type, uctx, ret) {
     packer_debug("-size: " + type.data.size);
-    
-    let ret = [];
-    
+
+    ret.length = 0;
+
     for (let i=0; i<type.data.size; i++) {
       ret.push(unpack_field(manager, data, type.data.type, uctx));
     }
-    
+
     return ret;
   }
 
-  static readJSON(manager, data, owner, type) {
+  static unpack(manager, data, type, uctx) {
+    packer_debug("-size: " + type.data.size);
+
     let ret = [];
-    let type2 = type.data.type;
 
-    if (!data) {
-      console.warn("Corrupted json data", owner);
-      return [];
-    }
-
-    for (let item of data) {
-      ret.push(fromJSON(manager, item, data, type2));
+    for (let i=0; i<type.data.size; i++) {
+      ret.push(unpack_field(manager, data, type.data.type, uctx));
     }
 
     return ret;
@@ -3081,6 +2881,16 @@ class StructStaticArrayField extends StructFieldType {
   }}
 }
 StructFieldType.register(StructStaticArrayField);
+
+var sintern2 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get StructFieldTypeMap () { return _export_StructFieldTypeMap_; },
+  setWarningMode: _export_setWarningMode_,
+  setDebugMode: _export_setDebugMode_,
+  StructFieldTypes: _export_StructFieldTypes_,
+  packNull: packNull,
+  StructFieldType: StructFieldType
+});
 
 "use strict";
 let StructFieldTypeMap$1 = _export_StructFieldTypeMap_;
@@ -3135,7 +2945,7 @@ let packdebug_tablevel$1 = 0;
 _module_exports_$1.truncateDollarSign = true;
 
 function gen_tabstr$2(tot) {
-  var ret = "";
+  let ret = "";
 
   for (let i = 0; i < tot; i++) {
     ret += " ";
@@ -3191,7 +3001,7 @@ _module_exports_$1.setDebugMode = (t) => {
   
   if (debug_struct) {
     packer_debug$1 = function (msg) {
-      if (msg != undefined) {
+      if (msg !== undefined) {
         let t = gen_tabstr$2(packdebug_tablevel$1);
         console.log(t + msg);
       } else {
@@ -3315,32 +3125,40 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       return ret;
     }
 
+    function throwError(stt, field, msg) {
+      let buf = STRUCT.formatStruct(stt);
+
+      console.error(buf + "\n\n" + msg);
+
+      if (onerror) {
+        onerror(msg, stt, field);
+      } else {
+        throw new Error(msg);
+      }
+    }
+
     for (let k in this.structs) {
       let stt = this.structs[k];
 
       for (let field of stt.fields) {
-        let type = getType(field.type);
+        if (field.name === "this") {
+          let type = field.type.type;
 
-        //console.log(formatType(type));
+          if (ValueTypes.has(type)) {
+            throwError(stt, field, "'this' cannot be used with value types");
+          }
+        }
+
+        let type = getType(field.type);
 
         if (type.type !== StructEnum$2.T_STRUCT && type.type !== StructEnum$2.T_TSTRUCT) {
           continue;
         }
 
         if (!(type.data in this.structs)) {
-
           let msg = stt.name + ":" + field.name + ": Unknown struct " + type.data + ".";
-          let buf = STRUCT.formatStruct(stt);
-
-          console.error(buf + "\n\n" + msg);
-
-          if (onerror) {
-            onerror(msg, stt, field);
-          } else {
-            throw new Error(msg);
-          }
+          throwError(stt, field, msg);
         }
-        //console.log(formatType(field.type));
       }
     }
   }
@@ -3614,15 +3432,15 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
   }
 
   static fmt_struct(stt, internal_only, no_helper_js) {
-    if (internal_only == undefined)
+    if (internal_only === undefined)
       internal_only = false;
-    if (no_helper_js == undefined)
+    if (no_helper_js === undefined)
       no_helper_js = false;
 
     let s = "";
     if (!internal_only) {
       s += stt.name;
-      if (stt.id != -1)
+      if (stt.id !== -1)
         s += " id=" + stt.id;
       s += " {\n";
     }
@@ -3653,7 +3471,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
     for (let i = 0; i < fields.length; i++) {
       let f = fields[i];
       s += tab + f.name + " : " + fmt_type(f.type);
-      if (!no_helper_js && f.get != undefined) {
+      if (!no_helper_js && f.get !== undefined) {
         s += " | " + f.get.trim();
       }
       s += ";\n";
@@ -3668,7 +3486,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
     if (env !== undefined) {
       envcode = "";
       for (let i = 0; i < env.length; i++) {
-        envcode = "var " + env[i][0] + " = env[" + i.toString() + "][1];\n" + envcode;
+        envcode = "let " + env[i][0] + " = env[" + i.toString() + "][1];\n" + envcode;
       }
     }
     let fullcode = "";
@@ -3717,21 +3535,20 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       return cls.useHelperJS(field);
     }
 
-    var fields = stt.fields;
-    var thestruct = this;
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
-      var t1 = f.type;
-      var t2 = t1.type;
+    let fields = stt.fields;
+    let thestruct = this;
+    for (let i = 0; i < fields.length; i++) {
+      let f = fields[i];
+      let t1 = f.type;
+      let t2 = t1.type;
 
       if (use_helper_js(f)) {
-        var val;
-        var type = t2;
-        if (f.get != undefined) {
+        let val;
+        let type = t2;
+        if (f.get !== undefined) {
           val = thestruct._env_call(f.get, obj);
-        }
-        else {
-          val = obj[f.name];
+        } else {
+          val = f.name === "this" ? obj : obj[f.name];
         }
         
         if (_nGlobal.DEBUG && _nGlobal.DEBUG.tinyeval) { 
@@ -3741,7 +3558,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
         do_pack$1(data, val, obj, thestruct, f, t1);
       }
       else {
-        var val = obj[f.name];
+        let val = f.name === "this" ? obj : obj[f.name];
         do_pack$1(data, val, obj, thestruct, f, t1);
       }
     }
@@ -3752,8 +3569,8 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
   @param obj  : structable object
   */
   write_object(data, obj) {
-    var cls = obj.constructor.structName;
-    var stt = this.get_struct(cls);
+    let cls = obj.constructor.structName;
+    let stt = this.get_struct(cls);
 
     if (data === undefined) {
       data = [];
@@ -3784,7 +3601,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
   }
 
   writeJSON(obj, stt=undefined) {
-    var cls = obj.constructor.structName;
+    let cls = obj.constructor.structName;
     stt = stt || this.get_struct(cls);
 
     function use_helper_js(field) {
@@ -3793,20 +3610,20 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       return cls.useHelperJS(field);
     }
 
-    let toJSON$1 = toJSON;
+    let toJSON = undefined;
 
-    var fields = stt.fields;
-    var thestruct = this;
+    let fields = stt.fields;
+    let thestruct = this;
     let json = {};
 
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
-      var t1 = f.type;
-      var t2 = t1.type;
-      var val;
+    for (let i = 0; i < fields.length; i++) {
+      let f = fields[i];
+      let t1 = f.type;
+      let t2 = t1.type;
+      let val;
 
       if (use_helper_js(f)) {
-        var type = t2;
+        let type = t2;
         if (f.get !== undefined) {
           val = thestruct._env_call(f.get, obj);
         }
@@ -3818,11 +3635,11 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
           console.log("\n\n\n", f.get, "Helper JS Ret", val, "\n\n\n");
         }
 
-        json[f.name] = toJSON$1(this, val, obj, f, t1);
+        json[f.name] = toJSON(this, val, obj, f, t1);
       }
       else {
         val = obj[f.name];
-        json[f.name] = toJSON$1(this, val, obj, f, t1);
+        json[f.name] = toJSON(this, val, obj, f, t1);
       }
     }
 
@@ -3834,14 +3651,14 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
   @param cls_or_struct_id : Structable class
   @param uctx : internal parameter
   */
-  read_object(data, cls_or_struct_id, uctx) {
+  read_object(data, cls_or_struct_id, uctx, objInstance) {
     let cls, stt;
 
     if (data instanceof Array) {
       data = new DataView(new Uint8Array(data).buffer);
     }
 
-    if (typeof cls_or_struct_id == "number") {
+    if (typeof cls_or_struct_id === "number") {
       cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
     } else {
       cls = cls_or_struct_id;
@@ -3853,7 +3670,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
 
     stt = this.structs[cls.structName];
 
-    if (uctx == undefined) {
+    if (uctx === undefined) {
       uctx = new _module_exports_.unpack_context();
 
       packer_debug$1("\n\n=Begin reading " + cls.structName + "=");
@@ -3865,30 +3682,44 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       return StructFieldTypeMap$1[type.type].unpack(this2, data, type, uctx);
     }
 
+    function unpack_into(type, dest) {
+      return StructFieldTypeMap$1[type.type].unpackInto(this2, data, type, uctx, dest);
+    }
+
     let was_run = false;
 
-    function load(obj) {
-      if (was_run) {
-        return;
-      }
+    function makeLoader(stt) {
+      return function load(obj) {
+        if (was_run) {
+          return;
+        }
 
-      was_run = true;
+        was_run = true;
 
-      let fields = stt.fields;
-      let flen = fields.length;
-      for (let i = 0; i < flen; i++) {
-        let f = fields[i];
-        let val = unpack_field(f.type);
-        obj[f.name] = val;
+        let fields = stt.fields;
+        let flen = fields.length;
+
+        for (let i = 0; i < flen; i++) {
+          let f = fields[i];
+
+          if (f.name === 'this') {
+            //load data into obj directly
+            unpack_into(f.type, obj);
+          } else {
+            obj[f.name] = unpack_field(f.type);
+          }
+        }
       }
     }
 
-    if (cls.prototype.loadSTRUCT !== undefined) {
-      let obj;
+    let load = makeLoader(stt);
 
-      if (cls.newSTRUCT !== undefined) {
+    if (cls.prototype.loadSTRUCT !== undefined) {
+      let obj = objInstance;
+
+      if (!obj && cls.newSTRUCT !== undefined) {
         obj = cls.newSTRUCT();
-      } else {
+      } else if (!obj) {
         obj = new cls();
       }
 
@@ -3899,10 +3730,11 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
         console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
       return cls.fromSTRUCT(load);
     } else { //default case, make new instance and then call load() on it
-      let obj;
-      if (cls.newSTRUCT !== undefined) {
+      let obj = objInstance;
+
+      if (!obj && cls.newSTRUCT !== undefined) {
         obj = cls.newSTRUCT();
-      } else {
+      } else if (!obj) {
         obj = new cls();
       }
 
@@ -3927,7 +3759,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
 
     stt = this.structs[cls.structName];
 
-    let fromJSON$1 = fromJSON;
+    let fromJSON = undefined;
     let thestruct = this;
 
     let this2  = this;
@@ -3947,7 +3779,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
         let f = fields[i];
 
         packer_debug$1("Load field " + f.name);
-        obj[f.name] = fromJSON$1(thestruct, data[f.name], data, f.type);
+        obj[f.name] = fromJSON(thestruct, data[f.name], data, f.type);
       }
     }
 
@@ -4332,8 +4164,8 @@ var StructTypes$2 = StructTypes;
 var Class = undefined;
 
 //forward struct_intern's exports
-for (var k$1 in _module_exports_$1) {
-  _module_exports_$2[k$1] = _module_exports_$1[k$1];
+for (var k in _module_exports_$1) {
+  _module_exports_$2[k] = _module_exports_$1[k];
 }
 
 /** truncate webpack mangled names. defaults to true
@@ -5478,6 +5310,29 @@ define(function () {
     }
 })());
 
+let f64tmp = new Float64Array(1);
+let u16tmp = new Uint16Array(f64tmp.buffer);
+
+function isDenormal(f) {
+  f64tmp[0] = f;
+
+  let a = u16tmp[0], b = u16tmp[1], c = u16tmp[2], d = u16tmp[3];
+
+  //zero? check both positive and negative zero
+  if (a === 0 && b === 0 && c === 0 && (d === 0 || d === 32768)) {
+    return false;
+  }
+
+  let test = d & ~(1<<15);
+  test = test >> 4;
+
+  //window.console.log(u16tmp[0], u16tmp[1], u16tmp[2], u16tmp[3], "|", test);
+
+  return test === 0;
+}
+window._isDenormal = isDenormal;
+
+
 let colormap = {
   "black"   : 30,
   "red"     : 31,
@@ -5691,8 +5546,8 @@ function isMobile() {
 
 //window._isMobile = isMobile;
 
-let SmartConsoleTag = Symbol("SmartConsoleTag");
-let tagid = 0;
+//let SmartConsoleTag = Symbol("SmartConsoleTag");
+//let tagid = 0;
 
 class SmartConsoleContext {
   constructor(name, console) {
@@ -5713,7 +5568,7 @@ class SmartConsoleContext {
     this.timeInterval = 375;
 
     //minimum time in general
-    this.timeIntervalAll = 0;
+    this.timeIntervalAll = 175;
 
     this._last = 0;
     this.last = 0;
@@ -5736,7 +5591,7 @@ class SmartConsoleContext {
       sum = sum ^ h;
     }
 
-    let visit = new Set();
+    let visit = new WeakSet();
 
     let recurse = (n) => {
       if (typeof n === "string") {
@@ -5744,15 +5599,15 @@ class SmartConsoleContext {
       } else if (typeof n === "undefined" || n === null) {
         dohash(0);
       } else if (typeof n === "object") {
-        if (n[SmartConsoleTag] === undefined) {
-          n[SmartConsoleTag] = tagid++;
+        if (n === undefined) {
+          //n[SmartConsoleTag] = tagid++;
         }
 
-        if (visit.has(n[SmartConsoleTag])) {
+        if (visit.has(n)) {
           return;
         }
 
-        visit.add(n[SmartConsoleTag]);
+        visit.add(n); //[SmartConsoleTag]);
 
         let keys = getAllKeys(n);
 
@@ -5817,6 +5672,8 @@ class SmartConsoleContext {
       return false;
     }
 
+    return true;
+    /*
     this.last2 = time_ms();
 
     let d = this._getData(args);
@@ -5835,7 +5692,7 @@ class SmartConsoleContext {
       return true;
     }
 
-    return false;
+    return false;*/
   }
 
   log() {
@@ -5856,6 +5713,11 @@ class SmartConsoleContext {
     }
   }
 
+  error() {
+    if (this._check(arguments)) {
+      window.console.error(...arguments);
+    }
+  }
 }
 
 class SmartConsole {
@@ -7620,8 +7482,148 @@ window.testHeapQueue = function(list1=[1, 8, -3, 11, 33]) {
   return list;
 };
 
+class Queue {
+  constructor(n=32) {
+    n = Math.max(n, 2);
+
+    this.initialSize = n;
+
+    this.queue = new Array(n);
+    this.a = 0;
+    this.b = 0;
+    this.length = 0;
+  }
+
+  enqueue(item) {
+    let qlen = this.queue.length;
+
+    let b = this.b;
+
+    this.queue[b] = item;
+    this.b = (this.b + 1) % qlen;
+
+    if (this.length >= qlen || this.a === this.b) {
+      let newsize = qlen<<1;
+      let queue = new Array(newsize);
+
+      for (let i=0; i<qlen; i++) {
+        let i2 = (i + this.a) % qlen;
+
+        queue[i] = this.queue[i2];
+      }
+
+      this.a = 0;
+      this.b = qlen;
+      this.queue = queue;
+    }
+
+    this.length++;
+  }
+
+  clear() {
+    this.queue.length = this.initialSize;
+
+    for (let i=0; i<this.queue.length; i++) {
+      this.queue[i] = undefined;
+    }
+
+    this.a = this.b = 0;
+    this.length = 0;
+
+    return this;
+  }
+
+  dequeue() {
+    if (this.length === 0) {
+      return undefined;
+    }
+    this.length--;
+
+    let ret = this.queue[this.a];
+    this.a = (this.a + 1) % this.queue.length;
+    return ret;
+  }
+}
+
+window._testQueue = function() {
+  let q = new Queue(2);
+
+  for (let i=0; i<15; i++) {
+    if (i === 1) {
+      window.console.log("i:", q.dequeue(), q.length);
+    }
+
+    q.enqueue(i);
+  }
+
+  window.console.log(q.queue.concat([]));
+
+  for (let i=0; i<15; i++) {
+    window.console.log("i:", q.dequeue(), q.length);
+  }
+
+  window.console.log(q.queue.concat([]));
+};
+
+
+class ArrayPool {
+  constructor() {
+    this.pools = new Map();
+    this.map = new Array(1024);
+  }
+
+  get(n, clear) {
+    let pool;
+
+    if (n < 1024) {
+      pool = this.map[n];
+    } else {
+      pool = this.pools.get(n);
+    }
+
+    if (!pool) {
+      let tot;
+
+      if (n > 512) {
+        tot = 32;
+      } else if (n > 256) {
+        tot = 64;
+      } else if (n > 128) {
+        tot = 256;
+      } else if (n > 64) {
+        tot = 512;
+      } else {
+        tot = 1024;
+      }
+
+      pool = new cachering(() => new Array(n), tot);
+      if (n < 1024) {
+        this.map[n] = pool;
+      }
+      this.pools.set(n, pool);
+
+      return this.get(n, clear);
+    }
+
+    let ret = pool.next();
+    if (ret.length !== n) {
+      console$1.warn("Array length was set", n, ret);
+      ret.length = n;
+    }
+
+    if (clear) {
+      for (let i = 0; i < n; i++) {
+        ret[i] = undefined;
+      }
+    }
+
+    return ret;
+  }
+}
+
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  isDenormal: isDenormal,
   termColorMap: termColorMap,
   termColor: termColor,
   termPrint: termPrint,
@@ -7661,22 +7663,24 @@ var util1 = /*#__PURE__*/Object.freeze({
   MapIter: MapIter,
   map: map,
   IDMap: IDMap,
-  MinHeapQueue: MinHeapQueue
+  MinHeapQueue: MinHeapQueue,
+  Queue: Queue,
+  ArrayPool: ArrayPool
 });
 
 const EulerOrders = {
-  XYZ : 0,
-  XZY : 1,
-  YXZ : 2,
-  YZX : 3,
-  ZXY : 4,
-  ZYX : 5
+  XYZ: 0,
+  XZY: 1,
+  YXZ: 2,
+  YZX: 3,
+  ZXY: 4,
+  ZYX: 5
 };
 
 /**
  * @param mode one of 'es', 'commonjs', 'rjs'
  */
-window.makeCompiledVectormathCode = function(mode="es") {
+window.makeCompiledVectormathCode = function (mode = "es") {
   let s = "";
   let es6exports = mode === "es";
 
@@ -7690,20 +7694,20 @@ window.makeCompiledVectormathCode = function(mode="es") {
 
   let classes = [Vector2, Vector3, Vector4, a];
   let lens = {
-    Vector2 : 2,
-    Vector3 : 3,
-    Vector4 : 4,
-    Quat    : 4
+    Vector2: 2,
+    Vector3: 3,
+    Vector4: 4,
+    Quat   : 4
   };
 
   let modecode = "";
 
   let nstructjscode = `
-  let g = typeof window != "undefined" ? window : "undefined";
+  let g = typeof window !== "undefined" ? window : "undefined";
   
-  g = g || (typeof global != "undefined" ? global : "undefined");
-  g = g || (typeof self != "undefined" ? self : "undefined");
-  g = g || (typeof globals != "undefined" ? globals : "undefined");
+  g = g || (typeof global !== "undefined" ? global : "undefined");
+  g = g || (typeof self !== "undefined" ? self : "undefined");
+  g = g || (typeof globals !== "undefined" ? globals : "undefined");
 
   if (typeof nstructjs === "undefined") {
     //add nstructjs stub
@@ -7801,7 +7805,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   
 `;
 
-  function indent(s, pad="  ") {
+  function indent(s, pad = "  ") {
     let l = s.split("\n");
     let s2 = "";
 
@@ -7837,13 +7841,13 @@ ${doExports("BaseVector")} class BaseVector extends Array {
       }
 
       if (v.endsWith(";}")) {
-        v = v.slice(0, v.length-1) + "\n  }\n";
+        v = v.slice(0, v.length - 1) + "\n  }\n";
       }
 
       let zero = "";
       let l = lens[cls.name];
 
-      for (let j=0; j<l; j++) {
+      for (let j = 0; j < l; j++) {
         if (j > 0) {
           zero += " = ";
         }
@@ -7854,16 +7858,16 @@ ${doExports("BaseVector")} class BaseVector extends Array {
 
       if (k === "constructor") {
         s += `  constructor(data) {
-    super();
+    super(${l});
         
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
 
-    this.length = ${l};
+    //this.length = ${l};
     ${zero};
 
-    if (data != undefined) {
+    if (data !== undefined) {
       this.load(data);
     }
   }
@@ -7881,7 +7885,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
     s += `nstructjs.register(${cls.name});\n\n`;
   }
 
-  s += "\n\n" + (""+internal_matrix).trim() + "\n";
+  s += "\n\n" + ("" + internal_matrix).trim() + "\n";
   s += "\n" + doExports("Matrix4") + Matrix4;
 
   s += `\n  Matrix4.STRUCT = \`${Matrix4.STRUCT}\`;\n`;
@@ -7924,50 +7928,49 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   return s;
 };
 
-var sin=Math.sin, cos=Math.cos, abs=Math.abs, log=Math.log,
-  asin=Math.asin, exp=Math.exp, acos=Math.acos, fract=Math.fract,
-  sign=Math.sign, tent=Math.tent, atan2=Math.atan2, atan=Math.atan,
-  pow=Math.pow, sqrt=Math.sqrt, floor=Math.floor, ceil=Math.ceil,
-  min=Math.min, max=Math.max, PI=Math.PI, E=2.718281828459045;
+var sin                                                          = Math.sin, cos                                          = Math.cos, abs                          = Math.abs, log = Math.log,
+    asin                                                         = Math.asin, exp                                        = Math.exp, acos = Math.acos, fract = Math.fract,
+    sign = Math.sign, tent = Math.tent, atan2 = Math.atan2, atan = Math.atan,
+    pow                                                          = Math.pow, sqrt = Math.sqrt, floor                      = Math.floor, ceil = Math.ceil,
+    min                                                          = Math.min, max = Math.max, PI = Math.PI, E = 2.718281828459045;
 
 var DOT_NORM_SNAP_LIMIT = 0.00000000001;
-var M_SQRT2=Math.sqrt(2.0);
-var FLT_EPSILON=2.22e-16;
+var M_SQRT2 = Math.sqrt(2.0);
+var FLT_EPSILON = 2.22e-16;
 
 var basic_funcs = {
-  equals  : [["b"], "this[X] == b[X]", "&&"],
+  equals   : [["b"], "this[X] === b[X]", "&&"],
   /*dot is made manually so it's safe for acos
   dot     : [["b"], "this[X]*b[X]", "+"],
    */
-  zero    : [[], "0.0;"],
-  negate  : [[], "-this[X];"],
-  combine : [["b", "u", "v"], "this[X]*u + this[X]*v;"],
-  interp  : [["b", "t"], "this[X] + (b[X] - this[X])*t;"],
-  add    : [["b"], "this[X] + b[X];"],
-  addFac : [["b", "F"], "this[X] + b[X]*F;"],
-  fract  : [[], "Math.fract(this[X]);"],
-  sub    : [["b"], "this[X] - b[X];"],
-  mul    : [["b"], "this[X] * b[X];"],
-  div    : [["b"], "this[X] / b[X];"],
-  mulScalar : [["b"], "this[X] * b;"],
-  divScalar : [["b"], "this[X] / b;"],
-  addScalar : [["b"], "this[X] + b;"],
-  subScalar : [["b"], "this[X] - b;"],
-  minScalar : [["b"], "Math.min(this[X], b);"],
-  maxScalar : [["b"], "Math.max(this[X], b);"],
-  ceil      : [[], "Math.ceil(this[X])"],
-  floor     : [[], "Math.floor(this[X])"],
-  abs       : [[], "Math.abs(this[X])"],
-  min       : [["b"], "Math.min(this[X], b[X])"],
-  max       : [["b"], "Math.max(this[X], b[X])"],
-  clamp     : [["MIN", "MAX"], "min(max(this[X], MAX), MIN)"],
+  zero     : [[], "0.0;"],
+  negate   : [[], "-this[X];"],
+  combine  : [["b", "u", "v"], "this[X]*u + this[X]*v;"],
+  interp   : [["b", "t"], "this[X] + (b[X] - this[X])*t;"],
+  add      : [["b"], "this[X] + b[X];"],
+  addFac   : [["b", "F"], "this[X] + b[X]*F;"],
+  fract    : [[], "Math.fract(this[X]);"],
+  sub      : [["b"], "this[X] - b[X];"],
+  mul      : [["b"], "this[X] * b[X];"],
+  div      : [["b"], "this[X] / b[X];"],
+  mulScalar: [["b"], "this[X] * b;"],
+  divScalar: [["b"], "this[X] / b;"],
+  addScalar: [["b"], "this[X] + b;"],
+  subScalar: [["b"], "this[X] - b;"],
+  minScalar: [["b"], "Math.min(this[X], b);"],
+  maxScalar: [["b"], "Math.max(this[X], b);"],
+  ceil     : [[], "Math.ceil(this[X])"],
+  floor    : [[], "Math.floor(this[X])"],
+  abs      : [[], "Math.abs(this[X])"],
+  min      : [["b"], "Math.min(this[X], b[X])"],
+  max      : [["b"], "Math.max(this[X], b[X])"],
+  clamp    : [["MIN", "MAX"], "min(max(this[X], MAX), MIN)"],
 };
 
 function bounded_acos(fac) {
-  if (fac<=-1.0)
+  if (fac <= -1.0)
     return Math.pi;
-  else
-  if (fac>=1.0)
+  else if (fac >= 1.0)
     return 0.0;
   else
     return Math.acos(fac);
@@ -7977,170 +7980,191 @@ function make_norm_safe_dot(cls) {
   var _dot = cls.prototype.dot;
 
   cls.prototype._dot = _dot;
-  cls.prototype.dot = function(b) {
+  cls.prototype.dot = function (b) {
     var ret = _dot.call(this, b);
 
-    if (ret >= 1.0-DOT_NORM_SNAP_LIMIT && ret <= 1.0+DOT_NORM_SNAP_LIMIT)
+    if (ret >= 1.0 - DOT_NORM_SNAP_LIMIT && ret <= 1.0 + DOT_NORM_SNAP_LIMIT)
       return 1.0;
-    if (ret >= -1.0-DOT_NORM_SNAP_LIMIT && ret <= -1.0+DOT_NORM_SNAP_LIMIT)
+    if (ret >= -1.0 - DOT_NORM_SNAP_LIMIT && ret <= -1.0 + DOT_NORM_SNAP_LIMIT)
       return -1.0;
 
     return ret;
   };
 }
 
-class BaseVector extends Array {
-  constructor() {
-    super();
+function getBaseVector(parent) {
+  return class BaseVector extends parent {
+    constructor() {
+      super(...arguments);
 
-    //this.xyzw = this.init_swizzle(4);
-    //this.xyz = this.init_swizzle(3);
-    //this.xy = this.init_swizzle(2);
-  }
-
-  copy() {
-    return new this.constructor(this);
-  }
-
-  load(data) {
-    throw new Error("Implement me!");
-  }
-
-  init_swizzle(size) {
-    var ret = {};
-    var cls = size == 4 ? Vector4 : (size == 3 ? Vector3 : Vector2);
-
-    for (var k in cls.prototype) {
-      var v = cls.prototype[k];
-      if (typeof v != "function" && !(v instanceof Function))
-        continue;
-
-      ret[k] = v.bind(this);
+      //this.xyzw = this.init_swizzle(4);
+      //this.xyz = this.init_swizzle(3);
+      //this.xy = this.init_swizzle(2);
     }
 
-    return ret;
-  }
+    static inherit(cls, vectorsize) {
+      make_norm_safe_dot(cls);
 
-  vectorLength() {
-    return sqrt(this.dot(this));
-  }
-
-  swapAxes(axis1, axis2) {
-    let t = this[axis1];
-    this[axis1] = this[axis2];
-    this[axis2] = t;
-
-    return this;
-  }
-
-  normalize() {
-    var l = this.vectorLength();
-    if (l > 0.00000001) {
-      this.mulScalar(1.0/l);
-    }
-
-    return this;
-  }
-  
-  static inherit(cls, vectorsize) {
-    make_norm_safe_dot(cls);
-
-    var f;
-
-    var vectorDotDistance = "f = function vectorDotDistance(b) {\n";
-    for (var i=0; i<vectorsize; i++) {
-      vectorDotDistance += "  let d"+i+" = this["+i+"]-b["+i+"];\n\n  ";
-    }
-
-    vectorDotDistance += "  return ";
-    for (var i=0; i<vectorsize; i++) {
-      if (i > 0)
-        vectorDotDistance += " + ";
-      vectorDotDistance += "d"+i+"*d"+i;
-    }
-    vectorDotDistance += ";\n";
-    vectorDotDistance += "};";
-    cls.prototype.vectorDotDistance = eval(vectorDotDistance);
-
-    var f;
-    var vectorDistance = "f = function vectorDistance(b) {\n";
-    for (var i=0; i<vectorsize; i++) {
-      vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
-      //vectorDistance += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
-    }
-
-    vectorDistance += "  return Math.sqrt(";
-    for (var i=0; i<vectorsize; i++) {
-      if (i > 0)
-        vectorDistance += " + ";
-      vectorDistance += "d"+i+"*d"+i;
-    }
-    vectorDistance += ");\n";
-    vectorDistance += "};";
-    cls.prototype.vectorDistance = eval(vectorDistance);
-
-    var vectorDistanceSqr = "f = function vectorDistanceSqr(b) {\n";
-    for (var i=0; i<vectorsize; i++) {
-      vectorDistanceSqr += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
-      //vectorDistanceSqr += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
-    }
-
-    vectorDistanceSqr += "  return (";
-    for (var i=0; i<vectorsize; i++) {
-      if (i > 0)
-        vectorDistanceSqr += " + ";
-      vectorDistanceSqr += "d"+i+"*d"+i;
-    }
-    vectorDistanceSqr += ");\n";
-    vectorDistanceSqr += "};";
-    cls.prototype.vectorDistanceSqr = eval(vectorDistanceSqr);
-
-
-    for (var k in basic_funcs) {
-      var func = basic_funcs[k];
-      var args = func[0];
-      var line = func[1];
       var f;
 
-      var code = "f = function " + k + "(";
-      for (var i=0; i<args.length; i++) {
+      var vectorDotDistance = "f = function vectorDotDistance(b) {\n";
+      for (var i = 0; i < vectorsize; i++) {
+        vectorDotDistance += "  let d" + i + " = this[" + i + "]-b[" + i + "];\n\n  ";
+      }
+
+      vectorDotDistance += "  return ";
+      for (var i = 0; i < vectorsize; i++) {
         if (i > 0)
-          code += ", ";
-
-        line = line.replace(args[i], args[i].toLowerCase());
-        code += args[i].toLowerCase();
+          vectorDotDistance += " + ";
+        vectorDotDistance += "d" + i + "*d" + i;
       }
-      code += ") {\n";
+      vectorDotDistance += ";\n";
+      vectorDotDistance += "};";
+      cls.prototype.vectorDotDistance = eval(vectorDotDistance);
 
-      if (func.length > 2) {
-        //make summation
-        code += "  return ";
+      var f;
+      var vectorDistance = "f = function vectorDistance(b) {\n";
+      for (var i = 0; i < vectorsize; i++) {
+        vectorDistance += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+        //vectorDistance += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
+      }
 
-        for (var i=0; i<vectorsize; i++) {
+      vectorDistance += "  return Math.sqrt(";
+      for (var i = 0; i < vectorsize; i++) {
+        if (i > 0)
+          vectorDistance += " + ";
+        vectorDistance += "d" + i + "*d" + i;
+      }
+      vectorDistance += ");\n";
+      vectorDistance += "};";
+      cls.prototype.vectorDistance = eval(vectorDistance);
+
+      var vectorDistanceSqr = "f = function vectorDistanceSqr(b) {\n";
+      for (var i = 0; i < vectorsize; i++) {
+        vectorDistanceSqr += `  let d${i} = this[${i}] - (b[${i}]||0);\n\n  `;
+        //vectorDistanceSqr += "  let d"+i+" = this["+i+"]-(b["+i+"]||0);\n\n  ";
+      }
+
+      vectorDistanceSqr += "  return (";
+      for (var i = 0; i < vectorsize; i++) {
+        if (i > 0)
+          vectorDistanceSqr += " + ";
+        vectorDistanceSqr += "d" + i + "*d" + i;
+      }
+      vectorDistanceSqr += ");\n";
+      vectorDistanceSqr += "};";
+      cls.prototype.vectorDistanceSqr = eval(vectorDistanceSqr);
+
+
+      for (var k in basic_funcs) {
+        var func = basic_funcs[k];
+        var args = func[0];
+        var line = func[1];
+        var f;
+
+        var code = "f = function " + k + "(";
+        for (var i = 0; i < args.length; i++) {
           if (i > 0)
-            code += func[2];
+            code += ", ";
 
-          code += "(" + line.replace(/X/g, ""+i) + ")";
+          line = line.replace(args[i], args[i].toLowerCase());
+          code += args[i].toLowerCase();
         }
-        code += ";\n";
-      } else {
-        for (var i = 0; i < vectorsize; i++) {
-          var line2 = line.replace(/X/g, "" + i);
-          code += "  this[" + i + "] = " + line2 + ";\n";
+        code += ") {\n";
+
+        if (func.length > 2) {
+          //make summation
+          code += "  return ";
+
+          for (var i = 0; i < vectorsize; i++) {
+            if (i > 0)
+              code += func[2];
+
+            code += "(" + line.replace(/X/g, "" + i) + ")";
+          }
+          code += ";\n";
+        } else {
+          for (var i = 0; i < vectorsize; i++) {
+            var line2 = line.replace(/X/g, "" + i);
+            code += "  this[" + i + "] = " + line2 + ";\n";
+          }
+          code += "  return this;\n";
         }
-        code += "  return this;\n";
+
+        code += "}\n";
+
+        //console.log(code);
+        var f = eval(code);
+
+        cls.prototype[k] = f;
+        //console.log(k, f);
+      }
+    }
+
+    copy() {
+      return new this.constructor(this);
+    }
+
+    load(data) {
+      throw new Error("Implement me!");
+    }
+
+    init_swizzle(size) {
+      var ret = {};
+      var cls = size === 4 ? Vector4 : (size === 3 ? Vector3 : Vector2);
+
+      for (var k in cls.prototype) {
+        var v = cls.prototype[k];
+        if (typeof v !== "function" && !(v instanceof Function))
+          continue;
+
+        ret[k] = v.bind(this);
       }
 
-      code += "}\n";
+      return ret;
+    }
 
-      //console.log(code);
-      var f = eval(code);
+    vectorLength() {
+      return sqrt(this.dot(this));
+    }
 
-      cls.prototype[k] = f;
-      //console.log(k, f);
+    swapAxes(axis1, axis2) {
+      let t = this[axis1];
+      this[axis1] = this[axis2];
+      this[axis2] = t;
+
+      return this;
+    }
+
+    normalize() {
+      /*
+      for (let i=0; i<this.length; i++) {
+        if (util.isDenormal(this[i])) {
+          console.error("Denormal error", i, this[i]);
+          this[i] = 0.0;
+        }
+      }
+      //*/
+
+      let l = this.vectorLength();
+
+      /*
+      if (util.isDenormal(l)) {
+        console.error("Denormal error", l);
+      }
+      //*/
+
+      if (l > 0.00000001) {
+        this.mulScalar(1.0/l);
+      }
+
+      return this;
     }
   }
 }
+
+const BaseVector = getBaseVector(Array);
+const F32BaseVector = getBaseVector(Float64Array);
 
 function myclamp(f, a, b) {
   return Math.min(Math.max(f, a), b);
@@ -8148,16 +8172,15 @@ function myclamp(f, a, b) {
 
 class Vector4 extends BaseVector {
   constructor(data) {
-    super();
+    super(4);
 
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
 
-    this.length = 4;
     this[0] = this[1] = this[2] = this[3] = 0.0;
 
-    if (data != undefined) {
+    if (data !== undefined) {
       this.load(data);
     }
   }
@@ -8188,7 +8211,7 @@ class Vector4 extends BaseVector {
   }
 
   load(data) {
-    if (data == undefined)
+    if (data === undefined)
       return this;
 
     this[0] = data[0];
@@ -8204,15 +8227,15 @@ class Vector4 extends BaseVector {
   }
 
   mulVecQuat(q) {
-    var t0=-this[1]*this[0]-this[2]*this[1]-this[3]*this[2];
-    var t1=this[0]*this[0]+this[2]*this[2]-this[3]*this[1];
-    var t2=this[0]*this[1]+this[3]*this[0]-this[1]*this[2];
-    this[2] = this[0]*this[2]+this[1]*this[1]-this[2]*this[0];
+    var t0 = -this[1]*this[0] - this[2]*this[1] - this[3]*this[2];
+    var t1 = this[0]*this[0] + this[2]*this[2] - this[3]*this[1];
+    var t2 = this[0]*this[1] + this[3]*this[0] - this[1]*this[2];
+    this[2] = this[0]*this[2] + this[1]*this[1] - this[2]*this[0];
     this[0] = t1;
     this[1] = t2;
-    t1 = t0*-this[1]+this[0]*this[0]-this[1]*this[3]+this[2]*this[2];
-    t2 = t0*-this[2]+this[1]*this[0]-this[2]*this[1]+this[0]*this[3];
-    this[2] = t0*-this[3]+this[2]*this[0]-this[0]*this[2]+this[1]*this[1];
+    t1 = t0* -this[1] + this[0]*this[0] - this[1]*this[3] + this[2]*this[2];
+    t2 = t0* -this[2] + this[1]*this[0] - this[2]*this[1] + this[0]*this[3];
+    this[2] = t0* -this[3] + this[2]*this[0] - this[0]*this[2] + this[1]*this[1];
     this[0] = t1;
     this[1] = t2;
 
@@ -8220,15 +8243,15 @@ class Vector4 extends BaseVector {
   }
 
   multVecMatrix(matrix) {
-    var x=this[0];
-    var y=this[1];
-    var z=this[2];
-    var w=this[3];
+    var x = this[0];
+    var y = this[1];
+    var z = this[2];
+    var w = this[3];
 
-    this[0] = w*matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21+z*matrix.$matrix.m31;
-    this[1] = w*matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22+z*matrix.$matrix.m32;
-    this[2] = w*matrix.$matrix.m43+x*matrix.$matrix.m13+y*matrix.$matrix.m23+z*matrix.$matrix.m33;
-    this[3] = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24+z*matrix.$matrix.m34;
+    this[0] = w*matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21 + z*matrix.$matrix.m31;
+    this[1] = w*matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22 + z*matrix.$matrix.m32;
+    this[2] = w*matrix.$matrix.m43 + x*matrix.$matrix.m13 + y*matrix.$matrix.m23 + z*matrix.$matrix.m33;
+    this[3] = w*matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24 + z*matrix.$matrix.m34;
 
     return this[3];
   }
@@ -8253,36 +8276,58 @@ class Vector4 extends BaseVector {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.load(this.vec);
-    delete this.vec;
+    if (typeof this.vec !== "undefined") {
+      this.load(this.vec);
+      delete this.vec;
+    }
   }
 };
 Vector4.STRUCT = `
 vec4 {
-  vec : array(float) | obj;
+  0 : float;
+  1 : float;
+  2 : float;
+  3 : float;
 }
 `;
 nstructjs.manager.add_class(Vector4);
 
 
-
 var _v3nd_n1_normalizedDot, _v3nd_n2_normalizedDot;
 var _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
 
-class Vector3 extends BaseVector {
+class Vector3 extends F32BaseVector {
   constructor(data) {
-    super();
+    super(3);
 
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
 
-    this.length = 3;
     this[0] = this[1] = this[2] = 0.0;
 
-    if (data != undefined) {
+    if (data !== undefined) {
       this.load(data);
     }
+
+    if (this.constructor === Vector3) {
+      Object.seal(this);
+    }
+  }
+
+  //normalizedDot4
+  static normalizedDot4(v1, v2, v3, v4) {
+    $_v3nd4_n1_normalizedDot4.load(v2).sub(v1).normalize();
+    $_v3nd4_n2_normalizedDot4.load(v4).sub(v3).normalize();
+
+    return $_v3nd4_n1_normalizedDot4.dot($_v3nd4_n2_normalizedDot4);
+  }
+
+  static normalizedDot3(v1, center, v2) {
+    $_v3nd4_n1_normalizedDot3.load(v1).sub(center).normalize();
+    $_v3nd4_n2_normalizedDot3.load(v2).sub(center).normalize();
+
+    return $_v3nd4_n1_normalizedDot3.dot($_v3nd4_n2_normalizedDot3);
   }
 
   toCSS() {
@@ -8315,8 +8360,12 @@ class Vector3 extends BaseVector {
   }
 
   load(data) {
-    if (data == undefined)
+    if (data === undefined)
       return this;
+
+    //if (isNaN(data[0]) || isNaN(data[1]) || isNaN(data[2])) {
+    //  throw new Error("NaN");
+    //}
 
     this[0] = data[0];
     this[1] = data[1];
@@ -8337,36 +8386,22 @@ class Vector3 extends BaseVector {
     return $_v3nd_n1_normalizedDot.dot($_v3nd_n2_normalizedDot);
   }
 
-  //normalizedDot4
-  static normalizedDot4(v1, v2, v3, v4) {
-    $_v3nd4_n1_normalizedDot4.load(v2).sub(v1).normalize();
-    $_v3nd4_n2_normalizedDot4.load(v4).sub(v3).normalize();
-
-    return $_v3nd4_n1_normalizedDot4.dot($_v3nd4_n2_normalizedDot4);
-  }
-
-  static normalizedDot3(v1, center, v2) {
-    $_v3nd4_n1_normalizedDot3.load(v1).sub(center).normalize();
-    $_v3nd4_n2_normalizedDot3.load(v2).sub(center).normalize();
-
-    return $_v3nd4_n1_normalizedDot3.dot($_v3nd4_n2_normalizedDot3);
-  }
-
   multVecMatrix(matrix, ignore_w) {
-    if (ignore_w==undefined) {
+    if (ignore_w === undefined) {
       ignore_w = false;
     }
-    var x=this[0];
-    var y=this[1];
-    var z=this[2];
-    this[0] = matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21+z*matrix.$matrix.m31;
-    this[1] = matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22+z*matrix.$matrix.m32;
-    this[2] = matrix.$matrix.m43+x*matrix.$matrix.m13+y*matrix.$matrix.m23+z*matrix.$matrix.m33;
-    var w=matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24+z*matrix.$matrix.m34;
-    if (!ignore_w&&w!=1&&w!=0&&matrix.isPersp) {
-      this[0]/=w;
-      this[1]/=w;
-      this[2]/=w;
+    var x = this[0];
+    var y = this[1];
+    var z = this[2];
+    this[0] = matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21 + z*matrix.$matrix.m31;
+    this[1] = matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22 + z*matrix.$matrix.m32;
+    this[2] = matrix.$matrix.m43 + x*matrix.$matrix.m13 + y*matrix.$matrix.m23 + z*matrix.$matrix.m33;
+    var w = matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24 + z*matrix.$matrix.m34;
+
+    if (!ignore_w && w !== 1 && w !== 0 && matrix.isPersp) {
+      this[0] /= w;
+      this[1] /= w;
+      this[2] /= w;
     }
     return w;
   }
@@ -8388,12 +8423,12 @@ class Vector3 extends BaseVector {
     var x = this[0];
     var y = this[1];
 
-    if (axis == 1) {
-      this[0] = x * cos(A) + y*sin(A);
-      this[1] = y * cos(A) - x*sin(A);
+    if (axis === 1) {
+      this[0] = x*cos(A) + y*sin(A);
+      this[1] = y*cos(A) - x*sin(A);
     } else {
-      this[0] = x * cos(A) - y*sin(A);
-      this[1] = y * cos(A) + x*sin(A);
+      this[0] = x*cos(A) - y*sin(A);
+      this[1] = y*cos(A) + x*sin(A);
     }
 
     return this;
@@ -8407,26 +8442,30 @@ class Vector3 extends BaseVector {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.load(this.vec);
-    delete this.vec;
+    if (typeof this.vec !== "undefined") {
+      this.load(this.vec);
+      delete this.vec;
+    }
   }
 }
+
 Vector3.STRUCT = `
 vec3 {
-  vec : array(float) | obj;
+  0 : float;
+  1 : float;
+  2 : float;
 }
 `;
 nstructjs.manager.add_class(Vector3);
 
 class Vector2 extends BaseVector {
   constructor(data) {
-    super();
+    super(2);
 
     if (arguments.length > 1) {
       throw new Error("unexpected argument");
     }
 
-    this.length = 2;
     this[0] = this[1] = 0.0;
 
     if (data !== undefined) {
@@ -8470,7 +8509,7 @@ class Vector2 extends BaseVector {
   }
 
   load(data) {
-    if (data == undefined)
+    if (data === undefined)
       return this;
 
     this[0] = data[0];
@@ -8484,12 +8523,12 @@ class Vector2 extends BaseVector {
     var x = this[0];
     var y = this[1];
 
-    if (axis == 1) {
-      this[0] = x * cos(A) + y*sin(A);
-      this[1] = y * cos(A) - x*sin(A);
+    if (axis === 1) {
+      this[0] = x*cos(A) + y*sin(A);
+      this[1] = y*cos(A) - x*sin(A);
     } else {
-      this[0] = x * cos(A) - y*sin(A);
-      this[1] = y * cos(A) + x*sin(A);
+      this[0] = x*cos(A) - y*sin(A);
+      this[1] = y*cos(A) + x*sin(A);
     }
 
     return this;
@@ -8500,18 +8539,18 @@ class Vector2 extends BaseVector {
   }
 
   multVecMatrix(matrix) {
-    var x=this[0];
-    var y=this[1];
+    var x = this[0];
+    var y = this[1];
 
     var w = 1.0;
 
-    this[0] = w*matrix.$matrix.m41+x*matrix.$matrix.m11+y*matrix.$matrix.m21;
-    this[1] = w*matrix.$matrix.m42+x*matrix.$matrix.m12+y*matrix.$matrix.m22;
+    this[0] = w*matrix.$matrix.m41 + x*matrix.$matrix.m11 + y*matrix.$matrix.m21;
+    this[1] = w*matrix.$matrix.m42 + x*matrix.$matrix.m12 + y*matrix.$matrix.m22;
 
     if (matrix.isPersp) {
-      let w2 = w*matrix.$matrix.m44+x*matrix.$matrix.m14+y*matrix.$matrix.m24;
+      let w2 = w*matrix.$matrix.m44 + x*matrix.$matrix.m14 + y*matrix.$matrix.m24;
 
-      if (w2 !== 0.0) {
+      if (w2  !==  0.0) {
         this[0] /= w2;
         this[1] /= w2;
       }
@@ -8524,18 +8563,18 @@ class Vector2 extends BaseVector {
     let w = 1.0;
     let z = 0.0;
 
-    var t0=-this[1]*this[0]-z*this[1]-w*z;
-    var t1=this[0]*this[0]+z*z-w*this[1];
-    var t2=this[0]*this[1]+w*this[0]-this[1]*z;
+    var t0 = -this[1]*this[0] - z*this[1] - w*z;
+    var t1 = this[0]*this[0] + z*z - w*this[1];
+    var t2 = this[0]*this[1] + w*this[0] - this[1]*z;
 
-    z = this[0]*z+this[1]*this[1]-z*this[0];
+    z = this[0]*z + this[1]*this[1] - z*this[0];
 
     this[0] = t1;
     this[1] = t2;
 
-    t1 = t0*-this[1]+this[0]*this[0]-this[1]*w+z*z;
-    t2 = t0*-z+this[1]*this[0]-z*this[1]+this[0]*w;
-    z = t0*-w+z*this[0]-this[0]*z+this[1]*this[1];
+    t1 = t0* -this[1] + this[0]*this[0] - this[1]*w + z*z;
+    t2 = t0* -z + this[1]*this[0] - z*this[1] + this[0]*w;
+    z = t0* -w + z*this[0] - this[0]*z + this[1]*this[1];
 
     this[0] = t1;
     this[1] = t2;
@@ -8543,16 +8582,23 @@ class Vector2 extends BaseVector {
     return this;
   }
 
+  vectorLengthSqr() {
+    return this.dot(this);
+  }
+
   loadSTRUCT(reader) {
     reader(this);
 
-    this.load(this.vec);
-    delete this.vec;
+    if (typeof this.vec !== undefined) {
+      this.load(this.vec);
+      delete this.vec;
+    }
   }
 };
 Vector2.STRUCT = `
 vec2 {
-  vec : array(float) | obj;
+  0 : float;
+  1 : float;
 }
 `;
 nstructjs.manager.add_class(Vector2);
@@ -8566,14 +8612,14 @@ class Quat extends Vector4 {
   }
 
   isZero() {
-    return (this[0]==0&&this[1]==0&&this[2]==0&&this[3]==0);
+    return (this[0] === 0 && this[1] === 0 && this[2] === 0 && this[3] === 0);
   }
 
   mulQuat(qt) {
-    var a=this[0]*qt[0]-this[1]*qt[1]-this[2]*qt[2]-this[3]*qt[3];
-    var b=this[0]*qt[1]+this[1]*qt[0]+this[2]*qt[3]-this[3]*qt[2];
-    var c=this[0]*qt[2]+this[2]*qt[0]+this[3]*qt[1]-this[1]*qt[3];
-    this[3] = this[0]*qt[3]+this[3]*qt[0]+this[1]*qt[2]-this[2]*qt[1];
+    var a = this[0]*qt[0] - this[1]*qt[1] - this[2]*qt[2] - this[3]*qt[3];
+    var b = this[0]*qt[1] + this[1]*qt[0] + this[2]*qt[3] - this[3]*qt[2];
+    var c = this[0]*qt[2] + this[2]*qt[0] + this[3]*qt[1] - this[1]*qt[3];
+    this[3] = this[0]*qt[3] + this[3]*qt[0] + this[1]*qt[2] - this[2]*qt[1];
     this[0] = a;
     this[1] = b;
     this[2] = c;
@@ -8586,13 +8632,13 @@ class Quat extends Vector4 {
   }
 
   dotWithQuat(q2) {
-    return this[0]*q2[0]+this[1]*q2[1]+this[2]*q2[2]+this[3]*q2[3];
+    return this[0]*q2[0] + this[1]*q2[1] + this[2]*q2[2] + this[3]*q2[3];
   }
 
   invert() {
-    var f= this.dot(this);
+    var f = this.dot(this);
 
-    if (f==0.0)
+    if (f === 0.0)
       return;
 
     conjugate_qt(q);
@@ -8600,7 +8646,7 @@ class Quat extends Vector4 {
   }
 
   sub(q2) {
-    var nq2=new Quat();
+    var nq2 = new Quat();
 
     nq2[0] = -q2[0];
     nq2[1] = q2[1];
@@ -8611,13 +8657,13 @@ class Quat extends Vector4 {
   }
 
   mulScalarWithFactor(fac) {
-    var angle=fac*bounded_acos(this[0]);
-    var co=Math.cos(angle);
-    var si=Math.sin(angle);
+    var angle = fac*bounded_acos(this[0]);
+    var co = Math.cos(angle);
+    var si = Math.sin(angle);
 
     this[0] = co;
 
-    var last3=Vector3([this[1], this[2], this[3]]);
+    var last3 = Vector3([this[1], this[2], this[3]]);
     last3.normalize();
     last3.mulScalar(si);
     this[1] = last3[0];
@@ -8627,34 +8673,34 @@ class Quat extends Vector4 {
   }
 
   toMatrix(m) {
-    if (m == undefined) {
-      m=new Matrix4();
+    if (m === undefined) {
+      m = new Matrix4();
     }
 
-    var q0=M_SQRT2*this[0];
-    var q1=M_SQRT2*this[1];
-    var q2=M_SQRT2*this[2];
-    var q3=M_SQRT2*this[3];
-    var qda=q0*q1;
-    var qdb=q0*q2;
-    var qdc=q0*q3;
-    var qaa=q1*q1;
-    var qab=q1*q2;
-    var qac=q1*q3;
-    var qbb=q2*q2;
-    var qbc=q2*q3;
-    var qcc=q3*q3;
-    m.$matrix.m11 = (1.0-qbb-qcc);
-    m.$matrix.m12 = (qdc+qab);
-    m.$matrix.m13 = (-qdb+qac);
+    var q0 = M_SQRT2*this[0];
+    var q1 = M_SQRT2*this[1];
+    var q2 = M_SQRT2*this[2];
+    var q3 = M_SQRT2*this[3];
+    var qda = q0*q1;
+    var qdb = q0*q2;
+    var qdc = q0*q3;
+    var qaa = q1*q1;
+    var qab = q1*q2;
+    var qac = q1*q3;
+    var qbb = q2*q2;
+    var qbc = q2*q3;
+    var qcc = q3*q3;
+    m.$matrix.m11 = (1.0 - qbb - qcc);
+    m.$matrix.m12 = (qdc + qab);
+    m.$matrix.m13 = (-qdb + qac);
     m.$matrix.m14 = 0.0;
-    m.$matrix.m21 = (-qdc+qab);
-    m.$matrix.m22 = (1.0-qaa-qcc);
-    m.$matrix.m23 = (qda+qbc);
+    m.$matrix.m21 = (-qdc + qab);
+    m.$matrix.m22 = (1.0 - qaa - qcc);
+    m.$matrix.m23 = (qda + qbc);
     m.$matrix.m24 = 0.0;
-    m.$matrix.m31 = (qdb+qac);
-    m.$matrix.m32 = (-qda+qbc);
-    m.$matrix.m33 = (1.0-qaa-qbb);
+    m.$matrix.m31 = (qdb + qac);
+    m.$matrix.m32 = (-qda + qbc);
+    m.$matrix.m33 = (1.0 - qaa - qbb);
     m.$matrix.m34 = 0.0;
     m.$matrix.m41 = m.$matrix.m42 = m.$matrix.m43 = 0.0;
     m.$matrix.m44 = 1.0;
@@ -8663,14 +8709,14 @@ class Quat extends Vector4 {
   }
 
   matrixToQuat(wmat) {
-    var mat=new Matrix4(wmat);
+    var mat = new Matrix4(wmat);
 
     mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
     mat.$matrix.m44 = 1.0;
 
-    var r1=new Vector3([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
-    var r2=new Vector3([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
-    var r3=new Vector3([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
+    var r1 = new Vector3([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
+    var r2 = new Vector3([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
+    var r3 = new Vector3([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
 
     r1.normalize();
     r2.normalize();
@@ -8685,53 +8731,48 @@ class Quat extends Vector4 {
     mat.$matrix.m31 = r3[0];
     mat.$matrix.m32 = r3[1];
     mat.$matrix.m33 = r3[2];
-    var tr=0.25*(1.0+mat.$matrix.m11+mat.$matrix.m22+mat.$matrix.m33);
-    var s=0;
-    if (tr>FLT_EPSILON) {
+    var tr = 0.25*(1.0 + mat.$matrix.m11 + mat.$matrix.m22 + mat.$matrix.m33);
+    var s = 0;
+    if (tr > FLT_EPSILON) {
       s = Math.sqrt(tr);
       this[0] = s;
       s = 1.0/(4.0*s);
-      this[1] = ((mat.$matrix.m23-mat.$matrix.m32)*s);
-      this[2] = ((mat.$matrix.m31-mat.$matrix.m13)*s);
-      this[3] = ((mat.$matrix.m12-mat.$matrix.m21)*s);
-    }
-    else {
-      if (mat.$matrix.m11>mat.$matrix.m22&&mat.$matrix.m11>mat.$matrix.m33) {
-        s = 2.0*Math.sqrt(1.0+mat.$matrix.m11-mat.$matrix.m22-mat.$matrix.m33);
+      this[1] = ((mat.$matrix.m23 - mat.$matrix.m32)*s);
+      this[2] = ((mat.$matrix.m31 - mat.$matrix.m13)*s);
+      this[3] = ((mat.$matrix.m12 - mat.$matrix.m21)*s);
+    } else {
+      if (mat.$matrix.m11 > mat.$matrix.m22 && mat.$matrix.m11 > mat.$matrix.m33) {
+        s = 2.0*Math.sqrt(1.0 + mat.$matrix.m11 - mat.$matrix.m22 - mat.$matrix.m33);
         this[1] = (0.25*s);
         s = 1.0/s;
-        this[0] = ((mat.$matrix.m32-mat.$matrix.m23)*s);
-        this[2] = ((mat.$matrix.m21+mat.$matrix.m12)*s);
-        this[3] = ((mat.$matrix.m31+mat.$matrix.m13)*s);
-      }
-      else
-      if (mat.$matrix.m22>mat.$matrix.m33) {
-        s = 2.0*Math.sqrt(1.0+mat.$matrix.m22-mat.$matrix.m11-mat.$matrix.m33);
+        this[0] = ((mat.$matrix.m32 - mat.$matrix.m23)*s);
+        this[2] = ((mat.$matrix.m21 + mat.$matrix.m12)*s);
+        this[3] = ((mat.$matrix.m31 + mat.$matrix.m13)*s);
+      } else if (mat.$matrix.m22 > mat.$matrix.m33) {
+        s = 2.0*Math.sqrt(1.0 + mat.$matrix.m22 - mat.$matrix.m11 - mat.$matrix.m33);
         this[2] = (0.25*s);
         s = 1.0/s;
-        this[0] = ((mat.$matrix.m31-mat.$matrix.m13)*s);
-        this[1] = ((mat.$matrix.m21+mat.$matrix.m12)*s);
-        this[3] = ((mat.$matrix.m32+mat.$matrix.m23)*s);
-      }
-      else {
-        s = 2.0*Math.sqrt(1.0+mat.$matrix.m33-mat.$matrix.m11-mat.$matrix.m22);
+        this[0] = ((mat.$matrix.m31 - mat.$matrix.m13)*s);
+        this[1] = ((mat.$matrix.m21 + mat.$matrix.m12)*s);
+        this[3] = ((mat.$matrix.m32 + mat.$matrix.m23)*s);
+      } else {
+        s = 2.0*Math.sqrt(1.0 + mat.$matrix.m33 - mat.$matrix.m11 - mat.$matrix.m22);
         this[3] = (0.25*s);
         s = 1.0/s;
-        this[0] = ((mat.$matrix.m21-mat.$matrix.m12)*s);
-        this[1] = ((mat.$matrix.m31+mat.$matrix.m13)*s);
-        this[2] = ((mat.$matrix.m32+mat.$matrix.m23)*s);
+        this[0] = ((mat.$matrix.m21 - mat.$matrix.m12)*s);
+        this[1] = ((mat.$matrix.m31 + mat.$matrix.m13)*s);
+        this[2] = ((mat.$matrix.m32 + mat.$matrix.m23)*s);
       }
     }
     this.normalize();
   }
 
   normalize() {
-    var len=Math.sqrt(this.dot(this));
+    var len = Math.sqrt(this.dot(this));
 
-    if (len!=0.0) {
+    if (len !== 0.0) {
       this.mulScalar(1.0/len);
-    }
-    else {
+    } else {
       this[1] = 1.0;
       this[0] = this[2] = this[3] = 0.0;
     }
@@ -8742,9 +8783,9 @@ class Quat extends Vector4 {
     let nor = _quat_vs3_temps.next().load(axis);
     nor.normalize();
 
-    if (nor.dot(nor) != 0.0) {
-      var phi=angle/2.0;
-      var si=Math.sin(phi);
+    if (nor.dot(nor) !== 0.0) {
+      var phi = angle/2.0;
+      var si = Math.sin(phi);
       this[0] = Math.cos(phi);
       this[1] = nor[0]*si;
       this[2] = nor[1]*si;
@@ -8756,7 +8797,7 @@ class Quat extends Vector4 {
     return this;
   }
 
-  rotationBetweenVecs(v1, v2, fac=1.0) {
+  rotationBetweenVecs(v1, v2, fac = 1.0) {
     v1 = new Vector3(v1);
     v2 = new Vector3(v2);
     v1.normalize();
@@ -8767,7 +8808,7 @@ class Quat extends Vector4 {
       return this;
     }
 
-    let axis=new Vector3(v1);
+    let axis = new Vector3(v1);
     axis.cross(v2);
 
     let angle = v1.preNormalizedAngle(v2)*fac;
@@ -8778,16 +8819,15 @@ class Quat extends Vector4 {
   }
 
   quatInterp(quat2, t) {
-    let quat=new Quat();
-    let cosom=this[0]*quat2[0]+this[1]*quat2[1]+this[2]*quat2[2]+this[3]*quat2[3];
-    if (cosom<0.0) {
+    let quat = new Quat();
+    let cosom = this[0]*quat2[0] + this[1]*quat2[1] + this[2]*quat2[2] + this[3]*quat2[3];
+    if (cosom < 0.0) {
       cosom = -cosom;
       quat[0] = -this[0];
       quat[1] = -this[1];
       quat[2] = -this[2];
       quat[3] = -this[3];
-    }
-    else {
+    } else {
       quat[0] = this[0];
       quat[1] = this[1];
       quat[2] = this[2];
@@ -8795,38 +8835,28 @@ class Quat extends Vector4 {
     }
 
     let omega, sinom, sc1, sc2;
-    if ((1.0-cosom)>0.0001) {
+    if ((1.0 - cosom) > 0.0001) {
       omega = Math.acos(cosom);
       sinom = Math.sin(omega);
-      sc1 = Math.sin((1.0-t)*omega)/sinom;
+      sc1 = Math.sin((1.0 - t)*omega)/sinom;
       sc2 = Math.sin(t*omega)/sinom;
-    }
-    else {
-      sc1 = 1.0-t;
+    } else {
+      sc1 = 1.0 - t;
       sc2 = t;
     }
-    this[0] = sc1*quat[0]+sc2*quat2[0];
-    this[1] = sc1*quat[1]+sc2*quat2[1];
-    this[2] = sc1*quat[2]+sc2*quat2[2];
-    this[3] = sc1*quat[3]+sc2*quat2[3];
+    this[0] = sc1*quat[0] + sc2*quat2[0];
+    this[1] = sc1*quat[1] + sc2*quat2[1];
+    this[2] = sc1*quat[2] + sc2*quat2[2];
+    this[3] = sc1*quat[3] + sc2*quat2[3];
 
     return this;
   }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    this.load(this.vec);
-    delete this.vec;
-  }
 };
 
-Quat.STRUCT = `
-quat {
-  vec : array(float) | obj;
+Quat.STRUCT = nstructjs.inherit(Quat, Vector4, 'quat') + `
 }
 `;
-nstructjs.manager.add_class(Quat);
+nstructjs.register(Quat);
 
 _v3nd4_n1_normalizedDot4 = new Vector3();
 _v3nd4_n2_normalizedDot4 = new Vector3();
@@ -8834,7 +8864,7 @@ _v3nd_n1_normalizedDot = new Vector3();
 _v3nd_n2_normalizedDot = new Vector3();
 
 BaseVector.inherit(Vector4, 4);
-BaseVector.inherit(Vector3, 3);
+F32BaseVector.inherit(Vector3, 3);
 BaseVector.inherit(Vector2, 2);
 
 lookat_cache_vs3 = cachering.fromConstructor(Vector3, 64);
@@ -8848,8 +8878,8 @@ var $_v3nd4_n2_normalizedDot4 = new Vector3();
 var $_v3nd4_n1_normalizedDot3 = new Vector3();
 var $_v3nd4_n2_normalizedDot3 = new Vector3();
 
-var M_SQRT2=Math.sqrt(2.0);
-var FLT_EPSILON=2.22e-16;
+var M_SQRT2 = Math.sqrt(2.0);
+var FLT_EPSILON = 2.22e-16;
 
 class internal_matrix {
   constructor() {
@@ -8890,6 +8920,13 @@ class Matrix4 {
         this.load(m);
       }
     }
+  }
+
+  static fromJSON() {
+    var mat = new Matrix4();
+    mat.load(json.items);
+    mat.isPersp = json.isPersp;
+    return mat;
   }
 
   clone() {
@@ -9040,7 +9077,7 @@ class Matrix4 {
   }
 
   load() {
-    if (arguments.length==1&&typeof arguments[0]=='object') {
+    if (arguments.length === 1 && typeof arguments[0] === 'object') {
       var matrix;
       if (arguments[0] instanceof Matrix4) {
         matrix = arguments[0].$matrix;
@@ -9062,10 +9099,9 @@ class Matrix4 {
         this.$matrix.m43 = matrix.m43;
         this.$matrix.m44 = matrix.m44;
         return this;
-      }
-      else
+      } else
         matrix = arguments[0];
-      if ("length" in matrix&&matrix.length>=16) {
+      if ("length" in matrix && matrix.length >= 16) {
         this.$matrix.m11 = matrix[0];
         this.$matrix.m12 = matrix[1];
         this.$matrix.m13 = matrix[2];
@@ -9095,15 +9131,10 @@ class Matrix4 {
     return {isPersp: this.isPersp, items: this.getAsArray()}
   }
 
-  static fromJSON() {
-    var mat=new Matrix4();
-    mat.load(json.items);
-    mat.isPersp = json.isPersp;
-    return mat;
-  }
-
   getAsArray() {
-    return [this.$matrix.m11, this.$matrix.m12, this.$matrix.m13, this.$matrix.m14, this.$matrix.m21, this.$matrix.m22, this.$matrix.m23, this.$matrix.m24, this.$matrix.m31, this.$matrix.m32, this.$matrix.m33, this.$matrix.m34, this.$matrix.m41, this.$matrix.m42, this.$matrix.m43, this.$matrix.m44];
+    return [this.$matrix.m11, this.$matrix.m12, this.$matrix.m13, this.$matrix.m14, this.$matrix.m21, this.$matrix.m22,
+            this.$matrix.m23, this.$matrix.m24, this.$matrix.m31, this.$matrix.m32, this.$matrix.m33, this.$matrix.m34,
+            this.$matrix.m41, this.$matrix.m42, this.$matrix.m43, this.$matrix.m44];
   }
 
   getAsFloat32Array() {
@@ -9111,7 +9142,7 @@ class Matrix4 {
   }
 
   setUniform(ctx, loc, transpose) {
-    if (Matrix4.setUniformArray==undefined) {
+    if (Matrix4.setUniformArray === undefined) {
       Matrix4.setUniformWebGLArray = new Float32Array(16);
       Matrix4.setUniformArray = new Array(16);
     }
@@ -9165,7 +9196,7 @@ class Matrix4 {
   }
 
   transpose() {
-    var tmp=this.$matrix.m12;
+    var tmp = this.$matrix.m12;
     this.$matrix.m12 = this.$matrix.m21;
     this.$matrix.m21 = tmp;
     tmp = this.$matrix.m13;
@@ -9192,9 +9223,9 @@ class Matrix4 {
   }
 
   invert() {
-    var det=this._determinant4x4();
+    var det = this._determinant4x4();
 
-    if (Math.abs(det)<1e-08)
+    if (Math.abs(det) < 1e-08)
       return null;
 
     this._makeAdjoint();
@@ -9220,10 +9251,12 @@ class Matrix4 {
   }
 
   translate(x, y, z) {
-    if (typeof x == 'object' && "length" in x) {
+    if (typeof x === 'object' && "length" in x) {
       var t = x;
 
-      x = t[0]; y = t[1]; z = t[2];
+      x = t[0];
+      y = t[1];
+      z = t[2];
     }
 
     x = x === undefined ? 0 : x;
@@ -9241,10 +9274,12 @@ class Matrix4 {
   }
 
   preTranslate(x, y, z) {
-    if (typeof x == 'object' && "length" in x) {
+    if (typeof x === 'object' && "length" in x) {
       var t = x;
 
-      x = t[0]; y = t[1]; z = t[2];
+      x = t[0];
+      y = t[1];
+      z = t[2];
     }
 
     x = x === undefined ? 0 : x;
@@ -9261,30 +9296,30 @@ class Matrix4 {
     return this;
   }
 
-  scale(x, y, z, w=1.0) {
-    if (typeof x=='object'&&"length" in x) {
-      var t=x;
+  scale(x, y, z, w = 1.0) {
+    if (typeof x === 'object' && "length" in x) {
+      var t = x;
       x = t[0];
       y = t[1];
       z = t[2];
     } else {
-      if (x===undefined)
+      if (x === undefined)
         x = 1;
 
-      if (z===undefined) {
-        if (y===undefined) {
+      if (z === undefined) {
+        if (y === undefined) {
           y = x;
           z = x;
         } else {
           z = x;
         }
-      } else if (y===undefined) {
+      } else if (y === undefined) {
         y = x;
       }
     }
 
 
-    var matrix=new Matrix4();
+    var matrix = new Matrix4();
     matrix.$matrix.m11 = x;
     matrix.$matrix.m22 = y;
     matrix.$matrix.m33 = z;
@@ -9293,7 +9328,7 @@ class Matrix4 {
     return this
   }
 
-  preScale(x, y, z, w=1.0) {
+  preScale(x, y, z, w = 1.0) {
     let mat = new Matrix4();
     mat.scale(x, y, z, w);
 
@@ -9383,7 +9418,7 @@ class Matrix4 {
 
   */
 
-  euler_rotate_order(x, y, z, order=EulerOrders.XYZ) {
+  euler_rotate_order(x, y, z, order = EulerOrders.XYZ) {
     if (y === undefined) {
       y = 0.0;
     }
@@ -9400,22 +9435,30 @@ class Matrix4 {
 
     let c = Math.cos(x), s = Math.sin(x);
 
-    m.m22 =  c;  m.m23 = s;
-    m.m32 = -s;  m.m33 = c;
+    m.m22 = c;
+    m.m23 = s;
+    m.m32 = -s;
+    m.m33 = c;
 
     let ymat = new Matrix4();
-    c = Math.cos(y); s = Math.sin(y);
+    c = Math.cos(y);
+    s = Math.sin(y);
     m = ymat.$matrix;
 
-    m.m11 = c;  m.m13 = -s;
-    m.m31 = s;  m.m33 =  c;
+    m.m11 = c;
+    m.m13 = -s;
+    m.m31 = s;
+    m.m33 = c;
 
     let zmat = new Matrix4();
-    c = Math.cos(z); s = Math.sin(z);
+    c = Math.cos(z);
+    s = Math.sin(z);
     m = zmat.$matrix;
 
-    m.m11 = c;  m.m12 = s;
-    m.m21 =-s;  m.m22 = c;
+    m.m11 = c;
+    m.m12 = s;
+    m.m21 = -s;
+    m.m22 = c;
 
     let a, b;
 
@@ -9474,24 +9517,32 @@ class Matrix4 {
 
     var c = Math.cos(x), s = Math.sin(x);
 
-    m.m22 =  c;  m.m23 = s;
-    m.m32 = -s;  m.m33 = c;
+    m.m22 = c;
+    m.m23 = s;
+    m.m32 = -s;
+    m.m33 = c;
 
     var ymat = new Matrix4();
-    c = Math.cos(y); s = Math.sin(y);
+    c = Math.cos(y);
+    s = Math.sin(y);
     var m = ymat.$matrix;
 
-    m.m11 = c;  m.m13 = -s;
-    m.m31 = s;  m.m33 =  c;
+    m.m11 = c;
+    m.m13 = -s;
+    m.m31 = s;
+    m.m33 = c;
 
     ymat.multiply(xmat);
 
     var zmat = new Matrix4();
-    c = Math.cos(z); s = Math.sin(z);
+    c = Math.cos(z);
+    s = Math.sin(z);
     var m = zmat.$matrix;
 
-    m.m11 = c;  m.m12 = s;
-    m.m21 =-s;  m.m22 = c;
+    m.m11 = c;
+    m.m12 = s;
+    m.m21 = -s;
+    m.m22 = c;
 
     zmat.multiply(ymat);
 
@@ -9509,67 +9560,69 @@ class Matrix4 {
     function dec(d) {
       var ret = d.toFixed(3);
 
-      if (ret[0] != "-") //make room for negative signs
+      if (ret[0] !== "-") //make room for negative signs
         ret = " " + ret;
       return ret
     }
 
-    s  = dec(m.m11) +", " + dec(m.m12) + ", " + dec(m.m13) + ", " + dec(m.m14) + "\n";
-    s += dec(m.m21) +", " + dec(m.m22) + ", " + dec(m.m23) + ", " + dec(m.m24) + "\n";
-    s += dec(m.m31) +", " + dec(m.m32) + ", " + dec(m.m33) + ", " + dec(m.m34) + "\n";
-    s += dec(m.m41) +", " + dec(m.m42) + ", " + dec(m.m43) + ", " + dec(m.m44) + "\n";
+    s = dec(m.m11) + ", " + dec(m.m12) + ", " + dec(m.m13) + ", " + dec(m.m14) + "\n";
+    s += dec(m.m21) + ", " + dec(m.m22) + ", " + dec(m.m23) + ", " + dec(m.m24) + "\n";
+    s += dec(m.m31) + ", " + dec(m.m32) + ", " + dec(m.m33) + ", " + dec(m.m34) + "\n";
+    s += dec(m.m41) + ", " + dec(m.m42) + ", " + dec(m.m43) + ", " + dec(m.m44) + "\n";
 
     return s
   }
 
   rotate(angle, x, y, z) {
-    if (typeof x=='object'&&"length" in x) {
-      var t=x;
-      x = t[0]; y = t[1]; z = t[2];
+    if (typeof x === 'object' && "length" in x) {
+      var t = x;
+      x = t[0];
+      y = t[1];
+      z = t[2];
     } else {
-      if (arguments.length==1) {
+      if (arguments.length === 1) {
         x = y = 0;
         z = 1;
-      } else if (arguments.length==3) {
+      } else if (arguments.length === 3) {
         this.rotate(angle, 1, 0, 0);
         this.rotate(x, 0, 1, 0);
         this.rotate(y, 0, 0, 1);
-        return ;
+        return;
       }
     }
 
-    angle/=2;
-    var sinA=Math.sin(angle);
-    var cosA=Math.cos(angle);
-    var sinA2=sinA*sinA;
-    var len=Math.sqrt(x*x+y*y+z*z);
+    angle /= 2;
+    var sinA = Math.sin(angle);
+    var cosA = Math.cos(angle);
+    var sinA2 = sinA*sinA;
+    var len = Math.sqrt(x*x + y*y + z*z);
 
-    if (len==0) {
+    if (len === 0) {
       x = 0;
       y = 0;
       z = 1;
-    } else if (len!=1) {
-      x/=len;
-      y/=len;
-      z/=len;
+    } else if (len !== 1) {
+      x /= len;
+      y /= len;
+      z /= len;
     }
 
-    var mat=new Matrix4();
-    if (x==1&&y==0&&z==0) {
+    var mat = new Matrix4();
+    if (x === 1 && y === 0 && z === 0) {
       mat.$matrix.m11 = 1;
       mat.$matrix.m12 = 0;
       mat.$matrix.m13 = 0;
       mat.$matrix.m21 = 0;
-      mat.$matrix.m22 = 1-2*sinA2;
+      mat.$matrix.m22 = 1 - 2*sinA2;
       mat.$matrix.m23 = 2*sinA*cosA;
       mat.$matrix.m31 = 0;
       mat.$matrix.m32 = -2*sinA*cosA;
-      mat.$matrix.m33 = 1-2*sinA2;
+      mat.$matrix.m33 = 1 - 2*sinA2;
       mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
       mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
       mat.$matrix.m44 = 1;
-    } else if (x==0&&y==1&&z==0) {
-      mat.$matrix.m11 = 1-2*sinA2;
+    } else if (x === 0 && y === 1 && z === 0) {
+      mat.$matrix.m11 = 1 - 2*sinA2;
       mat.$matrix.m12 = 0;
       mat.$matrix.m13 = -2*sinA*cosA;
       mat.$matrix.m21 = 0;
@@ -9577,16 +9630,16 @@ class Matrix4 {
       mat.$matrix.m23 = 0;
       mat.$matrix.m31 = 2*sinA*cosA;
       mat.$matrix.m32 = 0;
-      mat.$matrix.m33 = 1-2*sinA2;
+      mat.$matrix.m33 = 1 - 2*sinA2;
       mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
       mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
       mat.$matrix.m44 = 1;
-    } else if (x==0&&y==0&&z==1) {
-      mat.$matrix.m11 = 1-2*sinA2;
+    } else if (x === 0 && y === 0 && z === 1) {
+      mat.$matrix.m11 = 1 - 2*sinA2;
       mat.$matrix.m12 = 2*sinA*cosA;
       mat.$matrix.m13 = 0;
       mat.$matrix.m21 = -2*sinA*cosA;
-      mat.$matrix.m22 = 1-2*sinA2;
+      mat.$matrix.m22 = 1 - 2*sinA2;
       mat.$matrix.m23 = 0;
       mat.$matrix.m31 = 0;
       mat.$matrix.m32 = 0;
@@ -9595,18 +9648,18 @@ class Matrix4 {
       mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
       mat.$matrix.m44 = 1;
     } else {
-      var x2=x*x;
-      var y2=y*y;
-      var z2=z*z;
-      mat.$matrix.m11 = 1-2*(y2+z2)*sinA2;
-      mat.$matrix.m12 = 2*(x*y*sinA2+z*sinA*cosA);
-      mat.$matrix.m13 = 2*(x*z*sinA2-y*sinA*cosA);
-      mat.$matrix.m21 = 2*(y*x*sinA2-z*sinA*cosA);
-      mat.$matrix.m22 = 1-2*(z2+x2)*sinA2;
-      mat.$matrix.m23 = 2*(y*z*sinA2+x*sinA*cosA);
-      mat.$matrix.m31 = 2*(z*x*sinA2+y*sinA*cosA);
-      mat.$matrix.m32 = 2*(z*y*sinA2-x*sinA*cosA);
-      mat.$matrix.m33 = 1-2*(x2+y2)*sinA2;
+      var x2 = x*x;
+      var y2 = y*y;
+      var z2 = z*z;
+      mat.$matrix.m11 = 1 - 2*(y2 + z2)*sinA2;
+      mat.$matrix.m12 = 2*(x*y*sinA2 + z*sinA*cosA);
+      mat.$matrix.m13 = 2*(x*z*sinA2 - y*sinA*cosA);
+      mat.$matrix.m21 = 2*(y*x*sinA2 - z*sinA*cosA);
+      mat.$matrix.m22 = 1 - 2*(z2 + x2)*sinA2;
+      mat.$matrix.m23 = 2*(y*z*sinA2 + x*sinA*cosA);
+      mat.$matrix.m31 = 2*(z*x*sinA2 + y*sinA*cosA);
+      mat.$matrix.m32 = 2*(z*y*sinA2 - x*sinA*cosA);
+      mat.$matrix.m33 = 1 - 2*(x2 + y2)*sinA2;
       mat.$matrix.m14 = mat.$matrix.m24 = mat.$matrix.m34 = 0;
       mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
       mat.$matrix.m44 = 1;
@@ -9634,7 +9687,7 @@ class Matrix4 {
     return this;
   }
 
-  clearTranslation(set_w_to_one=false) {
+  clearTranslation(set_w_to_one = false) {
     let m = this.$matrix;
 
     m.m41 = m.m42 = m.m43 = 0.0;
@@ -9646,7 +9699,7 @@ class Matrix4 {
     return this;
   }
 
-  setTranslation(x, y, z, resetW=true) {
+  setTranslation(x, y, z, resetW = true) {
     if (typeof x === "object") {
       y = x[1];
       z = x[2];
@@ -9667,7 +9720,7 @@ class Matrix4 {
   }
 
   //this is really like the lookAt method, isn't it.
-  makeNormalMatrix(normal, up=undefined) {
+  makeNormalMatrix(normal, up = undefined) {
     if (normal === undefined) {
       throw new Error("normal cannot be undefined");
     }
@@ -9736,22 +9789,22 @@ class Matrix4 {
     let mm = this.$matrix;
     let mm2 = mat.$matrix;
 
-    let m11 = (mm2.m11 * mm.m11 + mm2.m12 * mm.m21 + mm2.m13 * mm.m31 + mm2.m14 * mm.m41);
-    let m12 = (mm2.m11 * mm.m12 + mm2.m12 * mm.m22 + mm2.m13 * mm.m32 + mm2.m14 * mm.m42);
-    let m13 = (mm2.m11 * mm.m13 + mm2.m12 * mm.m23 + mm2.m13 * mm.m33 + mm2.m14 * mm.m43);
-    let m14 = (mm2.m11 * mm.m14 + mm2.m12 * mm.m24 + mm2.m13 * mm.m34 + mm2.m14 * mm.m44);
-    let m21 = (mm2.m21 * mm.m11 + mm2.m22 * mm.m21 + mm2.m23 * mm.m31 + mm2.m24 * mm.m41);
-    let m22 = (mm2.m21 * mm.m12 + mm2.m22 * mm.m22 + mm2.m23 * mm.m32 + mm2.m24 * mm.m42);
-    let m23 = (mm2.m21 * mm.m13 + mm2.m22 * mm.m23 + mm2.m23 * mm.m33 + mm2.m24 * mm.m43);
-    let m24 = (mm2.m21 * mm.m14 + mm2.m22 * mm.m24 + mm2.m23 * mm.m34 + mm2.m24 * mm.m44);
-    let m31 = (mm2.m31 * mm.m11 + mm2.m32 * mm.m21 + mm2.m33 * mm.m31 + mm2.m34 * mm.m41);
-    let m32 = (mm2.m31 * mm.m12 + mm2.m32 * mm.m22 + mm2.m33 * mm.m32 + mm2.m34 * mm.m42);
-    let m33 = (mm2.m31 * mm.m13 + mm2.m32 * mm.m23 + mm2.m33 * mm.m33 + mm2.m34 * mm.m43);
-    let m34 = (mm2.m31 * mm.m14 + mm2.m32 * mm.m24 + mm2.m33 * mm.m34 + mm2.m34 * mm.m44);
-    let m41 = (mm2.m41 * mm.m11 + mm2.m42 * mm.m21 + mm2.m43 * mm.m31 + mm2.m44 * mm.m41);
-    let m42 = (mm2.m41 * mm.m12 + mm2.m42 * mm.m22 + mm2.m43 * mm.m32 + mm2.m44 * mm.m42);
-    let m43 = (mm2.m41 * mm.m13 + mm2.m42 * mm.m23 + mm2.m43 * mm.m33 + mm2.m44 * mm.m43);
-    let m44 = (mm2.m41 * mm.m14 + mm2.m42 * mm.m24 + mm2.m43 * mm.m34 + mm2.m44 * mm.m44);
+    let m11 = (mm2.m11*mm.m11 + mm2.m12*mm.m21 + mm2.m13*mm.m31 + mm2.m14*mm.m41);
+    let m12 = (mm2.m11*mm.m12 + mm2.m12*mm.m22 + mm2.m13*mm.m32 + mm2.m14*mm.m42);
+    let m13 = (mm2.m11*mm.m13 + mm2.m12*mm.m23 + mm2.m13*mm.m33 + mm2.m14*mm.m43);
+    let m14 = (mm2.m11*mm.m14 + mm2.m12*mm.m24 + mm2.m13*mm.m34 + mm2.m14*mm.m44);
+    let m21 = (mm2.m21*mm.m11 + mm2.m22*mm.m21 + mm2.m23*mm.m31 + mm2.m24*mm.m41);
+    let m22 = (mm2.m21*mm.m12 + mm2.m22*mm.m22 + mm2.m23*mm.m32 + mm2.m24*mm.m42);
+    let m23 = (mm2.m21*mm.m13 + mm2.m22*mm.m23 + mm2.m23*mm.m33 + mm2.m24*mm.m43);
+    let m24 = (mm2.m21*mm.m14 + mm2.m22*mm.m24 + mm2.m23*mm.m34 + mm2.m24*mm.m44);
+    let m31 = (mm2.m31*mm.m11 + mm2.m32*mm.m21 + mm2.m33*mm.m31 + mm2.m34*mm.m41);
+    let m32 = (mm2.m31*mm.m12 + mm2.m32*mm.m22 + mm2.m33*mm.m32 + mm2.m34*mm.m42);
+    let m33 = (mm2.m31*mm.m13 + mm2.m32*mm.m23 + mm2.m33*mm.m33 + mm2.m34*mm.m43);
+    let m34 = (mm2.m31*mm.m14 + mm2.m32*mm.m24 + mm2.m33*mm.m34 + mm2.m34*mm.m44);
+    let m41 = (mm2.m41*mm.m11 + mm2.m42*mm.m21 + mm2.m43*mm.m31 + mm2.m44*mm.m41);
+    let m42 = (mm2.m41*mm.m12 + mm2.m42*mm.m22 + mm2.m43*mm.m32 + mm2.m44*mm.m42);
+    let m43 = (mm2.m41*mm.m13 + mm2.m42*mm.m23 + mm2.m43*mm.m33 + mm2.m44*mm.m43);
+    let m44 = (mm2.m41*mm.m14 + mm2.m42*mm.m24 + mm2.m43*mm.m34 + mm2.m44*mm.m44);
 
     mm.m11 = m11;
     mm.m12 = m12;
@@ -9797,22 +9850,22 @@ class Matrix4 {
   ortho(left, right, bottom, top, near, far) {
     console.warn("Matrix4.ortho() is deprecated, use .orthographic() instead");
 
-    var tx=(left+right)/(left-right);
-    var ty=(top+bottom)/(top-bottom);
-    var tz=(far+near)/(far-near);
-    var matrix=new Matrix4();
+    var tx = (left + right)/(left - right);
+    var ty = (top + bottom)/(top - bottom);
+    var tz = (far + near)/(far - near);
+    var matrix = new Matrix4();
 
-    matrix.$matrix.m11 = 2/(left-right);
+    matrix.$matrix.m11 = 2/(left - right);
     matrix.$matrix.m12 = 0;
     matrix.$matrix.m13 = 0;
     matrix.$matrix.m14 = 0;
     matrix.$matrix.m21 = 0;
-    matrix.$matrix.m22 = 2/(top-bottom);
+    matrix.$matrix.m22 = 2/(top - bottom);
     matrix.$matrix.m23 = 0;
     matrix.$matrix.m24 = 0;
     matrix.$matrix.m31 = 0;
     matrix.$matrix.m32 = 0;
-    matrix.$matrix.m33 = -2/(far-near);
+    matrix.$matrix.m33 = -2/(far - near);
     matrix.$matrix.m34 = 0;
     matrix.$matrix.m41 = tx;
     matrix.$matrix.m42 = ty;
@@ -9825,18 +9878,18 @@ class Matrix4 {
   }
 
   frustum(left, right, bottom, top, near, far) {
-    var matrix=new Matrix4();
-    var A=(right+left)/(right-left);
-    var B=(top+bottom)/(top-bottom);
-    var C=-(far+near)/(far-near);
-    var D=-(2*far*near)/(far-near);
+    var matrix = new Matrix4();
+    var A = (right + left)/(right - left);
+    var B = (top + bottom)/(top - bottom);
+    var C = -(far + near)/(far - near);
+    var D = -(2*far*near)/(far - near);
 
-    matrix.$matrix.m11 = (2*near)/(right-left);
+    matrix.$matrix.m11 = (2*near)/(right - left);
     matrix.$matrix.m12 = 0;
     matrix.$matrix.m13 = 0;
     matrix.$matrix.m14 = 0;
     matrix.$matrix.m21 = 0;
-    matrix.$matrix.m22 = 2*near/(top-bottom);
+    matrix.$matrix.m22 = 2*near/(top - bottom);
     matrix.$matrix.m23 = 0;
     matrix.$matrix.m24 = 0;
     matrix.$matrix.m31 = A;
@@ -9869,10 +9922,10 @@ class Matrix4 {
   }
 
   perspective(fovy, aspect, zNear, zFar) {
-    var top=Math.tan(fovy*Math.PI/360)*zNear;
-    var bottom=-top;
-    var left=aspect*bottom;
-    var right=aspect*top;
+    var top = Math.tan(fovy*Math.PI/360)*zNear;
+    var bottom = -top;
+    var left = aspect*bottom;
+    var right = aspect*top;
 
     this.frustum(left, right, bottom, top, zNear, zFar);
 
@@ -9880,7 +9933,7 @@ class Matrix4 {
   }
 
   lookat(pos, target, up) {
-    var matrix=new Matrix4();
+    var matrix = new Matrix4();
 
     var vec = lookat_cache_vs3.next().load(pos).sub(target);
     var len = vec.vectorLength();
@@ -9960,7 +10013,7 @@ class Matrix4 {
     return this;
   }
 
-  decompose(_translate, _rotate, _scale, _skew, _perspective, order=EulerOrders.XYZ) {
+  decompose(_translate, _rotate, _scale, _skew, _perspective, order = EulerOrders.XYZ) {
     if (this.$matrix.m44 === 0)
       return false;
 
@@ -10015,87 +10068,87 @@ class Matrix4 {
       let m31 = m.m31, m32 = m.m32, m33 = m.m33, m34 = m.m34;
       //let m41 = m.m41, m42 = m.m42, m43 = m.m43, m44 = m.m44;
 
-      if ( order === EulerOrders.XYZ ) {
+      if (order === EulerOrders.XYZ) {
 
-        r[1] = Math.asin( clamp( m13, - 1, 1 ) );
+        r[1] = Math.asin(clamp(m13, -1, 1));
 
-        if ( Math.abs( m13 ) < 0.9999999 ) {
+        if (Math.abs(m13) < 0.9999999) {
 
-          r[0] = Math.atan2( - m23, m33 );
-          r[2] = Math.atan2( - m12, m11 );
+          r[0] = Math.atan2(-m23, m33);
+          r[2] = Math.atan2(-m12, m11);
 
         } else {
 
-          r[0] = Math.atan2( m32, m22 );
+          r[0] = Math.atan2(m32, m22);
           r[2] = 0;
 
         }
 
-      } else if ( order === EulerOrders.YXZ ) {
+      } else if (order === EulerOrders.YXZ) {
 
-        r[0] = Math.asin( - clamp( m23, - 1, 1 ) );
+        r[0] = Math.asin(-clamp(m23, -1, 1));
 
-        if ( Math.abs( m23 ) < 0.9999999 ) {
+        if (Math.abs(m23) < 0.9999999) {
 
-          r[1] = Math.atan2( m13, m33 );
-          r[2] = Math.atan2( m21, m22 );
+          r[1] = Math.atan2(m13, m33);
+          r[2] = Math.atan2(m21, m22);
 
         } else {
 
-          r[1] = Math.atan2( - m31, m11 );
+          r[1] = Math.atan2(-m31, m11);
           r[2] = 0;
 
         }
 
-      } else if ( order === EulerOrders.ZXY ) {
+      } else if (order === EulerOrders.ZXY) {
 
-        r[0] = Math.asin( clamp( m32, - 1, 1 ) );
+        r[0] = Math.asin(clamp(m32, -1, 1));
 
-        if ( Math.abs( m32 ) < 0.9999999 ) {
+        if (Math.abs(m32) < 0.9999999) {
 
-          r[1] = Math.atan2( - m31, m33 );
-          r[2] = Math.atan2( - m12, m22 );
+          r[1] = Math.atan2(-m31, m33);
+          r[2] = Math.atan2(-m12, m22);
 
         } else {
 
           r[1] = 0;
-          r[2] = Math.atan2( m21, m11 );
+          r[2] = Math.atan2(m21, m11);
 
         }
 
-      } else if ( order === EulerOrders.ZYX ) {
+      } else if (order === EulerOrders.ZYX) {
 
-        r[1] = Math.asin( - clamp( m31, - 1, 1 ) );
+        r[1] = Math.asin(-clamp(m31, -1, 1));
 
-        if ( Math.abs( m31 ) < 0.9999999 ) {
+        if (Math.abs(m31) < 0.9999999) {
 
-          r[0] = Math.atan2( m32, m33 );
-          r[2] = Math.atan2( m21, m11 );
+          r[0] = Math.atan2(m32, m33);
+          r[2] = Math.atan2(m21, m11);
 
         } else {
 
           r[0] = 0;
-          r[2] = Math.atan2( - m12, m22 );
+          r[2] = Math.atan2(-m12, m22);
 
         }
 
-      } else if ( order === EulerOrders.YZX ) {
+      } else if (order === EulerOrders.YZX) {
 
-        r[2] = Math.asin( clamp( m21, - 1, 1 ) );
+        r[2] = Math.asin(clamp(m21, -1, 1));
 
-        if ( Math.abs( m21 ) < 0.9999999 ) {
+        if (Math.abs(m21) < 0.9999999) {
 
-          r[0] = Math.atan2( - m23, m22 );
-          r[1] = Math.atan2( - m31, m11 );
+          r[0] = Math.atan2(-m23, m22);
+          r[1] = Math.atan2(-m31, m11);
 
         } else {
 
           r[0] = 0;
-          r[1] = Math.atan2( m13, m33 );
+          r[1] = Math.atan2(m13, m33);
 
         }
 
-      } else if ( order === EulerOrders.XZY ) {
+      } else if (order === EulerOrders.XZY) {
 
         r[2] = Math.asin(-clamp(m12, -1, 1));
 
@@ -10112,7 +10165,7 @@ class Matrix4 {
         }
 
       } else {
-        console.warn( 'unsupported euler order:', order);
+        console.warn('unsupported euler order:', order);
       }
       //r[0] = Math.atan2(m.m23, m.m33);
       //r[1] = Math.atan2(-m.m13, Math.sqrt(m.m23*m.m23 + m.m33*m.m33));
@@ -10121,11 +10174,11 @@ class Matrix4 {
   }
 
   _determinant2x2(a, b, c, d) {
-    return a*d-b*c;
+    return a*d - b*c;
   }
 
   _determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3) {
-    return a1*this._determinant2x2(b2, b3, c2, c3)-b1*this._determinant2x2(a2, a3, c2, c3)+c1*this._determinant2x2(a2, a3, b2, b3);
+    return a1*this._determinant2x2(b2, b3, c2, c3) - b1*this._determinant2x2(a2, a3, c2, c3) + c1*this._determinant2x2(a2, a3, b2, b3);
   }
 
   determinant() {
@@ -10133,23 +10186,23 @@ class Matrix4 {
   }
 
   _determinant4x4() {
-    var a1=this.$matrix.m11;
-    var b1=this.$matrix.m12;
-    var c1=this.$matrix.m13;
-    var d1=this.$matrix.m14;
-    var a2=this.$matrix.m21;
-    var b2=this.$matrix.m22;
-    var c2=this.$matrix.m23;
-    var d2=this.$matrix.m24;
-    var a3=this.$matrix.m31;
-    var b3=this.$matrix.m32;
-    var c3=this.$matrix.m33;
-    var d3=this.$matrix.m34;
-    var a4=this.$matrix.m41;
-    var b4=this.$matrix.m42;
-    var c4=this.$matrix.m43;
-    var d4=this.$matrix.m44;
-    return a1*this._determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4)-b1*this._determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4)+c1*this._determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4)-d1*this._determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+    var a1 = this.$matrix.m11;
+    var b1 = this.$matrix.m12;
+    var c1 = this.$matrix.m13;
+    var d1 = this.$matrix.m14;
+    var a2 = this.$matrix.m21;
+    var b2 = this.$matrix.m22;
+    var c2 = this.$matrix.m23;
+    var d2 = this.$matrix.m24;
+    var a3 = this.$matrix.m31;
+    var b3 = this.$matrix.m32;
+    var c3 = this.$matrix.m33;
+    var d3 = this.$matrix.m34;
+    var a4 = this.$matrix.m41;
+    var b4 = this.$matrix.m42;
+    var c4 = this.$matrix.m43;
+    var d4 = this.$matrix.m44;
+    return a1*this._determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1*this._determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1*this._determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1*this._determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
   }
 
   _makeAdjoint() {
@@ -10207,12 +10260,12 @@ nstructjs.register(Matrix4);
 
 preMultTemp = new Matrix4();
 
-window.testmat = (x=0, y=0, z=Math.PI*0.5) => {
+window.testmat = (x = 0, y = 0, z = Math.PI*0.5) => {
   let m1 = new Matrix4();
   m1.euler_rotate(x, y, z);
   //m1.scale(2.0, 0.5, 3.0);
 
-  let t = [0, 0, 0], r = [0, 0, 0], s = [0,0 ,0];
+  let t = [0, 0, 0], r = [0, 0, 0], s = [0, 0, 0];
 
   m1.decompose(t, r, s);
 
@@ -10234,6 +10287,7 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
+  F32BaseVector: F32BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
   Vector2: Vector2,
@@ -10244,6 +10298,101 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
 "use strict";
 
 let dtvtmps = cachering.fromConstructor(Vector3, 32);
+
+
+const ClosestModes = {
+  CLOSEST  : 0,
+  START    : 1,
+  END      : 2,
+  ENDPOINTS: 3,
+  ALL      : 4
+};
+
+let advs = cachering.fromConstructor(Vector4, 128);
+
+class AbstractCurve {
+  evaluate(t) {
+    throw new Error("implement me");
+  }
+
+  derivative(t) {
+  }
+
+  curvature(t) {
+
+  }
+
+  normal(t) {
+
+  }
+
+  width(t) {
+
+  }
+}
+
+class ClosestCurveRets {
+  constructor() {
+    this.p = new Vector3();
+    this.t = 0;
+  }
+}
+
+let cvrets = cachering.fromConstructor(ClosestCurveRets, 2048);
+let cvarrays = new ArrayPool();
+let cvtmp = new Array(1024);
+
+function closestPoint(p, curve, mode) {
+  let steps = 5;
+  let s=0, ds = 1.0 / steps;
+
+  let ri = 0;
+
+  for (let i=0; i<steps; i++, s += ds) {
+     let c1 = curve.evaluate(s);
+     let c2 = curve.evaluate(s+ds);
+
+
+  }
+}
+
+let poly_normal_tmps = cachering.fromConstructor(Vector3, 64);
+let pncent = new Vector3();
+
+function normal_poly(vs) {
+  if (vs.length === 3) {
+    return poly_normal_tmps.next().load(normal_tri(vs[0], vs[1], vs[2]));
+  } else if (vs.length === 4) {
+    return poly_normal_tmps.next().load(normal_quad(vs[0], vs[1], vs[2], vs[3]));
+  }
+
+  if (vs.length === 0) {
+    return poly_normal_tmps.next().zero();
+  }
+
+  let cent = pncent.zero();
+  let tot = 0;
+
+  for (let v of vs) {
+    cent.add(v);
+    tot++;
+  }
+
+  cent.mulScalar(1.0 / tot);
+  let n = poly_normal_tmps.next().zero();
+
+  for (let i=0; i<vs.length; i++) {
+    let a = vs[i];
+    let b = vs[(i+1)%vs.length];
+    let c = cent;
+
+    let n2 = normal_tri(a, b, c);
+    n.add(n2);
+  }
+
+  n.normalize();
+  return n;
+}
 
 /*
 on factor;
@@ -10264,6 +10413,85 @@ off fort;
 let barycentric_v2_rets = cachering.fromConstructor(Vector2, 2048);
 let calc_proj_refs = new cachering(() => [0, 0], 64);
 
+/*
+  a b c d
+     b
+
+  a------c
+
+     d
+
+  on factor;
+  load_package avector;
+
+  ax := 0;
+  ay := 0;
+  az := 0;
+
+  a := avec(ax, ay, az);
+  b := avec(bx, by, bz);
+  c := avec(cx, cy, cz);
+  d := avec(dx, dy, dz);
+
+  n1 := d cross c;
+  n2 := c cross b;
+
+  n1 := n1 / (VMOD n1);
+  n2 := n2 / (VMOD n2);
+
+  d := n1 dot n2;
+  on fort;
+
+  d*d;
+
+  off fort;
+
+
+  */
+
+/**
+
+    v2
+
+v1------v3
+
+    v4
+
+*/
+function dihedral_v3_sqr(v1, v2, v3, v4) {
+  let bx = v2[0] - v1[0];
+  let by = v2[1] - v1[1];
+  let bz = v2[2] - v1[2];
+
+  let cx = v3[0] - v1[0];
+  let cy = v3[1] - v1[1];
+  let cz = v3[2] - v1[2];
+
+  let dx = v4[0] - v1[0];
+  let dy = v4[1] - v1[1];
+  let dz = v4[2] - v1[2];
+
+
+  return ((bx*cz-bz*cx)*(cx*dz-cz*dx)+(by*cz-bz*cy)*(cy*dz-cz*dy)+(bx*cy-by*cx)*
+         (cx*dy-cy*dx))**2/(((bx*cz-bz*cx)**2+(by*cz-bz*cy)**2
+          +(bx*cy-by*cx)**2)*((cx*dz-cz*dx)**2+(cy*dz-cz*dy)**2+(cx*dy-cy*dx)**2));
+}
+
+let tet_area_tmps = cachering.fromConstructor(Vector3, 64);
+function tet_volume(a, b, c, d) {
+  a = tet_area_tmps.next().load(a);
+  b = tet_area_tmps.next().load(b);
+  c = tet_area_tmps.next().load(c);
+  d = tet_area_tmps.next().load(d);
+
+  a.sub(d);
+  b.sub(d);
+  c.sub(d);
+
+  b.cross(c);
+  return a.dot(b) / 6.0;
+}
+
 function calc_projection_axes(no) {
   let ax = Math.abs(no[0]), ay = Math.abs(no[1]), az = Math.abs(no[2]);
 
@@ -10281,6 +10509,63 @@ function calc_projection_axes(no) {
   }
 
   return ret;
+}
+
+let _avtmps = cachering.fromConstructor(Vector3, 128);
+
+function inrect_3d(p, min, max) {
+  let ok = p[0] >= min[0] && p[0] <= max[0];
+  ok = ok && p[1] >= min[1] && p[1] <= max[1];
+  ok = ok && p[2] >= min[2] && p[2] <= max[2];
+
+  return ok;
+}
+
+function aabb_isect_line_3d(v1, v2, min, max) {
+  let inside = inrect_3d(v1, min, max);
+  inside = inside || inrect_3d(v2, min, max);
+
+  if (inside) {
+    return true;
+  }
+
+  let cent = _avtmps.next().load(min).interp(max, 0.5);
+
+  let p = closest_point_on_line(cent, v1, v2, true);
+  if (!p) {
+    return false;
+  }
+
+  p = p[0];
+
+  return inrect_3d(p, min, max);
+}
+
+function aabb_isect_cylinder_3d(v1, v2, radius, min, max) {
+  let inside = inrect_3d(v1, min, max);
+  inside = inside || inrect_3d(v2, min, max);
+
+  if (inside) {
+    return true;
+  }
+
+  let cent = _avtmps.next().load(min).interp(max, 0.5);
+
+  let p = closest_point_on_line(cent, v1, v2, true);
+  if (!p) {
+    return false;
+  }
+
+  p = p[0];
+
+  let size = _avtmps.next().load(max).sub(min);
+
+  size.mulScalar(0.5);
+  size.addScalar(radius); //*(3**0.5));
+
+  p.sub(cent).abs();
+
+  return p[0] <= size[0] && p[1] <= size[1] && p[2] <= size[2];
 }
 
 function barycentric_v2(p, v1, v2, v3, axis1 = 0, axis2 = 1, out = undefined) {
@@ -11002,17 +11287,35 @@ function aabb_overlap_area(pos1, size1, pos2, size2) {
  */
 
 function aabb_isect_2d(pos1, size1, pos2, size2) {
-  var ret = 0;
-  for (var i = 0; i < 2; i++) {
-    var a = pos1[i];
-    var b = pos1[i] + size1[i];
-    var c = pos2[i];
-    var d = pos2[i] + size2[i];
+  let ret = 0;
+  for (let i = 0; i < 2; i++) {
+    let a = pos1[i];
+    let b = pos1[i] + size1[i];
+    let c = pos2[i];
+    let d = pos2[i] + size2[i];
     if (b >= c && a <= d)
       ret += 1;
   }
-  return ret == 2;
+  return ret === 2;
 };
+
+
+function aabb_isect_3d(pos1, size1, pos2, size2) {
+  let ret = 0;
+
+  for (let i = 0; i < 3; i++) {
+    let a = pos1[i];
+    let b = pos1[i] + size1[i];
+
+    let c = pos2[i];
+    let d = pos2[i] + size2[i];
+
+    if (b >= c && a <= d)
+      ret += 1;
+  }
+  return ret === 3;
+}
+
 
 let aabb_intersect_vs = cachering.fromConstructor(Vector2, 32);
 let aabb_intersect_rets = new cachering(() => {
@@ -11662,12 +11965,13 @@ function expand_line(l, margin) {
   return l;
 };
 
-function colinear(a, b, c) {
+//stupidly ancient function, todo: rewrite
+function colinear(a, b, c, limit=2.2e-16) {
   for (var i = 0; i < 3; i++) {
     _cross_vec1[i] = b[i] - a[i];
     _cross_vec2[i] = c[i] - a[i];
   }
-  var limit = 2.2e-16;
+
   if (a.vectorDistance(b) < feps*100 && a.vectorDistance(c) < feps*100) {
     return true;
   }
@@ -12075,24 +12379,60 @@ var $e1_normal_tri = new Vector3();
 var $e3_normal_tri = new Vector3();
 var $e2_normal_tri = new Vector3();
 
-function normal_tri(v1, v2, v3) {
-  $e1_normal_tri[0] = v2[0] - v1[0];
-  $e1_normal_tri[1] = v2[1] - v1[1];
-  $e1_normal_tri[2] = v2[2] - v1[2];
-  $e2_normal_tri[0] = v3[0] - v1[0];
-  $e2_normal_tri[1] = v3[1] - v1[1];
-  $e2_normal_tri[2] = v3[2] - v1[2];
-  $e3_normal_tri[0] = $e1_normal_tri[1]*$e2_normal_tri[2] - $e1_normal_tri[2]*$e2_normal_tri[1];
-  $e3_normal_tri[1] = $e1_normal_tri[2]*$e2_normal_tri[0] - $e1_normal_tri[0]*$e2_normal_tri[2];
-  $e3_normal_tri[2] = $e1_normal_tri[0]*$e2_normal_tri[1] - $e1_normal_tri[1]*$e2_normal_tri[0];
+function isNum(f) {
+  let ok = typeof f === "number";
 
-  var _len = Math.sqrt(($e3_normal_tri[0]*$e3_normal_tri[0] + $e3_normal_tri[1]*$e3_normal_tri[1] + $e3_normal_tri[2]*$e3_normal_tri[2]));
-  if (_len > 1e-05)
-    _len = 1.0/_len;
-  $e3_normal_tri[0] *= _len;
-  $e3_normal_tri[1] *= _len;
-  $e3_normal_tri[2] *= _len;
-  return $e3_normal_tri;
+  ok = ok && !isNaN(f) && isFinite(f);
+
+  return ok;
+}
+
+const _normal_tri_rets = cachering.fromConstructor(Vector3, 64);
+
+function normal_tri(v1, v2, v3) {
+  let x1 = v2[0] - v1[0];
+  let y1 = v2[1] - v1[1];
+  let z1 = v2[2] - v1[2];
+  let x2 = v3[0] - v1[0];
+  let y2 = v3[1] - v1[1];
+  let z2 = v3[2] - v1[2];
+
+  if (!isNum(x1+y1+z1+z2+y2+z2)) {
+    throw new Error("NaN in normal_tri");
+  }
+
+  let x3, y3, z3;
+
+  x1 = v2[0] - v1[0];
+  y1 = v2[1] - v1[1];
+  z1 = v2[2] - v1[2];
+  x2 = v3[0] - v1[0];
+  y2 = v3[1] - v1[1];
+  z2 = v3[2] - v1[2];
+  x3 = y1*z2 - z1*y2;
+  y3 = z1*x2 - x1*z2;
+  z3 = x1*y2 - y1*x2;
+
+  let len = Math.sqrt((x3*x3 + y3*y3 + z3*z3));
+
+  if (len > 1e-05)
+    len = 1.0/len;
+
+  x3 *= len;
+  y3 *= len;
+  z3 *= len;
+
+  let n = _normal_tri_rets.next();
+
+  if (!isNum(x3+y3+z3)) {
+    throw new Error("NaN!");
+  }
+
+  n[0] = x3;
+  n[1] = y3;
+  n[2] = z3;
+
+  return n;
 };
 
 var $n2_normal_quad = new Vector3();
@@ -12831,7 +13171,16 @@ class Mat4Stack {
 
 var math1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  ClosestModes: ClosestModes,
+  AbstractCurve: AbstractCurve,
+  ClosestCurveRets: ClosestCurveRets,
+  closestPoint: closestPoint,
+  normal_poly: normal_poly,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  tet_volume: tet_volume,
   calc_projection_axes: calc_projection_axes,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
   barycentric_v2: barycentric_v2,
   closest_point_on_tri: closest_point_on_tri,
   dist_to_tri_v3_old: dist_to_tri_v3_old,
@@ -12840,6 +13189,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   tri_area: tri_area,
   aabb_overlap_area: aabb_overlap_area,
   aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
   aabb_intersect_2d: aabb_intersect_2d,
   aabb_intersect_3d: aabb_intersect_3d,
   aabb_union: aabb_union,
@@ -12875,6 +13225,7 @@ var math1 = /*#__PURE__*/Object.freeze({
   aabb_sphere_dist: aabb_sphere_dist,
   point_in_tri: point_in_tri,
   convex_quad: convex_quad,
+  isNum: isNum,
   normal_tri: normal_tri,
   normal_quad: normal_quad,
   normal_quad_old: normal_quad_old,
@@ -13021,6 +13372,8 @@ let exports$1 = {
   //note that  users can also double click them to
   //enter text as well
   useNumSliderTextboxes : true,
+
+  numSliderArrowLimit : 6, //threshold to check if numslider arrow was clicked
 
   menu_close_time : 500,
   doubleClickTime : 500,
@@ -14313,7 +14666,28 @@ function copyMouseEvent(e) {
     
     ret[k] = v;
   }
-  
+
+  ret.ctrlKey = e.ctrlKey;
+  ret.shiftKey = e.shiftKey;
+  ret.altKey = e.altKey;
+
+  for (let i=0; i<2; i++) {
+    let key = i ? "targetTouches" : "touches";
+
+    if (e[key]) {
+      ret[key] = [];
+
+      for (let t of e[key]) {
+        let t2 = {};
+        ret[key].push(t2);
+
+        for (let k in t) {
+          t2[k] = t[k];
+        }
+      }
+    }
+  }
+
   return ret;
 }
 
@@ -14684,7 +15058,7 @@ function genHermiteTable(evaluate, steps) {
 "use strict";
 //import {EventDispatcher} from "../util/events.js";
 
-var Vector2$1 = Vector2;
+let Vector2$1 = Vector2;
 
 const SplineTemplates = {
   CONSTANT      : 0,
@@ -14695,7 +15069,8 @@ const SplineTemplates = {
   SMOOTHER      : 5,
   SHARPER       : 6,
   SPHERE        : 7,
-  REVERSE_LINEAR: 8
+  REVERSE_LINEAR: 8,
+  GUASSIAN      : 9
 };
 
 const templates = {
@@ -14715,7 +15090,7 @@ const templates = {
     "DEG", 2, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
   ],
   [SplineTemplates.SMOOTHER]      : [
-    "DEG", 6, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
+    "DEG", 6, [0, 0], [1.0/2.25, 0], [2.0/3.0, 1.0], [1, 1]
   ],
   [SplineTemplates.SHARPER]       : [
     [0, 0], [0.3, 0.03], [0.7, 0.065], [0.9, 0.16], [1, 1]
@@ -14726,6 +15101,9 @@ const templates = {
   [SplineTemplates.REVERSE_LINEAR]: [
     [0, 1], [1, 0]
   ],
+  [SplineTemplates.GUASSIAN]: [
+    "DEG", 5, [0, 0], [0.17969, 0.007], [0.48958, 0.01172], [0.77995, 0.99609], [1, 1]
+  ]
 };
 
 //is initialized below
@@ -14765,10 +15143,10 @@ function mySafeJSONParse(buf) {
 window.mySafeJSONStringify = mySafeJSONStringify;
 
 
-var bin_cache = {};
+let bin_cache = {};
 window._bin_cache = bin_cache;
 
-var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
+let eval2_rets = cachering.fromConstructor(Vector2$1, 32);
 
 /*
   I hate these stupid curve widgets.  This horrible one here works by
@@ -14777,15 +15155,15 @@ var eval2_rets = cachering.fromConstructor(Vector2$1, 32);
 */
 
 function bez3(a, b, c, t) {
-  var r1 = a + (b - a)*t;
-  var r2 = b + (c - b)*t;
+  let r1 = a + (b - a)*t;
+  let r2 = b + (c - b)*t;
 
   return r1 + (r2 - r1)*t;
 }
 
 function bez4(a, b, c, d, t) {
-  var r1 = bez3(a, b, c, t);
-  var r2 = bez3(b, c, d, t);
+  let r1 = bez3(a, b, c, t);
+  let r2 = bez3(b, c, d, t);
 
   return r1 + (r2 - r1)*t;
 }
@@ -14795,16 +15173,16 @@ function binomial(n, i) {
     throw new Error("Bad call to binomial(n, i), i was > than n");
   }
 
-  if (i == 0 || i == n) {
+  if (i === 0 || i === n) {
     return 1;
   }
 
-  var key = "" + n + "," + i;
+  let key = "" + n + "," + i;
 
   if (key in bin_cache)
     return bin_cache[key];
 
-  var ret = binomial(n - 1, i - 1) + bin(n - 1, i);
+  let ret = binomial(n - 1, i - 1) + bin(n - 1, i);
   bin_cache[key] = ret;
 
   return ret;
@@ -14825,13 +15203,18 @@ class Curve1DPoint extends Vector2$1 {
     this.flag = 0;
 
     this.tangent = TangentModes.SMOOTH;
+
+    Object.seal(this);
   }
 
   copy() {
-    var ret = new Curve1DPoint(this);
+    let ret = new Curve1DPoint(this);
 
     ret.tangent = this.tangent;
     ret.flag = this.flag;
+    ret.eid = this.eid;
+
+    ret.startco.load(this.startco);
     ret.rco.load(this.rco);
     ret.sco.load(this.sco);
 
@@ -14852,7 +15235,7 @@ class Curve1DPoint extends Vector2$1 {
   }
 
   static fromJSON(obj) {
-    var ret = new Curve1DPoint(obj);
+    let ret = new Curve1DPoint(obj);
 
     ret.eid = obj.eid;
     ret.flag = obj.flag;
@@ -14868,7 +15251,8 @@ class Curve1DPoint extends Vector2$1 {
 
     this.sco.load(this);
     this.rco.load(this);
-    this.recalc = RecalcFlags.ALL;
+
+    splineCache.update(this);
   }
 };
 Curve1DPoint.STRUCT = `
@@ -14885,14 +15269,92 @@ nstructjs$1.register(Curve1DPoint);
 
 let _udigest$1 = new HashDigest();
 
+class BSplineCache {
+  constructor() {
+    this.curves = [];
+    this.map = new Map();
+    this.maxCurves = 32;
+    this.gen = 0;
+  }
+
+  limit() {
+    if (this.curves.length <= this.maxCurves) {
+      return;
+    }
+
+    this.curves.sort((a, b) => b.cache_w - a.cache_w);
+    while (this.curves.length > this.maxCurves) {
+      let curve = this.curves.pop();
+      this.map.delete(curve.calcHashKey());
+    }
+  }
+
+  has(curve) {
+    let curve2 = this.map.get(curve.calcHashKey());
+    return curve2 && curve2.equals(curve);
+  }
+
+  get(curve) {
+    let key = curve.calcHashKey();
+    curve._last_cache_key = key;
+
+    let curve2 = this.map.get(key);
+    if (curve2 && curve2.equals(curve)) {
+      curve2.cache_w = this.gen++;
+      return curve2;
+    }
+
+    curve2 = curve.copy();
+    curve2._last_cache_key = key;
+
+    curve2.updateKnots();
+    curve2.regen_basis();
+    curve2.regen_hermite();
+
+    this.map.set(curve2);
+    this.curves.push(curve2);
+
+    curve2.cache_w = this.gen++;
+
+    this.limit();
+
+    return curve2;
+  }
+
+  _remove(key) {
+    let curve = this.map.get(key);
+    this.map.delete(key);
+    this.curves.remove(curve);
+  }
+
+  update(curve) {
+    let key = curve._last_cache_key;
+
+    if (this.map.has(key)) {
+      this._remove(curve);
+      this.get(curve);
+    }
+  }
+}
+
+let splineCache = new BSplineCache();
+window._splineCache = splineCache;
+
 class BSplineCurve extends CurveTypeData {
   constructor() {
     super();
+
+    this.cache_w = 0;
+    this._last_cache_key = 0;
+
+    this._last_update_key = "";
 
     this.fastmode = false;
     this.points = [];
     this.length = 0;
     this.interpolating = false;
+
+    this.range = [new Vector2$1([0, 1]), new Vector2$1([0, 1])];
 
     this._ps = [];
     this.hermite = [];
@@ -14935,7 +15397,32 @@ class BSplineCurve extends CurveTypeData {
       d.add(p.tangent); //is an enum
     }
 
+    d.add(this.range[0][0]);
+    d.add(this.range[0][1]);
+    d.add(this.range[1][0]);
+    d.add(this.range[1][1]);
+
     return d.get();
+  }
+
+  copyTo(b) {
+    b.deg = this.deg;
+    b.interpolating = this.interpolating;
+    b.fastmode = this.fastmode;
+
+    for (let p of this.points) {
+      let p2 = p.copy();
+
+      b.points.push(p2);
+    }
+
+    return b;
+  }
+
+  copy() {
+    let curve = new BSplineCurve();
+    this.copyTo(curve);
+    return curve;
   }
 
   equals(b) {
@@ -14985,7 +15472,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   add(x, y, no_update = false) {
-    var p = new Curve1DPoint();
+    let p = new Curve1DPoint();
     this.recalc = RecalcFlags.ALL;
 
     p.eid = this.eidgen.next();
@@ -15012,7 +15499,7 @@ class BSplineCurve extends CurveTypeData {
 
   _sortPoints() {
     if (!this.interpolating) {
-      for (var i = 0; i < this.points.length; i++) {
+      for (let i = 0; i < this.points.length; i++) {
         this.points[i].rco.load(this.points[i]);
       }
     }
@@ -15024,7 +15511,7 @@ class BSplineCurve extends CurveTypeData {
     return this;
   }
 
-  updateKnots(recalc = true) {
+  updateKnots(recalc = true, points=this.points) {
     if (recalc) {
       this.recalc = RecalcFlags.ALL;
     }
@@ -15032,38 +15519,38 @@ class BSplineCurve extends CurveTypeData {
     this._sortPoints();
 
     this._ps = [];
-    if (this.points.length < 2) {
+    if (points.length < 2) {
       return;
     }
-    var a = this.points[0][0], b = this.points[this.points.length - 1][0];
+    let a = points[0][0], b = points[points.length - 1][0];
 
-    for (var i = 0; i < this.points.length - 1; i++) {
-      this._ps.push(this.points[i]);
+    for (let i = 0; i < points.length - 1; i++) {
+      this._ps.push(points[i]);
     }
 
-    if (this.points.length < 3) {
+    if (points.length < 3) {
       return;
     }
 
-    var l1 = this.points[this.points.length - 1];
-    var l2 = this.points[this.points.length - 2];
+    let l1 = points[points.length - 1];
+    let l2 = points[points.length - 2];
 
-    var p = l1.copy();
+    let p = l1.copy();
     p.rco[0] = l1.rco[0] - 0.00004;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*1.0/3.0;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])/3.0;
     //this._ps.push(p);
 
-    var p = l1.copy();
+    p = l1.copy();
     p.rco[0] = l1.rco[0] - 0.00003;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*1.0/3.0;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])/3.0;
     //this._ps.push(p);
 
-    var p = l1.copy();
+    p = l1.copy();
     p.rco[0] = l1.rco[0] - 0.00001;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*1.0/3.0;
+    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])/3.0;
     this._ps.push(p);
 
-    var p = l1.copy();
+    p = l1.copy();
     p.rco[0] = l1.rco[0] - 0.00001;
     p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*2.0/3.0;
     this._ps.push(p);
@@ -15071,14 +15558,14 @@ class BSplineCurve extends CurveTypeData {
     this._ps.push(l1);
 
     if (!this.interpolating) {
-      for (var i = 0; i < this._ps.length; i++) {
+      for (let i = 0; i < this._ps.length; i++) {
         this._ps[i].rco.load(this._ps[i]);
       }
     }
 
-    for (var i = 0; i < this.points.length; i++) {
-      var p = this.points[i];
-      var x = p[0], y = p[1];//this.evaluate(x);
+    for (let i = 0; i < points.length; i++) {
+      let p = points[i];
+      let x = p[0], y = p[1];//this.evaluate(x);
 
       p.sco[0] = x;
       p.sco[1] = y;
@@ -15094,7 +15581,8 @@ class BSplineCurve extends CurveTypeData {
       points       : this.points.map(p => p.toJSON()),
       deg          : this.deg,
       interpolating: this.interpolating,
-      eidgen       : this.eidgen.toJSON()
+      eidgen       : this.eidgen.toJSON(),
+      range        : this.range
     });
 
     return ret;
@@ -15110,12 +15598,16 @@ class BSplineCurve extends CurveTypeData {
     this.points = [];
     this._ps = [];
 
+    if (obj.range) {
+      this.range = [new Vector2$1(obj.range[0]), new Vector2$1(obj.range[1])];
+    }
+
     this.hightlight = undefined;
     this.eidgen = IDGen.fromJSON(obj.eidgen);
     this.recalc = RecalcFlags.ALL;
     this.mpos = [0, 0];
 
-    for (var i = 0; i < obj.points.length; i++) {
+    for (let i = 0; i < obj.points.length; i++) {
       this.points.push(Curve1DPoint.fromJSON(obj.points[i]));
     }
 
@@ -15138,11 +15630,11 @@ class BSplineCurve extends CurveTypeData {
     i = Math.min(Math.max(i, 0), this._ps.length - 1);
     t = Math.min(Math.max(t, 0.0), 1.0)*0.999999999;
 
-    var table = this.basis_tables[i];
+    let table = this.basis_tables[i];
 
-    var s = t*(table.length/4)*0.99999;
+    let s = t*(table.length/4)*0.99999;
 
-    var j = ~~s;
+    let j = ~~s;
     s -= j;
 
     j *= 4;
@@ -15169,7 +15661,14 @@ class BSplineCurve extends CurveTypeData {
   }
 
   regen_hermite(steps) {
-    console.warn("building spline approx");
+    if (splineCache.has(this)) {
+      console.log("loading spline approx from cached bspline data");
+
+      this.hermite = splineCache.get(this).hermite;
+      return;
+    }
+
+    //console.warn("building spline approx");
 
     if (steps === undefined) {
       steps = this.fastmode ? 120 : 340;
@@ -15180,25 +15679,25 @@ class BSplineCurve extends CurveTypeData {
     }
 
     this.hermite = new Array(steps);
-    var table = this.hermite;
+    let table = this.hermite;
 
-    var eps = 0.00001;
-    var dt = (1.0 - eps*4.001)/(steps - 1);
-    var t = eps*4;
-    var lastdv1, lastf3;
+    let eps = 0.00001;
+    let dt = (1.0 - eps*4.001)/(steps - 1);
+    let t = eps*4;
+    let lastdv1, lastf3;
 
-    for (var j = 0; j < steps; j++, t += dt) {
-      var f1 = this._evaluate(t - eps*2);
-      var f2 = this._evaluate(t - eps);
-      var f3 = this._evaluate(t);
-      var f4 = this._evaluate(t + eps);
-      var f5 = this._evaluate(t + eps*2);
+    for (let j = 0; j < steps; j++, t += dt) {
+      let f1 = this._evaluate(t - eps*2);
+      let f2 = this._evaluate(t - eps);
+      let f3 = this._evaluate(t);
+      let f4 = this._evaluate(t + eps);
+      let f5 = this._evaluate(t + eps*2);
 
-      var dv1 = (f4 - f2)/(eps*2);
+      let dv1 = (f4 - f2)/(eps*2);
       dv1 /= steps;
 
       if (j > 0) {
-        var j2 = j - 1;
+        let j2 = j - 1;
 
         table[j2*4] = lastf3;
         table[j2*4 + 1] = lastf3 + lastdv1/3.0;
@@ -15217,6 +15716,9 @@ class BSplineCurve extends CurveTypeData {
     for (let p of this._ps) {
       p.rco.load(p);
     }
+    
+    let points = this.points.concat(this.points);
+    
 
     this._evaluate2(0.5);
 
@@ -15248,12 +15750,12 @@ class BSplineCurve extends CurveTypeData {
 
       for (let p of this._ps) {
         let r1 = error(p);
-        const df = 0.00001;
+        const df = 0.000001;
 
         err += Math.abs(r1);
 
-        if (p === this._ps[0] || p === this._ps[this._ps.length - 1]) {
-          //  continue;
+        if (p === this._ps[this._ps.length - 1]) {
+            continue;
         }
 
         g.zero();
@@ -15281,10 +15783,6 @@ class BSplineCurve extends CurveTypeData {
         p.rco[1] += -r1*g[1]*k;
       }
 
-      //console.log("ERR", err);
-
-      this.updateKnots(false);
-
       let th = this.fastmode ? 0.001 : 0.00005;
       if (err < th) {
         break;
@@ -15295,9 +15793,16 @@ class BSplineCurve extends CurveTypeData {
   }
 
   regen_basis() {
+    if (splineCache.has(this)) {
+      console.log("loading from cached bspline data");
+
+      this.basis_tables = splineCache.get(this).basis_tables;
+      return;
+    }
+
     //console.log("building basis functions");
-    //var steps = this.fastmode && !this.interpolating ? 64 : 128;
-    var steps = this.fastmode ? 64 : 128;
+    //let steps = this.fastmode && !this.interpolating ? 64 : 128;
+    let steps = this.fastmode ? 64 : 128;
 
     if (this.interpolating) {
       steps *= 2;
@@ -15305,26 +15810,26 @@ class BSplineCurve extends CurveTypeData {
 
     this.basis_tables = new Array(this._ps.length);
 
-    for (var i = 0; i < this._ps.length; i++) {
-      var table = this.basis_tables[i] = new Array((steps - 1)*4);
+    for (let i = 0; i < this._ps.length; i++) {
+      let table = this.basis_tables[i] = new Array((steps - 1)*4);
 
-      var eps = 0.00001;
-      var dt = (1.0 - eps*8)/(steps - 1);
-      var t = eps*4;
-      var lastdv1, lastf3;
+      let eps = 0.00001;
+      let dt = (1.0 - eps*8)/(steps - 1);
+      let t = eps*4;
+      let lastdv1 = 0.0, lastf3 = 0.0;
 
-      for (var j = 0; j < steps; j++, t += dt) {
-        var f1 = this._basis(t - eps*2, i);
-        var f2 = this._basis(t - eps, i);
-        var f3 = this._basis(t, i);
-        var f4 = this._basis(t + eps, i);
-        var f5 = this._basis(t + eps*2, i);
+      for (let j = 0; j < steps; j++, t += dt) {
+        //let f1 = this._basis(t - eps*2, i);
+        let f2 = this._basis(t - eps, i);
+        let f3 = this._basis(t, i);
+        let f4 = this._basis(t + eps, i);
+        //let f5 = this._basis(t + eps*2, i);
 
-        var dv1 = (f4 - f2)/(eps*2);
+        let dv1 = (f4 - f2)/(eps*2);
         dv1 /= steps;
 
         if (j > 0) {
-          var j2 = j - 1;
+          let j2 = j - 1;
 
           table[j2*4] = lastf3;
           table[j2*4 + 1] = lastf3 + lastdv1/3.0;
@@ -15339,28 +15844,28 @@ class BSplineCurve extends CurveTypeData {
   }
 
   _basis(t, i) {
-    var len = this._ps.length;
-    var ps = this._ps;
+    let len = this._ps.length;
+    let ps = this._ps;
 
     function safe_inv(n) {
-      return n == 0 ? 0 : 1.0/n;
+      return n === 0 ? 0 : 1.0/n;
     }
 
     function bas(s, i, n) {
-      var kp = Math.min(Math.max(i - 1, 0), len - 1);
-      var kn = Math.min(Math.max(i + 1, 0), len - 1);
-      var knn = Math.min(Math.max(i + n, 0), len - 1);
-      var knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
-      var ki = Math.min(Math.max(i, 0), len - 1);
+      let kp = Math.min(Math.max(i - 1, 0), len - 1);
+      let kn = Math.min(Math.max(i + 1, 0), len - 1);
+      let knn = Math.min(Math.max(i + n, 0), len - 1);
+      let knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
+      let ki = Math.min(Math.max(i, 0), len - 1);
 
-      if (n == 0) {
+      if (n === 0) {
         return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
       } else {
 
-        var a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
-        var b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
+        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
 
-        var ret = a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
+        let ret = a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
 
         /*
         if (isNaN(ret)) {
@@ -15376,21 +15881,21 @@ class BSplineCurve extends CurveTypeData {
       }
     }
 
-    var p = this._ps[i].rco, nk, pk;
-    var deg = this.deg;
+    let p = this._ps[i].rco, nk, pk;
+    let deg = this.deg;
 
-    var b = bas(t, i - deg, deg);
+    let b = bas(t, i - deg, deg);
 
     return b;
   }
 
   evaluate(t) {
-    var a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
+    let a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
 
     if (t < a[0]) return a[1];
     if (t > b[0]) return b[1];
 
-    if (this.points.length == 2) {
+    if (this.points.length === 2) {
       t = (t - a[0])/(b[0] - a[0]);
       return a[1] + (b[1] - a[1])*t;
     }
@@ -15408,10 +15913,10 @@ class BSplineCurve extends CurveTypeData {
 
     t *= 0.999999;
 
-    var table = this.hermite;
-    var s = t*(table.length/4);
+    let table = this.hermite;
+    let s = t*(table.length/4);
 
-    var i = Math.floor(s);
+    let i = Math.floor(s);
     s -= i;
 
     i *= 4;
@@ -15420,40 +15925,40 @@ class BSplineCurve extends CurveTypeData {
   }
 
   _evaluate(t) {
-    var start_t = t;
+    let start_t = t;
 
     if (this.points.length > 1) {
-      var a = this.points[0], b = this.points[this.points.length - 1];
+      let a = this.points[0], b = this.points[this.points.length - 1];
 
-      if (t < a[0]) return a[1];
-      if (t >= b[0]) return b[1];
+      //if (t < a[0]) return a[1];
+      //if (t >= b[0]) return b[1];
     }
 
-    for (var i = 0; i < 35; i++) {
-      var df = 0.0001;
-      var ret1 = this._evaluate2(t < 0.5 ? t : t - df);
-      var ret2 = this._evaluate2(t < 0.5 ? t + df : t);
+    for (let i = 0; i < 35; i++) {
+      let df = 0.0001;
+      let ret1 = this._evaluate2(t < 0.5 ? t : t - df);
+      let ret2 = this._evaluate2(t < 0.5 ? t + df : t);
 
-      var f1 = Math.abs(ret1[0] - start_t);
-      var f2 = Math.abs(ret2[0] - start_t);
-      var g = (f2 - f1)/df;
+      let f1 = Math.abs(ret1[0] - start_t);
+      let f2 = Math.abs(ret2[0] - start_t);
+      let g = (f2 - f1)/df;
 
-      if (f1 == f2) break;
+      if (f1 === f2) break;
 
       //if (f1 < 0.0005) break;
 
-      if (f1 == 0.0 || g == 0.0)
+      if (f1 === 0.0 || g === 0.0)
         return this._evaluate2(t)[1];
 
-      var fac = -(f1/g)*0.5;
-      if (fac == 0.0) {
+      let fac = -(f1/g)*0.5;
+      if (fac === 0.0) {
         fac = 0.01;
       } else if (Math.abs(fac) > 0.1) {
         fac = 0.1*Math.sign(fac);
       }
 
       t += fac;
-      var eps = 0.00001;
+      let eps = 0.00001;
       t = Math.min(Math.max(t, eps), 1.0 - eps);
     }
 
@@ -15461,17 +15966,17 @@ class BSplineCurve extends CurveTypeData {
   }
 
   _evaluate2(t) {
-    var ret = eval2_rets.next();
+    let ret = eval2_rets.next();
 
     t *= 0.9999999;
 
-    var totbasis = 0;
-    var sumx = 0;
-    var sumy = 0;
+    let totbasis = 0;
+    let sumx = 0;
+    let sumy = 0;
 
-    for (var i = 0; i < this._ps.length; i++) {
-      var p = this._ps[i].rco;
-      var b = this.basis(t, i);
+    for (let i = 0; i < this._ps.length; i++) {
+      let p = this._ps[i].rco;
+      let b = this.basis(t, i);
 
       sumx += b*p[0];
       sumy += b*p[1];
@@ -15479,7 +15984,7 @@ class BSplineCurve extends CurveTypeData {
       totbasis += b;
     }
 
-    if (totbasis != 0.0) {
+    if (totbasis !== 0.0) {
       sumx /= totbasis;
       sumy /= totbasis;
     }
@@ -15618,8 +16123,8 @@ class BSplineCurve extends CurveTypeData {
     row.iconbutton(Icons.TINY_X, "Delete Point", () => {
       console.log("delete point");
 
-      for (var i = 0; i < this.points.length; i++) {
-        var p = this.points[i];
+      for (let i = 0; i < this.points.length; i++) {
+        let p = this.points[i];
 
         if (p.flag & CurveFlags.SELECT) {
           this.points.remove(p);
@@ -15654,6 +16159,45 @@ class BSplineCurve extends CurveTypeData {
       console.log(check.value);
       fullUpdate();
     };
+
+    let panel = container.panel("Range");
+
+    let xmin = panel.slider(undefined, "X Min", this.range[0][0], -10, 10, 0.1, false, undefined, (val) => {
+      this.range[0][0] = val.value;
+    });
+
+    let xmax = panel.slider(undefined, "X Max", this.range[0][1], -10, 10, 0.1, false, undefined, (val) => {
+      this.range[0][1] = val.value;
+    });
+
+    let ymin = panel.slider(undefined, "Y Min", this.range[1][0], -10, 10, 0.1, false, undefined, (val) => {
+      this.range[1][0] = val.value;
+    });
+
+    let ymax = panel.slider(undefined, "Y Max", this.range[1][1], -10, 10, 0.1, false, undefined, (val) => {
+      this.range[1][1] = val.value;
+    });
+
+    xmin.displayUnit = xmin.baseUnit = "none";
+    ymin.displayUnit = ymin.baseUnit = "none";
+    xmax.displayUnit = xmax.baseUnit = "none";
+    ymax.displayUnit = ymax.baseUnit = "none";
+
+    panel.closed = true;
+
+    container.update.after(() => {
+      let key = this.calcHashKey();
+      if (key !== this._last_update_key) {
+        this._last_update_key = key;
+
+        slider.setValue(this.deg);
+        xmin.setValue(this.range[0][0]);
+        xmax.setValue(this.range[0][1]);
+
+        ymin.setValue(this.range[1][0]);
+        ymax.setValue(this.range[1][1]);
+      }
+    });
 
     return this;
   }
@@ -15698,13 +16242,13 @@ class BSplineCurve extends CurveTypeData {
 
     console.log(this.uidata.start_mpos, this.uidata.draw_trans);
 
-    var mpos = this.transform_mpos(e.x, e.y);
-    var x = mpos[0], y = mpos[1];
+    let mpos = this.transform_mpos(e.x, e.y);
+    let x = mpos[0], y = mpos[1];
     this.do_highlight(x, y);
 
     if (this.points.highlight !== undefined) {
       if (!e.shiftKey) {
-        for (var i = 0; i < this.points.length; i++) {
+        for (let i = 0; i < this.points.length; i++) {
           this.points[i].flag &= ~CurveFlags.SELECT;
         }
 
@@ -15723,7 +16267,7 @@ class BSplineCurve extends CurveTypeData {
       this.redraw();
       return;
     } else { //if (!e.isTouch) {
-      var p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
+      let p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
       this.points.highlight = p;
 
       this.updateKnots();
@@ -15739,13 +16283,13 @@ class BSplineCurve extends CurveTypeData {
   }
 
   do_highlight(x, y) {
-    var trans = this.uidata.draw_trans;
-    var mindis = 1e17, minp = undefined;
-    var limit = 19/trans[0], limitsqr = limit*limit;
+    let trans = this.uidata.draw_trans;
+    let mindis = 1e17, minp = undefined;
+    let limit = 19/trans[0], limitsqr = limit*limit;
 
-    for (var i = 0; i < this.points.length; i++) {
-      var p = this.points[i];
-      var dx = x - p.sco[0], dy = y - p.sco[1], dis = dx*dx + dy*dy;
+    for (let i = 0; i < this.points.length; i++) {
+      let p = this.points[i];
+      let dx = x - p.sco[0], dy = y - p.sco[1], dis = dx*dx + dy*dy;
 
       if (dis < mindis && dis < limitsqr) {
         mindis = dis;
@@ -15761,14 +16305,14 @@ class BSplineCurve extends CurveTypeData {
   }
 
   do_transform(x, y) {
-    var off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
+    let off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
 
-    for (var i = 0; i < this.uidata.transpoints.length; i++) {
-      var p = this.uidata.transpoints[i];
+    for (let i = 0; i < this.uidata.transpoints.length; i++) {
+      let p = this.uidata.transpoints[i];
       p.load(p.startco).add(off);
 
-      p[0] = Math.min(Math.max(p[0], 0), 1);
-      p[1] = Math.min(Math.max(p[1], 0), 1);
+      p[0] = Math.min(Math.max(p[0], this.range[0][0]), this.range[0][1]);
+      p[1] = Math.min(Math.max(p[1], this.range[1][0]), this.range[1][1]);
     }
 
     this.updateKnots();
@@ -15777,7 +16321,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   transform_mpos(x, y) {
-    var r = this.uidata.canvas.getClientRects()[0];
+    let r = this.uidata.canvas.getClientRects()[0];
     let dpi = devicePixelRatio; //evil module cycle: UIBase.getDPI();
 
     x -= parseInt(r.left);
@@ -15786,7 +16330,7 @@ class BSplineCurve extends CurveTypeData {
     x *= dpi;
     y *= dpi;
 
-    var trans = this.uidata.draw_trans;
+    let trans = this.uidata.draw_trans;
 
     x = x/trans[0] - trans[1][0];
     y = -y/trans[0] - trans[1][1];
@@ -15799,8 +16343,8 @@ class BSplineCurve extends CurveTypeData {
       e.preventDefault();
     }
 
-    var mpos = this.transform_mpos(e.x, e.y);
-    var x = mpos[0], y = mpos[1];
+    let mpos = this.transform_mpos(e.x, e.y);
+    let x = mpos[0], y = mpos[1];
 
     if (this.uidata.transforming) {
       this.do_transform(x, y);
@@ -15812,11 +16356,17 @@ class BSplineCurve extends CurveTypeData {
     }
   }
 
-  on_mouseup(e) {
+  end_transform() {
     this.uidata.transforming = false;
     this.fastmode = false;
     this.updateKnots();
     this.update();
+
+    splineCache.update(this);
+  }
+
+  on_mouseup(e) {
+    this.end_transform();
   }
 
   on_keydown(e) {
@@ -15825,7 +16375,7 @@ class BSplineCurve extends CurveTypeData {
     switch (e.keyCode) {
       case 88: //xkeey
       case 46: //delete
-        if (this.points.highlight != undefined) {
+        if (this.points.highlight !== undefined) {
           this.points.remove(this.points.highlight);
           this.recalc = RecalcFlags.ALL;
 
@@ -15855,28 +16405,28 @@ class BSplineCurve extends CurveTypeData {
     let sz = draw_trans[0], pan = draw_trans[1];
     g.lineWidth *= 3.0;
 
-    for (var ssi = 0; ssi < 2; ssi++) {
+    for (let ssi = 0; ssi < 2; ssi++) {
       break; //uncomment to draw basis functions
-      for (var si = 0; si < this.points.length; si++) {
+      for (let si = 0; si < this.points.length; si++) {
         g.beginPath();
 
-        var f = 0;
-        for (var i = 0; i < steps; i++, f += df) {
-          var totbasis = 0;
+        let f = 0;
+        for (let i = 0; i < steps; i++, f += df) {
+          let totbasis = 0;
 
-          for (var j = 0; j < this.points.length; j++) {
+          for (let j = 0; j < this.points.length; j++) {
             totbasis += this.basis(f, j);
           }
 
-          var val = this.basis(f, si);
+          let val = this.basis(f, si);
 
           if (ssi)
-            val /= (totbasis == 0 ? 1 : totbasis);
+            val /= (totbasis === 0 ? 1 : totbasis);
 
-          (i == 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5, w, w);
+          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5, w, w);
         }
 
-        var color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
+        let color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
 
         if (ssi) {
           color = "rgba(105, 25, 5," + alpha + ")";
@@ -15915,9 +16465,15 @@ class BSplineCurve extends CurveTypeData {
     reader(this);
     super.loadSTRUCT(reader);
 
-    this.updateKnots();
-    this.regen_basis();
-    this.recalc = RecalcFlags.ALL;
+    if (this.basis_tables.length === 0) {
+      this.recalc = RecalcFlags.ALL;
+
+      //console.warn("Regenerating bspline data . . .");
+      //this.updateKnots();
+      //this.regen_basis();
+    } else {
+      this.recalc = 0;
+    }
   }
 }
 
@@ -15926,6 +16482,7 @@ BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
   deg           : int;
   eidgen        : IDGen;
   interpolating : bool;
+  range         : array(vec2);
 }
 `;
 nstructjs$1.register(BSplineCurve);
@@ -15985,6 +16542,12 @@ function makeSplineTemplateIcons(size = 64) {
     SplineTemplateIcons[k] = img;
     SplineTemplateIcons[SplineTemplates[k]] = img;
   }
+}
+
+for (let k in SplineTemplates) {
+  let curve = new BSplineCurve();
+  curve.loadTemplate(SplineTemplates[k]);
+  splineCache.get(curve);
 }
 
 makeSplineTemplateIcons();
@@ -16070,9 +16633,17 @@ class EquationCurve extends CurveTypeData {
     this.uidata = undefined;
   }
 
+  updateTextBox() {
+    if (this.uidata && this.uidata.textbox) {
+      this.uidata.textbox.text = this.equation;
+    }
+  }
+
   evaluate(s) {
     if (!this.hermite || this._last_equation !== this.equation) {
       this._last_equation = this.equation;
+
+      this.updateTextBox();
 
       this._evaluate(0.0);
 
@@ -18257,7 +18828,29 @@ function isNumber(s) {
   return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
 }
 
-function parseValue(string, baseUnit=undefined) {
+/* if displayUnit is undefined, final value will be converted from displayUnit to baseUnit */
+function parseValue(string, baseUnit=undefined, displayUnit=undefined) {
+  let f = parseValueIntern(string, baseUnit);
+
+  let display, base;
+
+  if (displayUnit && displayUnit !== "none") {
+    display = Unit.getUnit(displayUnit);
+  }
+
+  if (baseUnit && baseUnit !== "none") {
+    base = Unit.getUnit(baseUnit);
+  }
+
+  if (display && base) {
+    f = display.toInternal(f);
+    f = base.fromInternal(f);
+  }
+
+  return f;
+}
+
+function parseValueIntern(string, baseUnit=undefined) {
   let base;
 
   string = string.trim();
@@ -18371,9 +18964,10 @@ const PropFlags = {
   USE_CUSTOM_GETSET  : 128, //used by controller.js interface
   SAVE_LAST_VALUE    : 256,
   READ_ONLY          : 512,
-  SIMPLE_SLIDER      : 1024,
-  FORCE_ROLLER_SLIDER: 2048,
-  USE_BASE_UNDO      : 1<<12 //internal to simple_controller.js
+  SIMPLE_SLIDER      : 1<<10,
+  FORCE_ROLLER_SLIDER: 1<<11,
+  USE_BASE_UNDO      : 1<<12, //internal to simple_controller.js
+  EDIT_AS_BASE_UNIT  : 1<<13 //user textbox input should be interpreted in display unit
 };
 
 class ToolPropertyIF {
@@ -18540,6 +19134,12 @@ class ListPropertyIF extends ToolPropertyIF {
     this.prop = prop;
   }
 
+  get length() {
+  }
+
+  set length(val) {
+  }
+
   copyTo(b) {
   }
 
@@ -18557,12 +19157,6 @@ class ListPropertyIF extends ToolPropertyIF {
   }
 
   [Symbol.iterator]() {
-  }
-
-  get length() {
-  }
-
-  set length(val) {
   }
 }
 
@@ -21157,6 +21751,11 @@ class DataPath {
     return this;
   }
 
+  editAsBaseUnit() {
+    this.data.flag |= PropFlags.EDIT_AS_BASE_UNIT;
+    return this;
+  }
+
   range(min, max) {
     this.data.setRange(min, max);
     return this;
@@ -22062,7 +22661,9 @@ class ToolOp extends EventHandler {
     }
 
     if (was_cancelled && this._on_cancel !== undefined) {
-      this._accept(this.modal_ctx, true);
+      if (this._accept) {
+        this._accept(this.modal_ctx, true);
+      }
       this._on_cancel(this);
     }
 
@@ -22077,8 +22678,11 @@ class ToolOp extends EventHandler {
     super.popModal();
 
     this._promise = undefined;
-    this._accept(ctx, false); //Context, was_cancelled
-    this._accept = this._reject = undefined;
+
+    if (this._accept) {
+      this._accept(ctx, false);//Context, was_cancelled
+      this._accept = this._reject = undefined;
+    }
 
     this.saveDefaultInputs();
   }
@@ -22555,7 +23159,12 @@ class ToolStack extends Array {
     let tot = 0;
 
     for (let tool of this) {
-      tot += tool.calcMemSize();
+      try {
+        tot += tool.calcMemSize();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Failed to execute a calcMemSize method");
+      }
     }
 
     return tot;
@@ -22762,6 +23371,8 @@ class ToolStack extends Array {
     return this;
   }
 
+  //cb is a function(ctx), if it returns the value false then playback stops
+  //promise will still be fulfilled.
   replay(cb) {
     let cur = this.cur;
 
@@ -22769,30 +23380,31 @@ class ToolStack extends Array {
 
     let last = this.cur;
 
-    let timer = window.setInterval(() => {
-      //if (this.cur >= cur) {
-      //  window.clearInterval(timer);
-      //  return;
-      //}
+    let start = time_ms();
 
-      last = this.cur;
+    return new Promise((accept, reject) => {
+      let next = () => {
+        last = this.cur;
 
-      this.redo();
-
-      if (cb) {
-        cb();
-      }
-
-      if (last === this.cur) {
-        window.clearInterval(timer);
-
-        if (this.enforceMemLimit) {
-          this.limitMemory(this.memLimit);
+        if (cb && cb(ctx) === false) {
+          accept();
+          return;
         }
-      }
-    }, 50);
 
-    return timer;
+        this.redo();
+
+        if (last === this.cur) {
+          console.warn("time:", (time_ms() - start)/1000.0);
+          accept(this);
+        } else {
+          window.redraw_viewport_p(true).then(() => {
+            next();
+          });
+        }
+      };
+
+      next();
+    });
   }
 
   loadSTRUCT(reader) {
@@ -26340,6 +26952,8 @@ class UIBase$2 extends HTMLElement {
   constructor() {
     super();
 
+    this._textBoxEvents = false;
+
     this._client_disabled_set = undefined;
     //this._parent_disabled_set = 0;
 
@@ -28964,6 +29578,7 @@ class TextBox extends TextBoxBase {
     super();
 
     this._width = "min-content";
+    this._textBoxEvents = true;
 
     let margin = Math.ceil(3 * this.getDPI());
 
@@ -29059,7 +29674,7 @@ class TextBox extends TextBoxBase {
 
       on_mousedown : (e) => {
         e.stopPropagation();
-        console.log("mouse down", e.x, e.y);
+        console.log("mouse down", e, e.x, e.y);
       }
     }, false);
   }
@@ -29069,6 +29684,8 @@ class TextBox extends TextBoxBase {
 
     this._modal = false;
     this.popModal();
+
+    this.blur();
 
     if (this.onend) {
       this.onend(ok);
@@ -30581,7 +31198,7 @@ class Menu extends UIBase$6 {
   }
 
   //item can be menu or text
-  addItem(item, id, add=true) {
+  addItem(item, id, add=true, tooltip=undefined) {
     id = id === undefined ? item : id;
     let text = item;
 
@@ -30598,6 +31215,10 @@ class Menu extends UIBase$6 {
 
     li.setAttribute("tabindex", this.itemindex++);
     li.setAttribute("class", "menuitem");
+
+    if (tooltip !== undefined) {
+      li.title = tooltip;
+    }
 
     if (item instanceof Menu) {
       //let dom = this.addItemExtra(""+item.title, id, "", -1, false);
@@ -30989,6 +31610,7 @@ class DropBox extends Button {
     let enummap = prop.values;
     let iconmap = prop.iconmap;
     let uimap = prop.ui_value_names;
+    let desr = prop.descriptions || {};
 
     for (let k in enummap) {
       let uk = k;
@@ -30999,11 +31621,13 @@ class DropBox extends Button {
         uk = uimap[k];
       }
 
+      let tooltip = desr[k];
+
       //menu.addItem(k, enummap[k], ":");
       if (iconmap && iconmap[k]) {
-        menu.addItemExtra(uk, enummap[k], undefined, iconmap[k]);
+        menu.addItemExtra(uk, enummap[k], undefined, iconmap[k], undefined, tooltip);
       } else {
-        menu.addItem(uk, enummap[k]);
+        menu.addItem(uk, enummap[k], undefined, tooltip);
       }
     }
 
@@ -31034,7 +31658,6 @@ class DropBox extends Button {
       }
 
       if (this.hasAttribute("datapath") && this.ctx) {
-        console.log("setting data api value", id, this.getAttribute("datapath"));
         this.setPathValue(this.ctx, this.getAttribute("datapath"), id);
       }
     };
@@ -32302,6 +32925,51 @@ class Container extends UIBase$2 {
 
     this._add(dbox);
     return dbox;
+  }
+
+  toolPanel(path_or_cls, args={}) {
+    let tdef;
+    let cls;
+
+    if (typeof path_or_cls === "string") {
+      cls = this.ctx.api.parseToolPath(path_or_cls);
+    } else {
+      cls = path_or_cls;
+    }
+
+    tdef = cls._getFinalToolDef();
+
+    let packflag = args.packflag || 0;
+    let label = args.label || tdef.uiname;
+    let create_cb = args.create_cb;
+    let container = args.container || this.panel(label);
+    let defaultsPath = args.defaultsPath || "toolDefaults";
+
+    if (defaultsPath.length > 0 && !defaultsPath.endsWith(".")) {
+      defaultsPath += ".";
+    }
+
+    let path = defaultsPath + tdef.toolpath;
+
+    container.useIcons(false);
+
+    let inputs = tdef.inputs || {};
+    for (let k in inputs) {
+      let prop = inputs[k];
+
+      if (prop.flag & PropFlags$1.PRIVATE) {
+        continue;
+      }
+
+      let apiname = prop.apiname || k;
+      let path2 = path + "." + apiname;
+
+      container.prop(path2);
+    }
+
+    container.tool(path_or_cls, packflag, create_cb, label);
+
+    return container;
   }
 
   tool(path_or_cls, packflag = 0, create_cb = undefined, label=undefined) {
@@ -38902,6 +39570,8 @@ class NumSlider extends ValueButtonBase {
 
     this._last_label = undefined;
 
+    this.mdown = false;
+
     this._name = "";
     this._step = 0.1;
     this._value = 0.0;
@@ -38914,6 +39584,7 @@ class NumSlider extends ValueButtonBase {
 
     this.range = [-1e17, 1e17];
     this.isInt = false;
+    this.editAsBaseUnit = undefined;
 
     this._redraw();
   }
@@ -38963,6 +39634,14 @@ class NumSlider extends ValueButtonBase {
       this.baseUnit = prop.baseUnit;
     }
 
+    if (this.editAsBaseUnit === undefined) {
+      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+        this.editAsBaseUnit = true;
+      } else {
+        this.editAsBaseUnit = false;
+      }
+    }
+
     if (prop.displayUnit !== undefined) {
       this.displayUnit = prop.displayUnit;
     }
@@ -38972,7 +39651,6 @@ class NumSlider extends ValueButtonBase {
 
   update() {
     if (!!this._last_disabled !== !!this.disabled) {
-      console.log("NUMSLIDER disabled update!", this.disabled);
       this._last_disabled = !!this.disabled;
       this._redraw();
       this.setCSS();
@@ -38990,6 +39668,7 @@ class NumSlider extends ValueButtonBase {
 
     tbox.decimalPlaces = this.decimalPlaces;
     tbox.isInt = this.isInt;
+    tbox.editAsBaseUnit = this.editAsBaseUnit;
 
     if (this.isInt && this.radix != 10) {
       let text = this.value.toString(this.radix);
@@ -39018,11 +39697,13 @@ class NumSlider extends ValueButtonBase {
         if (this.isInt && this.radix !== 10) {
           val = parseInt(val);
         } else {
-          val = parseValue(val, this.baseUnit);
+          let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+
+          val = parseValue(val, this.baseUnit, displayUnit);
         }
 
         if (isNaN(val)) {
-          console.log("EEK!", val, tbox.text.trim(), this.isInt);
+          console.log("Text input error", val, tbox.text.trim(), this.isInt);
           this.flash(ErrorColors.ERROR);
         } else {
           this.setValue(val);
@@ -39066,6 +39747,30 @@ class NumSlider extends ValueButtonBase {
         return;
       }
 
+      if (e.button === 0 && e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.swapWithTextbox();
+      } else if (!e.button) {
+        this.dragStart(e);
+        this.mdown = true;
+
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    let onmouseup = this._on_click = (e) => {
+      this.mdown = false;
+
+      if (this.disabled) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return;
+      }
+
       let r = this.getClientRects()[0];
       let x = e.x;
 
@@ -39084,25 +39789,11 @@ class NumSlider extends ValueButtonBase {
 
         let szmargin = Math.min(sz*8.0, r.width*0.4);
 
-        //console.log("D", x, "S", step, "V", v);
-
         if (x < szmargin) {
-           this.setValue(v - step);
+          this.setValue(v - step);
         } else if (x > r.width - szmargin) {
           this.setValue(v + step);
         }
-      }
-
-      if (e.button === 0 && e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.swapWithTextbox();
-      } else if (!e.button) {
-        this.dragStart(e);
-
-        e.preventDefault();
-        e.stopPropagation();
       }
     };
 
@@ -39127,7 +39818,6 @@ class NumSlider extends ValueButtonBase {
     /*
     this.addEventListener("touchstart", (e) => {
       if (this.disabled) return;
-      console.log(e)
 
       e.x = e.touches[0].screenX;
       e.y = e.touches[0].screenY;
@@ -39139,8 +39829,8 @@ class NumSlider extends ValueButtonBase {
     }, {passive : false});
     //*/
 
-    //this.addEventListener("touchstart", (e) => {
-    //  console.log(e);
+    //this.addEventListener("mouseup", (e) => {
+    //  return onmouseup(e);
     //});
 
     this.addEventListener("mouseover", (e) => {
@@ -39149,7 +39839,10 @@ class NumSlider extends ValueButtonBase {
       this.dom._background = this.getDefault("BoxHighlight");
       this._repos_canvas();
       this._redraw();
-      //console.log("mouse enter");
+    });
+
+    this.addEventListener("blur", (e) => {
+      this.mdown = false;
     });
 
     this.addEventListener("mouseout", (e) => {
@@ -39158,7 +39851,6 @@ class NumSlider extends ValueButtonBase {
       this.dom._background = this.getDefault("BoxBG");
       this._repos_canvas();
       this._redraw();
-      //console.log("mouse leave!");
     });
   }
 
@@ -39215,6 +39907,7 @@ class NumSlider extends ValueButtonBase {
     let value = startvalue;
 
     let startx = this.vertical ? e.y : e.x, starty = this.vertical ? e.x : e.y;
+    let sumdelta = 0;
 
     this.dom._background = this.getDefault("BoxDepressed");
     let fire = () => {
@@ -39253,6 +39946,8 @@ class NumSlider extends ValueButtonBase {
 
         dx *= this.vertical ? -1 : 1;
 
+        sumdelta += Math.abs(dx);
+
         value += dx * this._step * 0.1;
 
         let dvalue = value - startvalue;
@@ -39281,15 +39976,27 @@ class NumSlider extends ValueButtonBase {
       },
 
       on_mouseup: (e) => {
-        console.warn("MOUSEUP");
+        let dpi = UIBase$2.getDPI();
+
+        let limit = undefined;
+        limit = limit === undefined ? 6 : limit;
+        limit *= dpi;
+
+        let dv = this.vertical ? starty - e.y : startx - e.x;
+
         this.undoBreakPoint();
         cancel(false);
+
+        //check for arrow click
+        if (sumdelta < limit) {
+          this._on_click(e);
+        }
+
         e.preventDefault();
         e.stopPropagation();
       },
 
       on_mouseout: (e) => {
-        //console.log("leave");
         last_background = this.getDefault("BoxBG");
 
         e.preventDefault();
@@ -39297,7 +40004,6 @@ class NumSlider extends ValueButtonBase {
       },
 
       on_mouseover: (e) => {
-        //console.log("over");
         last_background = this.getDefault("BoxHighlight");
 
         e.preventDefault();
@@ -39321,8 +40027,6 @@ class NumSlider extends ValueButtonBase {
 
       this.dom._background = last_background; //ui_base.getDefault("BoxBG");
       this._redraw();
-
-      console.trace("end");
 
       this.popModal();
     };
@@ -39538,6 +40242,7 @@ class NumSliderSimpleBase extends UIBase$2 {
 
     this.baseUnit = undefined;
     this.displayUnit = undefined;
+    this.editAsBaseUnit = undefined;
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -39623,8 +40328,6 @@ class NumSliderSimpleBase extends UIBase$2 {
         this.uiRange[1] = prop.uiRange[1];
       }
 
-
-      //console.log("updating numsplider simple value", val);
       this.value = val;
     }
   }
@@ -39659,13 +40362,8 @@ class NumSliderSimpleBase extends UIBase$2 {
       return;
     }
 
-    console.log("start simple numslider modal");
-
     let end = () => {
-      console.log("end simple numslider modal");
-
       if (this._modal === undefined) {
-        console.warn("end called twiced");
         return;
       }
 
@@ -39727,7 +40425,6 @@ class NumSliderSimpleBase extends UIBase$2 {
     this.updateSize();
 
     this.addEventListener("keydown", (e) => {
-      console.log("yay keydown", e.keyCode);
       let dt = this.range[1] > this.range[0] ? 1 : -1;
 
       switch (e.keyCode) {
@@ -39755,7 +40452,6 @@ class NumSliderSimpleBase extends UIBase$2 {
       this._focus = 1;
       this._redraw();
       this.focus();
-      //console.log("focus2");
     });
 
     this.addEventListener("mousedown", (e) => {
@@ -39766,17 +40462,14 @@ class NumSliderSimpleBase extends UIBase$2 {
     });
 
     this.addEventListener("mousein", (e) => {
-      //console.log("mouse in");
       this.setHighlight(e);
       this._redraw();
     });
     this.addEventListener("mouseout", (e) => {
-      //console.log("mouse out");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("mouseover", (e) => {
-      //console.log("mouse over");
       this.setHighlight(e);
       this._redraw();
     });
@@ -39785,12 +40478,10 @@ class NumSliderSimpleBase extends UIBase$2 {
       this._redraw();
     });
     this.addEventListener("mouseleave", (e) => {
-      //console.log("mouse leave");
       this.highlight = false;
       this._redraw();
     });
     this.addEventListener("blur", (e) => {
-      //console.log("blur");
       this._focus = 0;
       this.highlight = false;
       this._redraw();
@@ -39813,7 +40504,6 @@ class NumSliderSimpleBase extends UIBase$2 {
 
     g.clearRect(0, 0, canvas.width, canvas.height);
 
-    //console.log(color)
     g.fillStyle = color;
 
     let y = (h - sh)*0.5;
@@ -39885,7 +40575,6 @@ class NumSliderSimpleBase extends UIBase$2 {
     let dv = new Vector2([co[0]/dpi-x, co[1]/dpi-y]);
     let dis = dv.vectorLength();
 
-    //console.log("dis", dis.toFixed(3));
     return dis < co[2]/dpi;
   }
 
@@ -39910,8 +40599,6 @@ class NumSliderSimpleBase extends UIBase$2 {
     x = (x - this.range[0]) / (this.range[1] - this.range[0]);
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
-
-    //console.log(x, this.range);
 
     x = x*w2 + boxw*0.5;
 
@@ -39943,7 +40630,6 @@ class NumSliderSimpleBase extends UIBase$2 {
     let canvas = this.canvas;
 
     if (w !== canvas.width || h !== canvas.height) {
-      //console.log("canvas size update", w, h);
       this.canvas.width = w;
       this.canvas.height = h;
 
@@ -40174,7 +40860,9 @@ class SliderWithTextbox extends ColumnFrame {
       } else {
         textbox.flash("green");
 
-        let f = parseValue(text, this.baseUnit);
+        let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+
+        let f = parseValue(text, this.baseUnit, displayUnit);
 
         if (isNaN(f)) {
           this.flash("red");
@@ -40302,11 +40990,27 @@ class SliderWithTextbox extends ColumnFrame {
 
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
 
-    if (prop !== undefined && !this.baseUnit && prop.baseUnit) {
+    if (!prop) {
+      return;
+    }
+
+    if (!this.baseUnit && prop.baseUnit) {
       this.baseUnit = prop.baseUnit;
     }
 
-    if (prop !== undefined && !this.displayUnit && prop.displayUnit) {
+    if (prop.decimalPlaces !== undefined) {
+      this.decimalPlaces = prop.decimalPlaces;
+    }
+
+    if (this.editAsBaseUnit === undefined) {
+      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+        this.editAsBaseUnit = true;
+      } else {
+        this.editAsBaseUnit = false;
+      }
+    }
+
+    if (!this.displayUnit && prop.displayUnit) {
       this.displayUnit = prop.displayUnit;
     }
   }
@@ -72224,8 +72928,8 @@ var controller1 = /*#__PURE__*/Object.freeze({
   initSimpleController: initSimpleController,
   getDataPathToolOp: getDataPathToolOp,
   setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
   DataPathSetOp: DataPathSetOp,
+  ModelInterface: ModelInterface,
   ToolClasses: ToolClasses,
   setContextClass: setContextClass,
   ToolFlags: ToolFlags,
@@ -72288,12 +72992,22 @@ var controller1 = /*#__PURE__*/Object.freeze({
   Curve1D: Curve1D,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
+  F32BaseVector: F32BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
   Vector2: Vector2,
   Quat: Quat,
   Matrix4: Matrix4,
+  ClosestModes: ClosestModes,
+  AbstractCurve: AbstractCurve,
+  ClosestCurveRets: ClosestCurveRets,
+  closestPoint: closestPoint,
+  normal_poly: normal_poly,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  tet_volume: tet_volume,
   calc_projection_axes: calc_projection_axes,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
   barycentric_v2: barycentric_v2,
   closest_point_on_tri: closest_point_on_tri,
   dist_to_tri_v3_old: dist_to_tri_v3_old,
@@ -72302,6 +73016,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   tri_area: tri_area,
   aabb_overlap_area: aabb_overlap_area,
   aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
   aabb_intersect_2d: aabb_intersect_2d,
   aabb_intersect_3d: aabb_intersect_3d,
   aabb_union: aabb_union,
@@ -72337,6 +73052,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   aabb_sphere_dist: aabb_sphere_dist,
   point_in_tri: point_in_tri,
   convex_quad: convex_quad,
+  isNum: isNum,
   normal_tri: normal_tri,
   normal_quad: normal_quad,
   normal_quad_old: normal_quad_old,
@@ -72406,20 +73122,58 @@ var platform1 = /*#__PURE__*/Object.freeze({
   get platform () { return platform; }
 });
 
+const mimeMap = {
+  ".js"  : "application/javascript",
+  ".json": "text/json",
+  ".html": "text/html",
+  ".txt" : "text/plain",
+  ".jpg" : "image/jpeg",
+  ".png" : "image/png",
+  ".tiff": "image/tiff",
+  ".gif" : "image/gif",
+  ".bmp" : "image/bitmap",
+  ".tga" : "image/targa",
+  ".svg" : "image/svg+xml",
+  ".xml" : "text/xml"
+};
+
 var textMimes = new Set([
-  "application-javascript", "application-x-javscript",
-  "image/svg+xml"
+  "application/javascript", "application/x-javscript",
+  "image/svg+xml", "application/xml"
 ]);
 
 function isMimeText(mime) {
   if (!mime) {
     return false;
   }
+
   if (mime.startsWith("text")) {
     return true;
   }
 
   return textMimes.has(mime);
+}
+
+function getExtension(path) {
+  if (!path) {
+    return "";
+  }
+
+  let i = path.length;
+  while (i > 0 && path[i] !== ".") {
+    i--;
+  }
+
+  return path.slice(i, path.length).trim().toLowerCase();
+}
+
+function getMime(path) {
+  let ext = getExtension(path);
+  if (ext in mimeMap) {
+    return mimeMap[ext];
+  }
+
+  return "application/x-octet-stream";
 }
 
 class PlatformAPI {
@@ -77733,13 +78487,7 @@ class Screen$2 extends UIBase$2 {
       }
     }
   }
-  //pickElement(x, y, sx=0, sy=0, nodeclass=undefined) {
 
-  //}
-
-  pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
-  }
-  
   /** 
    * @param x
    * @param y
@@ -78467,7 +79215,9 @@ class Screen$2 extends UIBase$2 {
   execKeyMap(e) {
     let handled = false;
 
-    console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
+    if (window.DEBUG && window.DEBUG.keymap) {
+      console.warn("execKeyMap called", e.keyCode, document.activeElement.tagName);
+    }
 
     if (this.sareas.active) {
       let area = this.sareas.active.area;
@@ -80036,7 +80786,10 @@ class Screen$2 extends UIBase$2 {
   }
 
   on_keydown(e) {
-    console.warn(e.keyCode, haveModal());
+    if (checkForTextBox(this, this.mpos[0], this.mpos[1])) {
+      console.log("textbox detected");
+      return;
+    }
 
     if (!haveModal() && this.execKeyMap(e)) {
       e.preventDefault();
@@ -80186,8 +80939,12 @@ UIBase$2.internalRegister(Screen$2);
 
 setScreenClass(Screen$2);
 
-
 let get_screen_cb;
+let _on_keydown;
+
+let start_cbs = [];
+let stop_cbs = [];
+
 function startEvents(getScreenFunc) {
   get_screen_cb = getScreenFunc;
 
@@ -80196,14 +80953,45 @@ function startEvents(getScreenFunc) {
   }
 
   _events_started = true;
-  window.addEventListener("keydown", (e) => {
+
+  _on_keydown = (e) => {
     let screen = get_screen_cb();
 
     return screen.on_keydown(e);
-  });
+  };
+
+  window.addEventListener("keydown", _on_keydown);
+
+  for (let cb of start_cbs) {
+    cb();
+  }
 }
+
+function stopEvents() {
+  window.removeEventListener("keydown", _on_keydown);
+  _on_keydown = undefined;
+  _events_started = false;
+
+  for (let cb of stop_cbs) {
+    try {
+      cb();
+    } catch (error) {
+      print_stack$1(error);
+    }
+  }
+  return get_screen_cb;
+}
+
 _setScreenClass(Screen$2);
 
+
+function _onEventsStart(cb) {
+  start_cbs.push(cb);
+}
+
+function _onEventsStop(cb) {
+  stop_cbs.push(cb);
+}
 /*
 document.addEventListener("touchstart", (e) => {
   e.preventDefault();
@@ -80234,20 +81022,57 @@ const platform$2 = platform1;
 const electron_api = electron_api1;
 const cconst$2 = exports$1;
 
-let mimemap = {
-  ".js" : "application/javascript",
-  ".json" :"text/json",
-  ".html" : "text/html",
-  ".txt" :"text/plain",
-  ".jpg" : "image/jpeg",
-  ".png" : "image/png",
-  ".svg" : "image/svg+xml",
-  ".xml" : "text/xml"
-};
+function getWebFilters(filters=[]) {
+  let types = [];
+
+  for (let item of filters) {
+    let mime = item.mime;
+    let exts = [];
+
+    for (let ext of item.extensions) {
+      ext = "." + ext;
+      if (ext.toLowerCase() in mimeMap) {
+        mime = mime !== undefined ? mime : mimeMap[ext.toLowerCase()];
+      }
+
+      exts.push(ext);
+    }
+
+    if (!mime) {
+      mime = "application/x-octet-stream";
+    }
+
+    types.push({
+      description: item.name,
+      accept     : {
+        [mime]: exts
+      }
+    });
+  }
+
+  return types;
+}
 
 class platform$3 extends PlatformAPI {
   //returns a promise
-  static showOpenDialog(title, args=new FileDialogArgs()) {
+  static showOpenDialog(title, args = new FileDialogArgs()) {
+    let types = getWebFilters(args.filters);
+
+    return new Promise((accept, reject) => {
+      window.showOpenFilePicker({
+        multiple : args.multi,
+        types
+      }).then(arg => {
+        let paths = [];
+
+        for (let file of arg) {
+          paths.push(new FilePath(file, file.name));
+        }
+
+        accept(paths);
+      });
+    });
+    /*
     let exts = [];
 
     for (let list of args.filters) {
@@ -80260,7 +81085,7 @@ class platform$3 extends PlatformAPI {
       loadFile(args.defaultPath, exts).then((file) => {
         accept([new FilePath(file)]);
       });
-    });
+    });*/
   }
 
   static writeFile(data, handle, mime) {
@@ -80272,39 +81097,12 @@ class platform$3 extends PlatformAPI {
     });
   }
 
-  static showSaveDialog(title, savedata_cb, args=new FileDialogArgs()) {
+  static showSaveDialog(title, savedata_cb, args = new FileDialogArgs()) {
     if (!window.showSaveFilePicker) {
       return this.showSaveDialog_old(...arguments);
     }
 
-    let types = [];
-
-    for (let item of args.filters) {
-      let mime = item.mime;
-      let exts = [];
-
-      for (let ext of item.extensions) {
-        ext = "." + ext;
-        if (ext.toLowerCase() in mimemap) {
-          mime = mime !== undefined ? mime : mimemap[ext.toLowerCase()];
-        }
-
-        exts.push(ext);
-      }
-
-      if (!mime) {
-        mime = "application/x-octet-stream";
-      }
-
-      types.push({
-        description : item.name,
-        accept : {
-          [mime] : exts
-        }
-      });
-    }
-
-    console.log(types);
+    let types = getWebFilters(args.filters);
 
     return new Promise((accept, reject) => {
       let fname;
@@ -80334,7 +81132,7 @@ class platform$3 extends PlatformAPI {
   }
 
   //returns a promise
-  static showSaveDialog_old(title, savedata, args=new FileDialogArgs()) {
+  static showSaveDialog_old(title, savedata, args = new FileDialogArgs()) {
 
     let exts = [];
 
@@ -80354,7 +81152,39 @@ class platform$3 extends PlatformAPI {
   }
 
   //path is a FilePath instance, for web this is the actual file data
-  static readFile(path, mime="") {
+  static readFile(path, mime = "") {
+    if (mime === "") {
+      mime = path.filename;
+      let i = mime.length-1;
+
+      while (i > 0 && mime[i] !== ".") {
+        i--;
+      }
+
+      mime = mime.slice(i, mime.length).trim().toLowerCase();
+      if (mime in mimeMap) {
+        mime = mimeMap[mime];
+      }
+    }
+
+    return new Promise((accept, reject) => {
+      path.data.getFile().then((file) => {
+        console.log("file!", file);
+
+        let promise;
+
+        if (isMimeText(mime)) {
+          promise = file.text();
+        } else {
+          promise = file.arrayBuffer();
+        }
+
+        promise.then(data => {
+          accept(data);
+        });
+      });
+    });
+
     return new Promise((accept, reject) => {
       let data = path.data;
 
@@ -80362,7 +81192,7 @@ class platform$3 extends PlatformAPI {
         let s = '';
         data = new Uint8Array(data);
 
-        for (let i=0; i<data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
           s += String.fromCharCode(data[i]);
         }
 
@@ -80376,8 +81206,9 @@ class platform$3 extends PlatformAPI {
 
 var web_api = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  getWebFilters: getWebFilters,
   platform: platform$3
 });
 
-export { Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DocHistory, DocHistoryItem, DocsAPI, DocsBrowser, DoubleClickHandler, DropBox, ElectronAPI, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, ServerAPI, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_line_2d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$2 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, styleScrollBars, tab_idgen, test, testToolParser, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DocHistory, DocHistoryItem, DocsAPI, DocsBrowser, DoubleClickHandler, DropBox, ElectronAPI, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, ServerAPI, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$2 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

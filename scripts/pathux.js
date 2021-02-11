@@ -1,5 +1,7 @@
 import './path-controller/util/polyfill.js';
 
+export * from './xmlpage/xmlpage.js';
+
 export * from './core/ui_base.js';
 export * from './core/ui.js';
 export * from './widgets/ui_widgets.js';
