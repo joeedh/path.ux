@@ -697,6 +697,51 @@ export class Container extends ui_base.UIBase {
     return dbox;
   }
 
+  toolPanel(path_or_cls, args={}) {
+    let tdef;
+    let cls;
+
+    if (typeof path_or_cls === "string") {
+      cls = this.ctx.api.parseToolPath(path_or_cls);
+    } else {
+      cls = path_or_cls;
+    }
+
+    tdef = cls._getFinalToolDef();
+
+    let packflag = args.packflag || 0;
+    let label = args.label || tdef.uiname;
+    let create_cb = args.create_cb;
+    let container = args.container || this.panel(label);
+    let defaultsPath = args.defaultsPath || "toolDefaults";
+
+    if (defaultsPath.length > 0 && !defaultsPath.endsWith(".")) {
+      defaultsPath += ".";
+    }
+
+    let path = defaultsPath + tdef.toolpath;
+
+    container.useIcons(false);
+
+    let inputs = tdef.inputs || {};
+    for (let k in inputs) {
+      let prop = inputs[k];
+
+      if (prop.flag & PropFlags.PRIVATE) {
+        continue;
+      }
+
+      let apiname = prop.apiname || k;
+      let path2 = path + "." + apiname;
+
+      container.prop(path2);
+    }
+
+    container.tool(path_or_cls, packflag, create_cb, label);
+
+    return container;
+  }
+
   tool(path_or_cls, packflag = 0, create_cb = undefined, label=undefined) {
     let cls;
 

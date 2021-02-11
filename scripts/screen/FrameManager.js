@@ -38,6 +38,7 @@ import '../widgets/ui_noteframe.js';
 import '../widgets/ui_listbox.js';
 import '../widgets/ui_table.js';
 import {AreaFlags} from "./ScreenArea.js";
+import {checkForTextBox} from '../widgets/ui_textbox.js';
 
 function list(iter) {
   let ret = [];
@@ -343,13 +344,7 @@ export class Screen extends ui_base.UIBase {
       }
     }
   }
-  //pickElement(x, y, sx=0, sy=0, nodeclass=undefined) {
 
-  //}
-
-  pickElement(x, y, sx, sy, nodeclass, excluded_classes) {
-  }
-  
   /** 
    * @param x
    * @param y
@@ -2648,7 +2643,10 @@ export class Screen extends ui_base.UIBase {
   }
 
   on_keydown(e) {
-    console.log(e);
+    if (checkForTextBox(this, this.mpos[0], this.mpos[1])) {
+      console.log("textbox detected");
+      return;
+    }
 
     if (!haveModal() && this.execKeyMap(e)) {
       e.preventDefault();
@@ -2798,8 +2796,12 @@ ui_base.UIBase.internalRegister(Screen);
 
 ScreenArea.setScreenClass(Screen);
 
-
 let get_screen_cb;
+let _on_keydown;
+
+let start_cbs = [];
+let stop_cbs = [];
+
 export function startEvents(getScreenFunc) {
   get_screen_cb = getScreenFunc;
 
@@ -2809,14 +2811,44 @@ export function startEvents(getScreenFunc) {
 
   _events_started = true;
 
-  window.addEventListener("keydown", (e) => {
+  _on_keydown = (e) => {
     let screen = get_screen_cb();
 
     return screen.on_keydown(e);
-  });
+  };
+
+  window.addEventListener("keydown", _on_keydown);
+
+  for (let cb of start_cbs) {
+    cb();
+  }
 }
+
+export function stopEvents() {
+  window.removeEventListener("keydown", _on_keydown);
+  _on_keydown = undefined;
+  _events_started = false;
+
+  for (let cb of stop_cbs) {
+    try {
+      cb();
+    } catch (error) {
+      util.print_stack(error);
+    }
+  }
+  return get_screen_cb;
+}
+
 _setScreenClass(Screen);
 
+
+export function _onEventsStart(cb) {
+  start_cbs.push(cb);
+}
+
+export function _onEventsStop(cb) {
+  stop_cbs.push(cb);
+}
 /*
 document.addEventListener("touchstart", (e) => {
   e.preventDefault();
