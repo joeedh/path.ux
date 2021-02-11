@@ -1,10 +1,10 @@
 import {WorkspaceEditor} from "../editors/workspace/workspace.js";
 import {Editor} from "../editors/editor_base.js";
 
-import {Context, ContextOverlay, ContextFlags, Area} from '../pathux.js';
+import {Context, ContextOverlay, ContextFlags, Area, getLastToolStruct} from '../pathux.js';
 import {DocsBrowserEditor} from "../editors/docbrowser/docbrowser.js";
 
-import {message, warning, error, sendNote} from '../pathux.js';
+import {message, warning, error, sendNote, SavedToolDefaults} from '../pathux.js';
 
 export class BaseOverlay extends ContextOverlay {
   static contextDefine() {return {
@@ -14,6 +14,24 @@ export class BaseOverlay extends ContextOverlay {
 
   get toolstack() {
     return this.state.toolstack;
+  }
+
+  //toolDefaults is used by path.ux, see api_define.js
+  get toolDefaults() {
+    return SavedToolDefaults;
+  }
+
+  toolDefaults_save() {
+    return SavedToolDefaults;
+  }
+
+  toolDefaults_load() {
+    return SavedToolDefaults;
+  }
+
+  //set up last_tool for path.ux
+  get last_tool() {
+    return getLastToolStruct(this);
   }
 
   get api() {

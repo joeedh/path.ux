@@ -3,6 +3,7 @@ import {ListProperty, StringProperty, Vec2Property, Vec4Property, FloatProperty}
 import {Vector2} from "../pathux.js";
 import {Brushes} from "./brush.js";
 import {DynamicsProperty, DynamicsState, DynamicsStateProperty} from '../core/dynamics.js';
+import {Icons} from '../editors/icon_enum.js';
 
 export class DrawOp extends ToolOp {
   constructor() {
@@ -16,6 +17,7 @@ export class DrawOp extends ToolOp {
     name     : "draw",
     uiname   : "Draw",
     toolpath : "canvas.draw",
+    icon     : Icons.ZOOM_OUT,
     is_modal : true,
     inputs   : {
       brushType    : new StringProperty("circle"),

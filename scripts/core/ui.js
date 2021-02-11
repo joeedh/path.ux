@@ -330,9 +330,11 @@ export class Container extends ui_base.UIBase {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(themeClass="strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1) {
-    let horiz = this instanceof RowFrame;
-    horiz = horiz || this.style["flex-direction"] === "row";
+  strip(themeClass="strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz=undefined) {
+    if (horiz === undefined) {
+      horiz = this instanceof RowFrame;
+      horiz = horiz || this.style["flex-direction"] === "row";
+    }
 
     let flag = horiz ? PackFlags.STRIP_HORIZ : PackFlags.STRIP_VERT;
 

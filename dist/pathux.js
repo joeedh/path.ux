@@ -396,41 +396,6 @@ Array.prototype[Symbol.keystr] = function() {
   return key;
 };
 
-//stores xml sources
-let pagecache = new Map();
-
-
-function parseXML(xml) {
-  let parser = new DOMParser();
-}
-
-function initPage(ctx, xml) {
-
-}
-
-function loadPage(ctx, url) {
-  let source;
-
-  if (pagecache.has(url)) {
-    source = pagecache.get(url);
-    return new Promise((accept, reject) => {
-      let ret = initPage(ctx, source);
-
-      accept(ret);
-    });
-  } else {
-    return new Promise((accept, reject) => {
-      fetch(url).then(res => res.text()).then(data => {
-        pagecache.set(url, data);
-
-        let ret = initPage(ctx, data);
-
-        accept(ret);
-      });
-    });
-  }
-}
-
 function css2matrix(s) {
   return new DOMMatrix(s);
 }
@@ -23458,7 +23423,7 @@ window._testToolStackIO = function() {
   return toolstack;
 };
 
-function buildToolSysAPI(api, registerWithNStructjs=true) {
+function buildToolSysAPI(api, registerWithNStructjs=true, rootCtxStruct=undefined) {
   let datastruct = api.mapStruct(ToolPropertyCache, true);
 
   for (let cls of ToolClasses) {
@@ -23471,6 +23436,10 @@ function buildToolSysAPI(api, registerWithNStructjs=true) {
         SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
       }
     }
+  }
+
+  if (rootCtxStruct) {
+    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
   }
 
   if (!registerWithNStructjs) {
@@ -29035,6 +29004,337 @@ window._loadUIData = loadUIData;
 
 _setUIBase(UIBase$2);
 
+//stores xml sources
+let pagecache = new Map();
+
+function parseXML(xml) {
+  let parser = new DOMParser();
+  return parser.parseFromString(xml, "application/xml");
+
+}
+
+function getIconFlag(elem) {
+  if (!elem.hasAttribute("useIcons")) {
+    return 0;
+  }
+
+  let attr = elem.getAttribute("useIcons");
+  if (attr === "true" || attr === "yes") {
+    return PackFlags.USE_ICONS;
+  } else if (attr === "small") {
+    return PackFlags.SMALL_ICON | PackFlags.USE_ICONS;
+  } else if (attr === "large") {
+    return PackFlags.LARGE_ICON | PackFlags.USE_ICONS;
+  }
+}
+
+function getPackFlag(elem) {
+  let packflag = getIconFlag(elem);
+
+  if (getbool(elem, "simpleSlider")) {
+    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+  }
+  if (getbool(elem, "rollarSlider")) {
+    packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+  }
+
+  return packflag;
+}
+
+function myParseFloat(s) {
+  s = '' + s;
+  s = s.trim().toLowerCase();
+
+  if (s.endsWith("px")) {
+    s = s.slice(0, s.length-2);
+  }
+
+  return parseFloat(s);
+}
+
+function getbool(elem, attr) {
+  let ret = elem.getAttribute(attr);
+  if (!ret) {
+    return false;
+  }
+
+  ret = ret.toLowerCase();
+  return ret === "1" || ret === "true" || ret === "yes";
+}
+
+function getfloat(elem, attr, defaultval) {
+  if (!elem.hasAttribute(attr)) {
+    return defaultval;
+  }
+
+  return myParseFloat(elem.getAttribute(attr));
+}
+
+class Handler {
+  constructor(ctx, container) {
+    this.container = container;
+    this.stack = [];
+    this.ctx = ctx;
+  }
+
+  push() {
+    this.stack.push(this.container);
+  }
+
+  pop() {
+    this.container = this.stack.pop();
+  }
+
+  handle(elem) {
+    if (elem.constructor === XMLDocument) {
+      for (let child of elem.childNodes) {
+        this.handle(child);
+      }
+
+      window.tree = elem;
+      return;
+    } else if (elem.constructor === Text) {
+      return;
+    }
+
+    let tagname = "" + elem.tagName;
+    if (this[tagname]) {
+      this[tagname](elem);
+    } else {
+      let elem2 = UIBase$2.createElement(tagname.toLowerCase());
+
+      if (elem2 instanceof UIBase$2) {
+       this.container.add(elem2);
+       this._style(elem, elem2);
+      } else {
+        console.warn("Unknown element " + elem.tagName + " (" + elem.constructor.name + ")");
+      }
+    }
+  }
+
+  _style(elem, elem2) {
+    if (elem.hasAttribute("style")) {
+      let style = elem.getAttribute("style");
+
+      if (0) {
+        console.log("STYLE", style);
+
+        style = style.split(";");
+        for (let row of style) {
+          let i = row.search(/\:/);
+          if (i >= 0) {
+            let key = row.slice(0, i).trim();
+            let val = row.slice(i + 1, row.length).trim();
+
+            console.log("kv", key, val, elem2);
+            elem2.style[key] = val;
+          }
+        }
+      } else {
+        elem2.setAttribute("style", style);
+      }
+    }
+  }
+
+  visit(node) {
+    for (let child of node.childNodes) {
+      this.handle(child);
+    }
+  }
+
+  _basic(elem, con) {
+    this._style(elem, con);
+
+    if (elem.hasAttribute("useIcons") && con.useIcons) {
+      con.useIcons(getbool(elem, "useIcons"));
+    }
+  }
+
+  _handlePathPrefix(elem, con) {
+    if (elem.hasAttribute("path")) {
+      let prefix = con.dataPrefix;
+      let path = elem.getAttribute("path").trim();
+
+      if (prefix.length > 0) {
+        prefix += ".";
+      }
+
+      prefix += path;
+      con.dataPrefix = prefix;
+    }
+  }
+
+  _container(elem, con) {
+    this._basic(elem, con);
+    this._handlePathPrefix(elem, con);
+  }
+
+  panel(elem) {
+    let title = "" + elem.getAttribute("title");
+    let closed = getbool(elem, "closed");
+
+    this.push();
+    this.container = this.container.panel(title);
+    this.container.closed = closed;
+
+    this._container(elem, this.container);
+
+    this.visit(elem);
+
+    this.pop();
+  }
+
+  pathlabel(elem) {
+    this._prop(elem, "pathlabel");
+  }
+
+  /** simpleSliders=true enables simple sliders */
+  prop(elem) {
+    this._prop(elem, "prop");
+  }
+
+  _prop(elem, key) {
+    let packflag = getPackFlag(elem);
+    let path = elem.getAttribute("path");
+
+    let elem2 = this.container[key](path, packflag);
+    if (!elem2) {
+      elem2 = document.createElement("span");
+      elem2.innerHTML = "error";
+      this.container.shadow.appendChild(elem2);
+    } else {
+      this._basic(elem2);
+    }
+  }
+
+  strip(elem) {
+    this.push();
+
+    let dir;
+    if (elem.hasAttribute("mode")) {
+      dir = elem.getAttribute("mode").toLowerCase().trim();
+      dir = dir === "horizontal";
+    }
+
+    let margin1 = getfloat(elem, "margin1", undefined);
+    let margin2 = getfloat(elem, "margin2", undefined);
+
+    console.log(margin1, margin2);
+
+    this.container = this.container.strip(undefined, margin1, margin2, dir);
+    this._container(elem, this.container);
+    this.visit(elem);
+
+    this.pop();
+  }
+
+  column(elem) {
+    this.push();
+    this.container = this.container.col();
+    this._container(elem, this.container);
+    this.visit(elem);
+    this.pop();
+  }
+
+  row(elem) {
+    this.push();
+    this.container = this.container.row();
+    this._container(elem, this.container);
+    this.visit(elem);
+    this.pop();
+  }
+
+  toolPanel(elem) {
+    this.tool(elem, "toolPanel");
+  }
+
+  tool(elem, key="tool") {
+    let path = elem.getAttribute("path");
+    let packflag = getPackFlag(elem);
+
+    if (getbool(elem, "useIcons")) {
+      packflag |= PackFlags.USE_ICONS;
+    }
+
+    if (elem.hasAttribute("label")) {
+      path += "|" + elem.getAttribute("label");
+    }
+
+    let elem2 = this.container[key](path, packflag);
+
+    if (elem2) {
+      this._basic(elem, elem2);
+    } else {
+      elem2 = document.createElement("strip");
+      elem2.innerHTML = "error";
+      this.container.shadow.appendChild(elem2);
+    }
+  }
+
+  tab(elem) {
+    this.push();
+
+    let title = "" + elem.getAttribute("title");
+
+    this.container = this.container.tab(title);
+    this._container(elem, this.container);
+    this.visit(elem);
+
+    this.pop();
+  }
+
+  tabs(elem) {
+    let pos = elem.getAttribute("pos") || "left";
+
+    this.push();
+
+    let tabs = this.container.tabs(pos);
+    this.container = tabs;
+
+    this._container(elem, tabs);
+    this.visit(elem);
+
+    this.pop();
+  }
+}
+
+function initPage(ctx, xml) {
+  let tree = parseXML(xml);
+  let container = UIBase$2.createElement("container-x");
+
+  container.ctx = ctx;
+  if (ctx) {
+    container._init();
+  }
+
+  let handler = new Handler(ctx, container);
+  handler.handle(tree);
+
+  return container;
+
+}
+
+function loadPage(ctx, url) {
+  let source;
+
+  if (pagecache.has(url)) {
+    source = pagecache.get(url);
+    return new Promise((accept, reject) => {
+      let ret = initPage(ctx, source);
+      accept(ret);
+    });
+  } else {
+    return new Promise((accept, reject) => {
+      fetch(url).then(res => res.text()).then(data => {
+        pagecache.set(url, data);
+
+        let ret = initPage(ctx, data);
+        accept(ret);
+      });
+    });
+  }
+}
+
 "use strict";
 
 let keymap$1 = keymap;
@@ -32560,9 +32860,11 @@ class Container extends UIBase$2 {
   *
   * .row().noMarginsOrPadding().oneAxisPadding()
   * */
-  strip(themeClass="strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1) {
-    let horiz = this instanceof RowFrame;
-    horiz = horiz || this.style["flex-direction"] === "row";
+  strip(themeClass="strip", margin1 = this.getDefault("oneAxisPadding"), margin2 = 1, horiz=undefined) {
+    if (horiz === undefined) {
+      horiz = this instanceof RowFrame;
+      horiz = horiz || this.style["flex-direction"] === "row";
+    }
 
     let flag = horiz ? PackFlags$5.STRIP_HORIZ : PackFlags$5.STRIP_VERT;
 
@@ -41108,6 +41410,10 @@ UIBase$2.internalRegister(NumSliderWithTextBox);
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen$1 = 0;
 
+function getLastToolStruct(ctx) {
+  return ctx.state._last_tool;
+}
+
 /*
 *
 * This panel shows the most recently executed ToolOp's
@@ -41167,6 +41473,7 @@ class LastToolPanel extends ColumnFrame {
     let panel = this.panel(def.uiname);
 
     this.buildTool(ctx, tool, panel);
+    this.flushUpdate();
   }
 
   /** client code can subclass and override this method */
@@ -72303,6 +72610,16 @@ class ContextOverlay {
     return this._state;
   }
 
+  /*
+  Ugly hack, ui_lasttool.js saves
+  a DataStruct wrapping the most recently executed ToolOp
+  in this.state._last_tool.
+  */
+  get last_tool() {
+    return this.state._last_tool;
+  }
+
+
   onRemove(have_new_file=false) {
   }
 
@@ -81210,5 +81527,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform$3
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DocHistory, DocHistoryItem, DocsAPI, DocsBrowser, DoubleClickHandler, DropBox, ElectronAPI, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, ServerAPI, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$2 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DocHistory, DocHistoryItem, DocsAPI, DocsBrowser, DoubleClickHandler, DropBox, ElectronAPI, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, ServerAPI, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setScreenClass, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calc_projection_axes, cconst$2 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

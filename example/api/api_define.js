@@ -1,4 +1,4 @@
-import {DataAPI, DataStruct} from "../pathux.js";
+import {DataAPI, DataStruct, buildToolSysAPI} from "../pathux.js";
 import {Icons} from "../editors/icon_enum.js";
 import {WorkspaceEditor} from "../editors/workspace/workspace.js";
 import {Canvas, DrawFlags, CanvasPath, Material, CanvasPoint, CanvasEdge} from "../draw/draw.js";
@@ -107,7 +107,9 @@ export function defineAPI() {
 
   dstruct.vec3("vector_test", "vector_test", "vector_test").baseUnit("degree").displayUnit("radian").range(-180, 180);
 
-  //.simpleSlider();
+  //set up some api fields require by path.ux
+  cstruct.dynamicStruct("last_tool", "last_tool", "Last Tool");
+  buildToolSysAPI(api, false, cstruct);
 
   return api;
 }

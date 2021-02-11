@@ -2,11 +2,14 @@ import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
         PackNode, PackNodeVertex, Vector2, graphPack, exportTheme} from '../../pathux.js';
 
 import {Editor} from "../editor_base.js";
+import {loadPage} from '../../../scripts/xmlpage/xmlpage.js';
+import {loadUIData, saveUIData} from '../../../scripts/core/ui_base.js';
 
 export class PropsEditor extends Editor {
   constructor() {
     super();
 
+    this._pageUIData = undefined;
     this.minSize = [55, undefined];
     //this.maxSize = [350, undefined]
   }
@@ -17,8 +20,40 @@ export class PropsEditor extends Editor {
     ]
   }
 
+  _save_page_data() {
+    let s = saveUIData(this.container, 'page');
+    return s;
+  }
+
+  loadPage() {
+    if (!this.ctx) {
+      console.log("waiting for ctx");
+      this.doOnce(this.loadPage);
+      return;
+    }
+
+    let url = location.origin + "/example/page.xml";
+
+    loadPage(this.ctx, url).then(container => {
+      this.container.add(container);
+      this.container.flushUpdate();
+
+      if (this._pageUIData) {
+        console.log("PAGE UI DATA", this._pageUIData.slice(0, 100) + "...");
+
+        loadUIData(this.container, this._pageUIData);
+        this._pageUIData = undefined;
+        this.container.flushUpdate();
+      }
+    });
+  }
+
   init() {
     super.init();
+
+    this.doOnce(this.loadPage);
+
+    this.style["overflow-y"] = "scroll";
 
     return;
     let tabs = this.tabs = this.container.tabs("left");
@@ -271,6 +306,7 @@ export class PropsEditor extends Editor {
     draw();
 
   }
+
   buildCurve(tab) {
     tab.prop("data.curvemap");
     //let c = document.createElement("curve-widget-x");
@@ -317,6 +353,7 @@ col.prop(path, undefined, massSetPath);</pre>
 };
 Editor.register(PropsEditor);
 PropsEditor.STRUCT = nstructjs.STRUCT.inherit(PropsEditor, Editor) + `
+  _pageUIData : string | this._save_page_data();
 }
 `;
 nstructjs.register(PropsEditor);

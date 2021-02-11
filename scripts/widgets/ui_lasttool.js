@@ -11,6 +11,10 @@ import cconst from '../config/const.js';
 const LastKey = Symbol("LastToolPanelId");
 let tool_idgen = 0;
 
+export function getLastToolStruct(ctx) {
+  return ctx.state._last_tool;
+}
+
 /*
 *
 * This panel shows the most recently executed ToolOp's
@@ -70,6 +74,7 @@ export class LastToolPanel extends ColumnFrame {
     let panel = this.panel(def.uiname);
 
     this.buildTool(ctx, tool, panel);
+    this.flushUpdate();
   }
 
   /** client code can subclass and override this method */
