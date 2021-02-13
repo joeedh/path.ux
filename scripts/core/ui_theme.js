@@ -12,12 +12,22 @@ import cconst from '../config/const.js';
 
 export let compatMap = {
   BoxMargin : "padding",
+  BoxBG : "background",
   BoxRadius : "border-radius",
   background : "background-color",
   defaultWidth : "width",
   defaultHeight : "height",
+  DefaultWidth : "width",
+  DefaultHeight : "height",
   BoxBorder : "border-color",
-  BoxLineWidth : "border-width"
+  BoxLineWidth : "border-width",
+  BoxSubBG : "background-color",
+  BoxSub2BG : "background-color",
+  DefaultPanelBG : "background-color",
+  InnerPanelBG : "background-color",
+  Background : "background-color",
+  numslider_width : "width",
+  numslider_height : "height",
 };
 
 export let ColorSchemeTypes = {

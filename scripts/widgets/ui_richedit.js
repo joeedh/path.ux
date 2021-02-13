@@ -229,7 +229,7 @@ export class RichEditor extends TextBoxBase {
     this.controls.background = this.getDefault("background-color");
 
     if (this._focus) {
-      this.textarea.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
+      this.textarea.style["border"] = `2px dashed ${this.getDefault('focus-border-color')}`;
     } else {
       this.textarea.style["border"] = "none";
     }

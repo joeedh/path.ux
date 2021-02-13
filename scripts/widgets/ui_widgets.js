@@ -263,7 +263,7 @@ export class Check extends UIBase {
     let style = document.createElement("style");
     //let style = this.cssStyleTag();
 
-    let color = this.getDefault("FocusOutline");
+    let color = this.getDefault("focus-border-color");
 
     style.textContent = `
       .checkx:focus {
@@ -381,7 +381,7 @@ export class Check extends UIBase {
     }
 
     if (this._focus) {
-      color = this.getDefault("FocusOutline");
+      color = this.getDefault("focus-border-color");
       g.lineWidth *= dpi;
       ui_base.drawRoundBox(this, canvas, g, undefined, undefined, undefined, "stroke", color);
     }

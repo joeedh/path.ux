@@ -1360,9 +1360,7 @@ export class Container extends ui_base.UIBase {
       let frame;
 
       frame = this.strip();
-
       frame.oneAxisPadding();
-      frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
 
       if (packflag & PackFlags.USE_ICONS) {
         for (let key in prop.values) {

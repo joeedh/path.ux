@@ -456,7 +456,8 @@ export class Overdraw extends ui_base.UIBase {
   }
   
   static define() {return {
-    tagname : "overdraw-x"
+    tagname : "overdraw-x",
+    style   : "overdraw"
   };}
 }
 

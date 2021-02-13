@@ -19,7 +19,12 @@ export function makePopupArea(area_class, screen, args={}) {
 
   sarea.switch_editor(area_class);
 
+  sarea.overrideClass("popup");
   sarea.style["background-color"] = sarea.getDefault("background-color");
+  sarea.style["border-radius"] = sarea.getDefault("border-radius") + "px";
+  sarea.style["border-color"] = sarea.getDefault("border-color");
+  sarea.style["border-style"] = sarea.getDefault("border-style");
+  sarea.style["border-width"] = sarea.getDefault("border-width") + "px";
 
   sarea.area.flag |= AreaFlags.FLOATING | AreaFlags.INDEPENDENT;
 

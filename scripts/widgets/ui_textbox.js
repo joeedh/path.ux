@@ -199,7 +199,7 @@ export class TextBox extends TextBoxBase {
     }
     
     if (this._focus) {
-      this.dom.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
+      this.dom.style["border"] = `2px dashed ${this.getDefault('focus-border-color')}`;
     } else {
       this.dom.style["border"] = "none";
     }

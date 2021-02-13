@@ -96,18 +96,29 @@ export function setTheme(theme2) {
       continue;
     }
 
+    let v0 = theme[k];
+
     if (!(k in theme)) {
       theme[k] = {};
     }
 
     for (let k2 in v) {
-      let k3 = k2;
+      //if (v0 && !(k2 in v0)) {
+      //  continue;
+      //}
 
       if (k2 in compatMap) {
-        k3 = compatMap[k2];
+        let k3 = compatMap[k2];
+
+        if (v[k3] === undefined) {
+          v[k3] = v[k2];
+        }
+
+        delete v[k2];
+        k2 = k3;
       }
       
-      theme[k][k3] = v[k2];
+      theme[k][k2] = v[k2];
     }
   }
 }
@@ -2415,9 +2426,6 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     
     r = r === undefined ? elem.getDefault("border-radius") : r;
 
-    if (margin === undefined) {
-      margin = elem.getDefault("padding");
-    }
     if (margin === undefined) {
       margin = 1;
     }

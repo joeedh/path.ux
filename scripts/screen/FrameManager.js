@@ -535,7 +535,14 @@ export class Screen extends ui_base.UIBase {
       return remove.apply(container, arguments);
     };
 
-    container.background = this.getDefault("background-color");
+    container.overrideClass("popup");
+
+    container.background = container.getDefault("background-color");
+    container.style["border-radius"] = container.getDefault("border-radius") + "px";
+    container.style["border-color"] = container.getDefault("border-color");
+    container.style["border-style"] = container.getDefault("border-style");
+    container.style["border-width"] = container.getDefault("border-width") + "px";
+
     container.style["position"] = "absolute";
     container.style["z-index"] = 205;
     container.style["left"] = x + "px";
