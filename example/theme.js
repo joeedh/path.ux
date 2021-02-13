@@ -7,159 +7,116 @@
 import {CSSFont} from './pathux.js';
 
 export const theme = {
-  base: {
-    AreaHeaderBG            : 'rgba(221,221,221, 1)',
-    BasePackFlag            : 0,
-    BoxBG                   : 'rgba(231,231,231, 1)',
-    BoxBorder               : 'rgba(36,36,36, 1)',
-    BoxDepressed            : 'rgba(114,114,114, 1)',
-    BoxDrawMargin           : 2,
-    BoxHighlight            : 'rgba(74,149,255, 0.367)',
-    BoxMargin               : 4,
-    BoxRadius               : 6.207598321508586,
-    BoxSub2BG               : 'rgba(112,112,112, 1)',
-    BoxSubBG                : 'rgba(102,102,102, 1)',
-    DefaultPanelBG          : 'rgba(216,216,216, 1)',
-    DefaultText             : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 14,
-      color  : 'rgba(0,0,0, 1)'
+  base:  {
+    AreaHeaderBG        : 'rgba(200, 200, 200, 0.95)',
+    BasePackFlag        : 0,
+    BoxDepressed        : 'rgba(130,130,130, 1)',
+    BoxHighlight        : 'rgba(151,208,239, 1)',
+    DefaultText         : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
-    Disabled                : {
-      AreaHeaderBG      : 'rgb(72, 72, 72)',
-      BoxBG             : 'rgb(50, 50, 50)',
-      BoxSub2BG         : 'rgb(50, 50, 50)',
-      BoxSubBG          : 'rgb(50, 50, 50)',
-      DefaultPanelBG    : 'rgb(72, 72, 72)',
-      InnerPanelBG      : 'rgb(72, 72, 72)',
-      'background-color': 'rgb(72, 72, 72)',
-      'background-size' : '5px 3px',
-      'border-radius'   : '15px',
-    },
-    DisabledBG              : 'rgba(58,58,58, 1)',
-    FocusOutline            : 'rgba(100, 150, 255, 1.0)',
-    HotkeyText              : new CSSFont({
-      font   : 'courier',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 12,
-      color  : 'rgba(0,0,0, 1)'
+    LabelText           : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
-    InnerPanelBG            : 'rgba(110,110,110, 1)',
-    LabelText               : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 13,
-      color  : 'rgba(35,35,35, 1)'
+    TitleText           : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
-    NoteBG                  : 'rgba(220, 220, 220, 0.0)',
-    NoteText                : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'bold',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 12,
-      color  : 'rgba(0,0,0, 1)'
-    }),
-    ProgressBar             : 'rgba(75, 175, 255, 1.0)',
-    ProgressBarBG           : 'rgba(110, 110, 110, 1.0)',
-    ScreenBorderInner       : 'rgba(130,130,130, 1)',
-    ScreenBorderMousePadding: 5,
-    ScreenBorderOuter       : 'rgba(178,178,178, 1)',
-    ScreenBorderWidth       : 2,
-    TitleText               : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'bold',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 16,
-      color  : 'rgba(0,0,0, 1)'
-    }),
-    ToolTipText             : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'bold',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 12,
-      color  : 'rgba(35, 35, 35, 1.0)'
-    }),
-    defaultHeight           : 32,
-    defaultWidth            : 32,
-    mobileSizeMultiplier    : 1,
-    mobileTextSizeMultiplier: 1,
-    numslider_height        : 24,
-    numslider_width         : 24,
-    oneAxisMargin           : 6,
-    oneAxisPadding          : 6,
-    themeVersion            : 0.1,
+    'background-color'  : 'rgba(207,207,207, 0.5)',
+    'border-color'      : 'rgba(34,34,34, 1)',
+    'border-radius'     : 12.010619764585666,
+    'focus-border-width': 2,
+    oneAxisPadding      : 2,
+    padding             : 1,
   },
 
-  button: {
-    BoxMargin    : 2.8251749218092415,
-    defaultHeight: 22.965012641773395,
-    defaultWidth : 100,
+  button:  {
+    'background-color': 'rgba(237,237,237, 1)',
+    'border-color'    : 'black',
+    'border-radius'   : 7,
+    'border-style'    : 'solid',
+    'border-width'    : 1,
+    height            : 25,
+    width             : 100,
   },
 
-  checkbox: {
-    BoxMargin         : 6,
-    BoxuMargin        : 2,
-    CheckSide         : 'left',
-    background        : 'blue',
-    'background-color': 'orange',
+  checkbox:  {
+    CheckSide: 'left',
+    height   : 32,
+    width    : 32,
   },
 
-  colorfield: {
-    circleSize    : 4,
+  colorfield:  {
+    circleSize    : 16,
     colorBoxHeight: 24,
-    defaultHeight : 200,
-    defaultWidth  : 200,
-    fieldsize     : 32,
-    hueheight     : 24,
+    fieldSize     : 400,
+    height        : 256,
+    hueHeight     : 32,
+    width         : 256,
   },
 
-  colorpickerbutton: {
-    defaultFont  : 'LabelText',
-    defaultHeight: 25,
-    defaultWidth : 100,
+  colorpickerbutton:  {
+    height: 32,
+    width : 120,
   },
 
-  curvewidget: {
-    CanvasBG    : 'rgba(50, 50, 50, 0.75)',
+  curvewidget:  {
+    CanvasBG    : 'rgba(117,79,79, 1)',
     CanvasHeight: 256,
     CanvasWidth : 256,
   },
 
-  dropbox: {
-    BoxHighlight : 'rgba(155, 220, 255, 0.4)',
-    defaultHeight: 24,
-    dropTextBG   : 'rgba(240,240,240, 0.7)',
+  dropbox:  {
+    dropTextBG: 'rgba(233,233,233, 1)',
+    height    : 25,
+    width     : 32,
   },
 
-  iconbutton: {},
-
-  iconcheck: {
-    drawCheck: true,
+  iconbutton:  {
+    'background-color': 'rgba(15,15,15, 0)',
+    'border-color'    : 'black',
+    'border-radius'   : 5,
+    'border-width'    : 1,
+    height            : 32,
+    width             : 32,
   },
 
-  listbox: {
-    DefaultPanelBG: 'rgba(230, 230, 230, 1.0)',
-    ListActive    : 'rgba(200, 205, 215, 1.0)',
-    ListHighlight : 'rgba(155, 220, 255, 0.5)',
-    height        : 200,
-    width         : 110,
+  iconcheck:  {
+    'background-color': 'rgba(15,15,15, 0)',
+    'border-color'    : 'rgba(237,209,209, 1)',
+    'border-radius'   : 5,
+    'border-width'    : 0,
+    drawCheck         : true,
+    height            : 32,
+    width             : 32,
   },
 
-  menu: {
-    MenuBG       : 'rgba(250, 250, 250, 1.0)',
-    MenuBorder   : '1px solid grey',
-    MenuHighlight: 'rgba(155, 220, 255, 1.0)',
-    MenuSeparator: `
+  listbox:  {
+    ListActive   : 'rgba(200, 205, 215, 1.0)',
+    ListHighlight: 'rgba(155, 220, 255, 0.5)',
+    height       : 200,
+    width        : 110,
+  },
+
+  menu:  {
+    MenuBG         : 'rgba(250, 250, 250, 1.0)',
+    MenuBorder     : '1px solid grey',
+    MenuHighlight  : 'rgba(155, 220, 255, 1.0)',
+    MenuSeparator  : `
       width : 100%;
       height : 2px;
       padding : 0px;
@@ -167,79 +124,67 @@ export const theme = {
       border : none;
       background-color : grey; 
     `,
-    MenuSpacing  : 5,
-    MenuText     : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 12,
-      color  : 'rgba(25, 25, 25, 1.0)'
+    MenuSpacing    : 5,
+    MenuText       : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(25, 25, 25, 1.0)'
     }),
+    'border-color' : 'grey',
+    'border-radius': 5,
+    'border-style' : 'solid',
+    'border-width' : 1,
   },
 
-  numslider: {
-    DefaultText  : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 14.204297767377387,
-      color  : 'rgba(63,63,63, 1)'
-    }),
-    defaultHeight: 16,
-    defaultWidth : 100,
-    labelOnTop   : true,
+  numslider:  {
+    'background-color': 'rgba(219,219,219, 1)',
+    'border-color'    : 'black',
+    'border-radius'   : 1,
+    height            : 18,
+    width             : 135,
   },
 
-  numslider_simple: {
-    BoxBG        : 'rgba(179,179,179, 1)',
-    BoxBorder    : 'rgb(75, 75, 75)',
-    BoxRadius    : 5,
-    DefaultHeight: 18,
-    DefaultWidth : 135,
-    SlideHeight  : 10,
-    TextBoxWidth : 45,
-    TitleText    : new CSSFont({
-      font   : undefined,
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 14,
-      color  : undefined
-    }),
-    labelOnTop   : true,
+  numslider_simple:  {
+    DefaultHeight     : 18,
+    DefaultWidth      : 135,
+    SlideHeight       : 10,
+    TextBoxWidth      : 45,
+    'background-color': 'rgba(219,219,219, 1)',
+    height            : 18,
+    labelOnTop        : true,
+    width             : 135,
   },
 
-  numslider_textbox: {
-    TitleText : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 14,
-      color  : 'rgba(0,0,0, 1)'
-    }),
-    labelOnTop: true,
+  numslider_textbox:  {
+    TextBoxHeight     : 25,
+    TextBoxWidth      : 100,
+    'background-color': 'rgba(219,219,219, 1)',
+    height            : 25,
+    labelOnTop        : true,
+    width             : 120,
   },
 
-  panel: {
-    Background            : 'rgba(86,86,86, 0.2108836733061692)',
-    BoxBorder             : 'rgba(0,0,0, 0.5598061397157866)',
-    BoxLineWidth          : 1.141,
-    BoxRadius             : 7.243125760182565,
+  panel:  {
+    HeaderBorderRadius    : 5.829650280441558,
     HeaderRadius          : 5.829650280441558,
-    TitleBackground       : 'rgba(212,212,212, 1)',
+    TitleBackground       : 'rgba(177,219,255, 1)',
     TitleBorder           : 'rgba(104,104,104, 1)',
     TitleText             : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 14,
-      color  : 'rgba(0,0,0, 1)'
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14,
+      color   : 'rgba(0,0,0, 1)'
     }),
+    'background-color'    : 'rgba(184,184,184, 0.7594818376068376)',
+    'border-color'        : 'rgba(0,0,0, 0.5598061397157866)',
+    'border-radius'       : 7.243125760182565,
     'border-style'        : 'groove',
+    'border-width'        : 1.141,
     'margin-bottom'       : 15.762442435166511,
     'margin-bottom-closed': 0,
     'margin-top'          : 0.2606556353343805,
@@ -250,19 +195,26 @@ export const theme = {
     'padding-top'         : 0.9665377430621097,
   },
 
-  richtext: {
+  richtext:  {
     DefaultText       : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 16,
-      color  : 'rgba(35, 35, 35, 1.0)'
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 16,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
     'background-color': 'rgb(245, 245, 245)',
   },
 
-  scrollbars: {
+  screenborder:  {
+    'border-inner'   : 'grey',
+    'border-outer'   : 'rgba(228,228,228, 1)',
+    'border-width'   : 2,
+    'mouse-threshold': 5,
+  },
+
+  scrollbars:  {
     border  : undefined,
     color   : undefined,
     color2  : undefined,
@@ -270,75 +222,77 @@ export const theme = {
     width   : undefined,
   },
 
-  sidebar: {
-    background: 'rgba(55, 55, 55, 0.5)',
+  sidebar:  {
+    'background-color': 'rgba(55, 55, 55, 0.5)',
   },
 
-  strip: {
-    BoxBorder     : 'rgba(0,0,0, 0.31325409987877156)',
-    BoxLineWidth  : 1,
-    BoxMargin     : 1,
-    BoxRadius     : 8.76503417507447,
-    background    : 'rgba(0,0,0, 0.22704720332704742)',
-    'border-style': 'solid',
-    margin        : 2,
+  strip:  {
+    'background-color': 'rgba(75,75,75, 0.33213141025641024)',
+    'border-color'    : 'rgba(0,0,0, 0.31325409987877156)',
+    'border-radius'   : 8.76503417507447,
+    'border-style'    : 'solid',
+    'border-width'    : 1,
+    margin            : 2,
+    oneAxisPadding    : 2,
+    padding           : 1,
   },
 
-  tabs: {
-    TabActive      : 'rgba(212,212,212, 1)',
-    TabBarRadius   : 6,
-    TabHighlight   : 'rgba(50, 50, 50, 0.2)',
-    TabInactive    : 'rgba(183,183,183, 1)',
-    TabStrokeStyle1: 'rgba(0,0,0, 1)',
-    TabStrokeStyle2: 'rgba(0,0,0, 1)',
-    TabText        : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'bold',
-      style  : 'normal',
-      size   : 15,
-      color  : 'rgba(0,0,0, 1)'
+  tabs:  {
+    TabActive         : 'rgba(212,212,212, 1)',
+    TabBarRadius      : 6,
+    TabHighlight      : 'rgba(50, 50, 50, 0.2)',
+    TabInactive       : 'rgba(183,183,183, 1)',
+    TabStrokeStyle1   : 'rgba(0,0,0, 1)',
+    TabStrokeStyle2   : 'rgba(0,0,0, 1)',
+    TabText           : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'bold',
+      style   : 'normal',
+      size    : 15,
+      color   : 'rgba(0,0,0, 1)'
     }),
+    'background-color': 'rgba(222,222,222, 1)',
   },
 
-  textbox: {
+  textbox:  {
     DefaultText       : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 14,
-      color  : 'rgba(3,3,3, 1)'
+      font    : 'sans-serif',
+      weight  : 'normal',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 14,
+      color   : 'rgba(3,3,3, 1)'
     }),
     'background-color': 'rgba(245,245,245, 1)',
   },
 
-  tooltip: {
-    BoxBG         : 'rgba(255,255,255, 1)',
-    BoxBorder     : 'rgba(139,139,139, 1)',
-    BoxLineWidth  : 1,
-    BoxRadius     : 3,
-    'border-style': 'solid',
-    padding       : 5,
-    ToolTipText   : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'bold',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 12,
-      color  : 'rgba(35, 35, 35, 1.0)'
+  tooltip:  {
+    ToolTipText       : new CSSFont({
+      font    : 'sans-serif',
+      weight  : 'bold',
+      variant : 'normal',
+      style   : 'normal',
+      size    : 12,
+      color   : 'rgba(35, 35, 35, 1.0)'
     }),
+    'background-color': 'rgba(255,255,255, 1)',
+    'border-color'    : 'rgba(139,139,139, 1)',
+    'border-radius'   : 3,
+    'border-style'    : 'solid',
+    'border-width'    : 1,
+    padding           : 5,
   },
 
-  treeview: {
+  treeview:  {
     itemIndent: 10,
     rowHeight : 18,
   },
 
-  vecPopupButton: {
-    BoxMargin    : 3,
+  vecPopupButton:  {
     defaultHeight: 18,
     defaultWidth : 100,
+    padding      : 3,
   },
 
 };

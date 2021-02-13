@@ -11353,9 +11353,9 @@
       var lastForeColor = Cell(null);
       var lastBackColor = Cell(null);
       registerTextColorButton(editor, 'forecolor', 'forecolor', 'Text color', lastForeColor);
-      registerTextColorButton(editor, 'backcolor', 'hilitecolor', 'Background color', lastBackColor);
+      registerTextColorButton(editor, 'backcolor', 'hilitecolor', 'background-color color', lastBackColor);
       registerTextColorMenuItem(editor, 'forecolor', 'forecolor', 'Text color');
-      registerTextColorMenuItem(editor, 'backcolor', 'hilitecolor', 'Background color');
+      registerTextColorMenuItem(editor, 'backcolor', 'hilitecolor', 'background-color color');
     };
 
     var forMenu = function (presets) {

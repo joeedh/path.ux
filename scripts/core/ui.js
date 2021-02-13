@@ -296,6 +296,10 @@ export class Container extends ui_base.UIBase {
     let rest = '';
 
     let add = (style) => {
+      if (!this.hasDefault(style)) {
+        return;
+      }
+
       let val = this.getDefault(style);
 
       if (val !== undefined) {
@@ -305,14 +309,14 @@ export class Container extends ui_base.UIBase {
     }
 
     add("border-radius");
-    add("border");
+    add("border-width");
     add("border-top");
     add("border-bottom");
     add("border-left");
     add("border-right");
 
     this.styletag.textContent = `div.containerx {
-        background-color : ${this.getDefault("DefaultPanelBG")};
+        background-color : ${this.getDefault("background-color")};
         ${rest}
       }
       `;
@@ -352,25 +356,25 @@ export class Container extends ui_base.UIBase {
 
     if (themeClass in theme) {
       strip.overrideClass(themeClass);
-      strip.background = strip.getDefault("background");
+      strip.background = strip.getDefault("background-color");
       strip.setCSS();
       strip.overrideClass(themeClass);
 
       let lastkey;
 
       strip.update.after(function() {
-        let bradius = strip.getDefault("BoxRadius");
-        let bline = strip.getDefault("BoxLineWidth");
+        let bradius = strip.getDefault("border-radius");
+        let bline = strip.getDefault("border-width");
         let bstyle = strip.getDefault("border-style") || 'solid';
-        let padding = strip.getDefault("BoxMargin");
-        let bcolor = strip.getDefault("BoxBorder") || "rgba(0,0,0,0)";
+        let padding = strip.getDefault("padding");
+        let bcolor = strip.getDefault("border-color") || "rgba(0,0,0,0)";
         let margin = strip.getDefault("margin") || 0;
 
         bline = bline === undefined ? 0 : bline;
         bradius = bradius === undefined ? 0 : bradius;
         padding = padding === undefined ? 5 : padding;
 
-        let bg = strip.getDefault("background");
+        let bg = strip.getDefault("background-color");
 
         let key = "" + bradius + ":" + bline + ":" + bg + ":" + padding + ":";
         key += bstyle + ":" + padding + ":" + bcolor + ":" + margin;

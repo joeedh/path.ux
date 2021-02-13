@@ -78,7 +78,7 @@ class ListItem extends RowFrame {
     } else if (this.is_active) {
       this.background = this.getDefault("ListActive");
     } else {
-      this.background = this.getDefault("DefaultPanelBG");
+      this.background = this.getDefault("background-color");
     }
   }
 

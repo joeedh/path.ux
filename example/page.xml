@@ -1,5 +1,6 @@
 <tabs pos="left" style="overflow-y : scroll">
   <tab title="Theme">
+    <button id="export_theme">Export Theme</button>
     <theme-editor-x></theme-editor-x>
   </tab>
   <tab title="Tab1">

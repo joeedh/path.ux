@@ -37,7 +37,7 @@ import {Button} from './ui_button.js';
 
 export class TextBoxBase extends UIBase {
   static define() {return {
-
+    modalKeyEvents : true
   }}
 }
 
@@ -189,7 +189,7 @@ export class TextBox extends TextBoxBase {
   setCSS() {
     super.setCSS();
 
-    this.overrideDefault("BoxBG", this.getDefault("background-color"));
+    this.overrideDefault("background-color", this.getDefault("background-color"));
     
     this.background = this.getDefault("background-color");
     this.dom.style["margin"] = this.dom.style["padding"] = "0px";
@@ -290,7 +290,8 @@ export class TextBox extends TextBoxBase {
 
   static define() {return {
     tagname : "textbox-x",
-    style   : "textbox"
+    style   : "textbox",
+    modalKeyEvents : true
   };}
 
   get text() {
@@ -345,11 +346,18 @@ export class TextBox extends TextBoxBase {
 UIBase.internalRegister(TextBox);
 
 export function checkForTextBox(screen, x, y) {
-  let elem = screen.pickElement(x, y);
-  //console.log(elem, x, y);
+  let p = screen.pickElement(x, y);
+  //console.log(p, x, y);
 
-  if (elem && elem instanceof TextBoxBase) {
-    return true;
+  while (p) {
+    let ok = p instanceof TextBoxBase;
+    ok = ok || p.constructor.define && p.constructor.define().modalKeyEvents;
+
+    if (ok) {
+      return true;
+    }
+
+    p = p.parentWidget ? p.parentWidget : p.parentNode;
   }
 
   return false;

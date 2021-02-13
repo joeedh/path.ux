@@ -137,6 +137,8 @@ let exports = {
   autoSizeUpdate : true,
   showPathsInToolTips: true,
 
+  enableThemeAutoUpdate : true,
+
   loadConstants : function(args) {
     for (let k in args) {
       if (k === "loadConstants")

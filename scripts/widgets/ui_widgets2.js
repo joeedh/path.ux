@@ -539,14 +539,14 @@ export class ToolTip extends UIBase {
   setCSS() {
     super.setCSS();
 
-    let color = this.getDefault("BoxBG");
-    let bcolor = this.getDefault("BoxBorder");
+    let color = this.getDefault("background-color");
+    let bcolor = this.getDefault("border-color");
 
     this.background = color;
 
-    let radius = this.getDefault("BoxRadius", undefined, 5);
+    let radius = this.getDefault("border-radius", undefined, 5);
     let bstyle = this.getDefault("border-style", undefined, "solid");
-    let bwidth = this.getDefault("BoxLineWidth", undefined, 1);
+    let bwidth = this.getDefault("border-width", undefined, 1);
     let padding = this.getDefault("padding", undefined, 5);
 
     this.noMarginsOrPadding();

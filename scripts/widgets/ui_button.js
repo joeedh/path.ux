@@ -9,7 +9,7 @@ import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import {DataPathError} from '../path-controller/controller/controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 import cconst from '../config/const.js';
-import {CSSFont} from "../core/ui_base.js";
+import {_themeUpdateKey, CSSFont} from "../core/ui_base.js";
 
 let keymap = events.keymap;
 
@@ -129,7 +129,7 @@ export class Button extends UIBase {
 
   get boxpad() {
     throw new Error("Button.boxpad is deprecated");
-    return this.getDefault("BoxMargin");
+    return this.getDefault("padding");
   }
 
   click() {
@@ -149,15 +149,15 @@ export class Button extends UIBase {
     throw new Error("Deprecated call to Button.boxpad setter");
 
     //console.warn("Deprecated call to Button.boxpad setter");
-    //this.overrideDefault("BoxMargin", val);
+    //this.overrideDefault("padding", val);
   }
 
   init() {
     let dpi = this.getDPI();
 
     //set default dimensions
-    let width = ~~(this.getDefault("defaultWidth"));
-    let height = ~~(this.getDefault("defaultHeight"));
+    let width = ~~(this.getDefault("width"));
+    let height = ~~(this.getDefault("height"));
 
     this.dom.style["width"] = width + "px";
     this.dom.style["height"] = height + "px";
@@ -183,11 +183,11 @@ export class Button extends UIBase {
   }
 
   get r() {
-    return this.getDefault("BoxRadius");
+    return this.getDefault("border-radius");
   }
 
   set r(val) {
-    this.overrideDefault("BoxRadius", val);
+    this.overrideDefault("border-radius", val);
   }
 
   bindEvents() {
@@ -274,7 +274,7 @@ export class Button extends UIBase {
       this._last_disabled = this.disabled;
 
       //setTimeout(() => {
-      this.dom._background = this.getDefault("BoxBG");
+      this.dom._background = this.getDefault("background-color");
 
       this._repos_canvas();
       this._redraw();
@@ -286,7 +286,7 @@ export class Button extends UIBase {
   }
 
   updateDefaultSize() {
-    let height = ~~(this.getDefault("defaultHeight")) + this.getDefault("BoxMargin");
+    let height = ~~(this.getDefault("height")) + this.getDefault("padding");
     let size = this.getDefault("DefaultText").size * 1.33;
 
     if (height === undefined || size === undefined || isNaN(height) || isNaN(size)) {
@@ -306,19 +306,7 @@ export class Button extends UIBase {
   }
 
   _calcUpdateKey() {
-    let ret = this.getDefault("BoxBG") + ":" + this.getDefault("BoxHighlight") + ":";
-    ret += this.style["background-color"] + ":";
-    ret += this.getDefault("BoxRadius") + ":" + this.getDefault("BoxMargin") + ":";
-    ret += this.getAttribute("name") + ":";
-
-    let font = this.getDefault("DefaultText");
-    if (font && typeof font === "string") {
-      ret += font;
-    } else if (font && font instanceof CSSFont) {
-      ret += font.genKey();
-    }
-
-    return ret;
+    return _themeUpdateKey;
   }
 
   update() {
@@ -359,7 +347,7 @@ export class Button extends UIBase {
 
     let dpi = this.getDPI();
 
-    let pad = this.getDefault("BoxMargin");
+    let pad = this.getDefault("padding");
     let ts = this.getDefault("DefaultText").size;
     
     let tw = ui_base.measureText(this, this._genLabel(),{
@@ -371,11 +359,27 @@ export class Button extends UIBase {
       tw += this._namePad;
     }
 
-    let w = this.getDefault("numslider_width") / dpi;
+    let w = this.getDefault("width") / dpi;
 
     w = Math.max(w, tw);
     w = ~~w;
     this.dom.style["width"] = w+"px";
+    this.updateBorders();
+  }
+
+  updateBorders() {
+    let lwid = this.getDefault("border-width");
+
+    if (lwid) {
+      this.dom.style["border-color"] = this.getDefault("border-color");
+      this.dom.style["border-width"] = lwid + "px";
+      this.dom.style["border-style"] = "solid";
+      this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+    } else {
+      this.dom.style["border-color"] = "none";
+      this.dom.style["border-width"] = "0px";
+      this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+    }
   }
 
   updateName() {
@@ -454,10 +458,21 @@ export class Button extends UIBase {
     } else if (this._highlight) {
       this.dom._background = this.getDefault("BoxHighlight");
     } else {
-      this.dom._background = this.getDefault("BoxBG");
+      this.dom._background = this.getDefault("background-color");
     }
 
-    ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, undefined, undefined);
+    ui_base.drawRoundBox(this, this.dom, this.g);
+
+    //drawn with CSS now
+    /*
+    let lwid = this.getDefault("border-width");
+    if (lwid) {
+      this.g.lineWidth = lwid*dpi;
+      ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined, undefined, "stroke");
+    }
+     */
+
+    this.updateBorders();
 
     if (this._focus) {
       let w = this.dom.width, h = this.dom.height;
@@ -466,8 +481,12 @@ export class Button extends UIBase {
       //XXX remove this.g.translate lines after refactoring drawRoundBox, see comment in ui_base.js
       this.g.translate(p, p);
       let lw = this.g.lineWidth;
-      this.g.lineWidth = 2*dpi;
+
+
+      this.g.lineWidth = this.getDefault("focus-border-width", undefined, 1.0)*dpi;
+
       ui_base.drawRoundBox(this, this.dom, this.g, w-p*2, h-p*2, this.r, "stroke", this.getDefault("BoxHighlight"));
+
       this.g.lineWidth = lw;
       this.g.translate(-p, -p);
     }
@@ -484,7 +503,7 @@ export class Button extends UIBase {
       dpi = dpi; //visualViewport.scale;
     }
 
-    let pad = this.getDefault("BoxMargin") * dpi;
+    let pad = this.getDefault("padding") * dpi;
     let ts = this.getDefault("DefaultText").size * dpi;
 
     let text = this._genLabel();

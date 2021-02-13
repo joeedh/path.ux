@@ -19,7 +19,7 @@ export function makePopupArea(area_class, screen, args={}) {
 
   sarea.switch_editor(area_class);
 
-  sarea.style["background-color"] = sarea.getDefault("DefaultPanelBG");
+  sarea.style["background-color"] = sarea.getDefault("background-color");
 
   sarea.area.flag |= AreaFlags.FLOATING | AreaFlags.INDEPENDENT;
 

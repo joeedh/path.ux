@@ -4812,7 +4812,7 @@
         {
           name: 'backgroundcolor',
           type: 'colorinput',
-          label: 'Background color'
+          label: 'background-color color'
         }
       ];
       var borderWidth = {

@@ -39,7 +39,7 @@ export class RichEditor extends TextBoxBase {
     let makeicon = (icon, description, cb) => {
       icon = controls.iconbutton(icon, description, cb);
       icon.iconsheet = 1; //use second smallest icon size
-      icon.overrideDefault("BoxMargin", 3);
+      icon.overrideDefault("padding", 3);
 
       return icon;
     };
@@ -57,7 +57,7 @@ export class RichEditor extends TextBoxBase {
       document.execCommand("strikeThrough");
     });
 
-    controls.background = this.getDefault("DefaultPanelBG");
+    controls.background = this.getDefault("background-color");
 
     this.shadow.appendChild(controls);
 
@@ -226,7 +226,7 @@ export class RichEditor extends TextBoxBase {
   setCSS() {
     super.setCSS();
 
-    this.controls.background = this.getDefault("DefaultPanelBG");
+    this.controls.background = this.getDefault("background-color");
 
     if (this._focus) {
       this.textarea.style["border"] = `2px dashed ${this.getDefault('FocusOutline')}`;
@@ -286,7 +286,8 @@ export class RichEditor extends TextBoxBase {
 
   static define() {return {
     tagname : "rich-text-editor-x",
-    style   : "richtext"
+    style   : "richtext",
+    modalKeyEvents : true
   }}
 }
 UIBase.internalRegister(RichEditor);

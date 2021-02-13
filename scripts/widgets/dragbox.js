@@ -109,7 +109,7 @@ export class DragBox extends Container {
       startDrag(this);
     }, {capture : false})
 
-    header.background = this.getDefault("Background");
+    header.background = this.getDefault("background-color");
 
     this.setCSS();
   }
@@ -210,7 +210,7 @@ export class DragBox extends Container {
   setCSS() {
     super.setCSS();
 
-    this.background = this.getDefault("Background");
+    this.background = this.getDefault("background-color");
   }
 
   static define() {return {

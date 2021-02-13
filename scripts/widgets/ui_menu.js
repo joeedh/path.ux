@@ -584,6 +584,14 @@ export class Menu extends UIBase {
     return li;
   }
 
+  _getBorderStyle() {
+    let r = this.getDefault("border-width");
+    let s =this.getDefault("border-style");
+    let c = this.getDefault("border-color");
+
+    return `${r}px ${s} ${c}`;
+  }
+
   buildStyle() {
     let pad1 = util.isMobile() ? 2 : 0;
     pad1 += this.getDefault("MenuSpacing");
@@ -593,7 +601,7 @@ export class Menu extends UIBase {
           position:absolute;
           float:left;
           
-          border-radius : ${this.getDefault("MenuBorderRadius")}px;
+          border-radius : ${this.getDefault("border-radius")}px;
 
           display: block;
           -moz-user-focus: normal;
@@ -607,8 +615,8 @@ export class Menu extends UIBase {
           
           margin : 0px;
           padding : 0px;
-          border : ${this.getDefault("MenuBorder")};
-          border-radius : ${this.getDefault("MenuBorderRadius")}px;
+          border : ${this._getBorderStyle()};
+          border-radius : ${this.getDefault("border-radius")}px;
           -moz-user-focus: normal;
           background-color: ${this.getDefault("MenuBG")};
           color : ${this.getDefault("MenuText").color};
@@ -629,7 +637,7 @@ export class Menu extends UIBase {
           padding-top : ${pad1}px;
           padding-bottom : ${pad1}px;
           
-          border-radius : ${this.getDefault("MenuBorderRadius")}px;
+          border-radius : ${this.getDefault("border-radius")}px;
           
           color : ${this.getDefault("MenuText").color};
           font : ${this.getDefault("MenuText").genCSS()};
@@ -646,7 +654,7 @@ export class Menu extends UIBase {
           
           border : none;
           outline : none;
-          border-radius : ${this.getDefault("MenuBorderRadius")}px;
+          border-radius : ${this.getDefault("border-radius")}px;
           
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${this.getDefault("MenuText").color};
@@ -775,7 +783,7 @@ export class DropBox extends Button {
       this.style["width"] = tw + "px";
       this.width = tw;
 
-      this.overrideDefault("defaultWidth", tw);
+      this.overrideDefault("width", tw);
       this._repos_canvas();
       this._redraw();
     }

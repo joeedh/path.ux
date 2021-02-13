@@ -104,14 +104,13 @@ export class PanelFrame extends ColumnFrame {
 
     let iconcheck = this.iconcheck;
 
-    iconcheck.overrideDefault("BoxMargin", 0);
+    iconcheck.overrideDefault("padding", 0);
 
     iconcheck.noMarginsOrPadding();
 
-    iconcheck.overrideDefault("BoxBG", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxSubBG", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("background-color", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
-    iconcheck.overrideDefault("BoxBorder", "rgba(0,0,0,0)");
+    iconcheck.overrideDefault("border-color", "rgba(0,0,0,0)");
 
     iconcheck.ctx = this.ctx;
     iconcheck._icon_pressed = ui_base.Icons.UI_EXPAND;
@@ -146,8 +145,8 @@ export class PanelFrame extends ColumnFrame {
     let bs = this.getDefault("border-style");
 
     row.background = this.getDefault("TitleBackground");
-    row.style["border-radius"] = this.getDefault("BoxRadius") + "px";
-    row.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
+    row.style["border-radius"] = this.getDefault("border-radius") + "px";
+    row.style["border"] = `${this.getDefault("border-width")}px ${bs} ${this.getDefault("border-color")}`;
 
     row.style["padding-right"] = "20px";
     row.style["padding-left"] = "5px";
@@ -158,7 +157,7 @@ export class PanelFrame extends ColumnFrame {
   init() {
     super.init();
 
-    this.background = this.getDefault("Background");
+    this.background = this.getDefault("background-color");
     this.style["width"] = "100%";
 
     this.contents.ctx = this.ctx;
@@ -193,18 +192,18 @@ export class PanelFrame extends ColumnFrame {
 
     let header_radius = this.getDefault("HeaderRadius");
     if (header_radius === undefined) {
-      header_radius = this.getDefault("BoxRadius");
+      header_radius = this.getDefault("border-radius");
     }
 
     this.titleframe.background = this.getDefault("TitleBackground");
     this.titleframe.style["border-radius"] = header_radius + "px";
-    this.titleframe.style["border"] = `${this.getDefault( "BoxLineWidth")}px ${bs} ${this.getDefault("TitleBorder")}`;
-    this.style["border"] = `${this.getDefault("BoxLineWidth")}px ${bs} ${this.getDefault("BoxBorder")}`;
-    this.style["border-radius"] = this.getDefault("BoxRadius") + "px";
+    this.titleframe.style["border"] = `${this.getDefault( "border-width")}px ${bs} ${this.getDefault("TitleBorder")}`;
+    this.style["border"] = `${this.getDefault("border-width")}px ${bs} ${this.getDefault("border-color")}`;
+    this.style["border-radius"] = this.getDefault("border-radius") + "px";
     this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
     this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
 
-    let bg = this.getDefault("Background");
+    let bg = this.getDefault("background-color");
     
     this.background = bg;
     this.contents.background = bg;
@@ -230,7 +229,7 @@ export class PanelFrame extends ColumnFrame {
     this.style['margin-top'] = margintop + "px";
     this.style['margin-bottom'] = marginbottom + "px";
 
-    let boxmargin = getDefault("BoxMargin", 0);
+    let boxmargin = getDefault("padding", 0);
     let paddingleft  = getDefault("padding-left", 0);
     let paddingright  = getDefault("padding-right", 0);
 
@@ -261,42 +260,23 @@ export class PanelFrame extends ColumnFrame {
   static define() {
     return {
       tagname: "panelframe-x",
-      style  : "panel"
+      style  : "panel",
+      subclassChecksTheme : true
     };
   }
 
   update() {
-    let key = this.getDefault("background-color") + this.getDefault("TitleBackground");
-    key += this.getDefault("BoxBorder") + this.getDefault("BoxLineWidth");
-    key += this.getDefault("BoxRadius") + this.getDefault("padding-top");
-    key += this.getDefault("padding-bottom") + this.getDefault("TitleBorder");
-    key += this.getDefault("Background") + this.getDefault("border-style");
-    key += this.getDefault("HeaderRadius");
-    key += this.getDefault("margin-top");
-    key += this.getDefault("margin-bottom");
-    key += this.getAttribute("title");
-    key += this.getDefault("padding-left");
-    key += this.getDefault("padding-right");
-    key += this.getDefault("margin-bottom-closed");
-    key += this.getDefault("margin-top-closed");
-    key += !!this._closed;
+    let text = this.getAttribute("title");
 
-    let font = this.__label.getDefault("TitleText");
-    if (font) {
-      if (typeof font === "string") {
-        key += font;
-      } else if (font instanceof CSSFont) {
-        key += font.genKey();
-      }
-    }
+    let update = text !== this.__label.text;
+    update = update || this.checkThemeUpdate();
 
-    if (key !== this._last_key) {
+    if (update) {
       if (this.getAttribute("title")) {
         this.label = this.getAttribute("title")
       }
 
       this.__label._updateFont();
-      this._last_key = key;
       this.setCSS();
     }
 

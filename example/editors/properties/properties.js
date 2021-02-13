@@ -45,6 +45,30 @@ export class PropsEditor extends Editor {
         this._pageUIData = undefined;
         this.container.flushUpdate();
       }
+
+      let exportbutton = container.getElementById("export_theme");
+      exportbutton.onclick = () => {
+        let theme = exportTheme();
+
+        theme = theme.replace(/var theme/, "export const theme");
+
+        theme = `import {CSSFont} from './pathux.js';\n\n` + theme;
+        theme = `
+/*
+ * WARNING: AUTO-GENERATED FILE
+ * 
+ * Copy to scripts/editors/theme.js
+ */
+      `.trim() + "\n\n" + theme + "\n";
+
+        console.log(theme);
+
+        let blob = new Blob([theme], {mime : "application/javascript"});
+        let url = URL.createObjectURL(blob);
+
+        console.log("url", url);
+        window.open(url);
+      };
     });
   }
 

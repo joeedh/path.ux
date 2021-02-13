@@ -266,6 +266,34 @@ class Handler {
     }
   }
 
+  button(elem) {
+    let title = elem.innerHTML.trim();
+
+    let ret = this.container.button(title);
+
+    if (elem.hasAttribute("id")) {
+      ret.setAttribute("id", elem.getAttribute("id"));
+    }
+
+    this._basic(elem, ret);
+  }
+
+  iconbutton(elem) {
+    let title = elem.innerHTML.trim();
+
+    let icon = elem.getAttribute("icon");
+    if (icon) {
+      icon = UIBase.getIconEnum()[icon];
+    }
+    let ret = this.container.iconbutton(icon, title);
+
+    if (elem.hasAttribute("id")) {
+      ret.setAttribute("id", elem.getAttribute("id"));
+    }
+
+    this._basic(elem, ret);
+  }
+
   tab(elem) {
     this.push();
 

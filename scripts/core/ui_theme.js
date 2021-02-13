@@ -1,7 +1,24 @@
+/*
+THEME REFACTOR:
+
+* Use CSS as much as possible
+* Create a compatibility layer
+
+*/
 import * as util from "../path-controller/util/util.js";
 import {Vector3, Vector4} from '../path-controller/util/vectormath.js';
 import * as nstructjs from "../path-controller/util/struct.js";
 import cconst from '../config/const.js';
+
+export let compatMap = {
+  BoxMargin : "padding",
+  BoxRadius : "border-radius",
+  background : "background-color",
+  defaultWidth : "width",
+  defaultHeight : "height",
+  BoxBorder : "border-color",
+  BoxLineWidth : "border-width"
+};
 
 export let ColorSchemeTypes = {
   LIGHT : "light",
@@ -20,7 +37,7 @@ export function color2css(c, alpha_override) {
 
   a = alpha_override !== undefined ? alpha_override : a;
 
-  if (c.length == 3 && alpha_override === undefined) {
+  if (c.length === 3 && alpha_override === undefined) {
     return `rgb(${r},${g},${b})`;
   } else {
     return `rgba(${r},${g},${b}, ${a})`;
@@ -224,6 +241,8 @@ export function setColorSchemeType(mode) {
 }
 window.validateWebColor = validateWebColor;
 
+let _digest = new util.HashDigest();
+
 export class CSSFont {
   constructor(args={}) {
     this._size = args.size ? args.size : 12;
@@ -232,6 +251,17 @@ export class CSSFont {
     this.weight = args.weight !== undefined ? args.weight : "normal";
     this.variant = args.variant !== undefined ? args.variant : "normal";
     this.color = args.color;
+  }
+
+  calcHashUpdate(digest=_digest.reset()) {
+    digest.add(this._size || 0);
+    digest.add(this.font);
+    digest.add(this.style);
+    digest.add(this.weight);
+    digest.add(this.variant);
+    digest.add(this.color);
+
+    return digest.get();
   }
 
   set size(val) {

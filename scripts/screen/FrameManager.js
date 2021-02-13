@@ -535,7 +535,7 @@ export class Screen extends ui_base.UIBase {
       return remove.apply(container, arguments);
     };
 
-    container.background = this.getDefault("BoxSubBG");
+    container.background = this.getDefault("background-color");
     container.style["position"] = "absolute";
     container.style["z-index"] = 205;
     container.style["left"] = x + "px";
@@ -2795,12 +2795,17 @@ nstructjs.manager.add_class(Screen);
 ui_base.UIBase.internalRegister(Screen);
 
 ScreenArea.setScreenClass(Screen);
+_setScreenClass(Screen);
+
 
 let get_screen_cb;
 let _on_keydown;
 
 let start_cbs = [];
 let stop_cbs = [];
+let keyboardDom = window;
+
+let key_event_opts = undefined;
 
 export function startEvents(getScreenFunc) {
   get_screen_cb = getScreenFunc;
@@ -2817,7 +2822,7 @@ export function startEvents(getScreenFunc) {
     return screen.on_keydown(e);
   };
 
-  window.addEventListener("keydown", _on_keydown);
+  window.addEventListener("keydown", _on_keydown, key_event_opts);
 
   for (let cb of start_cbs) {
     cb();
@@ -2825,7 +2830,7 @@ export function startEvents(getScreenFunc) {
 }
 
 export function stopEvents() {
-  window.removeEventListener("keydown", _on_keydown);
+  window.removeEventListener("keydown", _on_keydown, key_event_opts);
   _on_keydown = undefined;
   _events_started = false;
 
@@ -2836,11 +2841,27 @@ export function stopEvents() {
       util.print_stack(error);
     }
   }
+
   return get_screen_cb;
 }
 
-_setScreenClass(Screen);
+export function setKeyboardDom(dom) {
+  let started = _events_started;
+  if (started) {
+    stopEvents();
+  }
 
+  keyboardDom = dom;
+
+  if (started) {
+    startEvents(get_screen_cb);
+  }
+}
+
+/** Sets options passed to addEventListener() for on_keydown hotkey handler */
+export function setKeyboardOpts(opts) {
+  key_event_opts = opts;
+}
 
 export function _onEventsStart(cb) {
   start_cbs.push(cb);
@@ -2849,6 +2870,7 @@ export function _onEventsStart(cb) {
 export function _onEventsStop(cb) {
   stop_cbs.push(cb);
 }
+
 /*
 document.addEventListener("touchstart", (e) => {
   e.preventDefault();

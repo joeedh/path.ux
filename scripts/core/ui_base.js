@@ -23,7 +23,7 @@ import {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
 
 export * from './ui_theme.js';
 
-import {CSSFont, theme, parsepx} from "./ui_theme.js";
+import {CSSFont, theme, parsepx, compatMap} from "./ui_theme.js";
 
 import {DefaultTheme} from './theme.js';
 export {theme} from "./ui_theme.js";
@@ -101,7 +101,13 @@ export function setTheme(theme2) {
     }
 
     for (let k2 in v) {
-      theme[k][k2] = v[k2];
+      let k3 = k2;
+
+      if (k2 in compatMap) {
+        k3 = compatMap[k2];
+      }
+      
+      theme[k][k3] = v[k2];
     }
   }
 }
@@ -109,9 +115,9 @@ export function setTheme(theme2) {
 setTheme(DefaultTheme);
 
 let _last_report = util.time_ms();
-export function report(msg) {
+export function report() {
   if (util.time_ms() - _last_report > 350) {
-    console.warn(msg);
+    console.warn(...arguments);
     _last_report = util.time_ms();
   }
 }
@@ -123,7 +129,7 @@ export function getDefault(key, elem) {
   if (key in theme.base) {
     return theme.base[key];
   } else {
-    throw new Error("Unknown default", key);
+    throw new Error("Unknown default " + key);
   }
 }
 
@@ -522,11 +528,43 @@ ${selector}::-webkit-scrollbar-thumb {
 
 window.styleScrollBars = styleScrollBars;
 
+let _digest = new util.HashDigest();
+export function calcThemeKey(digest=_digest.reset()) {
+  for (let k in theme) {
+    let obj = theme[k];
+
+    if (typeof obj !== "object") {
+      continue;
+    }
+
+    for (let k2 in obj) {
+      let v2 = obj[k2];
+
+      if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
+        digest.add(v2);
+      } else if (typeof v2 === "object" && v2 instanceof CSSFont) {
+        v2.calcHashUpdate(digest);
+      }
+    }
+  }
+
+  return digest.get();
+}
+
+export var _themeUpdateKey = calcThemeKey();
+
+export function flagThemeUpdate() {
+  _themeUpdateKey = calcThemeKey();
+}
+
 export class UIBase extends HTMLElement {
   constructor() {
     super();
 
     this._textBoxEvents = false;
+
+    this._checkTheme = true;
+    this._last_theme_update_key = _themeUpdateKey;
 
     this._client_disabled_set = undefined;
     //this._parent_disabled_set = 0;
@@ -590,7 +628,8 @@ export class UIBase extends HTMLElement {
     let tagname = this.constructor.define().tagname;
     this._id = tagname.replace(/\-/g, "_") + (_idgen++);
 
-    this.default_overrides = {};
+    this.default_overrides = {}; //inherited by child widgets
+    this.my_default_overrides = {}; //not inherited to child widgets
     this.class_default_overrides = {};
 
     this._last_description = undefined;
@@ -691,6 +730,58 @@ export class UIBase extends HTMLElement {
     })
   }
 
+  getElementById(id) {
+    let ret;
+
+    let rec = (n) => {
+      if (ret) {
+        return;
+      }
+
+      if (n.getAttribute("id") === id || n.id === id) {
+        ret = n;
+      }
+
+      if (n.constructor.name === "PanelFrame") {
+        rec(n.contents);
+      } else if (n.constructor.name === "TabContainer") {
+        for (let k in n.tabs) {
+          let tab = n.tabs[k];
+
+          if (tab) {
+            rec(tab);
+          }
+        }
+      }
+
+      for (let n2 of n.childNodes) {
+        if (n2 instanceof HTMLElement) {
+          rec(n2);
+
+          if (ret) {
+            break;
+          }
+        }
+      }
+
+      if (n.shadow) {
+        for (let n2 of n.shadow.childNodes) {
+          if (n2 instanceof HTMLElement) {
+            rec(n2);
+
+            if (ret) {
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    rec(this);
+
+    return ret;
+  }
+
   static getIconEnum() {
     return Icons;
   }
@@ -725,7 +816,6 @@ export class UIBase extends HTMLElement {
 
     while (p) {
       if (p._useDataPathUndo !== undefined) {
-        //console.log(p._useDataPathUndo, p.tagName);
         return p._useDataPathUndo;
       }
 
@@ -896,7 +986,7 @@ export class UIBase extends HTMLElement {
   set background(bg) {
     this.__background = bg;
 
-    this.overrideDefault("background-color", bg);
+    this.overrideDefault("background-color", bg, true);
     this.style["background-color"] = bg;
   }
 
@@ -1899,7 +1989,20 @@ export class UIBase extends HTMLElement {
       n._ensureChildrenCtx(ctx);
     });
   }
-  
+
+  checkThemeUpdate() {
+    if (!cconst.enableThemeAutoUpdate) {
+      return false;
+    }
+
+    if (_themeUpdateKey !== this._last_theme_update_key) {
+      this._last_theme_update_key = _themeUpdateKey;
+      return true;
+    }
+
+    return false;
+  }
+
   //called regularly
   update() {
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
@@ -1911,8 +2014,14 @@ export class UIBase extends HTMLElement {
     if (!this._init_done) {
       this._init();
     }
-    
-    //this._ensureChildrenCtx();
+
+    if (this._init_done && !this.constructor.define().subclassChecksTheme) {
+      if (this.checkThemeUpdate()) {
+        console.log("theme update!");
+
+        this.setCSS();
+      }
+    }
   }
   
   onadd() {
@@ -2019,8 +2128,12 @@ export class UIBase extends HTMLElement {
     customElements.define(cls.define().tagname, cls);
   }
 
-  overrideDefault(key, val) {
-    this.default_overrides[key] = val;
+  overrideDefault(key, val, localOnly=false) {
+    this.my_default_overrides[key] = val;
+
+    if (!localOnly) {
+      this.default_overrides[key] = val;
+    }
   }
 
   overrideClass(style) {
@@ -2056,20 +2169,54 @@ export class UIBase extends HTMLElement {
     return val;
   }
 
-  getDefault(key, doMobile=true, defaultval=undefined) {
+  hasDefault(key) {
     let p = this;
 
     while (p) {
       if (key in p.default_overrides) {
-        let v = p.default_overrides[key];
-
-        return doMobile ? this._doMobileDefault(key, v) : v;
+        return true;
       }
 
       p = p.parentWidget;
     }
 
-    return this.getClassDefault(key, doMobile, defaultval);
+    return this.hasClassDefault(key);
+  }
+
+  getDefault(key, checkForMobile=true, defaultval=undefined) {
+    let ret = this.getDefault_intern(key, checkForMobile, defaultval);
+
+    //convert pixel units straight to numbers
+    if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
+      let s = ret.trim().toLowerCase();
+      s = s.slice(0, s.length-2).trim();
+
+      let f = parseFloat(s);
+      if (!isNaN(f) && isFinite(f)) {
+        return f;
+      }
+    }
+
+    return ret;
+  }
+
+  getDefault_intern(key, checkForMobile=true, defaultval=undefined) {
+    if (this.my_default_overrides[key] !== undefined) {
+      let v = this.my_default_overrides[key];
+      return checkForMobile ? this._doMobileDefault(key, v) : v;
+    }
+
+    let p = this;
+    while (p) {
+      if (p.default_overrides[key] !== undefined) {
+        let v = p.default_overrides[key];
+        checkForMobile ? this._doMobileDefault(key, v) : v;
+      }
+
+      p = p.parentWidget;
+    }
+
+    return this.getClassDefault(key, checkForMobile, defaultval);
   }
 
   getStyleClass() {
@@ -2095,7 +2242,28 @@ export class UIBase extends HTMLElement {
     return "base";
   }
 
-  getClassDefault(key, doMobile=true, defaultval=undefined) {
+  hasClassDefault(key) {
+    let style = this.getStyleClass();
+
+    let p = this;
+    while (p) {
+      let def = p.class_default_overrides[style];
+
+      if (def && (key in def)) {
+        return true;
+      }
+
+      p = p.parentWidget;
+    }
+
+    if (style in theme && key in theme[style]) {
+      return true;
+    }
+
+    return key in theme.base;
+  }
+
+  getClassDefault(key, checkForMobile=true, defaultval=undefined) {
     let style = this.getStyleClass();
 
     let val = undefined;
@@ -2111,15 +2279,24 @@ export class UIBase extends HTMLElement {
       p = p.parentWidget;
     }
 
+    if (val === undefined && style in theme && !(key in theme[style]) && !(key in theme.base)) {
+      report("Missing theme key ", key, "for", style);
+    }
+
     if (val === undefined && style in theme && key in theme[style]) {
       val = theme[style][key];
     } else if (defaultval !== undefined) {
       val = defaultval;
     } else if (val === undefined) {
-      val = theme.base[key];
+      let def = this.constructor.define();
+      if (def.parentStyle && key in theme[def.parentStyle]) {
+        val = def.parentStyle[key];
+      } else {
+        val = theme.base[key];
+      }
     }
 
-    return doMobile ? this._doMobileDefault(key, val) : val;
+    return checkForMobile ? this._doMobileDefault(key, val) : val;
   }
 
   getStyle() {
@@ -2213,6 +2390,7 @@ export class UIBase extends HTMLElement {
    * static define() {return {
    *   tagname : "custom-element-x",
    *   style : "[style class in theme]"
+   *   subclassChecksTheme : boolean //set to true to disable base class invokation of subclassChecksTheme
    * }}
    */
   static define() {
@@ -2235,10 +2413,13 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
 
     let dpi = elem.getDPI();
     
-    r = r === undefined ? elem.getDefault("BoxRadius") : r;
+    r = r === undefined ? elem.getDefault("border-radius") : r;
 
     if (margin === undefined) {
-      margin = elem.getDefault("BoxDrawMargin");
+      margin = elem.getDefault("padding");
+    }
+    if (margin === undefined) {
+      margin = 1;
     }
 
     r *= dpi;
@@ -2257,16 +2438,16 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     if (bg === undefined && canvas._background !== undefined) {
       bg = canvas._background;
     } else if (bg === undefined) {
-      bg = elem.getDefault("BoxBG");
+      bg = elem.getDefault("background-color");
     }
     
-    if (op == "fill" && !no_clear) {
+    if (op === "fill" && !no_clear) {
       g.clearRect(0, 0, width, height);
     }
     
     g.fillStyle = bg;
     //hackish!
-    g.strokeStyle = color === undefined ? elem.getDefault("BoxBorder") : color;
+    g.strokeStyle = color === undefined ? elem.getDefault("border-color") : color;
     
     let w = width, h = height;
     
@@ -2290,11 +2471,10 @@ export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     g.quadraticCurveTo(margin, margin, margin, margin+r1);
     g.closePath();
 
-    if (op == "clip") {
+    if (op === "clip") {
       g.clip();
-    } else if (op == "fill") {
+    } else if (op === "fill") {
       g.fill();
-      g.stroke();
     } else {
       g.stroke();
     }
@@ -2323,24 +2503,7 @@ export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
     return _getFont_new(elem, size, font, do_dpi);
   }
 
-  console.warn("Old style font detected");
-
-  if (!do_dpi) {
-    dpi = 1;
-  }
-  
-  if (size !== undefined) {
-    return ""+(size * dpi) + "px " + getDefault(font+"Font");
-  } else {
-    let size = getDefault(font+"Size");
-
-    if (size === undefined) {
-      console.warn("Unknown fontsize for font", font);
-      size = 14;
-    }
-
-    return ""+size+ "px " + getDefault(font+"Font");
-  }
+  throw new Error("unknown font " + font);
 }
 
 export function _ensureFont(elem, canvas, g, size) {

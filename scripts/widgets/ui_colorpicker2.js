@@ -231,8 +231,8 @@ export class HueField extends UIBase {
     let g = this.g, canvas = this.canvas;
     let dpi = this.getDPI();
 
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("hueheight");
+    let w = this.getDefault("width");
+    let h = this.getDefault("hueHeight");
 
     canvas.width = ~~(w*dpi);
     canvas.height = ~~(h*dpi);
@@ -401,12 +401,12 @@ export class SatValField extends UIBase {
     let dpi = this.getDPI();
     let canvas = this.canvas;
     let r = this.getDefault("circleSize");
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
+    let w = this.getDefault("width");
+    let h = this.getDefault("height");
 
     //r = ~~(r*dpi);
 
-    return getFieldImage(this.getDefault("fieldsize"), w-r*2, h-r*2, this.hsva);
+    return getFieldImage(this.getDefault("fieldSize"), w-r*2, h-r*2, this.hsva);
   }
 
   update(force_update=false) {
@@ -421,8 +421,8 @@ export class SatValField extends UIBase {
     let g = this.g, canvas = this.canvas;
     let dpi = this.getDPI();
 
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
+    let w = this.getDefault("width");
+    let h = this.getDefault("height");
 
     canvas.width = ~~(w*dpi);
     canvas.height = ~~(h*dpi);
@@ -682,7 +682,7 @@ export class ColorPicker extends ui.ColumnFrame {
     let style = document.createElement("style");
     style.textContent = `
       .colorpicker {
-        background-color : ${this.getDefault("BoxBG")};
+        background-color : ${this.getDefault("background-color")};
       }
     `;
 
@@ -699,7 +699,7 @@ export class ColorPicker extends ui.ColumnFrame {
     this.add(this.colorbox);
     this.add(this.field);
 
-    this.style["width"] = this.getDefault("defaultWidth") + "px";
+    this.style["width"] = this.getDefault("width") + "px";
   }
 
   updateColorBox() {
@@ -738,7 +738,7 @@ export class ColorPicker extends ui.ColumnFrame {
       node._no_update_textbox = false;
     };
 
-    //tabs.overrideDefault("DefaultPanelBG", node.getDefault("DefaultPanelBG"));
+    //tabs.overrideDefault("background-color", node.getDefault("background-color"));
 
     let tab = tabs.tab("HSV");
 
@@ -1139,9 +1139,9 @@ export class ColorPickerButton extends UIBase {
 
     widget.onchange = onchange;
 
-    colorpicker.style["background-color"] = widget.getDefault("DefaultPanelBG");
+    colorpicker.style["background-color"] = widget.getDefault("background-color");
     colorpicker.style["border-radius"] = "25px";
-    colorpicker.style["border"] = widget.getDefault("border");
+    colorpicker.style["border-width"] = widget.getDefault("border-width");
   }
 
   setRGBA(val) {
@@ -1267,8 +1267,8 @@ export class ColorPickerButton extends UIBase {
   setCSS() {
     super.setCSS();
 
-    let w = this.getDefault("defaultWidth");
-    let h = this.getDefault("defaultHeight");
+    let w = this.getDefault("width");
+    let h = this.getDefault("height");
     let dpi = this.getDPI();
 
     this.style["width"] = "min-contents" + "px";

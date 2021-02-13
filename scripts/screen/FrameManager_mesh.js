@@ -219,8 +219,8 @@ export class ScreenBorder extends ui_base.UIBase {
       this.appendChild(this._style);
     }
 
-    let pad = this.getDefault("ScreenBorderMousePadding");
-    let wid = this.getDefault("ScreenBorderWidth");
+    let pad = this.getDefault("mouse-threshold");
+    let wid = this.getDefault("border-width");
 
     let v1 = this.v1, v2 = this.v2;
     let vec = new Vector2(v2).sub(v1);
@@ -257,7 +257,7 @@ export class ScreenBorder extends ui_base.UIBase {
     }
 
 
-    let color = this.getDefault("ScreenBorderOuter");
+    let color = this.getDefault("border-outer");
     let debug = cconst.DEBUG.screenborders;
 
     if (debug) {
@@ -288,7 +288,7 @@ export class ScreenBorder extends ui_base.UIBase {
           margin : 0px;
           padding : 0px;
           
-          background-color : ${this.getDefault("ScreenBorderInner")};
+          background-color : ${this.getDefault("border-inner")};
           border-color : ${color};
           border-width : ${wid*0.5}px;
           border-style : ${debug && this.outer ? "dashed" : "solid"};
@@ -343,7 +343,8 @@ export class ScreenBorder extends ui_base.UIBase {
 
   static define() {
     return {
-      tagname: "screenborder-x"
+      tagname: "screenborder-x",
+      style : "screenborder"
     };
   }
 }

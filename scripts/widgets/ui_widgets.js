@@ -347,7 +347,7 @@ export class Check extends UIBase {
     let canvas = this.canvas, g = this.g;
     let dpi = UIBase.getDPI();
     let tilesize = ui_base.iconmanager.getTileSize(0);
-    let pad = this.getDefault("BoxMargin");
+    let pad = this.getDefault("padding");
 
     let csize = tilesize + pad*2;
 
@@ -446,7 +446,8 @@ export class Check extends UIBase {
   
   static define() {return {
     tagname : "check-x",
-    style   : "checkbox"
+    style   : "checkbox",
+    parentStyle : "button"
   };}
 }
 UIBase.internalRegister(Check);
@@ -589,7 +590,7 @@ export class IconCheck extends Button {
   }
 
   _getsize() {
-      let margin = this.getDefault("BoxMargin");
+      let margin = this.getDefault("padding");
       return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
   
@@ -632,7 +633,7 @@ export class IconCheck extends Button {
   _redraw() {
     this._repos_canvas();
     
-    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
+    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("background-color");
     if (this._checked) {
       this._highlight = false;
     }
@@ -667,7 +668,8 @@ export class IconCheck extends Button {
   
   static define() {return {
     tagname : "iconcheck-x",
-    style   : "iconcheck"
+    style   : "iconcheck",
+    parentStyle : "button"
   };}
 }
 
@@ -716,7 +718,7 @@ export class IconButton extends Button {
   }
 
   _getsize() {
-    let margin = this.getDefault("BoxMargin");
+    let margin = this.getDefault("padding");
 
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
@@ -741,7 +743,7 @@ export class IconButton extends Button {
   _redraw() {
     this._repos_canvas();
     
-    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("BoxBG");
+    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("background-color");
     //
     if (this.drawButtonBG) {
       super._redraw(false);
@@ -774,6 +776,7 @@ export class IconButton extends Button {
   static define() {return {
     tagname : "iconbutton-x",
     style : "iconbutton",
+    parentStyle : "button"
   };}
 }
 
@@ -795,8 +798,6 @@ export class Check1 extends Button {
     let box = 40;
     ui_base.drawRoundBox(this, this.dom, this.g, box);
 
-    let r = this.getDefault("BoxRadius") * dpi;
-    let pad = this.getDefault("BoxMargin") * dpi;
     let ts = this.getDefault("DefaultText").size;
 
     let text = this._genLabel();
@@ -813,7 +814,8 @@ export class Check1 extends Button {
   }
 
   static define() {return {
-    tagname : "check1-x"
+    tagname : "check1-x",
+    parentStyle : "button"
   };}
 }
 

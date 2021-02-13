@@ -801,7 +801,6 @@ export class TabBar extends UIBase {
   _redraw() {
     let g = this.g;
 
-    let bgcolor = this.getDefault("DefaultPanelBG");
     let activecolor = this.getDefault("TabActive") || "rgba(0,0,0,0)";
 
     if (debug) console.log("tab draw");
@@ -1017,7 +1016,7 @@ export class TabBar extends UIBase {
   }
 
   updateStyle() {
-    let key = "" + this.getDefault("DefaultPanelBG");
+    let key = "" + this.getDefault("background-color");
     key += this.getDefault("TabActive");
     key += this.getDefault("TabInactive");
     key += this.getDefault("TabBarRadius");
@@ -1111,7 +1110,7 @@ export class TabContainer extends UIBase {
 
       let div = document.createElement("div");
 
-      this.tbar.setCSS.once(() => div.style["background-color"] = this.getDefault("DefaultPanelBG"), div);
+      this.tbar.setCSS.once(() => div.style["background-color"] = this.getDefault("background-color"), div);
 
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
@@ -1179,13 +1178,13 @@ export class TabContainer extends UIBase {
   init() {
     super.init();
 
-    this.background = this.getDefault("DefaultPanelBG");
+    this.background = this.getDefault("background-color");
   }
 
   setCSS() {
     super.setCSS();
 
-    this.background = this.getDefault("DefaultPanelBG");
+    this.background = this.getDefault("background-color");
     this._remakeStyle();
   }
 
@@ -1193,7 +1192,7 @@ export class TabContainer extends UIBase {
     let horiz = this.tbar.horiz;
     let display = "flex";
     let flexDir = !horiz ? "row" : "column";
-    let bgcolor = this.__background; //this.getDefault("DefaultPanelBG");
+    let bgcolor = this.__background; //this.getDefault("background-color");
 
     //display = "inline" //XXX
     let style = document.createElement("style");
@@ -1330,7 +1329,7 @@ export class TabContainer extends UIBase {
   }
 
   updateStyle() {
-    let key = "" + this.getDefault("DefaultPanelBG");
+    let key = "" + this.getDefault("background-color");
 
     if (key !== this._last_style_key) {
       this._last_style_key = key;

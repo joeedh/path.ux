@@ -295,7 +295,7 @@ export class NumSlider extends ValueButtonBase {
     this.addEventListener("mouseout", (e) => {
       if (this.disabled) return;
 
-      this.dom._background = this.getDefault("BoxBG");
+      this.dom._background = this.getDefault("background-color");
       this._repos_canvas();
       this._redraw();
     })
@@ -444,7 +444,7 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseout: (e) => {
-        last_background = this.getDefault("BoxBG");
+        last_background = this.getDefault("background-color");
 
         e.preventDefault();
         e.stopPropagation();
@@ -472,7 +472,7 @@ export class NumSlider extends ValueButtonBase {
         fire();
       }
 
-      this.dom._background = last_background; //ui_base.getDefault("BoxBG");
+      this.dom._background = last_background; //ui_base.getDefault("background-color");
       this._redraw();
 
       this.popModal();
@@ -486,7 +486,7 @@ export class NumSlider extends ValueButtonBase {
         fire();
       }
 
-      this.dom._background = last_background; //ui_base.getDefault("BoxBG");
+      this.dom._background = last_background; //ui_base.getDefault("background-color");
       this._redraw();
 
       console.trace("end");
@@ -530,19 +530,19 @@ export class NumSlider extends ValueButtonBase {
       font : this.getDefault("DefaultText")
     }).width / dpi;
 
-    tw = Math.max(tw + this._getArrowSize()*0, this.getDefault("defaultWidth"));
+    tw = Math.max(tw + this._getArrowSize()*0, this.getDefault("width"));
 
     tw += ts;
     tw = ~~tw;
 
     //tw = Math.max(tw, w);
     if (this.vertical) {
-      this.style["width"] = this.dom.style["width"] = this.getDefault("defaultHeight") + "px";
+      this.style["width"] = this.dom.style["width"] = this.getDefault("height") + "px";
 
       this.style["height"] = tw+"px";
       this.dom.style["height"] = tw+"px";
     } else {
-      this.style["height"] = this.dom.style["height"] = this.getDefault("defaultHeight") + "px";
+      this.style["height"] = this.dom.style["height"] = this.getDefault("height") + "px";
 
       this.style["width"] = tw+"px";
       this.dom.style["width"] = tw+"px";
@@ -595,18 +595,18 @@ export class NumSlider extends ValueButtonBase {
     let dpi = this.getDPI();
     let disabled = this.disabled;
 
-    let r = this.getDefault("BoxRadius");
+    let r = this.getDefault("border-radius");
     if (this.isInt) {
       r *= 0.25;
     }
 
-    let boxbg = this.getDefault("BoxBG");
+    let boxbg = this.getDefault("background-color");
 
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
       r, undefined, disabled ? this.getDefault("DisabledBG") : boxbg);
 
     r *= dpi;
-    let pad = this.getDefault("BoxMargin");
+    let pad = this.getDefault("padding");
     let ts = this.getDefault("DefaultText").size;
 
     let text = this._genLabel();
@@ -640,7 +640,7 @@ export class NumSlider extends ValueButtonBase {
 
     //}
 
-    let c = css2color(this.getDefault("BoxBG"));
+    let c = css2color(this.getDefault("background-color"));
     let f = 1.0 - (c[0]+c[1]+c[2])*0.33;
     f = ~~(f*255);
 
@@ -677,7 +677,8 @@ export class NumSlider extends ValueButtonBase {
   }
   static define() {return {
     tagname : "numslider-x",
-    style : "numslider"
+    style : "numslider",
+    parentStyle : "button"
   };}
 }
 UIBase.internalRegister(NumSlider);
@@ -694,8 +695,8 @@ export class NumSliderSimpleBase extends UIBase {
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
 
-    this.canvas.style["width"] = this.getDefault("DefaultWidth") + "px";
-    this.canvas.style["height"] = this.getDefault("DefaultHeight") + "px";
+    this.canvas.style["width"] = this.getDefault("width") + "px";
+    this.canvas.style["height"] = this.getDefault("height") + "px";
     this.canvas.style["pointer-events"] = "none";
 
     this.highlight = false;
@@ -946,7 +947,7 @@ export class NumSliderSimpleBase extends UIBase {
     let w = canvas.width, h = canvas.height;
     let dpi = UIBase.getDPI();
 
-    let color = this.getDefault("BoxBG");
+    let color = this.getDefault("background-color");
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
 
     g.clearRect(0, 0, canvas.width, canvas.height);
@@ -958,7 +959,7 @@ export class NumSliderSimpleBase extends UIBase {
     //export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
     //                             op="fill", color=undefined, margin=undefined, no_clear=false) {
 
-    let r = this.getDefault("BoxRadius");
+    let r = this.getDefault("border-radius");
     r = 3;
 
     g.translate(0, y);
@@ -972,7 +973,7 @@ export class NumSliderSimpleBase extends UIBase {
     if (this.highlight === 1) {
       color = this.getDefault("BoxHighlight");
     } else {
-      color = this.getDefault("BoxBorder");
+      color = this.getDefault("border-color");
     }
     g.strokeStyle = color;
     g.stroke();
@@ -984,7 +985,7 @@ export class NumSliderSimpleBase extends UIBase {
     if (this.highlight === 2) {
       color = this.getDefault("BoxHighlight");
     } else {
-      color = this.getDefault("BoxBorder");
+      color = this.getDefault("border-color");
     }
 
     g.arc(co[0], co[1], Math.abs(co[2]), -Math.PI, Math.PI);
@@ -1056,8 +1057,8 @@ export class NumSliderSimpleBase extends UIBase {
     //super.setCSS();
 
     this.canvas.style["width"] = "min-contents";
-    this.canvas.style["min-width"] = this.getDefault("DefaultWidth") + "px";
-    this.style["min-width"] = this.getDefault("DefaultWidth") + "px";
+    this.canvas.style["min-width"] = this.getDefault("width") + "px";
+    this.style["min-width"] = this.getDefault("width") + "px";
     this._redraw();
   }
 
@@ -1105,7 +1106,8 @@ export class NumSliderSimpleBase extends UIBase {
 
   static define() {return {
     tagname : "numslider-simple-base-x",
-    style : "numslider_simple"
+    style : "numslider_simple",
+    parentStyle : "button"
   }}
 }
 UIBase.internalRegister(NumSliderSimpleBase);
@@ -1329,7 +1331,7 @@ export class SliderWithTextbox extends ColumnFrame {
     textbox.ctx = this.ctx;
     textbox.packflag |= this.inherit_packflag;
     textbox._width = this.getDefault("TextBoxWidth")+"px";
-    textbox.style["height"] = (this.getDefault("DefaultHeight")-2) + "px";
+    textbox.style["height"] = (this.getDefault("height")-2) + "px";
     textbox._init();
 
     strip.add(textbox);
