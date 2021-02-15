@@ -41,19 +41,29 @@ export class ThemeEditor extends Container {
     let col2 = row.col();
 
 
-    let do_onchange = (key, k) => {
+    let do_onchange = (key, k, obj) => {
       flagThemeUpdate();
 
       if (this.onchange) {
-        this.onchange(key, k);
+        this.onchange(key, k, obj);
       }
     };
+
+    let getpath = (path) => {
+      let obj = theme;
+
+      for (let i=0; i<path.length; i++) {
+        obj = obj[path[i]];
+      }
+
+      return obj;
+    }
 
     let ok = false;
     let _i = 0;
 
-    let dokey = (k, v) => {
-      let col = _i % 2 == 0 ? col1 : col2;
+    let dokey = (k, v, path) => {
+      let col = _i % 2 === 0 ? col1 : col2;
 
       if (k.toLowerCase().search("flag") >= 0) {
         return; //don't do flags
@@ -79,7 +89,7 @@ export class ThemeEditor extends Container {
 
           cw.onchange = () => {
             console.log("setting '" + k + "' to " + color2css(cw.rgba), key);
-            theme[key][k] = color2css(cw.rgba);
+            getpath(path)[k] = color2css(cw.rgba);
 
             do_onchange(key, k);
           }
@@ -87,7 +97,7 @@ export class ThemeEditor extends Container {
         } else {
           let box = col.textbox();
           box.onchange = () => {
-            theme[key][k] = box.text;
+            getpath(path)[k] = box.text;
             do_onchange(key, k);
           }
           box.text = v;
@@ -101,17 +111,17 @@ export class ThemeEditor extends Container {
         _i++;
 
         slider.onchange = () => {
-          theme[key][k] = slider.value;
+          getpath(path)[k] = slider.value;
 
           do_onchange(key, k);
         }
       } else if (typeof v === "boolean") {
         let check = col.check(undefined, k);
 
-        check.value = theme[key][k];
+        check.value = getpath(path)[k];
 
         check.onchange = () => {
-          theme[key][k] = !!check.value;
+          getpath(path)[k] = !!check.value;
           do_onchange(key, k);
         }
       } else if (typeof v === "object" && v instanceof CSSFont) {
@@ -149,13 +159,35 @@ export class ThemeEditor extends Container {
         slider.baseUnit = slider.displayUnit = "none";
 
         panel2.closed = true;
+      } else if (typeof v === "object") {
+        let old = {
+          panel, row, col1, col2
+        };
+
+        let path2 = path.slice(0, path.length);
+        path2.push(k);
+
+        panel = panel.panel(k);
+        row = panel.row();
+        col1 = row.col();
+        col2 = row.col();
+        for (let k2 in v) {
+          let v2 = v[k2];
+
+          dokey(k2, v2, path2);
+        }
+
+        panel = old.panel;
+        row = old.row;
+        col1 = old.col1;
+        col2 = old.col2;
       }
     };
 
     for (let k in obj) {
       let v = obj[k];
 
-      dokey(k, v);
+      dokey(k, v, [key]);
     }
 
     if (!ok) {
