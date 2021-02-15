@@ -5,6 +5,7 @@ import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as events from '../path-controller/util/events.js';
 import * as ui from '../core/ui.js';
+import {loadUIData, saveUIData} from '../core/ui_base.js';
 
 let UIBase      = ui_base.UIBase,
     PackFlags   = ui_base.PackFlags,
@@ -786,6 +787,7 @@ export class TabBar extends UIBase {
     //this.canvas.width = x;
   }
 
+  /** tab is a TabItem instance */
   setActive(tab) {
     let update = tab !== this.tabs.active;
     this.tabs.active = tab;
@@ -1125,6 +1127,43 @@ export class TabContainer extends UIBase {
     }
   }
 
+  saveData() {
+    let json = super.saveData() || {};
+    json.tabs = {};
+
+    for (let k in this.tabs) {
+      let tab = this.tabs[k];
+
+      if (k === this.tbar.tabs.active.id) {
+        //no need to save active tab here
+        continue;
+      }
+
+      try {
+        json.tabs[tab.id] = JSON.parse(saveUIData(tab, "tab"));
+      } catch (error) {
+        console.error("Failed to save tab UI layout", tab.id);
+      }
+    }
+
+    return json;
+  }
+
+  loadData(json) {
+    if (!json.tabs) {
+      return;
+    }
+
+    for (let k in json.tabs) {
+      if (!(k in this.tabs)) {
+        continue;
+      }
+
+      let uidata = JSON.stringify(json.tabs[k]);
+      loadUIData(this.tabs[k], uidata);
+    }
+  }
+
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
 
@@ -1255,6 +1294,11 @@ export class TabContainer extends UIBase {
     //let cls = this.tbar.horiz ? ui.ColumnFrame : ui.RowFrame;
 
     col.parentWidget = this;
+
+    if (col.ctx) {
+      col._init();
+    }
+
     col.setCSS();
 
     if (this._tab === undefined) {

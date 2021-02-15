@@ -227,9 +227,13 @@ export class Container extends ui_base.UIBase {
   }
 
   saveData() {
-    return {
-      scrollTop  : this.scrollTop,
-      scrollLeft : this.scrollLeft
+    if (this.scrollTop || this.scrollLeft) {
+      return {
+        scrollTop : this.scrollTop,
+        scrollLeft: this.scrollLeft
+      }
+    } else {
+      return {};
     }
   }
 

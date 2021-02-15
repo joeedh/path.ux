@@ -64,14 +64,18 @@ export class PanelFrame extends ColumnFrame {
 
   saveData() {
     let ret = {
-      _closed: this._closed
+      closed: this._closed
     };
 
     return Object.assign(super.saveData(), ret);
   }
 
   loadData(obj) {
-    this.closed = obj._closed;
+    if (!('closed' in obj)) {
+      this.closed = obj._closed; //handle old file data
+    } else {
+      this.closed = obj.closed;
+    }
   }
 
   clear() {

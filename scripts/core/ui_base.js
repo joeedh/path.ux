@@ -1,5 +1,8 @@
 let _ui_base = undefined;
 
+
+//import * as ui_save from './ui_save.js';
+
 /*
 if (window.document && document.body) {
   console.log("ensuring body.style.margin/padding are zero");
@@ -40,7 +43,8 @@ import {Icons} from '../icon_enum.js';
 export {setIconMap} from '../icon_enum.js';
 import {setIconMap} from '../icon_enum.js';
 
-import {AfterAspect, initAspectClass, _setUIBase} from "./aspect.js";
+import {AfterAspect, initAspectClass} from "./aspect.js";
+import * as aspect from './aspect.js';
 
 const EnumProperty = toolprop.EnumProperty;
 
@@ -2689,14 +2693,21 @@ export function saveUIData(node, key) {
     }
     
     path[pi] = ni;
-    path[pi+1] = is_shadow;
+    path[pi+1] = is_shadow ? 1 : 0;
     
     if (n instanceof UIBase) {
       let path2 = path.slice(0, path.length);
-      path2.push(n.saveData());
-      
-      if (path2[pi+2]) {
-        paths.push(path2);
+      let data = n.saveData();
+
+      let bad = !data;
+      bad = bad || (typeof data === "object" && Object.keys(data).length === 0);
+
+      if (!bad) {
+        path2.push(data);
+
+        if (path2[pi + 2]) {
+          paths.push(path2);
+        }
       }
     }
     
@@ -2778,4 +2789,6 @@ export function loadUIData(node, buf) {
 
 window._loadUIData = loadUIData;
 
-_setUIBase(UIBase);
+//avoid explicit circular references
+aspect._setUIBase(UIBase);
+//ui_save.setUIBase(UIBase);
