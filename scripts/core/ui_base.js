@@ -117,7 +117,7 @@ export function setTheme(theme2) {
         delete v[k2];
         k2 = k3;
       }
-      
+
       theme[k][k2] = v[k2];
     }
   }

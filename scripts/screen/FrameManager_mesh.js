@@ -213,7 +213,7 @@ export class ScreenBorder extends ui_base.UIBase {
 
   setCSS() {
     this.style["pointer-events"] = this.movable ? "auto" : "none";
-    
+
     if (this._style === undefined) {
       this._style = document.createElement("style");
       this.appendChild(this._style);
@@ -321,7 +321,7 @@ export class ScreenBorder extends ui_base.UIBase {
     this.setAttribute("class", "screenborder_" + this._id);
     this.inner.setAttribute("class", "screenborder_inner_" + this._id);
 
-    this.style["position"] = "absolute";
+    this.style["position"] = "fixed";
     this.style["left"] = x + "px";
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";

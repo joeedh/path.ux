@@ -74,10 +74,10 @@ export class Area extends ui_base.UIBase {
 
     this.inactive = true;
     this.areaDragToolEnabled = true;
-    
+
     this.owning_sarea = undefined;
     this._area_id = contextWrangler.idgen++;
-    
+
     this.pos = undefined; //set by screenarea parent
     this.size = undefined; //set by screenarea parent
     this.minSize = [5, 5];
@@ -203,51 +203,51 @@ export class Area extends ui_base.UIBase {
 
   buildDataPath() {
     let p = this;
-    
+
     let sarea = this.owning_sarea;
-    
+
     if (sarea === undefined || sarea.screen === undefined) {
       console.warn("Area.buildDataPath(): Failed to build data path");
       return "";
     }
-    
+
     let screen = sarea.screen;
-    
+
     let idx1 = screen.sareas.indexOf(sarea);
     let idx2 = sarea.editors.indexOf(this);
-    
+
     if (idx1 < 0 || idx2 < 0) {
       throw new Error("malformed area data");
     }
-    
+
     let ret = `screen.sareas[${idx1}].editors[${idx2}]`;
     return ret;
   }
-  
+
   saveData() {
     return {
       _area_id : this._area_id,
       areaName : this.areaName
     };
   }
-  
+
   loadData(obj) {
     let id = obj._area_id;
-    
+
     if (id !== undefined && id !== null) {
       this._area_id = id;
     }
   }
-  
+
   draw() {
   }
-  
+
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
     let ret = UIBase.createElement(this.constructor.define().tagname);
     return ret;
   }
-  
+
   on_resize(size, oldsize) {
     super.on_resize(size, oldsize);
   }
@@ -303,36 +303,36 @@ export class Area extends ui_base.UIBase {
   pop_ctx_active(dontSetLastRef=false) {
     contextWrangler.pop(this.constructor, this, !dontSetLastRef);
   }
-  
+
   static register(cls) {
     let def = cls.define();
-    
+
     if (!def.areaname) {
       throw new Error("Missing areaname key in define()");
     }
-    
+
     areaclasses[def.areaname] = cls;
-    
+
     ui_base.UIBase.internalRegister(cls);
   }
-  
+
   getScreen() {
     //XXX
     //return _appstate.screen;
     throw new Error("replace me in Area.prototype");
   }
-  
+
   toJSON() {
     return Object.assign(super.toJSON(), {
       areaname : this.constructor.define().areaname,
       _area_id : this._area_id
     });
   }
-  
+
   loadJSON(obj) {
     super.loadJSON(obj);
     this._area_id = obj._area_id;
-    
+
     return this;
   }
 
@@ -413,13 +413,13 @@ export class Area extends ui_base.UIBase {
 
     let mdown = false;
     let mpos = new Vector2();
-    
+
     let mpre = (e, pageX, pageY) => {
       pageX = pageX === undefined ? e.pageX : pageX;
       pageY = pageY === undefined ? e.pageY : pageY;
 
       let node = this.getScreen().pickElement(pageX, pageY);
-      
+
       /*
       while (node) {
         if (node === row) {
@@ -429,14 +429,14 @@ export class Area extends ui_base.UIBase {
       }//*/
 
       //console.log(node === row, node ? node._id : undefined, row._id)
-      
+
       if (node !== row) {
         return false;
       }
-      
+
       return true;
     }
-    
+
     row.addEventListener("mouseout", (e) => {
       //console.log("mouse leave");
       mdown = false;
@@ -445,10 +445,10 @@ export class Area extends ui_base.UIBase {
       //console.log("mouse out");
       mdown = false;
     });
-    
+
     row.addEventListener("mousedown", (e) => {
       if (!mpre(e)) return;
-      
+
       mpos[0] = e.pageX;
       mpos[1] = e.pageY;
       mdown = true;
@@ -531,7 +531,7 @@ export class Area extends ui_base.UIBase {
     row.addEventListener("mousemove", (e) => {
       return do_mousemove(e, e.pageX, e.pageY);
     }, false);
-      //*/
+    //*/
     row.addEventListener("mouseup", (e) => {
       if (!mpre(e)) return;
 
@@ -542,15 +542,15 @@ export class Area extends ui_base.UIBase {
       console.log("touchstart", e);
 
       if (!mpre(e, e.touches[0].pageX, e.touches[0].pageY)) return;
-      
+
       if (e.touches.length == 0)
         return;
-      
+
       mpos[0] = e.touches[0].pageX;
       mpos[1] = e.touches[0].pageY;
       mdown = true;
     }, false);
-    
+
     row.addEventListener("touchmove", (e) => {
       return do_mousemove(e, e.touches[0].pageX, e.touches[0].pageY);
     }, false);
@@ -562,15 +562,15 @@ export class Area extends ui_base.UIBase {
       }
       if (e.touches.length == 0)
         return;
-      
+
       mdown = false;
     };
-    
+
     row.addEventListener("touchcancel", (e) => {
-      touchend(e);        
+      touchend(e);
     }, false);
     row.addEventListener("touchend", (e) => {
-      touchend(e);        
+      touchend(e);
     }, false);
 
     if (!(this.flag & AreaFlags.NO_SWITCHER)) {
@@ -589,10 +589,10 @@ export class Area extends ui_base.UIBase {
     }
 
     this.header = row;
-    
+
     return row;
   }
-  
+
   setCSS() {
     if (this.size !== undefined) {
       this.style["position"] = "absolute";
@@ -602,7 +602,7 @@ export class Area extends ui_base.UIBase {
       this.style["height"] = this.size[1] + "px";
     }
   }
-  
+
   update() {
     //don't update non-active editors
     if (this.owning_sarea === undefined || this !== this.owning_sarea.area) {
@@ -610,7 +610,7 @@ export class Area extends ui_base.UIBase {
     }
 
     super.update();
-    
+
     //see FrameManager.js, we use a single update
     //function for everything now
     //this._forEachChildWidget((n) => {
@@ -674,7 +674,7 @@ export class Area extends ui_base.UIBase {
   loadSTRUCT(reader) {
     reader(this);
   }
-  
+
   _getSavedUIData() {
     return ui_base.saveUIData(this, "area");
   }
@@ -693,13 +693,13 @@ ui_base.UIBase.internalRegister(Area);
 export class ScreenArea extends ui_base.UIBase {
   constructor() {
     super();
-    
+
     this._borders = [];
     this._verts = [];
     this.dead = false;
-    
+
     this._sarea_id = contextWrangler.idgen++;
-    
+
     this._pos = new Vector2();
     this._size = new Vector2([512, 512]);
 
@@ -746,10 +746,10 @@ export class ScreenArea extends ui_base.UIBase {
     });
 
     //this.addEventListener("mouseleave", (e) => {
-      //console.log("screen area mouseleave");
+    //console.log("screen area mouseleave");
     //});
   }
-  
+
   /*
   saveData() {
     return {
@@ -880,7 +880,7 @@ export class ScreenArea extends ui_base.UIBase {
       pos : this.pos,
       size : this.size
     };
-    
+
     return Object.assign(super.toJSON(), ret);
   }
 
@@ -899,18 +899,18 @@ export class ScreenArea extends ui_base.UIBase {
     }
 
     super.loadJSON(obj);
-    
+
     this.pos.load(obj.pos);
     this.size.load(obj.size);
-    
+
     for (let editor of obj.editors) {
       let areaname = editor.areaname;
-      
+
       //console.log(editor);
-      
+
       let tagname = areaclasses[areaname].define().tagname;
       let area = UIBase.createElement(tagname);
-      
+
       area.owning_sarea = this;
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
@@ -918,32 +918,32 @@ export class ScreenArea extends ui_base.UIBase {
       area.pos = new Vector2(obj.pos);
       area.size = new Vector2(obj.size);
       area.ctx = this.ctx;
-      
+
       area.inactive = true;
       area.loadJSON(editor);
       area.owning_sarea = undefined;
-      
+
       if (areaname === obj.area) {
         this.area = area;
       }
     }
-    
+
     if (this.area !== undefined) {
       this.area.ctx = this.ctx;
       this.area.style["width"] = "100%";
       this.area.style["height"] = "100%";
       this.area.owning_sarea = this;
       this.area.parentWidget = this;
-      
+
       this.area.pos = this.pos;
       this.area.size = this.size;
-      
+
       this.area.inactive = false;
       this.shadow.appendChild(this.area);
       this.area.on_area_active();
       this.area.onadd();
     }
-    
+
     this.setCSS();
   }
 
@@ -951,14 +951,14 @@ export class ScreenArea extends ui_base.UIBase {
     super._ondestroy();
 
     this.dead = true;
-    
+
     for (let editor of this.editors) {
       if (editor === this.area) continue;
-      
+
       editor._ondestroy();
     }
   }
-  
+
   getScreen() {
     if (this.screen !== undefined) {
       return this.screen;
@@ -976,25 +976,25 @@ export class ScreenArea extends ui_base.UIBase {
         return undefined;
       }
     }
-    
+
     return p && p instanceof Screen ? p : undefined;
   }
-  
+
   copy(screen) {
     let ret = UIBase.createElement("screenarea-x");
-    
+
     ret.screen = screen;
     ret.ctx = this.ctx;
-    
+
     ret.pos[0] = this.pos[0];
     ret.pos[1] = this.pos[1];
-    
+
     ret.size[0] = this.size[0];
     ret.size[1] = this.size[1];
-    
+
     for (let area of this.editors) {
       let cpy = area.copy();
-      
+
       cpy.ctx = this.ctx;
 
       cpy.parentWidget = ret;
@@ -1004,7 +1004,7 @@ export class ScreenArea extends ui_base.UIBase {
         ret.area = cpy;
       }
     }
-    
+
     //console.trace("RET.AREA", this.area, ret.area);
 
     ret.ctx = this.ctx;
@@ -1016,10 +1016,10 @@ export class ScreenArea extends ui_base.UIBase {
       ret.area.size = ret.size;
       ret.area.owning_sarea = ret;
       ret.area.parentWidget = ret;
-      
+
       ret.shadow.appendChild(ret.area);
       //ret.area.onadd();
-      
+
       if (ret.area._init_done) {
         ret.area.push_ctx_active();
         ret.area.on_area_active();
@@ -1037,7 +1037,7 @@ export class ScreenArea extends ui_base.UIBase {
         });
       }
     }
-    
+
     return ret;
   }
 
@@ -1097,7 +1097,7 @@ export class ScreenArea extends ui_base.UIBase {
       min.min(v);
       max.max(v);
     }
-    
+
     this.pos[0] = min[0];
     this.pos[1] = min[1];
 
@@ -1107,19 +1107,19 @@ export class ScreenArea extends ui_base.UIBase {
     this.setCSS();
     return this;
   }
-  
+
   on_resize(size, oldsize) {
     super.on_resize(size, oldsize);
-    
+
     if (this.area !== undefined) {
       this.area.on_resize(size, oldsize);
-    }      
+    }
   }
-  
+
   makeBorders(screen) {
     this._borders.length = 0;
     this._verts.length = 0;
-    
+
     let p = this.pos, s = this.size;
 
     //s = snapi(new Vector2(s));
@@ -1154,33 +1154,33 @@ export class ScreenArea extends ui_base.UIBase {
       if (b.sareas.indexOf(this) < 0) {
         b.sareas.push(this);
       }
-      
+
       this._borders.push(b);
 
       b.movable = screen.isBorderMovable(b);
     }
-    
+
     return this;
   }
-  
+
   setCSS() {
-    this.style["position"] = "absolute";
-    
+    this.style["position"] = "fixed";
+
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
-    
+
     this.style["width"] = this.size[0] + "px";
     this.style["height"] = this.size[1] + "px";
-    
-    
+
+
     if (this.area !== undefined) {
       this.area.setCSS();
       //this.style["overflow"] = this.area.style["overflow"];
-      
+
       //this.area.style["width"] = this.size[0] + "px";
       //this.area.style["height"] = this.size[1] + "px";
     }
-      
+
     /*
     if (this.area) {
       let area = this.area;
@@ -1191,25 +1191,25 @@ export class ScreenArea extends ui_base.UIBase {
     }
     //*/
   }
-  
+
   appendChild(child) {
     if (child instanceof Area) {
       child.ctx = this.ctx;
       child.pos = this.pos;
       child.size = this.size;
-      
+
       if (this.editors.indexOf(child) < 0) {
         this.editors.push(child);
       }
-      
+
       child.owning_sarea = undefined;
       if (this.area === undefined) {
         this.area = child;
       }
     }
-    
+
     super.appendChild(child);
-    
+
     if (child instanceof ui_base.UIBase) {
       child.parentWidget = this;
       child.onadd();
@@ -1223,7 +1223,7 @@ export class ScreenArea extends ui_base.UIBase {
   switchEditor(cls) {
     let def = cls.define();
     let name = def.areaname;
-    
+
     //areaclasses[name]
     if (!(name in this.editormap)) {
       this.editormap[name] = UIBase.createElement(def.tagname);
@@ -1231,55 +1231,55 @@ export class ScreenArea extends ui_base.UIBase {
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
       this.editormap[name].inactive = false;
-      
+
       this.editors.push(this.editormap[name]);
     }
-    
+
     //var finish = () => {
-      if (this.area !== undefined) {
-        //break direct pos/size references for old active area
-        this.area.pos = new Vector2(this.area.pos);
-        this.area.size = new Vector2(this.area.size);
-        
-        this.area.owning_sarea = undefined;
-        this.area.inactive = true;
-        this.area.push_ctx_active();
-        this.area._init(); //check that init was called
-        this.area.on_area_inactive();
-        this.area.pop_ctx_active();
-        
-        this.area.remove();
-      }
-      
-      this.area = this.editormap[name];
+    if (this.area !== undefined) {
+      //break direct pos/size references for old active area
+      this.area.pos = new Vector2(this.area.pos);
+      this.area.size = new Vector2(this.area.size);
 
-      this.area.inactive = false;
-      this.area.parentWidget = this;
-
-      //. . .and set references to pos/size
-      this.area.pos = this.pos;
-      this.area.size = this.size;
-      this.area.owning_sarea = this;
-      this.area.ctx = this.ctx;
-
-      this.area.packflag |= this.packflag;
-
-      this.shadow.appendChild(this.area);
-
-      this.area.style["width"] = "100%";
-      this.area.style["height"] = "100%";
-
-      //propegate new size
+      this.area.owning_sarea = undefined;
+      this.area.inactive = true;
       this.area.push_ctx_active();
       this.area._init(); //check that init was called
-      this.area.on_resize(this.size, this.size);
+      this.area.on_area_inactive();
       this.area.pop_ctx_active();
 
-      this.area.push_ctx_active();
-      this.area.on_area_active();
-      this.area.pop_ctx_active();
+      this.area.remove();
+    }
 
-      this.regenTabOrder();
+    this.area = this.editormap[name];
+
+    this.area.inactive = false;
+    this.area.parentWidget = this;
+
+    //. . .and set references to pos/size
+    this.area.pos = this.pos;
+    this.area.size = this.size;
+    this.area.owning_sarea = this;
+    this.area.ctx = this.ctx;
+
+    this.area.packflag |= this.packflag;
+
+    this.shadow.appendChild(this.area);
+
+    this.area.style["width"] = "100%";
+    this.area.style["height"] = "100%";
+
+    //propegate new size
+    this.area.push_ctx_active();
+    this.area._init(); //check that init was called
+    this.area.on_resize(this.size, this.size);
+    this.area.pop_ctx_active();
+
+    this.area.push_ctx_active();
+    this.area.on_area_active();
+    this.area.pop_ctx_active();
+
+    this.regenTabOrder();
     //}
   }
 
@@ -1410,9 +1410,9 @@ export class ScreenArea extends ui_base.UIBase {
 
     this.pos = new Vector2(this.pos);
     this.size = new Vector2(this.size);
-    
+
     //find active editor
-    
+
     let editors = [];
 
     for (let area of this.editors) {
@@ -1427,13 +1427,13 @@ export class ScreenArea extends ui_base.UIBase {
         continue;
       }
       //*/
-      
+
       let areaname = area.constructor.define().areaname;
 
       area.inactive = true;
       area.owning_sarea = undefined;
       this.editormap[areaname] = area;
-      
+
       if (areaname === this.area) {
         this.area = area;
       }
@@ -1450,7 +1450,7 @@ export class ScreenArea extends ui_base.UIBase {
       editors.push(area);
     }
     this.editors = editors;
-    
+
     if (typeof this.area !== "object") {
       let area = this.editors[0];
 
@@ -1507,7 +1507,7 @@ export class ScreenArea extends ui_base.UIBase {
     }
 
   }
-  
+
   static define() {return {
     tagname : "screenarea-x"
   };}
@@ -1524,7 +1524,7 @@ pathux.ScreenArea {
 }
 `;
 
-nstructjs.manager.add_class(ScreenArea);  
+nstructjs.manager.add_class(ScreenArea);
 ui_base.UIBase.internalRegister(ScreenArea);
 
 ui_base._setAreaClass(Area);

@@ -1,6 +1,6 @@
 import {UIBase, drawText} from "../core/ui_base.js";
 import {ValueButtonBase} from "./ui_widgets.js";
-import * as cconst from '../config/const.js';
+import cconst from '../config/const.js';
 import * as ui_base from "../core/ui_base.js";
 import * as units from "../core/units.js";
 import {Vector2} from "../path-controller/util/vectormath.js";
