@@ -340,11 +340,13 @@ export class Button extends UIBase {
   setCSS() {
     super.setCSS();
 
-    this.dom.style["margin"] = this.getDefault("margin", undefined, 0) + "px";
-    this.dom.style["margin-left"] = this.getDefault("margin-left", undefined, 0) + "px";
-    this.dom.style["margin-right"] = this.getDefault("margin-right", undefined, 0) + "px";
-    this.dom.style["margin-top"] = this.getDefault("margin-top", undefined, 0) + "px";
-    this.dom.style["margin-bottom"] = this.getDefault("margin-bottom", undefined, 0) + "px";
+    let m = this.getDefault("margin", undefined, 0);
+
+    //this.dom.style["margin"] = this.getDefault("margin", undefined, 0) + "px";
+    this.style["margin-left"] = this.getDefault("margin-left", undefined, m) + "px";
+    this.style["margin-right"] = this.getDefault("margin-right", undefined, m) + "px";
+    this.style["margin-top"] = this.getDefault("margin-top", undefined, m) + "px";
+    this.style["margin-bottom"] = this.getDefault("margin-bottom", undefined, m) + "px";
 
     let name = this._name;
     if (name === undefined) {
