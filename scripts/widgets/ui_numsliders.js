@@ -1546,7 +1546,7 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
   _redraw() {
     this.numslider._redraw();
   }
-  
+
   static define() {return {
     tagname : "numslider-textbox-x",
     style : "numslider_textbox"

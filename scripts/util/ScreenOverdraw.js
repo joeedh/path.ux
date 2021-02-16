@@ -1,5 +1,5 @@
 "use strict";
-let SVG_URL = 'http://www.w3.org/2000/svg';
+export const SVG_URL = 'http://www.w3.org/2000/svg';
 
 import * as util from './util.js';
 import * as vectormath from './vectormath.js';
@@ -7,7 +7,7 @@ import * as ui_base from '../core/ui_base.js';
 import * as ui from '../core/ui.js';
 import * as math from './math.js';
 
-let Vector2 = vectormath.Vector2;
+const Vector2 = vectormath.Vector2;
 
 export class CanvasOverdraw extends ui_base.UIBase {
   constructor() {
@@ -115,9 +115,9 @@ export class Overdraw extends ui_base.UIBase {
         pointer-events : none;
       }
     `;
-    
+
     this.shadow.appendChild(style);
-    
+
     this.zindex_base = 1000;
   }
 
@@ -156,39 +156,39 @@ export class Overdraw extends ui_base.UIBase {
   start(screen) {
     this.screen = screen;
     this.ctx = screen.ctx;
-    
+
     screen.parentNode.appendChild(this);
-    
+
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
-    
+
     this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
-    
+
     this.style["width"] = screen.size[0] + "px";
     this.style["height"] = screen.size[1] + "px";
-    
+
     this.style["pointer-events"] = "none";
-    
+
     this.svg = document.createElementNS(SVG_URL, "svg");
     this.svg.style["width"] = "100%";
     this.svg.style["height"] = "100%";
-    
+
     this.shadow.appendChild(this.svg);
-    
+
     //this.style["background-color"] = "green";
   }
-  
+
   clear() {
     for (let child of list(this.svg.childNodes)) {
       child.remove();
     }
-    
+
     for (let child of this.otherChildren) {
       child.remove();
     }
-    
+
     this.otherChildren.length = 0;
   }
 
@@ -373,7 +373,7 @@ export class Overdraw extends ui_base.UIBase {
       args["border-radius"] = "" + args["border-radius"] + "px";
     }
 
-      //not sure I need SVG for this. . .
+    //not sure I need SVG for this. . .
     let box = document.createElement("div")
 
     box.setAttribute("class", "overdrawx");
@@ -429,11 +429,11 @@ export class Overdraw extends ui_base.UIBase {
     line.setAttribute("x2", v2[0]);
     line.setAttribute("y2", v2[1]);
     line.setAttribute("style", `stroke:${color};stroke-width:2`);
-    
+
     this.svg.appendChild(line);
     return line;
   }
-  
+
   rect(p, size, color="black") {
     let line = document.createElementNS(SVG_URL, "rect");
     line.setAttribute("x", p[0]);
@@ -449,12 +449,12 @@ export class Overdraw extends ui_base.UIBase {
     this.svg.appendChild(line);
     return line;
   }
-  
+
   end() {
     this.clear();
     this.remove();
   }
-  
+
   static define() {return {
     tagname : "overdraw-x",
     style   : "overdraw"
