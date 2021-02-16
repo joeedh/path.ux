@@ -1034,8 +1034,7 @@ export class DropBox extends Button {
     let dpi = this.getDPI();
 
     let p = 10*dpi;
-    let p2 = 4*dpi;
-
+    let p2 = dpi;
 
     //*
     let bg = this.getDefault("dropTextBG");
