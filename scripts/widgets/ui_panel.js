@@ -21,9 +21,9 @@ let PropSubTypes = toolprop.PropSubTypes;
 let EnumProperty = toolprop.EnumProperty;
 
 let Vector2 = vectormath.Vector2,
-  UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  PropTypes = toolprop.PropTypes;
+    UIBase = ui_base.UIBase,
+    PackFlags = ui_base.PackFlags,
+    PropTypes = toolprop.PropTypes;
 
 export class PanelFrame extends ColumnFrame {
   constructor() {
@@ -71,8 +71,8 @@ export class PanelFrame extends ColumnFrame {
   }
 
   loadData(obj) {
-    if (!('closed' in obj)) {
-      this.closed = obj._closed; //handle old file data
+    if (!("closed" in obj)) {
+      this.closed = obj._closed;
     } else {
       this.closed = obj.closed;
     }
@@ -192,6 +192,11 @@ export class PanelFrame extends ColumnFrame {
       return;
     }
 
+    let getDefault = (key, defval) => {
+      let val = this.getDefault(key);
+      return val !== undefined ? val : defval;
+    };
+
     let bs = this.getDefault("border-style");
 
     let header_radius = this.getDefault("HeaderRadius");
@@ -199,16 +204,27 @@ export class PanelFrame extends ColumnFrame {
       header_radius = this.getDefault("border-radius");
     }
 
+    let boxmargin = getDefault("padding", 0);
+
+    let paddingleft  = getDefault("padding-left", 0);
+    let paddingright  = getDefault("padding-right", 0);
+
+    paddingleft += boxmargin;
+    paddingright += boxmargin;
+
     this.titleframe.background = this.getDefault("TitleBackground");
     this.titleframe.style["border-radius"] = header_radius + "px";
     this.titleframe.style["border"] = `${this.getDefault( "border-width")}px ${bs} ${this.getDefault("TitleBorder")}`;
     this.style["border"] = `${this.getDefault("border-width")}px ${bs} ${this.getDefault("border-color")}`;
     this.style["border-radius"] = this.getDefault("border-radius") + "px";
+
     this.titleframe.style["padding-top"] = this.getDefault("padding-top") + "px";
     this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
+    this.titleframe.style["padding-left"] = paddingleft + "px";
+    this.titleframe.style["padding-right"] = paddingright + "px";
 
     let bg = this.getDefault("background-color");
-    
+
     this.background = bg;
     this.contents.background = bg;
     this.contents.parentWidget = this;
@@ -216,11 +232,6 @@ export class PanelFrame extends ColumnFrame {
     this.style["background-color"] = bg;
 
     let margintop, marginbottom;
-
-    let getDefault = (key, defval) => {
-      let val = this.getDefault(key);
-      return val !== undefined ? val : defval;
-    };
 
     if (this._closed) {
       margintop = getDefault('margin-top-closed', 0);
@@ -230,18 +241,17 @@ export class PanelFrame extends ColumnFrame {
       marginbottom = getDefault('margin-bottom', 0);
     }
 
+    let marginleft = getDefault('margin-left', 0);
+    let marginright = getDefault('margin-right', 0);
+
+    this.style['margin-left'] = marginleft + "px";
+    this.style['margin-right'] = marginright + "px";
+
     this.style['margin-top'] = margintop + "px";
     this.style['margin-bottom'] = marginbottom + "px";
 
-    let boxmargin = getDefault("padding", 0);
-    let paddingleft  = getDefault("padding-left", 0);
-    let paddingright  = getDefault("padding-right", 0);
-
-    paddingleft += boxmargin;
-    paddingright += boxmargin;
-
-    this.style["padding-left"] = paddingleft + "px";
-    this.style["padding-right"] = paddingright + "px";
+    //this.style["padding-left"] = paddingleft + "px";
+    //this.style["padding-right"] = paddingright + "px";
 
     this.__label._updateFont();
   }
@@ -255,7 +265,7 @@ export class PanelFrame extends ColumnFrame {
 
   on_enabled() {
     super.on_enabled();
-    
+
     this.__label.setCSS();
     this.__label.style["color"] = this.style["color"];
     this.setCSS();

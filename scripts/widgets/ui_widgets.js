@@ -31,7 +31,7 @@ let keymap = events.keymap;
 let EnumProperty = toolprop.EnumProperty,
     PropTypes = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase, 
+let UIBase = ui_base.UIBase,
     PackFlags = ui_base.PackFlags,
     IconSheets = ui_base.IconSheets;
 
@@ -85,23 +85,23 @@ export class ValueButtonBase extends Button {
   constructor() {
     super();
   }
-  
+
   get value() {
     return this._value;
   }
-  
+
   set value(val) {
     this._value = val;
-    
+
     if (this.ctx && this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
     }
   }
-  
+
   updateDataPath() {
     if (!this.hasAttribute("datapath")) return;
     if (this.ctx === undefined) return;
-    
+
     let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
@@ -127,10 +127,10 @@ export class ValueButtonBase extends Button {
       this.setCSS();
     }
   }
-  
+
   update() {
     this.updateDataPath();
-    
+
     super.update();
   }
 }
@@ -138,15 +138,15 @@ export class ValueButtonBase extends Button {
 export class Check extends UIBase {
   constructor() {
     super();
-    
+
     this._checked = false;
     this._highlight = false;
     this._focus = false;
 
     let shadow = this.shadow;
-    
+
     //let form = document.createElement("form");
-    
+
     let span = document.createElement("span");
     span.setAttribute("class", "checkx");
 
@@ -341,8 +341,11 @@ export class Check extends UIBase {
   }
 
   _redraw() {
-    if (this.canvas === undefined)
+    if (this.canvas === undefined) {
+      //flag update
+      this._updatekey = "";
       return;
+    }
 
     let canvas = this.canvas, g = this.g;
     let dpi = UIBase.getDPI();
@@ -390,6 +393,7 @@ export class Check extends UIBase {
   set checked(v) {
     if (!!this._checked != !!v) {
       this._checked = v;
+
       //this.dom.checked = v;
       this._redraw();
 
@@ -405,7 +409,7 @@ export class Check extends UIBase {
       }
     }
   }
-  
+
   get checked() {
     return this._checked;
   }
@@ -429,21 +433,25 @@ export class Check extends UIBase {
     }
 
     let updatekey = this.getDefault("DefaultText").hash();
+    updatekey += this._checked + ":" + this._label.textContent;
 
     if (updatekey !== this._updatekey) {
-      this._updatekey = updatekey;
+      this._repos_canvas();
       this.setCSS();
+
+      this._updatekey = updatekey;
+      this._redraw();
     }
   }
-  
+
   get label() {
     return this._label.textContent;
   }
-  
+
   set label(l) {
     this._label.textContent = l;
   }
-  
+
   static define() {return {
     tagname : "check-x",
     style   : "checkbox",
@@ -496,17 +504,17 @@ export class IconCheck extends Button {
   get icon() {
     return this._icon;
   }
-  
+
   set icon(val) {
     this._icon = val;
     this._repos_canvas();
     this._redraw();
   }
-  
+
   get checked() {
     return this._checked;
   }
-  
+
   set checked(val) {
     if (!!val != !!this._checked) {
       this._checked = val;
@@ -517,7 +525,7 @@ export class IconCheck extends Button {
       }
     }
   }
-  
+
   updateDataPath() {
     if (!this.hasAttribute("datapath") || !this.ctx) {
       return;
@@ -534,7 +542,7 @@ export class IconCheck extends Button {
           throw error;
         }
       }
-      
+
       if (rdef !== undefined && rdef.prop) {
         let icon, title;
 
@@ -576,7 +584,7 @@ export class IconCheck extends Button {
       this._redraw();
     }
   }
-  
+
   update() {
     if (this.packflag & PackFlags.HIDE_CHECK_MARKS) {
       this.drawCheck = false;
@@ -585,15 +593,15 @@ export class IconCheck extends Button {
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
-    
+
     super.update();
   }
 
   _getsize() {
-      let margin = this.getDefault("padding");
-      return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
+    let margin = this.getDefault("padding");
+    return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
-  
+
   _repos_canvas() {
     let dpi = UIBase.getDPI();
 
@@ -615,24 +623,24 @@ export class IconCheck extends Button {
     this._icon = f;
     this._redraw();
   }
-  
+
   get icon() {
     return this._icon;
   }
-  
+
   _onpress() {
     this.checked ^= 1;
-    
+
     if (this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
     }
 
     this._redraw();
   }
-  
+
   _redraw() {
     this._repos_canvas();
-    
+
     //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("background-color");
     if (this._checked) {
       this._highlight = false;
@@ -645,7 +653,7 @@ export class IconCheck extends Button {
     this._pressed = pressed;
 
     let icon = this._icon;
-    
+
     if (this._checked && this._icon_pressed !== undefined) {
       icon = this._icon_pressed;
     }
@@ -665,7 +673,7 @@ export class IconCheck extends Button {
 
     this.g.restore();
   }
-  
+
   static define() {return {
     tagname : "iconcheck-x",
     style   : "iconcheck",
@@ -706,13 +714,13 @@ export class IconButton extends Button {
   get icon() {
     return this._icon;
   }
-  
+
   set icon(val) {
     this._icon = val;
     this._repos_canvas();
     this._redraw();
   }
-  
+
   update() {
     super.update();
   }
@@ -722,7 +730,7 @@ export class IconButton extends Button {
 
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
-  
+
   _repos_canvas() {
     let dpi = UIBase.getDPI();
 
@@ -739,10 +747,10 @@ export class IconButton extends Button {
 
     super._repos_canvas();
   }
-  
+
   _redraw() {
     this._repos_canvas();
-    
+
     //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("background-color");
     //
     if (this.drawButtonBG) {
@@ -750,7 +758,7 @@ export class IconButton extends Button {
     }
 
     let icon = this._icon;
-    
+
     if (this._checked && this._icon_pressed !== undefined) {
       icon = this._icon_pressed;
     }
@@ -772,7 +780,7 @@ export class IconButton extends Button {
 
     this.g.restore();
   }
-  
+
   static define() {return {
     tagname : "iconbutton-x",
     style : "iconbutton",
@@ -785,11 +793,11 @@ UIBase.internalRegister(IconButton);
 export class Check1 extends Button {
   constructor() {
     super();
-    
+
     this._namePad = 40;
     this._value = undefined;
   }
-  
+
   _redraw() {
     //console.log("button draw");
 
