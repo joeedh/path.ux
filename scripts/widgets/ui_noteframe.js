@@ -34,6 +34,13 @@ export class Note extends ui_base.UIBase {
     this.setLabel("");
   }
 
+  static define() {
+    return {
+      tagname: "note-x",
+      style  : 'notification',
+    }
+  }
+
   setLabel(s) {
     let color = this.color;
     if (this.mark === undefined) {
@@ -88,11 +95,8 @@ export class Note extends ui_base.UIBase {
     this.style["background-color"] = clr;
     this.setCSS();
   }
-
-  static define() {return {
-    tagname : "note-x"
-  }}
 }
+
 UIBase.internalRegister(Note);
 
 export class ProgBarNote extends Note {
@@ -127,12 +131,8 @@ export class ProgBarNote extends Note {
     this.dom.appendChild(this.bar);
   }
 
-  setCSS() {
-    super.setCSS();
-
-    let w = ~~(this.percent * this.barWidth + 0.5);
-
-    this.bar2.style["width"] = w + "px";
+  get percent() {
+    return this._percent;
   }
 
   set percent(val) {
@@ -140,18 +140,26 @@ export class ProgBarNote extends Note {
     this.setCSS();
   }
 
-  get percent() {
-    return this._percent;
+  static define() {
+    return {
+      tagname: "note-progress-x",
+      style  : 'notification',
+    }
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let w = ~~(this.percent*this.barWidth + 0.5);
+
+    this.bar2.style["width"] = w + "px";
   }
 
   init() {
     super.init();
   }
-
-  static define() {return {
-    tagname : "note-progress-x"
-  }}
 }
+
 UIBase.internalRegister(ProgBarNote);
 
 export class NoteFrame extends ui.RowFrame {
@@ -160,13 +168,20 @@ export class NoteFrame extends ui.RowFrame {
     this._h = 20;
   }
 
+  static define() {
+    return {
+      tagname: "noteframe-x",
+      style  : 'noteframe',
+    }
+  }
+
   init() {
     super.init();
 
     this.noMarginsOrPadding();
 
     noteframes.push(this);
-    this.background = this.getDefault("NoteBG");
+    this.background = this.getDefault("background-color");
   }
 
   setCSS() {
@@ -184,7 +199,7 @@ export class NoteFrame extends ui.RowFrame {
     super._ondestroy();
   }
 
-  progbarNote(msg, percent, color="rgba(255,0,0,0.2)", timeout=700, id=msg) {
+  progbarNote(msg, percent, color = "rgba(255,0,0,0.2)", timeout = 700, id = msg) {
     let note;
 
     for (let child of this.children) {
@@ -215,7 +230,7 @@ export class NoteFrame extends ui.RowFrame {
     return note;
   }
 
-  addNote(msg, color="rgba(255,0,0,0.2)", timeout=1200, tagname="note-x") {
+  addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x") {
     //let note = UIBase.createElement("note-x");
 
     //note.ctx = this.ctx;
@@ -231,8 +246,8 @@ export class NoteFrame extends ui.RowFrame {
 
     note.style["text-align"] = "center";
 
-    note.style["font"] = ui_base.getFont(note, "NoteText");
-    note.style["color"] = this.getDefault("NoteText").color;
+    note.style["font"] = ui_base.getFont(note, "DefaultText");
+    note.style["color"] = this.getDefault("DefaultText").color;
 
     this.add(note);
 
@@ -246,8 +261,7 @@ export class NoteFrame extends ui.RowFrame {
     note.style["height"] = this._h + "px";
     note.height = this._h;
 
-
-    if (timeout != -1) {
+    if (timeout !== -1) {
       window.setTimeout(() => {
         //console.log("remove!");
         note.remove();
@@ -258,11 +272,8 @@ export class NoteFrame extends ui.RowFrame {
     return note;
 
   }
-
-  static define() {return {
-    tagname : "noteframe-x"
-  }}
 }
+
 UIBase.internalRegister(NoteFrame);
 
 export function getNoteFrames(screen) {
@@ -301,12 +312,13 @@ export function progbarNote(screen, msg, percent, color, timeout) {
       frame.progbarNote(msg, percent, color, timeout);
     } catch (error) {
       print_stack(error);
+      console.log(error.stack, error.message);
       console.log("bad notification frame");
     }
   }
 }
 
-export function sendNote(screen, msg, color, timeout=3000) {
+export function sendNote(screen, msg, color, timeout = 3000) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {
@@ -314,6 +326,7 @@ export function sendNote(screen, msg, color, timeout=3000) {
       frame.addNote(msg, color, timeout);
     } catch (error) {
       print_stack(error);
+      console.log(error.stack, error.message);
       console.log("bad notification frame");
     }
   }
