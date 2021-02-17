@@ -433,6 +433,8 @@ export const PackFlags = {
   FORCE_PROP_LABELS : 64, //force propeties (Container.prototype.prop()) to always have labels
   PUT_FLAG_CHECKS_IN_COLUMNS : 128, //group flag property checkmarks in columns (doesn't apply to icons)
 
+  WRAP_CHECKBOXES : 256,
+
   //internal flags
   STRIP_HORIZ : 512,
   STRIP_VERT : 1024,
@@ -442,6 +444,7 @@ export const PackFlags = {
   HIDE_CHECK_MARKS : (1<<13),
   NO_NUMSLIDER_TEXTBOX : (1<<14),
 };
+
  
 let first = (iter) => {
   if (iter === undefined) {

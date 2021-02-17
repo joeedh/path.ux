@@ -227,18 +227,21 @@ export class Container extends ui_base.UIBase {
   }
 
   saveData() {
-    return {
-      scrollTop  : this.scrollTop,
-      scrollLeft : this.scrollLeft
+    if (this.scrollTop || this.scrollLeft) {
+      return {
+        scrollTop : this.scrollTop,
+        scrollLeft: this.scrollLeft
+      }
+    } else {
+      return {};
     }
   }
-
 
   loadData(obj) {
     if (!obj) return;
 
     let x = obj.scrollLeft || 0;
-    let y = obj.scrollTop  || 0;
+    let y = obj.scrollTop || 0;
 
     this.doOnce(() => {
       this.scrollTo(x, y);
