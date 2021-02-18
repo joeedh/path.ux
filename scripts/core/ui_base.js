@@ -1252,6 +1252,17 @@ export class UIBase extends HTMLElement {
     });
   }
 
+  flushSetCSS() {
+    //check init
+    this._init();
+
+    this.setCSS();
+
+    this._forEachChildWidget((c) => {
+      c.flushSetCSS();
+    });
+  }
+
   //used by container nodes
   /**
    * Iterates over all child widgets,

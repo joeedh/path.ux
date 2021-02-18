@@ -695,7 +695,18 @@ export class Container extends ui_base.UIBase {
         this._menu.remove();
       }
 
-      this._menu = createMenu(this.ctx, title, list);
+      let templ = list;
+
+      if (typeof list === "function") {
+        templ = list();
+      }
+
+      if (templ instanceof HTMLElement && templ.constructor.name === 'Menu') {
+        this._menu = templ;
+      } else {
+        this._menu = createMenu(this.ctx, title, templ);
+      }
+
       return this._menu;
     }
 
