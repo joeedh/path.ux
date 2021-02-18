@@ -6,6 +6,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/path-controller/util/math.js~abstractcurve",
+    "class/scripts/path-controller/util/math.js~AbstractCurve.html",
+    "<span>AbstractCurve</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "class"
+  ],
+  [
     "./scripts/core/safeobservable.js~abstractobservable",
     "class/scripts/core/safeobservable.js~AbstractObservable.html",
     "<span>AbstractObservable</span> <span class=\"search-result-import-path\">./scripts/core/safeobservable.js</span>",
@@ -72,15 +78,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/vectormath.js~basevector",
-    "class/scripts/util/vectormath.js~BaseVector.html",
-    "<span>BaseVector</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "./scripts/path-controller/util/util.js~arraypool",
+    "class/scripts/path-controller/util/util.js~ArrayPool.html",
+    "<span>ArrayPool</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~boolproperty",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html",
-    "<span>BoolProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/util/vectormath.js~basevector",
+    "variable/index.html#static-variable-BaseVector",
+    "<span>BaseVector</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~boolproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html",
+    "<span>BoolProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
@@ -96,9 +108,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/curve/curve1d_anim.js~bouncecurve",
-    "class/scripts/curve/curve1d_anim.js~BounceCurve.html",
-    "<span>BounceCurve</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_anim.js</span>",
+    "./scripts/path-controller/curve/curve1d_anim.js~bouncecurve",
+    "class/scripts/path-controller/curve/curve1d_anim.js~BounceCurve.html",
+    "<span>BounceCurve</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_anim.js</span>",
     "class"
   ],
   [
@@ -120,15 +132,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/math.js~colinear",
+    "./scripts/path-controller/util/math.js~colinear",
     "variable/index.html#static-variable-COLINEAR",
-    "<span>COLINEAR</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>COLINEAR</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~colinear_isect",
+    "./scripts/path-controller/util/math.js~colinear_isect",
     "variable/index.html#static-variable-COLINEAR_ISECT",
-    "<span>COLINEAR_ISECT</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>COLINEAR_ISECT</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
@@ -138,10 +150,16 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_base.js~curve_version",
+    "./scripts/path-controller/curve/curve1d_base.js~curve_version",
     "variable/index.html#static-variable-CURVE_VERSION",
-    "<span>CURVE_VERSION</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "<span>CURVE_VERSION</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/util/screenoverdraw.js~canvasoverdraw",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html",
+    "<span>CanvasOverdraw</span> <span class=\"search-result-import-path\">./scripts/util/ScreenOverdraw.js</span>",
+    "class"
   ],
   [
     "./scripts/widgets/ui_widgets.js~check1",
@@ -154,6 +172,18 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_widgets.js~Check.html",
     "<span>Check</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_widgets.js</span>",
     "class"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~closestcurverets",
+    "class/scripts/path-controller/util/math.js~ClosestCurveRets.html",
+    "<span>ClosestCurveRets</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~closestmodes",
+    "variable/index.html#static-variable-ClosestModes",
+    "<span>ClosestModes</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "variable"
   ],
   [
     "./scripts/widgets/ui_colorpicker.js~colorfield",
@@ -204,9 +234,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/solver.js~constraint",
-    "class/scripts/util/solver.js~Constraint.html",
-    "<span>Constraint</span> <span class=\"search-result-import-path\">./scripts/util/solver.js</span>",
+    "./scripts/path-controller/util/solver.js~constraint",
+    "class/scripts/path-controller/util/solver.js~Constraint.html",
+    "<span>Constraint</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/solver.js</span>",
     "class"
   ],
   [
@@ -222,45 +252,45 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/controller/context.js~context",
-    "class/scripts/controller/context.js~Context.html",
-    "<span>Context</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "./scripts/path-controller/controller/context.js~context",
+    "class/scripts/path-controller/controller/context.js~Context.html",
+    "<span>Context</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/context.js~contextflags",
+    "./scripts/path-controller/controller/context.js~contextflags",
     "variable/index.html#static-variable-ContextFlags",
-    "<span>ContextFlags</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "<span>ContextFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "variable"
   ],
   [
-    "./scripts/controller/context.js~contextoverlay",
-    "class/scripts/controller/context.js~ContextOverlay.html",
-    "<span>ContextOverlay</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "./scripts/path-controller/controller/context.js~contextoverlay",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html",
+    "<span>ContextOverlay</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "class"
   ],
   [
-    "./scripts/curve/curve1d.js~curve1d",
-    "class/scripts/curve/curve1d.js~Curve1D.html",
-    "<span>Curve1D</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d.js</span>",
+    "./scripts/path-controller/curve/curve1d.js~curve1d",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html",
+    "<span>Curve1D</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d.js</span>",
     "class"
   ],
   [
-    "./scripts/curve/curve1d_bspline.js~curve1dpoint",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html",
-    "<span>Curve1DPoint</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "./scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html",
+    "<span>Curve1DPoint</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_bspline.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~curve1dproperty",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html",
-    "<span>Curve1DProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~curve1dproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html",
+    "<span>Curve1DProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~curve1dpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html",
-    "<span>Curve1DPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~curve1dpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html",
+    "<span>Curve1DPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
@@ -276,9 +306,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_base.js~curveconstructors",
+    "./scripts/path-controller/curve/curve1d_base.js~curveconstructors",
     "variable/index.html#static-variable-CurveConstructors",
-    "<span>CurveConstructors</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "<span>CurveConstructors</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
@@ -288,9 +318,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/curve/curve1d_base.js~curveflags",
+    "./scripts/path-controller/curve/curve1d_base.js~curveflags",
     "variable/index.html#static-variable-CurveFlags",
-    "<span>CurveFlags</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "<span>CurveFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
@@ -306,9 +336,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_base.js~curvetypedata",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html",
-    "<span>CurveTypeData</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "./scripts/path-controller/curve/curve1d_base.js~curvetypedata",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html",
+    "<span>CurveTypeData</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "class"
   ],
   [
@@ -324,63 +354,51 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/controller/simple_controller.js~dataapi",
-    "class/scripts/controller/simple_controller.js~DataAPI.html",
-    "<span>DataAPI</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "./scripts/path-controller/controller/controller.js~dataapi",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html",
+    "<span>DataAPI</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/controller.js~dataflags",
+    "./scripts/path-controller/controller/controller_base.js~dataflags",
     "variable/index.html#static-variable-DataFlags",
-    "<span>DataFlags</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "<span>DataFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "variable"
   ],
   [
-    "./scripts/controller/simple_controller.js~datalist",
-    "class/scripts/controller/simple_controller.js~DataList.html",
-    "<span>DataList</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "./scripts/path-controller/controller/controller.js~datalist",
+    "class/scripts/path-controller/controller/controller.js~DataList.html",
+    "<span>DataList</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/simple_controller.js~datapath",
-    "class/scripts/controller/simple_controller.js~DataPath.html",
-    "<span>DataPath</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "./scripts/path-controller/controller/controller_base.js~datapath",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html",
+    "<span>DataPath</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/controller.js~datapatherror",
-    "class/scripts/controller/controller.js~DataPathError.html",
-    "<span>DataPathError</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "./scripts/path-controller/controller/controller_base.js~datapatherror",
+    "class/scripts/path-controller/controller/controller_base.js~DataPathError.html",
+    "<span>DataPathError</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "class"
   ],
   [
-    "./scripts/core/ui.js~datapatherror",
-    "variable/index.html#static-variable-DataPathError",
-    "<span>DataPathError</span> <span class=\"search-result-import-path\">./scripts/core/ui.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/widgets/ui_table.js~datapatherror",
-    "variable/index.html#static-variable-DataPathError",
-    "<span>DataPathError</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_table.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/controller/controller_ops.js~datapathsetop",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html",
-    "<span>DataPathSetOp</span> <span class=\"search-result-import-path\">./scripts/controller/controller_ops.js</span>",
+    "./scripts/path-controller/controller/controller_ops.js~datapathsetop",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html",
+    "<span>DataPathSetOp</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_ops.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/simple_controller.js~datastruct",
-    "class/scripts/controller/simple_controller.js~DataStruct.html",
-    "<span>DataStruct</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "./scripts/path-controller/controller/controller.js~datastruct",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html",
+    "<span>DataStruct</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/simple_controller.js~datatypes",
+    "./scripts/path-controller/controller/controller_base.js~datatypes",
     "variable/index.html#static-variable-DataTypes",
-    "<span>DataTypes</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>DataTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "variable"
   ],
   [
@@ -420,15 +438,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/events.js~domeventtypes",
+    "./scripts/path-controller/util/events.js~domeventtypes",
     "variable/index.html#static-variable-DomEventTypes",
-    "<span>DomEventTypes</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "<span>DomEventTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/simple_events.js~doubleclickhandler",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html",
-    "<span>DoubleClickHandler</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "./scripts/path-controller/util/simple_events.js~doubleclickhandler",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html",
+    "<span>DoubleClickHandler</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "class"
   ],
   [
@@ -444,21 +462,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/ease.js~ease",
+    "./scripts/path-controller/curve/ease.js~ease",
     "function/index.html#static-function-Ease",
-    "<span>Ease</span> <span class=\"search-result-import-path\">./scripts/curve/ease.js</span>",
+    "<span>Ease</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/ease.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d_anim.js~easecurve",
-    "class/scripts/curve/curve1d_anim.js~EaseCurve.html",
-    "<span>EaseCurve</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_anim.js</span>",
+    "./scripts/path-controller/curve/curve1d_anim.js~easecurve",
+    "class/scripts/path-controller/curve/curve1d_anim.js~EaseCurve.html",
+    "<span>EaseCurve</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_anim.js</span>",
     "class"
   ],
   [
-    "./scripts/curve/curve1d_anim.js~elasticcurve",
-    "class/scripts/curve/curve1d_anim.js~ElasticCurve.html",
-    "<span>ElasticCurve</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_anim.js</span>",
+    "./scripts/path-controller/curve/curve1d_anim.js~elasticcurve",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.html",
+    "<span>ElasticCurve</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_anim.js</span>",
     "class"
   ],
   [
@@ -468,9 +486,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~enumkeypair",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html",
-    "<span>EnumKeyPair</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~enumkeypair",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html",
+    "<span>EnumKeyPair</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
@@ -480,15 +498,15 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/toolsys/toolprop.js~enumproperty",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html",
-    "<span>EnumProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~enumproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html",
+    "<span>EnumProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~enumpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html",
-    "<span>EnumPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html",
+    "<span>EnumPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
@@ -498,75 +516,99 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/vectormath.js~eulerorders",
+    "./scripts/path-controller/util/vectormath.js~eulerorders",
     "variable/index.html#static-variable-EulerOrders",
-    "<span>EulerOrders</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "<span>EulerOrders</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/events.js~eventdispatcher",
-    "class/scripts/util/events.js~EventDispatcher.html",
-    "<span>EventDispatcher</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "./scripts/path-controller/util/events.js~eventdispatcher",
+    "class/scripts/path-controller/util/events.js~EventDispatcher.html",
+    "<span>EventDispatcher</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "class"
   ],
   [
-    "./scripts/util/events.js~eventhandler",
-    "class/scripts/util/events.js~EventHandler.html",
-    "<span>EventHandler</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "./scripts/path-controller/util/events.js~eventhandler",
+    "class/scripts/path-controller/util/events.js~EventHandler.html",
+    "<span>EventHandler</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "class"
   ],
   [
-    "./scripts/util/math.js~feps",
+    "./scripts/path-controller/util/vectormath.js~f32basevector",
+    "variable/index.html#static-variable-F32BaseVector",
+    "<span>F32BaseVector</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~feps",
     "variable/index.html#static-variable-FEPS",
-    "<span>FEPS</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>FEPS</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~feps_data",
+    "./scripts/path-controller/util/math.js~feps_data",
     "variable/index.html#static-variable-FEPS_DATA",
-    "<span>FEPS_DATA</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>FEPS_DATA</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~float_max",
+    "./scripts/path-controller/util/math.js~float_max",
     "variable/index.html#static-variable-FLOAT_MAX",
-    "<span>FLOAT_MAX</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>FLOAT_MAX</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~float_min",
+    "./scripts/path-controller/util/math.js~float_min",
     "variable/index.html#static-variable-FLOAT_MIN",
-    "<span>FLOAT_MIN</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>FLOAT_MIN</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/util.js~fasthash",
-    "class/scripts/util/util.js~FastHash.html",
-    "<span>FastHash</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~fasthash",
+    "class/scripts/path-controller/util/util.js~FastHash.html",
+    "<span>FastHash</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~flagproperty",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html",
-    "<span>FlagProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/platforms/platform_base.js~filedialogargs",
+    "class/scripts/platforms/platform_base.js~FileDialogArgs.html",
+    "<span>FileDialogArgs</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~flagpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~FlagPropertyIF.html",
-    "<span>FlagPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/platforms/platform_base.js~filepath",
+    "class/scripts/platforms/platform_base.js~FilePath.html",
+    "<span>FilePath</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~floatproperty",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html",
-    "<span>FloatProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~flagproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~FlagProperty.html",
+    "<span>FlagProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~floatpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~FloatPropertyIF.html",
-    "<span>FloatPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~flagpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~FlagPropertyIF.html",
+    "<span>FlagPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~floatarrayproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html",
+    "<span>FloatArrayProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~floatproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html",
+    "<span>FloatProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~floatpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~FloatPropertyIF.html",
+    "<span>FloatPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
@@ -582,21 +624,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/util.js~hashdigest",
-    "class/scripts/util/util.js~HashDigest.html",
-    "<span>HashDigest</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~hashdigest",
+    "class/scripts/path-controller/util/util.js~HashDigest.html",
+    "<span>HashDigest</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/util.js~hashiter",
-    "class/scripts/util/util.js~HashIter.html",
-    "<span>HashIter</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~hashiter",
+    "class/scripts/path-controller/util/util.js~HashIter.html",
+    "<span>HashIter</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/simple_events.js~hotkey",
-    "class/scripts/util/simple_events.js~HotKey.html",
-    "<span>HotKey</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "./scripts/path-controller/util/simple_events.js~hotkey",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html",
+    "<span>HotKey</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "class"
   ],
   [
@@ -606,9 +648,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/util.js~idgen",
-    "class/scripts/util/util.js~IDGen.html",
-    "<span>IDGen</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~idgen",
+    "class/scripts/path-controller/util/util.js~IDGen.html",
+    "<span>IDGen</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~idmap",
+    "class/scripts/path-controller/util/util.js~IDMap.html",
+    "<span>IDMap</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
@@ -648,9 +696,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/util.js~imagereader",
-    "class/scripts/util/util.js~ImageReader.html",
-    "<span>ImageReader</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~imagereader",
+    "class/scripts/path-controller/util/util.js~ImageReader.html",
+    "<span>ImageReader</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
@@ -660,15 +708,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~intproperty",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html",
-    "<span>IntProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~intproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html",
+    "<span>IntProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~intpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~IntPropertyIF.html",
-    "<span>IntPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~intpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~IntPropertyIF.html",
+    "<span>IntPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
@@ -678,15 +726,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~keymap",
-    "class/scripts/util/simple_events.js~KeyMap.html",
-    "<span>KeyMap</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "./scripts/path-controller/util/simple_events.js~keymap",
+    "class/scripts/path-controller/util/simple_events.js~KeyMap.html",
+    "<span>KeyMap</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "class"
   ],
   [
-    "./scripts/util/math.js~linecross",
+    "./scripts/path-controller/util/math.js~linecross",
     "variable/index.html#static-variable-LINECROSS",
-    "<span>LINECROSS</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>LINECROSS</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
@@ -702,51 +750,69 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/controller/controller.js~listiface",
-    "class/scripts/controller/controller.js~ListIface.html",
-    "<span>ListIface</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "./scripts/path-controller/controller/controller_base.js~listiface",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html",
+    "<span>ListIface</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~listproperty",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html",
-    "<span>ListProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~listproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html",
+    "<span>ListProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~listpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html",
-    "<span>ListPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html",
+    "<span>ListPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/context.js~lockedcontext",
-    "class/scripts/controller/context.js~LockedContext.html",
-    "<span>LockedContext</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "./scripts/path-controller/controller/context.js~lockedcontext",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html",
+    "<span>LockedContext</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~mat4property",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html",
-    "<span>Mat4Property</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolsys.js~macroclasses",
+    "variable/index.html#static-variable-MacroClasses",
+    "<span>MacroClasses</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolsys.js~macrolink",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html",
+    "<span>MacroLink</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "class"
   ],
   [
-    "./scripts/util/math.js~mat4stack",
-    "class/scripts/util/math.js~Mat4Stack.html",
-    "<span>Mat4Stack</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "./scripts/path-controller/util/util.js~mapiter",
+    "class/scripts/path-controller/util/util.js~MapIter.html",
+    "<span>MapIter</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/vectormath.js~matrix4",
-    "class/scripts/util/vectormath.js~Matrix4.html",
-    "<span>Matrix4</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~mat4property",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html",
+    "<span>Mat4Property</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/util/math.js~matrix4ui",
+    "./scripts/path-controller/util/math.js~mat4stack",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html",
+    "<span>Mat4Stack</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/vectormath.js~matrix4",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html",
+    "<span>Matrix4</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~matrix4ui",
     "variable/index.html#static-variable-Matrix4UI",
-    "<span>Matrix4UI</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>Matrix4UI</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
@@ -762,9 +828,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/util.js~mersennerandom",
-    "class/scripts/util/util.js~MersenneRandom.html",
-    "<span>MersenneRandom</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~mersennerandom",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html",
+    "<span>MersenneRandom</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
@@ -780,9 +846,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/math.js~minmax",
-    "class/scripts/util/math.js~MinMax.html",
-    "<span>MinMax</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "./scripts/path-controller/util/util.js~minheapqueue",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html",
+    "<span>MinHeapQueue</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~minmax",
+    "class/scripts/path-controller/util/math.js~MinMax.html",
+    "<span>MinMax</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "class"
   ],
   [
@@ -792,21 +864,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/controller/controller.js~modelinterface",
-    "class/scripts/controller/controller.js~ModelInterface.html",
-    "<span>ModelInterface</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "./scripts/path-controller/controller/controller_abstract.js~modelinterface",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html",
+    "<span>ModelInterface</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/util/util.js~movingavg",
-    "class/scripts/util/util.js~MovingAvg.html",
-    "<span>MovingAvg</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~movingavg",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html",
+    "<span>MovingAvg</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/expr.js~node",
-    "class/scripts/util/expr.js~Node.html",
-    "<span>Node</span> <span class=\"search-result-import-path\">./scripts/util/expr.js</span>",
+    "./scripts/path-controller/util/expr.js~node",
+    "class/scripts/path-controller/util/expr.js~Node.html",
+    "<span>Node</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/expr.js</span>",
     "class"
   ],
   [
@@ -822,15 +894,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~numproperty",
-    "class/scripts/toolsys/toolprop.js~NumProperty.html",
-    "<span>NumProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~numproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~NumProperty.html",
+    "<span>NumProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~numpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~NumPropertyIF.html",
-    "<span>NumPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~numpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~NumPropertyIF.html",
+    "<span>NumPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
@@ -876,15 +948,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/controller/context.js~overlayclasses",
+    "./scripts/path-controller/controller/context.js~overlayclasses",
     "variable/index.html#static-variable-OverlayClasses",
-    "<span>OverlayClasses</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "<span>OverlayClasses</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/parseutil.js~putlparseerror",
-    "class/scripts/util/parseutil.js~PUTLParseError.html",
-    "<span>PUTLParseError</span> <span class=\"search-result-import-path\">./scripts/util/parseutil.js</span>",
+    "./scripts/path-controller/util/parseutil.js~putlparseerror",
+    "class/scripts/path-controller/util/parseutil.js~PUTLParseError.html",
+    "<span>PUTLParseError</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/parseutil.js</span>",
     "class"
   ],
   [
@@ -894,9 +966,21 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/path-controller/util/graphpack.js~packnode",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html",
+    "<span>PackNode</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/graphpack.js</span>",
+    "class"
+  ],
+  [
     "./scripts/util/graphpack.js~packnode",
     "class/scripts/util/graphpack.js~PackNode.html",
     "<span>PackNode</span> <span class=\"search-result-import-path\">./scripts/util/graphpack.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/graphpack.js~packnodevertex",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html",
+    "<span>PackNodeVertex</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/graphpack.js</span>",
     "class"
   ],
   [
@@ -912,21 +996,27 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_anim.js~paramkey",
-    "class/scripts/curve/curve1d_anim.js~ParamKey.html",
-    "<span>ParamKey</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_anim.js</span>",
+    "./scripts/path-controller/curve/curve1d_anim.js~paramkey",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ParamKey.html",
+    "<span>ParamKey</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_anim.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolpath.js~parser",
+    "./scripts/path-controller/toolsys/toolpath.js~parser",
     "variable/index.html#static-variable-Parser",
-    "<span>Parser</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
+    "<span>Parser</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolpath.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~planeops",
-    "class/scripts/util/math.js~PlaneOps.html",
-    "<span>PlaneOps</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "./scripts/path-controller/util/math.js~planeops",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html",
+    "<span>PlaneOps</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/platforms/platform_base.js~platformapi",
+    "class/scripts/platforms/platform_base.js~PlatformAPI.html",
+    "<span>PlatformAPI</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
     "class"
   ],
   [
@@ -936,45 +1026,57 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~propclasses",
-    "variable/index.html#static-variable-PropClasses",
-    "<span>PropClasses</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/toolsys/toolprop_abstract.js~propflags",
-    "variable/index.html#static-variable-PropFlags",
-    "<span>PropFlags</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/toolsys/toolprop.js~propsubtypes",
-    "variable/index.html#static-variable-PropSubTypes",
-    "<span>PropSubTypes</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/toolsys/toolprop_abstract.js~propsubtypes",
-    "variable/index.html#static-variable-PropSubTypes",
-    "<span>PropSubTypes</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/toolsys/toolprop_abstract.js~proptypes",
-    "variable/index.html#static-variable-PropTypes",
-    "<span>PropTypes</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
-    "variable"
-  ],
-  [
-    "./scripts/util/vectormath.js~quat",
-    "class/scripts/util/vectormath.js~Quat.html",
-    "<span>Quat</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "./scripts/widgets/ui_progress.js~progresscircle",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html",
+    "<span>ProgressCircle</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_progress.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~quatproperty",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html",
-    "<span>QuatProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~propclasses",
+    "variable/index.html#static-variable-PropClasses",
+    "<span>PropClasses</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~propflags",
+    "variable/index.html#static-variable-PropFlags",
+    "<span>PropFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~propsubtypes",
+    "variable/index.html#static-variable-PropSubTypes",
+    "<span>PropSubTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~propsubtypes",
+    "variable/index.html#static-variable-PropSubTypes",
+    "<span>PropSubTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~proptypes",
+    "variable/index.html#static-variable-PropTypes",
+    "<span>PropTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/util/vectormath.js~quat",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html",
+    "<span>Quat</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~quatproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html",
+    "<span>QuatProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~queue",
+    "class/scripts/path-controller/util/util.js~Queue.html",
+    "<span>Queue</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
@@ -984,9 +1086,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_anim.js~randcurve",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html",
-    "<span>RandCurve</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_anim.js</span>",
+    "./scripts/path-controller/curve/curve1d_anim.js~randcurve",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html",
+    "<span>RandCurve</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_anim.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~reportproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~ReportProperty.html",
+    "<span>ReportProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
@@ -1008,15 +1116,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/math.js~sqrt2",
+    "./scripts/path-controller/util/math.js~sqrt2",
     "variable/index.html#static-variable-SQRT2",
-    "<span>SQRT2</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>SQRT2</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/struct.js~struct",
+    "./scripts/path-controller/util/struct.js~struct",
     "variable/index.html#static-variable-STRUCT",
-    "<span>STRUCT</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>STRUCT</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/util/screenoverdraw.js~svg_url",
+    "variable/index.html#static-variable-SVG_URL",
+    "<span>SVG_URL</span> <span class=\"search-result-import-path\">./scripts/util/ScreenOverdraw.js</span>",
     "variable"
   ],
   [
@@ -1026,10 +1140,10 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/docbrowser/docbrowser.js~saveddocument",
-    "class/scripts/docbrowser/docbrowser.js~SavedDocument.html",
-    "<span>SavedDocument</span> <span class=\"search-result-import-path\">./scripts/docbrowser/docbrowser.js</span>",
-    "class"
+    "./scripts/path-controller/toolsys/toolsys.js~savedtooldefaults",
+    "variable/index.html#static-variable-SavedToolDefaults",
+    "<span>SavedToolDefaults</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
+    "variable"
   ],
   [
     "./scripts/screen/framemanager.js~screen",
@@ -1074,9 +1188,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/util.js~setiter",
-    "class/scripts/util/util.js~SetIter.html",
-    "<span>SetIter</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~setiter",
+    "class/scripts/path-controller/util/util.js~SetIter.html",
+    "<span>SetIter</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
@@ -1092,9 +1206,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_anim.js~simplecurvebase",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html",
-    "<span>SimpleCurveBase</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_anim.js</span>",
+    "./scripts/path-controller/curve/curve1d_anim.js~simplecurvebase",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html",
+    "<span>SimpleCurveBase</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_anim.js</span>",
     "class"
   ],
   [
@@ -1104,15 +1218,15 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/util/util.js~smartconsole",
-    "class/scripts/util/util.js~SmartConsole.html",
-    "<span>SmartConsole</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~smartconsole",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html",
+    "<span>SmartConsole</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/util.js~smartconsolecontext",
-    "class/scripts/util/util.js~SmartConsoleContext.html",
-    "<span>SmartConsoleContext</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~smartconsolecontext",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html",
+    "<span>SmartConsoleContext</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
@@ -1122,10 +1236,22 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/solver.js~solver",
-    "class/scripts/util/solver.js~Solver.html",
-    "<span>Solver</span> <span class=\"search-result-import-path\">./scripts/util/solver.js</span>",
+    "./scripts/path-controller/util/solver.js~solver",
+    "class/scripts/path-controller/util/solver.js~Solver.html",
+    "<span>Solver</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/solver.js</span>",
     "class"
+  ],
+  [
+    "./scripts/path-controller/curve/curve1d_bspline.js~splinetemplateicons",
+    "variable/index.html#static-variable-SplineTemplateIcons",
+    "<span>SplineTemplateIcons</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_bspline.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/curve/curve1d_bspline.js~splinetemplates",
+    "variable/index.html#static-variable-SplineTemplates",
+    "<span>SplineTemplates</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_bspline.js</span>",
+    "variable"
   ],
   [
     "./scripts/screen/framemanager_ops.js~splittool",
@@ -1134,33 +1260,33 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~stringproperty",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html",
-    "<span>StringProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~stringproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html",
+    "<span>StringProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~stringpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~StringPropertyIF.html",
-    "<span>StringPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~stringpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringPropertyIF.html",
+    "<span>StringPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~stringsetproperty",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html",
-    "<span>StringSetProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~stringsetproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html",
+    "<span>StringSetProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~stringsetpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html",
-    "<span>StringSetPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html",
+    "<span>StringSetPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/simple_controller.js~structflags",
+    "./scripts/path-controller/controller/controller_base.js~structflags",
     "variable/index.html#static-variable-StructFlags",
-    "<span>StructFlags</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>StructFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "variable"
   ],
   [
@@ -1194,9 +1320,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/curve/curve1d_base.js~tangentmodes",
+    "./scripts/path-controller/curve/curve1d_base.js~tangentmodes",
     "variable/index.html#static-variable-TangentModes",
-    "<span>TangentModes</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "<span>TangentModes</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "variable"
   ],
   [
@@ -1230,57 +1356,63 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~toolclasses",
+    "./scripts/path-controller/toolsys/toolsys.js~toolclasses",
     "variable/index.html#static-variable-ToolClasses",
-    "<span>ToolClasses</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "<span>ToolClasses</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "variable"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~toolflags",
+    "./scripts/path-controller/toolsys/toolsys.js~toolflags",
     "variable/index.html#static-variable-ToolFlags",
-    "<span>ToolFlags</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "<span>ToolFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "variable"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~toolmacro",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html",
-    "<span>ToolMacro</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "./scripts/path-controller/toolsys/toolsys.js~toolmacro",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html",
+    "<span>ToolMacro</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~toolop",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html",
-    "<span>ToolOp</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "./scripts/path-controller/toolsys/toolsys.js~toolop",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html",
+    "<span>ToolOp</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "class"
   ],
   [
-    "./scripts/controller/controller.js~toolopiface",
-    "class/scripts/controller/controller.js~ToolOpIface.html",
-    "<span>ToolOpIface</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "./scripts/path-controller/controller/controller_base.js~toolopiface",
+    "class/scripts/path-controller/controller/controller_base.js~ToolOpIface.html",
+    "<span>ToolOpIface</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolpath.js~toolpaths",
+    "./scripts/path-controller/toolsys/toolpath.js~toolpaths",
     "variable/index.html#static-variable-ToolPaths",
-    "<span>ToolPaths</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
+    "<span>ToolPaths</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolpath.js</span>",
     "variable"
   ],
   [
-    "./scripts/toolsys/toolprop.js~toolproperty",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html",
-    "<span>ToolProperty</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~toolproperty",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html",
+    "<span>ToolProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~toolpropertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html",
-    "<span>ToolPropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolsys.js~toolpropertycache",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html",
+    "<span>ToolPropertyCache</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~toolstack",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html",
-    "<span>ToolStack</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html",
+    "<span>ToolPropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolsys.js~toolstack",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html",
+    "<span>ToolStack</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "class"
   ],
   [
@@ -1308,6 +1440,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "./scripts/core/ui.js~twocolumnframe",
+    "class/scripts/core/ui.js~TwoColumnFrame.html",
+    "<span>TwoColumnFrame</span> <span class=\"search-result-import-path\">./scripts/core/ui.js</span>",
+    "class"
+  ],
+  [
     "./scripts/core/aspect.js~uibase",
     "variable/index.html#static-variable-UIBase",
     "<span>UIBase</span> <span class=\"search-result-import-path\">./scripts/core/aspect.js</span>",
@@ -1326,9 +1464,15 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~undoflags",
+    "./scripts/core/ui_save.js~ui_save_version",
+    "variable/index.html#static-variable-UI_SAVE_VERSION",
+    "<span>UI_SAVE_VERSION</span> <span class=\"search-result-import-path\">./scripts/core/ui_save.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolsys.js~undoflags",
     "variable/index.html#static-variable-UndoFlags",
-    "<span>UndoFlags</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "<span>UndoFlags</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "variable"
   ],
   [
@@ -1350,45 +1494,45 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~vec2property",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html",
-    "<span>Vec2Property</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~vec2property",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html",
+    "<span>Vec2Property</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~vec2propertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~Vec2PropertyIF.html",
-    "<span>Vec2PropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~vec2propertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Vec2PropertyIF.html",
+    "<span>Vec2PropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~vec3property",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html",
-    "<span>Vec3Property</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~vec3property",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html",
+    "<span>Vec3Property</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~vec3propertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~Vec3PropertyIF.html",
-    "<span>Vec3PropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~vec3propertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Vec3PropertyIF.html",
+    "<span>Vec3PropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~vec4property",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html",
-    "<span>Vec4Property</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~vec4property",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html",
+    "<span>Vec4Property</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop_abstract.js~vec4propertyif",
-    "class/scripts/toolsys/toolprop_abstract.js~Vec4PropertyIF.html",
-    "<span>Vec4PropertyIF</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop_abstract.js</span>",
+    "./scripts/path-controller/toolsys/toolprop_abstract.js~vec4propertyif",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Vec4PropertyIF.html",
+    "<span>Vec4PropertyIF</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop_abstract.js</span>",
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~vecpropertybase",
-    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html",
-    "<span>VecPropertyBase</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~vecpropertybase",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html",
+    "<span>VecPropertyBase</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
@@ -1398,15 +1542,15 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/vectormath.js~vector2",
-    "class/scripts/util/vectormath.js~Vector2.html",
-    "<span>Vector2</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "./scripts/path-controller/util/vectormath.js~vector2",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html",
+    "<span>Vector2</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
     "class"
   ],
   [
-    "./scripts/util/vectormath.js~vector3",
-    "class/scripts/util/vectormath.js~Vector3.html",
-    "<span>Vector3</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "./scripts/path-controller/util/vectormath.js~vector3",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html",
+    "<span>Vector3</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
     "class"
   ],
   [
@@ -1416,9 +1560,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/vectormath.js~vector4",
-    "class/scripts/util/vectormath.js~Vector4.html",
-    "<span>Vector4</span> <span class=\"search-result-import-path\">./scripts/util/vectormath.js</span>",
+    "./scripts/path-controller/util/vectormath.js~vector4",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html",
+    "<span>Vector4</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/vectormath.js</span>",
     "class"
   ],
   [
@@ -1440,9 +1584,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "./scripts/toolsys/toolprop.js~_numberpropertybase",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html",
-    "<span>_NumberPropertyBase</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "./scripts/path-controller/toolsys/toolprop.js~_numberpropertybase",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html",
+    "<span>_NumberPropertyBase</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "class"
   ],
   [
@@ -1464,15 +1608,27 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/struct.js~_nstructjs",
+    "./scripts/path-controller/util/struct.js~_nstructjs",
     "variable/index.html#static-variable-_nstructjs",
-    "<span>_nstructjs</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>_nstructjs</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~_old_isect_ray_plane",
+    "./scripts/path-controller/util/math.js~_old_isect_ray_plane",
     "function/index.html#static-function-_old_isect_ray_plane",
-    "<span>_old_isect_ray_plane</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>_old_isect_ray_plane</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/screen/framemanager.js~_oneventsstart",
+    "function/index.html#static-function-_onEventsStart",
+    "<span>_onEventsStart</span> <span class=\"search-result-import-path\">./scripts/screen/FrameManager.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/screen/framemanager.js~_oneventsstop",
+    "function/index.html#static-function-_onEventsStop",
+    "<span>_onEventsStop</span> <span class=\"search-result-import-path\">./scripts/screen/FrameManager.js</span>",
     "function"
   ],
   [
@@ -1482,9 +1638,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~_setscreenclass",
+    "./scripts/path-controller/util/simple_events.js~_setscreenclass",
     "function/index.html#static-function-_setScreenClass",
-    "<span>_setScreenClass</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>_setScreenClass</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
@@ -1494,45 +1650,87 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_intersect_2d",
+    "./scripts/core/ui_base.js~_themeupdatekey",
+    "variable/index.html#static-variable-_themeUpdateKey",
+    "<span>_themeUpdateKey</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_intersect_2d",
     "function/index.html#static-function-aabb_intersect_2d",
-    "<span>aabb_intersect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_intersect_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_isect_2d",
+    "./scripts/path-controller/util/math.js~aabb_intersect_3d",
+    "function/index.html#static-function-aabb_intersect_3d",
+    "<span>aabb_intersect_3d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_isect_2d",
     "function/index.html#static-function-aabb_isect_2d",
-    "<span>aabb_isect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_isect_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_isect_line_2d",
+    "./scripts/path-controller/util/math.js~aabb_isect_3d",
+    "function/index.html#static-function-aabb_isect_3d",
+    "<span>aabb_isect_3d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_isect_cylinder_3d",
+    "function/index.html#static-function-aabb_isect_cylinder_3d",
+    "<span>aabb_isect_cylinder_3d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_isect_line_2d",
     "function/index.html#static-function-aabb_isect_line_2d",
-    "<span>aabb_isect_line_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_isect_line_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_overlap_area",
+    "./scripts/path-controller/util/math.js~aabb_isect_line_3d",
+    "function/index.html#static-function-aabb_isect_line_3d",
+    "<span>aabb_isect_line_3d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_overlap_area",
     "function/index.html#static-function-aabb_overlap_area",
-    "<span>aabb_overlap_area</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_overlap_area</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_sphere_isect",
+    "./scripts/path-controller/util/math.js~aabb_sphere_dist",
+    "function/index.html#static-function-aabb_sphere_dist",
+    "<span>aabb_sphere_dist</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_sphere_isect",
     "function/index.html#static-function-aabb_sphere_isect",
-    "<span>aabb_sphere_isect</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_sphere_isect</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_sphere_isect_2d",
+    "./scripts/path-controller/util/math.js~aabb_sphere_isect_2d",
     "function/index.html#static-function-aabb_sphere_isect_2d",
-    "<span>aabb_sphere_isect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_sphere_isect_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~aabb_union_2d",
+    "./scripts/path-controller/util/math.js~aabb_union",
+    "function/index.html#static-function-aabb_union",
+    "<span>aabb_union</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~aabb_union_2d",
     "function/index.html#static-function-aabb_union_2d",
-    "<span>aabb_union_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>aabb_union_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -1548,15 +1746,21 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/util.js~atob",
+    "./scripts/path-controller/util/util.js~atob",
     "function/index.html#static-function-atob",
-    "<span>atob</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>atob</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d_bspline.js~binomial",
+    "./scripts/path-controller/util/math.js~barycentric_v2",
+    "function/index.html#static-function-barycentric_v2",
+    "<span>barycentric_v2</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/curve/curve1d_bspline.js~binomial",
     "function/index.html#static-function-binomial",
-    "<span>binomial</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "<span>binomial</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_bspline.js</span>",
     "function"
   ],
   [
@@ -1566,9 +1770,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~btoa",
+    "./scripts/path-controller/util/util.js~btoa",
     "function/index.html#static-function-btoa",
-    "<span>btoa</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>btoa</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
@@ -1584,9 +1788,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/toolsys/toolpath.js~buildparser",
+    "./scripts/path-controller/toolsys/toolpath.js~buildparser",
     "function/index.html#static-function-buildParser",
-    "<span>buildParser</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
+    "<span>buildParser</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolpath.js</span>",
     "function"
   ],
   [
@@ -1596,10 +1800,28 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~cachering",
-    "class/scripts/util/util.js~cachering.html",
-    "<span>cachering</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/toolsys/toolsys.js~buildtoolsysapi",
+    "function/index.html#static-function-buildToolSysAPI",
+    "<span>buildToolSysAPI</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~cachering",
+    "class/scripts/path-controller/util/util.js~cachering.html",
+    "<span>cachering</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
+  ],
+  [
+    "./scripts/core/ui_base.js~calcthemekey",
+    "function/index.html#static-function-calcThemeKey",
+    "<span>calcThemeKey</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~calc_projection_axes",
+    "function/index.html#static-function-calc_projection_axes",
+    "<span>calc_projection_axes</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
   ],
   [
     "./scripts/pathux.js~cconst",
@@ -1620,27 +1842,45 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~circ_from_line_tan",
+    "./scripts/path-controller/util/math.js~circ_from_line_tan",
     "function/index.html#static-function-circ_from_line_tan",
-    "<span>circ_from_line_tan</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>circ_from_line_tan</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~clip_line_w",
+    "./scripts/core/aspect.js~clearaspectcallbacks",
+    "function/index.html#static-function-clearAspectCallbacks",
+    "<span>clearAspectCallbacks</span> <span class=\"search-result-import-path\">./scripts/core/aspect.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~clip_line_w",
     "function/index.html#static-function-clip_line_w",
-    "<span>clip_line_w</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>clip_line_w</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~closest_point_on_line",
+    "./scripts/path-controller/util/math.js~closestpoint",
+    "function/index.html#static-function-closestPoint",
+    "<span>closestPoint</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~closest_point_on_line",
     "function/index.html#static-function-closest_point_on_line",
-    "<span>closest_point_on_line</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>closest_point_on_line</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~colinear",
+    "./scripts/path-controller/util/math.js~closest_point_on_tri",
+    "function/index.html#static-function-closest_point_on_tri",
+    "<span>closest_point_on_tri</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~colinear",
     "function/index.html#static-function-colinear",
-    "<span>colinear</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>colinear</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -1650,9 +1890,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~color2css",
+    "./scripts/path-controller/util/util.js~color2css",
     "function/index.html#static-function-color2css",
-    "<span>color2css</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>color2css</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
@@ -1662,9 +1902,27 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~console",
+    "./scripts/core/ui_theme.js~compatmap",
+    "variable/index.html#static-variable-compatMap",
+    "<span>compatMap</span> <span class=\"search-result-import-path\">./scripts/core/ui_theme.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/config/config.js~config",
+    "variable/index.html#static-variable-config",
+    "<span>config</span> <span class=\"search-result-import-path\">./scripts/path-controller/config/config.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/controller.js~config",
+    "variable/index.html#static-variable-config",
+    "<span>config</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~console",
     "variable/index.html#static-variable-console",
-    "<span>console</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>console</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "variable"
   ],
   [
@@ -1674,33 +1932,39 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
+    "./scripts/pathux.js~controller",
+    "variable/index.html#static-variable-controller",
+    "<span>controller</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
     "./scripts/core/units.js~convert",
     "function/index.html#static-function-convert",
     "<span>convert</span> <span class=\"search-result-import-path\">./scripts/core/units.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~convex_quad",
+    "./scripts/path-controller/util/math.js~convex_quad",
     "function/index.html#static-function-convex_quad",
-    "<span>convex_quad</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>convex_quad</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~copyevent",
+    "./scripts/path-controller/util/simple_events.js~copyevent",
     "function/index.html#static-function-copyEvent",
-    "<span>copyEvent</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>copyEvent</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/util/events.js~copymouseevent",
+    "./scripts/path-controller/util/events.js~copymouseevent",
     "function/index.html#static-function-copyMouseEvent",
-    "<span>copyMouseEvent</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "<span>copyMouseEvent</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~corner_normal",
+    "./scripts/path-controller/util/math.js~corner_normal",
     "function/index.html#static-function-corner_normal",
-    "<span>corner_normal</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>corner_normal</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -1716,27 +1980,57 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/cssutils.js~css2matrix",
+    "./scripts/path-controller/util/cssutils.js~css2matrix",
     "function/index.html#static-function-css2matrix",
-    "<span>css2matrix</span> <span class=\"search-result-import-path\">./scripts/util/cssutils.js</span>",
+    "<span>css2matrix</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/cssutils.js</span>",
     "function"
   ],
   [
-    "./scripts/toolsys/toolprop.js~custompropertytypes",
+    "./scripts/path-controller/toolsys/toolprop.js~custompropertytypes",
     "variable/index.html#static-variable-customPropertyTypes",
-    "<span>customPropertyTypes</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "<span>customPropertyTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~dist_to_line",
-    "function/index.html#static-function-dist_to_line",
-    "<span>dist_to_line</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "./scripts/path-controller/util/math.js~dihedral_v3_sqr",
+    "function/index.html#static-function-dihedral_v3_sqr",
+    "<span>dihedral_v3_sqr</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~dist_to_line_2d",
+    "./scripts/path-controller/util/math.js~dist_to_line",
+    "function/index.html#static-function-dist_to_line",
+    "<span>dist_to_line</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~dist_to_line_2d",
     "function/index.html#static-function-dist_to_line_2d",
-    "<span>dist_to_line_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>dist_to_line_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~dist_to_line_sqr",
+    "function/index.html#static-function-dist_to_line_sqr",
+    "<span>dist_to_line_sqr</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~dist_to_tri_v3",
+    "function/index.html#static-function-dist_to_tri_v3",
+    "<span>dist_to_tri_v3</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~dist_to_tri_v3_old",
+    "function/index.html#static-function-dist_to_tri_v3_old",
+    "<span>dist_to_tri_v3_old</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~dist_to_tri_v3_sqr",
+    "function/index.html#static-function-dist_to_tri_v3_sqr",
+    "<span>dist_to_tri_v3_sqr</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -1776,27 +2070,33 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~eventwastouch",
-    "function/index.html#static-function-eventWasTouch",
-    "<span>eventWasTouch</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "./scripts/path-controller/curve/curve1d_base.js~evalhermitetable",
+    "function/index.html#static-function-evalHermiteTable",
+    "<span>evalHermiteTable</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/context.js~excludedkeys",
+    "./scripts/path-controller/util/simple_events.js~eventwastouch",
+    "function/index.html#static-function-eventWasTouch",
+    "<span>eventWasTouch</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/controller/context.js~excludedkeys",
     "variable/index.html#static-variable-excludedKeys",
-    "<span>excludedKeys</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "<span>excludedKeys</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~expand_line",
+    "./scripts/path-controller/util/math.js~expand_line",
     "function/index.html#static-function-expand_line",
-    "<span>expand_line</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>expand_line</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~expand_rect2d",
+    "./scripts/path-controller/util/math.js~expand_rect2d",
     "function/index.html#static-function-expand_rect2d",
-    "<span>expand_rect2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>expand_rect2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -1812,33 +2112,45 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/math.js~feps",
+    "./scripts/path-controller/util/math.js~feps",
     "variable/index.html#static-variable-feps",
-    "<span>feps</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>feps</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/util.js~fetch_file",
+    "./scripts/path-controller/util/util.js~fetch_file",
     "function/index.html#static-function-fetch_file",
-    "<span>fetch_file</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>fetch_file</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~formatnumberui",
+    "./scripts/core/ui_base.js~flagthemeupdate",
+    "function/index.html#static-function-flagThemeUpdate",
+    "<span>flagThemeUpdate</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~formatnumberui",
     "function/index.html#static-function-formatNumberUI",
-    "<span>formatNumberUI</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>formatNumberUI</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~gen_circle",
+    "./scripts/path-controller/curve/curve1d_base.js~genhermitetable",
+    "function/index.html#static-function-genHermiteTable",
+    "<span>genHermiteTable</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~gen_circle",
     "function/index.html#static-function-gen_circle",
-    "<span>gen_circle</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>gen_circle</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~getallkeys",
+    "./scripts/path-controller/util/util.js~getallkeys",
     "function/index.html#static-function-getAllKeys",
-    "<span>getAllKeys</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>getAllKeys</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
@@ -1848,27 +2160,33 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~getclassparent",
+    "./scripts/path-controller/util/util.js~getclassparent",
     "function/index.html#static-function-getClassParent",
-    "<span>getClassParent</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>getClassParent</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d_base.js~getcurve",
+    "./scripts/path-controller/curve/curve1d_base.js~getcurve",
     "function/index.html#static-function-getCurve",
-    "<span>getCurve</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_base.js</span>",
+    "<span>getCurve</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_base.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~getdatapathtoolop",
+    "./scripts/path-controller/controller/controller.js~getdatapathtoolop",
     "function/index.html#static-function-getDataPathToolOp",
-    "<span>getDataPathToolOp</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>getDataPathToolOp</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "function"
   ],
   [
     "./scripts/core/ui_base.js~getdefault",
     "function/index.html#static-function-getDefault",
     "<span>getDefault</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/platform_base.js~getextension",
+    "function/index.html#static-function-getExtension",
+    "<span>getExtension</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
     "function"
   ],
   [
@@ -1902,9 +2220,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/image.js~getimagedata",
+    "./scripts/path-controller/util/image.js~getimagedata",
     "function/index.html#static-function-getImageData",
-    "<span>getImageData</span> <span class=\"search-result-import-path\">./scripts/util/image.js</span>",
+    "<span>getImageData</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/image.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/widgets/ui_lasttool.js~getlasttoolstruct",
+    "function/index.html#static-function-getLastToolStruct",
+    "<span>getLastToolStruct</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_lasttool.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/platform_base.js~getmime",
+    "function/index.html#static-function-getMime",
+    "<span>getMime</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
     "function"
   ],
   [
@@ -1926,9 +2256,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/controller/controller.js~getvecclass",
+    "./scripts/path-controller/controller/controller_base.js~getvecclass",
     "function/index.html#static-function-getVecClass",
-    "<span>getVecClass</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "<span>getVecClass</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/web/web_api.js~getwebfilters",
+    "function/index.html#static-function-getWebFilters",
+    "<span>getWebFilters</span> <span class=\"search-result-import-path\">./scripts/platforms/web/web_api.js</span>",
     "function"
   ],
   [
@@ -1938,27 +2274,33 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~get_boundary_winding",
+    "./scripts/path-controller/util/math.js~get_boundary_winding",
     "function/index.html#static-function-get_boundary_winding",
-    "<span>get_boundary_winding</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>get_boundary_winding</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~get_rect_lines",
+    "./scripts/path-controller/util/math.js~get_rect_lines",
     "function/index.html#static-function-get_rect_lines",
-    "<span>get_rect_lines</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>get_rect_lines</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~get_rect_points",
+    "./scripts/path-controller/util/math.js~get_rect_points",
     "function/index.html#static-function-get_rect_points",
-    "<span>get_rect_points</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>get_rect_points</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~get_tri_circ",
+    "./scripts/path-controller/util/math.js~get_tri_circ",
     "function/index.html#static-function-get_tri_circ",
-    "<span>get_tri_circ</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>get_tri_circ</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/graphpack.js~graphgetislands",
+    "function/index.html#static-function-graphGetIslands",
+    "<span>graphGetIslands</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/graphpack.js</span>",
     "function"
   ],
   [
@@ -1968,33 +2310,39 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/path-controller/util/graphpack.js~graphpack",
+    "function/index.html#static-function-graphPack",
+    "<span>graphPack</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/graphpack.js</span>",
+    "function"
+  ],
+  [
     "./scripts/util/graphpack.js~graphpack",
     "function/index.html#static-function-graphPack",
     "<span>graphPack</span> <span class=\"search-result-import-path\">./scripts/util/graphpack.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~hashjoin",
+    "./scripts/path-controller/util/util.js~hashjoin",
     "function/index.html#static-function-hashjoin",
-    "<span>hashjoin</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>hashjoin</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~hashtable",
-    "class/scripts/util/util.js~hashtable.html",
-    "<span>hashtable</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~hashtable",
+    "class/scripts/path-controller/util/util.js~hashtable.html",
+    "<span>hashtable</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/simple_events.js~havemodal",
+    "./scripts/path-controller/util/simple_events.js~havemodal",
     "function/index.html#static-function-haveModal",
-    "<span>haveModal</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>haveModal</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/util/colorutils.js~hsv_to_rgb",
+    "./scripts/path-controller/util/colorutils.js~hsv_to_rgb",
     "function/index.html#static-function-hsv_to_rgb",
-    "<span>hsv_to_rgb</span> <span class=\"search-result-import-path\">./scripts/util/colorutils.js</span>",
+    "<span>hsv_to_rgb</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/colorutils.js</span>",
     "function"
   ],
   [
@@ -2004,9 +2352,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/pathux.js~html5_fileapi",
+    "./scripts/path-controller/controller.js~html5_fileapi",
     "variable/index.html#static-variable-html5_fileapi",
-    "<span>html5_fileapi</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>html5_fileapi</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
@@ -2022,9 +2370,9 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/struct.js~inherit",
+    "./scripts/path-controller/util/struct.js~inherit",
     "variable/index.html#static-variable-inherit",
-    "<span>inherit</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>inherit</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
@@ -2040,21 +2388,27 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~initsimplecontroller",
+    "./scripts/xmlpage/xmlpage.js~initpage",
+    "function/index.html#static-function-initPage",
+    "<span>initPage</span> <span class=\"search-result-import-path\">./scripts/xmlpage/xmlpage.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/controller/controller.js~initsimplecontroller",
     "function/index.html#static-function-initSimpleController",
-    "<span>initSimpleController</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>initSimpleController</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "function"
   ],
   [
-    "./scripts/toolsys/toolpath.js~inittoolpaths",
+    "./scripts/path-controller/toolsys/toolpath.js~inittoolpaths",
     "function/index.html#static-function-initToolPaths",
-    "<span>initToolPaths</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
+    "<span>initToolPaths</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolpath.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~inrect_2d",
+    "./scripts/path-controller/util/math.js~inrect_2d",
     "function/index.html#static-function-inrect_2d",
-    "<span>inrect_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>inrect_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -2076,99 +2430,129 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~isleftclick",
+    "./scripts/path-controller/util/util.js~isdenormal",
+    "function/index.html#static-function-isDenormal",
+    "<span>isDenormal</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/simple_events.js~isleftclick",
     "function/index.html#static-function-isLeftClick",
-    "<span>isLeftClick</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>isLeftClick</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~ismobile",
+    "./scripts/platforms/platform_base.js~ismimetext",
+    "function/index.html#static-function-isMimeText",
+    "<span>isMimeText</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~ismobile",
     "function/index.html#static-function-isMobile",
-    "<span>isMobile</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>isMobile</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/events.js~ismodalhead",
+    "./scripts/path-controller/util/events.js~ismodalhead",
     "function/index.html#static-function-isModalHead",
-    "<span>isModalHead</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "<span>isModalHead</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~ismousedown",
+    "./scripts/path-controller/util/simple_events.js~ismousedown",
     "function/index.html#static-function-isMouseDown",
-    "<span>isMouseDown</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>isMouseDown</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/toolsys/toolprop.js~isnumber",
+    "./scripts/path-controller/util/math.js~isnum",
+    "function/index.html#static-function-isNum",
+    "<span>isNum</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~isnumber",
     "function/index.html#static-function-isNumber",
-    "<span>isNumber</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "<span>isNumber</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/controller.js~isvecproperty",
+    "./scripts/path-controller/controller/controller_base.js~isvecproperty",
     "function/index.html#static-function-isVecProperty",
-    "<span>isVecProperty</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "<span>isVecProperty</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~isect_ray_plane",
+    "./scripts/path-controller/util/math.js~isect_ray_plane",
     "function/index.html#static-function-isect_ray_plane",
-    "<span>isect_ray_plane</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>isect_ray_plane</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~keymap",
+    "./scripts/path-controller/util/simple_events.js~keymap",
     "variable/index.html#static-variable-keymap",
-    "<span>keymap</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>keymap</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/simple_events.js~keymap_latin_1",
+    "./scripts/path-controller/util/simple_events.js~keymap_latin_1",
     "variable/index.html#static-variable-keymap_latin_1",
-    "<span>keymap_latin_1</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>keymap_latin_1</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/parseutil.js~lexer",
-    "class/scripts/util/parseutil.js~lexer.html",
-    "<span>lexer</span> <span class=\"search-result-import-path\">./scripts/util/parseutil.js</span>",
+    "./scripts/path-controller/util/parseutil.js~lexer",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html",
+    "<span>lexer</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/parseutil.js</span>",
     "class"
   ],
   [
-    "./scripts/util/math.js~line_isect",
+    "./scripts/path-controller/util/math.js~line_isect",
     "function/index.html#static-function-line_isect",
-    "<span>line_isect</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>line_isect</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~line_line_cross",
+    "./scripts/path-controller/util/math.js~line_line_cross",
     "function/index.html#static-function-line_line_cross",
-    "<span>line_line_cross</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>line_line_cross</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~line_line_isect",
+    "./scripts/path-controller/util/math.js~line_line_isect",
     "function/index.html#static-function-line_line_isect",
-    "<span>line_line_isect</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>line_line_isect</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~list",
+    "./scripts/path-controller/util/util.js~list",
     "function/index.html#static-function-list",
-    "<span>list</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>list</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/html5_fileapi.js~loadfile",
+    "./scripts/path-controller/util/html5_fileapi.js~loadfile",
     "function/index.html#static-function-loadFile",
-    "<span>loadFile</span> <span class=\"search-result-import-path\">./scripts/util/html5_fileapi.js</span>",
+    "<span>loadFile</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/html5_fileapi.js</span>",
     "function"
   ],
   [
-    "./scripts/util/image.js~loadimagefile",
+    "./scripts/path-controller/util/image.js~loadimagefile",
     "function/index.html#static-function-loadImageFile",
-    "<span>loadImageFile</span> <span class=\"search-result-import-path\">./scripts/util/image.js</span>",
+    "<span>loadImageFile</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/image.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/xmlpage/xmlpage.js~loadpage",
+    "function/index.html#static-function-loadPage",
+    "<span>loadPage</span> <span class=\"search-result-import-path\">./scripts/xmlpage/xmlpage.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/core/ui_save.js~loadpath",
+    "function/index.html#static-function-loadPath",
+    "<span>loadPath</span> <span class=\"search-result-import-path\">./scripts/core/ui_save.js</span>",
     "function"
   ],
   [
@@ -2178,21 +2562,33 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~makecirclemesh",
-    "function/index.html#static-function-makeCircleMesh",
-    "<span>makeCircleMesh</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "./scripts/core/ui_save.js~loaduidata",
+    "function/index.html#static-function-loadUIData",
+    "<span>loadUIData</span> <span class=\"search-result-import-path\">./scripts/core/ui_save.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d_utils.js~makegenenum",
+    "./scripts/path-controller/util/math.js~makecirclemesh",
+    "function/index.html#static-function-makeCircleMesh",
+    "<span>makeCircleMesh</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/curve/curve1d_utils.js~makegenenum",
     "function/index.html#static-function-makeGenEnum",
-    "<span>makeGenEnum</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_utils.js</span>",
+    "<span>makeGenEnum</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_utils.js</span>",
     "function"
   ],
   [
     "./scripts/core/ui_base.js~makeicondiv",
     "function/index.html#static-function-makeIconDiv",
     "<span>makeIconDiv</span> <span class=\"search-result-import-path\">./scripts/core/ui_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/core/ui_save.js~makeparser",
+    "function/index.html#static-function-makeParser",
+    "<span>makeParser</span> <span class=\"search-result-import-path\">./scripts/core/ui_save.js</span>",
     "function"
   ],
   [
@@ -2214,10 +2610,16 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/struct.js~manager",
+    "./scripts/path-controller/util/struct.js~manager",
     "variable/index.html#static-variable-manager",
-    "<span>manager</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>manager</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~map",
+    "class/scripts/path-controller/util/util.js~map.html",
+    "<span>map</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
+    "class"
   ],
   [
     "./scripts/core/ui_base.js~marginpaddingcsskeys",
@@ -2226,15 +2628,15 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/pathux.js~math",
+    "./scripts/path-controller/controller.js~math",
     "variable/index.html#static-variable-math",
-    "<span>math</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>math</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/cssutils.js~matrix2css",
+    "./scripts/path-controller/util/cssutils.js~matrix2css",
     "function/index.html#static-function-matrix2css",
-    "<span>matrix2css</span> <span class=\"search-result-import-path\">./scripts/util/cssutils.js</span>",
+    "<span>matrix2css</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/cssutils.js</span>",
     "function"
   ],
   [
@@ -2256,15 +2658,15 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/util.js~merge",
+    "./scripts/path-controller/util/util.js~merge",
     "function/index.html#static-function-merge",
-    "<span>merge</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>merge</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~mesh_find_tangent",
+    "./scripts/path-controller/util/math.js~mesh_find_tangent",
     "function/index.html#static-function-mesh_find_tangent",
-    "<span>mesh_find_tangent</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>mesh_find_tangent</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -2274,57 +2676,75 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~minmax_verts",
+    "./scripts/platforms/platform_base.js~mimemap",
+    "variable/index.html#static-variable-mimeMap",
+    "<span>mimeMap</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~minmax_verts",
     "function/index.html#static-function-minmax_verts",
-    "<span>minmax_verts</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>minmax_verts</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/events.js~modalstack",
+    "./scripts/path-controller/util/events.js~modalstack",
     "variable/index.html#static-variable-modalStack",
-    "<span>modalStack</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "<span>modalStack</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/simple_events.js~modalstack",
+    "./scripts/path-controller/util/simple_events.js~modalstack",
     "variable/index.html#static-variable-modalstack",
-    "<span>modalstack</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>modalstack</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "variable"
   ],
   [
-    "./scripts/curve/curve1d.js~mysafejsonparse",
+    "./scripts/path-controller/curve/curve1d.js~mysafejsonparse",
     "function/index.html#static-function-mySafeJSONParse",
-    "<span>mySafeJSONParse</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d.js</span>",
+    "<span>mySafeJSONParse</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d_bspline.js~mysafejsonparse",
+    "./scripts/path-controller/curve/curve1d_bspline.js~mysafejsonparse",
     "function/index.html#static-function-mySafeJSONParse",
-    "<span>mySafeJSONParse</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "<span>mySafeJSONParse</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_bspline.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d.js~mysafejsonstringify",
+    "./scripts/path-controller/curve/curve1d.js~mysafejsonstringify",
     "function/index.html#static-function-mySafeJSONStringify",
-    "<span>mySafeJSONStringify</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d.js</span>",
+    "<span>mySafeJSONStringify</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d.js</span>",
     "function"
   ],
   [
-    "./scripts/curve/curve1d_bspline.js~mysafejsonstringify",
+    "./scripts/path-controller/curve/curve1d_bspline.js~mysafejsonstringify",
     "function/index.html#static-function-mySafeJSONStringify",
-    "<span>mySafeJSONStringify</span> <span class=\"search-result-import-path\">./scripts/curve/curve1d_bspline.js</span>",
+    "<span>mySafeJSONStringify</span> <span class=\"search-result-import-path\">./scripts/path-controller/curve/curve1d_bspline.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~normal_quad",
+    "./scripts/path-controller/util/math.js~normal_poly",
+    "function/index.html#static-function-normal_poly",
+    "<span>normal_poly</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~normal_quad",
     "function/index.html#static-function-normal_quad",
-    "<span>normal_quad</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>normal_quad</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~normal_tri",
+    "./scripts/path-controller/util/math.js~normal_quad_old",
+    "function/index.html#static-function-normal_quad_old",
+    "<span>normal_quad_old</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~normal_tri",
     "function/index.html#static-function-normal_tri",
-    "<span>normal_tri</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>normal_tri</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -2334,21 +2754,27 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/struct.js~nstructjs",
+    "./scripts/path-controller/controller.js~nstructjs",
     "variable/index.html#static-variable-nstructjs",
-    "<span>nstructjs</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>nstructjs</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/expr.js~parseexpr",
+    "./scripts/path-controller/util/struct.js~nstructjs",
+    "variable/index.html#static-variable-nstructjs",
+    "<span>nstructjs</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/path-controller/util/expr.js~parseexpr",
     "function/index.html#static-function-parseExpr",
-    "<span>parseExpr</span> <span class=\"search-result-import-path\">./scripts/util/expr.js</span>",
+    "<span>parseExpr</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/expr.js</span>",
     "function"
   ],
   [
-    "./scripts/toolsys/toolpath.js~parsetoolpath",
+    "./scripts/path-controller/toolsys/toolpath.js~parsetoolpath",
     "function/index.html#static-function-parseToolPath",
-    "<span>parseToolPath</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
+    "<span>parseToolPath</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolpath.js</span>",
     "function"
   ],
   [
@@ -2358,75 +2784,105 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/core/units.js~parsevalueintern",
+    "function/index.html#static-function-parseValueIntern",
+    "<span>parseValueIntern</span> <span class=\"search-result-import-path\">./scripts/core/units.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/xmlpage/xmlpage.js~parsexml",
+    "function/index.html#static-function-parseXML",
+    "<span>parseXML</span> <span class=\"search-result-import-path\">./scripts/xmlpage/xmlpage.js</span>",
+    "function"
+  ],
+  [
     "./scripts/core/ui_theme.js~parsepx",
     "function/index.html#static-function-parsepx",
     "<span>parsepx</span> <span class=\"search-result-import-path\">./scripts/core/ui_theme.js</span>",
     "function"
   ],
   [
-    "./scripts/util/parseutil.js~parser",
-    "class/scripts/util/parseutil.js~parser.html",
-    "<span>parser</span> <span class=\"search-result-import-path\">./scripts/util/parseutil.js</span>",
+    "./scripts/path-controller/util/parseutil.js~parser",
+    "class/scripts/path-controller/util/parseutil.js~parser.html",
+    "<span>parser</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/parseutil.js</span>",
     "class"
   ],
   [
-    "./scripts/pathux.js~parseutil",
+    "./scripts/path-controller/controller.js~parseutil",
     "variable/index.html#static-variable-parseutil",
-    "<span>parseutil</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>parseutil</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/simple_events.js~pathdebugevent",
+    "./scripts/path-controller/util/simple_events.js~pathdebugevent",
     "function/index.html#static-function-pathDebugEvent",
-    "<span>pathDebugEvent</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>pathDebugEvent</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~pathparser",
+    "./scripts/path-controller/controller/controller.js~pathparser",
     "variable/index.html#static-variable-pathParser",
-    "<span>pathParser</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>pathParser</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~point_in_aabb",
+    "./scripts/pathux.js~platform",
+    "variable/index.html#static-variable-platform",
+    "<span>platform</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "variable"
+  ],
+  [
+    "./scripts/platforms/electron/electron_api.js~platform",
+    "class/scripts/platforms/electron/electron_api.js~platform.html",
+    "<span>platform</span> <span class=\"search-result-import-path\">./scripts/platforms/electron/electron_api.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/platforms/web/web_api.js~platform",
+    "class/scripts/platforms/web/web_api.js~platform.html",
+    "<span>platform</span> <span class=\"search-result-import-path\">./scripts/platforms/web/web_api.js</span>",
+    "class"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~point_in_aabb",
     "function/index.html#static-function-point_in_aabb",
-    "<span>point_in_aabb</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>point_in_aabb</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~point_in_aabb_2d",
+    "./scripts/path-controller/util/math.js~point_in_aabb_2d",
     "function/index.html#static-function-point_in_aabb_2d",
-    "<span>point_in_aabb_2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>point_in_aabb_2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~point_in_tri",
+    "./scripts/path-controller/util/math.js~point_in_tri",
     "function/index.html#static-function-point_in_tri",
-    "<span>point_in_tri</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>point_in_tri</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~polltimer",
+    "./scripts/path-controller/util/util.js~polltimer",
     "function/index.html#static-function-pollTimer",
-    "<span>pollTimer</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>pollTimer</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~popmodallight",
+    "./scripts/path-controller/util/simple_events.js~popmodallight",
     "function/index.html#static-function-popModalLight",
-    "<span>popModalLight</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>popModalLight</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~popreportname",
+    "./scripts/path-controller/controller/controller.js~popreportname",
     "function/index.html#static-function-popReportName",
-    "<span>popReportName</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>popReportName</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~print_stack",
+    "./scripts/path-controller/util/util.js~print_stack",
     "function/index.html#static-function-print_stack",
-    "<span>print_stack</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>print_stack</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
@@ -2436,63 +2892,69 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~project",
+    "./scripts/path-controller/util/math.js~project",
     "function/index.html#static-function-project",
-    "<span>project</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>project</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/events.js~pushmodal",
+    "./scripts/screen/framemanager.js~purgeupdatestack",
+    "function/index.html#static-function-purgeUpdateStack",
+    "<span>purgeUpdateStack</span> <span class=\"search-result-import-path\">./scripts/screen/FrameManager.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/events.js~pushmodal",
     "function/index.html#static-function-pushModal",
-    "<span>pushModal</span> <span class=\"search-result-import-path\">./scripts/util/events.js</span>",
+    "<span>pushModal</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/events.js</span>",
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~pushmodallight",
+    "./scripts/path-controller/util/simple_events.js~pushmodallight",
     "function/index.html#static-function-pushModalLight",
-    "<span>pushModalLight</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>pushModalLight</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~pushreportname",
+    "./scripts/path-controller/controller/controller.js~pushreportname",
     "function/index.html#static-function-pushReportName",
-    "<span>pushReportName</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>pushReportName</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~random",
+    "./scripts/path-controller/util/util.js~random",
     "function/index.html#static-function-random",
-    "<span>random</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>random</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/struct.js~readjson",
+    "./scripts/path-controller/util/struct.js~readjson",
     "variable/index.html#static-variable-readJSON",
-    "<span>readJSON</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>readJSON</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/struct.js~readobject",
+    "./scripts/path-controller/util/struct.js~readobject",
     "variable/index.html#static-variable-readObject",
-    "<span>readObject</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>readObject</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/struct.js~register",
+    "./scripts/path-controller/util/struct.js~register",
     "function/index.html#static-function-register",
-    "<span>register</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>register</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/controller.js~registertool",
+    "./scripts/path-controller/controller/controller.js~registertool",
     "function/index.html#static-function-registerTool",
-    "<span>registerTool</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "<span>registerTool</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~registertool",
+    "./scripts/path-controller/controller/controller_base.js~registertool",
     "function/index.html#static-function-registerTool",
-    "<span>registerTool</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>registerTool</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
     "function"
   ],
   [
@@ -2514,15 +2976,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~reverse_keymap",
+    "./scripts/path-controller/util/simple_events.js~reverse_keymap",
     "variable/index.html#static-variable-reverse_keymap",
-    "<span>reverse_keymap</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>reverse_keymap</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/colorutils.js~rgb_to_hsv",
+    "./scripts/path-controller/util/colorutils.js~rgb_to_hsv",
     "function/index.html#static-function-rgb_to_hsv",
-    "<span>rgb_to_hsv</span> <span class=\"search-result-import-path\">./scripts/util/colorutils.js</span>",
+    "<span>rgb_to_hsv</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/colorutils.js</span>",
     "function"
   ],
   [
@@ -2532,9 +2994,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~rot2d",
+    "./scripts/path-controller/util/math.js~rot2d",
     "function/index.html#static-function-rot2d",
-    "<span>rot2d</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>rot2d</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
@@ -2550,9 +3012,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/html5_fileapi.js~savefile",
+    "./scripts/path-controller/util/html5_fileapi.js~savefile",
     "function/index.html#static-function-saveFile",
-    "<span>saveFile</span> <span class=\"search-result-import-path\">./scripts/util/html5_fileapi.js</span>",
+    "<span>saveFile</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/html5_fileapi.js</span>",
     "function"
   ],
   [
@@ -2562,9 +3024,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~seed",
+    "./scripts/core/ui_save.js~saveuidata",
+    "function/index.html#static-function-saveUIData",
+    "<span>saveUIData</span> <span class=\"search-result-import-path\">./scripts/core/ui_save.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~seed",
     "function/index.html#static-function-seed",
-    "<span>seed</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>seed</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
@@ -2574,15 +3042,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~set",
-    "class/scripts/util/util.js~set.html",
-    "<span>set</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "./scripts/path-controller/util/util.js~set",
+    "class/scripts/path-controller/util/util.js~set.html",
+    "<span>set</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "class"
   ],
   [
-    "./scripts/util/struct.js~setallowoverriding",
+    "./scripts/path-controller/util/struct.js~setallowoverriding",
     "variable/index.html#static-variable-setAllowOverriding",
-    "<span>setAllowOverriding</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>setAllowOverriding</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
@@ -2604,27 +3072,39 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/toolsys/simple_toolsys.js~setcontextclass",
+    "./scripts/path-controller/config/config.js~setconfig",
+    "function/index.html#static-function-setConfig",
+    "<span>setConfig</span> <span class=\"search-result-import-path\">./scripts/path-controller/config/config.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolsys.js~setcontextclass",
     "function/index.html#static-function-setContextClass",
-    "<span>setContextClass</span> <span class=\"search-result-import-path\">./scripts/toolsys/simple_toolsys.js</span>",
+    "<span>setContextClass</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
     "function"
   ],
   [
-    "./scripts/controller/simple_controller.js~setdatapathtoolop",
+    "./scripts/path-controller/controller/controller.js~setdatapathtoolop",
     "function/index.html#static-function-setDataPathToolOp",
-    "<span>setDataPathToolOp</span> <span class=\"search-result-import-path\">./scripts/controller/simple_controller.js</span>",
+    "<span>setDataPathToolOp</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller.js</span>",
     "function"
   ],
   [
-    "./scripts/util/struct.js~setdebugmode",
+    "./scripts/path-controller/util/struct.js~setdebugmode",
     "variable/index.html#static-variable-setDebugMode",
-    "<span>setDebugMode</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>setDebugMode</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/struct.js~setendian",
+    "./scripts/path-controller/toolsys/toolsys.js~setdefaultundohandlers",
+    "function/index.html#static-function-setDefaultUndoHandlers",
+    "<span>setDefaultUndoHandlers</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolsys.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/struct.js~setendian",
     "function/index.html#static-function-setEndian",
-    "<span>setEndian</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>setEndian</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "function"
   ],
   [
@@ -2640,9 +3120,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/controller/controller.js~setimplementationclass",
+    "./scripts/path-controller/controller/controller_base.js~setimplementationclass",
     "function/index.html#static-function-setImplementationClass",
-    "<span>setImplementationClass</span> <span class=\"search-result-import-path\">./scripts/controller/controller.js</span>",
+    "<span>setImplementationClass</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/controller_base.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/screen/framemanager.js~setkeyboarddom",
+    "function/index.html#static-function-setKeyboardDom",
+    "<span>setKeyboardDom</span> <span class=\"search-result-import-path\">./scripts/screen/FrameManager.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/screen/framemanager.js~setkeyboardopts",
+    "function/index.html#static-function-setKeyboardOpts",
+    "<span>setKeyboardOpts</span> <span class=\"search-result-import-path\">./scripts/screen/FrameManager.js</span>",
     "function"
   ],
   [
@@ -2652,9 +3144,15 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/toolsys/toolprop.js~setproptypes",
+    "./scripts/path-controller/controller/context.js~setnotifier",
+    "function/index.html#static-function-setNotifier",
+    "<span>setNotifier</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/toolsys/toolprop.js~setproptypes",
     "function/index.html#static-function-setPropTypes",
-    "<span>setPropTypes</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolprop.js</span>",
+    "<span>setPropTypes</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolprop.js</span>",
     "function"
   ],
   [
@@ -2682,21 +3180,27 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "./scripts/core/ui_save.js~setuibase",
+    "function/index.html#static-function-setUIBase",
+    "<span>setUIBase</span> <span class=\"search-result-import-path\">./scripts/core/ui_save.js</span>",
+    "function"
+  ],
+  [
     "./scripts/widgets/ui_menu.js~setwranglerscreen",
     "function/index.html#static-function-setWranglerScreen",
     "<span>setWranglerScreen</span> <span class=\"search-result-import-path\">./scripts/widgets/ui_menu.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~simple_tri_aabb_isect",
+    "./scripts/path-controller/util/math.js~simple_tri_aabb_isect",
     "function/index.html#static-function-simple_tri_aabb_isect",
-    "<span>simple_tri_aabb_isect</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>simple_tri_aabb_isect</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/simple_events.js~singlemouseevent",
+    "./scripts/path-controller/util/simple_events.js~singlemouseevent",
     "function/index.html#static-function-singleMouseEvent",
-    "<span>singleMouseEvent</span> <span class=\"search-result-import-path\">./scripts/util/simple_events.js</span>",
+    "<span>singleMouseEvent</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/simple_events.js</span>",
     "function"
   ],
   [
@@ -2712,9 +3216,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/pathux.js~solver",
+    "./scripts/path-controller/controller.js~solver",
     "variable/index.html#static-variable-solver",
-    "<span>solver</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>solver</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
@@ -2736,9 +3240,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/util.js~strhash",
+    "./scripts/util/startup_report.js~startupreport",
+    "function/index.html#static-function-startupReport",
+    "<span>startupReport</span> <span class=\"search-result-import-path\">./scripts/util/startup_report.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/screen/framemanager.js~stopevents",
+    "function/index.html#static-function-stopEvents",
+    "<span>stopEvents</span> <span class=\"search-result-import-path\">./scripts/screen/FrameManager.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/util/util.js~strhash",
     "function/index.html#static-function-strhash",
-    "<span>strhash</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>strhash</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
@@ -2754,34 +3270,52 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/util.js~termcolor",
+    "./scripts/path-controller/util/util.js~termcolor",
     "function/index.html#static-function-termColor",
-    "<span>termColor</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>termColor</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~termcolormap",
+    "./scripts/path-controller/util/util.js~termcolormap",
     "variable/index.html#static-variable-termColorMap",
-    "<span>termColorMap</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>termColorMap</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "variable"
   ],
   [
-    "./scripts/controller/context.js~test",
+    "./scripts/path-controller/util/util.js~termprint",
+    "function/index.html#static-function-termPrint",
+    "<span>termPrint</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/controller/context.js~test",
     "function/index.html#static-function-test",
-    "<span>test</span> <span class=\"search-result-import-path\">./scripts/controller/context.js</span>",
+    "<span>test</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller/context.js</span>",
     "function"
   ],
   [
-    "./scripts/toolsys/toolpath.js~testtoolparser",
+    "./scripts/path-controller/toolsys/toolpath.js~testtoolparser",
     "function/index.html#static-function-testToolParser",
-    "<span>testToolParser</span> <span class=\"search-result-import-path\">./scripts/toolsys/toolpath.js</span>",
+    "<span>testToolParser</span> <span class=\"search-result-import-path\">./scripts/path-controller/toolsys/toolpath.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~test_fasthash",
+    "./scripts/path-controller/util/util.js~test_fasthash",
     "function/index.html#static-function-test_fasthash",
-    "<span>test_fasthash</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>test_fasthash</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
+  ],
+  [
+    "./scripts/path-controller/util/math.js~tet_volume",
+    "function/index.html#static-function-tet_volume",
+    "<span>tet_volume</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/platforms/platform_base.js~textmimes",
+    "variable/index.html#static-variable-textMimes",
+    "<span>textMimes</span> <span class=\"search-result-import-path\">./scripts/platforms/platform_base.js</span>",
+    "variable"
   ],
   [
     "./scripts/core/ui_theme.js~theme",
@@ -2790,45 +3324,51 @@ window.esdocSearchIndex = [
     "variable"
   ],
   [
-    "./scripts/util/util.js~time_ms",
+    "./scripts/path-controller/util/util.js~time_ms",
     "function/index.html#static-function-time_ms",
-    "<span>time_ms</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>time_ms</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "function"
   ],
   [
-    "./scripts/util/util.js~timers",
+    "./scripts/path-controller/util/util.js~timers",
     "variable/index.html#static-variable-timers",
-    "<span>timers</span> <span class=\"search-result-import-path\">./scripts/util/util.js</span>",
+    "<span>timers</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/util.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/parseutil.js~tokdef",
-    "class/scripts/util/parseutil.js~tokdef.html",
-    "<span>tokdef</span> <span class=\"search-result-import-path\">./scripts/util/parseutil.js</span>",
+    "./scripts/path-controller/util/parseutil.js~tokdef",
+    "class/scripts/path-controller/util/parseutil.js~tokdef.html",
+    "<span>tokdef</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/parseutil.js</span>",
     "class"
   ],
   [
-    "./scripts/util/parseutil.js~token",
-    "class/scripts/util/parseutil.js~token.html",
-    "<span>token</span> <span class=\"search-result-import-path\">./scripts/util/parseutil.js</span>",
+    "./scripts/path-controller/util/parseutil.js~token",
+    "class/scripts/path-controller/util/parseutil.js~token.html",
+    "<span>token</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/parseutil.js</span>",
     "class"
   ],
   [
-    "./scripts/pathux.js~toolprop_abstract",
+    "./scripts/path-controller/controller.js~toolprop_abstract",
     "variable/index.html#static-variable-toolprop_abstract",
-    "<span>toolprop_abstract</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>toolprop_abstract</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/math.js~unproject",
-    "function/index.html#static-function-unproject",
-    "<span>unproject</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "./scripts/path-controller/util/math.js~tri_area",
+    "function/index.html#static-function-tri_area",
+    "<span>tri_area</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/pathux.js~util",
+    "./scripts/path-controller/util/math.js~unproject",
+    "function/index.html#static-function-unproject",
+    "<span>unproject</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
+    "function"
+  ],
+  [
+    "./scripts/path-controller/controller.js~util",
     "variable/index.html#static-variable-util",
-    "<span>util</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>util</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
@@ -2838,9 +3378,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/struct.js~validatestructs",
+    "./scripts/path-controller/util/struct.js~validatestructs",
     "variable/index.html#static-variable-validateStructs",
-    "<span>validateStructs</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>validateStructs</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
@@ -2850,9 +3390,9 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/pathux.js~vectormath",
+    "./scripts/path-controller/controller.js~vectormath",
     "variable/index.html#static-variable-vectormath",
-    "<span>vectormath</span> <span class=\"search-result-import-path\">./scripts/pathux.js</span>",
+    "<span>vectormath</span> <span class=\"search-result-import-path\">./scripts/path-controller/controller.js</span>",
     "variable"
   ],
   [
@@ -2868,33 +3408,33 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "./scripts/util/math.js~winding",
+    "./scripts/path-controller/util/math.js~winding",
     "function/index.html#static-function-winding",
-    "<span>winding</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>winding</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/math.js~winding_axis",
+    "./scripts/path-controller/util/math.js~winding_axis",
     "function/index.html#static-function-winding_axis",
-    "<span>winding_axis</span> <span class=\"search-result-import-path\">./scripts/util/math.js</span>",
+    "<span>winding_axis</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/math.js</span>",
     "function"
   ],
   [
-    "./scripts/util/struct.js~writejson",
+    "./scripts/path-controller/util/struct.js~writejson",
     "variable/index.html#static-variable-writeJSON",
-    "<span>writeJSON</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>writeJSON</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/struct.js~writeobject",
+    "./scripts/path-controller/util/struct.js~writeobject",
     "variable/index.html#static-variable-writeObject",
-    "<span>writeObject</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>writeObject</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
-    "./scripts/util/struct.js~write_scripts",
+    "./scripts/path-controller/util/struct.js~write_scripts",
     "variable/index.html#static-variable-write_scripts",
-    "<span>write_scripts</span> <span class=\"search-result-import-path\">./scripts/util/struct.js</span>",
+    "<span>write_scripts</span> <span class=\"search-result-import-path\">./scripts/path-controller/util/struct.js</span>",
     "variable"
   ],
   [
@@ -3186,1180 +3726,16 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/controller/context.js",
-    "file/scripts/controller/context.js.html",
-    "scripts/controller/context.js",
-    "file"
-  ],
-  [
-    "scripts/controller/context.js~context#_fix",
-    "class/scripts/controller/context.js~Context.html#instance-method-_fix",
-    "scripts/controller/context.js~Context#_fix",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#_inside_map",
-    "class/scripts/controller/context.js~Context.html#instance-member-_inside_map",
-    "scripts/controller/context.js~Context#_inside_map",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~context#_props",
-    "class/scripts/controller/context.js~Context.html#instance-member-_props",
-    "scripts/controller/context.js~Context#_props",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~context#_stack",
-    "class/scripts/controller/context.js~Context.html#instance-member-_stack",
-    "scripts/controller/context.js~Context#_stack",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~context#clear",
-    "class/scripts/controller/context.js~Context.html#instance-method-clear",
-    "scripts/controller/context.js~Context#clear",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#constructor",
-    "class/scripts/controller/context.js~Context.html#instance-constructor-constructor",
-    "scripts/controller/context.js~Context#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#copy",
-    "class/scripts/controller/context.js~Context.html#instance-method-copy",
-    "scripts/controller/context.js~Context#copy",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#ensureproperty",
-    "class/scripts/controller/context.js~Context.html#instance-method-ensureProperty",
-    "scripts/controller/context.js~Context#ensureProperty",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#error",
-    "class/scripts/controller/context.js~Context.html#instance-method-error",
-    "scripts/controller/context.js~Context#error",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#getoverlay",
-    "class/scripts/controller/context.js~Context.html#instance-method-getOverlay",
-    "scripts/controller/context.js~Context#getOverlay",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#getowningoverlay",
-    "class/scripts/controller/context.js~Context.html#instance-method-getOwningOverlay",
-    "scripts/controller/context.js~Context#getOwningOverlay",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#hasoverlay",
-    "class/scripts/controller/context.js~Context.html#instance-method-hasOverlay",
-    "scripts/controller/context.js~Context#hasOverlay",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#loadproperty",
-    "class/scripts/controller/context.js~Context.html#instance-method-loadProperty",
-    "scripts/controller/context.js~Context#loadProperty",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#message",
-    "class/scripts/controller/context.js~Context.html#instance-method-message",
-    "scripts/controller/context.js~Context#message",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#override",
-    "class/scripts/controller/context.js~Context.html#instance-method-override",
-    "scripts/controller/context.js~Context#override",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#popoverlay",
-    "class/scripts/controller/context.js~Context.html#instance-method-popOverlay",
-    "scripts/controller/context.js~Context#popOverlay",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#progbar",
-    "class/scripts/controller/context.js~Context.html#instance-method-progbar",
-    "scripts/controller/context.js~Context#progbar",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#pushoverlay",
-    "class/scripts/controller/context.js~Context.html#instance-method-pushOverlay",
-    "scripts/controller/context.js~Context#pushOverlay",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#removeoverlay",
-    "class/scripts/controller/context.js~Context.html#instance-method-removeOverlay",
-    "scripts/controller/context.js~Context#removeOverlay",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#reset",
-    "class/scripts/controller/context.js~Context.html#instance-method-reset",
-    "scripts/controller/context.js~Context#reset",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#saveproperty",
-    "class/scripts/controller/context.js~Context.html#instance-method-saveProperty",
-    "scripts/controller/context.js~Context#saveProperty",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#state",
-    "class/scripts/controller/context.js~Context.html#instance-member-state",
-    "scripts/controller/context.js~Context#state",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~context#tolocked",
-    "class/scripts/controller/context.js~Context.html#instance-method-toLocked",
-    "scripts/controller/context.js~Context#toLocked",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#validateoverlays",
-    "class/scripts/controller/context.js~Context.html#instance-method-validateOverlays",
-    "scripts/controller/context.js~Context#validateOverlays",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context#warning",
-    "class/scripts/controller/context.js~Context.html#instance-method-warning",
-    "scripts/controller/context.js~Context#warning",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context.inherit",
-    "class/scripts/controller/context.js~Context.html#static-method-inherit",
-    "scripts/controller/context.js~Context.inherit",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context.register",
-    "class/scripts/controller/context.js~Context.html#static-method-register",
-    "scripts/controller/context.js~Context.register",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~context.super",
-    "class/scripts/controller/context.js~Context.html#static-method-super",
-    "scripts/controller/context.js~Context.super",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#_state",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-member-_state",
-    "scripts/controller/context.js~ContextOverlay#_state",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#constructor",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-constructor-constructor",
-    "scripts/controller/context.js~ContextOverlay#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#copy",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-method-copy",
-    "scripts/controller/context.js~ContextOverlay#copy",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#ctx",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-member-ctx",
-    "scripts/controller/context.js~ContextOverlay#ctx",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#onremove",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-method-onRemove",
-    "scripts/controller/context.js~ContextOverlay#onRemove",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#state",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-get-state",
-    "scripts/controller/context.js~ContextOverlay#state",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay#validate",
-    "class/scripts/controller/context.js~ContextOverlay.html#instance-method-validate",
-    "scripts/controller/context.js~ContextOverlay#validate",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay.contextdefine",
-    "class/scripts/controller/context.js~ContextOverlay.html#static-method-contextDefine",
-    "scripts/controller/context.js~ContextOverlay.contextDefine",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~contextoverlay.resolvedef",
-    "class/scripts/controller/context.js~ContextOverlay.html#static-method-resolveDef",
-    "scripts/controller/context.js~ContextOverlay.resolveDef",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#api",
-    "class/scripts/controller/context.js~LockedContext.html#instance-member-api",
-    "scripts/controller/context.js~LockedContext#api",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#constructor",
-    "class/scripts/controller/context.js~LockedContext.html#instance-constructor-constructor",
-    "scripts/controller/context.js~LockedContext#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#ctx",
-    "class/scripts/controller/context.js~LockedContext.html#instance-member-ctx",
-    "scripts/controller/context.js~LockedContext#ctx",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#error",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-error",
-    "scripts/controller/context.js~LockedContext#error",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#load",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-load",
-    "scripts/controller/context.js~LockedContext#load",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#message",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-message",
-    "scripts/controller/context.js~LockedContext#message",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#progbar",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-progbar",
-    "scripts/controller/context.js~LockedContext#progbar",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#props",
-    "class/scripts/controller/context.js~LockedContext.html#instance-member-props",
-    "scripts/controller/context.js~LockedContext#props",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#setcontext",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-setContext",
-    "scripts/controller/context.js~LockedContext#setContext",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#state",
-    "class/scripts/controller/context.js~LockedContext.html#instance-member-state",
-    "scripts/controller/context.js~LockedContext#state",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#tolocked",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-toLocked",
-    "scripts/controller/context.js~LockedContext#toLocked",
-    "method"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#toolstack",
-    "class/scripts/controller/context.js~LockedContext.html#instance-member-toolstack",
-    "scripts/controller/context.js~LockedContext#toolstack",
-    "member"
-  ],
-  [
-    "scripts/controller/context.js~lockedcontext#warning",
-    "class/scripts/controller/context.js~LockedContext.html#instance-method-warning",
-    "scripts/controller/context.js~LockedContext#warning",
-    "method"
-  ],
-  [
     "scripts/controller/controller.js",
     "file/scripts/controller/controller.js.html",
     "scripts/controller/controller.js",
     "file"
   ],
   [
-    "scripts/controller/controller.js~listiface#filter",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-filter",
-    "scripts/controller/controller.js~ListIface#filter",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#get",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-get",
-    "scripts/controller/controller.js~ListIface#get",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#getactive",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-getActive",
-    "scripts/controller/controller.js~ListIface#getActive",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#getiter",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-getIter",
-    "scripts/controller/controller.js~ListIface#getIter",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#getkey",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-getKey",
-    "scripts/controller/controller.js~ListIface#getKey",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#getstruct",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-getStruct",
-    "scripts/controller/controller.js~ListIface#getStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#set",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-set",
-    "scripts/controller/controller.js~ListIface#set",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~listiface#setactive",
-    "class/scripts/controller/controller.js~ListIface.html#instance-method-setActive",
-    "scripts/controller/controller.js~ListIface#setActive",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#constructor",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-constructor-constructor",
-    "scripts/controller/controller.js~ModelInterface#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#createtool",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-createTool",
-    "scripts/controller/controller.js~ModelInterface#createTool",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#execorredo",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-execOrRedo",
-    "scripts/controller/controller.js~ModelInterface#execOrRedo",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#exectool",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-execTool",
-    "scripts/controller/controller.js~ModelInterface#execTool",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#getdescription",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-getDescription",
-    "scripts/controller/controller.js~ModelInterface#getDescription",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#gettooldef",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-getToolDef",
-    "scripts/controller/controller.js~ModelInterface#getToolDef",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#gettoolpathhotkey",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-getToolPathHotkey",
-    "scripts/controller/controller.js~ModelInterface#getToolPathHotkey",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#getvalue",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-getValue",
-    "scripts/controller/controller.js~ModelInterface#getValue",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#list",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-get-list",
-    "scripts/controller/controller.js~ModelInterface#list",
-    "member"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#masssetprop",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-massSetProp",
-    "scripts/controller/controller.js~ModelInterface#massSetProp",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#parsetoolpath",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-parseToolPath",
-    "scripts/controller/controller.js~ModelInterface#parseToolPath",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#popreportcontext",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-popReportContext",
-    "scripts/controller/controller.js~ModelInterface#popReportContext",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#prefix",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-member-prefix",
-    "scripts/controller/controller.js~ModelInterface#prefix",
-    "member"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#pushreportcontext",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-pushReportContext",
-    "scripts/controller/controller.js~ModelInterface#pushReportContext",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#resolvemasssetpaths",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-resolveMassSetPaths",
-    "scripts/controller/controller.js~ModelInterface#resolveMassSetPaths",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#resolvepath",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-resolvePath",
-    "scripts/controller/controller.js~ModelInterface#resolvePath",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#setvalue",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-setValue",
-    "scripts/controller/controller.js~ModelInterface#setValue",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface#validpath",
-    "class/scripts/controller/controller.js~ModelInterface.html#instance-method-validPath",
-    "scripts/controller/controller.js~ModelInterface#validPath",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface.registertool",
-    "class/scripts/controller/controller.js~ModelInterface.html#static-method-registerTool",
-    "scripts/controller/controller.js~ModelInterface.registerTool",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~modelinterface.toolregistered",
-    "class/scripts/controller/controller.js~ModelInterface.html#static-method-toolRegistered",
-    "scripts/controller/controller.js~ModelInterface.toolRegistered",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~toolopiface#constructor",
-    "class/scripts/controller/controller.js~ToolOpIface.html#instance-constructor-constructor",
-    "scripts/controller/controller.js~ToolOpIface#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/controller.js~toolopiface.tooldef",
-    "class/scripts/controller/controller.js~ToolOpIface.html#static-method-tooldef",
-    "scripts/controller/controller.js~ToolOpIface.tooldef",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js",
-    "file/scripts/controller/controller_ops.js.html",
-    "scripts/controller/controller_ops.js",
-    "file"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#__ctx",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-member-__ctx",
-    "scripts/controller/controller_ops.js~DataPathSetOp#__ctx",
-    "member"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#_undo",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-member-_undo",
-    "scripts/controller/controller_ops.js~DataPathSetOp#_undo",
-    "member"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#constructor",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-constructor-constructor",
-    "scripts/controller/controller_ops.js~DataPathSetOp#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#exec",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-exec",
-    "scripts/controller/controller_ops.js~DataPathSetOp#exec",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#hash",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-hash",
-    "scripts/controller/controller_ops.js~DataPathSetOp#hash",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#hashthis",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-hashThis",
-    "scripts/controller/controller_ops.js~DataPathSetOp#hashThis",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#modalstart",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-modalStart",
-    "scripts/controller/controller_ops.js~DataPathSetOp#modalStart",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#proptype",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-member-propType",
-    "scripts/controller/controller_ops.js~DataPathSetOp#propType",
-    "member"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#setvalue",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-setValue",
-    "scripts/controller/controller_ops.js~DataPathSetOp#setValue",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#undo",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-undo",
-    "scripts/controller/controller_ops.js~DataPathSetOp#undo",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop#undopre",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#instance-method-undoPre",
-    "scripts/controller/controller_ops.js~DataPathSetOp#undoPre",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop.create",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#static-method-create",
-    "scripts/controller/controller_ops.js~DataPathSetOp.create",
-    "method"
-  ],
-  [
-    "scripts/controller/controller_ops.js~datapathsetop.tooldef",
-    "class/scripts/controller/controller_ops.js~DataPathSetOp.html#static-method-tooldef",
-    "scripts/controller/controller_ops.js~DataPathSetOp.tooldef",
-    "method"
-  ],
-  [
     "scripts/controller/simple_controller.js",
     "file/scripts/controller/simple_controller.js.html",
     "scripts/controller/simple_controller.js",
     "file"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#_addclass",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-_addClass",
-    "scripts/controller/simple_controller.js~DataAPI#_addClass",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#constructor",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-constructor-constructor",
-    "scripts/controller/simple_controller.js~DataAPI#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#createtool",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-createTool",
-    "scripts/controller/simple_controller.js~DataAPI#createTool",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#getstruct",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-getStruct",
-    "scripts/controller/simple_controller.js~DataAPI#getStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#gettooldef",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-getToolDef",
-    "scripts/controller/simple_controller.js~DataAPI#getToolDef",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#gettoolpathhotkey",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-getToolPathHotkey",
-    "scripts/controller/simple_controller.js~DataAPI#getToolPathHotkey",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#gettoolpathhotkey_intern",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-getToolPathHotkey_intern",
-    "scripts/controller/simple_controller.js~DataAPI#getToolPathHotkey_intern",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#hasstruct",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-hasStruct",
-    "scripts/controller/simple_controller.js~DataAPI#hasStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#inheritstruct",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-inheritStruct",
-    "scripts/controller/simple_controller.js~DataAPI#inheritStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#list",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-get-list",
-    "scripts/controller/simple_controller.js~DataAPI#list",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#mapstruct",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-mapStruct",
-    "scripts/controller/simple_controller.js~DataAPI#mapStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#masssetprop",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-massSetProp",
-    "scripts/controller/simple_controller.js~DataAPI#massSetProp",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#mergestructs",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-mergeStructs",
-    "scripts/controller/simple_controller.js~DataAPI#mergeStructs",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#parsetoolargs",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-parseToolArgs",
-    "scripts/controller/simple_controller.js~DataAPI#parseToolArgs",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#parsetoolpath",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-parseToolPath",
-    "scripts/controller/simple_controller.js~DataAPI#parseToolPath",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#popreportcontext",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-popReportContext",
-    "scripts/controller/simple_controller.js~DataAPI#popReportContext",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#pushreportcontext",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-pushReportContext",
-    "scripts/controller/simple_controller.js~DataAPI#pushReportContext",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#resolvemasssetpaths",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-resolveMassSetPaths",
-    "scripts/controller/simple_controller.js~DataAPI#resolveMassSetPaths",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#resolvepath",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-resolvePath",
-    "scripts/controller/simple_controller.js~DataAPI#resolvePath",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#resolvepathold2",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-resolvePathOld2",
-    "scripts/controller/simple_controller.js~DataAPI#resolvePathOld2",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#resolvepath_intern",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-resolvePath_intern",
-    "scripts/controller/simple_controller.js~DataAPI#resolvePath_intern",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#resolvepathold",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-resolvePathold",
-    "scripts/controller/simple_controller.js~DataAPI#resolvePathold",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#rootcontextstruct",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-member-rootContextStruct",
-    "scripts/controller/simple_controller.js~DataAPI#rootContextStruct",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi#setroot",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#instance-method-setRoot",
-    "scripts/controller/simple_controller.js~DataAPI#setRoot",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi.registertool",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#static-method-registerTool",
-    "scripts/controller/simple_controller.js~DataAPI.registerTool",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~dataapi.toolregistered",
-    "class/scripts/controller/simple_controller.js~DataAPI.html#static-method-toolRegistered",
-    "scripts/controller/simple_controller.js~DataAPI.toolRegistered",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#_check",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-_check",
-    "scripts/controller/simple_controller.js~DataList#_check",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#cb",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-member-cb",
-    "scripts/controller/simple_controller.js~DataList#cb",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#constructor",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-constructor-constructor",
-    "scripts/controller/simple_controller.js~DataList#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#copy",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-copy",
-    "scripts/controller/simple_controller.js~DataList#copy",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#filter",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-filter",
-    "scripts/controller/simple_controller.js~DataList#filter",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#get",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-get",
-    "scripts/controller/simple_controller.js~DataList#get",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#getactive",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-getActive",
-    "scripts/controller/simple_controller.js~DataList#getActive",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#getiter",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-getIter",
-    "scripts/controller/simple_controller.js~DataList#getIter",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#getkey",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-getKey",
-    "scripts/controller/simple_controller.js~DataList#getKey",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#getlength",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-getLength",
-    "scripts/controller/simple_controller.js~DataList#getLength",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#getstruct",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-getStruct",
-    "scripts/controller/simple_controller.js~DataList#getStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#set",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-set",
-    "scripts/controller/simple_controller.js~DataList#set",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datalist#setactive",
-    "class/scripts/controller/simple_controller.js~DataList.html#instance-method-setActive",
-    "scripts/controller/simple_controller.js~DataList#setActive",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#apiname",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-member-apiname",
-    "scripts/controller/simple_controller.js~DataPath#apiname",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#baseunit",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-baseUnit",
-    "scripts/controller/simple_controller.js~DataPath#baseUnit",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#constructor",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-constructor-constructor",
-    "scripts/controller/simple_controller.js~DataPath#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#copy",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-copy",
-    "scripts/controller/simple_controller.js~DataPath#copy",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#customget",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-customGet",
-    "scripts/controller/simple_controller.js~DataPath#customGet",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#customgetset",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-customGetSet",
-    "scripts/controller/simple_controller.js~DataPath#customGetSet",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#customset",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-customSet",
-    "scripts/controller/simple_controller.js~DataPath#customSet",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#data",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-member-data",
-    "scripts/controller/simple_controller.js~DataPath#data",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#decimalplaces",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-decimalPlaces",
-    "scripts/controller/simple_controller.js~DataPath#decimalPlaces",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#description",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-description",
-    "scripts/controller/simple_controller.js~DataPath#description",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#descriptions",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-descriptions",
-    "scripts/controller/simple_controller.js~DataPath#descriptions",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#displayunit",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-displayUnit",
-    "scripts/controller/simple_controller.js~DataPath#displayUnit",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#exprate",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-expRate",
-    "scripts/controller/simple_controller.js~DataPath#expRate",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#flag",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-member-flag",
-    "scripts/controller/simple_controller.js~DataPath#flag",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#fullsaveundo",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-fullSaveUndo",
-    "scripts/controller/simple_controller.js~DataPath#fullSaveUndo",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#icon",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-icon",
-    "scripts/controller/simple_controller.js~DataPath#icon",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#icons",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-icons",
-    "scripts/controller/simple_controller.js~DataPath#icons",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#nounits",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-noUnits",
-    "scripts/controller/simple_controller.js~DataPath#noUnits",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#off",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-off",
-    "scripts/controller/simple_controller.js~DataPath#off",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#on",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-on",
-    "scripts/controller/simple_controller.js~DataPath#on",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#path",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-member-path",
-    "scripts/controller/simple_controller.js~DataPath#path",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#radix",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-radix",
-    "scripts/controller/simple_controller.js~DataPath#radix",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#range",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-range",
-    "scripts/controller/simple_controller.js~DataPath#range",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#read_only",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-read_only",
-    "scripts/controller/simple_controller.js~DataPath#read_only",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#relativestep",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-relativeStep",
-    "scripts/controller/simple_controller.js~DataPath#relativeStep",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#rollerslider",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-rollerSlider",
-    "scripts/controller/simple_controller.js~DataPath#rollerSlider",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#setprop",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-setProp",
-    "scripts/controller/simple_controller.js~DataPath#setProp",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#simpleslider",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-simpleSlider",
-    "scripts/controller/simple_controller.js~DataPath#simpleSlider",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#step",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-step",
-    "scripts/controller/simple_controller.js~DataPath#step",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#struct",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-member-struct",
-    "scripts/controller/simple_controller.js~DataPath#struct",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#type",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-member-type",
-    "scripts/controller/simple_controller.js~DataPath#type",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#uinames",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-uiNames",
-    "scripts/controller/simple_controller.js~DataPath#uiNames",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#uirange",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-uiRange",
-    "scripts/controller/simple_controller.js~DataPath#uiRange",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datapath#uniformslider",
-    "class/scripts/controller/simple_controller.js~DataPath.html#instance-method-uniformSlider",
-    "scripts/controller/simple_controller.js~DataPath#uniformSlider",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#add",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-add",
-    "scripts/controller/simple_controller.js~DataStruct#add",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#arraylist",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-arrayList",
-    "scripts/controller/simple_controller.js~DataStruct#arrayList",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#bool",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-bool",
-    "scripts/controller/simple_controller.js~DataStruct#bool",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#color3",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-color3",
-    "scripts/controller/simple_controller.js~DataStruct#color3",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#color4",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-color4",
-    "scripts/controller/simple_controller.js~DataStruct#color4",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#constructor",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-constructor-constructor",
-    "scripts/controller/simple_controller.js~DataStruct#constructor",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#copy",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-copy",
-    "scripts/controller/simple_controller.js~DataStruct#copy",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#curve1d",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-curve1d",
-    "scripts/controller/simple_controller.js~DataStruct#curve1d",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#dynamicstruct",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-dynamicStruct",
-    "scripts/controller/simple_controller.js~DataStruct#dynamicStruct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#enum",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-enum",
-    "scripts/controller/simple_controller.js~DataStruct#enum",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#flag",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-member-flag",
-    "scripts/controller/simple_controller.js~DataStruct#flag",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#flags",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-flags",
-    "scripts/controller/simple_controller.js~DataStruct#flags",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#float",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-float",
-    "scripts/controller/simple_controller.js~DataStruct#float",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#int",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-int",
-    "scripts/controller/simple_controller.js~DataStruct#int",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#list",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-list",
-    "scripts/controller/simple_controller.js~DataStruct#list",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#members",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-member-members",
-    "scripts/controller/simple_controller.js~DataStruct#members",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#name",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-member-name",
-    "scripts/controller/simple_controller.js~DataStruct#name",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#pathmap",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-member-pathmap",
-    "scripts/controller/simple_controller.js~DataStruct#pathmap",
-    "member"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#remove",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-remove",
-    "scripts/controller/simple_controller.js~DataStruct#remove",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#string",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-string",
-    "scripts/controller/simple_controller.js~DataStruct#string",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#struct",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-struct",
-    "scripts/controller/simple_controller.js~DataStruct#struct",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#textblock",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-textblock",
-    "scripts/controller/simple_controller.js~DataStruct#textblock",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#vec2",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-vec2",
-    "scripts/controller/simple_controller.js~DataStruct#vec2",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#vec3",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-vec3",
-    "scripts/controller/simple_controller.js~DataStruct#vec3",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#vec4",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-vec4",
-    "scripts/controller/simple_controller.js~DataStruct#vec4",
-    "method"
-  ],
-  [
-    "scripts/controller/simple_controller.js~datastruct#vectorlist",
-    "class/scripts/controller/simple_controller.js~DataStruct.html#instance-method-vectorList",
-    "scripts/controller/simple_controller.js~DataStruct#vectorList",
-    "method"
   ],
   [
     "scripts/core/anim.js",
@@ -4728,6 +4104,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/core/aspect.js~afteraspect#clear",
+    "class/scripts/core/aspect.js~AfterAspect.html#instance-method-clear",
+    "scripts/core/aspect.js~AfterAspect#clear",
+    "method"
+  ],
+  [
     "scripts/core/aspect.js~afteraspect#constructor",
     "class/scripts/core/aspect.js~AfterAspect.html#instance-constructor-constructor",
     "scripts/core/aspect.js~AfterAspect#constructor",
@@ -4756,6 +4138,12 @@ window.esdocSearchIndex = [
     "class/scripts/core/aspect.js~AfterAspect.html#instance-method-remove",
     "scripts/core/aspect.js~AfterAspect#remove",
     "method"
+  ],
+  [
+    "scripts/core/aspect.js~afteraspect#root",
+    "class/scripts/core/aspect.js~AfterAspect.html#instance-member-root",
+    "scripts/core/aspect.js~AfterAspect#root",
+    "member"
   ],
   [
     "scripts/core/aspect.js~afteraspect.bind",
@@ -4914,6 +4302,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui.js~columnframe#oneaxismargin",
+    "class/scripts/core/ui.js~ColumnFrame.html#instance-method-oneAxisMargin",
+    "scripts/core/ui.js~ColumnFrame#oneAxisMargin",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~columnframe#oneaxispadding",
+    "class/scripts/core/ui.js~ColumnFrame.html#instance-method-oneAxisPadding",
+    "scripts/core/ui.js~ColumnFrame#oneAxisPadding",
+    "method"
+  ],
+  [
     "scripts/core/ui.js~columnframe#update",
     "class/scripts/core/ui.js~ColumnFrame.html#instance-method-update",
     "scripts/core/ui.js~ColumnFrame#update",
@@ -5044,6 +4444,12 @@ window.esdocSearchIndex = [
     "class/scripts/core/ui.js~Container.html#instance-constructor-constructor",
     "scripts/core/ui.js~Container#constructor",
     "method"
+  ],
+  [
+    "scripts/core/ui.js~container#ctx",
+    "class/scripts/core/ui.js~Container.html#instance-member-ctx",
+    "scripts/core/ui.js~Container#ctx",
+    "member"
   ],
   [
     "scripts/core/ui.js~container#curve",
@@ -5250,6 +4656,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui.js~container#reverse",
+    "class/scripts/core/ui.js~Container.html#instance-method-reverse",
+    "scripts/core/ui.js~Container#reverse",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~container#reversed",
+    "class/scripts/core/ui.js~Container.html#instance-member-reversed",
+    "scripts/core/ui.js~Container#reversed",
+    "member"
+  ],
+  [
     "scripts/core/ui.js~container#row",
     "class/scripts/core/ui.js~Container.html#instance-method-row",
     "scripts/core/ui.js~Container#row",
@@ -5352,9 +4770,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui.js~container#toolpanel",
+    "class/scripts/core/ui.js~Container.html#instance-method-toolPanel",
+    "scripts/core/ui.js~Container#toolPanel",
+    "method"
+  ],
+  [
     "scripts/core/ui.js~container#treeview",
     "class/scripts/core/ui.js~Container.html#instance-method-treeview",
     "scripts/core/ui.js~Container#treeview",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~container#twocol",
+    "class/scripts/core/ui.js~Container.html#instance-method-twocol",
+    "scripts/core/ui.js~Container#twocol",
     "method"
   ],
   [
@@ -5412,6 +4842,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/core/ui.js~label#_lasttext",
+    "class/scripts/core/ui.js~Label.html#instance-member-_lastText",
+    "scripts/core/ui.js~Label#_lastText",
+    "member"
+  ],
+  [
     "scripts/core/ui.js~label#_last_font",
     "class/scripts/core/ui.js~Label.html#instance-member-_last_font",
     "scripts/core/ui.js~Label#_last_font",
@@ -5463,6 +4899,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~label#on_enabled",
     "class/scripts/core/ui.js~Label.html#instance-method-on_enabled",
     "scripts/core/ui.js~Label#on_enabled",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~label#setcss",
+    "class/scripts/core/ui.js~Label.html#instance-method-setCSS",
+    "scripts/core/ui.js~Label#setCSS",
     "method"
   ],
   [
@@ -5535,6 +4977,54 @@ window.esdocSearchIndex = [
     "scripts/core/ui.js~rowframe.define",
     "class/scripts/core/ui.js~RowFrame.html#static-method-define",
     "scripts/core/ui.js~RowFrame.define",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#_colwidth",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-member-_colWidth",
+    "scripts/core/ui.js~TwoColumnFrame#_colWidth",
+    "member"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#colwidth",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-get-colWidth",
+    "scripts/core/ui.js~TwoColumnFrame#colWidth",
+    "member"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#colwidth",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-set-colWidth",
+    "scripts/core/ui.js~TwoColumnFrame#colWidth",
+    "member"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#constructor",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-constructor-constructor",
+    "scripts/core/ui.js~TwoColumnFrame#constructor",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#init",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-method-init",
+    "scripts/core/ui.js~TwoColumnFrame#init",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#parentdepth",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-member-parentDepth",
+    "scripts/core/ui.js~TwoColumnFrame#parentDepth",
+    "member"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe#update",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#instance-method-update",
+    "scripts/core/ui.js~TwoColumnFrame#update",
+    "method"
+  ],
+  [
+    "scripts/core/ui.js~twocolumnframe.define",
+    "class/scripts/core/ui.js~TwoColumnFrame.html#static-method-define",
+    "scripts/core/ui.js~TwoColumnFrame.define",
     "method"
   ],
   [
@@ -5634,9 +5124,33 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/core/ui_base.js~uibase#__disabledstate",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-__disabledState",
+    "scripts/core/ui_base.js~UIBase#__disabledState",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#__updatedisable",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-__updateDisable",
+    "scripts/core/ui_base.js~UIBase#__updateDisable",
+    "method"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#_active_animations",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-_active_animations",
     "scripts/core/ui_base.js~UIBase#_active_animations",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#_checktheme",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_checkTheme",
+    "scripts/core/ui_base.js~UIBase#_checkTheme",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#_client_disabled_set",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_client_disabled_set",
+    "scripts/core/ui_base.js~UIBase#_client_disabled_set",
     "member"
   ],
   [
@@ -5649,12 +5163,6 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase#_description",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-_description",
     "scripts/core/ui_base.js~UIBase#_description",
-    "member"
-  ],
-  [
-    "scripts/core/ui_base.js~uibase#_disabled",
-    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_disabled",
-    "scripts/core/ui_base.js~UIBase#_disabled",
     "member"
   ],
   [
@@ -5712,6 +5220,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/core/ui_base.js~uibase#_internaldisabled",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_internalDisabled",
+    "scripts/core/ui_base.js~UIBase#_internalDisabled",
+    "member"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#_lastpathundogen",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-_lastPathUndoGen",
     "scripts/core/ui_base.js~UIBase#_lastPathUndoGen",
@@ -5721,6 +5235,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase#_last_description",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-_last_description",
     "scripts/core/ui_base.js~UIBase#_last_description",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#_last_theme_update_key",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_last_theme_update_key",
+    "scripts/core/ui_base.js~UIBase#_last_theme_update_key",
     "member"
   ],
   [
@@ -5763,6 +5283,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase#_screenstyleupdatehash",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-_screenStyleUpdateHash",
     "scripts/core/ui_base.js~UIBase#_screenStyleUpdateHash",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#_textboxevents",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-_textBoxEvents",
+    "scripts/core/ui_base.js~UIBase#_textBoxEvents",
     "member"
   ],
   [
@@ -5817,6 +5343,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui_base.js~uibase#calcz",
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-calcZ",
     "scripts/core/ui_base.js~UIBase#calcZ",
+    "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#checkthemeupdate",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-checkThemeUpdate",
+    "scripts/core/ui_base.js~UIBase#checkThemeUpdate",
     "method"
   ],
   [
@@ -5940,6 +5472,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_base.js~uibase#getdefault_intern",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-getDefault_intern",
+    "scripts/core/ui_base.js~UIBase#getDefault_intern",
+    "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#getelementbyid",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-getElementById",
+    "scripts/core/ui_base.js~UIBase#getElementById",
+    "method"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#getpathdescription",
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-getPathDescription",
     "scripts/core/ui_base.js~UIBase#getPathDescription",
@@ -6000,6 +5544,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_base.js~uibase#hasclassdefault",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-hasClassDefault",
+    "scripts/core/ui_base.js~UIBase#hasClassDefault",
+    "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#hasdefault",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-method-hasDefault",
+    "scripts/core/ui_base.js~UIBase#hasDefault",
+    "method"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#hidden",
     "class/scripts/core/ui_base.js~UIBase.html#instance-member-hidden",
     "scripts/core/ui_base.js~UIBase#hidden",
@@ -6018,6 +5574,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_base.js~uibase#internaldisabled",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-set-internalDisabled",
+    "scripts/core/ui_base.js~UIBase#internalDisabled",
+    "member"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#internaldisabled",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-get-internalDisabled",
+    "scripts/core/ui_base.js~UIBase#internalDisabled",
+    "member"
+  ],
+  [
     "scripts/core/ui_base.js~uibase#isdead",
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-isDead",
     "scripts/core/ui_base.js~UIBase#isDead",
@@ -6034,6 +5602,12 @@ window.esdocSearchIndex = [
     "class/scripts/core/ui_base.js~UIBase.html#instance-method-loadJSON",
     "scripts/core/ui_base.js~UIBase#loadJSON",
     "method"
+  ],
+  [
+    "scripts/core/ui_base.js~uibase#my_default_overrides",
+    "class/scripts/core/ui_base.js~UIBase.html#instance-member-my_default_overrides",
+    "scripts/core/ui_base.js~UIBase#my_default_overrides",
+    "member"
   ],
   [
     "scripts/core/ui_base.js~uibase#nomargins",
@@ -6288,6 +5862,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_base.js~uibase.geticonenum",
+    "class/scripts/core/ui_base.js~UIBase.html#static-method-getIconEnum",
+    "scripts/core/ui_base.js~UIBase.getIconEnum",
+    "method"
+  ],
+  [
     "scripts/core/ui_base.js~uibase.internalregister",
     "class/scripts/core/ui_base.js~UIBase.html#static-method-internalRegister",
     "scripts/core/ui_base.js~UIBase.internalRegister",
@@ -6312,6 +5892,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/core/ui_save.js",
+    "file/scripts/core/ui_save.js.html",
+    "scripts/core/ui_save.js",
+    "file"
+  ],
+  [
     "scripts/core/ui_theme.js",
     "file/scripts/core/ui_theme.js.html",
     "scripts/core/ui_theme.js",
@@ -6322,6 +5908,12 @@ window.esdocSearchIndex = [
     "class/scripts/core/ui_theme.js~CSSFont.html#instance-member-_size",
     "scripts/core/ui_theme.js~CSSFont#_size",
     "member"
+  ],
+  [
+    "scripts/core/ui_theme.js~cssfont#calchashupdate",
+    "class/scripts/core/ui_theme.js~CSSFont.html#instance-method-calcHashUpdate",
+    "scripts/core/ui_theme.js~CSSFont#calcHashUpdate",
+    "method"
   ],
   [
     "scripts/core/ui_theme.js~cssfont#color",
@@ -6357,6 +5949,12 @@ window.esdocSearchIndex = [
     "scripts/core/ui_theme.js~cssfont#gencss",
     "class/scripts/core/ui_theme.js~CSSFont.html#instance-method-genCSS",
     "scripts/core/ui_theme.js~CSSFont#genCSS",
+    "method"
+  ],
+  [
+    "scripts/core/ui_theme.js~cssfont#genkey",
+    "class/scripts/core/ui_theme.js~CSSFont.html#instance-method-genKey",
+    "scripts/core/ui_theme.js~CSSFont#genKey",
     "method"
   ],
   [
@@ -6628,642 +6226,6 @@ window.esdocSearchIndex = [
     "class/scripts/core/units.js~Unit.html#static-method-validate",
     "scripts/core/units.js~Unit.validate",
     "method"
-  ],
-  [
-    "scripts/curve/curve1d.js",
-    "file/scripts/curve/curve1d.js.html",
-    "scripts/curve/curve1d.js",
-    "file"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#version",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-VERSION",
-    "scripts/curve/curve1d.js~Curve1D#VERSION",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#_fastmode",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-_fastmode",
-    "scripts/curve/curve1d.js~Curve1D#_fastmode",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#_on_change",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-_on_change",
-    "scripts/curve/curve1d.js~Curve1D#_on_change",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#constructor",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-constructor-constructor",
-    "scripts/curve/curve1d.js~Curve1D#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#copy",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-copy",
-    "scripts/curve/curve1d.js~Curve1D#copy",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#derivative",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-derivative",
-    "scripts/curve/curve1d.js~Curve1D#derivative",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#derivative2",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-derivative2",
-    "scripts/curve/curve1d.js~Curve1D#derivative2",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#destroy",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-destroy",
-    "scripts/curve/curve1d.js~Curve1D#destroy",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#draw",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-draw",
-    "scripts/curve/curve1d.js~Curve1D#draw",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#equals",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-equals",
-    "scripts/curve/curve1d.js~Curve1D#equals",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#equals",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-equals",
-    "scripts/curve/curve1d.js~Curve1D#equals",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#evaluate",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-evaluate",
-    "scripts/curve/curve1d.js~Curve1D#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#fastmode",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-get-fastmode",
-    "scripts/curve/curve1d.js~Curve1D#fastmode",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#fastmode",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-set-fastmode",
-    "scripts/curve/curve1d.js~Curve1D#fastmode",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#generatortype",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-get-generatorType",
-    "scripts/curve/curve1d.js~Curve1D#generatorType",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#generators",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-generators",
-    "scripts/curve/curve1d.js~Curve1D#generators",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#getgenerator",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-getGenerator",
-    "scripts/curve/curve1d.js~Curve1D#getGenerator",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#inverse",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-inverse",
-    "scripts/curve/curve1d.js~Curve1D#inverse",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#load",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-load",
-    "scripts/curve/curve1d.js~Curve1D#load",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#loadjson",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-loadJSON",
-    "scripts/curve/curve1d.js~Curve1D#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#loadstruct",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-loadSTRUCT",
-    "scripts/curve/curve1d.js~Curve1D#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#redraw",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-redraw",
-    "scripts/curve/curve1d.js~Curve1D#redraw",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#reset",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-reset",
-    "scripts/curve/curve1d.js~Curve1D#reset",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#setgenerator",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-setGenerator",
-    "scripts/curve/curve1d.js~Curve1D#setGenerator",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#switchgenerator",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-switchGenerator",
-    "scripts/curve/curve1d.js~Curve1D#switchGenerator",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#tojson",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-toJSON",
-    "scripts/curve/curve1d.js~Curve1D#toJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#uizoom",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-member-uiZoom",
-    "scripts/curve/curve1d.js~Curve1D#uiZoom",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d.js~curve1d#update",
-    "class/scripts/curve/curve1d.js~Curve1D.html#instance-method-update",
-    "scripts/curve/curve1d.js~Curve1D#update",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js",
-    "file/scripts/curve/curve1d_anim.js.html",
-    "scripts/curve/curve1d_anim.js",
-    "file"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~bouncecurve#_evaluate",
-    "class/scripts/curve/curve1d_anim.js~BounceCurve.html#instance-method-_evaluate",
-    "scripts/curve/curve1d_anim.js~BounceCurve#_evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~bouncecurve#evaluate",
-    "class/scripts/curve/curve1d_anim.js~BounceCurve.html#instance-method-evaluate",
-    "scripts/curve/curve1d_anim.js~BounceCurve#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~bouncecurve.define",
-    "class/scripts/curve/curve1d_anim.js~BounceCurve.html#static-method-define",
-    "scripts/curve/curve1d_anim.js~BounceCurve.define",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~easecurve#constructor",
-    "class/scripts/curve/curve1d_anim.js~EaseCurve.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_anim.js~EaseCurve#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~easecurve#evaluate",
-    "class/scripts/curve/curve1d_anim.js~EaseCurve.html#instance-method-evaluate",
-    "scripts/curve/curve1d_anim.js~EaseCurve#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~easecurve.define",
-    "class/scripts/curve/curve1d_anim.js~EaseCurve.html#static-method-define",
-    "scripts/curve/curve1d_anim.js~EaseCurve.define",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~elasticcurve#_func",
-    "class/scripts/curve/curve1d_anim.js~ElasticCurve.html#instance-member-_func",
-    "scripts/curve/curve1d_anim.js~ElasticCurve#_func",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~elasticcurve#_last_hash",
-    "class/scripts/curve/curve1d_anim.js~ElasticCurve.html#instance-member-_last_hash",
-    "scripts/curve/curve1d_anim.js~ElasticCurve#_last_hash",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~elasticcurve#constructor",
-    "class/scripts/curve/curve1d_anim.js~ElasticCurve.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_anim.js~ElasticCurve#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~elasticcurve#evaluate",
-    "class/scripts/curve/curve1d_anim.js~ElasticCurve.html#instance-method-evaluate",
-    "scripts/curve/curve1d_anim.js~ElasticCurve#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~elasticcurve.define",
-    "class/scripts/curve/curve1d_anim.js~ElasticCurve.html#static-method-define",
-    "scripts/curve/curve1d_anim.js~ElasticCurve.define",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~paramkey#constructor",
-    "class/scripts/curve/curve1d_anim.js~ParamKey.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_anim.js~ParamKey#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~paramkey#key",
-    "class/scripts/curve/curve1d_anim.js~ParamKey.html#instance-member-key",
-    "scripts/curve/curve1d_anim.js~ParamKey#key",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~paramkey#val",
-    "class/scripts/curve/curve1d_anim.js~ParamKey.html#instance-member-val",
-    "scripts/curve/curve1d_anim.js~ParamKey#val",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve#_seed",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#instance-member-_seed",
-    "scripts/curve/curve1d_anim.js~RandCurve#_seed",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve#constructor",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_anim.js~RandCurve#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve#evaluate",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#instance-method-evaluate",
-    "scripts/curve/curve1d_anim.js~RandCurve#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve#random",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#instance-member-random",
-    "scripts/curve/curve1d_anim.js~RandCurve#random",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve#seed",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#instance-set-seed",
-    "scripts/curve/curve1d_anim.js~RandCurve#seed",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve#seed",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#instance-get-seed",
-    "scripts/curve/curve1d_anim.js~RandCurve#seed",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~randcurve.define",
-    "class/scripts/curve/curve1d_anim.js~RandCurve.html#static-method-define",
-    "scripts/curve/curve1d_anim.js~RandCurve.define",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#_saveparams",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-_saveParams",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#_saveParams",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#constructor",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#draw",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-draw",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#draw",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#equals",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-equals",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#equals",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#evaluate",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-evaluate",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#hasgui",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-get-hasGUI",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#hasGUI",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#killgui",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-killGUI",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#killGUI",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#loadjson",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-loadJSON",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#loadstruct",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-loadSTRUCT",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#makegui",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-makeGUI",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#makeGUI",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#params",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-member-params",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#params",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#redraw",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-redraw",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#redraw",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#reset",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-reset",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#reset",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#tojson",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-toJSON",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#toJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#type",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-member-type",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#type",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_anim.js~simplecurvebase#update",
-    "class/scripts/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-update",
-    "scripts/curve/curve1d_anim.js~SimpleCurveBase#update",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js",
-    "file/scripts/curve/curve1d_base.js.html",
-    "scripts/curve/curve1d_base.js",
-    "file"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#constructor",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_base.js~CurveTypeData#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#derivative",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-derivative",
-    "scripts/curve/curve1d_base.js~CurveTypeData#derivative",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#derivative2",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-derivative2",
-    "scripts/curve/curve1d_base.js~CurveTypeData#derivative2",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#destroy",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-destroy",
-    "scripts/curve/curve1d_base.js~CurveTypeData#destroy",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#draw",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-draw",
-    "scripts/curve/curve1d_base.js~CurveTypeData#draw",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#equals",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-equals",
-    "scripts/curve/curve1d_base.js~CurveTypeData#equals",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#evaluate",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-evaluate",
-    "scripts/curve/curve1d_base.js~CurveTypeData#evaluate",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#hasgui",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-get-hasGUI",
-    "scripts/curve/curve1d_base.js~CurveTypeData#hasGUI",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#inverse",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-inverse",
-    "scripts/curve/curve1d_base.js~CurveTypeData#inverse",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#killgui",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-killGUI",
-    "scripts/curve/curve1d_base.js~CurveTypeData#killGUI",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#loadjson",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-loadJSON",
-    "scripts/curve/curve1d_base.js~CurveTypeData#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#loadstruct",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-loadSTRUCT",
-    "scripts/curve/curve1d_base.js~CurveTypeData#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#makegui",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-makeGUI",
-    "scripts/curve/curve1d_base.js~CurveTypeData#makeGUI",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#onactive",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-onActive",
-    "scripts/curve/curve1d_base.js~CurveTypeData#onActive",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#oninactive",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-onInactive",
-    "scripts/curve/curve1d_base.js~CurveTypeData#onInactive",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#redraw",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-redraw",
-    "scripts/curve/curve1d_base.js~CurveTypeData#redraw",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#reset",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-reset",
-    "scripts/curve/curve1d_base.js~CurveTypeData#reset",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#tojson",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-toJSON",
-    "scripts/curve/curve1d_base.js~CurveTypeData#toJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#type",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-member-type",
-    "scripts/curve/curve1d_base.js~CurveTypeData#type",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata#update",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#instance-method-update",
-    "scripts/curve/curve1d_base.js~CurveTypeData#update",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata.define",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#static-method-define",
-    "scripts/curve/curve1d_base.js~CurveTypeData.define",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_base.js~curvetypedata.register",
-    "class/scripts/curve/curve1d_base.js~CurveTypeData.html#static-method-register",
-    "scripts/curve/curve1d_base.js~CurveTypeData.register",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_basic.js",
-    "file/scripts/curve/curve1d_basic.js.html",
-    "scripts/curve/curve1d_basic.js",
-    "file"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js",
-    "file/scripts/curve/curve1d_bspline.js.html",
-    "scripts/curve/curve1d_bspline.js",
-    "file"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#constructor",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-constructor-constructor",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#constructor",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#copy",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-copy",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#copy",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#eid",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-eid",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#eid",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#flag",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-flag",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#flag",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#loadstruct",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-loadSTRUCT",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#rco",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-rco",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#rco",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#recalc",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-recalc",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#recalc",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#sco",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-sco",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#sco",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#startco",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-startco",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#startco",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#tangent",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-tangent",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#tangent",
-    "member"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint#tojson",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-toJSON",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint#toJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_bspline.js~curve1dpoint.fromjson",
-    "class/scripts/curve/curve1d_bspline.js~Curve1DPoint.html#static-method-fromJSON",
-    "scripts/curve/curve1d_bspline.js~Curve1DPoint.fromJSON",
-    "method"
-  ],
-  [
-    "scripts/curve/curve1d_utils.js",
-    "file/scripts/curve/curve1d_utils.js.html",
-    "scripts/curve/curve1d_utils.js",
-    "file"
-  ],
-  [
-    "scripts/curve/ease.js",
-    "file/scripts/curve/ease.js.html",
-    "scripts/curve/ease.js",
-    "file"
   ],
   [
     "scripts/docbrowser/docbrowser.js",
@@ -7614,6 +6576,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/docbrowser/docbrowser.js~electronapi#checkinit",
+    "class/scripts/docbrowser/docbrowser.js~ElectronAPI.html#instance-method-checkInit",
+    "scripts/docbrowser/docbrowser.js~ElectronAPI#checkInit",
+    "method"
+  ],
+  [
     "scripts/docbrowser/docbrowser.js~electronapi#config",
     "class/scripts/docbrowser/docbrowser.js~ElectronAPI.html#instance-member-config",
     "scripts/docbrowser/docbrowser.js~ElectronAPI#config",
@@ -7644,6 +6612,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/docbrowser/docbrowser.js~electronapi#ready",
+    "class/scripts/docbrowser/docbrowser.js~ElectronAPI.html#instance-member-ready",
+    "scripts/docbrowser/docbrowser.js~ElectronAPI#ready",
+    "member"
+  ],
+  [
+    "scripts/docbrowser/docbrowser.js~electronapi#start",
+    "class/scripts/docbrowser/docbrowser.js~ElectronAPI.html#instance-method-start",
+    "scripts/docbrowser/docbrowser.js~ElectronAPI#start",
+    "method"
+  ],
+  [
     "scripts/docbrowser/docbrowser.js~electronapi#updatedoc",
     "class/scripts/docbrowser/docbrowser.js~ElectronAPI.html#instance-method-updateDoc",
     "scripts/docbrowser/docbrowser.js~ElectronAPI#updateDoc",
@@ -7654,18 +6634,6 @@ window.esdocSearchIndex = [
     "class/scripts/docbrowser/docbrowser.js~ElectronAPI.html#instance-method-uploadImage",
     "scripts/docbrowser/docbrowser.js~ElectronAPI#uploadImage",
     "method"
-  ],
-  [
-    "scripts/docbrowser/docbrowser.js~saveddocument#constructor",
-    "class/scripts/docbrowser/docbrowser.js~SavedDocument.html#instance-constructor-constructor",
-    "scripts/docbrowser/docbrowser.js~SavedDocument#constructor",
-    "method"
-  ],
-  [
-    "scripts/docbrowser/docbrowser.js~saveddocument#data",
-    "class/scripts/docbrowser/docbrowser.js~SavedDocument.html#instance-member-data",
-    "scripts/docbrowser/docbrowser.js~SavedDocument#data",
-    "member"
   ],
   [
     "scripts/docbrowser/docbrowser.js~serverapi#callapi",
@@ -7689,6 +6657,12 @@ window.esdocSearchIndex = [
     "scripts/docbrowser/docbrowser.js~serverapi#newdoc",
     "class/scripts/docbrowser/docbrowser.js~ServerAPI.html#instance-method-newDoc",
     "scripts/docbrowser/docbrowser.js~ServerAPI#newDoc",
+    "method"
+  ],
+  [
+    "scripts/docbrowser/docbrowser.js~serverapi#start",
+    "class/scripts/docbrowser/docbrowser.js~ServerAPI.html#instance-method-start",
+    "scripts/docbrowser/docbrowser.js~ServerAPI#start",
     "method"
   ],
   [
@@ -8304,6 +7278,7416 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "scripts/path-controller/config/config.js",
+    "file/scripts/path-controller/config/config.js.html",
+    "scripts/path-controller/config/config.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller.js",
+    "file/scripts/path-controller/controller.js.html",
+    "scripts/path-controller/controller.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller/context.js",
+    "file/scripts/path-controller/controller/context.js.html",
+    "scripts/path-controller/controller/context.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#_fix",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-_fix",
+    "scripts/path-controller/controller/context.js~Context#_fix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#_inside_map",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-member-_inside_map",
+    "scripts/path-controller/controller/context.js~Context#_inside_map",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#_props",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-member-_props",
+    "scripts/path-controller/controller/context.js~Context#_props",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#_stack",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-member-_stack",
+    "scripts/path-controller/controller/context.js~Context#_stack",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#clear",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-clear",
+    "scripts/path-controller/controller/context.js~Context#clear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#constructor",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/context.js~Context#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#copy",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-copy",
+    "scripts/path-controller/controller/context.js~Context#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#ensureproperty",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-ensureProperty",
+    "scripts/path-controller/controller/context.js~Context#ensureProperty",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#error",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-error",
+    "scripts/path-controller/controller/context.js~Context#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#fix",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-fix",
+    "scripts/path-controller/controller/context.js~Context#fix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#getoverlay",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-getOverlay",
+    "scripts/path-controller/controller/context.js~Context#getOverlay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#getowningoverlay",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-getOwningOverlay",
+    "scripts/path-controller/controller/context.js~Context#getOwningOverlay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#hasoverlay",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-hasOverlay",
+    "scripts/path-controller/controller/context.js~Context#hasOverlay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#loadproperty",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-loadProperty",
+    "scripts/path-controller/controller/context.js~Context#loadProperty",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#message",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-message",
+    "scripts/path-controller/controller/context.js~Context#message",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#override",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-override",
+    "scripts/path-controller/controller/context.js~Context#override",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#popoverlay",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-popOverlay",
+    "scripts/path-controller/controller/context.js~Context#popOverlay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#progbar",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-progbar",
+    "scripts/path-controller/controller/context.js~Context#progbar",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#pushoverlay",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-pushOverlay",
+    "scripts/path-controller/controller/context.js~Context#pushOverlay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#removeoverlay",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-removeOverlay",
+    "scripts/path-controller/controller/context.js~Context#removeOverlay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#reset",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-reset",
+    "scripts/path-controller/controller/context.js~Context#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#saveproperty",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-saveProperty",
+    "scripts/path-controller/controller/context.js~Context#saveProperty",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#state",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-member-state",
+    "scripts/path-controller/controller/context.js~Context#state",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#tolocked",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-toLocked",
+    "scripts/path-controller/controller/context.js~Context#toLocked",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#validateoverlays",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-validateOverlays",
+    "scripts/path-controller/controller/context.js~Context#validateOverlays",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context#warning",
+    "class/scripts/path-controller/controller/context.js~Context.html#instance-method-warning",
+    "scripts/path-controller/controller/context.js~Context#warning",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context.inherit",
+    "class/scripts/path-controller/controller/context.js~Context.html#static-method-inherit",
+    "scripts/path-controller/controller/context.js~Context.inherit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context.register",
+    "class/scripts/path-controller/controller/context.js~Context.html#static-method-register",
+    "scripts/path-controller/controller/context.js~Context.register",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~context.super",
+    "class/scripts/path-controller/controller/context.js~Context.html#static-method-super",
+    "scripts/path-controller/controller/context.js~Context.super",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#_state",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-member-_state",
+    "scripts/path-controller/controller/context.js~ContextOverlay#_state",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#constructor",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/context.js~ContextOverlay#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#copy",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-method-copy",
+    "scripts/path-controller/controller/context.js~ContextOverlay#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#ctx",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-member-ctx",
+    "scripts/path-controller/controller/context.js~ContextOverlay#ctx",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#last_tool",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-get-last_tool",
+    "scripts/path-controller/controller/context.js~ContextOverlay#last_tool",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#onremove",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-method-onRemove",
+    "scripts/path-controller/controller/context.js~ContextOverlay#onRemove",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#state",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-get-state",
+    "scripts/path-controller/controller/context.js~ContextOverlay#state",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay#validate",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#instance-method-validate",
+    "scripts/path-controller/controller/context.js~ContextOverlay#validate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay.contextdefine",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#static-method-contextDefine",
+    "scripts/path-controller/controller/context.js~ContextOverlay.contextDefine",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~contextoverlay.resolvedef",
+    "class/scripts/path-controller/controller/context.js~ContextOverlay.html#static-method-resolveDef",
+    "scripts/path-controller/controller/context.js~ContextOverlay.resolveDef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#api",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-member-api",
+    "scripts/path-controller/controller/context.js~LockedContext#api",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#constructor",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/context.js~LockedContext#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#ctx",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-member-ctx",
+    "scripts/path-controller/controller/context.js~LockedContext#ctx",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#error",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-error",
+    "scripts/path-controller/controller/context.js~LockedContext#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#load",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-load",
+    "scripts/path-controller/controller/context.js~LockedContext#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#message",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-message",
+    "scripts/path-controller/controller/context.js~LockedContext#message",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#progbar",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-progbar",
+    "scripts/path-controller/controller/context.js~LockedContext#progbar",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#props",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-member-props",
+    "scripts/path-controller/controller/context.js~LockedContext#props",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#setcontext",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-setContext",
+    "scripts/path-controller/controller/context.js~LockedContext#setContext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#state",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-member-state",
+    "scripts/path-controller/controller/context.js~LockedContext#state",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#tolocked",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-toLocked",
+    "scripts/path-controller/controller/context.js~LockedContext#toLocked",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#toolstack",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-member-toolstack",
+    "scripts/path-controller/controller/context.js~LockedContext#toolstack",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/context.js~lockedcontext#warning",
+    "class/scripts/path-controller/controller/context.js~LockedContext.html#instance-method-warning",
+    "scripts/path-controller/controller/context.js~LockedContext#warning",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js",
+    "file/scripts/path-controller/controller/controller.js.html",
+    "scripts/path-controller/controller/controller.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#_addclass",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-_addClass",
+    "scripts/path-controller/controller/controller.js~DataAPI#_addClass",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#_striptooluiname",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-_stripToolUIName",
+    "scripts/path-controller/controller/controller.js~DataAPI#_stripToolUIName",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#constructor",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller.js~DataAPI#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#createtool",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-createTool",
+    "scripts/path-controller/controller/controller.js~DataAPI#createTool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#getstruct",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-getStruct",
+    "scripts/path-controller/controller/controller.js~DataAPI#getStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#getstructs",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-getStructs",
+    "scripts/path-controller/controller/controller.js~DataAPI#getStructs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#gettooldef",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-getToolDef",
+    "scripts/path-controller/controller/controller.js~DataAPI#getToolDef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#gettoolpathhotkey",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-getToolPathHotkey",
+    "scripts/path-controller/controller/controller.js~DataAPI#getToolPathHotkey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#gettoolpathhotkey_intern",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-getToolPathHotkey_intern",
+    "scripts/path-controller/controller/controller.js~DataAPI#getToolPathHotkey_intern",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#hasstruct",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-hasStruct",
+    "scripts/path-controller/controller/controller.js~DataAPI#hasStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#inheritstruct",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-inheritStruct",
+    "scripts/path-controller/controller/controller.js~DataAPI#inheritStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#list",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-get-list",
+    "scripts/path-controller/controller/controller.js~DataAPI#list",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#mapstruct",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-mapStruct",
+    "scripts/path-controller/controller/controller.js~DataAPI#mapStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#masssetprop",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-massSetProp",
+    "scripts/path-controller/controller/controller.js~DataAPI#massSetProp",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#mergestructs",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-mergeStructs",
+    "scripts/path-controller/controller/controller.js~DataAPI#mergeStructs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#parsetoolargs",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-parseToolArgs",
+    "scripts/path-controller/controller/controller.js~DataAPI#parseToolArgs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#parsetoolpath",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-parseToolPath",
+    "scripts/path-controller/controller/controller.js~DataAPI#parseToolPath",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#popreportcontext",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-popReportContext",
+    "scripts/path-controller/controller/controller.js~DataAPI#popReportContext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#pushreportcontext",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-pushReportContext",
+    "scripts/path-controller/controller/controller.js~DataAPI#pushReportContext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#resolvemasssetpaths",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-resolveMassSetPaths",
+    "scripts/path-controller/controller/controller.js~DataAPI#resolveMassSetPaths",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#resolvepath",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-resolvePath",
+    "scripts/path-controller/controller/controller.js~DataAPI#resolvePath",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#resolvepathold2",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-resolvePathOld2",
+    "scripts/path-controller/controller/controller.js~DataAPI#resolvePathOld2",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#resolvepath_intern",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-resolvePath_intern",
+    "scripts/path-controller/controller/controller.js~DataAPI#resolvePath_intern",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#resolvepathold",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-resolvePathold",
+    "scripts/path-controller/controller/controller.js~DataAPI#resolvePathold",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#rootcontextstruct",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-member-rootContextStruct",
+    "scripts/path-controller/controller/controller.js~DataAPI#rootContextStruct",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#setroot",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-method-setRoot",
+    "scripts/path-controller/controller/controller.js~DataAPI#setRoot",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi#structs",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#instance-member-structs",
+    "scripts/path-controller/controller/controller.js~DataAPI#structs",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi.registertool",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#static-method-registerTool",
+    "scripts/path-controller/controller/controller.js~DataAPI.registerTool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~dataapi.toolregistered",
+    "class/scripts/path-controller/controller/controller.js~DataAPI.html#static-method-toolRegistered",
+    "scripts/path-controller/controller/controller.js~DataAPI.toolRegistered",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#_check",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-_check",
+    "scripts/path-controller/controller/controller.js~DataList#_check",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#cb",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-member-cb",
+    "scripts/path-controller/controller/controller.js~DataList#cb",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#constructor",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller.js~DataList#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#copy",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-copy",
+    "scripts/path-controller/controller/controller.js~DataList#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#filter",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-filter",
+    "scripts/path-controller/controller/controller.js~DataList#filter",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#get",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-get",
+    "scripts/path-controller/controller/controller.js~DataList#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#getactive",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-getActive",
+    "scripts/path-controller/controller/controller.js~DataList#getActive",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#getiter",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-getIter",
+    "scripts/path-controller/controller/controller.js~DataList#getIter",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#getkey",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-getKey",
+    "scripts/path-controller/controller/controller.js~DataList#getKey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#getlength",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-getLength",
+    "scripts/path-controller/controller/controller.js~DataList#getLength",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#getstruct",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-getStruct",
+    "scripts/path-controller/controller/controller.js~DataList#getStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#set",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-set",
+    "scripts/path-controller/controller/controller.js~DataList#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datalist#setactive",
+    "class/scripts/path-controller/controller/controller.js~DataList.html#instance-method-setActive",
+    "scripts/path-controller/controller/controller.js~DataList#setActive",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#add",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-add",
+    "scripts/path-controller/controller/controller.js~DataStruct#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#arraylist",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-arrayList",
+    "scripts/path-controller/controller/controller.js~DataStruct#arrayList",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#bool",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-bool",
+    "scripts/path-controller/controller/controller.js~DataStruct#bool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#color3",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-color3",
+    "scripts/path-controller/controller/controller.js~DataStruct#color3",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#color4",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-color4",
+    "scripts/path-controller/controller/controller.js~DataStruct#color4",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#constructor",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller.js~DataStruct#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#copy",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-copy",
+    "scripts/path-controller/controller/controller.js~DataStruct#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#curve1d",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-curve1d",
+    "scripts/path-controller/controller/controller.js~DataStruct#curve1d",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#dynamicstruct",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-dynamicStruct",
+    "scripts/path-controller/controller/controller.js~DataStruct#dynamicStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#enum",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-enum",
+    "scripts/path-controller/controller/controller.js~DataStruct#enum",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#flag",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-member-flag",
+    "scripts/path-controller/controller/controller.js~DataStruct#flag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#flags",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-flags",
+    "scripts/path-controller/controller/controller.js~DataStruct#flags",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#float",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-float",
+    "scripts/path-controller/controller/controller.js~DataStruct#float",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#fromtoolprop",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-fromToolProp",
+    "scripts/path-controller/controller/controller.js~DataStruct#fromToolProp",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#int",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-int",
+    "scripts/path-controller/controller/controller.js~DataStruct#int",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#list",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-list",
+    "scripts/path-controller/controller/controller.js~DataStruct#list",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#members",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-member-members",
+    "scripts/path-controller/controller/controller.js~DataStruct#members",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#name",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-member-name",
+    "scripts/path-controller/controller/controller.js~DataStruct#name",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#pathmap",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-member-pathmap",
+    "scripts/path-controller/controller/controller.js~DataStruct#pathmap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#remove",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-remove",
+    "scripts/path-controller/controller/controller.js~DataStruct#remove",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#report",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-report",
+    "scripts/path-controller/controller/controller.js~DataStruct#report",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#string",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-string",
+    "scripts/path-controller/controller/controller.js~DataStruct#string",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#struct",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-struct",
+    "scripts/path-controller/controller/controller.js~DataStruct#struct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#textblock",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-textblock",
+    "scripts/path-controller/controller/controller.js~DataStruct#textblock",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#vec2",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-vec2",
+    "scripts/path-controller/controller/controller.js~DataStruct#vec2",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#vec3",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-vec3",
+    "scripts/path-controller/controller/controller.js~DataStruct#vec3",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#vec4",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-vec4",
+    "scripts/path-controller/controller/controller.js~DataStruct#vec4",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller.js~datastruct#vectorlist",
+    "class/scripts/path-controller/controller/controller.js~DataStruct.html#instance-method-vectorList",
+    "scripts/path-controller/controller/controller.js~DataStruct#vectorList",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js",
+    "file/scripts/path-controller/controller/controller_abstract.js.html",
+    "scripts/path-controller/controller/controller_abstract.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#constructor",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#createtool",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-createTool",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#createTool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#execorredo",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-execOrRedo",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#execOrRedo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#exectool",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-execTool",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#execTool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#getdescription",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-getDescription",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#getDescription",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#gettooldef",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-getToolDef",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#getToolDef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#gettoolpathhotkey",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-getToolPathHotkey",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#getToolPathHotkey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#getvalue",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-getValue",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#list",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-get-list",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#list",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#masssetprop",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-massSetProp",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#massSetProp",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#parsetoolpath",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-parseToolPath",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#parseToolPath",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#popreportcontext",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-popReportContext",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#popReportContext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#prefix",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-member-prefix",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#prefix",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#pushreportcontext",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-pushReportContext",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#pushReportContext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#resolvemasssetpaths",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-resolveMassSetPaths",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#resolveMassSetPaths",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#resolvepath",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-resolvePath",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#resolvePath",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#setvalue",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-setValue",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface#validpath",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#instance-method-validPath",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface#validPath",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface.registertool",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#static-method-registerTool",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface.registerTool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_abstract.js~modelinterface.toolregistered",
+    "class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html#static-method-toolRegistered",
+    "scripts/path-controller/controller/controller_abstract.js~ModelInterface.toolRegistered",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js",
+    "file/scripts/path-controller/controller/controller_base.js.html",
+    "scripts/path-controller/controller/controller_base.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#apiname",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-apiname",
+    "scripts/path-controller/controller/controller_base.js~DataPath#apiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#baseunit",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-baseUnit",
+    "scripts/path-controller/controller/controller_base.js~DataPath#baseUnit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#constructor",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller_base.js~DataPath#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#copy",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-copy",
+    "scripts/path-controller/controller/controller_base.js~DataPath#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#customget",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-customGet",
+    "scripts/path-controller/controller/controller_base.js~DataPath#customGet",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#customgetset",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-customGetSet",
+    "scripts/path-controller/controller/controller_base.js~DataPath#customGetSet",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#customset",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-customSet",
+    "scripts/path-controller/controller/controller_base.js~DataPath#customSet",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#data",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-data",
+    "scripts/path-controller/controller/controller_base.js~DataPath#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#decimalplaces",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-decimalPlaces",
+    "scripts/path-controller/controller/controller_base.js~DataPath#decimalPlaces",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#description",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-description",
+    "scripts/path-controller/controller/controller_base.js~DataPath#description",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#descriptions",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-descriptions",
+    "scripts/path-controller/controller/controller_base.js~DataPath#descriptions",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#displayunit",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-displayUnit",
+    "scripts/path-controller/controller/controller_base.js~DataPath#displayUnit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#editasbaseunit",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-editAsBaseUnit",
+    "scripts/path-controller/controller/controller_base.js~DataPath#editAsBaseUnit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#exprate",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-expRate",
+    "scripts/path-controller/controller/controller_base.js~DataPath#expRate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#flag",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-flag",
+    "scripts/path-controller/controller/controller_base.js~DataPath#flag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#fullsaveundo",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-fullSaveUndo",
+    "scripts/path-controller/controller/controller_base.js~DataPath#fullSaveUndo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#getset",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-getSet",
+    "scripts/path-controller/controller/controller_base.js~DataPath#getSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#icon",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-icon",
+    "scripts/path-controller/controller/controller_base.js~DataPath#icon",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#icons",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-icons",
+    "scripts/path-controller/controller/controller_base.js~DataPath#icons",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#nounits",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-noUnits",
+    "scripts/path-controller/controller/controller_base.js~DataPath#noUnits",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#off",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-off",
+    "scripts/path-controller/controller/controller_base.js~DataPath#off",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#on",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-on",
+    "scripts/path-controller/controller/controller_base.js~DataPath#on",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#path",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-path",
+    "scripts/path-controller/controller/controller_base.js~DataPath#path",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#radix",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-radix",
+    "scripts/path-controller/controller/controller_base.js~DataPath#radix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#range",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-range",
+    "scripts/path-controller/controller/controller_base.js~DataPath#range",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#readonly",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-readOnly",
+    "scripts/path-controller/controller/controller_base.js~DataPath#readOnly",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#read_only",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-read_only",
+    "scripts/path-controller/controller/controller_base.js~DataPath#read_only",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#relativestep",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-relativeStep",
+    "scripts/path-controller/controller/controller_base.js~DataPath#relativeStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#rollerslider",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-rollerSlider",
+    "scripts/path-controller/controller/controller_base.js~DataPath#rollerSlider",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#setprop",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-setProp",
+    "scripts/path-controller/controller/controller_base.js~DataPath#setProp",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#simpleslider",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-simpleSlider",
+    "scripts/path-controller/controller/controller_base.js~DataPath#simpleSlider",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#step",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-step",
+    "scripts/path-controller/controller/controller_base.js~DataPath#step",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#struct",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-struct",
+    "scripts/path-controller/controller/controller_base.js~DataPath#struct",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#type",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-type",
+    "scripts/path-controller/controller/controller_base.js~DataPath#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#uinamegetter",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-uiNameGetter",
+    "scripts/path-controller/controller/controller_base.js~DataPath#uiNameGetter",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#uinames",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-uiNames",
+    "scripts/path-controller/controller/controller_base.js~DataPath#uiNames",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#uirange",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-uiRange",
+    "scripts/path-controller/controller/controller_base.js~DataPath#uiRange",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#ui_name_get",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-member-ui_name_get",
+    "scripts/path-controller/controller/controller_base.js~DataPath#ui_name_get",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~datapath#uniformslider",
+    "class/scripts/path-controller/controller/controller_base.js~DataPath.html#instance-method-uniformSlider",
+    "scripts/path-controller/controller/controller_base.js~DataPath#uniformSlider",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#filter",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-filter",
+    "scripts/path-controller/controller/controller_base.js~ListIface#filter",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#get",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-get",
+    "scripts/path-controller/controller/controller_base.js~ListIface#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#getactive",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-getActive",
+    "scripts/path-controller/controller/controller_base.js~ListIface#getActive",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#getiter",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-getIter",
+    "scripts/path-controller/controller/controller_base.js~ListIface#getIter",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#getkey",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-getKey",
+    "scripts/path-controller/controller/controller_base.js~ListIface#getKey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#getstruct",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-getStruct",
+    "scripts/path-controller/controller/controller_base.js~ListIface#getStruct",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#set",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-set",
+    "scripts/path-controller/controller/controller_base.js~ListIface#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~listiface#setactive",
+    "class/scripts/path-controller/controller/controller_base.js~ListIface.html#instance-method-setActive",
+    "scripts/path-controller/controller/controller_base.js~ListIface#setActive",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~toolopiface#constructor",
+    "class/scripts/path-controller/controller/controller_base.js~ToolOpIface.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller_base.js~ToolOpIface#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_base.js~toolopiface.tooldef",
+    "class/scripts/path-controller/controller/controller_base.js~ToolOpIface.html#static-method-tooldef",
+    "scripts/path-controller/controller/controller_base.js~ToolOpIface.tooldef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js",
+    "file/scripts/path-controller/controller/controller_ops.js.html",
+    "scripts/path-controller/controller/controller_ops.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#__ctx",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-member-__ctx",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#__ctx",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#_undo",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-member-_undo",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#_undo",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#constructor",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-constructor-constructor",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#exec",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-exec",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#exec",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#hash",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-hash",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#hash",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#hashthis",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-hashThis",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#hashThis",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#modalstart",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-modalStart",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#modalStart",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#proptype",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-member-propType",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#propType",
+    "member"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#setvalue",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-setValue",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#undo",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-undo",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#undo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop#undopre",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#instance-method-undoPre",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp#undoPre",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop.create",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#static-method-create",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp.create",
+    "method"
+  ],
+  [
+    "scripts/path-controller/controller/controller_ops.js~datapathsetop.tooldef",
+    "class/scripts/path-controller/controller/controller_ops.js~DataPathSetOp.html#static-method-tooldef",
+    "scripts/path-controller/controller/controller_ops.js~DataPathSetOp.tooldef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js",
+    "file/scripts/path-controller/curve/curve1d.js.html",
+    "scripts/path-controller/curve/curve1d.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#version",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-member-VERSION",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#VERSION",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#_fastmode",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-member-_fastmode",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#_fastmode",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#_on_change",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-_on_change",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#_on_change",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#calchashkey",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-calcHashKey",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#calcHashKey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#constructor",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#copy",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-copy",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#derivative",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-derivative",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#derivative",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#derivative2",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-derivative2",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#derivative2",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#destroy",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-destroy",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#destroy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#draw",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-draw",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#draw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#equals",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-equals",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#evaluate",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#fastmode",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-get-fastmode",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#fastmode",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#fastmode",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-set-fastmode",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#fastmode",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#generatortype",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-get-generatorType",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#generatorType",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#generators",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-member-generators",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#generators",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#getgenerator",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-getGenerator",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#getGenerator",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#integrate",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-integrate",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#integrate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#inverse",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-inverse",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#inverse",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#load",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-load",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#loadjson",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-loadJSON",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#loadstruct",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#redraw",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-redraw",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#redraw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#reset",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-reset",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#setgenerator",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-setGenerator",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#setGenerator",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#switchgenerator",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-switchGenerator",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#switchGenerator",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#tojson",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-toJSON",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#uizoom",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-member-uiZoom",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#uiZoom",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d.js~curve1d#update",
+    "class/scripts/path-controller/curve/curve1d.js~Curve1D.html#instance-method-update",
+    "scripts/path-controller/curve/curve1d.js~Curve1D#update",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js",
+    "file/scripts/path-controller/curve/curve1d_anim.js.html",
+    "scripts/path-controller/curve/curve1d_anim.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~bouncecurve#_evaluate",
+    "class/scripts/path-controller/curve/curve1d_anim.js~BounceCurve.html#instance-method-_evaluate",
+    "scripts/path-controller/curve/curve1d_anim.js~BounceCurve#_evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~bouncecurve#evaluate",
+    "class/scripts/path-controller/curve/curve1d_anim.js~BounceCurve.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d_anim.js~BounceCurve#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~bouncecurve.define",
+    "class/scripts/path-controller/curve/curve1d_anim.js~BounceCurve.html#static-method-define",
+    "scripts/path-controller/curve/curve1d_anim.js~BounceCurve.define",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~easecurve#constructor",
+    "class/scripts/path-controller/curve/curve1d_anim.js~EaseCurve.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_anim.js~EaseCurve#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~easecurve#evaluate",
+    "class/scripts/path-controller/curve/curve1d_anim.js~EaseCurve.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d_anim.js~EaseCurve#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~easecurve.define",
+    "class/scripts/path-controller/curve/curve1d_anim.js~EaseCurve.html#static-method-define",
+    "scripts/path-controller/curve/curve1d_anim.js~EaseCurve.define",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~elasticcurve#_func",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.html#instance-member-_func",
+    "scripts/path-controller/curve/curve1d_anim.js~ElasticCurve#_func",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~elasticcurve#_last_hash",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.html#instance-member-_last_hash",
+    "scripts/path-controller/curve/curve1d_anim.js~ElasticCurve#_last_hash",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~elasticcurve#constructor",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_anim.js~ElasticCurve#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~elasticcurve#evaluate",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d_anim.js~ElasticCurve#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~elasticcurve.define",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.html#static-method-define",
+    "scripts/path-controller/curve/curve1d_anim.js~ElasticCurve.define",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~paramkey#constructor",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ParamKey.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_anim.js~ParamKey#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~paramkey#key",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ParamKey.html#instance-member-key",
+    "scripts/path-controller/curve/curve1d_anim.js~ParamKey#key",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~paramkey#val",
+    "class/scripts/path-controller/curve/curve1d_anim.js~ParamKey.html#instance-member-val",
+    "scripts/path-controller/curve/curve1d_anim.js~ParamKey#val",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve#_seed",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#instance-member-_seed",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve#_seed",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve#constructor",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve#evaluate",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve#random",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#instance-member-random",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve#random",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve#seed",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#instance-set-seed",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve#seed",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve#seed",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#instance-get-seed",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve#seed",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~randcurve.define",
+    "class/scripts/path-controller/curve/curve1d_anim.js~RandCurve.html#static-method-define",
+    "scripts/path-controller/curve/curve1d_anim.js~RandCurve.define",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#_saveparams",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-_saveParams",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#_saveParams",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#calchashkey",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-calcHashKey",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#calcHashKey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#constructor",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#draw",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-draw",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#draw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#equals",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-equals",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#evaluate",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#hasgui",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-get-hasGUI",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#hasGUI",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#killgui",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-killGUI",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#killGUI",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#loadjson",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-loadJSON",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#loadstruct",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#makegui",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-makeGUI",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#makeGUI",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#params",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-member-params",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#params",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#redraw",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-redraw",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#redraw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#reset",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-reset",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#tojson",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-toJSON",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#type",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-member-type",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_anim.js~simplecurvebase#update",
+    "class/scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase.html#instance-method-update",
+    "scripts/path-controller/curve/curve1d_anim.js~SimpleCurveBase#update",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js",
+    "file/scripts/path-controller/curve/curve1d_base.js.html",
+    "scripts/path-controller/curve/curve1d_base.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#calchashkey",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-calcHashKey",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#calcHashKey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#constructor",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#derivative",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-derivative",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#derivative",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#derivative2",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-derivative2",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#derivative2",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#destroy",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-destroy",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#destroy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#draw",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-draw",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#draw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#equals",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-equals",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#evaluate",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-evaluate",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#hasgui",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-get-hasGUI",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#hasGUI",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#integrate",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-integrate",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#integrate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#inverse",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-inverse",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#inverse",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#killgui",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-killGUI",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#killGUI",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#loadjson",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-loadJSON",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#loadstruct",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#makegui",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-makeGUI",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#makeGUI",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#onactive",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-onActive",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#onActive",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#oninactive",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-onInactive",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#onInactive",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#redraw",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-redraw",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#redraw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#reset",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-reset",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#tojson",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-toJSON",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#type",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-member-type",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata#update",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#instance-method-update",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData#update",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata.define",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#static-method-define",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData.define",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_base.js~curvetypedata.register",
+    "class/scripts/path-controller/curve/curve1d_base.js~CurveTypeData.html#static-method-register",
+    "scripts/path-controller/curve/curve1d_base.js~CurveTypeData.register",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_basic.js",
+    "file/scripts/path-controller/curve/curve1d_basic.js.html",
+    "scripts/path-controller/curve/curve1d_basic.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js",
+    "file/scripts/path-controller/curve/curve1d_bspline.js.html",
+    "scripts/path-controller/curve/curve1d_bspline.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#constructor",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-constructor-constructor",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#copy",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-copy",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#eid",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-eid",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#eid",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#flag",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-flag",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#flag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#loadstruct",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#rco",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-rco",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#rco",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#sco",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-sco",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#sco",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#startco",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-startco",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#startco",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#tangent",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-member-tangent",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#tangent",
+    "member"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint#tojson",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#instance-method-toJSON",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_bspline.js~curve1dpoint.fromjson",
+    "class/scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.html#static-method-fromJSON",
+    "scripts/path-controller/curve/curve1d_bspline.js~Curve1DPoint.fromJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/curve/curve1d_utils.js",
+    "file/scripts/path-controller/curve/curve1d_utils.js.html",
+    "scripts/path-controller/curve/curve1d_utils.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/curve/ease.js",
+    "file/scripts/path-controller/curve/ease.js.html",
+    "scripts/path-controller/curve/ease.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolpath.js",
+    "file/scripts/path-controller/toolsys/toolpath.js.html",
+    "scripts/path-controller/toolsys/toolpath.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js",
+    "file/scripts/path-controller/toolsys/toolprop.js.html",
+    "scripts/path-controller/toolsys/toolprop.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#loadjson",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-method-loadJSON",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~boolproperty#tojson",
+    "class/scripts/path-controller/toolsys/toolprop.js~BoolProperty.html#instance-method-toJSON",
+    "scripts/path-controller/toolsys/toolprop.js~BoolProperty#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#evaluate",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-method-evaluate",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~curve1dproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~Curve1DProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~Curve1DProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumkeypair#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~EnumKeyPair#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumkeypair#key",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html#instance-member-key",
+    "scripts/path-controller/toolsys/toolprop.js~EnumKeyPair#key",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumkeypair#key_is_int",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html#instance-member-key_is_int",
+    "scripts/path-controller/toolsys/toolprop.js~EnumKeyPair#key_is_int",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumkeypair#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~EnumKeyPair#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumkeypair#val",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html#instance-member-val",
+    "scripts/path-controller/toolsys/toolprop.js~EnumKeyPair#val",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumkeypair#val_is_int",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumKeyPair.html#instance-member-val_is_int",
+    "scripts/path-controller/toolsys/toolprop.js~EnumKeyPair#val_is_int",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#_is_data_int",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-_is_data_int",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#_is_data_int",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#_loadmap",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-_loadMap",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#_loadMap",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#_savemap",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-_saveMap",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#_saveMap",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#adddescriptions",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-addDescriptions",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#addDescriptions",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#addicons",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-addIcons",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#addIcons",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#adduinames",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-addUINames",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#addUINames",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#copy",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-copy",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#descriptions",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-descriptions",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#descriptions",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#iconmap",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-iconmap",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#iconmap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#keys",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-keys",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#keys",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#ui_value_names",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-ui_value_names",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#ui_value_names",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#values",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-values",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#values",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~enumproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~EnumProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~EnumProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~flagproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~FlagProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~FlagProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~flagproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~FlagProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~FlagProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~flagproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~FlagProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~FlagProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~flagproperty#type",
+    "class/scripts/path-controller/toolsys/toolprop.js~FlagProperty.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop.js~FlagProperty#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~flagproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~FlagProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~FlagProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#[symbol.iterator]",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#clear",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-method-clear",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#clear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#push",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-method-push",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatarrayproperty#value",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty.html#instance-member-value",
+    "scripts/path-controller/toolsys/toolprop.js~FloatArrayProperty#value",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#decimalplaces",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-member-decimalPlaces",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#decimalPlaces",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#loadjson",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-method-loadJSON",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#setdecimalplaces",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-method-setDecimalPlaces",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#setDecimalPlaces",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~floatproperty#tojson",
+    "class/scripts/path-controller/toolsys/toolprop.js~FloatProperty.html#instance-method-toJSON",
+    "scripts/path-controller/toolsys/toolprop.js~FloatProperty#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#loadjson",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-method-loadJSON",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#radix",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-member-radix",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#radix",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#setradix",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-method-setRadix",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#setRadix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~intproperty#tojson",
+    "class/scripts/path-controller/toolsys/toolprop.js~IntProperty.html#instance-method-toJSON",
+    "scripts/path-controller/toolsys/toolprop.js~IntProperty#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#[symbol.iterator]",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#clear",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-clear",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#clear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#copy",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-copy",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#getlistitem",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-getListItem",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#getListItem",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#length",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-get-length",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#length",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-set-length",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#prop",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-member-prop",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#prop",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#push",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-push",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#setlistitem",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-setListItem",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#setListItem",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#uiname",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-member-uiname",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#uiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#value",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-member-value",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#value",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~listproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~ListProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~ListProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~mat4property#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Mat4Property.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~Mat4Property#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~numproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~NumProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~NumProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~numproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~NumProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~NumProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~numproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~NumProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~NumProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~numproperty#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~NumProperty.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~NumProperty#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~numproperty#range",
+    "class/scripts/path-controller/toolsys/toolprop.js~NumProperty.html#instance-member-range",
+    "scripts/path-controller/toolsys/toolprop.js~NumProperty#range",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~quatproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~QuatProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~quatproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~QuatProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~quatproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~QuatProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~quatproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~QuatProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~quatproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~QuatProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~quatproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~QuatProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~QuatProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~reportproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~ReportProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~ReportProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~reportproperty#type",
+    "class/scripts/path-controller/toolsys/toolprop.js~ReportProperty.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop.js~ReportProperty#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#multiline",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-member-multiLine",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#multiLine",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~StringProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#adddescriptions",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-addDescriptions",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#addDescriptions",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#addicons",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-addIcons",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#addIcons",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#adduinames",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-addUINames",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#addUINames",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#descriptions",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-member-descriptions",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#descriptions",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#iconmap",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-member-iconmap",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#iconmap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#ui_value_names",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-member-ui_value_names",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#ui_value_names",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#value",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-member-value",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#value",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#values",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-member-values",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#values",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~stringsetproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~StringSetProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~StringSetProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#_fire",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-_fire",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#_fire",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#apiname",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-apiname",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#apiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#baseunit",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-baseUnit",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#baseUnit",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#callbacks",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-callbacks",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#callbacks",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#cleareventcallbacks",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-clearEventCallbacks",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#clearEventCallbacks",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#copy",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-copy",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#decimalplaces",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-decimalPlaces",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#decimalPlaces",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#description",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-description",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#description",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#displayunit",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-displayUnit",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#displayUnit",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#flag",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-flag",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#flag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#getstep",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-getStep",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#getStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#icon",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-icon",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#icon",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#loadjson",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-loadJSON",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#loadstruct",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#nounits",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-noUnits",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#noUnits",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#off",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-off",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#off",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#on",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-on",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#on",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#private",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-private",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#private",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#radix",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-radix",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#radix",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#range",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-range",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#range",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#report",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-report",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#report",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#savelastvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-saveLastValue",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#saveLastValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setbaseunit",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setBaseUnit",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setBaseUnit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setdescription",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setDescription",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setDescription",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setdisplayunit",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setDisplayUnit",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setDisplayUnit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setflag",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setFlag",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setFlag",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#seticon",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setIcon",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setIcon",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setrange",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setRange",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setRange",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setrelativestep",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setRelativeStep",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setRelativeStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setstep",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setStep",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setuiname",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setUIName",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setUIName",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setuirange",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setUIRange",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setUIRange",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#step",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-step",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#step",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#stepisrelative",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-stepIsRelative",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#stepIsRelative",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#subtype",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-subtype",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#subtype",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#tojson",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-method-toJSON",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#type",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#uirange",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-uiRange",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#uiRange",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#uiname",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-uiname",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#uiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty.calcrelativestep",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#static-method-calcRelativeStep",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty.calcRelativeStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty.makeuiname",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#static-method-makeUIName",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty.makeUIName",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~toolproperty.register",
+    "class/scripts/path-controller/toolsys/toolprop.js~ToolProperty.html#static-method-register",
+    "scripts/path-controller/toolsys/toolprop.js~ToolProperty.register",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec2property#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~Vec2Property#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec2property#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~Vec2Property#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec2property#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~Vec2Property#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec2property#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~Vec2Property#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec2property#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~Vec2Property#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec2property#type",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec2Property.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop.js~Vec2Property#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec3property#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~Vec3Property#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec3property#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~Vec3Property#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec3property#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~Vec3Property#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec3property#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~Vec3Property#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec3property#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~Vec3Property#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec3property#type",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec3Property.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop.js~Vec3Property#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec4property#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~Vec4Property#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec4property#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~Vec4Property#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec4property#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~Vec4Property#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec4property#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop.js~Vec4Property#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec4property#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~Vec4Property#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vec4property#type",
+    "class/scripts/path-controller/toolsys/toolprop.js~Vec4Property.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop.js~Vec4Property#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vecpropertybase#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~VecPropertyBase#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vecpropertybase#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~VecPropertyBase#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vecpropertybase#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~VecPropertyBase#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vecpropertybase#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~VecPropertyBase#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vecpropertybase#hasuniformslider",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html#instance-member-hasUniformSlider",
+    "scripts/path-controller/toolsys/toolprop.js~VecPropertyBase#hasUniformSlider",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~vecpropertybase#uniformslider",
+    "class/scripts/path-controller/toolsys/toolprop.js~VecPropertyBase.html#instance-method-uniformSlider",
+    "scripts/path-controller/toolsys/toolprop.js~VecPropertyBase#uniformSlider",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#[key]",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-[key]",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#[key]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#constructor",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#copyto",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#data",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#equals",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#exprate",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-expRate",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#expRate",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#loadjson",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-loadJSON",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#loadjson",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-loadJSON",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#range",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-range",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#range",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#setexprate",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-setExpRate",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#setExpRate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#step",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-step",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#step",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#tojson",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-toJSON",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#uirange",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-uiRange",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#uiRange",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#ui_range",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-get-ui_range",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#ui_range",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#ui_range",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-set-ui_range",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#ui_range",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop.js~_numberpropertybase#wasset",
+    "class/scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-wasSet",
+    "scripts/path-controller/toolsys/toolprop.js~_NumberPropertyBase#wasSet",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js",
+    "file/scripts/path-controller/toolsys/toolprop_abstract.js.html",
+    "scripts/path-controller/toolsys/toolprop_abstract.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~curve1dpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~curve1dpropertyif#copyto",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~curve1dpropertyif#data",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~curve1dpropertyif#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~curve1dpropertyif#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Curve1DPropertyIF#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif#addicons",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-method-addIcons",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF#addIcons",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif#iconmap",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-iconmap",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF#iconmap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif#keys",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-keys",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF#keys",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif#ui_value_names",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-ui_value_names",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF#ui_value_names",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~enumpropertyif#values",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-values",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~EnumPropertyIF#values",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~flagpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~FlagPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~FlagPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~floatpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~FloatPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~FloatPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~floatpropertyif#setdecimalplaces",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~FloatPropertyIF.html#instance-method-setDecimalPlaces",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~FloatPropertyIF#setDecimalPlaces",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~intpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~IntPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~IntPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~intpropertyif#setradix",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~IntPropertyIF.html#instance-method-setRadix",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~IntPropertyIF#setRadix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#[symbol.iterator]",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#clear",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-clear",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#clear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#copy",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-copy",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#copyto",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#length",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-get-length",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#length",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-set-length",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#prop",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-member-prop",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#prop",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~listpropertyif#push",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-push",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ListPropertyIF#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#adddescriptions",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-addDescriptions",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#addDescriptions",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#addicons",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-addIcons",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#addIcons",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#adduinames",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-addUINames",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#addUINames",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#copy",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-copy",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#copyto",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~stringsetpropertyif#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~StringSetPropertyIF#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#_fire",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-_fire",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#_fire",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#apiname",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-apiname",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#apiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#copy",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-copy",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#copyto",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-copyTo",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#copyTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#data",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-data",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#description",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-description",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#description",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#equals",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-equals",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#flag",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-flag",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#flag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#getvalue",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-getValue",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#getValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#icon",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-icon",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#icon",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#off",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-off",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#off",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#on",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-on",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#on",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#seticon",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setIcon",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#setIcon",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#setrange",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setRange",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#setRange",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#setstep",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setStep",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#setStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#setuirange",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setUIRange",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#setUIRange",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#setunit",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setUnit",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#setUnit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#setvalue",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setValue",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#subtype",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-subtype",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#subtype",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#type",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-type",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~toolpropertyif#uiname",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-uiname",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~ToolPropertyIF#uiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~vec2propertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Vec2PropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Vec2PropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~vec3propertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Vec3PropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Vec3PropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolprop_abstract.js~vec4propertyif#constructor",
+    "class/scripts/path-controller/toolsys/toolprop_abstract.js~Vec4PropertyIF.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolprop_abstract.js~Vec4PropertyIF#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js",
+    "file/scripts/path-controller/toolsys/toolsys.js.html",
+    "scripts/path-controller/toolsys/toolsys.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#constructor",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#dest",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-member-dest",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#dest",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#destpropkey",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-member-destPropKey",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#destPropKey",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#destprops",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-member-destProps",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#destProps",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#source",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-member-source",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#source",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#sourcepropkey",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-member-sourcePropKey",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#sourcePropKey",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~macrolink#sourceprops",
+    "class/scripts/path-controller/toolsys/toolsys.js~MacroLink.html#instance-member-sourceProps",
+    "scripts/path-controller/toolsys/toolsys.js~MacroLink#sourceProps",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#_accept",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-_accept",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#_accept",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#_do_connections",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-_do_connections",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#_do_connections",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#_gettypeclass",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-_getTypeClass",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#_getTypeClass",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#_promise",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-_promise",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#_promise",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#_reject",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-_reject",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#_reject",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#add",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-add",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#calcundomem",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-calcUndoMem",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#calcUndoMem",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#connect",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-connect",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#connect",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#connectcb",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-connectCB",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#connectCB",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#connectlinks",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-connectLinks",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#connectLinks",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#connects",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-connects",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#connects",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#constructor",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#curtool",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-curtool",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#curtool",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#exec",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-exec",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#exec",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#getdefault",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-getDefault",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#getDefault",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#hasdefault",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-hasDefault",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#hasDefault",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#has_modal",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-has_modal",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#has_modal",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#is_modal",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-is_modal",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#is_modal",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#loaddefaults",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-loadDefaults",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#loadDefaults",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#modalstart",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-modalStart",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#modalStart",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#savedefaultinputs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-saveDefaultInputs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#saveDefaultInputs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#tools",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-member-tools",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#tools",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#undo",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-undo",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#undo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro#undopre",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#instance-method-undoPre",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro#undoPre",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro.canrun",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#static-method-canRun",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro.canRun",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolmacro.tooldef",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolMacro.html#static-method-tooldef",
+    "scripts/path-controller/toolsys/toolsys.js~ToolMacro.tooldef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#[k]",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-[k]",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#[k]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#__memsize",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-__memsize",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#__memsize",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#_accept",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-_accept",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#_accept",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#_overdraw",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-_overdraw",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#_overdraw",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#_promise",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-_promise",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#_promise",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#_reject",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-_reject",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#_reject",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#_save_inputs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-_save_inputs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#_save_inputs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#_save_outputs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-_save_outputs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#_save_outputs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#calcundomem",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-calcUndoMem",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#calcUndoMem",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#constructor",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#drawlines",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-drawlines",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#drawlines",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#error",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-error",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#exec",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-exec",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#exec",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#execpost",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-execPost",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#execPost",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#execpre",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-execPre",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#execPre",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#exec_pre",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-exec_pre",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#exec_pre",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#flag",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-flag",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#flag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#gentoolstring",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-genToolString",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#genToolString",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#getdefault",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-getDefault",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#getDefault",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#getoverdraw",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-getOverdraw",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#getOverdraw",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#hasdefault",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-hasDefault",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#hasDefault",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#inputs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-inputs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#inputs",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#is_modal",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-is_modal",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#is_modal",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#loaddefaults",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-loadDefaults",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#loadDefaults",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#loadstruct",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#maketempline",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-makeTempLine",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#makeTempLine",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#modalend",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-modalEnd",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#modalEnd",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#modalrunning",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-modalRunning",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#modalRunning",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#modalstart",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-modalStart",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#modalStart",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#modal_ctx",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-modal_ctx",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#modal_ctx",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#on_keydown",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-on_keydown",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#on_keydown",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#on_tick",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-on_tick",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#on_tick",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#outputs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-outputs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#outputs",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#popmodal",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-popModal",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#popModal",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#pushmodal",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-pushModal",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#pushModal",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#resettempgeom",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-resetTempGeom",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#resetTempGeom",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#savedefaultinputs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-saveDefaultInputs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#saveDefaultInputs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#toolcancel",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-toolCancel",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#toolCancel",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#undo",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-undo",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#undo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#undopre",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-method-undoPre",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#undoPre",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop#undoflag",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#instance-member-undoflag",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp#undoflag",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.equals",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-Equals",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.Equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop._getfinaltooldef",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-_getFinalToolDef",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp._getFinalToolDef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop._regwithnstructjs",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-_regWithNstructjs",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp._regWithNstructjs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.canrun",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-canRun",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.canRun",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.inherit",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-inherit",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.inherit",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.invoke",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-invoke",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.invoke",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.isregistered",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-isRegistered",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.isRegistered",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.ontick",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-onTick",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.onTick",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.register",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-register",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.register",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.searchboxok",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-searchBoxOk",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.searchBoxOk",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.tooldef",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-tooldef",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.tooldef",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolop.unregister",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html#static-method-unregister",
+    "scripts/path-controller/toolsys/toolsys.js~ToolOp.unregister",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#_buildaccessors",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-method-_buildAccessors",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#_buildAccessors",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#_getaccessor",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-method-_getAccessor",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#_getAccessor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#accessors",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-member-accessors",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#accessors",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#api",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-member-api",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#api",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#constructor",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#dstruct",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-member-dstruct",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#dstruct",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#get",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-method-get",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#has",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-method-has",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#has",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#map",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-member-map",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#map",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#pathmap",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-member-pathmap",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#pathmap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#set",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-method-set",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#usedefault",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-method-useDefault",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#useDefault",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache#usersetmap",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#instance-member-userSetMap",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache#userSetMap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolpropertycache.getpropkey",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.html#static-method-getPropKey",
+    "scripts/path-controller/toolsys/toolsys.js~ToolPropertyCache.getPropKey",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#[.cur]",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-[.cur]",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#[.cur]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#[i]",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-[i]",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#[i]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#_save",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-_save",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#_save",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#_undo_branch",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-_undo_branch",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#_undo_branch",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#calcmemsize",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-calcMemSize",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#calcMemSize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#constructor",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-constructor-constructor",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#ctx",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-ctx",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#ctx",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#cur",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-cur",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#enforcememlimit",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-enforceMemLimit",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#enforceMemLimit",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#execorredo",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-execOrRedo",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#execOrRedo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#exectool",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-execTool",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#execTool",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#head",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-get-head",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#head",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#length",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-length",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#limitmemory",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-limitMemory",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#limitMemory",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#loadstruct",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#memlimit",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-memLimit",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#memLimit",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#modalrunning",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-modalRunning",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#modalRunning",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#modal_running",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-modal_running",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#modal_running",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#redo",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-redo",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#redo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#replay",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-replay",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#replay",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#rerun",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-rerun",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#rerun",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#reset",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-reset",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#rewind",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-rewind",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#rewind",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#save",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-save",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#save",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#setrestrictedtoolcontext",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-setRestrictedToolContext",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#setRestrictedToolContext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#toolcancel",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-toolCancel",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#toolCancel",
+    "method"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#toolctx",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-member-toolctx",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#toolctx",
+    "member"
+  ],
+  [
+    "scripts/path-controller/toolsys/toolsys.js~toolstack#undo",
+    "class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html#instance-method-undo",
+    "scripts/path-controller/toolsys/toolsys.js~ToolStack#undo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/colorutils.js",
+    "file/scripts/path-controller/util/colorutils.js.html",
+    "scripts/path-controller/util/colorutils.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/cssutils.js",
+    "file/scripts/path-controller/util/cssutils.js.html",
+    "scripts/path-controller/util/cssutils.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/events.js",
+    "file/scripts/path-controller/util/events.js.html",
+    "scripts/path-controller/util/events.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventdispatcher#_cbs",
+    "class/scripts/path-controller/util/events.js~EventDispatcher.html#instance-member-_cbs",
+    "scripts/path-controller/util/events.js~EventDispatcher#_cbs",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventdispatcher#_fireevent",
+    "class/scripts/path-controller/util/events.js~EventDispatcher.html#instance-method-_fireEvent",
+    "scripts/path-controller/util/events.js~EventDispatcher#_fireEvent",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventdispatcher#constructor",
+    "class/scripts/path-controller/util/events.js~EventDispatcher.html#instance-constructor-constructor",
+    "scripts/path-controller/util/events.js~EventDispatcher#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventdispatcher#off",
+    "class/scripts/path-controller/util/events.js~EventDispatcher.html#instance-method-off",
+    "scripts/path-controller/util/events.js~EventDispatcher#off",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventdispatcher#on",
+    "class/scripts/path-controller/util/events.js~EventDispatcher.html#instance-method-on",
+    "scripts/path-controller/util/events.js~EventDispatcher#on",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventhandler#_modalstate",
+    "class/scripts/path-controller/util/events.js~EventHandler.html#instance-member-_modalstate",
+    "scripts/path-controller/util/events.js~EventHandler#_modalstate",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventhandler#popmodal",
+    "class/scripts/path-controller/util/events.js~EventHandler.html#instance-method-popModal",
+    "scripts/path-controller/util/events.js~EventHandler#popModal",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/events.js~eventhandler#pushmodal",
+    "class/scripts/path-controller/util/events.js~EventHandler.html#instance-method-pushModal",
+    "scripts/path-controller/util/events.js~EventHandler#pushModal",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js",
+    "file/scripts/path-controller/util/expr.js.html",
+    "scripts/path-controller/util/expr.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#[.indexof(n)]",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-member-[.indexOf(n)]",
+    "scripts/path-controller/util/expr.js~Node#[.indexOf(n)]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#[i]",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-member-[i]",
+    "scripts/path-controller/util/expr.js~Node#[i]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#[starti]",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-member-[starti]",
+    "scripts/path-controller/util/expr.js~Node#[starti]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#constructor",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-constructor-constructor",
+    "scripts/path-controller/util/expr.js~Node#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#insert",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-method-insert",
+    "scripts/path-controller/util/expr.js~Node#insert",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#parent",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-member-parent",
+    "scripts/path-controller/util/expr.js~Node#parent",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#push",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-method-push",
+    "scripts/path-controller/util/expr.js~Node#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#remove",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-method-remove",
+    "scripts/path-controller/util/expr.js~Node#remove",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#replace",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-method-replace",
+    "scripts/path-controller/util/expr.js~Node#replace",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#tostring",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-method-toString",
+    "scripts/path-controller/util/expr.js~Node#toString",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/expr.js~node#type",
+    "class/scripts/path-controller/util/expr.js~Node.html#instance-member-type",
+    "scripts/path-controller/util/expr.js~Node#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js",
+    "file/scripts/path-controller/util/graphpack.js.html",
+    "scripts/path-controller/util/graphpack.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#[symbol.keystr]",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-method-[Symbol.keystr]",
+    "scripts/path-controller/util/graphpack.js~PackNode#[Symbol.keystr]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#_id",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-member-_id",
+    "scripts/path-controller/util/graphpack.js~PackNode#_id",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#constructor",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-constructor-constructor",
+    "scripts/path-controller/util/graphpack.js~PackNode#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#oldpos",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-member-oldpos",
+    "scripts/path-controller/util/graphpack.js~PackNode#oldpos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#pos",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-member-pos",
+    "scripts/path-controller/util/graphpack.js~PackNode#pos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#size",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-member-size",
+    "scripts/path-controller/util/graphpack.js~PackNode#size",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#vel",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-member-vel",
+    "scripts/path-controller/util/graphpack.js~PackNode#vel",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnode#verts",
+    "class/scripts/path-controller/util/graphpack.js~PackNode.html#instance-member-verts",
+    "scripts/path-controller/util/graphpack.js~PackNode#verts",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#[symbol.keystr]",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-method-[Symbol.keystr]",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#[Symbol.keystr]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#_abspos",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-member-_absPos",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#_absPos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#_id",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-member-_id",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#_id",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#abspos",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-get-absPos",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#absPos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#constructor",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-constructor-constructor",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#edges",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-member-edges",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#edges",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/graphpack.js~packnodevertex#node",
+    "class/scripts/path-controller/util/graphpack.js~PackNodeVertex.html#instance-member-node",
+    "scripts/path-controller/util/graphpack.js~PackNodeVertex#node",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/html5_fileapi.js",
+    "file/scripts/path-controller/util/html5_fileapi.js.html",
+    "scripts/path-controller/util/html5_fileapi.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/image.js",
+    "file/scripts/path-controller/util/image.js.html",
+    "scripts/path-controller/util/image.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/jobs.js",
+    "file/scripts/path-controller/util/jobs.js.html",
+    "scripts/path-controller/util/jobs.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/kdtree.js",
+    "file/scripts/path-controller/util/kdtree.js.html",
+    "scripts/path-controller/util/kdtree.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/math.js",
+    "file/scripts/path-controller/util/math.js.html",
+    "scripts/path-controller/util/math.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/math.js~abstractcurve#curvature",
+    "class/scripts/path-controller/util/math.js~AbstractCurve.html#instance-method-curvature",
+    "scripts/path-controller/util/math.js~AbstractCurve#curvature",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~abstractcurve#derivative",
+    "class/scripts/path-controller/util/math.js~AbstractCurve.html#instance-method-derivative",
+    "scripts/path-controller/util/math.js~AbstractCurve#derivative",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~abstractcurve#evaluate",
+    "class/scripts/path-controller/util/math.js~AbstractCurve.html#instance-method-evaluate",
+    "scripts/path-controller/util/math.js~AbstractCurve#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~abstractcurve#normal",
+    "class/scripts/path-controller/util/math.js~AbstractCurve.html#instance-method-normal",
+    "scripts/path-controller/util/math.js~AbstractCurve#normal",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~abstractcurve#width",
+    "class/scripts/path-controller/util/math.js~AbstractCurve.html#instance-method-width",
+    "scripts/path-controller/util/math.js~AbstractCurve#width",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~closestcurverets#constructor",
+    "class/scripts/path-controller/util/math.js~ClosestCurveRets.html#instance-constructor-constructor",
+    "scripts/path-controller/util/math.js~ClosestCurveRets#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~closestcurverets#p",
+    "class/scripts/path-controller/util/math.js~ClosestCurveRets.html#instance-member-p",
+    "scripts/path-controller/util/math.js~ClosestCurveRets#p",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~closestcurverets#t",
+    "class/scripts/path-controller/util/math.js~ClosestCurveRets.html#instance-member-t",
+    "scripts/path-controller/util/math.js~ClosestCurveRets#t",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#constructor",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-constructor-constructor",
+    "scripts/path-controller/util/math.js~Mat4Stack#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#identity",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-identity",
+    "scripts/path-controller/util/math.js~Mat4Stack#identity",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#load",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-load",
+    "scripts/path-controller/util/math.js~Mat4Stack#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#matrix",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-member-matrix",
+    "scripts/path-controller/util/math.js~Mat4Stack#matrix",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#multiply",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-multiply",
+    "scripts/path-controller/util/math.js~Mat4Stack#multiply",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#pop",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-pop",
+    "scripts/path-controller/util/math.js~Mat4Stack#pop",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#push",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-push",
+    "scripts/path-controller/util/math.js~Mat4Stack#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#reset",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-reset",
+    "scripts/path-controller/util/math.js~Mat4Stack#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#set_internal_matrix",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-method-set_internal_matrix",
+    "scripts/path-controller/util/math.js~Mat4Stack#set_internal_matrix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#stack",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-member-stack",
+    "scripts/path-controller/util/math.js~Mat4Stack#stack",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~mat4stack#update_func",
+    "class/scripts/path-controller/util/math.js~Mat4Stack.html#instance-member-update_func",
+    "scripts/path-controller/util/math.js~Mat4Stack#update_func",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#_max",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-_max",
+    "scripts/path-controller/util/math.js~MinMax#_max",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#_min",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-_min",
+    "scripts/path-controller/util/math.js~MinMax#_min",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#_static_mr_co",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-_static_mr_co",
+    "scripts/path-controller/util/math.js~MinMax#_static_mr_co",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#_static_mr_cs",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-_static_mr_cs",
+    "scripts/path-controller/util/math.js~MinMax#_static_mr_cs",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#constructor",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-constructor-constructor",
+    "scripts/path-controller/util/math.js~MinMax#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#load",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-method-load",
+    "scripts/path-controller/util/math.js~MinMax#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#max",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-max",
+    "scripts/path-controller/util/math.js~MinMax#max",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#min",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-min",
+    "scripts/path-controller/util/math.js~MinMax#min",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#minmax",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-method-minmax",
+    "scripts/path-controller/util/math.js~MinMax#minmax",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#minmax_rect",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-method-minmax_rect",
+    "scripts/path-controller/util/math.js~MinMax#minmax_rect",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#reset",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-method-reset",
+    "scripts/path-controller/util/math.js~MinMax#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax#totaxis",
+    "class/scripts/path-controller/util/math.js~MinMax.html#instance-member-totaxis",
+    "scripts/path-controller/util/math.js~MinMax#totaxis",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~minmax.fromstruct",
+    "class/scripts/path-controller/util/math.js~MinMax.html#static-method-fromSTRUCT",
+    "scripts/path-controller/util/math.js~MinMax.fromSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#axis",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-member-axis",
+    "scripts/path-controller/util/math.js~PlaneOps#axis",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#colinear",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-colinear",
+    "scripts/path-controller/util/math.js~PlaneOps#colinear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#constructor",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-constructor-constructor",
+    "scripts/path-controller/util/math.js~PlaneOps#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#convex_quad",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-convex_quad",
+    "scripts/path-controller/util/math.js~PlaneOps#convex_quad",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#get_boundary_winding",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-get_boundary_winding",
+    "scripts/path-controller/util/math.js~PlaneOps#get_boundary_winding",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#line_isect",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-line_isect",
+    "scripts/path-controller/util/math.js~PlaneOps#line_isect",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#line_line_cross",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-line_line_cross",
+    "scripts/path-controller/util/math.js~PlaneOps#line_line_cross",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#reset_axis",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-reset_axis",
+    "scripts/path-controller/util/math.js~PlaneOps#reset_axis",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/math.js~planeops#winding",
+    "class/scripts/path-controller/util/math.js~PlaneOps.html#instance-method-winding",
+    "scripts/path-controller/util/math.js~PlaneOps#winding",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/mobile-detect.js",
+    "file/scripts/path-controller/util/mobile-detect.js.html",
+    "scripts/path-controller/util/mobile-detect.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/nstructjs.js",
+    "file/scripts/path-controller/util/nstructjs.js.html",
+    "scripts/path-controller/util/nstructjs.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js",
+    "file/scripts/path-controller/util/parseutil.js.html",
+    "scripts/path-controller/util/parseutil.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#add_state",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-add_state",
+    "scripts/path-controller/util/parseutil.js~lexer#add_state",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#at_end",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-at_end",
+    "scripts/path-controller/util/parseutil.js~lexer#at_end",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#constructor",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-constructor-constructor",
+    "scripts/path-controller/util/parseutil.js~lexer#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#copy",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-copy",
+    "scripts/path-controller/util/parseutil.js~lexer#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#errfunc",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-errfunc",
+    "scripts/path-controller/util/parseutil.js~lexer#errfunc",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#error",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-error",
+    "scripts/path-controller/util/parseutil.js~lexer#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#input",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-input",
+    "scripts/path-controller/util/parseutil.js~lexer#input",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#lexdata",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-lexdata",
+    "scripts/path-controller/util/parseutil.js~lexer#lexdata",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#lexpos",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-lexpos",
+    "scripts/path-controller/util/parseutil.js~lexer#lexpos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#lineno",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-lineno",
+    "scripts/path-controller/util/parseutil.js~lexer#lineno",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#next",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-next",
+    "scripts/path-controller/util/parseutil.js~lexer#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#peek",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-peek",
+    "scripts/path-controller/util/parseutil.js~lexer#peek",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#peek_i",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-peek_i",
+    "scripts/path-controller/util/parseutil.js~lexer#peek_i",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#peeked_tokens",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-peeked_tokens",
+    "scripts/path-controller/util/parseutil.js~lexer#peeked_tokens",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#pop_state",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-pop_state",
+    "scripts/path-controller/util/parseutil.js~lexer#pop_state",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#push_state",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-push_state",
+    "scripts/path-controller/util/parseutil.js~lexer#push_state",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#statedata",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-statedata",
+    "scripts/path-controller/util/parseutil.js~lexer#statedata",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#states",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-states",
+    "scripts/path-controller/util/parseutil.js~lexer#states",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#statestack",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-statestack",
+    "scripts/path-controller/util/parseutil.js~lexer#statestack",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#tok_int",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-method-tok_int",
+    "scripts/path-controller/util/parseutil.js~lexer#tok_int",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#tokdef",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-tokdef",
+    "scripts/path-controller/util/parseutil.js~lexer#tokdef",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#tokens",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-tokens",
+    "scripts/path-controller/util/parseutil.js~lexer#tokens",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~lexer#tokints",
+    "class/scripts/path-controller/util/parseutil.js~lexer.html#instance-member-tokints",
+    "scripts/path-controller/util/parseutil.js~lexer#tokints",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#at_end",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-at_end",
+    "scripts/path-controller/util/parseutil.js~parser#at_end",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#constructor",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-constructor-constructor",
+    "scripts/path-controller/util/parseutil.js~parser#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#copy",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-copy",
+    "scripts/path-controller/util/parseutil.js~parser#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#errfunc",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-member-errfunc",
+    "scripts/path-controller/util/parseutil.js~parser#errfunc",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#error",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-error",
+    "scripts/path-controller/util/parseutil.js~parser#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#expect",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-expect",
+    "scripts/path-controller/util/parseutil.js~parser#expect",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#input",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-input",
+    "scripts/path-controller/util/parseutil.js~parser#input",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#lexer",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-member-lexer",
+    "scripts/path-controller/util/parseutil.js~parser#lexer",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#next",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-next",
+    "scripts/path-controller/util/parseutil.js~parser#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#optional",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-optional",
+    "scripts/path-controller/util/parseutil.js~parser#optional",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#parse",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-parse",
+    "scripts/path-controller/util/parseutil.js~parser#parse",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#peek",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-peek",
+    "scripts/path-controller/util/parseutil.js~parser#peek",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#peek_i",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-peek_i",
+    "scripts/path-controller/util/parseutil.js~parser#peek_i",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#peeknext",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-method-peeknext",
+    "scripts/path-controller/util/parseutil.js~parser#peeknext",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#start",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-member-start",
+    "scripts/path-controller/util/parseutil.js~parser#start",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~parser#userdata",
+    "class/scripts/path-controller/util/parseutil.js~parser.html#instance-member-userdata",
+    "scripts/path-controller/util/parseutil.js~parser#userdata",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~tokdef#constructor",
+    "class/scripts/path-controller/util/parseutil.js~tokdef.html#instance-constructor-constructor",
+    "scripts/path-controller/util/parseutil.js~tokdef#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~tokdef#func",
+    "class/scripts/path-controller/util/parseutil.js~tokdef.html#instance-member-func",
+    "scripts/path-controller/util/parseutil.js~tokdef#func",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~tokdef#name",
+    "class/scripts/path-controller/util/parseutil.js~tokdef.html#instance-member-name",
+    "scripts/path-controller/util/parseutil.js~tokdef#name",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~tokdef#re",
+    "class/scripts/path-controller/util/parseutil.js~tokdef.html#instance-member-re",
+    "scripts/path-controller/util/parseutil.js~tokdef#re",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#constructor",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-constructor-constructor",
+    "scripts/path-controller/util/parseutil.js~token#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#lexer",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-lexer",
+    "scripts/path-controller/util/parseutil.js~token#lexer",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#lexlen",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-lexlen",
+    "scripts/path-controller/util/parseutil.js~token#lexlen",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#lexpos",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-lexpos",
+    "scripts/path-controller/util/parseutil.js~token#lexpos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#lineno",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-lineno",
+    "scripts/path-controller/util/parseutil.js~token#lineno",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#parser",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-parser",
+    "scripts/path-controller/util/parseutil.js~token#parser",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#setvalue",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-method-setValue",
+    "scripts/path-controller/util/parseutil.js~token#setValue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#tostring",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-method-toString",
+    "scripts/path-controller/util/parseutil.js~token#toString",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#type",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-type",
+    "scripts/path-controller/util/parseutil.js~token#type",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/parseutil.js~token#value",
+    "class/scripts/path-controller/util/parseutil.js~token.html#instance-member-value",
+    "scripts/path-controller/util/parseutil.js~token#value",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/polyfill.js",
+    "file/scripts/path-controller/util/polyfill.js.html",
+    "scripts/path-controller/util/polyfill.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js",
+    "file/scripts/path-controller/util/simple_events.js.html",
+    "scripts/path-controller/util/simple_events.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#_on_mousemove",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-method-_on_mousemove",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#_on_mousemove",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#_on_mouseup",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-method-_on_mouseup",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#_on_mouseup",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#abort",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-method-abort",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#abort",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#constructor",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-constructor-constructor",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#dblevent",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-member-dblEvent",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#dblEvent",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#down",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-member-down",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#down",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#last",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-member-last",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#last",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#mdown",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-member-mdown",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#mdown",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#mousedown",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-method-mousedown",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#mousedown",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#ondblclick",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-method-ondblclick",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#ondblclick",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#start_mpos",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-member-start_mpos",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#start_mpos",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#up",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-member-up",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#up",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~doubleclickhandler#update",
+    "class/scripts/path-controller/util/simple_events.js~DoubleClickHandler.html#instance-method-update",
+    "scripts/path-controller/util/simple_events.js~DoubleClickHandler#update",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#action",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-member-action",
+    "scripts/path-controller/util/simple_events.js~HotKey#action",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#buildstring",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-method-buildString",
+    "scripts/path-controller/util/simple_events.js~HotKey#buildString",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#constructor",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-constructor-constructor",
+    "scripts/path-controller/util/simple_events.js~HotKey#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#exec",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-method-exec",
+    "scripts/path-controller/util/simple_events.js~HotKey#exec",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#key",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-member-key",
+    "scripts/path-controller/util/simple_events.js~HotKey#key",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#mods",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-member-mods",
+    "scripts/path-controller/util/simple_events.js~HotKey#mods",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~hotkey#uiname",
+    "class/scripts/path-controller/util/simple_events.js~HotKey.html#instance-member-uiname",
+    "scripts/path-controller/util/simple_events.js~HotKey#uiname",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~keymap#add",
+    "class/scripts/path-controller/util/simple_events.js~KeyMap.html#instance-method-add",
+    "scripts/path-controller/util/simple_events.js~KeyMap#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~keymap#constructor",
+    "class/scripts/path-controller/util/simple_events.js~KeyMap.html#instance-constructor-constructor",
+    "scripts/path-controller/util/simple_events.js~KeyMap#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~keymap#handle",
+    "class/scripts/path-controller/util/simple_events.js~KeyMap.html#instance-method-handle",
+    "scripts/path-controller/util/simple_events.js~KeyMap#handle",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~keymap#pathid",
+    "class/scripts/path-controller/util/simple_events.js~KeyMap.html#instance-member-pathid",
+    "scripts/path-controller/util/simple_events.js~KeyMap#pathid",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/simple_events.js~keymap#push",
+    "class/scripts/path-controller/util/simple_events.js~KeyMap.html#instance-method-push",
+    "scripts/path-controller/util/simple_events.js~KeyMap#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js",
+    "file/scripts/path-controller/util/solver.js.html",
+    "scripts/path-controller/util/solver.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#constructor",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-constructor-constructor",
+    "scripts/path-controller/util/solver.js~Constraint#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#df",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-df",
+    "scripts/path-controller/util/solver.js~Constraint#df",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#evaluate",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-method-evaluate",
+    "scripts/path-controller/util/solver.js~Constraint#evaluate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#func",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-func",
+    "scripts/path-controller/util/solver.js~Constraint#func",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#funcdv",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-funcDv",
+    "scripts/path-controller/util/solver.js~Constraint#funcDv",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#glst",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-glst",
+    "scripts/path-controller/util/solver.js~Constraint#glst",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#k",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-k",
+    "scripts/path-controller/util/solver.js~Constraint#k",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#klst",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-klst",
+    "scripts/path-controller/util/solver.js~Constraint#klst",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#name",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-name",
+    "scripts/path-controller/util/solver.js~Constraint#name",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#params",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-params",
+    "scripts/path-controller/util/solver.js~Constraint#params",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~constraint#threshold",
+    "class/scripts/path-controller/util/solver.js~Constraint.html#instance-member-threshold",
+    "scripts/path-controller/util/solver.js~Constraint#threshold",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#add",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-method-add",
+    "scripts/path-controller/util/solver.js~Solver#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#constraints",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-member-constraints",
+    "scripts/path-controller/util/solver.js~Solver#constraints",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#constructor",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-constructor-constructor",
+    "scripts/path-controller/util/solver.js~Solver#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#gk",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-member-gk",
+    "scripts/path-controller/util/solver.js~Solver#gk",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#randcons",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-member-randCons",
+    "scripts/path-controller/util/solver.js~Solver#randCons",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#simple",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-member-simple",
+    "scripts/path-controller/util/solver.js~Solver#simple",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#solve",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-method-solve",
+    "scripts/path-controller/util/solver.js~Solver#solve",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#solvestep",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-method-solveStep",
+    "scripts/path-controller/util/solver.js~Solver#solveStep",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/solver.js~solver#solvestepsimple",
+    "class/scripts/path-controller/util/solver.js~Solver.html#instance-method-solveStepSimple",
+    "scripts/path-controller/util/solver.js~Solver#solveStepSimple",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/struct.js",
+    "file/scripts/path-controller/util/struct.js.html",
+    "scripts/path-controller/util/struct.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/util.js",
+    "file/scripts/path-controller/util/util.js.html",
+    "scripts/path-controller/util/util.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/util.js~arraypool#constructor",
+    "class/scripts/path-controller/util/util.js~ArrayPool.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~ArrayPool#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~arraypool#get",
+    "class/scripts/path-controller/util/util.js~ArrayPool.html#instance-method-get",
+    "scripts/path-controller/util/util.js~ArrayPool#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~arraypool#map",
+    "class/scripts/path-controller/util/util.js~ArrayPool.html#instance-member-map",
+    "scripts/path-controller/util/util.js~ArrayPool#map",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~arraypool#pools",
+    "class/scripts/path-controller/util/util.js~ArrayPool.html#instance-member-pools",
+    "scripts/path-controller/util/util.js~ArrayPool#pools",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#[h * ftot + fkey]",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-[h * FTOT + FKEY]",
+    "scripts/path-controller/util/util.js~FastHash#[h * FTOT + FKEY]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#[h * ftot + ftaken]",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-[h * FTOT + FTAKEN]",
+    "scripts/path-controller/util/util.js~FastHash#[h * FTOT + FTAKEN]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#[h * ftot + fval]",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-[h * FTOT + FVAL]",
+    "scripts/path-controller/util/util.js~FastHash#[h * FTOT + FVAL]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#constructor",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~FastHash#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#cursize",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-cursize",
+    "scripts/path-controller/util/util.js~FastHash#cursize",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#get",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-method-get",
+    "scripts/path-controller/util/util.js~FastHash#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#has",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-method-has",
+    "scripts/path-controller/util/util.js~FastHash#has",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#length",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-length",
+    "scripts/path-controller/util/util.js~FastHash#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#resize",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-method-resize",
+    "scripts/path-controller/util/util.js~FastHash#resize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#set",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-method-set",
+    "scripts/path-controller/util/util.js~FastHash#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#size",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-size",
+    "scripts/path-controller/util/util.js~FastHash#size",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~fasthash#used",
+    "class/scripts/path-controller/util/util.js~FastHash.html#instance-member-used",
+    "scripts/path-controller/util/util.js~FastHash#used",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest#add",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#instance-method-add",
+    "scripts/path-controller/util/util.js~HashDigest#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest#constructor",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~HashDigest#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest#get",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#instance-method-get",
+    "scripts/path-controller/util/util.js~HashDigest#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest#hash",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#instance-member-hash",
+    "scripts/path-controller/util/util.js~HashDigest#hash",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest#i",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#instance-member-i",
+    "scripts/path-controller/util/util.js~HashDigest#i",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest#reset",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#instance-method-reset",
+    "scripts/path-controller/util/util.js~HashDigest#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashdigest.cacheddigest",
+    "class/scripts/path-controller/util/util.js~HashDigest.html#static-method-cachedDigest",
+    "scripts/path-controller/util/util.js~HashDigest.cachedDigest",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashiter#constructor",
+    "class/scripts/path-controller/util/util.js~HashIter.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~HashIter#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashiter#hash",
+    "class/scripts/path-controller/util/util.js~HashIter.html#instance-member-hash",
+    "scripts/path-controller/util/util.js~HashIter#hash",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashiter#i",
+    "class/scripts/path-controller/util/util.js~HashIter.html#instance-member-i",
+    "scripts/path-controller/util/util.js~HashIter#i",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashiter#next",
+    "class/scripts/path-controller/util/util.js~HashIter.html#instance-method-next",
+    "scripts/path-controller/util/util.js~HashIter#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashiter#ret",
+    "class/scripts/path-controller/util/util.js~HashIter.html#instance-member-ret",
+    "scripts/path-controller/util/util.js~HashIter#ret",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#__cur",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-member-__cur",
+    "scripts/path-controller/util/util.js~IDGen#__cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#_cur",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-set-_cur",
+    "scripts/path-controller/util/util.js~IDGen#_cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#_cur",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-get-_cur",
+    "scripts/path-controller/util/util.js~IDGen#_cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#_debug",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-member-_debug",
+    "scripts/path-controller/util/util.js~IDGen#_debug",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#_internalid",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-member-_internalID",
+    "scripts/path-controller/util/util.js~IDGen#_internalID",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#constructor",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~IDGen#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#copy",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-method-copy",
+    "scripts/path-controller/util/util.js~IDGen#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#cur",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-get-cur",
+    "scripts/path-controller/util/util.js~IDGen#cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#cur",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-set-cur",
+    "scripts/path-controller/util/util.js~IDGen#cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#loadstruct",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/util/util.js~IDGen#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#max_cur",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-method-max_cur",
+    "scripts/path-controller/util/util.js~IDGen#max_cur",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#next",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-method-next",
+    "scripts/path-controller/util/util.js~IDGen#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen#tojson",
+    "class/scripts/path-controller/util/util.js~IDGen.html#instance-method-toJSON",
+    "scripts/path-controller/util/util.js~IDGen#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idgen.fromjson",
+    "class/scripts/path-controller/util/util.js~IDGen.html#static-method-fromJSON",
+    "scripts/path-controller/util/util.js~IDGen.fromJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#[symbol.iterator]",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/util/util.js~IDMap#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#[id]",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-member-[id]",
+    "scripts/path-controller/util/util.js~IDMap#[id]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#_keys",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-member-_keys",
+    "scripts/path-controller/util/util.js~IDMap#_keys",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#constructor",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~IDMap#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#delete",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-delete",
+    "scripts/path-controller/util/util.js~IDMap#delete",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#get",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-get",
+    "scripts/path-controller/util/util.js~IDMap#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#has",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-has",
+    "scripts/path-controller/util/util.js~IDMap#has",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#keys",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-keys",
+    "scripts/path-controller/util/util.js~IDMap#keys",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#length",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-member-length",
+    "scripts/path-controller/util/util.js~IDMap#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#set",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-set",
+    "scripts/path-controller/util/util.js~IDMap#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#size",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-member-size",
+    "scripts/path-controller/util/util.js~IDMap#size",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~idmap#values",
+    "class/scripts/path-controller/util/util.js~IDMap.html#instance-method-values",
+    "scripts/path-controller/util/util.js~IDMap#values",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~imagereader#example",
+    "class/scripts/path-controller/util/util.js~ImageReader.html#instance-method-example",
+    "scripts/path-controller/util/util.js~ImageReader#example",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~imagereader#load_image",
+    "class/scripts/path-controller/util/util.js~ImageReader.html#instance-method-load_image",
+    "scripts/path-controller/util/util.js~ImageReader#load_image",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#constructor",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~MapIter#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#done",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-member-done",
+    "scripts/path-controller/util/util.js~MapIter#done",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#finish",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-method-finish",
+    "scripts/path-controller/util/util.js~MapIter#finish",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#i",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-member-i",
+    "scripts/path-controller/util/util.js~MapIter#i",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#map",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-member-map",
+    "scripts/path-controller/util/util.js~MapIter#map",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#next",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-method-next",
+    "scripts/path-controller/util/util.js~MapIter#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#reset",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-method-reset",
+    "scripts/path-controller/util/util.js~MapIter#reset",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#ret",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-member-ret",
+    "scripts/path-controller/util/util.js~MapIter#ret",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#return",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-method-return",
+    "scripts/path-controller/util/util.js~MapIter#return",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mapiter#value",
+    "class/scripts/path-controller/util/util.js~MapIter.html#instance-member-value",
+    "scripts/path-controller/util/util.js~MapIter#value",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#constructor",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~MersenneRandom#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#extract_number",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-method-extract_number",
+    "scripts/path-controller/util/util.js~MersenneRandom#extract_number",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#index",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-member-index",
+    "scripts/path-controller/util/util.js~MersenneRandom#index",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#mt",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-member-mt",
+    "scripts/path-controller/util/util.js~MersenneRandom#mt",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#random",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-method-random",
+    "scripts/path-controller/util/util.js~MersenneRandom#random",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#seed",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-method-seed",
+    "scripts/path-controller/util/util.js~MersenneRandom#seed",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~mersennerandom#twist",
+    "class/scripts/path-controller/util/util.js~MersenneRandom.html#instance-method-twist",
+    "scripts/path-controller/util/util.js~MersenneRandom#twist",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#constructor",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~MinHeapQueue#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#end",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-member-end",
+    "scripts/path-controller/util/util.js~MinHeapQueue#end",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#freelist",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-member-freelist",
+    "scripts/path-controller/util/util.js~MinHeapQueue#freelist",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#heap",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-member-heap",
+    "scripts/path-controller/util/util.js~MinHeapQueue#heap",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#length",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-member-length",
+    "scripts/path-controller/util/util.js~MinHeapQueue#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#pop",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-method-pop",
+    "scripts/path-controller/util/util.js~MinHeapQueue#pop",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~minheapqueue#push",
+    "class/scripts/path-controller/util/util.js~MinHeapQueue.html#instance-method-push",
+    "scripts/path-controller/util/util.js~MinHeapQueue#push",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#[.cur]",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-member-[.cur]",
+    "scripts/path-controller/util/util.js~MovingAvg#[.cur]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#add",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-method-add",
+    "scripts/path-controller/util/util.js~MovingAvg#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#constructor",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~MovingAvg#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#cur",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-member-cur",
+    "scripts/path-controller/util/util.js~MovingAvg#cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#length",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-member-length",
+    "scripts/path-controller/util/util.js~MovingAvg#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#sample",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-method-sample",
+    "scripts/path-controller/util/util.js~MovingAvg#sample",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#sum",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-member-sum",
+    "scripts/path-controller/util/util.js~MovingAvg#sum",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~movingavg#used",
+    "class/scripts/path-controller/util/util.js~MovingAvg.html#instance-member-used",
+    "scripts/path-controller/util/util.js~MovingAvg#used",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#a",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-member-a",
+    "scripts/path-controller/util/util.js~Queue#a",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#b",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-member-b",
+    "scripts/path-controller/util/util.js~Queue#b",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#clear",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-method-clear",
+    "scripts/path-controller/util/util.js~Queue#clear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#constructor",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~Queue#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#dequeue",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-method-dequeue",
+    "scripts/path-controller/util/util.js~Queue#dequeue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#enqueue",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-method-enqueue",
+    "scripts/path-controller/util/util.js~Queue#enqueue",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#initialsize",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-member-initialSize",
+    "scripts/path-controller/util/util.js~Queue#initialSize",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#length",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-member-length",
+    "scripts/path-controller/util/util.js~Queue#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~queue#queue",
+    "class/scripts/path-controller/util/util.js~Queue.html#instance-member-queue",
+    "scripts/path-controller/util/util.js~Queue#queue",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~setiter#[symbol.iterator]",
+    "class/scripts/path-controller/util/util.js~SetIter.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/util/util.js~SetIter#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~setiter#constructor",
+    "class/scripts/path-controller/util/util.js~SetIter.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~SetIter#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~setiter#i",
+    "class/scripts/path-controller/util/util.js~SetIter.html#instance-member-i",
+    "scripts/path-controller/util/util.js~SetIter#i",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~setiter#next",
+    "class/scripts/path-controller/util/util.js~SetIter.html#instance-method-next",
+    "scripts/path-controller/util/util.js~SetIter#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~setiter#ret",
+    "class/scripts/path-controller/util/util.js~SetIter.html#instance-member-ret",
+    "scripts/path-controller/util/util.js~SetIter#ret",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~setiter#set",
+    "class/scripts/path-controller/util/util.js~SetIter.html#instance-member-set",
+    "scripts/path-controller/util/util.js~SetIter#set",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#constructor",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~SmartConsole#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#context",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-method-context",
+    "scripts/path-controller/util/util.js~SmartConsole#context",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#contexts",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-member-contexts",
+    "scripts/path-controller/util/util.js~SmartConsole#contexts",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#error",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-method-error",
+    "scripts/path-controller/util/util.js~SmartConsole#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#log",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-method-log",
+    "scripts/path-controller/util/util.js~SmartConsole#log",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#trace",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-method-trace",
+    "scripts/path-controller/util/util.js~SmartConsole#trace",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsole#warn",
+    "class/scripts/path-controller/util/util.js~SmartConsole.html#instance-method-warn",
+    "scripts/path-controller/util/util.js~SmartConsole#warn",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#__console",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-__console",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#__console",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#_check",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-_check",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#_check",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#_data",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-_data",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#_data",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#_data_length",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-_data_length",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#_data_length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#_getdata",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-_getData",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#_getData",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#_last",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-_last",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#_last",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#clearcache",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-clearCache",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#clearCache",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#color",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-color",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#color",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#constructor",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#error",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-error",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#error",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#hash",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-hash",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#hash",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#last",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-last",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#last",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#last2",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-last2",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#last2",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#log",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-log",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#log",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#maxcache",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-maxCache",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#maxCache",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#name",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-name",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#name",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#timeinterval",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-timeInterval",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#timeInterval",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#timeintervalall",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-member-timeIntervalAll",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#timeIntervalAll",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#trace",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-trace",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#trace",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~smartconsolecontext#warn",
+    "class/scripts/path-controller/util/util.js~SmartConsoleContext.html#instance-method-warn",
+    "scripts/path-controller/util/util.js~SmartConsoleContext#warn",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~cachering#constructor",
+    "class/scripts/path-controller/util/util.js~cachering.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~cachering#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~cachering#cur",
+    "class/scripts/path-controller/util/util.js~cachering.html#instance-member-cur",
+    "scripts/path-controller/util/util.js~cachering#cur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~cachering#gen",
+    "class/scripts/path-controller/util/util.js~cachering.html#instance-member-gen",
+    "scripts/path-controller/util/util.js~cachering#gen",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~cachering#next",
+    "class/scripts/path-controller/util/util.js~cachering.html#instance-method-next",
+    "scripts/path-controller/util/util.js~cachering#next",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~cachering#private",
+    "class/scripts/path-controller/util/util.js~cachering.html#instance-member-private",
+    "scripts/path-controller/util/util.js~cachering#private",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~cachering.fromconstructor",
+    "class/scripts/path-controller/util/util.js~cachering.html#static-method-fromConstructor",
+    "scripts/path-controller/util/util.js~cachering.fromConstructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#[symbol.iterator]",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/util/util.js~hashtable#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#_items",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-member-_items",
+    "scripts/path-controller/util/util.js~hashtable#_items",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#_keys",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-member-_keys",
+    "scripts/path-controller/util/util.js~hashtable#_keys",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#add",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-add",
+    "scripts/path-controller/util/util.js~hashtable#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#constructor",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~hashtable#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#foreach",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-forEach",
+    "scripts/path-controller/util/util.js~hashtable#forEach",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#get",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-get",
+    "scripts/path-controller/util/util.js~hashtable#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#has",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-has",
+    "scripts/path-controller/util/util.js~hashtable#has",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#keys",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-keys",
+    "scripts/path-controller/util/util.js~hashtable#keys",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#length",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-member-length",
+    "scripts/path-controller/util/util.js~hashtable#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#remove",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-remove",
+    "scripts/path-controller/util/util.js~hashtable#remove",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#set",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-set",
+    "scripts/path-controller/util/util.js~hashtable#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~hashtable#values",
+    "class/scripts/path-controller/util/util.js~hashtable.html#instance-method-values",
+    "scripts/path-controller/util/util.js~hashtable#values",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#[symbol.iterator]",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/util/util.js~map#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#_items",
+    "class/scripts/path-controller/util/util.js~map.html#instance-member-_items",
+    "scripts/path-controller/util/util.js~map#_items",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#_list",
+    "class/scripts/path-controller/util/util.js~map.html#instance-member-_list",
+    "scripts/path-controller/util/util.js~map#_list",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#constructor",
+    "class/scripts/path-controller/util/util.js~map.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~map#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#delete",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-delete",
+    "scripts/path-controller/util/util.js~map#delete",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#freelist",
+    "class/scripts/path-controller/util/util.js~map.html#instance-member-freelist",
+    "scripts/path-controller/util/util.js~map#freelist",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#get",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-get",
+    "scripts/path-controller/util/util.js~map#get",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#has",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-has",
+    "scripts/path-controller/util/util.js~map#has",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#itercur",
+    "class/scripts/path-controller/util/util.js~map.html#instance-member-itercur",
+    "scripts/path-controller/util/util.js~map#itercur",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#iterstack",
+    "class/scripts/path-controller/util/util.js~map.html#instance-member-iterstack",
+    "scripts/path-controller/util/util.js~map#iterstack",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#keys",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-keys",
+    "scripts/path-controller/util/util.js~map#keys",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#set",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-set",
+    "scripts/path-controller/util/util.js~map#set",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#size",
+    "class/scripts/path-controller/util/util.js~map.html#instance-member-size",
+    "scripts/path-controller/util/util.js~map#size",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~map#values",
+    "class/scripts/path-controller/util/util.js~map.html#instance-method-values",
+    "scripts/path-controller/util/util.js~map#values",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#[symbol.iterator]",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-[Symbol.iterator]",
+    "scripts/path-controller/util/util.js~set#[Symbol.iterator]",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#add",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-add",
+    "scripts/path-controller/util/util.js~set#add",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#clear",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-clear",
+    "scripts/path-controller/util/util.js~set#clear",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#constructor",
+    "class/scripts/path-controller/util/util.js~set.html#instance-constructor-constructor",
+    "scripts/path-controller/util/util.js~set#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#copy",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-copy",
+    "scripts/path-controller/util/util.js~set#copy",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#delete",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-delete",
+    "scripts/path-controller/util/util.js~set#delete",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#equals",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-equals",
+    "scripts/path-controller/util/util.js~set#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#filter",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-filter",
+    "scripts/path-controller/util/util.js~set#filter",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#foreach",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-forEach",
+    "scripts/path-controller/util/util.js~set#forEach",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#freelist",
+    "class/scripts/path-controller/util/util.js~set.html#instance-member-freelist",
+    "scripts/path-controller/util/util.js~set#freelist",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#has",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-has",
+    "scripts/path-controller/util/util.js~set#has",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#items",
+    "class/scripts/path-controller/util/util.js~set.html#instance-member-items",
+    "scripts/path-controller/util/util.js~set#items",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#keys",
+    "class/scripts/path-controller/util/util.js~set.html#instance-member-keys",
+    "scripts/path-controller/util/util.js~set#keys",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#length",
+    "class/scripts/path-controller/util/util.js~set.html#instance-member-length",
+    "scripts/path-controller/util/util.js~set#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#map",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-map",
+    "scripts/path-controller/util/util.js~set#map",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#reduce",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-reduce",
+    "scripts/path-controller/util/util.js~set#reduce",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#remove",
+    "class/scripts/path-controller/util/util.js~set.html#instance-method-remove",
+    "scripts/path-controller/util/util.js~set#remove",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/util.js~set#size",
+    "class/scripts/path-controller/util/util.js~set.html#instance-get-size",
+    "scripts/path-controller/util/util.js~set#size",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js",
+    "file/scripts/path-controller/util/vectormath.js.html",
+    "scripts/path-controller/util/vectormath.js",
+    "file"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#$matrix",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-member-$matrix",
+    "scripts/path-controller/util/vectormath.js~Matrix4#$matrix",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#__mat",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-member-__mat",
+    "scripts/path-controller/util/vectormath.js~Matrix4#__mat",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#_determinant2x2",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-_determinant2x2",
+    "scripts/path-controller/util/vectormath.js~Matrix4#_determinant2x2",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#_determinant3x3",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-_determinant3x3",
+    "scripts/path-controller/util/vectormath.js~Matrix4#_determinant3x3",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#_determinant4x4",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-_determinant4x4",
+    "scripts/path-controller/util/vectormath.js~Matrix4#_determinant4x4",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#_makeadjoint",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-_makeAdjoint",
+    "scripts/path-controller/util/vectormath.js~Matrix4#_makeAdjoint",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#addtohashdigest",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-addToHashDigest",
+    "scripts/path-controller/util/vectormath.js~Matrix4#addToHashDigest",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#cleartranslation",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-clearTranslation",
+    "scripts/path-controller/util/vectormath.js~Matrix4#clearTranslation",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#clone",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-clone",
+    "scripts/path-controller/util/vectormath.js~Matrix4#clone",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#constructor",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-constructor-constructor",
+    "scripts/path-controller/util/vectormath.js~Matrix4#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#copycolumn",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-copyColumn",
+    "scripts/path-controller/util/vectormath.js~Matrix4#copyColumn",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#copycolumnto",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-copyColumnTo",
+    "scripts/path-controller/util/vectormath.js~Matrix4#copyColumnTo",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#decompose",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-decompose",
+    "scripts/path-controller/util/vectormath.js~Matrix4#decompose",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#determinant",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-determinant",
+    "scripts/path-controller/util/vectormath.js~Matrix4#determinant",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#determinant",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-determinant",
+    "scripts/path-controller/util/vectormath.js~Matrix4#determinant",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#divide",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-divide",
+    "scripts/path-controller/util/vectormath.js~Matrix4#divide",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#equals",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-equals",
+    "scripts/path-controller/util/vectormath.js~Matrix4#equals",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#euler_rotate",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-euler_rotate",
+    "scripts/path-controller/util/vectormath.js~Matrix4#euler_rotate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#euler_rotate_order",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-euler_rotate_order",
+    "scripts/path-controller/util/vectormath.js~Matrix4#euler_rotate_order",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#frustum",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-frustum",
+    "scripts/path-controller/util/vectormath.js~Matrix4#frustum",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#getasarray",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-getAsArray",
+    "scripts/path-controller/util/vectormath.js~Matrix4#getAsArray",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#getasfloat32array",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-getAsFloat32Array",
+    "scripts/path-controller/util/vectormath.js~Matrix4#getAsFloat32Array",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#invert",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-invert",
+    "scripts/path-controller/util/vectormath.js~Matrix4#invert",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#ispersp",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-member-isPersp",
+    "scripts/path-controller/util/vectormath.js~Matrix4#isPersp",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#load",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-load",
+    "scripts/path-controller/util/vectormath.js~Matrix4#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#loadcolumn",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-loadColumn",
+    "scripts/path-controller/util/vectormath.js~Matrix4#loadColumn",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#loadstruct",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/util/vectormath.js~Matrix4#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#lookat",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-lookat",
+    "scripts/path-controller/util/vectormath.js~Matrix4#lookat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#makeidentity",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-makeIdentity",
+    "scripts/path-controller/util/vectormath.js~Matrix4#makeIdentity",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#makenormalmatrix",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-makeNormalMatrix",
+    "scripts/path-controller/util/vectormath.js~Matrix4#makeNormalMatrix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#makerotationonly",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-makeRotationOnly",
+    "scripts/path-controller/util/vectormath.js~Matrix4#makeRotationOnly",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#multiply",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-multiply",
+    "scripts/path-controller/util/vectormath.js~Matrix4#multiply",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#normalize",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-normalize",
+    "scripts/path-controller/util/vectormath.js~Matrix4#normalize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#ortho",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-ortho",
+    "scripts/path-controller/util/vectormath.js~Matrix4#ortho",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#orthographic",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-orthographic",
+    "scripts/path-controller/util/vectormath.js~Matrix4#orthographic",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#perspective",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-perspective",
+    "scripts/path-controller/util/vectormath.js~Matrix4#perspective",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#premultiply",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-preMultiply",
+    "scripts/path-controller/util/vectormath.js~Matrix4#preMultiply",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#prescale",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-preScale",
+    "scripts/path-controller/util/vectormath.js~Matrix4#preScale",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#pretranslate",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-preTranslate",
+    "scripts/path-controller/util/vectormath.js~Matrix4#preTranslate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#rotate",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-rotate",
+    "scripts/path-controller/util/vectormath.js~Matrix4#rotate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#scale",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-scale",
+    "scripts/path-controller/util/vectormath.js~Matrix4#scale",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#settranslation",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-setTranslation",
+    "scripts/path-controller/util/vectormath.js~Matrix4#setTranslation",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#setuniform",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-setUniform",
+    "scripts/path-controller/util/vectormath.js~Matrix4#setUniform",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#tojson",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-toJSON",
+    "scripts/path-controller/util/vectormath.js~Matrix4#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#tostring",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-toString",
+    "scripts/path-controller/util/vectormath.js~Matrix4#toString",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#translate",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-translate",
+    "scripts/path-controller/util/vectormath.js~Matrix4#translate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4#transpose",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#instance-method-transpose",
+    "scripts/path-controller/util/vectormath.js~Matrix4#transpose",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~matrix4.fromjson",
+    "class/scripts/path-controller/util/vectormath.js~Matrix4.html#static-method-fromJSON",
+    "scripts/path-controller/util/vectormath.js~Matrix4.fromJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#[0]",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-member-[0]",
+    "scripts/path-controller/util/vectormath.js~Quat#[0]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#[1]",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-member-[1]",
+    "scripts/path-controller/util/vectormath.js~Quat#[1]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#[2]",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-member-[2]",
+    "scripts/path-controller/util/vectormath.js~Quat#[2]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#[3]",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-member-[3]",
+    "scripts/path-controller/util/vectormath.js~Quat#[3]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#axisangletoquat",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-axisAngleToQuat",
+    "scripts/path-controller/util/vectormath.js~Quat#axisAngleToQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#conjugate",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-conjugate",
+    "scripts/path-controller/util/vectormath.js~Quat#conjugate",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#dotwithquat",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-dotWithQuat",
+    "scripts/path-controller/util/vectormath.js~Quat#dotWithQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#invert",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-invert",
+    "scripts/path-controller/util/vectormath.js~Quat#invert",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#iszero",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-isZero",
+    "scripts/path-controller/util/vectormath.js~Quat#isZero",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#makeunitquat",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-makeUnitQuat",
+    "scripts/path-controller/util/vectormath.js~Quat#makeUnitQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#matrixtoquat",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-matrixToQuat",
+    "scripts/path-controller/util/vectormath.js~Quat#matrixToQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#mulquat",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-mulQuat",
+    "scripts/path-controller/util/vectormath.js~Quat#mulQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#mulscalarwithfactor",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-mulScalarWithFactor",
+    "scripts/path-controller/util/vectormath.js~Quat#mulScalarWithFactor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#normalize",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-normalize",
+    "scripts/path-controller/util/vectormath.js~Quat#normalize",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#quatinterp",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-quatInterp",
+    "scripts/path-controller/util/vectormath.js~Quat#quatInterp",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#rotationbetweenvecs",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-rotationBetweenVecs",
+    "scripts/path-controller/util/vectormath.js~Quat#rotationBetweenVecs",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#sub",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-sub",
+    "scripts/path-controller/util/vectormath.js~Quat#sub",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~quat#tomatrix",
+    "class/scripts/path-controller/util/vectormath.js~Quat.html#instance-method-toMatrix",
+    "scripts/path-controller/util/vectormath.js~Quat#toMatrix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#[0]",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-member-[0]",
+    "scripts/path-controller/util/vectormath.js~Vector2#[0]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#[1]",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-member-[1]",
+    "scripts/path-controller/util/vectormath.js~Vector2#[1]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#constructor",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-constructor-constructor",
+    "scripts/path-controller/util/vectormath.js~Vector2#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#dot",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-dot",
+    "scripts/path-controller/util/vectormath.js~Vector2#dot",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#initvector2",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-initVector2",
+    "scripts/path-controller/util/vectormath.js~Vector2#initVector2",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#length",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-member-length",
+    "scripts/path-controller/util/vectormath.js~Vector2#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#load",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-load",
+    "scripts/path-controller/util/vectormath.js~Vector2#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#loadjson",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-loadJSON",
+    "scripts/path-controller/util/vectormath.js~Vector2#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#loadstruct",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/util/vectormath.js~Vector2#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#loadxy",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-loadXY",
+    "scripts/path-controller/util/vectormath.js~Vector2#loadXY",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#loadxy",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-loadXY",
+    "scripts/path-controller/util/vectormath.js~Vector2#loadXY",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#mulvecquat",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-mulVecQuat",
+    "scripts/path-controller/util/vectormath.js~Vector2#mulVecQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#multvecmatrix",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-multVecMatrix",
+    "scripts/path-controller/util/vectormath.js~Vector2#multVecMatrix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#rot2d",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-rot2d",
+    "scripts/path-controller/util/vectormath.js~Vector2#rot2d",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#tojson",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-toJSON",
+    "scripts/path-controller/util/vectormath.js~Vector2#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#vec",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-member-vec",
+    "scripts/path-controller/util/vectormath.js~Vector2#vec",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector2#vectorlengthsqr",
+    "class/scripts/path-controller/util/vectormath.js~Vector2.html#instance-method-vectorLengthSqr",
+    "scripts/path-controller/util/vectormath.js~Vector2#vectorLengthSqr",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#[0]",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-member-[0]",
+    "scripts/path-controller/util/vectormath.js~Vector3#[0]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#[1]",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-member-[1]",
+    "scripts/path-controller/util/vectormath.js~Vector3#[1]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#[2]",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-member-[2]",
+    "scripts/path-controller/util/vectormath.js~Vector3#[2]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#constructor",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-constructor-constructor",
+    "scripts/path-controller/util/vectormath.js~Vector3#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#cross",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-cross",
+    "scripts/path-controller/util/vectormath.js~Vector3#cross",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#dot",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-dot",
+    "scripts/path-controller/util/vectormath.js~Vector3#dot",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#initvector3",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-initVector3",
+    "scripts/path-controller/util/vectormath.js~Vector3#initVector3",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#length",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-member-length",
+    "scripts/path-controller/util/vectormath.js~Vector3#length",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#load",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-load",
+    "scripts/path-controller/util/vectormath.js~Vector3#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#loadjson",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-loadJSON",
+    "scripts/path-controller/util/vectormath.js~Vector3#loadJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#loadstruct",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/util/vectormath.js~Vector3#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#loadxyz",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-loadXYZ",
+    "scripts/path-controller/util/vectormath.js~Vector3#loadXYZ",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#multvecmatrix",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-multVecMatrix",
+    "scripts/path-controller/util/vectormath.js~Vector3#multVecMatrix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#normalizeddot",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-normalizedDot",
+    "scripts/path-controller/util/vectormath.js~Vector3#normalizedDot",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#prenormalizedangle",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-preNormalizedAngle",
+    "scripts/path-controller/util/vectormath.js~Vector3#preNormalizedAngle",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#rot2d",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-rot2d",
+    "scripts/path-controller/util/vectormath.js~Vector3#rot2d",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#tocss",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-toCSS",
+    "scripts/path-controller/util/vectormath.js~Vector3#toCSS",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#tojson",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-method-toJSON",
+    "scripts/path-controller/util/vectormath.js~Vector3#toJSON",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3#vec",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#instance-member-vec",
+    "scripts/path-controller/util/vectormath.js~Vector3#vec",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3.normalizeddot3",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#static-method-normalizedDot3",
+    "scripts/path-controller/util/vectormath.js~Vector3.normalizedDot3",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector3.normalizeddot4",
+    "class/scripts/path-controller/util/vectormath.js~Vector3.html#static-method-normalizedDot4",
+    "scripts/path-controller/util/vectormath.js~Vector3.normalizedDot4",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#[0]",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-member-[0]",
+    "scripts/path-controller/util/vectormath.js~Vector4#[0]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#[1]",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-member-[1]",
+    "scripts/path-controller/util/vectormath.js~Vector4#[1]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#[2]",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-member-[2]",
+    "scripts/path-controller/util/vectormath.js~Vector4#[2]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#[3]",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-member-[3]",
+    "scripts/path-controller/util/vectormath.js~Vector4#[3]",
+    "member"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#constructor",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-constructor-constructor",
+    "scripts/path-controller/util/vectormath.js~Vector4#constructor",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#cross",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-cross",
+    "scripts/path-controller/util/vectormath.js~Vector4#cross",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#dot",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-dot",
+    "scripts/path-controller/util/vectormath.js~Vector4#dot",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#load",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-load",
+    "scripts/path-controller/util/vectormath.js~Vector4#load",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#loadstruct",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-loadSTRUCT",
+    "scripts/path-controller/util/vectormath.js~Vector4#loadSTRUCT",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#loadxyz",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-loadXYZ",
+    "scripts/path-controller/util/vectormath.js~Vector4#loadXYZ",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#loadxyzw",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-loadXYZW",
+    "scripts/path-controller/util/vectormath.js~Vector4#loadXYZW",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#mulvecquat",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-mulVecQuat",
+    "scripts/path-controller/util/vectormath.js~Vector4#mulVecQuat",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#multvecmatrix",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-multVecMatrix",
+    "scripts/path-controller/util/vectormath.js~Vector4#multVecMatrix",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#prenormalizedangle",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-preNormalizedAngle",
+    "scripts/path-controller/util/vectormath.js~Vector4#preNormalizedAngle",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#tocss",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-method-toCSS",
+    "scripts/path-controller/util/vectormath.js~Vector4#toCSS",
+    "method"
+  ],
+  [
+    "scripts/path-controller/util/vectormath.js~vector4#vec",
+    "class/scripts/path-controller/util/vectormath.js~Vector4.html#instance-member-vec",
+    "scripts/path-controller/util/vectormath.js~Vector4#vec",
+    "member"
+  ],
+  [
     "scripts/pathux.js",
     "file/scripts/pathux.js.html",
     "scripts/pathux.js",
@@ -8316,10 +14700,142 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "scripts/platforms/electron/electron_api.js~platform.readfile",
+    "class/scripts/platforms/electron/electron_api.js~platform.html#static-method-readFile",
+    "scripts/platforms/electron/electron_api.js~platform.readFile",
+    "method"
+  ],
+  [
+    "scripts/platforms/electron/electron_api.js~platform.showopendialog",
+    "class/scripts/platforms/electron/electron_api.js~platform.html#static-method-showOpenDialog",
+    "scripts/platforms/electron/electron_api.js~platform.showOpenDialog",
+    "method"
+  ],
+  [
+    "scripts/platforms/electron/electron_api.js~platform.showsavedialog",
+    "class/scripts/platforms/electron/electron_api.js~platform.html#static-method-showSaveDialog",
+    "scripts/platforms/electron/electron_api.js~platform.showSaveDialog",
+    "method"
+  ],
+  [
     "scripts/platforms/electron/icogen.js",
     "file/scripts/platforms/electron/icogen.js.html",
     "scripts/platforms/electron/icogen.js",
     "file"
+  ],
+  [
+    "scripts/platforms/platform.js",
+    "file/scripts/platforms/platform.js.html",
+    "scripts/platforms/platform.js",
+    "file"
+  ],
+  [
+    "scripts/platforms/platform_base.js",
+    "file/scripts/platforms/platform_base.js.html",
+    "scripts/platforms/platform_base.js",
+    "file"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filedialogargs#addtorecentlist",
+    "class/scripts/platforms/platform_base.js~FileDialogArgs.html#instance-member-addToRecentList",
+    "scripts/platforms/platform_base.js~FileDialogArgs#addToRecentList",
+    "member"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filedialogargs#constructor",
+    "class/scripts/platforms/platform_base.js~FileDialogArgs.html#instance-constructor-constructor",
+    "scripts/platforms/platform_base.js~FileDialogArgs#constructor",
+    "method"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filedialogargs#filters",
+    "class/scripts/platforms/platform_base.js~FileDialogArgs.html#instance-member-filters",
+    "scripts/platforms/platform_base.js~FileDialogArgs#filters",
+    "member"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filedialogargs#multi",
+    "class/scripts/platforms/platform_base.js~FileDialogArgs.html#instance-member-multi",
+    "scripts/platforms/platform_base.js~FileDialogArgs#multi",
+    "member"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filepath#constructor",
+    "class/scripts/platforms/platform_base.js~FilePath.html#instance-constructor-constructor",
+    "scripts/platforms/platform_base.js~FilePath#constructor",
+    "method"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filepath#data",
+    "class/scripts/platforms/platform_base.js~FilePath.html#instance-member-data",
+    "scripts/platforms/platform_base.js~FilePath#data",
+    "member"
+  ],
+  [
+    "scripts/platforms/platform_base.js~filepath#filename",
+    "class/scripts/platforms/platform_base.js~FilePath.html#instance-member-filename",
+    "scripts/platforms/platform_base.js~FilePath#filename",
+    "member"
+  ],
+  [
+    "scripts/platforms/platform_base.js~platformapi.readfile",
+    "class/scripts/platforms/platform_base.js~PlatformAPI.html#static-method-readFile",
+    "scripts/platforms/platform_base.js~PlatformAPI.readFile",
+    "method"
+  ],
+  [
+    "scripts/platforms/platform_base.js~platformapi.showopendialog",
+    "class/scripts/platforms/platform_base.js~PlatformAPI.html#static-method-showOpenDialog",
+    "scripts/platforms/platform_base.js~PlatformAPI.showOpenDialog",
+    "method"
+  ],
+  [
+    "scripts/platforms/platform_base.js~platformapi.showsavedialog",
+    "class/scripts/platforms/platform_base.js~PlatformAPI.html#static-method-showSaveDialog",
+    "scripts/platforms/platform_base.js~PlatformAPI.showSaveDialog",
+    "method"
+  ],
+  [
+    "scripts/platforms/platform_base.js~platformapi.writefile",
+    "class/scripts/platforms/platform_base.js~PlatformAPI.html#static-method-writeFile",
+    "scripts/platforms/platform_base.js~PlatformAPI.writeFile",
+    "method"
+  ],
+  [
+    "scripts/platforms/web/web_api.js",
+    "file/scripts/platforms/web/web_api.js.html",
+    "scripts/platforms/web/web_api.js",
+    "file"
+  ],
+  [
+    "scripts/platforms/web/web_api.js~platform.readfile",
+    "class/scripts/platforms/web/web_api.js~platform.html#static-method-readFile",
+    "scripts/platforms/web/web_api.js~platform.readFile",
+    "method"
+  ],
+  [
+    "scripts/platforms/web/web_api.js~platform.showopendialog",
+    "class/scripts/platforms/web/web_api.js~platform.html#static-method-showOpenDialog",
+    "scripts/platforms/web/web_api.js~platform.showOpenDialog",
+    "method"
+  ],
+  [
+    "scripts/platforms/web/web_api.js~platform.showsavedialog",
+    "class/scripts/platforms/web/web_api.js~platform.html#static-method-showSaveDialog",
+    "scripts/platforms/web/web_api.js~platform.showSaveDialog",
+    "method"
+  ],
+  [
+    "scripts/platforms/web/web_api.js~platform.showsavedialog_old",
+    "class/scripts/platforms/web/web_api.js~platform.html#static-method-showSaveDialog_old",
+    "scripts/platforms/web/web_api.js~platform.showSaveDialog_old",
+    "method"
+  ],
+  [
+    "scripts/platforms/web/web_api.js~platform.writefile",
+    "class/scripts/platforms/web/web_api.js~platform.html#static-method-writeFile",
+    "scripts/platforms/web/web_api.js~platform.writeFile",
+    "method"
   ],
   [
     "scripts/screen/areadocker.js",
@@ -8610,9 +15126,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screen/framemanager.js~screen#checkcsssize",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-checkCSSSize",
+    "scripts/screen/FrameManager.js~Screen#checkCSSSize",
+    "method"
+  ],
+  [
     "scripts/screen/framemanager.js~screen#clear",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-clear",
     "scripts/screen/FrameManager.js~Screen#clear",
+    "method"
+  ],
+  [
+    "scripts/screen/framemanager.js~screen#collapsearea",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-collapseArea",
+    "scripts/screen/FrameManager.js~Screen#collapseArea",
     "method"
   ],
   [
@@ -8691,6 +15219,18 @@ window.esdocSearchIndex = [
     "scripts/screen/framemanager.js~screen#freeborder",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-freeBorder",
     "scripts/screen/FrameManager.js~Screen#freeBorder",
+    "method"
+  ],
+  [
+    "scripts/screen/framemanager.js~screen#fullscreen",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-member-fullScreen",
+    "scripts/screen/FrameManager.js~Screen#fullScreen",
+    "member"
+  ],
+  [
+    "scripts/screen/framemanager.js~screen#getboolattribute",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-getBoolAttribute",
+    "scripts/screen/FrameManager.js~Screen#getBoolAttribute",
     "method"
   ],
   [
@@ -8886,6 +15426,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/screen/framemanager.js~screen#oldpos",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-member-oldpos",
+    "scripts/screen/FrameManager.js~Screen#oldpos",
+    "member"
+  ],
+  [
     "scripts/screen/framemanager.js~screen#on_keydown",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-on_keydown",
     "scripts/screen/FrameManager.js~Screen#on_keydown",
@@ -8907,12 +15453,6 @@ window.esdocSearchIndex = [
     "scripts/screen/framemanager.js~screen#on_resize",
     "class/scripts/screen/FrameManager.js~Screen.html#instance-method-on_resize",
     "scripts/screen/FrameManager.js~Screen#on_resize",
-    "method"
-  ],
-  [
-    "scripts/screen/framemanager.js~screen#pickelement",
-    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-pickElement",
-    "scripts/screen/FrameManager.js~Screen#pickElement",
     "method"
   ],
   [
@@ -8944,6 +15484,12 @@ window.esdocSearchIndex = [
     "class/scripts/screen/FrameManager.js~Screen.html#instance-member-pos",
     "scripts/screen/FrameManager.js~Screen#pos",
     "member"
+  ],
+  [
+    "scripts/screen/framemanager.js~screen#purgeupdatestack",
+    "class/scripts/screen/FrameManager.js~Screen.html#instance-method-purgeUpdateStack",
+    "scripts/screen/FrameManager.js~Screen#purgeUpdateStack",
+    "method"
   ],
   [
     "scripts/screen/framemanager.js~screen#regenborders",
@@ -10500,460 +17046,16 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/screen/area_wrangler.js~areawrangler#updatelastref",
+    "class/scripts/screen/area_wrangler.js~AreaWrangler.html#instance-method-updateLastRef",
+    "scripts/screen/area_wrangler.js~AreaWrangler#updateLastRef",
+    "method"
+  ],
+  [
     "scripts/toolsys/simple_toolsys.js",
     "file/scripts/toolsys/simple_toolsys.js.html",
     "scripts/toolsys/simple_toolsys.js",
     "file"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#_accept",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-_accept",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#_accept",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#_do_connections",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-_do_connections",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#_do_connections",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#_promise",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-_promise",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#_promise",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#_reject",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-_reject",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#_reject",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#add",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-add",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#add",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#connect",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-connect",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#connect",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#connects",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-connects",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#connects",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#constructor",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-constructor-constructor",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#curtool",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-curtool",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#curtool",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#exec",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-exec",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#exec",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#has_modal",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-has_modal",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#has_modal",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#is_modal",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-is_modal",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#is_modal",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#modalstart",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-modalStart",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#modalStart",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#tools",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-member-tools",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#tools",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#undo",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-undo",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#undo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro#undopre",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#instance-method-undoPre",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro#undoPre",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro.canrun",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#static-method-canRun",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro.canRun",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolmacro.tooldef",
-    "class/scripts/toolsys/simple_toolsys.js~ToolMacro.html#static-method-tooldef",
-    "scripts/toolsys/simple_toolsys.js~ToolMacro.tooldef",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#[k]",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-[k]",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#[k]",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#_accept",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-_accept",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#_accept",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#_overdraw",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-_overdraw",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#_overdraw",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#_promise",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-_promise",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#_promise",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#_reject",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-_reject",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#_reject",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#_undo",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-_undo",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#_undo",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#constructor",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-constructor-constructor",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#drawlines",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-drawlines",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#drawlines",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#error",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-error",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#error",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#exec",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-exec",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#exec",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#execpost",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-execPost",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#execPost",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#execpre",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-execPre",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#execPre",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#exec_pre",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-exec_pre",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#exec_pre",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#flag",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-flag",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#flag",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#gentoolstring",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-genToolString",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#genToolString",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#getoverdraw",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-getOverdraw",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#getOverdraw",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#inputs",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-inputs",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#inputs",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#is_modal",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-is_modal",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#is_modal",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#maketempline",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-makeTempLine",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#makeTempLine",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#modalend",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-modalEnd",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#modalEnd",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#modalrunning",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-modalRunning",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#modalRunning",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#modalstart",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-modalStart",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#modalStart",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#modal_ctx",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-modal_ctx",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#modal_ctx",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#on_keydown",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-on_keydown",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#on_keydown",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#on_tick",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-on_tick",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#on_tick",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#outputs",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-outputs",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#outputs",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#popmodal",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-popModal",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#popModal",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#pushmodal",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-pushModal",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#pushModal",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#resettempgeom",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-resetTempGeom",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#resetTempGeom",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#toolcancel",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-toolCancel",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#toolCancel",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#undo",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-undo",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#undo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#undopre",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-method-undoPre",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#undoPre",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop#undoflag",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#instance-member-undoflag",
-    "scripts/toolsys/simple_toolsys.js~ToolOp#undoflag",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.equals",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-Equals",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.Equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.canrun",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-canRun",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.canRun",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.inherit",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-inherit",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.inherit",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.invoke",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-invoke",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.invoke",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.isregistered",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-isRegistered",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.isRegistered",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.ontick",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-onTick",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.onTick",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.register",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-register",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.register",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.searchboxok",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-searchBoxOk",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.searchBoxOk",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.tooldef",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-tooldef",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.tooldef",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolop.unregister",
-    "class/scripts/toolsys/simple_toolsys.js~ToolOp.html#static-method-unregister",
-    "scripts/toolsys/simple_toolsys.js~ToolOp.unregister",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#[.cur]",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-member-[.cur]",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#[.cur]",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#constructor",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-constructor-constructor",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#ctx",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-member-ctx",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#ctx",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#cur",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-member-cur",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#cur",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#execorredo",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-execOrRedo",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#execOrRedo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#exectool",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-execTool",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#execTool",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#head",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-get-head",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#head",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#length",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-member-length",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#length",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#modalrunning",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-member-modalRunning",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#modalRunning",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#redo",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-redo",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#redo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#reset",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-reset",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#reset",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#setrestrictedtoolcontext",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-setRestrictedToolContext",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#setRestrictedToolContext",
-    "method"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#toolctx",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-member-toolctx",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#toolctx",
-    "member"
-  ],
-  [
-    "scripts/toolsys/simple_toolsys.js~toolstack#undo",
-    "class/scripts/toolsys/simple_toolsys.js~ToolStack.html#instance-method-undo",
-    "scripts/toolsys/simple_toolsys.js~ToolStack#undo",
-    "method"
   ],
   [
     "scripts/toolsys/toolpath.js",
@@ -10968,1654 +17070,82 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/toolsys/toolprop.js~boolproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~BoolProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#copy",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~BoolProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~BoolProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#data",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~BoolProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#equals",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~BoolProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~BoolProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#loadjson",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-loadJSON",
-    "scripts/toolsys/toolprop.js~BoolProperty#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~BoolProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~boolproperty#tojson",
-    "class/scripts/toolsys/toolprop.js~BoolProperty.html#instance-method-toJSON",
-    "scripts/toolsys/toolprop.js~BoolProperty#toJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#copy",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#data",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#equals",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#evaluate",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-evaluate",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#evaluate",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~curve1dproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~Curve1DProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~Curve1DProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumkeypair#constructor",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~EnumKeyPair#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumkeypair#key",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-key",
-    "scripts/toolsys/toolprop.js~EnumKeyPair#key",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumkeypair#key_is_int",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-key_is_int",
-    "scripts/toolsys/toolprop.js~EnumKeyPair#key_is_int",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumkeypair#loadstruct",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~EnumKeyPair#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumkeypair#val",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-val",
-    "scripts/toolsys/toolprop.js~EnumKeyPair#val",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumkeypair#val_is_int",
-    "class/scripts/toolsys/toolprop.js~EnumKeyPair.html#instance-member-val_is_int",
-    "scripts/toolsys/toolprop.js~EnumKeyPair#val_is_int",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#_is_data_int",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-_is_data_int",
-    "scripts/toolsys/toolprop.js~EnumProperty#_is_data_int",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#_loadmap",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-_loadMap",
-    "scripts/toolsys/toolprop.js~EnumProperty#_loadMap",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#_savemap",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-_saveMap",
-    "scripts/toolsys/toolprop.js~EnumProperty#_saveMap",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#adddescriptions",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-addDescriptions",
-    "scripts/toolsys/toolprop.js~EnumProperty#addDescriptions",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#addicons",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-addIcons",
-    "scripts/toolsys/toolprop.js~EnumProperty#addIcons",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#adduinames",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-addUINames",
-    "scripts/toolsys/toolprop.js~EnumProperty#addUINames",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~EnumProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#copy",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~EnumProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~EnumProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#data",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~EnumProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#descriptions",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-descriptions",
-    "scripts/toolsys/toolprop.js~EnumProperty#descriptions",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#equals",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~EnumProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~EnumProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#iconmap",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-iconmap",
-    "scripts/toolsys/toolprop.js~EnumProperty#iconmap",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#keys",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-keys",
-    "scripts/toolsys/toolprop.js~EnumProperty#keys",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#loadstruct",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~EnumProperty#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~EnumProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#ui_value_names",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-ui_value_names",
-    "scripts/toolsys/toolprop.js~EnumProperty#ui_value_names",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#values",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-values",
-    "scripts/toolsys/toolprop.js~EnumProperty#values",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~enumproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~EnumProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~EnumProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~flagproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~FlagProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~flagproperty#copy",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~FlagProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~flagproperty#data",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~FlagProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~flagproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~FlagProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~flagproperty#type",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html#instance-member-type",
-    "scripts/toolsys/toolprop.js~FlagProperty#type",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~flagproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~FlagProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~FlagProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~FloatProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~FloatProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#data",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~FloatProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#decimalplaces",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-member-decimalPlaces",
-    "scripts/toolsys/toolprop.js~FloatProperty#decimalPlaces",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#loadjson",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-method-loadJSON",
-    "scripts/toolsys/toolprop.js~FloatProperty#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#loadstruct",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~FloatProperty#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#setdecimalplaces",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-method-setDecimalPlaces",
-    "scripts/toolsys/toolprop.js~FloatProperty#setDecimalPlaces",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~FloatProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~floatproperty#tojson",
-    "class/scripts/toolsys/toolprop.js~FloatProperty.html#instance-method-toJSON",
-    "scripts/toolsys/toolprop.js~FloatProperty#toJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~IntProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#data",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~IntProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#loadjson",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-method-loadJSON",
-    "scripts/toolsys/toolprop.js~IntProperty#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#loadstruct",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~IntProperty#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#radix",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-member-radix",
-    "scripts/toolsys/toolprop.js~IntProperty#radix",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#setradix",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-method-setRadix",
-    "scripts/toolsys/toolprop.js~IntProperty#setRadix",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~IntProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~intproperty#tojson",
-    "class/scripts/toolsys/toolprop.js~IntProperty.html#instance-method-toJSON",
-    "scripts/toolsys/toolprop.js~IntProperty#toJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#[symbol.iterator]",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-[Symbol.iterator]",
-    "scripts/toolsys/toolprop.js~ListProperty#[Symbol.iterator]",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#clear",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-clear",
-    "scripts/toolsys/toolprop.js~ListProperty#clear",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~ListProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#copy",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~ListProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~ListProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#equals",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~ListProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#getlistitem",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-getListItem",
-    "scripts/toolsys/toolprop.js~ListProperty#getListItem",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~ListProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#length",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-get-length",
-    "scripts/toolsys/toolprop.js~ListProperty#length",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#length",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-set-length",
-    "scripts/toolsys/toolprop.js~ListProperty#length",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#prop",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-member-prop",
-    "scripts/toolsys/toolprop.js~ListProperty#prop",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#push",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-push",
-    "scripts/toolsys/toolprop.js~ListProperty#push",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#setlistitem",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-setListItem",
-    "scripts/toolsys/toolprop.js~ListProperty#setListItem",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~ListProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#uiname",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-member-uiname",
-    "scripts/toolsys/toolprop.js~ListProperty#uiname",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#value",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-member-value",
-    "scripts/toolsys/toolprop.js~ListProperty#value",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~listproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~ListProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~ListProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#constructor",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~Mat4Property#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#copy",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~Mat4Property#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#copyto",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~Mat4Property#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#data",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~Mat4Property#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#equals",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~Mat4Property#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#getvalue",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~Mat4Property#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#loadstruct",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~Mat4Property#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~mat4property#setvalue",
-    "class/scripts/toolsys/toolprop.js~Mat4Property.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~Mat4Property#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~numproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~NumProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~numproperty#data",
-    "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~NumProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~numproperty#equals",
-    "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~NumProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~numproperty#loadstruct",
-    "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~NumProperty#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~numproperty#range",
-    "class/scripts/toolsys/toolprop.js~NumProperty.html#instance-member-range",
-    "scripts/toolsys/toolprop.js~NumProperty#range",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~QuatProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#copy",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~QuatProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~QuatProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#data",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~QuatProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#equals",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~QuatProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~QuatProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~quatproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~QuatProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~QuatProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~StringProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#copy",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~StringProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~StringProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#data",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~StringProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#equals",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~StringProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#multiline",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-member-multiLine",
-    "scripts/toolsys/toolprop.js~StringProperty#multiLine",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~StringProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~StringProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~StringProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#adddescriptions",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-addDescriptions",
-    "scripts/toolsys/toolprop.js~StringSetProperty#addDescriptions",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#addicons",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-addIcons",
-    "scripts/toolsys/toolprop.js~StringSetProperty#addIcons",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#adduinames",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-addUINames",
-    "scripts/toolsys/toolprop.js~StringSetProperty#addUINames",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~StringSetProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#copy",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~StringSetProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~StringSetProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#descriptions",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-descriptions",
-    "scripts/toolsys/toolprop.js~StringSetProperty#descriptions",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#equals",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~StringSetProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~StringSetProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#iconmap",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-iconmap",
-    "scripts/toolsys/toolprop.js~StringSetProperty#iconmap",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~StringSetProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#ui_value_names",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-ui_value_names",
-    "scripts/toolsys/toolprop.js~StringSetProperty#ui_value_names",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#value",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-value",
-    "scripts/toolsys/toolprop.js~StringSetProperty#value",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#values",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-values",
-    "scripts/toolsys/toolprop.js~StringSetProperty#values",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~stringsetproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~StringSetProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~StringSetProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#_fire",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-_fire",
-    "scripts/toolsys/toolprop.js~ToolProperty#_fire",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#apiname",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-apiname",
-    "scripts/toolsys/toolprop.js~ToolProperty#apiname",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#baseunit",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-baseUnit",
-    "scripts/toolsys/toolprop.js~ToolProperty#baseUnit",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#callbacks",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-callbacks",
-    "scripts/toolsys/toolprop.js~ToolProperty#callbacks",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#constructor",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~ToolProperty#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#copy",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~ToolProperty#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#copyto",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~ToolProperty#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#data",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~ToolProperty#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#decimalplaces",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-decimalPlaces",
-    "scripts/toolsys/toolprop.js~ToolProperty#decimalPlaces",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#description",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-description",
-    "scripts/toolsys/toolprop.js~ToolProperty#description",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#displayunit",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-displayUnit",
-    "scripts/toolsys/toolprop.js~ToolProperty#displayUnit",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#equals",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~ToolProperty#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#flag",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-flag",
-    "scripts/toolsys/toolprop.js~ToolProperty#flag",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#getstep",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-getStep",
-    "scripts/toolsys/toolprop.js~ToolProperty#getStep",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#getvalue",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~ToolProperty#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#icon",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-icon",
-    "scripts/toolsys/toolprop.js~ToolProperty#icon",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#loadjson",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-loadJSON",
-    "scripts/toolsys/toolprop.js~ToolProperty#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#loadstruct",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-loadSTRUCT",
-    "scripts/toolsys/toolprop.js~ToolProperty#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#nounits",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-noUnits",
-    "scripts/toolsys/toolprop.js~ToolProperty#noUnits",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#off",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-off",
-    "scripts/toolsys/toolprop.js~ToolProperty#off",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#on",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-on",
-    "scripts/toolsys/toolprop.js~ToolProperty#on",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#private",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-private",
-    "scripts/toolsys/toolprop.js~ToolProperty#private",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#radix",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-radix",
-    "scripts/toolsys/toolprop.js~ToolProperty#radix",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#range",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-range",
-    "scripts/toolsys/toolprop.js~ToolProperty#range",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#report",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-report",
-    "scripts/toolsys/toolprop.js~ToolProperty#report",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setbaseunit",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setBaseUnit",
-    "scripts/toolsys/toolprop.js~ToolProperty#setBaseUnit",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setdisplayunit",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setDisplayUnit",
-    "scripts/toolsys/toolprop.js~ToolProperty#setDisplayUnit",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setflag",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setFlag",
-    "scripts/toolsys/toolprop.js~ToolProperty#setFlag",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#seticon",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setIcon",
-    "scripts/toolsys/toolprop.js~ToolProperty#setIcon",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setrange",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setRange",
-    "scripts/toolsys/toolprop.js~ToolProperty#setRange",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setrelativestep",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setRelativeStep",
-    "scripts/toolsys/toolprop.js~ToolProperty#setRelativeStep",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setstep",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setStep",
-    "scripts/toolsys/toolprop.js~ToolProperty#setStep",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setuirange",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setUIRange",
-    "scripts/toolsys/toolprop.js~ToolProperty#setUIRange",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#setvalue",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~ToolProperty#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#step",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-step",
-    "scripts/toolsys/toolprop.js~ToolProperty#step",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#stepisrelative",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-stepIsRelative",
-    "scripts/toolsys/toolprop.js~ToolProperty#stepIsRelative",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#subtype",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-subtype",
-    "scripts/toolsys/toolprop.js~ToolProperty#subtype",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#tojson",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-method-toJSON",
-    "scripts/toolsys/toolprop.js~ToolProperty#toJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#type",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-type",
-    "scripts/toolsys/toolprop.js~ToolProperty#type",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#uirange",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-uiRange",
-    "scripts/toolsys/toolprop.js~ToolProperty#uiRange",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#uiname",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-uiname",
-    "scripts/toolsys/toolprop.js~ToolProperty#uiname",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty#wasset",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~ToolProperty#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty.calcrelativestep",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#static-method-calcRelativeStep",
-    "scripts/toolsys/toolprop.js~ToolProperty.calcRelativeStep",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~toolproperty.register",
-    "class/scripts/toolsys/toolprop.js~ToolProperty.html#static-method-register",
-    "scripts/toolsys/toolprop.js~ToolProperty.register",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#constructor",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~Vec2Property#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#copy",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~Vec2Property#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#copyto",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~Vec2Property#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#data",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~Vec2Property#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#getvalue",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~Vec2Property#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#setvalue",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~Vec2Property#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec2property#type",
-    "class/scripts/toolsys/toolprop.js~Vec2Property.html#instance-member-type",
-    "scripts/toolsys/toolprop.js~Vec2Property#type",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#constructor",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~Vec3Property#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#copy",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~Vec3Property#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#copyto",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~Vec3Property#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#data",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~Vec3Property#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#getvalue",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~Vec3Property#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#setvalue",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~Vec3Property#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec3property#type",
-    "class/scripts/toolsys/toolprop.js~Vec3Property.html#instance-member-type",
-    "scripts/toolsys/toolprop.js~Vec3Property#type",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#constructor",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~Vec4Property#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#copy",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-method-copy",
-    "scripts/toolsys/toolprop.js~Vec4Property#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#copyto",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~Vec4Property#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#data",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~Vec4Property#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#getvalue",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-method-getValue",
-    "scripts/toolsys/toolprop.js~Vec4Property#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#setvalue",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~Vec4Property#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vec4property#type",
-    "class/scripts/toolsys/toolprop.js~Vec4Property.html#instance-member-type",
-    "scripts/toolsys/toolprop.js~Vec4Property#type",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vecpropertybase#constructor",
-    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~VecPropertyBase#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vecpropertybase#copyto",
-    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~VecPropertyBase#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vecpropertybase#equals",
-    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~VecPropertyBase#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vecpropertybase#hasuniformslider",
-    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-member-hasUniformSlider",
-    "scripts/toolsys/toolprop.js~VecPropertyBase#hasUniformSlider",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~vecpropertybase#uniformslider",
-    "class/scripts/toolsys/toolprop.js~VecPropertyBase.html#instance-method-uniformSlider",
-    "scripts/toolsys/toolprop.js~VecPropertyBase#uniformSlider",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#[key]",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-[key]",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#[key]",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#constructor",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#copyto",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#data",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-data",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#equals",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-equals",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#exprate",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-expRate",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#expRate",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#loadjson",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-loadJSON",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#loadjson",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-loadJSON",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#range",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-range",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#range",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#setexprate",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-setExpRate",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#setExpRate",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#setvalue",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-setValue",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#step",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-step",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#step",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#tojson",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-method-toJSON",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#toJSON",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#uirange",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-uiRange",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#uiRange",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#ui_range",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-get-ui_range",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#ui_range",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#ui_range",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-set-ui_range",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#ui_range",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop.js~_numberpropertybase#wasset",
-    "class/scripts/toolsys/toolprop.js~_NumberPropertyBase.html#instance-member-wasSet",
-    "scripts/toolsys/toolprop.js~_NumberPropertyBase#wasSet",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js",
-    "file/scripts/toolsys/toolprop_abstract.js.html",
-    "scripts/toolsys/toolprop_abstract.js",
-    "file"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~curve1dpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~curve1dpropertyif#copyto",
-    "class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~curve1dpropertyif#data",
-    "class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-member-data",
-    "scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~curve1dpropertyif#getvalue",
-    "class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-getValue",
-    "scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~curve1dpropertyif#setvalue",
-    "class/scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF.html#instance-method-setValue",
-    "scripts/toolsys/toolprop_abstract.js~Curve1DPropertyIF#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~enumpropertyif#addicons",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-method-addIcons",
-    "scripts/toolsys/toolprop_abstract.js~EnumPropertyIF#addIcons",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~enumpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~EnumPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~enumpropertyif#iconmap",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-iconmap",
-    "scripts/toolsys/toolprop_abstract.js~EnumPropertyIF#iconmap",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~enumpropertyif#keys",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-keys",
-    "scripts/toolsys/toolprop_abstract.js~EnumPropertyIF#keys",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~enumpropertyif#ui_value_names",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-ui_value_names",
-    "scripts/toolsys/toolprop_abstract.js~EnumPropertyIF#ui_value_names",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~enumpropertyif#values",
-    "class/scripts/toolsys/toolprop_abstract.js~EnumPropertyIF.html#instance-member-values",
-    "scripts/toolsys/toolprop_abstract.js~EnumPropertyIF#values",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~flagpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~FlagPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~FlagPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~floatpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~FloatPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~FloatPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~floatpropertyif#setdecimalplaces",
-    "class/scripts/toolsys/toolprop_abstract.js~FloatPropertyIF.html#instance-method-setDecimalPlaces",
-    "scripts/toolsys/toolprop_abstract.js~FloatPropertyIF#setDecimalPlaces",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~intpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~IntPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~IntPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~intpropertyif#setradix",
-    "class/scripts/toolsys/toolprop_abstract.js~IntPropertyIF.html#instance-method-setRadix",
-    "scripts/toolsys/toolprop_abstract.js~IntPropertyIF#setRadix",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#[symbol.iterator]",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-[Symbol.iterator]",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#[Symbol.iterator]",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#clear",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-clear",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#clear",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#copy",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-copy",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#copyto",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#length",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-get-length",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#length",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#length",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-set-length",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#length",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#prop",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-member-prop",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#prop",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~listpropertyif#push",
-    "class/scripts/toolsys/toolprop_abstract.js~ListPropertyIF.html#instance-method-push",
-    "scripts/toolsys/toolprop_abstract.js~ListPropertyIF#push",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~StringPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~StringPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#adddescriptions",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-addDescriptions",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#addDescriptions",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#addicons",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-addIcons",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#addIcons",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#adduinames",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-addUINames",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#addUINames",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#copy",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-copy",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#copyto",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#getvalue",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-getValue",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~stringsetpropertyif#setvalue",
-    "class/scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF.html#instance-method-setValue",
-    "scripts/toolsys/toolprop_abstract.js~StringSetPropertyIF#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#_fire",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-_fire",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#_fire",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#apiname",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-apiname",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#apiname",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#copy",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-copy",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#copy",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#copyto",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-copyTo",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#copyTo",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#data",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-data",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#data",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#description",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-description",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#description",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#equals",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-equals",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#equals",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#flag",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-flag",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#flag",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#getvalue",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-getValue",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#getValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#icon",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-icon",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#icon",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#off",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-off",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#off",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#on",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-on",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#on",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#seticon",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setIcon",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#setIcon",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#setrange",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setRange",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#setRange",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#setstep",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setStep",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#setStep",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#setuirange",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setUIRange",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#setUIRange",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#setunit",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setUnit",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#setUnit",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#setvalue",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-method-setValue",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#setValue",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#subtype",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-subtype",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#subtype",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#type",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-type",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#type",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~toolpropertyif#uiname",
-    "class/scripts/toolsys/toolprop_abstract.js~ToolPropertyIF.html#instance-member-uiname",
-    "scripts/toolsys/toolprop_abstract.js~ToolPropertyIF#uiname",
-    "member"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~vec2propertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~Vec2PropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~Vec2PropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~vec3propertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~Vec3PropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~Vec3PropertyIF#constructor",
-    "method"
-  ],
-  [
-    "scripts/toolsys/toolprop_abstract.js~vec4propertyif#constructor",
-    "class/scripts/toolsys/toolprop_abstract.js~Vec4PropertyIF.html#instance-constructor-constructor",
-    "scripts/toolsys/toolprop_abstract.js~Vec4PropertyIF#constructor",
-    "method"
-  ],
-  [
     "scripts/util/screenoverdraw.js",
     "file/scripts/util/ScreenOverdraw.js.html",
     "scripts/util/ScreenOverdraw.js",
     "file"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#canvas",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-canvas",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#canvas",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#constructor",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-constructor-constructor",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#constructor",
+    "method"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#ctx",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-ctx",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#ctx",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#font",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-font",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#font",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#g",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-g",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#g",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#otherchildren",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-otherChildren",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#otherChildren",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#screen",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-screen",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#screen",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#shapes",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-shapes",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#shapes",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#start",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-method-start",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#start",
+    "method"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#startnode",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-method-startNode",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#startNode",
+    "method"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw#svg",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#instance-member-svg",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw#svg",
+    "member"
+  ],
+  [
+    "scripts/util/screenoverdraw.js~canvasoverdraw.define",
+    "class/scripts/util/ScreenOverdraw.js~CanvasOverdraw.html#static-method-define",
+    "scripts/util/ScreenOverdraw.js~CanvasOverdraw.define",
+    "method"
   ],
   [
     "scripts/util/screenoverdraw.js~overdraw#circle",
@@ -12738,136 +17268,10 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/util/cssutils.js",
-    "file/scripts/util/cssutils.js.html",
-    "scripts/util/cssutils.js",
-    "file"
-  ],
-  [
     "scripts/util/events.js",
     "file/scripts/util/events.js.html",
     "scripts/util/events.js",
     "file"
-  ],
-  [
-    "scripts/util/events.js~eventdispatcher#_cbs",
-    "class/scripts/util/events.js~EventDispatcher.html#instance-member-_cbs",
-    "scripts/util/events.js~EventDispatcher#_cbs",
-    "member"
-  ],
-  [
-    "scripts/util/events.js~eventdispatcher#_fireevent",
-    "class/scripts/util/events.js~EventDispatcher.html#instance-method-_fireEvent",
-    "scripts/util/events.js~EventDispatcher#_fireEvent",
-    "method"
-  ],
-  [
-    "scripts/util/events.js~eventdispatcher#constructor",
-    "class/scripts/util/events.js~EventDispatcher.html#instance-constructor-constructor",
-    "scripts/util/events.js~EventDispatcher#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/events.js~eventdispatcher#off",
-    "class/scripts/util/events.js~EventDispatcher.html#instance-method-off",
-    "scripts/util/events.js~EventDispatcher#off",
-    "method"
-  ],
-  [
-    "scripts/util/events.js~eventdispatcher#on",
-    "class/scripts/util/events.js~EventDispatcher.html#instance-method-on",
-    "scripts/util/events.js~EventDispatcher#on",
-    "method"
-  ],
-  [
-    "scripts/util/events.js~eventhandler#_modalstate",
-    "class/scripts/util/events.js~EventHandler.html#instance-member-_modalstate",
-    "scripts/util/events.js~EventHandler#_modalstate",
-    "member"
-  ],
-  [
-    "scripts/util/events.js~eventhandler#popmodal",
-    "class/scripts/util/events.js~EventHandler.html#instance-method-popModal",
-    "scripts/util/events.js~EventHandler#popModal",
-    "method"
-  ],
-  [
-    "scripts/util/events.js~eventhandler#pushmodal",
-    "class/scripts/util/events.js~EventHandler.html#instance-method-pushModal",
-    "scripts/util/events.js~EventHandler#pushModal",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js",
-    "file/scripts/util/expr.js.html",
-    "scripts/util/expr.js",
-    "file"
-  ],
-  [
-    "scripts/util/expr.js~node#[.indexof(n)]",
-    "class/scripts/util/expr.js~Node.html#instance-member-[.indexOf(n)]",
-    "scripts/util/expr.js~Node#[.indexOf(n)]",
-    "member"
-  ],
-  [
-    "scripts/util/expr.js~node#[i]",
-    "class/scripts/util/expr.js~Node.html#instance-member-[i]",
-    "scripts/util/expr.js~Node#[i]",
-    "member"
-  ],
-  [
-    "scripts/util/expr.js~node#[starti]",
-    "class/scripts/util/expr.js~Node.html#instance-member-[starti]",
-    "scripts/util/expr.js~Node#[starti]",
-    "member"
-  ],
-  [
-    "scripts/util/expr.js~node#constructor",
-    "class/scripts/util/expr.js~Node.html#instance-constructor-constructor",
-    "scripts/util/expr.js~Node#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js~node#insert",
-    "class/scripts/util/expr.js~Node.html#instance-method-insert",
-    "scripts/util/expr.js~Node#insert",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js~node#parent",
-    "class/scripts/util/expr.js~Node.html#instance-member-parent",
-    "scripts/util/expr.js~Node#parent",
-    "member"
-  ],
-  [
-    "scripts/util/expr.js~node#push",
-    "class/scripts/util/expr.js~Node.html#instance-method-push",
-    "scripts/util/expr.js~Node#push",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js~node#remove",
-    "class/scripts/util/expr.js~Node.html#instance-method-remove",
-    "scripts/util/expr.js~Node#remove",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js~node#replace",
-    "class/scripts/util/expr.js~Node.html#instance-method-replace",
-    "scripts/util/expr.js~Node#replace",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js~node#tostring",
-    "class/scripts/util/expr.js~Node.html#instance-method-toString",
-    "scripts/util/expr.js~Node#toString",
-    "method"
-  ],
-  [
-    "scripts/util/expr.js~node#type",
-    "class/scripts/util/expr.js~Node.html#instance-member-type",
-    "scripts/util/expr.js~Node#type",
-    "member"
   ],
   [
     "scripts/util/graphpack.js",
@@ -12972,231 +17376,9 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/util/image.js",
-    "file/scripts/util/image.js.html",
-    "scripts/util/image.js",
-    "file"
-  ],
-  [
-    "scripts/util/jobs.js",
-    "file/scripts/util/jobs.js.html",
-    "scripts/util/jobs.js",
-    "file"
-  ],
-  [
-    "scripts/util/kdtree.js",
-    "file/scripts/util/kdtree.js.html",
-    "scripts/util/kdtree.js",
-    "file"
-  ],
-  [
     "scripts/util/math.js",
     "file/scripts/util/math.js.html",
     "scripts/util/math.js",
-    "file"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#constructor",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-constructor-constructor",
-    "scripts/util/math.js~Mat4Stack#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#identity",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-identity",
-    "scripts/util/math.js~Mat4Stack#identity",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#load",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-load",
-    "scripts/util/math.js~Mat4Stack#load",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#matrix",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-member-matrix",
-    "scripts/util/math.js~Mat4Stack#matrix",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#multiply",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-multiply",
-    "scripts/util/math.js~Mat4Stack#multiply",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#pop",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-pop",
-    "scripts/util/math.js~Mat4Stack#pop",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#push",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-push",
-    "scripts/util/math.js~Mat4Stack#push",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#reset",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-reset",
-    "scripts/util/math.js~Mat4Stack#reset",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#set_internal_matrix",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-method-set_internal_matrix",
-    "scripts/util/math.js~Mat4Stack#set_internal_matrix",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#stack",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-member-stack",
-    "scripts/util/math.js~Mat4Stack#stack",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~mat4stack#update_func",
-    "class/scripts/util/math.js~Mat4Stack.html#instance-member-update_func",
-    "scripts/util/math.js~Mat4Stack#update_func",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#_max",
-    "class/scripts/util/math.js~MinMax.html#instance-member-_max",
-    "scripts/util/math.js~MinMax#_max",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#_min",
-    "class/scripts/util/math.js~MinMax.html#instance-member-_min",
-    "scripts/util/math.js~MinMax#_min",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#_static_mr_co",
-    "class/scripts/util/math.js~MinMax.html#instance-member-_static_mr_co",
-    "scripts/util/math.js~MinMax#_static_mr_co",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#_static_mr_cs",
-    "class/scripts/util/math.js~MinMax.html#instance-member-_static_mr_cs",
-    "scripts/util/math.js~MinMax#_static_mr_cs",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#constructor",
-    "class/scripts/util/math.js~MinMax.html#instance-constructor-constructor",
-    "scripts/util/math.js~MinMax#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~minmax#load",
-    "class/scripts/util/math.js~MinMax.html#instance-method-load",
-    "scripts/util/math.js~MinMax#load",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~minmax#max",
-    "class/scripts/util/math.js~MinMax.html#instance-member-max",
-    "scripts/util/math.js~MinMax#max",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#min",
-    "class/scripts/util/math.js~MinMax.html#instance-member-min",
-    "scripts/util/math.js~MinMax#min",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax#minmax",
-    "class/scripts/util/math.js~MinMax.html#instance-method-minmax",
-    "scripts/util/math.js~MinMax#minmax",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~minmax#minmax_rect",
-    "class/scripts/util/math.js~MinMax.html#instance-method-minmax_rect",
-    "scripts/util/math.js~MinMax#minmax_rect",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~minmax#reset",
-    "class/scripts/util/math.js~MinMax.html#instance-method-reset",
-    "scripts/util/math.js~MinMax#reset",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~minmax#totaxis",
-    "class/scripts/util/math.js~MinMax.html#instance-member-totaxis",
-    "scripts/util/math.js~MinMax#totaxis",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~minmax.fromstruct",
-    "class/scripts/util/math.js~MinMax.html#static-method-fromSTRUCT",
-    "scripts/util/math.js~MinMax.fromSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#axis",
-    "class/scripts/util/math.js~PlaneOps.html#instance-member-axis",
-    "scripts/util/math.js~PlaneOps#axis",
-    "member"
-  ],
-  [
-    "scripts/util/math.js~planeops#colinear",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-colinear",
-    "scripts/util/math.js~PlaneOps#colinear",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#constructor",
-    "class/scripts/util/math.js~PlaneOps.html#instance-constructor-constructor",
-    "scripts/util/math.js~PlaneOps#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#convex_quad",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-convex_quad",
-    "scripts/util/math.js~PlaneOps#convex_quad",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#get_boundary_winding",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-get_boundary_winding",
-    "scripts/util/math.js~PlaneOps#get_boundary_winding",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#line_isect",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-line_isect",
-    "scripts/util/math.js~PlaneOps#line_isect",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#line_line_cross",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-line_line_cross",
-    "scripts/util/math.js~PlaneOps#line_line_cross",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#reset_axis",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-reset_axis",
-    "scripts/util/math.js~PlaneOps#reset_axis",
-    "method"
-  ],
-  [
-    "scripts/util/math.js~planeops#winding",
-    "class/scripts/util/math.js~PlaneOps.html#instance-method-winding",
-    "scripts/util/math.js~PlaneOps#winding",
-    "method"
-  ],
-  [
-    "scripts/util/mobile-detect.js",
-    "file/scripts/util/mobile-detect.js.html",
-    "scripts/util/mobile-detect.js",
     "file"
   ],
   [
@@ -13206,466 +17388,10 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/util/parseutil.js",
-    "file/scripts/util/parseutil.js.html",
-    "scripts/util/parseutil.js",
-    "file"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#add_state",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-add_state",
-    "scripts/util/parseutil.js~lexer#add_state",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#at_end",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-at_end",
-    "scripts/util/parseutil.js~lexer#at_end",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#constructor",
-    "class/scripts/util/parseutil.js~lexer.html#instance-constructor-constructor",
-    "scripts/util/parseutil.js~lexer#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#errfunc",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-errfunc",
-    "scripts/util/parseutil.js~lexer#errfunc",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#error",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-error",
-    "scripts/util/parseutil.js~lexer#error",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#input",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-input",
-    "scripts/util/parseutil.js~lexer#input",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#lexdata",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-lexdata",
-    "scripts/util/parseutil.js~lexer#lexdata",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#lexpos",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-lexpos",
-    "scripts/util/parseutil.js~lexer#lexpos",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#lineno",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-lineno",
-    "scripts/util/parseutil.js~lexer#lineno",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#next",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-next",
-    "scripts/util/parseutil.js~lexer#next",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#peek",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-peek",
-    "scripts/util/parseutil.js~lexer#peek",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#peek_i",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-peek_i",
-    "scripts/util/parseutil.js~lexer#peek_i",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#peeked_tokens",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-peeked_tokens",
-    "scripts/util/parseutil.js~lexer#peeked_tokens",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#pop_state",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-pop_state",
-    "scripts/util/parseutil.js~lexer#pop_state",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#push_state",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-push_state",
-    "scripts/util/parseutil.js~lexer#push_state",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#statedata",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-statedata",
-    "scripts/util/parseutil.js~lexer#statedata",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#states",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-states",
-    "scripts/util/parseutil.js~lexer#states",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#statestack",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-statestack",
-    "scripts/util/parseutil.js~lexer#statestack",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#tok_int",
-    "class/scripts/util/parseutil.js~lexer.html#instance-method-tok_int",
-    "scripts/util/parseutil.js~lexer#tok_int",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#tokdef",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-tokdef",
-    "scripts/util/parseutil.js~lexer#tokdef",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#tokens",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-tokens",
-    "scripts/util/parseutil.js~lexer#tokens",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~lexer#tokints",
-    "class/scripts/util/parseutil.js~lexer.html#instance-member-tokints",
-    "scripts/util/parseutil.js~lexer#tokints",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#at_end",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-at_end",
-    "scripts/util/parseutil.js~parser#at_end",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#constructor",
-    "class/scripts/util/parseutil.js~parser.html#instance-constructor-constructor",
-    "scripts/util/parseutil.js~parser#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#errfunc",
-    "class/scripts/util/parseutil.js~parser.html#instance-member-errfunc",
-    "scripts/util/parseutil.js~parser#errfunc",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#error",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-error",
-    "scripts/util/parseutil.js~parser#error",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#expect",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-expect",
-    "scripts/util/parseutil.js~parser#expect",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#input",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-input",
-    "scripts/util/parseutil.js~parser#input",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#lexer",
-    "class/scripts/util/parseutil.js~parser.html#instance-member-lexer",
-    "scripts/util/parseutil.js~parser#lexer",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#next",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-next",
-    "scripts/util/parseutil.js~parser#next",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#optional",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-optional",
-    "scripts/util/parseutil.js~parser#optional",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#parse",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-parse",
-    "scripts/util/parseutil.js~parser#parse",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#peek",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-peek",
-    "scripts/util/parseutil.js~parser#peek",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#peek_i",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-peek_i",
-    "scripts/util/parseutil.js~parser#peek_i",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#peeknext",
-    "class/scripts/util/parseutil.js~parser.html#instance-method-peeknext",
-    "scripts/util/parseutil.js~parser#peeknext",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~parser#start",
-    "class/scripts/util/parseutil.js~parser.html#instance-member-start",
-    "scripts/util/parseutil.js~parser#start",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~tokdef#constructor",
-    "class/scripts/util/parseutil.js~tokdef.html#instance-constructor-constructor",
-    "scripts/util/parseutil.js~tokdef#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~tokdef#func",
-    "class/scripts/util/parseutil.js~tokdef.html#instance-member-func",
-    "scripts/util/parseutil.js~tokdef#func",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~tokdef#name",
-    "class/scripts/util/parseutil.js~tokdef.html#instance-member-name",
-    "scripts/util/parseutil.js~tokdef#name",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~tokdef#re",
-    "class/scripts/util/parseutil.js~tokdef.html#instance-member-re",
-    "scripts/util/parseutil.js~tokdef#re",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#constructor",
-    "class/scripts/util/parseutil.js~token.html#instance-constructor-constructor",
-    "scripts/util/parseutil.js~token#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~token#lexer",
-    "class/scripts/util/parseutil.js~token.html#instance-member-lexer",
-    "scripts/util/parseutil.js~token#lexer",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#lexlen",
-    "class/scripts/util/parseutil.js~token.html#instance-member-lexlen",
-    "scripts/util/parseutil.js~token#lexlen",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#lexpos",
-    "class/scripts/util/parseutil.js~token.html#instance-member-lexpos",
-    "scripts/util/parseutil.js~token#lexpos",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#lineno",
-    "class/scripts/util/parseutil.js~token.html#instance-member-lineno",
-    "scripts/util/parseutil.js~token#lineno",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#parser",
-    "class/scripts/util/parseutil.js~token.html#instance-member-parser",
-    "scripts/util/parseutil.js~token#parser",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#tostring",
-    "class/scripts/util/parseutil.js~token.html#instance-method-toString",
-    "scripts/util/parseutil.js~token#toString",
-    "method"
-  ],
-  [
-    "scripts/util/parseutil.js~token#type",
-    "class/scripts/util/parseutil.js~token.html#instance-member-type",
-    "scripts/util/parseutil.js~token#type",
-    "member"
-  ],
-  [
-    "scripts/util/parseutil.js~token#value",
-    "class/scripts/util/parseutil.js~token.html#instance-member-value",
-    "scripts/util/parseutil.js~token#value",
-    "member"
-  ],
-  [
-    "scripts/util/polyfill.js",
-    "file/scripts/util/polyfill.js.html",
-    "scripts/util/polyfill.js",
-    "file"
-  ],
-  [
     "scripts/util/simple_events.js",
     "file/scripts/util/simple_events.js.html",
     "scripts/util/simple_events.js",
     "file"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#_on_mousemove",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-method-_on_mousemove",
-    "scripts/util/simple_events.js~DoubleClickHandler#_on_mousemove",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#_on_mouseup",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-method-_on_mouseup",
-    "scripts/util/simple_events.js~DoubleClickHandler#_on_mouseup",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#abort",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-method-abort",
-    "scripts/util/simple_events.js~DoubleClickHandler#abort",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#constructor",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-constructor-constructor",
-    "scripts/util/simple_events.js~DoubleClickHandler#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#dblevent",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-member-dblEvent",
-    "scripts/util/simple_events.js~DoubleClickHandler#dblEvent",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#down",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-member-down",
-    "scripts/util/simple_events.js~DoubleClickHandler#down",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#last",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-member-last",
-    "scripts/util/simple_events.js~DoubleClickHandler#last",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#mdown",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-member-mdown",
-    "scripts/util/simple_events.js~DoubleClickHandler#mdown",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#mousedown",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-method-mousedown",
-    "scripts/util/simple_events.js~DoubleClickHandler#mousedown",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#ondblclick",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-method-ondblclick",
-    "scripts/util/simple_events.js~DoubleClickHandler#ondblclick",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#start_mpos",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-member-start_mpos",
-    "scripts/util/simple_events.js~DoubleClickHandler#start_mpos",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#up",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-member-up",
-    "scripts/util/simple_events.js~DoubleClickHandler#up",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~doubleclickhandler#update",
-    "class/scripts/util/simple_events.js~DoubleClickHandler.html#instance-method-update",
-    "scripts/util/simple_events.js~DoubleClickHandler#update",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#action",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-member-action",
-    "scripts/util/simple_events.js~HotKey#action",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#buildstring",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-method-buildString",
-    "scripts/util/simple_events.js~HotKey#buildString",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#constructor",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-constructor-constructor",
-    "scripts/util/simple_events.js~HotKey#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#exec",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-method-exec",
-    "scripts/util/simple_events.js~HotKey#exec",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#key",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-member-key",
-    "scripts/util/simple_events.js~HotKey#key",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#mods",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-member-mods",
-    "scripts/util/simple_events.js~HotKey#mods",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~hotkey#uiname",
-    "class/scripts/util/simple_events.js~HotKey.html#instance-member-uiname",
-    "scripts/util/simple_events.js~HotKey#uiname",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~keymap#add",
-    "class/scripts/util/simple_events.js~KeyMap.html#instance-method-add",
-    "scripts/util/simple_events.js~KeyMap#add",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~keymap#constructor",
-    "class/scripts/util/simple_events.js~KeyMap.html#instance-constructor-constructor",
-    "scripts/util/simple_events.js~KeyMap#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~keymap#handle",
-    "class/scripts/util/simple_events.js~KeyMap.html#instance-method-handle",
-    "scripts/util/simple_events.js~KeyMap#handle",
-    "method"
-  ],
-  [
-    "scripts/util/simple_events.js~keymap#pathid",
-    "class/scripts/util/simple_events.js~KeyMap.html#instance-member-pathid",
-    "scripts/util/simple_events.js~KeyMap#pathid",
-    "member"
-  ],
-  [
-    "scripts/util/simple_events.js~keymap#push",
-    "class/scripts/util/simple_events.js~KeyMap.html#instance-method-push",
-    "scripts/util/simple_events.js~KeyMap#push",
-    "method"
   ],
   [
     "scripts/util/solver.js",
@@ -13674,111 +17400,15 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/util/solver.js~constraint#constructor",
-    "class/scripts/util/solver.js~Constraint.html#instance-constructor-constructor",
-    "scripts/util/solver.js~Constraint#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/solver.js~constraint#df",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-df",
-    "scripts/util/solver.js~Constraint#df",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#evaluate",
-    "class/scripts/util/solver.js~Constraint.html#instance-method-evaluate",
-    "scripts/util/solver.js~Constraint#evaluate",
-    "method"
-  ],
-  [
-    "scripts/util/solver.js~constraint#func",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-func",
-    "scripts/util/solver.js~Constraint#func",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#glst",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-glst",
-    "scripts/util/solver.js~Constraint#glst",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#k",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-k",
-    "scripts/util/solver.js~Constraint#k",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#klst",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-klst",
-    "scripts/util/solver.js~Constraint#klst",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#name",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-name",
-    "scripts/util/solver.js~Constraint#name",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#params",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-params",
-    "scripts/util/solver.js~Constraint#params",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~constraint#threshold",
-    "class/scripts/util/solver.js~Constraint.html#instance-member-threshold",
-    "scripts/util/solver.js~Constraint#threshold",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~solver#add",
-    "class/scripts/util/solver.js~Solver.html#instance-method-add",
-    "scripts/util/solver.js~Solver#add",
-    "method"
-  ],
-  [
-    "scripts/util/solver.js~solver#constraints",
-    "class/scripts/util/solver.js~Solver.html#instance-member-constraints",
-    "scripts/util/solver.js~Solver#constraints",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~solver#constructor",
-    "class/scripts/util/solver.js~Solver.html#instance-constructor-constructor",
-    "scripts/util/solver.js~Solver#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/solver.js~solver#gk",
-    "class/scripts/util/solver.js~Solver.html#instance-member-gk",
-    "scripts/util/solver.js~Solver#gk",
-    "member"
-  ],
-  [
-    "scripts/util/solver.js~solver#solve",
-    "class/scripts/util/solver.js~Solver.html#instance-method-solve",
-    "scripts/util/solver.js~Solver#solve",
-    "method"
-  ],
-  [
-    "scripts/util/solver.js~solver#solvestep",
-    "class/scripts/util/solver.js~Solver.html#instance-method-solveStep",
-    "scripts/util/solver.js~Solver#solveStep",
-    "method"
+    "scripts/util/startup_report.js",
+    "file/scripts/util/startup_report.js.html",
+    "scripts/util/startup_report.js",
+    "file"
   ],
   [
     "scripts/util/struct.js",
     "file/scripts/util/struct.js.html",
     "scripts/util/struct.js",
-    "file"
-  ],
-  [
-    "scripts/util/test.js",
-    "file/scripts/util/test.js.html",
-    "scripts/util/test.js",
     "file"
   ],
   [
@@ -13788,1408 +17418,10 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "scripts/util/util.js~fasthash#[h * ftot + fkey]",
-    "class/scripts/util/util.js~FastHash.html#instance-member-[h * FTOT + FKEY]",
-    "scripts/util/util.js~FastHash#[h * FTOT + FKEY]",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~fasthash#[h * ftot + ftaken]",
-    "class/scripts/util/util.js~FastHash.html#instance-member-[h * FTOT + FTAKEN]",
-    "scripts/util/util.js~FastHash#[h * FTOT + FTAKEN]",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~fasthash#[h * ftot + fval]",
-    "class/scripts/util/util.js~FastHash.html#instance-member-[h * FTOT + FVAL]",
-    "scripts/util/util.js~FastHash#[h * FTOT + FVAL]",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~fasthash#constructor",
-    "class/scripts/util/util.js~FastHash.html#instance-constructor-constructor",
-    "scripts/util/util.js~FastHash#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~fasthash#cursize",
-    "class/scripts/util/util.js~FastHash.html#instance-member-cursize",
-    "scripts/util/util.js~FastHash#cursize",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~fasthash#get",
-    "class/scripts/util/util.js~FastHash.html#instance-method-get",
-    "scripts/util/util.js~FastHash#get",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~fasthash#has",
-    "class/scripts/util/util.js~FastHash.html#instance-method-has",
-    "scripts/util/util.js~FastHash#has",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~fasthash#length",
-    "class/scripts/util/util.js~FastHash.html#instance-member-length",
-    "scripts/util/util.js~FastHash#length",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~fasthash#resize",
-    "class/scripts/util/util.js~FastHash.html#instance-method-resize",
-    "scripts/util/util.js~FastHash#resize",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~fasthash#set",
-    "class/scripts/util/util.js~FastHash.html#instance-method-set",
-    "scripts/util/util.js~FastHash#set",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~fasthash#size",
-    "class/scripts/util/util.js~FastHash.html#instance-member-size",
-    "scripts/util/util.js~FastHash#size",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~fasthash#used",
-    "class/scripts/util/util.js~FastHash.html#instance-member-used",
-    "scripts/util/util.js~FastHash#used",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashdigest#add",
-    "class/scripts/util/util.js~HashDigest.html#instance-method-add",
-    "scripts/util/util.js~HashDigest#add",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashdigest#constructor",
-    "class/scripts/util/util.js~HashDigest.html#instance-constructor-constructor",
-    "scripts/util/util.js~HashDigest#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashdigest#get",
-    "class/scripts/util/util.js~HashDigest.html#instance-method-get",
-    "scripts/util/util.js~HashDigest#get",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashdigest#hash",
-    "class/scripts/util/util.js~HashDigest.html#instance-member-hash",
-    "scripts/util/util.js~HashDigest#hash",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashdigest#i",
-    "class/scripts/util/util.js~HashDigest.html#instance-member-i",
-    "scripts/util/util.js~HashDigest#i",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashdigest#reset",
-    "class/scripts/util/util.js~HashDigest.html#instance-method-reset",
-    "scripts/util/util.js~HashDigest#reset",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashdigest.cacheddigest",
-    "class/scripts/util/util.js~HashDigest.html#static-method-cachedDigest",
-    "scripts/util/util.js~HashDigest.cachedDigest",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashiter#constructor",
-    "class/scripts/util/util.js~HashIter.html#instance-constructor-constructor",
-    "scripts/util/util.js~HashIter#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashiter#hash",
-    "class/scripts/util/util.js~HashIter.html#instance-member-hash",
-    "scripts/util/util.js~HashIter#hash",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashiter#i",
-    "class/scripts/util/util.js~HashIter.html#instance-member-i",
-    "scripts/util/util.js~HashIter#i",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashiter#next",
-    "class/scripts/util/util.js~HashIter.html#instance-method-next",
-    "scripts/util/util.js~HashIter#next",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashiter#ret",
-    "class/scripts/util/util.js~HashIter.html#instance-member-ret",
-    "scripts/util/util.js~HashIter#ret",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~idgen#_cur",
-    "class/scripts/util/util.js~IDGen.html#instance-member-_cur",
-    "scripts/util/util.js~IDGen#_cur",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~idgen#_debug",
-    "class/scripts/util/util.js~IDGen.html#instance-member-_debug",
-    "scripts/util/util.js~IDGen#_debug",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~idgen#_internalid",
-    "class/scripts/util/util.js~IDGen.html#instance-member-_internalID",
-    "scripts/util/util.js~IDGen#_internalID",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~idgen#constructor",
-    "class/scripts/util/util.js~IDGen.html#instance-constructor-constructor",
-    "scripts/util/util.js~IDGen#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~idgen#copy",
-    "class/scripts/util/util.js~IDGen.html#instance-method-copy",
-    "scripts/util/util.js~IDGen#copy",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~idgen#loadstruct",
-    "class/scripts/util/util.js~IDGen.html#instance-method-loadSTRUCT",
-    "scripts/util/util.js~IDGen#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~idgen#max_cur",
-    "class/scripts/util/util.js~IDGen.html#instance-method-max_cur",
-    "scripts/util/util.js~IDGen#max_cur",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~idgen#next",
-    "class/scripts/util/util.js~IDGen.html#instance-method-next",
-    "scripts/util/util.js~IDGen#next",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~idgen#tojson",
-    "class/scripts/util/util.js~IDGen.html#instance-method-toJSON",
-    "scripts/util/util.js~IDGen#toJSON",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~idgen.fromjson",
-    "class/scripts/util/util.js~IDGen.html#static-method-fromJSON",
-    "scripts/util/util.js~IDGen.fromJSON",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~imagereader#example",
-    "class/scripts/util/util.js~ImageReader.html#instance-method-example",
-    "scripts/util/util.js~ImageReader#example",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~imagereader#load_image",
-    "class/scripts/util/util.js~ImageReader.html#instance-method-load_image",
-    "scripts/util/util.js~ImageReader#load_image",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#constructor",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-constructor-constructor",
-    "scripts/util/util.js~MersenneRandom#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#extract_number",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-method-extract_number",
-    "scripts/util/util.js~MersenneRandom#extract_number",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#index",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-member-index",
-    "scripts/util/util.js~MersenneRandom#index",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#mt",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-member-mt",
-    "scripts/util/util.js~MersenneRandom#mt",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#random",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-method-random",
-    "scripts/util/util.js~MersenneRandom#random",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#seed",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-method-seed",
-    "scripts/util/util.js~MersenneRandom#seed",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~mersennerandom#twist",
-    "class/scripts/util/util.js~MersenneRandom.html#instance-method-twist",
-    "scripts/util/util.js~MersenneRandom#twist",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~movingavg#[.cur]",
-    "class/scripts/util/util.js~MovingAvg.html#instance-member-[.cur]",
-    "scripts/util/util.js~MovingAvg#[.cur]",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~movingavg#add",
-    "class/scripts/util/util.js~MovingAvg.html#instance-method-add",
-    "scripts/util/util.js~MovingAvg#add",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~movingavg#constructor",
-    "class/scripts/util/util.js~MovingAvg.html#instance-constructor-constructor",
-    "scripts/util/util.js~MovingAvg#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~movingavg#cur",
-    "class/scripts/util/util.js~MovingAvg.html#instance-member-cur",
-    "scripts/util/util.js~MovingAvg#cur",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~movingavg#length",
-    "class/scripts/util/util.js~MovingAvg.html#instance-member-length",
-    "scripts/util/util.js~MovingAvg#length",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~movingavg#sample",
-    "class/scripts/util/util.js~MovingAvg.html#instance-method-sample",
-    "scripts/util/util.js~MovingAvg#sample",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~movingavg#sum",
-    "class/scripts/util/util.js~MovingAvg.html#instance-member-sum",
-    "scripts/util/util.js~MovingAvg#sum",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~movingavg#used",
-    "class/scripts/util/util.js~MovingAvg.html#instance-member-used",
-    "scripts/util/util.js~MovingAvg#used",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~setiter#[symbol.iterator]",
-    "class/scripts/util/util.js~SetIter.html#instance-method-[Symbol.iterator]",
-    "scripts/util/util.js~SetIter#[Symbol.iterator]",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~setiter#constructor",
-    "class/scripts/util/util.js~SetIter.html#instance-constructor-constructor",
-    "scripts/util/util.js~SetIter#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~setiter#i",
-    "class/scripts/util/util.js~SetIter.html#instance-member-i",
-    "scripts/util/util.js~SetIter#i",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~setiter#next",
-    "class/scripts/util/util.js~SetIter.html#instance-method-next",
-    "scripts/util/util.js~SetIter#next",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~setiter#ret",
-    "class/scripts/util/util.js~SetIter.html#instance-member-ret",
-    "scripts/util/util.js~SetIter#ret",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~setiter#set",
-    "class/scripts/util/util.js~SetIter.html#instance-member-set",
-    "scripts/util/util.js~SetIter#set",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#constructor",
-    "class/scripts/util/util.js~SmartConsole.html#instance-constructor-constructor",
-    "scripts/util/util.js~SmartConsole#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#context",
-    "class/scripts/util/util.js~SmartConsole.html#instance-method-context",
-    "scripts/util/util.js~SmartConsole#context",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#contexts",
-    "class/scripts/util/util.js~SmartConsole.html#instance-member-contexts",
-    "scripts/util/util.js~SmartConsole#contexts",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#error",
-    "class/scripts/util/util.js~SmartConsole.html#instance-method-error",
-    "scripts/util/util.js~SmartConsole#error",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#log",
-    "class/scripts/util/util.js~SmartConsole.html#instance-method-log",
-    "scripts/util/util.js~SmartConsole#log",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#trace",
-    "class/scripts/util/util.js~SmartConsole.html#instance-method-trace",
-    "scripts/util/util.js~SmartConsole#trace",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsole#warn",
-    "class/scripts/util/util.js~SmartConsole.html#instance-method-warn",
-    "scripts/util/util.js~SmartConsole#warn",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#__console",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-__console",
-    "scripts/util/util.js~SmartConsoleContext#__console",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#_check",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-_check",
-    "scripts/util/util.js~SmartConsoleContext#_check",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#_data",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-_data",
-    "scripts/util/util.js~SmartConsoleContext#_data",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#_data_length",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-_data_length",
-    "scripts/util/util.js~SmartConsoleContext#_data_length",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#_getdata",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-_getData",
-    "scripts/util/util.js~SmartConsoleContext#_getData",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#_last",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-_last",
-    "scripts/util/util.js~SmartConsoleContext#_last",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#clearcache",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-clearCache",
-    "scripts/util/util.js~SmartConsoleContext#clearCache",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#color",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-color",
-    "scripts/util/util.js~SmartConsoleContext#color",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#constructor",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-constructor-constructor",
-    "scripts/util/util.js~SmartConsoleContext#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#hash",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-hash",
-    "scripts/util/util.js~SmartConsoleContext#hash",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#last",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-last",
-    "scripts/util/util.js~SmartConsoleContext#last",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#log",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-log",
-    "scripts/util/util.js~SmartConsoleContext#log",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#maxcache",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-maxCache",
-    "scripts/util/util.js~SmartConsoleContext#maxCache",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#name",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-name",
-    "scripts/util/util.js~SmartConsoleContext#name",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#timeinterval",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-member-timeInterval",
-    "scripts/util/util.js~SmartConsoleContext#timeInterval",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#trace",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-trace",
-    "scripts/util/util.js~SmartConsoleContext#trace",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~smartconsolecontext#warn",
-    "class/scripts/util/util.js~SmartConsoleContext.html#instance-method-warn",
-    "scripts/util/util.js~SmartConsoleContext#warn",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~cachering#constructor",
-    "class/scripts/util/util.js~cachering.html#instance-constructor-constructor",
-    "scripts/util/util.js~cachering#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~cachering#cur",
-    "class/scripts/util/util.js~cachering.html#instance-member-cur",
-    "scripts/util/util.js~cachering#cur",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~cachering#next",
-    "class/scripts/util/util.js~cachering.html#instance-method-next",
-    "scripts/util/util.js~cachering#next",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~cachering.fromconstructor",
-    "class/scripts/util/util.js~cachering.html#static-method-fromConstructor",
-    "scripts/util/util.js~cachering.fromConstructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#[symbol.iterator]",
-    "class/scripts/util/util.js~hashtable.html#instance-method-[Symbol.iterator]",
-    "scripts/util/util.js~hashtable#[Symbol.iterator]",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#_items",
-    "class/scripts/util/util.js~hashtable.html#instance-member-_items",
-    "scripts/util/util.js~hashtable#_items",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashtable#_keys",
-    "class/scripts/util/util.js~hashtable.html#instance-member-_keys",
-    "scripts/util/util.js~hashtable#_keys",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashtable#add",
-    "class/scripts/util/util.js~hashtable.html#instance-method-add",
-    "scripts/util/util.js~hashtable#add",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#constructor",
-    "class/scripts/util/util.js~hashtable.html#instance-constructor-constructor",
-    "scripts/util/util.js~hashtable#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#foreach",
-    "class/scripts/util/util.js~hashtable.html#instance-method-forEach",
-    "scripts/util/util.js~hashtable#forEach",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#get",
-    "class/scripts/util/util.js~hashtable.html#instance-method-get",
-    "scripts/util/util.js~hashtable#get",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#has",
-    "class/scripts/util/util.js~hashtable.html#instance-method-has",
-    "scripts/util/util.js~hashtable#has",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#keys",
-    "class/scripts/util/util.js~hashtable.html#instance-method-keys",
-    "scripts/util/util.js~hashtable#keys",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#length",
-    "class/scripts/util/util.js~hashtable.html#instance-member-length",
-    "scripts/util/util.js~hashtable#length",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~hashtable#remove",
-    "class/scripts/util/util.js~hashtable.html#instance-method-remove",
-    "scripts/util/util.js~hashtable#remove",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#set",
-    "class/scripts/util/util.js~hashtable.html#instance-method-set",
-    "scripts/util/util.js~hashtable#set",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~hashtable#values",
-    "class/scripts/util/util.js~hashtable.html#instance-method-values",
-    "scripts/util/util.js~hashtable#values",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#[symbol.iterator]",
-    "class/scripts/util/util.js~set.html#instance-method-[Symbol.iterator]",
-    "scripts/util/util.js~set#[Symbol.iterator]",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#add",
-    "class/scripts/util/util.js~set.html#instance-method-add",
-    "scripts/util/util.js~set#add",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#clear",
-    "class/scripts/util/util.js~set.html#instance-method-clear",
-    "scripts/util/util.js~set#clear",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#constructor",
-    "class/scripts/util/util.js~set.html#instance-constructor-constructor",
-    "scripts/util/util.js~set#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#copy",
-    "class/scripts/util/util.js~set.html#instance-method-copy",
-    "scripts/util/util.js~set#copy",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#equals",
-    "class/scripts/util/util.js~set.html#instance-method-equals",
-    "scripts/util/util.js~set#equals",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#filter",
-    "class/scripts/util/util.js~set.html#instance-method-filter",
-    "scripts/util/util.js~set#filter",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#foreach",
-    "class/scripts/util/util.js~set.html#instance-method-forEach",
-    "scripts/util/util.js~set#forEach",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#freelist",
-    "class/scripts/util/util.js~set.html#instance-member-freelist",
-    "scripts/util/util.js~set#freelist",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~set#has",
-    "class/scripts/util/util.js~set.html#instance-method-has",
-    "scripts/util/util.js~set#has",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#items",
-    "class/scripts/util/util.js~set.html#instance-member-items",
-    "scripts/util/util.js~set#items",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~set#keys",
-    "class/scripts/util/util.js~set.html#instance-member-keys",
-    "scripts/util/util.js~set#keys",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~set#length",
-    "class/scripts/util/util.js~set.html#instance-member-length",
-    "scripts/util/util.js~set#length",
-    "member"
-  ],
-  [
-    "scripts/util/util.js~set#map",
-    "class/scripts/util/util.js~set.html#instance-method-map",
-    "scripts/util/util.js~set#map",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#reduce",
-    "class/scripts/util/util.js~set.html#instance-method-reduce",
-    "scripts/util/util.js~set#reduce",
-    "method"
-  ],
-  [
-    "scripts/util/util.js~set#remove",
-    "class/scripts/util/util.js~set.html#instance-method-remove",
-    "scripts/util/util.js~set#remove",
-    "method"
-  ],
-  [
     "scripts/util/vectormath.js",
     "file/scripts/util/vectormath.js.html",
     "scripts/util/vectormath.js",
     "file"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector#constructor",
-    "class/scripts/util/vectormath.js~BaseVector.html#instance-constructor-constructor",
-    "scripts/util/vectormath.js~BaseVector#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector#copy",
-    "class/scripts/util/vectormath.js~BaseVector.html#instance-method-copy",
-    "scripts/util/vectormath.js~BaseVector#copy",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector#init_swizzle",
-    "class/scripts/util/vectormath.js~BaseVector.html#instance-method-init_swizzle",
-    "scripts/util/vectormath.js~BaseVector#init_swizzle",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector#load",
-    "class/scripts/util/vectormath.js~BaseVector.html#instance-method-load",
-    "scripts/util/vectormath.js~BaseVector#load",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector#normalize",
-    "class/scripts/util/vectormath.js~BaseVector.html#instance-method-normalize",
-    "scripts/util/vectormath.js~BaseVector#normalize",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector#vectorlength",
-    "class/scripts/util/vectormath.js~BaseVector.html#instance-method-vectorLength",
-    "scripts/util/vectormath.js~BaseVector#vectorLength",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~basevector.inherit",
-    "class/scripts/util/vectormath.js~BaseVector.html#static-method-inherit",
-    "scripts/util/vectormath.js~BaseVector.inherit",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#$matrix",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-member-$matrix",
-    "scripts/util/vectormath.js~Matrix4#$matrix",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#__mat",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-member-__mat",
-    "scripts/util/vectormath.js~Matrix4#__mat",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#_determinant2x2",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-_determinant2x2",
-    "scripts/util/vectormath.js~Matrix4#_determinant2x2",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#_determinant3x3",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-_determinant3x3",
-    "scripts/util/vectormath.js~Matrix4#_determinant3x3",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#_determinant4x4",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-_determinant4x4",
-    "scripts/util/vectormath.js~Matrix4#_determinant4x4",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#_makeadjoint",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-_makeAdjoint",
-    "scripts/util/vectormath.js~Matrix4#_makeAdjoint",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#addtohashdigest",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-addToHashDigest",
-    "scripts/util/vectormath.js~Matrix4#addToHashDigest",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#cleartranslation",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-clearTranslation",
-    "scripts/util/vectormath.js~Matrix4#clearTranslation",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#clone",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-clone",
-    "scripts/util/vectormath.js~Matrix4#clone",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#constructor",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-constructor-constructor",
-    "scripts/util/vectormath.js~Matrix4#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#decompose",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-decompose",
-    "scripts/util/vectormath.js~Matrix4#decompose",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#determinant",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-determinant",
-    "scripts/util/vectormath.js~Matrix4#determinant",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#determinant",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-determinant",
-    "scripts/util/vectormath.js~Matrix4#determinant",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#divide",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-divide",
-    "scripts/util/vectormath.js~Matrix4#divide",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#equals",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-equals",
-    "scripts/util/vectormath.js~Matrix4#equals",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#euler_rotate",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-euler_rotate",
-    "scripts/util/vectormath.js~Matrix4#euler_rotate",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#euler_rotate_order",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-euler_rotate_order",
-    "scripts/util/vectormath.js~Matrix4#euler_rotate_order",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#frustum",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-frustum",
-    "scripts/util/vectormath.js~Matrix4#frustum",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#getasarray",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-getAsArray",
-    "scripts/util/vectormath.js~Matrix4#getAsArray",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#getasfloat32array",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-getAsFloat32Array",
-    "scripts/util/vectormath.js~Matrix4#getAsFloat32Array",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#invert",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-invert",
-    "scripts/util/vectormath.js~Matrix4#invert",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#ispersp",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-member-isPersp",
-    "scripts/util/vectormath.js~Matrix4#isPersp",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#load",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-load",
-    "scripts/util/vectormath.js~Matrix4#load",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#loadstruct",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-loadSTRUCT",
-    "scripts/util/vectormath.js~Matrix4#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#lookat",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-lookat",
-    "scripts/util/vectormath.js~Matrix4#lookat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#makeidentity",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-makeIdentity",
-    "scripts/util/vectormath.js~Matrix4#makeIdentity",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#makenormalmatrix",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-makeNormalMatrix",
-    "scripts/util/vectormath.js~Matrix4#makeNormalMatrix",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#makerotationonly",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-makeRotationOnly",
-    "scripts/util/vectormath.js~Matrix4#makeRotationOnly",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#multiply",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-multiply",
-    "scripts/util/vectormath.js~Matrix4#multiply",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#normalize",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-normalize",
-    "scripts/util/vectormath.js~Matrix4#normalize",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#ortho",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-ortho",
-    "scripts/util/vectormath.js~Matrix4#ortho",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#orthographic",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-orthographic",
-    "scripts/util/vectormath.js~Matrix4#orthographic",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#perspective",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-perspective",
-    "scripts/util/vectormath.js~Matrix4#perspective",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#premultiply",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-preMultiply",
-    "scripts/util/vectormath.js~Matrix4#preMultiply",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#prescale",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-preScale",
-    "scripts/util/vectormath.js~Matrix4#preScale",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#pretranslate",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-preTranslate",
-    "scripts/util/vectormath.js~Matrix4#preTranslate",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#rotate",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-rotate",
-    "scripts/util/vectormath.js~Matrix4#rotate",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#scale",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-scale",
-    "scripts/util/vectormath.js~Matrix4#scale",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#setuniform",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-setUniform",
-    "scripts/util/vectormath.js~Matrix4#setUniform",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#tojson",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-toJSON",
-    "scripts/util/vectormath.js~Matrix4#toJSON",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#tostring",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-toString",
-    "scripts/util/vectormath.js~Matrix4#toString",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#translate",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-translate",
-    "scripts/util/vectormath.js~Matrix4#translate",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4#transpose",
-    "class/scripts/util/vectormath.js~Matrix4.html#instance-method-transpose",
-    "scripts/util/vectormath.js~Matrix4#transpose",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~matrix4.fromjson",
-    "class/scripts/util/vectormath.js~Matrix4.html#static-method-fromJSON",
-    "scripts/util/vectormath.js~Matrix4.fromJSON",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#[0]",
-    "class/scripts/util/vectormath.js~Quat.html#instance-member-[0]",
-    "scripts/util/vectormath.js~Quat#[0]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#[1]",
-    "class/scripts/util/vectormath.js~Quat.html#instance-member-[1]",
-    "scripts/util/vectormath.js~Quat#[1]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#[2]",
-    "class/scripts/util/vectormath.js~Quat.html#instance-member-[2]",
-    "scripts/util/vectormath.js~Quat#[2]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#[3]",
-    "class/scripts/util/vectormath.js~Quat.html#instance-member-[3]",
-    "scripts/util/vectormath.js~Quat#[3]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#axisangletoquat",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-axisAngleToQuat",
-    "scripts/util/vectormath.js~Quat#axisAngleToQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#conjugate",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-conjugate",
-    "scripts/util/vectormath.js~Quat#conjugate",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#dotwithquat",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-dotWithQuat",
-    "scripts/util/vectormath.js~Quat#dotWithQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#invert",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-invert",
-    "scripts/util/vectormath.js~Quat#invert",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#iszero",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-isZero",
-    "scripts/util/vectormath.js~Quat#isZero",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#loadstruct",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-loadSTRUCT",
-    "scripts/util/vectormath.js~Quat#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#makeunitquat",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-makeUnitQuat",
-    "scripts/util/vectormath.js~Quat#makeUnitQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#matrixtoquat",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-matrixToQuat",
-    "scripts/util/vectormath.js~Quat#matrixToQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#mulquat",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-mulQuat",
-    "scripts/util/vectormath.js~Quat#mulQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#mulscalarwithfactor",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-mulScalarWithFactor",
-    "scripts/util/vectormath.js~Quat#mulScalarWithFactor",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#normalize",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-normalize",
-    "scripts/util/vectormath.js~Quat#normalize",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#quatinterp",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-quatInterp",
-    "scripts/util/vectormath.js~Quat#quatInterp",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#rotationbetweenvecs",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-rotationBetweenVecs",
-    "scripts/util/vectormath.js~Quat#rotationBetweenVecs",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#sub",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-sub",
-    "scripts/util/vectormath.js~Quat#sub",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~quat#tomatrix",
-    "class/scripts/util/vectormath.js~Quat.html#instance-method-toMatrix",
-    "scripts/util/vectormath.js~Quat#toMatrix",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#[0]",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-member-[0]",
-    "scripts/util/vectormath.js~Vector2#[0]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#[1]",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-member-[1]",
-    "scripts/util/vectormath.js~Vector2#[1]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#constructor",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-constructor-constructor",
-    "scripts/util/vectormath.js~Vector2#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#dot",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-dot",
-    "scripts/util/vectormath.js~Vector2#dot",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#initvector2",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-initVector2",
-    "scripts/util/vectormath.js~Vector2#initVector2",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#length",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-member-length",
-    "scripts/util/vectormath.js~Vector2#length",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#load",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-load",
-    "scripts/util/vectormath.js~Vector2#load",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#loadjson",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-loadJSON",
-    "scripts/util/vectormath.js~Vector2#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#loadstruct",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-loadSTRUCT",
-    "scripts/util/vectormath.js~Vector2#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#loadxy",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-loadXY",
-    "scripts/util/vectormath.js~Vector2#loadXY",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#mulvecquat",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-mulVecQuat",
-    "scripts/util/vectormath.js~Vector2#mulVecQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#multvecmatrix",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-multVecMatrix",
-    "scripts/util/vectormath.js~Vector2#multVecMatrix",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#rot2d",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-rot2d",
-    "scripts/util/vectormath.js~Vector2#rot2d",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector2#tojson",
-    "class/scripts/util/vectormath.js~Vector2.html#instance-method-toJSON",
-    "scripts/util/vectormath.js~Vector2#toJSON",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#[0]",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-member-[0]",
-    "scripts/util/vectormath.js~Vector3#[0]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#[1]",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-member-[1]",
-    "scripts/util/vectormath.js~Vector3#[1]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#[2]",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-member-[2]",
-    "scripts/util/vectormath.js~Vector3#[2]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#constructor",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-constructor-constructor",
-    "scripts/util/vectormath.js~Vector3#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#cross",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-cross",
-    "scripts/util/vectormath.js~Vector3#cross",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#dot",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-dot",
-    "scripts/util/vectormath.js~Vector3#dot",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#initvector3",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-initVector3",
-    "scripts/util/vectormath.js~Vector3#initVector3",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#length",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-member-length",
-    "scripts/util/vectormath.js~Vector3#length",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#load",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-load",
-    "scripts/util/vectormath.js~Vector3#load",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#loadjson",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-loadJSON",
-    "scripts/util/vectormath.js~Vector3#loadJSON",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#loadstruct",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-loadSTRUCT",
-    "scripts/util/vectormath.js~Vector3#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#loadxyz",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-loadXYZ",
-    "scripts/util/vectormath.js~Vector3#loadXYZ",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#multvecmatrix",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-multVecMatrix",
-    "scripts/util/vectormath.js~Vector3#multVecMatrix",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#normalizeddot",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-normalizedDot",
-    "scripts/util/vectormath.js~Vector3#normalizedDot",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#prenormalizedangle",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-preNormalizedAngle",
-    "scripts/util/vectormath.js~Vector3#preNormalizedAngle",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#rot2d",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-rot2d",
-    "scripts/util/vectormath.js~Vector3#rot2d",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#tocss",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-toCSS",
-    "scripts/util/vectormath.js~Vector3#toCSS",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3#tojson",
-    "class/scripts/util/vectormath.js~Vector3.html#instance-method-toJSON",
-    "scripts/util/vectormath.js~Vector3#toJSON",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector3.normalizeddot4",
-    "class/scripts/util/vectormath.js~Vector3.html#static-method-normalizedDot4",
-    "scripts/util/vectormath.js~Vector3.normalizedDot4",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#[0]",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-member-[0]",
-    "scripts/util/vectormath.js~Vector4#[0]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#[1]",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-member-[1]",
-    "scripts/util/vectormath.js~Vector4#[1]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#[2]",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-member-[2]",
-    "scripts/util/vectormath.js~Vector4#[2]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#[3]",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-member-[3]",
-    "scripts/util/vectormath.js~Vector4#[3]",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#constructor",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-constructor-constructor",
-    "scripts/util/vectormath.js~Vector4#constructor",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#cross",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-cross",
-    "scripts/util/vectormath.js~Vector4#cross",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#dot",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-dot",
-    "scripts/util/vectormath.js~Vector4#dot",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#length",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-member-length",
-    "scripts/util/vectormath.js~Vector4#length",
-    "member"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#load",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-load",
-    "scripts/util/vectormath.js~Vector4#load",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#loadstruct",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-loadSTRUCT",
-    "scripts/util/vectormath.js~Vector4#loadSTRUCT",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#loadxyz",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-loadXYZ",
-    "scripts/util/vectormath.js~Vector4#loadXYZ",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#loadxyzw",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-loadXYZW",
-    "scripts/util/vectormath.js~Vector4#loadXYZW",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#mulvecquat",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-mulVecQuat",
-    "scripts/util/vectormath.js~Vector4#mulVecQuat",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#multvecmatrix",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-multVecMatrix",
-    "scripts/util/vectormath.js~Vector4#multVecMatrix",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#prenormalizedangle",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-preNormalizedAngle",
-    "scripts/util/vectormath.js~Vector4#preNormalizedAngle",
-    "method"
-  ],
-  [
-    "scripts/util/vectormath.js~vector4#tocss",
-    "class/scripts/util/vectormath.js~Vector4.html#instance-method-toCSS",
-    "scripts/util/vectormath.js~Vector4#toCSS",
-    "method"
   ],
   [
     "scripts/widgets/dragbox.js",
@@ -15480,6 +17712,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_button.js~button#_last_but_update_key",
+    "class/scripts/widgets/ui_button.js~Button.html#instance-member-_last_but_update_key",
+    "scripts/widgets/ui_button.js~Button#_last_but_update_key",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_button.js~button#_last_disabled",
     "class/scripts/widgets/ui_button.js~Button.html#instance-member-_last_disabled",
     "scripts/widgets/ui_button.js~Button#_last_disabled",
@@ -15498,12 +17736,6 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_button.js~button#_last_update_key",
-    "class/scripts/widgets/ui_button.js~Button.html#instance-member-_last_update_key",
-    "scripts/widgets/ui_button.js~Button#_last_update_key",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_button.js~button#_last_w",
     "class/scripts/widgets/ui_button.js~Button.html#instance-member-_last_w",
     "scripts/widgets/ui_button.js~Button#_last_w",
@@ -15519,6 +17751,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_button.js~button#_lastw",
     "class/scripts/widgets/ui_button.js~Button.html#instance-member-_lastw",
     "scripts/widgets/ui_button.js~Button#_lastw",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_button.js~button#_leftpad",
+    "class/scripts/widgets/ui_button.js~Button.html#instance-member-_leftPad",
+    "scripts/widgets/ui_button.js~Button#_leftPad",
     "member"
   ],
   [
@@ -15550,6 +17788,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_button.js~Button.html#instance-method-_repos_canvas",
     "scripts/widgets/ui_button.js~Button#_repos_canvas",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_button.js~button#_rightpad",
+    "class/scripts/widgets/ui_button.js~Button.html#instance-member-_rightPad",
+    "scripts/widgets/ui_button.js~Button#_rightPad",
+    "member"
   ],
   [
     "scripts/widgets/ui_button.js~button#bindevents",
@@ -15639,6 +17883,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_button.js~button#update",
     "class/scripts/widgets/ui_button.js~Button.html#instance-method-update",
     "scripts/widgets/ui_button.js~Button#update",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_button.js~button#updateborders",
+    "class/scripts/widgets/ui_button.js~Button.html#instance-method-updateBorders",
+    "scripts/widgets/ui_button.js~Button#updateBorders",
     "method"
   ],
   [
@@ -15822,12 +18072,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_colorpicker.js~colorpicker#disabled",
-    "class/scripts/widgets/ui_colorpicker.js~ColorPicker.html#instance-member-disabled",
-    "scripts/widgets/ui_colorpicker.js~ColorPicker#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_colorpicker.js~colorpicker#field",
     "class/scripts/widgets/ui_colorpicker.js~ColorPicker.html#instance-member-field",
     "scripts/widgets/ui_colorpicker.js~ColorPicker#field",
@@ -15837,6 +18081,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_colorpicker.js~colorpicker#hsva",
     "class/scripts/widgets/ui_colorpicker.js~ColorPicker.html#instance-get-hsva",
     "scripts/widgets/ui_colorpicker.js~ColorPicker#hsva",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker.js~colorpicker#internaldisabled",
+    "class/scripts/widgets/ui_colorpicker.js~ColorPicker.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_colorpicker.js~ColorPicker#internalDisabled",
     "member"
   ],
   [
@@ -16008,12 +18258,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_colorpicker2.js~colorpicker#disabled",
-    "class/scripts/widgets/ui_colorpicker2.js~ColorPicker.html#instance-member-disabled",
-    "scripts/widgets/ui_colorpicker2.js~ColorPicker#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_colorpicker2.js~colorpicker#field",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPicker.html#instance-member-field",
     "scripts/widgets/ui_colorpicker2.js~ColorPicker#field",
@@ -16030,6 +18274,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_colorpicker2.js~ColorPicker.html#instance-method-init",
     "scripts/widgets/ui_colorpicker2.js~ColorPicker#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpicker#internaldisabled",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPicker.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_colorpicker2.js~ColorPicker#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_colorpicker2.js~colorpicker#rgba",
@@ -16176,12 +18426,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#disabled",
-    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-disabled",
-    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#dom",
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-dom",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#dom",
@@ -16210,6 +18454,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-method-init",
     "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#internaldisabled",
+    "class/scripts/widgets/ui_colorpicker2.js~ColorPickerButton.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_colorpicker2.js~ColorPickerButton#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_colorpicker2.js~colorpickerbutton#label",
@@ -17388,10 +19638,22 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_menu.js~dropbox#_convertval",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-method-_convertVal",
+    "scripts/widgets/ui_menu.js~DropBox#_convertVal",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_menu.js~dropbox#_genlabel",
     "class/scripts/widgets/ui_menu.js~DropBox.html#instance-method-_genLabel",
     "scripts/widgets/ui_menu.js~DropBox#_genLabel",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~dropbox#_last_datapath",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-_last_datapath",
+    "scripts/widgets/ui_menu.js~DropBox#_last_datapath",
+    "member"
   ],
   [
     "scripts/widgets/ui_menu.js~dropbox#_last_dbox_key",
@@ -17442,6 +19704,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_menu.js~dropbox#_value",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-_value",
+    "scripts/widgets/ui_menu.js~DropBox#_value",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_menu.js~dropbox#altkey",
     "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-altKey",
     "scripts/widgets/ui_menu.js~DropBox#altKey",
@@ -17454,16 +19722,16 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_menu.js~dropbox#disabled",
-    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-disabled",
-    "scripts/widgets/ui_menu.js~DropBox#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_menu.js~dropbox#init",
     "class/scripts/widgets/ui_menu.js~DropBox.html#instance-method-init",
     "scripts/widgets/ui_menu.js~DropBox#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~dropbox#internaldisabled",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_menu.js~DropBox#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_menu.js~dropbox#menu",
@@ -17475,6 +19743,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_menu.js~dropbox#menu",
     "class/scripts/widgets/ui_menu.js~DropBox.html#instance-get-menu",
     "scripts/widgets/ui_menu.js~DropBox#menu",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~dropbox#prop",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-prop",
+    "scripts/widgets/ui_menu.js~DropBox#prop",
     "member"
   ],
   [
@@ -17526,6 +19800,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_menu.js~dropbox#value",
+    "class/scripts/widgets/ui_menu.js~DropBox.html#instance-get-value",
+    "scripts/widgets/ui_menu.js~DropBox#value",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_menu.js~dropbox#width",
     "class/scripts/widgets/ui_menu.js~DropBox.html#instance-member-width",
     "scripts/widgets/ui_menu.js~DropBox#width",
@@ -17535,6 +19815,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_menu.js~dropbox.define",
     "class/scripts/widgets/ui_menu.js~DropBox.html#static-method-define",
     "scripts/widgets/ui_menu.js~DropBox.define",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_menu.js~menu#_getborderstyle",
+    "class/scripts/widgets/ui_menu.js~Menu.html#instance-method-_getBorderStyle",
+    "scripts/widgets/ui_menu.js~Menu#_getBorderStyle",
     "method"
   ],
   [
@@ -17965,13 +20251,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/widgets/ui_noteframe.js~progbarnote#percent",
-    "class/scripts/widgets/ui_noteframe.js~ProgBarNote.html#instance-set-percent",
+    "class/scripts/widgets/ui_noteframe.js~ProgBarNote.html#instance-get-percent",
     "scripts/widgets/ui_noteframe.js~ProgBarNote#percent",
     "member"
   ],
   [
     "scripts/widgets/ui_noteframe.js~progbarnote#percent",
-    "class/scripts/widgets/ui_noteframe.js~ProgBarNote.html#instance-get-percent",
+    "class/scripts/widgets/ui_noteframe.js~ProgBarNote.html#instance-set-percent",
     "scripts/widgets/ui_noteframe.js~ProgBarNote#percent",
     "member"
   ],
@@ -18010,6 +20296,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-method-_getArrowSize",
     "scripts/widgets/ui_numsliders.js~NumSlider#_getArrowSize",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~numslider#_last_disabled",
+    "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-member-_last_disabled",
+    "scripts/widgets/ui_numsliders.js~NumSlider#_last_disabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_numsliders.js~numslider#_last_label",
@@ -18084,6 +20376,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_numsliders.js~numslider#editasbaseunit",
+    "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-member-editAsBaseUnit",
+    "scripts/widgets/ui_numsliders.js~NumSlider#editAsBaseUnit",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_numsliders.js~numslider#exprate",
     "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-get-expRate",
     "scripts/widgets/ui_numsliders.js~NumSlider#expRate",
@@ -18105,6 +20403,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_numsliders.js~numslider#isint",
     "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-member-isInt",
     "scripts/widgets/ui_numsliders.js~NumSlider#isInt",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~numslider#mdown",
+    "class/scripts/widgets/ui_numsliders.js~NumSlider.html#instance-member-mdown",
+    "scripts/widgets/ui_numsliders.js~NumSlider#mdown",
     "member"
   ],
   [
@@ -18288,6 +20592,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_numsliders.js~numslidersimplebase#editasbaseunit",
+    "class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html#instance-member-editAsBaseUnit",
+    "scripts/widgets/ui_numsliders.js~NumSliderSimpleBase#editAsBaseUnit",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_numsliders.js~numslidersimplebase#g",
     "class/scripts/widgets/ui_numsliders.js~NumSliderSimpleBase.html#instance-member-g",
     "scripts/widgets/ui_numsliders.js~NumSliderSimpleBase#g",
@@ -18426,6 +20736,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_labelontop",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_labelOnTop",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_labelOnTop",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_numsliders.js~sliderwithtextbox#_last_label_on_top",
     "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-_last_label_on_top",
     "scripts/widgets/ui_numsliders.js~SliderWithTextbox#_last_label_on_top",
@@ -18504,6 +20820,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#editasbaseunit",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-editAsBaseUnit",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#editAsBaseUnit",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_numsliders.js~sliderwithtextbox#exprate",
     "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-expRate",
     "scripts/widgets/ui_numsliders.js~SliderWithTextbox#expRate",
@@ -18541,7 +20863,13 @@ window.esdocSearchIndex = [
   ],
   [
     "scripts/widgets/ui_numsliders.js~sliderwithtextbox#labelontop",
-    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-member-labelOnTop",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-get-labelOnTop",
+    "scripts/widgets/ui_numsliders.js~SliderWithTextbox#labelOnTop",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_numsliders.js~sliderwithtextbox#labelontop",
+    "class/scripts/widgets/ui_numsliders.js~SliderWithTextbox.html#instance-set-labelOnTop",
     "scripts/widgets/ui_numsliders.js~SliderWithTextbox#labelOnTop",
     "member"
   ],
@@ -18690,16 +21018,22 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_panel.js~panelframe#_last_key",
-    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-member-_last_key",
-    "scripts/widgets/ui_panel.js~PanelFrame#_last_key",
-    "member"
+    "scripts/widgets/ui_panel.js~panelframe#_onchange",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-_onchange",
+    "scripts/widgets/ui_panel.js~PanelFrame#_onchange",
+    "method"
   ],
   [
     "scripts/widgets/ui_panel.js~panelframe#_setvisible",
     "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-method-_setVisible",
     "scripts/widgets/ui_panel.js~PanelFrame#_setVisible",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_panel.js~panelframe#_state",
+    "class/scripts/widgets/ui_panel.js~PanelFrame.html#instance-member-_state",
+    "scripts/widgets/ui_panel.js~PanelFrame#_state",
+    "member"
   ],
   [
     "scripts/widgets/ui_panel.js~panelframe#_updateclosed",
@@ -18846,21 +21180,135 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_progress.js",
+    "file/scripts/widgets/ui_progress.js.html",
+    "scripts/widgets/ui_progress.js",
+    "file"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#_value",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-_value",
+    "scripts/widgets/ui_progress.js~ProgressCircle#_value",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#animreq",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-animreq",
+    "scripts/widgets/ui_progress.js~ProgressCircle#animreq",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#canvas",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-canvas",
+    "scripts/widgets/ui_progress.js~ProgressCircle#canvas",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#constructor",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-constructor-constructor",
+    "scripts/widgets/ui_progress.js~ProgressCircle#constructor",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#draw",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-draw",
+    "scripts/widgets/ui_progress.js~ProgressCircle#draw",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#endtimer",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-endTimer",
+    "scripts/widgets/ui_progress.js~ProgressCircle#endTimer",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#flagredraw",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-flagRedraw",
+    "scripts/widgets/ui_progress.js~ProgressCircle#flagRedraw",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#g",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-g",
+    "scripts/widgets/ui_progress.js~ProgressCircle#g",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#init",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-init",
+    "scripts/widgets/ui_progress.js~ProgressCircle#init",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#setcss",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-setCSS",
+    "scripts/widgets/ui_progress.js~ProgressCircle#setCSS",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#size",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-size",
+    "scripts/widgets/ui_progress.js~ProgressCircle#size",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#starttime",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-startTime",
+    "scripts/widgets/ui_progress.js~ProgressCircle#startTime",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#starttimer",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-startTimer",
+    "scripts/widgets/ui_progress.js~ProgressCircle#startTimer",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#timer",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-member-timer",
+    "scripts/widgets/ui_progress.js~ProgressCircle#timer",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#update",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-method-update",
+    "scripts/widgets/ui_progress.js~ProgressCircle#update",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#value",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-set-value",
+    "scripts/widgets/ui_progress.js~ProgressCircle#value",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle#value",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#instance-get-value",
+    "scripts/widgets/ui_progress.js~ProgressCircle#value",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_progress.js~progresscircle.define",
+    "class/scripts/widgets/ui_progress.js~ProgressCircle.html#static-method-define",
+    "scripts/widgets/ui_progress.js~ProgressCircle.define",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_richedit.js",
     "file/scripts/widgets/ui_richedit.js.html",
     "scripts/widgets/ui_richedit.js",
     "file"
   ],
   [
-    "scripts/widgets/ui_richedit.js~richeditor#_disabled",
-    "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-member-_disabled",
-    "scripts/widgets/ui_richedit.js~RichEditor#_disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_richedit.js~richeditor#_focus",
     "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-member-_focus",
     "scripts/widgets/ui_richedit.js~RichEditor#_focus",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_richedit.js~richeditor#_internaldisabled",
+    "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-member-_internalDisabled",
+    "scripts/widgets/ui_richedit.js~RichEditor#_internalDisabled",
     "member"
   ],
   [
@@ -18874,18 +21322,6 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-constructor-constructor",
     "scripts/widgets/ui_richedit.js~RichEditor#constructor",
     "method"
-  ],
-  [
-    "scripts/widgets/ui_richedit.js~richeditor#disabled",
-    "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-get-disabled",
-    "scripts/widgets/ui_richedit.js~RichEditor#disabled",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_richedit.js~richeditor#disabled",
-    "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-set-disabled",
-    "scripts/widgets/ui_richedit.js~RichEditor#disabled",
-    "member"
   ],
   [
     "scripts/widgets/ui_richedit.js~richeditor#formatend",
@@ -18910,6 +21346,18 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-method-init",
     "scripts/widgets/ui_richedit.js~RichEditor#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_richedit.js~richeditor#internaldisabled",
+    "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-get-internalDisabled",
+    "scripts/widgets/ui_richedit.js~RichEditor#internalDisabled",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_richedit.js~richeditor#internaldisabled",
+    "class/scripts/widgets/ui_richedit.js~RichEditor.html#instance-set-internalDisabled",
+    "scripts/widgets/ui_richedit.js~RichEditor#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_richedit.js~richeditor#setcss",
@@ -18990,16 +21438,16 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_richedit.js~richviewer#disabled",
-    "class/scripts/widgets/ui_richedit.js~RichViewer.html#instance-member-disabled",
-    "scripts/widgets/ui_richedit.js~RichViewer#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_richedit.js~richviewer#hidescrollbars",
     "class/scripts/widgets/ui_richedit.js~RichViewer.html#instance-method-hideScrollBars",
     "scripts/widgets/ui_richedit.js~RichViewer#hideScrollBars",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_richedit.js~richviewer#internaldisabled",
+    "class/scripts/widgets/ui_richedit.js~RichViewer.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_richedit.js~RichViewer#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_richedit.js~richviewer#showscrollbars",
@@ -19278,10 +21726,10 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_tabs.js~tabbar#_last_bgcolor",
-    "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-member-_last_bgcolor",
-    "scripts/widgets/ui_tabs.js~TabBar#_last_bgcolor",
-    "member"
+    "scripts/widgets/ui_tabs.js~tabbar#_getfont",
+    "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-method-_getFont",
+    "scripts/widgets/ui_tabs.js~TabBar#_getFont",
+    "method"
   ],
   [
     "scripts/widgets/ui_tabs.js~tabbar#_last_dpi",
@@ -19299,6 +21747,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_tabs.js~tabbar#_last_pos",
     "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-member-_last_pos",
     "scripts/widgets/ui_tabs.js~TabBar#_last_pos",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_tabs.js~tabbar#_last_style_key",
+    "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-member-_last_style_key",
+    "scripts/widgets/ui_tabs.js~TabBar#_last_style_key",
     "member"
   ],
   [
@@ -19410,10 +21864,22 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_tabs.js~tabbar#setcss",
+    "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-method-setCSS",
+    "scripts/widgets/ui_tabs.js~TabBar#setCSS",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_tabs.js~tabbar#swaptabs",
     "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-method-swapTabs",
     "scripts/widgets/ui_tabs.js~TabBar#swapTabs",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_tabs.js~tabbar#tabfontscale",
+    "class/scripts/widgets/ui_tabs.js~TabBar.html#instance-member-tabFontScale",
+    "scripts/widgets/ui_tabs.js~TabBar#tabFontScale",
+    "member"
   ],
   [
     "scripts/widgets/ui_tabs.js~tabbar#tabs",
@@ -19482,6 +21948,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "scripts/widgets/ui_tabs.js~tabcontainer#_last_style_key",
+    "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-member-_last_style_key",
+    "scripts/widgets/ui_tabs.js~TabContainer#_last_style_key",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_tabs.js~tabcontainer#_remakestyle",
     "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-_remakeStyle",
     "scripts/widgets/ui_tabs.js~TabContainer#_remakeStyle",
@@ -19516,6 +21988,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-constructor-constructor",
     "scripts/widgets/ui_tabs.js~TabContainer#constructor",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_tabs.js~tabcontainer#dataprefix",
+    "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-member-dataPrefix",
+    "scripts/widgets/ui_tabs.js~TabContainer#dataPrefix",
+    "member"
   ],
   [
     "scripts/widgets/ui_tabs.js~tabcontainer#enabledrag",
@@ -19560,6 +22038,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_tabs.js~tabcontainer#loaddata",
+    "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-loadData",
+    "scripts/widgets/ui_tabs.js~TabContainer#loadData",
+    "method"
+  ],
+  [
     "scripts/widgets/ui_tabs.js~tabcontainer#movetab",
     "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-moveTab",
     "scripts/widgets/ui_tabs.js~TabContainer#moveTab",
@@ -19575,6 +22059,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_tabs.js~tabcontainer#removetab",
     "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-removeTab",
     "scripts/widgets/ui_tabs.js~TabContainer#removeTab",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_tabs.js~tabcontainer#savedata",
+    "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-saveData",
+    "scripts/widgets/ui_tabs.js~TabContainer#saveData",
     "method"
   ],
   [
@@ -19594,6 +22084,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-tab",
     "scripts/widgets/ui_tabs.js~TabContainer#tab",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_tabs.js~tabcontainer#tabfontscale",
+    "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-member-tabFontScale",
+    "scripts/widgets/ui_tabs.js~TabContainer#tabFontScale",
+    "member"
   ],
   [
     "scripts/widgets/ui_tabs.js~tabcontainer#tabs",
@@ -19623,6 +22119,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_tabs.js~tabcontainer#updatehoriz",
     "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-updateHoriz",
     "scripts/widgets/ui_tabs.js~TabContainer#updateHoriz",
+    "method"
+  ],
+  [
+    "scripts/widgets/ui_tabs.js~tabcontainer#updatestyle",
+    "class/scripts/widgets/ui_tabs.js~TabContainer.html#instance-method-updateStyle",
+    "scripts/widgets/ui_tabs.js~TabContainer#updateStyle",
     "method"
   ],
   [
@@ -19776,6 +22278,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_textbox.js~textbox#_textboxevents",
+    "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-_textBoxEvents",
+    "scripts/widgets/ui_textbox.js~TextBox#_textBoxEvents",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_textbox.js~textbox#_width",
     "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-_width",
     "scripts/widgets/ui_textbox.js~TextBox#_width",
@@ -19812,12 +22320,6 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_textbox.js~textbox#disabled",
-    "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-disabled",
-    "scripts/widgets/ui_textbox.js~TextBox#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_textbox.js~textbox#displayunit",
     "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-displayUnit",
     "scripts/widgets/ui_textbox.js~TextBox#displayUnit",
@@ -19840,6 +22342,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-method-init",
     "scripts/widgets/ui_textbox.js~TextBox#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_textbox.js~textbox#internaldisabled",
+    "class/scripts/widgets/ui_textbox.js~TextBox.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_textbox.js~TextBox#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_textbox.js~textbox#radix",
@@ -20190,18 +22698,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_widgets.js~check#disabled",
-    "class/scripts/widgets/ui_widgets.js~Check.html#instance-get-disabled",
-    "scripts/widgets/ui_widgets.js~Check#disabled",
-    "member"
-  ],
-  [
-    "scripts/widgets/ui_widgets.js~check#disabled",
-    "class/scripts/widgets/ui_widgets.js~Check.html#instance-set-disabled",
-    "scripts/widgets/ui_widgets.js~Check#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_widgets.js~check#g",
     "class/scripts/widgets/ui_widgets.js~Check.html#instance-member-g",
     "scripts/widgets/ui_widgets.js~Check#g",
@@ -20212,6 +22708,18 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_widgets.js~Check.html#instance-method-init",
     "scripts/widgets/ui_widgets.js~Check#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets.js~check#internaldisabled",
+    "class/scripts/widgets/ui_widgets.js~Check.html#instance-get-internalDisabled",
+    "scripts/widgets/ui_widgets.js~Check#internalDisabled",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_widgets.js~check#internaldisabled",
+    "class/scripts/widgets/ui_widgets.js~Check.html#instance-set-internalDisabled",
+    "scripts/widgets/ui_widgets.js~Check#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_widgets.js~check#label",
@@ -20310,6 +22818,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_widgets.js~iconbutton#_customicon",
+    "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-member-_customIcon",
+    "scripts/widgets/ui_widgets.js~IconButton#_customIcon",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_widgets.js~iconbutton#_getsize",
     "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-method-_getsize",
     "scripts/widgets/ui_widgets.js~IconButton#_getsize",
@@ -20344,6 +22858,18 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-constructor-constructor",
     "scripts/widgets/ui_widgets.js~IconButton#constructor",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets.js~iconbutton#customicon",
+    "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-set-customIcon",
+    "scripts/widgets/ui_widgets.js~IconButton#customIcon",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_widgets.js~iconbutton#customicon",
+    "class/scripts/widgets/ui_widgets.js~IconButton.html#instance-get-customIcon",
+    "scripts/widgets/ui_widgets.js~IconButton#customIcon",
+    "member"
   ],
   [
     "scripts/widgets/ui_widgets.js~iconbutton#drawbuttonbg",
@@ -20478,12 +23004,6 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "scripts/widgets/ui_widgets.js~iconcheck#disabled",
-    "class/scripts/widgets/ui_widgets.js~IconCheck.html#instance-member-disabled",
-    "scripts/widgets/ui_widgets.js~IconCheck#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_widgets.js~iconcheck#drawcheck",
     "class/scripts/widgets/ui_widgets.js~IconCheck.html#instance-get-drawCheck",
     "scripts/widgets/ui_widgets.js~IconCheck#drawCheck",
@@ -20523,6 +23043,12 @@ window.esdocSearchIndex = [
     "scripts/widgets/ui_widgets.js~iconcheck#iconsheet",
     "class/scripts/widgets/ui_widgets.js~IconCheck.html#instance-member-iconsheet",
     "scripts/widgets/ui_widgets.js~IconCheck#iconsheet",
+    "member"
+  ],
+  [
+    "scripts/widgets/ui_widgets.js~iconcheck#internaldisabled",
+    "class/scripts/widgets/ui_widgets.js~IconCheck.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_widgets.js~IconCheck#internalDisabled",
     "member"
   ],
   [
@@ -20616,9 +23142,9 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_widgets.js~valuebuttonbase#disabled",
-    "class/scripts/widgets/ui_widgets.js~ValueButtonBase.html#instance-member-disabled",
-    "scripts/widgets/ui_widgets.js~ValueButtonBase#disabled",
+    "scripts/widgets/ui_widgets.js~valuebuttonbase#internaldisabled",
+    "class/scripts/widgets/ui_widgets.js~ValueButtonBase.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_widgets.js~ValueButtonBase#internalDisabled",
     "member"
   ],
   [
@@ -20658,6 +23184,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "scripts/widgets/ui_widgets2.js~tooltip#background",
+    "class/scripts/widgets/ui_widgets2.js~ToolTip.html#instance-member-background",
+    "scripts/widgets/ui_widgets2.js~ToolTip#background",
+    "member"
+  ],
+  [
     "scripts/widgets/ui_widgets2.js~tooltip#constructor",
     "class/scripts/widgets/ui_widgets2.js~ToolTip.html#instance-constructor-constructor",
     "scripts/widgets/ui_widgets2.js~ToolTip#constructor",
@@ -20686,12 +23218,6 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_widgets2.js~ToolTip.html#instance-method-setCSS",
     "scripts/widgets/ui_widgets2.js~ToolTip#setCSS",
     "method"
-  ],
-  [
-    "scripts/widgets/ui_widgets2.js~tooltip#styletag",
-    "class/scripts/widgets/ui_widgets2.js~ToolTip.html#instance-member-styletag",
-    "scripts/widgets/ui_widgets2.js~ToolTip#styletag",
-    "member"
   ],
   [
     "scripts/widgets/ui_widgets2.js~tooltip#text",
@@ -20778,12 +23304,6 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_widgets2.js~vectorpanel#disabled",
-    "class/scripts/widgets/ui_widgets2.js~VectorPanel.html#instance-member-disabled",
-    "scripts/widgets/ui_widgets2.js~VectorPanel#disabled",
-    "member"
-  ],
-  [
     "scripts/widgets/ui_widgets2.js~vectorpanel#hasuniformslider",
     "class/scripts/widgets/ui_widgets2.js~VectorPanel.html#instance-member-hasUniformSlider",
     "scripts/widgets/ui_widgets2.js~VectorPanel#hasUniformSlider",
@@ -20794,6 +23314,12 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_widgets2.js~VectorPanel.html#instance-method-init",
     "scripts/widgets/ui_widgets2.js~VectorPanel#init",
     "method"
+  ],
+  [
+    "scripts/widgets/ui_widgets2.js~vectorpanel#internaldisabled",
+    "class/scripts/widgets/ui_widgets2.js~VectorPanel.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_widgets2.js~VectorPanel#internalDisabled",
+    "member"
   ],
   [
     "scripts/widgets/ui_widgets2.js~vectorpanel#name",
@@ -20886,9 +23412,9 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#disabled",
-    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-member-disabled",
-    "scripts/widgets/ui_widgets2.js~VectorPopupButton#disabled",
+    "scripts/widgets/ui_widgets2.js~vectorpopupbutton#internaldisabled",
+    "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#instance-member-internalDisabled",
+    "scripts/widgets/ui_widgets2.js~VectorPopupButton#internalDisabled",
     "member"
   ],
   [
@@ -20914,5 +23440,11 @@ window.esdocSearchIndex = [
     "class/scripts/widgets/ui_widgets2.js~VectorPopupButton.html#static-method-define",
     "scripts/widgets/ui_widgets2.js~VectorPopupButton.define",
     "method"
+  ],
+  [
+    "scripts/xmlpage/xmlpage.js",
+    "file/scripts/xmlpage/xmlpage.js.html",
+    "scripts/xmlpage/xmlpage.js",
+    "file"
   ]
 ]

@@ -70,7 +70,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -142,7 +144,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -162,7 +166,46 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content">
+<div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><h1 id="tool-properties">Tool Properties</h1><p>Tool Properties are generic typed value containers.  They
+store things like:</p>
+<ul>
+<li>Numbers (floats, integers)</li>
+<li>Vectors</li>
+<li>Simple lists</li>
+<li>Enumerations</li>
+<li>Bitflags</li>
+</ul>
+<p>Tool properties also store various UX related data:</p>
+<ul>
+<li>Ranges</li>
+<li>Tooltips</li>
+<li>UI names</li>
+<li>Slider step sizes</li>
+<li>Number units</li>
+</ul>
+<p>Tool properties are used by the ToolOp API
+(the basic operators that implement the undo stack)
+as well as the datapath controller API (where they internally
+provide type information for the application model)</p>
+<h2 id="api">API</h2><p>The basic interface for tool properties is:</p>
+<p><pre>
+
+class ToolProperty {
+    getValue() {
+    }
+
+    setValue(v) {
+    }
+
+    //add event callback, type should be &apos;change&apos;
+    on(type, cb) {
+    }
+}
+
+</pre>
+
+</p>
+</div>
 </div>
 
 <footer class="footer">

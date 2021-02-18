@@ -70,7 +70,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -142,7 +144,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -169,7 +173,7 @@ It is not suited for unstructed data (use JSON for that).<br>NStructJS arose out
 <li>JSON allocates objects twice.</li>
 <li>JSON is slow compared to what you can get with a structured binary format</li>
 </ul>
-<p>The idea of NStructJS is to attach little scripts to your classes that define that 
+<p>The idea of NStructJS is to attach little scripts to your classes that define that
 class&apos;s data and how it is saved.  For example:</p>
 <pre><code><code class="source-code prettyprint">class SomeClass {
   constructor() {
@@ -191,9 +195,9 @@ my_module.SomeClass {
   obj   : int | this.obj.id;
 }
 `;
-nstructjs.manager.add_class(SomeClass);</code>
+nstructjs.register(SomeClass);</code>
 </code></pre><h2 id="control-how-fields-are-saved">Control How Fields Are Saved</h2><p>You can use little code snippets to control how fields are saved.
-For example, if you want to save an integer ID instead of a reference for an 
+For example, if you want to save an integer ID instead of a reference for an
 object property, you might do this:</p>
 <pre><code><code class="source-code prettyprint">my_module.AnotherClass {
   someclass : int | this.someclass !== undefined ? this.someclass.id : -1;

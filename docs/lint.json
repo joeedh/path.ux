@@ -1,168 +1,30 @@
 [
   {
-    "name": "ModelInterface#execOrRedo",
-    "filePath": "scripts/controller/controller.js",
-    "lines": [
-      {
-        "lineNumber": 130,
-        "line": "  /**\r"
-      },
-      {
-        "lineNumber": 131,
-        "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
-      },
-      {
-        "lineNumber": 132,
-        "line": "   *\r"
-      },
-      {
-        "lineNumber": 133,
-        "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
-      },
-      {
-        "lineNumber": 134,
-        "line": "   *\r"
-      },
-      {
-        "lineNumber": 135,
-        "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
-      },
-      {
-        "lineNumber": 136,
-        "line": "   * */\r"
-      },
-      {
-        "lineNumber": 137,
-        "line": "  execOrRedo(ctx, toolop, compareInputs=false) {\r"
-      }
-    ],
-    "codeParams": [
-      "ctx",
-      "toolop",
-      "compareInputs"
-    ],
-    "docParams": [
-      "compareInputs"
-    ]
-  },
-  {
-    "name": "DataAPI#_addClass",
-    "filePath": "scripts/controller/simple_controller.js",
-    "lines": [
-      {
-        "lineNumber": 785,
-        "line": "  /**\r"
-      },
-      {
-        "lineNumber": 786,
-        "line": "   * Look up struct definition for a class.\r"
-      },
-      {
-        "lineNumber": 787,
-        "line": "   *\r"
-      },
-      {
-        "lineNumber": 788,
-        "line": "   * @param cls: the class\r"
-      },
-      {
-        "lineNumber": 789,
-        "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
-      },
-      {
-        "lineNumber": 790,
-        "line": "   * @returns {IterableIterator<*>}\r"
-      },
-      {
-        "lineNumber": 791,
-        "line": "   */\r"
-      },
-      {
-        "lineNumber": 792,
-        "line": "\r"
-      },
-      {
-        "lineNumber": 793,
-        "line": "  _addClass(cls, dstruct) {\r"
-      }
-    ],
-    "codeParams": [
-      "cls",
-      "dstruct"
-    ],
-    "docParams": [
-      "cls:",
-      "auto_create:"
-    ]
-  },
-  {
-    "name": "DataAPI#resolvePath_intern",
-    "filePath": "scripts/controller/simple_controller.js",
-    "lines": [
-      {
-        "lineNumber": 906,
-        "line": "  /**\r"
-      },
-      {
-        "lineNumber": 907,
-        "line": "   get meta information for a datapath.\r"
-      },
-      {
-        "lineNumber": 908,
-        "line": "\r"
-      },
-      {
-        "lineNumber": 909,
-        "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
-      },
-      {
-        "lineNumber": 910,
-        "line": "   just want meta information\r"
-      },
-      {
-        "lineNumber": 911,
-        "line": "   */\r"
-      },
-      {
-        "lineNumber": 912,
-        "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false) {\r"
-      }
-    ],
-    "codeParams": [
-      "ctx",
-      "inpath",
-      "ignoreExistence"
-    ],
-    "docParams": [
-      "ignoreExistence:"
-    ]
-  },
-  {
     "name": "Container#wrap",
     "filePath": "scripts/core/ui.js",
     "lines": [
       {
-        "lineNumber": 246,
+        "lineNumber": 274,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 247,
+        "lineNumber": 275,
         "line": "   *\r"
       },
       {
-        "lineNumber": 248,
+        "lineNumber": 276,
         "line": "   * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse\r"
       },
       {
-        "lineNumber": 249,
+        "lineNumber": 277,
         "line": "   * @returns {Container}\r"
       },
       {
-        "lineNumber": 250,
+        "lineNumber": 278,
         "line": "   */\r"
       },
       {
-        "lineNumber": 251,
+        "lineNumber": 279,
         "line": "  wrap(mode=\"wrap\") {\r"
       }
     ],
@@ -178,31 +40,31 @@
     "filePath": "scripts/core/units.js",
     "lines": [
       {
-        "lineNumber": 400,
+        "lineNumber": 422,
         "line": "/**\r"
       },
       {
-        "lineNumber": 401,
+        "lineNumber": 423,
         "line": " *\r"
       },
       {
-        "lineNumber": 402,
+        "lineNumber": 424,
         "line": " * @param value Note: is not converted to internal unit\r"
       },
       {
-        "lineNumber": 403,
+        "lineNumber": 425,
         "line": " * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name\r"
       },
       {
-        "lineNumber": 404,
+        "lineNumber": 426,
         "line": " * @returns {*}\r"
       },
       {
-        "lineNumber": 405,
+        "lineNumber": 427,
         "line": " */\r"
       },
       {
-        "lineNumber": 406,
+        "lineNumber": 428,
         "line": "export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {\r"
       }
     ],
@@ -218,31 +80,216 @@
     ]
   },
   {
+    "name": "DataAPI#_addClass",
+    "filePath": "scripts/path-controller/controller/controller.js",
+    "lines": [
+      {
+        "lineNumber": 653,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 654,
+        "line": "   * Look up struct definition for a class.\r"
+      },
+      {
+        "lineNumber": 655,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 656,
+        "line": "   * @param cls: the class\r"
+      },
+      {
+        "lineNumber": 657,
+        "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
+      },
+      {
+        "lineNumber": 658,
+        "line": "   * @returns {IterableIterator<*>}\r"
+      },
+      {
+        "lineNumber": 659,
+        "line": "   */\r"
+      },
+      {
+        "lineNumber": 660,
+        "line": "\r"
+      },
+      {
+        "lineNumber": 661,
+        "line": "  _addClass(cls, dstruct) {\r"
+      }
+    ],
+    "codeParams": [
+      "cls",
+      "dstruct"
+    ],
+    "docParams": [
+      "cls:",
+      "auto_create:"
+    ]
+  },
+  {
+    "name": "DataAPI#resolvePath_intern",
+    "filePath": "scripts/path-controller/controller/controller.js",
+    "lines": [
+      {
+        "lineNumber": 795,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 796,
+        "line": "   get meta information for a datapath.\r"
+      },
+      {
+        "lineNumber": 797,
+        "line": "\r"
+      },
+      {
+        "lineNumber": 798,
+        "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
+      },
+      {
+        "lineNumber": 799,
+        "line": "   just want meta information\r"
+      },
+      {
+        "lineNumber": 800,
+        "line": "   */\r"
+      },
+      {
+        "lineNumber": 801,
+        "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false, p=pathParser) {\r"
+      }
+    ],
+    "codeParams": [
+      "ctx",
+      "inpath",
+      "ignoreExistence",
+      "p"
+    ],
+    "docParams": [
+      "ignoreExistence:"
+    ]
+  },
+  {
+    "name": "ModelInterface#execOrRedo",
+    "filePath": "scripts/path-controller/controller/controller_abstract.js",
+    "lines": [
+      {
+        "lineNumber": 33,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 34,
+        "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
+      },
+      {
+        "lineNumber": 35,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 36,
+        "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
+      },
+      {
+        "lineNumber": 37,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 38,
+        "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
+      },
+      {
+        "lineNumber": 39,
+        "line": "   * */\r"
+      },
+      {
+        "lineNumber": 40,
+        "line": "  execOrRedo(ctx, toolop, compareInputs=false) {\r"
+      }
+    ],
+    "codeParams": [
+      "ctx",
+      "toolop",
+      "compareInputs"
+    ],
+    "docParams": [
+      "compareInputs"
+    ]
+  },
+  {
+    "name": "ToolStack#execOrRedo",
+    "filePath": "scripts/path-controller/toolsys/toolsys.js",
+    "lines": [
+      {
+        "lineNumber": 1339,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 1340,
+        "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
+      },
+      {
+        "lineNumber": 1341,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 1342,
+        "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
+      },
+      {
+        "lineNumber": 1343,
+        "line": "   *\r"
+      },
+      {
+        "lineNumber": 1344,
+        "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
+      },
+      {
+        "lineNumber": 1345,
+        "line": "   * */\r"
+      },
+      {
+        "lineNumber": 1346,
+        "line": "  execOrRedo(ctx, tool, compareInputs=false) {\r"
+      }
+    ],
+    "codeParams": [
+      "ctx",
+      "tool",
+      "compareInputs"
+    ],
+    "docParams": [
+      "compareInputs"
+    ]
+  },
+  {
     "name": "Screen#pickElement",
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 329,
+        "lineNumber": 347,
         "line": "  /** \r"
       },
       {
-        "lineNumber": 330,
+        "lineNumber": 348,
         "line": "   * @param x\r"
       },
       {
-        "lineNumber": 331,
+        "lineNumber": 349,
         "line": "   * @param y\r"
       },
       {
-        "lineNumber": 332,
+        "lineNumber": 350,
         "line": "   * @param args arguments : {sx, sy, nodeclass, excluded_classes}\r"
       },
       {
-        "lineNumber": 333,
+        "lineNumber": 351,
         "line": "  */\r"
       },
       {
-        "lineNumber": 334,
+        "lineNumber": 352,
         "line": "  pickElement(x, y, args, sy, nodeclass, excluded_classes) {\r"
       }
     ],
@@ -265,31 +312,31 @@
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 408,
+        "lineNumber": 426,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 409,
+        "lineNumber": 427,
         "line": "   *\r"
       },
       {
-        "lineNumber": 410,
+        "lineNumber": 428,
         "line": "   * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,\r"
       },
       {
-        "lineNumber": 411,
+        "lineNumber": 429,
         "line": "   *                     then move the popup so it's fully inside the window (if it's outsize).\r"
       },
       {
-        "lineNumber": 412,
+        "lineNumber": 430,
         "line": "   *\r"
       },
       {
-        "lineNumber": 413,
+        "lineNumber": 431,
         "line": "    * */\r"
       },
       {
-        "lineNumber": 414,
+        "lineNumber": 432,
         "line": "  popup(owning_node, elem_or_x, y, closeOnMouseOut=true, popupDelay=250) {\r"
       }
     ],
@@ -302,52 +349,6 @@
     ],
     "docParams": [
       "popupDelay"
-    ]
-  },
-  {
-    "name": "ToolStack#execOrRedo",
-    "filePath": "scripts/toolsys/simple_toolsys.js",
-    "lines": [
-      {
-        "lineNumber": 564,
-        "line": "  /**\r"
-      },
-      {
-        "lineNumber": 565,
-        "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
-      },
-      {
-        "lineNumber": 566,
-        "line": "   *\r"
-      },
-      {
-        "lineNumber": 567,
-        "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
-      },
-      {
-        "lineNumber": 568,
-        "line": "   *\r"
-      },
-      {
-        "lineNumber": 569,
-        "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
-      },
-      {
-        "lineNumber": 570,
-        "line": "   * */\r"
-      },
-      {
-        "lineNumber": 571,
-        "line": "  execOrRedo(ctx, tool, compareInputs=false) {\r"
-      }
-    ],
-    "codeParams": [
-      "ctx",
-      "tool",
-      "compareInputs"
-    ],
-    "docParams": [
-      "compareInputs"
     ]
   },
   {

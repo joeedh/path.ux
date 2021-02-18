@@ -5,8 +5,8 @@
   "outputAST" : false,
   "plugins": [
     {"name": "esdoc-ecmascript-proposal-plugin", "option": {"all": true}},
-    {"name": "./enumObjLiterals.js", "option" : {}},
-    {"name": "./esdoc_fix_urls.js", "option" : {}},
+    {"name": "./enumObjLiterals.cjs", "option" : {}},
+    {"name": "./esdoc_fix_urls.cjs", "option" : {}},
     {
     "name": "esdoc-standard-plugin",
     "option": {

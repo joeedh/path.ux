@@ -70,7 +70,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -142,7 +144,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -181,9 +185,9 @@ on the first.</p>
 around a (client-provided) Context instance, which is required to have the 
 following properties:</p>
 <ul>
-<li>api       : a <a href="./manual/../class/scripts/controller/controller.js~ModelInterface.html">ModelInterface</a> class (typically a <a href="./manual/../class/scripts/controller/simple_controller.js~DataAPI.html">DataAPI</a> instance)</li>
+<li>api       : a <a href="./manual/../class/scripts/path-controller/controller/controller_abstract.js~ModelInterface.html">ModelInterface</a> class (typically a <a href="./manual/../class/scripts/path-controller/controller/controller.js~DataAPI.html">DataAPI</a> instance)</li>
 <li>screen    : The current screen, a <a href="./manual/../class/scripts/screen/FrameManager.js~Screen.html">Screen</a> instance (or subclass of)</li>
-<li>toolstack : The tool stack, see <a href="./manual/../class/scripts/toolsys/simple_toolsys.js~ToolStack.html">ToolStack</a></li>
+<li>toolstack : The tool stack, see <a href="./manual/../class/scripts/path-controller/toolsys/toolsys.js~ToolStack.html">ToolStack</a></li>
 </ul>
 <p>Path.ux allows different controller implementations (though they must all pass type information via the 
 classes in toolprop.js).  The included implementation can be found in 

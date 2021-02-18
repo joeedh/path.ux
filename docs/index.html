@@ -70,7 +70,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -142,7 +144,9 @@
 <div data-ice="manual">
     <ul class="manual-toc">
       
-    </ul>
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/toolprop.html"><a href="manual/toolprop.html" data-ice="link">Tool Properties</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/toolprop.html"><a href="manual/toolprop.html#api" data-ice="link">API</a></li>
+</ul>
   </div>
 <div data-ice="manual">
     <ul class="manual-toc">
@@ -197,7 +201,7 @@ Blender, a 3D animation/modeling/visualization app.  </p>
 It is not suited for unstructed data (use JSON for that).<br>NStructJS arose out of the following shortcomings of JSON:</p><ul>
 <li>JSON allocates objects twice.</li>
 <li>JSON is slow compared to what you can get with a structured binary format</li>
-</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that 
+</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that
 class&apos;s data and how it is saved.  For example:</p><pre><code><code class="source-code prettyprint">class SomeClass {
   constructor() {
     this.data1 = 0;
@@ -218,9 +222,9 @@ my_module.SomeClass {
   obj   : int | this.obj.id;
 }
 `;
-nstructjs.manager.add_class(SomeClass);</code>
+nstructjs.register(SomeClass);</code>
 </code></pre><h2>Control How Fields Are Saved</h2><p>You can use little code snippets to control how fields are saved.
-For example, if you want to save an integer ID instead of a reference for an 
+For example, if you want to save an integer ID instead of a reference for an
 object property, you might do this:</p><pre><code><code class="source-code prettyprint">my_module.AnotherClass {
   someclass : int | this.someclass !== undefined ? this.someclass.id : -1;
 }</code>
@@ -231,21 +235,35 @@ copy of your struct scripts with each file, that way each file knows how to load
     </div>
 <div class="manual-card-wrap" data-ice="cards">
       <div class="manual-card">
-        <div data-ice="card"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and 
-in general are foundational to path.ux and it&apos;s associated projects.  </p><p>Tools all inherit from <a href="./manual/../class/scripts/toolsys/simple_toolsys.js~ToolOp.html">ToolOp</a>, which roughly looks like this (see Context section for an 
+        <div data-ice="card"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and
+in general are foundational to path.ux and it&apos;s associated projects.</p><p>Tools all inherit from <a href="./manual/../class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html">ToolOp</a>, which roughly looks like this (see Context section for an
 explanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code class="source-code prettyprint">class SomeTool extends ToolOp {
   static tooldef() {return {
     uiname   : &quot;Tool&quot;,
-    path     : &quot;module.tool&quot;
-    inputs   : ToolOp.inherit({}), //inherit properties from base class
+    toolpath     : &quot;module.tool&quot;
+    inputs   : ToolOp.inherit({
+    }), //use ToolOp.inherit to flag inheritance
     outputs  : {}
   }}
+
   static invoke(ctx, args) {
     /*create a new tool instance.
       args is simple key:val mapping
       where val is either a string, a number
       or a boolean.*/
-    return new ToolOp()
+
+    //super.invoke will create tool and parse args
+    return super.invoke(ctx, args);
+  }
+
+  //add a 2d line
+  makeDrawLine(v1, v2, css_color);
+
+  //reset temporary drawing geometry
+  resetTempGeom();
+
+  calcUndoMem(ctx) {
+    return size in bytes of stored undo data
   }
   undoPre(ctx) {
     //create undo data
@@ -257,13 +275,16 @@ explanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code cl
     //execute tool
   }
   modalStart(ctx) {
+    super.modalStart(ctx);
+
     //start interactice mode
   }
-  modalEnd(ctx) {
+  modalEnd(was_cancelled) {
+    super.modalEnd(was_cancelled);
     //end interactive mode
   }
   on_[mousedown/mousemove/mouseup/keydown](ctx) {
-    //interactive mode event
+    //interactive mode event handler
   }
 
   ToolOp.register(SomeTool);
@@ -289,13 +310,51 @@ either override the following methods in ScreenArea.Area.prototype, or subclass 
   //called when area should be considered &quot;inactive&quot;
   pop_ctx_active() {
   }</code>
-</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the 
-entire application and then reloading it on undo).  Additionally to save on speed and memory subclasses 
+</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the
+entire application and then reloading it on undo).  Additionally to save on speed and memory subclasses
 can override undoPre and undo with their own implementation.</p><h2>tooldef()</h2><p>Tools have a special tooldef() static function that &quot;defines&quot; the tool.  It returns things like
-what properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties, 
+what properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties,
 various linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code
 may provide it&apos;s own property classes.</p></div>
         <a data-ice="link" href="manual/toolsystem.html"></a>
+      </div>
+    </div>
+<div class="manual-card-wrap" data-ice="cards">
+      <div class="manual-card">
+        <div data-ice="card"><h1>Tool Properties</h1><p>Tool Properties are generic typed value containers.  They
+store things like:</p><ul>
+<li>Numbers (floats, integers)</li>
+<li>Vectors</li>
+<li>Simple lists</li>
+<li>Enumerations</li>
+<li>Bitflags</li>
+</ul><p>Tool properties also store various UX related data:</p><ul>
+<li>Ranges</li>
+<li>Tooltips</li>
+<li>UI names</li>
+<li>Slider step sizes</li>
+<li>Number units</li>
+</ul><p>Tool properties are used by the ToolOp API
+(the basic operators that implement the undo stack)
+as well as the datapath controller API (where they internally
+provide type information for the application model)</p><h2>API</h2><p>The basic interface for tool properties is:</p><p><pre>
+
+class ToolProperty {
+    getValue() {
+    }
+
+    setValue(v) {
+    }
+
+    //add event callback, type should be &apos;change&apos;
+    on(type, cb) {
+    }
+}
+
+</pre>
+
+</p></div>
+        <a data-ice="link" href="manual/toolprop.html"></a>
       </div>
     </div>
 <div class="manual-card-wrap" data-ice="cards">
@@ -305,7 +364,7 @@ to ToolOps and used by path.ux.</p><h2>Required fields</h2><p>Call contexts are 
 <li>screen -- the active FrameManager.Screen (or a subclass of it)</li>
 <li>api -- the data path controller, (controller.ModelInterface)</li>
 <li>toolstack -- The tool operator stack (simple_toolsys.ToolStack)</li>
-</ul><h2>Context Overlay:</h2><p>A <a href="./manual/../class/scripts/controller/context.js~ContextOverlay.html">context overlay</a> is a class that overrides context fields.  It has a validate()
+</ul><h2>Context Overlay:</h2><p>A <a href="./manual/../class/scripts/path-controller/controller/context.js~ContextOverlay.html">context overlay</a> is a class that overrides context fields.  It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.</p><p>Contexts can be &quot;frozen&quot; with .lock.  When frozen they should <em>have no direct object 
 references at all</em>, other then .state, .datalib and .api.  </p><p>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside
 of the overlay classes, as well as overriding saveProperty and loadProperty
@@ -426,7 +485,7 @@ to ToolOps and used by path.ux.</p><h2>Required fields</h2><p>Call contexts are 
 <li>screen -- the active FrameManager.Screen (or a subclass of it)</li>
 <li>api -- the data path controller, (controller.ModelInterface)</li>
 <li>toolstack -- The tool operator stack (simple_toolsys.ToolStack)</li>
-</ul><h2>Context Overlay:</h2><p>A <a href="./manual/../class/scripts/controller/context.js~ContextOverlay.html">context overlay</a> is a class that overrides context fields.  It has a validate()
+</ul><h2>Context Overlay:</h2><p>A <a href="./manual/../class/scripts/path-controller/controller/context.js~ContextOverlay.html">context overlay</a> is a class that overrides context fields.  It has a validate()
 method that is polled regularly; if it returns false the overlay is removed.</p><p>Contexts can be &quot;frozen&quot; with .lock.  When frozen they should <em>have no direct object 
 references at all</em>, other then .state, .datalib and .api.  </p><p>Properties can control this with &quot;_save&quot; and &quot;_load&quot; methods inside
 of the overlay classes, as well as overriding saveProperty and loadProperty
@@ -557,7 +616,7 @@ Context.register(ToolOverlay);</code>
 It is not suited for unstructed data (use JSON for that).<br>NStructJS arose out of the following shortcomings of JSON:</p><ul>
 <li>JSON allocates objects twice.</li>
 <li>JSON is slow compared to what you can get with a structured binary format</li>
-</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that 
+</ul><p>The idea of NStructJS is to attach little scripts to your classes that define that
 class&apos;s data and how it is saved.  For example:</p><pre><code><code class="source-code prettyprint">class SomeClass {
   constructor() {
     this.data1 = 0;
@@ -578,9 +637,9 @@ my_module.SomeClass {
   obj   : int | this.obj.id;
 }
 `;
-nstructjs.manager.add_class(SomeClass);</code>
+nstructjs.register(SomeClass);</code>
 </code></pre><h2>Control How Fields Are Saved</h2><p>You can use little code snippets to control how fields are saved.
-For example, if you want to save an integer ID instead of a reference for an 
+For example, if you want to save an integer ID instead of a reference for an
 object property, you might do this:</p><pre><code><code class="source-code prettyprint">my_module.AnotherClass {
   someclass : int | this.someclass !== undefined ? this.someclass.id : -1;
 }</code>
@@ -591,21 +650,73 @@ copy of your struct scripts with each file, that way each file knows how to load
     </div>
 <div class="manual-card-wrap" data-ice="cards">
       <div class="manual-card">
-        <div data-ice="card"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and 
-in general are foundational to path.ux and it&apos;s associated projects.  </p><p>Tools all inherit from <a href="./manual/../class/scripts/toolsys/simple_toolsys.js~ToolOp.html">ToolOp</a>, which roughly looks like this (see Context section for an 
+        <div data-ice="card"><h1>Tool Properties</h1><p>Tool Properties are generic typed value containers.  They
+store things like:</p><ul>
+<li>Numbers (floats, integers)</li>
+<li>Vectors</li>
+<li>Simple lists</li>
+<li>Enumerations</li>
+<li>Bitflags</li>
+</ul><p>Tool properties also store various UX related data:</p><ul>
+<li>Ranges</li>
+<li>Tooltips</li>
+<li>UI names</li>
+<li>Slider step sizes</li>
+<li>Number units</li>
+</ul><p>Tool properties are used by the ToolOp API
+(the basic operators that implement the undo stack)
+as well as the datapath controller API (where they internally
+provide type information for the application model)</p><h2>API</h2><p>The basic interface for tool properties is:</p><p><pre>
+
+class ToolProperty {
+    getValue() {
+    }
+
+    setValue(v) {
+    }
+
+    //add event callback, type should be &apos;change&apos;
+    on(type, cb) {
+    }
+}
+
+</pre>
+
+</p></div>
+        <a data-ice="link" href="manual/toolprop.html"></a>
+      </div>
+    </div>
+<div class="manual-card-wrap" data-ice="cards">
+      <div class="manual-card">
+        <div data-ice="card"><h1>Tool System</h1><p>Tools are what the user uses to change state in the model.  They handle undo, can take control of events if needed and
+in general are foundational to path.ux and it&apos;s associated projects.</p><p>Tools all inherit from <a href="./manual/../class/scripts/path-controller/toolsys/toolsys.js~ToolOp.html">ToolOp</a>, which roughly looks like this (see Context section for an
 explanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code class="source-code prettyprint">class SomeTool extends ToolOp {
   static tooldef() {return {
     uiname   : &quot;Tool&quot;,
-    path     : &quot;module.tool&quot;
-    inputs   : ToolOp.inherit({}), //inherit properties from base class
+    toolpath     : &quot;module.tool&quot;
+    inputs   : ToolOp.inherit({
+    }), //use ToolOp.inherit to flag inheritance
     outputs  : {}
   }}
+
   static invoke(ctx, args) {
     /*create a new tool instance.
       args is simple key:val mapping
       where val is either a string, a number
       or a boolean.*/
-    return new ToolOp()
+
+    //super.invoke will create tool and parse args
+    return super.invoke(ctx, args);
+  }
+
+  //add a 2d line
+  makeDrawLine(v1, v2, css_color);
+
+  //reset temporary drawing geometry
+  resetTempGeom();
+
+  calcUndoMem(ctx) {
+    return size in bytes of stored undo data
   }
   undoPre(ctx) {
     //create undo data
@@ -617,13 +728,16 @@ explanation for what the &quot;ctx&quot; parameters are):</p><pre><code><code cl
     //execute tool
   }
   modalStart(ctx) {
+    super.modalStart(ctx);
+
     //start interactice mode
   }
-  modalEnd(ctx) {
+  modalEnd(was_cancelled) {
+    super.modalEnd(was_cancelled);
     //end interactive mode
   }
   on_[mousedown/mousemove/mouseup/keydown](ctx) {
-    //interactive mode event
+    //interactive mode event handler
   }
 
   ToolOp.register(SomeTool);
@@ -649,10 +763,10 @@ either override the following methods in ScreenArea.Area.prototype, or subclass 
   //called when area should be considered &quot;inactive&quot;
   pop_ctx_active() {
   }</code>
-</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the 
-entire application and then reloading it on undo).  Additionally to save on speed and memory subclasses 
+</code></pre><h2>Undo</h2><p>Typically tools will inherit from a base class with a general, brute-force undo (i.e. saving the
+entire application and then reloading it on undo).  Additionally to save on speed and memory subclasses
 can override undoPre and undo with their own implementation.</p><h2>tooldef()</h2><p>Tools have a special tooldef() static function that &quot;defines&quot; the tool.  It returns things like
-what properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties, 
+what properties the tool has, it&apos;s name, it&apos;s path in the data path system, etc.</p><h2>Tool Properties</h2><p>Tools have input and output slots.  See toolprop.js.  There are integer properties, float properties,
 various linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code
 may provide it&apos;s own property classes.</p></div>
         <a data-ice="link" href="manual/toolsystem.html"></a>
