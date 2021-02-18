@@ -1098,7 +1098,11 @@ export class DropBox extends Button {
     return this._value;
   }
 
-  setValue(val) {
+  set value(v) {
+    this.setValue(v);
+  }
+
+  setValue(val, setLabelOnly=false) {
     if (val === undefined || val === this._value) {
       return;
     }
@@ -1112,7 +1116,7 @@ export class DropBox extends Button {
 
     this._value = val;
 
-    if (this.prop !== undefined) {
+    if (this.prop !== undefined && !setLabelOnly) {
       this.prop.setValue(val);
       let val2=val;
 
@@ -1127,7 +1131,7 @@ export class DropBox extends Button {
       this._name = ""+val;
     }
 
-    if (this.onchange) {
+    if (this.onchange && !setLabelOnly) {
       this.onchange(val);
     }
 

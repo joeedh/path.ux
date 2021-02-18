@@ -378,7 +378,7 @@ export class Area extends ui_base.UIBase {
 
     let prop = Area.makeAreasEnum();
 
-    return container.listenum(undefined, {
+    let dropbox = container.listenum(undefined, {
       name : this.constructor.define().uiname,
       enumDef : prop,
       callback : (id) => {
@@ -387,7 +387,16 @@ export class Area extends ui_base.UIBase {
       }
     });
 
-    //return areas;
+    dropbox.update.after(() => {
+      let name = this.constructor.define().uiname;
+      let val = prop.values[name];
+
+      if (dropbox.value !== val) {
+        dropbox.setValue(prop.values[name], true);
+      }
+    });
+
+    return dropbox;
   }
 
   makeHeader(container, add_note_area=true) {
