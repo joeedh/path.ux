@@ -596,7 +596,6 @@ export class Screen extends ui_base.UIBase {
       }
 
       if (done) return;
-      console.warn("container end");
 
       this.ctx.screen.removeEventListener("touchstart", touchpick, true);
       this.ctx.screen.removeEventListener("touchmove", touchpick, true);

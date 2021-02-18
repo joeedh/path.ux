@@ -30,6 +30,8 @@ export class Menu extends UIBase {
     this._ignoreFocusEvents = false;
     this.closeOnMouseUp = true;
 
+    this._submenu = undefined;
+
     this.itemindex = 0;
     this.closed = false;
     this.started = false;
@@ -62,23 +64,9 @@ export class Menu extends UIBase {
     let style = this.menustyle = document.createElement("style");
     this.buildStyle();
 
-    /*
-
-        .menuitem:focus {
-        }
-
-
-
-    */
     this.dom.setAttribute("tabindex", -1);
 
-    //let's have the menu wrangler handle key events
-
-    this.container.addEventListener("mouseleave", (e) => {
-      this.close();
-    }, false);
-
-    //this.container.appendChild(this.dom);
+    //the menu wrangler handles key events
 
     this.shadow.appendChild(style);
     this.shadow.appendChild(this.container);
@@ -105,12 +93,9 @@ export class Menu extends UIBase {
   }
 
   click() {
-    if (this.activeItem == undefined)
+    if (!this.activeItem || this.activeItem._isMenu) {
       return;
-
-    if (this.activeItem !== undefined && this.activeItem._isMenu)
-    //ignore
-      return;
+    }
 
     if (this.onselect) {
       try {
@@ -140,7 +125,6 @@ export class Menu extends UIBase {
   }
 
   close() {
-    console.warn("menu closed");
     if (this.closed) {
       return;
     }
@@ -302,8 +286,11 @@ export class Menu extends UIBase {
   }
 
   start(prepend=false, setActive=true) {
+    this.closed = false;
+
     this.started = true;
     this.focus();
+
     menuWrangler.pushMenu(this);
 
     if (this.items.length > 15 && this.autoSearchMode) {
@@ -512,7 +499,7 @@ export class Menu extends UIBase {
       li.addEventListener("click", (e) => {
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           //ignore
-          return n;
+          return;
         }
 
         this.click();
@@ -533,22 +520,22 @@ export class Menu extends UIBase {
           return;
         }
 
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          let active = this.activeItem;
+        let active = this.activeItem;
 
-          window.setTimeout(() => {
-            if (this.activeItem && this.activeItem !== active) {
-              active._menu.close();
-            }
-          }, 10);
+        if (this._submenu) {
+          this._submenu.close();
+          this._submenu = undefined;
         }
+
         if (li._isMenu) {
           li._menu.onselect = (item) => {
             this.onselect(item);
+            li._menu.close();
             this.close();
           };
 
           li._menu.start(false, false);
+          this._submenu = li._menu;
         }
 
         this.setActive(li, false);
@@ -1159,6 +1146,9 @@ export class MenuWrangler {
 
     this.closetimer = 0;
     this.closeOnMouseUp = undefined;
+    this.closereq = undefined;
+
+    this.timer = undefined;
   }
 
   get menu() {
@@ -1166,6 +1156,8 @@ export class MenuWrangler {
   }
 
   pushMenu(menu) {
+    this.spawnreq = undefined;
+
     if (this.menustack.length === 0 && menu.closeOnMouseUp) {
       this.closeOnMouseUp = true;
     }
@@ -1326,19 +1318,8 @@ export class MenuWrangler {
 
   }
 
-  on_mousemove(e) {
-    if (this.menu && this.menu.hasSearchBox) {
-      this.closetimer = util.time_ms();
-      return;
-    }
-
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = util.time_ms();
-      return;
-    }
-
+  findMenu(x, y) {
     let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
 
     let element = screen.pickElement(x, y);
 
@@ -1347,7 +1328,62 @@ export class MenuWrangler {
     }
 
     if (element instanceof Menu) {
+      return element;
+    }
+
+    let w = element;
+
+    while (w) {
+      if (w instanceof Menu) {//w === this.menu) {
+        return w;
+        break;
+      }
+
+      w = w.parentWidget;
+    }
+
+    return undefined;
+  }
+
+  on_mousemove(e) {
+    if (this.menu && this.menu.hasSearchBox) {
       this.closetimer = util.time_ms();
+      this.closereq = undefined;
+      return;
+    }
+
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = util.time_ms();
+      this.closereq = undefined;
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element;
+    let menu = this.menu;
+
+    if (menu) {
+      let r = menu.getBoundingClientRect();
+      let pad = 15;
+
+      if (r && x >= r.x-pad && y >= r.y-pad && x <= r.x+r.width+pad*2 && y <= r.y+r.height+pad*2) {
+        element = menu;
+      }
+    }
+
+    if (!element) {
+      element = screen.pickElement(x, y);
+    }
+
+    if (element === undefined) {
+      return;
+    }
+
+    if (element instanceof Menu) {
+      this.closetimer = util.time_ms();
+      this.closereq = undefined;
       return;
     }
 
@@ -1356,6 +1392,7 @@ export class MenuWrangler {
       this.endMenus();
 
       this.closetimer = util.time_ms();
+      this.closereq = undefined;
 
       //start new menu
       element._onpress(e);
@@ -1371,7 +1408,7 @@ export class MenuWrangler {
         break;
       }
 
-      if (w instanceof DropBox && w.menu === this.menu) {
+      if (w instanceof DropBox && w._menu === this.menu) {
         ok = true;
         break;
       }
@@ -1379,10 +1416,41 @@ export class MenuWrangler {
       w = w.parentWidget;
     }
 
-    if (!ok && (util.time_ms() - this.closetimer > cconst.menu_close_time)) {
-      this.endMenus();
-    } else if (ok) {
+    if (!ok) {
+      this.closereq = this.menu;
+    } else {
       this.closetimer = util.time_ms();
+      this.closereq = undefined;
+    }
+  }
+
+  update() {
+    let closetime = cconst.menu_close_time;
+    closetime = closetime === undefined ? 50 : closetime;
+
+    let close = this.closereq && this.closereq === this.menu;
+    close = close && util.time_ms() - this.closetimer > closetime;
+
+    if (close) {
+      this.closereq = undefined;
+      this.endMenus();
+    }
+  }
+
+  startTimer() {
+    if (this.timer) {
+      this.stopTimer();
+    }
+
+    this.timer = setInterval(() => {
+      this.update();
+    }, 150);
+  }
+
+  stopTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = undefined;
     }
   }
 }
@@ -1410,6 +1478,7 @@ export function startMenuEventWrangling(screen) {
   }
 
   menuWrangler.screen = screen;
+  menuWrangler.startTimer();
 }
 
 export function setWranglerScreen(screen) {
