@@ -770,11 +770,11 @@
       "isDiff": true
     }
   ],
-  "relpath": "/page2.html",
+  "relpath": "",
   "headVersion": {
-    "mtime": 1608728255895.5752,
-    "relpath": "/page2.html",
-    "data": "<h1>Page 3</h1><p>Welcome to page 3;</p><p class=\"notebox\">Notebox</p><p><span class=\"hotkey\">Ctrl+Shift+Z</span></p><p><span class=\"hotkey\">Ctrl+A</span></p><p>S</p>",
+    "mtime": 0,
+    "relpath": "",
+    "data": "",
     "isDiff": false
   }
 }
