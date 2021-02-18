@@ -1910,6 +1910,20 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
+  twocol(parentDepth=1, packflag = 0) {
+    packflag |= this.inherit_packflag;
+
+    let ret = UIBase.createElement("two-column-x");
+
+    ret.parentDepth = parentDepth;
+    ret.packflag |= packflag;
+    ret.inherit_packflag |= packflag;
+    ret.dataPrefix = this.dataPrefix;
+
+    this._add(ret);
+    return ret;
+  }
+
   col(packflag = 0) {
     packflag |= this.inherit_packflag;
 
@@ -2123,3 +2137,69 @@ export class ColumnFrame extends Container {
 
 UIBase.internalRegister(ColumnFrame);
 
+
+export class TwoColumnFrame extends Container {
+  constructor() {
+    super();
+
+    this._colWidth = 256;
+    this.parentDepth = 1;
+  }
+
+  get colWidth() {
+    if (this.hasAttribute("colWidth")) {
+      return parsepx(this.getAttribute("colWidth"));
+    }
+
+    return this._colWidth;
+  }
+
+  set colWidth(v) {
+    if (this.hasAttribute("colWidth")) {
+      this.setAttribute("colWidth", "" + v);
+    } else {
+      this._colWidth = v;
+    }
+  }
+
+  init() {
+    super.init();
+
+    this.style["display"] = "flex";
+    this.style["flex-direction"] = "column";
+  }
+
+  update() {
+    super.update();
+
+    let p = this;
+
+    for (let i=0; i<this.parentDepth; i++) {
+      p = p.parentWidget ? p.parentWidget : p;
+    }
+
+    if (!p) {
+      return;
+    }
+
+    let r = p.getBoundingClientRect();
+
+    if (!r) {
+      return;
+    }
+
+    let style = r.width > this.colWidth*2.0 ? 'row' : 'column';
+
+    if (this.style["flex-direction"] !== style) {
+      this.style["flex-direction"] = style;
+    }
+  }
+
+  static define() {
+    return {
+      tagname: "two-column-x"
+    }
+  }
+}
+
+UIBase.internalRegister(TwoColumnFrame);
