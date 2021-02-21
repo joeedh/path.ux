@@ -88,7 +88,7 @@ export class Note extends ui_base.UIBase {
     this.style["border-radius"] = "7px";
     this.style["padding"] = "2px";
 
-    this.style["color"] = this.getDefault("NoteText").color;
+    this.style["color"] = this.getDefault("DefaultText").color;
     let clr = css2color(this.color);
     clr = color2css([clr[0], clr[1], clr[2], 0.25]);
 
