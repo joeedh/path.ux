@@ -313,31 +313,30 @@ export class Check extends UIBase {
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
+    let redraw = false;
+
     if (val === undefined) {
       this.internalDisabled = true;
       return;
     } else {
+      redraw = this.internalDisabled;
+
       this.internalDisabled = false;
     }
 
     val = !!val;
 
-    if (!!this._checked !== !!val) {
+    redraw = redraw || !!this._checked !== !!val;
+
+    if (redraw) {
       this._checked = val;
+      this._repos_canvas();
+      this.setCSS();
       this._redraw();
     }
   }
 
   _repos_canvas() {
-    if (this.canvas === undefined)
-      return;
-
-    let r = this.canvas.getClientRects()[0];
-
-    if (r === undefined) {
-      return;
-    }
-
   }
 
   _redraw() {
@@ -391,8 +390,12 @@ export class Check extends UIBase {
   }
 
   set checked(v) {
-    if (!!this._checked != !!v) {
+    v = !!v;
+
+    if (this._checked !== v) {
       this._checked = v;
+
+      this.setCSS();
 
       //this.dom.checked = v;
       this._redraw();
