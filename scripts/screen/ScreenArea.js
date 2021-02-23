@@ -391,6 +391,10 @@ export class Area extends ui_base.UIBase {
       let name = this.constructor.define().uiname;
       let val = prop.values[name];
 
+      if (dropbox.value !== val && val in prop.keys) {
+        val = prop.keys[val];
+      }
+      
       if (dropbox.value !== val) {
         dropbox.setValue(prop.values[name], true);
       }

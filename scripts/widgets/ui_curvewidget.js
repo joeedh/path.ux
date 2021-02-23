@@ -128,7 +128,7 @@ export class Curve1DWidget extends ColumnFrame {
     super.setCSS();
 
     this.style["width"] = "min-contents";
-    this.style["heizght"] = "min-contents";
+    this.style["height"] = "min-contents";
     this.updateSize();
   }
 
@@ -144,7 +144,7 @@ export class Curve1DWidget extends ColumnFrame {
       return;
     }
 
-    this._last_dpi = true;
+    this._last_dpi = dpi;
     this.canvas.width = w;
     this.canvas.height = h;
 
@@ -155,9 +155,13 @@ export class Curve1DWidget extends ColumnFrame {
   }
 
   _redraw() {
+    //forcibly clear canvas, works better then clearRect
+    this.canvas.width = this.canvas.width;
+    this.canvas.height = this.canvas.height;
+
     let canvas = this.canvas, g = this.g;
 
-    g.clearRect(0, 0, canvas.width, canvas.height);
+    //g.clearRect(0, 0, canvas.width, canvas.height);
     g.beginPath();
     g.rect(0, 0, canvas.width, canvas.height);
     g.fillStyle = this.getDefault("CanvasBG");
@@ -208,7 +212,6 @@ export class Curve1DWidget extends ColumnFrame {
     this.dropbox.setValue(this.value.generatorType);
     this.dropbox.onchange = onchange;
 
-    console.log("new curve type", this.value.generatorType, this._gen_type);
     col.clear();
 
     let gen = this.value.generators.active;

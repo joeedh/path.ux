@@ -12,20 +12,17 @@ import {AppScreen} from "../editors/screen.js";
 //import * as util from '../util/util.js';
 import './toolop.js';
 
-import {theme} from '../theme.js';
-setTheme(theme);
-
-import {Icons} from "../editors/icon_enum.js";
-setIconMap(Icons);
-import {MenuBarEditor} from "../editors/menu/menu.js";
 import cconst1 from './const.js';
 import {cconst} from '../pathux.js';
+
+/*load our application's constants into pathux*/
+cconst.loadConstants(cconst1);
+
+import {MenuBarEditor} from "../editors/menu/menu.js";
 
 import {PropsEditor} from "../editors/properties/properties.js";
 import {LogEditor} from "../editors/log/log_editor.js";
 
-/*load our application's constants into pathux*/
-cconst.loadConstants(cconst1);
 
 let iconmanager = new IconManager([
   document.getElementById("iconsheet16"),

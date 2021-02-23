@@ -685,7 +685,7 @@ export class UIBase extends HTMLElement {
       button = button === undefined ? 0 : button;
       let e2 = copyEvent(e);
 
-      if (e.touches.length == 0) {
+      if (e.touches.length === 0) {
         //hrm, what to do, what to do. . .
       } else {
         let t = e.touches[0];
