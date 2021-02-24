@@ -40,7 +40,6 @@ export const DefaultTheme = {
     'border-color'      : 'rgba(34,34,34, 1)',
     'border-radius'     : 12.010619764585666,
     'focus-border-width': 2,
-    'focus-border-color': "rgb(55, 155, 255)",
     oneAxisPadding      : 2,
     padding             : 1,
   },
@@ -53,8 +52,6 @@ export const DefaultTheme = {
     'border-width'    : 1,
     height            : 25,
     width             : 100,
-    margin            : 2,
-    padding           : 2,
   },
 
   checkbox:  {
@@ -70,7 +67,6 @@ export const DefaultTheme = {
     height        : 256,
     hueHeight     : 32,
     width         : 256,
-    "background-color" : "rgb(181,181,181)",
   },
 
   colorpickerbutton:  {
@@ -80,23 +76,14 @@ export const DefaultTheme = {
 
   curvewidget:  {
     CanvasBG    : 'rgba(117,79,79, 1)',
-    "background-color" : "rgb(181,181,181)",
     CanvasHeight: 256,
     CanvasWidth : 256,
-  },
-
-  overdraw: {
-    "background-color" : "rgba(0,0,0,0)",
-    "border-width" : 0,
-    padding : 0,
-    margin : 0
   },
 
   dropbox:  {
     dropTextBG: 'rgba(233,233,233, 1)',
     height    : 25,
     width     : 32,
-    "border-width" : 1,
   },
 
   iconbutton:  {
@@ -218,10 +205,6 @@ export const DefaultTheme = {
       color   : 'rgba(35, 35, 35, 1.0)'
     }),
     'background-color': 'rgb(245, 245, 245)',
-  },
-
-  popup: {
-    "background-color" : "rgb(181,181,181)"
   },
 
   screenborder:  {
