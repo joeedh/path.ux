@@ -8,7 +8,12 @@ import {pushModalLight, popModalLight} from "../path-controller/util/simple_even
 import * as cconst from '../config/const.js';
 import * as nstructjs from "../path-controller/util/struct.js";
 import {UIBase, Icons} from "../core/ui_base.js";
-import '../lib/tinymce/tinymce.js';
+
+let tinymceLoaded = false;
+import('../lib/tinymce/tinymce.js').then(mod => {
+  tinymceLoaded = true;
+});
+
 import * as util from '../util/util.js';
 import {Vector2, Matrix4} from '../util/vectormath.js';
 
@@ -611,6 +616,11 @@ export class DocsBrowser extends UIBase {
   }
 
   initDoc() {
+    if (!tinymceLoaded) {
+      this.doOnce(this.initDoc);
+      return;
+    }
+
     this._doDocInit = false;
     this.contentDiv = undefined;
 

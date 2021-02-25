@@ -41,7 +41,7 @@ export const theme = {
     'border-radius'     : 12.010619764585666,
     'focus-border-width': 2,
     oneAxisPadding      : 2,
-    padding             : 1,
+    padding             : 1
   },
 
   button:  {
@@ -52,6 +52,8 @@ export const theme = {
     'border-width'    : 1,
     height            : 25,
     width             : 100,
+    margin            : 1,
+    padding           : 1
   },
 
   checkbox:  {
@@ -93,6 +95,11 @@ export const theme = {
     'border-width'    : 1,
     height            : 32,
     width             : 32,
+    'margin-bottom'   : 1,
+    'margin-left'     : 2,
+    'margin-right'    : 2,
+    'margin-top'      : 1,
+    padding           : 2,
   },
 
   iconcheck:  {
@@ -103,6 +110,11 @@ export const theme = {
     drawCheck         : true,
     height            : 32,
     width             : 32,
+    'margin-bottom'   : 1,
+    'margin-left'     : 2,
+    'margin-right'    : 2,
+    'margin-top'      : 1,
+    padding           : 2,
   },
 
   listbox:  {

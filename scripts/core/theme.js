@@ -93,6 +93,11 @@ export const DefaultTheme = {
     'border-width'    : 1,
     height            : 32,
     width             : 32,
+    'margin-bottom'   : 1,
+    'margin-left'     : 2,
+    'margin-right'    : 2,
+    'margin-top'      : 1,
+    padding           : 2,
   },
 
   iconcheck:  {
@@ -103,6 +108,11 @@ export const DefaultTheme = {
     drawCheck         : true,
     height            : 32,
     width             : 32,
+    'margin-bottom'   : 1,
+    'margin-left'     : 2,
+    'margin-right'    : 2,
+    'margin-top'      : 1,
+    padding           : 2,
   },
 
   listbox:  {
