@@ -3702,6 +3702,12 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
   @return {cls_or_struct_id} Instance of cls_or_struct_id
   */
   readObject(data, cls_or_struct_id, uctx) {
+    if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
+      data = new DataView(data.buffer);
+    } else if (data instanceof Array) {
+      data = new DataView(new Uint8Array(data).buffer);
+    }
+
     return this.read_object(data, cls_or_struct_id, uctx);
   }
   
@@ -3850,7 +3856,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       let obj = objInstance;
 
       if (!obj && cls.newSTRUCT !== undefined) {
-        obj = cls.newSTRUCT();
+        obj = cls.newSTRUCT(load);
       } else if (!obj) {
         obj = new cls();
       }
@@ -3865,7 +3871,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       let obj = objInstance;
 
       if (!obj && cls.newSTRUCT !== undefined) {
-        obj = cls.newSTRUCT();
+        obj = cls.newSTRUCT(load);
       } else if (!obj) {
         obj = new cls();
       }
@@ -3943,7 +3949,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       let obj = objInstance;
 
       if (!obj && cls.newSTRUCT !== undefined) {
-        obj = cls.newSTRUCT();
+        obj = cls.newSTRUCT(load);
       } else if (!obj) {
         obj = new cls();
       }
@@ -3958,7 +3964,7 @@ let STRUCT = _module_exports_$1.STRUCT = class STRUCT {
       let obj = objInstance;
 
       if (!obj && cls.newSTRUCT !== undefined) {
-        obj = cls.newSTRUCT();
+        obj = cls.newSTRUCT(load);
       } else if (!obj) {
         obj = new cls();
       }
@@ -8369,7 +8375,8 @@ function getBaseVector(parent) {
 }
 
 const BaseVector = getBaseVector(Array);
-const F32BaseVector = getBaseVector(Float64Array);
+const F64BaseVector = getBaseVector(Float64Array);
+const F32BaseVector = getBaseVector(Float32Array);
 
 function myclamp(f, a, b) {
   return Math.min(Math.max(f, a), b);
@@ -8501,7 +8508,7 @@ nstructjs.manager.add_class(Vector4);
 var _v3nd_n1_normalizedDot, _v3nd_n2_normalizedDot;
 var _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
 
-class Vector3 extends F32BaseVector {
+class Vector3 extends F64BaseVector {
   constructor(data) {
     super(3);
 
@@ -9069,7 +9076,7 @@ _v3nd_n1_normalizedDot = new Vector3();
 _v3nd_n2_normalizedDot = new Vector3();
 
 BaseVector.inherit(Vector4, 4);
-F32BaseVector.inherit(Vector3, 3);
+F64BaseVector.inherit(Vector3, 3);
 BaseVector.inherit(Vector2, 2);
 
 lookat_cache_vs3 = cachering.fromConstructor(Vector3, 64);
@@ -10492,6 +10499,7 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
+  F64BaseVector: F64BaseVector,
   F32BaseVector: F32BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
@@ -16293,6 +16301,7 @@ class BSplineCurve extends CurveTypeData {
     this.recalc = 1;
     this.updateKnots();
     this.update();
+    this.redraw();
   }
 
   on_touchmove(e) {
@@ -18301,6 +18310,8 @@ class Curve1D extends EventDispatcher {
 
   draw(canvas, g, draw_transform) {
     var w=canvas.width, h=canvas.height;
+
+    console.warn("draw");
 
     g.save();
 
@@ -26122,7 +26133,6 @@ const DefaultTheme = {
     'border-color'      : 'rgba(34,34,34, 1)',
     'border-radius'     : 12.010619764585666,
     'focus-border-width': 2,
-    'focus-border-color': "rgb(55, 155, 255)",
     oneAxisPadding      : 2,
     padding             : 1,
   },
@@ -26135,8 +26145,6 @@ const DefaultTheme = {
     'border-width'    : 1,
     height            : 25,
     width             : 100,
-    margin            : 2,
-    padding           : 2,
   },
 
   checkbox:  {
@@ -26152,7 +26160,6 @@ const DefaultTheme = {
     height        : 256,
     hueHeight     : 32,
     width         : 256,
-    "background-color" : "rgb(181,181,181)",
   },
 
   colorpickerbutton:  {
@@ -26162,23 +26169,14 @@ const DefaultTheme = {
 
   curvewidget:  {
     CanvasBG    : 'rgba(117,79,79, 1)',
-    "background-color" : "rgb(181,181,181)",
     CanvasHeight: 256,
     CanvasWidth : 256,
-  },
-
-  overdraw: {
-    "background-color" : "rgba(0,0,0,0)",
-    "border-width" : 0,
-    padding : 0,
-    margin : 0
   },
 
   dropbox:  {
     dropTextBG: 'rgba(233,233,233, 1)',
     height    : 25,
     width     : 32,
-    "border-width" : 1,
   },
 
   iconbutton:  {
@@ -26188,6 +26186,11 @@ const DefaultTheme = {
     'border-width'    : 1,
     height            : 32,
     width             : 32,
+    'margin-bottom'   : 1,
+    'margin-left'     : 2,
+    'margin-right'    : 2,
+    'margin-top'      : 1,
+    padding           : 2,
   },
 
   iconcheck:  {
@@ -26198,6 +26201,11 @@ const DefaultTheme = {
     drawCheck         : true,
     height            : 32,
     width             : 32,
+    'margin-bottom'   : 1,
+    'margin-left'     : 2,
+    'margin-right'    : 2,
+    'margin-top'      : 1,
+    padding           : 2,
   },
 
   listbox:  {
@@ -26300,10 +26308,6 @@ const DefaultTheme = {
       color   : 'rgba(35, 35, 35, 1.0)'
     }),
     'background-color': 'rgb(245, 245, 245)',
-  },
-
-  popup: {
-    "background-color" : "rgb(181,181,181)"
   },
 
   screenborder:  {
@@ -27336,7 +27340,7 @@ class UIBase$2 extends HTMLElement {
       button = button === undefined ? 0 : button;
       let e2 = copyEvent(e);
 
-      if (e.touches.length == 0) {
+      if (e.touches.length === 0) {
         //hrm, what to do, what to do. . .
       } else {
         let t = e.touches[0];
@@ -31003,31 +31007,30 @@ class Check extends UIBase$5 {
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
+    let redraw = false;
+
     if (val === undefined) {
       this.internalDisabled = true;
       return;
     } else {
+      redraw = this.internalDisabled;
+
       this.internalDisabled = false;
     }
 
     val = !!val;
 
-    if (!!this._checked !== !!val) {
+    redraw = redraw || !!this._checked !== !!val;
+
+    if (redraw) {
       this._checked = val;
+      this._repos_canvas();
+      this.setCSS();
       this._redraw();
     }
   }
 
   _repos_canvas() {
-    if (this.canvas === undefined)
-      return;
-
-    let r = this.canvas.getClientRects()[0];
-
-    if (r === undefined) {
-      return;
-    }
-
   }
 
   _redraw() {
@@ -31081,8 +31084,12 @@ class Check extends UIBase$5 {
   }
 
   set checked(v) {
-    if (!!this._checked != !!v) {
+    v = !!v;
+
+    if (this._checked !== v) {
       this._checked = v;
+
+      this.setCSS();
 
       //this.dom.checked = v;
       this._redraw();
@@ -31599,6 +31606,8 @@ class Menu extends UIBase$6 {
     this._ignoreFocusEvents = false;
     this.closeOnMouseUp = true;
 
+    this._submenu = undefined;
+
     this.itemindex = 0;
     this.closed = false;
     this.started = false;
@@ -31631,23 +31640,9 @@ class Menu extends UIBase$6 {
     let style = this.menustyle = document.createElement("style");
     this.buildStyle();
 
-    /*
-
-        .menuitem:focus {
-        }
-
-
-
-    */
     this.dom.setAttribute("tabindex", -1);
 
-    //let's have the menu wrangler handle key events
-
-    this.container.addEventListener("mouseleave", (e) => {
-      this.close();
-    }, false);
-
-    //this.container.appendChild(this.dom);
+    //the menu wrangler handles key events
 
     this.shadow.appendChild(style);
     this.shadow.appendChild(this.container);
@@ -31674,12 +31669,9 @@ class Menu extends UIBase$6 {
   }
 
   click() {
-    if (this.activeItem == undefined)
+    if (!this.activeItem || this.activeItem._isMenu) {
       return;
-
-    if (this.activeItem !== undefined && this.activeItem._isMenu)
-    //ignore
-      return;
+    }
 
     if (this.onselect) {
       try {
@@ -31709,7 +31701,6 @@ class Menu extends UIBase$6 {
   }
 
   close() {
-    console.warn("menu closed");
     if (this.closed) {
       return;
     }
@@ -31871,8 +31862,11 @@ class Menu extends UIBase$6 {
   }
 
   start(prepend=false, setActive=true) {
+    this.closed = false;
+
     this.started = true;
     this.focus();
+
     menuWrangler.pushMenu(this);
 
     if (this.items.length > 15 && this.autoSearchMode) {
@@ -32081,7 +32075,7 @@ class Menu extends UIBase$6 {
       li.addEventListener("click", (e) => {
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           //ignore
-          return n;
+          return;
         }
 
         this.click();
@@ -32102,22 +32096,22 @@ class Menu extends UIBase$6 {
           return;
         }
 
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          let active = this.activeItem;
+        let active = this.activeItem;
 
-          window.setTimeout(() => {
-            if (this.activeItem && this.activeItem !== active) {
-              active._menu.close();
-            }
-          }, 10);
+        if (this._submenu) {
+          this._submenu.close();
+          this._submenu = undefined;
         }
+
         if (li._isMenu) {
           li._menu.onselect = (item) => {
             this.onselect(item);
+            li._menu.close();
             this.close();
           };
 
           li._menu.start(false, false);
+          this._submenu = li._menu;
         }
 
         this.setActive(li, false);
@@ -32728,6 +32722,9 @@ class MenuWrangler {
 
     this.closetimer = 0;
     this.closeOnMouseUp = undefined;
+    this.closereq = undefined;
+
+    this.timer = undefined;
   }
 
   get menu() {
@@ -32735,6 +32732,8 @@ class MenuWrangler {
   }
 
   pushMenu(menu) {
+    this.spawnreq = undefined;
+
     if (this.menustack.length === 0 && menu.closeOnMouseUp) {
       this.closeOnMouseUp = true;
     }
@@ -32895,19 +32894,8 @@ class MenuWrangler {
 
   }
 
-  on_mousemove(e) {
-    if (this.menu && this.menu.hasSearchBox) {
-      this.closetimer = time_ms();
-      return;
-    }
-
-    if (this.menu === undefined || this.screen === undefined) {
-      this.closetimer = time_ms();
-      return;
-    }
-
+  findMenu(x, y) {
     let screen = this.screen;
-    let x = e.pageX, y = e.pageY;
 
     let element = screen.pickElement(x, y);
 
@@ -32916,7 +32904,62 @@ class MenuWrangler {
     }
 
     if (element instanceof Menu) {
+      return element;
+    }
+
+    let w = element;
+
+    while (w) {
+      if (w instanceof Menu) {//w === this.menu) {
+        return w;
+        break;
+      }
+
+      w = w.parentWidget;
+    }
+
+    return undefined;
+  }
+
+  on_mousemove(e) {
+    if (this.menu && this.menu.hasSearchBox) {
       this.closetimer = time_ms();
+      this.closereq = undefined;
+      return;
+    }
+
+    if (this.menu === undefined || this.screen === undefined) {
+      this.closetimer = time_ms();
+      this.closereq = undefined;
+      return;
+    }
+
+    let screen = this.screen;
+    let x = e.pageX, y = e.pageY;
+
+    let element;
+    let menu = this.menu;
+
+    if (menu) {
+      let r = menu.getBoundingClientRect();
+      let pad = 15;
+
+      if (r && x >= r.x-pad && y >= r.y-pad && x <= r.x+r.width+pad*2 && y <= r.y+r.height+pad*2) {
+        element = menu;
+      }
+    }
+
+    if (!element) {
+      element = screen.pickElement(x, y);
+    }
+
+    if (element === undefined) {
+      return;
+    }
+
+    if (element instanceof Menu) {
+      this.closetimer = time_ms();
+      this.closereq = undefined;
       return;
     }
 
@@ -32925,6 +32968,7 @@ class MenuWrangler {
       this.endMenus();
 
       this.closetimer = time_ms();
+      this.closereq = undefined;
 
       //start new menu
       element._onpress(e);
@@ -32940,7 +32984,7 @@ class MenuWrangler {
         break;
       }
 
-      if (w instanceof DropBox && w.menu === this.menu) {
+      if (w instanceof DropBox && w._menu === this.menu) {
         ok = true;
         break;
       }
@@ -32948,10 +32992,41 @@ class MenuWrangler {
       w = w.parentWidget;
     }
 
-    if (!ok && (time_ms() - this.closetimer > exports$1.menu_close_time)) {
-      this.endMenus();
-    } else if (ok) {
+    if (!ok) {
+      this.closereq = this.menu;
+    } else {
       this.closetimer = time_ms();
+      this.closereq = undefined;
+    }
+  }
+
+  update() {
+    let closetime = exports$1.menu_close_time;
+    closetime = closetime === undefined ? 50 : closetime;
+
+    let close = this.closereq && this.closereq === this.menu;
+    close = close && time_ms() - this.closetimer > closetime;
+
+    if (close) {
+      this.closereq = undefined;
+      this.endMenus();
+    }
+  }
+
+  startTimer() {
+    if (this.timer) {
+      this.stopTimer();
+    }
+
+    this.timer = setInterval(() => {
+      this.update();
+    }, 150);
+  }
+
+  stopTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = undefined;
     }
   }
 }
@@ -32979,6 +33054,7 @@ function startMenuEventWrangling(screen) {
   }
 
   menuWrangler.screen = screen;
+  menuWrangler.startTimer();
 }
 
 function setWranglerScreen(screen) {
@@ -36341,7 +36417,7 @@ class Curve1DWidget extends ColumnFrame {
     super.setCSS();
 
     this.style["width"] = "min-contents";
-    this.style["heizght"] = "min-contents";
+    this.style["height"] = "min-contents";
     this.updateSize();
   }
 
@@ -36357,7 +36433,7 @@ class Curve1DWidget extends ColumnFrame {
       return;
     }
 
-    this._last_dpi = true;
+    this._last_dpi = dpi;
     this.canvas.width = w;
     this.canvas.height = h;
 
@@ -36368,9 +36444,13 @@ class Curve1DWidget extends ColumnFrame {
   }
 
   _redraw() {
+    //forcibly clear canvas, works better then clearRect
+    this.canvas.width = this.canvas.width;
+    this.canvas.height = this.canvas.height;
+
     let canvas = this.canvas, g = this.g;
 
-    g.clearRect(0, 0, canvas.width, canvas.height);
+    //g.clearRect(0, 0, canvas.width, canvas.height);
     g.beginPath();
     g.rect(0, 0, canvas.width, canvas.height);
     g.fillStyle = this.getDefault("CanvasBG");
@@ -36421,7 +36501,6 @@ class Curve1DWidget extends ColumnFrame {
     this.dropbox.setValue(this.value.generatorType);
     this.dropbox.onchange = onchange;
 
-    console.log("new curve type", this.value.generatorType, this._gen_type);
     col.clear();
 
     let gen = this.value.generators.active;
@@ -40353,7 +40432,7 @@ class Note extends UIBase$2 {
     this.style["border-radius"] = "7px";
     this.style["padding"] = "2px";
 
-    this.style["color"] = this.getDefault("NoteText").color;
+    this.style["color"] = this.getDefault("DefaultText").color;
     let clr = css2color$1(this.color);
     clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
 
@@ -43654,6 +43733,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   Curve1D: Curve1D,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
+  F64BaseVector: F64BaseVector,
   F32BaseVector: F32BaseVector,
   Vector4: Vector4,
   Vector3: Vector3,
@@ -46109,6 +46189,10 @@ class Area$1 extends UIBase$2 {
       let name = this.constructor.define().uiname;
       let val = prop.values[name];
 
+      if (dropbox.value !== val && val in prop.keys) {
+        val = prop.keys[val];
+      }
+      
       if (dropbox.value !== val) {
         dropbox.setValue(prop.values[name], true);
       }
@@ -49451,7 +49535,6 @@ class Screen$2 extends UIBase$2 {
       }
 
       if (done) return;
-      console.warn("container end");
 
       this.ctx.screen.removeEventListener("touchstart", touchpick, true);
       this.ctx.screen.removeEventListener("touchmove", touchpick, true);
@@ -51951,5 +52034,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform$3
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setScreenClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setScreenClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_tri, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customPropertyTypes, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getTagPrefix, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$2 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple_tri_aabb_isect, singleMouseEvent, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_area, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
