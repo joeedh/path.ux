@@ -1161,15 +1161,6 @@ export class Container extends ui_base.UIBase {
       }
 
       if (!(packflag & PackFlags.USE_ICONS)) {
-        let val;
-        try {
-          val = this.ctx.api.getValue(this.ctx, this._joinPrefix(inpath));
-        } catch (error) {
-          if (!(error instanceof DataPathError)) {
-            throw error;
-          }
-        }
-
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
           let strip = this.strip();
           strip.label(prop.uiname);
@@ -1208,7 +1199,7 @@ export class Container extends ui_base.UIBase {
         ret.packflag |= packflag;
 
         if (inpath) {
-          ret.setAttribute("datapath", inpath);
+          ret.setAttribute("datapath", this._joinPrefix(inpath));
         }
 
         if (mass_set_path) {
@@ -1277,7 +1268,7 @@ export class Container extends ui_base.UIBase {
           }
 
 
-          return;
+          return row;
         }
 
         if (packflag & PackFlags.WRAP_CHECKBOXES) {
@@ -1333,7 +1324,7 @@ export class Container extends ui_base.UIBase {
             }
           }
 
-          return;
+          return strip;
         }
 
         for (let k in prop.values) {
@@ -1350,6 +1341,8 @@ export class Container extends ui_base.UIBase {
             check.description = tooltip;
           }
         }
+
+        return con;
       }
     }
   }

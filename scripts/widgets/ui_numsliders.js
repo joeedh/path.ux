@@ -1529,6 +1529,10 @@ export class NumSliderSimple extends SliderWithTextbox {
     this.numslider = UIBase.createElement("numslider-simple-base-x");
   }
 
+  _redraw() {
+    this.numslider._redraw();
+  }
+
   static define() {return {
     tagname : "numslider-simple-x",
     style : "numslider_simple"

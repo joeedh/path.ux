@@ -41,7 +41,7 @@ function myParseFloat(s) {
   s = s.trim().toLowerCase();
 
   if (s.endsWith("px")) {
-    s = s.slice(0, s.length-2);
+    s = s.slice(0, s.length - 2);
   }
 
   return parseFloat(s);
@@ -99,8 +99,8 @@ class Handler {
       let elem2 = UIBase.createElement(tagname.toLowerCase());
 
       if (elem2 instanceof UIBase) {
-       this.container.add(elem2);
-       this._style(elem, elem2);
+        this.container.add(elem2);
+        this._style(elem, elem2);
       } else {
         console.warn("Unknown element " + elem.tagName + " (" + elem.constructor.name + ")");
       }
@@ -137,11 +137,69 @@ class Handler {
     }
   }
 
-  _basic(elem, con) {
-    this._style(elem, con);
+  _basic(elem, elem2) {
+    this._style(elem, elem2);
 
-    if (elem.hasAttribute("useIcons") && con.useIcons) {
-      con.useIcons(getbool(elem, "useIcons"));
+    if (elem.hasAttribute("useIcons") && typeof elem2.useIcons === "function") {
+      let val = elem.getAttribute("useIcons");
+
+      if (val === "small") {
+        elem2.useIcons(true);
+        elem2.packflag &= ~PackFlags.LARGE_ICON;
+        elem2.packflag |= PackFlags.SMALL_ICON;
+      } else if (val === "large") {
+        elem2.useIcons(true);
+        elem2.packflag |= PackFlags.LARGE_ICON;
+        elem2.packflag &= ~PackFlags.SMALL_ICON;
+      } else {
+        elem2.useIcons(getbool(elem, "useIcons"));
+      }
+    }
+
+    if (elem.hasAttribute("sliderTextBox")) {
+      let textbox = getbool(elem, "sliderTextBox");
+
+      if (textbox) {
+        elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
+      } else {
+        elem2.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+      }
+
+      //console.error("textBox", textbox, elem2, elem.getAttribute("sliderTextBox"), elem2.packflag);
+    }
+
+    if (elem.hasAttribute("sliderMode")) {
+      let sliderMode = elem.getAttribute("sliderMode");
+
+      if (sliderMode === "slider") {
+        elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
+
+        elem2.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+      } else if (sliderMode === "roller") {
+        elem2.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+
+        elem2.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+      }
+
+      //console.error("sliderMode", sliderMode, elem2, elem2.packflag & (PackFlags.SIMPLE_NUMSLIDERS | PackFlags.FORCE_ROLLER_SLIDER));
+    }
+
+    if (elem.hasAttribute("showLabel")) {
+      let state = getbool(elem, "showLabel");
+
+      if (state) {
+        elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
+        elem2.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
+      } else {
+        elem2.packflag &= ~PackFlags.FORCE_PROP_LABELS;
+        elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
+      }
     }
   }
 
@@ -183,6 +241,11 @@ class Handler {
     this._prop(elem, "pathlabel")
   }
 
+  label(elem) {
+    let elem2 = this.container.label(elem.innerHTML);
+    this._basic(elem, elem2);
+  }
+
   /** simpleSliders=true enables simple sliders */
   prop(elem) {
     this._prop(elem, "prop")
@@ -198,7 +261,7 @@ class Handler {
       elem2.innerHTML = "error";
       this.container.shadow.appendChild(elem2);
     } else {
-      this._basic(elem2);
+      this._basic(elem, elem2);
     }
   }
 
@@ -213,8 +276,6 @@ class Handler {
 
     let margin1 = getfloat(elem, "margin1", undefined);
     let margin2 = getfloat(elem, "margin2", undefined);
-
-    console.log(margin1, margin2);
 
     this.container = this.container.strip(undefined, margin1, margin2, dir);
     this._container(elem, this.container);
@@ -243,7 +304,7 @@ class Handler {
     this.tool(elem, "toolPanel");
   }
 
-  tool(elem, key="tool") {
+  tool(elem, key = "tool") {
     let path = elem.getAttribute("path");
     let packflag = getPackFlag(elem);
 
@@ -321,13 +382,17 @@ class Handler {
   }
 }
 
-export function initPage(ctx, xml) {
+export function initPage(ctx, xml, parentContainer = undefined) {
   let tree = parseXML(xml);
   let container = UIBase.createElement("container-x");
 
   container.ctx = ctx;
   if (ctx) {
     container._init();
+  }
+
+  if (parentContainer) {
+    parentContainer.add(container);
   }
 
   let handler = new Handler(ctx, container);
@@ -337,22 +402,28 @@ export function initPage(ctx, xml) {
 
 }
 
-export function loadPage(ctx, url) {
+export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly = false) {
   let source;
 
   if (pagecache.has(url)) {
     source = pagecache.get(url);
     return new Promise((accept, reject) => {
-      let ret = initPage(ctx, source);
-      accept(ret);
+      if (loadSourceOnly) {
+        accept(source);
+      } else {
+        accept(initPage(ctx, source, parentContainer));
+      }
     });
   } else {
     return new Promise((accept, reject) => {
       fetch(url).then(res => res.text()).then(data => {
         pagecache.set(url, data);
 
-        let ret = initPage(ctx, data);
-        accept(ret);
+        if (loadSourceOnly) {
+          accept(data);
+        } else {
+          accept(initPage(ctx, data, parentContainer));
+        }
       });
     });
   }

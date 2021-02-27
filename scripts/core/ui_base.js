@@ -1182,8 +1182,9 @@ export class UIBase extends HTMLElement {
   init() {
     this._init_done = true;
 
-    if (this._id)
+    if (!this.hasAttribute("id") && this._id) {
       this.setAttribute("id", this._id);
+    }
   }
   
   _ondestroy() {
@@ -1642,8 +1643,6 @@ export class UIBase extends HTMLElement {
   flash(color, rect_element=this, timems=355) {
     //console.warn("flash internalDisabled due to bug");
     //return;
-    
-    console.warn("flash");
 
     if (typeof color != "object") {
         color = css2color(color);
@@ -2046,8 +2045,6 @@ export class UIBase extends HTMLElement {
 
     if (this._init_done && !this.constructor.define().subclassChecksTheme) {
       if (this.checkThemeUpdate()) {
-        console.log("theme update!");
-
         this.setCSS();
       }
     }
@@ -2309,7 +2306,9 @@ export class UIBase extends HTMLElement {
     }
 
     if (val === undefined && style in theme && !(key in theme[style]) && !(key in theme.base)) {
-      report("Missing theme key ", key, "for", style);
+      if (window.DEBUG.theme) {
+        report("Missing theme key ", key, "for", style);
+      }
     }
 
     if (val === undefined && style in theme && key in theme[style]) {
