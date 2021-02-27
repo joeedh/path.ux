@@ -198,6 +198,8 @@ export class Container extends ui_base.UIBase {
     super();
 
     this.dataPrefix = '';
+    this.massSetPrefix = '';
+
     this.inherit_packflag = 0;
 
     let style = this.styletag = document.createElement("style")
@@ -208,10 +210,17 @@ export class Container extends ui_base.UIBase {
     this.reversed = false;
 
     this._prefixstack = [];
+    this._mass_prefixstack = [];
   }
 
   reverse() {
     this.reversed ^= true;
+    return this;
+  }
+
+  pushMassSetPrefix(val) {
+    this._mass_prefixstack.push(this.massSetPrefix);
+    this.massSetPrefix = val;
     return this;
   }
 
@@ -223,6 +232,11 @@ export class Container extends ui_base.UIBase {
 
   popDataPrefix() {
     this.dataPrefix = this._prefixstack.pop();
+    return this;
+  }
+
+  popMassSetPrefix() {
+    this.massSetPrefix = this._mass_prefixstack.pop();
     return this;
   }
 
@@ -356,6 +370,7 @@ export class Container extends ui_base.UIBase {
 
     strip.packflag |= flag;
     strip.dataPrefix = this.dataPrefix;
+    strip.massSetPrefix = this.massSetPrefix;
 
     if (themeClass in theme) {
       strip.overrideClass(themeClass);
@@ -960,12 +975,10 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  _joinPrefix(path) {
+  _joinPrefix(path, prefix=this.dataPrefix.trim()) {
     if (path === undefined) {
       return undefined;
     }
-
-    let prefix = this.dataPrefix.trim();
 
     path = path.trim();
 
@@ -978,6 +991,8 @@ export class Container extends ui_base.UIBase {
 
   colorbutton(inpath, packflag, mass_set_path = undefined) {
     packflag |= this.inherit_packflag;
+
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
     let ret = UIBase.createElement("color-picker-button-x");
 
@@ -1008,6 +1023,8 @@ export class Container extends ui_base.UIBase {
   curve1d(inpath, packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+
     let ret = UIBase.createElement("curve-widget-x");
 
     ret.ctx = this.ctx;
@@ -1028,6 +1045,8 @@ export class Container extends ui_base.UIBase {
 
   vecpopup(inpath, packflag=0, mass_set_path=undefined) {
     let button = UIBase.createElement("vector-popup-button-x");
+
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
     packflag |= this.inherit_packflag;
     let name = "vector";
@@ -1051,6 +1070,18 @@ export class Container extends ui_base.UIBase {
 
     this.add(button);
     return button;
+  }
+
+  _getMassPath(ctx, inpath, mass_set_path) {
+    if (mass_set_path === undefined && this.massSetPrefix.length > 0) {
+      mass_set_path = ctx.api.getPropName(ctx, inpath);
+    }
+
+    if (mass_set_path === undefined) {
+      return undefined;
+    }
+
+    return this._joinPrefix(mass_set_path, this.massSetPrefix);
   }
 
   prop(inpath, packflag = 0, mass_set_path = undefined) {
@@ -1196,7 +1227,11 @@ export class Container extends ui_base.UIBase {
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
         let ret = UIBase.createElement("vector-panel-x");
-        ret.packflag |= packflag;
+
+        mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+
+        ret.packflag |= packflag | this.inherit_packflag;
+        ret.inherit_packflag |= packflag | this.inherit_packflag;
 
         if (inpath) {
           ret.setAttribute("datapath", this._joinPrefix(inpath));
@@ -1382,6 +1417,8 @@ export class Container extends ui_base.UIBase {
       ret = UIBase.createElement("check-x");
     }
 
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+
     ret.packflag |= packflag;
     ret.label = name;
     ret.noMarginsOrPadding();
@@ -1418,6 +1455,8 @@ export class Container extends ui_base.UIBase {
       mass_set_path = args.mass_set_path;
     }
 
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+
     packflag = packflag === undefined ? 0 : packflag;
     packflag |= this.inherit_packflag;
 
@@ -1425,6 +1464,7 @@ export class Container extends ui_base.UIBase {
 
     let has_path = path !== undefined;
     let prop;
+    let frame;
 
     if (path !== undefined) {
       prop = this.ctx.api.resolvePath(this.ctx, path, true);
@@ -1438,8 +1478,6 @@ export class Container extends ui_base.UIBase {
         console.warn("Bad path in checkenum", path);
         return;
       }
-
-      let frame;
 
       frame = this.strip();
       frame.oneAxisPadding();
@@ -1507,6 +1545,8 @@ export class Container extends ui_base.UIBase {
         }
       }
     }
+
+    return frame;
   }
 
   checkenum_panel(inpath, name, packflag=0, callback=undefined, mass_set_path=undefined, prop=undefined) {
@@ -1514,6 +1554,7 @@ export class Container extends ui_base.UIBase {
     packflag |= this.inherit_packflag;
 
     let path = this._joinPrefix(inpath);
+    let frame;
 
     let has_path = path !== undefined;
 
@@ -1534,7 +1575,7 @@ export class Container extends ui_base.UIBase {
         return;
       }
 
-      let frame = this.panel(name, name, packflag);
+      frame = this.panel(name, name, packflag);
 
       frame.oneAxisPadding();
       frame.setCSS.after(frame.background = this.getDefault("BoxSub2BG"));
@@ -1603,6 +1644,7 @@ export class Container extends ui_base.UIBase {
       }
     }
 
+    return frame;
   }
 
   /*
@@ -1636,6 +1678,8 @@ export class Container extends ui_base.UIBase {
       mass_set_path = args.mass_set_path;
     }
 
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
+
     let path;
 
     if (inpath !== undefined) {
@@ -1662,6 +1706,8 @@ export class Container extends ui_base.UIBase {
         name = name === undefined ? res.prop.uiname : name;
       }
     }
+
+    mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
@@ -1847,6 +1893,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= this.inherit_packflag;
     ret.inherit_packflag |= this.inherit_packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     return ret;
   }
@@ -1860,6 +1907,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     ret.setAttribute("title", name);
     ret.setAttribute("id", id);
@@ -1869,6 +1917,7 @@ export class Container extends ui_base.UIBase {
     ret.ctx = this.ctx;
     ret.contents.ctx = ret.ctx;
     ret.contents.dataPrefix = this.dataPrefix;
+    ret.contents.massSetPrefix = this.massSetPrefix;
 
     return ret.contents;
   }
@@ -1881,6 +1930,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     this._add(ret);
 
@@ -1897,6 +1947,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     this._add(ret);
     return ret;
@@ -1909,6 +1960,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     this._add(ret);
     return ret;
@@ -1923,6 +1975,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     this._add(ret);
     return ret;
@@ -1936,6 +1989,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     this._add(ret);
     return ret;
@@ -1957,6 +2011,7 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     ret.ctx = this.ctx;
     ret.parentWidget = this;
@@ -1984,6 +2039,8 @@ export class Container extends ui_base.UIBase {
   textarea(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
 
+    mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
+
     let ret = UIBase.createElement("rich-text-editor-x");
     ret.ctx = this.ctx;
 
@@ -2007,6 +2064,8 @@ export class Container extends ui_base.UIBase {
    * */
   viewer(datapath=undefined, value="", packflag=0, mass_set_path=undefined) {
     packflag |= this.inherit_packflag;
+
+    mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
 
     let ret = UIBase.createElement("html-viewer-x");
     ret.ctx = this.ctx;
@@ -2037,6 +2096,8 @@ export class Container extends ui_base.UIBase {
     ret.packflag |= packflag;
     ret.inherit_packflag |= packflag;
     ret.ctx = this.ctx;
+    ret.dataPrefix = this.dataPrefix;
+    ret.massSetPrefix = this.massSetPrefix;
 
     this._add(ret);
     return ret;
