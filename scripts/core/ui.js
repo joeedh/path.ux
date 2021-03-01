@@ -1270,6 +1270,8 @@ export class Container extends ui_base.UIBase {
         if (tooltip) {
           ret.description = tooltip;
         }
+
+        return ret;
       } else {
         let con = this;
 
