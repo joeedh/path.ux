@@ -583,6 +583,11 @@ export class Menu extends UIBase {
     let pad1 = util.isMobile() ? 2 : 0;
     pad1 += this.getDefault("MenuSpacing");
 
+    let boxShadow = "";
+    if (this.hasDefault("box-shadow")) {
+      boxShadow = "box-shadow: " + this.getDefault("box-shadow") + ';';
+    }
+
     this.menustyle.textContent = `
         .menucon {
           position:absolute;
@@ -592,6 +597,7 @@ export class Menu extends UIBase {
 
           display: block;
           -moz-user-focus: normal;
+          ${boxShadow}
         }
         
         ul.menu {
@@ -723,8 +729,30 @@ export class DropBox extends Button {
 
   setCSS() {
     //do not call parent classes's setCSS here
+
     this.style["user-select"] = "none";
     this.dom.style["user-select"] = "none";
+
+    let keys;
+    if (this.getAttribute("simple")) {
+      keys = ["margin-left", "margin-right", "padding-left", "padding-right"];
+    } else {
+      keys = [
+        "margin", "margin-left", "margin-right",
+        "margin-top", "margin-bottom", "padding",
+        "padding-left", "padding-right", "padding-top",
+        "padding-bottom"];
+    }
+
+    let setDefault = (key) => {
+      if (this.hasDefault(key)) {
+        this.style[key] = this.getDefault(key, undefined, 0) + "px";
+      }
+    }
+
+    for (let k of keys) {
+      setDefault(k);
+    }
   }
 
   _genLabel() {
@@ -749,6 +777,7 @@ export class DropBox extends Button {
 
     return ret;
   }
+
   updateWidth() {
     //let ret = super.updateWidth(10);
     let dpi = this.getDPI();

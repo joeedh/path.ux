@@ -2,7 +2,7 @@ import {Area} from '../screen/ScreenArea.js';
 import * as nstructjs from '../path-controller/util/struct.js';
 import {UIBase, theme, flagThemeUpdate} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
-import {color2css, css2color, CSSFont} from '../core/ui_theme.js';
+import {validateCSSColor, color2css, css2color, CSSFont} from '../core/ui_theme.js';
 
 let basic_colors = {
   'white' : [1,1,1],
@@ -72,17 +72,20 @@ export class ThemeEditor extends Container {
       if (typeof v === "string") {
         let v2 = v.toLowerCase().trim();
 
-        let iscolor = v2 in basic_colors;
-        iscolor = iscolor || v2.search("rgb") >= 0;
-        iscolor = iscolor || v2[0] === "#";
+        let iscolor = validateCSSColor(v2);
 
         if (iscolor) {
           let cw = col.colorbutton();
           ok = true;
           _i++;
 
+          let color = css2color(v2);
+          if (color.length < 3) {
+            color = [color[0], color[1], color[2], 1.0];
+          }
+
           try {
-            cw.setRGBA(css2color(v2));
+            cw.setRGBA(color);
           } catch (error) {
             console.warn("Failed to set color " + k, v2);
           }
@@ -95,6 +98,8 @@ export class ThemeEditor extends Container {
           }
           cw.label = k;
         } else {
+          col.label(k);
+
           let box = col.textbox();
           box.onchange = () => {
             getpath(path)[k] = box.text;

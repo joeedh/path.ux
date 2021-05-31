@@ -1,6 +1,10 @@
 //stores xml sources
 let pagecache = new Map()
 import {PackFlags, UIBase} from '../core/ui_base.js';
+import {sliderDomAttributes} from '../widgets/ui_numsliders.js';
+import * as util from '../util/util.js';
+
+export var domTransferAttrs = new Set(["id", "title", "tab-index"]);
 
 export function parseXML(xml) {
   let parser = new DOMParser()
@@ -25,6 +29,14 @@ function getIconFlag(elem) {
 
 function getPackFlag(elem) {
   let packflag = getIconFlag(elem);
+
+  if (elem.hasAttribute("drawChecks")) {
+    if (!getbool(elem, "drawChecks")) {
+      packflag |= PackFlags.HIDE_CHECK_MARKS;
+    } else {
+      packflag &= ~PackFlags.HIDE_CHECK_MARKS;
+    }
+  }
 
   if (getbool(elem, "simpleSlider")) {
     packflag |= PackFlags.SIMPLE_NUMSLIDERS;
@@ -70,13 +82,24 @@ class Handler {
     this.container = container;
     this.stack = [];
     this.ctx = ctx;
+
+    let attrs = util.list(sliderDomAttributes);
+
+    //note that useIcons, showLabel and sliderMode are PackFlag bits and are inherited through that system
+
+    this.inheritDomAttrs = {};
+    this.inheritDomAttrKeys = new Set(attrs);
   }
 
   push() {
     this.stack.push(this.container);
+    this.stack.push(new Set(this.inheritDomAttrKeys));
+    this.stack.push(Object.assign({}, this.inheritDomAttrs));
   }
 
   pop() {
+    this.inheritDomAttrs = this.stack.pop();
+    this.inheritDomAttrKeys = this.stack.pop();
     this.container = this.stack.pop();
   }
 
@@ -139,6 +162,24 @@ class Handler {
 
   _basic(elem, elem2) {
     this._style(elem, elem2);
+
+    for (let k of domTransferAttrs) {
+      if (elem.hasAttribute(k)) {
+        elem2.setAttribute(k, elem.getAttribute(k));
+      }
+    }
+
+    for (let k in this.inheritDomAttrs) {
+      if (!elem.hasAttribute(k)) {
+        elem.setAttribute(k, this.inheritDomAttrs[k]);
+      }
+    }
+
+    for (let k of sliderDomAttributes) {
+      if (elem.hasAttribute(k)) {
+        elem2.setAttribute(k, elem.getAttribute(k));
+      }
+    }
 
     if (elem.hasAttribute("useIcons") && typeof elem2.useIcons === "function") {
       let val = elem.getAttribute("useIcons");
@@ -215,15 +256,38 @@ class Handler {
       prefix += path;
       con.dataPrefix = prefix;
     }
+
+    if (elem.hasAttribute("massSetPath")) {
+      let prefix = con.massSetPrefix;
+      let path = elem.getAttribute("massSetPath").trim();
+
+      if (prefix.length > 0) {
+        prefix += ".";
+      }
+
+      prefix += path;
+      con.massSetPrefix = prefix;
+    }
   }
 
   _container(elem, con) {
+    for (let k of this.inheritDomAttrKeys) {
+      if (elem.hasAttribute(k)) {
+        this.inheritDomAttrs[k] = elem.getAttribute(k);
+      }
+    }
+
+    let packflag = getPackFlag(elem);
+
+    con.packflag |= packflag;
+    con.inherit_packflag |= packflag;
+
     this._basic(elem, con);
     this._handlePathPrefix(elem, con);
   }
 
   panel(elem) {
-    let title = "" + elem.getAttribute("title")
+    let title = "" + elem.getAttribute("label")
     let closed = getbool(elem, "closed")
 
     this.push()
@@ -262,6 +326,13 @@ class Handler {
       this.container.shadow.appendChild(elem2);
     } else {
       this._basic(elem, elem2);
+
+      if (elem.hasAttribute("massSetPath")) {
+        let mpath = elem.getAttribute("massSetPath");
+        mpath = this.container._getMassPath(this.container.ctx, path, mpath);
+
+        elem2.setAttribute("mass_set_path", mpath);
+      }
     }
   }
 
@@ -358,7 +429,7 @@ class Handler {
   tab(elem) {
     this.push();
 
-    let title = "" + elem.getAttribute("title");
+    let title = "" + elem.getAttribute("label");
 
     this.container = this.container.tab(title);
     this._container(elem, this.container)

@@ -1,5 +1,6 @@
 import {UIBase} from '../core/ui_base.js';
 import * as util from '../path-controller/util/util.js';
+import {keymap} from '../path-controller/util/simple_events.js';
 
 export class ProgressCircle extends UIBase {
   constructor() {
@@ -19,6 +20,24 @@ export class ProgressCircle extends UIBase {
     super.init();
     this.flagRedraw();
     this.update();
+
+    //enable keyboard focus
+    this.tabIndex = 0;
+    this.setAttribute("tab-index", 0);
+    this.setAttribute("tabindex", 0);
+
+    let onkey = (e) => {
+      switch (e.keyCode) {
+        case keymap["Escape"]:
+          if (this.oncancel) {
+            this.oncancel(this);
+          }
+          break;
+      }
+    }
+
+    this.addEventListener("keydown", onkey);
+    this.canvas.addEventListener("keydown", onkey);
   }
 
   flagRedraw() {
@@ -33,7 +52,6 @@ export class ProgressCircle extends UIBase {
   }
 
   draw() {
-    console.log("draw!");
     let c = this.canvas, g = this.g;
 
     let clr1 = "rgb(68,69,83)";
@@ -116,7 +134,6 @@ export class ProgressCircle extends UIBase {
     g.stroke();
 
     g.restore();
-    this._value += 0.1;
   }
 
   set value(percent) {
@@ -132,6 +149,8 @@ export class ProgressCircle extends UIBase {
     if (this.timer !== undefined) {
       return;
     }
+
+    this.focus();
 
     window.setInterval(() => {
       if (!this.isConnected) {

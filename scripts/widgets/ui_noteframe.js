@@ -14,6 +14,8 @@ export class Note extends ui_base.UIBase {
     this._noteid = undefined;
     this.height = 20;
 
+    this.showExclMark = true;
+
     style.textContent = `
     .notex {
       display : flex;
@@ -43,7 +45,7 @@ export class Note extends ui_base.UIBase {
 
   setLabel(s) {
     let color = this.color;
-    if (this.mark === undefined) {
+    if (this.showExclMark && this.mark === undefined) {
       this.mark = document.createElement("div");
       this.mark.style["display"] = "flex";
       this.mark.style["flex-direction"] = "row";
@@ -70,9 +72,12 @@ export class Note extends ui_base.UIBase {
       //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
       //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
       //this.mark.style["background-color"] = color;
+    } else if (!this.showExclMark && this.mark) {
+      this.mark.remove();
+      this.mark = undefined;
     }
 
-    let mark = this.mark, ntext = this.ntext;
+    let ntext = this.ntext;
     //mark.innerText = "!";
     ntext.innerText = " " + s;
   }
@@ -230,7 +235,7 @@ export class NoteFrame extends ui.RowFrame {
     return note;
   }
 
-  addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x") {
+  addNote(msg, color = "rgba(255,0,0,0.2)", timeout = 1200, tagname = "note-x", showExclMark=true) {
     //let note = UIBase.createElement("note-x");
 
     //note.ctx = this.ctx;
@@ -248,6 +253,7 @@ export class NoteFrame extends ui.RowFrame {
 
     note.style["font"] = ui_base.getFont(note, "DefaultText");
     note.style["color"] = this.getDefault("DefaultText").color;
+    note.showExclMark = showExclMark;
 
     this.add(note);
 
@@ -318,12 +324,12 @@ export function progbarNote(screen, msg, percent, color, timeout) {
   }
 }
 
-export function sendNote(screen, msg, color, timeout = 3000) {
+export function sendNote(screen, msg, color, timeout = 3000, showExclMark=true) {
   noteframes = getNoteFrames(screen);
 
   for (let frame of noteframes) {
     try {
-      frame.addNote(msg, color, timeout);
+      frame.addNote(msg, color, timeout, undefined, showExclMark);
     } catch (error) {
       print_stack(error);
       console.log(error.stack, error.message);
@@ -343,6 +349,5 @@ export function warning(screen, msg, timeout) {
 }
 
 export function message(screen, msg, timeout) {
-  return sendNote(screen, msg, ui_base.color2css([0.4, 1.0, 0.5, 1.0]), timeout);
+  return sendNote(screen, msg, ui_base.color2css([0.2, 0.9, 0.1, 1.0]), timeout, false);
 }
-

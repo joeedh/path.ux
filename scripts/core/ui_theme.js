@@ -56,17 +56,21 @@ export function color2css(c, alpha_override) {
 window.color2css = color2css;
 
 let css2color_rets = util.cachering.fromConstructor(Vector4, 64);
-let cmap = {
-  red : [1, 0, 0, 1],
-  green : [0, 1, 0, 1],
-  blue : [0, 0, 1, 1],
-  yellow : [1, 1, 0, 1],
-  white : [1, 1, 1, 1],
-  black : [0, 0, 0, 1],
-  grey : [0.7, 0.7, 0.7, 1],
-  teal : [0, 1, 1, 1],
-  orange : [1,0.55,0.25,1],
-  brown  : [0.7, 0.4, 0.3, 1]
+let basic_colors = {
+  'white' : [1,1,1],
+  'grey' : [0.5, 0.5, 0.5],
+  'gray' : [0.5, 0.5, 0.5],
+  'black' : [0, 0, 0],
+  'red' : [1, 0, 0],
+  'yellow' : [1, 1, 0],
+  'green' : [0, 1, 0],
+  'teal' : [0, 1, 1],
+  'cyan' : [0, 1, 1],
+  'blue' : [0, 0, 1],
+  'orange' : [1, 0.5, 0.25],
+  'brown' : [0.5, 0.4, 0.3],
+  'purple' : [1, 0, 1],
+  'pink' : [1, 0.5, 0.5]
 };
 
 export function color2web(color) {
@@ -134,8 +138,8 @@ export function css2color(color) {
     return ret;
   }
 
-  if (color in cmap) {
-    return ret.load(cmap[color]);
+  if (color in basic_colors) {
+    return ret.load(basic_colors[color]);
   }
 
   color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",")
@@ -170,18 +174,20 @@ export function validateWebColor(str) {
   return str.trim().search(validate_pat) === 0;
 }
 
-let num = "([0-9]+\.[0-9]+)|[0-9a-f]+";
+let num = "(([0-9]+\.[0-9]+)|[0-9a-f]+)";
 
 let validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
 let validate_rgb = new RegExp(`rgb\\(${num},${num},${num},${num}\\)$`);
 
 export function validateCSSColor(color) {
-  if (color.toLowerCase() in cmap) {
+  if (color.toLowerCase() in basic_colors) {
     return true;
   }
 
   let rgba = color.toLowerCase().replace(/[ \t]/g, "");
-  if (validate_rgba.exec(rgba) || validate_rgb.exec(rgba)) {
+  rgba = rgba.trim();
+
+  if (validate_rgba.test(rgba) || validate_rgb.exec(rgba)) {
     return true;
   }
 
@@ -210,7 +216,7 @@ export function invertTheme() {
 
   let bg = document.body.style["background-color"];
   //if (!bg) {
-    bg = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
+  bg = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? "rgb(200,200,200)" : "rgb(55, 55, 55)";
   //} else {
   //  bg = inverted(bg);
   //}
@@ -229,7 +235,7 @@ export function invertTheme() {
         v = v.trim().toLowerCase();
 
         let iscolor = v.search("rgb") >= 0;
-        iscolor = iscolor || v in cmap;
+        iscolor = iscolor || v in basic_colors;
         iscolor = iscolor || validateWebColor(v);
 
         if (iscolor) {
@@ -342,7 +348,7 @@ export function exportTheme(theme1=theme) {
       keys.push(k);
     }
     keys.sort();
-    
+
     return keys;
   }
 
@@ -355,7 +361,7 @@ export function exportTheme(theme1=theme) {
       } else {
         v = "'" + v + "'";
       }
-      
+
       return v;
     } else if (typeof v === "object") {
       if (v instanceof CSSFont) {
@@ -393,7 +399,7 @@ ${indent}})`;
   for (let k of sortkeys(theme1)) {
     let k2 = k;
 
-    if (k.search(/[\-\. ]/) >= 0) {
+    if (k.search("-") >= 0 || k.search(" ") >= 0) {
       k2 = "'" + k + "'";
     }
     s += "  " + k2 + ": ";
@@ -421,7 +427,7 @@ ${indent}})`;
         if (k2.search("-") >= 0 || k2.search(" ") >= 0) {
           k2 = "'" + k2 + "'";
         }
-    
+
         let pad = "";
 
         for (let i=0; i<maxwid-k2.length; i++) {

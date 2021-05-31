@@ -1374,6 +1374,13 @@ export class ColorPickerButton extends UIBase {
       this._keyhandler_remove();
     }
 
+    for (let i=0; i<this.rgba.length; i++) {
+      if (this.rgba[i] == undefined) {
+        console.warn("corrupted color or alpha detected", this.rgba);
+        this.rgba[i] = 1.0;
+      }
+    }
+
     let key = "" + this.rgba[0].toFixed(4) + " " + this.rgba[1].toFixed(4) + " " + this.rgba[2].toFixed(4) + " " + this.rgba[3].toFixed(4);
     key += this.disabled;
 
