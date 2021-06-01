@@ -20,16 +20,29 @@ let PropSubTypes = toolprop.PropSubTypes;
 
 let EnumProperty = toolprop.EnumProperty;
 
-let Vector2 = vectormath.Vector2,
-    UIBase = ui_base.UIBase,
+let Vector2   = vectormath.Vector2,
+    UIBase    = ui_base.UIBase,
     PackFlags = ui_base.PackFlags,
     PropTypes = toolprop.PropTypes;
+
+
+//methods to forward to this.contents
+let forward_keys = new Set([
+  "row", "col", "strip", "noteframe", "helppicker", "vecpopup",
+  "tabs", "table", "menu", "listbox", "panel",
+  "pathlabel", "label", "listenum", "check", "iconcheck",
+  "button", "iconbutton", "colorPicker", "twocol",
+  "treeview", "slider", "simpleslider", "curve1d",
+  "noteframe", "vecpopup",
+  "prop", "tool", "toolPanel", "textbox", "dynamicMenu",
+  "add", "prepend", "useIcons", "noMarginsOrPadding", "wrap"
+]);
 
 export class PanelFrame extends ColumnFrame {
   constructor() {
     super();
 
-    this.titleframe = this.row();
+    this.titleframe = super.row();
 
     this.contents = UIBase.createElement("colframe-x", true);
     this.contents._remove = this.contents.remove;
@@ -37,22 +50,24 @@ export class PanelFrame extends ColumnFrame {
       this.remove();
     };
 
+    this._panel = this; //compatibility alias
+
     this.contents._panel = this;
     this.iconcheck = UIBase.createElement("iconcheck-x");
 
     Object.defineProperty(this.contents, "closed", {
-      get : () => {
+      get: () => {
         return this.closed;
       },
 
-      set : (v) => {
+      set: (v) => {
         this.closed = v;
       }
     })
 
     Object.defineProperty(this.contents, "title", {
-      get : () => this.getAttribute("title"),
-      set : (v) => this.setAttribute("title", v)
+      get: () => this.titleframe.getAttribute("title"),
+      set: (v) => this.setHeaderToolTip(v)
     });
 
     this.packflag = this.inherit_packflag = 0;
@@ -60,6 +75,74 @@ export class PanelFrame extends ColumnFrame {
     this._closed = false;
 
     this.makeHeader();
+  }
+
+  get inherit_packflag() {
+    if (!this.contents) return;
+    return this.contents.inherit_packflag;
+  }
+
+  set inherit_packflag(val) {
+    if (!this.contents) return;
+    this.contents.inherit_packflag = val;
+  }
+
+  get packflag() {
+    if (!this.contents) return;
+    return this.contents.packflag;
+  }
+
+  set packflag(val) {
+    if (!this.contents) return;
+    this.contents.packflag = val;
+  }
+
+  get headerLabel() {
+    return this.__label.text;
+  }
+
+  set headerLabel(v) {
+    this.__label.text = v;
+  }
+
+  get dataPrefix() {
+    return this.contents ? this.contents.dataPrefix : "";
+  }
+
+  set dataPrefix(v) {
+    if (this.contents) {
+      this.contents.dataPrefix = v;
+    }
+  }
+
+  get closed() {
+    return this._closed;
+  }
+
+  set closed(val) {
+    let update = !!val !== !!this.closed;
+    this._closed = val;
+
+    //console.log("closed set", update);
+    if (update) {
+      this._updateClosed(true);
+    }
+  }
+
+  static define() {
+    return {
+      tagname            : "panelframe-x",
+      style              : "panel",
+      subclassChecksTheme: true
+    };
+  }
+
+  setHeaderToolTip(tooltip) {
+    this.titleframe.setAttribute("title", tooltip);
+
+    this.titleframe._forEachChildWidget((child) => {
+      child.setAttribute("title", tooltip);
+    });
   }
 
   saveData() {
@@ -81,26 +164,6 @@ export class PanelFrame extends ColumnFrame {
   clear() {
     this.clear();
     this.add(this.titleframe);
-  }
-
-  get inherit_packflag() {
-    if (!this.contents) return;
-    return this.contents.inherit_packflag;
-  }
-
-  set inherit_packflag(val) {
-    if (!this.contents) return;
-    this.contents.inherit_packflag = val;
-  }
-
-  get packflag () {
-    if (!this.contents) return;
-    return this.contents.packflag;
-  }
-
-  set packflag(val) {
-    if (!this.contents) return;
-    this.contents.packflag = val;
   }
 
   makeHeader() {
@@ -135,7 +198,7 @@ export class PanelFrame extends ColumnFrame {
       iconcheck.checked = !iconcheck.checked;
     };
 
-    let label = this.__label = row.label(this.getAttribute("title"));
+    let label = this.__label = row.label(this.getAttribute("label"));
 
     this.__label.overrideClass("panel");
     this.__label.font = "TitleText";
@@ -166,7 +229,7 @@ export class PanelFrame extends ColumnFrame {
 
     this.contents.ctx = this.ctx;
     if (!this._closed) {
-      this.add(this.contents);
+      super.add(this.contents);
       this.contents.flushUpdate();
     }
 
@@ -175,14 +238,6 @@ export class PanelFrame extends ColumnFrame {
     //con.style["margin-left"] = "5px";
 
     this.setCSS();
-  }
-
-  get label() {
-    return this.__label.text;
-  }
-
-  set label(v) {
-    this.__label.text = v;
   }
 
   setCSS() {
@@ -206,15 +261,15 @@ export class PanelFrame extends ColumnFrame {
 
     let boxmargin = getDefault("padding", 0);
 
-    let paddingleft  = getDefault("padding-left", 0);
-    let paddingright  = getDefault("padding-right", 0);
+    let paddingleft = getDefault("padding-left", 0);
+    let paddingright = getDefault("padding-right", 0);
 
     paddingleft += boxmargin;
     paddingright += boxmargin;
 
     this.titleframe.background = this.getDefault("TitleBackground");
     this.titleframe.style["border-radius"] = header_radius + "px";
-    this.titleframe.style["border"] = `${this.getDefault( "border-width")}px ${bs} ${this.getDefault("TitleBorder")}`;
+    this.titleframe.style["border"] = `${this.getDefault("border-width")}px ${bs} ${this.getDefault("TitleBorder")}`;
     this.style["border"] = `${this.getDefault("border-width")}px ${bs} ${this.getDefault("border-color")}`;
     this.style["border-radius"] = this.getDefault("border-radius") + "px";
 
@@ -271,23 +326,15 @@ export class PanelFrame extends ColumnFrame {
     this.setCSS();
   }
 
-  static define() {
-    return {
-      tagname: "panelframe-x",
-      style  : "panel",
-      subclassChecksTheme : true
-    };
-  }
-
   update() {
-    let text = this.getAttribute("title");
+    let text = this.getAttribute("label");
 
     let update = text !== this.__label.text;
     update = update || this.checkThemeUpdate();
 
     if (update) {
-      if (this.getAttribute("title")) {
-        this.label = this.getAttribute("title")
+      if (this.getAttribute("label")) {
+        this.headerLabel = this.getAttribute("label")
       }
 
       this.__label._updateFont();
@@ -315,7 +362,7 @@ export class PanelFrame extends ColumnFrame {
     if (isClosed) {
       this.contents._remove();
     } else {
-      this.add(this.contents, false);
+      super.add(this.contents, false);
       this.contents.parentWidget = this;
 
       this.contents.flushUpdate();
@@ -345,20 +392,17 @@ export class PanelFrame extends ColumnFrame {
     this._setVisible(this._closed, changed);
     this.iconcheck.checked = this._closed;
   }
+}
 
-  get closed() {
-    return this._closed;
+
+let makeForward = (k) => {
+  return function() {
+    return this.contents[k](...arguments);
   }
+};
 
-  set closed(val) {
-    let update = !!val != !!this.closed;
-    this._closed = val;
-
-    //console.log("closed set", update);
-    if (update) {
-      this._updateClosed(true);
-    }
-  }
+for (let k of forward_keys) {
+  PanelFrame.prototype[k] = makeForward(k);
 }
 
 UIBase.internalRegister(PanelFrame);

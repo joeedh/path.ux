@@ -1,15 +1,15 @@
 <tabs pos="left" style="overflow-y : scroll">
-  <tab title="Theme">
+  <tab label="Theme">
     <button id="export_theme">Export Theme</button>
     <theme-editor-x></theme-editor-x>
   </tab>
-  <tab title="Tab1">
+  <tab label="Tab1">
     <tool path="canvas.draw()" label="Exec Draw" useIcons="false"></tool>
-    <panel title="Panel" closed="false" path="data">
+    <panel label="Panel" closed="false" path="data">
       <strip mode="vertical">
       <prop path="angle1"/>
-      <prop path="angle1"/>
-      <prop path="angle1"/>
+      <prop path="angle2"/>
+      <prop path="angle3"/>
       </strip>
       <column>
       <pathlabel path="vector_test[0]"/>
@@ -20,14 +20,14 @@
       <pathlabel path="vector_test[3]"/>
       </row>
     </panel>
-    <panel title="Canvas" path="canvas">
+    <panel label="Canvas" path="canvas">
       <prop path="drawflag[BLUR]" useIcons="false" />
     </panel>
   </tab>
-  <tab title="Curve Mapping">
+  <tab label="Curve Mapping">
     <prop path="data.curvemap" />
   </tab>
-  <tab title="Last Command">
+  <tab label="Last Command">
     <last-tool-panel-x />
   </tab>
 </tabs>

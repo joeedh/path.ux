@@ -15,6 +15,7 @@ TRANSLATE   : for moving things
 UI_EXPAND   : panel open icon
 UI_COLLAPSE : panel close icon
 NOTE_EXCL   : exclamation mark for notifications
+HELP        : help symbol
 */
 export function setIconMap(icons) {
   for (let k in icons) {
@@ -22,54 +23,40 @@ export function setIconMap(icons) {
   }
 }
 
+let a = 0;
 export let Icons = {
-  HFLIP          : 0,
-  TRANSLATE      : 1,
-  ROTATE         : 2,
-  HELP_PICKER    : 3,
-  UNDO           : 4,
-  REDO           : 5,
-  CIRCLE_SEL     : 6,
-  BACKSPACE      : 7,
-  LEFT_ARROW     : 8,
-  RIGHT_ARROW    : 9,
-  UI_EXPAND      : 10, //triangle
-  UI_COLLAPSE    : 11, //triangle
-  FILTER_SEL_OPS : 12,
-  SCROLL_DOWN    : 13,
-  SCROLL_UP      : 14,
-  NOTE_EXCL      : 15,
-  TINY_X         : 16,
-  FOLDER         : 17,
-  FILE           : 18,
-  SMALL_PLUS     : 19,
-  SMALL_MINUS    : 20,
-  MAKE_SEGMENT   : 21,
-  MAKE_POLYGON   : 22,
-  FACE_MODE      : 23,
-  EDGE_MODE      : 24,
-  VERT_MODE      : 25,
-  CURSOR_ARROW   : 26,
-  TOGGLE_SEL_ALL : 27,
-  DELETE         : 28,
-  RESIZE         : 29,
-  Z_UP           : 30,
-  Z_DOWN         : 31,
-  SPLIT_EDGE     : 32,
-  SHOW_ANIMPATHS : 33,
-  UNCHECKED      : 34,
-  CHECKED        : 35,
-  ENUM_UNCHECKED : 36,
-  ENUM_CHECKED   : 37,
-  APPEND_VERTEX  : 38,
-  LARGE_CHECK    : 39,
-  BOLD           : 40,
-  ITALIC         : 41,
-  UNDERLINE      : 42,
-  STRIKETHRU     : 43,
-  TREE_EXPAND    : 44,
-  TREE_COLLAPSE  : 45,
-  ZOOM_OUT       : 46,
-  ZOOM_IN        : 47
+  FOLDER: a++,
+  FILE  : a++,
+  TINY_X: a++,
+
+  SMALL_PLUS : a++,
+  SMALL_MINUS: a++,
+  UNDO       : a++,
+
+  REDO: a++,
+  HELP: a++,
+
+  UNCHECKED   : a++,
+  CHECKED     : a++,
+  LARGE_CHECK : a++,
+  CURSOR_ARROW: a++,
+  NOTE_EXCL   : a++,
+  SCROLL_DOWN : a++,
+  SCROLL_UP   : a++,
+  BACKSPACE   : a++,
+  LEFT_ARROW  : a++,
+  RIGHT_ARROW : a++,
+  UI_EXPAND   : a++, //triangle
+  UI_COLLAPSE : a++, //triangle
+
+
+  BOLD         : a++,
+  ITALIC       : a++,
+  UNDERLINE    : a++,
+  STRIKETHRU   : a++,
+  TREE_EXPAND  : a++,
+  TREE_COLLAPSE: a++,
+  ZOOM_OUT     : a++,
+  ZOOM_IN      : a++
 };
 

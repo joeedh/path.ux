@@ -4,6 +4,7 @@ import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
 import {Editor} from "../editor_base.js";
 import {loadPage} from '../../../scripts/xmlpage/xmlpage.js';
 import {loadUIData, saveUIData} from '../../../scripts/core/ui_base.js';
+import {platform} from '../../../scripts/platforms/platform.js';
 
 export class PropsEditor extends Editor {
   constructor() {
@@ -32,7 +33,8 @@ export class PropsEditor extends Editor {
       return;
     }
 
-    let url = location.origin + "/example/page.xml";
+
+    let url = platform.resolveURL("./page.xml")
 
     loadPage(this.ctx, url).then(container => {
       this.container.add(container);

@@ -10,11 +10,11 @@ import {DomEventTypes} from '../path-controller/util/events.js';
 import {HotKey, keymap} from '../path-controller/util/simple_events.js';
 
 let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
+    PropTypes = toolprop.PropTypes;
 
 let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
+    PackFlags = ui_base.PackFlags,
+    IconSheets = ui_base.IconSheets;
 
 function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -171,7 +171,7 @@ export class Menu extends UIBase {
         }
       } while (item !== this.activeItem);
 
-      this.setActive(item, focus); 
+      this.setActive(item, focus);
     }
 
     if (this.hasSearchBox) {
@@ -216,7 +216,7 @@ export class Menu extends UIBase {
         item.focus();
       }
     }
-    
+
     this.activeItem = item;
   }
 
@@ -233,10 +233,10 @@ export class Menu extends UIBase {
 
     let sbox = this.textbox = UIBase.createElement("textbox-x");
     this.textbox.parentWidget = this;
-    
+
     dom2.appendChild(sbox);
     dom2.appendChild(this.dom);
-    
+
     dom2.style["height"] = "300px";
     this.dom.style["height"] = "300px";
     this.dom.style["overflow"] = "scroll";
@@ -654,8 +654,6 @@ export class Menu extends UIBase {
           -moz-user-focus: normal;
         }
       `;
-
-
   }
 
   setCSS() {
@@ -680,7 +678,7 @@ export class Menu extends UIBase {
   menu(title) {
     let ret = UIBase.createElement("menu-x");
 
-    ret.setAttribute("title", title);
+    ret.setAttribute("name", title);
     this.addItem(ret);
 
     return ret;
@@ -697,6 +695,8 @@ UIBase.internalRegister(Menu);
 export class DropBox extends Button {
   constructor() {
     super();
+
+    this._template = undefined;
 
     this._searchMenuMode = false;
     this.altKey = undefined;
@@ -746,7 +746,7 @@ export class DropBox extends Button {
 
     let setDefault = (key) => {
       if (this.hasDefault(key)) {
-        this.style[key] = this.getDefault(key, undefined, 0) + "px";
+        this.dom.style[key] = this.getDefault(key, undefined, 0) + "px";
       }
     }
 
@@ -777,7 +777,6 @@ export class DropBox extends Button {
 
     return ret;
   }
-
   updateWidth() {
     //let ret = super.updateWidth(10);
     let dpi = this.getDPI();
@@ -872,7 +871,36 @@ export class DropBox extends Button {
     }
   }
 
+  set template(v) {
+    this._template = v;
+  }
+
+  get template() {
+    return this._template;
+  }
+
+  _build_menu_template() {
+    if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+      this._menu.remove();
+    }
+
+    //let name = "" + this.getAttribute("name");
+    let template = this._template;
+
+    if (typeof template === "function") {
+      template = template();
+    }
+
+    this._menu = createMenu(this.ctx, "", template);
+    return this._menu;
+  }
+
   _build_menu() {
+    if (this._template) {
+      this._build_menu_template();
+      return;
+    }
+
     let prop = this.prop;
 
     if (this.prop === undefined) {
@@ -884,8 +912,9 @@ export class DropBox extends Button {
     }
 
     let menu = this._menu = UIBase.createElement("menu-x");
-    menu.setAttribute("title", name);
 
+    //let name = "" + this.getAttribute("name");
+    menu.setAttribute("name", "");
     menu._dropbox = this;
 
     let valmap = {};
@@ -1271,31 +1300,31 @@ export class MenuWrangler {
       case keymap["Down"]: //down
         menu.selectNext();
         break;
-        /*
-        let item = menu.activeItem;
-        if (!item) {
-          item = menu.items[0];
-        }
+      /*
+      let item = menu.activeItem;
+      if (!item) {
+        item = menu.items[0];
+      }
 
-        if (!item) {
-          return;
-        }
+      if (!item) {
+        return;
+      }
 
-        let item2;
-        let i = menu.items.indexOf(item);
+      let item2;
+      let i = menu.items.indexOf(item);
 
-        if (e.keyCode == 38) {
-          i = (i - 1 + menu.items.length) % menu.items.length;
-        } else {
-          i = (i + 1) % menu.items.length;
-        }
+      if (e.keyCode == 38) {
+        i = (i - 1 + menu.items.length) % menu.items.length;
+      } else {
+        i = (i + 1) % menu.items.length;
+      }
 
-        item2 = menu.items[i];
+      item2 = menu.items[i];
 
-        if (item2) {
-          menu.setActive(item2);
-        }
-        break;//*/
+      if (item2) {
+        menu.setActive(item2);
+      }
+      break;//*/
       case 13: //return key
       case 32: //space key
         menu.click(menu.activeItem);
@@ -1566,24 +1595,38 @@ export function createMenu(ctx, title, templ) {
       menu.seperator();
     } else if (typeof item === "function" || item instanceof Function) {
       doItem(item());
-    } else if (item instanceof Array) {
+    } else if (item instanceof Array) { //old array-based api for custom entries
       let hotkey = item.length > 2 ? item[2] : undefined;
       let icon = item.length > 3 ? item[3] : undefined;
       let tooltip = item.length > 4 ? item[4] : undefined;
+      let id2 = item.length > 5 ? item[5] : id++;
 
       if (hotkey !== undefined && hotkey instanceof HotKey) {
         hotkey = hotkey.buildString();
       }
 
-      menu.addItemExtra(item[0], id, hotkey, icon, undefined, tooltip);
+      menu.addItemExtra(item[0], id2, hotkey, icon, undefined, tooltip);
 
-      cbs[id] = (function (cbfunc, arg) {
+      cbs[id2] = (function (cbfunc, arg) {
         return function () {
           cbfunc(arg);
         }
-      })(item[1], item[2]);
+      })(item[1], id2);
+    } else if (typeof item === "object") { //new object-based api for custom entries
+      let {name, callback, hotkey, icon, tooltip} = item;
 
-      id++;
+      let id2 = item.id !== undefined ? item.id : id++;
+      if (hotkey !== undefined && hotkey instanceof HotKey) {
+        hotkey = hotkey.buildString();
+      }
+
+      menu.addItemExtra(name, id2, hotkey, icon, undefined, tooltip);
+
+      cbs[id2] = (function (cbfunc, arg) {
+        return function () {
+          cbfunc(arg);
+        }
+      })(callback, id2);
     }
   }
 

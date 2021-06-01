@@ -1,8 +1,12 @@
 //stores xml sources
+import {isNumber} from '../path-controller/toolsys/toolprop.js';
+
 let pagecache = new Map()
 import {PackFlags, UIBase} from '../core/ui_base.js';
 import {sliderDomAttributes} from '../widgets/ui_numsliders.js';
 import * as util from '../util/util.js';
+import {Menu} from '../widgets/ui_menu.js';
+import {Icons} from '../core/ui_base.js';
 
 export var domTransferAttrs = new Set(["id", "title", "tab-index"]);
 
@@ -12,19 +16,54 @@ export function parseXML(xml) {
 
 }
 
+let num_re = /[0-9]+$/;
+
 function getIconFlag(elem) {
   if (!elem.hasAttribute("useIcons")) {
     return 0;
   }
 
   let attr = elem.getAttribute("useIcons");
+
+  if (typeof attr === "string") {
+    attr = attr.toLowerCase().trim();
+  }
+
+  if (attr === "false" || attr === "no") {
+    return 0;
+  }
+
+  console.log("ATTR", attr, typeof attr);
+
   if (attr === "true" || attr === "yes") {
     return PackFlags.USE_ICONS;
   } else if (attr === "small") {
     return PackFlags.SMALL_ICON | PackFlags.USE_ICONS;
   } else if (attr === "large") {
     return PackFlags.LARGE_ICON | PackFlags.USE_ICONS;
+  } else {
+    let isnum = typeof attr === "number";
+    let sheet = attr;
+
+    if (typeof sheet === "string" && sheet.search(num_re) === 0) {
+      sheet = parseInt(sheet);
+      isnum = true;
+    }
+
+    if (!isnum) {
+      return PackFlags.USE_ICONS;
+    }
+
+    return PackFlags.USE_ICONS;
+    let flag = PackFlags.USE_ICONS | PackFlags.CUSTOM_ICON_SHEET;
+    flag |= ((sheet-1) << PackFlags.CUSTOM_ICON_SHEET_START);
+
+    console.log("SHEET", sheet, typeof sheet, flag);
+
+    return flag;
   }
+
+  return 0;
 }
 
 function getPackFlag(elem) {
@@ -182,19 +221,19 @@ class Handler {
     }
 
     if (elem.hasAttribute("useIcons") && typeof elem2.useIcons === "function") {
-      let val = elem.getAttribute("useIcons");
+      let val = elem.getAttribute("useIcons").trim().toLowerCase();
 
-      if (val === "small") {
-        elem2.useIcons(true);
-        elem2.packflag &= ~PackFlags.LARGE_ICON;
-        elem2.packflag |= PackFlags.SMALL_ICON;
+      if (val === "small" || val === "true" || val === "yes") {
+        val = true;
       } else if (val === "large") {
-        elem2.useIcons(true);
-        elem2.packflag |= PackFlags.LARGE_ICON;
-        elem2.packflag &= ~PackFlags.SMALL_ICON;
+        val = 1;
+      } else if (val === "false" || val === "no") {
+        val = false;
       } else {
-        elem2.useIcons(getbool(elem, "useIcons"));
+        val = parseInt(val) - 1;
       }
+
+      elem2.useIcons(val);
     }
 
     if (elem.hasAttribute("sliderTextBox")) {
@@ -284,6 +323,14 @@ class Handler {
 
     this._basic(elem, con);
     this._handlePathPrefix(elem, con);
+  }
+
+  noteframe(elem) {
+    let ret = this.container.noteframe();
+
+    if (ret) {
+      this._basic(elem, ret);
+    }
   }
 
   panel(elem) {
@@ -396,6 +443,70 @@ class Handler {
       elem2.innerHTML = "error"
       this.container.shadow.appendChild(elem2);
     }
+  }
+
+  dropbox(elem) {
+    return this.menu(elem, true);
+  }
+
+  menu(elem, isDropBox=false) {
+    let packflag = getPackFlag(elem);
+    let title = elem.getAttribute("name")
+
+    let list = [];
+
+    for (let child of elem.childNodes) {
+      console.log(child, child.tagName);
+      if (child.tagName === "tool") {
+        let path = child.getAttribute("path");
+        let label = child.innerHTML.trim();
+
+        if (label.length > 0) {
+          path += "|" + label;
+        }
+
+        list.push(path);
+      } else if (child.tagName === "sep") {
+        list.push(Menu.SEP);
+      } else if (child.tagName === "item") {
+        let id, icon, hotkey, description;
+
+        if (child.hasAttribute("id")) {
+          id = child.getAttribute("id");
+        }
+
+        if (child.hasAttribute("icon")) {
+          icon = child.getAttribute("icon").toUpperCase().trim();
+          icon = Icons[icon];
+        }
+
+        if (child.hasAttribute("hotkey")) {
+          hotkey = child.getAttribute("hotkey");
+        }
+
+        if (child.hasAttribute("description")) {
+          description = child.getAttribute("description");
+        }
+
+        list.push({
+          name : child.innerHTML.trim(),
+          id, icon, hotkey, description
+        });
+      }
+    }
+
+    let ret = this.container.menu(title, list, packflag);
+    if (isDropBox) {
+      ret.removeAttribute("simple");
+    }
+
+    if (elem.hasAttribute("id")) {
+      ret.setAttribute("id", elem.getAttribute("id"));
+    }
+
+    this._basic(elem, ret);
+
+    return ret;
   }
 
   button(elem) {

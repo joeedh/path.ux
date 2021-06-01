@@ -57,6 +57,52 @@ export class PlatformAPI {
     throw new Error("implement me");
   }
 
+  static resolveURL(path, base=location.href) {
+    base = base.trim();
+
+    if (path.startsWith("./")) {
+      path = path.slice(2, path.length).trim();
+    }
+
+    while (path.startsWith("/")) {
+      path = path.slice(1, path.length).trim();
+    }
+
+    while (base.endsWith("/")) {
+      base = base.slice(0, base.length-1).trim();
+    }
+
+    let exts = ["html", "txt", "js", "php", "cgi"]
+    for (let ext of exts) {
+      ext = "." + ext;
+      if (base.endsWith(ext)) {
+        let i = base.length-1;
+        while (i > 0 && base[i] !== "/") {
+          i--;
+        }
+
+        base = base.slice(0, i).trim();
+      }
+    }
+
+    while (base.endsWith("/")) {
+      base = base.slice(0, base.length-1).trim();
+    }
+
+    path = (base + "/" + path).split("/")
+    let path2 = [];
+
+    for (let i=0; i<path.length; i++) {
+      if (path[i] === "..") {
+        path2.pop();
+      } else {
+        path2.push(path[i]);
+      }
+    }
+
+    return path2.join("/");
+  }
+
   //returns a promise that resolves to a FilePath that can be used for re-saving.
   static showOpenDialog(title, args=new FileDialogArgs()) {
     throw new Error("implement me");

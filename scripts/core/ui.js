@@ -13,7 +13,7 @@ import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import '../path-controller/util/html5_fileapi.js';
 import {HotKey} from '../path-controller/util/simple_events.js';
 import {CSSFont} from './ui_theme.js';
-import {theme} from './ui_base.js';
+import {theme, iconSheetFromPackFlag} from './ui_base.js';
 
 import {createMenu, startMenu} from "../widgets/ui_menu.js";
 
@@ -274,14 +274,32 @@ export class Container extends ui_base.UIBase {
     this.setAttribute("class", "containerx");
   }
 
-  useIcons(enabled=true) {
-    if (enabled) {
-      this.packflag |= PackFlags.USE_ICONS;
-      this.inherit_packflag |= PackFlags.USE_ICONS;
-    } else {
+  useIcons(enabled_or_sheet=true) {
+    let enabled = !!enabled_or_sheet;
+
+    if (!enabled) {
       this.packflag &= ~PackFlags.USE_ICONS;
       this.inherit_packflag &= ~PackFlags.USE_ICONS;
+
+      return;
     }
+
+    let sheet = enabled_or_sheet;
+
+    if (sheet === true) {
+      sheet = PackFlags.SMALL_ICON;
+    } else if (sheet === 1) {
+      sheet = PackFlags.LARGE_ICON;
+    } else {
+      sheet = PackFlags.CUSTOM_ICON_SHEET | (sheet<<(PackFlags.CUSTOM_ICON_SHEET_START));
+    }
+
+    //clear any existing sizing flags
+    this.packflag &= ~(PackFlags.SMALL_ICON | PackFlags.LARGE_ICON | PackFlags.CUSTOM_ICON_SHEET);
+    this.packflag &= ~(255 << PackFlags.CUSTOM_ICON_SHEET_START);
+
+    this.packflag |= PackFlags.USE_ICONS | sheet;
+    this.inherit_packflag |= PackFlags.USE_ICONS | sheet;
 
     return this;
   }
@@ -840,12 +858,7 @@ export class Container extends ui_base.UIBase {
 
       ret = this.iconbutton(def.icon, label, cb);
 
-      if (packflag & PackFlags.SMALL_ICON) {
-        ret.iconsheet = ui_base.IconSheets.SMALL;
-      } else {
-        ret.iconsheet = ui_base.IconSheets.LARGE;
-      }
-
+      ret.iconsheet = iconSheetFromPackFlag(packflag);
       ret.packflag |= packflag;
     } else {
       label = label !== undefined ? label : def.uiname;
@@ -924,7 +937,8 @@ export class Container extends ui_base.UIBase {
     })
 
     if (util.isMobile()) {
-      ret.iconsheet = 2;
+      //ret.iconsheet = 2;
+      //XXX look up in mobile theme properly
     }
 
     if (ret.ctx) {
@@ -946,11 +960,7 @@ export class Container extends ui_base.UIBase {
     ret.description = description;
     ret.icon = icon;
 
-    if (packflag & PackFlags.SMALL_ICON) {
-      ret.iconsheet = ui_base.IconSheets.SMALL;
-    } else {
-      ret.iconsheet = ui_base.IconSheets.LARGE;
-    }
+    ret.iconsheet = iconSheetFromPackFlag(packflag);
 
     ret.onclick = cb;
 
@@ -1412,9 +1422,7 @@ export class Container extends ui_base.UIBase {
     if (packflag & PackFlags.USE_ICONS) {
       ret = UIBase.createElement("iconcheck-x");
 
-      if (packflag & PackFlags.SMALL_ICON) {
-        ret.iconsheet = ui_base.IconSheets.SMALL;
-      }
+      ret.iconsheet = iconSheetFromPackFlag(packflag);
     } else {
       ret = UIBase.createElement("check-x");
     }
@@ -1743,13 +1751,6 @@ export class Container extends ui_base.UIBase {
     return p;
   }
 
-  curve(id, name, default_preset, packflag = 0) {
-    packflag |= this.inherit_packflag;
-
-    //XXX don't forget to OR packflag into widget
-    throw new Error("implement me!");
-  }
-
   simpleslider(inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
     if (arguments.length === 2 || typeof name === "object") {
       let args = Object.assign({}, name);
@@ -1900,7 +1901,7 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  panel(name, id, packflag = 0) {
+  panel(name, id, packflag = 0, tooltip=undefined) {
     id = id === undefined ? name : id;
     packflag |= this.inherit_packflag;
 
@@ -1911,7 +1912,11 @@ export class Container extends ui_base.UIBase {
     ret.dataPrefix = this.dataPrefix;
     ret.massSetPrefix = this.massSetPrefix;
 
-    ret.setAttribute("title", name);
+    if (tooltip) {
+      ret.setHeaderToolTip(tooltip);
+    }
+
+    ret.setAttribute("label", name);
     ret.setAttribute("id", id);
 
     this._add(ret);
@@ -1921,7 +1926,7 @@ export class Container extends ui_base.UIBase {
     ret.contents.dataPrefix = this.dataPrefix;
     ret.contents.massSetPrefix = this.massSetPrefix;
 
-    return ret.contents;
+    return ret;
   }
 
   row(packflag = 0) {

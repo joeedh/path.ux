@@ -10,6 +10,101 @@ import {PropTypes, isNumber, PropSubTypes, PropFlags} from "../path-controller/t
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
 import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
 
+export const sliderDomAttributes = new Set([
+  "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
+  "radix", "step", "expRate", "stepIsRelative", "decimalPlaces"
+]);
+
+function updateSliderFromDom(dom, slider=dom) {
+  let redraw = false;
+
+  function getbool(attr, prop=attr) {
+    if (!dom.hasAttribute(attr)) {
+      return;
+    }
+
+    let v = dom.getAttribute(attr);
+    let ret = v === null || v.toLowerCase() === "true" || v.toLowerCase === "yes";
+
+    let old = slider[prop];
+    if (old !== undefined && old !== ret) {
+      redraw = true;
+    }
+
+    slider[prop] = ret;
+    return ret;
+  }
+
+  function getfloat(attr, prop=attr) {
+    if (!dom.hasAttribute(attr)) {
+      return;
+    }
+
+    let v = dom.getAttribute(attr);
+    let ret = parseFloat(v);
+
+    let old = slider[prop];
+    if (old !== undefined && Math.abs(old - v) < 0.00001) {
+      redraw = true;
+    }
+
+    slider[prop] = ret;
+    return ret;
+  }
+
+  function getint(attr, prop=attr) {
+    if (!dom.hasAttribute(attr)) {
+      return;
+    }
+
+    let v = dom.getAttribute(attr);
+    let ret = parseInt(v);
+
+    let old = slider[prop];
+    if (old !== undefined && Math.abs(old - v) < 0.00001) {
+      redraw = true;
+    }
+
+    slider[prop] = ret;
+    return ret;
+  }
+
+  if (dom.hasAttribute("min")) {
+    slider.range = slider.range || [1e17, 1e17];
+
+    let r = slider.range[0];
+    slider.range[0] = parseFloat(dom.getAttribute("min"));
+    redraw = Math.abs(slider.range[0]-r) > 0.0001;
+  }
+
+  if (dom.hasAttribute("max")) {
+    slider.range = slider.range || [1e17, 1e17];
+
+    let r = slider.range[1];
+    slider.range[1] = parseFloat(dom.getAttribute("max"));
+    redraw = redraw || Math.abs(slider.range[1]-r) > 0.0001;
+  }
+
+  if (dom.hasAttribute("displayUnit")) {
+    let old = slider.displayUnit;
+    slider.displayUnit = dom.getAttribute("displayUnit").trim();
+
+    redraw = redraw || old !== slider.displayUnit;
+  }
+
+  getint("integer", "isInt");
+
+  getint("radix");
+  getint("decimalPlaces");
+
+  getbool("labelOnTop");
+  getbool("stepIsRelative");
+  getfloat("expRate");
+  getfloat("step");
+
+  return redraw;
+}
+
 //use .setAttribute("linear") to disable nonlinear sliding
 export class NumSlider extends ValueButtonBase {
   constructor() {

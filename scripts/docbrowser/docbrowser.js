@@ -8,6 +8,7 @@ import {pushModalLight, popModalLight} from "../path-controller/util/simple_even
 import * as cconst from '../config/const.js';
 import * as nstructjs from "../path-controller/util/struct.js";
 import {UIBase, Icons} from "../core/ui_base.js";
+import {platform} from '../platforms/platform.js';
 
 let tinymceLoaded = false;
 import('../lib/tinymce/tinymce.js').then(mod => {
@@ -112,7 +113,7 @@ export class DocsAPI {
 }
 
 
-window.PATHUX_DOCPATH = "../simple_docsys/docsys_base.js";
+window.PATHUX_DOCPATH = "../../simple_docsys/docsys_base.js";
 window.PATHUX_DOC_CONFIG = "../simple_docsys/docs.config.js";
 window.PATHUX_DOCPATH_PREFIX = "../simple_docsys/doc_build";
 
@@ -372,6 +373,8 @@ nstructjs.register(DocHistory);
 export class DocsBrowser extends UIBase {
   constructor() {
     super();
+
+    this.pathuxBaseURL = location.href;
 
     this.editMode = false;
 
@@ -672,38 +675,8 @@ export class DocsBrowser extends UIBase {
       }
 
 
-      let base_url;
-
-      if (window.haveElectron) {
-        let cwd = process.cwd();
-
-        cwd = cwd.replace(/\\/g, '/');
-        if (!cwd.endsWith("/")) {
-          cwd += "/";
-        }
-
-        base_url = require('path').resolve(cwd + "lib/tinymce");
-        base_url = base_url.replace(/\\/g, '/');
-        base_url = base_url.trim();
-
-        if (base_url[1] === ":") {
-          base_url = base_url[0].toLowerCase() + base_url.slice(1, base_url.length);
-        }
-
-        base_url = "file://" + base_url;
-
-        tinyMCEPreInit.baseURL = base_url;
-        tinyMCEPreInit.documentBaseURL = base_url;
-
-        console.warn(base_url);
-      } else {
-        base_url = document.location.href;
-        if (!base_url.endsWith("/")) {
-          base_url += "/";
-        }
-
-        base_url += "scripts/lib/tinymce";
-      }
+      let base = this.pathuxBaseURL;
+      let base_url = platform.resolveURL("scripts/lib/tinymce", base);
 
       console.warn(window.haveElectron, "haveElectron", base_url);
 

@@ -4,26 +4,18 @@ import {UIBase, theme, flagThemeUpdate} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
 import {validateCSSColor, color2css, css2color, CSSFont} from '../core/ui_theme.js';
 
-let basic_colors = {
-  'white' : [1,1,1],
-  'grey' : [0.5, 0.5, 0.5],
-  'gray' : [0.5, 0.5, 0.5],
-  'black' : [0, 0, 0],
-  'red' : [1, 0, 0],
-  'yellow' : [1, 1, 0],
-  'green' : [0, 1, 0],
-  'teal' : [0, 1, 1],
-  'cyan' : [0, 1, 1],
-  'blue' : [0, 0, 1],
-  'orange' : [1, 0.5, 0.25],
-  'brown' : [0.5, 0.4, 0.3],
-  'purple' : [1, 0, 1],
-  'pink' : [1, 0.5, 0.5]
-};
-
 export class ThemeEditor extends Container {
   constructor() {
     super();
+
+    this.categoryMap = {};
+  }
+
+  static define() {
+    return {
+      tagname: "theme-editor-x",
+      style  : "theme-editor"
+    }
   }
 
   init() {
@@ -32,8 +24,10 @@ export class ThemeEditor extends Container {
     this.build();
   }
 
-  doFolder(key, obj) {
-    let panel = this.panel(key);
+  doFolder(catkey, obj, container = this) {
+    let key = catkey.key;
+
+    let panel = container.panel(key, undefined, undefined, catkey.help);
     panel.style["margin-left"] = "15px";
 
     let row = panel.row();
@@ -52,7 +46,7 @@ export class ThemeEditor extends Container {
     let getpath = (path) => {
       let obj = theme;
 
-      for (let i=0; i<path.length; i++) {
+      for (let i = 0; i < path.length; i++) {
         obj = obj[path[i]];
       }
 
@@ -63,7 +57,7 @@ export class ThemeEditor extends Container {
     let _i = 0;
 
     let dokey = (k, v, path) => {
-      let col = _i % 2 === 0 ? col1 : col2;
+      let col = _i%2 === 0 ? col1 : col2;
 
       if (k.toLowerCase().search("flag") >= 0) {
         return; //don't do flags
@@ -136,7 +130,7 @@ export class ThemeEditor extends Container {
 
         let textbox = (key) => {
           panel2.label(key);
-          panel2.textbox(undefined, v[key]).onchange = function() {
+          panel2.textbox(undefined, v[key]).onchange = function () {
             v[key] = this.text;
             do_onchange(key, k);
           }
@@ -204,20 +198,71 @@ export class ThemeEditor extends Container {
   }
 
   build() {
-    let keys = Object.keys(theme);
-    keys.sort();
+    let categories = {};
+
+    for (let k of Object.keys(theme)) {
+      let catkey;
+
+      if (k in this.categoryMap) {
+        let cat = this.categoryMap[k];
+
+        if (typeof cat === "string") {
+          cat = {
+            category: cat,
+            help    : "",
+            key     : k
+          }
+        }
+
+        catkey = cat;
+      } else {
+        catkey = {category: k, help: '', key: k};
+      }
+
+      if (!catkey.key) {
+        catkey.key = k;
+      }
+
+      if (!(catkey.category in categories)) {
+        categories[catkey.category] = [];
+      }
+
+      categories[catkey.category].push(catkey);
+    }
+
+    function strcmp(a, b) {
+      a = a.trim().toLowerCase();
+      b = b.trim().toLowerCase();
+      return a < b ? -1 : (a === b ? 0 : 1);
+    }
+
+    let keys = Object.keys(categories);
+    keys.sort(strcmp);
 
     for (let k of keys) {
-      let v = theme[k];
-      if (typeof v === "object") {
-        this.doFolder(k, v);
+      let list = categories[k];
+      list.sort((a, b) => strcmp(a.key, b.key));
+
+      let panel = this;
+
+      if (list.length > 1) {
+        panel = this.panel(k);
+      }
+
+      for (let cat of list) {
+        let k2 = cat.key;
+        let v = theme[k2];
+
+        if (typeof v === "object") {
+          this.doFolder(cat, v, panel);
+        }
+      }
+
+      if (list.length > 1) {
+        panel.closed = true;
       }
     }
   }
-
-  static define() { return {
-    tagname : "theme-editor-x",
-    style   : "theme-editor"
-  }}
 }
+
 UIBase.internalRegister(ThemeEditor);

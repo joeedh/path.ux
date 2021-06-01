@@ -29,6 +29,7 @@ export * from './ui_theme.js';
 import {CSSFont, theme, parsepx, compatMap} from "./ui_theme.js";
 
 import {DefaultTheme} from './theme.js';
+
 export {theme} from "./ui_theme.js";
 
 import cconst from '../config/const.js';
@@ -54,9 +55,9 @@ export let _setAreaClass = (cls) => {
 }
 
 export const ErrorColors = {
-  WARNING : "yellow",
-  ERROR : "red",
-  OK : "green"
+  WARNING: "yellow",
+  ERROR  : "red",
+  OK     : "green"
 };
 
 window.__theme = theme;
@@ -65,18 +66,18 @@ let registered_has_happened = false;
 let tagPrefix = "";
 
 /**
-* Sets tag prefix for pathux html elements.
+ * Sets tag prefix for pathux html elements.
  * Must be called prior to loading other modules.
  * Since this is tricky, you can alternatively
  * add a script tag with the prefix with the id "pathux-tag-prefix",
  * e.g.<pre> <script type="text/plain" id="pathux-tag-prefix">prefix</script> </pre>
-* */
+ * */
 export function setTagPrefix(prefix) {
   if (registered_has_happened) {
     throw new Error("have to call ui_base.setTagPrefix before loading any other path.ux modules");
   }
 
-  tagPrefix = ""+prefix;
+  tagPrefix = "" + prefix;
 }
 
 export function getTagPrefix(prefix) {
@@ -130,6 +131,7 @@ export function setTheme(theme2) {
 setTheme(DefaultTheme);
 
 let _last_report = util.time_ms();
+
 export function report() {
   if (util.time_ms() - _last_report > 350) {
     console.warn(...arguments);
@@ -170,10 +172,10 @@ class _IconManager {
 
     this.image = image;
   }
-  
-  canvasDraw(elem, canvas, g, icon, x=0, y=0) {
-    let tx = icon % this.tilex;
-    let ty = ~~(icon / this.tilex);
+
+  canvasDraw(elem, canvas, g, icon, x = 0, y = 0) {
+    let tx = icon%this.tilex;
+    let ty = ~~(icon/this.tilex);
 
     let dpi = elem.getDPI();
     let ts = this.tilesize;
@@ -204,11 +206,11 @@ class _IconManager {
     if (icon == -1) { //-1 means no icon
       return '';
     }
-    
-    let ratio = this.drawsize / this.tilesize;
 
-    let x = (-(icon % this.tilex) * this.tilesize) * ratio;
-    let y = (-(~~(icon / this.tilex)) * this.tilesize) * ratio;
+    let ratio = this.drawsize/this.tilesize;
+
+    let x = (-(icon%this.tilex)*this.tilesize)*ratio;
+    let y = (-(~~(icon/this.tilex))*this.tilesize)*ratio;
 
     //x = ~~x;
     //y = ~~y;
@@ -230,8 +232,8 @@ export class IconManager {
   constructor(images, sizes, horizontal_tile_count) {
     this.iconsheets = [];
     this.tilex = horizontal_tile_count;
-    
-    for (let i=0; i<images.length; i++) {
+
+    for (let i = 0; i < images.length; i++) {
       let size, drawsize;
 
       if (typeof sizes[i] == "object") {
@@ -241,7 +243,7 @@ export class IconManager {
       }
 
       if (util.isMobile()) {
-        drawsize = ~~(drawsize * theme.base.mobileSizeMultiplier);
+        drawsize = ~~(drawsize*theme.base.mobileSizeMultiplier);
       }
 
       this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
@@ -260,14 +262,14 @@ export class IconManager {
     this.tilex = horizontal_tile_count;
   }
 
-  add(image, size, drawsize=size) {
+  add(image, size, drawsize = size) {
     this.iconsheets.push(new _IconManager(image, size, this.tilex, drawsize));
     return this;
   }
 
-  canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
+  canvasDraw(elem, canvas, g, icon, x = 0, y = 0, sheet = 0) {
     let base = this.iconsheets[sheet];
-    
+
     sheet = this.findSheet(sheet);
     let ds = sheet.drawsize;
 
@@ -282,7 +284,7 @@ export class IconManager {
     sheets.sort((a, b) => a.drawsize - b.drawsize);
     let sheet;
 
-    for (let i=0; i<sheets.length; i++) {
+    for (let i = 0; i < sheets.length; i++) {
       if (sheets[i].drawsize <= size) {
         sheet = sheets[i];
         break;
@@ -290,17 +292,17 @@ export class IconManager {
     }
 
     if (!sheet)
-      sheet = sheets[sheets.length-1];
+      sheet = sheets[sheets.length - 1];
 
     return this.iconsheets.indexOf(sheet);
   }
-  
+
   findSheet(sheet) {
     if (sheet === undefined) {
       console.warn("sheet was undefined");
       sheet = 0;
     }
-    
+
     let base = this.iconsheets[sheet];
 
     /**sigh**/
@@ -319,40 +321,40 @@ export class IconManager {
     return minsheet === undefined ? base : minsheet;
   }
 
-  getTileSize(sheet=0) {
+  getTileSize(sheet = 0) {
     return this.iconsheets[sheet].drawsize;
     return this.findSheet(sheet).drawsize;
   }
 
-  getRealSize(sheet=0) {
+  getRealSize(sheet = 0) {
     return this.iconsheets[sheet].tilesize;
     return this.findSheet(sheet).tilesize;
     //return this.iconsheets[sheet].tilesize;
   }
-  
+
   //icon is an integer
-  getCSS(icon, sheet=0) {
+  getCSS(icon, sheet = 0) {
     //return this.iconsheets[sheet].getCSS(icon);
     //return this.findSheet(sheet).getCSS(icon);
 
     let base = this.iconsheets[sheet];
     sheet = this.findSheet(sheet);
     let ds = sheet.drawsize;
-    
+
     sheet.drawsize = base.drawsize;
     let ret = sheet.getCSS(icon);
     sheet.drawsize = ds;
-    
+
     return ret;
   }
 
-  setCSS(icon, dom, sheet=0) {
+  setCSS(icon, dom, sheet = 0) {
     //return this.iconsheets[sheet].setCSS(icon, dom);
-    
+
     let base = this.iconsheets[sheet];
     sheet = this.findSheet(sheet);
     let ds = sheet.drawsize;
-    
+
     sheet.drawsize = base.drawsize;
     let ret = sheet.setCSS(icon, dom);
     sheet.drawsize = ds;
@@ -372,10 +374,22 @@ window._iconmanager = iconmanager; //debug global
 //if client code overrides iconsheets, they must follow logical convention
 //that the first one is "small" and the second is "large"
 export let IconSheets = {
-  SMALL  : 0,
-  LARGE  : 1,
-  XLARGE : 2
+  SMALL : 0,
+  LARGE : 1,
+  XLARGE: 2
 };
+
+export function iconSheetFromPackFlag(flag) {
+  if (flag & PackFlags.CUSTOM_ICON_SHEET) {
+    return flag >> PackFlags.CUSTOM_ICON_SHEET_START;
+  }
+
+  if (flag & PackFlags.SMALL_ICON) {
+    return 0//IconSheets.SMALL; //0
+  } else {
+    return 1//IconSheets.LARGE; //1
+  }
+}
 
 export function getIconManager() {
   return iconmanager;
@@ -391,23 +405,23 @@ export function setIconManager(manager, IconSheetsOverride) {
   }
 }
 
-export function makeIconDiv(icon, sheet=0) {
-    let size = iconmanager.getRealSize(sheet);
-    let drawsize = iconmanager.getTileSize(sheet);
+export function makeIconDiv(icon, sheet = 0) {
+  let size = iconmanager.getRealSize(sheet);
+  let drawsize = iconmanager.getTileSize(sheet);
 
-    let icontest = document.createElement("div");
-    
-    icontest.style["width"] = icontest.style["min-width"] = drawsize + "px";
-    icontest.style["height"] = icontest.style["min-height"] = drawsize + "px";
-    
-    icontest.style["background-color"] = "orange";
-    
-    icontest.style["margin"] = "0px";
-    icontest.style["padding"] = "0px";
+  let icontest = document.createElement("div");
 
-    iconmanager.setCSS(icon, icontest, sheet);
+  icontest.style["width"] = icontest.style["min-width"] = drawsize + "px";
+  icontest.style["height"] = icontest.style["min-height"] = drawsize + "px";
 
-    return icontest;
+  icontest.style["background-color"] = "orange";
+
+  icontest.style["margin"] = "0px";
+  icontest.style["padding"] = "0px";
+
+  iconmanager.setCSS(icon, icontest, sheet);
+
+  return icontest;
 }
 
 let Vector2 = vectormath.Vector2;
@@ -415,50 +429,49 @@ let Matrix4 = vectormath.Matrix4;
 
 export let dpistack = [];
 
-export const UIFlags = {
-
-};
+export const UIFlags = {};
 
 const internalElementNames = {};
 const externalElementNames = {};
 
 export const PackFlags = {
-  INHERIT_WIDTH  : 1,
-  INHERIT_HEIGHT : 2,
-  VERTICAL : 4,
-  USE_ICONS : 8,
-  SMALL_ICON : 16,
-  LARGE_ICON : 32,
+  INHERIT_WIDTH : 1,
+  INHERIT_HEIGHT: 2,
+  VERTICAL      : 4,
+  USE_ICONS     : 8,
+  SMALL_ICON    : 16,
+  LARGE_ICON    : 32,
 
-  FORCE_PROP_LABELS : 64, //force propeties (Container.prototype.prop()) to always have labels
-  PUT_FLAG_CHECKS_IN_COLUMNS : 128, //group flag property checkmarks in columns (doesn't apply to icons)
+  FORCE_PROP_LABELS         : 64, //force propeties (Container.prototype.prop()) to always have labels
+  PUT_FLAG_CHECKS_IN_COLUMNS: 128, //group flag property checkmarks in columns (doesn't apply to icons)
 
-  WRAP_CHECKBOXES : 256,
+  WRAP_CHECKBOXES: 256,
 
   //internal flags
-  STRIP_HORIZ : 512,
-  STRIP_VERT : 1024,
-  STRIP : 512|1024,
-  SIMPLE_NUMSLIDERS : 2048,
-  FORCE_ROLLER_SLIDER : 4096,
-  HIDE_CHECK_MARKS : (1<<13),
-  NO_NUMSLIDER_TEXTBOX : (1<<14),
+  STRIP_HORIZ            : 512,
+  STRIP_VERT             : 1024,
+  STRIP                  : 512 | 1024,
+  SIMPLE_NUMSLIDERS      : 2048,
+  FORCE_ROLLER_SLIDER    : 4096,
+  HIDE_CHECK_MARKS       : (1<<13),
+  NO_NUMSLIDER_TEXTBOX   : (1<<14),
+  CUSTOM_ICON_SHEET      : 1<<15,
+  CUSTOM_ICON_SHEET_START: 20
 };
 
- 
 let first = (iter) => {
   if (iter === undefined) {
     return undefined;
   }
-  
+
   if (!(Symbol.iterator in iter)) {
     for (let item in iter) {
       return item;
     }
-    
+
     return undefined;
   }
-  
+
   for (let item of iter) {
     return item;
   }
@@ -478,7 +491,7 @@ let _mobile_theme_patterns = [
 
 let _idgen = 0;
 
-window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, border="solid") {
+window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15, border = "solid") {
   let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
   CTX.screen.mergeGlobalCSS(buf);
 
@@ -496,7 +509,8 @@ window._testSetScrollbars = function(color="grey", contrast=0.5, width=15, borde
   return buf;
 };
 
-export function styleScrollBars(color="grey", color2=undefined, contrast=0.5, width=15, border="1px groove black", selector="*") {
+export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
+                                border = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -506,7 +520,7 @@ export function styleScrollBars(color="grey", color2=undefined, contrast=0.5, wi
     let inv = c.slice(0, c.length);
 
     inv[2] = 1.0 - inv[2];
-    inv[2] += (c[2] - inv[2]) * (1.0 - contrast);
+    inv[2] += (c[2] - inv[2])*(1.0 - contrast);
 
     inv = hsv_to_rgb(inv[0], inv[1], inv[2]);
 
@@ -547,7 +561,8 @@ ${selector}::-webkit-scrollbar-thumb {
 window.styleScrollBars = styleScrollBars;
 
 let _digest = new util.HashDigest();
-export function calcThemeKey(digest=_digest.reset()) {
+
+export function calcThemeKey(digest = _digest.reset()) {
   for (let k in theme) {
     let obj = theme[k];
 
@@ -600,7 +615,7 @@ export class UIBase extends HTMLElement {
 
     initAspectClass(this, new Set(["appendChild", "animate", "shadow", "removeNode", "prepend", "add", "init"]));
 
-    this.shadow = this.attachShadow({mode : 'open'});
+    this.shadow = this.attachShadow({mode: 'open'});
 
     if (cconst.DEBUG.paranoidEvents) {
       this.__cbs = [];
@@ -655,7 +670,7 @@ export class UIBase extends HTMLElement {
     //getting css to flow down properly can be a pain, so
     //some packing settings are set as bitflags here,
     //see PackFlags
-    
+
     /*
     setInterval(() => {
       this.update();
@@ -668,13 +683,13 @@ export class UIBase extends HTMLElement {
     this.__disabledState = false;
     this._disdata = undefined;
     this._ctx = undefined;
-    
+
     this._description = undefined;
-    
+
     let style = document.createElement("style");
     style.textContent = `
     .DefaultText {
-      font: `+_getFont(this)+`;
+      font: ` + _getFont(this) + `;
     }
     `;
     this.shadow.appendChild(style);
@@ -714,16 +729,16 @@ export class UIBase extends HTMLElement {
 
     this.addEventListener("touchstart", (e) => {
       do_touch(e, "mousedown", 0);
-    }, {passive : false});
+    }, {passive: false});
     this.addEventListener("touchmove", (e) => {
       do_touch(e, "mousemove");
-    }, {passive : false});
+    }, {passive: false});
     this.addEventListener("touchcancel", (e) => {
       do_touch(e, "mouseup", 2);
-    }, {passive : false});
+    }, {passive: false});
     this.addEventListener("touchend", (e) => {
       do_touch(e, "mouseup", 0);
-    }, {passive : false});
+    }, {passive: false});
   }
 
   /*
@@ -736,7 +751,191 @@ export class UIBase extends HTMLElement {
     return this._default_overrides;
   }//*/
 
-  hide(sethide=true) {
+  get parentWidget() {
+    return this._parentWidget;
+  }
+
+  set parentWidget(val) {
+    if (val) {
+      this._wasAddedToNodeAtSomeTime = true;
+    }
+
+    this._parentWidget = val;
+  }
+
+  get useDataPathUndo() {
+    let p = this;
+
+    while (p) {
+      if (p._useDataPathUndo !== undefined) {
+        return p._useDataPathUndo;
+      }
+
+      p = p.parentWidget;
+    }
+
+    return false;
+  }
+
+  /**
+   causes calls to setPathValue to go through
+   toolpath app.datapath_set(path="" newValueJSON="")
+
+   every child will inherit
+   */
+  set useDataPathUndo(val) {
+    this._useDataPathUndo = val;
+  }
+
+  get description() {
+
+    return this._description;
+  }
+
+  set description(val) {
+    this._description = val;
+
+    if (val === undefined || val === null) {
+      return;
+    }
+
+    if (cconst.showPathsInToolTips && this.hasAttribute("datapath")) {
+      let s = "" + this._description;
+
+      let path = this.getAttribute("datapath");
+      s += "\n    path: " + path;
+
+      if (this.hasAttribute("mass_set_path")) {
+        let m = this.getAttribute("mass_set_path");
+        s += "\n    massSetPath: " + m;
+      }
+      this.title = s;
+
+    } else {
+      this.title = "" + val;
+    }
+  }
+
+  get background() {
+    return this.__background;
+  }
+
+  set background(bg) {
+    this.__background = bg;
+
+    this.overrideDefault("background-color", bg, true);
+    this.style["background-color"] = bg;
+  }
+
+  get disabled() {
+    //hrm, I could just propegate checks upward. . .
+
+    if (this.parentWidget && this.parentWidget.disabled) {
+      return true;
+    }
+
+    return !!this._client_disabled_set || !!this._internalDisabled;// || !!this._parent_disabled_set;
+  }
+
+  set disabled(v) {
+    this._client_disabled_set = v;
+    this.__updateDisable(this.disabled);
+  }
+
+  get internalDisabled() {
+    return this._internalDisabled;
+  }
+
+  set internalDisabled(val) {
+    this._internalDisabled = !!val;
+
+    this.__updateDisable(this.disabled);
+  }
+
+  get ctx() {
+    return this._ctx;
+  }
+
+  set ctx(c) {
+    this._ctx = c;
+
+    this._forEachChildWidget((n) => {
+      n.ctx = c;
+    });
+  }
+
+  get _reportCtxName() {
+    return "" + this._id;
+  }
+
+  static getIconEnum() {
+    return Icons;
+  }
+
+  static setDefault(element) {
+    return element;
+  }
+
+  /**DEPRECATED
+
+   scaling ratio (e.g. for high-resolution displays)
+   */
+  static getDPI() {
+    //if (dpistack.length > 0) {
+    //  return dpistack[this.dpistack.length-1];
+    //} else {
+    //if (util.isMobile()) {
+    return window.devicePixelRatio; // * visualViewport.scale;
+    //}
+
+    return window.devicePixelRatio;
+    //}
+  }
+
+  static prefix(name) {
+    return tagPrefix + name;
+  }
+
+  static internalRegister(cls) {
+    registered_has_happened = true;
+
+    internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
+    customElements.define(this.prefix(cls.define().tagname), cls);
+  }
+
+  static createElement(name, internal = false) {
+    if (!internal && name in externalElementNames) {
+      return document.createElement(name);
+    } else if (name in internalElementNames) {
+      return document.createElement(internalElementNames[name]);
+    } else {
+      return document.createElement(name)
+    }
+  }
+
+  static register(cls) {
+    registered_has_happened = true;
+
+    externalElementNames[cls.define().tagname] = cls.define().tagname;
+    customElements.define(cls.define().tagname, cls);
+  }
+
+  /**
+   * Defines core attributes of the class
+   *
+   * @example
+   *
+   * static define() {return {
+   *   tagname : "custom-element-x",
+   *   style : "[style class in theme]"
+   *   subclassChecksTheme : boolean //set to true to disable base class invokation of subclassChecksTheme
+   * }}
+   */
+  static define() {
+    throw new Error("Missing define() for ux element");
+  }
+
+  hide(sethide = true) {
     this.hidden = sethide;
 
     for (let n of this.shadow.childNodes) {
@@ -800,47 +999,8 @@ export class UIBase extends HTMLElement {
     return ret;
   }
 
-  static getIconEnum() {
-    return Icons;
-  }
-
   unhide() {
     this.hide(false);
-  }
-  /**
-   causes calls to setPathValue to go through
-   toolpath app.datapath_set(path="" newValueJSON="")
-
-   every child will inherit
-  */
-  set useDataPathUndo(val) {
-    this._useDataPathUndo = val;
-  }
-
-  get parentWidget() {
-    return this._parentWidget;
-  }
-
-  set parentWidget(val) {
-    if (val) {
-      this._wasAddedToNodeAtSomeTime = true;
-    }
-
-    this._parentWidget = val;
-  }
-
-  get useDataPathUndo() {
-    let p = this;
-
-    while (p) {
-      if (p._useDataPathUndo !== undefined) {
-        return p._useDataPathUndo;
-      }
-
-      p = p.parentWidget;
-    }
-
-    return false;
   }
 
   findArea() {
@@ -871,7 +1031,7 @@ export class UIBase extends HTMLElement {
       if (cconst.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
-      
+
       let area = this.findArea();
 
       if (area) {
@@ -903,8 +1063,7 @@ export class UIBase extends HTMLElement {
     return super.addEventListener(type, cb, options);
   }
 
-  removeEventListener(type, cb, options)
-  {
+  removeEventListener(type, cb, options) {
     if (cconst.DEBUG.paranoidEvents) {
       for (let item of this.__cbs) {
         if (item[0] == type && item[1] === cb._cb2 && ("" + item[2]) === ("" + options)) {
@@ -929,39 +1088,10 @@ export class UIBase extends HTMLElement {
 
   }
 
-  get description() {
-
-    return this._description;
-  }
-
-  set description(val) {
-    this._description = val;
-
-    if (val === undefined || val === null) {
-      return;
-    }
-
-    if (cconst.showPathsInToolTips && this.hasAttribute("datapath")) {
-      let s = "" + this._description;
-
-      let path = this.getAttribute("datapath");
-      s += "\n    path: " + path;
-
-      if (this.hasAttribute("mass_set_path")) {
-        let m = this.getAttribute("mass_set_path");
-        s += "\n    massSetPath: " + m;
-      }
-      this.title = s;
-
-    } else {
-      this.title = ""+val;
-    }
-  }
-
   noMarginsOrPadding() {
     let keys = ["margin", "padding", "margin-block-start", "margin-block-end"];
     keys = keys.concat(["padding-block-start", "padding-block-end"]);
-    
+
     keys = keys.concat(["margin-left", "margin-top", "margin-bottom", "margin-right"]);
     keys = keys.concat(["padding-left", "padding-top", "padding-bottom", "padding-right"]);
 
@@ -997,17 +1127,6 @@ export class UIBase extends HTMLElement {
     return this;
   }
 
-  get background() {
-    return this.__background;
-  }
-
-  set background(bg) {
-    this.__background = bg;
-
-    this.overrideDefault("background-color", bg, true);
-    this.style["background-color"] = bg;
-  }
-
   getTotalRect() {
     let found = false;
 
@@ -1020,8 +1139,8 @@ export class UIBase extends HTMLElement {
       for (let r of rs) {
         min[0] = Math.min(min[0], r.x);
         min[1] = Math.min(min[1], r.y);
-        max[0] = Math.max(max[0], r.x+r.width);
-        max[1] = Math.max(max[1], r.y+r.height);
+        max[0] = Math.max(max[0], r.x + r.width);
+        max[1] = Math.max(max[1], r.y + r.height);
 
         found = true;
       }
@@ -1035,22 +1154,22 @@ export class UIBase extends HTMLElement {
 
     if (found) {
       return {
-        width  : max[0] - min[0],
-        height : max[1] - min[1],
-        x : min[0],
-        y : min[1],
-        left : min[0],
-        top : min[1],
+        width : max[0] - min[0],
+        height: max[1] - min[1],
+        x     : min[0],
+        y     : min[1],
+        left  : min[0],
+        top   : min[1],
         right : max[0],
-        bottom : max[1]
+        bottom: max[1]
       };
     } else {
       return undefined;
     }
   }
 
-  parseNumber(value, args={}) {
-    value = (""+value).trim().toLowerCase();
+  parseNumber(value, args = {}) {
+    value = ("" + value).trim().toLowerCase();
 
     let baseUnit = args.baseUnit || this.baseUnit;
     let isInt = args.isInt || this.isInt;
@@ -1071,7 +1190,7 @@ export class UIBase extends HTMLElement {
       value = value.slice(2, value.length).trim();
       value = parseInt(value, 16);
     } else if (value.search(hexre) === 0) {
-      value = value.slice(0, value.length-1).trim();
+      value = value.slice(0, value.length - 1).trim();
       value = parseInt(value, 16);
     } else {
       value = units.parseValue(value, baseUnit);
@@ -1084,7 +1203,7 @@ export class UIBase extends HTMLElement {
     return value*sign;
   }
 
-  formatNumber(value, args={}) {
+  formatNumber(value, args = {}) {
     let baseUnit = args.baseUnit || this.baseUnit;
     let displayUnit = args.displayUnit || this.displayUnit;
     let isInt = args.isInt || this.isInt;
@@ -1105,7 +1224,7 @@ export class UIBase extends HTMLElement {
     return units.buildString(value, baseUnit, decimalPlaces, displayUnit);
   }
 
-  setCSS(setBG=true) {
+  setCSS(setBG = true) {
     if (setBG) {
       let bg = this.getDefault("background-color");
       if (bg) {
@@ -1132,7 +1251,7 @@ export class UIBase extends HTMLElement {
 
     let visit = new Set();
 
-    return (function*() {
+    return (function* () {
       let stack = [this2];
 
       while (stack.length > 0) {
@@ -1178,7 +1297,7 @@ export class UIBase extends HTMLElement {
     return super.appendChild(child);
   }
 
-    //delayed init
+  //delayed init
   init() {
     this._init_done = true;
 
@@ -1186,7 +1305,7 @@ export class UIBase extends HTMLElement {
       this.setAttribute("id", this._id);
     }
   }
-  
+
   _ondestroy() {
     if (this.tabIndex >= 0) {
       this.regenTabOrder();
@@ -1205,8 +1324,8 @@ export class UIBase extends HTMLElement {
       this.ondestroy();
     }
   }
-  
-  remove(trigger_on_destroy=true) {
+
+  remove(trigger_on_destroy = true) {
     if (this.tabIndex >= 0) {
       this.regenTabOrder();
     }
@@ -1233,8 +1352,8 @@ export class UIBase extends HTMLElement {
   on_remove() {
 
   }
-  
-  removeChild(child, trigger_on_destroy=true) {
+
+  removeChild(child, trigger_on_destroy = true) {
     super.removeChild(child);
 
     if (trigger_on_destroy) {
@@ -1305,7 +1424,7 @@ export class UIBase extends HTMLElement {
       }
     }
   }
-  
+
   _init() {
     if (this._init_done) {
       return;
@@ -1314,20 +1433,14 @@ export class UIBase extends HTMLElement {
     this._init_done = true;
     this.init();
   }
-  
-  static setDefault(element) {
-    return element;
-  }
-  
+
   getWinWidth() {
     return window.innerWidth;
   }
-  
+
   getWinHeight() {
     return window.innerHeight;
   }
-
-
 
   calcZ() {
     let p = this;
@@ -1349,7 +1462,7 @@ export class UIBase extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args={}, marginy=0, nodeclass=UIBase, excluded_classes=undefined) {
+  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase, excluded_classes = undefined) {
     let marginx;
     let clip;
 
@@ -1363,28 +1476,28 @@ export class UIBase extends HTMLElement {
       marginx = args;
 
       args = {
-        marginx : marginx || 0,
-        marginy : marginy || 0,
-        nodeclass : nodeclass || UIBase,
-        excluded_classes : excluded_classes,
-        clip : clip
+        marginx         : marginx || 0,
+        marginy         : marginy || 0,
+        nodeclass       : nodeclass || UIBase,
+        excluded_classes: excluded_classes,
+        clip            : clip
       }
     }
 
     if (!clip) {
       clip = {
         pos : new Vector2([-10000, 10000]),
-        size : new Vector2([20000, 10000])
+        size: new Vector2([20000, 10000])
       };
     }
-    
+
     let ret = undefined;
 
     let retzindex = undefined;
 
     let testwidget = (n) => {
       if (n instanceof nodeclass) {
-        let ok=true;
+        let ok = true;
         ok = n.visibleToPick;
         ok = ok && !n.hidden;
         ok = ok && !(excluded_classes !== undefined && excluded_classes.indexOf(n.constructor) >= 0);
@@ -1393,7 +1506,7 @@ export class UIBase extends HTMLElement {
       }
     };
 
-    let rec = (n, widget, widget_zindex, zindex, clip, depth=0) => {
+    let rec = (n, widget, widget_zindex, zindex, clip, depth = 0) => {
       if (n.style && n.style["z-index"]) {
         if (!(n instanceof UIBase) || n.visibleToPick) {
           zindex = parseInt(n.style["z-index"]);
@@ -1432,7 +1545,7 @@ export class UIBase extends HTMLElement {
           ok = true;
 
           let clip2 = math.aabb_intersect_2d(clip.pos, clip.size, [rect.x, rect.y], [rect.width, rect.height]);
-          
+
           if (!clip2) {
             ok = false;
             continue;
@@ -1442,8 +1555,8 @@ export class UIBase extends HTMLElement {
           ok = ok && (retzindex === undefined || widget_zindex >= retzindex);
           ok = ok && (retzindex === undefined || zindex >= retzindex);
 
-          ok = ok && x >= clip2.pos[0]-marginx && x <= clip2.pos[0] + clip2.size[0]+marginy;
-          ok = ok && y >= clip2.pos[1]-marginy && y <= clip2.pos[1] + clip2.size[1]+marginx;
+          ok = ok && x >= clip2.pos[0] - marginx && x <= clip2.pos[0] + clip2.size[0] + marginy;
+          ok = ok && y >= clip2.pos[1] - marginy && y <= clip2.pos[1] + clip2.size[1] + marginx;
 
           if (n.visibleToPick !== undefined) {
             ok = ok && n.visibleToPick;
@@ -1468,7 +1581,7 @@ export class UIBase extends HTMLElement {
 
       if (!isleaf) {
         if (n.shadow !== undefined) {
-          for (let i=0; i<n.shadow.childNodes.length; i++) {
+          for (let i = 0; i < n.shadow.childNodes.length; i++) {
             let i2 = i;
             //i2 = n.shadow.childNodes.length - 1 - i;
 
@@ -1478,7 +1591,7 @@ export class UIBase extends HTMLElement {
             }
           }
         }
-        for (let i=0; i<n.childNodes.length; i++) {
+        for (let i = 0; i < n.childNodes.length; i++) {
           let i2 = i;
           //i2 = n.childNodes.length - 1 - i;
 
@@ -1502,13 +1615,6 @@ export class UIBase extends HTMLElement {
     return ret;
   }
 
-
-  set internalDisabled(val) {
-    this._internalDisabled = !!val;
-
-    this.__updateDisable(this.disabled);
-  }
-
   __updateDisable(val) {
     if (!!val === !!this.__disabledState) {
       return;
@@ -1518,14 +1624,14 @@ export class UIBase extends HTMLElement {
 
     if (val && !this._disdata) {
       let style = this.getDefault("internalDisabled") || {
-        "background-color" : this.getDefault("DisabledBG")
+        "background-color": this.getDefault("DisabledBG")
       };
 
       this._disdata = {
-        style : {},
-        defaults : {}
+        style   : {},
+        defaults: {}
       };
-      
+
       for (let k in style) {
         this._disdata.style[k] = this.style[k];
         this._disdata.defaults[k] = this.default_overrides[k];
@@ -1599,8 +1705,8 @@ export class UIBase extends HTMLElement {
 
   }
 
-  pushModal(handlers=this, autoStopPropagation=true) {
-    if (this._modaldata !== undefined){
+  pushModal(handlers = this, autoStopPropagation = true) {
+    if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       //pop modal stack just to be safe
       popModalLight(this._modaldata);
@@ -1621,52 +1727,33 @@ export class UIBase extends HTMLElement {
     this._modaldata = undefined;
   }
 
-  set disabled(v) {
-    this._client_disabled_set = v;
-    this.__updateDisable(this.disabled);
-  }
-
-  get disabled() {
-    //hrm, I could just propegate checks upward. . .
-
-    if (this.parentWidget && this.parentWidget.disabled) {
-      return true;
-    }
-
-    return !!this._client_disabled_set || !!this._internalDisabled;// || !!this._parent_disabled_set;
-  }
-
-  get internalDisabled() {
-    return this._internalDisabled;
-  }
-
-  flash(color, rect_element=this, timems=355) {
+  flash(color, rect_element = this, timems = 355) {
     //console.warn("flash internalDisabled due to bug");
     //return;
 
     if (typeof color != "object") {
-        color = css2color(color);
+      color = css2color(color);
     }
     color = new Vector4(color);
     let csscolor = color2css(color);
-    
+
     if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
       window.setTimeout(() => {
         this.flash(color, rect_element, timems);
       }, 100);
-      
+
       return;
     } else if (this._flashtimer !== undefined) {
       return;
     }
-    
+
     //let rect = rect_element.getClientRects()[0];
     let rect = rect_element.getBoundingClientRect();
 
     if (rect === undefined) {
       return;
     }
-    
+
     //okay, dom apparently calls onchange() on .remove, so we have
     //to put the timer code first to avoid loops
     let timer;
@@ -1679,17 +1766,17 @@ export class UIBase extends HTMLElement {
       if (timer === undefined) {
         return
       }
-      
-      let a = 1.0 - tick / max;
+
+      let a = 1.0 - tick/max;
       div.style["background-color"] = color2css(color, a*a*0.5);
-      
+
       if (tick > max) {
         window.clearInterval(timer);
-        
+
         this._flashtimer = undefined;
         this._flashcolor = undefined;
         timer = undefined;
-        
+
         div.remove();
         this.focus();
       }
@@ -1729,33 +1816,29 @@ export class UIBase extends HTMLElement {
       screen._exitPopupSafe();
     }
   }
-  
+
   destory() {
   }
-  
+
   on_resize(newsize) {
   }
-  
-  get ctx() {
-    return this._ctx;
-  }
-  
+
   toJSON() {
     let ret = {};
-    
+
     if (this.hasAttribute("datapath")) {
       ret.datapath = this.getAttribute("datapath");
     }
-    
+
     return ret;
   }
-  
+
   loadJSON(obj) {
     if (!this._init_done) {
       this._init();
     }
   }
-  
+
   getPathValue(ctx, path) {
     try {
       return ctx.api.getValue(ctx, path);
@@ -1786,8 +1869,8 @@ export class UIBase extends HTMLElement {
     bad = bad || this.pathUndoGen !== this._lastPathUndoGen;
 
     //if (head !== undefined && head instanceof getDataPathToolOp()) {
-      //console.log("===>", bad, head.hashThis());
-      //console.log("    ->", head.hash(mass_set_path, path, prop.type, this._id));
+    //console.log("===>", bad, head.hashThis());
+    //console.log("    ->", head.hash(mass_set_path, path, prop.type, this._id));
     //}
 
     if (!bad) {
@@ -1796,11 +1879,19 @@ export class UIBase extends HTMLElement {
       toolstack.redo();
     } else {
       this._lastPathUndoGen = this.pathUndoGen;
-      
+
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
       ctx.toolstack.execTool(this.ctx, toolop);
     }
   }
+
+  /*
+    adds a method call to the event queue,
+    but only if that method (for this instance, as differentiated
+    by ._id) isn't there already.
+
+    also, method won't be ran until this.ctx exists
+  */
 
   pushReportContext(key) {
     if (this.ctx.api.pushReportContext) {
@@ -1853,10 +1944,6 @@ export class UIBase extends HTMLElement {
     }
 
     this.popReportContext();
-  }
-
-  get _reportCtxName() {
-    return ""+this._id;
   }
 
   getPathMeta(ctx, path) {
@@ -1927,18 +2014,11 @@ export class UIBase extends HTMLElement {
 
     return true;
   }
-  /*
-    adds a method call to the event queue,
-    but only if that method (for this instance, as differentiated
-    by ._id) isn't there already.
 
-    also, method won't be ran until this.ctx exists
-  */
-  
-  doOnce(func, timeout=undefined) {
+  doOnce(func, timeout = undefined) {
     if (func._doOnce === undefined) {
       func._doOnce_reqs = new Set();
-      
+
       func._doOnce = function (thisvar, trace) {
         if (func._doOnce_reqs.has(thisvar._id)) {
           return;
@@ -1979,41 +2059,32 @@ export class UIBase extends HTMLElement {
     func._doOnce(this, trace);
   }
 
-  
-  set ctx(c) {
-    this._ctx = c;
-
-    this._forEachChildWidget((n) => {
-      n.ctx = c;
-    });
-  }
-  
-  float(x=0, y=0, zindex=undefined) {
+  float(x = 0, y = 0, zindex = undefined) {
     this.style.position = "absolute";
-    
+
     this.style.left = x + "px";
     this.style.top = y + "px";
-    
+
     if (zindex !== undefined) {
       this.style["z-index"] = zindex
     }
-    
+
     return this;
   }
-  
+
   _ensureChildrenCtx() {
     let ctx = this.ctx;
     if (ctx === undefined) {
       return;
     }
-    
+
     this._forEachChildWidget((n) => {
       n.parentWidget = this;
 
       if (n.ctx === undefined) {
         n.ctx = ctx;
       }
-      
+
       n._ensureChildrenCtx(ctx);
     });
   }
@@ -2049,7 +2120,7 @@ export class UIBase extends HTMLElement {
       }
     }
   }
-  
+
   onadd() {
     //if (this.parentWidget !== undefined) {
     //  this._useDataPathUndo = this.parentWidget._useDataPathUndo;
@@ -2085,22 +2156,6 @@ export class UIBase extends HTMLElement {
     return UIBase.getDPI();
   }
 
-  /**DEPRECATED
-
-    scaling ratio (e.g. for high-resolution displays)
-   */
-  static getDPI() {
-    //if (dpistack.length > 0) {
-    //  return dpistack[this.dpistack.length-1];
-    //} else {
-    //if (util.isMobile()) {
-      return window.devicePixelRatio; // * visualViewport.scale;
-    //}
-
-    return window.devicePixelRatio;
-    //}
-  }
-  
   /**
    * for saving ui state.
    * see saveUIData() export
@@ -2108,8 +2163,7 @@ export class UIBase extends HTMLElement {
    * should fail gracefully.
    */
   saveData() {
-    return {
-    };
+    return {};
   }
 
   /**
@@ -2126,35 +2180,7 @@ export class UIBase extends HTMLElement {
     return this;
   }
 
-  static prefix(name) {
-    return tagPrefix + name;
-  }
-
-  static internalRegister(cls) {
-    registered_has_happened = true;
-
-    internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
-    customElements.define(this.prefix(cls.define().tagname), cls);
-  }
-
-  static createElement(name, internal=false) {
-    if (!internal && name in externalElementNames) {
-      return document.createElement(name);
-    } else if (name in internalElementNames) {
-      return document.createElement(internalElementNames[name]);
-    } else {
-      return document.createElement(name)
-    }
-  }
-
-  static register(cls) {
-    registered_has_happened = true;
-
-    externalElementNames[cls.define().tagname] = cls.define().tagname;
-    customElements.define(cls.define().tagname, cls);
-  }
-
-  overrideDefault(key, val, localOnly=false) {
+  overrideDefault(key, val, localOnly = false) {
     this.my_default_overrides[key] = val;
 
     if (!localOnly) {
@@ -2209,13 +2235,13 @@ export class UIBase extends HTMLElement {
     return this.hasClassDefault(key);
   }
 
-  getDefault(key, checkForMobile=true, defaultval=undefined) {
+  getDefault(key, checkForMobile = true, defaultval = undefined) {
     let ret = this.getDefault_intern(key, checkForMobile, defaultval);
 
     //convert pixel units straight to numbers
     if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
       let s = ret.trim().toLowerCase();
-      s = s.slice(0, s.length-2).trim();
+      s = s.slice(0, s.length - 2).trim();
 
       let f = parseFloat(s);
       if (!isNaN(f) && isFinite(f)) {
@@ -2226,7 +2252,7 @@ export class UIBase extends HTMLElement {
     return ret;
   }
 
-  getDefault_intern(key, checkForMobile=true, defaultval=undefined) {
+  getDefault_intern(key, checkForMobile = true, defaultval = undefined) {
     if (this.my_default_overrides[key] !== undefined) {
       let v = this.my_default_overrides[key];
       return checkForMobile ? this._doMobileDefault(key, v) : v;
@@ -2289,7 +2315,7 @@ export class UIBase extends HTMLElement {
     return key in theme.base;
   }
 
-  getClassDefault(key, checkForMobile=true, defaultval=undefined) {
+  getClassDefault(key, checkForMobile = true, defaultval = undefined) {
     let style = this.getStyleClass();
 
     let val = undefined;
@@ -2333,7 +2359,7 @@ export class UIBase extends HTMLElement {
   }
 
   /** returns a new Animator instance */
-  animate(_extra_handlers={}) {
+  animate(_extra_handlers = {}) {
     let transform = new DOMMatrix(this.style["transform"]);
 
     let update_trans = () => {
@@ -2374,14 +2400,14 @@ export class UIBase extends HTMLElement {
     handlers = Object.assign(handlers, _extra_handlers);
 
     let handler = {
-      get : (target, key, receiver) => {
+      get: (target, key, receiver) => {
         if ((key + "_get") in handlers) {
           return handlers[key + "_get"].call(target);
         } else {
           return target[key];
         }
       },
-      set : (target, key, val, receiver) => {
+      set: (target, key, val, receiver) => {
         if ((key + "_set") in handlers) {
           handlers[key + "_set"].call(target, val);
         } else {
@@ -2410,116 +2436,103 @@ export class UIBase extends HTMLElement {
 
     this._active_animations = [];
   }
-  /**
-   * Defines core attributes of the class
-   *
-   * @example
-   *
-   * static define() {return {
-   *   tagname : "custom-element-x",
-   *   style : "[style class in theme]"
-   *   subclassChecksTheme : boolean //set to true to disable base class invokation of subclassChecksTheme
-   * }}
-   */
-  static define() {
-    throw new Error("Missing define() for ux element");
-  }
 }
 
-export function drawRoundBox2(elem, options={}) {
+export function drawRoundBox2(elem, options = {}) {
   drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
 }
 
 /**okay, I need to refactor this function,
-  it needs to take x, y as well as width, height,
-  and be usable for more use cases.*/
-export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
-                             op="fill", color=undefined, margin=undefined, no_clear=false) {
-    width = width === undefined ? canvas.width : width;
-    height = height === undefined ? canvas.height : height;
-    g.save();
+ it needs to take x, y as well as width, height,
+ and be usable for more use cases.*/
+export function drawRoundBox(elem, canvas, g, width, height, r      = undefined,
+                             op = "fill", color = undefined, margin = undefined,
+                             no_clear = false) {
+  width = width === undefined ? canvas.width : width;
+  height = height === undefined ? canvas.height : height;
+  g.save();
 
-    let dpi = elem.getDPI();
-    
-    r = r === undefined ? elem.getDefault("border-radius") : r;
+  let dpi = elem.getDPI();
 
-    if (margin === undefined) {
-      margin = 1;
-    }
+  r = r === undefined ? elem.getDefault("border-radius") : r;
 
-    r *= dpi;
-    let r1=r, r2=r;
-    
-    if (r > (height - margin*2)*0.5) {
-      r1 = (height - margin*2)*0.5;
-    }
-    
-    if (r > (width - margin*2)*0.5) {
-      r2 = (width - margin*2)*0.5;
-    }
-    
-    let bg = color;
-    
-    if (bg === undefined && canvas._background !== undefined) {
-      bg = canvas._background;
-    } else if (bg === undefined) {
-      bg = elem.getDefault("background-color");
-    }
-    
-    if (op === "fill" && !no_clear) {
-      g.clearRect(0, 0, width, height);
-    }
-    
-    g.fillStyle = bg;
-    //hackish!
-    g.strokeStyle = color === undefined ? elem.getDefault("border-color") : color;
-    
-    let w = width, h = height;
-    
-    let th = Math.PI/4;
-    let th2 = Math.PI*0.75;
-    
-    g.beginPath();
+  if (margin === undefined) {
+    margin = 1;
+  }
 
-    g.moveTo(margin, margin+r1);
-    g.lineTo(margin, h-r1-margin);
+  r *= dpi;
+  let r1 = r, r2 = r;
 
-    g.quadraticCurveTo(margin, h-margin, margin+r2, h-margin);
-    g.lineTo(w-margin-r2, h-margin);
-    
-    g.quadraticCurveTo(w-margin, h-margin, w-margin, h-margin-r1);
-    g.lineTo(w-margin, margin+r1);
-    
-    g.quadraticCurveTo(w-margin, margin, w-margin-r2, margin);
-    g.lineTo(margin+r2, margin);
+  if (r > (height - margin*2)*0.5) {
+    r1 = (height - margin*2)*0.5;
+  }
 
-    g.quadraticCurveTo(margin, margin, margin, margin+r1);
-    g.closePath();
+  if (r > (width - margin*2)*0.5) {
+    r2 = (width - margin*2)*0.5;
+  }
 
-    if (op === "clip") {
-      g.clip();
-    } else if (op === "fill") {
-      g.fill();
-    } else {
-      g.stroke();
-    }
+  let bg = color;
 
-    g.restore();
+  if (bg === undefined && canvas._background !== undefined) {
+    bg = canvas._background;
+  } else if (bg === undefined) {
+    bg = elem.getDefault("background-color");
+  }
+
+  if (op === "fill" && !no_clear) {
+    g.clearRect(0, 0, width, height);
+  }
+
+  g.fillStyle = bg;
+  //hackish!
+  g.strokeStyle = color === undefined ? elem.getDefault("border-color") : color;
+
+  let w = width, h = height;
+
+  let th = Math.PI/4;
+  let th2 = Math.PI*0.75;
+
+  g.beginPath();
+
+  g.moveTo(margin, margin + r1);
+  g.lineTo(margin, h - r1 - margin);
+
+  g.quadraticCurveTo(margin, h - margin, margin + r2, h - margin);
+  g.lineTo(w - margin - r2, h - margin);
+
+  g.quadraticCurveTo(w - margin, h - margin, w - margin, h - margin - r1);
+  g.lineTo(w - margin, margin + r1);
+
+  g.quadraticCurveTo(w - margin, margin, w - margin - r2, margin);
+  g.lineTo(margin + r2, margin);
+
+  g.quadraticCurveTo(margin, margin, margin, margin + r1);
+  g.closePath();
+
+  if (op === "clip") {
+    g.clip();
+  } else if (op === "fill") {
+    g.fill();
+  } else {
+    g.stroke();
+  }
+
+  g.restore();
 };
 
-export function _getFont_new(elem, size, font="DefaultText", do_dpi=true) {
+export function _getFont_new(elem, size, font = "DefaultText", do_dpi = true) {
 
   font = elem.getDefault(font);
 
   return font.genCSS(size);
 }
 
-export function getFont(elem, size, font="DefaultText", do_dpi=true) {
-  return _getFont_new(elem, size, font="DefaultText", do_dpi=true);
+export function getFont(elem, size, font = "DefaultText", do_dpi = true) {
+  return _getFont_new(elem, size, font = "DefaultText", do_dpi = true);
 }
 
 //size is optional, defaults to font's default size
-export function _getFont(elem, size, font="DefaultText", do_dpi=true) {
+export function _getFont(elem, size, font = "DefaultText", do_dpi = true) {
   let dpi = elem.getDPI();
 
   let font2 = elem.getDefault(font);
@@ -2541,6 +2554,7 @@ export function _ensureFont(elem, canvas, g, size) {
 }
 
 let _mc;
+
 function get_measure_canvas() {
   if (_mc !== undefined) {
     return _mc;
@@ -2554,13 +2568,13 @@ function get_measure_canvas() {
   return _mc;
 }
 
-export function measureTextBlock(elem, text, canvas=undefined,
-                                 g=undefined, size=undefined, font=undefined) {
+export function measureTextBlock(elem, text, canvas                    = undefined,
+                                 g = undefined, size = undefined, font = undefined) {
   let lines = text.split("\n");
 
   let ret = {
     width : 0,
-    height : 0
+    height: 0
   };
 
   if (size === undefined) {
@@ -2585,8 +2599,8 @@ export function measureTextBlock(elem, text, canvas=undefined,
   return ret;
 }
 
-export function measureText(elem, text, canvas=undefined,
-                            g=undefined, size=undefined, font=undefined) {
+export function measureText(elem, text, canvas                    = undefined,
+                            g = undefined, size = undefined, font = undefined) {
   if (typeof canvas === "object" && canvas !== null && !(canvas instanceof HTMLCanvasElement) && canvas.tagName !== "CANVAS") {
     let args = canvas;
 
@@ -2631,17 +2645,17 @@ export function measureText(elem, text, canvas=undefined,
 
     ret = ret2;
   }
-  
+
   if (size !== undefined) {
     //clear custom font for next time
     g.font = undefined;
   }
-  
+
   return ret;
 }
 
 //export function drawText(elem, x, y, text, canvas, g, color=undefined, size=undefined, font=undefined) {
-export function drawText(elem, x, y, text, args={}) {
+export function drawText(elem, x, y, text, args = {}) {
   let canvas = args.canvas, g = args.g, color = args.color, font = args.font;
   let size = args.size;
 
@@ -2673,15 +2687,15 @@ export function drawText(elem, x, y, text, args={}) {
 
 
   g.fillStyle = color;
-  g.fillText(text, x+0.5, y+0.5);
-  
+  g.fillText(text, x + 0.5, y + 0.5);
+
   if (size !== undefined) {
     //clear custom font for next time
     g.font = undefined;
   }
 }
 
-let PIDX=0, PSHADOW=1, PTOT=2;
+let PIDX = 0, PSHADOW = 1, PTOT = 2;
 
 /**
 
@@ -2694,20 +2708,20 @@ export function saveUIData(node, key) {
   if (key === undefined) {
     throw new Error("ui_base.saveUIData(): key cannot be undefined");
   }
-  
+
   let paths = [];
-  
+
   let rec = (n, path, ni, is_shadow) => {
     path = path.slice(0, path.length); //copy path
-    
+
     let pi = path.length;
-    for (let i=0; i<PTOT; i++) {
+    for (let i = 0; i < PTOT; i++) {
       path.push(undefined);
     }
-    
+
     path[pi] = ni;
-    path[pi+1] = is_shadow ? 1 : 0;
-    
+    path[pi + 1] = is_shadow ? 1 : 0;
+
     if (n instanceof UIBase) {
       let path2 = path.slice(0, path.length);
       let data = n.saveData();
@@ -2723,31 +2737,31 @@ export function saveUIData(node, key) {
         }
       }
     }
-    
-    for (let i=0; i<n.childNodes.length; i++) {
+
+    for (let i = 0; i < n.childNodes.length; i++) {
       let n2 = n.childNodes[i];
-      
+
       rec(n2, path, i, false);
     }
-    
+
     let shadow = n.shadow;
-    
+
     if (!shadow)
       return;
-    
-    for (let i=0; i<shadow.childNodes.length; i++) {
+
+    for (let i = 0; i < shadow.childNodes.length; i++) {
       let n2 = shadow.childNodes[i];
-      
+
       rec(n2, path, i, true);
     }
   }
-  
+
   rec(node, [], 0, false);
-  
+
   return JSON.stringify({
-    key : key,
-    paths : paths,
-    _ui_version : 1
+    key        : key,
+    paths      : paths,
+    _ui_version: 1
   });
 }
 
@@ -2757,44 +2771,44 @@ export function loadUIData(node, buf) {
   if (buf === undefined || buf === null) {
     return;
   }
-  
+
   let obj = JSON.parse(buf);
   let key = buf.key;
-  
+
   for (let path of obj.paths) {
     let n = node;
-    
-    let data = path[path.length-1];
-    path = path.slice(2, path.length-1); //in case some api doesn't want me calling .pop()
-    
-    for (let pi=0; pi<path.length; pi += PTOT) {
-      let ni = path[pi], shadow = path[pi+1];
-      
+
+    let data = path[path.length - 1];
+    path = path.slice(2, path.length - 1); //in case some api doesn't want me calling .pop()
+
+    for (let pi = 0; pi < path.length; pi += PTOT) {
+      let ni = path[pi], shadow = path[pi + 1];
+
       let list;
-      
+
       if (shadow) {
         list = n.shadow;
-        
+
         if (list) {
           list = list.childNodes;
         }
       } else {
         list = n.childNodes;
       }
-      
+
       if (list === undefined || list[ni] === undefined) {
         //console.log("failed to load a ui data block", path);
         n = undefined;
         break;
       }
-      
+
       n = list[ni];
     }
-    
+
     if (n !== undefined && n instanceof UIBase) {
       n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
-      
+
       //console.log(n, path, data);
     }
   }

@@ -177,7 +177,7 @@ export function validateWebColor(str) {
 let num = "(([0-9]+\.[0-9]+)|[0-9a-f]+)";
 
 let validate_rgba = new RegExp(`rgba\\(${num},${num},${num},${num}\\)$`);
-let validate_rgb = new RegExp(`rgb\\(${num},${num},${num},${num}\\)$`);
+let validate_rgb = new RegExp(`rgb\\(${num},${num},${num}\\)$`);
 
 export function validateCSSColor(color) {
   if (color.toLowerCase() in basic_colors) {
