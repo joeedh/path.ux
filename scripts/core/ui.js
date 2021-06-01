@@ -281,7 +281,7 @@ export class Container extends ui_base.UIBase {
       this.packflag &= ~PackFlags.USE_ICONS;
       this.inherit_packflag &= ~PackFlags.USE_ICONS;
 
-      return;
+      return this;
     }
 
     let sheet = enabled_or_sheet;
