@@ -189,9 +189,17 @@ class _IconManager {
     g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
   }
 
-  setCSS(icon, dom) {
-    dom.style["background"] = this.getCSS(icon);
-    dom.style["background-size"] = (this.drawsize*this.tilex) + "px";
+  setCSS(icon, dom, fitsize=undefined) {
+    if (!fitsize) {
+      fitsize = this.drawsize;
+    }
+
+    if (typeof fitsize === "object") {
+      fitsize = Math.max(fitsize[0], fitsize[1]);
+    }
+
+    dom.style["background"] = this.getCSS(icon, fitsize);
+    dom.style["background-size"] = (fitsize*this.tilex) + "px";
 
     if (!dom.style["width"]) {
       dom.style["width"] = this.drawsize + "px";
@@ -202,12 +210,16 @@ class _IconManager {
   }
 
   //icon is an integer
-  getCSS(icon) {
+  getCSS(icon, fitsize=this.drawsize) {
     if (icon == -1) { //-1 means no icon
       return '';
     }
 
-    let ratio = this.drawsize/this.tilesize;
+    if (typeof fitsize === "object") {
+      fitsize = Math.max(fitsize[0], fitsize[1]);
+    }
+
+    let ratio = fitsize/this.tilesize;
 
     let x = (-(icon%this.tilex)*this.tilesize)*ratio;
     let y = (-(~~(icon/this.tilex))*this.tilesize)*ratio;
@@ -348,7 +360,7 @@ export class IconManager {
     return ret;
   }
 
-  setCSS(icon, dom, sheet = 0) {
+  setCSS(icon, dom, sheet = 0, fitsize=undefined) {
     //return this.iconsheets[sheet].setCSS(icon, dom);
 
     let base = this.iconsheets[sheet];
@@ -356,7 +368,7 @@ export class IconManager {
     let ds = sheet.drawsize;
 
     sheet.drawsize = base.drawsize;
-    let ret = sheet.setCSS(icon, dom);
+    let ret = sheet.setCSS(icon, dom, fitsize);
     sheet.drawsize = ds;
 
     return ret;

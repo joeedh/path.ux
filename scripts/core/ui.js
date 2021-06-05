@@ -799,6 +799,16 @@ export class Container extends ui_base.UIBase {
     let cls;
 
     if (typeof path_or_cls == "string") {
+      if (path_or_cls.search(/\|/) >= 0) {
+        path_or_cls = path_or_cls.split("|");
+
+        if (path_or_cls.length > 1) {
+          label = path_or_cls[1].trim();
+        }
+
+        path_or_cls = path_or_cls[0].trim();
+      }
+
       if (this.ctx === undefined) {
         console.warn("this.ctx was undefined in tool()");
         return;

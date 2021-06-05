@@ -6,7 +6,7 @@ import * as ui_base from '../core/ui_base.js';
 import * as events from '../path-controller/util/events.js';
 import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 import {RowFrame, ColumnFrame} from "../core/ui.js";
-import {isNumber} from "../path-controller/toolsys/toolprop.js";
+import {isNumber, PropFlags} from "../path-controller/toolsys/toolprop.js";
 
 import './ui_widgets.js';
 
@@ -415,9 +415,18 @@ export class VectorPanel extends ColumnFrame {
 
     let length = val.length;
 
-    if (meta)
+    if (meta && (meta.flag & PropFlags.USE_CUSTOM_GETSET)) {
+      let rdef = this.ctx.api.resolvePath(this.ctx, path);
+
+      meta.ctx = this.ctx;
+      meta.dataref = rdef.obj;
+      meta.datapath = path;
+
       length = meta.getValue().length;
-    
+
+      meta.dataref = undefined;
+    }
+
     if (this.value.length !== length) {
       switch (length) {
         case 2:

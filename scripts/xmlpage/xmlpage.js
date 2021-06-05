@@ -426,12 +426,22 @@ class Handler {
     let path = elem.getAttribute("path");
     let packflag = getPackFlag(elem);
 
+    let noIcons = false, iconflags;
+
     if (getbool(elem, "useIcons")) {
       packflag |= PackFlags.USE_ICONS;
+    } else if (elem.hasAttribute("useIcons")) {
+      packflag &= ~PackFlags.USE_ICONS;
+      noIcons = true;
     }
 
-    if (elem.hasAttribute("label")) {
-      path += "|" + elem.getAttribute("label");
+    let label = (""+elem.textContent).trim()
+    if (label.length > 0) {
+      path += "|" + label;
+    }
+
+    if (noIcons) {
+      iconflags = this.container.useIcons(false);
     }
 
     let elem2 = this.container[key](path, packflag);
@@ -442,6 +452,11 @@ class Handler {
       elem2 = document.createElement("strip")
       elem2.innerHTML = "error"
       this.container.shadow.appendChild(elem2);
+    }
+
+    if (noIcons) {
+      this.container.inherit_packflag |= iconflags;
+      this.container.packflag |= iconflags;
     }
   }
 

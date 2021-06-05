@@ -320,7 +320,24 @@ export class TextBox extends TextBoxBase {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
       }
     } else if (prop.type == PropTypes.STRING) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
+      try {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
+
+        if (this._had_error) {
+          this.flash(ui_base.ErrorColors.OK, this.dom);
+          this.dom.focus();
+        }
+
+        this._had_error = false;
+      } catch (error) {
+        console.log(error.stack);
+        console.log(error.message);
+        console.warn("textbox error!");
+        //this._had_error = true;
+
+        this.flash(ui_base.ErrorColors.ERROR, this.dom);
+        this.dom.focus();
+      }
     }
   }
 
