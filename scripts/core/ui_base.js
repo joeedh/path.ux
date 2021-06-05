@@ -396,7 +396,7 @@ export function iconSheetFromPackFlag(flag) {
     return flag >> PackFlags.CUSTOM_ICON_SHEET_START;
   }
 
-  if (flag & PackFlags.SMALL_ICON) {
+  if ((flag & PackFlags.SMALL_ICON) && !(PackFlags.LARGE_ICON)) {
     return 0//IconSheets.SMALL; //0
   } else {
     return 1//IconSheets.LARGE; //1
