@@ -304,6 +304,18 @@ export class Area extends ui_base.UIBase {
     contextWrangler.pop(this.constructor, this, !dontSetLastRef);
   }
 
+  static unregister(cls) {
+    let def = cls.define();
+
+    if (!def.areaname) {
+      throw new Error("Missing areaname key in define()");
+    }
+
+    if (def.areaname in areaclasses) {
+      delete areaclasses[def.areaname];
+    }
+  }
+
   static register(cls) {
     let def = cls.define();
 
