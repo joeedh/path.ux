@@ -7,12 +7,14 @@ import {ModelData} from "./state.js";
 import {defineAPI} from "../api/api_define.js"
 import {ToolContext, ViewContext} from "./context.js";
 
+import {DataLib, DataRef, DataBlock} from './datablock.js';
+
 import {WorkspaceEditor} from '../editors/workspace/workspace.js';
 import {AppScreen} from "../editors/screen.js";
 //import * as util from '../util/util.js';
 import './toolop.js';
 
-import cconst1 from './const.js';
+import cconst1, {Version} from './const.js';
 import {cconst} from '../pathux.js';
 
 /*load our application's constants into pathux*/
@@ -49,10 +51,14 @@ DataPathSetOp.prototype.undo = function() {
 export class AppState {
   constructor() {
     this.toolstack = new ToolStack();
-    this.data = new ModelData();
     this.api = defineAPI();
     this.viewctx = new ViewContext(this);
     this.toolctx = new ToolContext(this);
+
+    this.datalib = new DataLib();
+    let model = new ModelData();
+
+    this.datalib.add(model);
 
     this.toolstack.setRestrictedToolContext(this.toolctx);
 
@@ -118,6 +124,10 @@ export class AppState {
     let i32 = new Int32Array(buf);
     let u8 = new Uint8Array(buf);
 
+    function packbyte(i) {
+      data.push(i);
+    }
+
     function packint(i) {
       i32[0] = i;
       for (let i=0; i<4; i++) {
@@ -147,9 +157,14 @@ export class AppState {
       }
     }
 
-    writestr("STRC");
+    writestr("STRT");
 
-    packfloat(cconst.VERSION);
+    let version = cconst.VERSION.toJSON();
+
+    packbyte(version[0]);
+    packbyte(version[1]);
+    packbyte(version[2]);
+    packbyte(version[3]);
 
     let str = nstructjs.write_scripts();
     packint(str.length);
@@ -158,14 +173,13 @@ export class AppState {
     if (args.writeScreen) {
       let data2 = [];
 
-      nstructjs.manager.write_object(data2, this.screen);
+      nstructjs.writeObject(data2, this.screen);
       writeblock("SCRN", data2);
     }
 
     if (args.writeData) {
       let data2 = [];
-
-      nstructjs.manager.write_object(data2, this.data);
+      nstructjs.writeObject(data2, this.datalib);
       writeblock("DATA", data2);
     }
 
@@ -195,6 +209,11 @@ export class AppState {
       return s;
     }
 
+    function readbyte() {
+      _i += 1;
+      return data.getUint8(_i-1);
+    }
+
     function readint() {
       _i += 4;
       return data.getInt32(_i-4, endian);
@@ -221,14 +240,19 @@ export class AppState {
 
     let magic = readfour();
 
-    if (magic !== "STRC") {
+    if (magic !== "STRT") {
       throw new Error("File corruption");
     }
 
-    let version = readfloat();
+    let version = [];
+    for (let i=0; i<4; i++) {
+      version.push(readbyte());
+    }
+    version = new Version().loadJSON(version);
+
     let structs = readstring();
 
-    let screen, appdata;
+    let screen, datalib;
 
     let rstruct = new nstructjs.STRUCT();
     rstruct.parse_structs(structs);
@@ -241,9 +265,9 @@ export class AppState {
 
       _i += len;
       if (type === "SCRN") {
-        screen = rstruct.read_object(data2, AppScreen);
+        screen = rstruct.readObject(data2, AppScreen);
       } else if (type === "DATA") {
-        appdata = rstruct.read_object(data2, ModelData);
+        datalib = rstruct.readObject(data2, DataLib);
       } else {
         console.log("Unknown data type", type);
       }
@@ -253,8 +277,7 @@ export class AppState {
     this.toolctx.reset();
     this.viewctx.reset();
 
-    console.log(appdata);
-    this.data = appdata;
+    this.datalib = datalib;
 
     if (screen && args.loadScreen) {
       screen.ctx = this.viewctx;

@@ -2247,6 +2247,26 @@ export class UIBase extends HTMLElement {
     return this.hasClassDefault(key);
   }
 
+  /** get a sub style from a theme style class.
+   *  note that if key is falsy then it just forwards to this.getDefault directly*/
+  getSubDefault(key, subkey, backupkey=subkey, defaultval=undefined) {
+    if (!key) {
+      return this.getDefault(subkey, undefined, defaultval);
+    }
+
+    let style = this.getDefault(key);
+
+    if (!style || typeof style !== "object" || !(subkey in style)) {
+      if (defaultval !== undefined) {
+        return defaultval;
+      } else if (backupkey !== undefined) {
+        return this.getDefault(backupkey);
+      }
+    } else {
+      return style[subkey];
+    }
+  }
+
   getDefault(key, checkForMobile = true, defaultval = undefined) {
     let ret = this.getDefault_intern(key, checkForMobile, defaultval);
 
@@ -2356,7 +2376,7 @@ export class UIBase extends HTMLElement {
     } else if (val === undefined) {
       let def = this.constructor.define();
       if (def.parentStyle && key in theme[def.parentStyle]) {
-        val = def.parentStyle[key];
+        val = theme[def.parentStyle][key];
       } else {
         val = theme.base[key];
       }
@@ -2681,16 +2701,20 @@ export function drawText(elem, x, y, text, args = {}) {
 
   size *= UIBase.getDPI();
 
+  if (color === undefined) {
+    if (font && font.color) {
+      color = font.color;
+    } else {
+      color = elem.getDefault("DefaultText").color;
+    }
+  }
+
   if (font === undefined) {
     _ensureFont(elem, canvas, g, size);
   } else if (typeof font === "object" && font instanceof CSSFont) {
     g.font = font = font.genCSS(size);
   } else if (font) {
     g.font = font;
-  }
-
-  if (color === undefined) {
-    color = elem.getDefault("DefaultText").color;
   }
 
   if (typeof color === "object") {

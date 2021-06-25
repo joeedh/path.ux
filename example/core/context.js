@@ -39,7 +39,7 @@ export class BaseOverlay extends ContextOverlay {
   }
 
   get data() {
-    return this.state.data;
+    return this.state.datalib.model_data.active;
   }
 
   get canvas() {

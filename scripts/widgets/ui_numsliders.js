@@ -735,11 +735,22 @@ export class NumSlider extends ValueButtonBase {
 
     //}
 
-    let c = css2color(this.getDefault("background-color"));
-    let f = 1.0 - (c[0]+c[1]+c[2])*0.33;
-    f = ~~(f*255);
+    let arrowcolor = this.getDefault("arrow-color") || "33%";
+    arrowcolor = arrowcolor.trim();
 
-    g.fillStyle = `rgba(${f},${f},${f},0.95)`;
+    if (arrowcolor.endsWith("%")) {
+      arrowcolor = arrowcolor.slice(0, arrowcolor.length-1).trim();
+      let perc = parseFloat(arrowcolor) / 100.0;
+      let c = css2color(this.getDefault("arrow-color"));
+
+      let f = 1.0 - (c[0]+c[1]+c[2])*perc;
+
+      f = ~~(f*255);
+      g.fillStyle = `rgba(${f},${f},${f},0.95)`;
+
+    } else {
+      g.fillStyle = arrowcolor;
+    }
 
     let d = 7, w=canvas.width, h=canvas.height;
     let sz = this._getArrowSize();

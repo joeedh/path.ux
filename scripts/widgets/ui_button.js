@@ -14,11 +14,11 @@ import {_themeUpdateKey, CSSFont} from "../core/ui_base.js";
 let keymap = events.keymap;
 
 let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
+    PropTypes = toolprop.PropTypes;
 
 let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
+    PackFlags = ui_base.PackFlags,
+    IconSheets = ui_base.IconSheets;
 
 let parsepx = ui_base.parsepx;
 
@@ -30,7 +30,7 @@ export class Button extends UIBase {
     let dpi = this.getDPI();
 
     this._last_but_update_key = "";
-    
+
     this._name = "";
     this._namePad = undefined;
     this._leftPad = 5; //extra pad before text
@@ -340,13 +340,11 @@ export class Button extends UIBase {
   setCSS() {
     super.setCSS();
 
-    let m = this.getDefault("margin", undefined, 0);
-
-    //this.dom.style["margin"] = this.getDefault("margin", undefined, 0) + "px";
-    this.style["margin-left"] = this.getDefault("margin-left", undefined, m) + "px";
-    this.style["margin-right"] = this.getDefault("margin-right", undefined, m) + "px";
-    this.style["margin-top"] = this.getDefault("margin-top", undefined, m) + "px";
-    this.style["margin-bottom"] = this.getDefault("margin-bottom", undefined, m) + "px";
+    this.dom.style["margin"] = this.getDefault("margin", undefined, 0) + "px";
+    this.dom.style["margin-left"] = this.getDefault("margin-left", undefined, 0) + "px";
+    this.dom.style["margin-right"] = this.getDefault("margin-right", undefined, 0) + "px";
+    this.dom.style["margin-top"] = this.getDefault("margin-top", undefined, 0) + "px";
+    this.dom.style["margin-bottom"] = this.getDefault("margin-bottom", undefined, 0) + "px";
 
     let name = this._name;
     if (name === undefined) {
@@ -357,7 +355,7 @@ export class Button extends UIBase {
 
     let pad = this.getDefault("padding");
     let ts = this.getDefault("DefaultText").size;
-    
+
     let tw = ui_base.measureText(this, this._genLabel(),{
       size : ts,
       font : this.getDefault("DefaultText")
@@ -456,17 +454,29 @@ export class Button extends UIBase {
     return "" + this._name;
   }
 
+  _getSubKey() {
+    if (this._pressed) {
+      return 'depressed';
+    } else if (this._highlight) {
+      return 'highlight';
+    } else {
+      return undefined; //make getSubDefault forward to getDefault
+    }
+  }
+
   _redraw(draw_text=true) {
     //console.log("button draw");
 
     let dpi = this.getDPI();
 
+    let subkey = this._getSubKey();
+
     if (this._pressed) {
-      this.dom._background = this.getDefault("BoxDepressed");
+      this.dom._background = this.getSubDefault(subkey, "background-color","BoxDepressed");
     } else if (this._highlight) {
-      this.dom._background = this.getDefault("BoxHighlight");
+      this.dom._background = this.getSubDefault(subkey, "highlight", "BoxHighlight");
     } else {
-      this.dom._background = this.getDefault("background-color");
+      this.dom._background = this.getSubDefault(subkey, "background-color", "background-color");
     }
 
     ui_base.drawRoundBox(this, this.dom, this.g);
@@ -507,15 +517,18 @@ export class Button extends UIBase {
   _draw_text() {
     let dpi = this.getDPI();
 
+    let subkey = this._getSubKey();
+
     //if (util.isMobile()) {
-      //dpi = dpi; //visualViewport.scale;
+    //dpi = dpi; //visualViewport.scale;
     //}
 
+    let font = this.getSubDefault(subkey, "DefaultText");
+
     let pad = this.getDefault("padding") * dpi;
-    let ts = this.getDefault("DefaultText").size * dpi;
+    let ts = font.size * dpi;
 
     let text = this._genLabel();
-    let font = this.getDefault("DefaultText");
 
     //console.log(text, "text", this._name);
 
@@ -527,6 +540,7 @@ export class Button extends UIBase {
     let cy = ts + (h-ts)/3.0;
 
     let g = this.g;
+
     ui_base.drawText(this, ~~cx, ~~cy, text, {
       canvas : this.dom,
       g : this.g,

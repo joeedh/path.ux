@@ -10,7 +10,7 @@ export const BlockFlag = {
 
 export const BlockClasses = [];
 
-class DataBlock {
+export class DataBlock {
   constructor() {
     this.lib_id = -1;
     this.lib_users = 0;
@@ -214,7 +214,7 @@ export class BlockSet extends Array {
 BlockSet.STRUCT = `
 BlockSet {
   _blocks : array(abstract(DataBlock)) | this;
-  active  : DataRef.fromBlock(this.active);
+  active  : DataRef | DataRef.fromBlock(this.active);
 }
 `;
 nstructjs.register(BlockSet);
@@ -241,8 +241,19 @@ export class DataLib {
     }
   }
 
+  get allblocks() {
+    let this2 = this;
+    return (function*() {
+      for (let bset of this.blocksets) {
+        for (let block of bset) {
+          yield block;
+        }
+      }
+    })();
+  }
+
   add(block) {
-    let def = block.constructor().blockDefine();
+    let def = block.constructor.blockDefine();
 
     if (block.lib_id < 0) {
       block.lib_id = this.idgen.next();

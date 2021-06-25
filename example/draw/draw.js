@@ -51,6 +51,8 @@ export class CanvasEdge extends Vector2 {
 
     this.id = -1;
     this.material = new Material();
+    this.v1 = undefined;
+    this.v2 = undefined;
   }
 }
 CanvasEdge.STRUCT = STRUCT.inherit(CanvasEdge, Vector2) + `
@@ -124,6 +126,83 @@ export class Canvas {
     this.idmap = {};
   }
 
+  clear() {
+    this.verts.length = 0;
+    this.edges.length = 0;
+    this.paths.length = 0;
+    this.indexMap = {};
+    this.idmap = {};
+    this.idgen = 0;
+
+    return this;
+  }
+
+  copyTo(b) {
+    b.clear();
+    b.idgen = this.idgen;
+
+    let idmap = this.idmap;
+
+    let i = 0;
+    for (let v of this.verts) {
+      this.indexMap[v.id] = i++;
+    }
+
+    i = 0;
+    for (let e of this.edges) {
+      this.indexMap[e.id] = i++;
+    }
+
+    i = 0;
+    for (let p of this.paths) {
+      this.indexMap[p.id] = i++;
+    }
+
+    for (let v1 of this.verts) {
+      let v2 = new CanvasPoint(v1);
+      v2.id  = v1.id;
+
+      b.idmap[v2.id] = v2;
+      b.verts.push(v2);
+    }
+
+    for (let e1 of this.edges) {
+      let v1 = this.indexMap[e1.v1.id];
+      let v2 = this.indexMap[e1.v2.id];
+
+      v1 = b.verts[v1];
+      v2 = b.verts[v2];
+
+      let e2 = new CanvasEdge();
+
+      e2.v1 = v1;
+      e2.v2 = v2;
+
+      e2.id = e1.id;
+      this.idmap[e2.id] = e2;
+      this.edges.push(e2);
+    }
+
+    for (let p1 of this.paths) {
+      let vs = p1.verts.map(v => b.idmap[v.id]);
+      let p2 = new CanvasPath();
+
+      p2.verts = vs;
+      p2.id = p1.id;
+      b.idmap[p2.id] = p2;
+      b.paths.push(p2);
+    }
+
+    for (let v1 of this.verts) {
+      let v2 = b.idmap[v1.id];
+
+      for (let e1 of v2.edges) {
+        let e2 = b.idmap[e1.id];
+
+        v2.edges.push(e2);
+      }
+    }
+  }
   isDeadElement(e) {
     let dead = e === undefined;
     dead = dead || !(e.id in this.idmap);
