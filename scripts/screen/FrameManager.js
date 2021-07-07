@@ -680,6 +680,11 @@ export class Screen extends ui_base.UIBase {
     };
 
     keydown = (e) => {
+      if (!container.isConnected) {
+        window.removeEventListener("keydown", keydown);
+        return;
+      }
+
       console.log(e.keyCode);
 
       switch (e.keyCode) {
