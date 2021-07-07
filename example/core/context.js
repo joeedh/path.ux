@@ -38,6 +38,10 @@ export class BaseOverlay extends ContextOverlay {
     return this.state.api;
   }
 
+  get datalib() {
+    return this.state.datalib;
+  }
+
   get data() {
     return this.state.datalib.model_data.active;
   }

@@ -24,6 +24,9 @@
       <prop path="drawflag[BLUR]" useIcons="false" />
     </panel>
   </tab>
+  <tab label="Graph Packing" id="graph_pack_tab">
+
+  </tab>
   <tab label="Curve Mapping">
     <prop path="data.curvemap" />
   </tab>

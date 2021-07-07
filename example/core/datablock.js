@@ -77,6 +77,7 @@ DataBlock {
   lib_users  : int;
 }
 `
+nstructjs.register(DataBlock);
 
 export class DataRef {
   constructor() {
@@ -85,13 +86,17 @@ export class DataRef {
   }
 
   static fromBlock(block) {
+    let ref = new DataRef();
+
     if (!block) {
-      this.lib_id = -1;
-      return;
+      ref.lib_id = -1;
+      return ref;
     }
 
-    this.lib_id = block.lib_id;
-    this.name = block.name;
+    ref.lib_id = block.lib_id;
+    ref.name = block.name;
+
+    return ref;
   }
 }
 
@@ -213,8 +218,9 @@ export class BlockSet extends Array {
 }
 BlockSet.STRUCT = `
 BlockSet {
-  _blocks : array(abstract(DataBlock)) | this;
-  active  : DataRef | DataRef.fromBlock(this.active);
+  _blocks  : array(abstract(DataBlock)) | this;
+  active   : DataRef | DataRef.fromBlock(this.active);
+  typeName : string;
 }
 `;
 nstructjs.register(BlockSet);
@@ -338,11 +344,11 @@ export class DataLib {
   }
 
   loadSTRUCT(reader) {
-    reader(this);
-
     for (let key of this._blocksetKeys) {
       this[key] = undefined;
     }
+
+    reader(this);
 
     this._blocksetKeys = [];
 

@@ -274,6 +274,8 @@ export class AppState {
 
     }
 
+    console.error("DATALIB", datalib);
+
     this.toolctx.reset();
     this.viewctx.reset();
 
@@ -357,6 +359,8 @@ export class AppState {
 
 export function start() {
   window._appstate = new AppState();
+
+  nstructjs.validateStructs();
 
   let animreq;
   let f = () => {

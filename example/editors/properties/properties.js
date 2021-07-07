@@ -48,6 +48,9 @@ export class PropsEditor extends Editor {
         this.container.flushUpdate();
       }
 
+      let graphtab = container.getElementById("graph_pack_tab");
+      this.buildGraphPack(graphtab);
+
       let exportbutton = container.getElementById("export_theme");
       exportbutton.onclick = () => {
         let theme = exportTheme();
