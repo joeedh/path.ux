@@ -1790,7 +1790,7 @@ export class UIBase extends HTMLElement {
         timer = undefined;
 
         div.remove();
-        this.focus();
+        this._flash_focus();
       }
 
       tick++;
@@ -1827,6 +1827,11 @@ export class UIBase extends HTMLElement {
     if (screen !== undefined) {
       screen._exitPopupSafe();
     }
+  }
+
+  /** child classes can override this to prevent focus on flash*/
+  _flash_focus() {
+    this.focus();
   }
 
   destory() {

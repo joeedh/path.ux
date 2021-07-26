@@ -1140,7 +1140,7 @@ export class ColorPickerButton extends UIBase {
     widget.onchange = onchange;
 
     colorpicker.style["background-color"] = widget.getDefault("background-color");
-    colorpicker.style["border-radius"] = "25px";
+    //colorpicker.style["border-radius"] = "25px";
     colorpicker.style["border-width"] = widget.getDefault("border-width");
   }
 

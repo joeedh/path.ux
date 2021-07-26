@@ -54,6 +54,7 @@ export class PanelFrame extends ColumnFrame {
 
     this.contents._panel = this;
     this.iconcheck = UIBase.createElement("iconcheck-x");
+    this.iconcheck.noEmboss = true;
 
     Object.defineProperty(this.contents, "closed", {
       get: () => {

@@ -6,6 +6,10 @@ import {loadPage} from '../../../scripts/xmlpage/xmlpage.js';
 import {loadUIData, saveUIData} from '../../../scripts/core/ui_base.js';
 import {platform} from '../../../scripts/platforms/platform.js';
 
+let graphNodes;
+let solveTimer;
+let seed = 0;
+
 export class PropsEditor extends Editor {
   constructor() {
     super();
@@ -197,28 +201,13 @@ export class PropsEditor extends Editor {
   }
 
 
-  buildGraphPack(tab) {
+  buildGraphPackNodes(size) {
     let nodes = this._nodes = [];
     let nodemap = this._nodemap = {};
-    let draw;
 
-    let canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 600;
-    let scale = 0.25;
-
-    canvas.addEventListener("wheel", (e) => {
-      let df = Math.sign(e.deltaY)*0.05;
-      scale *= 1.0 - df;
-
-      console.log("scale", scale);
-
-      draw();
-    });
-
-    let rand = new util.MersenneRandom();
-    let count = 29;
-    let size = (canvas.width*canvas.height) / count;
+    let rand = new util.MersenneRandom(seed++);
+    let count = 35;
+    size /= count;
     size = Math.sqrt(size)*0.75;
 
     for (let i=0; i<count; i++) {
@@ -230,7 +219,7 @@ export class PropsEditor extends Editor {
       n.size[1] = (rand.random()*0.5+0.5)*size;
 
       for (let i=0; i<2; i++) {
-        let scount = Math.random()*8;
+        let scount = rand.random()*8;
         let x = i ? n.size[0] : 0;
         let y = 0, socksize = Math.min(20, n.size[1]/scount);
 
@@ -255,32 +244,77 @@ export class PropsEditor extends Editor {
 
     let visit2 = new Set();
 
-    for (let i=0; i<count*2; i++) {
+    let linkcount = count*2.5*(rand.random()*0.5 + 0.5);
+
+    for (let i=0; i<linkcount; i++) {
       //let n1 = randitem(nodes), n2 = randitem(nodes);
       let ri = i % nodes.length;
-
-      let n1 = nodes[ri];
+      ri = ~~(rand.random() * nodes.length * 0.99999);
 
       let ri2 = (ri + 1) % nodes.length;
+      if (rand.random() > 0.8) {
+        ri2 = ~~(rand.random()*nodes.length*0.99999);
+      }
+
+      let n1 = nodes[ri];
       let n2 = nodes[ri2];
 
-      if (visit2.has(n1._id)) {
+      let key = "" + Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
+      if (visit2.has(key)) {//n1._id)) {
         continue;
       }
 
       if (n1 === n2)
         continue;
 
-      visit2.add(n1._id);
+      visit2.add(key);
 
       let s1 = randitem(n1.verts);
       let s2 = randitem(n2.verts);
+
+      if (s1.edges.indexOf(s2) >= 0) {
+        continue;
+      }
 
       if (!s1 || !s2) continue;
 
       s1.edges.push(s2);
       s2.edges.push(s1);
     }
+
+    graphNodes = {
+      nodes, nodemap
+    }
+
+    return graphNodes;
+  }
+
+  buildGraphPack(tab) {
+    let draw;
+
+    let canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    let scale = 0.25;
+
+    canvas.addEventListener("wheel", (e) => {
+      let df = Math.sign(e.deltaY)*0.05;
+      scale *= 1.0 - df;
+
+      console.log("scale", scale);
+
+      draw();
+    });
+
+    const margin = 55;
+
+    if (!graphNodes) {
+      this.buildGraphPackNodes(canvas.width*canvas.height);
+      graphPack(graphNodes.nodes, {steps : 2, margin});
+    }
+
+    let {nodes} = graphNodes;
+
     canvas.g = canvas.getContext("2d");
 
     canvas.style["border"] = "1px solid orange";
@@ -305,8 +339,19 @@ export class PropsEditor extends Editor {
 
           for (let v2 of v.edges) {
             let p2 = new Vector2(v2).add(v2.node.pos);
+
+            //let d = v.vectorDistance(v2)*1.5;
+            let d = Math.abs(v2[0] - v[0])*1.5;
+
+            let s1 = v.side ? -1 : 1;
+            let s2 = v2.side ? -1 : 1;
+
+            let dx1 = -s1*d, dy1 = 0.0;
+            let dx2 = -s2*d, dy2 = 0.0;
+
             g.moveTo(p1[0], p1[1]);
-            g.lineTo(p2[0], p2[1]);
+            g.bezierCurveTo(p1[0]+dx1, p1[1]+dy1, p2[0]+dx2, p2[1]+dy2, p2[0], p2[1]);
+            //g.lineTo(p2[0], p2[1]);
           }
         }
       }
@@ -323,10 +368,49 @@ export class PropsEditor extends Editor {
       g.stroke();
     };
 
-    tab.button("pack", () => {
+    let timercb = () => {
+      if (!this.isConnected) {
+        window.clearInterval(solveTimer);
+        solveTimer = undefined;
+        return;
+      }
+
+      let time = util.time_ms();
+      while (util.time_ms() - time < 100) {
+        graphPack(nodes, {
+          steps: 2,
+          speed: 0.1,
+          margin
+        });
+      }
+
+      draw();
+    }
+
+    let strip = tab.row();
+
+    strip.button("Reset", () => {
+      nodes = this.buildGraphPackNodes(canvas.width*canvas.height).nodes;
+      graphPack(graphNodes.nodes, {steps : 22, margin});
+      draw();
+    });
+
+    strip.button("Pack", () => {
+      graphPack(graphNodes.nodes, {steps : 22, margin});
+
+      draw();
+    });
+
+    strip.button("Start/Stop", () => {
       console.log("pack!");
       //graphPack(nodes, undefined, undefined, draw);
-      graphPack(nodes, undefined, 25);
+      if (solveTimer !== undefined) {
+        window.clearInterval(solveTimer);
+        solveTimer = undefined;
+        return;
+      }
+
+      solveTimer = window.setInterval(timercb, 30);
 
       draw();
     });

@@ -281,6 +281,52 @@ class Handler {
         elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
       }
     }
+
+    function doBox(key) {
+      if (elem.hasAttribute(key)) {
+        let val = elem.getAttribute(key).toLowerCase().trim();
+
+        if (val.endsWith("px")) {
+          val = val.slice(0, val.length - 2).trim();
+        }
+
+        if (val.endsWith("%")) {
+          //eek! don't support at all?
+          //or use aspect overlay?
+
+          console.warn(`Relative styling of '${key}' may be unstable for this element`, elem);
+
+          elem.setCSS.after(function () {
+            this.style[key] = val;
+          });
+        } else {
+          val = parseFloat(val);
+
+          if (isNaN(val) || typeof val !== "number") {
+            console.error(`Invalid style ${key}:${elem.getAttribute(key)}`);
+            return;
+          }
+
+          elem2.overrideDefault(key, val);
+          elem2.setCSS();
+          elem2.style[key] = "" + val + "px";
+        }
+      }
+    }
+
+    doBox("width");
+    doBox("height");
+    doBox("margin");
+    doBox("padding");
+
+    for (let i=0; i<2; i++) {
+      let key = i ? "margin" : "padding";
+
+      doBox(key + "-bottom");
+      doBox(key + "-top");
+      doBox(key + "-left");
+      doBox(key + "-right");
+    }
   }
 
   _handlePathPrefix(elem, con) {
@@ -366,7 +412,13 @@ class Handler {
     let packflag = getPackFlag(elem);
     let path = elem.getAttribute("path");
 
-    let elem2 = this.container[key](path, packflag);
+    let elem2;
+    if (key === 'pathlabel') {
+      elem2 = this.container.pathlabel(path, elem.innerHTML, packflag);
+    } else {
+      elem2 = this.container[key](path, packflag);
+    }
+
     if (!elem2) {
       elem2 = document.createElement("span");
       elem2.innerHTML = "error";
@@ -374,8 +426,12 @@ class Handler {
     } else {
       this._basic(elem, elem2);
 
-      if (elem.hasAttribute("massSetPath")) {
+      if (elem.hasAttribute("massSetPath") || this.container.massSetPrefix) {
         let mpath = elem.getAttribute("massSetPath");
+        if (!mpath) {
+          mpath = elem.getAttribute("path");
+        }
+
         mpath = this.container._getMassPath(this.container.ctx, path, mpath);
 
         elem2.setAttribute("mass_set_path", mpath);

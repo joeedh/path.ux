@@ -25,11 +25,11 @@ function myToFixed(s, n) {
 let keymap = events.keymap;
 
 let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
+    PropTypes = toolprop.PropTypes;
 
 let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
+    PackFlags = ui_base.PackFlags,
+    IconSheets = ui_base.IconSheets;
 
 let parsepx = ui_base.parsepx;
 
@@ -52,7 +52,7 @@ export class TextBox extends TextBoxBase {
 
     this._had_error = false;
 
-    this.decimalPlaces = 4;
+    this.decimalPlaces = undefined; //will inherit from property defaults
 
     this.baseUnit = undefined; //will automatically use defaults
     this.displayUnit = undefined; //will automatically use defaults
@@ -78,25 +78,64 @@ export class TextBox extends TextBoxBase {
     this.shadow.appendChild(this.dom);
 
     this.dom.addEventListener("focus", (e) => {
-      console.log("Textbox focus");
-      this._startModal();
+      console.log("Textbox focus", this.isModal);
+
       this._focus = 1;
-      this.setCSS();
+
+      if (this.isModal) {
+        this._startModal();
+        this.setCSS();
+      }
     });
 
     this.dom.addEventListener("blur", (e) => {
       console.log("Textbox blur");
+
+      this._focus = 0;
+
       if (this._modal) {
         this._endModal(true);
-        this._focus = 0;
         this.setCSS();
       }
     });
 
   }
 
+  /** realtime dom attribute getter, defaults to true in absence of attribute*/
+  get realtime() {
+    let ret = this.getAttribute("realtime");
+
+    if (!ret) {
+      return true;
+    }
+
+    ret = ret.toLowerCase().trim();
+
+    return ret === 'yes' || ret === 'true' || ret === 'on';
+  }
+
+  set realtime(val) {
+    this.setAttribute('realtime', val ? 'true' : 'false');
+  }
+
+  get isModal() {
+    let ret = this.getAttribute("modal");
+
+    if (!ret) {
+      return false;
+    }
+
+    ret = ret.toLowerCase().trim();
+
+    return ret === 'yes' || ret === 'true' || ret === 'on';
+  }
+
+  set isModal(val) {
+    this.setAttribute('modal', val ? 'true' : 'false');
+  }
+
   _startModal() {
-    console.log("textbox modal");
+    console.warn("textbox modal");
 
     if (this._modal) {
       this._endModal(true);
@@ -147,6 +186,10 @@ export class TextBox extends TextBoxBase {
     }, false)
   }
 
+  _flash_focus() {
+    //don't focus on flash
+  }
+
   _endModal(ok) {
     console.log("textbox end modal");
 
@@ -157,7 +200,11 @@ export class TextBox extends TextBoxBase {
 
     if (this.onend) {
       this.onend(ok);
+    } else {
+      this._updatePathVal(this.dom.value);
     }
+
+    this.blur();
   }
 
   get tabIndex() {
@@ -170,6 +217,11 @@ export class TextBox extends TextBoxBase {
 
   init() {
     super.init();
+
+    //set isModal default
+    if (!this.hasAttribute('modal')) {
+      this.isModal = true;
+    }
 
     this.style["display"] = "flex";
     this.style["width"] = this._width;
@@ -190,14 +242,14 @@ export class TextBox extends TextBoxBase {
     super.setCSS();
 
     this.overrideDefault("background-color", this.getDefault("background-color"));
-    
+
     this.background = this.getDefault("background-color");
     this.dom.style["margin"] = this.dom.style["padding"] = "0px";
-    
+
     if (this.getDefault("background-color")) {
       this.dom.style["background-color"] = this.getDefault("background-color");
     }
-    
+
     if (this._focus) {
       this.dom.style["border"] = `2px dashed ${this.getDefault('focus-border-color')}`;
     } else {
@@ -225,6 +277,8 @@ export class TextBox extends TextBoxBase {
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === undefined || val === null) {
+      console.error("invalid datapath " + this.getAttribute("datapath"), val);
+
       this.internalDisabled = true;
       return;
     } else {
@@ -236,10 +290,35 @@ export class TextBox extends TextBoxBase {
 
     let text = this.text;
 
-    if (prop !== undefined && (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT)) {
+    if (!prop) {
+      console.error("datapath error " + this.getAttribute("datapath"), val);
+      return;
+    }
+
+    let is_num = prop.type & (PropTypes.FLOAT|PropTypes.INT);
+    if (typeof val === "number" && (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT))) {
+      is_num = true;
+    }
+
+    if (is_num) {
       let is_int = prop.type === PropTypes.INT;
 
       this.radix = prop.radix;
+
+      let decimalPlaces = this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
+      if (this.hasAttribute("decimalPlaces")) {
+        decimalPlaces = parseInt(this.getAttribute("decimalPlaces"));
+      }
+
+      let baseUnit = this.baseUnit ?? prop.baseUnit;
+      if (this.hasAttribute("baseUnit")) {
+        baseUnit = this.getAttribute("baseUnit");
+      }
+
+      let displayUnit = this.displayUnit ?? prop.displayUnit;
+      if (this.hasAttribute("displayUnit")) {
+        displayUnit = this.getAttribute("displayUnit");
+      }
 
       if (is_int && this.radix === 2) {
         text = val.toString(this.radix);
@@ -247,7 +326,7 @@ export class TextBox extends TextBoxBase {
       } else if (is_int && this.radix === 16) {
         text += "h";
       } else {
-        text = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
+        text = units.buildString(val, baseUnit, decimalPlaces, displayUnit);
       }
     } else if (prop !== undefined && prop.type === PropTypes.STRING) {
       text = val;
@@ -303,15 +382,41 @@ export class TextBox extends TextBoxBase {
   }
 
   _prop_update(prop, text) {
-    if ((prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT)) {
-      let val = units.parseValue(this.text, this.baseUnit);
+    let is_num = prop.type & (PropTypes.FLOAT|PropTypes.INT);
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
-      if (!toolprop.isNumber(this.text.trim())) {
+    if (typeof val === "number" && (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT))) {
+      is_num = true;
+    }
+
+    if (is_num) {
+      let is_int = prop.type === PropTypes.INT;
+
+      this.radix = prop.radix;
+
+      let decimalPlaces = this.decimalPlaces !== undefined ? this.decimalPlaces : prop.decimalPlaces;
+      if (this.hasAttribute("decimalPlaces")) {
+        decimalPlaces = parseInt(this.getAttribute("decimalPlaces"));
+      }
+
+      let baseUnit = this.baseUnit ?? prop.baseUnit;
+      if (this.hasAttribute("baseUnit")) {
+        baseUnit = this.getAttribute("baseUnit");
+      }
+
+      let displayUnit = this.displayUnit ?? prop.displayUnit;
+      if (this.hasAttribute("displayUnit")) {
+        displayUnit = this.getAttribute("displayUnit");
+      }
+
+      if (!units.isNumber(text.trim())) {
         this.flash(ui_base.ErrorColors.ERROR, this.dom);
         this.focus();
         this.dom.focus();
         this._had_error = true;
       } else {
+        let val = units.parseValue(text, baseUnit, displayUnit);
+
         if (this._had_error) {
           this.flash(ui_base.ErrorColors.OK, this.dom);
         }
@@ -319,7 +424,7 @@ export class TextBox extends TextBoxBase {
         this._had_error = false;
         this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
       }
-    } else if (prop.type == PropTypes.STRING) {
+    } else if (prop.type === PropTypes.STRING) {
       try {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
 
@@ -342,16 +447,26 @@ export class TextBox extends TextBoxBase {
   }
 
 
+  _updatePathVal(text) {
+    if (this.hasAttribute("datapath") && this.ctx !== undefined) {
+      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      console.log(prop);
+
+      if (prop) {
+        this._prop_update(prop, text);
+      }
+    }
+
+  }
+
   _change(text) {
     //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
     //console.log("onchange", this._focus);
 
-    if (this.hasAttribute("datapath") && this.ctx !== undefined) {
-      let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-      //console.log(prop);
-      if (prop) {
-        this._prop_update(prop, text);
-      }
+    console.log("change", text);
+
+    if (this.realtime) {
+      this._updatePathVal(text);
     }
 
     if (this.onchange) {

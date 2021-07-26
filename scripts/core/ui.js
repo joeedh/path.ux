@@ -5,6 +5,7 @@
 
 var _ui = undefined;
 
+import * as units from '../core/units.js';
 import * as util from '../path-controller/util/util.js';
 import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from './ui_base.js';
@@ -132,16 +133,8 @@ export class Label extends ui_base.UIBase {
     }
 
     //console.log(path);
-    if (prop !== undefined && prop.type === PropTypes.INT) {
-      val = val.toString(prop.radix);
-
-      if (prop.radix === 2) {
-        val = "0b" + val;
-      } else if (prop.radix === 16) {
-        val += "h";
-      }
-    } else if (prop !== undefined && prop.type === PropTypes.FLOAT && val !== Math.floor(val)) {
-      val = val.toFixed(prop.decimalPlaces);
+    if (prop.type & (PropTypes.INT|PropTypes.FLOAT)) {
+      val = units.buildString(val, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
     }
 
     val = "" + this._label + " " + val;
@@ -910,8 +903,10 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  pathlabel(inpath, label = "") {
+  pathlabel(inpath, label = "", packflag=0) {
     let path;
+
+    packflag |= this.inherit_packflag;
 
     if (inpath) {
       path = this._joinPrefix(inpath);
@@ -920,6 +915,7 @@ export class Container extends ui_base.UIBase {
     let ret = UIBase.createElement("label-x");
 
     ret.text = label;
+    ret.packflag = packflag;
     ret.setAttribute("datapath", path);
 
     this._add(ret);

@@ -641,6 +641,22 @@ export class IconCheck extends Button {
     this._redraw();
   }
 
+  get noEmboss() {
+    let ret = this.getAttribute("no-emboss");
+
+    if (!ret) {
+      return false;
+    }
+
+    ret = ret.toLowerCase().trim();
+
+    return ret === 'true' || ret === 'yes' || ret === 'on';
+  }
+
+  set noEmboss(val) {
+    this.setAttribute('no-emboss', val ? 'true' : 'false');
+  }
+
   _redraw() {
     this._repos_canvas();
 
@@ -650,10 +666,13 @@ export class IconCheck extends Button {
     }
 
     //
-    let pressed = this._pressed;
-    this._pressed = this._checked;
-    super._redraw(false);
-    this._pressed = pressed;
+    if (!this.noEmboss) {
+      let pressed = this._pressed;
+      this._pressed = this._checked;
+      super._redraw(false);
+      this._pressed = pressed;
+    }
+
 
     let icon = this._icon;
 

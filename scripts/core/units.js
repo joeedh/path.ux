@@ -203,12 +203,12 @@ export class FootUnit extends Unit {
     let vin = (value*12) % 12;
 
     if (vft === 0.0) {
-      return myToFixed(value, decimals) + " in";
+      return myToFixed(vin, decimals) + " in";
     }
 
     let s = "" + vft + " ft";
     if (vin !== 0.0) {
-      s += " " + myToFixed(value, decimals) + " in";
+      s += " " + myToFixed(vin, decimals) + " in";
     }
 
     return s;
@@ -338,7 +338,7 @@ let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/
 let binre = /[+\-]?0b[01]+$/
 let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/
 
-function isNumber(s) {
+function isnumber(s) {
   s = (""+s).trim();
   function test(re) {
     return s.search(re) == 0;
@@ -369,6 +369,22 @@ export function parseValue(string, baseUnit=undefined, displayUnit=undefined) {
   return f;
 }
 
+export function isNumber(string) {
+  if (isnumber(string)) {
+    return true;
+  }
+
+  for (let unit of Units) {
+    let def = unit.unitDefine();
+
+    if (unit.validate(string)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function parseValueIntern(string, baseUnit=undefined) {
   let base;
 
@@ -378,7 +394,7 @@ export function parseValueIntern(string, baseUnit=undefined) {
   }
 
   //unannotated string?
-  if (isNumber(string)) {
+  if (isnumber(string)) {
     //assume base unit
     let f = parseFloat(string);
     

@@ -542,6 +542,7 @@ export class Screen extends ui_base.UIBase {
     container.style["border-color"] = container.getDefault("border-color");
     container.style["border-style"] = container.getDefault("border-style");
     container.style["border-width"] = container.getDefault("border-width") + "px";
+    container.style["box-shadow"] = container.getDefault("box-shadow");
 
     container.style["position"] = "absolute";
     container.style["z-index"] = 205;
