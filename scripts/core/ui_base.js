@@ -186,10 +186,14 @@ class _IconManager {
       return;
     }
 
-    g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
+    try {
+      g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
+    } catch (error) {
+      console.log("failed to draw an icon");
+    }
   }
 
-  setCSS(icon, dom, fitsize=undefined) {
+  setCSS(icon, dom, fitsize = undefined) {
     if (!fitsize) {
       fitsize = this.drawsize;
     }
@@ -210,7 +214,7 @@ class _IconManager {
   }
 
   //icon is an integer
-  getCSS(icon, fitsize=this.drawsize) {
+  getCSS(icon, fitsize = this.drawsize) {
     if (icon == -1) { //-1 means no icon
       return '';
     }
@@ -360,7 +364,7 @@ export class IconManager {
     return ret;
   }
 
-  setCSS(icon, dom, sheet = 0, fitsize=undefined) {
+  setCSS(icon, dom, sheet = 0, fitsize = undefined) {
     //return this.iconsheets[sheet].setCSS(icon, dom);
 
     let base = this.iconsheets[sheet];
@@ -393,7 +397,8 @@ export let IconSheets = {
 
 export function iconSheetFromPackFlag(flag) {
   if (flag & PackFlags.CUSTOM_ICON_SHEET) {
-    return flag >> PackFlags.CUSTOM_ICON_SHEET_START;
+    console.log("Custom Icon Sheet:", flag>>PackFlags.CUSTOM_ICON_SHEET_START);
+    return flag>>PackFlags.CUSTOM_ICON_SHEET_START;
   }
 
   if ((flag & PackFlags.SMALL_ICON) && !(PackFlags.LARGE_ICON)) {
@@ -468,7 +473,7 @@ export const PackFlags = {
   HIDE_CHECK_MARKS       : (1<<13),
   NO_NUMSLIDER_TEXTBOX   : (1<<14),
   CUSTOM_ICON_SHEET      : 1<<15,
-  CUSTOM_ICON_SHEET_START: 20
+  CUSTOM_ICON_SHEET_START: 20 //custom icon sheet bits are shifted to here
 };
 
 let first = (iter) => {
@@ -522,7 +527,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -607,6 +612,8 @@ export class UIBase extends HTMLElement {
     super();
 
     this._textBoxEvents = false;
+
+    this._themeOverride = undefined;
 
     this._checkTheme = true;
     this._last_theme_update_key = _themeUpdateKey;
@@ -940,7 +947,7 @@ export class UIBase extends HTMLElement {
    * static define() {return {
    *   tagname : "custom-element-x",
    *   style : "[style class in theme]"
-   *   subclassChecksTheme : boolean //set to true to disable base class invokation of subclassChecksTheme
+   *   subclassChecksTheme : boolean //set to true to disable base class invokation of checkTheme()
    * }}
    */
   static define() {
@@ -1248,6 +1255,17 @@ export class UIBase extends HTMLElement {
     this.style["transform"] = `scale(${zoom},${zoom})`;
   }
 
+  flushSetCSS() {
+    //check init
+    this._init();
+
+    this.setCSS();
+
+    this._forEachChildWidget((c) => {
+      c.flushSetCSS();
+    });
+  }
+
   traverse(type_or_set) {
     let this2 = this;
 
@@ -1384,17 +1402,6 @@ export class UIBase extends HTMLElement {
     });
   }
 
-  flushSetCSS() {
-    //check init
-    this._init();
-
-    this.setCSS();
-
-    this._forEachChildWidget((c) => {
-      c.flushSetCSS();
-    });
-  }
-
   //used by container nodes
   /**
    * Iterates over all child widgets,
@@ -1437,13 +1444,19 @@ export class UIBase extends HTMLElement {
     }
   }
 
+  checkInit() {
+    return this._init();
+  }
+
   _init() {
     if (this._init_done) {
-      return;
+      return false;
     }
 
     this._init_done = true;
     this.init();
+
+    return true;
   }
 
   getWinWidth() {
@@ -1645,6 +1658,7 @@ export class UIBase extends HTMLElement {
       };
 
       for (let k in style) {
+        //save old style information
         this._disdata.style[k] = this.style[k];
         this._disdata.defaults[k] = this.default_overrides[k];
 
@@ -1652,16 +1666,18 @@ export class UIBase extends HTMLElement {
 
         if (typeof v === "object" && v instanceof CSSFont) {
           this.style[k] = style[k].genCSS();
-          this.default_overrides[k] = style[k];
         } else {
           this.style[k] = style[k];
-          this.default_overrides[k] = style[k];
         }
+
+        this.default_overrides[k] = style[k];
       }
 
       this.__disabledState = !!val;
       this.on_disabled();
     } else if (!val && this._disdata) {
+
+      //load old style information
       for (let k in this._disdata.style) {
         this.style[k] = this._disdata.style[k];
       }
@@ -1676,7 +1692,7 @@ export class UIBase extends HTMLElement {
         }
       }
 
-      this.background = this.style["background-color"];
+      //this.background = this.style["background-color"];
       this._disdata = undefined;
 
       this.__disabledState = !!val;
@@ -1739,9 +1755,16 @@ export class UIBase extends HTMLElement {
     this._modaldata = undefined;
   }
 
+  /** child classes can override this to prevent focus on flash*/
+  _flash_focus() {
+    this.focus();
+  }
+
   flash(color, rect_element = this, timems = 355) {
     //console.warn("flash internalDisabled due to bug");
     //return;
+
+    console.warn("flash");
 
     if (typeof color != "object") {
       color = css2color(color);
@@ -1829,11 +1852,6 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  /** child classes can override this to prevent focus on flash*/
-  _flash_focus() {
-    this.focus();
-  }
-
   destory() {
   }
 
@@ -1899,6 +1917,11 @@ export class UIBase extends HTMLElement {
 
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
       ctx.toolstack.execTool(this.ctx, toolop);
+      head = toolstack.head;
+    }
+
+    if (!head || head.hadError === true) {
+      throw new Error("toolpath error");
     }
   }
 
@@ -2133,6 +2156,8 @@ export class UIBase extends HTMLElement {
 
     if (this._init_done && !this.constructor.define().subclassChecksTheme) {
       if (this.checkThemeUpdate()) {
+        console.log("theme update!");
+
         this.setCSS();
       }
     }
@@ -2254,7 +2279,7 @@ export class UIBase extends HTMLElement {
 
   /** get a sub style from a theme style class.
    *  note that if key is falsy then it just forwards to this.getDefault directly*/
-  getSubDefault(key, subkey, backupkey=subkey, defaultval=undefined) {
+  getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined) {
     if (!key) {
       return this.getDefault(subkey, undefined, defaultval);
     }
@@ -2345,6 +2370,12 @@ export class UIBase extends HTMLElement {
       p = p.parentWidget;
     }
 
+    let th = this._themeOverride;
+
+    if (th && style in th && key in th[style]) {
+      return true;
+    }
+
     if (style in theme && key in theme[style]) {
       return true;
     }
@@ -2354,6 +2385,10 @@ export class UIBase extends HTMLElement {
 
   getClassDefault(key, checkForMobile = true, defaultval = undefined) {
     let style = this.getStyleClass();
+
+    if (style === "none") {
+      return undefined;
+    }
 
     let val = undefined;
     let p = this;
@@ -2374,20 +2409,39 @@ export class UIBase extends HTMLElement {
       }
     }
 
-    if (val === undefined && style in theme && key in theme[style]) {
-      val = theme[style][key];
-    } else if (defaultval !== undefined) {
-      val = defaultval;
-    } else if (val === undefined) {
-      let def = this.constructor.define();
-      if (def.parentStyle && key in theme[def.parentStyle]) {
-        val = theme[def.parentStyle][key];
-      } else {
-        val = theme.base[key];
+    for (let i = 0; i < 2; i++) {
+      let th = !i ? this._themeOverride : theme;
+
+      if (!th) {
+        continue;
+      }
+
+      if (val === undefined && style in th && key in th[style]) {
+        val = th[style][key];
+      } else if (defaultval !== undefined) {
+        val = defaultval;
+      } else if (val === undefined) {
+        let def = this.constructor.define();
+
+        if (def.parentStyle && key in th[def.parentStyle]) {
+          val = th[def.parentStyle][key];
+        } else {
+          val = th.base[key];
+        }
       }
     }
 
     return checkForMobile ? this._doMobileDefault(key, val) : val;
+  }
+
+  overrideTheme(theme) {
+    this._themeOverride = theme;
+
+    this._forEachChildWidget((child) => {
+      child.overrideTheme(theme);
+    });
+
+    return this;
   }
 
   getStyle() {
@@ -2484,7 +2538,7 @@ export function drawRoundBox2(elem, options = {}) {
  and be usable for more use cases.*/
 export function drawRoundBox(elem, canvas, g, width, height, r      = undefined,
                              op = "fill", color = undefined, margin = undefined,
-                             no_clear = false) {
+                             no_clear                               = false) {
   width = width === undefined ? canvas.width : width;
   height = height === undefined ? canvas.height : height;
   g.save();
@@ -2705,6 +2759,7 @@ export function drawText(elem, x, y, text, args = {}) {
   }
 
   size *= UIBase.getDPI();
+
 
   if (color === undefined) {
     if (font && font.color) {

@@ -676,6 +676,10 @@ export class Container extends ui_base.UIBase {
     child.parentWidget = this;
     child._useDataPathUndo = this._useDataPathUndo;
 
+    if (!child._themeOverride && this._themeOverride) {
+      child.overrideTheme(this._themeOverride);
+    }
+
     if (prepend) {
       this.shadow.prepend(child);
     } else {
