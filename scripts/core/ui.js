@@ -5,8 +5,8 @@
 
 var _ui = undefined;
 
-import * as units from '../core/units.js';
 import * as util from '../path-controller/util/util.js';
+import * as units from '../core/units.js';
 import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from './ui_base.js';
 import * as ui_widgets from '../widgets/ui_widgets.js';
@@ -206,6 +206,45 @@ export class Container extends ui_base.UIBase {
     this._mass_prefixstack = [];
   }
 
+  /** recursively change path prefix for all children*/
+  changePathPrefix(newprefix) {
+    let prefix = this.dataPrefix.trim();
+    this.dataPrefix = newprefix;
+
+    if (prefix.length > 0) {
+      prefix += ".";
+    }
+
+    let rec = (n, con) => {
+      if (n instanceof Container && n !== this) {
+        if (n.dataPrefix.startsWith(prefix)) {
+          n.dataPrefix = n.dataPath.slice(prefix.length, n.dataPrefix.length);
+          n.dataPrefix = con._joinPrefix(n.dataPrefix);
+          con = n;
+        }
+      }
+
+      if (n.hasAttribute("datapath")) {
+        let path = n.getAttribute("datapath");
+
+        if (path.startsWith(prefix)) {
+          path = path.slice(prefix.length, path.length);
+          path = con._joinPrefix(path);
+          n.setAttribute("datapath", path);
+
+          //update helper tooltips
+          n.description = n.description;
+        }
+      }
+
+      n._forEachChildWidget((n2) => {
+        rec(n2, con);
+      });
+    }
+
+    rec(this, this);
+  }
+
   reverse() {
     this.reversed ^= true;
     return this;
@@ -267,14 +306,21 @@ export class Container extends ui_base.UIBase {
     this.setAttribute("class", "containerx");
   }
 
+  /** Returns previous icon flags */
   useIcons(enabled_or_sheet=true) {
     let enabled = !!enabled_or_sheet;
+
+    let mask = PackFlags.USE_ICONS | PackFlags.SMALL_ICON | PackFlags.LARGE_ICON;
+    mask = mask | PackFlags.CUSTOM_ICON_SHEET;
+    mask = mask | (255<<PackFlags.CUSTOM_ICON_SHEET_START);
+
+    let previous = this.packflag & mask;
 
     if (!enabled) {
       this.packflag &= ~PackFlags.USE_ICONS;
       this.inherit_packflag &= ~PackFlags.USE_ICONS;
 
-      return this;
+      return previous;
     }
 
     let sheet = enabled_or_sheet;
@@ -294,7 +340,7 @@ export class Container extends ui_base.UIBase {
     this.packflag |= PackFlags.USE_ICONS | sheet;
     this.inherit_packflag |= PackFlags.USE_ICONS | sheet;
 
-    return this;
+    return previous;
   }
 
   /**
@@ -584,15 +630,7 @@ export class Container extends ui_base.UIBase {
 
   update() {
     super.update();
-    //this._forEachChildWidget((n) => {
-    //  n.update();
-    //});
   }
-
-  //on_destroy() {
-  //  super.on_destroy();
-  //this.dat.destroy();
-  //}
 
   appendChild(child) {
     if (child instanceof ui_base.UIBase) {
@@ -720,24 +758,17 @@ export class Container extends ui_base.UIBase {
     dbox.setAttribute("simple", true);
     dbox.setAttribute("name", title);
 
-    dbox._build_menu = function() {
-      if (this._menu !== undefined && this._menu.parentNode !== undefined) {
-        this._menu.remove();
-      }
+    if (list instanceof HTMLElement && list.constructor.name === "Menu") {
+      dbox._build_menu = function() {
+        if (this._menu !== undefined && this._menu.parentNode !== undefined) {
+          this._menu.remove();
+        }
 
-      let templ = list;
-
-      if (typeof list === "function") {
-        templ = list();
-      }
-
-      if (templ instanceof HTMLElement && templ.constructor.name === 'Menu') {
-        this._menu = templ;
-      } else {
         this._menu = createMenu(this.ctx, title, templ);
+        return this._menu;
       }
-
-      return this._menu;
+    } else if (list) {
+      dbox.template = list;
     }
 
     dbox.packflag |= packflag;
@@ -879,7 +910,7 @@ export class Container extends ui_base.UIBase {
   }
 
   //supports number types
-  textbox(inpath, text="", cb=undefined, packflag = 0) {
+  textbox(inpath, text, cb=undefined, packflag = 0) {
     let path;
 
     if (inpath)
@@ -1135,6 +1166,7 @@ export class Container extends ui_base.UIBase {
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     let prop = rdef.prop;
 
+    let useDataPathUndo = !(prop.flag & PropFlags.NO_UNDO);
     //console.log(prop, PropTypes, PropSubTypes);
 
     function makeUIName(name) {
@@ -1158,6 +1190,7 @@ export class Container extends ui_base.UIBase {
         ret = this.pathlabel(inpath, prop.uiname);
       } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
+        ret.useDataPathUndo = useDataPathUndo;
       } else {
         let strip = this.strip();
 
@@ -1166,6 +1199,7 @@ export class Container extends ui_base.UIBase {
         strip.label(prop.uiname);
 
         ret = strip.textbox(inpath);
+        ret.useDataPathUndo = useDataPathUndo;
 
         if (mass_set_path) {
           ret.setAttribute("mass_set_path", mass_set_path);
@@ -1175,7 +1209,9 @@ export class Container extends ui_base.UIBase {
       ret.packflag |= packflag;
       return ret;
     } else if (prop.type === PropTypes.CURVE) {
-      return this.curve1d(inpath, packflag, mass_set_path);
+      let ret = this.curve1d(inpath, packflag, mass_set_path);
+      ret.useDataPathUndo = useDataPathUndo;
+      return ret;
     } else if (prop.type === PropTypes.INT || prop.type === PropTypes.FLOAT) {
       let ret;
       if (packflag & PackFlags.SIMPLE_NUMSLIDERS) {
@@ -1184,6 +1220,7 @@ export class Container extends ui_base.UIBase {
         ret = this.slider(inpath, {packflag : packflag});
       }
 
+      ret.useDataPathUndo = useDataPathUndo;
       ret.packflag |= packflag;
 
       if (mass_set_path) {
@@ -1192,7 +1229,9 @@ export class Container extends ui_base.UIBase {
 
       return ret;
     } else if (prop.type === PropTypes.BOOL) {
-      return this.check(inpath, prop.uiname, packflag, mass_set_path);
+      let ret = this.check(inpath, prop.uiname, packflag, mass_set_path);
+      ret.useDataPathUndo = useDataPathUndo;
+      return ret;
     } else if (prop.type === PropTypes.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
@@ -1202,8 +1241,10 @@ export class Container extends ui_base.UIBase {
           name = makeUIName(rdef.subkey);
         }
 
-        let check = this.check(inpath, rdef.prop.ui_value_names[subkey], packflag, mass_set_path);
+        let check = this.check(inpath, name, packflag, mass_set_path);
         let tooltip = rdef.prop.descriptions[subkey];
+
+        check.useDataPathUndo = useDataPathUndo;
 
         check.description = tooltip === undefined ? rdef.prop.ui_value_names[subkey] : tooltip;
         check.icon = rdef.prop.iconmap[rdef.subkey];
@@ -1216,19 +1257,19 @@ export class Container extends ui_base.UIBase {
           let strip = this.strip();
           strip.label(prop.uiname);
 
-          return strip.listenum(inpath, {packflag, mass_set_path});
+          return strip.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
         } else {
-          return this.listenum(inpath, {packflag, mass_set_path});
+          return this.listenum(inpath, {packflag, mass_set_path}).setUndo(useDataPathUndo);
         }
 
       } else {
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          let strip = this.strip();
+          let strip = thdis.strip();
           strip.label(prop.uiname);
 
-          return strip.checkenum(inpath, undefined, packflag);
+          return strip.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
         } else {
-          return this.checkenum(inpath, undefined, packflag);
+          return this.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
         }
       }
     } else if (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
@@ -1241,9 +1282,9 @@ export class Container extends ui_base.UIBase {
           ret = this.slider(inpath, {packflag : packflag});
 
         ret.packflag |= packflag;
-        return ret;
+        return ret.setUndo(useDataPathUndo);
       } else if (prop.subtype === PropSubTypes.COLOR) {
-        return this.colorbutton(inpath, packflag, mass_set_path);
+        return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
         let ret = UIBase.createElement("vector-panel-x");
@@ -1263,7 +1304,7 @@ export class Container extends ui_base.UIBase {
 
         this.add(ret);
 
-        return ret;
+        return ret.setUndo(useDataPathUndo);
       }
     } else if (prop.type === PropTypes.FLAG) {
       if (rdef.subkey !== undefined) {
@@ -1291,7 +1332,7 @@ export class Container extends ui_base.UIBase {
           ret.description = tooltip;
         }
 
-        return ret;
+        return ret.setUndo(useDataPathUndo);
       } else {
         let con = this;
 
@@ -1321,9 +1362,10 @@ export class Container extends ui_base.UIBase {
               check.description = tooltip;
             }
 
+            check.setUndo(useDataPathUndo);
+
             i++;
           }
-
 
           return row;
         }
@@ -1384,20 +1426,44 @@ export class Container extends ui_base.UIBase {
           return strip;
         }
 
-        for (let k in prop.values) {
-          let name = prop.ui_value_names[k];
-          let tooltip = prop.descriptions[k];
+        if (con === this) {
+          con = this.strip();
+        }
 
-          if (name === undefined) {
-            name = makeUIName(k);
-          }
+        let rebuild = () => {
+          con.clear();
 
-          let check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
+          for (let k in prop.values) {
+            let name = prop.ui_value_names[k];
+            let tooltip = prop.descriptions[k];
 
-          if (tooltip) {
-            check.description = tooltip;
+            if (name === undefined) {
+              name = makeUIName(k);
+            }
+
+            let check = con.check(`${inpath}[${k}]`, name, packflag, mass_set_path);
+            check.useDataPathUndo = useDataPathUndo;
+
+            if (tooltip) {
+              check.description = tooltip;
+            }
+
+            check.setUndo(useDataPathUndo);
           }
         }
+
+        rebuild();
+        let last_hash = prop.calcHash();
+
+        con.update.after(() => {
+          let hash = prop.calcHash();
+
+          if (last_hash !== hash) {
+            last_hash = hash;
+            console.error("Property definition update");
+            rebuild();
+          }
+        });
 
         return con;
       }

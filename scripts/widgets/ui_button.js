@@ -471,8 +471,10 @@ export class Button extends UIBase {
 
     let subkey = this._getSubKey();
 
-    if (this._pressed) {
-      this.dom._background = this.getSubDefault(subkey, "background-color","BoxDepressed");
+    if (this._pressed && this._highlight) {
+      this.dom._background = this.getSubDefault(subkey, "highlight-pressed", "BoxHighlight");
+    } else if (this._pressed) {
+      this.dom._background = this.getSubDefault(subkey, "pressed","BoxDepressed");
     } else if (this._highlight) {
       this.dom._background = this.getSubDefault(subkey, "highlight", "BoxHighlight");
     } else {

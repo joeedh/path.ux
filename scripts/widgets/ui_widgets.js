@@ -547,12 +547,19 @@ export class IconCheck extends Button {
       }
 
       if (rdef !== undefined && rdef.prop) {
-        let icon, title;
+        let icon, icon2, title;
+
+        if (rdef.prop.flag & PropFlags.NO_UNDO) {
+          this.setUndo(false);
+        } else {
+          this.setUndo(true);
+        }
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
-        if (rdef.subkey && (rdef.prop.type == PropTypes.FLAG || rdef.prop.type == PropTypes.ENUM)) {
+        if (rdef.subkey && (rdef.prop.type === PropTypes.FLAG || rdef.prop.type === PropTypes.ENUM)) {
           icon = rdef.prop.iconmap[rdef.subkey];
+          icon2 = rdef.prop.iconmap2[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
 
           if (title === undefined && rdef.subkey.length > 0) {
@@ -560,8 +567,14 @@ export class IconCheck extends Button {
             title = title[0].toUpperCase() + title.slice(1, title.length).toLowerCase();
           }
         } else {
+          icon2 = rdef.prop.icon2;
           icon = rdef.prop.icon;
           title = rdef.prop.description;
+        }
+
+        if (icon2 !== undefined) {
+          this._icon_pressed = icon;
+          icon = icon2;
         }
 
         if (icon !== undefined && icon !== this.icon)
@@ -660,19 +673,12 @@ export class IconCheck extends Button {
   _redraw() {
     this._repos_canvas();
 
-    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("background-color");
-    if (this._checked) {
-      this._highlight = false;
-    }
-
-    //
     if (!this.noEmboss) {
       let pressed = this._pressed;
       this._pressed = this._checked;
       super._redraw(false);
       this._pressed = pressed;
     }
-
 
     let icon = this._icon;
 

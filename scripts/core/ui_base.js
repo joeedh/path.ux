@@ -782,6 +782,11 @@ export class UIBase extends HTMLElement {
     this._parentWidget = val;
   }
 
+  setUndo(val) {
+    this.useDataPathUndo = val;
+    return this;
+  }
+
   get useDataPathUndo() {
     let p = this;
 
@@ -1252,7 +1257,18 @@ export class UIBase extends HTMLElement {
     }
 
     let zoom = this.getZoom();
-    this.style["transform"] = `scale(${zoom},${zoom})`;
+    let transform = "" + this.style["transform"];
+
+    //try to preserve user set transform by selectively deleting scale
+    //kind of hackish. . .
+
+    //normalize whitespace
+    transform = transform.replace(/[ \t\n\r]+/g, ' ');
+    transform = transform.replace(/, /g, ',');
+
+    //cut out scale
+    let transform2 = transform.replace(/scale\([^)]+\)/, '').trim();
+    this.style["transform"] = transform2 + ` scale(${zoom},${zoom})`;
   }
 
   flushSetCSS() {

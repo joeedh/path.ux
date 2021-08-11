@@ -477,11 +477,36 @@ export class TextBox extends TextBoxBase {
 
 UIBase.internalRegister(TextBox);
 
+/**
+
+ Returns false if it's safe to call preventDefault.
+
+ Returns true if the element at position x,y is
+ either a textbox or is draggable.
+ */
 export function checkForTextBox(screen, x, y) {
   let p = screen.pickElement(x, y);
   //console.log(p, x, y);
 
   while (p) {
+    //don't prevent draggable elements from dragging
+    if (p.draggable) {
+      return true;
+    }
+
+    if (p instanceof UIBase) {
+      //check immediate children of p
+      for (let i=0; i<2; i++) {
+        let nodes = i ? p.childNodes : p.shadow.childNodes;
+
+        for (let child of nodes) {
+          if (child.draggable) {
+            return true;
+          }
+        }
+      }
+    }
+
     let ok = p instanceof TextBoxBase;
     ok = ok || p.constructor.define && p.constructor.define().modalKeyEvents;
 

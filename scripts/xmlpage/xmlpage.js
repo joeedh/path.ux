@@ -403,6 +403,15 @@ class Handler {
     this._basic(elem, elem2);
   }
 
+  textbox(elem) {
+    if (elem.hasAttribute("path")) {
+      this._prop(elem, 'textbox');
+    } else {
+      //let elem2 = this.container.textbox();
+      //this._basic(elem, elem2);
+    }
+  }
+
   /** simpleSliders=true enables simple sliders */
   prop(elem) {
     this._prop(elem, "prop")
@@ -415,6 +424,20 @@ class Handler {
     let elem2;
     if (key === 'pathlabel') {
       elem2 = this.container.pathlabel(path, elem.innerHTML, packflag);
+    } else if (key === 'textbox') {
+      console.error("PATH", path);
+      elem2 = this.container.textbox(path, undefined, undefined, packflag);
+
+      elem2.update();
+
+      //make textboxes non-modal by default
+      if (elem.hasAttribute("modal")) {
+        elem2.setAttribute("modal", elem.getAttribute("modal"));
+      }
+
+      if (elem.hasAttribute("realtime")) {
+        elem2.setAttribute("realtime", elem.getAttribute("realtime"));
+      }
     } else {
       elem2 = this.container[key](path, packflag);
     }
@@ -655,11 +678,16 @@ export function initPage(ctx, xml, parentContainer = undefined) {
 
 }
 
-export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly = false) {
+export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly = false, modifySourceCB) {
   let source;
 
   if (pagecache.has(url)) {
     source = pagecache.get(url);
+
+    if (modifySourceCB) {
+      source = modifySourceCB(source);
+    }
+
     return new Promise((accept, reject) => {
       if (loadSourceOnly) {
         accept(source);
@@ -671,6 +699,10 @@ export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly =
     return new Promise((accept, reject) => {
       fetch(url).then(res => res.text()).then(data => {
         pagecache.set(url, data);
+
+        if (modifySourceCB) {
+          data = modifySourceCB(data);
+        }
 
         if (loadSourceOnly) {
           accept(data);
