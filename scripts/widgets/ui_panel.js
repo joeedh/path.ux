@@ -44,7 +44,7 @@ export class PanelFrame extends ColumnFrame {
 
     this.titleframe = super.row();
 
-    this.contents = UIBase.createElement("colframe-x", true);
+    this.contents = super.col();
     this.contents._remove = this.contents.remove;
     this.contents.remove = () => {
       this.remove();
@@ -96,6 +96,10 @@ export class PanelFrame extends ColumnFrame {
   set packflag(val) {
     if (!this.contents) return;
     this.contents.packflag = val;
+  }
+
+  appendChild(child) {
+    return this.contents.shadow.appendChild(child);
   }
 
   get headerLabel() {
@@ -361,11 +365,15 @@ export class PanelFrame extends ColumnFrame {
     this._state = isClosed;
 
     if (isClosed) {
-      this.contents._remove();
-    } else {
-      super.add(this.contents, false);
-      this.contents.parentWidget = this;
+      this.contents.style.display = "none";
 
+      //this.contents._remove();
+      //this.contents.hide(true);
+      this.contents.packflag |= PackFlags.NO_UPDATE;
+    } else {
+      //this.contents.hide(false);
+      this.contents.style.display = "flex";
+      this.contents.packflag &= ~PackFlags.NO_UPDATE;
       this.contents.flushUpdate();
     }
 

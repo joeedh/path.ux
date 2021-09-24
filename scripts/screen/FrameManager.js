@@ -25,7 +25,7 @@ import {AreaDocker} from './AreaDocker.js';
 
 import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
 export {ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
-import {theme} from '../core/ui_base.js';
+import {theme, PackFlags} from '../core/ui_base.js';
 import * as FrameManager_mesh from './FrameManager_mesh.js';
 import {makePopupArea} from "../widgets/ui_dialog.js";
 
@@ -1295,6 +1295,10 @@ export class Screen extends ui_base.UIBase {
 
   completeSetCSS() {
     let rec = (n) => {
+      if (n.packflag & PackFlags.NO_UPDATE) {
+        return;
+      }
+
       n.setCSS();
 
       n._forEachChildWidget((c) => {
@@ -1436,7 +1440,9 @@ export class Screen extends ui_base.UIBase {
         }
 
         for (let n2 of n.childNodes) {
-          push(n2);
+          if (!(n2 instanceof UIBase) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+            push(n2);
+          }
         }
 
         if (n.shadow === undefined) {
@@ -1444,12 +1450,16 @@ export class Screen extends ui_base.UIBase {
         }
 
         for (let n2 of n.shadow.childNodes) {
-          push(n2);
+          if (!(n2 instanceof UIBase) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+            push(n2);
+          }
         }
 
         if (n instanceof UIBase) {
-          scopestack.push(n);
-          push(SCOPE_POP);
+          if (!(n.packflag & PackFlags.NO_UPDATE)) {
+            scopestack.push(n);
+            push(SCOPE_POP);
+          }
         }
       }
     })();

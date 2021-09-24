@@ -473,7 +473,8 @@ export const PackFlags = {
   HIDE_CHECK_MARKS       : (1<<13),
   NO_NUMSLIDER_TEXTBOX   : (1<<14),
   CUSTOM_ICON_SHEET      : 1<<15,
-  CUSTOM_ICON_SHEET_START: 20 //custom icon sheet bits are shifted to here
+  CUSTOM_ICON_SHEET_START: 20, //custom icon sheet bits are shifted to here
+  NO_UPDATE              : 1<<16
 };
 
 let first = (iter) => {
@@ -527,7 +528,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -782,11 +783,6 @@ export class UIBase extends HTMLElement {
     this._parentWidget = val;
   }
 
-  setUndo(val) {
-    this.useDataPathUndo = val;
-    return this;
-  }
-
   get useDataPathUndo() {
     let p = this;
 
@@ -957,6 +953,11 @@ export class UIBase extends HTMLElement {
    */
   static define() {
     throw new Error("Missing define() for ux element");
+  }
+
+  setUndo(val) {
+    this.useDataPathUndo = val;
+    return this;
   }
 
   hide(sethide = true) {
@@ -1257,6 +1258,11 @@ export class UIBase extends HTMLElement {
     }
 
     let zoom = this.getZoom();
+
+    if (zoom === 1.0) {
+      return;
+    }
+
     let transform = "" + this.style["transform"];
 
     //try to preserve user set transform by selectively deleting scale
@@ -1278,7 +1284,9 @@ export class UIBase extends HTMLElement {
     this.setCSS();
 
     this._forEachChildWidget((c) => {
-      c.flushSetCSS();
+      if (!(c.packflag & PackFlags.NO_UPDATE)) {
+        c.flushSetCSS();
+      }
     });
   }
 
@@ -1414,7 +1422,9 @@ export class UIBase extends HTMLElement {
     this.update();
 
     this._forEachChildWidget((c) => {
-      c.flushUpdate();
+      if (!(c.packflag & PackFlags.NO_UPDATE)) {
+        c.flushUpdate();
+      }
     });
   }
 
@@ -1527,8 +1537,8 @@ export class UIBase extends HTMLElement {
 
     if (!clip) {
       clip = {
-        pos : new Vector2([-10000, 10000]),
-        size: new Vector2([20000, 10000])
+        pos : new Vector2([-10000, -10000]),
+        size: new Vector2([20000, 20000])
       };
     }
 
@@ -2547,6 +2557,21 @@ export class UIBase extends HTMLElement {
 
 export function drawRoundBox2(elem, options = {}) {
   drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
+}
+
+export function setRoundBoxCSS(elem, style_override = {}) {
+  function get(key) {
+    if (key in style_override) {
+      let ret = style_override[key];
+
+      if (ret.endsWith("px")) {
+        ret = parsepx(ret);
+      }
+
+      return ret;
+    }
+
+  }
 }
 
 /**okay, I need to refactor this function,

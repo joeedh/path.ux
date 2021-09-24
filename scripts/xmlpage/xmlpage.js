@@ -6,14 +6,16 @@ import {PackFlags, UIBase} from '../core/ui_base.js';
 import {sliderDomAttributes} from '../widgets/ui_numsliders.js';
 import * as util from '../util/util.js';
 import {Menu} from '../widgets/ui_menu.js';
-import {Icons} from '../core/ui_base.js';
+import {Icons} from '../../../editors/icon_enum.js';
+import {Container} from '../core/ui.js';
 
 export var domTransferAttrs = new Set(["id", "title", "tab-index"]);
+export var domEventAttrs = new Set(["click", "mousedown", "mouseup", "mousemove", "keydown", "keypress"]);
 
 export function parseXML(xml) {
   let parser = new DOMParser()
-  return parser.parseFromString(xml, "application/xml");
-
+  xml = `<root>${xml}</root>`;
+  return parser.parseFromString(xml.trim(), "application/xml");
 }
 
 let num_re = /[0-9]+$/;
@@ -32,8 +34,6 @@ function getIconFlag(elem) {
   if (attr === "false" || attr === "no") {
     return 0;
   }
-
-  console.log("ATTR", attr, typeof attr);
 
   if (attr === "true" || attr === "yes") {
     return PackFlags.USE_ICONS;
@@ -54,11 +54,8 @@ function getIconFlag(elem) {
       return PackFlags.USE_ICONS;
     }
 
-    return PackFlags.USE_ICONS;
     let flag = PackFlags.USE_ICONS | PackFlags.CUSTOM_ICON_SHEET;
-    flag |= ((sheet-1) << PackFlags.CUSTOM_ICON_SHEET_START);
-
-    console.log("SHEET", sheet, typeof sheet, flag);
+    flag |= ((sheet - 1)<<PackFlags.CUSTOM_ICON_SHEET_START);
 
     return flag;
   }
@@ -116,11 +113,16 @@ function getfloat(elem, attr, defaultval) {
   return myParseFloat(elem.getAttribute(attr));
 }
 
+export const customHandlers = {};
+
 class Handler {
   constructor(ctx, container) {
     this.container = container;
     this.stack = [];
     this.ctx = ctx;
+    this.codefuncs = {};
+
+    this.templateVars = {};
 
     let attrs = util.list(sliderDomAttributes);
 
@@ -143,54 +145,131 @@ class Handler {
   }
 
   handle(elem) {
-    if (elem.constructor === XMLDocument) {
+    if (elem.constructor === XMLDocument || elem.nodeName === 'root') {
       for (let child of elem.childNodes) {
         this.handle(child);
       }
 
       window.tree = elem
       return;
-    } else if (elem.constructor === Text) {
+    } else if (elem.constructor === Text || elem.constructor === Comment) {
       return;
     }
 
     let tagname = "" + elem.tagName;
-    if (this[tagname]) {
+
+    if (tagname in customHandlers) {
+      customHandlers[tagname](this, elem);
+    } else if (this[tagname]) {
       this[tagname](elem);
     } else {
       let elem2 = UIBase.createElement(tagname.toLowerCase());
 
+      window.__elem = elem;
+      //transfer DOM attributes
+      for (let k of elem.getAttributeNames()) {
+        elem2.setAttribute(k, elem.getAttribute(k));
+      }
+
       if (elem2 instanceof UIBase) {
         this.container.add(elem2);
         this._style(elem, elem2);
+
+        if (elem2 instanceof Container) {
+          this.push();
+
+          this.container = elem2;
+          this._container(elem, elem2);
+          this.visit(elem);
+
+          this.pop();
+
+          return;
+        }
       } else {
         console.warn("Unknown element " + elem.tagName + " (" + elem.constructor.name + ")");
+        let elem2 = document.createElement(elem.tagName.toLowerCase());
+
+        for (let attr of elem.getAttributeNames()) {
+          elem2.setAttribute(attr, elem.getAttribute(attr));
+        }
+
+        this._basic(elem, elem2);
+
+        this.container.shadow.appendChild(elem2);
+        elem2.pathux_ctx = this.container.ctx;
       }
+
+      this.visit(elem);
     }
   }
 
   _style(elem, elem2) {
-    if (elem.hasAttribute("style")) {
-      let style = elem.getAttribute("style");
+    let style = {};
 
-      if (0) {
-        console.log("STYLE", style);
+    //try to handle class attribute, at least somewhat
 
-        style = style.split(";");
-        for (let row of style) {
-          let i = row.search(/\:/);
-          if (i >= 0) {
-            let key = row.slice(0, i).trim();
-            let val = row.slice(i + 1, row.length).trim();
+    if (elem.hasAttribute("class")) {
+      elem2.setAttribute("class", elem.getAttribute("class"));
 
-            console.log("kv", key, val, elem2);
-            elem2.style[key] = val;
+      let cls = elem2.getAttribute("class").trim();
+      let keys = [
+        cls,
+        (elem2.tagName.toLowerCase() + "." + cls).trim(),
+        "#" + elem.getAttribute("id").trim()
+      ];
+
+      for (let sheet of document.styleSheets) {
+        for (let rule of sheet.rules) {
+          for (let k of keys) {
+            if (rule.selectorText.trim() === k) {
+              for (let k2 of rule.styleMap.keys()) {
+                let val = rule.style[k2]
+
+                style[k2] = val;
+              }
+            }
           }
         }
-      } else {
-        elem2.setAttribute("style", style);
       }
     }
+
+    if (elem.hasAttribute("style")) {
+      let stylecode = elem.getAttribute("style");
+
+      stylecode = stylecode.split(";");
+
+      for (let row of stylecode) {
+        row = row.trim();
+
+        let i = row.search(/\:/);
+        if (i >= 0) {
+          let key = row.slice(0, i).trim();
+          let val = row.slice(i + 1, row.length).trim();
+
+          style[key] = val;
+        }
+      }
+    }
+
+    let keys = Object.keys(style);
+    if (keys.length === 0) {
+      return;
+    }
+
+    function setStyle() {
+      for (let k of keys) {
+        elem2.style[k] = style[k];
+      }
+    }
+
+    if (elem2 instanceof UIBase) {
+      elem2.setCSS.after(() => {
+        setStyle();
+      });
+    }
+
+    setStyle();
   }
 
   visit(node) {
@@ -199,8 +278,84 @@ class Handler {
     }
   }
 
+  _getattr(elem, k) {
+    let val = elem.getAttribute(k);
+
+    if (!val) {
+      return val;
+    }
+
+    if (val.startsWith("##")) {
+      val = val.slice(2, val.length).trim();
+
+      if (!(val in this.templateVars)) {
+        console.error(`unknown template variable '${val}'`);
+        val = '';
+      } else {
+        val = this.templateVars[val];
+      }
+    }
+
+    return val;
+  }
+
   _basic(elem, elem2) {
     this._style(elem, elem2);
+
+    for (let k of elem.getAttributeNames()) {
+      if (k.startsWith("custom")) {
+        elem2.setAttribute(k, this._getattr(elem, k));
+      }
+    }
+
+    let codeattrs = [];
+
+    for (let k of elem.getAttributeNames()) {
+      let val = ""+elem.getAttribute(k);
+
+      if (val.startsWith('ng[')) {
+        val = val.slice(3, val.endsWith("]") ? val.length-1 : val.length);
+
+        codeattrs.push([k, "ng", val]);
+      }
+    }
+
+    for (let k of domEventAttrs) {
+      let k2 = 'on' + k;
+
+      if (elem.hasAttribute(k2)) {
+        codeattrs.push([k, "dom", elem.getAttribute(k2)]);
+      }
+    }
+
+    for (let [k, eventType, id] of codeattrs) {
+      if (!(id in this.codefuncs)) {
+        console.error("Unknown code fragment " + id);
+        continue;
+      }
+
+      if (eventType === "dom") {
+        //click events usually don't go through normal
+        //dom event system
+        if (k === 'click') {
+          let onclick = elem2.onclick;
+          let func = this.codefuncs[id];
+
+          elem2.onclick = function () {
+            if (onclick) {
+              onclick.apply(this, arguments);
+            }
+
+            return func.apply(this, arguments);
+          }
+        } else {
+          elem2.addEventListener(k, this.codefuncs[id]);
+        }
+      } else if (eventType === "ng") {
+        elem2.addEventListener(k, this.codefuncs[id]);
+      }
+    }
+
 
     for (let k of domTransferAttrs) {
       if (elem.hasAttribute(k)) {
@@ -218,6 +373,10 @@ class Handler {
       if (elem.hasAttribute(k)) {
         elem2.setAttribute(k, elem.getAttribute(k));
       }
+    }
+
+    if (!(elem2 instanceof UIBase)) {
+      return;
     }
 
     if (elem.hasAttribute("useIcons") && typeof elem2.useIcons === "function") {
@@ -319,7 +478,7 @@ class Handler {
     doBox("margin");
     doBox("padding");
 
-    for (let i=0; i<2; i++) {
+    for (let i = 0; i < 2; i++) {
       let key = i ? "margin" : "padding";
 
       doBox(key + "-bottom");
@@ -379,6 +538,22 @@ class Handler {
     }
   }
 
+  cell(elem) {
+    this.push();
+    this.container = this.container.cell();
+    this._container(elem, this.container);
+    this.visit(elem);
+    this.pop();
+  }
+
+  table(elem) {
+    this.push();
+    this.container = this.container.table();
+    this._container(elem, this.container);
+    this.visit(elem);
+    this.pop();
+  }
+
   panel(elem) {
     let title = "" + elem.getAttribute("label")
     let closed = getbool(elem, "closed")
@@ -398,9 +573,33 @@ class Handler {
     this._prop(elem, "pathlabel")
   }
 
-  label(elem) {
-    let elem2 = this.container.label(elem.innerHTML);
-    this._basic(elem, elem2);
+  /**
+   handle a code element, which are wrapped in functions
+   */
+  code(elem) {
+    window._codelem = elem;
+
+    let buf = '';
+
+    for (let elem2 of elem.childNodes) {
+      if (elem2.nodeName === "#text") {
+        buf += elem2.textContent + '\n';
+      }
+    }
+
+    var func, $scope = this.templateScope;
+
+    buf = `
+func = function() {
+  ${buf};
+}
+    `;
+
+    eval(buf);
+
+    let id = "" + elem.getAttribute("id");
+
+    this.codefuncs[id] = func;
   }
 
   textbox(elem) {
@@ -410,6 +609,11 @@ class Handler {
       //let elem2 = this.container.textbox();
       //this._basic(elem, elem2);
     }
+  }
+
+  label(elem) {
+    let elem2 = this.container.label(elem.innerHTML);
+    this._basic(elem, elem2);
   }
 
   /** simpleSliders=true enables simple sliders */
@@ -425,7 +629,6 @@ class Handler {
     if (key === 'pathlabel') {
       elem2 = this.container.pathlabel(path, elem.innerHTML, packflag);
     } else if (key === 'textbox') {
-      console.error("PATH", path);
       elem2 = this.container.textbox(path, undefined, undefined, packflag);
 
       elem2.update();
@@ -514,7 +717,7 @@ class Handler {
       noIcons = true;
     }
 
-    let label = (""+elem.textContent).trim()
+    let label = ("" + elem.textContent).trim()
     if (label.length > 0) {
       path += "|" + label;
     }
@@ -543,14 +746,13 @@ class Handler {
     return this.menu(elem, true);
   }
 
-  menu(elem, isDropBox=false) {
+  menu(elem, isDropBox = false) {
     let packflag = getPackFlag(elem);
     let title = elem.getAttribute("name")
 
     let list = [];
 
     for (let child of elem.childNodes) {
-      console.log(child, child.tagName);
       if (child.tagName === "tool") {
         let path = child.getAttribute("path");
         let label = child.innerHTML.trim();
@@ -583,7 +785,7 @@ class Handler {
         }
 
         list.push({
-          name : child.innerHTML.trim(),
+          name: child.innerHTML.trim(),
           id, icon, hotkey, description
         });
       }
@@ -658,7 +860,7 @@ class Handler {
   }
 }
 
-export function initPage(ctx, xml, parentContainer = undefined) {
+export function initPage(ctx, xml, parentContainer = undefined, templateVars = {}, templateScope = {}) {
   let tree = parseXML(xml);
   let container = UIBase.createElement("container-x");
 
@@ -672,14 +874,32 @@ export function initPage(ctx, xml, parentContainer = undefined) {
   }
 
   let handler = new Handler(ctx, container);
+
+  handler.templateVars = Object.assign({}, templateVars);
+  handler.templateScope = templateScope;
+
   handler.handle(tree);
 
   return container;
 
 }
 
-export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly = false, modifySourceCB) {
+export function loadPage(ctx, url, parentContainer_or_args = undefined, loadSourceOnly = false,
+                         modifySourceCB, templateVars, templateScope) {
   let source;
+  let parentContainer;
+
+  if (parentContainer_or_args !== undefined && !(parentContainer_or_args instanceof HTMLElement)) {
+    let args = parentContainer_or_args;
+
+    parentContainer = args.parentContainer;
+    loadSourceOnly = args.loadSourceOnly;
+    modifySourceCB = args.modifySourceCB;
+    templateVars = args.templateVars;
+    templateScope = args.templateScope;
+  } else {
+    parentContainer = parentContainer_or_args;
+  }
 
   if (pagecache.has(url)) {
     source = pagecache.get(url);
@@ -692,7 +912,7 @@ export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly =
       if (loadSourceOnly) {
         accept(source);
       } else {
-        accept(initPage(ctx, source, parentContainer));
+        accept(initPage(ctx, source, parentContainer, templateVars, templateScope));
       }
     });
   } else {
@@ -707,7 +927,7 @@ export function loadPage(ctx, url, parentContainer = undefined, loadSourceOnly =
         if (loadSourceOnly) {
           accept(data);
         } else {
-          accept(initPage(ctx, data, parentContainer));
+          accept(initPage(ctx, data, parentContainer, templateVars, templateScope));
         }
       });
     });
