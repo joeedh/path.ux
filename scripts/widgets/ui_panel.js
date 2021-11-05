@@ -108,6 +108,11 @@ export class PanelFrame extends ColumnFrame {
 
   set headerLabel(v) {
     this.__label.text = v;
+    this.__label._updateFont();
+
+    if (this.ctx) {
+      this.setCSS();
+    }
   }
 
   get dataPrefix() {
@@ -175,6 +180,10 @@ export class PanelFrame extends ColumnFrame {
     let row = this.titleframe;
 
     let iconcheck = this.iconcheck;
+
+    if (!iconcheck) {
+      return;
+    }
 
     iconcheck.overrideDefault("padding", 0);
 
@@ -338,9 +347,7 @@ export class PanelFrame extends ColumnFrame {
     update = update || this.checkThemeUpdate();
 
     if (update) {
-      if (this.getAttribute("label")) {
-        this.headerLabel = this.getAttribute("label")
-      }
+      this.headerLabel = this.getAttribute("label")
 
       this.__label._updateFont();
       this.setCSS();
@@ -359,6 +366,32 @@ export class PanelFrame extends ColumnFrame {
     }
   }
 
+  //catch setAttribute so we can detect label update
+  //even if close and updates disabled
+  setAttribute(key, value) {
+    let ret = super.setAttribute(key, value);
+
+    if (this.ctx) {
+      this.update();
+      this.flushUpdate();
+    }
+
+    return ret;
+  }
+
+  get noUpdateClosedContents() {
+    if (!this.hasAttribute("update-closed-contents")) {
+      return false;
+    }
+
+    let ret = this.getAttribute("update-closed-contents");
+    return ret === "true" || ret === "on";
+  }
+
+  set noUpdateClosedContents(v) {
+    this.setAttribute("update-closed-contents", v ? "true" : "false");
+  }
+
   _setVisible(isClosed, changed) {
     changed = changed || !!isClosed !== !!this._closed;
 
@@ -369,7 +402,9 @@ export class PanelFrame extends ColumnFrame {
 
       //this.contents._remove();
       //this.contents.hide(true);
-      this.contents.packflag |= PackFlags.NO_UPDATE;
+      if (!this.noUpdateClosedContents) {
+        this.contents.packflag |= PackFlags.NO_UPDATE;
+      }
     } else {
       //this.contents.hide(false);
       this.contents.style.display = "flex";
@@ -399,7 +434,10 @@ export class PanelFrame extends ColumnFrame {
 
   _updateClosed(changed) {
     this._setVisible(this._closed, changed);
-    this.iconcheck.checked = this._closed;
+
+    if (this.iconcheck) {
+      this.iconcheck.checked = this._closed;
+    }
   }
 }
 

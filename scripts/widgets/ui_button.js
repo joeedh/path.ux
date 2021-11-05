@@ -10,6 +10,7 @@ import {DataPathError} from '../path-controller/controller/controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 import cconst from '../config/const.js';
 import {_themeUpdateKey, CSSFont} from "../core/ui_base.js";
+import {pushModalLight, popModalLight, eventWasTouch} from '../path-controller/util/simple_events.js';
 
 let keymap = events.keymap;
 
@@ -22,8 +23,279 @@ let UIBase = ui_base.UIBase,
 
 let parsepx = ui_base.parsepx;
 
-//use .setAttribute("linear") to disable nonlinear sliding
+cconst.DEBUG.buttonEvents = true;
+
 export class Button extends UIBase {
+  constructor() {
+    super();
+
+    this.label = document.createElement("span");
+    this.label.innerText = "button";
+    this.shadow.appendChild(this.label);
+
+    this.label.style["pointer-events"] = "none";
+
+    this._pressed = false;
+    this._highlight = false;
+
+    this._auto_depress = true;
+    this._modalstate = undefined;
+
+    this._last_name = undefined;
+    this._last_disabled = undefined;
+  }
+
+  init() {
+    super.init();
+    this.tabIndex = 0;
+
+    this.bindEvents();
+
+    this.setCSS();
+  }
+
+  get name() {
+    return "" + this.getAttribute("name");
+  }
+
+  set name(val) {
+    this.setAttribute("name", val);
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let subkey = undefined;
+
+    if (this.disabled) {
+      subkey = "disabled";
+    } else if (this._pressed && this._highlight) {
+      subkey = "highlight-pressed";
+    } else if (this._pressed) {
+      subkey = "pressed";
+    } else if (this._highlight) {
+      subkey = "highlight";
+    }
+
+    console.log("setcss", subkey, subkey ? this.getDefault(subkey) : null);
+
+    let h = this.getDefault("height");
+
+    this.setBoxCSS(subkey);
+
+    this.label.style["padding"] = this.label.style["margin"] = "0px";
+    this.style["background-color"] = this.getSubDefault(subkey, "background-color");
+
+    let font = this.getSubDefault(subkey, "DefaultText");
+    this.label.style["font"] = font.genCSS();
+    this.label.style["color"] = font.color;
+
+    this.style["display"] = "flex";
+    this.style["align-items"] = "center";
+    this.style["width"] = "max-content";
+    this.style["height"] = h + "px";
+
+    this.style["user-select"] = "none";
+    this.label.style["user-select"] = "none";
+  }
+
+  click() {
+    if (this._onpress) {
+      let rect = this.getClientRects();
+      let x = rect.x + rect.width*0.5;
+      let y = rect.y + rect.height*0.5;
+
+      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+
+      this._onpress(e);
+    }
+
+    super.click();
+  }
+
+  bindEvents() {
+    let press_gen = 0;
+    let depress;
+
+    let press = (e) => {
+      e.stopPropagation();
+
+      if (!this._modalstate) {
+        let this2 = this;
+
+        this._modalstate = pushModalLight({
+          on_mousedown(e) {
+            this.end(e);
+          },
+          on_mouseup(e) {
+            this.end(e);
+          },
+
+          end(e) {
+            if (!this2._modalstate) {
+              return;
+            }
+
+            popModalLight(this2._modalstate);
+            this2._modalstate = undefined;
+
+            depress(e);
+          }
+        });
+      }
+
+      if (cconst.DEBUG.buttonEvents) {
+        console.log("button press", this._pressed, this.disabled, e.button);
+      }
+
+      if (this.disabled) return;
+
+      this._pressed = true;
+
+      if (util.isMobile() && this.onclick && e.button === 0) {
+        this.onclick();
+      }
+
+      if (this._onpress) {
+        this._onpress(this);
+      }
+
+      this._redraw();
+
+      e.preventDefault();
+    };
+
+    depress = (e) => {
+      if (cconst.DEBUG.buttonEvents)
+        console.log("button depress", e.button, e.was_touch);
+
+      if (this._auto_depress) {
+        this._pressed = false;
+
+        if (this.disabled) return;
+
+        this._redraw();
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (util.isMobile() || e.type === "mouseup" && e.button) {
+        return;
+      }
+
+      this._redraw();
+
+      if (cconst.DEBUG.buttonEvents)
+        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
+
+      if (this.onclick && e.touches !== undefined) {
+        this.onclick(this);
+      }
+
+      this.undoBreakPoint();
+    }
+
+    this.addEventListener("click", () => {
+      this._pressed = false;
+      this._highlight = false;
+      this._redraw();
+    });
+
+    this.addEventListener("mousedown", press, {captured : true, passive : false});
+    this.addEventListener("mouseup", depress, {captured : true, passive : false});
+    this.addEventListener("mouseover", (e) => {
+      if (this.disabled)
+        return;
+
+      this._highlight = true;
+      this._redraw();
+    })
+
+    this.addEventListener("mouseout", (e) => {
+      if (this.disabled)
+        return;
+
+      this._highlight = false;
+      this._redraw();
+    })
+
+    this.addEventListener("keydown", (e) => {
+      if (this.disabled) return;
+
+      if (cconst.DEBUG.buttonEvents)
+        console.log(e.keyCode);
+
+      switch (e.keyCode) {
+        case 27: //escape
+          this.blur();
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+        case 32: //spacebar
+        case 13: //enter
+          this.click();
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+      }
+    });
+
+    this.addEventListener("focusin", () => {
+      if (this.disabled) return;
+
+      this._focus = 1;
+      this._redraw();
+      this.focus();
+      //console.log("focus2");
+    });
+
+    this.addEventListener("blur", () => {
+      if (this.disabled) return;
+
+      this._focus = 0;
+      this._redraw();
+      //console.log("blur2");
+    });
+  }
+
+  _redraw() {
+    console.log("_redraw");
+    this.setCSS();
+  }
+
+  updateDisabled() {
+    if (this._last_disabled !== this.disabled) {
+      this._last_disabled = this.disabled;
+
+      //setTimeout(() => {
+
+      this._redraw();
+
+      if (cconst.DEBUG.buttonEvents)
+        console.log("disabled update!", this.disabled, this.style["background-color"]);
+      //}, 100);
+    }
+  }
+
+  update() {
+    if (this._last_name !== this.name) {
+      this.label.innerHTML = this.name;
+      this._last_name = this.name;
+    }
+  }
+
+  static define() {
+    return {
+      tagname: "button-x",
+      style  : "button"
+    };
+  }
+}
+UIBase.register(Button);
+
+//use .setAttribute("linear") to disable nonlinear sliding
+export class OldButton extends UIBase {
   constructor() {
     super();
 
@@ -93,43 +365,7 @@ export class Button extends UIBase {
     this._last_disabled = false;
     this._auto_depress = true;
 
-    let style = document.createElement("style");
-    style.textContent = `.canvas1 {
-      -moz-user-focus: normal;
-      moz-user-focus: normal;
-      user-focus: normal;
-      padding : 0px;
-      margin : 0px;
-    }
-    `;
-
-    this.shadow.appendChild(style);
-    let form = this._div = document.createElement("div");
-
-    form.style["tabindex"] = 4;
-    form.tabIndex = 4;
-    form.setAttribute("type", "hidden");
-    form.type ="hidden";
-    form.style["-moz-user-focus"] = "normal";
-    form.setAttribute("class", "canvas1");
-    form.style["padding"] = form.style["margin"] = "0px";
-
-    form.appendChild(this.dom);
-
-    this.shadow.appendChild(form);
-  }
-
-  get tabIndex() {
-    return this._div.tabIndex;
-  }
-
-  set tabIndex(val) {
-    this._div.tabIndex = val;
-  }
-
-  get boxpad() {
-    throw new Error("Button.boxpad is deprecated");
-    return this.getDefault("padding");
+    this.shadow.appendChild(this.dom);
   }
 
   click() {
@@ -144,12 +380,6 @@ export class Button extends UIBase {
     }
 
     super.click();
-  }
-  set boxpad(val) {
-    throw new Error("Deprecated call to Button.boxpad setter");
-
-    //console.warn("Deprecated call to Button.boxpad setter");
-    //this.overrideDefault("padding", val);
   }
 
   init() {
@@ -176,7 +406,7 @@ export class Button extends UIBase {
   setAttribute(key, val) {
     super.setAttribute(key, val);
 
-    if (key == "name") {
+    if (key === "name") {
       this.updateName();
       this.updateWidth();
     }
@@ -386,6 +616,7 @@ export class Button extends UIBase {
       this.dom.style["border-width"] = "0px";
       this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
     }
+
   }
 
   updateName() {
@@ -551,9 +782,11 @@ export class Button extends UIBase {
     });
   }
 
-  static define() {return {
-    tagname : "button-x",
-    style : "button"
-  };}
+  static define() {
+    return {
+      tagname: "old-button-x",
+      style  : "button"
+    };
+  }
 }
-UIBase.internalRegister(Button);
+UIBase.internalRegister(OldButton);

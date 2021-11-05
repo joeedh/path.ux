@@ -217,6 +217,42 @@ export class FootUnit extends Unit {
 Unit.register(FootUnit);
 
 
+let square_foot_re = /((-?\d+(\.\d*)?ft(\u00b2)?)(-?\d+(\.\d*)?(in|inch)(\u00b2)?)?)|(-?\d+(\.\d*)?(in|inch)(\u00b2)?)$/
+
+export class SquareFootUnit extends FootUnit {
+  static unitDefine() {return {
+    name    : "square_foot",
+    uiname  : "Square Feet",
+    type    : "area",
+    icon    : -1,
+    pattern : square_foot_re
+  }}
+
+  static parse(string) {
+    string = string.replace(/\u00b2/g, "");
+    return super.parse(string);
+  }
+
+
+  static buildString(value, decimals=2) {
+    let vft = ~~(value);
+    let vin = (value*12) % 12;
+
+    if (vft === 0.0) {
+      return myToFixed(vin, decimals) + " in\u00b2";
+    }
+
+    let s = "" + vft + " ft\u00b2";
+    if (vin !== 0.0) {
+      s += " " + myToFixed(vin, decimals) + " in\u00b2";
+    }
+
+    return s;
+  }
+}
+Unit.register(SquareFootUnit);
+
+
 export class MileUnit extends Unit {
   static unitDefine() {return {
     name    : "mile",

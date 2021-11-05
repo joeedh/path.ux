@@ -6,7 +6,7 @@ import {PackFlags, UIBase} from '../core/ui_base.js';
 import {sliderDomAttributes} from '../widgets/ui_numsliders.js';
 import * as util from '../util/util.js';
 import {Menu} from '../widgets/ui_menu.js';
-import {Icons} from '../../../editors/icon_enum.js';
+import {Icons} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
 
 export var domTransferAttrs = new Set(["id", "title", "tab-index"]);
@@ -734,6 +734,7 @@ func = function() {
       elem2 = document.createElement("strip")
       elem2.innerHTML = "error"
       this.container.shadow.appendChild(elem2);
+      this._basic(elem, elem2);
     }
 
     if (noIcons) {

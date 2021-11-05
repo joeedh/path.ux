@@ -8,7 +8,7 @@ import * as stoolsys from '../path-controller/toolsys/toolsys.js';
 import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import {DataPathError} from '../path-controller/controller/controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
-import {isNumber} from "../path-controller/toolsys/toolprop.js";
+import {isNumber, PropFlags} from "../path-controller/toolsys/toolprop.js";
 import * as units from '../core/units.js';
 
 import cconst from '../config/const.js';
@@ -37,7 +37,8 @@ let UIBase = ui_base.UIBase,
 
 let parsepx = ui_base.parsepx;
 
-import {Button} from './ui_button.js';
+import {Button, OldButton} from './ui_button.js';
+import {eventWasTouch, popModalLight, pushModalLight} from '../path-controller/util/simple_events.js';
 export {Button} from './ui_button.js';
 
 export class IconLabel extends UIBase {
@@ -81,7 +82,7 @@ export class IconLabel extends UIBase {
 }
 UIBase.internalRegister(IconLabel);
 
-export class ValueButtonBase extends Button {
+export class ValueButtonBase extends OldButton {
   constructor() {
     super();
   }
@@ -300,6 +301,8 @@ export class Check extends UIBase {
     this._label.style["font"] = this.getDefault("DefaultText").genCSS();
     this._label.style["color"] = this.getDefault("DefaultText").color;
 
+    this._label.style['font'] = 'normal 14px poppins'; // TODO - Jordan - add to settings
+
     super.setCSS();
 
     //force clear background
@@ -463,16 +466,270 @@ export class Check extends UIBase {
 }
 UIBase.internalRegister(Check);
 
-export class IconCheck extends Button {
+export class IconButton extends UIBase {
+  constructor() {
+    super();
+
+    this._customIcon = undefined;
+
+    this._pressed = false;
+    this._highlight = false;
+    this._draw_pressed = true;
+
+    this._icon = -1;
+    this._icon_pressed = undefined;
+    this.iconsheet = 0;
+    this.drawButtonBG = true;
+
+    //have to put icon in subdiv
+    this.dom = document.createElement("div");
+    this.shadow.appendChild(this.dom);
+
+  }
+
+  _on_press() {
+    this._pressed = true;
+    this.setCSS();
+  }
+
+  _on_depress() {
+    this._pressed = false;
+    this.setCSS();
+  }
+
+  updateDefaultSize() {
+
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    let def;
+    let pstyle = this.getDefault("depressed");
+    let hstyle = this.getDefault("highlight");
+
+    this.noMarginsOrPadding();
+
+    if (this._pressed && this._draw_pressed) {
+      def = k => pstyle && k in pstyle ? pstyle[k] : this.getDefault(k);
+    } else if (this._highlight) {
+      def = k => hstyle && k in hstyle ? hstyle[k] : this.getDefault(k);
+    } else {
+      def = k => this.getDefault(k);
+    }
+
+    let loadstyle = (key, addpx) => {
+      let val = def(key);
+      if (addpx) {
+        val = ("" + val).trim();
+
+        if (!val.toLowerCase().endsWith("px")) {
+          val += "px";
+        }
+      }
+
+      this.style[key] = val;
+    }
+
+    let keys = ["margin", "padding", "margin-left", "margin-right", "margin-top", "margin-botton",
+                "padding-left", "padding-bottom", "padding-top", "padding-right",
+                "border-radius"]
+
+    for (let k of keys) {
+      loadstyle(k, true);
+    }
+    loadstyle("background-color", false);
+    loadstyle("color", false);
+
+    let border = `${def("border-width", true)} ${def("border-style", false)} ${def("border-color", false)}`
+    this.style["border"] = border;
+
+    let w = this.getDefault("width");
+
+    let size = ui_base.iconmanager.getTileSize(this.iconsheet);
+    w = size;
+
+    this.style["width"] = w+"px";
+    this.style["height"] = w+"px";
+
+    this.dom.style["width"] = w + "px";
+    this.dom.style["height"] = w + "px";
+    this.dom.style["margin"] = this.dom.style["padding"] = "0px";
+
+    this.style["display"] = "flex";
+    this.style["align-items"] = "center";
+
+    if (this._customIcon) {
+      this.dom.style["background-image"] = `url("${this._customIcon}")`
+    } else {
+      let icon = this.icon;
+
+      if (this._pressed && this._icon_pressed !== undefined) {
+        icon = this._icon_pressed;
+      }
+
+      ui_base.iconmanager.setCSS(icon, this.dom, this.iconsheet);
+    }
+  }
+
+  init() {
+    super.init();
+
+    let modalstate = undefined;
+
+    let press = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      if (modalstate) {
+        popModalLight(modalstate);
+        modalstate = undefined;
+      }
+
+      if (!eventWasTouch(e) && e.button !== 0) {
+        return;
+      }
+
+      if (1) { //!eventWasTouch(e)) {
+        let this2 = this;
+
+        modalstate = pushModalLight({
+          on_mouseup(e) {
+            //touch events aren't fireing onclick automatically the way mouse ones are
+
+            if (this2.onclick && eventWasTouch(e)) {
+              this2.onclick();
+            }
+            this.end();
+          },
+          on_touchcancel(e) {
+            this.on_mouseup(e);
+            this.end();
+          },
+          on_touchend(e) {
+            this.on_mouseup(e);
+            this.end();
+          },
+          on_keydown(e) {
+            this.end();
+          },
+          end() {
+            if (modalstate) {
+              popModalLight(modalstate);
+              modalstate = undefined;
+              this2._on_depress(e)
+              this2.setCSS();
+            }
+          }
+        });
+      }
+
+      this._on_press(e);
+    }
+
+    let depress = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      this._on_depress();
+      this.setCSS();
+    }
+
+    let high = (e) => {
+      this._highlight = true;
+      this.setCSS();
+    }
+
+    let unhigh = (e) => {
+      this._highlight = false;
+      this.setCSS();
+    }
+
+    this.tabIndex = 0;
+
+    this.addEventListener("mouseover", high);
+    this.addEventListener("mouseexit", unhigh);
+    this.addEventListener("mouseleave", unhigh);
+    this.addEventListener("focus", high);
+    this.addEventListener("blur", unhigh);
+
+    this.addEventListener("mousedown", press, {capture: true});
+    this.addEventListener("mouseup", depress, {capture: true});
+    //this.addEventListener("touchstart", press, {capture: true});
+    //this.addEventListener("touchcancel", depress, {capture: true});
+    //this.addEventListener("touchend", depress, {capture: true});
+    this.setCSS();
+
+    this.dom.style["pointer-events"] = "none";
+  }
+
+  set customIcon(domImage) {
+    this._customIcon = domImage;
+    this.setCSS();
+  }
+
+  get customIcon() {
+    return this._customIcon;
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  set icon(val) {
+    this._icon = val;
+    this.setCSS();
+  }
+
+  update() {
+    super.update();
+  }
+
+  _getsize() {
+    let margin = this.getDefault("padding");
+
+    return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
+  }
+
+  static define() {return {
+    tagname : "iconbutton-x",
+    style : "iconbutton"
+  };}
+}
+
+UIBase.internalRegister(IconButton);
+
+
+export class IconCheck extends IconButton {
   constructor() {
     super();
 
     this._checked = undefined;
-
     this._drawCheck = undefined;
-    this._icon = -1;
-    this._icon_pressed = undefined;
-    this.iconsheet = ui_base.IconSheets.LARGE;
+  }
+
+  _updatePressed(val) {
+    //don't set _pressed if we have a custom icon for press state
+    if (this._icon_pressed) {
+      this._draw_pressed = false;
+    }
+
+    this._pressed = val;
+    this.setCSS();
+  }
+
+  _on_depress() {
+    return;
+  }
+
+  _on_press() {
+    this.checked ^= 1;
+
+    if (this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
+    }
+
+    this.setCSS();
   }
 
   updateDefaultSize() {
@@ -498,7 +755,7 @@ export class IconCheck extends Button {
     }
 
     if (!!val !== !!this._drawCheck) {
-      this._redraw();
+      this.setCSS();
     }
 
     this._drawCheck = val;
@@ -510,8 +767,7 @@ export class IconCheck extends Button {
 
   set icon(val) {
     this._icon = val;
-    this._repos_canvas();
-    this._redraw();
+    this.setCSS();
   }
 
   get checked() {
@@ -519,9 +775,10 @@ export class IconCheck extends Button {
   }
 
   set checked(val) {
-    if (!!val != !!this._checked) {
-      this._checked = val;
-      this._redraw();
+    if (!!val !== !!this._checked) {
+      this._checked = val
+      this._updatePressed(!!val);
+      this.setCSS();
 
       if (this.onchange) {
         this.onchange(val);
@@ -595,9 +852,10 @@ export class IconCheck extends Button {
 
     val = !!val;
 
-    if (val != !!this._checked) {
+    if (val !== !!this._checked) {
       this._checked = val;
-      this._redraw();
+      this._updatePressed(!!val);
+      this.setCSS();
     }
   }
 
@@ -618,42 +876,6 @@ export class IconCheck extends Button {
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
 
-  _repos_canvas() {
-    let dpi = UIBase.getDPI();
-
-    let w = (~~(this._getsize()*dpi))/dpi;
-    let h = (~~(this._getsize()*dpi))/dpi;
-
-    this.dom.style["width"] = w + "px";
-    this.dom.style["height"] = h + "px";
-
-    if (this._div !== undefined) {
-      this._div.style["width"] = w + "px";
-      this._div.style["height"] = h + "px";
-    }
-
-    super._repos_canvas();
-  }
-
-  set icon(f) {
-    this._icon = f;
-    this._redraw();
-  }
-
-  get icon() {
-    return this._icon;
-  }
-
-  _onpress() {
-    this.checked ^= 1;
-
-    if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
-    }
-
-    this._redraw();
-  }
-
   get noEmboss() {
     let ret = this.getAttribute("no-emboss");
 
@@ -670,153 +892,14 @@ export class IconCheck extends Button {
     this.setAttribute('no-emboss', val ? 'true' : 'false');
   }
 
-  _redraw() {
-    this._repos_canvas();
-
-    if (!this.noEmboss) {
-      let pressed = this._pressed;
-      this._pressed = this._checked;
-      super._redraw(false);
-      this._pressed = pressed;
-    }
-
-    let icon = this._icon;
-
-    if (this._checked && this._icon_pressed !== undefined) {
-      icon = this._icon_pressed;
-    }
-
-    let tsize = ui_base.iconmanager.getTileSize(this.iconsheet);
-    let size = this._getsize();
-    let off = size > tsize ? (size - tsize)*0.5 : 0.0;
-
-    this.g.save();
-    this.g.translate(off, off);
-    ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
-
-    if (this.drawCheck) {
-      let icon2 = this._checked ? ui_base.Icons.CHECKED : ui_base.Icons.UNCHECKED;
-      ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon2, undefined, undefined, this.iconsheet);
-    }
-
-    this.g.restore();
-  }
-
   static define() {return {
     tagname : "iconcheck-x",
     style   : "iconcheck",
-    parentStyle : "button"
+    parentStyle : "iconbutton"
   };}
 }
 
 UIBase.internalRegister(IconCheck);
-
-export class IconButton extends Button {
-  constructor() {
-    super();
-
-    this._customIcon = undefined;
-
-    this._icon = 0;
-    this._icon_pressed = undefined;
-    this.iconsheet = ui_base.Icons.LARGE;
-    this.drawButtonBG = true;
-  }
-
-  updateDefaultSize() {
-
-  }
-
-  set customIcon(domImage) {
-    this._customIcon = domImage;
-  }
-
-  get customIcon() {
-    return this._customIcon;
-  }
-
-  _calcUpdateKey() {
-    return super._calcUpdateKey() + ":" + this._icon;
-  }
-
-  get icon() {
-    return this._icon;
-  }
-
-  set icon(val) {
-    this._icon = val;
-    this._repos_canvas();
-    this._redraw();
-  }
-
-  update() {
-    super.update();
-  }
-
-  _getsize() {
-    let margin = this.getDefault("padding");
-
-    return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
-  }
-
-  _repos_canvas() {
-    let dpi = UIBase.getDPI();
-
-    let w = (~~(this._getsize()*dpi))/dpi;
-    let h = (~~(this._getsize()*dpi))/dpi;
-
-    this.dom.style["width"] = w + "px";
-    this.dom.style["height"] = h + "px";
-
-    if (this._div !== undefined) {
-      this._div.style["width"] = w + "px";
-      this._div.style["height"] = h + "px";
-    }
-
-    super._repos_canvas();
-  }
-
-  _redraw() {
-    this._repos_canvas();
-
-    //this.dom._background = this._checked ? this.getDefault("BoxDepressed") : this.getDefault("background-color");
-    //
-    if (this.drawButtonBG) {
-      super._redraw(false);
-    }
-
-    let icon = this._icon;
-
-    if (this._checked && this._icon_pressed !== undefined) {
-      icon = this._icon_pressed;
-    }
-
-    let tsize = ui_base.iconmanager.getTileSize(this.iconsheet);
-    let size = this._getsize();
-
-    let dpi = UIBase.getDPI();
-    let off = size > tsize ? (size - tsize)*0.5*dpi : 0.0;
-
-    this.g.save();
-    this.g.translate(off, off);
-
-    if (this.customIcon) {
-      this.g.drawImage(this.customIcon, 0, 0, this.customIcon.width, this.customIcon.height, 0, 0, size, size);
-    } else {
-      ui_base.iconmanager.canvasDraw(this, this.dom, this.g, icon, undefined, undefined, this.iconsheet);
-    }
-
-    this.g.restore();
-  }
-
-  static define() {return {
-    tagname : "iconbutton-x",
-    style : "iconbutton",
-    parentStyle : "button"
-  };}
-}
-
-UIBase.internalRegister(IconButton);
 
 export class Check1 extends Button {
   constructor() {

@@ -19,7 +19,9 @@ import * as vectormath from '../path-controller/util/vectormath.js';
 import * as math from '../path-controller/util/math.js';
 import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import * as controller from '../path-controller/controller/controller.js';
-import {pushModalLight, popModalLight, copyEvent, pathDebugEvent} from '../path-controller/util/simple_events.js';
+import {
+  pushModalLight, popModalLight, copyEvent, pathDebugEvent, haveModal
+} from '../path-controller/util/simple_events.js';
 import {getDataPathToolOp} from '../path-controller/controller/controller.js';
 import * as units from './units.js';
 import {rgb_to_hsv, hsv_to_rgb} from "../util/colorutils.js";
@@ -204,6 +206,7 @@ class _IconManager {
 
     dom.style["background"] = this.getCSS(icon, fitsize);
     dom.style["background-size"] = (fitsize*this.tilex) + "px";
+    dom.style["background-clip"] = "content-box";
 
     if (!dom.style["width"]) {
       dom.style["width"] = this.drawsize + "px";
@@ -215,7 +218,7 @@ class _IconManager {
 
   //icon is an integer
   getCSS(icon, fitsize = this.drawsize) {
-    if (icon == -1) { //-1 means no icon
+    if (icon === -1) { //-1 means no icon
       return '';
     }
 
@@ -233,6 +236,7 @@ class _IconManager {
 
     //console.log(this.tilesize, this.drawsize, x, y);
 
+    let ts = this.tilesize;
     return `url("${this.image.src}") ${x}px ${y}px`;
   }
 }
@@ -528,7 +532,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -621,6 +625,11 @@ export class UIBase extends HTMLElement {
 
     this._client_disabled_set = undefined;
     //this._parent_disabled_set = 0;
+
+    this._useNativeToolTips = cconst.useNativeToolTips;
+    this._useNativeToolTips_set = false;
+    this._has_own_tooltips = undefined;
+    this._tooltip_timer = util.time_ms();
 
     this.pathUndoGen = 0;
     this._lastPathUndoGen = 0;
@@ -771,6 +780,15 @@ export class UIBase extends HTMLElement {
     return this._default_overrides;
   }//*/
 
+  get useNativeToolTips() {
+    return this._useNativeToolTips;
+  }
+
+  set useNativeToolTips(val) {
+    this._useNativeToolTips = val;
+    this._useNativeToolTips_set = true;
+  }
+
   get parentWidget() {
     return this._parentWidget;
   }
@@ -813,6 +831,11 @@ export class UIBase extends HTMLElement {
   }
 
   set description(val) {
+    if (val === null) {
+      this._description = undefined;
+      return;
+    }
+
     this._description = val;
 
     if (val === undefined || val === null) {
@@ -829,10 +852,15 @@ export class UIBase extends HTMLElement {
         let m = this.getAttribute("mass_set_path");
         s += "\n    massSetPath: " + m;
       }
-      this.title = s;
+
+      if (cconst.useNativeToolTips) {
+        this.title = s;
+      }
 
     } else {
-      this.title = "" + val;
+      if (cconst.useNativeToolTips) {
+        this.title = "" + val;
+      }
     }
   }
 
@@ -1249,6 +1277,95 @@ export class UIBase extends HTMLElement {
     return units.buildString(value, baseUnit, decimalPlaces, displayUnit);
   }
 
+  setBoxCSS(subkey) {
+    let boxcode = '';
+
+    //debugger;
+
+    let keys = ["left", "right", "top", "bottom"];
+
+    let sub;
+    if (subkey) {
+      sub = this.getAttribute(subkey) || {};
+    }
+
+    let def = (key) => {
+      if (sub) {
+        return this.getSubDefault(subkey, key);
+      }
+
+      return this.getDefault(key);
+    }
+
+    for (let i = 0; i < 2; i++) {
+      let key = i ? "padding" : "margin";
+
+      this.style[key] = "unset";
+
+      let val = def(key);
+      if (val !== undefined) { //handle default first
+        for (let j = 0; j < 4; j++) {
+          this.style[key + "-" + keys[j]] = val + "px";
+        }
+      }
+
+      for (let j = 0; j < 4; j++) { //now do box sides
+        let key2 = `${key}-${keys[j]}`;
+        let val2 = def(key2);
+
+        if (val2 !== undefined) {
+          this.style[key2] = val2 + "px";
+        }
+      }
+
+    }
+
+    this.style["border-radius"] = def("border-radius") + "px";
+    this.style["border"] = `${def("border-width")}px ${def("border-style")} ${def("border-color")}`;
+  }
+
+  genBoxCSS(subkey) {
+    let boxcode = '';
+
+    let keys = ["left", "right", "top", "bottom"];
+
+    let sub;
+    if (subkey) {
+      sub = this.getAttribute(subkey) || {};
+    }
+
+    let def = (key) => {
+      if (sub) {
+        return this.getSubDefault(subkey, key);
+      }
+
+      return this.getDefault(key);
+    }
+
+    for (let i = 0; i < 2; i++) {
+      let key = i ? "padding" : "margin";
+
+      let val = def(key);
+      if (val !== undefined) {
+        boxcode += `${key}: ${val} px;\n`;
+      }
+
+      for (let j = 0; j < 4; j++) {
+        let key2 = `${key}-${keys[j]}`;
+        let val2 = def(key2);
+
+        if (val2 !== undefined) {
+          boxcode += `${key2}: ${val}px;\n`;
+        }
+      }
+    }
+
+    boxcode += `border-radius: ${def("border-radius")}px;\n`;
+    boxcode += `border: ${def("border-width")}px ${def("border-style")} ${def("border-color")};\n`;
+
+    return boxcode;
+  }
+
   setCSS(setBG = true) {
     if (setBG) {
       let bg = this.getDefault("background-color");
@@ -1258,7 +1375,6 @@ export class UIBase extends HTMLElement {
     }
 
     let zoom = this.getZoom();
-
     if (zoom === 1.0) {
       return;
     }
@@ -1656,9 +1772,11 @@ export class UIBase extends HTMLElement {
 
     let p = this;
 
-    while (p && !p.style["z-index"] && p.style["z-index"] !== 0.0) {
+    while (p && (p.style["z-index"] === null || p.style["z-index"] === undefined
+      || p.style["z-index"] === "initial" || p.style["z-index"] === '')) {
       p = p.parentWidget;
     }
+
     let zindex = p !== undefined ? parseInt(p.style["z-index"]) : 0;
 
     rec(this, testwidget(this) ? this : undefined, zindex, zindex, clip, 0);
@@ -2168,8 +2286,140 @@ export class UIBase extends HTMLElement {
     return false;
   }
 
+  updateToolTipHandlers() {
+    if (!this._useNativeToolTips_set && !cconst.useNativeToolTips !== !this._useNativeToolTips) {
+      this._useNativeToolTips = cconst.useNativeToolTips;
+    }
+
+    if (!!this.useNativeToolTips === !this._has_own_tooltips) {
+      return;
+    }
+
+    if (!this.useNativeToolTips) {
+      let state = this._has_own_tooltips = {
+        start_timer : (e) => {
+          this._tooltip_timer = util.time_ms();
+          //console.warn(this._id, "tooltip timer start", e.type);
+        },
+        stop_timer  : (e) => {
+          //console.warn(this._id, "tooltip timer end", util.time_ms()-this._tooltip_timer, e.type);
+          this._tooltip_timer = undefined;
+        },
+        reset_timer : (e) => {
+          //console.warn(this._id, "tooltip timer reset", util.time_ms()-this._tooltip_timer, e.type);
+          if (this._tooltip_timer !== undefined) {
+            this._tooltip_timer = util.time_ms();
+          }
+        },
+        start_events: [
+          "mouseover"
+        ],
+        reset_events: [
+          "mousemove", "mousedown", "mouseup",
+          "touchstart", "touchend", "keydown", "focus"
+        ],
+        stop_events : [
+          "mouseleave", "blur", "mouseout"
+        ],
+        handlers    : {}
+      }
+
+      let bind_handler = (type, etype) => {
+        let handler = (e) => {
+          state[type](e);
+        };
+
+        if (etype in state.handlers) {
+          console.error(type, "is in handlers already");
+          return;
+        }
+
+        state.handlers[etype] = handler;
+        return handler;
+      }
+
+      let i = 0;
+      let lists = [state.start_events, state.stop_events, state.reset_events];
+
+      for (let type of ["start_timer", "stop_timer", "reset_timer"]) {
+        for (let etype of lists[i]) {
+          this.addEventListener(etype, bind_handler(type, etype));
+        }
+
+        i++;
+      }
+    } else {
+      console.warn(this.id, "removing tooltip handlers");
+      let state = this._has_own_tooltips;
+
+      for (let k in this.state.handlers) {
+        let handler = this.state.handlers[k];
+        this.removeEventListener(k, handler);
+      }
+
+      this._has_own_tooltips = undefined;
+      this._tooltip_timer = undefined;
+    }
+  }
+
+  updateToolTips() {
+    if (this._description === undefined || this._description === null ||
+      this._description.trim().length === 0) {
+      return;
+    }
+
+    if (!this.ctx || !this.ctx.screen) {
+      return;
+    }
+
+    this.updateToolTipHandlers();
+
+    if (this.useNativeToolTips || this._tooltip_timer === undefined) {
+      return;
+    }
+
+    let screen = this.ctx.screen;
+
+    const timelimit = 500;
+    let ok = util.time_ms() - this._tooltip_timer > timelimit;
+
+    let x = screen.mpos[0], y = screen.mpos[1];
+
+    let r = this.getClientRects();
+    r = r ? r[0] : r;
+
+    if (!r) {
+      ok = false;
+    } else {
+      ok = ok && x >= r.x && x < r.x + r.width;
+      ok = ok && y >= r.y && y < r.y + r.height;
+    }
+
+
+    //console.log(r);
+    if (r) {
+      //console.warn(this._id, "possible tooltip", x, y, r.x-3, r.y-3, r.width, r.height);
+    }
+
+    ok = ok && !haveModal();
+    ok = ok && screen.pickElement(x, y) === this;
+    ok = ok && this._description;
+
+    if (ok) {
+      //console.warn(this._id, "tooltip!", this);
+      _ToolTip.show(this._description, this.ctx.screen, x, y);
+    }
+
+    //console.warn(this._id, "tooltip timer end");
+    if (util.time_ms() - this._tooltip_timer > timelimit) {
+      this._tooltip_timer = undefined;
+    }
+  }
+
   //called regularly
   update() {
+    this.updateToolTips();
+
     if (this.ctx && this._description === undefined && this.getAttribute("datapath")) {
       let d = this.getPathDescription(this.ctx, this.getAttribute("datapath"));
 
@@ -2254,6 +2504,8 @@ export class UIBase extends HTMLElement {
     if (!localOnly) {
       this.default_overrides[key] = val;
     }
+
+    return this;
   }
 
   overrideClass(style) {
@@ -2467,6 +2719,11 @@ export class UIBase extends HTMLElement {
       child.overrideTheme(theme);
     });
 
+    if (this.ctx) {
+      this.flushSetCSS();
+      this.flushUpdate();
+    }
+
     return this;
   }
 
@@ -2557,21 +2814,6 @@ export class UIBase extends HTMLElement {
 
 export function drawRoundBox2(elem, options = {}) {
   drawRoundBox(elem, options.canvas, options.g, options.width, options.height, options.r, options.op, options.color, options.margin, options.no_clear);
-}
-
-export function setRoundBoxCSS(elem, style_override = {}) {
-  function get(key) {
-    if (key in style_override) {
-      let ret = style_override[key];
-
-      if (ret.endsWith("px")) {
-        ret = parsepx(ret);
-      }
-
-      return ret;
-    }
-
-  }
 }
 
 /**okay, I need to refactor this function,

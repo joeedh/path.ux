@@ -35,6 +35,7 @@ export default {
     screenborders    : false,
     allBordersMovable: false,
     modalEvents      : true,
+    useNativeToolTips: false,
     /*
     customWindowSize: {
       width: 512, height: 512

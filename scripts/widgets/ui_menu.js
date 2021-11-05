@@ -4,7 +4,7 @@ import * as util from '../path-controller/util/util.js';
 import cconst from '../config/const.js';
 import * as ui_base from '../core/ui_base.js';
 import * as toolprop from '../path-controller/toolsys/toolprop.js';
-import {Button} from "./ui_button.js";
+import {OldButton} from "./ui_button.js";
 import {DomEventTypes} from '../path-controller/util/events.js';
 
 import {HotKey, keymap} from '../path-controller/util/simple_events.js';
@@ -692,7 +692,7 @@ export class Menu extends UIBase {
 Menu.SEP = Symbol("menu seperator");
 UIBase.internalRegister(Menu);
 
-export class DropBox extends Button {
+export class DropBox extends OldButton {
   constructor() {
     super();
 

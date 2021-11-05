@@ -407,8 +407,15 @@ export class VectorPanel extends ColumnFrame {
     }
 
     if (meta && meta.range) {
+      let update = this.range[0] !== meta.range[0];
+      update= update || this.range[1] !== meta.range[1];
+
       this.range[0] = meta.range[0];
       this.range[1] = meta.range[1];
+
+      if (update) {
+        this.doOnce(this.rebuild);
+      }
     }
 
     this.internalDisabled = false;
@@ -492,6 +499,7 @@ export class VectorPanel extends ColumnFrame {
 }
 UIBase.internalRegister(VectorPanel);
 
+
 export class ToolTip extends UIBase {
   constructor() {
     super();
@@ -500,13 +508,21 @@ export class ToolTip extends UIBase {
     this.div = document.createElement("div");
 
     this.shadow.appendChild(this.div);
+    this._start_time = undefined;
+    this.timeout = undefined;
   }
 
   static show(message, screen, x, y) {
     let ret = UIBase.createElement(this.define().tagname);
 
+    ret._start_time = util.time_ms();
+    ret.timeout = ret.getDefault("timeout");
+
     ret.text = message;
     let size = ret._estimateSize();
+
+    let pad = 5;
+    size = [size[0] + pad, size[1] + pad];
 
     console.log(size);
     x = Math.min(Math.max(x, 0), screen.size[0] - size[0]);
@@ -515,6 +531,7 @@ export class ToolTip extends UIBase {
     ret._popup = screen.popup(ret, x, y);
     ret._popup.background = "rgba(0,0,0,0)";
     ret._popup.style["border"] = "none";
+    ret.div.style["padding"] = "15px";
 
     ret._popup.add(ret);
 
@@ -545,6 +562,14 @@ export class ToolTip extends UIBase {
     return [block.width+50, block.height+30];
   }
 
+  update() {
+    super.update();
+
+    if (util.time_ms() - this._start_time > this.timeout) {
+      this.end();
+    }
+  }
+
   setCSS() {
     super.setCSS();
 
@@ -556,7 +581,7 @@ export class ToolTip extends UIBase {
     let radius = this.getDefault("border-radius", undefined, 5);
     let bstyle = this.getDefault("border-style", undefined, "solid");
     let bwidth = this.getDefault("border-width", undefined, 1);
-    let padding = this.getDefault("padding", undefined, 5);
+    let padding = this.getDefault("padding", undefined, 15);
 
     this.noMarginsOrPadding();
 
@@ -578,3 +603,5 @@ export class ToolTip extends UIBase {
   }}
 };
 UIBase.internalRegister(ToolTip);
+
+window._ToolTip = ToolTip;

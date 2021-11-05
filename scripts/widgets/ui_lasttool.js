@@ -1,4 +1,4 @@
-import {UIBase} from "../core/ui_base.js";
+import {PackFlags, UIBase} from "../core/ui_base.js";
 import {ColumnFrame} from "../core/ui.js";
 import {PropTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
 
@@ -96,6 +96,10 @@ export class LastToolPanel extends ColumnFrame {
       return tool;
     };
 
+    if (tool.flag & ToolFlags.PRIVATE) {
+      return;
+    }
+
     let st = this.ctx.api.mapStruct(fakecls, true);
     let paths = [];
 
@@ -143,11 +147,17 @@ export class LastToolPanel extends ColumnFrame {
       defineProp(k, apikey);
     }
 
+    panel.useDataPathUndo = false;
+
     for (let dpath of paths) {
       let path = "last_tool." + dpath.path;
 
       panel.label(dpath.data.uiname);
-      panel.prop(path);
+      let ret = panel.prop(path, PackFlags.FORCE_ROLLER_SLIDER);
+
+      if (ret) {
+        ret.useDataPathUndo = false;
+      }
     }
     this.setCSS();
 

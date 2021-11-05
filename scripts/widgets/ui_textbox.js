@@ -263,8 +263,8 @@ export class TextBox extends TextBoxBase {
       this.dom.style["color"] = this.getDefault("DefaultText").color;
     }
 
-    this.dom.style["width"] = this.style["width"];
-    this.dom.style["height"] = this.style["height"];
+    this.dom.style["width"] = "100%";
+    this.dom.style["height"] = "100%";
   }
 
   updateDataPath() {

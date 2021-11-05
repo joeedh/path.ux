@@ -151,6 +151,10 @@ export function css2color(color) {
     }
   }
 
+  if (color.length === 3) {
+    color.push(1.0);
+  }
+
   return ret;
 }
 

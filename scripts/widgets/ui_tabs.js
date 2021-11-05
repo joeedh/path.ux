@@ -304,7 +304,8 @@ export class TabBar extends UIBase {
     this._last_pos = undefined;
 
     this.horiz = true;
-    this.onchange = undefined;
+    this.onchange = null;
+    this.onselect = null; //onselect is like onchange, but fires even if tab hasn't changed
 
     let mx, my;
 
@@ -337,7 +338,13 @@ export class TabBar extends UIBase {
       my *= dpi;
 
       do_element(e);
+
+      const is_mdown = e.type === "mousedown";
+      if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
+        e.preventDefault();
+      }
     }
+
 
     let do_touch = (e) => {
       let r = this.canvas.getClientRects()[0];
@@ -353,6 +360,11 @@ export class TabBar extends UIBase {
       my *= dpi;
 
       do_element(e);
+
+      const is_mdown = e.type === "touchstart";
+      if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
+        e.preventDefault();
+      }
     }
 
     this.canvas.addEventListener("mousemove", (e) => {
@@ -366,11 +378,15 @@ export class TabBar extends UIBase {
     }, false);
 
     this.canvas.addEventListener("touchstart", (e) => {
-      if (e.touches.length == 0) {
+      if (e.touches.length === 0) {
         return;
       }
 
       do_touch(e);
+
+      if (e.defaultPrevented) {
+        return;
+      }
 
       let ht = this.tabs.highlight;
 
@@ -390,6 +406,10 @@ export class TabBar extends UIBase {
 
     this.canvas.addEventListener("mousedown", (e) => {
       do_mouse(e);
+
+      if (e.defaultPrevented) {
+        return;
+      }
 
       if (debug) console.log("mdown");
 
@@ -430,6 +450,34 @@ export class TabBar extends UIBase {
       tagname: "tabbar-x",
       style  : "tabs"
     };
+  }
+
+
+  _fireOnSelect() {
+    let e = this._makeOnSelectEvt();
+
+    if (this.onselect) {
+      this.onselect(e);
+    }
+
+    return e;
+  }
+
+  _makeOnSelectEvt() {
+    return {
+      tab             : this.tabs.highlight,
+      defaultPrevented: false,
+      preventDefault() {
+        this.defaultPrevented = true;
+      }
+    }
+    /*
+      return new MouseEvent("mousedown", {
+        target : [this.tabs.highlight],
+        tab : "sdfdsf"
+      });
+
+   */
   }
 
   getTab(name_or_id) {
@@ -540,7 +588,7 @@ export class TabBar extends UIBase {
     this.tabs.push(tab);
     this.update(true);
 
-    if (this.tabs.length == 1) {
+    if (this.tabs.length === 1) {
       this.setActive(this.tabs[0]);
     }
 
@@ -550,10 +598,10 @@ export class TabBar extends UIBase {
   updatePos(force_update = false) {
     let pos = this.getAttribute("bar_pos");
 
-    if (pos != this._last_pos || force_update) {
+    if (pos !== this._last_pos || force_update) {
       this._last_pos = pos;
 
-      this.horiz = pos == "top" || pos == "bottom";
+      this.horiz = pos === "top" || pos === "bottom";
       if (debug) console.log("tab bar position update", this.horiz);
 
       if (this.horiz) {
@@ -772,8 +820,8 @@ export class TabBar extends UIBase {
       x += w + pad*2;
     }
 
-    x = (~~(x + pad)) / dpi;
-    h = (~~h) / dpi;
+    x = (~~(x + pad))/dpi;
+    h = (~~h)/dpi;
 
 
     if (this.horiz) {
@@ -1093,6 +1141,12 @@ export class TabContainer extends UIBase {
 
     this.tbar.parentWidget = this;
 
+    this.tbar.onselect = (e) => {
+      if (this.onselect) {
+        this.onselect(e);
+      }
+    };
+
     this.tbar.onchange = (tab) => {
       if (this._tab) {
         HTMLElement.prototype.remove.call(this._tab);
@@ -1125,6 +1179,19 @@ export class TabContainer extends UIBase {
         this.onchange(tab);
       }
     }
+  }
+
+  static setDefault(e) {
+    e.setAttribute("bar_pos", "top");
+
+    return e;
+  }
+
+  static define() {
+    return {
+      tagname: "tabcontainer-x",
+      style  : "tabs"
+    };
   }
 
   saveData() {
@@ -1162,19 +1229,6 @@ export class TabContainer extends UIBase {
       let uidata = JSON.stringify(json.tabs[k]);
       loadUIData(this.tabs[k], uidata);
     }
-  }
-
-  static setDefault(e) {
-    e.setAttribute("bar_pos", "top");
-
-    return e;
-  }
-
-  static define() {
-    return {
-      tagname: "tabcontainer-x",
-      style  : "tabs"
-    };
   }
 
   enableDrag() {
