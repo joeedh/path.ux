@@ -17,10 +17,10 @@ function myToFixed(s, n) {
   s = s.toFixed(n);
 
   while (s.endsWith('0')) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
   if (s.endsWith("\.")) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
 
   return s;
@@ -29,16 +29,17 @@ function myToFixed(s, n) {
 let keymap = events.keymap;
 
 let EnumProperty = toolprop.EnumProperty,
-    PropTypes = toolprop.PropTypes;
+    PropTypes    = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase,
-    PackFlags = ui_base.PackFlags,
+let UIBase     = ui_base.UIBase,
+    PackFlags  = ui_base.PackFlags,
     IconSheets = ui_base.IconSheets;
 
 let parsepx = ui_base.parsepx;
 
 import {Button, OldButton} from './ui_button.js';
 import {eventWasTouch, popModalLight, pushModalLight} from '../path-controller/util/simple_events.js';
+
 export {Button} from './ui_button.js';
 
 export class IconLabel extends UIBase {
@@ -46,6 +47,21 @@ export class IconLabel extends UIBase {
     super();
     this._icon = -1;
     this.iconsheet = 1;
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  set icon(id) {
+    this._icon = id;
+    this.setCSS();
+  }
+
+  static define() {
+    return {
+      tagname: "icon-label-x"
+    }
   }
 
   init() {
@@ -57,15 +73,6 @@ export class IconLabel extends UIBase {
     this.setCSS();
   }
 
-  set icon(id) {
-    this._icon = id;
-    this.setCSS();
-  }
-
-  get icon() {
-    return this._icon;
-  }
-
   setCSS() {
     let size = ui_base.iconmanager.getTileSize(this.iconsheet);
 
@@ -75,11 +82,8 @@ export class IconLabel extends UIBase {
     this.style["width"] = size + "px";
     this.style["height"] = size + "px";
   }
-
-  static define() {return {
-    tagname : "icon-label-x"
-  }}
 }
+
 UIBase.internalRegister(IconLabel);
 
 export class ValueButtonBase extends OldButton {
@@ -103,7 +107,7 @@ export class ValueButtonBase extends OldButton {
     if (!this.hasAttribute("datapath")) return;
     if (this.ctx === undefined) return;
 
-    let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
       let redraw = !this.disabled;
@@ -256,26 +260,6 @@ export class Check extends UIBase {
     shadow.appendChild(span);
   }
 
-  init() {
-    this.tabIndex = 1;
-    this.setAttribute("class", "checkx");
-
-
-    let style = document.createElement("style");
-    //let style = this.cssStyleTag();
-
-    let color = this.getDefault("focus-border-color");
-
-    style.textContent = `
-      .checkx:focus {
-        outline : none;
-      }
-    `;
-
-    //document.body.prepend(style);
-    this.prepend(style);
-  }
-
   get internalDisabled() {
     return super.internalDisabled;
   }
@@ -295,6 +279,70 @@ export class Check extends UIBase {
 
   set value(v) {
     this.checked = v;
+  }
+
+  get checked() {
+    return this._checked;
+  }
+
+  set checked(v) {
+    v = !!v;
+
+    if (this._checked !== v) {
+      this._checked = v;
+
+      this.setCSS();
+
+      //this.dom.checked = v;
+      this._redraw();
+
+      if (this.onclick) {
+        this.onclick(v);
+      }
+      if (this.onchange) {
+        this.onchange(v);
+      }
+
+      if (this.hasAttribute("datapath")) {
+        this.setPathValue(this.ctx, this.getAttribute("datapath"), this._checked);
+      }
+    }
+  }
+
+  get label() {
+    return this._label.textContent;
+  }
+
+  set label(l) {
+    this._label.textContent = l;
+  }
+
+  static define() {
+    return {
+      tagname    : "check-x",
+      style      : "checkbox",
+      parentStyle: "button"
+    };
+  }
+
+  init() {
+    this.tabIndex = 1;
+    this.setAttribute("class", "checkx");
+
+
+    let style = document.createElement("style");
+    //let style = this.cssStyleTag();
+
+    let color = this.getDefault("focus-border-color");
+
+    style.textContent = `
+      .checkx:focus {
+        outline : none;
+      }
+    `;
+
+    //document.body.prepend(style);
+    this.prepend(style);
   }
 
   setCSS() {
@@ -381,7 +429,7 @@ export class Check extends UIBase {
     ui_base.drawRoundBox(this, canvas, g, undefined, undefined, undefined, undefined, color);
     if (this._checked) {
       //canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
-      let x=(csize-tilesize)*0.5, y=(csize-tilesize)*0.5;
+      let x = (csize - tilesize)*0.5, y = (csize - tilesize)*0.5;
       ui_base.iconmanager.canvasDraw(this, canvas, g, ui_base.Icons.LARGE_CHECK, x, y);
     }
 
@@ -390,34 +438,6 @@ export class Check extends UIBase {
       g.lineWidth *= dpi;
       ui_base.drawRoundBox(this, canvas, g, undefined, undefined, undefined, "stroke", color);
     }
-  }
-
-  set checked(v) {
-    v = !!v;
-
-    if (this._checked !== v) {
-      this._checked = v;
-
-      this.setCSS();
-
-      //this.dom.checked = v;
-      this._redraw();
-
-      if (this.onclick) {
-        this.onclick(v);
-      }
-      if (this.onchange) {
-        this.onchange(v);
-      }
-
-      if (this.hasAttribute("datapath")) {
-        this.setPathValue(this.ctx, this.getAttribute("datapath"), this._checked);
-      }
-    }
-  }
-
-  get checked() {
-    return this._checked;
   }
 
   updateDPI() {
@@ -449,21 +469,8 @@ export class Check extends UIBase {
       this._redraw();
     }
   }
-
-  get label() {
-    return this._label.textContent;
-  }
-
-  set label(l) {
-    this._label.textContent = l;
-  }
-
-  static define() {return {
-    tagname : "check-x",
-    style   : "checkbox",
-    parentStyle : "button"
-  };}
 }
+
 UIBase.internalRegister(Check);
 
 export class IconButton extends UIBase {
@@ -485,6 +492,33 @@ export class IconButton extends UIBase {
     this.dom = document.createElement("div");
     this.shadow.appendChild(this.dom);
 
+    this._last_iconsheet = undefined;
+
+  }
+
+  get customIcon() {
+    return this._customIcon;
+  }
+
+  set customIcon(domImage) {
+    this._customIcon = domImage;
+    this.setCSS();
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  set icon(val) {
+    this._icon = val;
+    this.setCSS();
+  }
+
+  static define() {
+    return {
+      tagname: "iconbutton-x",
+      style  : "iconbutton"
+    };
   }
 
   _on_press() {
@@ -549,8 +583,8 @@ export class IconButton extends UIBase {
     let size = ui_base.iconmanager.getTileSize(this.iconsheet);
     w = size;
 
-    this.style["width"] = w+"px";
-    this.style["height"] = w+"px";
+    this.style["width"] = w + "px";
+    this.style["height"] = w + "px";
 
     this.dom.style["width"] = w + "px";
     this.dom.style["height"] = w + "px";
@@ -663,26 +697,13 @@ export class IconButton extends UIBase {
     this.dom.style["pointer-events"] = "none";
   }
 
-  set customIcon(domImage) {
-    this._customIcon = domImage;
-    this.setCSS();
-  }
-
-  get customIcon() {
-    return this._customIcon;
-  }
-
-  get icon() {
-    return this._icon;
-  }
-
-  set icon(val) {
-    this._icon = val;
-    this.setCSS();
-  }
-
   update() {
     super.update();
+
+    if (this.iconsheet !== this._last_iconsheet) {
+      this.setCSS();
+      this._last_iconsheet = this.iconsheet;
+    }
   }
 
   _getsize() {
@@ -690,11 +711,6 @@ export class IconButton extends UIBase {
 
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
-
-  static define() {return {
-    tagname : "iconbutton-x",
-    style : "iconbutton"
-  };}
 }
 
 UIBase.internalRegister(IconButton);
@@ -706,38 +722,6 @@ export class IconCheck extends IconButton {
 
     this._checked = undefined;
     this._drawCheck = undefined;
-  }
-
-  _updatePressed(val) {
-    //don't set _pressed if we have a custom icon for press state
-    if (this._icon_pressed) {
-      this._draw_pressed = false;
-    }
-
-    this._pressed = val;
-    this.setCSS();
-  }
-
-  _on_depress() {
-    return;
-  }
-
-  _on_press() {
-    this.checked ^= 1;
-
-    if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
-    }
-
-    this.setCSS();
-  }
-
-  updateDefaultSize() {
-
-  }
-
-  _calcUpdateKey() {
-    return super._calcUpdateKey() + ":" + this._icon;
   }
 
   get drawCheck() {
@@ -786,6 +770,62 @@ export class IconCheck extends IconButton {
     }
   }
 
+  get noEmboss() {
+    let ret = this.getAttribute("no-emboss");
+
+    if (!ret) {
+      return false;
+    }
+
+    ret = ret.toLowerCase().trim();
+
+    return ret === 'true' || ret === 'yes' || ret === 'on';
+  }
+
+  set noEmboss(val) {
+    this.setAttribute('no-emboss', val ? 'true' : 'false');
+  }
+
+  static define() {
+    return {
+      tagname    : "iconcheck-x",
+      style      : "iconcheck",
+      parentStyle: "iconbutton"
+    };
+  }
+
+  _updatePressed(val) {
+    //don't set _pressed if we have a custom icon for press state
+    if (this._icon_pressed) {
+      this._draw_pressed = false;
+    }
+
+    this._pressed = val;
+    this.setCSS();
+  }
+
+  _on_depress() {
+    return;
+  }
+
+  _on_press() {
+    this.checked ^= 1;
+
+    if (this.hasAttribute("datapath")) {
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
+    }
+
+    this.setCSS();
+  }
+
+  updateDefaultSize() {
+
+  }
+
+  _calcUpdateKey() {
+    return super._calcUpdateKey() + ":" + this._icon;
+  }
+
   updateDataPath() {
     if (!this.hasAttribute("datapath") || !this.ctx) {
       return;
@@ -795,7 +835,7 @@ export class IconCheck extends IconButton {
       let rdef;
       try {
         rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
-      } catch(error) {
+      } catch (error) {
         if (error instanceof DataPathError) {
           return;
         } else {
@@ -875,28 +915,6 @@ export class IconCheck extends IconButton {
     let margin = this.getDefault("padding");
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
   }
-
-  get noEmboss() {
-    let ret = this.getAttribute("no-emboss");
-
-    if (!ret) {
-      return false;
-    }
-
-    ret = ret.toLowerCase().trim();
-
-    return ret === 'true' || ret === 'yes' || ret === 'on';
-  }
-
-  set noEmboss(val) {
-    this.setAttribute('no-emboss', val ? 'true' : 'false');
-  }
-
-  static define() {return {
-    tagname : "iconcheck-x",
-    style   : "iconcheck",
-    parentStyle : "iconbutton"
-  };}
 }
 
 UIBase.internalRegister(IconCheck);
@@ -907,6 +925,13 @@ export class Check1 extends Button {
 
     this._namePad = 40;
     this._value = undefined;
+  }
+
+  static define() {
+    return {
+      tagname    : "check1-x",
+      parentStyle: "button"
+    };
   }
 
   _redraw() {
@@ -924,18 +949,13 @@ export class Check1 extends Button {
     //console.log(text, "text", this._name);
 
     let tw = ui_base.measureText(this, text, this.dom, this.g).width;
-    let cx = this.dom.width / 2 - tw / 2;
-    let cy = this.dom.height / 2;
+    let cx = this.dom.width/2 - tw/2;
+    let cy = this.dom.height/2;
 
-    ui_base.drawText(this, box, cy + ts / 2, text, {
+    ui_base.drawText(this, box, cy + ts/2, text, {
       canvas: this.dom, g: this.g
     });
   }
-
-  static define() {return {
-    tagname : "check1-x",
-    parentStyle : "button"
-  };}
 }
 
 UIBase.internalRegister(Check1);
