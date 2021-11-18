@@ -77,8 +77,6 @@ export class Button extends UIBase {
       subkey = "highlight";
     }
 
-    console.log("setcss", subkey, subkey ? this.getDefault(subkey) : null);
-
     let h = this.getDefault("height");
 
     this.setBoxCSS(subkey);
@@ -247,7 +245,6 @@ export class Button extends UIBase {
       this._focus = 1;
       this._redraw();
       this.focus();
-      //console.log("focus2");
     });
 
     this.addEventListener("blur", () => {
@@ -255,12 +252,10 @@ export class Button extends UIBase {
 
       this._focus = 0;
       this._redraw();
-      //console.log("blur2");
     });
   }
 
   _redraw() {
-    console.log("_redraw");
     this.setCSS();
   }
 
@@ -351,7 +346,6 @@ export class OldButton extends UIBase {
       this._focus = 1;
       this._redraw();
       this.focus();
-      //console.log("focus2");
     });
 
     this.addEventListener("blur", () => {
@@ -359,7 +353,6 @@ export class OldButton extends UIBase {
 
       this._focus = 0;
       this._redraw();
-      //console.log("blur2");
     });
 
     this._last_disabled = false;
