@@ -1717,7 +1717,7 @@ export class UIBase extends HTMLElement {
         }
 
         //to improve scrolling performance, don't check individual
-        //client rects in mousemove events
+        //client rects in mousemove events if mouse button is down.
 
         if (!isMouseMove || !isMouseDown) {
           let rects = n.getClientRects() || [];

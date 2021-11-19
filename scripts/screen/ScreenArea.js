@@ -415,7 +415,7 @@ export class Area extends ui_base.UIBase {
     return dropbox;
   }
 
-  makeHeader(container, add_note_area=true) {
+  makeHeader(container, add_note_area=true, make_draggable=true) {
     let row = this.header = container.row();
 
     row.remove();
@@ -480,7 +480,7 @@ export class Area extends ui_base.UIBase {
     }, false);
 
     let do_mousemove = (e, pageX, pageY) => {
-      if (haveModal()) {
+      if (haveModal() || !make_draggable) {
         return;
       }
 

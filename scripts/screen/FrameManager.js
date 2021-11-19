@@ -140,7 +140,11 @@ export class Screen extends ui_base.UIBase {
       let dragging = e.type === "mousemove" || e.type === "touchmove" || e.type === "pointermove";
       dragging = dragging && (e.buttons || (e.touches && e.touches.length > 0));
 
-      if (!dragging) {
+      /*
+      make sure active area is up to date.
+      but don't call pickElement too often as it's slow
+      */
+      if (!dragging && Math.random() > 0.9) {
         let elem = this.pickElement(x, y, {
           sx        : 1,
           sy        : 1,
@@ -171,15 +175,15 @@ export class Screen extends ui_base.UIBase {
       return on_mousemove(e, e.x, e.y);
     }, {passive: true});
 
-    /*uiBase forwards events for us
+    /*UIBase forwards touch events already
     this.shadow.addEventListener("touchmove", (e) => {
       if (e.touches.length === 0) {
         return;
       }
 
       return on_mousemove(e, e.touches[0].pageX, e.touches[0].pagesY);
-    });*/
-
+    }, {passive : true});
+    */
   }
 
   get borders() {
