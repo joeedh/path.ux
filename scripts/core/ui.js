@@ -794,7 +794,7 @@ export class Container extends ui_base.UIBase {
 
     let packflag = args.packflag || 0;
     let label = args.label || tdef.uiname;
-    let create_cb = args.create_cb;
+    let createCb = args.createCb || args.create_cb;
     let container = args.container || this.panel(label);
     let defaultsPath = args.defaultsPath || "toolDefaults";
 
@@ -820,19 +820,30 @@ export class Container extends ui_base.UIBase {
       container.prop(path2);
     }
 
-    container.tool(path_or_cls, packflag, create_cb, label);
+    container.tool(path_or_cls, packflag, createCb, label);
 
     return container;
   }
 
-  tool(path_or_cls, packflag = 0, create_cb = undefined, label=undefined) {
+  tool(path_or_cls, packflag_or_args = {}, createCb = undefined, label=undefined) {
     let cls;
+    let packflag;
+
+    if (typeof packflag_or_args === "object") {
+      let args = packflag_or_args;
+
+      packflag = args.packflag;
+      createCb = args.createCb;
+      label = args.label;
+    } else {
+      packflag = packflag_or_args || 0;
+    }
 
     if (typeof path_or_cls == "string") {
       if (path_or_cls.search(/\|/) >= 0) {
         path_or_cls = path_or_cls.split("|");
 
-        if (path_or_cls.length > 1) {
+        if (label === undefined && path_or_cls.length > 1) {
           label = path_or_cls[1].trim();
         }
 
@@ -857,8 +868,8 @@ export class Container extends ui_base.UIBase {
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
     let hotkey;
 
-    if (create_cb === undefined) {
-      create_cb = (cls) => {
+    if (createCb === undefined) {
+      createCb = (cls) => {
         return this.ctx.api.createTool(this.ctx, path_or_cls);
       }
     }
@@ -866,7 +877,7 @@ export class Container extends ui_base.UIBase {
     let cb = () => {
       console.log("tool run");
 
-      let toolob = create_cb(cls);
+      let toolob = createCb(cls);
       this.ctx.api.execTool(this.ctx, toolob);
     }
 
@@ -893,15 +904,14 @@ export class Container extends ui_base.UIBase {
     let ret;
 
     if (def.icon !== undefined && (packflag & PackFlags.USE_ICONS)) {
-      //console.log("iconbutton!");
-      label = label !== undefined ? label : tooltip;
+      label = label === undefined ? tooltip : label;
 
       ret = this.iconbutton(def.icon, label, cb);
 
       ret.iconsheet = iconSheetFromPackFlag(packflag);
       ret.packflag |= packflag;
     } else {
-      label = label !== undefined ? label : def.uiname;
+      label = label === undefined ? def.uiname : label;
 
       ret = this.button(label, cb);
       ret.description = tooltip;
