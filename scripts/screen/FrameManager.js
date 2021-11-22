@@ -1325,11 +1325,11 @@ export class Screen extends ui_base.UIBase {
 
   completeSetCSS() {
     let rec = (n) => {
+      n.setCSS();
+
       if (n.packflag & PackFlags.NO_UPDATE) {
         return;
       }
-
-      n.setCSS();
 
       n._forEachChildWidget((c) => {
         rec(c);

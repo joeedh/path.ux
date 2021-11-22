@@ -1034,6 +1034,10 @@ export class NumSliderSimpleBase extends UIBase {
       if (this.disabled) {
         return;
       }
+
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
       this._startModal(e);
     });
 

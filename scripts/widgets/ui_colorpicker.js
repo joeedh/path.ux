@@ -369,6 +369,10 @@ export class ColorField extends UIBase {
     });
     
     this.canvas.addEventListener("touchstart", (e) => {
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
       do_touch(e);
       if (mx !== undefined)
         return this.on_mousedown(e, mx, my, 0);

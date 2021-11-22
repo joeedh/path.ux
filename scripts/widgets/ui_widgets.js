@@ -182,6 +182,11 @@ export class Check extends UIBase {
     let mdown = (e) => {
       this._highlight = false;
       this.checked = !this.checked;
+
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
     };
 
     let mup = (e) => {

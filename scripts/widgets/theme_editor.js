@@ -41,6 +41,9 @@ export class ThemeEditor extends Container {
       if (this.onchange) {
         this.onchange(key, k, obj);
       }
+
+      this.ctx.screen.completeSetCSS();
+      this.ctx.screen.completeUpdate();
     };
 
     let getpath = (path) => {

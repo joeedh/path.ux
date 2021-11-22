@@ -107,6 +107,11 @@ export class DragBox extends Container {
     this.addEventListener("mousedown", (e) => {
       console.log("start drag");
       startDrag(this);
+
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
     }, {capture : false})
 
     header.background = this.getDefault("background-color");

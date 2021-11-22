@@ -854,6 +854,10 @@ func = function() {
     let tabs = this.container.tabs(pos)
     this.container = tabs;
 
+    if (elem.hasAttribute("movable-tabs")) {
+      tabs.setAttribute("movable-tabs", elem.getAttribute("movable-tabs"));
+    }
+
     this._container(elem, tabs);
     this.visit(elem);
 

@@ -20,14 +20,6 @@ export const DefaultTheme = {
       size   : 14,
       color  : 'rgba(35, 35, 35, 1.0)'
     }),
-    LabelText           : new CSSFont({
-      font   : 'sans-serif',
-      weight : 'normal',
-      variant: 'normal',
-      style  : 'normal',
-      size   : 12,
-      color  : 'rgba(35, 35, 35, 1.0)'
-    }),
     TitleText           : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
@@ -236,6 +228,17 @@ export const DefaultTheme = {
     width             : 135,
   },
 
+  label: {
+    LabelText         : new CSSFont({
+      font   : 'sans-serif',
+      weight : 'normal',
+      variant: 'normal',
+      style  : 'normal',
+      size   : 14,
+      color  : 'rgba(35, 35, 35, 1.0)'
+    }),
+  },
+
   numslider_textbox: {
     TextBoxHeight     : 25,
     TextBoxWidth      : 100,
@@ -267,6 +270,8 @@ export const DefaultTheme = {
     'margin-bottom-closed': 0,
     'margin-top'          : 0.2606556353343805,
     'margin-top-closed'   : 0,
+    'margin-left'         : 0,
+    'margin-right'        : 0,
     'padding-bottom'      : 0.8561244078997758,
     'padding-left'        : 0,
     'padding-right'       : 0,

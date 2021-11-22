@@ -8,6 +8,7 @@ import {defineAPI} from "../api/api_define.js"
 import {ToolContext, ViewContext} from "./context.js";
 
 import {DataLib, DataRef, DataBlock} from './datablock.js';
+import {theme} from '../theme.js';
 
 import {WorkspaceEditor} from '../editors/workspace/workspace.js';
 import {AppScreen} from "../editors/screen.js";
@@ -358,6 +359,8 @@ export class AppState {
 }
 
 export function start() {
+  setTheme(theme);
+
   window._appstate = new AppState();
 
   nstructjs.validateStructs();

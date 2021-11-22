@@ -210,6 +210,10 @@ export class PanelFrame extends ColumnFrame {
 
     let onclick = (e) => {
       iconcheck.checked = !iconcheck.checked;
+
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
     };
 
     let label = this.__label = row.label(this.getAttribute("label"));
@@ -291,6 +295,11 @@ export class PanelFrame extends ColumnFrame {
     this.titleframe.style["padding-bottom"] = this.getDefault("padding-bottom") + "px";
     this.titleframe.style["padding-left"] = paddingleft + "px";
     this.titleframe.style["padding-right"] = paddingright + "px";
+    this.titleframe.style["margin-bottom"] = "0px";
+    this.titleframe.style["margin-top"] = "0px";
+
+    this.__label.style["border"] = "unset";
+    this.__label.style["border-radius"] = "unset";
 
     let bg = this.getDefault("background-color");
 
@@ -344,7 +353,13 @@ export class PanelFrame extends ColumnFrame {
     let text = this.getAttribute("label");
 
     let update = text !== this.__label.text;
-    update = update || this.checkThemeUpdate();
+
+    if (this.checkThemeUpdate()) {
+      update = true;
+      this._setVisible(this.closed, true);
+      this.setCSS();
+      this.flushSetCSS();
+    }
 
     if (update) {
       this.headerLabel = this.getAttribute("label")

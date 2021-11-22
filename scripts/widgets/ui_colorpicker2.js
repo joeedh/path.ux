@@ -198,6 +198,10 @@ export class HueField extends UIBase {
     };
 
     this.addEventListener("mousedown", (e) => {
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
       let rect = this.canvas.getClientRects()[0];
       let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
@@ -218,7 +222,7 @@ export class HueField extends UIBase {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+            if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
               this.popModal();
             }
           }
@@ -315,6 +319,10 @@ export class SatValField extends UIBase {
     };
 
     this.canvas.addEventListener("mousedown", (e) => {
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
       let rect = this.canvas.getClientRects()[0];
       let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
@@ -339,7 +347,7 @@ export class SatValField extends UIBase {
             this.popModal();
           },
           on_keydown: (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
+            if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
               this.popModal();
             }
           }
@@ -348,6 +356,10 @@ export class SatValField extends UIBase {
     });
 
     this.canvas.addEventListener("touchstart", (e) => {
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
       let rect = this.canvas.getClientRects()[0];
       let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
 
@@ -950,6 +962,10 @@ export class ColorPickerButton extends UIBase {
     });
 
     this.addEventListener("mousedown", (e) => {
+      /* ensure browser doesn't spawn its own (incompatible)
+         touch->mouse emulation events}; */
+      e.preventDefault();
+
       this.click(e);
     });
 

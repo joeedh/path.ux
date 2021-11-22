@@ -95,8 +95,6 @@ export class ModalTabMove extends events.EventHandler {
   }
 
   on_mousedown(e) {
-    if (debug) console.log("yay");
-
     this.finish();
   }
 
@@ -207,7 +205,7 @@ export class ModalTabMove extends events.EventHandler {
     dragok = dragok || disty > limit*1.5;
     dragok = dragok && (this.tbar.draggable || this.tbar.getAttribute("draggable"));
 
-    console.log(dragok, disty, this.tbar.draggable);
+    //console.log(dragok, disty, this.tbar.draggable);
 
     if (dragok) {
       this.dragstate = true;
@@ -277,6 +275,7 @@ export class TabBar extends UIBase {
     let canvas = document.createElement("canvas");
 
     this.iconsheet = 0;
+    this.movableTabs = true;
 
     this.tabFontScale = 1.0;
 
@@ -393,11 +392,13 @@ export class TabBar extends UIBase {
       if (ht !== undefined && this.tool === undefined) {
         this.setActive(ht);
 
-        let edom = this.getScreen();
-        let tool = new ModalTabMove(ht, this, edom);
-        this.tool = tool;
+        if (this.movableTabs) {
+          let edom = this.getScreen();
+          let tool = new ModalTabMove(ht, this, edom);
+          this.tool = tool;
 
-        tool.pushModal(edom, false);
+          tool.pushModal(edom, false);
+        }
       }
 
       e.preventDefault();
@@ -414,6 +415,9 @@ export class TabBar extends UIBase {
       if (debug) console.log("mdown");
 
       if (e.button !== 0) {
+        /* ensure browser doesn't spawn its own (incompatible)
+           touch->mouse emulation events}; */
+        e.preventDefault();
         return;
       }
 
@@ -423,14 +427,19 @@ export class TabBar extends UIBase {
         this.setActive(ht);
 
         if (this.ctx === undefined) {
+          /* ensure browser doesn't spawn its own (incompatible)
+             touch->mouse emulation events}; */
+          e.preventDefault();
           return;
         }
 
-        let edom = this.getScreen();
-        let tool = new ModalTabMove(ht, this, edom);
-        this.tool = tool;
+        if (this.movableTabs) {
+          let edom = this.getScreen();
+          let tool = new ModalTabMove(ht, this, edom);
+          this.tool = tool;
 
-        tool.pushModal(edom, false);
+          tool.pushModal(edom, false);
+        }
       }
 
       e.preventDefault();
@@ -1181,6 +1190,23 @@ export class TabContainer extends UIBase {
     }
   }
 
+  get movableTabs() {
+    if (!this.hasAttribute("movable-tabs")) {
+      return true;
+    }
+
+    let ret = "" + this.getAttribute("movable-tabs");
+
+    return ret === "" || ret === "true" || ret === "yes" || ret === "null" || ret === "undefined";
+  }
+
+  set movableTabs(val) {
+    val = !!val;
+
+    this.setAttribute("movable-tabs", val ? "true" : "false");
+    this.tbar.movableTabs = this.movableTabs;
+  }
+
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
 
@@ -1437,6 +1463,8 @@ export class TabContainer extends UIBase {
 
   update() {
     super.update();
+
+    this.tbar.movableTabs = this.movableTabs;
 
     if (this._tab !== undefined) {
       this._tab.update();
