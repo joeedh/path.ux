@@ -300,7 +300,7 @@ export class Container extends ui_base.UIBase {
     this.style["display"] = "flex";
     this.style["flex-direction"] = this.reversed ? "column-reverse" : "column";
     this.style["flex-wrap"] = "nowrap";
-    this.style["flex-grow"] = "1";
+    this.style["flex-grow"] = "" + this.getDefault("flex-grow", undefined, "1");
 
     this.setCSS();
 

@@ -149,7 +149,7 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
 
   //for (let size of sizes) {
   if (1) {
-    let size = 32;
+    let size = 16;
     let iconsheet = manager.findClosestSheet(size);
     let tilesize = manager.getTileSize(iconsheet);
 
