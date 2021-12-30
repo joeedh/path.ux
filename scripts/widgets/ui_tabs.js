@@ -1191,13 +1191,25 @@ export class TabContainer extends UIBase {
   }
 
   get movableTabs() {
+    let attr;
+
     if (!this.hasAttribute("movable-tabs")) {
-      return true;
+      attr = this.getDefault("movable-tabs");
+
+      if (attr === undefined || attr === null) {
+        attr = "true";
+      }
+
+      if (typeof attr === "boolean" || typeof attr === "number") {
+        attr = attr ? "true" : "false";
+      }
+    } else {
+      attr = "" + this.getAttribute("movable-tabs");
     }
 
-    let ret = "" + this.getAttribute("movable-tabs");
+    attr = attr.toLowerCase();
 
-    return ret === "" || ret === "true" || ret === "yes" || ret === "null" || ret === "undefined";
+    return attr === "true";
   }
 
   set movableTabs(val) {

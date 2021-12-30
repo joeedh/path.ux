@@ -1919,12 +1919,7 @@ export class UIBase extends HTMLElement {
     this.focus();
   }
 
-  flash(color, rect_element = this, timems = 355) {
-    //console.warn("flash internalDisabled due to bug");
-    //return;
-
-    console.warn("flash");
-
+  flash(color, rect_element = this, timems = 355, autoFocus= true) {
     if (typeof color != "object") {
       color = css2color(color);
     }
@@ -1933,7 +1928,7 @@ export class UIBase extends HTMLElement {
 
     if (this._flashtimer !== undefined && this._flashcolor !== csscolor) {
       window.setTimeout(() => {
-        this.flash(color, rect_element, timems);
+        this.flash(color, rect_element, timems, autoFocus);
       }, 100);
 
       return;
@@ -1972,7 +1967,10 @@ export class UIBase extends HTMLElement {
         timer = undefined;
 
         div.remove();
-        this._flash_focus();
+
+        if (autoFocus) {
+          this._flash_focus();
+        }
       }
 
       tick++;
@@ -2003,7 +2001,10 @@ export class UIBase extends HTMLElement {
     }
 
     document.body.appendChild(div);
-    this.focus();
+    if (autoFocus) {
+      this._flash_focus();
+    }
+
     this._flashcolor = csscolor;
 
     if (screen !== undefined) {

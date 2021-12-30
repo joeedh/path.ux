@@ -410,7 +410,7 @@ export class TextBox extends TextBoxBase {
       }
 
       if (!units.isNumber(text.trim())) {
-        this.flash(ui_base.ErrorColors.ERROR, this.dom);
+        this.flash(ui_base.ErrorColors.ERROR, this.dom, undefined, false);
         this.focus();
         this.dom.focus();
         this._had_error = true;
@@ -418,7 +418,7 @@ export class TextBox extends TextBoxBase {
         let val = units.parseValue(text, baseUnit, displayUnit);
 
         if (this._had_error) {
-          this.flash(ui_base.ErrorColors.OK, this.dom);
+          this.flash(ui_base.ErrorColors.OK, this.dom, undefined, false);
         }
 
         this._had_error = false;
@@ -429,7 +429,7 @@ export class TextBox extends TextBoxBase {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
 
         if (this._had_error) {
-          this.flash(ui_base.ErrorColors.OK, this.dom);
+          this.flash(ui_base.ErrorColors.OK, this.dom, undefined, false);
           this.dom.focus();
         }
 
@@ -440,7 +440,7 @@ export class TextBox extends TextBoxBase {
         console.warn("textbox error!");
         //this._had_error = true;
 
-        this.flash(ui_base.ErrorColors.ERROR, this.dom);
+        this.flash(ui_base.ErrorColors.ERROR, this.dom, undefined, false);
         this.dom.focus();
       }
     }

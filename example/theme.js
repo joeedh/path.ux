@@ -328,6 +328,7 @@ export const theme = {
   },
 
   tabs:  {
+    "movable-tabs"    : "true",
     TabActive         : 'rgba(212,212,212, 1)',
     TabBarRadius      : 6,
     TabHighlight      : 'rgba(50, 50, 50, 0.2)',

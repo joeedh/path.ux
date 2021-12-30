@@ -70,7 +70,7 @@ function updateSliderFromDom(dom, slider = dom) {
   }
 
   if (dom.hasAttribute("min")) {
-    slider.range = slider.range || [1e17, 1e17];
+    slider.range = slider.range || [-1e17, 1e17];
 
     let r = slider.range[0];
     slider.range[0] = parseFloat(dom.getAttribute("min"));
@@ -78,7 +78,7 @@ function updateSliderFromDom(dom, slider = dom) {
   }
 
   if (dom.hasAttribute("max")) {
-    slider.range = slider.range || [1e17, 1e17];
+    slider.range = slider.range || [-1e17, 1e17];
 
     let r = slider.range[1];
     slider.range[1] = parseFloat(dom.getAttribute("max"));

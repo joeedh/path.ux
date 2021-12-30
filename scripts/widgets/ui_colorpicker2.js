@@ -914,6 +914,8 @@ export class ColorPickerButton extends UIBase {
     this._depress = false;
     this._label = "";
 
+    this.customLabel = undefined;
+
     this.rgba = new Vector4([1, 1, 1, 1]);
 
     this.labelDom = document.createElement("span");
@@ -1338,7 +1340,7 @@ export class ColorPickerButton extends UIBase {
 
     this.internalDisabled = false;
 
-    if (prop.uiname !== this._label) {
+    if (this.customLabel === undefined && prop.uiname !== this._label) {
       this.label = prop.uiname;
     }
 
@@ -1383,6 +1385,10 @@ export class ColorPickerButton extends UIBase {
 
   update() {
     super.update();
+
+    if (this.customLabel !== undefined && this.customLabel !== this._label) {
+      this.label = this.customLabel;
+    }
 
     //remove keyhandler after timeout in case something kept it from happening automatically
     if (this._has_keyhandler && util.time_ms() - this._keyhandler_timeout > 3500) {
