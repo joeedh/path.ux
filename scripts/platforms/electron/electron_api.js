@@ -124,7 +124,7 @@ function makeIconKey(icon, iconsheet, invertColors) {
   return "" + icon + ":" + iconsheet + ":" + invertColors;
 }
 
-export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
+export function getNativeIcon(icon, iconsheet=0, invertColors=false, size=16) {
   //let key = makeIconKey(icon, iconsheet, invertColors);
   //if (key in iconcache) {
   //  return iconcache[key];
@@ -149,13 +149,13 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
 
   //for (let size of sizes) {
   if (1) {
-    let size = 16;
     let iconsheet = manager.findClosestSheet(size);
     let tilesize = manager.getTileSize(iconsheet);
 
     let canvas = document.createElement("canvas");
-    canvas.width = canvas.height = size;
     let g = canvas.getContext("2d");
+
+    canvas.width = canvas.height = size;
 
     if (invertColors) {
       g.filter = "invert(100%)";
@@ -164,11 +164,11 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
     let scale = size / tilesize;
     g.scale(scale, scale);
 
-    let header = "data:image/png;base64,";
-
     manager.canvasDraw({getDPI: () => 1.0}, canvas, g, icon, 0, 0, iconsheet);
 
+    let header = "data:image/png;base64,";
     let data = canvas.toDataURL();
+
     data = data.slice(header.length, data.length);
     data = Buffer.from(data, "base64");
 
