@@ -149,7 +149,7 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
 
   //for (let size of sizes) {
   if (1) {
-    let size = 16;
+    let size = 32;
     let iconsheet = manager.findClosestSheet(size);
     let tilesize = manager.getTileSize(iconsheet);
 
@@ -167,12 +167,13 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false) {
     let header = "data:image/png;base64,";
 
     manager.canvasDraw({getDPI: () => 1.0}, canvas, g, icon, 0, 0, iconsheet);
+
     let data = canvas.toDataURL();
-    
     data = data.slice(header.length, data.length);
     data = Buffer.from(data, "base64");
 
-    myRequire("fs").writeFileSync("myicon2.png", data);
+    myRequire("fs").writeFileSync("./myicon2.png", data);
+
     images.push(data);
   }
   //}

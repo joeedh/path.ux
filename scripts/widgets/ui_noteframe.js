@@ -187,6 +187,7 @@ export class NoteFrame extends ui.RowFrame {
 
     noteframes.push(this);
     this.background = this.getDefault("background-color");
+    this.style['flex-grow'] = 'unset';
   }
 
   setCSS() {
