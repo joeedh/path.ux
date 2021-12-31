@@ -2399,6 +2399,8 @@ export class UIBase extends HTMLElement {
     const timelimit = 500;
     let ok = util.time_ms() - this._tooltip_timer > timelimit;
 
+    let dpi = this.getDPI();
+
     let x = screen.mpos[0], y = screen.mpos[1];
 
     let r = this.getClientRects();

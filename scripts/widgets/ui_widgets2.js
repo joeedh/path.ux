@@ -528,6 +528,11 @@ export class ToolTip extends UIBase {
     x = Math.min(Math.max(x, 0), screen.size[0] - size[0]);
     y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
 
+    let dpi = UIBase.getDPI();
+
+    x += 10/dpi;
+    y += 15/dpi;
+
     ret._popup = screen.popup(ret, x, y);
     ret._popup.background = "rgba(0,0,0,0)";
     ret._popup.style["border"] = "none";

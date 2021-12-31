@@ -27,7 +27,7 @@ export function getAreaIntName(name) {
   for (let i=0; i<name.length; i++) {
     let c = name.charCodeAt(i);
 
-    if (i % 2 == 0) {
+    if (i % 2 === 0) {
       hash += c<<8;
       hash *= 13;
       hash = hash & ((1<<15)-1);
