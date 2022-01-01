@@ -12,11 +12,11 @@ import {Container, ColumnFrame, RowFrame} from '../core/ui.js';
 import {keymap} from '../path-controller/util/events.js';
 
 let EnumProperty = toolprop.EnumProperty,
-  PropTypes = toolprop.PropTypes;
+    PropTypes    = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
+let UIBase     = ui_base.UIBase,
+    PackFlags  = ui_base.PackFlags,
+    IconSheets = ui_base.IconSheets;
 
 function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -27,13 +27,13 @@ class ListItem extends RowFrame {
     super();
 
     let highlight = () => {
-      console.log("listitem mouseover");
+      //console.log("listitem mouseover");
       this.highlight = true;
       this.setBackground();
     };
 
     let unhighlight = () => {
-      console.log("listitem mouseleave");
+      //console.log("listitem mouseleave");
       this.highlight = false;
       this.setBackground();
     };
@@ -46,7 +46,7 @@ class ListItem extends RowFrame {
     this.addEventListener("blur", unhighlight);
 
     this.addEventListener("click", (e) => {
-      console.log("click!");
+      //console.log("click!");
       if (this.onclick) {
         this.onclick();
       }
@@ -64,16 +64,29 @@ class ListItem extends RowFrame {
     this.shadowRoot.prepend(style);
   }
 
+  static define() {
+    return {
+      tagname: "listitem-x",
+      style  : "listbox"
+    }
+  }
+
   init() {
     super.init();
 
     this.setAttribute("class", "listitem");
+
     this.style["width"] = "100%";
+    this.style["height"] = this.getDefault("ItemHeight") + "px";
+    this.style["flex-grow"] = "unset";
+
     this.setCSS();
   }
 
   setBackground() {
-    if (this.highlight) {
+    if (this.highlight && this.is_active) {
+      this.background = this.getDefault("ListActiveHighlight");
+    } else if (this.highlight) {
       this.background = this.getDefault("ListHighlight");
     } else if (this.is_active) {
       this.background = this.getDefault("ListActive");
@@ -81,12 +94,8 @@ class ListItem extends RowFrame {
       this.background = this.getDefault("background-color");
     }
   }
-
-  static define() {return {
-    tagname : "listitem-x",
-    style : "listbox"
-  }}
 }
+
 UIBase.internalRegister(ListItem);
 
 class ListBox extends Container {
@@ -110,8 +119,6 @@ class ListBox extends Container {
     this.shadow.prepend(style);
 
     this.onkeydown = (e) => {
-      console.log("yay", e.keyCode);
-
       switch (e.keyCode) {
         case keymap["Up"]:
         case keymap["Down"]:
@@ -126,7 +133,7 @@ class ListBox extends Container {
           let i = this.items.indexOf(this.items.active);
           let dir = e.keyCode == keymap["Up"] ? -1 : 1;
 
-          i = Math.max(Math.min(i+dir, this.items.length-1), 0);
+          i = Math.max(Math.min(i + dir, this.items.length - 1), 0);
           this.setActive(this.items[i]);
 
           break;
@@ -136,6 +143,13 @@ class ListBox extends Container {
     //this.addEventListener("keydown", on_keydown);
 
     //this._table =  this.table();
+  }
+
+  static define() {
+    return {
+      tagname: "listbox-x",
+      style  : "listbox"
+    }
   }
 
   setCSS() {
@@ -172,7 +186,7 @@ class ListBox extends Container {
     item.label(name);
     let this2 = this;
 
-    item.onclick = function() {
+    item.onclick = function () {
       this2.setActive(this);
       this.setBackground();
     };
@@ -195,7 +209,7 @@ class ListBox extends Container {
       item = this.idmap[item];
     }
 
-    console.log("set active!");
+    //console.log("set active!");
 
     if (item === this.items.active) {
       return;
@@ -207,26 +221,23 @@ class ListBox extends Container {
       this.items.active.setBackground();
     }
 
-    item.is_active = true;
     this.items.active = item;
 
-    if (item !== undefined) {
+    if (item) {
+      item.is_active = true;
+
       item.setBackground();
       item.scrollIntoViewIfNeeded();
     }
 
     if (this.onchange) {
-      this.onchange(item._id, item);
+      this.onchange(item ? item._id : undefined, item);
     }
   }
 
   clear() {
 
   }
-
-  static define() {return {
-    tagname : "listbox-x",
-    style : "listbox"
-  }}
 }
+
 UIBase.internalRegister(ListBox);

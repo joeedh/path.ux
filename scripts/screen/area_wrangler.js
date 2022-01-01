@@ -130,7 +130,7 @@ export class AreaWrangler {
       this.stacks[type.name].pop();
 
       let last = this.stacks[type.name].pop();
-      
+
       if (last) {
         this.lasts[type.name] = last;
       }
