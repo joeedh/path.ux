@@ -99,13 +99,15 @@ export class AreaWrangler {
   }
 
   push(type, area, pushLastRef=true) {
+    if (!(type.name in this.stacks)) {
+      this.stacks[type.name] = [];
+    }
+
+    this.stacks[type.name].push(this.lasts[type.name]);
+
     if (pushLastRef || this.lasts[type.name] === undefined) {
       this.lasts[type.name] = area;
       this.lastArea = area;
-    }
-
-    if (!(type.name in this.stacks)) {
-      this.stacks[type.name] = [];
     }
 
     this.stacks[type.name].push(area);
@@ -126,6 +128,12 @@ export class AreaWrangler {
 
     if (this.stacks[type.name].length > 0) {
       this.stacks[type.name].pop();
+
+      let last = this.stacks[type.name].pop();
+      
+      if (last) {
+        this.lasts[type.name] = last;
+      }
     }
 
     if (this.stack.length > 0) {
