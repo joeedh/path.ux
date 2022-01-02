@@ -57,8 +57,21 @@ function updateSliderFromDom(dom, slider = dom) {
       return;
     }
 
-    let v = dom.getAttribute(attr);
-    let ret = parseInt(v);
+    let v = (""+dom.getAttribute(attr)).toLowerCase();
+    let ret;
+
+    if (v === "true") {
+      ret = true;
+    } else if (v === "false") {
+      ret = false;
+    } else {
+      ret = parseInt(v);
+    }
+
+    if (isNaN(ret)) {
+      console.error("bad value " + v);
+      return 0.0;
+    }
 
     let old = slider[prop];
     if (old !== undefined && Math.abs(old - v) < 0.00001) {
@@ -180,6 +193,8 @@ export class NumSlider extends ValueButtonBase {
     if (prop.radix !== undefined) {
       this.radix = prop.radix;
     }
+
+    this.isInt = prop.type === PropTypes.INT;
 
     if (prop.step) {
       this._step = prop.getStep(rdef.value);
@@ -681,6 +696,12 @@ export class NumSlider extends ValueButtonBase {
     } else {
       val = val === undefined ? 0.0 : val;
 
+      if (this.isInt) {
+        val = Math.floor(val);
+      }
+
+      //console.error(this.isInt, val);
+
       val = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
       //val = myToFixed(val, this.decimalPlaces);
 
@@ -886,6 +907,7 @@ export class NumSliderSimpleBase extends UIBase {
       if (!prop) {
         return;
       }
+
       this.isInt = prop.type === PropTypes.INT;
 
       if (prop.range !== undefined) {
