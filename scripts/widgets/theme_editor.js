@@ -133,7 +133,11 @@ export class ThemeEditor extends Container {
 
         let textbox = (key) => {
           panel2.label(key);
-          panel2.textbox(undefined, v[key]).onchange = function () {
+          let tbox = panel2.textbox(undefined, v[key]);
+
+          tbox.width = tbox.getDefault("width");
+
+          tbox.onchange = function () {
             v[key] = this.text;
             do_onchange(key, k);
           }
@@ -157,6 +161,8 @@ export class ThemeEditor extends Container {
           v.size = slider.value;
           do_onchange(key, k);
         }
+        slider.setAttribute("min", 1);
+        slider.setAttribute("max", 100);
 
         slider.baseUnit = slider.displayUnit = "none";
 

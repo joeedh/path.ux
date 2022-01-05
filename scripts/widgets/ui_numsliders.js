@@ -1461,7 +1461,6 @@ export class SliderWithTextbox extends ColumnFrame {
       this._name = "slider";
     }
 
-
     this.l = this.container.label(this._name);
     this.l.overrideClass("numslider_textbox");
     this.l.font = "TitleText";
