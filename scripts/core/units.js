@@ -376,6 +376,10 @@ let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/
 
 function isnumber(s) {
   s = (""+s).trim();
+  if (s.startsWith(".")) {
+    s = "0" + s;
+  }
+
   function test(re) {
     return s.search(re) == 0;
   }
