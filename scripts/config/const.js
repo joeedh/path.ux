@@ -132,6 +132,9 @@ let exports = {
     //*/
   },
 
+  //auto load 1d bspline templates, can hurt startup time
+  autoLoadSplineTemplates : true,
+
   addHelpPickers : true,
 
   useAreaTabSwitcher: false,
