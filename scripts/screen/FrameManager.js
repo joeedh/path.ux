@@ -530,7 +530,7 @@ export class Screen extends ui_base.UIBase {
         return;
       }
 
-      console.log("rect", rect);
+      //console.log("rect", rect);
 
       if (rect.bottom > size[1]) {
         ret.style["top"] = (size[1] - rect.height - 10) + "px";
