@@ -55,6 +55,7 @@ export function getMime(path) {
 export class PlatformAPI {
   static writeFile(data, handle, mime) {
     throw new Error("implement me");
+    //returns a promise
   }
 
   static resolveURL(path, base=location.href) {

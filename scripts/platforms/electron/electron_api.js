@@ -15,11 +15,50 @@ function myRequire(mod) {
 import {Menu, DropBox} from '../../widgets/ui_menu.js';
 import {getIconManager} from "../../core/ui_base.js";
 import cconst from "../../config/const.js";
+import * as util from '../../util/util.js';
 
 import {FileDialogArgs, FilePath} from '../platform_base.js';
 
+function getFilename(path) {
+  let filename = path.replace(/\\/g, "/");
+  let i = filename.length-1;
+  while (i >= 0 && filename[i] !== "/") {
+    i--;
+  }
+  if (i > 0) {
+    filename = filename.slice(i, filename.length).trim();
+  }
+
+  return filename;
+}
+
 let _menu_init = false;
 let _init = false;
+
+let mimemap = {
+  "js"  : "application/javascript",
+  "json": "text/json",
+  "png" : "image/png",
+  "svg" : "image/svg+xml",
+  "jpg" : "image/jpeg",
+  "txt" : "text/plain",
+  "html": "text/html",
+  "css" : "text/css",
+  "ts"  : "application/typescript",
+  "py"  : "application/python",
+  "c"   : "application/c",
+  "cpp" : "application/cpp",
+  "cc"  : "application/cpp",
+  "h"   : "application/c",
+  "hh"  : "application/cpp",
+  "hpp" : "application/cpp",
+  "xml" : "text/xml",
+  "sh"  : "application/bash",
+  "mjs" : "application/javascript",
+  "cjs" : "application/javascript",
+  "gif" : "image/gif"
+};
+
 
 function patchDropBox() {
   //haveElectron = false;
@@ -85,10 +124,10 @@ function patchDropBox() {
 
     x = ~~x;
     y = ~~y;
-    
+
     emenu.popup({
-      x: x,
-      y: y,
+      x       : x,
+      y       : y,
       callback: () => {
 
         if (this._menu) {
@@ -120,11 +159,12 @@ export function checkInit() {
 }
 
 export let iconcache = {};
+
 function makeIconKey(icon, iconsheet, invertColors) {
   return "" + icon + ":" + iconsheet + ":" + invertColors;
 }
 
-export function getNativeIcon(icon, iconsheet=0, invertColors=false, size=16) {
+export function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 16) {
   //let key = makeIconKey(icon, iconsheet, invertColors);
   //if (key in iconcache) {
   //  return iconcache[key];
@@ -161,7 +201,7 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false, size=16) {
       g.filter = "invert(100%)";
     }
 
-    let scale = size / tilesize;
+    let scale = size/tilesize;
     g.scale(scale, scale);
 
     manager.canvasDraw({getDPI: () => 1.0}, canvas, g, icon, 0, 0, iconsheet);
@@ -191,10 +231,10 @@ export function getNativeIcon(icon, iconsheet=0, invertColors=false, size=16) {
 }
 
 let map = {
-  CTRL : "Control",
-  ALT : "Alt",
-  SHIFT : "Shift",
-  COMMAND : "Command"
+  CTRL   : "Control",
+  ALT    : "Alt",
+  SHIFT  : "Shift",
+  COMMAND: "Command"
 };
 
 export function buildElectronHotkey(hk) {
@@ -220,20 +260,20 @@ export function buildElectronMenu(menu) {
       let menu2 = item._menu;
 
       return new ElectronMenuItem({
-        submenu : buildElectronMenu(item._menu),
-        label : menu2.getAttribute("title")
+        submenu: buildElectronMenu(item._menu),
+        label  : menu2.getAttribute("title")
       });
     }
 
 
     let hotkey = item.hotkey;
     let icon = item.icon;
-    let label = ""+item.label;
+    let label = "" + item.label;
 
     if (hotkey && typeof hotkey !== "string") {
       hotkey = buildElectronHotkey(hotkey);
     } else {
-      hotkey = ""+hotkey;
+      hotkey = "" + hotkey;
     }
 
     if (icon < 0) {
@@ -241,14 +281,14 @@ export function buildElectronMenu(menu) {
     }
 
     let args = {
-      id          : ""+item._id,
-      label       : label,
-      accelerator : hotkey,
-      icon        : icon ? getNativeIcon(icon) : undefined,
-      click       : function() {
+      id                 : "" + item._id,
+      label              : label,
+      accelerator        : hotkey,
+      icon               : icon ? getNativeIcon(icon) : undefined,
+      click              : function () {
         menu.onselect(item._id);
       },
-      registerAccelerator : false
+      registerAccelerator: false
     };
 
     return new ElectronMenuItem(args);
@@ -263,7 +303,7 @@ export function buildElectronMenu(menu) {
   return emenu;
 }
 
-export function initMenuBar(menuEditor, override=false) {
+export function initMenuBar(menuEditor, override = false) {
   checkInit();
 
   if (!window.haveElectron) {
@@ -292,14 +332,14 @@ export function initMenuBar(menuEditor, override=false) {
   }
 
   roles = Object.assign(roles, {
-    "select all" : "selectAll",
-    "file"       : "fileMenu",
-    "edit"       : "editMenu",
-    "view"       : "viewMenu",
-    "app"        : "appMenu",
-    "help"       : "help",
-    "zoom in"    : "zoomIn",
-    "zoom out"   : "zoomOut"
+    "select all": "selectAll",
+    "file"      : "fileMenu",
+    "edit"      : "editMenu",
+    "view"      : "viewMenu",
+    "app"       : "appMenu",
+    "help"      : "help",
+    "zoom in"   : "zoomIn",
+    "zoom out"  : "zoomOut"
   });
 
   /*
@@ -326,7 +366,6 @@ export function initMenuBar(menuEditor, override=false) {
   });//*/
 
 
-
   let header = menuEditor.header;
   for (let dbox of header.traverse(DropBox)) {
     dbox._build_menu();
@@ -340,9 +379,9 @@ export function initMenuBar(menuEditor, override=false) {
 
     let title = dbox._genLabel();
     let args = {
-      label   : title,
-      tooltip : dbox.description,
-      submenu : buildElectronMenu(menu2)
+      label  : title,
+      tooltip: dbox.description,
+      submenu: buildElectronMenu(menu2)
     };
 
     menu.insert(0, new ElectronMenuItem(args));
@@ -363,7 +402,7 @@ export class platform extends PlatformAPI {
 
     let eargs = {
       defaultPath: args.defaultPath,
-      filters    : args.filters,
+      filters    : this._sanitizeFilters(args.filters ?? []),
       properties : [
         "openFile", "showHiddenFiles", "createDirectory"
       ]
@@ -382,10 +421,36 @@ export class platform extends PlatformAPI {
         if (ret.canceled) {
           reject("cancel");
         } else {
-          accept(ret.filePaths.map(f => new FilePath(f)));
+          accept(ret.filePaths.map(f => new FilePath(f, getFilename(f))));
         }
       });
     });
+  }
+
+  static _sanitizeFilters(filters) {
+    let filters2 = [];
+
+    for (let filter of filters) {
+      if (Array.isArray(filter)) {
+        let ext = filter[0];
+
+        filter = {extensions: filter};
+
+        ext = ext.replace(/\./g, "").trim().toLowerCase();
+        if (ext in mimemap) {
+          filter.mime = mimemap[ext];
+        }
+
+        filter.name = ext;
+      }
+
+      console.log(filter.extensions);
+      filter.extensions = filter.extensions.map(f => f.startsWith(".") ? f.slice(1, f.length) : f);
+
+      filters2.push(filter);
+    }
+
+    return filters2;
   }
 
   static showSaveDialog(title, filedata_cb, args = new FileDialogArgs()) {
@@ -395,7 +460,7 @@ export class platform extends PlatformAPI {
 
     let eargs = {
       defaultPath: args.defaultPath,
-      filters    : args.filters,
+      filters    : this._sanitizeFilters(args.filters ?? []),
       properties : [
         "openFile", "showHiddenFiles", "createDirectory"
       ]
@@ -423,7 +488,8 @@ export class platform extends PlatformAPI {
 
           require('fs').writeFileSync(path, filedata);
           console.log("saved file", filedata);
-          accept(path);
+
+          accept(new FilePath(path, getFilename(path)));
         }
       });
     });
@@ -438,6 +504,15 @@ export class platform extends PlatformAPI {
       } else {
         accept(fs.readFileSync(path.data).buffer);
       }
+    });
+  }
+
+  static writeFile(data, handle, mime) {
+    return new Promise((accept, reject) => {
+      let fs = require('fs');
+
+      fs.writeFileSync(handle.data, data);
+      accept(handle);
     });
   }
 }

@@ -120,6 +120,10 @@ export class platform extends PlatformAPI {
     let exts = [];
 
     for (let list of args.filters) {
+      if (!Array.isArray(list) && list.filters) {
+        list = list.filters;
+      }
+
       for (let ext of list) {
         exts.push(ext);
       }

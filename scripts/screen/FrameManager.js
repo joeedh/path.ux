@@ -40,6 +40,7 @@ import '../widgets/ui_listbox.js';
 import '../widgets/ui_table.js';
 import {AreaFlags} from "./ScreenArea.js";
 import {checkForTextBox} from '../widgets/ui_textbox.js';
+import {startMenu} from '../widgets/ui_menu.js';
 
 function list(iter) {
   let ret = [];
@@ -498,10 +499,8 @@ export class Screen extends ui_base.UIBase {
   }
 
   popupMenu(menu, x, y) {
-    let popup = this.popup(undefined, x, y, false);
-    popup.add(menu);
+    startMenu(menu, x, y);
 
-    menu.start();
     return menu;
   }
 
