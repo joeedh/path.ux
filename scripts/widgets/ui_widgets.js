@@ -832,10 +832,10 @@ export class IconCheck extends IconButton {
   }
 
   _on_press() {
-    this.checked ^= 1;
+    this.checked ^= true;
 
     if (this.hasAttribute("datapath")) {
-      this.setPathValue(this.ctx, this.getAttribute("datapath"), this.checked);
+      this.setPathValue(this.ctx, this.getAttribute("datapath"), !!this.checked);
     }
 
     this.setCSS();
