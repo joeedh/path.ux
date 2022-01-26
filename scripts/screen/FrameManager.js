@@ -2837,7 +2837,7 @@ pathux.Screen {
 }
 `;
 
-nstructjs.manager.add_class(Screen);
+nstructjs.register(Screen);
 ui_base.UIBase.internalRegister(Screen);
 
 ScreenArea.setScreenClass(Screen);
