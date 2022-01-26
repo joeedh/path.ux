@@ -236,7 +236,7 @@ class _IconManager {
 
     //console.log(this.tilesize, this.drawsize, x, y);
     let ts = this.tilesize;
-    return `image('${this.image.src}#xywh=${x},${y},${ts},${ts}')`;
+    //return `image('${this.image.src}#xywh=${x},${y},${ts},${ts}')`;
     return `url("${this.image.src}") ${x}px ${y}px`;
   }
 }

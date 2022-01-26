@@ -611,7 +611,7 @@ export class IconButton extends UIBase {
 
       ui_base.iconmanager.setCSS(icon, this.dom, this.iconsheet);
 
-      if (this._extraIcon !== undefined) {
+      if (0 && this._extraIcon !== undefined) {
         this.dom.style["background"] = this.dom.style["background"].replace(/url/, "image");
 
         ui_base.iconmanager.setCSS(this._extraIcon, this.dom, this.iconsheet);
