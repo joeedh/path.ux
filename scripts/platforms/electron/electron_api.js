@@ -532,7 +532,7 @@ export class platform extends PlatformAPI {
         } else {
           accept(ret.filePaths.map(f => new FilePath(f, getFilename(f))));
         }
-      }), makeRemoteCallback("show-open-dialog", (error) => {
+      }), wrapRemoteCallback("show-open-dialog", (error) => {
         reject(error);
       }));
     });
@@ -586,7 +586,9 @@ export class platform extends PlatformAPI {
     }
 
     return new Promise((accept, reject) => {
-      dialog.showSaveDialog(undefined, eargs).then((ret) => {
+      initElectronIpc();
+
+      let onthen = (ret) => {
         if (ret.canceled) {
           reject("cancel");
         } else {
@@ -602,7 +604,14 @@ export class platform extends PlatformAPI {
 
           accept(new FilePath(path, getFilename(path)));
         }
-      });
+      }
+
+      let oncatch = (error) => {
+        reject(error);
+      }
+
+      ipcRenderer.invoke('show-save-dialog', eargs, wrapRemoteCallback('dialog', onthen), wrapRemoteCallback('dialog', oncatch));
+
     });
   }
 
