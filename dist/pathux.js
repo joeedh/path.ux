@@ -45831,6 +45831,7 @@ class FilePath {
 * this api in browsers
 * */
 function getElectron() {
+
   return require('electron');
 }
 

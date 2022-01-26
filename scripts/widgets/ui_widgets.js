@@ -493,6 +493,8 @@ export class IconButton extends UIBase {
     this.iconsheet = 0;
     this.drawButtonBG = true;
 
+    this._extraIcon = undefined; //draw another icon on top
+
     //have to put icon in subdiv
     this.dom = document.createElement("div");
     this.shadow.appendChild(this.dom);
@@ -608,6 +610,22 @@ export class IconButton extends UIBase {
       }
 
       ui_base.iconmanager.setCSS(icon, this.dom, this.iconsheet);
+
+      if (this._extraIcon !== undefined) {
+        this.dom.style["background"] = this.dom.style["background"].replace(/url/, "image");
+
+        ui_base.iconmanager.setCSS(this._extraIcon, this.dom, this.iconsheet);
+        //#xywh=0,0,16,16
+        if (0) {
+          let css = "(" + this.dom.style["background"] + ")";
+
+          ui_base.iconmanager.setCSS(this._extraIcon, this.dom, this.iconsheet);
+          this.dom.style["background"] = css + " , " + "(" + this.dom.style["background"] + ")";
+
+          console.error(css + "," + "(" + this.dom.style["background"] + ")");
+          console.error(this.dom.style["background"]);
+        }
+      }
     }
   }
 
@@ -907,6 +925,10 @@ export class IconCheck extends IconButton {
   update() {
     if (this.packflag & PackFlags.HIDE_CHECK_MARKS) {
       this.drawCheck = false;
+    }
+
+    if (this.drawCheck) {
+      this._extraIcon = Icons.ENUM_CHECKED;
     }
 
     if (this.hasAttribute("datapath")) {

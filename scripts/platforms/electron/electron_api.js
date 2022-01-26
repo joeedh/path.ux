@@ -1,5 +1,21 @@
 "use strict";
 
+function getElectronVersion() {
+  let key = navigator.userAgent;
+  let i = key.search("Electron");
+  key = key.slice(i + 9, key.length);
+
+  i = key.search(/[ \t]/);
+  if (i >= 0) {
+    key = key.slice(0, i);
+  }
+
+  key = key.trim();
+  key = key.split(".").map(f => parseInt(f));
+
+  return key;
+}
+
 /*
 * wrap require to keep angular from auto-importing
 * this api in browsers
@@ -21,7 +37,7 @@ import {FileDialogArgs, FilePath} from '../platform_base.js';
 
 function getFilename(path) {
   let filename = path.replace(/\\/g, "/");
-  let i = filename.length-1;
+  let i = filename.length - 1;
   while (i >= 0 && filename[i] !== "/") {
     i--;
   }
@@ -60,7 +76,99 @@ let mimemap = {
 };
 
 
+let electron_menu_idgen = 1;
+let ipcRenderer;
+
+export class ElectronMenu extends Array {
+  constructor(args = {}) {
+    super();
+
+    this._ipcId = electron_menu_idgen++;
+
+    for (let k in args) {
+      this[k] = args[k];
+    }
+  }
+
+  insert(i, item) {
+    this.length++;
+
+    let j = this.length-1;
+    while (j > i) {
+      this[j] = this[j-1];
+      j--;
+    }
+    this[i] = item;
+
+    return this;
+  }
+
+  static setApplicationMenu(menu) {
+    initElectronIpc();
+
+    ipcRenderer.invoke("set-menu-bar", menu);
+  }
+
+  closePopup() {
+    ipcRenderer.invoke("close-menu", this._ipcId);
+  }
+
+  append(item) {
+    this.push(item);
+  }
+
+  popup(args) {
+    let {x, y, callback} = args;
+
+    callback = wrapRemoteCallback("popup_menu_click", callback);
+
+    const {ipcRenderer} = require('electron')
+    ipcRenderer.invoke("popup-menu", this, x, y, callback);
+  }
+}
+
+let callbacks = {};
+let keybase = 1;
+
+export function wrapRemoteCallback(key, callback) {
+  key = "remote_" + key + (keybase++);
+  callbacks[key] = callback;
+
+  return key;
+}
+
+let ipcInit = false;
+
+function initElectronIpc() {
+  if (ipcInit) {
+    return;
+  }
+
+  ipcInit = true;
+  ipcRenderer = require('electron').ipcRenderer;
+
+  ipcRenderer.on('invoke-menu-callback', (event, key, args) => {
+    console.error("Electron menu callback", key, args);
+    callbacks[key].apply(undefined, args);
+  });
+}
+
+
+export class ElectronMenuItem {
+  constructor(args) {
+    for (let k in args) {
+      this[k] = args[k];
+    }
+
+    if (this.click) {
+      this.click = wrapRemoteCallback("menu_click", this.click);
+    }
+  }
+}
+
 function patchDropBox() {
+  initElectronIpc();
+
   //haveElectron = false;
   //return;
   DropBox.prototype._onpress = function _onpress(e) {
@@ -74,12 +182,10 @@ function patchDropBox() {
 
     this._build_menu();
 
-    let {getCurrentWindow, Menu, MenuItem} = getElectron().remote;
-
     let emenu = buildElectronMenu(this._menu);
 
     this._menu.close = () => {
-      emenu.closePopup(getCurrentWindow);
+      emenu.closePopup(); //getCurrentWindow);
     };
 
     //console.log("menu dropbox click", this._menu);
@@ -178,6 +284,7 @@ export function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 
     icongen = myRequire("./icogen.cjs");
   }
 
+
   window.icongen = icongen;
   let nativeImage = getElectron().nativeImage;
 
@@ -249,11 +356,12 @@ export function buildElectronHotkey(hk) {
 export function buildElectronMenu(menu) {
   let electron = getElectron().remote;
 
-  let ElectronMenu = electron.Menu;
-  let ElectronMenuItem = electron.MenuItem;
+  initElectronIpc();
+
+  //let ElectronMenu = electron.Menu;
+  //let ElectronMenuItem = electron.MenuItem;
 
   let emenu = new ElectronMenu();
-
 
   let buildItem = (item) => {
     if (item._isMenu) {
@@ -318,9 +426,7 @@ export function initMenuBar(menuEditor, override = false) {
 
   let electron = getElectron().remote;
 
-  let win = electron.getCurrentWindow();
-  let ElectronMenu = electron.Menu;
-  let ElectronMenuItem = electron.MenuItem;
+  //let win = electron.getCurrentWindow();
 
   let menu = new ElectronMenu();
 
@@ -384,6 +490,7 @@ export function initMenuBar(menuEditor, override = false) {
       submenu: buildElectronMenu(menu2)
     };
 
+    console.error(menu);
     menu.insert(0, new ElectronMenuItem(args));
   }
 
@@ -416,14 +523,18 @@ export class platform extends PlatformAPI {
       eargs.properties.push("dontAddToRecent");
     }
 
+    initElectronIpc();
+
     return new Promise((accept, reject) => {
-      dialog.showOpenDialog(undefined, eargs).then((ret) => {
-        if (ret.canceled) {
+      ipcRenderer.invoke('show-open-dialog', eargs, wrapRemoteCallback("open-dialog", (ret) => {
+        if (ret.canceled || ret.cancelled) {
           reject("cancel");
         } else {
           accept(ret.filePaths.map(f => new FilePath(f, getFilename(f))));
         }
-      });
+      }), makeRemoteCallback("show-open-dialog", (error) => {
+        reject(error);
+      }));
     });
   }
 
