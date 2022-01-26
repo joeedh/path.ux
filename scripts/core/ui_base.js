@@ -695,6 +695,7 @@ export class UIBase extends HTMLElement {
     this.class_default_overrides = {};
 
     this._last_description = undefined;
+    this._description_final = undefined;
 
     //getting css to flow down properly can be a pain, so
     //some packing settings are set as bitflags here,
@@ -853,14 +854,11 @@ export class UIBase extends HTMLElement {
         s += "\n    massSetPath: " + m;
       }
 
-      if (cconst.useNativeToolTips) {
-        this.title = s;
-      }
+      this._description_final = s;
+    }
 
-    } else {
-      if (cconst.useNativeToolTips) {
-        this.title = "" + val;
-      }
+    if (cconst.useNativeToolTips) {
+      this.title = "" + this._description_final;
     }
   }
 
@@ -2379,8 +2377,8 @@ export class UIBase extends HTMLElement {
   }
 
   updateToolTips() {
-    if (this._description === undefined || this._description === null ||
-      this._description.trim().length === 0) {
+    if (this._description_final === undefined || this._description_final === null ||
+      this._description_final.trim().length === 0) {
       return;
     }
 
@@ -2398,8 +2396,6 @@ export class UIBase extends HTMLElement {
 
     const timelimit = 500;
     let ok = util.time_ms() - this._tooltip_timer > timelimit;
-
-    let dpi = this.getDPI();
 
     let x = screen.mpos[0], y = screen.mpos[1];
 
@@ -2421,11 +2417,11 @@ export class UIBase extends HTMLElement {
 
     ok = ok && !haveModal();
     ok = ok && screen.pickElement(x, y) === this;
-    ok = ok && this._description;
+    ok = ok && this._description_final;
 
     if (ok) {
       //console.warn(this._id, "tooltip!", this);
-      _ToolTip.show(this._description, this.ctx.screen, x, y);
+      _ToolTip.show(this._description_final, this.ctx.screen, x, y);
     }
 
     //console.warn(this._id, "tooltip timer end");

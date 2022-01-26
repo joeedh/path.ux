@@ -700,8 +700,6 @@ export class NumSlider extends ValueButtonBase {
         val = Math.floor(val);
       }
 
-      //console.error(this.isInt, val);
-
       val = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
       //val = myToFixed(val, this.decimalPlaces);
 
@@ -845,6 +843,8 @@ export class NumSliderSimpleBase extends UIBase {
     this._focus = false;
 
     this.modal = undefined;
+
+    this._last_slider_key = '';
   }
 
   get value() {
@@ -907,7 +907,6 @@ export class NumSliderSimpleBase extends UIBase {
       if (!prop) {
         return;
       }
-
       this.isInt = prop.type === PropTypes.INT;
 
       if (prop.range !== undefined) {
@@ -1216,6 +1215,10 @@ export class NumSliderSimpleBase extends UIBase {
 
     this.canvas.style["width"] = "min-contents";
     this.canvas.style["min-width"] = this.getDefault("width") + "px";
+    this.canvas.style["height"] = this.getDefault("height") + "px";
+
+    this.canvas.height = this.getDefault("height") * UIBase.getDPI();
+
     this.style["min-width"] = this.getDefault("width") + "px";
     this._redraw();
   }
@@ -1254,6 +1257,15 @@ export class NumSliderSimpleBase extends UIBase {
   update() {
     super.update();
 
+    let key = this.getDefault("width") + this.getDefault("height") + this.getDefault("SlideHeight");
+    if (key !== this._last_slider_key) {
+      this._last_slider_key = key;
+
+      this.flushUpdate();
+      this.setCSS();
+      this._redraw();
+    }
+
     if (this.getAttribute("tab-index") !== this.tabIndex) {
       this.tabIndex = this.getAttribute("tab-index");
     }
@@ -1285,6 +1297,8 @@ export class SliderWithTextbox extends ColumnFrame {
 
     this.textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+
+    this._last_value = undefined;
   }
 
   /**
@@ -1442,6 +1456,7 @@ export class SliderWithTextbox extends ColumnFrame {
     super.init();
 
     this.rebuild();
+    window.setTimeout(() => this.updateTextBox(), 500);
   }
 
   rebuild() {
@@ -1461,18 +1476,15 @@ export class SliderWithTextbox extends ColumnFrame {
       this._name = "slider";
     }
 
+
     this.l = this.container.label(this._name);
     this.l.overrideClass("numslider_textbox");
     this.l.font = "TitleText";
     this.l.style["display"] = "float";
     this.l.style["position"] = "relative";
 
-    if (!this.labelOnTop && !(this.numslider instanceof NumSlider)) {
-      this.l.style["left"] = "8px";
-      this.l.style["top"] = "5px";
-    }
-
     let strip = this.container.row();
+    //strip.style['justify-content'] = 'space-between';
     strip.add(this.numslider);
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
@@ -1560,10 +1572,9 @@ export class SliderWithTextbox extends ColumnFrame {
     if (this._lock_textbox > 0)
       return;
 
-    //this.textbox.text = util.formatNumberUI(this._value, this.isInt, this.decimalPlaces);
-
     this.textbox.text = this.formatNumber(this._value);
     this.textbox.update();
+
     updateSliderFromDom(this, this.numslider);
   }
 
@@ -1622,6 +1633,12 @@ export class SliderWithTextbox extends ColumnFrame {
 
     if (!prop) {
       return;
+    }
+
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    if (val !== this._last_value) {
+      this._last_value = this._value = val;
+      this.updateTextBox();
     }
 
     if (!this.baseUnit && prop.baseUnit) {

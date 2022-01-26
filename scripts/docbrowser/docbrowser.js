@@ -6,7 +6,7 @@ note that you must set window.TINYMCE_PATH
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
 import * as cconst from '../config/const.js';
-import * as nstructjs from "../path-controller/util/struct.js";
+import nstructjs from "../path-controller/util/struct.js";
 import {UIBase, Icons} from "../core/ui_base.js";
 import {platform} from '../platforms/platform.js';
 

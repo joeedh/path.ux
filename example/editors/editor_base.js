@@ -1,4 +1,5 @@
 import {Area, UIBase, nstructjs} from '../pathux.js';
+import {contextWrangler} from '../../scripts/screen/ScreenArea.js';
 
 export class Editor extends Area {
   constructor() {
@@ -12,7 +13,15 @@ export class Editor extends Area {
   }
 
   on_fileload(isActiveEditor) {
+  }
 
+  push_ctx_active() {
+    contextWrangler.updateLastRef(this.constructor, this);
+    contextWrangler.push(this.constructor, this);
+  }
+
+  pop_ctx_active(dontSetLastRef=false) {
+    contextWrangler.pop(this.constructor, this);
   }
 
   init() {

@@ -2,7 +2,7 @@ import {PackFlags, UIBase} from "../core/ui_base.js";
 import {ColumnFrame} from "../core/ui.js";
 import {PropTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
 
-import {UndoFlags} from "../path-controller/toolsys/toolsys.js";
+import {UndoFlags, ToolFlags} from "../path-controller/toolsys/toolsys.js";
 import {DataPath, DataTypes} from "../path-controller/controller/controller.js";
 
 import * as util from '../path-controller/util/util.js';
@@ -12,7 +12,18 @@ const LastKey = Symbol("LastToolPanelId");
 let tool_idgen = 0;
 
 export function getLastToolStruct(ctx) {
-  return ctx.state._last_tool;
+  let ret = ctx.state._last_tool;
+
+  if (!ret) {
+    ret = ctx.toolstack.head;
+  } else {
+    let msg = "Passing the last tool to last-tool-panel via appstate._last_tool is deprecated;";
+    msg += "\nctx.toolstack.head is now used instead.";
+
+    console.warn(msg);
+  }
+
+  return ret;
 }
 
 /*
@@ -120,8 +131,6 @@ export class LastToolPanel extends ColumnFrame {
           if (tool) {
             tool.inputs[k].setValue(val);
             ctx.toolstack.rerun(tool);
-
-            window.redraw_viewport();
           }
         }
       });

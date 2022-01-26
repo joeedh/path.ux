@@ -24,13 +24,13 @@ export function setScreenClass(cls) {
 export function getAreaIntName(name) {
   let hash = 0;
 
-  for (let i=0; i<name.length; i++) {
+  for (let i = 0; i < name.length; i++) {
     let c = name.charCodeAt(i);
 
-    if (i % 2 === 0) {
+    if (i%2 === 0) {
       hash += c<<8;
       hash *= 13;
-      hash = hash & ((1<<15)-1);
+      hash = hash & ((1<<15) - 1);
     } else {
       hash += c;
     }
@@ -38,12 +38,13 @@ export function getAreaIntName(name) {
 
   return hash;
 }
+
 //XXX get rid of me
 window.getAreaIntName = getAreaIntName;
 
 //XXX get rid of me
 export var AreaTypes = {
-  TEST_CANVAS_EDITOR : 0
+  TEST_CANVAS_EDITOR: 0
 };
 
 export function setAreaTypes(def) {
@@ -57,6 +58,7 @@ export function setAreaTypes(def) {
 }
 
 export let areaclasses = {};
+
 export class AreaWrangler {
   constructor() {
     this.stacks = {};
@@ -98,7 +100,7 @@ export class AreaWrangler {
     return this;
   }
 
-  push(type, area, pushLastRef=true) {
+  push(type, area, pushLastRef = true) {
     if (!(type.name in this.stacks)) {
       this.stacks[type.name] = [];
     }
@@ -131,9 +133,13 @@ export class AreaWrangler {
 
       let last = this.stacks[type.name].pop();
 
-      if (last) {
+      /* paranoia isConnected check to ensure stale elements don't
+       * pollute the lasts stack */
+      if (last && last.isConnected) {
         this.lasts[type.name] = last;
       }
+    } else {
+      console.error("pop_ctx_area called in error");
     }
 
     if (this.stack.length > 0) {
@@ -144,7 +150,7 @@ export class AreaWrangler {
   getLastArea(type) {
     if (type === undefined) {
       if (this.stack.length > 0) {
-        return this.stack[this.stack.length-1];
+        return this.stack[this.stack.length - 1];
       } else {
         return this.lastArea;
       }
@@ -153,7 +159,7 @@ export class AreaWrangler {
         let stack = this.stacks[type.name];
 
         if (stack.length > 0) {
-          return stack[stack.length-1];
+          return stack[stack.length - 1];
         }
       }
 

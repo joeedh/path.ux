@@ -25,6 +25,7 @@ import {MenuBarEditor} from "../editors/menu/menu.js";
 
 import {PropsEditor} from "../editors/properties/properties.js";
 import {LogEditor} from "../editors/log/log_editor.js";
+import {contextWrangler} from '../../scripts/screen/ScreenArea.js';
 
 
 let iconmanager = new IconManager([
@@ -190,6 +191,10 @@ export class AppState {
   loadFile(data, args={resetToolStack : true, loadScreen : true}) {
     args.loadScreen = args.loadScreen === undefined ? true : args.loadScreen;
     args.resetToolStack = args.resetToolStack === undefined ? true : args.resetToolStack;
+
+    if (args.loadScreen) {
+      contextWrangler.reset();
+    }
 
     if (data instanceof Array) {
       data = new DataView(new Uint8Array(data).buffer);

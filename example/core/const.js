@@ -1,5 +1,5 @@
 export class Version {
-  constructor(major=0, minor=0, micro=0, dev=0) {
+  constructor(major = 0, minor = 0, micro = 0, dev = 0) {
     this.major = major;
     this.minor = minor;
     this.micro = micro;
@@ -20,10 +20,10 @@ export class Version {
   }
 
   toInt() {
-    let f = this.major << 24;
+    let f = this.major<<24;
 
-    f |= this.minor << 16;
-    f |= this.micro << 8;
+    f |= this.minor<<16;
+    f |= this.micro<<8;
     f |= this.dev;
 
     return f;
@@ -31,18 +31,20 @@ export class Version {
 }
 
 export default {
-  DEBUG           : {
+  DEBUG              : {
     screenborders    : false,
     allBordersMovable: false,
     modalEvents      : true,
-    useNativeToolTips: false,
     /*
     customWindowSize: {
       width: 512, height: 512
     },
     //*/
   },
-  autoSizeUpdate  : true,
-  VERSION         : new Version(0, 0, 0, 0),
-  LOCALSTORAGE_KEY: "pathux_example_app"
+
+  useNativeToolTips  : false,
+  showPathsInToolTips: true,
+  autoSizeUpdate     : true,
+  VERSION            : new Version(0, 0, 0, 0),
+  LOCALSTORAGE_KEY   : "pathux_example_app"
 };

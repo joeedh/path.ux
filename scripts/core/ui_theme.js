@@ -7,7 +7,7 @@ THEME REFACTOR:
 */
 import * as util from "../path-controller/util/util.js";
 import {Vector3, Vector4} from '../path-controller/util/vectormath.js';
-import * as nstructjs from "../path-controller/util/struct.js";
+import nstructjs from "../path-controller/util/struct.js";
 import cconst from '../config/const.js';
 
 export let compatMap = {

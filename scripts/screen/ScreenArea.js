@@ -8,7 +8,7 @@ import * as ui_noteframe from '../widgets/ui_noteframe.js';
 import {haveModal} from '../path-controller/util/simple_events.js';
 import cconst from '../config/const.js';
 
-import '../path-controller/util/struct.js';
+import nstructjs from '../path-controller/util/struct.js';
 
 let UIBase = ui_base.UIBase;
 

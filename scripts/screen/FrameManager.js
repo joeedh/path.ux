@@ -6,6 +6,8 @@ import '../widgets/ui_widgets2.js';
 import '../widgets/ui_panel.js';
 import '../widgets/ui_treeview.js';
 
+import {nstructjs} from '../path-controller/controller.js';
+
 import '../util/ScreenOverdraw.js';
 import cconst from '../config/const.js';
 import {haveModal, pushModalLight, popModalLight, _setScreenClass} from '../path-controller/util/simple_events.js';
@@ -59,9 +61,6 @@ let _events_started = false;
 export function registerToolStackGetter(func) {
   FrameManager_ops.registerToolStackGetter(func);
 }
-
-//XXX why!!!
-window._nstructjs = nstructjs;
 
 let Vector2         = vectormath.Vector2,
     UIBase          = ui_base.UIBase,

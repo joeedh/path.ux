@@ -466,6 +466,42 @@ export function parseValueIntern(string, baseUnit=undefined) {
   return NaN;
 }
 
+
+export class PixelUnit extends Unit {
+  static unitDefine() {return {
+    name    : "pixel",
+    uiname  : "Pixel",
+    type    : "distance",
+    icon    : -1,
+    pattern : /-?\d+(\.\d*)?px$/
+  }}
+
+  static parse(string) {
+    string = normString(string);
+    if (string.endsWith("px")) {
+      string = string.slice(0, string.length-2).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value;
+  }
+
+  static fromInternal(value) {
+    return value;
+  }
+
+  static buildString(value, decimals=2) {
+    return "" + myToFixed(value, decimals) + "px";
+  }
+}
+
+Unit.register(PixelUnit);
+
 export function convert(value, unita, unitb) {
   if (typeof unita === "string")
     unita = Unit.getUnit(unita);

@@ -4,6 +4,7 @@ import {PanOp} from "./workspace_ops.js";
 import {DrawOp} from "../../draw/draw_ops.js";
 import {BrushSettings} from '../../draw/brush.js';
 import {Dynamics} from "../../core/dynamics.js";
+import {contextWrangler} from '../../../scripts/screen/ScreenArea.js';
 
 export class WorkspaceEditor extends Editor {
   constructor() {
@@ -211,6 +212,8 @@ export class WorkspaceEditor extends Editor {
   }
 
   draw() {
+    this.push_ctx_active();
+
     console.log("canvas draw");
     let g = this.g;
 
@@ -224,6 +227,9 @@ export class WorkspaceEditor extends Editor {
 
     canvas.draw(this.canvas, this.g, this._last_id);
     this._last_id = canvas.idgen-1;
+
+    this.pop_ctx_active();
+    contextWrangler.updateLastRef(this.constructor, this);
   }
 
   update() {
