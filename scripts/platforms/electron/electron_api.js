@@ -148,7 +148,7 @@ function initElectronIpc() {
   ipcRenderer = require('electron').ipcRenderer;
 
   ipcRenderer.on('invoke-menu-callback', (event, key, args) => {
-    console.error("Electron menu callback", key, args);
+    //console.error("Electron menu callback", key, args);
     callbacks[key].apply(undefined, args);
   });
 }
@@ -490,7 +490,6 @@ export function initMenuBar(menuEditor, override = false) {
       submenu: buildElectronMenu(menu2)
     };
 
-    console.error(menu);
     menu.insert(0, new ElectronMenuItem(args));
   }
 

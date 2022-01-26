@@ -928,7 +928,7 @@ export class IconCheck extends IconButton {
     }
 
     if (this.drawCheck) {
-      this._extraIcon = Icons.ENUM_CHECKED;
+      this._extraIcon = ui_base.Icons.ENUM_CHECKED;
     }
 
     if (this.hasAttribute("datapath")) {
