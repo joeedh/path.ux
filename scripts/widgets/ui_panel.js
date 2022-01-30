@@ -110,6 +110,10 @@ export class PanelFrame extends ColumnFrame {
     this.__label.text = v;
     this.__label._updateFont();
 
+    if (this.hasAttribute("label")) {
+      this.setAttribute("label", v);
+    }
+
     if (this.ctx) {
       this.setCSS();
     }
