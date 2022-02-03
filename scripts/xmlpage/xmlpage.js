@@ -839,7 +839,18 @@ func = function() {
 
     let title = "" + elem.getAttribute("label");
 
+    let tabs = this.container;
+
     this.container = this.container.tab(title);
+
+    if (elem.hasAttribute("overflow")) {
+      this.container.setAttribute("overflow", elem.getAttribute("overflow"));
+    }
+
+    if (elem.hasAttribute("overflow-y")) {
+      this.container.setAttribute("overflow-y", elem.getAttribute("overflow-y"));
+    }
+
     this._container(elem, this.container)
     this.visit(elem);
 

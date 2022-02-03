@@ -32,6 +32,10 @@ import {CSSFont, theme, parsepx, compatMap} from "./ui_theme.js";
 
 import {DefaultTheme} from './theme.js';
 
+//global list of elements to, hopefully, prevent minification tree shaking
+//of live elements
+export let ElementClasses = [];
+
 export {theme} from "./ui_theme.js";
 
 import cconst from '../config/const.js';
@@ -962,6 +966,8 @@ export class UIBase extends HTMLElement {
   static register(cls) {
     registered_has_happened = true;
 
+    ElementClasses.push(cls);
+
     externalElementNames[cls.define().tagname] = cls.define().tagname;
     customElements.define(cls.define().tagname, cls);
   }
@@ -1010,9 +1016,9 @@ export class UIBase extends HTMLElement {
         ret = n;
       }
 
-      if (n.constructor.name === "PanelFrame") {
+      if (n instanceof UIBase && n.constructor.define().tagname === "panelframe-x") {
         rec(n.contents);
-      } else if (n.constructor.name === "TabContainer") {
+      } else if (n instanceof UIBase && n.constructor.define().tagname === "tabcontainer-x") {
         for (let k in n.tabs) {
           let tab = n.tabs[k];
 

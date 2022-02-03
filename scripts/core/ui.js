@@ -32,16 +32,6 @@ import {DataPathError} from '../path-controller/controller/controller_base.js';
 
 import cconst from '../config/const.js';
 
-var list = function list(iter) {
-  let ret = [];
-
-  for (let item of iter) {
-    ret.push(item);
-  }
-
-  return ret;
-};
-
 export class Label extends ui_base.UIBase {
   constructor() {
     super();
@@ -699,7 +689,7 @@ export class Container extends ui_base.UIBase {
     if (i >= this.shadow.childNodes.length) {
       this.add(ch);
     } else {
-      this.shadow.insertBefore(ch, list(this.children)[i]);
+      this.shadow.insertBefore(ch, util.list(this.children)[i]);
     }
 
     if (ch.onadd) {

@@ -51,3 +51,6 @@ export * from './util/ScreenOverdraw.js';
 
 import cconst1 from './config/const.js';
 export const cconst = cconst1;
+
+import * as simple1 from './simple/simple.js';
+export const simple = simple1;

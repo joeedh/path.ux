@@ -1473,6 +1473,17 @@ export class TabContainer extends UIBase {
     }
   }
 
+  get hideScrollBars() {
+    let attr = (""+this.getAttribute("hide-scrollbars")).toLowerCase();
+    return attr === "true" || attr === "yes";
+  }
+
+  set hideScrollBars(val) {
+    val = !!val;
+
+    this.setAttribute("hide-scrollbars", ""+val);
+  }
+
   update() {
     super.update();
 
@@ -1491,6 +1502,30 @@ export class TabContainer extends UIBase {
     this.updateHoriz();
     this.updateBarPos();
     this.tbar.update();
+
+    let act = this.tbar.tabs.active;
+
+    if (act && !this.hideScrollBars) {
+      let container = this.tabs[act.id];
+
+      //propegate overflow-y to tab container as a whole
+
+      if (container.hasAttribute("overflow-y") && this.style["overflow-y"] !== container.getAttribute("overflow-y")) {
+        this.style["overflow-y"] = container.getAttribute("overflow-y");
+        //container.style["overflow-y"] = "unset";
+      } else if (!container.hasAttribute("overflow-y")) {
+        this.style["overflow-y"] = this.getDefault("overflow-y") || "unset";
+      }
+
+      if (container.hasAttribute("overflow") && this.style["overflow"] !== container.getAttribute("overflow")) {
+        this.style["overflow"] = container.getAttribute("overflow");
+        //container.style["overflow-y"] = "unset";
+      } else if (!container.hasAttribute("overflow")) {
+        this.style["overflow"] = this.getDefault("overflow") || "unset";
+      }
+    } else if (this.hideScrollBars) {
+      this.style["overflow"] = this.style["overflow-y"] = "unset";
+    }
   }
 }
 
