@@ -85,6 +85,7 @@ export class SideBar extends Container {
     this.style["position"] = "fixed";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
+    this.style["z-index"] = "100";
 
     this.style["background-color"] = this.getDefault("AreaHeaderBG");
 

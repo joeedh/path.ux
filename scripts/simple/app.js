@@ -1,10 +1,12 @@
 import nstructjs from '../path-controller/util/struct.js';
+
 export const DataModelClasses = [];
 import {ToolStack} from '../path-controller/toolsys/toolsys.js';
 import {Context} from '../path-controller/controller/context.js';
 import {DataAPI} from '../path-controller/controller/controller.js';
 import {Screen} from '../screen/FrameManager.js';
 import {areaclasses} from '../screen/area_wrangler.js';
+import * as util from '../util/util.js';
 
 export class DataModel {
   static defineAPI(api, strct) {
@@ -70,6 +72,7 @@ export function makeAPI(ctxClass) {
 
 import {Icons, loadDefaultIconSheet} from './icons.js';
 import {IconManager, setIconManager, setIconMap} from '../core/ui_base.js';
+import {FileArgs, loadFile, saveFile} from './file.js';
 
 export class StartArgs {
   constructor() {
@@ -82,7 +85,7 @@ export class StartArgs {
 }
 
 export class AppState {
-  constructor(ctxClass, screenClass=Screen) {
+  constructor(ctxClass, screenClass = Screen) {
     ctxClass = GetContextClass(ctxClass);
 
     this.ctx = new ctxClass(this);
@@ -91,6 +94,34 @@ export class AppState {
     this.api = makeAPI(ctxClass);
     this.screenClass = screenClass;
     this.screen = undefined;
+
+    this.fileMagic = "STRT";
+    this.fileVersion = [0, 0, 1];
+    this.fileExt = ".data";
+  }
+
+  reset() {
+    this.toolstack.reset();
+  }
+
+  saveFile(objects, args = {}) {
+    args = new FileArgs(Object.assign({
+      magic  : this.fileMagic,
+      version: this.fileVersion,
+      ext    : this.fileExt
+    }, args));
+
+    return saveFile(this, args, objects)
+  }
+
+  loadFile(data, args = {}) {
+    args = new FileArgs(Object.assign({
+      magic  : this.fileMagic,
+      version: this.fileVersion,
+      ext    : this.fileExt
+    }, args));
+
+    return loadFile(this, args, data);
   }
 
   makeScreen() {
@@ -116,7 +147,7 @@ export class AppState {
     screen.listen();
   }
 
-  start(args=new StartArgs()) {
+  start(args = new StartArgs()) {
     let args2 = new StartArgs();
 
     for (let k in args2) {
@@ -154,5 +185,7 @@ export class AppState {
         return this._appstate.ctx;
       }
     });
+
+    nstructjs.validateStructs();
   }
 }
