@@ -144,6 +144,8 @@ export function loadFile(appstate, args, data) {
       appstate.screen.remove();
     }
 
+    ret.screen.ctx = appstate.ctx;
+
     appstate.screen = ret.screen;
     document.body.appendChild(appstate.screen);
     appstate.screen.listen();

@@ -55,13 +55,11 @@ export class SideBar extends Container {
     super.init();
 
     if (!this.getAttribute("width")) {
-      this.width = 400;
+      this.width = 300;
     }
     if (!this.getAttribute("height")) {
-      this.height = 800;
+      this.height = 700;
     }
-
-    console.log(this.width, this.height)
 
     this.setCSS();
   }
@@ -82,15 +80,18 @@ export class SideBar extends Container {
 
     let w = this.width, h = this.height;
 
+    w = isNaN(w) ? 500 : w;
+    h = isNaN(h) ? 500 : h;
+
     this.style["position"] = "fixed";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
     this.style["z-index"] = "100";
+    this.style["overflow"] = "scroll";
 
     this.style["background-color"] = this.getDefault("AreaHeaderBG");
 
     this.tabbar.style["height"] = (h - 45) + "px";
-    console.log((editor.pos[0] + editor.size[0] - w) + "px");
     this.style["left"] = (editor.pos[0] + editor.size[0] - w) + "px";
   }
 
