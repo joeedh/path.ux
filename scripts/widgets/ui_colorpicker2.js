@@ -11,21 +11,22 @@ import cconst from '../config/const.js';
 import {color2web, web2color, validateWebColor} from "../core/ui_base.js";
 
 let Vector2 = vectormath.Vector2,
-  Vector3 = vectormath.Vector3,
-  Vector4 = vectormath.Vector4,
-  Matrix4 = vectormath.Matrix4;
+    Vector3 = vectormath.Vector3,
+    Vector4 = vectormath.Vector4,
+    Matrix4 = vectormath.Matrix4;
 
 export {rgb_to_hsv, hsv_to_rgb} from "../path-controller/util/colorutils.js";
-import {rgb_to_hsv, hsv_to_rgb} from "../path-controller/util/colorutils.js";
+import {rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk} from "../path-controller/util/colorutils.js";
 
-let UIBase = ui_base.UIBase,
-  PackFlags = ui_base.PackFlags,
-  IconSheets = ui_base.IconSheets;
+let UIBase     = ui_base.UIBase,
+    PackFlags  = ui_base.PackFlags,
+    IconSheets = ui_base.IconSheets;
 
 let UPW = 1.25, VPW = 0.75;
 
 //*
 let sample_rets = new util.cachering(() => [0, 0], 64);
+
 export function inv_sample(u, v) {
   let ret = sample_rets.next();
 
@@ -43,11 +44,13 @@ export function sample(u, v) {
 
   return ret;
 }
+
 //*/
 
 let fieldrand = new util.MersenneRandom(0);
 
 let huefields = {};
+
 export function getHueField(width, height, dpi) {
   let key = width + ":" + height + ":" + dpi.toFixed(4);
 
@@ -58,16 +61,16 @@ export function getHueField(width, height, dpi) {
   let field = new ImageData(width, height);
   let idata = field.data;
 
-  for (let i=0; i<width*height; i++) {
-    let ix = i % width, iy = ~~(i / width);
+  for (let i = 0; i < width*height; i++) {
+    let ix = i%width, iy = ~~(i/width);
     let idx = i*4;
 
     let rgb = hsv_to_rgb(ix/width, 1, 1);
 
     idata[idx] = rgb[0]*255;
-    idata[idx+1] = rgb[1]*255;
-    idata[idx+2] = rgb[2]*255;
-    idata[idx+3] = 255;
+    idata[idx + 1] = rgb[1]*255;
+    idata[idx + 2] = rgb[2]*255;
+    idata[idx + 3] = 255;
   }
 
   //*
@@ -84,6 +87,7 @@ export function getHueField(width, height, dpi) {
 }
 
 let fields = {};
+
 export function getFieldImage(fieldsize, width, height, hsva) {
   fieldrand.seed(0);
 
@@ -101,52 +105,52 @@ export function getFieldImage(fieldsize, width, height, hsva) {
 
   let image = {
     width : width,
-    height : height,
+    height: height,
     image : new ImageData(fieldsize, fieldsize),
 
-    x2sat : (x) => {
+    x2sat: (x) => {
       return Math.min(Math.max(x/width, 0), 1);
     },
-    y2val : (y) => {
+    y2val: (y) => {
       y = 1.0 - Math.min(Math.max(y/height, 0), 1);
 
       return y === 0.0 ? 0.0 : y**valpow;
     },
-    sat2x : (s) => {
-       return s*width;
+    sat2x: (s) => {
+      return s*width;
     },
-    val2y : (v) => {
+    val2y: (v) => {
       if (v == 0)
         return height;
 
-      v = v**(1.0 / valpow);
+      v = v**(1.0/valpow);
       return (1.0 - v)*height;
     }
   };
 
   image.params = {
-    box : {
-      x : 0,
-      y : 0,
+    box: {
+      x     : 0,
+      y     : 0,
       width : width,
-      height : height
+      height: height
     }
   };
 
   let idata = image.image.data;
-  for (let i=0; i<idata.length; i += 4) {
+  for (let i = 0; i < idata.length; i += 4) {
     let i2 = i/4;
-    let x = i2 % size2, y = ~~(i2 / size2);
+    let x = i2%size2, y = ~~(i2/size2);
 
-    let v = 1.0 - (y / size2);
+    let v = 1.0 - (y/size2);
     let s = (x/size2);
 
     let rgb = hsv_to_rgb(hsva[0], s, v**valpow);
 
     idata[i] = rgb[0]*255;
-    idata[i+1] = rgb[1]*255;
-    idata[i+2] = rgb[2]*255;
-    idata[i+3] = 255;
+    idata[i + 1] = rgb[1]*255;
+    idata[i + 2] = rgb[2]*255;
+    idata[i + 3] = 255;
   }
 
   //*
@@ -157,7 +161,7 @@ export function getFieldImage(fieldsize, width, height, hsva) {
   g.putImageData(image.image, 0, 0);
   //*/
   image.canvas = image2;
-  image.scale = width / size2;
+  image.scale = width/size2;
 
   fields[key] = image;
   return image;
@@ -166,7 +170,7 @@ export function getFieldImage(fieldsize, width, height, hsva) {
 let _update_temp = new Vector4();
 
 export class SimpleBox {
-  constructor(pos=[0, 0], size=[1, 1]) {
+  constructor(pos = [0, 0], size = [1, 1]) {
     this.pos = new Vector2(pos);
     this.size = new Vector2(size);
     this.r = 0;
@@ -183,9 +187,12 @@ export class HueField extends UIBase {
 
     let setFromXY = (x, y) => {
       let dpi = this.getDPI();
-      let r = this.getDefault("circleSize");
+      let pad = this._getPad();
 
-      let h = x / ((this.canvas.width - r*4)/dpi);
+      let w = this.canvas.width / dpi - pad*2.0;
+      x -= pad;
+
+      let h = x / w;
       h = Math.min(Math.max(h, 0.0), 1.0);
 
       this.hsva[0] = h;
@@ -218,10 +225,10 @@ export class HueField extends UIBase {
           on_mousedown: (e) => {
             this.popModal();
           },
-          on_mouseup: (e) => {
+          on_mouseup  : (e) => {
             this.popModal();
           },
-          on_keydown: (e) => {
+          on_keydown  : (e) => {
             if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
               this.popModal();
             }
@@ -229,6 +236,17 @@ export class HueField extends UIBase {
         });
       }, 1)
     });
+  }
+
+  static define() {
+    return {
+      tagname: "huefield-x",
+      style  : "colorfield"
+    };
+  }
+
+  _getPad() {
+    return Math.max(this.getDefault("circleSize"), 15);
   }
 
   _redraw() {
@@ -244,17 +262,24 @@ export class HueField extends UIBase {
     canvas.style["width"] = w + "px";
     canvas.style["height"] = h + "px";
 
-    let rselector = ~~(this.getDefault("circleSize") * dpi);
+    /* create horizontal padding to make selection of
+     *  endpoint hue easier */
 
-    let w2 = canvas.width - rselector*4, h2 = canvas.height;
+    let rselector = ~~(this._getPad()*dpi); //~~(this.getDefault("circleSize")*dpi);
+    let r_circle = this.getDefault("circleSize")*dpi;
 
-    g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector*2, 0, w2, h2);
+    let w2 = canvas.width, h2 = canvas.height;
 
-    let x = this.hsva[0]*(canvas.width - rselector*4) + rselector*2;
+    w2 -= rselector*2.0;
+
+    //g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector*2, 0, w2, h2);
+    g.drawImage(getHueField(w2, h2, dpi), 0, 0, w2, h2, rselector, 0, w2, h2);
+
+    let x = this.hsva[0]*w2 + rselector;
     let y = canvas.height*0.5;
 
     g.beginPath();
-    g.arc(x, y, rselector, -Math.PI, Math.PI);
+    g.arc(x, y, r_circle, -Math.PI, Math.PI);
     g.closePath();
 
     g.strokeStyle = "white";
@@ -280,11 +305,6 @@ export class HueField extends UIBase {
   on_enabled() {
     this._redraw();
   }
-
-  static define() {return {
-    tagname : "huefield-x",
-    style   : "colorfield"
-  };}
 }
 
 UIBase.internalRegister(HueField);
@@ -293,7 +313,7 @@ export class SatValField extends UIBase {
   constructor() {
     super();
 
-    this.hsva = [0,0,0,1];
+    this.hsva = [0, 0, 0, 1];
 
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
@@ -305,8 +325,8 @@ export class SatValField extends UIBase {
       let field = this._getField();
       let r = ~~(this.getDefault("circleSize")*this.getDPI());
 
-      let sat = field.x2sat(x-r);
-      let val = field.y2val(y-r);
+      let sat = field.x2sat(x - r);
+      let val = field.y2val(y - r);
 
       this.hsva[1] = sat;
       this.hsva[2] = val;
@@ -335,7 +355,7 @@ export class SatValField extends UIBase {
             if (rect === undefined) {
               return;
             }
-            
+
             let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
             setFromXY(x, y);
@@ -343,10 +363,10 @@ export class SatValField extends UIBase {
           on_mousedown: (e) => {
             this.popModal();
           },
-          on_mouseup: (e) => {
+          on_mouseup  : (e) => {
             this.popModal();
           },
-          on_keydown: (e) => {
+          on_keydown  : (e) => {
             if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
               this.popModal();
             }
@@ -367,7 +387,7 @@ export class SatValField extends UIBase {
 
       setTimeout(() => {
         this.pushModal({
-          on_mousemove: (e) => {
+          on_mousemove  : (e) => {
             let rect = this.canvas.getClientRects()[0];
             let x, y;
 
@@ -381,25 +401,25 @@ export class SatValField extends UIBase {
 
             setFromXY(x, y);
           },
-          on_touchmove: (e) => {
+          on_touchmove  : (e) => {
             let rect = this.canvas.getClientRects()[0];
             let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
 
             setFromXY(x, y);
           },
-          on_mousedown: (e) => {
+          on_mousedown  : (e) => {
             this.popModal();
           },
           on_touchcancel: (e) => {
             this.popModal();
           },
-          on_touchend: (e) => {
+          on_touchend   : (e) => {
             this.popModal();
           },
-          on_mouseup: (e) => {
+          on_mouseup    : (e) => {
             this.popModal();
           },
-          on_keydown: (e) => {
+          on_keydown    : (e) => {
             if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
               this.popModal();
             }
@@ -407,6 +427,13 @@ export class SatValField extends UIBase {
         });
       }, 1);
     })
+  }
+
+  static define() {
+    return {
+      tagname: "satvalfield-x",
+      style  : "colorfield"
+    };
   }
 
   _getField() {
@@ -418,10 +445,10 @@ export class SatValField extends UIBase {
 
     //r = ~~(r*dpi);
 
-    return getFieldImage(this.getDefault("fieldSize"), w-r*2, h-r*2, this.hsva);
+    return getFieldImage(this.getDefault("fieldSize"), w - r*2, h - r*2, this.hsva);
   }
 
-  update(force_update=false) {
+  update(force_update = false) {
     super.update();
 
     if (force_update) {
@@ -443,7 +470,7 @@ export class SatValField extends UIBase {
     canvas.style["height"] = h + "px";
     //SatValField
 
-    let rselector = ~~(this.getDefault("circleSize") * dpi);
+    let rselector = ~~(this.getDefault("circleSize")*dpi);
 
     let field = this._getField()
     let image = field.canvas;
@@ -457,13 +484,13 @@ export class SatValField extends UIBase {
     g.beginPath();
 
     let steps = 17;
-    let dx = canvas.width / steps;
-    let dy = canvas.height / steps;
+    let dx = canvas.width/steps;
+    let dy = canvas.height/steps;
 
-    for (let i=0; i<steps*steps; i++) {
-      let x = (i % steps)*dx, y = (~~(i / steps))*dy;
+    for (let i = 0; i < steps*steps; i++) {
+      let x = (i%steps)*dx, y = (~~(i/steps))*dy;
 
-      if (i % 2 == 0) {
+      if (i%2 == 0) {
         continue;
       }
       g.rect(x, y, dx, dy);
@@ -473,7 +500,7 @@ export class SatValField extends UIBase {
     g.fill();
 
     g.globalAlpha = this.hsva[3];
-    g.drawImage(image, 0, 0, image.width, image.height, rselector, rselector, canvas.width-rselector*2, canvas.height-rselector*2);
+    g.drawImage(image, 0, 0, image.width, image.height, rselector, rselector, canvas.width - rselector*2, canvas.height - rselector*2);
 
     let hsva = this.hsva;
 
@@ -508,11 +535,6 @@ export class SatValField extends UIBase {
   on_enabled() {
     this._redraw();
   }
-
-  static define() {return {
-    tagname : "satvalfield-x",
-    style   : "colorfield"
-  };}
 }
 
 UIBase.internalRegister(SatValField);
@@ -562,7 +584,26 @@ export class ColorField extends ui.ColumnFrame {
     //this.shadow.appendChild(huecanvas);
   }
 
-  setHSVA(h, s, v, a=1.0, fire_onchange=true) {
+  static define() {
+    return {
+      tagname: "colorfield-x",
+      style  : "colorfield"
+    };
+  }
+
+  setCMYK(c, m, y, k) {
+    let rgb = cmyk_to_rgb(c, m, y, k);
+    let hsv = rgb_to_hsv(rgb[0], rgb[1], rgb[2]);
+
+    this.setHSVA(hsv[0], hsv[1], hsv[2], this.hsva[3]);
+  }
+
+  getCMYK() {
+    let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
+    return rgb_to_cmyk(rgb[0], rgb[1], rgb[2]);
+  }
+
+  setHSVA(h, s, v, a = 1.0, fire_onchange = true) {
     this.hsva[0] = h;
     this.hsva[1] = s;
     this.hsva[2] = v;
@@ -576,7 +617,7 @@ export class ColorField extends ui.ColumnFrame {
     }
   }
 
-  setRGBA(r, g, b, a=1.0, fire_onchange=true) {
+  setRGBA(r, g, b, a = 1.0, fire_onchange = true) {
     let hsv = rgb_to_hsv(r, g, b);
 
     this.hsva[0] = hsv[0];
@@ -603,7 +644,7 @@ export class ColorField extends ui.ColumnFrame {
     return this;
   }
 
-  updateDPI(force_update=false, _in_update=false) {
+  updateDPI(force_update = false, _in_update = false) {
     let dpi = this.getDPI();
 
     let update = force_update;
@@ -619,7 +660,7 @@ export class ColorField extends ui.ColumnFrame {
     }
   }
 
-  setRGBA(r, g, b, a=1.0, fire_onchange=true) {
+  setRGBA(r, g, b, a = 1.0, fire_onchange = true) {
     if (bad(r) || bad(g) || bad(b) || bad(a)) {
       console.warn("Invalid value!");
       return;
@@ -643,7 +684,8 @@ export class ColorField extends ui.ColumnFrame {
       this.onchange(this.hsva, this.rgba);
     }
   }
-  update(force_update=false) {
+
+  update(force_update = false) {
     super.update();
 
     let redraw = false;
@@ -656,16 +698,12 @@ export class ColorField extends ui.ColumnFrame {
     }
   }
 
-  static define() {return {
-    tagname : "colorfield-x",
-    style : "colorfield"
-  };}
-
   _redraw() {
     this.satvalfield._redraw();
     this.huefield._redraw();
   }
 }
+
 UIBase.internalRegister(ColorField);
 
 export class ColorPicker extends ui.ColumnFrame {
@@ -673,58 +711,14 @@ export class ColorPicker extends ui.ColumnFrame {
     super();
   }
 
-  init() {
-    super.init();
-
-    this.field = UIBase.createElement("colorfield-x");
-    this.field.setAttribute("class", "colorpicker");
-
-    this.field.packflag |= this.inherit_packflag;
-    this.field.packflag |= this.packflag;
-
-    this.field.onchange = () => {
-      this._setDataPath();
-      this._setSliders();
-
-      if (this.onchange) {
-        this.onchange(this.field.rgba);
-      }
-    };
-
-    let style = document.createElement("style");
-    style.textContent = `
-      .colorpicker {
-        background-color : ${this.getDefault("background-color")};
-      }
-    `;
-
-    this._style = style;
-
-    let cb = this.colorbox = document.createElement("div");
-    cb.style["width"] = "100%";
-    cb.style["height"] = this.getDefault("colorBoxHeight") + "px";
-    cb.style["background-color"] = "black";
-
-    this.shadow.appendChild(style);
-    this.field.ctx = this.ctx;
-
-    this.add(this.colorbox);
-    this.add(this.field);
-
-    this.style["width"] = this.getDefault("width") + "px";
+  //*
+  get hsva() {
+    return this.field.hsva;
   }
 
-  updateColorBox() {
-    let r = this.field.rgba[0], g = this.field.rgba[1], b = this.field.rgba[2];
-    //let a = this.field.rgba[3];
-
-    r = ~~(r*255);
-    g = ~~(g*255);
-    b = ~~(b*255);
-
-    let css = `rgb(${r},${g},${b})`;
-    this.colorbox.style["background-color"] = css;
-  }
+  get rgba() {
+    return this.field.rgba;
+  }//*/
 
   static setDefault(node) {
     let tabs = node.tabs();
@@ -791,7 +785,87 @@ export class ColorPicker extends ui.ColumnFrame {
       node.setRGBA(rgba[0], rgba[1], rgba[2], e.value);
     });
 
+    tab = tabs.tab("CMYK")
+    let makeCMYKSlider = (label, idx) => {
+      return tab.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+        let cmyk = node.getCMYK();
+        cmyk[idx] = e.value;
+        node.setCMYK(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
+      })
+    }
+
+    node.cmyk = [
+      makeCMYKSlider("C", 0),
+      makeCMYKSlider("M", 1),
+      makeCMYKSlider("Y", 2),
+      makeCMYKSlider("K", 3),
+    ];
+
     node._setSliders();
+  }
+
+  static define() {
+    return {
+      tagname: "colorpicker-x",
+      style  : "colorfield"
+    };
+  }
+
+  set description(val) {
+    //do not allow setting description of the colorpicker container
+  }
+
+  init() {
+    super.init();
+
+    this.field = UIBase.createElement("colorfield-x");
+    this.field.setAttribute("class", "colorpicker");
+
+    this.field.packflag |= this.inherit_packflag;
+    this.field.packflag |= this.packflag;
+
+    this.field.onchange = () => {
+      this._setDataPath();
+      this._setSliders();
+
+      if (this.onchange) {
+        this.onchange(this.field.rgba);
+      }
+    };
+
+    let style = document.createElement("style");
+    style.textContent = `
+      .colorpicker {
+        background-color : ${this.getDefault("background-color")};
+      }
+    `;
+
+    this._style = style;
+
+    let cb = this.colorbox = document.createElement("div");
+    cb.style["width"] = "100%";
+    cb.style["height"] = this.getDefault("colorBoxHeight") + "px";
+    cb.style["background-color"] = "black";
+
+    this.shadow.appendChild(style);
+    this.field.ctx = this.ctx;
+
+    this.add(this.colorbox);
+    this.add(this.field);
+
+    this.style["width"] = this.getDefault("width") + "px";
+  }
+
+  updateColorBox() {
+    let r = this.field.rgba[0], g = this.field.rgba[1], b = this.field.rgba[2];
+    //let a = this.field.rgba[3];
+
+    r = ~~(r*255);
+    g = ~~(g*255);
+    b = ~~(b*255);
+
+    let css = `rgb(${r},${g},${b})`;
+    this.colorbox.style["background-color"] = css;
   }
 
   _setSliders() {
@@ -814,6 +888,12 @@ export class ColorPicker extends ui.ColumnFrame {
     this.b.setValue(rgba[2], false);
     this.a2.setValue(rgba[3], false);
 
+    let cmyk = this.field.getCMYK();
+
+    for (let i=0; i<4; i++) {
+      this.cmyk[i].setValue(cmyk[i], false);
+    }
+
     this.updateColorBox();
 
     if (!this._no_update_textbox) {
@@ -821,22 +901,13 @@ export class ColorPicker extends ui.ColumnFrame {
     }
   }
 
-  //*
-  get hsva() {
-    return this.field.hsva;
-  }
-
-  get rgba() {
-    return this.field.rgba;
-  }//*/
-
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
       return;
     }
 
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    let val =  this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
     if (val === undefined) {
       //console.warn("Bad datapath", this.getAttribute("datapath"));
@@ -852,7 +923,7 @@ export class ColorPicker extends ui.ColumnFrame {
       _update_temp[3] = 1.0;
     }
 
-    if (_update_temp.vectorDistance(this.field.rgba) > 0.01)  {
+    if (_update_temp.vectorDistance(this.field.rgba) > 0.01) {
       this.field.setRGBA(_update_temp[0], _update_temp[1], _update_temp[2], _update_temp[3], false);
       this._setSliders();
       this.field.update(true);
@@ -885,6 +956,12 @@ export class ColorPicker extends ui.ColumnFrame {
     }
   }
 
+  setCMYK(c, m, y, k) {
+    this.field.setCMYK(c, m, y, k);
+    this._setSliders();
+    this._setDataPath();
+  }
+
   setHSVA(h, s, v, a) {
     this.field.setHSVA(h, s, v, a);
     this._setSliders();
@@ -896,11 +973,6 @@ export class ColorPicker extends ui.ColumnFrame {
     this._setSliders();
     this._setDataPath();
   }
-
-  static define() {return {
-    tagname : "colorpicker-x",
-    style : "colorfield"
-  };}
 }
 
 UIBase.internalRegister(ColorPicker);
@@ -927,13 +999,30 @@ export class ColorPickerButton extends UIBase {
     this.shadow.appendChild(this.dom);
   }
 
+  get label() {
+    return this._label;
+  }
+
   set label(val) {
     this._label = val;
     this.labelDom.textContent = val;
   }
 
-  get label() {
-    return this._label;
+  get font() {
+    return this._font;
+  }
+
+  set font(val) {
+    this._font = val;
+
+    this.setCSS();
+  }
+
+  static define() {
+    return {
+      tagname: "color-picker-button-x",
+      style  : "colorpickerbutton"
+    }
   }
 
   init() {
@@ -984,7 +1073,7 @@ export class ColorPickerButton extends UIBase {
   _keyhandler_remove() {
     if (this._has_keyhandler) {
       window.removeEventListener("keydown", this._keydown, {
-        capture : true, passive : false
+        capture: true, passive: false
       });
       this._has_keyhandler = false;
     }
@@ -993,7 +1082,7 @@ export class ColorPickerButton extends UIBase {
   _keyhandler_add() {
     if (!this._has_keyhandler) {
       window.addEventListener("keydown", this._keydown, {
-        capture : true, passive : false
+        capture: true, passive: false
       });
       this._has_keyhandler = true;
     }
@@ -1001,7 +1090,7 @@ export class ColorPickerButton extends UIBase {
     this._keyhandler_timeout = util.time_ms();
   }
 
-  _keydown(e, internal_mode=false) {
+  _keydown(e, internal_mode = false) {
     if (internal_mode && !this._highlight) {
       return;
     }
@@ -1012,12 +1101,12 @@ export class ColorPickerButton extends UIBase {
 
     this._last_keyevt = e;
 
-    if (e.keyCode === 67 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
+    if (e.keyCode === 67 && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey) {
       this.clipboardCopy();
       e.preventDefault();
       e.stopPropagation();
     }
-    if (e.keyCode === 86 && (e.ctrlKey||e.commandKey) && !e.shiftKey && !e.altKey) {
+    if (e.keyCode === 86 && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey) {
       this.clipboardPaste();
       e.preventDefault();
       e.stopPropagation();
@@ -1073,7 +1162,7 @@ export class ColorPickerButton extends UIBase {
 
     let data = cconst.getClipboardData("text/plain");
 
-    if (!data || !validateCSSColor(""+data.data)) {// || data.mime !== "text/css") {
+    if (!data || !validateCSSColor("" + data.data)) {// || data.mime !== "text/css") {
       return;
     }
 
@@ -1131,6 +1220,10 @@ export class ColorPickerButton extends UIBase {
   }
 
   click(e) {
+    this.abortToolTips(4000);
+    console.warn("CLICK COLORPICKER");
+    this.blur();
+
     if (this.onclick) {
       this.onclick(e);
     }
@@ -1149,7 +1242,7 @@ export class ColorPickerButton extends UIBase {
     let onchange = () => {
       this.rgba.load(widget.rgba);
       this.redraw();
-      
+
       if (this.onchange) {
         this.onchange(this);
       }
@@ -1189,21 +1282,11 @@ export class ColorPickerButton extends UIBase {
     return this;
   }
 
-  get font() {
-    return this._font;
-  }
-
-  set font(val) {
-    this._font = val;
-
-    this.setCSS();
-  }
-
   on_disabled() {
     this.setCSS();
     this._redraw();
   }
-  
+
   _redraw() {
     let canvas = this.dom, g = this.g;
 
@@ -1217,16 +1300,16 @@ export class ColorPickerButton extends UIBase {
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", color);
       ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip");
       let steps = 5;
-      let dt = canvas.width / steps, t = 0;
+      let dt = canvas.width/steps, t = 0;
 
       g.beginPath();
       g.lineWidth = 2;
       g.strokeStyle = "black";
 
-      for (let i=0; i<steps; i++, t += dt) {
+      for (let i = 0; i < steps; i++, t += dt) {
         g.moveTo(t, 0);
-        g.lineTo(t+dt, canvas.height);
-        g.moveTo(t+dt, 0);
+        g.lineTo(t + dt, canvas.height);
+        g.moveTo(t + dt, 0);
         g.lineTo(t, canvas.height);
       }
 
@@ -1245,15 +1328,15 @@ export class ColorPickerButton extends UIBase {
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "fill", grid1);
 
     let cellsize = 10;
-    let totx = Math.ceil(canvas.width / cellsize), toty = Math.ceil(canvas.height / cellsize);
+    let totx = Math.ceil(canvas.width/cellsize), toty = Math.ceil(canvas.height/cellsize);
 
     ui_base.drawRoundBox(this, canvas, g, canvas.width, canvas.height, undefined, "clip", undefined, undefined, true);
     g.clip();
 
     g.beginPath();
-    for (let x=0; x<totx; x++) {
-      for (let y=0; y<toty; y++) {
-        if ((x+y) & 1) {
+    for (let x = 0; x < totx; x++) {
+      for (let y = 0; y < toty; y++) {
+        if ((x + y) & 1) {
           continue;
         }
 
@@ -1304,15 +1387,10 @@ export class ColorPickerButton extends UIBase {
     canvas.style["height"] = h + "px";
     canvas.width = ~~(w*dpi);
     canvas.height = ~~(h*dpi);
-        
+
     this.style["background-color"] = "rgba(0,0,0,0)";
     this._redraw();
   }
-
-  static define() {return {
-    tagname : "color-picker-button-x",
-    style   : "colorpickerbutton"
-  }}
 
   updateDataPath() {
     if (!(this.hasAttribute("datapath"))) {
@@ -1396,7 +1474,7 @@ export class ColorPickerButton extends UIBase {
       this._keyhandler_remove();
     }
 
-    for (let i=0; i<this.rgba.length; i++) {
+    for (let i = 0; i < this.rgba.length; i++) {
       if (this.rgba[i] == undefined) {
         console.warn("corrupted color or alpha detected", this.rgba);
         this.rgba[i] = 1.0;
@@ -1410,7 +1488,7 @@ export class ColorPickerButton extends UIBase {
       this._last_key = key;
       this.redraw();
     }
-    
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }

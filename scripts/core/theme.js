@@ -124,7 +124,7 @@ export const DefaultTheme = {
   },
 
   colorfield:  {
-    circleSize    : 16,
+    circleSize    : 11,
     colorBoxHeight: 24,
     fieldSize     : 400,
     height        : 256,

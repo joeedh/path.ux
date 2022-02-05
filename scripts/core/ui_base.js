@@ -620,6 +620,9 @@ export class UIBase extends HTMLElement {
   constructor() {
     super();
 
+    this._tool_tip_abort_delay = undefined;
+    this._tooltip_ref = undefined;
+
     this._textBoxEvents = false;
 
     this._themeOverride = undefined;
@@ -2306,6 +2309,21 @@ export class UIBase extends HTMLElement {
     return false;
   }
 
+  abortToolTips(delayMs=500) {
+    if (this._has_own_tooltips) {
+      this._has_own_tooltips.stop_timer();
+    }
+
+    if (this._tooltip_ref) {
+      this._tooltip_ref.remove();
+      this._tooltip_ref = undefined;
+    }
+
+    this._tool_tip_abort_delay = util.time_ms() + delayMs;
+
+    return this;
+  }
+
   updateToolTipHandlers() {
     if (!this._useNativeToolTips_set && !cconst.useNativeToolTips !== !this._useNativeToolTips) {
       this._useNativeToolTips = cconst.useNativeToolTips;
@@ -2346,6 +2364,11 @@ export class UIBase extends HTMLElement {
 
       let bind_handler = (type, etype) => {
         let handler = (e) => {
+          if (this._tool_tip_abort_delay !== undefined && util.time_ms() < this._tool_tip_abort_delay) {
+            this._tooltip_timer = undefined;
+            return;
+          }
+
           state[type](e);
         };
 
@@ -2398,6 +2421,12 @@ export class UIBase extends HTMLElement {
       return;
     }
 
+    if (this._tool_tip_abort_delay !== undefined && util.time_ms() < this._tool_tip_abort_delay) {
+      return;
+    }
+
+    this._tool_tip_abort_delay = undefined;
+
     let screen = this.ctx.screen;
 
     const timelimit = 500;
@@ -2426,8 +2455,14 @@ export class UIBase extends HTMLElement {
     ok = ok && this._description_final;
 
     if (ok) {
-      //console.warn(this._id, "tooltip!", this);
-      _ToolTip.show(this._description_final, this.ctx.screen, x, y);
+      //console.warn("Showing tooltop", this.id);
+      this._tooltip_ref = _ToolTip.show(this._description_final, this.ctx.screen, x, y);
+    } else {
+      if (this._tooltip_ref) {
+        this._tooltip_ref.remove();
+      }
+
+      this._tooltip_ref = undefined;
     }
 
     //console.warn(this._id, "tooltip timer end");
