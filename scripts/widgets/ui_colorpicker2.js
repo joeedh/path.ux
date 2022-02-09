@@ -189,10 +189,10 @@ export class HueField extends UIBase {
       let dpi = this.getDPI();
       let pad = this._getPad();
 
-      let w = this.canvas.width / dpi - pad*2.0;
+      let w = this.canvas.width/dpi - pad*2.0;
       x -= pad;
 
-      let h = x / w;
+      let h = x/w;
       h = Math.min(Math.max(h, 0.0), 1.0);
 
       this.hsva[0] = h;
@@ -720,6 +720,10 @@ export class ColorPicker extends ui.ColumnFrame {
     return this.field.rgba;
   }//*/
 
+  set description(val) {
+    //do not allow setting description of the colorpicker container
+  }
+
   static setDefault(node) {
     let tabs = node.tabs();
 
@@ -811,10 +815,6 @@ export class ColorPicker extends ui.ColumnFrame {
     };
   }
 
-  set description(val) {
-    //do not allow setting description of the colorpicker container
-  }
-
   init() {
     super.init();
 
@@ -890,7 +890,7 @@ export class ColorPicker extends ui.ColumnFrame {
 
     let cmyk = this.field.getCMYK();
 
-    for (let i=0; i<4; i++) {
+    for (let i = 0; i < 4; i++) {
       this.cmyk[i].setValue(cmyk[i], false);
     }
 

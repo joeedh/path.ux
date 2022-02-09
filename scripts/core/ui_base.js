@@ -536,7 +536,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -1926,7 +1926,7 @@ export class UIBase extends HTMLElement {
     this.focus();
   }
 
-  flash(color, rect_element = this, timems = 355, autoFocus= true) {
+  flash(color, rect_element = this, timems = 355, autoFocus = true) {
     if (typeof color != "object") {
       color = css2color(color);
     }
@@ -2309,7 +2309,7 @@ export class UIBase extends HTMLElement {
     return false;
   }
 
-  abortToolTips(delayMs=500) {
+  abortToolTips(delayMs = 500) {
     if (this._has_own_tooltips) {
       this._has_own_tooltips.stop_timer();
     }
