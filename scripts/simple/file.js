@@ -1,5 +1,7 @@
 import nstructjs from '../path-controller/util/struct.js';
 
+import {UIBase} from '../core/ui_base.js';
+
 export class FileHeader {
   constructor(version, magic, flags) {
     this.magic = magic;
@@ -146,7 +148,19 @@ export function loadFile(appstate, args, data) {
 
     ret.screen.ctx = appstate.ctx;
 
+    if (!(ret.screen instanceof appstate.screenClass)) {
+      let screen = UIBase.createElement(appstate.screenClass.define().tagname);
+      screen.ctx = appstate.ctx;
+
+      for (let sarea of ret.screen.sareas) {
+        screen.appendChild(sarea);
+      }
+
+      ret.screen = screen;
+    }
+
     appstate.screen = ret.screen;
+
     document.body.appendChild(appstate.screen);
     appstate.screen.listen();
   }

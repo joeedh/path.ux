@@ -71,8 +71,9 @@ export function makeAPI(ctxClass) {
 }
 
 import {Icons, loadDefaultIconSheet} from './icons.js';
-import {IconManager, setIconManager, setIconMap} from '../core/ui_base.js';
+import {IconManager, setIconManager, setIconMap, setTheme, UIBase} from '../core/ui_base.js';
 import {FileArgs, loadFile, saveFile} from './file.js';
+import {HotKey, KeyMap} from '../path-controller/util/simple_events.js';
 
 export class StartArgs {
   constructor() {
@@ -81,11 +82,35 @@ export class StartArgs {
     this.iconSizes = [16, 24, 32, 48];
     this.iconTileSize = 32;
     this.iconsPerRow = 16;
+    this.theme = undefined; //see scripts/core/theme.js
   }
 }
 
+export class SimpleScreen extends Screen {
+  constructor() {
+    super();
+
+    this.keymap = new KeyMap([
+      new HotKey("Z", ["CTRL"], () => {
+        this.ctx.toolstack.undo(this.ctx);
+      }),
+      new HotKey("Z", ["CTRL", "SHIFT"], () => {
+        this.ctx.toolstack.redo(this.ctx);
+      }),
+    ])
+  }
+
+  static define() {
+    return {
+      tagname: "simple-screen-x"
+    }
+  }
+}
+
+UIBase.register(SimpleScreen);
+
 export class AppState {
-  constructor(ctxClass, screenClass = Screen) {
+  constructor(ctxClass, screenClass = SimpleScreen) {
     ctxClass = GetContextClass(ctxClass);
 
     this.ctx = new ctxClass(this);
@@ -173,6 +198,10 @@ export class AppState {
     let iconManager = new IconManager(images, sizes, args.iconsPerRow);
     setIconManager(iconManager);
     setIconMap(args.icons);
+
+    if (args.theme) {
+      setTheme(args.theme);
+    }
 
     document.body.style["margin"] = "0px";
     document.body.style["padding"] = "0px";
