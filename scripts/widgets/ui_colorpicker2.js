@@ -91,22 +91,27 @@ let fields = {};
 export function getFieldImage(fieldsize, width, height, hsva) {
   fieldrand.seed(0);
 
+  //render field at half res and upscale via canvas2d
+  let width2 = width >> 1;
+  let height2 = height >> 1;
+  let fieldsize2 = fieldsize >> 1;
+
   let hue = hsva[0];
   let hue_rgb = hsv_to_rgb(hue, 1.0, 1.0);
-  let key = fieldsize + ":" + width + ":" + height + ":" + hue.toFixed(5);
+  let key = fieldsize + ":" + width2 + ":" + height2 + ":" + hue.toFixed(5);
 
   if (key in fields)
     return fields[key];
 
   //console.log("generation color picker field of size", size);
 
-  let size2 = fieldsize;
+  let size2 = fieldsize2;
   let valpow = 0.75;
 
   let image = {
     width : width,
     height: height,
-    image : new ImageData(fieldsize, fieldsize),
+    image : new ImageData(fieldsize2, fieldsize2),
 
     x2sat: (x) => {
       return Math.min(Math.max(x/width, 0), 1);
@@ -120,7 +125,7 @@ export function getFieldImage(fieldsize, width, height, hsva) {
       return s*width;
     },
     val2y: (v) => {
-      if (v == 0)
+      if (v === 0)
         return height;
 
       v = v**(1.0/valpow);
@@ -166,6 +171,7 @@ export function getFieldImage(fieldsize, width, height, hsva) {
   fields[key] = image;
   return image;
 }
+
 
 let _update_temp = new Vector4();
 
@@ -770,6 +776,11 @@ export class ColorPicker extends ui.ColumnFrame {
       node.setHSVA(hsva[0], hsva[1], hsva[2], e.value);
     });
 
+    node.h.baseUnit = node.h.displayUnit = "none";
+    node.s.baseUnit = node.s.displayUnit = "none";
+    node.v.baseUnit = node.v.displayUnit = "none";
+    node.a.baseUnit = node.a.displayUnit = "none";
+
     tab = tabs.tab("RGB");
 
     node.r = tab.slider(undefined, "R", 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
@@ -789,21 +800,31 @@ export class ColorPicker extends ui.ColumnFrame {
       node.setRGBA(rgba[0], rgba[1], rgba[2], e.value);
     });
 
-    tab = tabs.tab("CMYK")
-    let makeCMYKSlider = (label, idx) => {
-      return tab.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-        let cmyk = node.getCMYK();
-        cmyk[idx] = e.value;
-        node.setCMYK(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
-      })
-    }
+    node.r.baseUnit = node.r.displayUnit = "none";
+    node.g.baseUnit = node.g.displayUnit = "none";
+    node.b.baseUnit = node.b.displayUnit = "none";
+    node.a2.baseUnit = node.a2.displayUnit = "none";
 
-    node.cmyk = [
-      makeCMYKSlider("C", 0),
-      makeCMYKSlider("M", 1),
-      makeCMYKSlider("Y", 2),
-      makeCMYKSlider("K", 3),
-    ];
+    if (!node.getDefault("noCMYK")) {
+      tab = tabs.tab("CMYK")
+      let makeCMYKSlider = (label, idx) => {
+        let slider = tab.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
+          let cmyk = node.getCMYK();
+          cmyk[idx] = e.value;
+          node.setCMYK(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
+        })
+
+        slider.baseUnit = slider.displayUnit = "none";
+        return slider;
+      }
+
+      node.cmyk = [
+        makeCMYKSlider("C", 0),
+        makeCMYKSlider("M", 1),
+        makeCMYKSlider("Y", 2),
+        makeCMYKSlider("K", 3),
+      ];
+    }
 
     node._setSliders();
   }
@@ -888,10 +909,12 @@ export class ColorPicker extends ui.ColumnFrame {
     this.b.setValue(rgba[2], false);
     this.a2.setValue(rgba[3], false);
 
-    let cmyk = this.field.getCMYK();
+    if (this.cmyk) {
+      let cmyk = this.field.getCMYK();
 
-    for (let i = 0; i < 4; i++) {
-      this.cmyk[i].setValue(cmyk[i], false);
+      for (let i = 0; i < 4; i++) {
+        this.cmyk[i].setValue(cmyk[i], false);
+      }
     }
 
     this.updateColorBox();
@@ -954,6 +977,10 @@ export class ColorPicker extends ui.ColumnFrame {
 
       this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
     }
+  }
+
+  getCMYK() {
+    return this.field.getCMYK();
   }
 
   setCMYK(c, m, y, k) {
