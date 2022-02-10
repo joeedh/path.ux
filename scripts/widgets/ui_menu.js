@@ -504,6 +504,8 @@ export class Menu extends UIBase {
           return;
         }
 
+        e.stopPropagation();
+        e.preventDefault();
         this.click();
       });
 
@@ -551,6 +553,8 @@ export class Menu extends UIBase {
           return;
         }
 
+        e.stopPropagation();
+        e.preventDefault();
         this.click();
       });
 

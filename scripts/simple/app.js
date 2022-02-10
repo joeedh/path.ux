@@ -8,6 +8,8 @@ import {Screen} from '../screen/FrameManager.js';
 import {areaclasses} from '../screen/area_wrangler.js';
 import * as util from '../util/util.js';
 
+import cconst from '../config/const.js';
+
 export class DataModel {
   static defineAPI(api, strct) {
     return strct;
@@ -74,6 +76,7 @@ import {Icons, loadDefaultIconSheet} from './icons.js';
 import {IconManager, setIconManager, setIconMap, setTheme, UIBase} from '../core/ui_base.js';
 import {FileArgs, loadFile, saveFile} from './file.js';
 import {HotKey, KeyMap} from '../path-controller/util/simple_events.js';
+import {initSplineTemplates} from '../path-controller/curve/curve1d_bspline.js';
 
 export class StartArgs {
   constructor() {
@@ -83,6 +86,14 @@ export class StartArgs {
     this.iconTileSize = 32;
     this.iconsPerRow = 16;
     this.theme = undefined; //see scripts/core/theme.js
+
+    this.autoLoadSplineTemplates = true;
+    this.showPathsInToolTips = true;
+    this.enableThemeAutoUpdate = false;
+    this.addHelpPickers = false;
+    this.useNumSliderTextboxes = true;
+    this.numSliderArrowLimit = cconst.numSliderArrowLimit;
+    this.simpleNumSliders = cconst.simpleNumSliders;
   }
 }
 
@@ -185,6 +196,13 @@ export class AppState {
       args.iconsheet = loadDefaultIconSheet();
     }
 
+    console.error("ARGS", args);
+    cconst.loadConstants(args);
+
+    if (args.autoLoadSplineTemplates) {
+      initSplineTemplates();
+    }
+
     let sizes = [];
     let images = [];
 
@@ -194,6 +212,7 @@ export class AppState {
     }
 
     window.iconsheet = args.iconsheet;
+
 
     let iconManager = new IconManager(images, sizes, args.iconsPerRow);
     setIconManager(iconManager);

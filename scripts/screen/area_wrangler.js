@@ -6,7 +6,7 @@ import * as ui_base from '../core/ui_base.js';
 import * as ui from '../core/ui.js';
 import * as ui_noteframe from '../widgets/ui_noteframe.js';
 //import * as nstructjs from './struct.js';
-import {haveModal} from '../path-controller/util/simple_events.js';
+import {haveModal, _setModalAreaClass} from '../path-controller/util/simple_events.js';
 
 import '../path-controller/util/struct.js';
 
@@ -14,6 +14,7 @@ let UIBase = ui_base.UIBase;
 let Vector2 = vectormath.Vector2;
 let ScreenClass = undefined;
 
+import {ClassIdSymbol} from '../core/ui_base.js';
 import {snap, snapi} from './FrameManager_mesh.js';
 
 
@@ -59,14 +60,20 @@ export function setAreaTypes(def) {
 
 export let areaclasses = {};
 
+/*hackish! store ref an active wrangler so simple_event's modal
+* system can lock it!*/
+let theWrangler = undefined;
+
 export class AreaWrangler {
   constructor() {
-    this.stacks = {};
-    this.lasts = {};
+    this.stacks = new Map();
+    this.lasts = new Map();
     this.lastArea = undefined;
     this.stack = [];
     this.idgen = 0;
+    this.locked = 0;
     this._last_screen_id = undefined;
+    theWrangler = this;
   }
 
   _checkWrangler(ctx) {
@@ -91,52 +98,100 @@ export class AreaWrangler {
   }
 
   reset() {
-    this.stacks = {};
-    this.lasts = {};
+    theWrangler = this;
+    this.stacks = new Map();
+    this.lasts = new Map();
     this.lastArea = undefined;
     this.stack = [];
+    this.locked = 0;
     this._last_screen_id = undefined;
 
     return this;
   }
 
+  static findInstance() {
+    return theWrangler;
+  }
+
+  static lock() {
+    return this.findInstance().lock();
+  }
+
+  static unlock() {
+    return this.findInstance().unlock();
+  }
+
+  lock() {
+    this.locked++;
+    return this;
+  }
+
+  unlock() {
+    this.locked = Math.max(this.locked - 1, 0);
+    return this;
+  }
+
   push(type, area, pushLastRef = true) {
-    if (!(type.name in this.stacks)) {
-      this.stacks[type.name] = [];
+    theWrangler = this;
+
+    if (haveModal() || this.locked) {
+      pushLastRef = false;
     }
 
-    this.stacks[type.name].push(this.lasts[type.name]);
-
-    if (pushLastRef || this.lasts[type.name] === undefined) {
-      this.lasts[type.name] = area;
+    if (pushLastRef || !this.lasts.has(type[ClassIdSymbol])) {
+      this.lasts.set(type[ClassIdSymbol], area);
       this.lastArea = area;
     }
 
-    this.stacks[type.name].push(area);
+    let stack = this.stacks.get(type[ClassIdSymbol]);
+    if (stack === undefined) {
+      stack = [];
+      this.stacks.set(type[ClassIdSymbol], stack);
+    }
+
+    let last = this.lasts.get(type[ClassIdSymbol]);
+
+    if (this.locked) {
+      //to ensure stack semantics don't get messed up,
+      //we push the active area on top of the stack
+
+      area = last;
+    }
+
+    stack.push(last);
+    stack.push(area);
+
     this.stack.push(area);
   }
 
   updateLastRef(type, area) {
-    this.lasts[type.name] = area;
+    theWrangler = this;
+
+    if ((this.locked || haveModal()) && this.lasts.has(type[ClassIdSymbol])) {
+      return;
+    }
+
+    this.lasts.set(type[ClassIdSymbol], area);
     this.lastArea = area;
   }
 
   pop(type, area) {
-    if (!(type.name in this.stacks)) {
+    let stack = this.stacks.get(type[ClassIdSymbol]);
+
+    if (stack === undefined) {
       console.warn("pop_ctx_area called in error");
       //throw new Error("pop_ctx_area called in error");
       return;
     }
 
-    if (this.stacks[type.name].length > 0) {
-      this.stacks[type.name].pop();
-
-      let last = this.stacks[type.name].pop();
+    if (stack.length > 0) {
+      stack.pop();
+      let last = stack.pop();
 
       /* paranoia isConnected check to ensure stale elements don't
        * pollute the lasts stack */
-      if (last && last.isConnected) {
-        this.lasts[type.name] = last;
+      if (!this.locked && last && last.isConnected) {
+        this.lasts.set(type[ClassIdSymbol], last);
       }
     } else {
       console.error("pop_ctx_area called in error");
@@ -148,6 +203,10 @@ export class AreaWrangler {
   }
 
   getLastArea(type) {
+    //if (Math.random() > 0.9995) {
+      //console.warn("getLastArea!", type, this.lasts.get(type[ClassIdSymbol]));
+    //}
+
     if (type === undefined) {
       if (this.stack.length > 0) {
         return this.stack[this.stack.length - 1];
@@ -155,15 +214,28 @@ export class AreaWrangler {
         return this.lastArea;
       }
     } else {
-      if (type.name in this.stacks) {
-        let stack = this.stacks[type.name];
+      if (this.locked) {
+        if (this.lastArea && this.lastArea instanceof type) {
+          return this.lastArea;
+        }
+
+        let area = this.lasts.get(type[ClassIdSymbol]);
+
+        if (area) {
+          return area;
+        }
+      }
+
+      if (this.stacks.has(type[ClassIdSymbol])) {
+        let stack = this.stacks.get(type[ClassIdSymbol]);
 
         if (stack.length > 0) {
           return stack[stack.length - 1];
         }
       }
 
-      return this.lasts[type.name];
+      return this.lasts.get(type[ClassIdSymbol]);
     }
   }
 }
+_setModalAreaClass(AreaWrangler);

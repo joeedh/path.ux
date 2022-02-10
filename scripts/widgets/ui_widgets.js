@@ -601,7 +601,9 @@ export class IconButton extends UIBase {
     this.style["align-items"] = "center";
 
     if (this._customIcon) {
-      this.dom.style["background-image"] = `url("${this._customIcon}")`
+      this.dom.style["background-image"] = `url("${this._customIcon.src}")`
+      this.dom.style["background-size"] = "contain";
+      this.dom.style["background-repeat"] = "no-repeat";
     } else {
       let icon = this.icon;
 

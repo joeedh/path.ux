@@ -97,6 +97,9 @@ if (prefix) {
   setTagPrefix(prefix);
 }
 
+export const ClassIdSymbol = Symbol("pathux-class-id");
+let class_idgen = 1;
+
 export function setTheme(theme2) {
   //merge theme
   for (let k in theme2) {
@@ -950,6 +953,8 @@ export class UIBase extends HTMLElement {
   }
 
   static internalRegister(cls) {
+    cls[ClassIdSymbol] = class_idgen++;
+
     registered_has_happened = true;
 
     internalElementNames[cls.define().tagname] = this.prefix(cls.define().tagname);
@@ -968,6 +973,8 @@ export class UIBase extends HTMLElement {
 
   static register(cls) {
     registered_has_happened = true;
+
+    cls[ClassIdSymbol] = class_idgen++;
 
     ElementClasses.push(cls);
 
@@ -1538,15 +1545,15 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  flushUpdate() {
+  flushUpdate(force=false) {
     //check init
     this._init();
 
     this.update();
 
     this._forEachChildWidget((c) => {
-      if (!(c.packflag & PackFlags.NO_UPDATE)) {
-        c.flushUpdate();
+      if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
+        c.flushUpdate(force);
       }
     });
   }

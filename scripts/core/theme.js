@@ -139,7 +139,7 @@ export const DefaultTheme = {
   },
 
   curvewidget: {
-    CanvasBG    : 'rgba(117,79,79, 1)',
+    CanvasBG    : 'rgb(44,44,44)',
     CanvasHeight: 256,
     CanvasWidth : 256,
   },

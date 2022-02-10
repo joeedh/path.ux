@@ -25,15 +25,7 @@ let Vector2 = vectormath.Vector2,
   PropTypes = toolprop.PropTypes;
 
 
-var list = function list(iter) {
-  let ret = [];
-
-  for (let item of iter) {
-    ret.push(item);
-  }
-
-  return ret;
-}
+const list = util.list;
 
 export class TableRow extends Container {
   constructor() {

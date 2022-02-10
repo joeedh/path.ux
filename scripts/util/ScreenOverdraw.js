@@ -181,7 +181,7 @@ export class Overdraw extends ui_base.UIBase {
   }
 
   clear() {
-    for (let child of list(this.svg.childNodes)) {
+    for (let child of util.list(this.svg.childNodes)) {
       child.remove();
     }
 
