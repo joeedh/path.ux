@@ -4,6 +4,9 @@ import {UIBase} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
 import {parsepx} from '../core/ui_base.js';
 import {Icons} from '../core/ui_base.js';
+import * as util from '../util/util.js';
+
+let sidebar_hash = new util.HashDigest();
 
 export class SideBar extends Container {
   constructor() {
@@ -12,16 +15,56 @@ export class SideBar extends Container {
     this.header = this.row();
     this.header.style["height"] = "45px";
 
+    this._last_resize_key = undefined;
+
     this._closed = false;
 
-    this.header.iconbutton(Icons.RIGHT_ARROW, "Close/Open sidebar", () => {
+    this.closeIcon = this.header.iconbutton(Icons.RIGHT_ARROW, "Close/Open sidebar", () => {
       console.log("click!");
-
+      this.closed = !this._closed;
     });
 
+    this._openWidth = undefined;
     this.needsSetCSS = true;
     this.tabbar = this.tabs("left");
     //this.tabbar.style["flex-grow"] = "8";
+  }
+
+  saveData() {
+    return {
+      closed : this.closed
+    }
+  }
+
+  loadData(obj) {
+    this.closed = obj.closed;
+  }
+
+  set closed(val) {
+    if (!!this._closed === !!val) {
+      return;
+    }
+
+    if (this._openWidth === undefined && !this._closed && val) {
+      this._openWidth = this.width;
+    }
+
+    console.log("animate!");
+    let w = val ? 50 : this._openWidth;
+    this.animate().goto("width", w, 500);
+
+
+    if (val) {
+      this.closeIcon.icon = Icons.LEFT_ARROW;
+    } else {
+      this.closeIcon.icon = Icons.RIGHT_ARROW;
+    }
+
+    this._closed = val;
+  }
+
+  get closed() {
+    return this._closed;
   }
 
   get width() {
@@ -54,6 +97,9 @@ export class SideBar extends Container {
   init() {
     super.init();
 
+    let closed = this._closed;
+    this._closed = false;
+
     if (!this.getAttribute("width")) {
       this.width = 300;
     }
@@ -62,6 +108,10 @@ export class SideBar extends Container {
     }
 
     this.setCSS();
+
+    if (closed) {
+      this.closed = true;
+    }
   }
 
   setCSS() {
@@ -96,6 +146,16 @@ export class SideBar extends Container {
   }
 
   update() {
+    sidebar_hash.reset();
+    sidebar_hash.add(this.width);
+    sidebar_hash.add(this.height);
+
+    let key = sidebar_hash.get();
+    if (key !== this._last_resize_key) {
+      this._last_resize_key = key;
+      this.needsSetCSS = true;
+    }
+
     if (this.needsSetCSS) {
       this.setCSS();
     }
@@ -150,8 +210,8 @@ export class Editor extends Area {
     if (this.ctx) {
       sidebar._init();
 
-      this.flushSetCSS();
-      this.flushUpdate();
+      this.sidebar.flushSetCSS();
+      this.sidebar.flushUpdate();
     }
 
 

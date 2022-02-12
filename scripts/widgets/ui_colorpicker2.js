@@ -1488,8 +1488,23 @@ export class ColorPickerButton extends UIBase {
     }
   }
 
+  get noLabel() {
+    let ret = ""+this.getAttribute("no-label");
+    ret = ret.toLowerCase();
+
+    return ret === "true" || ret === "yes" || ret === "on";
+  }
+
+  set noLabel(v) {
+    this.setAttribute("no-label", v ? "true" : "false");
+  }
+
   update() {
     super.update();
+
+    if (this.noLabel && this.labelDom.isConnected) {
+      this.labelDom.remove();
+    }
 
     if (this.customLabel !== undefined && this.customLabel !== this._label) {
       this.label = this.customLabel;

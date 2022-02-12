@@ -539,7 +539,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -1545,7 +1545,7 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  flushUpdate(force=false) {
+  flushUpdate(force = false) {
     //check init
     this._init();
 
@@ -2794,7 +2794,12 @@ export class UIBase extends HTMLElement {
     return this.getStyleClass();
   }
 
-  /** returns a new Animator instance */
+  /** returns a new Animator instance
+   *
+   * example:
+   *
+   * container.animate().goto("style.width", 500, 100, "ease");
+   * */
   animate(_extra_handlers = {}) {
     let transform = new DOMMatrix(this.style["transform"]);
 
@@ -2833,10 +2838,40 @@ export class UIBase extends HTMLElement {
       }
     }
 
+    let pixkeys = ["width", "height", "left", "top", "right", "bottom", "border-radius",
+                   "border-width", "margin", "padding", "margin-left", "margin-right",
+                   "margin-top", "margin-bottom", "padding-left", "padding-right", "padding-bottom",
+                   "padding-top"];
     handlers = Object.assign(handlers, _extra_handlers);
+
+    let makePixHandler = (k, k2) => {
+      handlers[k2 + "_get"] = () => {
+        let s = this.style[k];
+
+        if (s.endsWith("px")) {
+          return parsepx(s);
+        } else {
+          return 0.0;
+        }
+      }
+
+      handlers[k2 + "_set"] = (val) => {
+        this.style[k] = val + "px";
+      }
+    }
+
+    for (let k of pixkeys) {
+      if (!(k in handlers)) {
+        makePixHandler(k, `style.${k}`);
+        makePixHandler(k, `style["${k}"]`);
+        makePixHandler(k, `style['${k}']`);
+      }
+    }
 
     let handler = {
       get: (target, key, receiver) => {
+        console.log(key, handlers[key + "_get"], handlers);
+
         if ((key + "_get") in handlers) {
           return handlers[key + "_get"].call(target);
         } else {
@@ -2844,6 +2879,8 @@ export class UIBase extends HTMLElement {
         }
       },
       set: (target, key, val, receiver) => {
+        console.log(key);
+
         if ((key + "_set") in handlers) {
           handlers[key + "_set"].call(target, val);
         } else {

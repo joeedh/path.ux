@@ -151,13 +151,6 @@ export class AreaWrangler {
 
     let last = this.lasts.get(type[ClassIdSymbol]);
 
-    if (this.locked) {
-      //to ensure stack semantics don't get messed up,
-      //we push the active area on top of the stack
-
-      area = last;
-    }
-
     stack.push(last);
     stack.push(area);
 
@@ -214,18 +207,6 @@ export class AreaWrangler {
         return this.lastArea;
       }
     } else {
-      if (this.locked) {
-        if (this.lastArea && this.lastArea instanceof type) {
-          return this.lastArea;
-        }
-
-        let area = this.lasts.get(type[ClassIdSymbol]);
-
-        if (area) {
-          return area;
-        }
-      }
-
       if (this.stacks.has(type[ClassIdSymbol])) {
         let stack = this.stacks.get(type[ClassIdSymbol]);
 

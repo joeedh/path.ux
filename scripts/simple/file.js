@@ -154,6 +154,9 @@ export function loadFile(appstate, args, data) {
 
       for (let sarea of ret.screen.sareas) {
         screen.appendChild(sarea);
+
+        sarea.area.afterSTRUCT();
+        sarea.area.on_fileload();
       }
 
       ret.screen = screen;
