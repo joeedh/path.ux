@@ -59,4 +59,8 @@ export let Icons = {
   ZOOM_OUT     : a++,
   ZOOM_IN      : a++
 };
+/* used for icon checkboxes with overlayed check marks */
+Icons.ENUM_CHECKED = Icons.CHECKED;
+Icons.ENUM_UNCHECKED = Icons.UNCHECKED;
+
 

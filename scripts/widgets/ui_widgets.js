@@ -495,6 +495,8 @@ export class IconButton extends UIBase {
 
     this._extraIcon = undefined; //draw another icon on top
 
+    this.extraDom = undefined;
+
     //have to put icon in subdiv
     this.dom = document.createElement("div");
     this.shadow.appendChild(this.dom);
@@ -628,6 +630,27 @@ export class IconButton extends UIBase {
           console.error(this.dom.style["background"]);
         }
       }
+    }
+
+    if (this._extraIcon !== undefined) {
+      let dom;
+
+      if (!this.extraDom) {
+        this.extraDom = dom = document.createElement("div");
+
+        this.shadow.appendChild(dom);
+      } else {
+        dom = this.extraDom;
+      }
+
+      dom.style["position"] = "absolute";
+      dom.style["width"] = size + "px";
+      dom.style["height"] = size + "px";
+      dom.style["margin"] = dom.style["padding"] = "0px";
+      //dom.style["background-color"] = 'orange';
+      dom.style["pointer-events"] = "none";
+
+      ui_base.iconmanager.setCSS(this._extraIcon, dom, this.iconsheet);
     }
   }
 
@@ -894,7 +917,7 @@ export class IconCheck extends IconButton {
           title = rdef.prop.description;
         }
 
-        if (icon2 !== undefined) {
+        if (icon2 !== undefined && icon2 !== -1) {
           this._icon_pressed = icon;
           icon = icon2;
         }
@@ -924,14 +947,20 @@ export class IconCheck extends IconButton {
     }
   }
 
+  updateDrawCheck() {
+    if (this.drawCheck) {
+      this._extraIcon = this._checked ? ui_base.Icons.ENUM_CHECKED : ui_base.Icons.ENUM_UNCHECKED;
+    } else {
+      this._extraIcon = undefined;
+    }
+  }
+
   update() {
     if (this.packflag & PackFlags.HIDE_CHECK_MARKS) {
       this.drawCheck = false;
     }
 
-    if (this.drawCheck) {
-      this._extraIcon = ui_base.Icons.ENUM_CHECKED;
-    }
+    this.updateDrawCheck();
 
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
@@ -943,6 +972,11 @@ export class IconCheck extends IconButton {
   _getsize() {
     let margin = this.getDefault("padding");
     return ui_base.iconmanager.getTileSize(this.iconsheet) + margin*2;
+  }
+
+  setCSS() {
+    this.updateDrawCheck();
+    super.setCSS();
   }
 }
 
