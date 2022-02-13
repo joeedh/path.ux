@@ -45,7 +45,7 @@ export class TextBox extends TextBoxBase {
   constructor() {
     super();
 
-    this._width = "min-content";
+    this._width = this.getDefault("width") + "px";
     this._textBoxEvents = true;
 
     let margin = Math.ceil(3 * this.getDPI());

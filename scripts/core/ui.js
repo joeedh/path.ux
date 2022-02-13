@@ -915,8 +915,9 @@ export class Container extends ui_base.UIBase {
   textbox(inpath, text, cb=undefined, packflag = 0) {
     let path;
 
-    if (inpath)
+    if (inpath) {
       path = this._joinPrefix(inpath);
+    }
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
 
@@ -929,6 +930,8 @@ export class Container extends ui_base.UIBase {
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
+    this._add(ret);
+
     ret.setCSS();
     ret.update();
 
@@ -936,7 +939,6 @@ export class Container extends ui_base.UIBase {
     ret.onchange = cb;
     ret.text = text;
 
-    this._add(ret);
     return ret;
   }
 

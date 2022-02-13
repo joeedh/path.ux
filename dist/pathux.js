@@ -11322,7 +11322,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
       key = undefined; //make handler that still blocks events
 
     //check we don't override other mouse pointer event handlers
-    if (key === undefined && k.search("pointer") === 0) {
+    if (key === undefined) {
       continue;
     }
 
