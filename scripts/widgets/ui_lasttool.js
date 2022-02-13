@@ -132,6 +132,8 @@ export class LastToolPanel extends ColumnFrame {
           let tool = getTool();
           if (tool) {
             tool.inputs[k].setValue(val);
+            tool.saveDefaultInputs();
+
             ctx.toolstack.rerun(tool);
           }
         }
