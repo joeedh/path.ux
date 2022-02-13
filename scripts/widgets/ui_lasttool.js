@@ -5,6 +5,8 @@ import {PropTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
 import {UndoFlags, ToolFlags} from "../path-controller/toolsys/toolsys.js";
 import {DataPath, DataTypes} from "../path-controller/controller/controller.js";
 
+import {ToolProperty} from '../path-controller/toolsys/toolprop.js';
+
 import * as util from '../path-controller/util/util.js';
 import cconst from '../config/const.js';
 
@@ -143,7 +145,10 @@ export class LastToolPanel extends ColumnFrame {
         continue;
       }
 
-      let uiname = prop.uiname !== undefined ? prop.uiname : k;
+      let uiname = prop.uiname;
+      if (!uiname) {
+        uiname = ToolProperty.makeUIName(k);
+      }
 
       prop.uiname = uiname;
       let apikey = k.replace(/[\t ]/g, "_");
