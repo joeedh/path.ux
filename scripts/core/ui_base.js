@@ -408,7 +408,7 @@ export let IconSheets = {
 
 export function iconSheetFromPackFlag(flag) {
   if (flag & PackFlags.CUSTOM_ICON_SHEET) {
-    console.log("Custom Icon Sheet:", flag>>PackFlags.CUSTOM_ICON_SHEET_START);
+    //console.log("Custom Icon Sheet:", flag>>PackFlags.CUSTOM_ICON_SHEET_START);
     return flag>>PackFlags.CUSTOM_ICON_SHEET_START;
   }
 
