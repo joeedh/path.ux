@@ -184,6 +184,25 @@ export class Editor extends Area {
     return strct;
   }
 
+  /** \param makeMenuBar function(ctx, container, menuBarEditor)
+   *
+   * example:
+   *
+   * function makeMenuBar(ctx, container, menuBarEditor) {
+   *
+   *  container.menu("File", [
+   *    "app.new()",
+   *    simple.Menu.SEP,
+   *    "app.save()",
+   *    "app.save(forceDialog=true)|Save As",
+   *    "app.open"
+   *  ]);
+   * }
+   * */
+  static registerAppMenu(makeMenuBar) {
+    this.makeMenuBar = makeMenuBar;
+  }
+
   static register(cls) {
     if (!cls.hasOwnProperty("define")) {
       throw new Error("missing define() method");

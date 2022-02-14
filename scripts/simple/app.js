@@ -7,6 +7,9 @@ import {DataAPI} from '../path-controller/controller/controller.js';
 import {Screen} from '../screen/FrameManager.js';
 import {areaclasses} from '../screen/area_wrangler.js';
 import * as util from '../util/util.js';
+import {Editor} from './editor.js';
+
+import {Vector2} from '../path-controller/util/vectormath.js';
 
 import cconst from '../config/const.js';
 
@@ -77,6 +80,8 @@ import {IconManager, setIconManager, setIconMap, setTheme, UIBase} from '../core
 import {FileArgs, loadFile, saveFile} from './file.js';
 import {HotKey, KeyMap} from '../path-controller/util/simple_events.js';
 import {initSplineTemplates} from '../path-controller/curve/curve1d_bspline.js';
+import {MenuBarEditor} from './menubar.js';
+import {register} from './app_ops.js';
 
 export class StartArgs {
   constructor() {
@@ -86,6 +91,8 @@ export class StartArgs {
     this.iconTileSize = 32;
     this.iconsPerRow = 16;
     this.theme = undefined; //see scripts/core/theme.js
+
+    this.registerSaveOpenOps = true;
 
     this.autoLoadSplineTemplates = true;
     this.showPathsInToolTips = true;
@@ -109,6 +116,11 @@ export class SimpleScreen extends Screen {
         this.ctx.toolstack.redo(this.ctx);
       }),
     ])
+
+    if (_appstate.startArgs.registerSaveOpenOps) {
+      this.keymap.add(new HotKey("S", ["CTRL"], "app.save()"));
+      this.keymap.add(new HotKey("O", ["CTRL"], "app.open()"));
+    }
   }
 
   static define() {
@@ -122,7 +134,12 @@ UIBase.register(SimpleScreen);
 
 export class AppState {
   constructor(ctxClass, screenClass = SimpleScreen) {
+    this._ctxClass = ctxClass;
+
     ctxClass = GetContextClass(ctxClass);
+
+    this.startArgs = undefined;
+    this.currentFileRef = undefined; //current file path/ref
 
     this.ctx = new ctxClass(this);
     this.ctx._state = this;
@@ -133,11 +150,36 @@ export class AppState {
 
     this.fileMagic = "STRT";
     this.fileVersion = [0, 0, 1];
-    this.fileExt = ".data";
+    this.fileExt = "data";
+    this.saveFilesInJSON = false; /* save files in nstructjs-json */
+
+    this.defaultEditorClass = undefined; //if undefined, the first non-menubar editor will be used
   }
 
   reset() {
     this.toolstack.reset();
+  }
+
+  createNewFile() {
+    console.warn("appstate.createNewFile: implement me, using default hack");
+    let state = new this.constructor(this.ctx._ctxClass);
+
+    state.api = this.api;
+    state.ctx = this.ctx;
+    state.startArgs = this.startArgs;
+    state.saveFilesInJSON = this.saveFilesInJSON;
+
+    state.toolstack = this.toolstack;
+    state.toolstack.reset();
+
+    this.screen.unlisten();
+    this.screen.remove();
+
+    for (let k in state) {
+      this[k] = state[k];
+    }
+
+    this.makeScreen();
   }
 
   saveFile(objects, args = {}) {
@@ -147,33 +189,118 @@ export class AppState {
       ext    : this.fileExt
     }, args));
 
-    return saveFile(this, args, objects)
+    return new Promise((accept, reject) => {
+      accept(saveFile(this, args, objects));
+    });
   }
 
   loadFile(data, args = {}) {
-    args = new FileArgs(Object.assign({
-      magic  : this.fileMagic,
-      version: this.fileVersion,
-      ext    : this.fileExt
-    }, args));
+    return new Promise((accept, reject) => {
+      args = new FileArgs(Object.assign({
+        magic  : this.fileMagic,
+        version: this.fileVersion,
+        ext    : this.fileExt
+      }, args));
 
-    return loadFile(this, args, data);
+      let ret = loadFile(this, args, data);
+
+      if (args.doScreen) {
+        try {
+          this.ensureMenuBar();
+        } catch (error) {
+          console.error(error.stack);
+          console.error(error.message);
+          console.error("Failed to add menu bar");
+        }
+
+        this.screen.completeSetCSS();
+        this.screen.completeUpdate();
+      }
+
+      accept(ret);
+    });
+  }
+
+  ensureMenuBar() {
+    let screen = this.screen;
+    let ok = false;
+
+    for (let sarea of screen.sareas) {
+      if (sarea.area instanceof MenuBarEditor) {
+        ok = true;
+        break;
+      }
+    }
+
+    if (ok) {
+      return;
+    }
+
+    /* ensure screen size is up to date */
+    screen.update();
+
+    let sarea = UIBase.createElement("screenarea-x");
+
+    screen.appendChild(sarea);
+
+    let h = 30;
+    let min = new Vector2().addScalar(1e17);
+    let max = new Vector2().addScalar(-1e17);
+    let tmp = new Vector2();
+
+    for (let sarea2 of screen.sareas) {
+      if (sarea2 === sarea) {
+        continue;
+      }
+
+      min.min(sarea2.pos);
+      tmp.load(sarea2.pos).add(sarea2.size);
+      max.max(tmp);
+    }
+
+    let scale = (max[1] - min[1] - h) / (max[1] - min[1]);
+
+    for (let sarea2 of screen.sareas) {
+      if (sarea2 === sarea) {
+        continue;
+      }
+
+      sarea2.pos[1] *= scale;
+      sarea2.size[1] *= scale;
+      sarea2.pos[1] += h;
+    }
+
+    sarea.pos.zero();
+    sarea.size[0] = screen.size[0];
+    sarea.size[1] = h;
+
+    screen.regenScreenMesh();
+    screen.snapScreenVerts();
+
+    sarea.switch_editor(MenuBarEditor);
+    screen.completeSetCSS();
+    screen.completeUpdate();
   }
 
   makeScreen() {
-    let screen = this.screen = document.createElement(this.screenClass.define().tagname);
-    let sarea = document.createElement("screenarea-x");
+    let screen = this.screen = UIBase.createElement(this.screenClass.define().tagname);
+    let sarea = UIBase.createElement("screenarea-x");
 
     screen.ctx = this.ctx;
     sarea.ctx = this.ctx;
 
     document.body.appendChild(screen);
 
-    let cls;
+    let cls = this.defaultEditorClass;
 
-    for (let k in areaclasses) {
-      cls = areaclasses[k];
-      break;
+    if (!cls) {
+      for (let k in areaclasses) {
+        cls = areaclasses[k];
+
+        if (cls !== MenuBarEditor) {
+          break;
+        }
+      }
     }
 
     sarea.switch_editor(cls);
@@ -181,6 +308,13 @@ export class AppState {
 
     screen._init();
     screen.listen();
+    screen.update();
+    screen.completeSetCSS();
+    screen.completeUpdate();
+
+    if (Editor.makeMenuBar) {
+      this.ensureMenuBar();
+    }
   }
 
   start(args = new StartArgs()) {
@@ -192,11 +326,16 @@ export class AppState {
       }
     }
 
+    if (args.registerSaveOpenOps) {
+      register();
+    }
+
     if (!args.iconsheet) {
       args.iconsheet = loadDefaultIconSheet();
     }
 
-    console.error("ARGS", args);
+    this.startArgs = args;
+
     cconst.loadConstants(args);
 
     if (args.autoLoadSplineTemplates) {

@@ -49,6 +49,7 @@ export class FileArgs {
     this.useJSON = args.useJSON !== undefined ? args.useJSON : false;
     this.version = args.version !== undefined ? args.version : 0;
     this.fileFlags = args.fileFlags !== undefined ? args.fileFlags : 0;
+    this.fromFileOp = false; /* SimpleSaveOp and SimpleOpenOp set this to true */
   }
 }
 
@@ -127,6 +128,8 @@ export function loadFile(appstate, args, data) {
 
   let istruct = new nstructjs.STRUCT();
   istruct.parse_structs(header.schema);
+
+  console.log(header);
 
   let ret;
 
