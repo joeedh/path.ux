@@ -614,22 +614,6 @@ export class IconButton extends UIBase {
       }
 
       ui_base.iconmanager.setCSS(icon, this.dom, this.iconsheet);
-
-      if (0 && this._extraIcon !== undefined) {
-        this.dom.style["background"] = this.dom.style["background"].replace(/url/, "image");
-
-        ui_base.iconmanager.setCSS(this._extraIcon, this.dom, this.iconsheet);
-        //#xywh=0,0,16,16
-        if (0) {
-          let css = "(" + this.dom.style["background"] + ")";
-
-          ui_base.iconmanager.setCSS(this._extraIcon, this.dom, this.iconsheet);
-          this.dom.style["background"] = css + " , " + "(" + this.dom.style["background"] + ")";
-
-          console.error(css + "," + "(" + this.dom.style["background"] + ")");
-          console.error(this.dom.style["background"]);
-        }
-      }
     }
 
     if (this._extraIcon !== undefined) {
@@ -651,6 +635,8 @@ export class IconButton extends UIBase {
       dom.style["pointer-events"] = "none";
 
       ui_base.iconmanager.setCSS(this._extraIcon, dom, this.iconsheet);
+    } else if (this.extraDom) {
+      this.extraDom.remove();
     }
   }
 
@@ -782,15 +768,19 @@ export class IconCheck extends IconButton {
   }
 
   set drawCheck(val) {
+    val = !!val;
+
     if (val && (this.packflag & PackFlags.HIDE_CHECK_MARKS)) {
       this.packflag &= ~PackFlags.HIDE_CHECK_MARKS;
     }
 
-    if (!!val !== !!this._drawCheck) {
+    let old = !!this.drawCheck;
+    this._drawCheck = val;
+
+    if (val !== old) {
+      this.updateDrawCheck();
       this.setCSS();
     }
-
-    this._drawCheck = val;
   }
 
   get icon() {

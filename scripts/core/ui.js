@@ -1576,6 +1576,8 @@ export class Container extends ui_base.UIBase {
         for (let key in prop.values) {
           let check = frame.check(inpath + "["+key+"]", "", packflag);
 
+          check.packflag |= PackFlags.HIDE_CHECK_MARKS;
+
           check.icon = prop.iconmap[key];
           check.drawCheck = false;
 
