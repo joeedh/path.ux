@@ -80,7 +80,7 @@ import {IconManager, setIconManager, setIconMap, setTheme, UIBase} from '../core
 import {FileArgs, loadFile, saveFile} from './file.js';
 import {HotKey, KeyMap} from '../path-controller/util/simple_events.js';
 import {initSplineTemplates} from '../path-controller/curve/curve1d_bspline.js';
-import {MenuBarEditor} from './menubar.js';
+import {MenuBarEditor, registerMenuBarEditor} from './menubar.js';
 import {register} from './app_ops.js';
 
 export class StartArgs {
@@ -319,6 +319,8 @@ export class AppState {
 
   start(args = new StartArgs()) {
     let args2 = new StartArgs();
+
+    registerMenuBarEditor();
 
     for (let k in args2) {
       if (args[k] === undefined) {

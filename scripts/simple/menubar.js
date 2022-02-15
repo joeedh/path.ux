@@ -94,4 +94,7 @@ export class MenuBarEditor extends Editor {
 MenuBarEditor.STRUCT = nstructjs.inherit(MenuBarEditor, Editor, "MenuBarEditor") + `
 }
 `;
-Editor.register(MenuBarEditor);
+
+export function registerMenuBarEditor() {
+  Editor.register(MenuBarEditor);
+}
