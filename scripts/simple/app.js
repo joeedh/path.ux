@@ -323,6 +323,8 @@ export class AppState {
   start(args = new StartArgs()) {
     let args2 = new StartArgs();
 
+    document.body.style["touch-action"] = "none";
+
     registerMenuBarEditor();
 
     for (let k in args2) {

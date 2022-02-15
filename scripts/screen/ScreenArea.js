@@ -440,6 +440,10 @@ export class Area extends ui_base.UIBase {
     let mpos = new Vector2();
 
     let mpre = (e, pageX, pageY) => {
+      if (haveModal()) {
+        return;
+      }
+
       pageX = pageX === undefined ? e.pageX : pageX;
       pageY = pageY === undefined ? e.pageY : pageY;
 
@@ -472,6 +476,8 @@ export class Area extends ui_base.UIBase {
     });
 
     row.addEventListener("mousedown", (e) => {
+      console.log("MDOWN", e);
+
       if (!mpre(e)) return;
 
       mpos[0] = e.pageX;
@@ -479,14 +485,24 @@ export class Area extends ui_base.UIBase {
       mdown = true;
     }, false);
 
+    let last_time = util.time_ms();
+
     let do_mousemove = (e, pageX, pageY) => {
       if (haveModal() || !make_draggable) {
         return;
       }
 
-      let mdown2 = e.buttons != 0 || (e.touches && e.touches.length > 0);
+      let mdown2 = e.buttons !== 0 || (e.touches && e.touches.length > 0);
+      mdown2 = mdown2 && mdown;
 
       //console.log("area drag?", e, mdown2, e.pageX, e.pageY, mpre(e, pageX, pageY), e.was_touch);
+
+      //calls to pickElement in mpre are expensive
+      if (util.time_ms() - last_time < 250) {
+        return;
+      }
+
+      last_time = util.time_ms;
 
       if (!mdown2 || !mpre(e, pageX, pageY)) return;
 

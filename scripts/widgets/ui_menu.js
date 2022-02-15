@@ -520,6 +520,8 @@ export class Menu extends UIBase {
       });
 
       let onfocus = (e) => {
+        console.trace("onfocus", this._ignoreFocusEvents);
+
         if (this._ignoreFocusEvents) {
           return;
         }
@@ -545,7 +547,7 @@ export class Menu extends UIBase {
         this.setActive(li, false);
       };
 
-      li.addEventListener("touchend", (e) => {
+      li.addEventListener("pointerup", (e) => {
         onfocus(e);
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
@@ -560,14 +562,24 @@ export class Menu extends UIBase {
 
       li.addEventListener("focus", (e) => {
         onfocus(e);
+        onfocus(e);
       })
 
-      li.addEventListener("touchmove", (e) => {
+      li.addEventListener("pointermove", (e) => {
+        onfocus(e);
+        li.focus();
+      });
+      li.addEventListener("mouseover", (e) => {
+        onfocus(e);
+        li.focus();
+      });
+      li.addEventListener("mouseenter", (e) => {
         onfocus(e);
         li.focus();
       });
 
-      li.addEventListener("mouseenter", (e) => {
+      li.addEventListener("pointerover", (e) => {
+        onfocus(e);
         li.focus();
       });
 
@@ -717,6 +729,8 @@ UIBase.internalRegister(Menu);
 export class DropBox extends OldButton {
   constructor() {
     super();
+
+    this.lockTimer = 0;
 
     this._template = undefined;
 
@@ -1027,12 +1041,18 @@ export class DropBox extends OldButton {
     this.abortToolTips(1000);
 
     if (this._menu !== undefined) {
+      this.lockTimer = util.time_ms();
+
       this._pressed = false;
       this._redraw();
 
       let menu = this._menu;
       this._menu = undefined;
       menu.close();
+      return;
+    }
+
+    if (util.time_ms() - this.lockTimer < 200) {
       return;
     }
 
@@ -1053,6 +1073,8 @@ export class DropBox extends OldButton {
 
     let onclose = this._menu.onclose;
     this._menu.onclose = () => {
+      this.lockTimer = util.time_ms();
+
       this._pressed = false;
       this._redraw();
 
@@ -1281,6 +1303,8 @@ export class MenuWrangler {
     this.screen = undefined;
     this.menustack = [];
 
+    this.lastPickElemTime = util.time_ms();
+
     this.closetimer = 0;
     this.closeOnMouseUp = undefined;
     this.closereq = undefined;
@@ -1414,7 +1438,7 @@ export class MenuWrangler {
     }
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = util.time_ms();
       return;
@@ -1432,7 +1456,7 @@ export class MenuWrangler {
     }
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     if (this.menu === undefined || this.screen === undefined) {
       this.closetimer = util.time_ms();
       return;
@@ -1482,7 +1506,7 @@ export class MenuWrangler {
     return undefined;
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     if (this.menu && this.menu.hasSearchBox) {
       this.closetimer = util.time_ms();
       this.closereq = undefined;
@@ -1510,8 +1534,9 @@ export class MenuWrangler {
       }
     }
 
-    if (!element) {
+    if (!element && util.time_ms() - this.lastPickElemTime > 250) {
       element = screen.pickElement(x, y);
+      this.lastPickElemTime = util.time_ms();
     }
 
     if (element === undefined) {

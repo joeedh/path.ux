@@ -767,18 +767,20 @@ export class UIBase extends HTMLElement {
       this.dispatchEvent(e2);
     };
 
-    this.addEventListener("touchstart", (e) => {
-      do_touch(e, "mousedown", 0);
-    }, {passive: false});
-    this.addEventListener("touchmove", (e) => {
-      do_touch(e, "mousemove");
-    }, {passive: true});
-    this.addEventListener("touchcancel", (e) => {
-      do_touch(e, "mouseup", 2);
-    }, {passive: false});
-    this.addEventListener("touchend", (e) => {
-      do_touch(e, "mouseup", 0);
-    }, {passive: false});
+    if (1) {
+      this.addEventListener("touchstart", (e) => {
+        do_touch(e, "mousedown", 0);
+      }, {passive: false});
+      this.addEventListener("touchmove", (e) => {
+        do_touch(e, "mousemove");
+      }, {passive: false});
+      this.addEventListener("touchcancel", (e) => {
+        do_touch(e, "mouseup", 2);
+      }, {passive: false});
+      this.addEventListener("touchend", (e) => {
+        do_touch(e, "mouseup", 0);
+      }, {passive: false});
+    }
   }
 
   /*

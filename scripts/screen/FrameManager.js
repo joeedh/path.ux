@@ -706,6 +706,11 @@ export class Screen extends ui_base.UIBase {
     let last_pick_time = util.time_ms();
 
     mousepick = (e, x, y, do_timeout = true) => {
+      if (!container.isConnected) {
+        end();
+        return;
+      }
+
       if (sarea && sarea.area) {
         sarea.area.push_ctx_active();
         sarea.area.pop_ctx_active();
@@ -713,7 +718,7 @@ export class Screen extends ui_base.UIBase {
       //console.log("=======================================================popup touch start");
       //console.log(e);
 
-      if (util.time_ms() - last_pick_time < 250) {
+      if (util.time_ms() - last_pick_time < 350) {
         return;
       }
       last_pick_time = util.time_ms();
@@ -783,8 +788,8 @@ export class Screen extends ui_base.UIBase {
 
     //this.ctx.screen.addEventListener("touchstart", touchpick, true);
     //this.ctx.screen.addEventListener("touchmove", touchpick, true);
-    this.ctx.screen.addEventListener("mousemove", mousepick, {passive: true});
     this.ctx.screen.addEventListener("mousedown", mousepick, true);
+    this.ctx.screen.addEventListener("mousemove", mousepick, {passive: true});
     this.ctx.screen.addEventListener("mouseup", mousepick, true);
     window.addEventListener("keydown", keydown);
 
