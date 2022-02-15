@@ -14,7 +14,18 @@ export class MenuBarEditor extends Editor {
     this.borderLock = 1 | 2 | 4 | 8;
     this.areaDragToolEnabled = false;
 
+    this._height = 25;
+
     this.needsRebuild = false;
+  }
+
+  get height() {
+    return this._height;
+  }
+
+  set height(v) {
+    this._height = v;
+    this.updateHeight();
   }
 
   static define() {
@@ -27,7 +38,7 @@ export class MenuBarEditor extends Editor {
     }
   }
 
-  updateHeight() {
+  updateHeight(force = false) {
     if (!this.header)
       return;
 
@@ -37,12 +48,15 @@ export class MenuBarEditor extends Editor {
       return;
     }
 
-    let rect = this.header.getClientRects()[0];
-    if (rect) {
-      this._height = rect.height;
+    if (this._height === undefined) {
+      let rect = this.header.getClientRects()[0];
+
+      if (rect) {
+        this._height = rect.height;
+      }
     }
 
-    let update = this._height !== this.minSize[1];
+    let update = force || this._height !== this.minSize[1];
     this.minSize[1] = this.maxSize[1] = this._height;
 
     if (update && this.ctx && this.getScreen()) {
@@ -66,14 +80,16 @@ export class MenuBarEditor extends Editor {
 
     this.menuRow = this.header.row();
     this.makeMenuBar(this.menuRow);
-    this.flushUpdate();
 
     this.doOnce(() => {
       if (window.haveElectron) {
-        this.maxSize[1] = this.minSize[1] = 1;
+        this.height = 1;
         electron_api.initMenuBar(this);
       }
     });
+
+    this.updateHeight(true);
+    this.flushUpdate();
   }
 
   rebuild() {

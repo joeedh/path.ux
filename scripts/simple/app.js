@@ -243,7 +243,7 @@ export class AppState {
 
     screen.appendChild(sarea);
 
-    let h = 30;
+    let h = 55;
     let min = new Vector2().addScalar(1e17);
     let max = new Vector2().addScalar(-1e17);
     let tmp = new Vector2();
@@ -278,6 +278,9 @@ export class AppState {
     screen.snapScreenVerts();
 
     sarea.switch_editor(MenuBarEditor);
+
+    screen.solveAreaConstraints();
+
     screen.completeSetCSS();
     screen.completeUpdate();
   }

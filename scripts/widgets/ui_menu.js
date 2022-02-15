@@ -594,6 +594,23 @@ export class Menu extends UIBase {
       boxShadow = "box-shadow: " + this.getDefault("box-shadow") + ';';
     }
 
+    let sepcss = this.getDefault("MenuSeparator");
+    if (typeof sepcss === "object") {
+      let s = '';
+
+      for (let k in sepcss) {
+        let v = sepcss[k];
+
+        if (typeof v === "number") {
+          v = v.toFixed(4) + "px";
+        }
+
+        s += `    ${k}: ${v};\n`;
+      }
+
+      sepcss = s;
+    }
+
     this.menustyle.textContent = `
         .menucon {
           position:absolute;
@@ -644,7 +661,7 @@ export class Menu extends UIBase {
         }
         
         .menuseparator {
-          ${this.getDefault("MenuSeparator")}
+          ${sepcss}
         }
         
         .menuitem:focus {
@@ -674,7 +691,6 @@ export class Menu extends UIBase {
   seperator() {
     let bar = document.createElement("div");
     bar.setAttribute("class", "menuseparator");
-
 
     this.dom.appendChild(bar);
 
