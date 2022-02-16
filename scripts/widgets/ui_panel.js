@@ -176,8 +176,8 @@ export class PanelFrame extends ColumnFrame {
   }
 
   clear() {
-    super.clear();
-    super.add(this.titleframe);
+    this.contents.clear();
+    return this;
   }
 
   makeHeader() {
