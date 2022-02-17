@@ -286,6 +286,11 @@ export class AppState {
   }
 
   makeScreen() {
+    if (this.screen) {
+      this.screen.unlisten();
+      this.screen.remove();
+    }
+
     let screen = this.screen = UIBase.createElement(this.screenClass.define().tagname);
     let sarea = UIBase.createElement("screenarea-x");
 

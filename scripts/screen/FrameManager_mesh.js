@@ -4,12 +4,14 @@ import * as FrameManager_ops from "./FrameManager_ops.js";
 import cconst from "../config/const.js";
 
 import {Vector2} from '../path-controller/util/vectormath.js';
+import {createMenu, Menu} from '../widgets/ui_menu.js';
+import {popModalLight, pushModalLight} from '../path-controller/util/simple_events.js';
 
 export let SnapLimit = 1;
 
-export function snap(c, snap_limit=SnapLimit) {
+export function snap(c, snap_limit = SnapLimit) {
   if (Array.isArray(c)) {
-    for (let i=0; i<c.length; i++) {
+    for (let i = 0; i < c.length; i++) {
       c[i] = Math.floor(c[i]/snap_limit)*snap_limit;
     }
   } else {
@@ -19,11 +21,11 @@ export function snap(c, snap_limit=SnapLimit) {
   return c;
 }
 
-export function snapi(c, snap_limit=SnapLimit) {
+export function snapi(c, snap_limit = SnapLimit) {
   //return snap(c, snap_limit);
 
   if (Array.isArray(c)) {
-    for (let i=0; i<c.length; i++) {
+    for (let i = 0; i < c.length; i++) {
       c[i] = Math.ceil(c[i]/snap_limit)*snap_limit;
     }
   } else {
@@ -48,7 +50,7 @@ export class ScreenVert extends Vector2 {
     let x = snap(pos[0]);
     let y = snap(pos[1]);
 
-    return ""+x + ":" + y + ": + added_id";
+    return "" + x + ":" + y + ": + added_id";
   }
 
   valueOf() {
@@ -118,10 +120,15 @@ export class ScreenBorder extends ui_base.UIBase {
     //this.inner.innerText = "sdfsdfsdf";
     this.shadow.appendChild(this.inner);
 
-    this.addEventListener("mousedown", (e) => {
-      console.log(this.sareas.length, this.sareas, "|||||");
+    let call_menu = ScreenBorder.bindBorderMenu(this);
 
+    this.addEventListener("mousedown", (e) => {
       let ok = this.movable;
+
+      if (e.button === 2) {
+        call_menu(e);
+        return;
+      }
 
       if (!ok) {
         console.log("border is not movable");
@@ -135,7 +142,55 @@ export class ScreenBorder extends ui_base.UIBase {
 
       e.preventDefault();
       e.stopPropagation();
-    });
+    }, {capture: true});
+  }
+
+  static bindBorderMenu(elem, usePickElement=false) {
+    let on_dblclick = (e) => {
+      if (usePickElement && elem.pickElement(e.x, e.y) !== elem) {
+        return;
+      }
+
+      let menu = [
+        ["Split Area", () => {
+          elem.ctx.screen.splitTool();
+        }],
+        Menu.SEP,
+        ["Collapse Area", () => {
+          elem.ctx.screen.removeAreaTool(elem instanceof ScreenBorder ? elem : undefined);
+        }],
+      ];
+
+      menu = createMenu(elem.ctx, "", menu);
+      //if (e.button === 2) {
+      menu.ignoreFirstClick = 2;
+      //}
+
+      elem.ctx.screen.popupMenu(menu, e.x-15, e.y-15);
+
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    elem.addEventListener("contextmenu", (e) => e.preventDefault());
+    elem.addEventListener("dblclick", on_dblclick, {capture: true});
+
+    return on_dblclick;
+  }
+  getOtherSarea(sarea) {
+    console.log(this.halfedges, this.halfedges.length);
+
+    for (let he of this.halfedges) {
+      console.log(he);
+
+      let ok = he.sarea !== sarea;
+      ok = ok && he.sarea._verts.indexOf(this.v1) >= 0;
+      ok = ok && he.sarea._verts.indexOf(this.v2) >= 0;
+
+      if (ok) {
+        return he.sarea;
+      }
+    }
   }
 
   get dead() {
@@ -197,18 +252,29 @@ export class ScreenBorder extends ui_base.UIBase {
     return ret;
   }
 
-  otherVertex(v) {
-    if (v === this.v1)
-      return this.v2;
-    else
-      return this.v1;
-  }
-
   get horiz() {
     let dx = this.v2[0] - this.v1[0];
     let dy = this.v2[1] - this.v1[1];
 
     return Math.abs(dx) > Math.abs(dy);
+  }
+
+  static hash(v1, v2) {
+    return Math.min(v1._id, v2._id) + ":" + Math.max(v1._id, v2._id);
+  }
+
+  static define() {
+    return {
+      tagname: "screenborder-x",
+      style  : "screenborder"
+    };
+  }
+
+  otherVertex(v) {
+    if (v === this.v1)
+      return this.v2;
+    else
+      return this.v1;
   }
 
   setCSS() {
@@ -265,13 +331,13 @@ export class ScreenBorder extends ui_base.UIBase {
       let alpha = 1.0;
       let c = this.sareas.length*75;
 
-      let r=0, g=0, b=0;
+      let r = 0, g = 0, b = 0;
 
       if (this.movable) {
-        b=255;
+        b = 255;
       }
       if (this.halfedges.length > 1) {
-        g=255;
+        g = 255;
       }
       if (this.outer) {
         r = 255;
@@ -329,23 +395,12 @@ export class ScreenBorder extends ui_base.UIBase {
     this.style["z-index"] = "25";
   }
 
-  static hash(v1, v2) {
-    return Math.min(v1._id, v2._id) + ":" + Math.max(v1._id, v2._id);
-  }
-
   valueOf() {
     return ScreenBorder.hash(this.v1, this.v2);
   }
 
   [Symbol.keystr]() {
     return ScreenBorder.hash(this.v1, this.v2);
-  }
-
-  static define() {
-    return {
-      tagname: "screenborder-x",
-      style : "screenborder"
-    };
   }
 }
 

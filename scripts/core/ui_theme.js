@@ -345,7 +345,7 @@ CSSFont {
 `;
 nstructjs.register(CSSFont);
 
-export function exportTheme(theme1=theme) {
+export function exportTheme(theme1=theme, addVarDecl=true) {
   let sortkeys = (obj) => {
     let keys = [];
     for (let k in obj) {
@@ -356,7 +356,7 @@ export function exportTheme(theme1=theme) {
     return keys;
   }
 
-  let s = "var theme = {\n";
+  let s = addVarDecl ? "var theme = {\n" : "{\n";
 
   function writekey(v, indent="") {
     if (typeof v === "string") {

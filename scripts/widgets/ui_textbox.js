@@ -34,6 +34,7 @@ let UIBase = ui_base.UIBase,
 let parsepx = ui_base.parsepx;
 
 import {Button} from './ui_button.js';
+import {_setTextboxClass} from '../core/ui_base.js';
 
 export class TextBoxBase extends UIBase {
   static define() {return {
@@ -519,3 +520,5 @@ export function checkForTextBox(screen, x, y) {
 
   return false;
 }
+
+ui_base._setTextboxClass(TextBox);

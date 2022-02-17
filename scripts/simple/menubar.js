@@ -34,7 +34,8 @@ export class MenuBarEditor extends Editor {
       areaname: "menu",
       uiname  : "Menu Bar",
       icon    : -1,
-      flag    : AreaFlags.HIDDEN //hide in editor list
+      //hide in editor list
+      flag    : AreaFlags.HIDDEN | AreaFlags.NO_HEADER_CONTEXT_MENU | AreaFlags.NO_COLLAPSE | AreaFlags.NO_SWITCHER
     }
   }
 
@@ -76,7 +77,6 @@ export class MenuBarEditor extends Editor {
     super.init();
 
     this.background = this.getDefault("AreaHeaderBG");
-    this.switcher.remove();
 
     this.menuRow = this.header.row();
     this.makeMenuBar(this.menuRow);

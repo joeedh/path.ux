@@ -1,5 +1,10 @@
 let _ui_base = undefined;
 
+//avoid circular module references
+let TextBox = undefined;
+export function _setTextboxClass(cls) {
+  TextBox = cls;
+}
 
 //import * as ui_save from './ui_save.js';
 
@@ -20,7 +25,8 @@ import * as math from '../path-controller/util/math.js';
 import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import * as controller from '../path-controller/controller/controller.js';
 import {
-  pushModalLight, popModalLight, copyEvent, pathDebugEvent, haveModal
+  pushModalLight, popModalLight, copyEvent, pathDebugEvent,
+  haveModal, keymap, reverse_keymap
 } from '../path-controller/util/simple_events.js';
 import {getDataPathToolOp} from '../path-controller/controller/controller.js';
 import * as units from './units.js';
@@ -539,7 +545,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -990,9 +996,12 @@ export class UIBase extends HTMLElement {
    * @example
    *
    * static define() {return {
-   *   tagname : "custom-element-x",
-   *   style : "[style class in theme]"
+   *   tagname             : "custom-element-x",
+   *   style               : "[style class in theme]"
    *   subclassChecksTheme : boolean //set to true to disable base class invokation of checkTheme()
+   *   havePickClipboard   : boolean //whether element supports mouse hover copy/paste
+   *   pasteForAllChildren : boolean //mouse hover paste happens even over child widgets
+   *   copyForAllChildren  : boolean //mouse hover copy happens even over child widgets
    * }}
    */
   static define() {
@@ -1483,12 +1492,131 @@ export class UIBase extends HTMLElement {
     return super.appendChild(child);
   }
 
+  _clipboardHotkeyInit() {
+    this._clipboard_over = false;
+    this._last_clipboard_keyevt = undefined;
+
+    this._clipboard_keystart = () => {
+      if (this._clipboard_events) {
+        return;
+      }
+
+      this._clipboard_events = true;
+      window.addEventListener("keydown", this._clipboard_keydown, {capture: true, passive: false});
+    }
+
+    this._clipboard_keyend = () => {
+      if (!this._clipboard_events) {
+        return;
+      }
+
+      this._clipboard_events = false;
+      window.removeEventListener("keydown", this._clipboard_keydown, {capture: true, passive: false});
+    }
+
+    this._clipboard_keydown = (e, internal_mode) => {
+      if (!this.isConnected || !cconst.getClipboardData) {
+        this._clipboard_keyend();
+        return;
+      }
+
+      if (e === this._last_clipboard_keyevt || !this._clipboard_over) {
+        return;
+      }
+
+      /* the user's mouse cursor might not be over the element
+      *  if they've tabbed to it */
+
+      let is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
+      let is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
+
+      if (!is_copy && !is_paste) {
+        //early out, remember that pickElement is highly expensive to run
+        return;
+      }
+
+      //pasteForAllChildren
+      if (!internal_mode) {
+        let screen = this.ctx.screen;
+        let elem = screen.pickElement(screen.mpos[0], screen.mpos[1]);
+
+        let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
+        checkTree = checkTree || (is_copy && this.constructor.define().copyForAllChildren);
+
+        while (checkTree && !(elem instanceof TextBox) && elem !== this && elem.parentWidget) {
+          console.log("  " + elem._id);
+
+          elem = elem.parentWidget;
+        }
+
+        console.warn("COLOR", this._id, elem._id);
+
+        if (elem !== this) {
+          //remove global keyhandler
+          this._clipboard_keyend();
+          return;
+        }
+      } else {
+        console.warn("COLOR", this._id);
+      }
+
+      this._last_clipboard_keyevt = e;
+
+      if (is_copy) {
+        this.clipboardCopy();
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      if (is_paste) {
+        this.clipboardPaste();
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+
+    let start = (e) => {
+      this._clipboard_over = true;
+      this._clipboard_keystart();
+    }
+
+    let stop = (e) => {
+      this._clipboard_over = false;
+      this._clipboard_keyend();
+    }
+
+    this.tabIndex = 0; //enable self key events when element has focus
+
+    this.addEventListener("keydown", (e) => {
+      return this._clipboard_keydown(e, true);
+    });
+
+    this.addEventListener("pointerover", start, {capture: true, passive: true});
+    this.addEventListener("pointerout", stop, {capture: true, passive: true});
+    this.addEventListener("focus", stop, {capture: true, passive: true});
+  }
+
+  /** set havePickClipboard to true in define() to
+   *  enable mouseover pick clipboarding */
+  clipboardCopy() {
+    throw new Error("implement me!");
+  }
+
+
+  clipboardPaste() {
+    throw new Error("implement me!");
+  }
+
   //delayed init
   init() {
     this._init_done = true;
 
     if (!this.hasAttribute("id") && this._id) {
       this.setAttribute("id", this._id);
+    }
+
+    if (this.constructor.define().havePickClipboard) {
+      this._clipboardHotkeyInit();
     }
   }
 
@@ -1906,6 +2034,10 @@ export class UIBase extends HTMLElement {
 
   on_enabled() {
 
+  }
+
+  get modalRunning() {
+    return this._modaldata !== undefined;
   }
 
   pushModal(handlers = this, autoStopPropagation = true) {

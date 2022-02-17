@@ -24,6 +24,8 @@ export class Menu extends UIBase {
   constructor() {
     super();
 
+    this._was_clicked = false;
+
     this.items = [];
     this.autoSearchMode = true;
 
@@ -31,6 +33,8 @@ export class Menu extends UIBase {
     this.closeOnMouseUp = true;
 
     this._submenu = undefined;
+
+    this.ignoreFirstClick = false;
 
     this.itemindex = 0;
     this.closed = false;
@@ -100,9 +104,20 @@ export class Menu extends UIBase {
   }
 
   click() {
+    if (this._was_clicked) {
+      return;
+    }
+
+    if (this.ignoreFirstClick) {
+      this.ignoreFirstClick = Math.max(this.ignoreFirstClick - 1, 0);
+      return;
+    }
+
     if (!this.activeItem || this.activeItem._isMenu) {
       return;
     }
+
+    this._was_clicked = true;
 
     if (this.onselect) {
       try {
@@ -295,6 +310,23 @@ export class Menu extends UIBase {
 
     menuWrangler.pushMenu(this);
 
+    let dokey = (key) => {
+      let val = this.getDefault(key);
+      if (typeof val === "number") {
+        val = "" + val + "px";
+      }
+
+      if (val !== undefined) {
+        this.dom.style[key] = val;
+      }
+    }
+
+    dokey("padding");
+    dokey("padding-top");
+    dokey("padding-left");
+    dokey("padding-right");
+    dokey("padding-bottom");
+
     if (this.items.length > 15 && this.autoSearchMode) {
       return this.start_fancy(prepend, setActive);
     }
@@ -451,6 +483,8 @@ export class Menu extends UIBase {
 
     if (typeof item === "string" || item instanceof String) {
       let dom = document.createElement("dom");
+      dom.style["text-align"] = "left";
+
       dom.textContent = item;
       item = dom;
       //return this.addItemExtra(item, id);
@@ -498,17 +532,6 @@ export class Menu extends UIBase {
     li.label = text ? text : li.innerText.trim();
 
     if (add) {
-      li.addEventListener("click", (e) => {
-        if (this.activeItem !== undefined && this.activeItem._isMenu) {
-          //ignore
-          return;
-        }
-
-        e.stopPropagation();
-        e.preventDefault();
-        this.click();
-      });
-
       li.addEventListener("blur", (e) => {
         if (this._ignoreFocusEvents) {
           return;
@@ -547,18 +570,26 @@ export class Menu extends UIBase {
         this.setActive(li, false);
       };
 
-      li.addEventListener("pointerup", (e) => {
+      let onclick = (e) => {
         onfocus(e);
+
+        e.stopPropagation();
+        e.preventDefault();
 
         if (this.activeItem !== undefined && this.activeItem._isMenu) {
           //ignore
           return;
         }
 
-        e.stopPropagation();
-        e.preventDefault();
         this.click();
-      });
+      }
+
+      li.addEventListener("contextmenu", e => e.preventDefault());
+      this.addEventListener("contextmenu", e => e.preventDefault());
+
+      li.addEventListener("pointerup", onclick, {capture: true});
+      li.addEventListener("click", onclick, {capture: true});
+      li.addEventListener("pointerdown", onclick, {capture: true});
 
       li.addEventListener("focus", (e) => {
         onfocus(e);
@@ -623,6 +654,14 @@ export class Menu extends UIBase {
       sepcss = s;
     }
 
+    let itemRadius = 0;
+
+    if (this.hasDefault("item-radius")) {
+      itemRadius = this.getDefault("item-radius");
+    } else {
+      itemRadius = this.getDefault("border-radius");
+    }
+
     this.menustyle.textContent = `
         .menucon {
           position:absolute;
@@ -665,7 +704,7 @@ export class Menu extends UIBase {
           padding-top : ${pad1}px;
           padding-bottom : ${pad1}px;
           
-          border-radius : ${this.getDefault("border-radius")}px;
+          border-radius : ${itemRadius}px;
           
           color : ${this.getDefault("MenuText").color};
           font : ${this.getDefault("MenuText").genCSS()};
@@ -678,11 +717,11 @@ export class Menu extends UIBase {
         
         .menuitem:focus {
           display : flex;
-          flex-wrap : nowrap;
+          text-align: left;
           
           border : none;
           outline : none;
-          border-radius : ${this.getDefault("border-radius")}px;
+          border-radius : ${itemRadius}px;
           
           background-color: ${this.getDefault("MenuHighlight")};
           color : ${this.getDefault("MenuText").color};
@@ -1756,4 +1795,10 @@ export function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) 
   } else {
     menu.start();
   }
+
+  menu.flushUpdate();
+  menu.flushSetCSS();
+
+  menu._popup.flushUpdate();
+  menu._popup.flushSetCSS();
 }

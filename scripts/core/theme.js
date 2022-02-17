@@ -251,19 +251,21 @@ export const DefaultTheme = {
   },
 
   menu: {
-    MenuBG         : 'rgba(250, 250, 250, 1.0)',
-    MenuBorder     : '1px solid grey',
-    MenuHighlight  : 'rgba(155, 220, 255, 1.0)',
-    MenuSeparator  : `
-      width : 100%;
-      height : 2px;
-      padding : 0px;
-      margin : 0px;
-      border : none;
-      background-color : grey; 
-    `,
-    MenuSpacing    : 5,
-    MenuText       : new CSSFont({
+    MenuBG          : 'rgba(250, 250, 250, 1.0)',
+    "item-radius"   : 0,
+    MenuBorder      : '1px solid grey',
+    MenuHighlight   : 'rgba(155, 220, 255, 1.0)',
+    MenuSeparator   : {
+      width             : "100%",
+      height            : 2,
+      padding           : 0,
+      margin            : 0,
+      border            : "none",
+      "background-color": "grey"
+    },
+    'box-shadow'    : '5px 5px 25px rgba(0,0,0,0.75)',
+    MenuSpacing     : 5,
+    MenuText        : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
       variant: 'normal',
@@ -271,10 +273,14 @@ export const DefaultTheme = {
       size   : 12,
       color  : 'rgba(25, 25, 25, 1.0)'
     }),
-    'border-color' : 'grey',
-    'border-radius': 5,
-    'border-style' : 'solid',
-    'border-width' : 1,
+    "padding-top"   : 0,
+    "padding-left"  : 0,
+    "padding-right" : 0,
+    "padding-bottom": 0,
+    'border-color'  : 'grey',
+    'border-radius' : 5,
+    'border-style'  : 'solid',
+    'border-width'  : 1,
   },
 
   numslider: {

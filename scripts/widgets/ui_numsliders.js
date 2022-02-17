@@ -123,6 +123,7 @@ export class NumSlider extends ValueButtonBase {
   constructor() {
     super();
 
+    this._highlight = undefined;
     this._last_label = undefined;
 
     this.mdown = false;
@@ -410,18 +411,24 @@ export class NumSlider extends ValueButtonBase {
 
     this.addEventListener("mouseover", (e) => {
       if (this.disabled) return;
+      console.log("mouse over!", e);
 
-      this.dom._background = this.getDefault("BoxHighlight");
-      this._repos_canvas();
-      this._redraw();
+      if (!this._highlight) {
+        this._highlight = true;
+        this._repos_canvas();
+        this._redraw();
+      }
     })
 
     this.addEventListener("blur", (e) => {
+      this._highlight = false;
       this.mdown = false;
     });
 
     this.addEventListener("mouseout", (e) => {
       if (this.disabled) return;
+
+      this._highlight = false;
 
       this.dom._background = this.getDefault("background-color");
       this._repos_canvas();
@@ -724,7 +731,7 @@ export class NumSlider extends ValueButtonBase {
       r *= 0.25;
     }
 
-    let boxbg = this.getDefault("background-color");
+    let boxbg = this.getDefault(this._highlight ? "BoxHighlight" : "background-color");
 
     ui_base.drawRoundBox(this, this.dom, this.g, undefined, undefined,
       r, "fill", disabled ? this.getDefault("DisabledBG") : boxbg);

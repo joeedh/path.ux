@@ -500,6 +500,11 @@ export class Screen extends ui_base.UIBase {
   popupMenu(menu, x, y) {
     startMenu(menu, x, y);
 
+    for (let i=0; i<3; i++) {
+      menu.flushSetCSS();
+      menu.flushUpdate();
+    }
+
     return menu;
   }
 
@@ -624,7 +629,7 @@ export class Screen extends ui_base.UIBase {
     container.style["box-shadow"] = container.getDefault("box-shadow");
 
     container.style["position"] = "absolute";
-    container.style["z-index"] = 205;
+    container.style["z-index"] = "2205";
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
     container.style["margin"] = "0px";
@@ -635,6 +640,10 @@ export class Screen extends ui_base.UIBase {
     let p = new Vector2();
 
     let _update = container.update;
+    container.update.after(() => {
+      container.style["z-index"] = "2205";
+    });
+
     /*causes weird bugs
     container.update = () => {
       _update.call(container);
@@ -776,8 +785,6 @@ export class Screen extends ui_base.UIBase {
         window.removeEventListener("keydown", keydown);
         return;
       }
-
-      console.log(e.keyCode);
 
       switch (e.keyCode) {
         case keymap["Escape"]:
@@ -1513,14 +1520,45 @@ export class Screen extends ui_base.UIBase {
     this.setCSS();
   }
 
-  collapseArea(sarea) {
+  collapseArea(sarea, border) {
+    let sarea2;
+
+    if (!border) {
+      for (let b of sarea._borders) {
+        let sarea2 = b.getOtherSarea(sarea);
+        if (!sarea2) {
+          continue;
+        }
+
+        let mask = 1 << sarea2._borders.indexOf(b);
+        let lock = sarea2.borderLock & mask;
+
+        if (!lock && !(sarea2.flag & AreaFlags.NO_COLLAPSE)) {
+          border = b;
+          break;
+        }
+      }
+    }
+
+    console.warn("SAREA2", border, sarea2, sarea2 !== sarea);
+
+    if (border) {
+      sarea2 = border.getOtherSarea(sarea);
+
+      let size1 = new Vector2(sarea.pos).add(sarea.size);
+      let size2 = new Vector2(sarea2.pos).add(sarea2.size);
+
+      sarea2.pos.min(sarea.pos);
+      sarea2.size.load(size1).max(size2).sub(sarea2.pos);
+
+      sarea2.loadFromPosSize();
+    }
+
+    this.sareas.remove(sarea);
     sarea.remove();
 
-    this.regenBorders();
-    this.snapScreenVerts(true);
-    this.solveAreaConstraints();
-    this.completeSetCSS();
-    this.completeUpdate();
+    this.regenScreenMesh();
+    this._internalRegenAll();
 
     return this;
   }
@@ -2582,6 +2620,10 @@ export class Screen extends ui_base.UIBase {
     this._recalcAABB();
     this.calcTabOrder();
     this.setCSS();
+
+    this.completeUpdate();
+    this.completeSetCSS();
+    this.completeUpdate();
   }
 
   _updateAll() {
@@ -2667,6 +2709,14 @@ export class Screen extends ui_base.UIBase {
 
   hintPickerTool() {
     (new FrameManager_ops.ToolTipViewer(this)).start();
+  }
+
+  removeAreaTool(border) {
+    console.log("screen split!");
+
+    let tool = new FrameManager_ops.RemoveAreaTool(this, border);
+    //let tool = new FrameManager_ops.AreaDragTool(this, undefined, this.mpos);
+    tool.start();
   }
 
   splitTool() {

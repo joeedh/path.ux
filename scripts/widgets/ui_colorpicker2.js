@@ -47,6 +47,47 @@ export function sample(u, v) {
 
 //*/
 
+/* shared methods for clipboard handling */
+function colorClipboardCopy() {
+  let rgba = this.getRGBA();
+
+  let r = rgba[0]*255;
+  let g = rgba[1]*255;
+  let b = rgba[2]*255;
+  let a = rgba[3];
+
+  let data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
+  //cconst.setClipboardData("color", "text/css", data);
+
+  cconst.setClipboardData("color", "text/plain", data);
+}
+
+function colorClipboardPaste() {
+  let data = cconst.getClipboardData("text/plain");
+
+  if (!data || !validateCSSColor("" + data.data)) {// || data.mime !== "text/css") {
+    return;
+  }
+
+  let color;
+
+  try {
+    color = css2color(data.data);
+  } catch (error) {
+    //not a color
+    console.log(error.stack);
+    console.log(error.message);
+  }
+
+  if (color) {
+    if (color.length < 4) {
+      color.push(1.0);
+    }
+
+    this.setRGBA(color);
+  }
+}
+
 let fieldrand = new util.MersenneRandom(0);
 
 let huefields = {};
@@ -92,9 +133,9 @@ export function getFieldImage(fieldsize, width, height, hsva) {
   fieldrand.seed(0);
 
   //render field at half res and upscale via canvas2d
-  let width2 = width >> 1;
-  let height2 = height >> 1;
-  let fieldsize2 = fieldsize >> 1;
+  let width2 = width>>1;
+  let height2 = height>>1;
+  let fieldsize2 = fieldsize>>1;
 
   let hue = hsva[0];
   let hue_rgb = hsv_to_rgb(hue, 1.0, 1.0);
@@ -203,14 +244,34 @@ export class HueField extends UIBase {
 
       this.hsva[0] = h;
 
-      if (this.onchange !== undefined) {
+      if (this.onchange) {
         this.onchange(this.hsva);
       }
 
       this._redraw();
     };
 
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap["Left"]:
+        case keymap["Right"]:
+          let sign = e.keyCode === keymap["Left"] ? -1 : 1;
+
+          this.hsva[0] = Math.min(Math.max(this.hsva[0] + 0.05*sign, 0.0), 1.0);
+          this._redraw();
+
+          if (this.onchange) {
+            this.onchange();
+          }
+          break;
+      }
+    });
+
     this.addEventListener("mousedown", (e) => {
+      if (this.modalRunning) {
+        return;
+      }
+
       /* ensure browser doesn't spawn its own (incompatible)
          touch->mouse emulation events}; */
       e.preventDefault();
@@ -220,35 +281,59 @@ export class HueField extends UIBase {
 
       setFromXY(x, y);
 
-      setTimeout(() => {
-        this.pushModal({
-          on_mousemove: (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            let x = e.clientX - rect.x, y = e.clientY - rect.y;
+      this.pushModal({
+        on_mousemove: (e) => {
+          let rect = this.canvas.getClientRects()[0];
+          let x = e.clientX - rect.x, y = e.clientY - rect.y;
 
-            setFromXY(x, y);
-          },
-          on_mousedown: (e) => {
+          setFromXY(x, y);
+        },
+        on_mousedown: (e) => {
+          this.popModal();
+        },
+        on_mouseup  : (e) => {
+          this.popModal();
+        },
+        on_keydown  : (e) => {
+          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
             this.popModal();
-          },
-          on_mouseup  : (e) => {
-            this.popModal();
-          },
-          on_keydown  : (e) => {
-            if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
-              this.popModal();
-            }
           }
-        });
-      }, 1)
+        }
+      });
     });
   }
 
+
   static define() {
     return {
-      tagname: "huefield-x",
-      style  : "colorfield"
+      tagname          : "huefield-x",
+      style            : "colorfield",
+      havePickClipboard: true
     };
+  }
+
+  getRGBA() {
+    let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+  }
+
+  setRGBA(rgba) {
+    let hsv = rgb_to_hsv(rgba[0], rgba[1], rgba[2]);
+    this.hsva.loadXYZW(hsv[0], hsv[1], hsv[2], rgba[3]);
+
+    this._redraw();
+
+    if (this.onchange) {
+      this.onchange(this.hsva);
+    }
+  }
+
+  clipboardCopy() {
+    colorClipboardCopy.apply(this, arguments);
+  }
+
+  clipboardPaste() {
+    colorClipboardPaste.apply(this, arguments);
   }
 
   _getPad() {
@@ -344,7 +429,41 @@ export class SatValField extends UIBase {
       this._redraw();
     };
 
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap["Left"]:
+        case keymap["Right"]: {
+          let sign = e.keyCode === keymap["Left"] ? -1 : 1;
+
+          this.hsva[1] = Math.min(Math.max(this.hsva[1] + 0.05*sign, 0.0), 1.0);
+          this._redraw();
+
+          if (this.onchange) {
+            this.onchange(this.hsva);
+          }
+          break;
+        }
+
+        case keymap["Up"]:
+        case keymap["Down"]: {
+          let sign = e.keyCode === keymap["Down"] ? -1 : 1;
+
+          this.hsva[2] = Math.min(Math.max(this.hsva[2] + 0.05*sign, 0.0), 1.0);
+          this._redraw();
+
+          if (this.onchange) {
+            this.onchange(this.hsva);
+          }
+          break;
+        }
+      }
+    });
+
     this.canvas.addEventListener("mousedown", (e) => {
+      if (this.modalRunning) {
+        return;
+      }
+
       /* ensure browser doesn't spawn its own (incompatible)
          touch->mouse emulation events}; */
       e.preventDefault();
@@ -354,34 +473,36 @@ export class SatValField extends UIBase {
 
       setFromXY(x, y);
 
-      setTimeout(() => {
-        this.pushModal({
-          on_mousemove: (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            if (rect === undefined) {
-              return;
-            }
-
-            let x = e.clientX - rect.x, y = e.clientY - rect.y;
-
-            setFromXY(x, y);
-          },
-          on_mousedown: (e) => {
-            this.popModal();
-          },
-          on_mouseup  : (e) => {
-            this.popModal();
-          },
-          on_keydown  : (e) => {
-            if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
-              this.popModal();
-            }
+      this.pushModal({
+        on_mousemove: (e) => {
+          let rect = this.canvas.getClientRects()[0];
+          if (rect === undefined) {
+            return;
           }
-        });
-      }, 1);
+
+          let x = e.clientX - rect.x, y = e.clientY - rect.y;
+
+          setFromXY(x, y);
+        },
+        on_mousedown: (e) => {
+          this.popModal();
+        },
+        on_mouseup  : (e) => {
+          this.popModal();
+        },
+        on_keydown  : (e) => {
+          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+            this.popModal();
+          }
+        }
+      });
     });
 
     this.canvas.addEventListener("touchstart", (e) => {
+      if (this.modalRunning) {
+        return;
+      }
+
       /* ensure browser doesn't spawn its own (incompatible)
          touch->mouse emulation events}; */
       e.preventDefault();
@@ -391,55 +512,79 @@ export class SatValField extends UIBase {
 
       setFromXY(x, y);
 
-      setTimeout(() => {
-        this.pushModal({
-          on_mousemove  : (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            let x, y;
+      this.pushModal({
+        on_mousemove  : (e) => {
+          let rect = this.canvas.getClientRects()[0];
+          let x, y;
 
-            if (e.touches && e.touches.length) {
-              x = e.touches[0].clientX - rect.x;
-              y = e.touches[0].clientY - rect.y;
-            } else {
-              x = e.x;
-              y = e.y;
-            }
-
-            setFromXY(x, y);
-          },
-          on_touchmove  : (e) => {
-            let rect = this.canvas.getClientRects()[0];
-            let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
-
-            setFromXY(x, y);
-          },
-          on_mousedown  : (e) => {
-            this.popModal();
-          },
-          on_touchcancel: (e) => {
-            this.popModal();
-          },
-          on_touchend   : (e) => {
-            this.popModal();
-          },
-          on_mouseup    : (e) => {
-            this.popModal();
-          },
-          on_keydown    : (e) => {
-            if (e.keyCode == keymap["Enter"] || e.keyCode == keymap["Escape"] || e.keyCode == keymap["Space"]) {
-              this.popModal();
-            }
+          if (e.touches && e.touches.length) {
+            x = e.touches[0].clientX - rect.x;
+            y = e.touches[0].clientY - rect.y;
+          } else {
+            x = e.x;
+            y = e.y;
           }
-        });
-      }, 1);
+
+          setFromXY(x, y);
+        },
+        on_touchmove  : (e) => {
+          let rect = this.canvas.getClientRects()[0];
+          let x = e.touches[0].clientX - rect.x, y = e.touches[0].clientY - rect.y;
+
+          setFromXY(x, y);
+        },
+        on_mousedown  : (e) => {
+          this.popModal();
+        },
+        on_touchcancel: (e) => {
+          this.popModal();
+        },
+        on_touchend   : (e) => {
+          this.popModal();
+        },
+        on_mouseup    : (e) => {
+          this.popModal();
+        },
+        on_keydown    : (e) => {
+          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+            this.popModal();
+          }
+        }
+      });
     })
   }
 
   static define() {
     return {
-      tagname: "satvalfield-x",
-      style  : "colorfield"
+      tagname          : "satvalfield-x",
+      style            : "colorfield",
+      havePickClipboard: true
     };
+  }
+
+  getRGBA() {
+    let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+  }
+
+  setRGBA(rgba) {
+    let hsv = rgb_to_hsv(rgba[0], rgba[1], rgba[2]);
+    this.hsva.loadXYZW(hsv[0], hsv[1], hsv[2], rgba[3]);
+
+    this.update(true);
+    this._redraw();
+
+    if (this.onchange) {
+      this.onchange(this.hsva);
+    }
+  }
+
+  clipboardCopy() {
+    colorClipboardCopy.apply(this, arguments);
+  }
+
+  clipboardPaste() {
+    colorClipboardPaste.apply(this, arguments);
   }
 
   _getField() {
@@ -496,7 +641,7 @@ export class SatValField extends UIBase {
     for (let i = 0; i < steps*steps; i++) {
       let x = (i%steps)*dx, y = (~~(i/steps))*dy;
 
-      if (i%2 == 0) {
+      if (i%2 === 0) {
         continue;
       }
       g.rect(x, y, dx, dy);
@@ -623,22 +768,6 @@ export class ColorField extends ui.ColumnFrame {
     }
   }
 
-  setRGBA(r, g, b, a = 1.0, fire_onchange = true) {
-    let hsv = rgb_to_hsv(r, g, b);
-
-    this.hsva[0] = hsv[0];
-    this.hsva[1] = hsv[1];
-    this.hsva[2] = hsv[2];
-    this.hsva[3] = a;
-
-    this._recalcRGBA();
-    this.update(true);
-
-    if (this.onchange && fire_onchange) {
-      this.onchange(this.hsva, this.rgba);
-    }
-  }
-
   _recalcRGBA() {
     let ret = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
 
@@ -666,21 +795,24 @@ export class ColorField extends ui.ColumnFrame {
     }
   }
 
+  getRGBA() {
+    let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+  }
+
   setRGBA(r, g, b, a = 1.0, fire_onchange = true) {
-    if (bad(r) || bad(g) || bad(b) || bad(a)) {
-      console.warn("Invalid value!");
-      return;
+    if (typeof r === "object") {
+      g = r[1];
+      b = r[2];
+      a = r[3];
+      r = r[0];
     }
 
-    let ret = rgb_to_hsv(r, g, b);
+    let hsv = rgb_to_hsv(r, g, b);
 
-    function bad(f) {
-      return typeof f !== "number" || isNaN(f);
-    }
-
-    this.hsva[0] = ret[0];
-    this.hsva[1] = ret[1];
-    this.hsva[2] = ret[2];
+    this.hsva[0] = hsv[0];
+    this.hsva[1] = hsv[1];
+    this.hsva[2] = hsv[2];
     this.hsva[3] = a;
 
     this._recalcRGBA();
@@ -694,9 +826,8 @@ export class ColorField extends ui.ColumnFrame {
   update(force_update = false) {
     super.update();
 
-    let redraw = false;
-
-    redraw = redraw || this.updateDPI(force_update, true);
+    let redraw = this.updateDPI(force_update, true);
+    redraw = redraw || force_update;
 
     if (redraw) {
       this.satvalfield.update(true);
@@ -831,9 +962,20 @@ export class ColorPicker extends ui.ColumnFrame {
 
   static define() {
     return {
-      tagname: "colorpicker-x",
-      style  : "colorfield"
+      tagname            : "colorpicker-x",
+      style              : "colorfield",
+      havePickClipboard  : true,
+      copyForAllChildren : true,
+      pasteForAllChildren: true,
     };
+  }
+
+  clipboardCopy() {
+    colorClipboardCopy.apply(this, arguments);
+  }
+
+  clipboardPaste() {
+    colorClipboardPaste.apply(this, arguments);
   }
 
   init() {
@@ -995,6 +1137,10 @@ export class ColorPicker extends ui.ColumnFrame {
     this._setDataPath();
   }
 
+  getRGBA() {
+    return this.field.getRGBA();
+  }
+
   setRGBA(r, g, b, a) {
     this.field.setRGBA(r, g, b, a)
     this._setSliders();
@@ -1011,14 +1157,14 @@ export class ColorPickerButton extends UIBase {
 
     this._highlight = false;
     this._depress = false;
-    this._label = "";
+    this._label = "error";
 
     this.customLabel = undefined;
 
     this.rgba = new Vector4([1, 1, 1, 1]);
 
     this.labelDom = document.createElement("span");
-    this.labelDom.textContent = "error";
+    this.labelDom.textContent = this._label;
     this.dom = document.createElement("canvas");
     this.g = this.dom.getContext("2d");
 
@@ -1045,10 +1191,22 @@ export class ColorPickerButton extends UIBase {
     this.setCSS();
   }
 
+  get noLabel() {
+    let ret = "" + this.getAttribute("no-label");
+    ret = ret.toLowerCase();
+
+    return ret === "true" || ret === "yes" || ret === "on";
+  }
+
+  set noLabel(v) {
+    this.setAttribute("no-label", v ? "true" : "false");
+  }
+
   static define() {
     return {
-      tagname: "color-picker-button-x",
-      style  : "colorpickerbutton"
+      tagname          : "color-picker-button-x",
+      style            : "colorpickerbutton",
+      havePickClipboard: true
     }
   }
 
@@ -1057,27 +1215,19 @@ export class ColorPickerButton extends UIBase {
     this._font = "DefaultText"; //this.getDefault("defaultFont");
 
     let enter = (e) => {
-      this._keyhandler_add();
       this._highlight = true;
       this._redraw();
-    };
+    }
 
     let leave = (e) => {
-      this._keyhandler_remove();
       this._highlight = false;
       this._redraw();
-    };
+    }
 
-    this.tabIndex = 0;
+    this.addEventListener("pointerover", enter, {capture: true, passive: true});
+    this.addEventListener("pointerout", leave, {capture: true, passive: true});
+    this.addEventListener("focus", leave, {capture: true, passive: true});
 
-    this._has_keyhandler = false;
-    this._keyhandler_timeout = -1;
-    this._last_keyevt = undefined;
-
-    this._keydown = this._keydown.bind(this);
-    this.addEventListener("keydown", (e) => {
-      return this._keydown(e, true);
-    });
 
     this.addEventListener("mousedown", (e) => {
       /* ensure browser doesn't spawn its own (incompatible)
@@ -1087,163 +1237,19 @@ export class ColorPickerButton extends UIBase {
       this.click(e);
     });
 
-    this.addEventListener("mouseover", enter);
-    this.addEventListener("mouseleave", leave);
-    this.addEventListener("mousein", enter);
-    this.addEventListener("mouseout", leave);
-    this.addEventListener("focus", enter);
-    this.addEventListener("blur", leave);
-
     this.setCSS();
   }
 
-  _keyhandler_remove() {
-    if (this._has_keyhandler) {
-      window.removeEventListener("keydown", this._keydown, {
-        capture: true, passive: false
-      });
-      this._has_keyhandler = false;
-    }
-  }
-
-  _keyhandler_add() {
-    if (!this._has_keyhandler) {
-      window.addEventListener("keydown", this._keydown, {
-        capture: true, passive: false
-      });
-      this._has_keyhandler = true;
-    }
-
-    this._keyhandler_timeout = util.time_ms();
-  }
-
-  _keydown(e, internal_mode = false) {
-    if (internal_mode && !this._highlight) {
-      return;
-    }
-
-    if (e === this._last_keyevt) {
-      return; //prevent double event procesing
-    }
-
-    this._last_keyevt = e;
-
-    if (e.keyCode === 67 && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey) {
-      this.clipboardCopy();
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (e.keyCode === 86 && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey) {
-      this.clipboardPaste();
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }
-
   clipboardCopy() {
-    if (!cconst.setClipboardData) {
-      console.log("no clipboard api");
-      return;
-    }
-
-    let r = this.rgba[0]*255;
-    let g = this.rgba[1]*255;
-    let b = this.rgba[2]*255;
-    let a = this.rgba[3];
-
-    let data = `rgba(${r.toFixed(4)}, ${g.toFixed(4)}, ${b.toFixed(4)}, ${a.toFixed(4)})`;
-    //cconst.setClipboardData("color", "text/css", data);
-
-    cconst.setClipboardData("color", "text/plain", data);
-
-    /*
-    function makehex(c) {
-      c = (~~c).toString(16);
-      while (c.length < 2) {
-        c = "0" + c;
-      }
-
-      if (c.length > 2) {
-        return "FF";
-      }
-
-      return c.toUpperCase();
-    }
-
-    r = makehex(r);
-    g = makehex(g);
-    b = makehex(b);
-    a = makehex(a*255);
-
-    data = "#" + r + g + b + a;
-
-    cconst.setClipboardData("color", "text/plain", data);
-
-     */
+    colorClipboardCopy.apply(this, arguments);
   }
 
   clipboardPaste() {
-    if (!cconst.getClipboardData) {
-      return;
-    }
+    colorClipboardPaste.apply(this, arguments);
+  }
 
-    let data = cconst.getClipboardData("text/plain");
-
-    if (!data || !validateCSSColor("" + data.data)) {// || data.mime !== "text/css") {
-      return;
-    }
-
-    let color;
-
-    try {
-      color = css2color(data.data);
-    } catch (error) {
-      //not a color
-      console.log(error.stack);
-      console.log(error.message);
-    }
-
-    if (color) {
-      if (color.length < 4) {
-        color.push(1.0);
-      }
-
-      this.setRGBA(color);
-    }
-
-    /*
-    console.log("data:", data);
-    data = data.data.trim();
-    if (data.startsWith("{")) {
-      data = data.slice(1, data.length-1).split(";");
-      for (let arg of data) {
-        arg = arg.trim().split(":");
-
-        if (arg.length < 2) {
-          continue;
-        }
-
-        arg[0] = arg[0].trim().toLowerCase();
-        arg[1] = arg[1].trim().toLowerCase();
-
-        if (arg[0] === "color") {
-          data = arg[1];
-          break;
-        }
-      }
-    }
-
-    console.log("DATA", data);
-    let color = css2color(data);
-
-    if (color.length < 3) {
-      color.push(1.0);
-    }
-    console.log("COLOR", color);
-
-    this.setRGBA(color);
-
-     */
+  getRGBA() {
+    return this.rgba;
   }
 
   click(e) {
@@ -1488,17 +1494,6 @@ export class ColorPickerButton extends UIBase {
     }
   }
 
-  get noLabel() {
-    let ret = ""+this.getAttribute("no-label");
-    ret = ret.toLowerCase();
-
-    return ret === "true" || ret === "yes" || ret === "on";
-  }
-
-  set noLabel(v) {
-    this.setAttribute("no-label", v ? "true" : "false");
-  }
-
   update() {
     super.update();
 
@@ -1510,14 +1505,8 @@ export class ColorPickerButton extends UIBase {
       this.label = this.customLabel;
     }
 
-    //remove keyhandler after timeout in case something kept it from happening automatically
-    if (this._has_keyhandler && util.time_ms() - this._keyhandler_timeout > 3500) {
-      console.log("keyhandler auto remove");
-      this._keyhandler_remove();
-    }
-
     for (let i = 0; i < this.rgba.length; i++) {
-      if (this.rgba[i] == undefined) {
+      if (this.rgba[i] === undefined) {
         console.warn("corrupted color or alpha detected", this.rgba);
         this.rgba[i] = 1.0;
       }
