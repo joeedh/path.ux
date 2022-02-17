@@ -746,7 +746,7 @@ pathux.Area {
 }
 `
 
-nstructjs.register(Area);
+nstructjs.register(Area, "Area");
 ui_base.UIBase.internalRegister(Area);
 
 export class ScreenArea extends ui_base.UIBase {
@@ -1584,7 +1584,7 @@ pathux.ScreenArea {
 }
 `;
 
-nstructjs.register(ScreenArea);
+nstructjs.register(ScreenArea, "ScreenArea");
 ui_base.UIBase.internalRegister(ScreenArea);
 
 ui_base._setAreaClass(Area);

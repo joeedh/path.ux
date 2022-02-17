@@ -2160,7 +2160,7 @@ export class UIBase extends HTMLElement {
     }
   }
 
-  destory() {
+  destroy() {
   }
 
   on_resize(newsize) {

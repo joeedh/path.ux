@@ -132,7 +132,7 @@ let fields = {};
 export function getFieldImage(fieldsize, width, height, hsva) {
   fieldrand.seed(0);
 
-  //render field at half res and upscale via canvas2d
+  /* render field at half res and upscale via canvas2d */
   let width2 = width>>1;
   let height2 = height>>1;
   let fieldsize2 = fieldsize>>1;
@@ -143,8 +143,6 @@ export function getFieldImage(fieldsize, width, height, hsva) {
 
   if (key in fields)
     return fields[key];
-
-  //console.log("generation color picker field of size", size);
 
   let size2 = fieldsize2;
   let valpow = 0.75;
@@ -939,13 +937,22 @@ export class ColorPicker extends ui.ColumnFrame {
     if (!node.getDefault("noCMYK")) {
       tab = tabs.tab("CMYK")
       let makeCMYKSlider = (label, idx) => {
-        let slider = tab.slider(undefined, label, 0.0, 0.0, 1.0, 0.001, false, true, (e) => {
-          let cmyk = node.getCMYK();
-          cmyk[idx] = e.value;
-          node.setCMYK(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
-        })
+        let slider = tab.slider(undefined, {
+          name      : label,
+          min       : 0.0,
+          max       : 1.0,
+          is_int    : false,
+          defaultval: cmyk[idx],
+          callback  : (e) => {
+            let cmyk = node.getCMYK();
+            cmyk[idx] = e.value;
+            node.setCMYK(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
+          },
+          step      : 0.001
+        });
 
         slider.baseUnit = slider.displayUnit = "none";
+
         return slider;
       }
 

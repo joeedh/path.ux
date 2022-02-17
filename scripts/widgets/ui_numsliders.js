@@ -57,7 +57,7 @@ function updateSliderFromDom(dom, slider = dom) {
       return;
     }
 
-    let v = (""+dom.getAttribute(attr)).toLowerCase();
+    let v = ("" + dom.getAttribute(attr)).toLowerCase();
     let ret;
 
     if (v === "true") {
@@ -1224,7 +1224,7 @@ export class NumSliderSimpleBase extends UIBase {
     this.canvas.style["min-width"] = this.getDefault("width") + "px";
     this.canvas.style["height"] = this.getDefault("height") + "px";
 
-    this.canvas.height = this.getDefault("height") * UIBase.getDPI();
+    this.canvas.height = this.getDefault("height")*UIBase.getDPI();
 
     this.style["min-width"] = this.getDefault("width") + "px";
     this._redraw();
