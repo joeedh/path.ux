@@ -2,6 +2,7 @@ let _ui_base = undefined;
 
 //avoid circular module references
 let TextBox = undefined;
+
 export function _setTextboxClass(cls) {
   TextBox = cls;
 }
@@ -743,6 +744,10 @@ export class UIBase extends HTMLElement {
 
     //make default touch handlers that send mouse events
     let do_touch = (e, type, button) => {
+      if (haveModal()) {
+        return;
+      }
+
       button = button === undefined ? 0 : button;
       let e2 = copyEvent(e);
 
@@ -773,36 +778,18 @@ export class UIBase extends HTMLElement {
       this.dispatchEvent(e2);
     };
 
-    if (1) {
-      this.addEventListener("touchstart", (e) => {
-        if (haveModal()) {
-          return;
-        }
-
-        do_touch(e, "mousedown", 0);
-      }, {passive: false});
-      this.addEventListener("touchmove", (e) => {
-        if (haveModal()) {
-          return;
-        }
-
-        do_touch(e, "mousemove");
-      }, {passive: false});
-      this.addEventListener("touchcancel", (e) => {
-        if (haveModal()) {
-          return;
-        }
-
-        do_touch(e, "mouseup", 2);
-      }, {passive: false});
-      this.addEventListener("touchend", (e) => {
-        if (haveModal()) {
-          return;
-        }
-
-        do_touch(e, "mouseup", 0);
-      }, {passive: false});
-    }
+    this.addEventListener("touchstart", (e) => {
+      do_touch(e, "mousedown", 0);
+    }, {passive: false});
+    this.addEventListener("touchmove", (e) => {
+      do_touch(e, "mousemove");
+    }, {passive: false});
+    this.addEventListener("touchcancel", (e) => {
+      do_touch(e, "mouseup", 2);
+    }, {passive: false});
+    this.addEventListener("touchend", (e) => {
+      do_touch(e, "mouseup", 0);
+    }, {passive: false});
   }
 
   /*
@@ -946,6 +933,10 @@ export class UIBase extends HTMLElement {
 
   get _reportCtxName() {
     return "" + this._id;
+  }
+
+  get modalRunning() {
+    return this._modaldata !== undefined;
   }
 
   static getIconEnum() {
@@ -1619,7 +1610,6 @@ export class UIBase extends HTMLElement {
     throw new Error("implement me!");
   }
 
-
   clipboardPaste() {
     throw new Error("implement me!");
   }
@@ -1856,7 +1846,7 @@ export class UIBase extends HTMLElement {
 
     //console.warn(path);
 
-    for (let i=0; i<path.length; i++) {
+    for (let i = 0; i < path.length; i++) {
       let node = path[i];
       let ok = node instanceof nodeclass;
 
@@ -1972,10 +1962,6 @@ export class UIBase extends HTMLElement {
 
   on_enabled() {
 
-  }
-
-  get modalRunning() {
-    return this._modaldata !== undefined;
   }
 
   pushModal(handlers = this, autoStopPropagation = true) {
