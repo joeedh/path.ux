@@ -85,6 +85,8 @@ import {register} from './app_ops.js';
 
 export class StartArgs {
   constructor() {
+    this.singlePage = true;
+
     this.icons = Icons;
     this.iconsheet = undefined; //will default to loadDefaultIconSheet();
     this.iconSizes = [16, 24, 32, 48];
@@ -127,6 +129,14 @@ export class SimpleScreen extends Screen {
     return {
       tagname: "simple-screen-x"
     }
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.style["position"] = UIBase.PositionKey;
+    this.style["left"] = this.pos[0] + "px";
+    this.style["top"] = this.pos[1] + "px";
   }
 }
 
@@ -258,7 +268,7 @@ export class AppState {
       max.max(tmp);
     }
 
-    let scale = (max[1] - min[1] - h) / (max[1] - min[1]);
+    let scale = (max[1] - min[1] - h)/(max[1] - min[1]);
 
     for (let sarea2 of screen.sareas) {
       if (sarea2 === sarea) {
@@ -375,7 +385,10 @@ export class AppState {
 
     document.body.style["margin"] = "0px";
     document.body.style["padding"] = "0px";
-    document.body.style["overflow"] = "hidden";
+
+    if (args.singlePage) {
+      document.body.style["overflow"] = "hidden";
+    }
 
     this.makeScreen();
 

@@ -224,7 +224,7 @@ export class ModalTabMove extends events.EventHandler {
       this.dragcanvas.height = ~~tab.size[1];
       this.dragcanvas.style["width"] = (tab.size[0]/dpi) + "px";
       this.dragcanvas.style["height"] = (tab.size[1]/dpi) + "px";
-      this.dragcanvas.style["position"] = "absolute";
+      this.dragcanvas.style["position"] = UIBase.PositionKey;
       this.dragcanvas.style["left"] = e.x + "px";
       this.dragcanvas.style["top"] = e.y + "px";
       this.dragcanvas.style["z-index"] = "500";
@@ -774,7 +774,7 @@ export class TabBar extends UIBase {
         tab.dom.style["z-index"] = z + 1 + ti;
 
         document.body.appendChild(tab.dom);
-        tab.dom.style["position"] = "fixed";
+        tab.dom.style["position"] = UIBase.PositionKey;
         tab.dom.style["display"] = "flex";
         tab.dom.style["flex-direction"] = this.horiz ? "row" : "column";
 

@@ -627,7 +627,7 @@ export class IconButton extends UIBase {
         dom = this.extraDom;
       }
 
-      dom.style["position"] = "absolute";
+      dom.style["position"] = UIBase.PositionKey;
       dom.style["width"] = size + "px";
       dom.style["height"] = size + "px";
       dom.style["margin"] = dom.style["padding"] = "0px";

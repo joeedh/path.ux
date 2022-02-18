@@ -293,7 +293,7 @@ export class TreeView extends Container {
     od.style["padding"] = "0px";
     od.svg.style["margin"] = "0px";
 
-    od.style["position"] = "fixed";
+    od.style["position"] = UIBase.PositionKey;
 
     od.style["width"] = (r.width-1) + "px";
     od.style["height"] = (r.height-1) + "px";

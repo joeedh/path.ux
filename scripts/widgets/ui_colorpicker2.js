@@ -472,6 +472,9 @@ export class SatValField extends UIBase {
       setFromXY(x, y);
 
       this.pushModal({
+        on_pointermove(e) {
+          this.on_mousemove(e);
+        },
         on_mousemove: (e) => {
           let rect = this.canvas.getClientRects()[0];
           if (rect === undefined) {
@@ -936,6 +939,8 @@ export class ColorPicker extends ui.ColumnFrame {
 
     if (!node.getDefault("noCMYK")) {
       tab = tabs.tab("CMYK")
+      let cmyk = node.getCMYK();
+
       let makeCMYKSlider = (label, idx) => {
         let slider = tab.slider(undefined, {
           name      : label,

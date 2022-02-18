@@ -261,9 +261,9 @@ export class NoteFrame extends ui.RowFrame {
     this.noMarginsOrPadding();
     note.noMarginsOrPadding();
 
-    //this.dom.style["position"] = "absolute";
-    //this.style["position"] = "absolute";
-    //note.style["position"] = "absolute";
+    //this.dom.style["position"] = UIBase.PositionKey;
+    //this.style["position"] = UIBase.PositionKey;
+    //note.style["position"] = UIBase.PositionKey;
 
     note.style["height"] = this._h + "px";
     note.height = this._h;

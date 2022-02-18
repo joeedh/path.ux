@@ -20,6 +20,13 @@ function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
+function debugmenu() {
+  if (window.DEBUG && window.DEBUG.menu) {
+    console.warn("%cmenu:", "color:blue", ...arguments);
+  }
+}
+
+
 export class Menu extends UIBase {
   constructor() {
     super();
@@ -664,7 +671,7 @@ export class Menu extends UIBase {
 
     this.menustyle.textContent = `
         .menucon {
-          position:absolute;
+          position:fixed;
           float:left;
           
           border-radius : ${this.getDefault("border-radius")}px;
@@ -1150,7 +1157,7 @@ export class DropBox extends OldButton {
       let con = screen.popup(this, 500, 400, false, 0);
 
       con.style["z-index"] = "-10000";
-      con.style["position"] = "absolute";
+      con.style["position"] = UIBase.PositionKey;
       document.body.appendChild(con);
 
       con.style["visibility"] = "hidden";
@@ -1200,7 +1207,7 @@ export class DropBox extends OldButton {
     w.style["width"] = w.style["height"] = "15px";
     w.style["background-color"] = "red";
     w.style["z-index"] = "5000";
-    w.style["position"] = "absolute";
+    w.style["position"] = UIBase.PositionKey;
     w.style["pointer-events"] = "none";
     w.style["left"] = x + "px";
     w.style["top"] = y + "px";
@@ -1344,11 +1351,20 @@ export class MenuWrangler {
 
     this.lastPickElemTime = util.time_ms();
 
-    this.closetimer = 0;
+    this._closetimer = 0;
     this.closeOnMouseUp = undefined;
     this.closereq = undefined;
 
     this.timer = undefined;
+  }
+
+  set closetimer(v) {
+    debugmenu("set closertime", v);
+    this._closetimer = v;
+  }
+
+  get closetimer() {
+    return this._closetimer;
   }
 
   get menu() {
@@ -1356,6 +1372,8 @@ export class MenuWrangler {
   }
 
   pushMenu(menu) {
+    debugmenu("pushMenu");
+
     this.spawnreq = undefined;
 
     if (this.menustack.length === 0 && menu.closeOnMouseUp) {
@@ -1366,10 +1384,14 @@ export class MenuWrangler {
   }
 
   popMenu(menu) {
+    debugmenu("popMenu");
+
     return this.menustack.pop();
   }
 
   endMenus() {
+    debugmenu("endMenus");
+
     for (let menu of this.menustack) {
       menu.close();
     }
@@ -1644,12 +1666,16 @@ export class MenuWrangler {
     }
 
     this.timer = setInterval(() => {
+      debugmenu("start menu wrangler interval");
+
       this.update();
     }, 150);
   }
 
   stopTimer() {
     if (this.timer) {
+      debugmenu("stop menu wrangler interval");
+
       clearInterval(this.timer);
       this.timer = undefined;
     }

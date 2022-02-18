@@ -62,6 +62,23 @@ export class AppState extends simple.AppState {
     super(Context);
 
     this.canvas = new Canvas();
+    this.timer  = window.setInterval(() => {
+      this.update()
+    }, 150);
+  }
+
+  makeScreen() {
+    super.makeScreen(...arguments);
+
+    this.screen.setPosSize(0, 600, 500, 500);
+  }
+
+  update() {
+    let elem = document.getElementById("box");
+
+    if (this.screen.parentNode !== elem) {
+      elem.appendChild(this.screen);
+    }
   }
 
   saveFile(args = {}) {
@@ -72,6 +89,14 @@ export class AppState extends simple.AppState {
     let file = super.loadFile(data, args);
 
     this.canvas = file.objects[0];
+  }
+
+  start() {
+    return super.start({
+        autoSizeUpdate: false,
+        singlePage    : false,
+      }
+    );
   }
 }
 
@@ -160,10 +185,10 @@ export class CanvasEditor extends simple.Editor {
 
     let idata = canvas.image.data;
 
-    let idx = (y * canvas.dimen + x) * 4;
+    let idx = (y*canvas.dimen + x)*4;
 
-    idata[idx] = idata[idx+1] = idata[idx+2] = 0.0;
-    idata[idx+3] = 255;
+    idata[idx] = idata[idx + 1] = idata[idx + 2] = 0.0;
+    idata[idx + 3] = 255;
 
     this.flagRedraw();
   }

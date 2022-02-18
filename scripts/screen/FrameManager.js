@@ -186,6 +186,32 @@ export class Screen extends ui_base.UIBase {
     */
   }
 
+  setPosSize(x, y, w, h) {
+    this.pos[0] = x;
+    this.pos[1] = y;
+    this.size[0] = w;
+    this.size[1] = h;
+
+    this.setCSS();
+    this._internalRegenAll();
+  }
+
+  setSize(w, h) {
+    this.size[0] = w;
+    this.size[1] = h;
+
+    this.setCSS();
+    this._internalRegenAll();
+  }
+
+  setPos(x, y) {
+    this.pos[0] = x;
+    this.pos[1] = y;
+
+    this.setCSS();
+    this._internalRegenAll();
+  }
+
   get borders() {
     let this2 = this;
 
@@ -451,14 +477,6 @@ export class Screen extends ui_base.UIBase {
       };
     }
 
-    if (clip === undefined) {
-      clip = args.clip = {
-        pos : new Vector2(this.pos),
-        size: new Vector2(this.size)
-      }
-    }
-    ;
-
     if (!this.ctx) {
       console.warn("no ctx in screen");
       return;
@@ -572,8 +590,8 @@ export class Screen extends ui_base.UIBase {
     }
 
     ret.style["z-index"] = 205;
-    ret.style["position"] = "absolute";
-    ret.style["left"] = x + "px";
+    ret.style["position"] = UIBase.PositionKey;
+    ret.style["left"] =  x + "px";
     ret.style["top"] = y + "px";
 
     document.body.appendChild(ret);
@@ -605,6 +623,9 @@ export class Screen extends ui_base.UIBase {
       x = elem_or_x;
     }
 
+    x += window.scrollX;
+    y += window.scrollY;
+
     let container = UIBase.createElement("container-x");
 
     container.ctx = this.ctx;
@@ -628,7 +649,7 @@ export class Screen extends ui_base.UIBase {
     container.style["border-width"] = container.getDefault("border-width") + "px";
     container.style["box-shadow"] = container.getDefault("box-shadow");
 
-    container.style["position"] = "absolute";
+    container.style["position"] = UIBase.PositionKey;
     container.style["z-index"] = "2205";
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
@@ -1619,6 +1640,8 @@ export class Screen extends ui_base.UIBase {
       this.style["height"] = this.size[1] + "px";
     }
 
+    this.style["overflow"] = "hidden";
+
     //call setCSS on borders
     for (let key in this._edgemap) {
       let b = this._edgemap[key];
@@ -1865,7 +1888,7 @@ export class Screen extends ui_base.UIBase {
         ret.setAttribute("class", "__debug");
 
 
-        ret.style["position"] = "absolute";
+        ret.style["position"] = UIBase.PositionKey;
         ret.style["left"] = x + "px";
         ret.style["top"] = y + "px";
         ret.style["height"] = s + "px";
@@ -1888,7 +1911,7 @@ export class Screen extends ui_base.UIBase {
 
           ret.setAttribute("class", "__debug");
 
-          ret.style["position"] = "absolute";
+          ret.style["position"] = UIBase.PositionKey;
           ret.style["left"] = x + "px";
           ret.style["top"] = y + "px";
           ret.style["height"] = s + "px";

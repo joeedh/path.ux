@@ -51,7 +51,7 @@ export class CanvasOverdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "absolute";
+    this.style["position"] = "fixed";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -79,7 +79,7 @@ export class CanvasOverdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "absolute";
+    this.style["position"] = "fixed";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -134,7 +134,7 @@ export class Overdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "absolute";
+    this.style["position"] = "fixed";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -162,7 +162,7 @@ export class Overdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "absolute";
+    this.style["position"] = "fixed";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -378,7 +378,7 @@ export class Overdraw extends ui_base.UIBase {
 
     box.setAttribute("class", "overdrawx");
 
-    box.style["position"] = "absolute";
+    box.style["position"] = "fixed";
     box.style["width"] = "min-contents";
     box.style["height"] = "min-contents";
     box.style["border-width"] = args["border-width"]

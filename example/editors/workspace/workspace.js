@@ -26,7 +26,7 @@ export class WorkspaceEditor extends Editor {
     this.canvas = document.createElement("canvas");
     this.canvas.style["margin"] = this.canvas.style["padding"] = "0px";
 
-    this.canvas.style["position"] = "absolute";
+    this.canvas.style["position"] = UIBase.PositionKey;
     this.canvas.style["z-index"] = "-2";
 
     this.canvas.style["pointer-events"] = "none";

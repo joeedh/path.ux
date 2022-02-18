@@ -355,7 +355,7 @@ export const DefaultTheme = {
     'border-inner'   : 'grey',
     'border-outer'   : 'rgba(228,228,228, 1)',
     'border-width'   : 2,
-    'mouse-threshold': 5,
+    'mouse-threshold': 8,
   },
 
   scrollbars: {

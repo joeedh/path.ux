@@ -2,6 +2,7 @@ import nstructjs from '../path-controller/util/struct.js';
 import * as ui_base from "../core/ui_base.js";
 import * as FrameManager_ops from "./FrameManager_ops.js";
 import cconst from "../config/const.js";
+import {UIBase} from '../core/ui_base.js';
 
 import {Vector2} from '../path-controller/util/vectormath.js';
 import {createMenu, Menu} from '../widgets/ui_menu.js';
@@ -387,7 +388,7 @@ export class ScreenBorder extends ui_base.UIBase {
     this.setAttribute("class", "screenborder_" + this._id);
     this.inner.setAttribute("class", "screenborder_inner_" + this._id);
 
-    this.style["position"] = "fixed";
+    this.style["position"] = UIBase.PositionKey;
     this.style["left"] = x + "px";
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";

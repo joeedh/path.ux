@@ -133,7 +133,9 @@ export class SideBar extends Container {
     w = isNaN(w) ? 500 : w;
     h = isNaN(h) ? 500 : h;
 
-    this.style["position"] = "fixed";
+    h = Math.min(h, editor.size[1]-25);
+
+    this.style["position"] = UIBase.PositionKey;
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
     this.style["z-index"] = "100";

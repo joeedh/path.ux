@@ -666,7 +666,7 @@ export class Area extends ui_base.UIBase {
 
   setCSS() {
     if (this.size !== undefined) {
-      this.style["position"] = "absolute";
+      this.style["position"] = UIBase.PositionKey;
       //this.style["left"] = this.pos[0] + "px";
       //this.style["top"] = this.pos[1] + "px";
       this.style["width"] = this.size[0] + "px";
@@ -746,7 +746,7 @@ pathux.Area {
 }
 `
 
-nstructjs.register(Area, "Area");
+nstructjs.register(Area, "pathux.Area");
 ui_base.UIBase.internalRegister(Area);
 
 export class ScreenArea extends ui_base.UIBase {
@@ -1254,7 +1254,7 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   setCSS() {
-    this.style["position"] = "fixed";
+    this.style["position"] = UIBase.PositionKey;
 
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
@@ -1274,7 +1274,7 @@ export class ScreenArea extends ui_base.UIBase {
     /*
     if (this.area) {
       let area = this.area;
-      area.style["position"] = "absolute";
+      area.style["position"] = UIBase.PositionKey;
 
       area.style["width"] = this.size[0] + "px";
       area.style["height"] = this.size[1] + "px";
@@ -1584,7 +1584,7 @@ pathux.ScreenArea {
 }
 `;
 
-nstructjs.register(ScreenArea, "ScreenArea");
+nstructjs.register(ScreenArea, "pathux.ScreenArea");
 ui_base.UIBase.internalRegister(ScreenArea);
 
 ui_base._setAreaClass(Area);
