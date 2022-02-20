@@ -929,8 +929,30 @@ export class DropBox extends OldButton {
       return;
     }
 
-    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+    let wasError = false;
+    let prop, val;
+
+    try {
+      this.pushReportContext(this._reportCtxName);
+      prop = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath")).prop;
+      val = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+      this.popReportContext();
+    } catch (error) {
+      util.print_stack(error);
+      wasError = true;
+    }
+
+    if (wasError) {
+      this.disabled = true;
+      this.setCSS();
+      this._redraw();
+
+      return;
+    } else {
+      this.disabled = false;
+      this.setCSS();
+      this._redraw();
+    }
 
     if (!prop) {
       return;
@@ -938,14 +960,6 @@ export class DropBox extends OldButton {
 
     if (this.prop === undefined) {
       this.prop = prop;
-    }
-
-    if (val === undefined) {
-      this.internalDisabled = true;
-
-      return;
-    } else {
-      this.internalDisabled = false;
     }
 
     prop = this.prop;

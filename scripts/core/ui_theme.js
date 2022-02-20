@@ -139,7 +139,9 @@ export function css2color(color) {
   }
 
   if (color in basic_colors) {
-    return ret.load(basic_colors[color]);
+    ret.load(basic_colors[color]);
+    ret[3] = 1.0;
+    return ret;
   }
 
   color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",")

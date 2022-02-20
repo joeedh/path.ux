@@ -2074,7 +2074,17 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  colorPicker(inpath, packflag = 0, mass_set_path = undefined) {
+  colorPicker(inpath, packflag_or_args = 0, mass_set_path = undefined, themeOverride=undefined) {
+    let packflag;
+
+    if (typeof packflag_or_args === "object") {
+      let args = packflag_or_args;
+
+      packflag = args.packflag !== undefined ? args.packflag : 0;
+      mass_set_path = args.massSetPath;
+      themeOverride = args.themeOverride;
+    }
+
     let path;
 
     if (inpath) {
@@ -2082,6 +2092,10 @@ export class Container extends ui_base.UIBase {
     }
 
     let ret = UIBase.createElement("colorpicker-x");
+
+    if (themeOverride) {
+      ret.overrideClass(themeOverride);
+    }
 
     packflag |= PackFlags.SIMPLE_NUMSLIDERS;
 

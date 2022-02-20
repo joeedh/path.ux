@@ -113,6 +113,16 @@ function getfloat(elem, attr, defaultval) {
   return myParseFloat(elem.getAttribute(attr));
 }
 
+/*
+**
+*
+* a customHandler can be a callback, or the string "default", e.g.
+*
+* xmlpage.customHandlers["homegig-element-x"] = "default".
+*
+* The default case simply suppresses the warning that would otherwise
+* be printed to the console.
+* */
 export const customHandlers = {};
 
 class Handler {
@@ -172,6 +182,24 @@ class Handler {
       }
 
       if (elem2 instanceof UIBase) {
+        if (!elem2.hasAttribute("datapath") && elem2.hasAttribute("path")) {
+          elem2.setAttribute("datapath", elem2.getAttribute("path"));
+        }
+
+        if (elem2.hasAttribute("datapath")) {
+          let path = elem2.getAttribute("datapath");
+          path = this.container._joinPrefix(path);
+          elem2.setAttribute("datapath", path);
+        }
+
+        if (elem2.hasAttribute("massSetPath")) {
+          let massSetPath = elem2.getAttribute("massSetPath");
+          let path = elem2.getAttribute("datapath");
+
+          path = this.container._getMassPath(this.container.ctx, path, massSetPath);
+          elem2.setAttribute("massSetPath", path);
+        }
+
         this.container.add(elem2);
         this._style(elem, elem2);
 
@@ -179,7 +207,7 @@ class Handler {
           this.push();
 
           this.container = elem2;
-          this._container(elem, elem2);
+          this._container(elem, elem2, true);
           this.visit(elem);
 
           this.pop();
@@ -197,7 +225,12 @@ class Handler {
         this._basic(elem, elem2);
 
         this.container.shadow.appendChild(elem2);
-        elem2.pathux_ctx = this.container.ctx;
+
+        if (!(elem2 instanceof UIBase)) {
+          elem2.pathux_ctx = this.container.ctx;
+        } else {
+          elem2.ctx = this.container.ctx;
+        }
       }
 
       this.visit(elem);
@@ -379,6 +412,15 @@ class Handler {
       return;
     }
 
+    if (elem.hasAttribute("theme-class")) {
+      elem2.overrideClass(elem.getAttribute("theme-class"));
+
+      if (elem2._init_done) {
+        elem2.setCSS();
+        elem2.flushUpdate();
+      }
+    }
+
     if (elem.hasAttribute("useIcons") && typeof elem2.useIcons === "function") {
       let val = elem.getAttribute("useIcons").trim().toLowerCase();
 
@@ -514,7 +556,7 @@ class Handler {
     }
   }
 
-  _container(elem, con) {
+  _container(elem, con, ignorePathPrefix=false) {
     for (let k of this.inheritDomAttrKeys) {
       if (elem.hasAttribute(k)) {
         this.inheritDomAttrs[k] = elem.getAttribute(k);
@@ -527,9 +569,11 @@ class Handler {
     con.inherit_packflag |= packflag;
 
     this._basic(elem, con);
-    this._handlePathPrefix(elem, con);
-  }
 
+    if (!ignorePathPrefix) {
+      this._handlePathPrefix(elem, con);
+    }
+  }
   noteframe(elem) {
     let ret = this.container.noteframe();
 
@@ -616,6 +660,10 @@ func = function() {
     this._basic(elem, elem2);
   }
 
+  colorfield(elem) {
+    this._prop(elem, "colorfield");
+  }
+
   /** simpleSliders=true enables simple sliders */
   prop(elem) {
     this._prop(elem, "prop")
@@ -641,6 +689,11 @@ func = function() {
       if (elem.hasAttribute("realtime")) {
         elem2.setAttribute("realtime", elem.getAttribute("realtime"));
       }
+    } else if (key === "colorfield") {
+      elem2 = this.container.colorPicker(path, {
+        packflag,
+        themeOverride: elem.hasAttribute("theme-class") ? elem.getAttribute("theme-class") : undefined
+      });
     } else {
       elem2 = this.container[key](path, packflag);
     }

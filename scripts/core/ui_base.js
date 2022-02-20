@@ -1879,7 +1879,7 @@ export class UIBase extends HTMLElement {
     this.__disabledState = !!val;
 
     if (val && !this._disdata) {
-      let style = this.getDefault("internalDisabled") || {
+      let style = this.getDefault("disabled") || this.getDefault("internalDisabled") || {
         "background-color": this.getDefault("DisabledBG")
       };
 

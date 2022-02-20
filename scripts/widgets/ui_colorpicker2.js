@@ -700,6 +700,8 @@ export class ColorField extends ui.ColumnFrame {
 
     this._recalcRGBA();
 
+    this._lastThemeStyle = this.constructor.define().style;
+
     /*
     this.hbox = new SimpleBox();
     this.svbox = new SimpleBox();
@@ -824,8 +826,28 @@ export class ColorField extends ui.ColumnFrame {
     }
   }
 
+  updateThemeOverride() {
+    let theme = this.getStyleClass();
+    if (theme === this._lastThemeStyle) {
+      return false;
+    }
+
+    this._lastThemeStyle = theme;
+    this.huefield.overrideClass(theme);
+    this.satvalfield.overrideClass(theme);
+
+    for (let i=0; i<3; i++) {
+      this.flushSetCSS();
+      this.flushUpdate();
+    }
+
+    return true;
+  }
+
   update(force_update = false) {
     super.update();
+
+    this.updateThemeOverride();
 
     let redraw = this.updateDPI(force_update, true);
     redraw = redraw || force_update;
@@ -834,6 +856,12 @@ export class ColorField extends ui.ColumnFrame {
       this.satvalfield.update(true);
       this._redraw();
     }
+  }
+
+  setCSS() {
+    super.setCSS();
+
+    this.style["flex-grow"] = this.getDefault("flex-grow");
   }
 
   _redraw() {
@@ -847,6 +875,8 @@ UIBase.internalRegister(ColorField);
 export class ColorPicker extends ui.ColumnFrame {
   constructor() {
     super();
+
+    this._lastThemeStyle = this.constructor.define().style;
   }
 
   //*
@@ -863,7 +893,21 @@ export class ColorPicker extends ui.ColumnFrame {
   }
 
   static setDefault(node) {
-    let tabs = node.tabs();
+    let tabs, colorsPanel = node;
+
+    if (node.getClassDefault("usePanels")) {
+      let panel = colorsPanel = node.panel("Color");
+      tabs = panel.tabs();
+      panel.closed = true;
+
+      panel.style["flex-grow"] = "unset";
+
+      /* force compactness */
+      panel.titleframe.style["flex-grow"] = "unset";
+      //panel.titleframe.style["align-items"] = "unset";
+    } else {
+      tabs = node.tabs();
+    }
 
     node.cssText = node.textbox();
     node.cssText.onchange = (val) => {
@@ -1107,7 +1151,24 @@ export class ColorPicker extends ui.ColumnFrame {
     }
   }
 
+  updateThemeOverride() {
+    let theme = this.getStyleClass();
+    if (theme === this._lastThemeStyle) {
+      return false;
+    }
+
+    this._lastThemeStyle = theme;
+    this.field.overrideClass(theme);
+
+    this.flushSetCSS();
+    this.flushUpdate();
+
+    return true;
+  }
+
   update() {
+    this.updateThemeOverride();
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
