@@ -287,6 +287,24 @@ export const theme = {
     "padding-bottom": 0,
   },
 
+  notification: {
+    DefaultText       : new CSSFont({
+      font   : 'poppins',
+      weight : 'bold',
+      variant: 'normal',
+      style  : 'normal',
+      size   : 12,
+      color  : 'rgb(225,225,225)'
+    }),
+    "background-color": "rgba(72,72,72,0)",
+    "border-radius"   : 5,
+    "border-color"    : "grey",
+    "border-width"    : 1,
+    "border-style"    : "solid",
+    ProgressBarBG     : "rgb(74,148,183)",
+    ProgressBar       : "rgb(250,132,58)",
+  },
+
   numslider: {
     'background-color': 'rgba(219,219,219, 1)',
     'border-color'    : 'black',

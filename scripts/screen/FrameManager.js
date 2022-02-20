@@ -532,8 +532,13 @@ export class Screen extends ui_base.UIBase {
    *                     then move the popup so it's fully inside the window (if it's outsize).
    *
    * */
-  popup(owning_node, elem_or_x, y, closeOnMouseOut = true, popupDelay = 250) {
+  popup(owning_node, elem_or_x, y, closeOnMouseOut = true, popupDelay = 5) {
     let ret = this._popup(...arguments);
+
+    for (let i=0; i<2; i++) {
+      ret.flushUpdate();
+      ret.flushSetCSS();
+    }
 
     if (popupDelay === 0) {
       return ret;
@@ -567,6 +572,9 @@ export class Screen extends ui_base.UIBase {
 
 
       ret.style["z-index"] = z;
+
+      ret.flushUpdate();
+      ret.flushSetCSS();
     }
 
     setTimeout(cb, popupDelay);

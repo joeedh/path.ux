@@ -12,6 +12,10 @@ function normString(s) {
 }
 
 function myToFixed(f, decimals) {
+  if (typeof f !== "number") {
+    return "(error)";
+  }
+
   f = f.toFixed(decimals);
   while (f.endsWith("0") && f.search(/\./) >= 0) {
     f = f.slice(0, f.length-1);

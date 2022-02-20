@@ -32,6 +32,13 @@ class EmptyContextClass extends Context {
   }
 }
 
+import * as ui_noteframe from '../widgets/ui_noteframe.js';
+
+/**
+ * Extend the client-provided context class
+ * with a few standard methods and properties
+ *
+ * */
 function GetContextClass(ctxClass) {
   return class ContextDerived extends ctxClass {
     get screen() {
@@ -49,6 +56,22 @@ function GetContextClass(ctxClass) {
     toLocked() {
       //for now, don't support context locking
       return this;
+    }
+
+    message(msg, timeout=2500) {
+      return ui_noteframe.message(this.screen, msg, timeout);
+    }
+
+    error(msg, timeout=2500) {
+      return ui_noteframe.error(this.screen, msg, timeout);
+    }
+
+    warning(msg, timeout=2500) {
+      return ui_noteframe.warning(this.screen, msg, timeout);
+    }
+
+    progressBar(msg, percent, color, timeout=1000) {
+      return ui_noteframe.progbarNote(this.screen, msg, percent, color, timeout);
     }
   }
 }
@@ -143,6 +166,14 @@ export class SimpleScreen extends Screen {
 UIBase.register(SimpleScreen);
 
 export class AppState {
+  /** ctxClass is the context class.  It can be either a simple class
+   *  or a subclass of the more complex path.ux Context class.  Note that
+   *  using Context will avoid subtle undo stack errors caused by the context
+   *  changing after a tool is run (this is why Context has a serialization
+   *  mechanism).
+   *
+   *  Path.ux will actually subclass ctxClass and add a few standard methods
+   *  and properties, see GetContextClass.*/
   constructor(ctxClass, screenClass = SimpleScreen) {
     this._ctxClass = ctxClass;
 

@@ -100,6 +100,10 @@ export class Note extends ui_base.UIBase {
     this.style["background-color"] = clr;
     this.setCSS();
   }
+
+  setCSS() {
+    super.setCSS(false);
+  }
 }
 
 UIBase.internalRegister(Note);
@@ -311,20 +315,6 @@ export function getNoteFrames(screen) {
 
 export let noteframes = [];
 
-export function progbarNote(screen, msg, percent, color, timeout) {
-  noteframes = getNoteFrames(screen);
-
-  for (let frame of noteframes) {
-    try {
-      frame.progbarNote(msg, percent, color, timeout);
-    } catch (error) {
-      print_stack(error);
-      console.log(error.stack, error.message);
-      console.log("bad notification frame");
-    }
-  }
-}
-
 export function sendNote(screen, msg, color, timeout = 3000, showExclMark=true) {
   noteframes = getNoteFrames(screen);
 
@@ -351,4 +341,19 @@ export function warning(screen, msg, timeout) {
 
 export function message(screen, msg, timeout) {
   return sendNote(screen, msg, ui_base.color2css([0.2, 0.9, 0.1, 1.0]), timeout, false);
+}
+
+
+export function progbarNote(screen, msg, percent, color, timeout) {
+  noteframes = getNoteFrames(screen);
+
+  for (let frame of noteframes) {
+    try {
+      frame.progbarNote(msg, percent, color, timeout);
+    } catch (error) {
+      print_stack(error);
+      console.log(error.stack, error.message);
+      console.log("bad notification frame");
+    }
+  }
 }
