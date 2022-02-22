@@ -177,6 +177,22 @@ export class NumSlider extends ValueButtonBase {
     };
   }
 
+  /** Current name label.  If set to null label will
+    * be pulled from the datapath api.*/
+  get name() {
+    return this.getAttribute("name") || this._name;
+  }
+
+  /** Current name label.  If set to null label will
+   * be pulled from the datapath api.*/
+  set name(name) {
+    if (name === undefined || name === null) {
+      this.removeAttribute("name");
+    } else {
+      this.setAttribute("name", name);
+    }
+  }
+
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
       return;
@@ -187,6 +203,19 @@ export class NumSlider extends ValueButtonBase {
 
     if (!prop)
       return;
+
+    let name;
+
+    if (this.hasAttribute("name")) {
+      name = this.getAttribute("name");
+    } else {
+      name = "" + prop.uiname;
+    }
+
+    if (name !== this._name) {
+      this._name = name;
+      this.setCSS();
+    }
 
     if (prop.expRate) {
       this._expRate = prop.expRate;
@@ -680,6 +709,10 @@ export class NumSlider extends ValueButtonBase {
   }
 
   updateName(force) {
+    if (!this.hasAttribute("name")) {
+      return;
+    }
+
     let name = this.getAttribute("name");
 
     if (force || name !== this._name) {
@@ -708,7 +741,6 @@ export class NumSlider extends ValueButtonBase {
       }
 
       val = units.buildString(val, this.baseUnit, this.decimalPlaces, this.displayUnit);
-      //val = myToFixed(val, this.decimalPlaces);
 
       text = val;
       if (this._name) {

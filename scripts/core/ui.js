@@ -1910,34 +1910,6 @@ export class Container extends ui_base.UIBase {
 
     if (inpath) {
       ret.setAttribute("datapath", inpath);
-
-      let rdef;
-      try {
-        rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
-      } catch (error) {
-        if (error instanceof DataPathError) {
-          util.print_stack(error);
-          console.warn("Error resolving property", inpath);
-        } else {
-          throw error;
-        }
-      }
-      if (rdef && rdef.prop) {
-        let prop = rdef.prop;
-
-        let range = prop.uiRange !== undefined ? prop.uiRange : prop.range;
-        range = range === undefined ? [-100000, 100000] : range;
-
-        min = min === undefined ? range[0] : min;
-        max = max === undefined ? range[1] : max;
-        is_int = is_int === undefined ? prop.type === PropTypes.INT : is_int;
-        name = name === undefined ? prop.uiname : name;
-        step = step === undefined ? prop.step : step;
-        step = step === undefined ? (is_int ? 1 : 0.1) : step;
-        decimals = decimals === undefined ? prop.decimalPlaces : decimals;
-      } else {
-        console.warn("warning, failed to lookup property info for path", inpath);
-      }
     }
 
     if (name) {
@@ -1945,11 +1917,9 @@ export class Container extends ui_base.UIBase {
     }
 
     if (min !== undefined) {
-      //ret.range[0] = min;
       ret.setAttribute("min", min);
     }
     if (max !== undefined) {
-      //ret.range[1] = max;
       ret.setAttribute("max", max);
     }
 
@@ -1957,8 +1927,10 @@ export class Container extends ui_base.UIBase {
       ret.setValue(defaultval);
     }
 
-    if (is_int)
+    if (is_int) {
       ret.setAttribute("integer", is_int);
+    }
+
     if (decimals !== undefined) {
       ret.decimalPlaces = decimals;
     }
@@ -1968,6 +1940,11 @@ export class Container extends ui_base.UIBase {
     }
 
     this._add(ret);
+
+    if (this.ctx) {
+      ret.setCSS();
+      ret.update();
+    }
 
     return ret;
   }
