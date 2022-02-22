@@ -627,12 +627,11 @@ export class IconButton extends UIBase {
         dom = this.extraDom;
       }
 
-      dom.style["position"] = UIBase.PositionKey;
+      dom.style["position"] = "absolute";
+      dom.style["margin"] = dom.style["padding"] = "0px";
+      dom.style["pointer-events"] = "none";
       dom.style["width"] = size + "px";
       dom.style["height"] = size + "px";
-      dom.style["margin"] = dom.style["padding"] = "0px";
-      //dom.style["background-color"] = 'orange';
-      dom.style["pointer-events"] = "none";
 
       ui_base.iconmanager.setCSS(this._extraIcon, dom, this.iconsheet);
     } else if (this.extraDom) {
