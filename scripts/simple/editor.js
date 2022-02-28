@@ -73,6 +73,7 @@ export class SideBar extends Container {
 
   set width(val) {
     this.setAttribute("width", "" + val + "px");
+    this.update();
   }
 
   get height() {
@@ -81,6 +82,7 @@ export class SideBar extends Container {
 
   set height(val) {
     this.setAttribute("height", "" + val + "px");
+    this.update();
   }
 
   static define() {

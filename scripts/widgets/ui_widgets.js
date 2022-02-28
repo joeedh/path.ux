@@ -169,24 +169,9 @@ export class Check extends UIBase {
     check.setAttribute("id", check._id);
     check.setAttribute("name", check._id);
 
-    /*
-    let doblur = () => {
-      this.blur();
-    };
-    check.addEventListener("mousedown", doblur);
-    check.addEventListener("mouseup", doblur);
-    check.addEventListener("touchstart", doblur);
-    check.addEventListener("touchend", doblur);
-    //*/
-
     let mdown = (e) => {
       this._highlight = false;
       this.checked = !this.checked;
-
-      /* ensure browser doesn't spawn its own (incompatible)
-         touch->mouse emulation events}; */
-      e.preventDefault();
-
     };
 
     let mup = (e) => {
@@ -205,10 +190,11 @@ export class Check extends UIBase {
       this._redraw();
     };
 
-    span.addEventListener("mouseover", mover);
-    span.addEventListener("mousein", mover);
-    span.addEventListener("mouseleave", mleave);
-    span.addEventListener("mouseout", mleave);
+    span.addEventListener("pointerover", mover, {passive: true});
+    span.addEventListener("mousein", mover, {passive: true});
+    span.addEventListener("mouseleave", mleave, {passive: true});
+    span.addEventListener("pointerout", mleave, {passive: true});
+
     this.addEventListener("blur", (e) => {
       this._highlight = this._focus = false;
       this._redraw();
@@ -223,10 +209,9 @@ export class Check extends UIBase {
     });
 
 
-    span.addEventListener("mousedown", mdown);
-    span.addEventListener("touchstart", mdown);
-    span.addEventListener("mouseup", mup);
-    span.addEventListener("touchend", mup);
+    span.addEventListener("pointerdown", mdown, {passive: true});
+    span.addEventListener("pointerup", mup, {passive: true});
+    span.addEventListener("pointercancel", mup, {passive: true});
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {

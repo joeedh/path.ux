@@ -1688,6 +1688,10 @@ export class SliderWithTextbox extends ColumnFrame {
       this.decimalPlaces = prop.decimalPlaces;
     }
 
+    if (prop.range !== undefined) {
+      this.range = [prop.range[0], prop.range[1]];
+    }
+
     if (this.editAsBaseUnit === undefined) {
       if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
         this.editAsBaseUnit = true;

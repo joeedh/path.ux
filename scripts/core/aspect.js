@@ -10,72 +10,81 @@ export function _setUIBase(uibase) {
   UIBase = uibase;
 }
 
-export function initAspectClass(object, blacklist=new Set()) {
+let AspectKeys = Symbol("aspect-keys");
+
+export function initAspectClass(object, blacklist = new Set()) {
   let cls = object.constructor;
 
-  let keys = [];
+  if (!cls[AspectKeys]) {
+    cls[AspectKeys] = [];
+    let keys = [];
 
-  let p = object.__proto__;
-  while (p) {
-    keys = keys.concat(Reflect.ownKeys(p));
-    p = p.__proto__;
+    let p = object.__proto__;
+    while (p) {
+      keys = keys.concat(Reflect.ownKeys(p));
+      p = p.__proto__;
+    }
+    keys = new Set(keys);
+
+    function validProperty(obj, key) {
+      let descr = Object.getOwnPropertyDescriptor(obj, key);
+
+      if (descr && (descr.get || descr.set)) {
+        return false;
+      }
+
+      let p = obj.constructor;
+      do {
+        if (p.prototype) {
+          let descr = Object.getOwnPropertyDescriptor(p.prototype, key);
+
+          if (descr && (descr.set || descr.get)) {
+            return false;
+          }
+        }
+
+        p = p.__proto__;
+      } while (p && p !== p.__proto__);
+
+      return true;
+    }
+
+    for (let k of keys) {
+      let v;
+
+      if (typeof k === "string" && k.startsWith("_")) {
+        continue;
+      }
+
+      if (k === "constructor") {
+        continue;
+      }
+
+      if (blacklist.has(k) || exclude.has(k)) {
+        continue;
+      }
+
+      if (!validProperty(object, k)) {
+        continue;
+      }
+
+      try {
+        v = object[k];
+      } catch (error) {
+        continue;
+      }
+
+      if (typeof v !== "function") {
+        continue;
+      }
+
+      cls[AspectKeys].push(k);
+    }
   }
-  keys = new Set(keys);
 
   object.__aspect_methods = new Set();
 
-  function validProperty(obj, key) {
-    let descr = Object.getOwnPropertyDescriptor(obj, key);
-
-    if (descr && (descr.get || descr.set)) {
-      return false;
-    }
-
-    let p = obj.constructor;
-    do {
-      if (p.prototype) {
-        let descr = Object.getOwnPropertyDescriptor(p.prototype, key);
-
-        if (descr && (descr.set || descr.get)) {
-          return false;
-        }
-      }
-
-      p = p.__proto__;
-    } while (p && p !== p.__proto__);
-
-    return true;
-  }
-
-  for (let k of keys) {
-    let v;
-
-    if (typeof k === "string" && k.startsWith("_")) {
-      continue;
-    }
-
-    if (k === "constructor") {
-      continue;
-    }
-
-    if (blacklist.has(k) || exclude.has(k)) {
-      continue;
-    }
-
-    if (!validProperty(object, k)) {
-      continue;
-    }
-
-    try {
-      v = object[k];
-    } catch (error) {
-      continue;
-    }
-
-    if (typeof v !== "function") {
-      continue;
-    }
-
+  for (let k of cls[AspectKeys]) {
     AfterAspect.bind(object, k);
   }
 }
@@ -108,17 +117,17 @@ export class AfterAspect {
 
     let this2 = this;
 
-    let method = this._method = function() {
+    let method = this._method = function () {
       let chain = this2.chain;
       let chain2 = this2.chain2;
 
       chain2.length = chain.length;
 
-      for (let i=0; i<chain.length; i++) {
+      for (let i = 0; i < chain.length; i++) {
         chain2[i] = chain[i];
       }
 
-      for (let i=0; i<chain2.length; i++) {
+      for (let i = 0; i < chain2.length; i++) {
         let [cb, node, once] = chain2[i];
 
         if (node) {
@@ -203,7 +212,7 @@ export class AfterAspect {
     this._checkbind();
 
     if (cb === undefined) {
-        console.warn("invalid call to .after(); cb was undefined");
+      console.warn("invalid call to .after(); cb was undefined");
       return;
     }
     this.chain = [[cb, node, once]].concat(this.chain);

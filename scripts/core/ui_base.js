@@ -2451,7 +2451,7 @@ export class UIBase extends HTMLElement {
 
       for (let type of ["start_timer", "stop_timer", "reset_timer"]) {
         for (let etype of lists[i]) {
-          this.addEventListener(etype, bind_handler(type, etype));
+          this.addEventListener(etype, bind_handler(type, etype), {passive: true});
         }
 
         i++;
