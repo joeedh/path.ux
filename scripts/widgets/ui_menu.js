@@ -550,8 +550,6 @@ export class Menu extends UIBase {
       });
 
       let onfocus = (e) => {
-        console.trace("onfocus", this._ignoreFocusEvents);
-
         if (this._ignoreFocusEvents) {
           return;
         }

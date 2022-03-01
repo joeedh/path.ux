@@ -461,8 +461,9 @@ export class OldButton extends UIBase {
 
       this._redraw();
 
-      if (cconst.DEBUG.buttonEvents)
+      if (cconst.DEBUG.buttonEvents) {
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
+      }
 
       if (this.onclick && e.touches !== undefined) {
         this.onclick(this);

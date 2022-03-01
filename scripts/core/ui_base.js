@@ -186,10 +186,19 @@ class _IconManager {
     this.tilesize = tilesize;
     this.drawsize = drawsize;
 
+    this.customIcons = new Map();
+
     this.image = image;
   }
 
   canvasDraw(elem, canvas, g, icon, x = 0, y = 0) {
+    let customIcon = this.customIcons.get(icon);
+
+    if (customIcon) {
+      g.drawImage(customIcon.canvas, x, y);
+      return;
+    }
+
     let tx = icon%this.tilex;
     let ty = ~~(icon/this.tilex);
 
@@ -219,7 +228,12 @@ class _IconManager {
     }
 
     dom.style["background"] = this.getCSS(icon, fitsize);
-    dom.style["background-size"] = (fitsize*this.tilex) + "px";
+    if (this.customIcons.has(icon)) {
+      dom.style["background-size"] = (fitsize) + "px";
+    } else {
+      dom.style["background-size"] = (fitsize*this.tilex) + "px";
+    }
+
     dom.style["background-clip"] = "content-box";
 
     if (!dom.style["width"]) {
@@ -242,6 +256,17 @@ class _IconManager {
 
     let ratio = fitsize/this.tilesize;
 
+    let customIcon = this.customIcons.get(icon);
+    if (customIcon !== undefined) {
+      //ratio = fitsize / this.drawsize;
+      //let d = this.drawsize*0.25;
+      let d = 0.0;
+
+      let css = `url("${customIcon.blobUrl}")`;
+
+      return css;
+    }
+
     let x = (-(icon%this.tilex)*this.tilesize)*ratio;
     let y = (-(~~(icon/this.tilex))*this.tilesize)*ratio;
 
@@ -249,9 +274,45 @@ class _IconManager {
     //y = ~~y;
 
     //console.log(this.tilesize, this.drawsize, x, y);
-    let ts = this.tilesize;
+    //let ts = this.tilesize;
     //return `image('${this.image.src}#xywh=${x},${y},${ts},${ts}')`;
     return `url("${this.image.src}") ${x}px ${y}px`;
+  }
+}
+
+export class CustomIcon {
+  constructor(manager, key, id, baseImage) {
+    this.key = key;
+    this.baseImage = baseImage;
+    this.images = []
+    this.id = id;
+    this.manager = manager;
+  }
+
+  regenIcons() {
+    let manager = this.manager;
+
+    let doSheet = (sheet) => {
+      let size = sheet.drawsize;
+      let canvas = document.createElement("canvas");
+      let g = canvas.getContext("2d");
+
+      canvas.width = canvas.height = size;
+      g.drawImage(this.baseImage, 0, 0, size, size);
+
+      canvas.toBlob((blob) => {
+        let blobUrl = URL.createObjectURL(blob);
+
+        sheet.customIcons.set(this.id, {
+          blobUrl,
+          canvas
+        });
+      })
+    }
+
+    for (let sheet of manager.iconsheets) {
+      doSheet(sheet);
+    }
   }
 }
 
@@ -266,6 +327,9 @@ export class IconManager {
   constructor(images, sizes, horizontal_tile_count) {
     this.iconsheets = [];
     this.tilex = horizontal_tile_count;
+
+    this.customIcons = new Map();
+    this.customIconIDMap = new Map();
 
     for (let i = 0; i < images.length; i++) {
       let size, drawsize;
@@ -282,6 +346,34 @@ export class IconManager {
 
       this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
     }
+  }
+
+  addCustomIcon(key, image) {
+    let icon = this.customIcons.get(key);
+
+    if (!icon) {
+      let maxid = 0;
+
+      for (let k in Icons) {
+        maxid = Math.max(maxid, Icons[k] + 1);
+      }
+      for (let icon of this.customIcons.values()) {
+        maxid = Math.max(maxid, icon.id + 1);
+      }
+
+      maxid = Math.max(maxid, 1000); //just to be on the safe side
+
+      let id = maxid;
+      icon = new CustomIcon(this, key, id, image);
+
+      this.customIcons.set(key, icon);
+      this.customIconIDMap.set(id, icon);
+    }
+
+    icon.baseImage = image;
+    icon.regenIcons();
+
+    return icon.id;
   }
 
   load(manager2) {
@@ -442,6 +534,7 @@ export function setIconManager(manager, IconSheetsOverride) {
 
 export function makeIconDiv(icon, sheet = 0) {
   let size = iconmanager.getRealSize(sheet);
+
   let drawsize = iconmanager.getTileSize(sheet);
 
   let icontest = document.createElement("div");
@@ -449,7 +542,7 @@ export function makeIconDiv(icon, sheet = 0) {
   icontest.style["width"] = icontest.style["min-width"] = drawsize + "px";
   icontest.style["height"] = icontest.style["min-height"] = drawsize + "px";
 
-  icontest.style["background-color"] = "orange";
+  //icontest.style["background-color"] = "orange";
 
   icontest.style["margin"] = "0px";
   icontest.style["padding"] = "0px";
@@ -546,7 +639,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
