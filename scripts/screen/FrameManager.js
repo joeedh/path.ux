@@ -6,7 +6,7 @@ import '../widgets/ui_widgets2.js';
 import '../widgets/ui_panel.js';
 import '../widgets/ui_treeview.js';
 
-import {nstructjs} from '../path-controller/controller.js';
+import {DataPathError, nstructjs} from '../path-controller/controller.js';
 
 import '../util/ScreenOverdraw.js';
 import cconst from '../config/const.js';
@@ -1343,9 +1343,10 @@ export class Screen extends ui_base.UIBase {
       try {
         ret = this._update_gen.next();
       } catch (error) {
-        util.print_stack(error);
-        console.log("error in update_intern tasklet");
-        this._update_gen = undefined;
+        if (!(error instanceof DataPathError)) {
+          util.print_stack(error);
+          console.log("error in update_intern tasklet");
+        }
         return;
       }
 

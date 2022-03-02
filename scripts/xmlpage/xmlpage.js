@@ -192,12 +192,18 @@ class Handler {
           elem2.setAttribute("datapath", path);
         }
 
-        if (elem2.hasAttribute("massSetPath")) {
-          let massSetPath = elem2.getAttribute("massSetPath");
+        if (elem2.hasAttribute("massSetPath") || this.container.massSetPrefix) {
+          let massSetPath = "";
+
+          if (elem2.hasAttribute("massSetPath")) {
+            massSetPath = elem2.getAttribute("massSetPath");
+          }
+
           let path = elem2.getAttribute("datapath");
 
           path = this.container._getMassPath(this.container.ctx, path, massSetPath);
           elem2.setAttribute("massSetPath", path);
+          elem2.setAttribute("mass_set_path", path);
         }
 
         this.container.add(elem2);
