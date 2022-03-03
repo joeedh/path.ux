@@ -9,7 +9,7 @@ import * as util from "../path-controller/util/util.js";
 import {
   PropTypes, isNumber, PropSubTypes, PropFlags, NumberConstraints, IntProperty
 } from "../path-controller/toolsys/toolprop.js";
-import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
+import {pushModalLight, popModalLight, eventWasTouch} from "../path-controller/util/simple_events.js";
 import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
 import {color2css, css2color} from "../core/ui_theme.js";
 import {ThemeEditor} from "./theme_editor.js";
@@ -647,7 +647,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     let last_background = this.dom._background;
     let cancel;
 
-    this.ma = new util.MovingAvg(8);
+    this.ma = new util.MovingAvg(eventWasTouch(e) ? 8 : 2);
 
     let startvalue = this.value;
     let value = startvalue;
@@ -1149,7 +1149,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       return;
     }
 
-    this.ma = new util.MovingAvg(4);
+    this.ma = new util.MovingAvg(eventWasTouch(e) ? 4 : 2);
 
     let end = () => {
       if (this._modal === undefined) {
