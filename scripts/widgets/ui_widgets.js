@@ -4,7 +4,7 @@ import * as util from '../path-controller/util/util.js';
 import * as vectormath from '../path-controller/util/vectormath.js';
 import * as ui_base from '../core/ui_base.js';
 import * as events from '../path-controller/util/events.js';
-import * as stoolsys from '../path-controller/toolsys/toolsys.js';
+import * as toolsys from '../path-controller/toolsys/toolsys.js';
 import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import {DataPathError} from '../path-controller/controller/controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';

@@ -5,6 +5,12 @@ import {Vector2, Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/
 all units convert to meters
 */
 
+const FLT_EPSILONE = 1.192092895507812e-07;
+
+function myfloor(f) {
+  return Math.floor(f + FLT_EPSILONE*2.0);
+}
+
 function normString(s) {
   //remove all whitespace
   s = s.replace(/ /g, "").replace(/\t/g, "");
@@ -18,11 +24,11 @@ function myToFixed(f, decimals) {
 
   f = f.toFixed(decimals);
   while (f.endsWith("0") && f.search(/\./) >= 0) {
-    f = f.slice(0, f.length-1);
+    f = f.slice(0, f.length - 1);
   }
 
   if (f.endsWith(".")) {
-    f = f.slice(0, f.length-1);
+    f = f.slice(0, f.length - 1);
   }
 
   if (f.length === 0)
@@ -30,10 +36,15 @@ function myToFixed(f, decimals) {
 
   return f.trim();
 }
+
 export const Units = [];
 
 export class Unit {
   static getUnit(name) {
+    if (name === "none" || name === undefined) {
+      return undefined;
+    }
+
     for (let cls of Units) {
       if (cls.unitDefine().name === name) {
         return cls;
@@ -48,13 +59,15 @@ export class Unit {
   }
 
   //subclassed static methods start here
-  static unitDefine() {return {
-    name    : "",
-    uiname  : "",
-    type    : "", //e.g. distance
-    icon    : -1,
-    pattern : undefined //a re literal to validate strings
-  }}
+  static unitDefine() {
+    return {
+      name   : "",
+      uiname : "",
+      type   : "", //e.g. distance
+      icon   : -1,
+      pattern: undefined //a re literal to validate strings
+    }
+  }
 
   static parse(string) {
 
@@ -81,24 +94,26 @@ export class Unit {
 
   }
 
-  static buildString(value, decimals=2) {
+  static buildString(value, decimals = 2) {
 
   }
 }
 
 export class MeterUnit extends Unit {
-  static unitDefine() {return {
-    name    : "meter",
-    uiname  : "Meter",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d*)?m$/
-  }}
+  static unitDefine() {
+    return {
+      name   : "meter",
+      uiname : "Meter",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d*)?m$/
+    }
+  }
 
   static parse(string) {
     string = normString(string);
     if (string.endsWith("m")) {
-      string = string.slice(0, string.length-1);
+      string = string.slice(0, string.length - 1);
     }
 
     return parseFloat(string);
@@ -114,7 +129,7 @@ export class MeterUnit extends Unit {
     return value;
   }
 
-  static buildString(value, decimals=2) {
+  static buildString(value, decimals = 2) {
     return "" + myToFixed(value, decimals) + " m";
   }
 }
@@ -122,13 +137,15 @@ export class MeterUnit extends Unit {
 Unit.register(MeterUnit);
 
 export class InchUnit extends Unit {
-  static unitDefine() {return {
-    name    : "inch",
-    uiname  : "Inch",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d*)?(in|inch)$/
-  }}
+  static unitDefine() {
+    return {
+      name   : "inch",
+      uiname : "Inch",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d*)?(in|inch)$/
+    }
+  }
 
   static parse(string) {
     string = string.toLowerCase();
@@ -151,28 +168,31 @@ export class InchUnit extends Unit {
     return value/0.0254;
   }
 
-  static buildString(value, decimals=2) {
+  static buildString(value, decimals = 2) {
     return "" + myToFixed(value, decimals) + "in";
   }
 }
+
 Unit.register(InchUnit);
 
 let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/
 
 export class FootUnit extends Unit {
-  static unitDefine() {return {
-    name    : "foot",
-    uiname  : "Foot",
-    type    : "distance",
-    icon    : -1,
-    pattern : foot_re
-  }}
+  static unitDefine() {
+    return {
+      name   : "foot",
+      uiname : "Foot",
+      type   : "distance",
+      icon   : -1,
+      pattern: foot_re
+    }
+  }
 
   static parse(string) {
     string = normString(string);
     let i = string.search("ft");
     let parts = [];
-    let vft=0.0, vin=0.0;
+    let vft = 0.0, vin = 0.0;
 
     if (i >= 0) {
       parts = string.split("ft");
@@ -202,9 +222,9 @@ export class FootUnit extends Unit {
     return value/0.3048;
   }
 
-  static buildString(value, decimals=2) {
-    let vft = ~~(value);
-    let vin = (value*12) % 12;
+  static buildString(value, decimals = 2) {
+    let vft = myfloor(value);
+    let vin = ((value + FLT_EPSILONE*2)*12)%12;
 
     if (vft === 0.0) {
       return myToFixed(vin, decimals) + " in";
@@ -218,19 +238,22 @@ export class FootUnit extends Unit {
     return s;
   }
 }
+
 Unit.register(FootUnit);
 
 
 let square_foot_re = /((-?\d+(\.\d*)?ft(\u00b2)?)(-?\d+(\.\d*)?(in|inch)(\u00b2)?)?)|(-?\d+(\.\d*)?(in|inch)(\u00b2)?)$/
 
 export class SquareFootUnit extends FootUnit {
-  static unitDefine() {return {
-    name    : "square_foot",
-    uiname  : "Square Feet",
-    type    : "area",
-    icon    : -1,
-    pattern : square_foot_re
-  }}
+  static unitDefine() {
+    return {
+      name   : "square_foot",
+      uiname : "Square Feet",
+      type   : "area",
+      icon   : -1,
+      pattern: square_foot_re
+    }
+  }
 
   static parse(string) {
     string = string.replace(/\u00b2/g, "");
@@ -238,9 +261,9 @@ export class SquareFootUnit extends FootUnit {
   }
 
 
-  static buildString(value, decimals=2) {
-    let vft = ~~(value);
-    let vin = (value*12) % 12;
+  static buildString(value, decimals = 2) {
+    let vft = myfloor(value);
+    let vin = ((value + FLT_EPSILONE*2)*12)%12;
 
     if (vft === 0.0) {
       return myToFixed(vin, decimals) + " in\u00b2";
@@ -254,17 +277,20 @@ export class SquareFootUnit extends FootUnit {
     return s;
   }
 }
+
 Unit.register(SquareFootUnit);
 
 
 export class MileUnit extends Unit {
-  static unitDefine() {return {
-    name    : "mile",
-    uiname  : "Mile",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d+)?miles$/
-  }}
+  static unitDefine() {
+    return {
+      name   : "mile",
+      uiname : "Mile",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d+)?miles$/
+    }
+  }
 
   static parse(string) {
     string = normString(string);
@@ -282,20 +308,23 @@ export class MileUnit extends Unit {
     return value/1609.34;
   }
 
-  static buildString(value, decimals=3) {
+  static buildString(value, decimals = 3) {
     return "" + myToFixed(value, decimals) + " miles";
   }
 }
+
 Unit.register(MileUnit);
 
 export class DegreeUnit extends Unit {
-  static unitDefine() {return {
-    name    : "degree",
-    uiname  : "Degrees",
-    type    : "angle",
-    icon    : -1,
-    pattern : /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)?$/
-  }}
+  static unitDefine() {
+    return {
+      name   : "degree",
+      uiname : "Degrees",
+      type   : "angle",
+      icon   : -1,
+      pattern: /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)$/
+    }
+  }
 
   static parse(string) {
     string = normString(string);
@@ -318,20 +347,22 @@ export class DegreeUnit extends Unit {
     return value*180.0/Math.PI;
   }
 
-  static buildString(value, decimals=3) {
+  static buildString(value, decimals = 3) {
     return "" + myToFixed(value, decimals) + " \u00B0";
   }
 };
 Unit.register(DegreeUnit);
 
 export class RadianUnit extends Unit {
-  static unitDefine() {return {
-    name    : "radian",
-    uiname  : "Radians",
-    type    : "angle",
-    icon    : -1,
-    pattern : /-?\d+(\.\d+)?(r|rad|radian|radians)$/
-  }}
+  static unitDefine() {
+    return {
+      name   : "radian",
+      uiname : "Radians",
+      type   : "angle",
+      icon   : -1,
+      pattern: /-?\d+(\.\d+)?(r|rad|radian|radians)$/
+    }
+  }
 
   static parse(string) {
     string = normString(string);
@@ -352,7 +383,7 @@ export class RadianUnit extends Unit {
     return value;
   }
 
-  static buildString(value, decimals=3) {
+  static buildString(value, decimals = 3) {
     return "" + myToFixed(value, decimals) + " r";
   }
 };
@@ -372,42 +403,86 @@ export function setMetric(val) {
 Unit.isMetric = true;
 Unit.baseUnit = "meter";
 
-let numre = /[+\-]?[0-9]+(\.[0-9]*)?$/
+let numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/
+let numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/
 let hexre1 = /[+\-]?[0-9a-fA-F]+h$/
 let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/
 let binre = /[+\-]?0b[01]+$/
 let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/
+let intre = /[+\-]?[0-9]+$/
 
 function isnumber(s) {
-  s = (""+s).trim();
-  if (s.startsWith(".")) {
-    s = "0" + s;
-  }
+  s = ("" + s).trim();
 
   function test(re) {
-    return s.search(re) == 0;
+    return s.search(re) === 0;
   }
 
-  return test(numre) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
+  return test(intre) || test(numre1) || test(numre2) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
+}
+
+
+export function parseValueIntern(string, baseUnit = undefined) {
+  string = string.trim();
+  if (string[0] === ".") {
+    string = "0" + string;
+  }
+
+  if (typeof baseUnit === "string") {
+    let base = Unit.getUnit(baseUnit);
+
+    if (base === undefined && baseUnit !== "none") {
+      console.warn("Unknown unit " + baseUnit);
+      return NaN;
+    }
+
+    baseUnit = base;
+  }
+
+  //unannotated string?
+  if (isnumber(string)) {
+    //assume base unit
+    let f = parseFloat(string);
+
+    return f;
+  }
+
+  if (baseUnit === undefined) {
+    console.warn("No base unit in units.js:parseValueIntern");
+  }
+
+  for (let unit of Units) {
+    let def = unit.unitDefine();
+
+    if (unit.validate(string)) {
+      console.log(unit);
+      let value = unit.parse(string);
+
+      if (baseUnit) {
+        value = unit.toInternal(value);
+        return baseUnit.fromInternal(value);
+      } else {
+        return value;
+      }
+    }
+  }
+
+  return NaN;
 }
 
 /* if displayUnit is undefined, final value will be converted from displayUnit to baseUnit */
-export function parseValue(string, baseUnit=undefined, displayUnit=undefined) {
-  let f = parseValueIntern(string, baseUnit);
+export function parseValue(string, baseUnit = undefined, displayUnit = undefined) {
+  displayUnit = Unit.getUnit(displayUnit);
+  baseUnit = Unit.getUnit(baseUnit);
 
-  let display, base;
+  let f = parseValueIntern(string, displayUnit || baseUnit);
 
-  if (displayUnit && displayUnit !== "none") {
-    display = Unit.getUnit(displayUnit);
-  }
+  if (baseUnit) {
+    if (displayUnit) {
+      f = displayUnit.toInternal(f);
+    }
 
-  if (baseUnit && baseUnit !== "none") {
-    base = Unit.getUnit(baseUnit);
-  }
-
-  if (display && base) {
-    f = display.toInternal(f);
-    f = base.fromInternal(f);
+    f = baseUnit.fromInternal(f);
   }
 
   return f;
@@ -429,61 +504,21 @@ export function isNumber(string) {
   return false;
 }
 
-export function parseValueIntern(string, baseUnit=undefined) {
-  let base;
-
-  string = string.trim();
-  if (string[0] === ".") {
-    string = "0" + string;
-  }
-
-  //unannotated string?
-  if (isnumber(string)) {
-    //assume base unit
-    let f = parseFloat(string);
-    
-    return f;
-  }  
-
-  if (baseUnit && baseUnit !== "none") {
-    base = Unit.getUnit(baseUnit);
-    if (base === undefined) {
-      console.warn("Unknown unit " + baseUnit);
-      return NaN;
-    }
-  } else {
-    base = Unit.getUnit(Unit.baseUnit);
-  }
-
-  for (let unit of Units) {
-    let def = unit.unitDefine();
-
-    if (unit.validate(string)) {
-      console.log(unit);
-      let value = unit.parse(string);
-
-      value = unit.toInternal(value);
-      return base.fromInternal(value);
-    }
-  }
-
-  return NaN;
-}
-
-
 export class PixelUnit extends Unit {
-  static unitDefine() {return {
-    name    : "pixel",
-    uiname  : "Pixel",
-    type    : "distance",
-    icon    : -1,
-    pattern : /-?\d+(\.\d*)?px$/
-  }}
+  static unitDefine() {
+    return {
+      name   : "pixel",
+      uiname : "Pixel",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d*)?px$/
+    }
+  }
 
   static parse(string) {
     string = normString(string);
     if (string.endsWith("px")) {
-      string = string.slice(0, string.length-2).trim();
+      string = string.slice(0, string.length - 2).trim();
     }
 
     return parseFloat(string);
@@ -499,7 +534,7 @@ export class PixelUnit extends Unit {
     return value;
   }
 
-  static buildString(value, decimals=2) {
+  static buildString(value, decimals = 2) {
     return "" + myToFixed(value, decimals) + "px";
   }
 }
@@ -522,7 +557,7 @@ export function convert(value, unita, unitb) {
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
-export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {
+export function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, displayUnit = Unit.baseUnit) {
   if (typeof baseUnit === "string" && baseUnit !== "none") {
     baseUnit = Unit.getUnit(baseUnit);
   }
@@ -541,5 +576,6 @@ export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, disp
     return myToFixed(value, decimalPlaces);
   }
 }
+
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;

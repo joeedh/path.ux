@@ -293,6 +293,8 @@ export class NumSlider extends ValueButtonBase {
     //this.dom.hidden = true;
 
     let finish = (ok) => {
+      debugger;
+
       tbox.remove();
       this.hidden = false;
 
