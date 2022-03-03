@@ -6,15 +6,18 @@ import * as units from "../core/units.js";
 import {Vector2} from "../path-controller/util/vectormath.js";
 import {ColumnFrame} from "../core/ui.js";
 import * as util from "../path-controller/util/util.js";
-import {PropTypes, isNumber, PropSubTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
+import {
+  PropTypes, isNumber, PropSubTypes, PropFlags, NumberConstraints, IntProperty
+} from "../path-controller/toolsys/toolprop.js";
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
 import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
-import { color2css, css2color } from "../core/ui_theme.js";
-import { ThemeEditor } from "./theme_editor.js";
+import {color2css, css2color} from "../core/ui_theme.js";
+import {ThemeEditor} from "./theme_editor.js";
 
 export const sliderDomAttributes = new Set([
   "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
-  "radix", "step", "expRate", "stepIsRelative", "decimalPlaces"
+  "radix", "step", "expRate", "stepIsRelative", "decimalPlaces",
+  "slideSpeed"
 ]);
 
 function updateSliderFromDom(dom, slider = dom) {
@@ -120,8 +123,100 @@ function updateSliderFromDom(dom, slider = dom) {
   return redraw;
 }
 
+export const SliderDefaults = {
+  stepIsRelative: false,
+  expRate       : 1.0 + 1.0/3.0,
+  radix         : 10,
+  decimalPlaces : 4,
+  baseUnit      : "none",
+  displayUnit   : "none",
+  slideSpeed    : 1.0,
+  step          : 0.1,
+}
+
+export function NumberSliderBase(cls = UIBase, skip = new Set(), defaults = SliderDefaults) {
+  skip = new Set(skip);
+
+  return class NumberSliderBase extends cls {
+    constructor() {
+      super();
+
+      for (let key of NumberConstraints) {
+        if (skip.has(key)) {
+          continue;
+        }
+
+        if (key in defaults) {
+          this[key] = defaults[key];
+        } else {
+          this[key] = undefined;
+        }
+      }
+    }
+
+    loadConstraints(prop=undefined) {
+      if (!this.hasAttribute("datapath")) {
+        return;
+      }
+
+      if (!prop) {
+        prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      }
+
+      let loadAttr = (propkey, domkey = key, thiskey = key) => {
+        if (this.hasAttribute(domkey)) {
+          this[thiskey] = parseFloat(this.getAttribute(domkey));
+        } else {
+          this[thiskey] = prop[propkey];
+        }
+      }
+
+      for (let key of NumberConstraints) {
+        let thiskey = key, domkey = key;
+
+        if (key === "range") { //handled later
+          continue;
+        }
+
+        loadAttr(key, domkey, thiskey);
+      }
+
+      let range = prop.range;
+      if (range && !this.hasAttribute("min")) {
+        this.range[0] = range[0];
+      } else if (this.hasAttribute("min")) {
+        this.range[0] = parseFloat(this.getAttribute("min"));
+      }
+
+      if (range && !this.hasAttribute("max")) {
+        this.range[1] = range[1];
+      } else if (this.hasAttribute("max")) {
+        this.range[1] = parseFloat(this.getAttribute("max"));
+      }
+
+      if (this.getAttribute("integer")) {
+        let val = this.getAttribute("integer");
+        val = ("" + val).toLowerCase();
+
+        //handles anonymouse <numslider-x integer> case
+        this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
+      } else {
+        this.isInt = prop instanceof IntProperty;
+      }
+
+      if (this.editAsBaseUnit === undefined) {
+        if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+          this.editAsBaseUnit = true;
+        } else {
+          this.editAsBaseUnit = false;
+        }
+      }
+    }
+  }
+}
+
 //use .setAttribute("linear") to disable nonlinear sliding
-export class NumSlider extends ValueButtonBase {
+export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   constructor() {
     super();
 
@@ -135,13 +230,10 @@ export class NumSlider extends ValueButtonBase {
     this.start_mpos = new Vector2();
 
     this._last_overarrow = false;
-    
+
     this._name = "";
-    this._step = 0.1;
     this._value = 0.0;
-    this._expRate = 1.333;
-    this.decimalPlaces = 4;
-    this.radix = 10;
+    this.expRate = SliderDefaults.expRate;
 
     this.vertical = false;
     this._last_disabled = false;
@@ -153,40 +245,16 @@ export class NumSlider extends ValueButtonBase {
     this._redraw();
   }
 
-  get step() {
-    return this._step;
-  }
-
-  set step(v) {
-    this._step = v;
-  }
-
-  get expRate() {
-    return this._expRate;
-  }
-
-  set expRate(v) {
-    this._expRate = v;
-  }
-
   get value() {
     return this._value;
   }
 
   set value(val) {
-    this.setValue(val, true, false);
-  }
-
-  static define() {
-    return {
-      tagname    : "numslider-x",
-      style      : "numslider",
-      parentStyle: "button"
-    };
+    this.setValue(val);
   }
 
   /** Current name label.  If set to null label will
-    * be pulled from the datapath api.*/
+   * be pulled from the datapath api.*/
   get name() {
     return this.getAttribute("name") || this._name;
   }
@@ -201,16 +269,25 @@ export class NumSlider extends ValueButtonBase {
     }
   }
 
+  static define() {
+    return {
+      tagname    : "numslider-x",
+      style      : "numslider",
+      parentStyle: "button"
+    };
+  }
+
+
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
       return;
     }
 
-    let rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
-    let prop = rdef ? rdef.prop : undefined;
+    let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
 
-    if (!prop)
+    if (!prop) {
       return;
+    }
 
     let name;
 
@@ -220,54 +297,25 @@ export class NumSlider extends ValueButtonBase {
       name = "" + prop.uiname;
     }
 
-    let range = prop.range;
-    if (range && !this.hasAttribute("min")) {
-      this.range[0] = range[0];
-    } else if (this.hasAttribute("min")) {
-      this.range[0] = parseFloat(this.getAttribute("min"));
-    }
-
-    if (range && !this.hasAttribute("max")) {
-      this.range[1] = range[1];
-    } else if (this.hasAttribute("max")) {
-      this.range[1] = parseFloat(this.getAttribute("max"));
-    }
+    //lazily load constraints, since there's so much
+    //accessing of DOM attributes
+    let updateConstraints = false;
 
     if (name !== this._name) {
       this._name = name;
       this.setCSS();
+      updateConstraints = true;
     }
 
-    if (prop.expRate) {
-      this._expRate = prop.expRate;
-    }
-    if (prop.radix !== undefined) {
-      this.radix = prop.radix;
+    let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+
+    if (val !== this._value) {
+      updateConstraints = true;
+      /* Note that super.updateDataPath will update .value for us*/
     }
 
-    this.isInt = prop.type === PropTypes.INT;
-
-    if (prop.step) {
-      this._step = prop.getStep(rdef.value);
-    }
-    if (prop.decimalPlaces !== undefined) {
-      this.decimalPlaces = prop.decimalPlaces;
-    }
-
-    if (prop.baseUnit !== undefined) {
-      this.baseUnit = prop.baseUnit;
-    }
-
-    if (this.editAsBaseUnit === undefined) {
-      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
-        this.editAsBaseUnit = true;
-      } else {
-        this.editAsBaseUnit = false;
-      }
-    }
-
-    if (prop.displayUnit !== undefined) {
-      this.displayUnit = prop.displayUnit;
+    if (updateConstraints) {
+      this.loadConstraints(prop);
     }
 
     super.updateDataPath();
@@ -314,8 +362,6 @@ export class NumSlider extends ValueButtonBase {
     //this.dom.hidden = true;
 
     let finish = (ok) => {
-      debugger;
-
       tbox.remove();
       this.hidden = false;
 
@@ -413,18 +459,12 @@ export class NumSlider extends ValueButtonBase {
           step *= 0.1;
         }
 
-        console.error(this.value, step, this.value + step);
-
-        //debugger;
         this.setValue(this.value + step);
-        console.error(this.value);
       }
     }
 
     this.addEventListener("mousemove", (e) => {
       this.setMpos(e);
-
-      console.log(this.mdown, this.start_mpos.vectorDistance(this.mpos));
 
       if (this.mdown && !this._modaldata && this.mpos.vectorDistance(this.start_mpos) > 13) {
         this.dragStart(e);
@@ -451,13 +491,12 @@ export class NumSlider extends ValueButtonBase {
 
     this.addEventListener("mousedown", (e) => {
       this.setMpos(e);
-      
+
       if (this.disabled) return;
       onmousedown(e);
-    }, {capture : true});
+    }, {capture: true});
 
     this.addEventListener("mouseup", (e) => {
-      console.warn("Mouse up!", this.modalRunning);
       this.mdown = false;
     })
     /*
@@ -506,16 +545,6 @@ export class NumSlider extends ValueButtonBase {
     })
   }
 
-  /*
-  set mdown(v) {
-    console.warn("set mdown", v)
-    this._mdown = v;
-  }
-
-  get mdown() {
-    return this._mdown;
-  }//*/
-
   overArrow(x, y) {
     let r = this.getBoundingClientRect();
     let rwidth, rx;
@@ -528,14 +557,14 @@ export class NumSlider extends ValueButtonBase {
       rwidth = r.width;
       rx = r.x;
     }
-    
+
     x -= rx;
     let sz = this._getArrowSize();
 
     let szmargin = sz + cconst.numSliderArrowLimit;
 
     let step = this.step || 0.01;
-    
+
     if (this.isInt) {
       step = Math.max(step, 1);
     }
@@ -556,22 +585,11 @@ export class NumSlider extends ValueButtonBase {
   }
 
   doRange() {
-    console.warn("Deprecated: NumSlider.prototype.doRange, use checkDomAttrs instead!");
-    this.checkDomAttrs();
+    console.warn("Deprecated: NumSlider.prototype.doRange, use loadConstraints instead!");
+    this.loadConstraints();
   }
 
-  checkDomAttrs() {
-    if (this.hasAttribute("min")) {
-      this.range[0] = parseFloat(this.getAttribute("min"));
-    }
-    if (this.hasAttribute("max")) {
-      this.range[1] = parseFloat(this.getAttribute("max"));
-    }
-
-    this._value = Math.min(Math.max(this._value, this.range[0]), this.range[1]);
-  }
-
-  setValue(value, fire_onchange = true) {
+  setValue(value, fire_onchange = true, setDataPath=true, checkConstraints=true) {
     this._value = value;
 
     if (this.hasAttribute("integer")) {
@@ -582,11 +600,11 @@ export class NumSlider extends ValueButtonBase {
       this._value = Math.floor(this._value);
     }
 
-    console.log(this.checkDomAttrs);
+    if (checkConstraints) {
+      this.loadConstraints();
+    }
 
-    this.checkDomAttrs();
-
-    if (this.ctx && this.hasAttribute("datapath")) {
+    if (setDataPath && this.ctx && this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
     }
 
@@ -607,7 +625,7 @@ export class NumSlider extends ValueButtonBase {
     }
 
     let over = this.overArrow(e.x, e.y);
-    
+
     if (over !== this._last_overarrow) {
       this._last_overarrow = over;
       this._redraw();
@@ -644,7 +662,6 @@ export class NumSlider extends ValueButtonBase {
       }
     }
 
-
     let handlers = {
       on_keydown: (e) => {
         switch (e.keyCode) {
@@ -661,14 +678,14 @@ export class NumSlider extends ValueButtonBase {
 
       on_mousemove: (e) => {
         if (this.disabled) return;
-        
+
         e.preventDefault();
         e.stopPropagation();
-        
+
         let x = this.ma.add(this.vertical ? e.y : e.x);
         let dx = x - startx;
         startx = x;
-        
+
         if (util.time_ms() - this.last_time < 35) {
           return;
         }
@@ -682,12 +699,12 @@ export class NumSlider extends ValueButtonBase {
 
         sumdelta += Math.abs(dx);
 
-        value += dx*this._step*0.1;
+        value += dx*this.step*0.1*this.slideSpeed;
 
         let dvalue = value - startvalue;
         let dsign = Math.sign(dvalue);
 
-        let expRate = this._expRate;
+        let expRate = this.expRate;
 
         //if (eventWasTouch(e)) {
         //  expRate = (1 + expRate)*0.5;
@@ -698,16 +715,15 @@ export class NumSlider extends ValueButtonBase {
         }
 
         this.value = startvalue + dvalue;
-        this.checkDomAttrs();
 
         /*
         if (e.shiftKey) {
           dx *= 0.1;
-          this.value = startvalue2 + dx*0.1*this._step;
+          this.value = startvalue2 + dx*0.1*this.step*this.slideSpeed;
           startvalue3 = this.value;
         } else {
           startvalue2 = this.value;
-          this.value = startvalue3 + dx*0.1*this._step;
+          this.value = startvalue3 + dx*0.1*this.step*this.slideSpeed;
         }*/
 
         this.updateWidth();
@@ -971,7 +987,7 @@ export class NumSlider extends ValueButtonBase {
       g.moveTo(w*0.5, h - d);
       g.lineTo(w*0.5 + sz*0.5, h - sz - d);
       g.lineTo(w*0.5 - sz*0.5, h - sz - d);
-      
+
       g.fillStyle = over > 0 ? higharrow : arrowcolor;
       g.fill();
     } else {
@@ -987,7 +1003,7 @@ export class NumSlider extends ValueButtonBase {
       g.moveTo(w - d, h*0.5);
       g.lineTo(w - sz - d, h*0.5 + sz*0.5);
       g.lineTo(w - sz - d, h*0.5 - sz*0.5);
-      
+
       g.fillStyle = over > 0 ? higharrow : arrowcolor;
       g.fill();
     }
@@ -1003,7 +1019,7 @@ export class NumSlider extends ValueButtonBase {
 UIBase.internalRegister(NumSlider);
 
 
-export class NumSliderSimpleBase extends UIBase {
+export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
   constructor() {
     super();
 
@@ -1023,6 +1039,9 @@ export class NumSliderSimpleBase extends UIBase {
 
     this.shadow.appendChild(this.canvas);
     this.range = [0, 1];
+
+    /** if not undefined defines subrange of visible slider */
+    this.uiRange = undefined;
 
     this.step = 0.1;
     this._value = 0.5;
@@ -1050,7 +1069,7 @@ export class NumSliderSimpleBase extends UIBase {
     }
   }
 
-  setValue(val, fire_onchange = true) {
+  setValue(val, fire_onchange = true, setDataPath = true) {
     val = Math.min(Math.max(val, this.range[0]), this.range[1]);
 
     if (this.isInt) {
@@ -1065,7 +1084,7 @@ export class NumSliderSimpleBase extends UIBase {
         this.onchange(val);
       }
 
-      if (this.getAttribute("datapath")) {
+      if (setDataPath && this.getAttribute("datapath")) {
         let path = this.getAttribute("datapath");
         this.setPathValue(this.ctx, path, this._value);
       }
@@ -1094,19 +1113,9 @@ export class NumSliderSimpleBase extends UIBase {
       if (!prop) {
         return;
       }
-      this.isInt = prop.type === PropTypes.INT;
 
-      if (prop.range !== undefined) {
-        this.range[0] = prop.range[0];
-        this.range[1] = prop.range[1];
-      }
-      if (prop.uiRange !== undefined) {
-        this.uiRange = new Array(2);
-        this.uiRange[0] = prop.uiRange[0];
-        this.uiRange[1] = prop.uiRange[1];
-      }
-
-      this.value = val;
+      this.loadConstraints(prop);
+      this.setValue(val, true, false);
     }
   }
 
@@ -1156,9 +1165,9 @@ export class NumSliderSimpleBase extends UIBase {
     this.modal = {
       mousemove: (e) => {
         let x = e.x, y = e.y;
-      
+
         x = this.ma.add(x);
-        
+
         let e2 = new MouseEvent(e, {
           x, y
         });
@@ -1305,11 +1314,7 @@ export class NumSliderSimpleBase extends UIBase {
 
     let y = (h - sh)*0.5;
 
-    //export function drawRoundBox(elem, canvas, g, width, height, r=undefined,
-    //                             op="fill", color=undefined, margin=undefined, no_clear=false) {
-
     let r = this.getDefault("border-radius");
-    r = 3;
 
     g.translate(0, y);
     ui_base.drawRoundBox(this, this.canvas, g, w, sh, r, "fill", color, undefined, true);
@@ -1318,15 +1323,12 @@ export class NumSliderSimpleBase extends UIBase {
     ui_base.drawRoundBox(this, this.canvas, g, w, sh, r, "stroke", bcolor, undefined, true);
     g.translate(0, -y);
 
-    //g.beginPath();
-    //g.rect(0, y, w, sh);
-    //g.fill();
-
     if (this.highlight === 1) {
       color = this.getDefault("BoxHighlight");
     } else {
       color = this.getDefault("border-color");
     }
+
     g.strokeStyle = color;
     g.stroke();
 
@@ -1385,8 +1387,10 @@ export class NumSliderSimpleBase extends UIBase {
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
 
+    let range = this.uiRange || this.range;
+
     x = (x - boxw*0.5)/w2;
-    x = x*(this.range[1] - this.range[0]) + this.range[0];
+    x = x*(range[1] - range[0]) + range[0];
 
     return x;
   }
@@ -1396,7 +1400,11 @@ export class NumSliderSimpleBase extends UIBase {
     let dpi = UIBase.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let x = this._value;
-    x = (x - this.range[0])/(this.range[1] - this.range[0]);
+
+    let range = this.uiRange || this.range;
+
+    x = (x - range[0])/(range[1] - range[0]);
+
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
 
@@ -1538,6 +1546,14 @@ export class SliderWithTextbox extends ColumnFrame {
     this.textbox.range = this._numslider.range;
   }
 
+  get editAsBaseUnit() {
+    return this.numslider.editAsBaseUnit;
+  }
+
+  set editAsBaseUnit(v) {
+    this.numslider.editAsBaseUnit = v;
+  }
+
   get range() {
     return this.numslider.range;
   }
@@ -1576,6 +1592,14 @@ export class SliderWithTextbox extends ColumnFrame {
 
   set isInt(v) {
     this.numslider.isInt = v;
+  }
+
+  get slideSpeed() {
+    return this.numslider.slideSpeed;
+  }
+
+  set slideSpeed(v) {
+    this.numslider.slideSpeed = v;
   }
 
   get radix() {
@@ -1835,30 +1859,6 @@ export class SliderWithTextbox extends ColumnFrame {
     if (val !== this._last_value) {
       this._last_value = this._value = val;
       this.updateTextBox();
-    }
-
-    if (!this.baseUnit && prop.baseUnit) {
-      this.baseUnit = prop.baseUnit;
-    }
-
-    if (prop.decimalPlaces !== undefined) {
-      this.decimalPlaces = prop.decimalPlaces;
-    }
-
-    if (prop.range !== undefined) {
-      this.range = [prop.range[0], prop.range[1]];
-    }
-
-    if (this.editAsBaseUnit === undefined) {
-      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
-        this.editAsBaseUnit = true;
-      } else {
-        this.editAsBaseUnit = false;
-      }
-    }
-
-    if (!this.displayUnit && prop.displayUnit) {
-      this.displayUnit = prop.displayUnit;
     }
   }
 

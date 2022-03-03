@@ -71,9 +71,10 @@ function api_define_brushsettings(api) {
     .range(0.25, 1024)
     .uiRange(0.25, 512)
     .decimalPlaces(1)
-    .expRate(1.5)
+    .expRate(1.25)
     .unit("pixel")
-    .step(0.5);
+    .step(1.0)
+    .slideSpeed(5.0);
 
   st.float("spacing", "spacing", "spacing").range(0.01, 4).decimalPlaces(2).noUnits()
     .expRate(1.4).step(0.025).simpleSlider();
