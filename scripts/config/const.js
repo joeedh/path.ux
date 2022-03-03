@@ -99,7 +99,7 @@ let exports = {
   //enter text as well
   useNumSliderTextboxes : true,
 
-  numSliderArrowLimit : 6, //threshold to check if numslider arrow was clicked
+  numSliderArrowLimit : 3, //threshold to check if numslider arrow was clicked
   simpleNumSliders : false,
 
   menu_close_time : 500,

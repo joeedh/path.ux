@@ -90,6 +90,8 @@ export class PlatformAPI {
       base = base.slice(0, base.length-1).trim();
     }
 
+    console.log("BASE", base);
+    
     path = (base + "/" + path).split("/")
     let path2 = [];
 

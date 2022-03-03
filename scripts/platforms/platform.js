@@ -10,4 +10,15 @@ export var platform;
 
 promise.then((module) => {
   platform = module.platform;
+  promise = undefined;
 });
+
+export function getPlatformAsync() {
+  if (promise) {
+    return promise;
+  }
+
+  return new Promise((accept, reject) => {
+    accept(platform);
+  })
+}

@@ -9,6 +9,8 @@ import * as util from "../path-controller/util/util.js";
 import {PropTypes, isNumber, PropSubTypes, PropFlags} from "../path-controller/toolsys/toolprop.js";
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
 import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
+import { color2css, css2color } from "../core/ui_theme.js";
+import { ThemeEditor } from "./theme_editor.js";
 
 export const sliderDomAttributes = new Set([
   "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
@@ -127,7 +129,13 @@ export class NumSlider extends ValueButtonBase {
     this._last_label = undefined;
 
     this.mdown = false;
+    this.ma = undefined;
 
+    this.mpos = new Vector2();
+    this.start_mpos = new Vector2();
+
+    this._last_overarrow = false;
+    
     this._name = "";
     this._step = 0.1;
     this._value = 0.0;
@@ -210,6 +218,19 @@ export class NumSlider extends ValueButtonBase {
       name = this.getAttribute("name");
     } else {
       name = "" + prop.uiname;
+    }
+
+    let range = prop.range;
+    if (range && !this.hasAttribute("min")) {
+      this.range[0] = range[0];
+    } else if (this.hasAttribute("min")) {
+      this.range[0] = parseFloat(this.getAttribute("min"));
+    }
+
+    if (range && !this.hasAttribute("max")) {
+      this.range[1] = range[1];
+    } else if (this.hasAttribute("max")) {
+      this.range[1] = parseFloat(this.getAttribute("max"));
     }
 
     if (name !== this._name) {
@@ -345,29 +366,36 @@ export class NumSlider extends ValueButtonBase {
     });
 
     let onmousedown = (e) => {
+      e.preventDefault();
+
       if (this.disabled) {
-        e.preventDefault();
+        this.mdown = false;
         e.stopPropagation();
 
         return;
       }
 
-      if (e.button === 0 && e.shiftKey) {
+      if (e.button) {
+        return;
+      }
+
+      this.mdown = true;
+
+      if (e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
 
         this.swapWithTextbox();
-      } else if (!e.button) {
+      } else if (this.overArrow(e.x, e.y)) {
+        this._on_click(e);
+      } else {
         this.dragStart(e);
-        this.mdown = true;
-
-        e.preventDefault();
         e.stopPropagation();
       }
     }
 
-    let onmouseup = this._on_click = (e) => {
-      this.mdown = false;
+    this._on_click = (e) => {
+      this.setMpos(e);
 
       if (this.disabled) {
         e.preventDefault();
@@ -376,34 +404,37 @@ export class NumSlider extends ValueButtonBase {
         return;
       }
 
-      let r = this.getClientRects()[0];
-      let x = e.x;
+      let step;
 
-      if (r) {
-        x -= r.x;
-        let sz = this._getArrowSize();
-
-        let v = this.value;
-
-        let step = this.step || 0.01;
-        if (this.isInt) {
-          step = Math.max(step, 1);
-        } else {
-          step *= 5.0;
+      if (step = this.overArrow(e.x, e.y)) {
+        if (e.shiftKey) {
+          step *= 0.1;
         }
 
-        let szmargin = Math.min(sz*8.0, r.width*0.4);
+        console.error(this.value, step, this.value + step);
 
-        if (x < szmargin) {
-          this.setValue(v - step);
-        } else if (x > r.width - szmargin) {
-          this.setValue(v + step);
-        }
+        //debugger;
+        this.setValue(this.value + step);
+        console.error(this.value);
       }
     }
 
+    this.addEventListener("mousemove", (e) => {
+      this.setMpos(e);
+
+      console.log(this.mdown, this.start_mpos.vectorDistance(this.mpos));
+
+      if (this.mdown && !this._modaldata && this.mpos.vectorDistance(this.start_mpos) > 13) {
+        this.dragStart(e);
+      }
+    });
+
     this.addEventListener("dblclick", (e) => {
-      if (this.disabled) {
+      this.setMpos(e);
+
+      this.mdown = false;
+
+      if (this.disabled || this.overArrow(e.x, e.y)) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -412,14 +443,21 @@ export class NumSlider extends ValueButtonBase {
 
       e.preventDefault();
       e.stopPropagation();
+
       this.swapWithTextbox();
     });
 
     this.addEventListener("mousedown", (e) => {
+      this.setMpos(e);
+      
       if (this.disabled) return;
       onmousedown(e);
-    });
+    }, {capture : true});
 
+    this.addEventListener("mouseup", (e) => {
+      console.warn("Mouse up!", this.modalRunning);
+      this.mdown = false;
+    })
     /*
     this.addEventListener("touchstart", (e) => {
       if (this.disabled) return;
@@ -439,8 +477,8 @@ export class NumSlider extends ValueButtonBase {
     //});
 
     this.addEventListener("mouseover", (e) => {
+      this.setMpos(e);
       if (this.disabled) return;
-      console.log("mouse over!", e);
 
       if (!this._highlight) {
         this._highlight = true;
@@ -455,6 +493,7 @@ export class NumSlider extends ValueButtonBase {
     });
 
     this.addEventListener("mouseout", (e) => {
+      this.setMpos(e);
       if (this.disabled) return;
 
       this._highlight = false;
@@ -465,7 +504,61 @@ export class NumSlider extends ValueButtonBase {
     })
   }
 
+  /*
+  set mdown(v) {
+    console.warn("set mdown", v)
+    this._mdown = v;
+  }
+
+  get mdown() {
+    return this._mdown;
+  }//*/
+
+  overArrow(x, y) {
+    let r = this.getBoundingClientRect();
+    let rwidth, rx;
+
+    if (this.vertical) {
+      rwidth = r.height;
+      rx = r.y;
+      x = y;
+    } else {
+      rwidth = r.width;
+      rx = r.x;
+    }
+    
+    x -= rx;
+    let sz = this._getArrowSize();
+
+    let szmargin = sz + cconst.numSliderArrowLimit;
+
+    let step = this.step || 0.01;
+    
+    if (this.isInt) {
+      step = Math.max(step, 1);
+    }
+
+    if (isNaN(step)) {
+      console.error("NaN step size", "step:", this.step, "numslider:", this._id);
+      this.flash("red");
+      step = this.isInt ? 1 : 0.1;
+    }
+
+    if (x < szmargin) {
+      return -step;
+    } else if (x > rwidth - szmargin) {
+      return step;
+    }
+
+    return 0;
+  }
+
   doRange() {
+    console.warn("Deprecated: NumSlider.prototype.doRange, use checkDomAttrs instead!");
+    this.checkDomAttrs();
+  }
+
+  checkDomAttrs() {
     if (this.hasAttribute("min")) {
       this.range[0] = parseFloat(this.getAttribute("min"));
     }
@@ -487,7 +580,9 @@ export class NumSlider extends ValueButtonBase {
       this._value = Math.floor(this._value);
     }
 
-    this.doRange();
+    console.log(this.checkDomAttrs);
+
+    this.checkDomAttrs();
 
     if (this.ctx && this.hasAttribute("datapath")) {
       this.setPathValue(this.ctx, this.getAttribute("datapath"), this._value);
@@ -500,11 +595,39 @@ export class NumSlider extends ValueButtonBase {
     this._redraw();
   }
 
+  setMpos(e) {
+    this.mpos[0] = e.x;
+    this.mpos[1] = e.y;
+
+    if (!this.mdown) {
+      this.start_mpos[0] = e.x;
+      this.start_mpos[1] = e.y;
+    }
+
+    let over = this.overArrow(e.x, e.y);
+    
+    if (over !== this._last_overarrow) {
+      this._last_overarrow = over;
+      this._redraw();
+    }
+  }
+
   dragStart(e) {
+    this.mdown = false;
+
     if (this.disabled) return;
+
+    if (this.modalRunning) {
+      console.log("modal already running for numslider", this);
+      return;
+    }
+
+    this.last_time = util.time_ms();
 
     let last_background = this.dom._background;
     let cancel;
+
+    this.ma = new util.MovingAvg(8);
 
     let startvalue = this.value;
     let value = startvalue;
@@ -536,12 +659,18 @@ export class NumSlider extends ValueButtonBase {
 
       on_mousemove: (e) => {
         if (this.disabled) return;
-
+        
         e.preventDefault();
         e.stopPropagation();
-
-        let dx = (this.vertical ? e.y : e.x) - startx;
-        startx = (this.vertical ? e.y : e.x)
+        
+        let x = this.ma.add(this.vertical ? e.y : e.x);
+        let dx = x - startx;
+        startx = x;
+        
+        if (util.time_ms() - this.last_time < 35) {
+          return;
+        }
+        this.last_time = util.time_ms();
 
         if (e.shiftKey) {
           dx *= 0.1;
@@ -556,12 +685,18 @@ export class NumSlider extends ValueButtonBase {
         let dvalue = value - startvalue;
         let dsign = Math.sign(dvalue);
 
+        let expRate = this._expRate;
+
+        //if (eventWasTouch(e)) {
+        //  expRate = (1 + expRate)*0.5;
+        //}
+
         if (!this.hasAttribute("linear")) {
-          dvalue = Math.pow(Math.abs(dvalue), this._expRate)*dsign;
+          dvalue = Math.pow(Math.abs(dvalue), expRate)*dsign;
         }
 
         this.value = startvalue + dvalue;
-        this.doRange();
+        this.checkDomAttrs();
 
         /*
         if (e.shiftKey) {
@@ -579,21 +714,10 @@ export class NumSlider extends ValueButtonBase {
       },
 
       on_mouseup: (e) => {
-        let dpi = UIBase.getDPI();
-
-        let limit = cconst.numSliderArrowLimit;
-        limit = limit === undefined ? 6 : limit;
-        limit *= dpi;
-
-        let dv = this.vertical ? starty - e.y : startx - e.x;
+        this.setMpos(e);
 
         this.undoBreakPoint();
         cancel(false);
-
-        //check for arrow click
-        if (sumdelta < limit) {
-          this._on_click(e);
-        }
 
         e.preventDefault();
         e.stopPropagation();
@@ -816,11 +940,18 @@ export class NumSlider extends ValueButtonBase {
       let f = 1.0 - (c[0] + c[1] + c[2])*perc;
 
       f = ~~(f*255);
-      g.fillStyle = `rgba(${f},${f},${f},0.95)`;
+      arrowcolor = `rgba(${f},${f},${f},0.95)`;
 
-    } else {
-      g.fillStyle = arrowcolor;
     }
+
+    arrowcolor = css2color(arrowcolor);
+    let higharrow = css2color(this.getDefault("BoxHighlight"));
+    higharrow.interp(arrowcolor, 0.5);
+
+    arrowcolor = color2css(arrowcolor);
+    higharrow = color2css(higharrow);
+
+    let over = this._highlight ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
 
     let d = 7, w = canvas.width, h = canvas.height;
     let sz = this._getArrowSize();
@@ -831,18 +962,32 @@ export class NumSlider extends ValueButtonBase {
       g.lineTo(w*0.5 + sz*0.5, d + sz);
       g.lineTo(w*0.5 - sz*0.5, d + sz);
 
+      g.fillStyle = over < 0 ? higharrow : arrowcolor;
+      g.fill();
+
+      g.beginPath();
       g.moveTo(w*0.5, h - d);
       g.lineTo(w*0.5 + sz*0.5, h - sz - d);
       g.lineTo(w*0.5 - sz*0.5, h - sz - d);
+      
+      g.fillStyle = over > 0 ? higharrow : arrowcolor;
+      g.fill();
     } else {
       g.beginPath();
       g.moveTo(d, h*0.5);
       g.lineTo(d + sz, h*0.5 + sz*0.5);
       g.lineTo(d + sz, h*0.5 - sz*0.5);
 
+      g.fillStyle = over < 0 ? higharrow : arrowcolor;
+      g.fill();
+
+      g.beginPath();
       g.moveTo(w - d, h*0.5);
       g.lineTo(w - sz - d, h*0.5 + sz*0.5);
       g.lineTo(w - sz - d, h*0.5 - sz*0.5);
+      
+      g.fillStyle = over > 0 ? higharrow : arrowcolor;
+      g.fill();
     }
 
     g.fill();
@@ -879,6 +1024,7 @@ export class NumSliderSimpleBase extends UIBase {
 
     this.step = 0.1;
     this._value = 0.5;
+    this.ma = undefined;
     this._focus = false;
 
     this.modal = undefined;
@@ -992,6 +1138,8 @@ export class NumSliderSimpleBase extends UIBase {
       return;
     }
 
+    this.ma = new util.MovingAvg(4);
+
     let end = () => {
       if (this._modal === undefined) {
         return;
@@ -1005,6 +1153,13 @@ export class NumSliderSimpleBase extends UIBase {
 
     this.modal = {
       mousemove: (e) => {
+        let x = e.x, y = e.y;
+      
+        x = this.ma.add(x);
+        
+        let e2 = new MouseEvent(e, {
+          x, y
+        });
         this._setFromMouse(e);
       },
 
