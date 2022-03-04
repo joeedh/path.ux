@@ -427,7 +427,7 @@ export class AppState {
     let args2 = new StartArgs();
 
     let methodsCheck = [
-      "saveFile", "createFile"
+      "saveFile", "createFile", "loadFile"
     ];
 
     for (let method of methodsCheck) {
