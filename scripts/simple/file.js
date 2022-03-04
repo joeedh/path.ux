@@ -111,7 +111,7 @@ export function loadFile(appstate, args, data) {
   }
 
   args = new FileArgs(args);
-  
+
   if (!args.useJSON) {
     if (data instanceof Array) {
       data = (new Uint8Array(data)).buffer;
@@ -126,8 +126,10 @@ export function loadFile(appstate, args, data) {
     }
 
     header = nstructjs.readObject(data, FileHeader);
-  } else if (typeof data === "string") {
-    data = JSON.parse(data);
+  } else {
+    if (typeof data === "string") {
+      data = JSON.parse(data);
+    }
 
     header = nstructjs.readJSON(data, FileHeader);
   }
