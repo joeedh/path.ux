@@ -27774,7 +27774,7 @@ const DefaultTheme = {
       variant: 'normal',
       style  : 'normal',
       size   : 12,
-      color  : 'rgb(225,225,225)'
+      color  : 'rgb(55,55,55)'
     }),
     "background-color": "rgba(72,72,72,0)",
     "border-radius"   : 5,
@@ -58933,6 +58933,8 @@ class SimpleAppOpenOp extends ToolOp {
             });
         });
       }
+    }).catch(error => {
+      ctx.error(error.message);
     });
   }
 }
@@ -59526,18 +59528,22 @@ class platform$3 extends PlatformAPI {
     let types = getWebFilters(args.filters);
 
     return new Promise((accept, reject) => {
-      window.showOpenFilePicker({
-        multiple : args.multi,
-        types
-      }).then(arg => {
-        let paths = [];
+      try {
+        window.showOpenFilePicker({
+          multiple: args.multi,
+          types
+        }).then(arg => {
+          let paths = [];
 
-        for (let file of arg) {
-          paths.push(new FilePath(file, file.name));
-        }
+          for (let file of arg) {
+            paths.push(new FilePath(file, file.name));
+          }
 
-        accept(paths);
-      });
+          accept(paths);
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
     /*
     let exts = [];
@@ -59573,7 +59579,14 @@ class platform$3 extends PlatformAPI {
 
     return new Promise((accept, reject) => {
       let fname;
-      let saveHandle = window.showSaveFilePicker({types});
+      let saveHandle;
+
+      try {
+        saveHandle = window.showSaveFilePicker({types});
+      } catch (error) {
+        reject(error);
+      }
+
       let handle;
 
       saveHandle.then((handle1) => {
