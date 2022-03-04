@@ -1,3 +1,5 @@
+import 'https://joeedh.github.io/path.ux/dist/pathux.js';
+
 if (typeof window === "undefined" && typeof global !== "undefined") {
   global.window = global;
 }
@@ -7446,6 +7448,158 @@ class ArrayPool {
   }
 }
 
+/** jsFiddle-friendly */
+class DivLogger {
+  constructor(elemId, maxLines=16) {
+    this.elemId = elemId;
+    this.elem = undefined;
+    this.lines = new Array();
+    this.maxLines = maxLines;
+  }
+
+  push(line) {
+    if (this.lines.length > this.maxLines) {
+      this.lines.shift();
+      this.lines.push(line);
+    } else {
+      this.lines.push(line);
+    }
+
+    this.update();
+  }
+
+  update() {
+    let buf = this.lines.join(`<br>`);
+    buf = buf.replace(/[ \t]/g, "&nbsp;");
+
+    if (!this.elem) {
+      this.elem = document.getElementById(this.elemId);
+    }
+
+    this.elem.innerHTML = buf;
+  }
+
+  toString(obj, depth=0) {
+    let s = '';
+
+    let tab = '';
+    for (let i=0; i<depth; i++) {
+      tab += '$TAB';
+    }
+
+    if (typeof obj === "symbol") {
+      return `[${obj.description}]`;
+    }
+
+    const DEPTH_LIMIT = 1;
+    const CHAR_LIMIT = 100;
+
+    if (typeof obj === "object" && Array.isArray(obj)) {
+      s = "[$NL";
+      for (let i=0; i<obj.length; i++) {
+        let v = obj[i];
+
+        if (depth >= DEPTH_LIMIT) {
+          v = typeof v;
+        } else {
+          v = this.toString(v, depth+1);
+        }
+
+        s += tab + "$TAB";
+        s += v + (i !== obj.length - 1 ? "," : "") + "$NL";
+      }
+
+      let keys = Reflect.ownKeys(obj);
+      for (let i=0; i<keys.length; i++) {
+        let k = keys[i];
+        let n;
+
+        let k2 = this.toString(k);
+
+        if (typeof k !== "symbol" && !isNaN(n = parseInt(k))) {
+          if (n >= 0 && n < obj.length) {
+            continue;
+          }
+        }
+
+        let v;
+        try {
+          v = obj[k];
+        } catch (error) {
+          v = "(error)";
+        }
+
+        s += tab + `$TAB${k2} : ${v}`;
+
+        if (i < keys.length-1) {
+          s += ",";
+        }
+
+        if (!s.endsWith("$NL") && !s.endsWith("\n")) {
+          s += "$NL";
+        }
+      }
+      s += "$TAB]$NL";
+
+      if (s.length < CHAR_LIMIT) {
+        s = s.replace(/\$NL/g, "");
+        s = s.replace(/(\$TAB)+/g, " ");
+      } else {
+        s = s.replace(/\$NL/g, "\n");
+        s = s.replace(/\$TAB/g, "  ");
+      }
+    } else if (typeof obj === "object") {
+      s = '{$NL';
+
+      let keys = Reflect.ownKeys(obj);
+      for (let i=0; i<keys.length; i++) {
+        let k = keys[i];
+        let k2 = this.toString(k);
+
+        let v;
+        try {
+          v = obj[k];
+        } catch (error) {
+          v = '(error)';
+        }
+
+        if (depth >= DEPTH_LIMIT) {
+          v = typeof v;
+        } else {
+          v = this.toString(v, depth+1);
+        }
+
+        s += tab + `$TAB${k2} : ${v}`;
+
+        if (i < keys.length-1) {
+          s += ",";
+        }
+
+        if (!s.endsWith("$NL") && !s.endsWith("\n")) {
+          s += "$NL";
+        }
+      }
+      s += tab + "}$NL";
+
+      if (s.length < CHAR_LIMIT) {
+        s = s.replace(/\$NL/g, "");
+        s = s.replace(/(\$TAB)+/g, " ");
+      } else {
+        s = s.replace(/\$NL/g, "\n");
+        s = s.replace(/\$TAB/g, "  ");
+      }
+    } else if (typeof obj === "undefined") {
+      s = 'undefined';
+    } else if (typeof obj === "function") {
+      s = 'function ' + obj.name;
+    } else {
+      s = "" + obj;
+    }
+
+    return s;
+  }
+}
+
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   isDenormal: isDenormal,
@@ -7491,7 +7645,8 @@ var util1 = /*#__PURE__*/Object.freeze({
   IDMap: IDMap,
   MinHeapQueue: MinHeapQueue,
   Queue: Queue,
-  ArrayPool: ArrayPool
+  ArrayPool: ArrayPool,
+  DivLogger: DivLogger
 });
 
 const EulerOrders = {
@@ -10521,6 +10676,585 @@ var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
   StringSetPropertyIF: StringSetPropertyIF,
   Curve1DPropertyIF: Curve1DPropertyIF
 });
+
+/*
+all units convert to meters
+*/
+
+const FLT_EPSILONE = 1.192092895507812e-07;
+
+function myfloor(f) {
+  return Math.floor(f + FLT_EPSILONE*2.0);
+}
+
+function normString(s) {
+  //remove all whitespace
+  s = s.replace(/ /g, "").replace(/\t/g, "");
+  return s.toLowerCase();
+}
+
+function myToFixed(f, decimals) {
+  if (typeof f !== "number") {
+    return "(error)";
+  }
+
+  f = f.toFixed(decimals);
+  while (f.endsWith("0") && f.search(/\./) >= 0) {
+    f = f.slice(0, f.length - 1);
+  }
+
+  if (f.endsWith(".")) {
+    f = f.slice(0, f.length - 1);
+  }
+
+  if (f.length === 0)
+    f = "0";
+
+  return f.trim();
+}
+
+const Units = [];
+
+class Unit {
+  static getUnit(name) {
+    if (name === "none" || name === undefined) {
+      return undefined;
+    }
+
+    for (let cls of Units) {
+      if (cls.unitDefine().name === name) {
+        return cls;
+      }
+    }
+
+    throw new Error("Unknown unit " + name);
+  }
+
+  static register(cls) {
+    Units.push(cls);
+  }
+
+  //subclassed static methods start here
+  static unitDefine() {
+    return {
+      name   : "",
+      uiname : "",
+      type   : "", //e.g. distance
+      icon   : -1,
+      pattern: undefined //a re literal to validate strings
+    }
+  }
+
+  static parse(string) {
+
+  }
+
+  static validate(string) {
+    string = normString(string);
+    let def = this.unitDefine();
+
+    let m = string.match(def.pattern);
+    if (!m)
+      return false;
+
+    return m[0] === string;
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+
+  }
+
+  static fromInternal(value) {
+
+  }
+
+  static buildString(value, decimals = 2) {
+
+  }
+}
+
+class MeterUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "meter",
+      uiname : "Meter",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d*)?m$/
+    }
+  }
+
+  static parse(string) {
+    string = normString(string);
+    if (string.endsWith("m")) {
+      string = string.slice(0, string.length - 1);
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value;
+  }
+
+  static fromInternal(value) {
+    return value;
+  }
+
+  static buildString(value, decimals = 2) {
+    return "" + myToFixed(value, decimals) + " m";
+  }
+}
+
+Unit.register(MeterUnit);
+
+class InchUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "inch",
+      uiname : "Inch",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d*)?(in|inch)$/
+    }
+  }
+
+  static parse(string) {
+    string = string.toLowerCase();
+    let i = string.indexOf("i");
+
+    if (i >= 0) {
+      string = string.slice(0, i);
+    }
+
+    return parseInt(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*0.0254;
+  }
+
+  static fromInternal(value) {
+    return value/0.0254;
+  }
+
+  static buildString(value, decimals = 2) {
+    return "" + myToFixed(value, decimals) + "in";
+  }
+}
+
+Unit.register(InchUnit);
+
+let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
+
+class FootUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "foot",
+      uiname : "Foot",
+      type   : "distance",
+      icon   : -1,
+      pattern: foot_re
+    }
+  }
+
+  static parse(string) {
+    string = normString(string);
+    let i = string.search("ft");
+    let parts = [];
+    let vft = 0.0, vin = 0.0;
+
+    if (i >= 0) {
+      parts = string.split("ft");
+      let j = parts[1].search("in");
+
+      if (j >= 0) {
+        parts = [parts[0]].concat(parts[1].split("in"));
+        vin = parseFloat(parts[1]);
+      }
+
+      vft = parseFloat(parts[0]);
+    } else {
+      string = string.replace(/in/g, "");
+      vin = parseFloat(string);
+    }
+
+    return vin/12.0 + vft;
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*0.3048;
+  }
+
+  static fromInternal(value) {
+    return value/0.3048;
+  }
+
+  static buildString(value, decimals = 2) {
+    let vft = myfloor(value);
+    let vin = ((value + FLT_EPSILONE*2)*12)%12;
+
+    if (vft === 0.0) {
+      return myToFixed(vin, decimals) + " in";
+    }
+
+    let s = "" + vft + " ft";
+    if (vin !== 0.0) {
+      s += " " + myToFixed(vin, decimals) + " in";
+    }
+
+    return s;
+  }
+}
+
+Unit.register(FootUnit);
+
+
+let square_foot_re = /((-?\d+(\.\d*)?ft(\u00b2)?)(-?\d+(\.\d*)?(in|inch)(\u00b2)?)?)|(-?\d+(\.\d*)?(in|inch)(\u00b2)?)$/;
+
+class SquareFootUnit extends FootUnit {
+  static unitDefine() {
+    return {
+      name   : "square_foot",
+      uiname : "Square Feet",
+      type   : "area",
+      icon   : -1,
+      pattern: square_foot_re
+    }
+  }
+
+  static parse(string) {
+    string = string.replace(/\u00b2/g, "");
+    return super.parse(string);
+  }
+
+
+  static buildString(value, decimals = 2) {
+    let vft = myfloor(value);
+    let vin = ((value + FLT_EPSILONE*2)*12)%12;
+
+    if (vft === 0.0) {
+      return myToFixed(vin, decimals) + " in\u00b2";
+    }
+
+    let s = "" + vft + " ft\u00b2";
+    if (vin !== 0.0) {
+      s += " " + myToFixed(vin, decimals) + " in\u00b2";
+    }
+
+    return s;
+  }
+}
+
+Unit.register(SquareFootUnit);
+
+
+class MileUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "mile",
+      uiname : "Mile",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d+)?miles$/
+    }
+  }
+
+  static parse(string) {
+    string = normString(string);
+    string = string.replace(/miles/, "");
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value*1609.34;
+  }
+
+  static fromInternal(value) {
+    return value/1609.34;
+  }
+
+  static buildString(value, decimals = 3) {
+    return "" + myToFixed(value, decimals) + " miles";
+  }
+}
+
+Unit.register(MileUnit);
+
+class DegreeUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "degree",
+      uiname : "Degrees",
+      type   : "angle",
+      icon   : -1,
+      pattern: /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)$/
+    }
+  }
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("d") >= 0) {
+      string = string.slice(0, string.search("d")).trim();
+    } else if (string.search("\u00B0") >= 0) {
+      string = string.slice(0, string.search("\u00B0")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value/180.0*Math.PI;
+  }
+
+  static fromInternal(value) {
+    return value*180.0/Math.PI;
+  }
+
+  static buildString(value, decimals = 3) {
+    return "" + myToFixed(value, decimals) + " \u00B0";
+  }
+};
+Unit.register(DegreeUnit);
+
+class RadianUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "radian",
+      uiname : "Radians",
+      type   : "angle",
+      icon   : -1,
+      pattern: /-?\d+(\.\d+)?(r|rad|radian|radians)$/
+    }
+  }
+
+  static parse(string) {
+    string = normString(string);
+    if (string.search("r") >= 0) {
+      string = string.slice(0, string.search("r")).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value;
+  }
+
+  static fromInternal(value) {
+    return value;
+  }
+
+  static buildString(value, decimals = 3) {
+    return "" + myToFixed(value, decimals) + " r";
+  }
+};
+
+Unit.register(RadianUnit);
+
+function setBaseUnit(unit) {
+  Unit.baseUnit = unit;
+}
+
+window._getBaseUnit = () => Unit.baseUnit;
+
+function setMetric(val) {
+  Unit.isMetric = val;
+}
+
+Unit.isMetric = true;
+Unit.baseUnit = "meter";
+
+let numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/;
+let numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/;
+let hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
+let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
+let binre = /[+\-]?0b[01]+$/;
+let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
+let intre = /[+\-]?[0-9]+$/;
+
+function isnumber(s) {
+  s = ("" + s).trim();
+
+  function test(re) {
+    return s.search(re) === 0;
+  }
+
+  return test(intre) || test(numre1) || test(numre2) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
+}
+
+
+function parseValueIntern(string, baseUnit = undefined) {
+  string = string.trim();
+  if (string[0] === ".") {
+    string = "0" + string;
+  }
+
+  if (typeof baseUnit === "string") {
+    let base = Unit.getUnit(baseUnit);
+
+    if (base === undefined && baseUnit !== "none") {
+      console.warn("Unknown unit " + baseUnit);
+      return NaN;
+    }
+
+    baseUnit = base;
+  }
+
+  //unannotated string?
+  if (isnumber(string)) {
+    //assume base unit
+    let f = parseFloat(string);
+
+    return f;
+  }
+
+  if (baseUnit === undefined) {
+    console.warn("No base unit in units.js:parseValueIntern");
+  }
+
+  for (let unit of Units) {
+    let def = unit.unitDefine();
+
+    if (unit.validate(string)) {
+      console.log(unit);
+      let value = unit.parse(string);
+
+      if (baseUnit) {
+        value = unit.toInternal(value);
+        return baseUnit.fromInternal(value);
+      } else {
+        return value;
+      }
+    }
+  }
+
+  return NaN;
+}
+
+/* if displayUnit is undefined, final value will be converted from displayUnit to baseUnit */
+function parseValue(string, baseUnit = undefined, displayUnit = undefined) {
+  displayUnit = Unit.getUnit(displayUnit);
+  baseUnit = Unit.getUnit(baseUnit);
+
+  let f = parseValueIntern(string, displayUnit || baseUnit);
+
+  if (baseUnit) {
+    if (displayUnit) {
+      f = displayUnit.toInternal(f);
+    }
+
+    f = baseUnit.fromInternal(f);
+  }
+
+  return f;
+}
+
+function isNumber(string) {
+  if (isnumber(string)) {
+    return true;
+  }
+
+  for (let unit of Units) {
+    let def = unit.unitDefine();
+
+    if (unit.validate(string)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+class PixelUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "pixel",
+      uiname : "Pixel",
+      type   : "distance",
+      icon   : -1,
+      pattern: /-?\d+(\.\d*)?px$/
+    }
+  }
+
+  static parse(string) {
+    string = normString(string);
+    if (string.endsWith("px")) {
+      string = string.slice(0, string.length - 2).trim();
+    }
+
+    return parseFloat(string);
+  }
+
+  //convert to internal units,
+  //e.g. meters for distance
+  static toInternal(value) {
+    return value;
+  }
+
+  static fromInternal(value) {
+    return value;
+  }
+
+  static buildString(value, decimals = 2) {
+    return "" + myToFixed(value, decimals) + "px";
+  }
+}
+
+Unit.register(PixelUnit);
+
+function convert(value, unita, unitb) {
+  if (typeof unita === "string")
+    unita = Unit.getUnit(unita);
+
+  if (typeof unitb === "string")
+    unitb = Unit.getUnit(unitb);
+
+  return unitb.fromInternal(unita.toInternal(value));
+}
+
+/**
+ *
+ * @param value Note: is not converted to internal unit
+ * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
+ * @returns {*}
+ */
+function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, displayUnit = Unit.baseUnit) {
+  if (typeof baseUnit === "string" && baseUnit !== "none") {
+    baseUnit = Unit.getUnit(baseUnit);
+  }
+  if (typeof displayUnit === "string" && displayUnit !== "none") {
+    displayUnit = Unit.getUnit(displayUnit);
+  }
+
+
+  if (baseUnit !== "none" && displayUnit !== baseUnit && displayUnit !== "none") {
+    value = convert(value, baseUnit, displayUnit);
+  }
+
+  if (displayUnit !== "none") {
+    return displayUnit.buildString(value, decimalPlaces);
+  } else {
+    return myToFixed(value, decimalPlaces);
+  }
+}
+
+window._parseValueTest = parseValue;
+window._buildStringTest = buildString;
 
 let config = {
   doubleClickTime : 500,
@@ -15500,18 +16234,8 @@ StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty$1) + `
 `;
 nstructjs.register(StringProperty);
 ToolProperty$1.internalRegister(StringProperty);
-
-let num_res = [
-  /([0-9]+)/,
-  /((0x)?[0-9a-fA-F]+(h?))/,
-  /([0-9]+\.[0-9]*)/,
-  /([0-9]*\.[0-9]+)/,
-  /(\.[0-9]+)/
-];
-
-//num_re = /([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)/
-
-function isNumber(f) {
+/*
+export function isNumber(f) {
   if (f === "NaN" || (typeof f == "number" && isNaN(f))) {
     return false;
   }
@@ -15521,7 +16245,7 @@ function isNumber(f) {
   let ok = false;
 
   for (let re of num_res) {
-    let ret = f.match(re);
+    let ret = f.match(re)
     if (!ret) {
       ok = false;
       continue;
@@ -15534,9 +16258,9 @@ function isNumber(f) {
   }
 
   return ok;
-}
+}*/
 
-window.isNumber = isNumber;
+//window.isNumber = isNumber;
 
 class NumProperty extends ToolProperty$1 {
   constructor(type, value, apiname,
@@ -21493,585 +22217,6 @@ class Animator {
   }
 }
 
-/*
-all units convert to meters
-*/
-
-const FLT_EPSILONE = 1.192092895507812e-07;
-
-function myfloor(f) {
-  return Math.floor(f + FLT_EPSILONE*2.0);
-}
-
-function normString(s) {
-  //remove all whitespace
-  s = s.replace(/ /g, "").replace(/\t/g, "");
-  return s.toLowerCase();
-}
-
-function myToFixed(f, decimals) {
-  if (typeof f !== "number") {
-    return "(error)";
-  }
-
-  f = f.toFixed(decimals);
-  while (f.endsWith("0") && f.search(/\./) >= 0) {
-    f = f.slice(0, f.length - 1);
-  }
-
-  if (f.endsWith(".")) {
-    f = f.slice(0, f.length - 1);
-  }
-
-  if (f.length === 0)
-    f = "0";
-
-  return f.trim();
-}
-
-const Units = [];
-
-class Unit {
-  static getUnit(name) {
-    if (name === "none" || name === undefined) {
-      return undefined;
-    }
-
-    for (let cls of Units) {
-      if (cls.unitDefine().name === name) {
-        return cls;
-      }
-    }
-
-    throw new Error("Unknown unit " + name);
-  }
-
-  static register(cls) {
-    Units.push(cls);
-  }
-
-  //subclassed static methods start here
-  static unitDefine() {
-    return {
-      name   : "",
-      uiname : "",
-      type   : "", //e.g. distance
-      icon   : -1,
-      pattern: undefined //a re literal to validate strings
-    }
-  }
-
-  static parse(string) {
-
-  }
-
-  static validate(string) {
-    string = normString(string);
-    let def = this.unitDefine();
-
-    let m = string.match(def.pattern);
-    if (!m)
-      return false;
-
-    return m[0] === string;
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-
-  }
-
-  static fromInternal(value) {
-
-  }
-
-  static buildString(value, decimals = 2) {
-
-  }
-}
-
-class MeterUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "meter",
-      uiname : "Meter",
-      type   : "distance",
-      icon   : -1,
-      pattern: /-?\d+(\.\d*)?m$/
-    }
-  }
-
-  static parse(string) {
-    string = normString(string);
-    if (string.endsWith("m")) {
-      string = string.slice(0, string.length - 1);
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value;
-  }
-
-  static fromInternal(value) {
-    return value;
-  }
-
-  static buildString(value, decimals = 2) {
-    return "" + myToFixed(value, decimals) + " m";
-  }
-}
-
-Unit.register(MeterUnit);
-
-class InchUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "inch",
-      uiname : "Inch",
-      type   : "distance",
-      icon   : -1,
-      pattern: /-?\d+(\.\d*)?(in|inch)$/
-    }
-  }
-
-  static parse(string) {
-    string = string.toLowerCase();
-    let i = string.indexOf("i");
-
-    if (i >= 0) {
-      string = string.slice(0, i);
-    }
-
-    return parseInt(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value*0.0254;
-  }
-
-  static fromInternal(value) {
-    return value/0.0254;
-  }
-
-  static buildString(value, decimals = 2) {
-    return "" + myToFixed(value, decimals) + "in";
-  }
-}
-
-Unit.register(InchUnit);
-
-let foot_re = /((-?\d+(\.\d*)?ft)(-?\d+(\.\d*)?(in|inch))?)|(-?\d+(\.\d*)?(in|inch))$/;
-
-class FootUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "foot",
-      uiname : "Foot",
-      type   : "distance",
-      icon   : -1,
-      pattern: foot_re
-    }
-  }
-
-  static parse(string) {
-    string = normString(string);
-    let i = string.search("ft");
-    let parts = [];
-    let vft = 0.0, vin = 0.0;
-
-    if (i >= 0) {
-      parts = string.split("ft");
-      let j = parts[1].search("in");
-
-      if (j >= 0) {
-        parts = [parts[0]].concat(parts[1].split("in"));
-        vin = parseFloat(parts[1]);
-      }
-
-      vft = parseFloat(parts[0]);
-    } else {
-      string = string.replace(/in/g, "");
-      vin = parseFloat(string);
-    }
-
-    return vin/12.0 + vft;
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value*0.3048;
-  }
-
-  static fromInternal(value) {
-    return value/0.3048;
-  }
-
-  static buildString(value, decimals = 2) {
-    let vft = myfloor(value);
-    let vin = ((value + FLT_EPSILONE*2)*12)%12;
-
-    if (vft === 0.0) {
-      return myToFixed(vin, decimals) + " in";
-    }
-
-    let s = "" + vft + " ft";
-    if (vin !== 0.0) {
-      s += " " + myToFixed(vin, decimals) + " in";
-    }
-
-    return s;
-  }
-}
-
-Unit.register(FootUnit);
-
-
-let square_foot_re = /((-?\d+(\.\d*)?ft(\u00b2)?)(-?\d+(\.\d*)?(in|inch)(\u00b2)?)?)|(-?\d+(\.\d*)?(in|inch)(\u00b2)?)$/;
-
-class SquareFootUnit extends FootUnit {
-  static unitDefine() {
-    return {
-      name   : "square_foot",
-      uiname : "Square Feet",
-      type   : "area",
-      icon   : -1,
-      pattern: square_foot_re
-    }
-  }
-
-  static parse(string) {
-    string = string.replace(/\u00b2/g, "");
-    return super.parse(string);
-  }
-
-
-  static buildString(value, decimals = 2) {
-    let vft = myfloor(value);
-    let vin = ((value + FLT_EPSILONE*2)*12)%12;
-
-    if (vft === 0.0) {
-      return myToFixed(vin, decimals) + " in\u00b2";
-    }
-
-    let s = "" + vft + " ft\u00b2";
-    if (vin !== 0.0) {
-      s += " " + myToFixed(vin, decimals) + " in\u00b2";
-    }
-
-    return s;
-  }
-}
-
-Unit.register(SquareFootUnit);
-
-
-class MileUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "mile",
-      uiname : "Mile",
-      type   : "distance",
-      icon   : -1,
-      pattern: /-?\d+(\.\d+)?miles$/
-    }
-  }
-
-  static parse(string) {
-    string = normString(string);
-    string = string.replace(/miles/, "");
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value*1609.34;
-  }
-
-  static fromInternal(value) {
-    return value/1609.34;
-  }
-
-  static buildString(value, decimals = 3) {
-    return "" + myToFixed(value, decimals) + " miles";
-  }
-}
-
-Unit.register(MileUnit);
-
-class DegreeUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "degree",
-      uiname : "Degrees",
-      type   : "angle",
-      icon   : -1,
-      pattern: /-?\d+(\.\d+)?(\u00B0|degree|deg|d|degree|degrees)$/
-    }
-  }
-
-  static parse(string) {
-    string = normString(string);
-    if (string.search("d") >= 0) {
-      string = string.slice(0, string.search("d")).trim();
-    } else if (string.search("\u00B0") >= 0) {
-      string = string.slice(0, string.search("\u00B0")).trim();
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value/180.0*Math.PI;
-  }
-
-  static fromInternal(value) {
-    return value*180.0/Math.PI;
-  }
-
-  static buildString(value, decimals = 3) {
-    return "" + myToFixed(value, decimals) + " \u00B0";
-  }
-};
-Unit.register(DegreeUnit);
-
-class RadianUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "radian",
-      uiname : "Radians",
-      type   : "angle",
-      icon   : -1,
-      pattern: /-?\d+(\.\d+)?(r|rad|radian|radians)$/
-    }
-  }
-
-  static parse(string) {
-    string = normString(string);
-    if (string.search("r") >= 0) {
-      string = string.slice(0, string.search("r")).trim();
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value;
-  }
-
-  static fromInternal(value) {
-    return value;
-  }
-
-  static buildString(value, decimals = 3) {
-    return "" + myToFixed(value, decimals) + " r";
-  }
-};
-
-Unit.register(RadianUnit);
-
-function setBaseUnit(unit) {
-  Unit.baseUnit = unit;
-}
-
-window._getBaseUnit = () => Unit.baseUnit;
-
-function setMetric(val) {
-  Unit.isMetric = val;
-}
-
-Unit.isMetric = true;
-Unit.baseUnit = "meter";
-
-let numre1 = /[+\-]?[0-9]+(\.[0-9]*)?$/;
-let numre2 = /[+\-]?[0-9]?(\.[0-9]*)+$/;
-let hexre1 = /[+\-]?[0-9a-fA-F]+h$/;
-let hexre2 = /[+\-]?0x[0-9a-fA-F]+$/;
-let binre = /[+\-]?0b[01]+$/;
-let expre = /[+\-]?[0-9]+(\.[0-9]*)?[eE]\-?[0-9]+$/;
-let intre = /[+\-]?[0-9]+$/;
-
-function isnumber(s) {
-  s = ("" + s).trim();
-
-  function test(re) {
-    return s.search(re) === 0;
-  }
-
-  return test(intre) || test(numre1) || test(numre2) || test(hexre1) || test(hexre2) || test(binre) || test(expre);
-}
-
-
-function parseValueIntern(string, baseUnit = undefined) {
-  string = string.trim();
-  if (string[0] === ".") {
-    string = "0" + string;
-  }
-
-  if (typeof baseUnit === "string") {
-    let base = Unit.getUnit(baseUnit);
-
-    if (base === undefined && baseUnit !== "none") {
-      console.warn("Unknown unit " + baseUnit);
-      return NaN;
-    }
-
-    baseUnit = base;
-  }
-
-  //unannotated string?
-  if (isnumber(string)) {
-    //assume base unit
-    let f = parseFloat(string);
-
-    return f;
-  }
-
-  if (baseUnit === undefined) {
-    console.warn("No base unit in units.js:parseValueIntern");
-  }
-
-  for (let unit of Units) {
-    let def = unit.unitDefine();
-
-    if (unit.validate(string)) {
-      console.log(unit);
-      let value = unit.parse(string);
-
-      if (baseUnit) {
-        value = unit.toInternal(value);
-        return baseUnit.fromInternal(value);
-      } else {
-        return value;
-      }
-    }
-  }
-
-  return NaN;
-}
-
-/* if displayUnit is undefined, final value will be converted from displayUnit to baseUnit */
-function parseValue(string, baseUnit = undefined, displayUnit = undefined) {
-  displayUnit = Unit.getUnit(displayUnit);
-  baseUnit = Unit.getUnit(baseUnit);
-
-  let f = parseValueIntern(string, displayUnit || baseUnit);
-
-  if (baseUnit) {
-    if (displayUnit) {
-      f = displayUnit.toInternal(f);
-    }
-
-    f = baseUnit.fromInternal(f);
-  }
-
-  return f;
-}
-
-function isNumber$1(string) {
-  if (isnumber(string)) {
-    return true;
-  }
-
-  for (let unit of Units) {
-    let def = unit.unitDefine();
-
-    if (unit.validate(string)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-class PixelUnit extends Unit {
-  static unitDefine() {
-    return {
-      name   : "pixel",
-      uiname : "Pixel",
-      type   : "distance",
-      icon   : -1,
-      pattern: /-?\d+(\.\d*)?px$/
-    }
-  }
-
-  static parse(string) {
-    string = normString(string);
-    if (string.endsWith("px")) {
-      string = string.slice(0, string.length - 2).trim();
-    }
-
-    return parseFloat(string);
-  }
-
-  //convert to internal units,
-  //e.g. meters for distance
-  static toInternal(value) {
-    return value;
-  }
-
-  static fromInternal(value) {
-    return value;
-  }
-
-  static buildString(value, decimals = 2) {
-    return "" + myToFixed(value, decimals) + "px";
-  }
-}
-
-Unit.register(PixelUnit);
-
-function convert(value, unita, unitb) {
-  if (typeof unita === "string")
-    unita = Unit.getUnit(unita);
-
-  if (typeof unitb === "string")
-    unitb = Unit.getUnit(unitb);
-
-  return unitb.fromInternal(unita.toInternal(value));
-}
-
-/**
- *
- * @param value Note: is not converted to internal unit
- * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
- * @returns {*}
- */
-function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, displayUnit = Unit.baseUnit) {
-  if (typeof baseUnit === "string" && baseUnit !== "none") {
-    baseUnit = Unit.getUnit(baseUnit);
-  }
-  if (typeof displayUnit === "string" && displayUnit !== "none") {
-    displayUnit = Unit.getUnit(displayUnit);
-  }
-
-
-  if (baseUnit !== "none" && displayUnit !== baseUnit && displayUnit !== "none") {
-    value = convert(value, baseUnit, displayUnit);
-  }
-
-  if (displayUnit !== "none") {
-    return displayUnit.buildString(value, decimalPlaces);
-  } else {
-    return myToFixed(value, decimalPlaces);
-  }
-}
-
-window._parseValueTest = parseValue;
-window._buildStringTest = buildString;
-
 class token$1 {
   constructor(type, val, lexpos, lexlen, lineno, lexer, parser) {
     this.type = type;
@@ -27177,10 +27322,6 @@ class DataAPI extends ModelInterface {
 
     return tool;
   }
-}
-
-function registerTool$1(cls) {
-  return DataAPI.registerTool(cls);
 }
 
 function initSimpleController() {
@@ -32682,7 +32823,7 @@ class TextBox$1 extends TextBoxBase {
         displayUnit = this.getAttribute("displayUnit");
       }
 
-      if (!isNumber$1(text.trim())) {
+      if (!isNumber(text.trim())) {
         this.flash(ErrorColors.ERROR, this.dom, undefined, false);
         this.focus();
         this.dom.focus();
@@ -44531,7 +44672,7 @@ class SliderWithTextbox extends ColumnFrame {
     let apply_textbox = () => {
       let text = textbox.text;
 
-      if (!isNumber$1(text)) {
+      if (!isNumber(text)) {
         textbox.flash("red");
         return;
       } else {
@@ -51797,7 +51938,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   ListIface: ListIface,
   ToolOpIface: ToolOpIface,
   setImplementationClass: setImplementationClass,
-  registerTool: registerTool$1,
+  registerTool: registerTool,
   pathParser: pathParser,
   pushReportName: pushReportName,
   popReportName: popReportName,
@@ -51824,6 +51965,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   buildToolSysAPI: buildToolSysAPI,
   PropTypes: PropTypes,
   PropFlags: PropFlags,
+  isNumber: isNumber,
   NumberConstraintsBase: NumberConstraintsBase,
   IntegerConstraints: IntegerConstraints,
   FloatConstrinats: FloatConstrinats,
@@ -51837,7 +51979,6 @@ var controller1 = /*#__PURE__*/Object.freeze({
   ToolProperty: ToolProperty$1,
   FloatArrayProperty: FloatArrayProperty,
   StringProperty: StringProperty,
-  isNumber: isNumber,
   NumProperty: NumProperty,
   _NumberPropertyBase: _NumberPropertyBase,
   IntProperty: IntProperty,
@@ -59262,7 +59403,7 @@ var simple1 = /*#__PURE__*/Object.freeze({
 const controller = controller1;
 setNotifier(ui_noteframe);
 const platform$2 = platform1;
-const electron_api = electron_api1;
+const electron_api$1 = electron_api1;
 const cconst$1 = exports;
 const simple = simple1;
 
@@ -59458,5 +59599,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform$3
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox$1 as TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber$1 as isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$1 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, quad_bilinear, registerTool$1 as registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox$1 as TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$1 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, quad_bilinear, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

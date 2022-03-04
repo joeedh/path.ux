@@ -2,7 +2,6 @@ import {Editor} from './editor.js';
 import {UIBase} from '../core/ui_base.js';
 import {nstructjs} from '../path-controller/controller.js';
 import {AreaFlags} from '../screen/ScreenArea.js';
-import {electron_api} from '../pathux.js';
 
 /** see ./editor.js:Editor.registerAppMenu */
 
