@@ -21392,7 +21392,7 @@ let exports = {
     areaContextPushes: false,
     allBordersMovable: false,
     doOnce: false,
-    modalEvents : true,
+    modalEvents : false,
     areaConstraintSolver : false,
     datapaths : false,
 
@@ -57561,6 +57561,10 @@ class Editor extends Area$1 {
    * }
    * */
   static registerAppMenu(makeMenuBar) {
+    if (this !== Editor) {
+      throw new Error("must call registerAppMenu from simple.Editor base class");
+    }
+
     this.makeMenuBar = makeMenuBar;
   }
 
