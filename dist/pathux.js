@@ -59234,16 +59234,17 @@ class AppState {
 
     for (let sarea of screen.sareas) {
       if (sarea.area instanceof MenuBarEditor) {
-        if (sarea.area.constructor === MenuBarEditor && !Editor.makeMenuBar) {
-          continue;
-        }
-
         ok = true;
         break;
       }
     }
 
     if (ok) {
+      return;
+    }
+
+    if (!Editor.makeMenuBar) {
+      /* don't make menu bar if Editor.registerAppMenu hasn't been called */
       return;
     }
 
