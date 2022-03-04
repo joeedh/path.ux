@@ -66,7 +66,7 @@ export function saveFile(appstate, args, objects) {
   if (args.useJSON === undefined) {
     args.useJSON = appstate.saveFilesInJSON;
   }
-  
+
   args = new FileArgs(args);
 
   let version = args.version;
@@ -106,6 +106,12 @@ export function saveFile(appstate, args, objects) {
 export function loadFile(appstate, args, data) {
   let header;
 
+  if (args.useJSON === undefined) {
+    args.useJSON = appstate.saveFilesInJSON;
+  }
+
+  args = new FileArgs(args);
+  
   if (!args.useJSON) {
     if (data instanceof Array) {
       data = (new Uint8Array(data)).buffer;
