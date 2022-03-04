@@ -58601,6 +58601,10 @@ EmptyStruct {
 nstructjs.register(EmptyStruct);
 
 function saveFile$1(appstate, args, objects) {
+  if (args.useJSON === undefined) {
+    args.useJSON = appstate.saveFilesInJSON;
+  }
+  
   args = new FileArgs(args);
 
   let version = args.version;
