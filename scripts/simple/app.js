@@ -209,18 +209,31 @@ export class AppState {
 
     this.fileMagic = "STRT";
     this.fileVersion = [0, 0, 1];
-    this.fileExt = "data";
+    this._fileExt = "data";
+    this._fileExtSet = false;
     this.saveFilesInJSON = false; /* save files in nstructjs-json */
 
     this.defaultEditorClass = undefined; //if undefined, the first non-menubar editor will be used
   }
 
+
+  get fileExt() {
+    return this._fileExt;
+  }
+
+  set fileExt(ext) {
+    this._fileExt = ext;
+    this._fileExtSet = true;
+  }
+
+  /** resets the undo stack */
   reset() {
     this.toolstack.reset();
   }
 
   /** Create a new file. See this.makeScreen() if you wish
-   *  to create a new screen at this time. */
+   *  to create a new screen at this time, and this.reset()
+   *  if you wish to reset the undo stack*/
   createNewFile() {
     console.warn("appstate.createNewFile: implement me, using default hack");
     let state = new this.constructor(this.ctx._ctxClass);
@@ -243,6 +256,15 @@ export class AppState {
     this.makeScreen();
   }
 
+  /** Serialize the application state. Takes
+   *  a list of objects to save (with nstructjs);
+   *  Subclasses should override this, like so:
+   *
+   *  saveFile(args={}) {
+   *    let objects = app state;
+   *    return super.saveFile(objects, args);
+   *  }
+   **/
   saveFile(objects, args = {}) {
     args = new FileArgs(Object.assign({
       magic  : this.fileMagic,
@@ -393,6 +415,19 @@ export class AppState {
   start(args = new StartArgs()) {
     let args2 = new StartArgs();
 
+    let methodsCheck = [
+      "saveFile", "createFile"
+    ];
+
+    for (let method of methodsCheck) {
+      let m1 = AppState.prototype[method];
+      let m2 = this[method];
+
+      if (m1 === m2) {
+        console.warn(`Warning: it is recommended to override .${method} when subclassing simple.AppState`);
+      }
+    }
+
     document.body.style["touch-action"] = "none";
 
     registerMenuBarEditor();
@@ -454,5 +489,13 @@ export class AppState {
     });
 
     nstructjs.validateStructs();
+
+    if (this.saveFilesInJSON && !this._fileExtSet) {
+      this._fileExt = "json";
+    }
+
+    if (this._fileExt.startsWith(".")) {
+      this._fileExt = this._fileExt.slice(1, this._fileExt.length).trim();
+    }
   }
 }
