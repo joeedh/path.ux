@@ -58786,7 +58786,9 @@ class MenuBarEditor extends Editor {
   }
 
   makeMenuBar(container) {
-    Editor.makeMenuBar(this.ctx, container, this);
+    if (Editor.makeMenuBar) {
+      Editor.makeMenuBar(this.ctx, container, this);
+    }
   }
 
   flagRebuild() {
@@ -59209,6 +59211,10 @@ class AppState {
 
     for (let sarea of screen.sareas) {
       if (sarea.area instanceof MenuBarEditor) {
+        if (sarea.area.constructor === MenuBarEditor && !Editor.makeMenuBar) {
+          continue;
+        }
+
         ok = true;
         break;
       }
