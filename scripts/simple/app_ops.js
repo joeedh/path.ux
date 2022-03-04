@@ -104,7 +104,9 @@ export class SimpleAppOpenOp extends ToolOp {
             });
         });
       }
-    });
+    }).catch(error => {
+      ctx.error(error.message);
+    })
   }
 }
 

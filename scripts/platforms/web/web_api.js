@@ -42,18 +42,22 @@ export class platform extends PlatformAPI {
     let types = getWebFilters(args.filters);
 
     return new Promise((accept, reject) => {
-      window.showOpenFilePicker({
-        multiple : args.multi,
-        types
-      }).then(arg => {
-        let paths = [];
+      try {
+        window.showOpenFilePicker({
+          multiple: args.multi,
+          types
+        }).then(arg => {
+          let paths = [];
 
-        for (let file of arg) {
-          paths.push(new FilePath(file, file.name));
-        }
+          for (let file of arg) {
+            paths.push(new FilePath(file, file.name));
+          }
 
-        accept(paths);
-      });
+          accept(paths);
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
     /*
     let exts = [];
@@ -89,7 +93,14 @@ export class platform extends PlatformAPI {
 
     return new Promise((accept, reject) => {
       let fname;
-      let saveHandle = window.showSaveFilePicker({types});
+      let saveHandle;
+
+      try {
+        saveHandle = window.showSaveFilePicker({types});
+      } catch (error) {
+        reject(error);
+      }
+
       let handle;
 
       saveHandle.then((handle1) => {

@@ -290,7 +290,7 @@ export const DefaultTheme = {
       variant: 'normal',
       style  : 'normal',
       size   : 12,
-      color  : 'rgb(225,225,225)'
+      color  : 'rgb(55,55,55)'
     }),
     "background-color": "rgba(72,72,72,0)",
     "border-radius"   : 5,
