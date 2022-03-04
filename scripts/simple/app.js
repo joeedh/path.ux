@@ -277,6 +277,16 @@ export class AppState {
     });
   }
 
+  /** It is recommended you override this to
+   *  handle setting data state, e.g.
+   *
+   *  loadFile(data, args) {
+   *    return super.loadFile(data, args).then((array_of_objects, fileMeta) => {
+   *      //load array_of_objects into appropriate properties
+   *      this.data = array_of_objects;
+   *    });
+   *  }
+   *  */
   loadFile(data, args = {}) {
     return new Promise((accept, reject) => {
       args = new FileArgs(Object.assign({
@@ -300,7 +310,7 @@ export class AppState {
         this.screen.completeUpdate();
       }
 
-      accept(ret);
+      accept(ret.objects, ret);
     });
   }
 
