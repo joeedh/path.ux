@@ -65,7 +65,9 @@ export class MenuBarEditor extends Editor {
   }
 
   makeMenuBar(container) {
-    Editor.makeMenuBar(this.ctx, container, this);
+    if (Editor.makeMenuBar) {
+      Editor.makeMenuBar(this.ctx, container, this);
+    }
   }
 
   flagRebuild() {
