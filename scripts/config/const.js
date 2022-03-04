@@ -113,7 +113,7 @@ let exports = {
     areaContextPushes: false,
     allBordersMovable: false,
     doOnce: false,
-    modalEvents : true,
+    modalEvents : false,
     areaConstraintSolver : false,
     datapaths : false,
 

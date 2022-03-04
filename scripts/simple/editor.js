@@ -204,6 +204,10 @@ export class Editor extends Area {
    * }
    * */
   static registerAppMenu(makeMenuBar) {
+    if (this !== Editor) {
+      throw new Error("must call registerAppMenu from simple.Editor base class");
+    }
+
     this.makeMenuBar = makeMenuBar;
   }
 
