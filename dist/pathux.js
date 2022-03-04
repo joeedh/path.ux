@@ -17011,6 +17011,11 @@ class Vec3Property extends VecPropertyBase {
     this.data = new Vector3(data);
   }
 
+  isColor() {
+    this.subtype = PropSubTypes$1.COLOR;
+    return this;
+  }
+
   setValue(v) {
     this.data.load(v);
 
@@ -17060,6 +17065,11 @@ class Vec4Property extends FloatProperty {
       this.data[3] = w;
     }
 
+    return this;
+  }
+
+  isColor() {
+    this.subtype = PropSubTypes$1.COLOR;
     return this;
   }
 
@@ -23443,8 +23453,9 @@ class ToolOp extends EventHandler {
 
       slots = {};
       let p = this.constructor;
+      let lastp = undefined;
 
-      while (p !== undefined && p !== Object && p !== ToolOp) {
+      while (p !== undefined && p !== Object && p !== ToolOp && p !== lastp) {
         if (p.tooldef) {
           let def = p.tooldef();
 
@@ -23466,8 +23477,9 @@ class ToolOp extends EventHandler {
               break;
             }
           }
-
         }
+
+        lastp = p;
         p = p.prototype.__proto__.constructor;
       }
 
