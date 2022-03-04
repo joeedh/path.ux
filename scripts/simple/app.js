@@ -40,17 +40,33 @@ import * as ui_noteframe from '../widgets/ui_noteframe.js';
  *
  * */
 function GetContextClass(ctxClass) {
+  let StateSymbol = Symbol("AppState ref");
+
   return class ContextDerived extends ctxClass {
+    constructor(state) {
+      super(...arguments);
+
+      this[StateSymbol] = state;
+    }
+
     get screen() {
-      return this._state.screen;
+      return this[StateSymbol].screen;
+    }
+
+    set state(v) {
+      this[StateSymbol] = v;
+    }
+
+    get state() {
+      return this[StateSymbol];
     }
 
     get api() {
-      return this._state.api;
+      return this[StateSymbol].api;
     }
 
     get toolstack() {
-      return this._state.toolstack;
+      return this[StateSymbol].toolstack;
     }
 
     toLocked() {
@@ -141,8 +157,10 @@ export class SimpleScreen extends Screen {
         this.ctx.toolstack.redo(this.ctx);
       }),
     ])
+  }
 
-    if (_appstate.startArgs.registerSaveOpenOps) {
+  init() {
+    if (this.ctx.state.startArgs.registerSaveOpenOps) {
       this.keymap.add(new HotKey("S", ["CTRL"], "app.save()"));
       this.keymap.add(new HotKey("O", ["CTRL"], "app.open()"));
     }
