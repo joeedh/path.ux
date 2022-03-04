@@ -63,6 +63,10 @@ EmptyStruct {
 nstructjs.register(EmptyStruct);
 
 export function saveFile(appstate, args, objects) {
+  if (args.useJSON === undefined) {
+    args.useJSON = appstate.saveFilesInJSON;
+  }
+  
   args = new FileArgs(args);
 
   let version = args.version;
