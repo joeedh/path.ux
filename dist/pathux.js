@@ -57160,7 +57160,6 @@ class Screen$2 extends UIBase$2 {
     this.clear();
 
     reader(this);
-    console.log("SAREAS", this.sareas.concat([]));
 
     //handle old files that might have saved as simple arrays
     this.size = new Vector2$d(this.size);
@@ -58679,8 +58678,6 @@ function loadFile$1(appstate, args, data) {
   let istruct = new nstructjs.STRUCT();
   istruct.parse_structs(header.schema);
 
-  console.log(header);
-
   let ret;
 
   if (!args.useJSON) {
@@ -59144,6 +59141,8 @@ class AppState {
     this.toolstack.reset();
   }
 
+  /** Create a new file. See this.makeScreen() if you wish
+   *  to create a new screen at this time. */
   createNewFile() {
     console.warn("appstate.createNewFile: implement me, using default hack");
     let state = new this.constructor(this.ctx._ctxClass);

@@ -219,6 +219,8 @@ export class AppState {
     this.toolstack.reset();
   }
 
+  /** Create a new file. See this.makeScreen() if you wish
+   *  to create a new screen at this time. */
   createNewFile() {
     console.warn("appstate.createNewFile: implement me, using default hack");
     let state = new this.constructor(this.ctx._ctxClass);

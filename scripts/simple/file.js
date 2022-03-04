@@ -141,8 +141,6 @@ export function loadFile(appstate, args, data) {
   let istruct = new nstructjs.STRUCT();
   istruct.parse_structs(header.schema);
 
-  console.log(header);
-
   let ret;
 
   if (!args.useJSON) {
