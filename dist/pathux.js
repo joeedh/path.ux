@@ -1,5 +1,3 @@
-import 'https://joeedh.github.io/path.ux/dist/pathux.js';
-
 if (typeof window === "undefined" && typeof global !== "undefined") {
   global.window = global;
 }
