@@ -277,15 +277,28 @@ export class AppState {
     });
   }
 
-  /** It is recommended you override this to
-   *  handle setting data state, e.g.
+  /**
+   *  Loads a new file. The default behavior is a
+   *  complete state reset (you can control this
+   *  with args.reset_toolstack, args.reset_context
+   *  and args.doScreen).
+   *
+   *  As the base class cannot know just what to do
+   *  with the loaded data (the objects parameter
+   *  passed to saveFile) it is recommended you
+   *  override this function like so:
    *
    *  loadFile(data, args) {
-   *    return super.loadFile(data, args).then((array_of_objects, fileMeta) => {
-   *      //load array_of_objects into appropriate properties
-   *      this.data = array_of_objects;
+   *    return super.loadFile(data, args).then(fileData) => {
+   *      // load fileData.objects into appropriate properties
+   *      // this is the same objects array originally passed
+   *      // to this.saveFile
+   *      this.data = fileData.objects;
    *    });
    *  }
+   *
+   *  @param {ArrayBuffer|JSON|DataView} data
+   *  @param {FileArgs} args
    *  */
   loadFile(data, args = {}) {
     return new Promise((accept, reject) => {
@@ -310,7 +323,7 @@ export class AppState {
         this.screen.completeUpdate();
       }
 
-      accept(ret.objects, ret);
+      accept(ret);
     });
   }
 
