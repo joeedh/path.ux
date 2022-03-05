@@ -437,7 +437,7 @@ The lexical scanner in this module was inspired by PyPLY
 http://www.dabeaz.com/ply/ply.html
 */
 
-class token {
+class token$1 {
   constructor(type, val, lexpos, lineno, lexer, parser) {
     this.type = type;
     this.value = val;
@@ -455,7 +455,7 @@ class token {
   }
 }
 
-class tokdef {
+class tokdef$1 {
   constructor(name, regexpr, func, example) {
     this.name = name;
     this.re = regexpr;
@@ -486,7 +486,7 @@ class PUTIL_ParseError extends Error {
   }
 }
 
-class lexer {
+class lexer$2 {
   constructor(tokdef, errfunc) {
     this.tokdef = tokdef;
     this.tokens = new Array();
@@ -616,7 +616,7 @@ class lexer {
     }
 
     let def = theres[0];
-    let tok = new token(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
+    let tok = new token$1(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
     this.lexpos += tok.value.length;
 
     if (def.func) {
@@ -630,7 +630,7 @@ class lexer {
   }
 }
 
-class parser {
+class parser$1 {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -745,12 +745,12 @@ class parser {
   }
 }
 
-function test_parser() {
+function test_parser$1() {
   let basic_types = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
   let reserved_tokens = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
 
   function tk(name, re, func) {
-    return new tokdef(name, re, func);
+    return new tokdef$1(name, re, func);
   }
 
   let tokens = [tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function (t) {
@@ -794,7 +794,7 @@ function test_parser() {
     return true;
   }
 
-  let lex = new lexer(tokens, errfunc);
+  let lex = new lexer$2(tokens, errfunc);
   console.log("Testing lexical scanner...");
   lex.input(a);
   let token;
@@ -882,11 +882,11 @@ function test_parser() {
 
 var struct_parseutil = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  token: token,
-  tokdef: tokdef,
+  token: token$1,
+  tokdef: tokdef$1,
   PUTIL_ParseError: PUTIL_ParseError,
-  lexer: lexer,
-  parser: parser
+  lexer: lexer$2,
+  parser: parser$1
 });
 
 "use strict";
@@ -982,7 +982,7 @@ function StructParser() {
   ]);
 
   function tk(name, re, func) {
-    return new tokdef(name, re, func);
+    return new tokdef$1(name, re, func);
   }
 
   let tokens = [
@@ -1037,8 +1037,8 @@ function StructParser() {
     return true;
   }
 
-  let lex = new lexer(tokens, errfunc);
-  let parser$1 = new parser(lex);
+  let lex = new lexer$2(tokens, errfunc);
+  let parser$1$1 = new parser$1(lex);
 
   function p_Static_String(p) {
     p.expect("STATIC_STRING");
@@ -1233,8 +1233,8 @@ function StructParser() {
     return st;
   }
 
-  parser$1.start = p_Struct;
-  return parser$1;
+  parser$1$1.start = p_Struct;
+  return parser$1$1;
 }
 
 const struct_parse = StructParser();
@@ -1594,7 +1594,7 @@ var struct_binpack = /*#__PURE__*/Object.freeze({
 });
 
 let warninglvl = 2;
-let debug = 0;
+let debug$1 = 0;
 
 let _static_envcode_null = "";
 let packer_debug, packer_debug_start, packer_debug_end;
@@ -1603,11 +1603,11 @@ let packdebug_tablevel = 0;
 function _get_pack_debug() {
   return {
     packer_debug, packer_debug_start, packer_debug_end,
-    debug, warninglvl
+    debug: debug$1, warninglvl
   }
 }
 
-class cachering extends Array {
+class cachering$1 extends Array {
   constructor(cb, tot) {
     super();
     this.length = tot;
@@ -1619,7 +1619,7 @@ class cachering extends Array {
   }
 
   static fromConstructor(cls, tot) {
-    return new cachering(() => new cls(), tot);
+    return new cachering$1(() => new cls(), tot);
   }
 
   next() {
@@ -1650,9 +1650,9 @@ function setWarningMode(t) {
 }
 
 function setDebugMode(t) {
-  debug = t;
+  debug$1 = t;
 
-  if (debug) {
+  if (debug$1) {
     packer_debug = function () {
       let tab = gen_tabstr$1(packdebug_tablevel);
 
@@ -1684,7 +1684,7 @@ function setDebugMode(t) {
   }
 }
 
-setDebugMode(debug);
+setDebugMode(debug$1);
 
 const StructFieldTypes = [];
 const StructFieldTypeMap = {};
@@ -1704,21 +1704,21 @@ function fromJSON(manager, val, obj, field, type, instance) {
 function unpack_field(manager, data, type, uctx) {
   let name;
 
-  if (debug) {
+  if (debug$1) {
     name = StructFieldTypeMap[type.type].define().name;
     packer_debug_start("R " + name);
   }
 
   let ret = StructFieldTypeMap[type.type].unpack(manager, data, type, uctx);
 
-  if (debug) {
+  if (debug$1) {
     packer_debug_end();
   }
 
   return ret;
 }
 
-let fakeFields = new cachering(() => {
+let fakeFields = new cachering$1(() => {
   return {type: undefined, get: undefined, set: undefined}
 }, 256);
 
@@ -1729,7 +1729,7 @@ function fmt_type(type) {
 function do_pack(manager, data, val, obj, field, type) {
   let name;
 
-  if (debug) {
+  if (debug$1) {
     name = StructFieldTypeMap[type.type].define().name;
     packer_debug_start("W " + name);
   }
@@ -1741,7 +1741,7 @@ function do_pack(manager, data, val, obj, field, type) {
 
   let ret = StructFieldTypeMap[typeid].pack(manager, data, val, obj, field, type);
 
-  if (debug) {
+  if (debug$1) {
     packer_debug_end();
   }
 
@@ -2735,7 +2735,7 @@ function updateDEBUG() {
 let warninglvl$1 = 2;
 
 var truncateDollarSign = true;
-var manager;
+var manager$1;
 
 function setTruncateDollarSign(v) {
   truncateDollarSign = !!v;
@@ -2804,7 +2804,7 @@ function setDebugMode$1(t) {
 let _ws_env$1 = [[undefined, undefined]];
 
 function do_pack$1(data, val, obj, thestruct, field, type) {
-  StructFieldTypeMap[field.type.type].pack(manager, data, val, obj, field, type);
+  StructFieldTypeMap[field.type.type].pack(manager$1, data, val, obj, field, type);
 }
 
 function define_empty_class(name) {
@@ -3081,7 +3081,7 @@ class STRUCT {
   //defaults to structjs.manager
   parse_structs(buf, defined_classes) {
     if (defined_classes === undefined) {
-      defined_classes = manager;
+      defined_classes = manager$1;
     }
 
     if (defined_classes instanceof STRUCT) {
@@ -3096,8 +3096,8 @@ class STRUCT {
     if (defined_classes === undefined) {
       defined_classes = [];
 
-      for (let k in manager.struct_cls) {
-        defined_classes.push(manager.struct_cls[k]);
+      for (let k in manager$1.struct_cls) {
+        defined_classes.push(manager$1.struct_cls[k]);
       }
     }
 
@@ -3713,7 +3713,7 @@ class STRUCT {
 };
 
 //main struct script manager
-manager = new STRUCT();
+manager$1 = new STRUCT();
 
 /**
  * Write all defined structs out to a string.
@@ -3721,7 +3721,7 @@ manager = new STRUCT();
  * @param nManager STRUCT instance, defaults to nstructjs.manager
  * @param include_code include save code snippets
  * */
-function write_scripts(nManager = manager, include_code = false) {
+function write_scripts(nManager = manager$1, include_code = false) {
   let buf = "";
 
   nManager.forEach(function (stt) {
@@ -3896,7 +3896,7 @@ class FileHelper {
     let struct = this.struct = new STRUCT();
 
     let scripts = unpack_string(dataview, this.unpack_ctx);
-    this.struct.parse_structs(scripts, manager);
+    this.struct.parse_structs(scripts, manager$1);
 
     let blocks = [];
     let dviewlen = dataview.buffer.byteLength;
@@ -3938,7 +3938,7 @@ class FileHelper {
   }
 
   write(blocks) {
-    this.struct = manager;
+    this.struct = manager$1;
     this.blocks = blocks;
 
     let data = [];
@@ -4029,7 +4029,7 @@ function truncateDollarSign$1(value = true) {
 }
 
 function validateStructs(onerror) {
-  return manager.validateStructs(onerror);
+  return manager$1.validateStructs(onerror);
 }
 
 /**
@@ -4048,23 +4048,23 @@ function getEndian() {
 }
 
 function setAllowOverriding(t) {
-  return manager.allowOverriding = !!t;
+  return manager$1.allowOverriding = !!t;
 }
 
 function isRegistered(cls) {
-  return manager.isRegistered(cls);
+  return manager$1.isRegistered(cls);
 }
 
 /** Register a class with nstructjs **/
-function register(cls, structName) {
-  return manager.register(cls, structName);
+function register$1(cls, structName) {
+  return manager$1.register(cls, structName);
 }
 
 function unregister(cls) {
-  manager.unregister(cls);
+  manager$1.unregister(cls);
 }
 
-function inherit(child, parent, structName = child.name) {
+function inherit$1(child, parent, structName = child.name) {
 
   return STRUCT.inherit(...arguments);
 }
@@ -4073,39 +4073,39 @@ function inherit(child, parent, structName = child.name) {
  @param data : DataView
  */
 function readObject(data, cls, __uctx = undefined) {
-  return manager.readObject(data, cls, __uctx);
+  return manager$1.readObject(data, cls, __uctx);
 }
 
 /**
  @param data : Array instance to write bytes to
  */
 function writeObject(data, obj) {
-  return manager.writeObject(data, obj);
+  return manager$1.writeObject(data, obj);
 }
 
 function writeJSON(obj) {
-  return manager.writeJSON(obj);
+  return manager$1.writeJSON(obj);
 }
 
 function readJSON(json, class_or_struct_id) {
-  return manager.readJSON(json, class_or_struct_id);
+  return manager$1.readJSON(json, class_or_struct_id);
 }
 
-var nstructjs = /*#__PURE__*/Object.freeze({
+var nstructjs$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   STRUCT: STRUCT,
   _truncateDollarSign: _truncateDollarSign,
   binpack: struct_binpack,
   filehelper: struct_filehelper,
   getEndian: getEndian,
-  inherit: inherit,
+  inherit: inherit$1,
   isRegistered: isRegistered,
-  get manager () { return manager; },
+  get manager () { return manager$1; },
   parser: struct_parser,
   parseutil: struct_parseutil,
   readJSON: readJSON,
   readObject: readObject,
-  register: register,
+  register: register$1,
   setAllowOverriding: setAllowOverriding,
   setDebugMode: setDebugMode$1,
   setEndian: setEndian$1,
@@ -5597,7 +5597,7 @@ function getClassParent(cls) {
 //make global for debugging purposes in console
 //window._getClassParent = getClassParent;
 
-function list(iterable) {
+function list$2(iterable) {
   let ret = [];
 
   for (let item of iterable) {
@@ -5738,7 +5738,7 @@ function time_ms() {
     return new Date().getMilliseconds();
 }
 
-function color2css$1(c) {
+function color2css$2(c) {
   var ret = c.length == 3 ? "rgb(" : "rgba(";
 
   for (var i = 0; i < 3; i++) {
@@ -5850,7 +5850,7 @@ if (debug_cacherings) {
   };
 }
 
-class cachering$1 extends Array {
+class cachering extends Array {
   constructor(func, size, isprivate = false) {
     super();
 
@@ -5872,7 +5872,7 @@ class cachering$1 extends Array {
       return new cls();
     };
 
-    return new cachering$1(func, size, isprivate);
+    return new cachering(func, size, isprivate);
   }
 
   next() {
@@ -5927,7 +5927,7 @@ class SetIter {
 
 
  * */
-class set$1 {
+class set$2 {
   constructor(input) {
     this.items = [];
     this.keys = {};
@@ -5991,7 +5991,7 @@ class set$1 {
 
   filter(f, thisvar) {
     let i = 0;
-    let ret = new set$1();
+    let ret = new set$2();
 
     for (let item of this) {
       if (f.call(thisvar, item, i++, this)) {
@@ -6004,7 +6004,7 @@ class set$1 {
   }
 
   map(f, thisvar) {
-    let ret = new set$1();
+    let ret = new set$2();
 
     let i = 0;
 
@@ -6032,7 +6032,7 @@ class set$1 {
   }
 
   copy() {
-    let ret = new set$1();
+    let ret = new set$2();
     for (let item of this) {
       ret.add(item);
     }
@@ -6325,7 +6325,7 @@ IDGen {
   cur : int;
 }
 `;
-nstructjs.register(IDGen);
+nstructjs$1.register(IDGen);
 
 
 function get_callstack(err) {
@@ -6747,7 +6747,7 @@ window._test_hash2 = () => {
   }
 };
 
-digestcache = cachering$1.fromConstructor(HashDigest, 512);
+digestcache = cachering.fromConstructor(HashDigest, 512);
 
 //globalThis._HashDigest = HashDigest;
 
@@ -6823,7 +6823,7 @@ class MapIter {
   }
 }
 
-class map {
+class map$1 {
   constructor() {
     this._items = {};
     this._list = [];
@@ -6926,7 +6926,7 @@ class map {
 }
 
 globalThis._test_map = function () {
-  let m = new map();
+  let m = new map$1();
 
   m.set("1", 2);
   m.set(11, 3);
@@ -7423,7 +7423,7 @@ class ArrayPool {
         tot = 1024;
       }
 
-      pool = new cachering$1(() => new Array(n), tot);
+      pool = new cachering(() => new Array(n), tot);
       if (n < 1024) {
         this.map[n] = pool;
       }
@@ -7614,18 +7614,18 @@ var util1 = /*#__PURE__*/Object.freeze({
   SmartConsole: SmartConsole,
   console: console$1,
   getClassParent: getClassParent,
-  list: list,
+  list: list$2,
   count: count,
   getAllKeys: getAllKeys,
   btoa: btoa$1,
   formatNumberUI: formatNumberUI,
   atob: atob$1,
   time_ms: time_ms,
-  color2css: color2css$1,
+  color2css: color2css$2,
   merge: merge,
-  cachering: cachering$1,
+  cachering: cachering,
   SetIter: SetIter,
-  set: set$1,
+  set: set$2,
   HashIter: HashIter,
   hashtable: hashtable,
   IDGen: IDGen,
@@ -7641,7 +7641,7 @@ var util1 = /*#__PURE__*/Object.freeze({
   HashDigest: HashDigest,
   hashjoin: hashjoin,
   MapIter: MapIter,
-  map: map,
+  map: map$1,
   IDMap: IDMap,
   MinHeapQueue: MinHeapQueue,
   Queue: Queue,
@@ -7673,7 +7673,7 @@ window.makeCompiledVectormathCode = function (mode = "es") {
     }
   }
 
-  let classes = [Vector2, Vector3, Vector4, a];
+  let classes = [Vector2$d, Vector3$2, Vector4$2, a];
   let lens = {
     Vector2: 2,
     Vector3: 3,
@@ -7871,9 +7871,9 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   }
 
   s += "\n\n" + ("" + internal_matrix).trim() + "\n";
-  s += "\n" + doExports("Matrix4") + Matrix4;
+  s += "\n" + doExports("Matrix4") + Matrix4$2;
 
-  s += `\n  Matrix4.STRUCT = \`${Matrix4.STRUCT}\`;\n`;
+  s += `\n  Matrix4.STRUCT = \`${Matrix4$2.STRUCT}\`;\n`;
   s += "nstructjs.register(Matrix4)\n";
 
   s += `
@@ -7913,7 +7913,7 @@ ${doExports("BaseVector")} class BaseVector extends Array {
   return s;
 };
 
-var sin                                                          = Math.sin, cos                                          = Math.cos, abs                          = Math.abs, log = Math.log,
+var sin$1                                                          = Math.sin, cos$1                                          = Math.cos, abs                          = Math.abs, log = Math.log,
     asin                                                         = Math.asin, exp                                        = Math.exp, acos = Math.acos, fract = Math.fract,
     sign = Math.sign, tent = Math.tent, atan2 = Math.atan2, atan = Math.atan,
     pow                                                          = Math.pow, sqrt = Math.sqrt, floor                      = Math.floor, ceil = Math.ceil,
@@ -8098,7 +8098,7 @@ function getBaseVector(parent) {
 
     init_swizzle(size) {
       var ret = {};
-      var cls = size === 4 ? Vector4 : (size === 3 ? Vector3 : Vector2);
+      var cls = size === 4 ? Vector4$2 : (size === 3 ? Vector3$2 : Vector2$d);
 
       for (var k in cls.prototype) {
         var v = cls.prototype[k];
@@ -8158,7 +8158,7 @@ function myclamp(f, a, b) {
   return Math.min(Math.max(f, a), b);
 }
 
-class Vector4 extends BaseVector {
+class Vector4$2 extends BaseVector {
   constructor(data) {
     super(4);
 
@@ -8273,7 +8273,7 @@ class Vector4 extends BaseVector {
     }
   }
 };
-Vector4.STRUCT = `
+Vector4$2.STRUCT = `
 vec4 {
   0 : float;
   1 : float;
@@ -8281,13 +8281,13 @@ vec4 {
   3 : float;
 }
 `;
-nstructjs.manager.add_class(Vector4);
+nstructjs$1.manager.add_class(Vector4$2);
 
 
 var _v3nd_n1_normalizedDot, _v3nd_n2_normalizedDot;
 var _v3nd4_n1_normalizedDot4, _v3nd4_n2_normalizedDot4;
 
-class Vector3 extends F64BaseVector {
+class Vector3$2 extends F64BaseVector {
   constructor(data) {
     super(3);
 
@@ -8301,7 +8301,7 @@ class Vector3 extends F64BaseVector {
       this.load(data);
     }
 
-    if (this.constructor === Vector3) {
+    if (this.constructor === Vector3$2) {
       Object.preventExtensions(this);
     }
   }
@@ -8441,11 +8441,11 @@ class Vector3 extends F64BaseVector {
     var y = this[1];
 
     if (axis === 1) {
-      this[0] = x*cos(A) + y*sin(A);
-      this[1] = y*cos(A) - x*sin(A);
+      this[0] = x*cos$1(A) + y*sin$1(A);
+      this[1] = y*cos$1(A) - x*sin$1(A);
     } else {
-      this[0] = x*cos(A) - y*sin(A);
-      this[1] = y*cos(A) + x*sin(A);
+      this[0] = x*cos$1(A) - y*sin$1(A);
+      this[1] = y*cos$1(A) + x*sin$1(A);
     }
 
     return this;
@@ -8466,16 +8466,16 @@ class Vector3 extends F64BaseVector {
   }
 }
 
-Vector3.STRUCT = `
+Vector3$2.STRUCT = `
 vec3 {
   0 : float;
   1 : float;
   2 : float;
 }
 `;
-nstructjs.manager.add_class(Vector3);
+nstructjs$1.manager.add_class(Vector3$2);
 
-class Vector2 extends BaseVector {
+class Vector2$d extends BaseVector {
   constructor(data) {
     super(2);
 
@@ -8541,11 +8541,11 @@ class Vector2 extends BaseVector {
     var y = this[1];
 
     if (axis === 1) {
-      this[0] = x*cos(A) + y*sin(A);
-      this[1] = y*cos(A) - x*sin(A);
+      this[0] = x*cos$1(A) + y*sin$1(A);
+      this[1] = y*cos$1(A) - x*sin$1(A);
     } else {
-      this[0] = x*cos(A) - y*sin(A);
-      this[1] = y*cos(A) + x*sin(A);
+      this[0] = x*cos$1(A) - y*sin$1(A);
+      this[1] = y*cos$1(A) + x*sin$1(A);
     }
 
     return this;
@@ -8607,17 +8607,17 @@ class Vector2 extends BaseVector {
     }
   }
 };
-Vector2.STRUCT = `
+Vector2$d.STRUCT = `
 vec2 {
   0 : float;
   1 : float;
 }
 `;
-nstructjs.manager.add_class(Vector2);
+nstructjs$1.manager.add_class(Vector2$d);
 
-let _quat_vs3_temps = cachering$1.fromConstructor(Vector3, 64);
+let _quat_vs3_temps = cachering.fromConstructor(Vector3$2, 64);
 
-class Quat extends Vector4 {
+class Quat extends Vector4$2 {
   makeUnitQuat() {
     this[0] = 1.0;
     this[1] = this[2] = this[3] = 0.0;
@@ -8675,7 +8675,7 @@ class Quat extends Vector4 {
 
     this[0] = co;
 
-    var last3 = Vector3([this[1], this[2], this[3]]);
+    var last3 = Vector3$2([this[1], this[2], this[3]]);
     last3.normalize();
     last3.mulScalar(si);
     this[1] = last3[0];
@@ -8686,7 +8686,7 @@ class Quat extends Vector4 {
 
   toMatrix(m) {
     if (m === undefined) {
-      m = new Matrix4();
+      m = new Matrix4$2();
     }
 
     var q0 = M_SQRT2*this[0];
@@ -8727,9 +8727,9 @@ class Quat extends Vector4 {
     mat.$matrix.m41 = mat.$matrix.m42 = mat.$matrix.m43 = 0;
     mat.$matrix.m44 = 1.0;
 
-    var r1 = new Vector3([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
-    var r2 = new Vector3([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
-    var r3 = new Vector3([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
+    var r1 = new Vector3$2([mat.$matrix.m11, mat.$matrix.m12, mat.$matrix.m13]);
+    var r2 = new Vector3$2([mat.$matrix.m21, mat.$matrix.m22, mat.$matrix.m23]);
+    var r3 = new Vector3$2([mat.$matrix.m31, mat.$matrix.m32, mat.$matrix.m33]);
 
     r1.normalize();
     r2.normalize();
@@ -8811,8 +8811,8 @@ class Quat extends Vector4 {
   }
 
   rotationBetweenVecs(v1, v2, fac = 1.0) {
-    v1 = new Vector3(v1);
-    v2 = new Vector3(v2);
+    v1 = new Vector3$2(v1);
+    v2 = new Vector3$2(v2);
     v1.normalize();
     v2.normalize();
 
@@ -8821,7 +8821,7 @@ class Quat extends Vector4 {
       return this;
     }
 
-    let axis = new Vector3(v1);
+    let axis = new Vector3$2(v1);
     axis.cross(v2);
 
     let angle = v1.preNormalizedAngle(v2)*fac;
@@ -8866,31 +8866,31 @@ class Quat extends Vector4 {
   }
 };
 
-Quat.STRUCT = nstructjs.inherit(Quat, Vector4, 'quat') + `
+Quat.STRUCT = nstructjs$1.inherit(Quat, Vector4$2, 'quat') + `
 }
 `;
-nstructjs.register(Quat);
+nstructjs$1.register(Quat);
 
-_v3nd4_n1_normalizedDot4 = new Vector3();
-_v3nd4_n2_normalizedDot4 = new Vector3();
-_v3nd_n1_normalizedDot = new Vector3();
-_v3nd_n2_normalizedDot = new Vector3();
+_v3nd4_n1_normalizedDot4 = new Vector3$2();
+_v3nd4_n2_normalizedDot4 = new Vector3$2();
+_v3nd_n1_normalizedDot = new Vector3$2();
+_v3nd_n2_normalizedDot = new Vector3$2();
 
-BaseVector.inherit(Vector4, 4);
-F64BaseVector.inherit(Vector3, 3);
-BaseVector.inherit(Vector2, 2);
+BaseVector.inherit(Vector4$2, 4);
+F64BaseVector.inherit(Vector3$2, 3);
+BaseVector.inherit(Vector2$d, 2);
 
-lookat_cache_vs3 = cachering$1.fromConstructor(Vector3, 64);
-lookat_cache_vs4 = cachering$1.fromConstructor(Vector4, 64);
+lookat_cache_vs3 = cachering.fromConstructor(Vector3$2, 64);
+lookat_cache_vs4 = cachering.fromConstructor(Vector4$2, 64);
 
-makenormalcache = cachering$1.fromConstructor(Vector3, 64);
+makenormalcache = cachering.fromConstructor(Vector3$2, 64);
 
-var $_v3nd_n1_normalizedDot = new Vector3();
-var $_v3nd_n2_normalizedDot = new Vector3();
-var $_v3nd4_n1_normalizedDot4 = new Vector3();
-var $_v3nd4_n2_normalizedDot4 = new Vector3();
-var $_v3nd4_n1_normalizedDot3 = new Vector3();
-var $_v3nd4_n2_normalizedDot3 = new Vector3();
+var $_v3nd_n1_normalizedDot = new Vector3$2();
+var $_v3nd_n2_normalizedDot = new Vector3$2();
+var $_v3nd4_n1_normalizedDot4 = new Vector3$2();
+var $_v3nd4_n2_normalizedDot4 = new Vector3$2();
+var $_v3nd4_n1_normalizedDot3 = new Vector3$2();
+var $_v3nd4_n2_normalizedDot3 = new Vector3$2();
 
 var M_SQRT2 = Math.sqrt(2.0);
 var FLT_EPSILON = 2.22e-16;
@@ -8925,7 +8925,7 @@ var temp_mats;
 
 let preMultTemp;
 
-class Matrix4 {
+class Matrix4$2 {
   constructor(m) {
     this.$matrix = new internal_matrix();
     this.isPersp = false;
@@ -8933,14 +8933,14 @@ class Matrix4 {
     if (typeof m === 'object') {
       if ("length" in m && m.length >= 16) {
         this.load(m);
-      } else if (m instanceof Matrix4) {
+      } else if (m instanceof Matrix4$2) {
         this.load(m);
       }
     }
   }
 
   static fromJSON() {
-    var mat = new Matrix4();
+    var mat = new Matrix4$2();
     mat.load(json.items);
     mat.isPersp = json.isPersp;
     return mat;
@@ -8951,7 +8951,7 @@ class Matrix4 {
   }
 
   clone() {
-    return new Matrix4(this);
+    return new Matrix4$2(this);
   }
 
   addToHashDigest(hash) {
@@ -9094,13 +9094,13 @@ class Matrix4 {
   }
 
   copyColumn(i) {
-    return this.copyColumnTo(i, new Vector3());
+    return this.copyColumnTo(i, new Vector3$2());
   }
 
   load() {
     if (arguments.length === 1 && typeof arguments[0] === 'object') {
       var matrix;
-      if (arguments[0] instanceof Matrix4) {
+      if (arguments[0] instanceof Matrix4$2) {
         matrix = arguments[0].$matrix;
         this.isPersp = arguments[0].isPersp;
         this.$matrix.m11 = matrix.m11;
@@ -9163,31 +9163,31 @@ class Matrix4 {
   }
 
   setUniform(ctx, loc, transpose) {
-    if (Matrix4.setUniformArray === undefined) {
-      Matrix4.setUniformWebGLArray = new Float32Array(16);
-      Matrix4.setUniformArray = new Array(16);
+    if (Matrix4$2.setUniformArray === undefined) {
+      Matrix4$2.setUniformWebGLArray = new Float32Array(16);
+      Matrix4$2.setUniformArray = new Array(16);
     }
 
-    Matrix4.setUniformArray[0] = this.$matrix.m11;
-    Matrix4.setUniformArray[1] = this.$matrix.m12;
-    Matrix4.setUniformArray[2] = this.$matrix.m13;
-    Matrix4.setUniformArray[3] = this.$matrix.m14;
-    Matrix4.setUniformArray[4] = this.$matrix.m21;
-    Matrix4.setUniformArray[5] = this.$matrix.m22;
-    Matrix4.setUniformArray[6] = this.$matrix.m23;
-    Matrix4.setUniformArray[7] = this.$matrix.m24;
-    Matrix4.setUniformArray[8] = this.$matrix.m31;
-    Matrix4.setUniformArray[9] = this.$matrix.m32;
-    Matrix4.setUniformArray[10] = this.$matrix.m33;
-    Matrix4.setUniformArray[11] = this.$matrix.m34;
-    Matrix4.setUniformArray[12] = this.$matrix.m41;
-    Matrix4.setUniformArray[13] = this.$matrix.m42;
-    Matrix4.setUniformArray[14] = this.$matrix.m43;
-    Matrix4.setUniformArray[15] = this.$matrix.m44;
+    Matrix4$2.setUniformArray[0] = this.$matrix.m11;
+    Matrix4$2.setUniformArray[1] = this.$matrix.m12;
+    Matrix4$2.setUniformArray[2] = this.$matrix.m13;
+    Matrix4$2.setUniformArray[3] = this.$matrix.m14;
+    Matrix4$2.setUniformArray[4] = this.$matrix.m21;
+    Matrix4$2.setUniformArray[5] = this.$matrix.m22;
+    Matrix4$2.setUniformArray[6] = this.$matrix.m23;
+    Matrix4$2.setUniformArray[7] = this.$matrix.m24;
+    Matrix4$2.setUniformArray[8] = this.$matrix.m31;
+    Matrix4$2.setUniformArray[9] = this.$matrix.m32;
+    Matrix4$2.setUniformArray[10] = this.$matrix.m33;
+    Matrix4$2.setUniformArray[11] = this.$matrix.m34;
+    Matrix4$2.setUniformArray[12] = this.$matrix.m41;
+    Matrix4$2.setUniformArray[13] = this.$matrix.m42;
+    Matrix4$2.setUniformArray[14] = this.$matrix.m43;
+    Matrix4$2.setUniformArray[15] = this.$matrix.m44;
 
-    Matrix4.setUniformWebGLArray.set(Matrix4.setUniformArray);
+    Matrix4$2.setUniformWebGLArray.set(Matrix4$2.setUniformArray);
 
-    ctx.uniformMatrix4fv(loc, transpose, Matrix4.setUniformWebGLArray);
+    ctx.uniformMatrix4fv(loc, transpose, Matrix4$2.setUniformWebGLArray);
 
     return this;
   }
@@ -9532,7 +9532,7 @@ class Matrix4 {
     if (z === undefined) {
       z = 0.0;
     }
-    window.Matrix4 = Matrix4;
+    window.Matrix4 = Matrix4$2;
 
     var xmat = euler_rotate_mats.next().makeIdentity();
     var m = xmat.$matrix;
@@ -9695,10 +9695,10 @@ class Matrix4 {
   normalize() {
     let m = this.$matrix;
 
-    let v1 = new Vector4([m.m11, m.m12, m.m13, m.m14]);
-    let v2 = new Vector4([m.m21, m.m22, m.m23, m.m24]);
-    let v3 = new Vector4([m.m31, m.m32, m.m33, m.m34]);
-    let v4 = new Vector4([m.m41, m.m42, m.m43, m.m44]);
+    let v1 = new Vector4$2([m.m11, m.m12, m.m13, m.m14]);
+    let v2 = new Vector4$2([m.m21, m.m22, m.m23, m.m24]);
+    let v3 = new Vector4$2([m.m31, m.m32, m.m33, m.m34]);
+    let v4 = new Vector4$2([m.m41, m.m42, m.m43, m.m44]);
 
     v1.normalize();
     v2.normalize();
@@ -10039,14 +10039,14 @@ class Matrix4 {
   }
 
   alignAxis(axis, vec) {
-    vec = new Vector3(vec);
+    vec = new Vector3$2(vec);
     vec.normalize();
 
     let mat = this.inputs.transformMatrix.getValue();
     let m = mat.$matrix;
 
-    let mat2 = new Matrix4(mat);
-    let loc = new Vector3(), scale = new Vector3(), rot = new Vector3();
+    let mat2 = new Matrix4$2(mat);
+    let loc = new Vector3$2(), scale = new Vector3$2(), rot = new Vector3$2();
 
     //we don't use rot
     mat2.decompose(loc, rot, scale);
@@ -10316,18 +10316,18 @@ class Matrix4 {
   }
 }
 
-Matrix4.STRUCT = `
+Matrix4$2.STRUCT = `
 mat4 {
   mat      : array(float) | this.getAsArray();
   isPersp  : int          | this.isPersp;
 }
 `;
-nstructjs.register(Matrix4);
+nstructjs$1.register(Matrix4$2);
 
-preMultTemp = new Matrix4();
+preMultTemp = new Matrix4$2();
 
 window.testmat = (x = 0, y = 0, z = Math.PI*0.5) => {
-  let m1 = new Matrix4();
+  let m1 = new Matrix4$2();
   m1.euler_rotate(x, y, z);
   //m1.scale(2.0, 0.5, 3.0);
 
@@ -10349,9 +10349,9 @@ window.testmat = (x = 0, y = 0, z = Math.PI*0.5) => {
   return r;
 };
 
-lookat_cache_ms = cachering$1.fromConstructor(Matrix4, 64);
-euler_rotate_mats = cachering$1.fromConstructor(Matrix4, 64);
-temp_mats = cachering$1.fromConstructor(Matrix4, 64);
+lookat_cache_ms = cachering.fromConstructor(Matrix4$2, 64);
+euler_rotate_mats = cachering.fromConstructor(Matrix4$2, 64);
+temp_mats = cachering.fromConstructor(Matrix4$2, 64);
 
 var vectormath1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -10359,16 +10359,16 @@ var vectormath1 = /*#__PURE__*/Object.freeze({
   BaseVector: BaseVector,
   F64BaseVector: F64BaseVector,
   F32BaseVector: F32BaseVector,
-  Vector4: Vector4,
-  Vector3: Vector3,
-  Vector2: Vector2,
+  Vector4: Vector4$2,
+  Vector3: Vector3$2,
+  Vector2: Vector2$d,
   Quat: Quat,
-  Matrix4: Matrix4
+  Matrix4: Matrix4$2
 });
 
 "use strict";
 
-let PropTypes = {
+let PropTypes$8 = {
   INT        : 1,
   STRING     : 2,
   BOOL       : 4,
@@ -10388,12 +10388,12 @@ let PropTypes = {
   //ITER : 8192<<1
 };
 
-const PropSubTypes = {
+const PropSubTypes$4 = {
   COLOR: 1
 };
 
 //flags
-const PropFlags = {
+const PropFlags$3 = {
   SELECT                : 1,
   PRIVATE               : 2,
   LABEL                 : 4,
@@ -10469,7 +10469,7 @@ class ToolPropertyIF {
 
 class StringPropertyIF extends ToolPropertyIF {
   constructor() {
-    super(PropTypes.STRING);
+    super(PropTypes$8.STRING);
   }
 }
 
@@ -10478,7 +10478,7 @@ class NumPropertyIF extends ToolPropertyIF {
 
 class IntPropertyIF extends ToolPropertyIF {
   constructor() {
-    super(PropTypes.INT);
+    super(PropTypes$8.INT);
   }
 
   setRadix(radix) {
@@ -10488,7 +10488,7 @@ class IntPropertyIF extends ToolPropertyIF {
 
 class FloatPropertyIF extends ToolPropertyIF {
   constructor() {
-    super(PropTypes.FLOAT);
+    super(PropTypes$8.FLOAT);
   }
 
   setDecimalPlaces(n) {
@@ -10497,7 +10497,7 @@ class FloatPropertyIF extends ToolPropertyIF {
 
 class EnumPropertyIF extends ToolPropertyIF {
   constructor(value, valid_values) {
-    super(PropTypes.ENUM);
+    super(PropTypes$8.ENUM);
 
     this.values = {};
     this.keys = {};
@@ -10538,25 +10538,25 @@ class EnumPropertyIF extends ToolPropertyIF {
 
 class FlagPropertyIF extends EnumPropertyIF {
   constructor(valid_values) {
-    super(PropTypes.FLAG);
+    super(PropTypes$8.FLAG);
   }
 }
 
 class Vec2PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
-    super(PropTypes.VEC2);
+    super(PropTypes$8.VEC2);
   }
 }
 
 class Vec3PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
-    super(PropTypes.VEC3);
+    super(PropTypes$8.VEC3);
   }
 }
 
 class Vec4PropertyIF extends ToolPropertyIF {
   constructor(valid_values) {
-    super(PropTypes.VEC4);
+    super(PropTypes$8.VEC4);
   }
 }
 
@@ -10568,7 +10568,7 @@ class ListPropertyIF extends ToolPropertyIF {
   * Prop must be a ToolProperty subclass instance
   * */
   constructor(prop) {
-    super(PropTypes.PROPLIST);
+    super(PropTypes$8.PROPLIST);
 
     this.prop = prop;
   }
@@ -10602,7 +10602,7 @@ class ListPropertyIF extends ToolPropertyIF {
 //like FlagsProperty but uses strings
 class StringSetPropertyIF extends ToolPropertyIF {
   constructor(value = undefined, definition = []) {
-    super(PropTypes.STRSET);
+    super(PropTypes$8.STRSET);
   }
 
   /*
@@ -10634,7 +10634,7 @@ class StringSetPropertyIF extends ToolPropertyIF {
 
 class Curve1DPropertyIF extends ToolPropertyIF {
   constructor(curve, uiname) {
-    super(PropTypes.CURVE);
+    super(PropTypes$8.CURVE);
 
     this.data = curve;
   }
@@ -10659,9 +10659,9 @@ class Curve1DPropertyIF extends ToolPropertyIF {
 
 var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  PropTypes: PropTypes,
-  PropSubTypes: PropSubTypes,
-  PropFlags: PropFlags,
+  PropTypes: PropTypes$8,
+  PropSubTypes: PropSubTypes$4,
+  PropFlags: PropFlags$3,
   ToolPropertyIF: ToolPropertyIF,
   StringPropertyIF: StringPropertyIF,
   NumPropertyIF: NumPropertyIF,
@@ -10693,7 +10693,7 @@ function normString(s) {
   return s.toLowerCase();
 }
 
-function myToFixed(f, decimals) {
+function myToFixed$2(f, decimals) {
   if (typeof f !== "number") {
     return "(error)";
   }
@@ -10806,7 +10806,7 @@ class MeterUnit extends Unit {
   }
 
   static buildString(value, decimals = 2) {
-    return "" + myToFixed(value, decimals) + " m";
+    return "" + myToFixed$2(value, decimals) + " m";
   }
 }
 
@@ -10845,7 +10845,7 @@ class InchUnit extends Unit {
   }
 
   static buildString(value, decimals = 2) {
-    return "" + myToFixed(value, decimals) + "in";
+    return "" + myToFixed$2(value, decimals) + "in";
   }
 }
 
@@ -10903,12 +10903,12 @@ class FootUnit extends Unit {
     let vin = ((value + FLT_EPSILONE*2)*12)%12;
 
     if (vft === 0.0) {
-      return myToFixed(vin, decimals) + " in";
+      return myToFixed$2(vin, decimals) + " in";
     }
 
     let s = "" + vft + " ft";
     if (vin !== 0.0) {
-      s += " " + myToFixed(vin, decimals) + " in";
+      s += " " + myToFixed$2(vin, decimals) + " in";
     }
 
     return s;
@@ -10942,12 +10942,12 @@ class SquareFootUnit extends FootUnit {
     let vin = ((value + FLT_EPSILONE*2)*12)%12;
 
     if (vft === 0.0) {
-      return myToFixed(vin, decimals) + " in\u00b2";
+      return myToFixed$2(vin, decimals) + " in\u00b2";
     }
 
     let s = "" + vft + " ft\u00b2";
     if (vin !== 0.0) {
-      s += " " + myToFixed(vin, decimals) + " in\u00b2";
+      s += " " + myToFixed$2(vin, decimals) + " in\u00b2";
     }
 
     return s;
@@ -10985,7 +10985,7 @@ class MileUnit extends Unit {
   }
 
   static buildString(value, decimals = 3) {
-    return "" + myToFixed(value, decimals) + " miles";
+    return "" + myToFixed$2(value, decimals) + " miles";
   }
 }
 
@@ -11024,7 +11024,7 @@ class DegreeUnit extends Unit {
   }
 
   static buildString(value, decimals = 3) {
-    return "" + myToFixed(value, decimals) + " \u00B0";
+    return "" + myToFixed$2(value, decimals) + " \u00B0";
   }
 };
 Unit.register(DegreeUnit);
@@ -11060,7 +11060,7 @@ class RadianUnit extends Unit {
   }
 
   static buildString(value, decimals = 3) {
-    return "" + myToFixed(value, decimals) + " r";
+    return "" + myToFixed$2(value, decimals) + " r";
   }
 };
 
@@ -11211,7 +11211,7 @@ class PixelUnit extends Unit {
   }
 
   static buildString(value, decimals = 2) {
-    return "" + myToFixed(value, decimals) + "px";
+    return "" + myToFixed$2(value, decimals) + "px";
   }
 }
 
@@ -11249,14 +11249,14 @@ function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, display
   if (displayUnit !== "none") {
     return displayUnit.buildString(value, decimalPlaces);
   } else {
-    return myToFixed(value, decimalPlaces);
+    return myToFixed$2(value, decimalPlaces);
   }
 }
 
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
 
-let config = {
+let config$1 = {
   doubleClickTime : 500,
 
   //auto load 1d bspline templates, can hurt startup time
@@ -11271,18 +11271,18 @@ let config = {
 
 function setConfig(obj) {
   for (let k in obj) {
-    config[k] = obj[k];
+    config$1[k] = obj[k];
   }
 }
 
 var config1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  config: config,
+  config: config$1,
   setConfig: setConfig,
-  'default': config
+  'default': config$1
 });
 
-let modalstack = [];
+let modalstack$1 = [];
 let singleMouseCBs = {};
 
 function singletonMouseEvents() {
@@ -11299,7 +11299,7 @@ function singletonMouseEvents() {
     }, type);
   };
 
-  let _mpos = new Vector2();
+  let _mpos = new Vector2$d();
 
   function doSingleCbs(e, type) {
     let list = singleMouseCBs[type];
@@ -11394,7 +11394,7 @@ class DoubleClickHandler {
     this.last = 0;
     this.dblEvent = undefined;
 
-    this.start_mpos = new Vector2();
+    this.start_mpos = new Vector2$d();
 
     this._on_mouseup = this._on_mouseup.bind(this);
     this._on_mousemove = this._on_mousemove.bind(this);
@@ -11406,7 +11406,7 @@ class DoubleClickHandler {
   }
 
   _on_mousemove(e) {
-    let mpos = new Vector2();
+    let mpos = new Vector2$d();
     mpos[0] = e.x; mpos[1] = e.y;
 
     let dist = mpos.vectorDistance(this.start_mpos) * devicePixelRatio;
@@ -11463,7 +11463,7 @@ class DoubleClickHandler {
       this.last = this.down;
       this.down = time_ms();
 
-      if (this.down - this.last < config.doubleClickTime) {
+      if (this.down - this.last < config$1.doubleClickTime) {
         this.mdown = false;
         this.ondblclick(this.dblEvent);
 
@@ -11482,12 +11482,12 @@ class DoubleClickHandler {
   }
 
   update() {
-    if (modalstack.length > 0) {
+    if (modalstack$1.length > 0) {
       //cancel double click requests
       this.mdown = false;
     }
 
-    if (this.mdown && time_ms() - this.down > config.doubleClickHoldTime) {
+    if (this.mdown && time_ms() - this.down > config$1.doubleClickHoldTime) {
       this.mdown = false;
       this.ondblclick(this.dblEvent);
     }
@@ -11574,15 +11574,15 @@ function copyEvent(e) {
   return ret;
 }
 
-let Screen;
+let Screen$2;
 function _setScreenClass(cls) {
-  Screen = cls;
+  Screen$2 = cls;
 }
 
 function findScreen() {
   let rec = (n) => {
     for (let n2 of n.childNodes) {
-      if (n2 && typeof n2 === "object" && n2 instanceof Screen) {
+      if (n2 && typeof n2 === "object" && n2 instanceof Screen$2) {
         return n2;
       }
     }
@@ -11607,7 +11607,7 @@ function _setModalAreaClass(cls) {
 }
 
 function pushModalLight(obj, autoStopPropagation=true) {
-  if (config.DEBUG.modalEvents) {
+  if (config$1.DEBUG.modalEvents) {
     console.warn("pushModalLight");
   }
 
@@ -11654,7 +11654,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
   function make_default_touchhandler(type, state) {
     return function(e) {
       //console.warn("touch event!", type, touchmap[type], e.touches.length);
-      if (config.DEBUG.domEvents) {
+      if (config$1.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -11705,7 +11705,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
 
   function make_handler(type, key) {
     return function(e) {
-      if (config.DEBUG.domEvents) {
+      if (config$1.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -11774,7 +11774,7 @@ function pushModalLight(obj, autoStopPropagation=true) {
     }
   }
 
-  modalstack.push(ret);
+  modalstack$1.push(ret);
   ContextAreaClass.lock();
 
   return ret;
@@ -11835,8 +11835,8 @@ function popModalLight(state) {
     return;
   }
 
-  if (state !== modalstack[modalstack.length-1]) {
-    if (modalstack.indexOf(state) < 0) {
+  if (state !== modalstack$1[modalstack$1.length-1]) {
+    if (modalstack$1.indexOf(state) < 0) {
       console.warn("Error in popModalLight; modal handler not found");
       return;
     } else {
@@ -11850,16 +11850,16 @@ function popModalLight(state) {
   }
 
   state.handlers = {};
-  modalstack.remove(state);
+  modalstack$1.remove(state);
   ContextAreaClass.unlock();
 
-  if (config.DEBUG.modalEvents) {
-    console.warn("popModalLight", modalstack);
+  if (config$1.DEBUG.modalEvents) {
+    console.warn("popModalLight", modalstack$1);
   }
 }
 
 function haveModal() {
-  return modalstack.length > 0;
+  return modalstack$1.length > 0;
 }
 window._haveModal = haveModal; //for debugging console
 
@@ -11926,7 +11926,7 @@ for (var k$1 in keymap_latin_1) {
   keymap_latin_1_rev[keymap_latin_1[k$1]] = k$1;
 }
 
-var keymap = keymap_latin_1;
+var keymap$4 = keymap_latin_1;
 var reverse_keymap = keymap_latin_1_rev;
 
 class HotKey {
@@ -11934,7 +11934,7 @@ class HotKey {
   constructor(key, modifiers, action, uiname) {
     this.action = action;
     this.mods = modifiers;
-    this.key = keymap[key];
+    this.key = keymap$4[key];
     this.uiname = uiname;
   }
 
@@ -11987,7 +11987,7 @@ class KeyMap extends Array {
   }
 
   handle(ctx, e) {
-    let mods = new set$1();
+    let mods = new set$2();
     if (e.shiftKey)
       mods.add("shift");
     if (e.altKey)
@@ -12024,7 +12024,7 @@ class KeyMap extends Array {
           hk.exec(ctx);
         } catch (error) {
           print_stack$1(error);
-          console.log("failed to execute a hotkey", keymap[e.keyCode]);
+          console.log("failed to execute a hotkey", keymap$4[e.keyCode]);
         }
         return true;
       }
@@ -12287,7 +12287,7 @@ function getCurve(type, throw_on_error = true) {
   }
 }
 
-let _udigest = new HashDigest();
+let _udigest$4 = new HashDigest();
 
 class CurveTypeData {
   constructor() {
@@ -12324,7 +12324,7 @@ class CurveTypeData {
     }
   }
 
-  calcHashKey(digest = _udigest.reset()) {
+  calcHashKey(digest = _udigest$4.reset()) {
     let d = digest;
 
     d.add(this.type);
@@ -12464,7 +12464,7 @@ CurveTypeData {
   type : string;
 }
 `;
-nstructjs.register(CurveTypeData);
+nstructjs$1.register(CurveTypeData);
 
 
 function evalHermiteTable(table, t) {
@@ -12521,7 +12521,7 @@ function genHermiteTable(evaluate, steps) {
 "use strict";
 //import {EventDispatcher} from "../util/events.js";
 
-let Vector2$1 = Vector2;
+let Vector2$c = Vector2$d;
 
 const SplineTemplates = {
   CONSTANT      : 0,
@@ -12581,7 +12581,7 @@ let RecalcFlags = {
   FULL_BASIS: 4
 };
 
-function mySafeJSONStringify(obj) {
+function mySafeJSONStringify$1(obj) {
   return JSON.stringify(obj.toJSON(), function (key) {
     let v = this[key];
 
@@ -12597,19 +12597,19 @@ function mySafeJSONStringify(obj) {
   });
 }
 
-function mySafeJSONParse(buf) {
+function mySafeJSONParse$1(buf) {
   return JSON.parse(buf, (key, val) => {
 
   });
 };
 
-window.mySafeJSONStringify = mySafeJSONStringify;
+window.mySafeJSONStringify = mySafeJSONStringify$1;
 
 
 let bin_cache = {};
 window._bin_cache = bin_cache;
 
-let eval2_rets = cachering$1.fromConstructor(Vector2$1, 32);
+let eval2_rets = cachering.fromConstructor(Vector2$c, 32);
 
 /*
   I hate these stupid curve widgets.  This horrible one here works by
@@ -12617,16 +12617,16 @@ let eval2_rets = cachering$1.fromConstructor(Vector2$1, 32);
   surprisingly well).
 */
 
-function bez3(a, b, c, t) {
+function bez3$1(a, b, c, t) {
   let r1 = a + (b - a)*t;
   let r2 = b + (c - b)*t;
 
   return r1 + (r2 - r1)*t;
 }
 
-function bez4(a, b, c, d, t) {
-  let r1 = bez3(a, b, c, t);
-  let r2 = bez3(b, c, d, t);
+function bez4$1(a, b, c, d, t) {
+  let r1 = bez3$1(a, b, c, t);
+  let r2 = bez3$1(b, c, d, t);
 
   return r1 + (r2 - r1)*t;
 }
@@ -12653,15 +12653,15 @@ function binomial(n, i) {
 
 window.bin = binomial;
 
-class Curve1DPoint extends Vector2$1 {
+class Curve1DPoint extends Vector2$c {
   constructor(co) {
     super(co);
 
-    this.rco = new Vector2$1(co);
-    this.sco = new Vector2$1(co);
+    this.rco = new Vector2$c(co);
+    this.sco = new Vector2$c(co);
 
     //for transform
-    this.startco = new Vector2$1();
+    this.startco = new Vector2$c();
     this.eid = -1;
     this.flag = 0;
 
@@ -12732,9 +12732,9 @@ Curve1DPoint {
   rco     : vec2;
 }
 `;
-nstructjs.register(Curve1DPoint);
+nstructjs$1.register(Curve1DPoint);
 
-let _udigest$1 = new HashDigest();
+let _udigest$3 = new HashDigest();
 
 class BSplineCache {
   constructor() {
@@ -12821,7 +12821,7 @@ class BSplineCurve extends CurveTypeData {
     this.length = 0;
     this.interpolating = false;
 
-    this.range = [new Vector2$1([0, 1]), new Vector2$1([0, 1])];
+    this.range = [new Vector2$c([0, 1]), new Vector2$c([0, 1])];
 
     this._ps = [];
     this.hermite = [];
@@ -12835,7 +12835,7 @@ class BSplineCurve extends CurveTypeData {
     this.add(0, 0);
     this.add(1, 1);
 
-    this.mpos = new Vector2$1();
+    this.mpos = new Vector2$c();
 
     this.on_mousedown = this.on_mousedown.bind(this);
     this.on_mousemove = this.on_mousemove.bind(this);
@@ -12859,7 +12859,7 @@ class BSplineCurve extends CurveTypeData {
     }
   }
 
-  calcHashKey(digest = _udigest$1.reset()) {
+  calcHashKey(digest = _udigest$3.reset()) {
     let d = digest;
 
     super.calcHashKey(d);
@@ -13071,7 +13071,7 @@ class BSplineCurve extends CurveTypeData {
     this._ps = [];
 
     if (obj.range) {
-      this.range = [new Vector2$1(obj.range[0]), new Vector2$1(obj.range[1])];
+      this.range = [new Vector2$c(obj.range[0]), new Vector2$c(obj.range[1])];
     }
 
     this.hightlight = undefined;
@@ -13112,7 +13112,7 @@ class BSplineCurve extends CurveTypeData {
     j *= 4;
     return table[j] + (table[j + 3] - table[j])*s;
 
-    return bez4(table[j], table[j + 1], table[j + 2], table[j + 3], s);
+    return bez4$1(table[j], table[j + 1], table[j + 2], table[j + 3], s);
   }
 
   reset(empty = false) {
@@ -13213,7 +13213,7 @@ class BSplineCurve extends CurveTypeData {
     };
 
     let err = 0.0;
-    let g = new Vector2$1();
+    let g = new Vector2$c();
 
     for (let step = 0; step < 25; step++) {
       err = 0.0;
@@ -13523,7 +13523,7 @@ class BSplineCurve extends CurveTypeData {
 
   makeGUI(container, canvas, drawTransform) {
     this.uidata = {
-      start_mpos : new Vector2$1(),
+      start_mpos : new Vector2$c(),
       transpoints: [],
 
       dom         : container,
@@ -13746,7 +13746,7 @@ class BSplineCurve extends CurveTypeData {
   }
 
   do_transform(x, y) {
-    let off = new Vector2$1([x, y]).sub(this.uidata.start_mpos);
+    let off = new Vector2$c([x, y]).sub(this.uidata.start_mpos);
 
     for (let i = 0; i < this.uidata.transpoints.length; i++) {
       let p = this.uidata.transpoints[i];
@@ -13909,7 +13909,7 @@ class BSplineCurve extends CurveTypeData {
   }
 }
 
-BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
+BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
   points        : array(Curve1DPoint);
   deg           : int;
   eidgen        : IDGen;
@@ -13917,7 +13917,7 @@ BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
   range         : array(vec2);
 }
 `;
-nstructjs.register(BSplineCurve);
+nstructjs$1.register(BSplineCurve);
 CurveTypeData.register(BSplineCurve);
 
 
@@ -14008,7 +14008,7 @@ function initSplineTemplates() {
 
 //delay to ensure config is fully loaded
 window.setTimeout(() => {
-  if (config.autoLoadSplineTemplates) {
+  if (config$1.autoLoadSplineTemplates) {
     initSplineTemplates();
   }
 }, 0);
@@ -14247,11 +14247,11 @@ class EquationCurve extends CurveTypeData {
   }
 }
 
-EquationCurve.STRUCT = nstructjs.inherit(EquationCurve, CurveTypeData) + `
+EquationCurve.STRUCT = nstructjs$1.inherit(EquationCurve, CurveTypeData) + `
   equation : string;
 }
 `;
-nstructjs.register(EquationCurve);
+nstructjs$1.register(EquationCurve);
 CurveTypeData.register(EquationCurve);
 
 
@@ -14426,13 +14426,13 @@ class GuassianCurve extends CurveTypeData {
   }
 }
 
-GuassianCurve.STRUCT = nstructjs.inherit(GuassianCurve, CurveTypeData) + `
+GuassianCurve.STRUCT = nstructjs$1.inherit(GuassianCurve, CurveTypeData) + `
   height    : float;
   offset    : float;
   deviation : float;
 }
 `;
-nstructjs.register(GuassianCurve);
+nstructjs$1.register(GuassianCurve);
 CurveTypeData.register(GuassianCurve);
 
 /*
@@ -14890,16 +14890,16 @@ Ease.getElasticInOut = function(amplitude,period) {
  **/
 Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
 
-function bez3$1(a, b, c, t) {
+function bez3(a, b, c, t) {
   var r1 = a + (b - a)*t;
   var r2 = b + (c - b)*t;
 
   return r1 + (r2 - r1)*t;
 }
 
-function bez4$1(a, b, c, d, t) {
-  var r1 = bez3$1(a, b, c, t);
-  var r2 = bez3$1(b, c, d, t);
+function bez4(a, b, c, d, t) {
+  var r1 = bez3(a, b, c, t);
+  var r2 = bez3(b, c, d, t);
 
   return r1 + (r2 - r1)*t;
 }
@@ -14917,10 +14917,10 @@ ParamKey {
   val : float;
 }
 `;
-nstructjs.register(ParamKey);
+nstructjs$1.register(ParamKey);
 let BOOL_FLAG = 1e17;
 
-let _udigest$3 = new HashDigest();
+let _udigest$1 = new HashDigest();
 
 class SimpleCurveBase extends CurveTypeData {
   constructor() {
@@ -14941,7 +14941,7 @@ class SimpleCurveBase extends CurveTypeData {
     return true;
   }
 
-  calcHashKey(digest = _udigest$3.reset()) {
+  calcHashKey(digest = _udigest$1.reset()) {
     let d = digest;
     super.calcHashKey(d);
 
@@ -15095,11 +15095,11 @@ class SimpleCurveBase extends CurveTypeData {
   }
 }
 
-SimpleCurveBase.STRUCT = nstructjs.inherit(SimpleCurveBase, CurveTypeData) + `
+SimpleCurveBase.STRUCT = nstructjs$1.inherit(SimpleCurveBase, CurveTypeData) + `
   params : array(ParamKey) | obj._saveParams();
 }
 `;
-nstructjs.register(SimpleCurveBase);
+nstructjs$1.register(SimpleCurveBase);
 
 class BounceCurve extends SimpleCurveBase {
   static define() {
@@ -15144,9 +15144,9 @@ class BounceCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(BounceCurve);
-BounceCurve.STRUCT = nstructjs.inherit(BounceCurve, SimpleCurveBase) + `
+BounceCurve.STRUCT = nstructjs$1.inherit(BounceCurve, SimpleCurveBase) + `
 }`;
-nstructjs.register(BounceCurve);
+nstructjs$1.register(BounceCurve);
 
 
 class ElasticCurve extends SimpleCurveBase {
@@ -15187,9 +15187,9 @@ class ElasticCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(ElasticCurve);
-ElasticCurve.STRUCT = nstructjs.inherit(ElasticCurve, SimpleCurveBase) + `
+ElasticCurve.STRUCT = nstructjs$1.inherit(ElasticCurve, SimpleCurveBase) + `
 }`;
-nstructjs.register(ElasticCurve);
+nstructjs$1.register(ElasticCurve);
 
 
 class EaseCurve extends SimpleCurveBase {
@@ -15215,14 +15215,14 @@ class EaseCurve extends SimpleCurveBase {
     let a1 = this.params.mode_in ? 1.0 - amp : 1.0/3.0;
     let a2 = this.params.mode_out ? amp : 2.0/3.0;
 
-    return bez4$1(0.0, a1, a2, 1.0, t);
+    return bez4(0.0, a1, a2, 1.0, t);
   }
 }
 
 CurveTypeData.register(EaseCurve);
-EaseCurve.STRUCT = nstructjs.inherit(EaseCurve, SimpleCurveBase) + `
+EaseCurve.STRUCT = nstructjs$1.inherit(EaseCurve, SimpleCurveBase) + `
 }`;
-nstructjs.register(EaseCurve);
+nstructjs$1.register(EaseCurve);
 
 
 class RandCurve extends SimpleCurveBase {
@@ -15286,15 +15286,15 @@ class RandCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(RandCurve);
-RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
+RandCurve.STRUCT = nstructjs$1.inherit(RandCurve, SimpleCurveBase) + `
 }`;
-nstructjs.register(RandCurve);
+nstructjs$1.register(RandCurve);
 
 "use strict";
 
-var Vector2$2 = Vector2;
+var Vector2$b = Vector2$d;
 
-function mySafeJSONStringify$1(obj) {
+function mySafeJSONStringify(obj) {
   return JSON.stringify(obj.toJSON(), function (key) {
     let v = this[key];
 
@@ -15310,15 +15310,15 @@ function mySafeJSONStringify$1(obj) {
   });
 }
 
-function mySafeJSONParse$1(buf) {
+function mySafeJSONParse(buf) {
   return JSON.parse(buf, (key, val) => {
 
   });
 };
 
-window.mySafeJSONStringify = mySafeJSONStringify$1;
+window.mySafeJSONStringify = mySafeJSONStringify;
 
-let _udigest$4 = new HashDigest();
+let _udigest = new HashDigest();
 
 class Curve1D extends EventDispatcher {
   constructor() {
@@ -15356,7 +15356,7 @@ class Curve1D extends EventDispatcher {
     }
   }
 
-  calcHashKey(digest = _udigest$4.reset()) {
+  calcHashKey(digest = _udigest.reset()) {
     let d = digest;
 
     for (let g of this.generators) {
@@ -15382,8 +15382,8 @@ class Curve1D extends EventDispatcher {
       return;
     }
 
-    let buf1 = mySafeJSONStringify$1(b);
-    let buf2 = mySafeJSONStringify$1(this);
+    let buf1 = mySafeJSONStringify(b);
+    let buf2 = mySafeJSONStringify(this);
 
     if (buf1 === buf2) {
       return;
@@ -15398,7 +15398,7 @@ class Curve1D extends EventDispatcher {
 
   copy() {
     let ret = new Curve1D();
-    ret.loadJSON(JSON.parse(mySafeJSONStringify$1(this)));
+    ret.loadJSON(JSON.parse(mySafeJSONStringify(this)));
     return ret;
   }
 
@@ -15650,7 +15650,7 @@ Curve1D {
   uiZoom      : float;
 }
 `;
-nstructjs.register(Curve1D);
+nstructjs$1.register(Curve1D);
 
 const NumberConstraintsBase = new Set([
   'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
@@ -15659,19 +15659,19 @@ const NumberConstraintsBase = new Set([
 
 const IntegerConstraints = new Set([
   'radix'
-].concat(list(NumberConstraintsBase)));
+].concat(list$2(NumberConstraintsBase)));
 
 const FloatConstrinats = new Set([
   'decimalPlaces'
-].concat(list(NumberConstraintsBase)));
+].concat(list$2(NumberConstraintsBase)));
 
-const NumberConstraints = new Set(list(IntegerConstraints).concat(list(FloatConstrinats)));
+const NumberConstraints = new Set(list$2(IntegerConstraints).concat(list$2(FloatConstrinats)));
 
-const PropSubTypes$1 = {
+const PropSubTypes$3 = {
   COLOR: 1
 };
 
-let first = (iter) => {
+let first$1 = (iter) => {
   if (iter === undefined) {
     return undefined;
   }
@@ -15692,7 +15692,7 @@ let first = (iter) => {
 //set PropTypes to custom type integers
 function setPropTypes(types) {
   for (let k in types) {
-    PropTypes[k] = types[k];
+    PropTypes$8[k] = types[k];
   }
 }
 
@@ -15824,7 +15824,7 @@ class ToolProperty$1 extends ToolPropertyIF {
 
   static register(cls) {
     cls.PROP_TYPE_ID = (1<<customPropTypeBase);
-    PropTypes[cls.name] = cls.PROP_TYPE_ID;
+    PropTypes$8[cls.name] = cls.PROP_TYPE_ID;
 
     customPropTypeBase++;
     customPropertyTypes.push(cls);
@@ -15876,12 +15876,12 @@ class ToolProperty$1 extends ToolPropertyIF {
   }
 
   private() {
-    this.flag |= PropFlags.PRIVATE;
+    this.flag |= PropFlags$3.PRIVATE;
     return this;
   }
 
   saveLastValue() {
-    this.flag |= PropFlags.SAVE_LAST_VALUE;
+    this.flag |= PropFlags$3.SAVE_LAST_VALUE;
     return this;
   }
 
@@ -16123,13 +16123,13 @@ ToolProperty {
   decimalPlaces  : int;
 }
 `;
-nstructjs.register(ToolProperty$1);
+nstructjs$1.register(ToolProperty$1);
 
 window.ToolProperty = ToolProperty$1;
 
 class FloatArrayProperty extends ToolProperty$1 {
   constructor(value, apiname, uiname, description, flag, icon) {
-    super(PropTypes.FLOAT_ARRAY, undefined, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.FLOAT_ARRAY, undefined, apiname, uiname, description, flag, icon);
 
     this.value = [];
 
@@ -16180,14 +16180,14 @@ class FloatArrayProperty extends ToolProperty$1 {
   }
 }
 
-FloatArrayProperty.STRUCT = nstructjs.inherit(FloatArrayProperty, ToolProperty$1) + `
+FloatArrayProperty.STRUCT = nstructjs$1.inherit(FloatArrayProperty, ToolProperty$1) + `
   value : array(float);
 }`;
-nstructjs.register(FloatArrayProperty);
+nstructjs$1.register(FloatArrayProperty);
 
 class StringProperty extends ToolProperty$1 {
   constructor(value, apiname, uiname, description, flag, icon) {
-    super(PropTypes.STRING, undefined, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.STRING, undefined, apiname, uiname, description, flag, icon);
 
     this.multiLine = false;
 
@@ -16228,11 +16228,11 @@ class StringProperty extends ToolProperty$1 {
   }
 }
 
-StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty$1) + `
+StringProperty.STRUCT = nstructjs$1.inherit(StringProperty, ToolProperty$1) + `
   data : string;
 }
 `;
-nstructjs.register(StringProperty);
+nstructjs$1.register(StringProperty);
 ToolProperty$1.internalRegister(StringProperty);
 /*
 export function isNumber(f) {
@@ -16280,7 +16280,7 @@ class NumProperty extends ToolProperty$1 {
     super.loadSTRUCT(reader);
   }
 };
-NumProperty.STRUCT = nstructjs.inherit(NumProperty, ToolProperty$1) + `
+NumProperty.STRUCT = nstructjs$1.inherit(NumProperty, ToolProperty$1) + `
   range : array(float);
   data  : float;
 }
@@ -16412,7 +16412,7 @@ class _NumberPropertyBase extends ToolProperty$1 {
     return this;
   }
 };
-_NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty$1) + `
+_NumberPropertyBase.STRUCT = nstructjs$1.inherit(_NumberPropertyBase, ToolProperty$1) + `
   range      : array(float);
   expRate    : float;
   data       : float;
@@ -16420,12 +16420,12 @@ _NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty
   slideSpeed : float;
 }
 `;
-nstructjs.register(_NumberPropertyBase);
+nstructjs$1.register(_NumberPropertyBase);
 
 class IntProperty extends _NumberPropertyBase {
   constructor(value, apiname,
               uiname, description, flag, icon) {
-    super(PropTypes.INT, value, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.INT, value, apiname, uiname, description, flag, icon);
 
     //remember to update NumberConstraintsBase et al when adding new number
     //constraints
@@ -16466,10 +16466,10 @@ class IntProperty extends _NumberPropertyBase {
   }
 }
 
-IntProperty.STRUCT = nstructjs.inherit(IntProperty, _NumberPropertyBase) + `
+IntProperty.STRUCT = nstructjs$1.inherit(IntProperty, _NumberPropertyBase) + `
   data : int;
 }`;
-nstructjs.register(IntProperty);
+nstructjs$1.register(IntProperty);
 
 ToolProperty$1.internalRegister(IntProperty);
 
@@ -16477,20 +16477,20 @@ class ReportProperty extends StringProperty {
   constructor(value, apiname, uiname, description, flag, icon) {
     super(value, apiname, uiname, description, flag, icon);
 
-    this.type = PropTypes.REPORT;
+    this.type = PropTypes$8.REPORT;
   }
 }
 
-ReportProperty.STRUCT = nstructjs.inherit(ReportProperty, StringProperty) + `
+ReportProperty.STRUCT = nstructjs$1.inherit(ReportProperty, StringProperty) + `
 }
 `;
-nstructjs.register(ReportProperty);
+nstructjs$1.register(ReportProperty);
 ToolProperty$1.internalRegister(ReportProperty);
 
 class BoolProperty extends ToolProperty$1 {
   constructor(value, apiname,
               uiname, description, flag, icon) {
-    super(PropTypes.BOOL, undefined, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.BOOL, undefined, apiname, uiname, description, flag, icon);
 
     this.data = !!value;
   }
@@ -16531,17 +16531,17 @@ class BoolProperty extends ToolProperty$1 {
 }
 
 ToolProperty$1.internalRegister(BoolProperty);
-BoolProperty.STRUCT = nstructjs.inherit(BoolProperty, ToolProperty$1) + `
+BoolProperty.STRUCT = nstructjs$1.inherit(BoolProperty, ToolProperty$1) + `
   data : bool;
 }
 `;
-nstructjs.register(BoolProperty);
+nstructjs$1.register(BoolProperty);
 
 
 class FloatProperty extends _NumberPropertyBase {
   constructor(value, apiname,
               uiname, description, flag, icon) {
-    super(PropTypes.FLOAT, value, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.FLOAT, value, apiname, uiname, description, flag, icon);
 
     //remember to update NumberConstraintsBase et al when adding new number
     //constraints
@@ -16594,12 +16594,12 @@ class FloatProperty extends _NumberPropertyBase {
 }
 
 ToolProperty$1.internalRegister(FloatProperty);
-FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
+FloatProperty.STRUCT = nstructjs$1.inherit(FloatProperty, _NumberPropertyBase) + `
   decimalPlaces : int;
   data          : float;
 }
 `;
-nstructjs.register(FloatProperty);
+nstructjs$1.register(FloatProperty);
 
 class EnumKeyPair {
   constructor(key, val) {
@@ -16630,12 +16630,12 @@ EnumKeyPair {
   val_is_int : bool; 
 }
 `;
-nstructjs.register(EnumKeyPair);
+nstructjs$1.register(EnumKeyPair);
 
-class EnumProperty extends ToolProperty$1 {
+class EnumProperty$9 extends ToolProperty$1 {
   constructor(string_or_int, valid_values, apiname,
               uiname, description, flag, icon) {
-    super(PropTypes.ENUM, undefined, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.ENUM, undefined, apiname, uiname, description, flag, icon);
 
     this.values = {};
     this.keys = {};
@@ -16657,7 +16657,7 @@ class EnumProperty extends ToolProperty$1 {
     }
 
     if (string_or_int === undefined) {
-      this.data = first(valid_values);
+      this.data = first$1(valid_values);
     } else {
       this.setValue(string_or_int);
     }
@@ -16698,7 +16698,7 @@ class EnumProperty extends ToolProperty$1 {
 
     let enumdef;
 
-    if (enumdef_or_prop instanceof EnumProperty) {
+    if (enumdef_or_prop instanceof EnumProperty$9) {
       enumdef = enumdef_or_prop.values;
     } else {
       enumdef = enumdef_or_prop;
@@ -16711,7 +16711,7 @@ class EnumProperty extends ToolProperty$1 {
       this.keys[v] = k;
     }
 
-    if (enumdef_or_prop instanceof EnumProperty) {
+    if (enumdef_or_prop instanceof EnumProperty$9) {
       let prop = enumdef_or_prop;
       this.iconmap = Object.assign({}, prop.iconmap);
       this.iconmap2 = Object.assign({}, prop.iconmap2);
@@ -16894,8 +16894,8 @@ class EnumProperty extends ToolProperty$1 {
   }
 }
 
-ToolProperty$1.internalRegister(EnumProperty);
-EnumProperty.STRUCT = nstructjs.inherit(EnumProperty, ToolProperty$1) + `
+ToolProperty$1.internalRegister(EnumProperty$9);
+EnumProperty$9.STRUCT = nstructjs$1.inherit(EnumProperty$9, ToolProperty$1) + `
   data            : string             | ""+this.data;
   data_is_int     : bool               | this._is_data_int();
   _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
@@ -16906,15 +16906,15 @@ EnumProperty.STRUCT = nstructjs.inherit(EnumProperty, ToolProperty$1) + `
   _descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;  
 }
 `;
-nstructjs.register(EnumProperty);
+nstructjs$1.register(EnumProperty$9);
 
-class FlagProperty extends EnumProperty {
+class FlagProperty extends EnumProperty$9 {
   constructor(string, valid_values, apiname,
               uiname, description, flag, icon) {
     super(string, valid_values, apiname,
       uiname, description, flag, icon);
 
-    this.type = PropTypes.FLAG;
+    this.type = PropTypes$8.FLAG;
     this.wasSet = false;
   }
 
@@ -16928,10 +16928,10 @@ class FlagProperty extends EnumProperty {
 }
 
 ToolProperty$1.internalRegister(FlagProperty);
-FlagProperty.STRUCT = nstructjs.inherit(FlagProperty, EnumProperty) + `
+FlagProperty.STRUCT = nstructjs$1.inherit(FlagProperty, EnumProperty$9) + `
 }
 `;
-nstructjs.register(FlagProperty);
+nstructjs$1.register(FlagProperty);
 
 
 class VecPropertyBase extends FloatProperty {
@@ -16960,7 +16960,7 @@ class VecPropertyBase extends FloatProperty {
   }
 }
 
-VecPropertyBase.STRUCT = nstructjs.inherit(VecPropertyBase, FloatProperty) + `
+VecPropertyBase.STRUCT = nstructjs$1.inherit(VecPropertyBase, FloatProperty) + `
   hasUniformSlider : bool;
 }
 `;
@@ -16970,8 +16970,8 @@ class Vec2Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
-    this.type = PropTypes.VEC2;
-    this.data = new Vector2(data);
+    this.type = PropTypes$8.VEC2;
+    this.data = new Vector2$d(data);
   }
 
   setValue(v) {
@@ -16995,11 +16995,11 @@ class Vec2Property extends FloatProperty {
   }
 }
 
-Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, VecPropertyBase) + `
+Vec2Property.STRUCT = nstructjs$1.inherit(Vec2Property, VecPropertyBase) + `
   data : vec2;
 }
 `;
-nstructjs.register(Vec2Property);
+nstructjs$1.register(Vec2Property);
 
 ToolProperty$1.internalRegister(Vec2Property);
 
@@ -17007,12 +17007,12 @@ class Vec3Property extends VecPropertyBase {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
-    this.type = PropTypes.VEC3;
-    this.data = new Vector3(data);
+    this.type = PropTypes$8.VEC3;
+    this.data = new Vector3$2(data);
   }
 
   isColor() {
-    this.subtype = PropSubTypes$1.COLOR;
+    this.subtype = PropSubTypes$3.COLOR;
     return this;
   }
 
@@ -17037,19 +17037,19 @@ class Vec3Property extends VecPropertyBase {
   }
 }
 
-Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, VecPropertyBase) + `
+Vec3Property.STRUCT = nstructjs$1.inherit(Vec3Property, VecPropertyBase) + `
   data : vec3;
 }
 `;
-nstructjs.register(Vec3Property);
+nstructjs$1.register(Vec3Property);
 ToolProperty$1.internalRegister(Vec3Property);
 
 class Vec4Property extends FloatProperty {
   constructor(data, apiname, uiname, description) {
     super(undefined, apiname, uiname, description);
 
-    this.type = PropTypes.VEC4;
-    this.data = new Vector4(data);
+    this.type = PropTypes$8.VEC4;
+    this.data = new Vector4$2(data);
   }
 
   setValue(v, w = 1.0) {
@@ -17069,7 +17069,7 @@ class Vec4Property extends FloatProperty {
   }
 
   isColor() {
-    this.subtype = PropSubTypes$1.COLOR;
+    this.subtype = PropSubTypes$3.COLOR;
     return this;
   }
 
@@ -17086,16 +17086,16 @@ class Vec4Property extends FloatProperty {
   }
 }
 
-Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, VecPropertyBase) + `
+Vec4Property.STRUCT = nstructjs$1.inherit(Vec4Property, VecPropertyBase) + `
   data : vec4;
 }
 `;
-nstructjs.register(Vec4Property);
+nstructjs$1.register(Vec4Property);
 ToolProperty$1.internalRegister(Vec4Property);
 
 class QuatProperty extends ToolProperty$1 {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.QUAT, undefined, apiname, uiname, description);
+    super(PropTypes$8.QUAT, undefined, apiname, uiname, description);
     this.data = new Quat(data);
   }
 
@@ -17122,18 +17122,18 @@ class QuatProperty extends ToolProperty$1 {
   }
 }
 
-QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, VecPropertyBase) + `
+QuatProperty.STRUCT = nstructjs$1.inherit(QuatProperty, VecPropertyBase) + `
   data : vec4;
 }
 `;
-nstructjs.register(QuatProperty);
+nstructjs$1.register(QuatProperty);
 
 ToolProperty$1.internalRegister(QuatProperty);
 
 class Mat4Property extends ToolProperty$1 {
   constructor(data, apiname, uiname, description) {
-    super(PropTypes.MATRIX4, undefined, apiname, uiname, description);
-    this.data = new Matrix4(data);
+    super(PropTypes$8.MATRIX4, undefined, apiname, uiname, description);
+    this.data = new Matrix4$2(data);
   }
 
   calcMemSize() {
@@ -17181,11 +17181,11 @@ class Mat4Property extends ToolProperty$1 {
   }
 }
 
-Mat4Property.STRUCT = nstructjs.inherit(Mat4Property, FloatProperty) + `
+Mat4Property.STRUCT = nstructjs$1.inherit(Mat4Property, FloatProperty) + `
   data           : mat4;
 }
 `;
-nstructjs.register(Mat4Property);
+nstructjs$1.register(Mat4Property);
 ToolProperty$1.internalRegister(Mat4Property);
 
 /**
@@ -17196,7 +17196,7 @@ class ListProperty extends ToolProperty$1 {
   * Prop must be a ToolProperty subclass instance
   * */
   constructor(prop, list = [], uiname = "") {
-    super(PropTypes.PROPLIST);
+    super(PropTypes$8.PROPLIST);
 
     this.uiname = uiname;
 
@@ -17350,11 +17350,11 @@ class ListProperty extends ToolProperty$1 {
   }
 }
 
-ListProperty.STRUCT = nstructjs.inherit(ListProperty, ToolProperty$1) + `
+ListProperty.STRUCT = nstructjs$1.inherit(ListProperty, ToolProperty$1) + `
   prop  : abstract(ToolProperty);
   value : array(abstract(ToolProperty));
 }`;
-nstructjs.register(ListProperty);
+nstructjs$1.register(ListProperty);
 
 ToolProperty$1.internalRegister(ListProperty);
 
@@ -17362,14 +17362,14 @@ ToolProperty$1.internalRegister(ListProperty);
 //like FlagsProperty but uses strings
 class StringSetProperty extends ToolProperty$1 {
   constructor(value = undefined, definition = []) {
-    super(PropTypes.STRSET);
+    super(PropTypes$8.STRSET);
 
     let values = [];
 
-    this.value = new set$1();
+    this.value = new set$2();
 
     let def = definition;
-    if (Array.isArray(def) || def instanceof set$1 || def instanceof Set) {
+    if (Array.isArray(def) || def instanceof set$2 || def instanceof Set) {
       for (let item of def) {
         values.push(item);
       }
@@ -17459,7 +17459,7 @@ class StringSetProperty extends ToolProperty$1 {
     } else {
       let data = [];
 
-      if (Array.isArray(values) || values instanceof set$1 || values instanceof Set) {
+      if (Array.isArray(values) || values instanceof set$2 || values instanceof Set) {
         for (let item of values) {
           data.push(item);
         }
@@ -17573,21 +17573,21 @@ class StringSetProperty extends ToolProperty$1 {
       this.values[s] = s;
     }
 
-    this.value = new set$1(this.value);
+    this.value = new set$2(this.value);
   }
 }
 
-StringSetProperty.STRUCT = nstructjs.inherit(StringSetProperty, ToolProperty$1) + `
+StringSetProperty.STRUCT = nstructjs$1.inherit(StringSetProperty, ToolProperty$1) + `
   value  : iter(string);
   values : iterkeys(string);  
 }`;
-nstructjs.register(StringSetProperty);
+nstructjs$1.register(StringSetProperty);
 
 ToolProperty$1.internalRegister(StringSetProperty);
 
 class Curve1DProperty extends ToolProperty$1 {
   constructor(curve, apiname, uiname, description, flag, icon) {
-    super(PropTypes.CURVE, undefined, apiname, uiname, description, flag, icon);
+    super(PropTypes$8.CURVE, undefined, apiname, uiname, description, flag, icon);
 
     this.data = new Curve1D();
 
@@ -17631,12 +17631,12 @@ class Curve1DProperty extends ToolProperty$1 {
   }
 }
 
-Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty$1) + `
+Curve1DProperty.STRUCT = nstructjs$1.inherit(Curve1DProperty, ToolProperty$1) + `
   data : Curve1D;
 }
 `;
 
-nstructjs.register(Curve1DProperty);
+nstructjs$1.register(Curve1DProperty);
 ToolProperty$1.internalRegister(Curve1DProperty);
 
 function css2matrix(s) {
@@ -17653,10 +17653,10 @@ function matrix2css(m) {
 
 "use strict";
 
-let dtvtmps = cachering$1.fromConstructor(Vector3, 32);
+let dtvtmps = cachering.fromConstructor(Vector3$2, 32);
 
 
-let quad_co_rets2 = cachering$1.fromConstructor(Vector2, 512);
+let quad_co_rets2 = cachering.fromConstructor(Vector2$d, 512);
 
 function quad_bilinear(v1, v2, v3, v4, u, v) {
   return -((v1 - v2)*u - v1 - (u*v1 - u*v2 + u*v3 - u*v4 - v1 + v4)*v);
@@ -17779,7 +17779,7 @@ const ClosestModes = {
   ALL      : 4
 };
 
-let advs = cachering$1.fromConstructor(Vector4, 128);
+let advs = cachering.fromConstructor(Vector4$2, 128);
 
 class AbstractCurve {
   evaluate(t) {
@@ -17804,12 +17804,12 @@ class AbstractCurve {
 
 class ClosestCurveRets {
   constructor() {
-    this.p = new Vector3();
+    this.p = new Vector3$2();
     this.t = 0;
   }
 }
 
-let cvrets = cachering$1.fromConstructor(ClosestCurveRets, 2048);
+let cvrets = cachering.fromConstructor(ClosestCurveRets, 2048);
 let cvarrays = new ArrayPool();
 let cvtmp = new Array(1024);
 
@@ -17827,8 +17827,8 @@ function closestPoint(p, curve, mode) {
   }
 }
 
-let poly_normal_tmps = cachering$1.fromConstructor(Vector3, 64);
-let pncent = new Vector3();
+let poly_normal_tmps = cachering.fromConstructor(Vector3$2, 64);
+let pncent = new Vector3$2();
 
 function normal_poly(vs) {
   if (vs.length === 3) {
@@ -17881,8 +17881,8 @@ off fort;
 
 */
 
-let barycentric_v2_rets = cachering$1.fromConstructor(Vector2, 2048);
-let calc_proj_refs = new cachering$1(() => [0, 0], 64);
+let barycentric_v2_rets = cachering.fromConstructor(Vector2$d, 2048);
+let calc_proj_refs = new cachering(() => [0, 0], 64);
 
 /*
   a b c d
@@ -17948,7 +17948,7 @@ function dihedral_v3_sqr(v1, v2, v3, v4) {
     + (bx*cy - by*cx)**2)*((cx*dz - cz*dx)**2 + (cy*dz - cz*dy)**2 + (cx*dy - cy*dx)**2));
 }
 
-let tet_area_tmps = cachering$1.fromConstructor(Vector3, 64);
+let tet_area_tmps = cachering.fromConstructor(Vector3$2, 64);
 
 function tet_volume(a, b, c, d) {
   a = tet_area_tmps.next().load(a);
@@ -17983,7 +17983,7 @@ function calc_projection_axes(no) {
   return ret;
 }
 
-let _avtmps = cachering$1.fromConstructor(Vector3, 128);
+let _avtmps = cachering.fromConstructor(Vector3$2, 128);
 
 function inrect_3d(p, min, max) {
   let ok = p[0] >= min[0] && p[0] <= max[0];
@@ -18105,25 +18105,25 @@ function _linedis2(co, v1, v2) {
   return dis;
 }
 
-let closest_p_tri_rets = new cachering$1(() => {
+let closest_p_tri_rets = new cachering(() => {
   return {
-    co  : new Vector3(),
-    uv  : new Vector2(),
+    co  : new Vector3$2(),
+    uv  : new Vector2$d(),
     dist: 0
   }
 }, 512);
 
-let cpt_v1 = new Vector3();
-let cpt_v2 = new Vector3();
-let cpt_v3 = new Vector3();
-let cpt_v4 = new Vector3();
-let cpt_v5 = new Vector3();
-let cpt_v6 = new Vector3();
-let cpt_p = new Vector3();
-let cpt_n = new Vector3();
-let cpt_mat = new Matrix4();
-let cpt_mat2 = new Matrix4();
-let cpt_b = new Vector3();
+let cpt_v1 = new Vector3$2();
+let cpt_v2 = new Vector3$2();
+let cpt_v3 = new Vector3$2();
+let cpt_v4 = new Vector3$2();
+let cpt_v5 = new Vector3$2();
+let cpt_v6 = new Vector3$2();
+let cpt_p = new Vector3$2();
+let cpt_n = new Vector3$2();
+let cpt_mat = new Matrix4$2();
+let cpt_mat2 = new Matrix4$2();
+let cpt_b = new Vector3$2();
 
 function closest_point_on_quad(p, v1, v2, v3, v4, n, uvw) {
   let a = closest_point_on_tri(p, v1, v2, v3, n, uvw);
@@ -18444,7 +18444,7 @@ off fort;
 
 */
 
-let _dt3s_n = new Vector3();
+let _dt3s_n = new Vector3$2();
 
 function dist_to_tri_v3_sqr(p, v1, v2, v3, n) {
   if (n === undefined) {
@@ -18709,7 +18709,7 @@ function dist_to_tri_v3_sqr(p, v1, v2, v3, n) {
   return dis*mul + planedis*planedis;
 }
 
-let tri_area_temps = cachering$1.fromConstructor(Vector3, 64);
+let tri_area_temps = cachering.fromConstructor(Vector3$2, 64);
 
 function tri_area(v1, v2, v3) {
   let l1 = v1.vectorDistance(v2);
@@ -18782,11 +18782,11 @@ function aabb_isect_3d(pos1, size1, pos2, size2) {
 }
 
 
-let aabb_intersect_vs = cachering$1.fromConstructor(Vector2, 32);
-let aabb_intersect_rets = new cachering$1(() => {
+let aabb_intersect_vs = cachering.fromConstructor(Vector2$d, 32);
+let aabb_intersect_rets = new cachering(() => {
   return {
-    pos : new Vector2(),
-    size: new Vector2()
+    pos : new Vector2$d(),
+    size: new Vector2$d()
   }
 }, 512);
 
@@ -18850,15 +18850,15 @@ window.test_aabb_intersect_2d = function () {
   g.clearRect(0, 0, canvas.width, canvas.height);
 
   let sz = 800;
-  let a1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
-  let a2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
-  let b1 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
-  let b2 = new Vector2([Math.random()*sz, Math.random()*sz]).floor();
+  let a1 = new Vector2$d([Math.random()*sz, Math.random()*sz]).floor();
+  let a2 = new Vector2$d([Math.random()*sz, Math.random()*sz]).floor();
+  let b1 = new Vector2$d([Math.random()*sz, Math.random()*sz]).floor();
+  let b2 = new Vector2$d([Math.random()*sz, Math.random()*sz]).floor();
 
-  let p1 = new Vector2();
-  let s1 = new Vector2();
-  let p2 = new Vector2();
-  let s2 = new Vector2();
+  let p1 = new Vector2$d();
+  let s1 = new Vector2$d();
+  let p2 = new Vector2$d();
+  let s2 = new Vector2$d();
 
   p1.load(a1).min(a2);
   s1.load(a1).max(a2);
@@ -18940,7 +18940,7 @@ test_aabb_intersect_2d.timer = function timer(rate = 500) {
   }, rate);
 };
 
-let aabb_intersect_vs3 = cachering$1.fromConstructor(Vector3, 64);
+let aabb_intersect_vs3 = cachering.fromConstructor(Vector3$2, 64);
 
 function aabb_intersect_3d(min1, max1, min2, max2) {
   let tot = 0;
@@ -19006,7 +19006,7 @@ function init_prototype(cls, proto) {
   return cls.prototype;
 }
 
-function inherit$1(cls, parent, proto) {
+function inherit(cls, parent, proto) {
   cls.prototype = Object.create(parent.prototype);
 
   for (var k in proto) {
@@ -19016,7 +19016,7 @@ function inherit$1(cls, parent, proto) {
   return cls.prototype;
 }
 
-var set$2 = set$1;
+var set$1 = set$2;
 
 //everything below here was compiled from es6 code  
 //variables starting with $ are function static local vars,
@@ -19033,8 +19033,8 @@ const COLINEAR = 1;
 const LINECROSS = 2;
 const COLINEAR_ISECT = 3;
 
-var _cross_vec1 = new Vector3();
-var _cross_vec2 = new Vector3();
+var _cross_vec1 = new Vector3$2();
+var _cross_vec2 = new Vector3$2();
 
 const SQRT2 = Math.sqrt(2.0);
 const FEPS_DATA = {
@@ -19049,7 +19049,7 @@ const FEPS_DATA = {
 const FEPS = FEPS_DATA.F32;
 const FLOAT_MIN = -1e+21;
 const FLOAT_MAX = 1e+22;
-const Matrix4UI = Matrix4;
+const Matrix4UI = Matrix4$2;
 
 /*
 var Matrix4UI=exports.Matrix4UI = function(loc, rot, size) {
@@ -19194,13 +19194,13 @@ class MinMax {
 
       switch (totaxis) {
         case 2:
-          cls = Vector2;
+          cls = Vector2$d;
           break;
         case 3:
-          cls = Vector3;
+          cls = Vector3$2;
           break;
         case 4:
-          cls = Vector4;
+          cls = Vector4$2;
           break;
         default:
           cls = Array;
@@ -19234,10 +19234,10 @@ class MinMax {
       this._min = mm.min;
       this._max = mm.max;
     } else {
-      this.min = new Vector3(mm.min);
-      this.max = new Vector3(mm.max);
-      this._min = new Vector3(mm._min);
-      this._max = new Vector3(mm._max);
+      this.min = new Vector3$2(mm.min);
+      this.max = new Vector3$2(mm.max);
+      this._min = new Vector3$2(mm._min);
+      this._max = new Vector3$2(mm._max);
     }
   }
 
@@ -19362,13 +19362,13 @@ function inrect_2d(p, pos, size) {
   }
   return p[0] >= pos[0] && p[0] <= pos[0] + size[0] && p[1] >= pos[1] && p[1] <= pos[1] + size[1];
 };
-var $smin_aabb_isect_line_2d = new Vector2();
-var $ssize_aabb_isect_line_2d = new Vector2();
-var $sv1_aabb_isect_line_2d = new Vector2();
-var $ps_aabb_isect_line_2d = [new Vector2(), new Vector2(), new Vector2()];
+var $smin_aabb_isect_line_2d = new Vector2$d();
+var $ssize_aabb_isect_line_2d = new Vector2$d();
+var $sv1_aabb_isect_line_2d = new Vector2$d();
+var $ps_aabb_isect_line_2d = [new Vector2$d(), new Vector2$d(), new Vector2$d()];
 var $l1_aabb_isect_line_2d = [0, 0];
-var $smax_aabb_isect_line_2d = new Vector2();
-var $sv2_aabb_isect_line_2d = new Vector2();
+var $smax_aabb_isect_line_2d = new Vector2$d();
+var $sv2_aabb_isect_line_2d = new Vector2$d();
 var $l2_aabb_isect_line_2d = [0, 0];
 
 function aabb_isect_line_2d(v1, v2, min, max) {
@@ -19413,7 +19413,7 @@ function expand_rect2d(pos, size, margin) {
 };
 
 function expand_line(l, margin) {
-  var c = new Vector3();
+  var c = new Vector3$2();
   c.add(l[0]);
   c.add(l[1]);
   c.mulScalar(0.5);
@@ -19446,16 +19446,16 @@ function colinear(a, b, c, limit = 2.2e-16) {
   return _cross_vec1.dot(_cross_vec1) < limit;
 };
 
-var _llc_l1 = [new Vector3(), new Vector3()];
-var _llc_l2 = [new Vector3(), new Vector3()];
-var _llc_l3 = [new Vector3(), new Vector3()];
-var _llc_l4 = [new Vector3(), new Vector3()];
+var _llc_l1 = [new Vector3$2(), new Vector3$2()];
+var _llc_l2 = [new Vector3$2(), new Vector3$2()];
+var _llc_l3 = [new Vector3$2(), new Vector3$2()];
+var _llc_l4 = [new Vector3$2(), new Vector3$2()];
 
-var lli_v1 = new Vector3(), lli_v2 = new Vector3(), lli_v3 = new Vector3(), lli_v4 = new Vector3();
+var lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
 
-var _zero_cn = new Vector3();
-var _tmps_cn = cachering$1.fromConstructor(Vector3, 64);
-var _rets_cn = cachering$1.fromConstructor(Vector3, 64);
+var _zero_cn = new Vector3$2();
+var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
+var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
 
 //vec1, vec2 should both be normalized
 function corner_normal(vec1, vec2, width) {
@@ -19607,23 +19607,23 @@ function line_line_cross(v1, v2, v3, v4) {
   return (w1 == w2) && (w3 == w4) && (w1 != w3);
 };
 
-var _asi_v1 = new Vector3();
-var _asi_v2 = new Vector3();
-var _asi_v3 = new Vector3();
-var _asi_v4 = new Vector3();
-var _asi_v5 = new Vector3();
-var _asi_v6 = new Vector3();
+var _asi_v1 = new Vector3$2();
+var _asi_v2 = new Vector3$2();
+var _asi_v3 = new Vector3$2();
+var _asi_v4 = new Vector3$2();
+var _asi_v5 = new Vector3$2();
+var _asi_v6 = new Vector3$2();
 
 function point_in_aabb_2d(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
 }
 
-var _asi2d_v1 = new Vector2();
-var _asi2d_v2 = new Vector2();
-var _asi2d_v3 = new Vector2();
-var _asi2d_v4 = new Vector2();
-var _asi2d_v5 = new Vector2();
-var _asi2d_v6 = new Vector2();
+var _asi2d_v1 = new Vector2$d();
+var _asi2d_v2 = new Vector2$d();
+var _asi2d_v3 = new Vector2$d();
+var _asi2d_v4 = new Vector2$d();
+var _asi2d_v5 = new Vector2$d();
+var _asi2d_v6 = new Vector2$d();
 
 function aabb_sphere_isect_2d(p, r, min, max) {
   var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
@@ -19695,10 +19695,10 @@ function point_in_aabb(p, min, max) {
 
 let asi_rect = new Array(8);
 for (let i = 0; i < 8; i++) {
-  asi_rect[i] = new Vector3();
+  asi_rect[i] = new Vector3$2();
 }
 
-let aabb_sphere_isect_vs = cachering$1.fromConstructor(Vector3, 64);
+let aabb_sphere_isect_vs = cachering.fromConstructor(Vector3$2, 64);
 
 function aabb_sphere_isect(p, r, min, max) {
   {
@@ -19860,9 +19860,9 @@ function convex_quad(v1, v2, v3, v4) {
   return line_line_cross([v1, v3], [v2, v4]);
 };
 
-var $e1_normal_tri = new Vector3();
-var $e3_normal_tri = new Vector3();
-var $e2_normal_tri = new Vector3();
+var $e1_normal_tri = new Vector3$2();
+var $e3_normal_tri = new Vector3$2();
+var $e2_normal_tri = new Vector3$2();
 
 function isNum(f) {
   let ok = typeof f === "number";
@@ -19872,7 +19872,7 @@ function isNum(f) {
   return ok;
 }
 
-const _normal_tri_rets = cachering$1.fromConstructor(Vector3, 64);
+const _normal_tri_rets = cachering.fromConstructor(Vector3$2, 64);
 
 function normal_tri(v1, v2, v3) {
   let x1 = v2[0] - v1[0];
@@ -19920,9 +19920,9 @@ function normal_tri(v1, v2, v3) {
   return n;
 };
 
-var $n2_normal_quad = new Vector3();
+var $n2_normal_quad = new Vector3$2();
 
-let _q1 = new Vector3(), _q2 = new Vector3(), _q3 = new Vector3();
+let _q1 = new Vector3$2(), _q2 = new Vector3$2(), _q3 = new Vector3$2();
 
 function normal_quad(v1, v2, v3, v4) {
   _q1.load(normal_tri(v1, v2, v3));
@@ -19950,7 +19950,7 @@ function normal_quad_old(v1, v2, v3, v4) {
   return $n2_normal_quad;
 };
 
-var _li_vi = new Vector3();
+var _li_vi = new Vector3$2();
 
 //calc_t is optional, false
 function line_isect(v1, v2, v3, v4, calc_t) {
@@ -19959,7 +19959,7 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   }
   var div = (v2[0] - v1[0])*(v4[1] - v3[1]) - (v2[1] - v1[1])*(v4[0] - v3[0]);
   if (div == 0.0)
-    return [new Vector3(), COLINEAR, 0.0];
+    return [new Vector3$2(), COLINEAR, 0.0];
   var vi = _li_vi;
   vi[0] = 0;
   vi[1] = 0;
@@ -19967,8 +19967,8 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   vi[0] = ((v3[0] - v4[0])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[0] - v2[0])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   vi[1] = ((v3[1] - v4[1])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[1] - v2[1])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   if (calc_t || v1.length == 3) {
-    var n1 = new Vector2(v2).sub(v1);
-    var n2 = new Vector2(vi).sub(v1);
+    var n1 = new Vector2$d(v2).sub(v1);
+    var n2 = new Vector2$d(vi).sub(v1);
     var t = n2.vectorLength()/n1.vectorLength();
     n1.normalize();
     n2.normalize();
@@ -19983,11 +19983,11 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   return [vi, LINECROSS];
 };
 
-var dt2l_v1 = new Vector2();
-var dt2l_v2 = new Vector2();
-var dt2l_v3 = new Vector2();
-var dt2l_v4 = new Vector2();
-var dt2l_v5 = new Vector2();
+var dt2l_v1 = new Vector2$d();
+var dt2l_v2 = new Vector2$d();
+var dt2l_v3 = new Vector2$d();
+var dt2l_v4 = new Vector2$d();
+var dt2l_v5 = new Vector2$d();
 
 function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = undefined) {
   if (clip == undefined) {
@@ -20022,11 +20022,11 @@ function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = un
   return n.vectorDistance(p);
 }
 
-var dt3l_v1 = new Vector3();
-var dt3l_v2 = new Vector3();
-var dt3l_v3 = new Vector3();
-var dt3l_v4 = new Vector3();
-var dt3l_v5 = new Vector3();
+var dt3l_v1 = new Vector3$2();
+var dt3l_v2 = new Vector3$2();
+var dt3l_v3 = new Vector3$2();
+var dt3l_v4 = new Vector3$2();
+var dt3l_v5 = new Vector3$2();
 
 function dist_to_line_sqr(p, v1, v2, clip = true) {
   let px = p[0] - v1[0];
@@ -20067,9 +20067,9 @@ function dist_to_line(p, v1, v2, clip = true) {
 }
 
 //p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
-var _cplw_vs4 = cachering$1.fromConstructor(Vector4, 64);
-var _cplw_vs3 = cachering$1.fromConstructor(Vector3, 64);
-var _cplw_vs2 = cachering$1.fromConstructor(Vector2, 64);
+var _cplw_vs4 = cachering.fromConstructor(Vector4$2, 64);
+var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
+var _cplw_vs2 = cachering.fromConstructor(Vector2$d, 64);
 
 function wclip(x1, x2, w1, w2, near) {
   var r1 = near*w1 - x1;
@@ -20137,12 +20137,12 @@ function clip_line_w(_v1, _v2, znear, zfar) {
 };
 
 //clip is optional, true.  clip point to lie within line segment v1->v2
-var _closest_point_on_line_cache = cachering$1.fromConstructor(Vector3, 64);
-var _closest_point_rets = new cachering$1(function () {
+var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
+var _closest_point_rets = new cachering(function () {
   return [0, 0];
 }, 64);
 
-var _closest_tmps = [new Vector3(), new Vector3(), new Vector3()];
+var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
 
 function closest_point_on_line(p, v1, v2, clip = true) {
   var l1 = _closest_tmps[0], l2 = _closest_tmps[1];
@@ -20182,9 +20182,9 @@ function closest_point_on_line(p, v1, v2, clip = true) {
   
   note that t need not be normalized, this function
   does that itself*/
-var _circ_from_line_tan_vs = cachering$1.fromConstructor(Vector3, 32);
-var _circ_from_line_tan_ret = new cachering$1(function () {
-  return [new Vector3(), 0];
+var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
+var _circ_from_line_tan_ret = new cachering(function () {
+  return [new Vector3$2(), 0];
 }, 64);
 
 function circ_from_line_tan(a, b, t) {
@@ -20220,9 +20220,9 @@ function circ_from_line_tan(a, b, t) {
 
   note that t need not be normalized, this function
   does that itself*/
-var _circ_from_line_tan2d_vs = cachering$1.fromConstructor(Vector3, 32);
-var _circ_from_line_tan2d_ret = new cachering$1(function () {
-  return [new Vector2(), 0];
+var _circ_from_line_tan2d_vs = cachering.fromConstructor(Vector3$2, 32);
+var _circ_from_line_tan2d_ret = new cachering(function () {
+  return [new Vector2$d(), 0];
 }, 64);
 
 function circ_from_line_tan_2d(a, b, t) {
@@ -20306,16 +20306,16 @@ function circ_from_line_tan_2d(a, b, t) {
   return ret;
 }
 
-var _gtc_e1 = new Vector3();
-var _gtc_e2 = new Vector3();
-var _gtc_e3 = new Vector3();
-var _gtc_p1 = new Vector3();
-var _gtc_p2 = new Vector3();
-var _gtc_v1 = new Vector3();
-var _gtc_v2 = new Vector3();
-var _gtc_p12 = new Vector3();
-var _gtc_p22 = new Vector3();
-var _get_tri_circ_ret = new cachering$1(function () {
+var _gtc_e1 = new Vector3$2();
+var _gtc_e2 = new Vector3$2();
+var _gtc_e3 = new Vector3$2();
+var _gtc_p1 = new Vector3$2();
+var _gtc_p2 = new Vector3$2();
+var _gtc_v1 = new Vector3$2();
+var _gtc_v2 = new Vector3$2();
+var _gtc_p12 = new Vector3$2();
+var _gtc_p22 = new Vector3$2();
+var _get_tri_circ_ret = new cachering(function () {
   return [0, 0]
 });
 
@@ -20388,7 +20388,7 @@ function gen_circle(m, origin, r, stfeps) {
   for (var i = 0; i < stfeps; i++) {
     var x = origin[0] + r*Math.sin(f);
     var y = origin[1] + r*Math.cos(f);
-    var v = m.make_vert(new Vector3([x, y, origin[2]]));
+    var v = m.make_vert(new Vector3$2([x, y, origin[2]]));
     verts.push(v);
     f += df;
   }
@@ -20400,8 +20400,8 @@ function gen_circle(m, origin, r, stfeps) {
   return verts;
 };
 
-var cos$1 = Math.cos;
-var sin$1 = Math.sin;
+var cos = Math.cos;
+var sin = Math.sin;
 
 //axis is optional, 0
 function rot2d(v1, A, axis) {
@@ -20409,25 +20409,25 @@ function rot2d(v1, A, axis) {
   var y = v1[1];
 
   if (axis == 1) {
-    v1[0] = x*cos$1(A) + y*sin$1(A);
-    v1[2] = y*cos$1(A) - x*sin$1(A);
+    v1[0] = x*cos(A) + y*sin(A);
+    v1[2] = y*cos(A) - x*sin(A);
   } else {
-    v1[0] = x*cos$1(A) - y*sin$1(A);
-    v1[1] = y*cos$1(A) + x*sin$1(A);
+    v1[0] = x*cos(A) - y*sin(A);
+    v1[1] = y*cos(A) + x*sin(A);
   }
 }
 
 function makeCircleMesh(gl, radius, stfeps) {
   var mesh = new Mesh();
-  var verts1 = gen_circle(mesh, new Vector3(), radius, stfeps);
-  var verts2 = gen_circle(mesh, new Vector3(), radius/1.75, stfeps);
+  var verts1 = gen_circle(mesh, new Vector3$2(), radius, stfeps);
+  var verts2 = gen_circle(mesh, new Vector3$2(), radius/1.75, stfeps);
   mesh.make_face_complex([verts1, verts2]);
   return mesh;
 };
 
 function minmax_verts(verts) {
-  var min = new Vector3([1000000000000.0, 1000000000000.0, 1000000000000.0]);
-  var max = new Vector3([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
+  var min = new Vector3$2([1000000000000.0, 1000000000000.0, 1000000000000.0]);
+  var max = new Vector3$2([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
   var __iter_v = __get_iter(verts);
   var v;
   while (1) {
@@ -20445,25 +20445,25 @@ function minmax_verts(verts) {
 };
 
 function unproject(vec, ipers, iview) {
-  var newvec = new Vector3(vec);
+  var newvec = new Vector3$2(vec);
   newvec.multVecMatrix(ipers);
   newvec.multVecMatrix(iview);
   return newvec;
 };
 
 function project(vec, pers, view) {
-  var newvec = new Vector3(vec);
+  var newvec = new Vector3$2(vec);
   newvec.multVecMatrix(pers);
   newvec.multVecMatrix(view);
   return newvec;
 };
 
-var _sh_minv = new Vector3();
-var _sh_maxv = new Vector3();
+var _sh_minv = new Vector3$2();
+var _sh_maxv = new Vector3$2();
 var _sh_start = [];
 var _sh_end = [];
 
-var static_cent_gbw = new Vector3();
+var static_cent_gbw = new Vector3$2();
 
 function get_boundary_winding(points) {
   var cent = static_cent_gbw.zero();
@@ -20515,20 +20515,20 @@ class PlaneOps {
 
   convex_quad(v1, v2, v3, v4) {
     var ax = this.axis;
-    v1 = new Vector3([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
-    v2 = new Vector3([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
-    v3 = new Vector3([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
-    v4 = new Vector3([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
+    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
     return convex_quad(v1, v2, v3, v4);
   }
 
   line_isect(v1, v2, v3, v4) {
     var ax = this.axis;
     var orig1 = v1, orig2 = v2;
-    v1 = new Vector3([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
-    v2 = new Vector3([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
-    v3 = new Vector3([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
-    v4 = new Vector3([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
+    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
     var ret = line_isect(v1, v2, v3, v4, true);
     var vi = ret[0];
     if (ret[1] == LINECROSS) {
@@ -20540,10 +20540,10 @@ class PlaneOps {
   line_line_cross(l1, l2) {
     var ax = this.axis;
     var v1 = l1[0], v2 = l1[1], v3 = l2[0], v4 = l2[1];
-    v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0.0]);
-    v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0.0]);
-    v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0.0]);
-    v4 = new Vector3([v4[ax[0]], v4[ax[1]], 0.0]);
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
+    v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], 0.0]);
     return line_line_cross([v1, v2], [v3, v4]);
   }
 
@@ -20551,23 +20551,23 @@ class PlaneOps {
     var ax = this.axis;
     if (v1 == undefined)
       console.trace();
-    v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0.0]);
-    v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0.0]);
-    v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0.0]);
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
     return winding(v1, v2, v3);
   }
 
   colinear(v1, v2, v3) {
     var ax = this.axis;
-    v1 = new Vector3([v1[ax[0]], v1[ax[1]], 0.0]);
-    v2 = new Vector3([v2[ax[0]], v2[ax[1]], 0.0]);
-    v3 = new Vector3([v3[ax[0]], v3[ax[1]], 0.0]);
+    v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
+    v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
+    v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
     return colinear(v1, v2, v3);
   }
 
   get_boundary_winding(points) {
     var ax = this.axis;
-    var cent = new Vector3();
+    var cent = new Vector3$2();
     if (points.length == 0)
       return false;
     for (var i = 0; i < points.length; i++) {
@@ -20603,8 +20603,8 @@ part(ff, 1, 2);
 off fort;
 
 * */
-var _isrp_ret = new Vector3();
-let isect_ray_plane_rets = cachering$1.fromConstructor(Vector3, 256);
+var _isrp_ret = new Vector3$2();
+let isect_ray_plane_rets = cachering.fromConstructor(Vector3$2, 256);
 
 function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
   let po = planeorigin, pn = planenormal, ro = rayorigin, rn = raynormal;
@@ -20636,8 +20636,8 @@ function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
 function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
   if (verts == undefined)
     verts = mesh.verts.selected;
-  var vset = new set$2();
-  var eset = new set$2();
+  var vset = new set$1();
+  var eset = new set$1();
   var __iter_v = __get_iter(verts);
   var v;
   while (1) {
@@ -20670,12 +20670,12 @@ function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
     }
   }
   if (eset.length == 0) {
-    return new Vector3(offvec);
+    return new Vector3$2(offvec);
   }
-  var tanav = new Vector3();
-  var evec = new Vector3();
-  var tan = new Vector3();
-  var co2 = new Vector3();
+  var tanav = new Vector3$2();
+  var evec = new Vector3$2();
+  var tan = new Vector3$2();
+  var co2 = new Vector3$2();
   var __iter_e = __get_iter(eset);
   var e;
   while (1) {
@@ -20702,7 +20702,7 @@ function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
 class Mat4Stack {
   constructor() {
     this.stack = [];
-    this.matrix = new Matrix4();
+    this.matrix = new Matrix4$2();
     this.matrix.makeIdentity();
     this.update_func = undefined;
   }
@@ -20738,7 +20738,7 @@ class Mat4Stack {
   }
 
   push(mat2) {
-    this.stack.push(new Matrix4(this.matrix));
+    this.stack.push(new Matrix4$2(this.matrix));
     if (mat2 != undefined) {
       this.matrix.load(mat2);
       if (this.update_func != undefined)
@@ -20802,7 +20802,7 @@ sub(u=0, v=1, w=0, p7[0]);
 
 */
 
-const tril_rets = cachering$1.fromConstructor(Vector3, 128);
+const tril_rets = cachering.fromConstructor(Vector3$2, 128);
 
 function lreport() {
   //console.log(...arguments);
@@ -20841,10 +20841,10 @@ function trilinear_v3(uvw, boxverts) {
   return p;
 }
 
-let tril_co_rets = cachering$1.fromConstructor(Vector3, 128);
-let tril_co_tmps = cachering$1.fromConstructor(Vector3, 16);
-let tril_mat_1 = new Matrix4();
-let tril_mat_2 = new Matrix4();
+let tril_co_rets = cachering.fromConstructor(Vector3$2, 128);
+let tril_co_tmps = cachering.fromConstructor(Vector3$2, 16);
+let tril_mat_1 = new Matrix4$2();
+let tril_mat_2 = new Matrix4$2();
 
 let wtable = [
   [
@@ -20875,7 +20875,7 @@ for (let i = 0; i < 4; i++) {
   wtable.push(w);
 }
 
-const pih_tmps = cachering$1.fromConstructor(Vector3, 16);
+const pih_tmps = cachering.fromConstructor(Vector3$2, 16);
 const boxfaces_table = [
   [0, 1, 2, 3],
   [7, 6, 5, 4],
@@ -20887,12 +20887,12 @@ const boxfaces_table = [
 
 let boxfaces_tmp = new Array(6);
 for (let i = 0; i < 6; i++) {
-  boxfaces_tmp[i] = new Vector3();
+  boxfaces_tmp[i] = new Vector3$2();
 }
 
 let boxfacenormals_tmp = new Array(6);
 for (let i = 0; i < 6; i++) {
-  boxfacenormals_tmp[i] = new Vector3();
+  boxfacenormals_tmp[i] = new Vector3$2();
 }
 
 function point_in_hex(p, boxverts, boxfacecents = undefined, boxfacenormals = undefined) {
@@ -20961,7 +20961,7 @@ function point_in_hex(p, boxverts, boxfacecents = undefined, boxfacenormals = un
 
 const boxverts_tmp = new Array(8);
 for (let i = 0; i < 8; i++) {
-  boxverts_tmp[i] = new Vector3();
+  boxverts_tmp[i] = new Vector3$2();
 }
 
 function trilinear_co(p, boxverts) {
@@ -21172,8 +21172,8 @@ function trilinear_co2(p, boxverts, uvw) {
   return uvw;
 }
 
-let angle_tri_v3_rets = cachering$1.fromConstructor(Vector3, 32);
-let angle_tri_v3_vs = cachering$1.fromConstructor(Vector3, 32);
+let angle_tri_v3_rets = cachering.fromConstructor(Vector3$2, 32);
+let angle_tri_v3_vs = cachering.fromConstructor(Vector3$2, 32);
 
 function tri_angles(v1, v2, v3) {
   let t1 = angle_tri_v3_vs.next().load(v1).sub(v2);
@@ -21484,11 +21484,11 @@ let ColorSchemeTypes = {
   DARK  : "dark"
 };
 
-function parsepx$1(css) {
+function parsepx$4(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
-function color2css$2(c, alpha_override) {
+function color2css$1(c, alpha_override) {
   let r = ~~(c[0]*255);
   let g = ~~(c[1]*255);
   let b = ~~(c[2]*255);
@@ -21502,9 +21502,9 @@ function color2css$2(c, alpha_override) {
     return `rgba(${r},${g},${b}, ${a})`;
   }
 }
-window.color2css = color2css$2;
+window.color2css = color2css$1;
 
-let css2color_rets = cachering$1.fromConstructor(Vector4, 64);
+let css2color_rets = cachering.fromConstructor(Vector4$2, 64);
 let basic_colors = {
   'white' : [1,1,1],
   'grey' : [0.5, 0.5, 0.5],
@@ -21558,7 +21558,7 @@ window.color2web = color2web;
 
 function css2color$1(color) {
   if (!color) {
-    return new Vector4([0,0,0,1]);
+    return new Vector4$2([0,0,0,1]);
   }
 
   color = (""+color).trim();
@@ -21666,7 +21666,7 @@ function invertTheme() {
     }
 
     color = css2color$1(color);
-    return color2css$2(inverted(color));
+    return color2css$1(inverted(color));
   }
 
   let bg = document.body.style["background-color"];
@@ -21712,7 +21712,7 @@ function setColorSchemeType(mode) {
 }
 window.validateWebColor = validateWebColor;
 
-let _digest = new HashDigest();
+let _digest$1 = new HashDigest();
 
 class CSSFont {
   constructor(args={}) {
@@ -21724,7 +21724,7 @@ class CSSFont {
     this.color = args.color;
   }
 
-  calcHashUpdate(digest=_digest.reset()) {
+  calcHashUpdate(digest=_digest$1.reset()) {
     digest.add(this._size || 0);
     digest.add(this.font);
     digest.add(this.style);
@@ -21794,7 +21794,7 @@ CSSFont {
   weight   : string | ""+obj.weight;
 }
 `;
-nstructjs.register(CSSFont);
+nstructjs$1.register(CSSFont);
 
 function exportTheme(theme1=theme, addVarDecl=true) {
   let sortkeys = (obj) => {
@@ -21975,8 +21975,8 @@ class AnimManager {
 }
 
 
-const manager$1 = new AnimManager();
-manager$1.start();
+const manager = new AnimManager();
+manager.start();
 
 class AbstractCommand {
   constructor() {
@@ -22032,7 +22032,7 @@ class GoToCommand extends AbstractCommand {
     let value = this.object[this.key];
 
     if (Array.isArray(value)) {
-      this.startValue = list(value);
+      this.startValue = list$2(value);
     } else {
       this.startValue = value;
     }
@@ -22116,7 +22116,7 @@ class Animator {
     this._done = false;
     this.owner = owner;
     //this.owner[this.method].after(this.on_tick);
-    manager$1.add(this.on_tick);
+    manager.add(this.on_tick);
   }
 
   wait(ms) {
@@ -22152,7 +22152,7 @@ class Animator {
     }
 
     this._done = true;
-    manager$1.remove(this.on_tick);
+    manager.remove(this.on_tick);
     //this.owner.update.remove(this.on_tick);
 
     if (this.onend) {
@@ -22227,7 +22227,7 @@ class Animator {
   }
 }
 
-class token$1 {
+class token {
   constructor(type, val, lexpos, lexlen, lineno, lexer, parser) {
     this.type = type;
     this.value = val;
@@ -22256,7 +22256,7 @@ class token$1 {
 //a) returns the token, or b) returns
 //undefined, in which case the token
 //should be ignored by the lexer
-class tokdef$1 {
+class tokdef {
   constructor(name, regexpr, func) {
     this.name = name;
     this.re = regexpr;
@@ -22264,7 +22264,7 @@ class tokdef$1 {
   }
 }
 
-class PUTLParseError extends Error {
+class PUTLParseError$1 extends Error {
 }
 
 //errfunc is optional.  it requires
@@ -22362,7 +22362,7 @@ class lexer$1 {
     var next = Math.min(this.lexpos+8, this.lexdata.length);
     console.log("  " + this.lexdata.slice(this.lexpos, next));
 
-    throw new PUTLParseError("Parse error");
+    throw new PUTLParseError$1("Parse error");
   }
 
   peek() {
@@ -22440,7 +22440,7 @@ class lexer$1 {
     var def = theres[0];
 
     var lexlen = max_res;
-    var tok = new token$1(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, undefined);
+    var tok = new token(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, undefined);
     this.lexpos += max_res;
 
     if (def.func) {
@@ -22454,7 +22454,7 @@ class lexer$1 {
   }
 }
 
-class parser$1 {
+class parser {
   constructor(lexer, errfunc) {
     this.lexer = lexer;
     this.errfunc = errfunc;
@@ -22463,7 +22463,7 @@ class parser$1 {
   }
 
   copy() {
-    let ret = new parser$1(this.lexer.copy(), this.errfunc);
+    let ret = new parser(this.lexer.copy(), this.errfunc);
     ret.start = this.start;
 
     return ret;
@@ -22522,7 +22522,7 @@ class parser$1 {
       return;
     }
 
-    throw new PUTLParseError(estr);
+    throw new PUTLParseError$1(estr);
   }
 
   peek() {
@@ -22583,7 +22583,7 @@ class parser$1 {
   }
 }
 
-function test_parser$1() {
+function test_parser() {
   var basic_types = new set([
     "int",
     "float",
@@ -22607,7 +22607,7 @@ function test_parser$1() {
     "array"]);
 
   function tk(name, re, func) {
-    return new tokdef$1(name, re, func);
+    return new tokdef(name, re, func);
   }
   var tokens = [
     tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
@@ -22782,11 +22782,11 @@ function test_parser$1() {
 
 var parseutil1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  token: token$1,
-  tokdef: tokdef$1,
-  PUTLParseError: PUTLParseError,
+  token: token,
+  tokdef: tokdef,
+  PUTLParseError: PUTLParseError$1,
   lexer: lexer$1,
-  parser: parser$1
+  parser: parser
 });
 
 const DataFlags = {
@@ -22808,7 +22808,7 @@ let propCacheRings = {};
 
 function getTempProp(type) {
   if (!(type in propCacheRings)) {
-    propCacheRings[type] = cachering$1.fromConstructor(ToolProperty.getClass(type), 32);
+    propCacheRings[type] = cachering.fromConstructor(ToolProperty.getClass(type), 32);
   }
 
   return propCacheRings[type].next();
@@ -22820,13 +22820,13 @@ class DataPathError extends Error {
 
 function getVecClass(proptype) {
   switch (proptype) {
-    case PropTypes.VEC2:
-      return Vector2;
-    case PropTypes.VEC3:
-      return Vector3;
-    case PropTypes.VEC4:
-      return Vector4;
-    case PropTypes.QUAT:
+    case PropTypes$8.VEC2:
+      return Vector2$d;
+    case PropTypes$8.VEC3:
+      return Vector3$2;
+    case PropTypes$8.VEC4:
+      return Vector4$2;
+    case PropTypes$8.QUAT:
       return Quat;
     default:
       throw new Error("bad prop type " + proptype);
@@ -22846,10 +22846,10 @@ function isVecProperty(prop) {
   ok = ok || prop instanceof Vec3Property;
   ok = ok || prop instanceof Vec4Property;
 
-  ok = ok || prop.type === PropTypes.VEC2;
-  ok = ok || prop.type === PropTypes.VEC3;
-  ok = ok || prop.type === PropTypes.VEC4;
-  ok = ok || prop.type === PropTypes.QUAT;
+  ok = ok || prop.type === PropTypes$8.VEC2;
+  ok = ok || prop.type === PropTypes$8.VEC3;
+  ok = ok || prop.type === PropTypes$8.VEC4;
+  ok = ok || prop.type === PropTypes$8.QUAT;
 
   return ok;
 }
@@ -22880,7 +22880,7 @@ class DataPath {
   /** this property should not be treated as something
    *  that should be kept track off in the undo stack*/
   noUndo() {
-    this.data.flag |= PropFlags.NO_UNDO;
+    this.data.flag |= PropFlags$3.NO_UNDO;
     return this;
   }
 
@@ -22892,7 +22892,7 @@ class DataPath {
     this.flag |= DataFlags.READ_ONLY;
 
     if (this.type === DataTypes.PROP) {
-      this.data.flag |= PropFlags.READ_ONLY;
+      this.data.flag |= PropFlags$3.READ_ONLY;
     }
 
     return this;
@@ -22919,7 +22919,7 @@ class DataPath {
    * */
   customPropCallback(callback) {
     this.flag |= DataFlags.USE_CUSTOM_PROP_GETTER;
-    this.data.flag |= PropFlags.USE_CUSTOM_PROP_GETTER;
+    this.data.flag |= PropFlags$3.USE_CUSTOM_PROP_GETTER;
     this.propGetter = callback;
 
     return this;
@@ -22935,7 +22935,7 @@ class DataPath {
     this.flag |= DataFlags.USE_CUSTOM_GETSET;
 
     if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
-      this.data.flag |= PropFlags.USE_CUSTOM_GETSET;
+      this.data.flag |= PropFlags$3.USE_CUSTOM_GETSET;
       this.data._getValue = this.data.getValue;
       this.data._setValue = this.data.setValue;
 
@@ -22989,14 +22989,14 @@ class DataPath {
   }
 
   simpleSlider() {
-    this.data.flag |= PropFlags.SIMPLE_SLIDER;
-    this.data.flag &= ~PropFlags.FORCE_ROLLER_SLIDER;
+    this.data.flag |= PropFlags$3.SIMPLE_SLIDER;
+    this.data.flag &= ~PropFlags$3.FORCE_ROLLER_SLIDER;
     return this;
   }
 
   rollerSlider() {
-    this.data.flag &= ~PropFlags.SIMPLE_SLIDER;
-    this.data.flag |= PropFlags.FORCE_ROLLER_SLIDER;
+    this.data.flag &= ~PropFlags$3.SIMPLE_SLIDER;
+    this.data.flag |= PropFlags$3.FORCE_ROLLER_SLIDER;
 
     return this;
   }
@@ -23022,7 +23022,7 @@ class DataPath {
   }
 
   editAsBaseUnit() {
-    this.data.flag |= PropFlags.EDIT_AS_BASE_UNIT;
+    this.data.flag |= PropFlags$3.EDIT_AS_BASE_UNIT;
     return this;
   }
 
@@ -23094,7 +23094,7 @@ class DataPath {
    * */
   fullSaveUndo() {
     this.flag |= DataFlags.USE_FULL_UNDO;
-    this.data.flag |= PropFlags.USE_BASE_UNDO;
+    this.data.flag |= PropFlags$3.USE_BASE_UNDO;
 
     return this;
   }
@@ -23216,26 +23216,26 @@ function setContextClass(cls) {
   console.warn("setContextClass is deprecated");
 }
 
-const ToolFlags = {
+const ToolFlags$1 = {
   PRIVATE: 1
 
 };
 
 
-const UndoFlags = {
+const UndoFlags$1 = {
   NO_UNDO      : 2,
   IS_UNDO_ROOT : 4,
   UNDO_BARRIER : 8,
   HAS_UNDO_DATA: 16
 };
 
-class InheritFlag {
+class InheritFlag$1 {
   constructor(slots = {}) {
     this.slots = slots;
   }
 }
 
-let modalstack$1 = [];
+let modalstack = [];
 
 let defaultUndoHandlers = {
   undoPre(ctx) {
@@ -23447,7 +23447,7 @@ class ToolOp extends EventHandler {
       if (slots === undefined)
         return {};
 
-      if (!(slots instanceof InheritFlag)) {
+      if (!(slots instanceof InheritFlag$1)) {
         return slots;
       }
 
@@ -23461,9 +23461,9 @@ class ToolOp extends EventHandler {
 
           if (def[key] !== undefined) {
             let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag);
+            let stop = !(slots2 instanceof InheritFlag$1);
 
-            if (slots2 instanceof InheritFlag) {
+            if (slots2 instanceof InheritFlag$1) {
               slots2 = slots2.slots;
             }
 
@@ -23578,7 +23578,7 @@ class ToolOp extends EventHandler {
   }
 
   static inherit(slots = {}) {
-    return new InheritFlag(slots);
+    return new InheritFlag$1(slots);
   }
 
   /**
@@ -23600,7 +23600,7 @@ class ToolOp extends EventHandler {
       let prop = tool.inputs[k];
       let val = args[k];
 
-      if ((typeof val === "string") && prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+      if ((typeof val === "string") && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
         if (val in prop.values) {
           val = prop.values[val];
         } else {
@@ -23625,7 +23625,7 @@ class ToolOp extends EventHandler {
   }
 
   static _regWithNstructjs(cls, structName = cls.name) {
-    if (nstructjs.isRegistered(cls)) {
+    if (nstructjs$1.isRegistered(cls)) {
       return;
     }
 
@@ -23636,10 +23636,10 @@ class ToolOp extends EventHandler {
         this._regWithNstructjs(parent);
       }
 
-      cls.STRUCT = nstructjs.inherit(cls, parent) + '}\n';
+      cls.STRUCT = nstructjs$1.inherit(cls, parent) + '}\n';
     }
 
-    nstructjs.register(cls);
+    nstructjs$1.register(cls);
   }
 
   static isRegistered(cls) {
@@ -23659,7 +23659,7 @@ class ToolOp extends EventHandler {
       if (slots === undefined)
         return {};
 
-      if (!(slots instanceof InheritFlag)) {
+      if (!(slots instanceof InheritFlag$1)) {
         return slots;
       }
 
@@ -23672,9 +23672,9 @@ class ToolOp extends EventHandler {
 
           if (def[key] !== undefined) {
             let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag);
+            let stop = !(slots2 instanceof InheritFlag$1);
 
-            if (slots2 instanceof InheritFlag) {
+            if (slots2 instanceof InheritFlag$1) {
               slots2 = slots2.slots;
             }
 
@@ -23706,14 +23706,14 @@ class ToolOp extends EventHandler {
   }
 
   static onTick() {
-    for (let toolop of modalstack$1) {
+    for (let toolop of modalstack) {
       toolop.on_tick();
     }
   }
 
   static searchBoxOk(ctx) {
     let flag = this.tooldef().flag;
-    let ret = !(flag && (flag & ToolFlags.PRIVATE));
+    let ret = !(flag && (flag & ToolFlags$1.PRIVATE));
     ret = ret && this.canRun(ctx);
 
     return ret;
@@ -23803,7 +23803,7 @@ class ToolOp extends EventHandler {
     for (let k in this.inputs) {
       let prop = this.inputs[k];
 
-      if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
+      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
         SavedToolDefaults.set(this.constructor, k, prop);
       }
     }
@@ -23819,16 +23819,16 @@ class ToolOp extends EventHandler {
       let prop = this.inputs[k];
 
       path += k + "=";
-      if (prop.type === PropTypes.STRING)
+      if (prop.type === PropTypes$8.STRING)
         path += "'";
 
-      if (prop.type === PropTypes.FLOAT) {
+      if (prop.type === PropTypes$8.FLOAT) {
         path += prop.getValue().toFixed(3);
       } else {
         path += prop.getValue();
       }
 
-      if (prop.type === PropTypes.STRING)
+      if (prop.type === PropTypes$8.STRING)
         path += "'";
       path += " ";
     }
@@ -23844,11 +23844,11 @@ class ToolOp extends EventHandler {
    no need to call super() to execute this if you don't want to*/
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap["Enter"]:
-      case keymap["Space"]:
+      case keymap$4["Enter"]:
+      case keymap$4["Space"]:
         this.modalEnd(false);
         break;
-      case keymap["Escape"]:
+      case keymap$4["Escape"]:
         this.modalEnd(true);
         break;
     }
@@ -23946,7 +23946,7 @@ class ToolOp extends EventHandler {
       this._accept = accept;
       this._reject = reject;
 
-      modalstack$1.push(this);
+      modalstack.push(this);
       super.pushModal(ctx.screen);
     });
 
@@ -23964,7 +23964,7 @@ class ToolOp extends EventHandler {
 
   modalEnd(was_cancelled) {
     if (this._modalstate) {
-      modalstack$1.pop();
+      modalstack.pop();
     }
 
     if (this._overdraw !== undefined) {
@@ -24042,7 +24042,7 @@ toolsys.ToolOp {
   outputs : array(toolsys.PropKey) | this._save_outputs();
 }
 `;
-nstructjs.register(ToolOp);
+nstructjs$1.register(ToolOp);
 
 class PropKey {
   constructor(key, val) {
@@ -24057,7 +24057,7 @@ toolsys.PropKey {
   val : abstract(ToolProperty);
 }
 `;
-nstructjs.register(PropKey);
+nstructjs$1.register(PropKey);
 
 class MacroLink {
   constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
@@ -24082,7 +24082,7 @@ toolsys.MacroLink {
   destProps      : string; 
 }
 `;
-nstructjs.register(MacroLink);
+nstructjs$1.register(MacroLink);
 
 const MacroClasses = {};
 window._MacroClasses = MacroClasses;
@@ -24221,7 +24221,7 @@ class ToolMacro extends ToolOp {
     for (let k in this.inputs) {
       let prop = this.inputs[k];
 
-      if (prop.flag & PropFlags.SAVE_LAST_VALUE) {
+      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
         SavedToolDefaults.set(this._getTypeClass(), k, prop);
       }
     }
@@ -24297,7 +24297,7 @@ class ToolMacro extends ToolOp {
     for (let k in tool.inputs) {
       let prop = tool.inputs[k];
 
-      if (!(prop.flag & PropFlags.PRIVATE)) {
+      if (!(prop.flag & PropFlags$3.PRIVATE)) {
         this.inputs[k] = prop;
       }
     }
@@ -24442,12 +24442,12 @@ class ToolMacro extends ToolOp {
   }
 }
 
-ToolMacro.STRUCT = nstructjs.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
+ToolMacro.STRUCT = nstructjs$1.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
   tools        : array(abstract(toolsys.ToolOp));
   connectLinks : array(toolsys.MacroLink);
 }
 `;
-nstructjs.register(ToolMacro);
+nstructjs$1.register(ToolMacro);
 
 class ToolStack extends Array {
   constructor(ctx) {
@@ -24586,7 +24586,7 @@ class ToolStack extends Array {
 
     toolop.execCtx = tctx;
 
-    if (!(undoflag & UndoFlags.NO_UNDO)) {
+    if (!(undoflag & UndoFlags$1.NO_UNDO)) {
       this.cur++;
 
       //save branch for if tool cancel
@@ -24605,7 +24605,7 @@ class ToolStack extends Array {
       this.modal_running = true;
 
       toolop._on_cancel = (function (toolop) {
-        if (!(toolop.undoflag & UndoFlags.NO_UNDO)) {
+        if (!(toolop.undoflag & UndoFlags$1.NO_UNDO)) {
           this.pop_i(this.cur);
           this.cur--;
         }
@@ -24647,7 +24647,7 @@ class ToolStack extends Array {
       this.limitMemory(this.memLimit);
     }
 
-    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags.IS_UNDO_ROOT)) {
+    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags$1.IS_UNDO_ROOT)) {
       let tool = this[this.cur];
 
       tool.undo(tool.execCtx);
@@ -24707,7 +24707,7 @@ class ToolStack extends Array {
 
   save() {
     let data = [];
-    nstructjs.writeObject(data, this);
+    nstructjs$1.writeObject(data, this);
     return data;
   }
 
@@ -24794,7 +24794,7 @@ class ToolStack extends Array {
     for (let tool of this) {
       let cls = tool.constructor;
 
-      if (!nstructjs.isRegistered(cls)) {
+      if (!nstructjs$1.isRegistered(cls)) {
         cls._regWithNstructjs(cls);
       }
     }
@@ -24809,16 +24809,16 @@ toolsys.ToolStack {
   _stack : array(abstract(toolsys.ToolOp)) | this._save();
 }
 `;
-nstructjs.register(ToolStack);
+nstructjs$1.register(ToolStack);
 
 window._testToolStackIO = function () {
   let data = [];
   let cls = _appstate.toolstack.constructor;
 
-  nstructjs.writeObject(data, _appstate.toolstack);
+  nstructjs$1.writeObject(data, _appstate.toolstack);
   data = new DataView(new Uint8Array(data).buffer);
 
-  let toolstack = nstructjs.readObject(data, cls);
+  let toolstack = nstructjs$1.readObject(data, cls);
 
   _appstate.toolstack.rewind();
 
@@ -24838,7 +24838,7 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = unde
     for (let k in def.inputs) {
       let prop = def.inputs[k];
 
-      if (!(prop.flag & (PropFlags.PRIVATE | PropFlags.READ_ONLY))) {
+      if (!(prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY))) {
         SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
       }
     }
@@ -24855,7 +24855,7 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = unde
   //register tools with nstructjs
   for (let cls of ToolClasses) {
     try {
-      if (!nstructjs.isRegistered(cls)) {
+      if (!nstructjs$1.isRegistered(cls)) {
         ToolOp._regWithNstructjs(cls);
       }
     } catch (error) {
@@ -24870,7 +24870,7 @@ let ToolPaths = {};
 var initToolPaths_run = false;
 
 function buildParser() {
-  let t = (name, re, func) => new tokdef$1(name, re, func);
+  let t = (name, re, func) => new tokdef(name, re, func);
 
   let tokens = [
     t('ID', /[a-zA-Z_$]+[a-zA-Z0-9_$]*/, (t) => {
@@ -24926,7 +24926,7 @@ function buildParser() {
 
       let t = p.next();
       if (!(t.type in valid_datatypes)) {
-        throw new PUTLParseError("parse error: unexpected " + t.type);
+        throw new PUTLParseError$1("parse error: unexpected " + t.type);
       }
 
       args[keyword] = t.value;
@@ -24936,7 +24936,7 @@ function buildParser() {
   }
 
   let lex = new lexer$1(tokens, lexerror);
-  let p = new parser$1(lex);
+  let p = new parser(lex);
   p.start = p_Start;
 
   return p;
@@ -25123,11 +25123,11 @@ class ModelInterface {
     let res = this.resolvePath(ctx, path, undefined,  rootStruct);
     let prop = res.prop;
 
-    if (prop !== undefined && (prop.flag & PropFlags.READ_ONLY)) {
+    if (prop !== undefined && (prop.flag & PropFlags$3.READ_ONLY)) {
       throw new DataPathError("Tried to set read only property");
     }
 
-    if (prop !== undefined && (prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+    if (prop !== undefined && (prop.flag & PropFlags$3.USE_CUSTOM_GETSET)) {
       prop.dataref = res.obj;
       prop.ctx = ctx;
       prop.datapath = path;
@@ -25138,7 +25138,7 @@ class ModelInterface {
           val2 = val2.copy();
         }
 
-        if (prop.type === PropTypes.FLAG) {
+        if (prop.type === PropTypes$8.FLAG) {
           if (val) {
             val2 |= prop.values[res.subkey];
           } else {
@@ -25146,7 +25146,7 @@ class ModelInterface {
           }
 
           val = val2;
-        } else if (prop.type === PropTypes.ENUM) {
+        } else if (prop.type === PropTypes$8.ENUM) {
           val = prop.values[res.subkey];
         } else {
           val2[res.subkey] = val;
@@ -25159,13 +25159,13 @@ class ModelInterface {
     }
 
     if (prop !== undefined) {
-      if (prop.type === PropTypes.CURVE && !val) {
+      if (prop.type === PropTypes$8.CURVE && !val) {
         throw new DataPathError("can't set curve data to nothing");
       }
 
-      let use_range = (prop.type & (PropTypes.INT | PropTypes.FLOAT));
+      let use_range = (prop.type & (PropTypes$8.INT | PropTypes$8.FLOAT));
 
-      use_range = use_range || (res.subkey && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4)));
+      use_range = use_range || (res.subkey && (prop.type & (PropTypes$8.VEC2 | PropTypes$8.VEC3 | PropTypes$8.VEC4)));
       use_range = use_range && prop.range;
       use_range = use_range && !(prop.range[0] === 0.0 && prop.range[1] === 0.0);
       use_range = use_range && typeof val === "number";
@@ -25177,13 +25177,13 @@ class ModelInterface {
 
     let old = res.obj[res.key];
 
-    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes.ENUM) {
+    if (res.subkey !== undefined && res.prop !== undefined && res.prop.type === PropTypes$8.ENUM) {
       let ival = res.prop.values[res.subkey];
 
       if (val) {
         res.obj[res.key] = ival;
       }
-    } else if (res.prop !== undefined && res.prop.type === PropTypes.FLAG) {
+    } else if (res.prop !== undefined && res.prop.type === PropTypes$8.FLAG) {
       if (res.subkey !== undefined) {
         let ival = res.prop.values[res.subkey];
 
@@ -25240,11 +25240,11 @@ class ModelInterface {
     if (rdef.subkey !== undefined) {
       let subkey = rdef.subkey;
 
-      if (type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4)) {
+      if (type & (PropTypes$8.VEC2|PropTypes$8.VEC3|PropTypes$8.VEC4)) {
         if (prop.descriptions && subkey in prop.descriptions) {
           return prop.descriptions[subkey];
         }
-      } else if (type & (PropTypes.ENUM|PropTypes.FLAG)) {
+      } else if (type & (PropTypes$8.ENUM|PropTypes$8.FLAG)) {
         if (!(subkey in prop.values) && subkey in prop.keys) {
           subkey = prop.keys[subkey];
         };
@@ -25252,7 +25252,7 @@ class ModelInterface {
         if (prop.descriptions && subkey in prop.descriptions) {
           return prop.descriptions[subkey];
         }
-      } else if (type === PropTypes.PROPLIST) {
+      } else if (type === PropTypes$8.PROPLIST) {
         let val = tdef.value;
         if (typeof val === "object" && val instanceof ToolProperty$1) {
           return val.description;
@@ -25309,11 +25309,11 @@ class ModelInterface {
       throw new DataPathError("invalid path " + path);
     }
 
-    let exec = ret.prop !== undefined && (ret.prop.flag & PropFlags.USE_CUSTOM_GETSET);
+    let exec = ret.prop !== undefined && (ret.prop.flag & PropFlags$3.USE_CUSTOM_GETSET);
 
     //resolvePath handles the case of vector properties with custom callbacks for us
     //(and possibly all the other cases too, need to check)
-    exec = exec && !(ret.prop !== undefined && (ret.prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT)));
+    exec = exec && !(ret.prop !== undefined && (ret.prop.type & (PropTypes$8.VEC2|PropTypes$8.VEC3|PropTypes$8.VEC4|PropTypes$8.QUAT)));
 
     if (exec) {
       ret.prop.dataref = ret.obj;
@@ -25322,13 +25322,13 @@ class ModelInterface {
 
       let val = ret.prop.getValue();
 
-      if (typeof val === "string" && (ret.prop.type & (PropTypes.FLAG|PropTypes.ENUM))) {
+      if (typeof val === "string" && (ret.prop.type & (PropTypes$8.FLAG|PropTypes$8.ENUM))) {
         val = ret.prop.values[val];
       }
 
-      if (ret.subkey && ret.prop.type === PropTypes.ENUM) {
+      if (ret.subkey && ret.prop.type === PropTypes$8.ENUM) {
         val = val === ret.prop.values[ret.subkey];
-      } else if (ret.subkey && ret.prop.type === PropTypes.FLAG) {
+      } else if (ret.subkey && ret.prop.type === PropTypes$8.FLAG) {
         val = val & ret.prop.values[ret.subkey];
       }
 
@@ -25352,7 +25352,7 @@ class DataPathSetOp extends ToolOp {
     let prop = this.inputs.prop;
     let path = this.inputs.dataPath.getValue();
 
-    if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+    if (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
       let rdef = ctx.api.resolvePath(ctx, path);
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
@@ -25397,15 +25397,15 @@ class DataPathSetOp extends ToolOp {
     tool.propType = prop.type;
     tool.inputs.destType.setValue(prop.type);
 
-    if (prop && (prop.flag & PropFlags.USE_BASE_UNDO)) {
+    if (prop && (prop.flag & PropFlags$3.USE_BASE_UNDO)) {
       tool.inputs.fullSaveUndo.setValue(true);
     }
 
-    let mask = PropTypes.FLAG | PropTypes.ENUM;
-    mask |= PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT;
+    let mask = PropTypes$8.FLAG | PropTypes$8.ENUM;
+    mask |= PropTypes$8.VEC2 | PropTypes$8.VEC3 | PropTypes$8.VEC4 | PropTypes$8.QUAT;
 
     if (rdef.subkey !== undefined && (prop.type & mask)) {
-      if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
+      if (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
         let i = datapath.length - 1;
 
         //chope off enum selector
@@ -25427,14 +25427,14 @@ class DataPathSetOp extends ToolOp {
         subkey = rdef.prop.values[subkey];
       }
 
-      if (prop.type === PropTypes.FLAG) {
+      if (prop.type === PropTypes$8.FLAG) {
         tool.inputs.flagBit.setValue(subkey);
         tool.inputs.useFlagBit.setValue(true);
       }
 
-      if (prop.type === PropTypes.ENUM) {
+      if (prop.type === PropTypes$8.ENUM) {
         value = subkey;
-      } else if (prop.type === PropTypes.FLAG) {
+      } else if (prop.type === PropTypes$8.FLAG) {
         let value2 = ctx.api.getValue(ctx, datapath);
 
         if (typeof value2 !== "number") {
@@ -25563,7 +25563,7 @@ class DataPathSetOp extends ToolOp {
     for (let path in this._undo) {
       let rdef = ctx.api.resolvePath(ctx, path);
 
-      if (rdef.prop !== undefined && (rdef.prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      if (rdef.prop !== undefined && (rdef.prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
         let old = rdef.obj[rdef.key];
 
         if (rdef.subkey) {
@@ -25573,7 +25573,7 @@ class DataPathSetOp extends ToolOp {
             key = rdef.prop.values[key];
           }
 
-          if (rdef.prop.type === PropTypes.FLAG) {
+          if (rdef.prop.type === PropTypes$8.FLAG) {
             if (this._undo[path]) {
               rdef.obj[rdef.key] |= key;
             } else {
@@ -25626,7 +25626,7 @@ class DataPathSetOp extends ToolOp {
       let value = this.inputs.prop.getValue();
       let useFlagBit = this.inputs.useFlagBit.getValue();
 
-      if (useFlagBit && this.inputs.destType.getValue() === PropTypes.FLAG) {
+      if (useFlagBit && this.inputs.destType.getValue() === PropTypes$8.FLAG) {
         let bit = this.inputs.flagBit.getValue();
 
         value = !!(value & bit);
@@ -25658,7 +25658,7 @@ class DataPathSetOp extends ToolOp {
       uiname  : "Property Set",
       toolpath: "app.prop_set",
       icon    : -1,
-      flag    : ToolFlags.PRIVATE,
+      flag    : ToolFlags$1.PRIVATE,
       is_modal: true,
       inputs  : {
         dataPath    : new StringProperty(),
@@ -25666,7 +25666,7 @@ class DataPathSetOp extends ToolOp {
         fullSaveUndo: new BoolProperty(false),
         flagBit     : new IntProperty(),
         useFlagBit  : new BoolProperty(),
-        destType    : new EnumProperty(PropTypes.INT, PropTypes),
+        destType    : new EnumProperty$9(PropTypes$8.INT, PropTypes$8),
       }
     }
   }
@@ -25716,9 +25716,9 @@ ToolOp.register(DataPathSetOp);
  </pre>
  */
 
-let PUTLParseError$1 = PUTLParseError;
+let PUTLParseError = PUTLParseError$1;
 
-let tk = (name, re, func) => new tokdef$1(name, re, func);
+let tk = (name, re, func) => new tokdef(name, re, func);
 let tokens = [
   tk("ID", /[a-zA-Z_$]+[a-zA-Z_$0-9]*/),
   tk("NUM", /-?[0-9]+/, (t) => {
@@ -25745,12 +25745,12 @@ let tokens = [
   tk("WS", /[ \t\n\r]+/, (t) => undefined) //drok token
 ];
 
-let lexer$2 = new lexer$1(tokens, (t) => {
+let lexer = new lexer$1(tokens, (t) => {
   console.warn("Parse error", t);
   throw new DataPathError();
 });
 
-let pathParser = new parser$1(lexer$2);
+let pathParser = new parser(lexer);
 
 let parserStack = new Array(32);
 for (let i = 0; i < parserStack.length; i++) {
@@ -25760,12 +25760,12 @@ parserStack.cur = 0;
 
 let tool_classes = ToolClasses;
 
-let tool_idgen = 1;
+let tool_idgen$1 = 1;
 Symbol.ToolID = Symbol("toolid");
 
 function toolkey(cls) {
   if (!(Symbol.ToolID in cls)) {
-    cls[Symbol.ToolID] = tool_idgen++;
+    cls[Symbol.ToolID] = tool_idgen$1++;
   }
 
   return cls[Symbol.ToolID];
@@ -25787,7 +25787,7 @@ function pushReportName(name) {
   reportstack.push(name);
 }
 
-function report(msg) {
+function report$1(msg) {
   let name = reportstack.length === 0 ? "api" : reportstack[reportstack.length - 1];
 
   console$1.context(name).warn(msg);
@@ -25999,7 +25999,7 @@ class DataStruct {
   color3(path, apiname, uiname, description) {
     let ret = this.vec3(path, apiname, uiname, description);
 
-    ret.data.subtype = PropSubTypes$1.COLOR;
+    ret.data.subtype = PropSubTypes$3.COLOR;
     ret.range(0, 1);
     ret.simpleSlider();
 
@@ -26011,7 +26011,7 @@ class DataStruct {
   color4(path, apiname, uiname, description = uiname) {
     let ret = this.vec4(path, apiname, uiname, description);
 
-    ret.data.subtype = PropSubTypes$1.COLOR;
+    ret.data.subtype = PropSubTypes$3.COLOR;
     ret.range(0, 1);
     ret.simpleSlider();
 
@@ -26054,11 +26054,11 @@ class DataStruct {
   }
 
   color3List(path, apiname, uiname, description) {
-    return this.vectorList(3, path, apiname, uiname, description, PropSubTypes$1.COLOR);
+    return this.vectorList(3, path, apiname, uiname, description, PropSubTypes$3.COLOR);
   }
 
   color4List(path, apiname, uiname, description) {
-    return this.vectorList(4, path, apiname, uiname, description, PropSubTypes$1.COLOR);
+    return this.vectorList(4, path, apiname, uiname, description, PropSubTypes$3.COLOR);
   }
 
   vectorList(size, path, apiname, uiname, description, subtype) {
@@ -26207,10 +26207,10 @@ class DataStruct {
   enum(path, apiname, enumdef, uiname, description) {
     let prop;
 
-    if (enumdef instanceof EnumProperty) {
+    if (enumdef instanceof EnumProperty$9) {
       prop = enumdef;
     } else {
-      prop = new EnumProperty(undefined, enumdef, apiname, uiname, description);
+      prop = new EnumProperty$9(undefined, enumdef, apiname, uiname, description);
     }
 
     let dpath = new DataPath(path, apiname, prop);
@@ -26524,7 +26524,7 @@ class DataAPI extends ModelInterface {
       //throw new DataPathError("bad path " + path);
       if (!(error instanceof DataPathError)) {
         print_stack$1(error);
-        report("error while evaluating path " + inpath);
+        report$1("error while evaluating path " + inpath);
       }
 
       if (window.DEBUG && window.DEBUG.datapaths) {
@@ -26594,7 +26594,7 @@ class DataAPI extends ModelInterface {
         p.next();
         return t.value;
       } else {
-        throw new PUTLParseError$1("Expected list key");
+        throw new PUTLParseError("Expected list key");
       }
     }
 
@@ -26613,7 +26613,7 @@ class DataAPI extends ModelInterface {
           prop = DummyIntProperty;
 
           prop.name = "length";
-          prop.flag = PropFlags.READ_ONLY;
+          prop.flag = PropFlags$3.READ_ONLY;
 
           dpath = _dummypath;
           dpath.type = DataTypes.PROP;
@@ -26742,7 +26742,7 @@ class DataAPI extends ModelInterface {
               obj = undefined;
             }
 
-            if (typeof obj === "string" && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+            if (typeof obj === "string" && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
               obj = prop.values[obj];
             }
 
@@ -26771,7 +26771,7 @@ class DataAPI extends ModelInterface {
 
       if (t.type === "DOT") {
         p.next();
-      } else if (t.type === "EQUALS" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "EQUALS" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
         p.expect("EQUALS");
 
         let t2 = p.peeknext();
@@ -26795,7 +26795,7 @@ class DataAPI extends ModelInterface {
 
         key = dpath.path;
         obj = !!(lastobj[key] == val);
-      } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
         p.expect("AND");
 
         let t2 = p.peeknext();
@@ -26819,7 +26819,7 @@ class DataAPI extends ModelInterface {
 
         key = dpath.path;
         obj = !!(lastobj[key] & val);
-      } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes.ENUM | PropTypes.FLAG))) {
+      } else if (t.type === "LSBRACKET" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
         p.expect("LSBRACKET");
 
         let t2 = p.peeknext();
@@ -26845,7 +26845,7 @@ class DataAPI extends ModelInterface {
         let bitfield;
         key = dpath.path;
 
-        if (!(prop.flag & PropFlags.USE_CUSTOM_GETSET)) {
+        if (!(prop.flag & PropFlags$3.USE_CUSTOM_GETSET)) {
           bitfield = lastobj ? lastobj[key] : 0;
         } else {
           prop.dataref = lastobj;
@@ -26864,7 +26864,7 @@ class DataAPI extends ModelInterface {
         if (lastobj === undefined && !ignoreExistence) {
           throw new DataPathError("no data for path " + inpath);
         } else if (lastobj !== undefined) {
-          if (prop.type === PropTypes.ENUM) {
+          if (prop.type === PropTypes$8.ENUM) {
             obj = !!(bitfield === val);
           } else {
             obj = !!(bitfield & val);
@@ -26879,7 +26879,7 @@ class DataAPI extends ModelInterface {
 
         subkey = num;
 
-        if (prop !== undefined && !(prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT))) {
+        if (prop !== undefined && !(prop.type & (PropTypes$8.VEC2 | PropTypes$8.VEC3 | PropTypes$8.VEC4 | PropTypes$8.QUAT))) {
           lastobj = obj;
         }
 
@@ -27006,7 +27006,7 @@ class DataAPI extends ModelInterface {
           }
         }
 
-        if (prop !== undefined && (prop.type === PropTypes.ENUM || prop.type === PropTypes.FLAG)) {
+        if (prop !== undefined && (prop.type === PropTypes$8.ENUM || prop.type === PropTypes$8.FLAG)) {
           console$1.context("api").log("found flag/enum property");
           ok = true;
         }
@@ -27023,7 +27023,7 @@ class DataAPI extends ModelInterface {
             value = prop.values[key];
           }
 
-          if (prop.type === PropTypes.ENUM) {
+          if (prop.type === PropTypes$8.ENUM) {
             value = !!(value == key);
           } else { //flag
             value = !!(value & key);
@@ -27358,7 +27358,7 @@ function setDataPathToolOp(cls) {
 
 setImplementationClass(DataAPI);
 
-let rgb_to_hsv_rets = new cachering$1(() => [0, 0, 0], 64);
+let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
 
 function rgb_to_hsv(r, g, b) {
   let computedH = 0;
@@ -27400,7 +27400,7 @@ function rgb_to_hsv(r, g, b) {
   return ret;
 }
 
-let hsv_to_rgb_rets = new cachering$1(() => [0, 0, 0], 64);
+let hsv_to_rgb_rets = new cachering(() => [0, 0, 0], 64);
 
 function hsv_to_rgb(h, s, v) {
   let c = 0, m = 0, x = 0;
@@ -27441,8 +27441,8 @@ function hsv_to_rgb(h, s, v) {
   return color;
 }
 
-let rgb_to_cmyk_rets = cachering$1.fromConstructor(Vector4, 512);
-let cmyk_to_rgb_rets = cachering$1.fromConstructor(Vector3, 512);
+let rgb_to_cmyk_rets = cachering.fromConstructor(Vector4$2, 512);
+let cmyk_to_rgb_rets = cachering.fromConstructor(Vector3$2, 512);
 
 function cmyk_to_rgb(c, m, y, k) {
   let ret = cmyk_to_rgb_rets.next();
@@ -27978,12 +27978,12 @@ HELP        : help symbol
 */
 function setIconMap(icons) {
   for (let k in icons) {
-    Icons[k] = icons[k];
+    Icons$2[k] = icons[k];
   }
 }
 
 let a$1 = 0;
-let Icons = {
+let Icons$2 = {
   FOLDER: a$1++,
   FILE  : a$1++,
   TINY_X: a$1++,
@@ -28019,19 +28019,19 @@ let Icons = {
   ZOOM_IN      : a$1++
 };
 /* used for icon checkboxes with overlayed check marks */
-Icons.ENUM_CHECKED = Icons.CHECKED;
-Icons.ENUM_UNCHECKED = Icons.UNCHECKED;
+Icons$2.ENUM_CHECKED = Icons$2.CHECKED;
+Icons$2.ENUM_UNCHECKED = Icons$2.UNCHECKED;
 
 let exclude = new Set([
   "toString", "constructor", "prototype", "__proto__", "toLocaleString",
   "hasOwnProperty", "shadow"
 ]);
 
-let UIBase$1 = undefined;
+let UIBase$h = undefined;
 
 //deal with circular module refrence
 function _setUIBase(uibase) {
-  UIBase$1 = uibase;
+  UIBase$h = uibase;
 }
 
 let AspectKeys = Symbol("aspect-keys");
@@ -28157,7 +28157,7 @@ class AfterAspect {
         if (node) {
           let isDead = !node.isConnected;
 
-          if (node instanceof UIBase$1) {
+          if (node instanceof UIBase$h) {
             isDead = isDead || node.isDead();
           }
 
@@ -28256,10 +28256,10 @@ class AfterAspect {
 let _ui_base = undefined;
 
 //avoid circular module references
-let TextBox = undefined;
+let TextBox$1 = undefined;
 
 function _setTextboxClass(cls) {
-  TextBox = cls;
+  TextBox$1 = cls;
 }
 
 //global list of elements to, hopefully, prevent minification tree shaking
@@ -28268,13 +28268,13 @@ let ElementClasses = [];
 
 window.__cconst = exports;
 
-let Vector4$1 = Vector4;
+let Vector4$1 = Vector4$2;
 
-const EnumProperty$1 = EnumProperty;
+const EnumProperty$8 = EnumProperty$9;
 
-let Area;
+let Area$2;
 let _setAreaClass = (cls) => {
-  Area = cls;
+  Area$2 = cls;
 };
 
 const ErrorColors = {
@@ -28358,7 +28358,7 @@ setTheme(DefaultTheme);
 
 let _last_report = time_ms();
 
-function report$1() {
+function report() {
   if (time_ms() - _last_report > 350) {
     console.warn(...arguments);
     _last_report = time_ms();
@@ -28564,8 +28564,8 @@ class IconManager {
     if (!icon) {
       let maxid = 0;
 
-      for (let k in Icons) {
-        maxid = Math.max(maxid, Icons[k] + 1);
+      for (let k in Icons$2) {
+        maxid = Math.max(maxid, Icons$2[k] + 1);
       }
       for (let icon of this.customIcons.values()) {
         maxid = Math.max(maxid, icon.id + 1);
@@ -28642,7 +28642,7 @@ class IconManager {
     let base = this.iconsheets[sheet];
 
     /**sigh**/
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
     let minsheet = undefined;
     let goal = dpi*base.drawsize;
 
@@ -28699,29 +28699,29 @@ class IconManager {
   }
 }
 
-let iconmanager = new IconManager([
+let iconmanager$1 = new IconManager([
   document.getElementById("iconsheet16"),
   document.getElementById("iconsheet32"),
   document.getElementById("iconsheet48")
 ], [16, 32, 64], 16);
 
-window._iconmanager = iconmanager; //debug global
+window._iconmanager = iconmanager$1; //debug global
 
 //if client code overrides iconsheets, they must follow logical convention
 //that the first one is "small" and the second is "large"
-let IconSheets = {
+let IconSheets$7 = {
   SMALL : 0,
   LARGE : 1,
   XLARGE: 2
 };
 
 function iconSheetFromPackFlag(flag) {
-  if (flag & PackFlags.CUSTOM_ICON_SHEET) {
+  if (flag & PackFlags$a.CUSTOM_ICON_SHEET) {
     //console.log("Custom Icon Sheet:", flag>>PackFlags.CUSTOM_ICON_SHEET_START);
-    return flag>>PackFlags.CUSTOM_ICON_SHEET_START;
+    return flag>>PackFlags$a.CUSTOM_ICON_SHEET_START;
   }
 
-  if ((flag & PackFlags.SMALL_ICON) && !(PackFlags.LARGE_ICON)) {
+  if ((flag & PackFlags$a.SMALL_ICON) && !(PackFlags$a.LARGE_ICON)) {
     return 0//IconSheets.SMALL; //0
   } else {
     return 1//IconSheets.LARGE; //1
@@ -28729,23 +28729,23 @@ function iconSheetFromPackFlag(flag) {
 }
 
 function getIconManager() {
-  return iconmanager;
+  return iconmanager$1;
 }
 
 function setIconManager(manager, IconSheetsOverride) {
-  iconmanager.load(manager);
+  iconmanager$1.load(manager);
 
   if (IconSheetsOverride !== undefined) {
     for (let k in IconSheetsOverride) {
-      IconSheets[k] = IconSheetsOverride[k];
+      IconSheets$7[k] = IconSheetsOverride[k];
     }
   }
 }
 
 function makeIconDiv(icon, sheet = 0) {
-  let size = iconmanager.getRealSize(sheet);
+  let size = iconmanager$1.getRealSize(sheet);
 
-  let drawsize = iconmanager.getTileSize(sheet);
+  let drawsize = iconmanager$1.getTileSize(sheet);
 
   let icontest = document.createElement("div");
 
@@ -28757,13 +28757,13 @@ function makeIconDiv(icon, sheet = 0) {
   icontest.style["margin"] = "0px";
   icontest.style["padding"] = "0px";
 
-  iconmanager.setCSS(icon, icontest, sheet);
+  iconmanager$1.setCSS(icon, icontest, sheet);
 
   return icontest;
 }
 
-let Vector2$3 = Vector2;
-let Matrix4$1 = Matrix4;
+let Vector2$a = Vector2$d;
+let Matrix4$1 = Matrix4$2;
 
 let dpistack = [];
 
@@ -28772,7 +28772,7 @@ const UIFlags = {};
 const internalElementNames = {};
 const externalElementNames = {};
 
-const PackFlags = {
+const PackFlags$a = {
   INHERIT_WIDTH : 1,
   INHERIT_HEIGHT: 2,
   VERTICAL      : 4,
@@ -28798,7 +28798,7 @@ const PackFlags = {
   NO_UPDATE              : 1<<16
 };
 
-let first$1 = (iter) => {
+let first = (iter) => {
   if (iter === undefined) {
     return undefined;
   }
@@ -28829,7 +28829,7 @@ let _mobile_theme_patterns = [
 let _idgen = 0;
 
 window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15, border = "solid") {
-  let buf = styleScrollBars(color, undefined, contrast, width, border, "*");
+  let buf = styleScrollBars$1(color, undefined, contrast, width, border, "*");
   CTX.screen.mergeGlobalCSS(buf);
 
   //document.body.style["overflow"] = "scroll";
@@ -28846,7 +28846,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
   return buf;
 };
 
-function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
+function styleScrollBars$1(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
                                 border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
@@ -28895,11 +28895,11 @@ ${selector}::-webkit-scrollbar-thumb {
   return buf;
 }
 
-window.styleScrollBars = styleScrollBars;
+window.styleScrollBars = styleScrollBars$1;
 
-let _digest$1 = new HashDigest();
+let _digest = new HashDigest();
 
-function calcThemeKey(digest = _digest$1.reset()) {
+function calcThemeKey(digest = _digest.reset()) {
   for (let k in theme) {
     let obj = theme[k];
 
@@ -28927,7 +28927,7 @@ function flagThemeUpdate() {
   _themeUpdateKey = calcThemeKey();
 }
 
-class UIBase$2 extends HTMLElement {
+class UIBase$g extends HTMLElement {
   constructor() {
     super();
 
@@ -28974,7 +28974,7 @@ class UIBase$2 extends HTMLElement {
     ///*
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
-      if (child && typeof child === "object" && child instanceof UIBase$2) {
+      if (child && typeof child === "object" && child instanceof UIBase$g) {
         child.parentWidget = this;
       }
 
@@ -29241,7 +29241,7 @@ class UIBase$2 extends HTMLElement {
   }
 
   static getIconEnum() {
-    return Icons;
+    return Icons$2;
   }
 
   static setDefault(element) {
@@ -29345,9 +29345,9 @@ class UIBase$2 extends HTMLElement {
         ret = n;
       }
 
-      if (n instanceof UIBase$2 && n.constructor.define().tagname === "panelframe-x") {
+      if (n instanceof UIBase$g && n.constructor.define().tagname === "panelframe-x") {
         rec(n.contents);
-      } else if (n instanceof UIBase$2 && n.constructor.define().tagname === "tabcontainer-x") {
+      } else if (n instanceof UIBase$g && n.constructor.define().tagname === "tabcontainer-x") {
         for (let k in n.tabs) {
           let tab = n.tabs[k];
 
@@ -29393,7 +29393,7 @@ class UIBase$2 extends HTMLElement {
     let p = this;
 
     while (p) {
-      if (p instanceof Area) {
+      if (p instanceof Area$2) {
         return p;
       }
 
@@ -29517,8 +29517,8 @@ class UIBase$2 extends HTMLElement {
   getTotalRect() {
     let found = false;
 
-    let min = new Vector2$3([1e17, 1e17]);
-    let max = new Vector2$3([-1e17, -1e17]);
+    let min = new Vector2$a([1e17, 1e17]);
+    let max = new Vector2$a([-1e17, -1e17]);
 
     let doaabb = (n) => {
       let rs = n.getClientRects();
@@ -29734,7 +29734,7 @@ class UIBase$2 extends HTMLElement {
     this.setCSS();
 
     this._forEachChildWidget((c) => {
-      if (!(c.packflag & PackFlags.NO_UPDATE)) {
+      if (!(c.packflag & PackFlags$a.NO_UPDATE)) {
         c.flushSetCSS();
       }
     });
@@ -29746,7 +29746,7 @@ class UIBase$2 extends HTMLElement {
     let classes = type_or_set;
 
     let is_set = type_or_set instanceof Set;
-    is_set = is_set || type_or_set instanceof set$1;
+    is_set = is_set || type_or_set instanceof set$2;
     is_set = is_set || Array.isArray(type_or_set);
 
     if (!is_set) {
@@ -29791,7 +29791,7 @@ class UIBase$2 extends HTMLElement {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase$2) {
+    if (child instanceof UIBase$g) {
       child.ctx = this.ctx;
       child.parentWidget = this;
 
@@ -29836,8 +29836,8 @@ class UIBase$2 extends HTMLElement {
       /* the user's mouse cursor might not be over the element
       *  if they've tabbed to it */
 
-      let is_copy = e.keyCode === keymap["C"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
-      let is_paste = e.keyCode === keymap["V"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
+      let is_copy = e.keyCode === keymap$4["C"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
+      let is_paste = e.keyCode === keymap$4["V"] && (e.ctrlKey || e.commandKey) && !e.shiftKey && !e.altKey;
 
       if (!is_copy && !is_paste) {
         //early out, remember that pickElement is highly expensive to run
@@ -29852,7 +29852,7 @@ class UIBase$2 extends HTMLElement {
         let checkTree = is_paste && this.constructor.define().pasteForAllChildren;
         checkTree = checkTree || (is_copy && this.constructor.define().copyForAllChildren);
 
-        while (checkTree && !(elem instanceof TextBox) && elem !== this && elem.parentWidget) {
+        while (checkTree && !(elem instanceof TextBox$1) && elem !== this && elem.parentWidget) {
           console.log("  " + elem._id);
 
           elem = elem.parentWidget;
@@ -29990,7 +29990,7 @@ class UIBase$2 extends HTMLElement {
     this.update();
 
     this._forEachChildWidget((c) => {
-      if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
+      if (force || !(c.packflag & PackFlags$a.NO_UPDATE)) {
         c.flushUpdate(force);
       }
     });
@@ -30008,7 +30008,7 @@ class UIBase$2 extends HTMLElement {
    **/
   _forEachChildWidget(cb, thisvar) {
     let rec = (n) => {
-      if (n instanceof UIBase$2) {
+      if (n instanceof UIBase$g) {
         if (thisvar !== undefined) {
           cb.call(thisvar, n);
         } else {
@@ -30081,7 +30081,7 @@ class UIBase$2 extends HTMLElement {
     return 0;
   }
 
-  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase$2, excluded_classes = undefined) {
+  pickElement(x, y, args = {}, marginy = 0, nodeclass = UIBase$g, excluded_classes = undefined) {
     let marginx;
     let clip;
     let mouseEvent;
@@ -30090,7 +30090,7 @@ class UIBase$2 extends HTMLElement {
     if (typeof args === "object") {
       marginx = args.sx || 0;
       marginy = args.sy || 0;
-      nodeclass = args.nodeclass || UIBase$2;
+      nodeclass = args.nodeclass || UIBase$g;
       excluded_classes = args.excluded_classes;
       clip = args.clip;
       mouseEvent = args.mouseEvent;
@@ -30100,7 +30100,7 @@ class UIBase$2 extends HTMLElement {
       args = {
         marginx         : marginx || 0,
         marginy         : marginy || 0,
-        nodeclass       : nodeclass || UIBase$2,
+        nodeclass       : nodeclass || UIBase$g,
         excluded_classes: excluded_classes,
         clip            : clip
       };
@@ -30234,7 +30234,7 @@ class UIBase$2 extends HTMLElement {
     this.__disabledState = !!val;
 
     let visit = (n) => {
-      if (n instanceof UIBase$2) {
+      if (n instanceof UIBase$g) {
         let changed = !!n.__disabledState;
 
         /*
@@ -30358,7 +30358,7 @@ class UIBase$2 extends HTMLElement {
     div.tabIndex = undefined;
     div.style["z-index"] = "900";
     div.style["display"] = "float";
-    div.style["position"] = UIBase$2.PositionKey;
+    div.style["position"] = UIBase$g.PositionKey;
     div.style["margin"] = "0px";
     div.style["left"] = x + "px";
     div.style["top"] = y + "px";
@@ -30633,7 +30633,7 @@ class UIBase$2 extends HTMLElement {
   }
 
   float(x = 0, y = 0, zindex = undefined) {
-    this.style.position = UIBase$2.PositionKey;
+    this.style.position = UIBase$g.PositionKey;
 
     this.style.left = x + "px";
     this.style.top = y + "px";
@@ -30892,7 +30892,7 @@ class UIBase$2 extends HTMLElement {
       return this.parentWidget.getDPI();
     }
 
-    return UIBase$2.getDPI();
+    return UIBase$g.getDPI();
   }
 
   /**
@@ -31039,7 +31039,7 @@ class UIBase$2 extends HTMLElement {
 
     let p = this.constructor, lastp = undefined;
 
-    while (p && p !== lastp && p !== UIBase$2 && p !== Object) {
+    while (p && p !== lastp && p !== UIBase$g && p !== Object) {
       let def = p.define();
 
       if (def.style) {
@@ -31104,7 +31104,7 @@ class UIBase$2 extends HTMLElement {
 
     if (val === undefined && style in theme && !(key in theme[style]) && !(key in theme.base)) {
       if (window.DEBUG.theme) {
-        report$1("Missing theme key ", key, "for", style);
+        report("Missing theme key ", key, "for", style);
       }
     }
 
@@ -31208,7 +31208,7 @@ class UIBase$2 extends HTMLElement {
         let s = this.style[k];
 
         if (s.endsWith("px")) {
-          return parsepx$1(s);
+          return parsepx$4(s);
         } else {
           return 0.0;
         }
@@ -31262,7 +31262,7 @@ class UIBase$2 extends HTMLElement {
   }
 
   abortAnimations() {
-    for (let anim of list(this._active_animations)) {
+    for (let anim of list$2(this._active_animations)) {
       anim.end();
     }
 
@@ -31462,7 +31462,7 @@ function measureText(elem, text, canvas                    = undefined,
 
   if (ret && isMobile()) {
     let ret2 = {};
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
 
     for (let k in ret) {
       let v = ret[k];
@@ -31499,7 +31499,7 @@ function drawText(elem, x, y, text, args = {}) {
     }
   }
 
-  size *= UIBase$2.getDPI();
+  size *= UIBase$g.getDPI();
 
 
   if (color === undefined) {
@@ -31559,7 +31559,7 @@ function saveUIData(node, key) {
     path[pi] = ni;
     path[pi + 1] = is_shadow ? 1 : 0;
 
-    if (n instanceof UIBase$2) {
+    if (n instanceof UIBase$g) {
       let path2 = path.slice(0, path.length);
       let data = n.saveData();
 
@@ -31642,7 +31642,7 @@ function loadUIData(node, buf) {
       n = list[ni];
     }
 
-    if (n !== undefined && n instanceof UIBase$2) {
+    if (n !== undefined && n instanceof UIBase$g) {
       n._init(); //ensure init's been called, _init will check if it has
       n.loadData(data);
 
@@ -31651,30 +31651,30 @@ function loadUIData(node, buf) {
   }
 }
 
-UIBase$2.PositionKey = "fixed";
+UIBase$g.PositionKey = "fixed";
 
 window._loadUIData = loadUIData;
 
 //avoid explicit circular references
-_setUIBase(UIBase$2);
+_setUIBase(UIBase$g);
 //ui_save.setUIBase(UIBase);
 
 "use strict";
 
-let keymap$1 = keymap;
+let keymap$3 = keymap$4;
 
-let EnumProperty$2 = EnumProperty,
-    PropTypes$1 = PropTypes;
+let EnumProperty$7 = EnumProperty$9,
+    PropTypes$7 = PropTypes$8;
 
-let UIBase$3 = UIBase$2,
-    PackFlags$1 = PackFlags,
-    IconSheets$1 = IconSheets;
+let UIBase$f = UIBase$g,
+    PackFlags$9 = PackFlags$a,
+    IconSheets$6 = IconSheets$7;
 
-let parsepx$2 = parsepx$1;
+let parsepx$3 = parsepx$4;
 
 exports.DEBUG.buttonEvents = true;
 
-class Button extends UIBase$3 {
+class Button extends UIBase$f {
   constructor() {
     super();
 
@@ -31936,10 +31936,10 @@ class Button extends UIBase$3 {
     };
   }
 }
-UIBase$3.register(Button);
+UIBase$f.register(Button);
 
 //use .setAttribute("linear") to disable nonlinear sliding
-class OldButton extends UIBase$3 {
+class OldButton extends UIBase$f {
   constructor() {
     super();
 
@@ -32036,7 +32036,7 @@ class OldButton extends UIBase$3 {
     this.dom.style["padding"] = this.dom.style["margin"] = "0px";
 
     this.dom.width = Math.ceil(width*dpi); //parsepx(this.dom.style["width"])*dpi;
-    this.dom.height = Math.ceil(parsepx$2(this.dom.style["height"])*dpi);
+    this.dom.height = Math.ceil(parsepx$3(this.dom.style["height"])*dpi);
 
     this._name = undefined;
     this.updateName();
@@ -32284,8 +32284,8 @@ class OldButton extends UIBase$3 {
   _repos_canvas() {
     let dpi = this.getDPI();
 
-    let w = parsepx$2(this.dom.style["width"]);
-    let h = parsepx$2(this.dom.style["height"]);
+    let w = parsepx$3(this.dom.style["width"]);
+    let h = parsepx$3(this.dom.style["height"]);
 
     let w2 = ~~(w*dpi);
     let h2 = ~~(h*dpi);
@@ -32432,7 +32432,7 @@ class OldButton extends UIBase$3 {
     };
   }
 }
-UIBase$3.internalRegister(OldButton);
+UIBase$f.internalRegister(OldButton);
 
 "use strict";
 
@@ -32449,24 +32449,24 @@ function myToFixed$1(s, n) {
   return s;
 }
 
-let keymap$2 = keymap;
+let keymap$2 = keymap$4;
 
-let EnumProperty$3 = EnumProperty,
-    PropTypes$2 = PropTypes;
+let EnumProperty$6 = EnumProperty$9,
+    PropTypes$6 = PropTypes$8;
 
-let UIBase$4 = UIBase$2,
-    PackFlags$2 = PackFlags,
-    IconSheets$2 = IconSheets;
+let UIBase$e = UIBase$g,
+    PackFlags$8 = PackFlags$a,
+    IconSheets$5 = IconSheets$7;
 
-let parsepx$3 = parsepx$1;
+let parsepx$2 = parsepx$4;
 
-class TextBoxBase extends UIBase$4 {
+class TextBoxBase extends UIBase$e {
   static define() {return {
     modalKeyEvents : true
   }}
 }
 
-class TextBox$1 extends TextBoxBase {
+class TextBox extends TextBoxBase {
   constructor() {
     super();
 
@@ -32721,13 +32721,13 @@ class TextBox$1 extends TextBoxBase {
       return;
     }
 
-    let is_num = prop.type & (PropTypes$2.FLOAT|PropTypes$2.INT);
-    if (typeof val === "number" && (prop.type & (PropTypes$2.VEC2|PropTypes$2.VEC3|PropTypes$2.VEC4|PropTypes$2.QUAT))) {
+    let is_num = prop.type & (PropTypes$6.FLOAT|PropTypes$6.INT);
+    if (typeof val === "number" && (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4|PropTypes$6.QUAT))) {
       is_num = true;
     }
 
     if (is_num) {
-      let is_int = prop.type === PropTypes$2.INT;
+      let is_int = prop.type === PropTypes$6.INT;
 
       this.radix = prop.radix;
 
@@ -32754,7 +32754,7 @@ class TextBox$1 extends TextBoxBase {
       } else {
         text = buildString(val, baseUnit, decimalPlaces, displayUnit);
       }
-    } else if (prop !== undefined && prop.type === PropTypes$2.STRING) {
+    } else if (prop !== undefined && prop.type === PropTypes$6.STRING) {
       text = val;
     }
 
@@ -32808,15 +32808,15 @@ class TextBox$1 extends TextBoxBase {
   }
 
   _prop_update(prop, text) {
-    let is_num = prop.type & (PropTypes$2.FLOAT|PropTypes$2.INT);
+    let is_num = prop.type & (PropTypes$6.FLOAT|PropTypes$6.INT);
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
-    if (typeof val === "number" && (prop.type & (PropTypes$2.VEC2|PropTypes$2.VEC3|PropTypes$2.VEC4|PropTypes$2.QUAT))) {
+    if (typeof val === "number" && (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4|PropTypes$6.QUAT))) {
       is_num = true;
     }
 
     if (is_num) {
-      let is_int = prop.type === PropTypes$2.INT;
+      let is_int = prop.type === PropTypes$6.INT;
 
       this.radix = prop.radix;
 
@@ -32850,7 +32850,7 @@ class TextBox$1 extends TextBoxBase {
         this._had_error = false;
         this.setPathValue(this.ctx, this.getAttribute("datapath"), val);
       }
-    } else if (prop.type === PropTypes$2.STRING) {
+    } else if (prop.type === PropTypes$6.STRING) {
       try {
         this.setPathValue(this.ctx, this.getAttribute("datapath"), this.text);
 
@@ -32901,7 +32901,7 @@ class TextBox$1 extends TextBoxBase {
   }
 }
 
-UIBase$4.internalRegister(TextBox$1);
+UIBase$e.internalRegister(TextBox);
 
 /**
 
@@ -32920,7 +32920,7 @@ function checkForTextBox(screen, x, y) {
       return true;
     }
 
-    if (p instanceof UIBase$4) {
+    if (p instanceof UIBase$e) {
       //check immediate children of p
       for (let i=0; i<2; i++) {
         let nodes = i ? p.childNodes : p.shadow.childNodes;
@@ -32946,11 +32946,11 @@ function checkForTextBox(screen, x, y) {
   return false;
 }
 
-_setTextboxClass(TextBox$1);
+_setTextboxClass(TextBox);
 
 "use strict";
 
-function myToFixed$2(s, n) {
+function myToFixed(s, n) {
   s = s.toFixed(n);
 
   while (s.endsWith('0')) {
@@ -32963,18 +32963,18 @@ function myToFixed$2(s, n) {
   return s;
 }
 
-let keymap$3 = keymap;
+let keymap$1 = keymap$4;
 
-let EnumProperty$4 = EnumProperty,
-    PropTypes$3    = PropTypes;
+let EnumProperty$5 = EnumProperty$9,
+    PropTypes$5    = PropTypes$8;
 
-let UIBase$5     = UIBase$2,
-    PackFlags$3  = PackFlags,
-    IconSheets$3 = IconSheets;
+let UIBase$d     = UIBase$g,
+    PackFlags$7  = PackFlags$a,
+    IconSheets$4 = IconSheets$7;
 
-let parsepx$4 = parsepx$1;
+let parsepx$1 = parsepx$4;
 
-class IconLabel extends UIBase$5 {
+class IconLabel extends UIBase$d {
   constructor() {
     super();
     this._icon = -1;
@@ -33006,17 +33006,17 @@ class IconLabel extends UIBase$5 {
   }
 
   setCSS() {
-    let size = iconmanager.getTileSize(this.iconsheet);
+    let size = iconmanager$1.getTileSize(this.iconsheet);
 
 
-    iconmanager.setCSS(this.icon, this);
+    iconmanager$1.setCSS(this.icon, this);
 
     this.style["width"] = size + "px";
     this.style["height"] = size + "px";
   }
 }
 
-UIBase$5.internalRegister(IconLabel);
+UIBase$d.internalRegister(IconLabel);
 
 class ValueButtonBase extends OldButton {
   constructor() {
@@ -33072,7 +33072,7 @@ class ValueButtonBase extends OldButton {
   }
 }
 
-class Check extends UIBase$5 {
+class Check extends UIBase$d {
   constructor() {
     super();
 
@@ -33093,7 +33093,7 @@ class Check extends UIBase$5 {
     //span.style["background"] = ui_base.iconmanager.getCSS(1);
 
     let sheet = 0;
-    let size = iconmanager.getTileSize(0);
+    let size = iconmanager$1.getTileSize(0);
 
     let check = this.canvas = document.createElement("canvas");
     this.g = check.getContext("2d");
@@ -33147,7 +33147,7 @@ class Check extends UIBase$5 {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap$3["Escape"]:
+        case keymap$1["Escape"]:
           this._highlight = undefined;
           this._redraw();
           e.preventDefault();
@@ -33155,8 +33155,8 @@ class Check extends UIBase$5 {
 
           this.blur();
           break;
-        case keymap$3["Enter"]:
-        case keymap$3["Space"]:
+        case keymap$1["Enter"]:
+        case keymap$1["Space"]:
           this.checked = !this.checked;
           e.preventDefault();
           e.stopPropagation();
@@ -33320,8 +33320,8 @@ class Check extends UIBase$5 {
     }
 
     let canvas = this.canvas, g = this.g;
-    let dpi = UIBase$5.getDPI();
-    let tilesize = iconmanager.getTileSize(0);
+    let dpi = UIBase$d.getDPI();
+    let tilesize = iconmanager$1.getTileSize(0);
     let pad = this.getDefault("padding");
 
     let csize = tilesize + pad*2;
@@ -33352,7 +33352,7 @@ class Check extends UIBase$5 {
     if (this._checked) {
       //canvasDraw(elem, canvas, g, icon, x=0, y=0, sheet=0) {
       let x = (csize - tilesize)*0.5, y = (csize - tilesize)*0.5;
-      iconmanager.canvasDraw(this, canvas, g, Icons.LARGE_CHECK, x, y);
+      iconmanager$1.canvasDraw(this, canvas, g, Icons$2.LARGE_CHECK, x, y);
     }
 
     if (this._focus) {
@@ -33363,7 +33363,7 @@ class Check extends UIBase$5 {
   }
 
   updateDPI() {
-    let dpi = UIBase$5.getDPI();
+    let dpi = UIBase$d.getDPI();
 
     if (dpi !== this._last_dpi) {
       this._last_dpi = dpi;
@@ -33393,9 +33393,9 @@ class Check extends UIBase$5 {
   }
 }
 
-UIBase$5.internalRegister(Check);
+UIBase$d.internalRegister(Check);
 
-class IconButton extends UIBase$5 {
+class IconButton extends UIBase$d {
   constructor() {
     super();
 
@@ -33506,7 +33506,7 @@ class IconButton extends UIBase$5 {
 
     let w = this.getDefault("width");
 
-    let size = iconmanager.getTileSize(this.iconsheet);
+    let size = iconmanager$1.getTileSize(this.iconsheet);
     w = size;
 
     this.style["width"] = w + "px";
@@ -33530,7 +33530,7 @@ class IconButton extends UIBase$5 {
         icon = this._icon_pressed;
       }
 
-      iconmanager.setCSS(icon, this.dom, this.iconsheet);
+      iconmanager$1.setCSS(icon, this.dom, this.iconsheet);
     }
 
     if (this._extraIcon !== undefined) {
@@ -33550,7 +33550,7 @@ class IconButton extends UIBase$5 {
       dom.style["width"] = size + "px";
       dom.style["height"] = size + "px";
 
-      iconmanager.setCSS(this._extraIcon, dom, this.iconsheet);
+      iconmanager$1.setCSS(this._extraIcon, dom, this.iconsheet);
     } else if (this.extraDom) {
       this.extraDom.remove();
     }
@@ -33659,11 +33659,11 @@ class IconButton extends UIBase$5 {
   _getsize() {
     let margin = this.getDefault("padding");
 
-    return iconmanager.getTileSize(this.iconsheet) + margin*2;
+    return iconmanager$1.getTileSize(this.iconsheet) + margin*2;
   }
 }
 
-UIBase$5.internalRegister(IconButton);
+UIBase$d.internalRegister(IconButton);
 
 
 class IconCheck extends IconButton {
@@ -33686,8 +33686,8 @@ class IconCheck extends IconButton {
   set drawCheck(val) {
     val = !!val;
 
-    if (val && (this.packflag & PackFlags$3.HIDE_CHECK_MARKS)) {
-      this.packflag &= ~PackFlags$3.HIDE_CHECK_MARKS;
+    if (val && (this.packflag & PackFlags$7.HIDE_CHECK_MARKS)) {
+      this.packflag &= ~PackFlags$7.HIDE_CHECK_MARKS;
     }
 
     let old = !!this.drawCheck;
@@ -33800,7 +33800,7 @@ class IconCheck extends IconButton {
       if (rdef !== undefined && rdef.prop) {
         let icon, icon2, title;
 
-        if (rdef.prop.flag & PropFlags.NO_UNDO) {
+        if (rdef.prop.flag & PropFlags$3.NO_UNDO) {
           this.setUndo(false);
         } else {
           this.setUndo(true);
@@ -33808,7 +33808,7 @@ class IconCheck extends IconButton {
 
         //console.log("SUBKEY", rdef.subkey, rdef.prop.iconmap);
 
-        if (rdef.subkey && (rdef.prop.type === PropTypes$3.FLAG || rdef.prop.type === PropTypes$3.ENUM)) {
+        if (rdef.subkey && (rdef.prop.type === PropTypes$5.FLAG || rdef.prop.type === PropTypes$5.ENUM)) {
           icon = rdef.prop.iconmap[rdef.subkey];
           icon2 = rdef.prop.iconmap2[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
@@ -33855,14 +33855,14 @@ class IconCheck extends IconButton {
 
   updateDrawCheck() {
     if (this.drawCheck) {
-      this._extraIcon = this._checked ? Icons.ENUM_CHECKED : Icons.ENUM_UNCHECKED;
+      this._extraIcon = this._checked ? Icons$2.ENUM_CHECKED : Icons$2.ENUM_UNCHECKED;
     } else {
       this._extraIcon = undefined;
     }
   }
 
   update() {
-    if (this.packflag & PackFlags$3.HIDE_CHECK_MARKS) {
+    if (this.packflag & PackFlags$7.HIDE_CHECK_MARKS) {
       this.drawCheck = false;
     }
 
@@ -33877,7 +33877,7 @@ class IconCheck extends IconButton {
 
   _getsize() {
     let margin = this.getDefault("padding");
-    return iconmanager.getTileSize(this.iconsheet) + margin*2;
+    return iconmanager$1.getTileSize(this.iconsheet) + margin*2;
   }
 
   setCSS() {
@@ -33886,7 +33886,7 @@ class IconCheck extends IconButton {
   }
 }
 
-UIBase$5.internalRegister(IconCheck);
+UIBase$d.internalRegister(IconCheck);
 
 class Check1 extends Button {
   constructor() {
@@ -33927,9 +33927,9 @@ class Check1 extends Button {
   }
 }
 
-UIBase$5.internalRegister(Check1);
+UIBase$d.internalRegister(Check1);
 
-function saveFile(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
+function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
   let blob = new Blob([data], {type : mime});
   let url = URL.createObjectURL(blob);
 
@@ -33941,7 +33941,7 @@ function saveFile(data, filename="unnamed", exts=[], mime="application/x-octet-s
 }
 
 //returns a promise
-function loadFile(filename="unnamed", exts=[]) {
+function loadFile$1(filename="unnamed", exts=[]) {
   let input = document.createElement("input");
   input.type = "file";
 
@@ -33969,7 +33969,7 @@ function loadFile(filename="unnamed", exts=[]) {
 }
 
 window._testLoadFile = function(exts=["*.*"]) {
-  loadFile(undefined, exts).then((data) => {
+  loadFile$1(undefined, exts).then((data) => {
     console.log("got file data:", data);
   });
 };
@@ -33977,25 +33977,25 @@ window._testLoadFile = function(exts=["*.*"]) {
 window._testSaveFile = function() {
   let buf = _appstate.createFile();
   //console.log(buf);
-  saveFile(buf, "unnamed.w3d", [".w3d"]);
+  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
 };
 
 var html5_fileapi1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  saveFile: saveFile,
-  loadFile: loadFile
+  saveFile: saveFile$1,
+  loadFile: loadFile$1
 });
 
 "use strict";
 
-let EnumProperty$5 = EnumProperty,
-    PropTypes$4    = PropTypes;
+let EnumProperty$4 = EnumProperty$9,
+    PropTypes$4    = PropTypes$8;
 
-let UIBase$6     = UIBase$2,
-    PackFlags$4  = PackFlags,
-    IconSheets$4 = IconSheets;
+let UIBase$c     = UIBase$g,
+    PackFlags$6  = PackFlags$a,
+    IconSheets$3 = IconSheets$7;
 
-function getpx(css) {
+function getpx$2(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
@@ -34006,7 +34006,7 @@ function debugmenu() {
 }
 
 
-class Menu extends UIBase$6 {
+class Menu extends UIBase$c {
   constructor() {
     super();
 
@@ -34234,7 +34234,7 @@ class Menu extends UIBase$6 {
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
 
-    let sbox = this.textbox = UIBase$6.createElement("textbox-x");
+    let sbox = this.textbox = UIBase$c.createElement("textbox-x");
     this.textbox.parentWidget = this;
 
     dom2.appendChild(sbox);
@@ -34358,9 +34358,9 @@ class Menu extends UIBase$6 {
     let icon_div;
 
     if (1) { //icon >= 0) {
-      icon_div = makeIconDiv(icon, IconSheets$4.SMALL);
+      icon_div = makeIconDiv(icon, IconSheets$3.SMALL);
     } else {
-      let tilesize = iconmanager.getTileSize(IconSheets$4.SMALL);
+      let tilesize = iconmanager$1.getTileSize(IconSheets$3.SMALL);
 
       //tilesize *= window.devicePixelRatio;
 
@@ -34396,7 +34396,7 @@ class Menu extends UIBase$6 {
     if (hotkey) {
       dom.hotkey = hotkey;
       g.font = getFont(this, undefined, "HotkeyText");
-      hwid = Math.ceil(g.measureText(hotkey).width/UIBase$6.getDPI());
+      hwid = Math.ceil(g.measureText(hotkey).width/UIBase$c.getDPI());
       twid += hwid + 8;
     }
 
@@ -34733,7 +34733,7 @@ class Menu extends UIBase$6 {
   }
 
   menu(title) {
-    let ret = UIBase$6.createElement("menu-x");
+    let ret = UIBase$c.createElement("menu-x");
 
     ret.setAttribute("name", title);
     this.addItem(ret);
@@ -34747,7 +34747,7 @@ class Menu extends UIBase$6 {
 }
 
 Menu.SEP = Symbol("menu seperator");
-UIBase$6.internalRegister(Menu);
+UIBase$c.internalRegister(Menu);
 
 class DropBox extends OldButton {
   constructor() {
@@ -35011,7 +35011,7 @@ class DropBox extends OldButton {
       this._menu.remove();
     }
 
-    let menu = this._menu = UIBase$6.createElement("menu-x");
+    let menu = this._menu = UIBase$c.createElement("menu-x");
 
     //let name = "" + this.getAttribute("name");
     menu.setAttribute("name", "");
@@ -35148,7 +35148,7 @@ class DropBox extends OldButton {
       let con = screen.popup(this, 500, 400, false, 0);
 
       con.style["z-index"] = "-10000";
-      con.style["position"] = UIBase$6.PositionKey;
+      con.style["position"] = UIBase$c.PositionKey;
       document.body.appendChild(con);
 
       con.style["visibility"] = "hidden";
@@ -35333,7 +35333,7 @@ class DropBox extends OldButton {
   }
 }
 
-UIBase$6.internalRegister(DropBox);
+UIBase$c.internalRegister(DropBox);
 
 class MenuWrangler {
   constructor() {
@@ -35403,16 +35403,16 @@ class MenuWrangler {
     //}
 
     switch (e.keyCode) {
-      case keymap["Enter"]: //return key
+      case keymap$4["Enter"]: //return key
         menu.click(menu.activeItem);
         break;
-      case keymap["Escape"]: //escape key
+      case keymap$4["Escape"]: //escape key
         menu.close();
         break;
-      case keymap["Up"]:
+      case keymap$4["Up"]:
         menu.selectPrev(false);
         break;
-      case keymap["Down"]:
+      case keymap$4["Down"]:
         menu.selectNext(false);
         break;
     }
@@ -35432,12 +35432,12 @@ class MenuWrangler {
     let menu = this.menu;
 
     switch (e.keyCode) {
-      case keymap["Left"]: //left
-      case keymap["Right"]: //right
+      case keymap$4["Left"]: //left
+      case keymap$4["Right"]: //right
         if (menu._dropbox) {
           let dropbox = menu._dropbox;
 
-          if (e.keyCode === keymap["Left"]) {
+          if (e.keyCode === keymap$4["Left"]) {
             dropbox = dropbox.previousElementSibling;
           } else {
             dropbox = dropbox.nextElementSibling;
@@ -35449,10 +35449,10 @@ class MenuWrangler {
           }
         }
         break;
-      case keymap["Up"]: //up
+      case keymap$4["Up"]: //up
         menu.selectPrev();
         break;
-      case keymap["Down"]: //down
+      case keymap$4["Down"]: //down
         menu.selectNext();
         break;
       /*
@@ -35708,7 +35708,7 @@ function getWranglerScreen() {
 }
 
 function createMenu(ctx, title, templ) {
-  let menu = UIBase$6.createElement("menu-x");
+  let menu = UIBase$c.createElement("menu-x");
   menu.ctx = ctx;
   menu.setAttribute("name", title);
 
@@ -35825,19 +35825,19 @@ function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
 //note that require has an api for handling circular 
 //module refs, in such cases do not use these vars.
 
-var _ui = undefined;
+var _ui$2 = undefined;
 
-let PropFlags$1 = PropFlags;
-let PropSubTypes$2 = PropSubTypes$1;
+let PropFlags$2 = PropFlags$3;
+let PropSubTypes$2 = PropSubTypes$3;
 
-let EnumProperty$6 = EnumProperty;
+let EnumProperty$3 = EnumProperty$9;
 
-let Vector2$4   = Vector2,
-    UIBase$7    = UIBase$2,
-    PackFlags$5 = PackFlags,
-    PropTypes$5 = PropTypes;
+let Vector2$9   = Vector2$d,
+    UIBase$b    = UIBase$g,
+    PackFlags$5 = PackFlags$a,
+    PropTypes$3 = PropTypes$8;
 
-class Label extends UIBase$2 {
+class Label extends UIBase$g {
   constructor() {
     super();
 
@@ -35949,7 +35949,7 @@ class Label extends UIBase$2 {
     }
 
     //console.log(path);
-    if (prop.type & (PropTypes$5.INT | PropTypes$5.FLOAT)) {
+    if (prop.type & (PropTypes$3.INT | PropTypes$3.FLOAT)) {
       val = buildString(val, prop.baseUnit, prop.decimalPlaces, prop.displayUnit);
     }
 
@@ -35981,9 +35981,9 @@ class Label extends UIBase$2 {
   }
 }
 
-UIBase$2.internalRegister(Label);
+UIBase$g.internalRegister(Label);
 
-class Container extends UIBase$2 {
+class Container extends UIBase$g {
   constructor() {
     super();
 
@@ -36431,7 +36431,7 @@ class Container extends UIBase$2 {
   }
 
   appendChild(child) {
-    if (child instanceof UIBase$2) {
+    if (child instanceof UIBase$g) {
       child.ctx = this.ctx;
       child.parentWidget = this;
       this.shadow.appendChild(child);
@@ -36448,7 +36448,7 @@ class Container extends UIBase$2 {
 
   clear(trigger_on_destroy = true) {
     for (let child of this.children) {
-      if (child instanceof UIBase$2) {
+      if (child instanceof UIBase$g) {
         child.remove(trigger_on_destroy);
       }
     }
@@ -36471,7 +36471,7 @@ class Container extends UIBase$2 {
   }
 
   prepend(child) {
-    if (child instanceof UIBase$7) {
+    if (child instanceof UIBase$b) {
       this._prepend(child);
     } else {
       super.prepend(child);
@@ -36494,7 +36494,7 @@ class Container extends UIBase$2 {
     if (i >= this.shadow.childNodes.length) {
       this.add(ch);
     } else {
-      this.shadow.insertBefore(ch, list(this.children)[i]);
+      this.shadow.insertBefore(ch, list$2(this.children)[i]);
     }
 
     if (ch.onadd) {
@@ -36550,7 +36550,7 @@ class Container extends UIBase$2 {
 
    **/
   menu(title, list, packflag = 0) {
-    let dbox = UIBase$7.createElement("dropbox-x");
+    let dbox = UIBase$b.createElement("dropbox-x");
 
     dbox._name = title;
     dbox.setAttribute("simple", true);
@@ -36605,7 +36605,7 @@ class Container extends UIBase$2 {
     for (let k in inputs) {
       let prop = inputs[k];
 
-      if (prop.flag & PropFlags$1.PRIVATE) {
+      if (prop.flag & PropFlags$2.PRIVATE) {
         continue;
       }
 
@@ -36726,7 +36726,7 @@ class Container extends UIBase$2 {
 
     packflag |= this.inherit_packflag & ~PackFlags$5.NO_UPDATE;
 
-    let ret = UIBase$7.createElement("textbox-x");
+    let ret = UIBase$b.createElement("textbox-x");
 
     if (path !== undefined) {
       ret.setAttribute("datapath", path);
@@ -36756,7 +36756,7 @@ class Container extends UIBase$2 {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = UIBase$7.createElement("label-x");
+    let ret = UIBase$b.createElement("label-x");
 
     ret.text = label;
     ret.packflag = packflag;
@@ -36768,7 +36768,7 @@ class Container extends UIBase$2 {
   }
 
   label(text) {
-    let ret = UIBase$7.createElement("label-x");
+    let ret = UIBase$b.createElement("label-x");
     ret.text = text;
 
     this._add(ret);
@@ -36782,7 +36782,7 @@ class Container extends UIBase$2 {
    * to view tooltips on mobile devices
    * */
   helppicker() {
-    let ret = this.iconbutton(Icons.HELP, "Help Picker", () => {
+    let ret = this.iconbutton(Icons$2.HELP, "Help Picker", () => {
       this.getScreen().hintPickerTool();
     });
 
@@ -36802,7 +36802,7 @@ class Container extends UIBase$2 {
   iconbutton(icon, description, cb, thisvar, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags$5.NO_UPDATE;
 
-    let ret = UIBase$7.createElement("iconbutton-x");
+    let ret = UIBase$b.createElement("iconbutton-x");
 
     ret.packflag |= packflag;
 
@@ -36822,7 +36822,7 @@ class Container extends UIBase$2 {
   button(label, cb, thisvar, id, packflag = 0) {
     packflag |= this.inherit_packflag & ~PackFlags$5.NO_UPDATE;
 
-    let ret = UIBase$7.createElement("button-x");
+    let ret = UIBase$b.createElement("button-x");
 
     ret.packflag |= packflag;
 
@@ -36857,7 +36857,7 @@ class Container extends UIBase$2 {
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
-    let ret = UIBase$7.createElement("color-picker-button-x");
+    let ret = UIBase$b.createElement("color-picker-button-x");
 
     if (inpath !== undefined) {
       inpath = this._joinPrefix(inpath);
@@ -36875,7 +36875,7 @@ class Container extends UIBase$2 {
   }
 
   noteframe(packflag = 0) {
-    let ret = UIBase$7.createElement("noteframe-x");
+    let ret = UIBase$b.createElement("noteframe-x");
 
     ret.packflag |= (this.inherit_packflag & ~PackFlags$5.NO_UPDATE) | packflag;
 
@@ -36888,7 +36888,7 @@ class Container extends UIBase$2 {
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
-    let ret = UIBase$7.createElement("curve-widget-x");
+    let ret = UIBase$b.createElement("curve-widget-x");
 
     ret.ctx = this.ctx;
     ret.packflag |= packflag;
@@ -36907,7 +36907,7 @@ class Container extends UIBase$2 {
   }
 
   vecpopup(inpath, packflag = 0, mass_set_path = undefined) {
-    let button = UIBase$7.createElement("vector-popup-button-x");
+    let button = UIBase$b.createElement("vector-popup-button-x");
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
@@ -36978,7 +36978,7 @@ class Container extends UIBase$2 {
     //slider(path, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag=0) {
     let prop = rdef.prop;
 
-    let useDataPathUndo = !(prop.flag & PropFlags$1.NO_UNDO);
+    let useDataPathUndo = !(prop.flag & PropFlags$2.NO_UNDO);
 
     //console.log(prop, PropTypes, PropSubTypes);
 
@@ -36994,12 +36994,12 @@ class Container extends UIBase$2 {
       return name;
     }
 
-    if (prop.type === PropTypes$5.REPORT) {
+    if (prop.type === PropTypes$3.REPORT) {
       return this.pathlabel(inpath, prop.uiname);
-    } else if (prop.type === PropTypes$5.STRING) {
+    } else if (prop.type === PropTypes$3.STRING) {
       let ret;
 
-      if (prop.flag & PropFlags$1.READ_ONLY) {
+      if (prop.flag & PropFlags$2.READ_ONLY) {
         ret = this.pathlabel(inpath, prop.uiname);
       } else if (prop.multiLine) {
         ret = this.textarea(inpath, rdef.value, packflag, mass_set_path);
@@ -37021,11 +37021,11 @@ class Container extends UIBase$2 {
 
       ret.packflag |= packflag;
       return ret;
-    } else if (prop.type === PropTypes$5.CURVE) {
+    } else if (prop.type === PropTypes$3.CURVE) {
       let ret = this.curve1d(inpath, packflag, mass_set_path);
       ret.useDataPathUndo = useDataPathUndo;
       return ret;
-    } else if (prop.type === PropTypes$5.INT || prop.type === PropTypes$5.FLOAT) {
+    } else if (prop.type === PropTypes$3.INT || prop.type === PropTypes$3.FLOAT) {
       let ret;
       if (packflag & PackFlags$5.SIMPLE_NUMSLIDERS) {
         ret = this.simpleslider(inpath, {packflag: packflag});
@@ -37041,11 +37041,11 @@ class Container extends UIBase$2 {
       }
 
       return ret;
-    } else if (prop.type === PropTypes$5.BOOL) {
+    } else if (prop.type === PropTypes$3.BOOL) {
       let ret = this.check(inpath, prop.uiname, packflag, mass_set_path);
       ret.useDataPathUndo = useDataPathUndo;
       return ret;
-    } else if (prop.type === PropTypes$5.ENUM) {
+    } else if (prop.type === PropTypes$3.ENUM) {
       if (rdef.subkey !== undefined) {
         let subkey = rdef.subkey;
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -37085,7 +37085,7 @@ class Container extends UIBase$2 {
           return this.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
         }
       }
-    } else if (prop.type & (PropTypes$5.VEC2 | PropTypes$5.VEC3 | PropTypes$5.VEC4)) {
+    } else if (prop.type & (PropTypes$3.VEC2 | PropTypes$3.VEC3 | PropTypes$3.VEC4)) {
       if (rdef.subkey !== undefined) {
         let ret;
 
@@ -37100,7 +37100,7 @@ class Container extends UIBase$2 {
         return this.colorbutton(inpath, packflag, mass_set_path).setUndo(useDataPathUndo);
         //return this.colorPicker(inpath, packflag, mass_set_path);
       } else {
-        let ret = UIBase$7.createElement("vector-panel-x");
+        let ret = UIBase$b.createElement("vector-panel-x");
 
         mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
 
@@ -37119,7 +37119,7 @@ class Container extends UIBase$2 {
 
         return ret.setUndo(useDataPathUndo);
       }
-    } else if (prop.type === PropTypes$5.FLAG) {
+    } else if (prop.type === PropTypes$3.FLAG) {
       if (rdef.subkey !== undefined) {
         let tooltip = rdef.prop.descriptions[rdef.subkey];
         let name = rdef.prop.ui_value_names[rdef.subkey];
@@ -37284,7 +37284,7 @@ class Container extends UIBase$2 {
   }
 
   iconcheck(inpath, icon, name, mass_set_path) {
-    let ret = UIBase$7.createElement("iconcheck-x");
+    let ret = UIBase$b.createElement("iconcheck-x");
     ret.icon = icon;
     ret.description = name;
 
@@ -37309,11 +37309,11 @@ class Container extends UIBase$2 {
     //let prop = this.ctx.getProp(path);
     let ret;
     if (packflag & PackFlags$5.USE_ICONS) {
-      ret = UIBase$7.createElement("iconcheck-x");
+      ret = UIBase$b.createElement("iconcheck-x");
 
       ret.iconsheet = iconSheetFromPackFlag(packflag);
     } else {
-      ret = UIBase$7.createElement("check-x");
+      ret = UIBase$b.createElement("check-x");
     }
 
     mass_set_path = this._getMassPath(this.ctx, inpath, mass_set_path);
@@ -37587,12 +37587,12 @@ class Container extends UIBase$2 {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = UIBase$7.createElement("dropbox-x");
+    let ret = UIBase$b.createElement("dropbox-x");
     if (enumDef !== undefined) {
-      if (enumDef instanceof EnumProperty) {
+      if (enumDef instanceof EnumProperty$9) {
         ret.prop = enumDef;
       } else {
-        ret.prop = new EnumProperty(defaultval, enumDef, path, name);
+        ret.prop = new EnumProperty$9(defaultval, enumDef, path, name);
       }
 
       if (iconmap !== undefined) {
@@ -37686,10 +37686,10 @@ class Container extends UIBase$2 {
       inpath = this._joinPrefix(inpath);
 
       let rdef = this.ctx.api.resolvePath(this.ctx, inpath, true);
-      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$1.SIMPLE_SLIDER)) {
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.SIMPLE_SLIDER)) {
         packflag |= PackFlags$5.SIMPLE_NUMSLIDERS;
       }
-      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$1.FORCE_ROLLER_SLIDER)) {
+      if (rdef && rdef.prop && (rdef.prop.flag & PropFlags$2.FORCE_ROLLER_SLIDER)) {
         packflag |= PackFlags$5.FORCE_ROLLER_SLIDER;
       }
     }
@@ -37701,15 +37701,15 @@ class Container extends UIBase$2 {
 
     if (extraTextBox) {
       if (simple) {
-        ret = UIBase$7.createElement("numslider-simple-x");
+        ret = UIBase$b.createElement("numslider-simple-x");
       } else {
-        ret = UIBase$7.createElement("numslider-textbox-x");
+        ret = UIBase$b.createElement("numslider-textbox-x");
       }
     } else {
       if (simple) {
-        ret = UIBase$7.createElement("numslider-simple-x");
+        ret = UIBase$b.createElement("numslider-simple-x");
       } else {
-        ret = UIBase$7.createElement("numslider-x");
+        ret = UIBase$b.createElement("numslider-x");
       }
     }
 
@@ -37770,7 +37770,7 @@ class Container extends UIBase$2 {
   }
 
   treeview() {
-    let ret = UIBase$7.createElement("tree-view-x");
+    let ret = UIBase$b.createElement("tree-view-x");
     ret.ctx = this.ctx;
     this.add(ret);
 
@@ -37782,7 +37782,7 @@ class Container extends UIBase$2 {
   panel(name, id, packflag = 0, tooltip = undefined) {
     id = id === undefined ? name : id;
 
-    let ret = UIBase$7.createElement("panelframe-x");
+    let ret = UIBase$b.createElement("panelframe-x");
 
     this._container_inherit(ret, packflag);
 
@@ -37811,7 +37811,7 @@ class Container extends UIBase$2 {
   }
 
   row(packflag = 0) {
-    let ret = UIBase$7.createElement("rowframe-x");
+    let ret = UIBase$b.createElement("rowframe-x");
 
     this._container_inherit(ret, packflag);
 
@@ -37823,7 +37823,7 @@ class Container extends UIBase$2 {
   }
 
   listbox(packflag = 0) {
-    let ret = UIBase$7.createElement("listbox-x");
+    let ret = UIBase$b.createElement("listbox-x");
 
     this._container_inherit(ret, packflag);
 
@@ -37832,7 +37832,7 @@ class Container extends UIBase$2 {
   }
 
   table(packflag = 0) {
-    let ret = UIBase$7.createElement("tableframe-x");
+    let ret = UIBase$b.createElement("tableframe-x");
 
     this._container_inherit(ret, packflag);
 
@@ -37841,7 +37841,7 @@ class Container extends UIBase$2 {
   }
 
   twocol(parentDepth = 1, packflag = 0) {
-    let ret = UIBase$7.createElement("two-column-x");
+    let ret = UIBase$b.createElement("two-column-x");
 
     ret.parentDepth = parentDepth;
 
@@ -37852,7 +37852,7 @@ class Container extends UIBase$2 {
   }
 
   col(packflag = 0) {
-    let ret = UIBase$7.createElement("colframe-x");
+    let ret = UIBase$b.createElement("colframe-x");
 
     this._container_inherit(ret, packflag);
 
@@ -37877,7 +37877,7 @@ class Container extends UIBase$2 {
       path = this._joinPrefix(inpath);
     }
 
-    let ret = UIBase$7.createElement("colorpicker-x");
+    let ret = UIBase$b.createElement("colorpicker-x");
 
     if (themeOverride) {
       ret.overrideClass(themeOverride);
@@ -37915,7 +37915,7 @@ class Container extends UIBase$2 {
 
     mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
 
-    let ret = UIBase$7.createElement("rich-text-editor-x");
+    let ret = UIBase$b.createElement("rich-text-editor-x");
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -37941,7 +37941,7 @@ class Container extends UIBase$2 {
 
     mass_set_path = this._getMassPath(this.ctx, datapath, mass_set_path);
 
-    let ret = UIBase$7.createElement("html-viewer-x");
+    let ret = UIBase$b.createElement("html-viewer-x");
     ret.ctx = this.ctx;
 
     ret.packflag |= packflag;
@@ -37962,7 +37962,7 @@ class Container extends UIBase$2 {
   //
   tabs(position = "top", packflag = 0) {
 
-    let ret = UIBase$7.createElement("tabcontainer-x");
+    let ret = UIBase$b.createElement("tabcontainer-x");
 
     ret.constructor.setDefault(ret);
     ret.setAttribute("bar_pos", position);
@@ -37982,7 +37982,7 @@ class Container extends UIBase$2 {
 
 };
 
-UIBase$2.internalRegister(Container, "div");
+UIBase$g.internalRegister(Container, "div");
 
 
 class RowFrame extends Container {
@@ -38039,7 +38039,7 @@ class RowFrame extends Container {
   }
 }
 
-UIBase$7.internalRegister(RowFrame);
+UIBase$b.internalRegister(RowFrame);
 
 class ColumnFrame extends Container {
   constructor() {
@@ -38079,7 +38079,7 @@ class ColumnFrame extends Container {
   }
 }
 
-UIBase$7.internalRegister(ColumnFrame);
+UIBase$b.internalRegister(ColumnFrame);
 
 
 class TwoColumnFrame extends Container {
@@ -38146,11 +38146,11 @@ class TwoColumnFrame extends Container {
   }
 }
 
-UIBase$7.internalRegister(TwoColumnFrame);
+UIBase$b.internalRegister(TwoColumnFrame);
 
-let UIBase$8 = UIBase$2;
+let UIBase$a = UIBase$g;
 
-class Note extends UIBase$2 {
+class Note extends UIBase$g {
   constructor() {
     super();
 
@@ -38199,7 +38199,7 @@ class Note extends UIBase$2 {
       //this.mark.style["width"]
       let sheet = 0;
 
-      let size = iconmanager.getTileSize(sheet);
+      let size = iconmanager$1.getTileSize(sheet);
 
       this.mark.style["width"] = "" + size + "px";
       this.mark.style["height"] = "" + size + "px";
@@ -38212,7 +38212,7 @@ class Note extends UIBase$2 {
 
       this.dom.appendChild(this.ntext);
 
-      iconmanager.setCSS(Icons.NOTE_EXCL, this.mark, sheet);
+      iconmanager$1.setCSS(Icons$2.NOTE_EXCL, this.mark, sheet);
 
       //this.mark.style["margin"] = this.ntext.style["margin"] = "0px"
       //this.mark.style["padding"] = this.ntext.style["padding"] = "0px"
@@ -38240,7 +38240,7 @@ class Note extends UIBase$2 {
 
     this.style["color"] = this.getDefault("DefaultText").color;
     let clr = css2color$1(this.color);
-    clr = color2css$2([clr[0], clr[1], clr[2], 0.25]);
+    clr = color2css$1([clr[0], clr[1], clr[2], 0.25]);
 
     this.style["background-color"] = clr;
     this.setCSS();
@@ -38251,7 +38251,7 @@ class Note extends UIBase$2 {
   }
 }
 
-UIBase$8.internalRegister(Note);
+UIBase$a.internalRegister(Note);
 
 class ProgBarNote extends Note {
   constructor() {
@@ -38314,7 +38314,7 @@ class ProgBarNote extends Note {
   }
 }
 
-UIBase$8.internalRegister(ProgBarNote);
+UIBase$a.internalRegister(ProgBarNote);
 
 class NoteFrame extends RowFrame {
   constructor() {
@@ -38394,7 +38394,7 @@ class NoteFrame extends RowFrame {
 
     //this._add(note);
 
-    let note = UIBase$8.createElement(tagname);
+    let note = UIBase$a.createElement(tagname);
 
     note.color = color;
     note.setLabel(msg);
@@ -38430,7 +38430,7 @@ class NoteFrame extends RowFrame {
   }
 }
 
-UIBase$8.internalRegister(NoteFrame);
+UIBase$a.internalRegister(NoteFrame);
 
 function getNoteFrames(screen) {
   let ret = [];
@@ -38447,7 +38447,7 @@ function getNoteFrames(screen) {
       }
     }
 
-    if (n instanceof UIBase$2 && n.shadow !== undefined && n.shadow.childNodes) {
+    if (n instanceof UIBase$g && n.shadow !== undefined && n.shadow.childNodes) {
       for (let node of n.shadow.childNodes) {
         rec(node);
       }
@@ -38477,15 +38477,15 @@ function sendNote(screen, msg, color, timeout = 3000, showExclMark=true) {
 window._sendNote = sendNote;
 
 function error(screen, msg, timeout) {
-  return sendNote(screen, msg, color2css$2([1.0, 0.0, 0.0, 1.0]), timeout);
+  return sendNote(screen, msg, color2css$1([1.0, 0.0, 0.0, 1.0]), timeout);
 }
 
 function warning(screen, msg, timeout) {
-  return sendNote(screen, msg, color2css$2([0.78, 0.78, 0.2, 1.0]), timeout);
+  return sendNote(screen, msg, color2css$1([0.78, 0.78, 0.2, 1.0]), timeout);
 }
 
 function message(screen, msg, timeout) {
-  return sendNote(screen, msg, color2css$2([0.2, 0.9, 0.1, 1.0]), timeout, false);
+  return sendNote(screen, msg, color2css$1([0.2, 0.9, 0.1, 1.0]), timeout, false);
 }
 
 
@@ -38517,7 +38517,7 @@ var ui_noteframe = /*#__PURE__*/Object.freeze({
   progbarNote: progbarNote
 });
 
-let UIBase$9 = UIBase$2, Icons$1 = Icons;
+let UIBase$9 = UIBase$g, Icons$1 = Icons$2;
 
 class RichEditor extends TextBoxBase {
   constructor() {
@@ -38584,7 +38584,7 @@ class RichEditor extends TextBoxBase {
     this.textarea.setAttribute("white-space", "pre-wrap");
 
     this.textarea.addEventListener("keydown", (e) => {
-      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
+      if (e.keyCode === keymap$4["S"] && e.shiftKey && (e.ctrlKey || e.commandKey)) {
         this.toggleStrikeThru();
 
         e.preventDefault();
@@ -38880,13 +38880,13 @@ UIBase$9.internalRegister(RichViewer);
 
 "use strict";
 
-let keymap$4 = keymap;
+let keymap = keymap$4;
 
 class VectorPopupButton extends Button {
   constructor() {
     super();
 
-    this.value = new Vector4();
+    this.value = new Vector4$2();
   }
 
   static define() {return {
@@ -38899,7 +38899,7 @@ class VectorPopupButton extends Button {
       return;
     }
 
-    let panel = UIBase$2.createElement("vector-panel-x");
+    let panel = UIBase$g.createElement("vector-panel-x");
     let screen = this.ctx.screen;
 
     let popup = screen.popup(this, this);
@@ -38938,13 +38938,13 @@ class VectorPopupButton extends Button {
     if (this.value.length !== value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2();
+          this.value = new Vector2$d();
           break;
         case 3:
-          this.value = new Vector3();
+          this.value = new Vector3$2();
           break;
         case 4:
-          this.value = new Vector4();
+          this.value = new Vector4$2();
           break;
       }
     }
@@ -38961,7 +38961,7 @@ class VectorPopupButton extends Button {
   }
 
 }
-UIBase$2.internalRegister(VectorPopupButton);
+UIBase$g.internalRegister(VectorPopupButton);
 
 class VectorPanel extends ColumnFrame {
   constructor() {
@@ -38972,11 +38972,11 @@ class VectorPanel extends ColumnFrame {
     this.name = "";
 
     this.axes = "XYZW";
-    this.value = new Vector3();
+    this.value = new Vector3$2();
     this.sliders = [];
     this.hasUniformSlider = false;
 
-    this.packflag |= PackFlags.FORCE_ROLLER_SLIDER|PackFlags.NO_NUMSLIDER_TEXTBOX;
+    this.packflag |= PackFlags$a.FORCE_ROLLER_SLIDER|PackFlags$a.NO_NUMSLIDER_TEXTBOX;
 
     let makeParam = (key) => {
       Object.defineProperty(this, key, {
@@ -39109,7 +39109,7 @@ class VectorPanel extends ColumnFrame {
     }
 
     if (this.hasUniformSlider) {
-      let uslider = this.uslider = UIBase$2.createElement("numslider-x");
+      let uslider = this.uslider = UIBase$g.createElement("numslider-x");
       row._prepend(uslider);
 
       uslider.range = this.range;
@@ -39194,13 +39194,13 @@ class VectorPanel extends ColumnFrame {
     if (value.length !== this.value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2(value);
+          this.value = new Vector2$d(value);
           break;
         case 3:
-          this.value = new Vector3(value);
+          this.value = new Vector3$2(value);
           break;
         case 4:
-          this.value = new Vector4(value);
+          this.value = new Vector4$2(value);
           break;
         default:
           throw new Error("invalid vector size " + value.length);
@@ -39285,7 +39285,7 @@ class VectorPanel extends ColumnFrame {
 
     let length = val.length;
 
-    if (meta && (meta.flag & PropFlags.USE_CUSTOM_GETSET)) {
+    if (meta && (meta.flag & PropFlags$3.USE_CUSTOM_GETSET)) {
       let rdef = this.ctx.api.resolvePath(this.ctx, path);
 
       meta.ctx = this.ctx;
@@ -39300,13 +39300,13 @@ class VectorPanel extends ColumnFrame {
     if (this.value.length !== length) {
       switch (length) {
         case 2:
-          val = new Vector2(val);
+          val = new Vector2$d(val);
           break;
         case 3:
-          val = new Vector3(val);
+          val = new Vector3$2(val);
           break;
         case 4:
-          val = new Vector4(val);
+          val = new Vector4$2(val);
           break;
         default:
           val = meta.getValue().copy().load(val);
@@ -39360,10 +39360,10 @@ class VectorPanel extends ColumnFrame {
     tagname : "vector-panel-x"
   }}
 }
-UIBase$2.internalRegister(VectorPanel);
+UIBase$g.internalRegister(VectorPanel);
 
 
-class ToolTip extends UIBase$2 {
+class ToolTip extends UIBase$g {
   constructor() {
     super();
 
@@ -39376,7 +39376,7 @@ class ToolTip extends UIBase$2 {
   }
 
   static show(message, screen, x, y) {
-    let ret = UIBase$2.createElement(this.define().tagname);
+    let ret = UIBase$g.createElement(this.define().tagname);
 
     ret._start_time = time_ms();
     ret.timeout = ret.getDefault("timeout");
@@ -39391,7 +39391,7 @@ class ToolTip extends UIBase$2 {
     x = Math.min(Math.max(x, 0), screen.size[0] - size[0]);
     y = Math.min(Math.max(y, 0), screen.size[1] - size[1]);
 
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
 
     x += 10/dpi;
     y += 15/dpi;
@@ -39470,7 +39470,7 @@ class ToolTip extends UIBase$2 {
     style   : "tooltip"
   }}
 };
-UIBase$2.internalRegister(ToolTip);
+UIBase$g.internalRegister(ToolTip);
 
 window._ToolTip = ToolTip;
 
@@ -39484,14 +39484,14 @@ let toolstack_getter = function () {
   throw new Error("must pass a toolstack getter to registerToolStackGetter")
 };
 
-function registerToolStackGetter(func) {
+function registerToolStackGetter$1(func) {
   toolstack_getter = func;
 }
 
-let Vector2$5   = Vector2,
-    Vector3$1   = Vector3,
-    UndoFlags$1 = UndoFlags,
-    ToolFlags$1 = ToolFlags;
+let Vector2$8   = Vector2$d,
+    Vector3$1   = Vector3$2,
+    UndoFlags = UndoFlags$1,
+    ToolFlags = ToolFlags$1;
 
 //import {keymap} from './events';
 
@@ -39534,7 +39534,7 @@ class ToolBase extends ToolOp {
       popModalLight(this.modaldata);
     }
 
-    this.overdraw = UIBase$2.createElement("overdraw-x");
+    this.overdraw = UIBase$g.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
     let handlers = {};
@@ -39578,11 +39578,11 @@ class ToolBase extends ToolOp {
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap$4.Escape: //esc
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap$4.Space: //space
+      case keymap$4.Enter: //return
         this.finish();
         break;
     }
@@ -39595,7 +39595,7 @@ class AreaResizeTool extends ToolBase {
 
     super(screen);
 
-    this.start_mpos = new Vector2$5(mpos);
+    this.start_mpos = new Vector2$8(mpos);
 
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
@@ -39616,10 +39616,10 @@ class AreaResizeTool extends ToolBase {
     return {
       uiname     : "Resize Area",
       toolpath   : "screen.area.resize",
-      icon       : Icons.RESIZE,
+      icon       : Icons$2.RESIZE,
       description: "change size of area",
       is_modal   : true,
-      undoflag   : UndoFlags$1.NO_UNDO,
+      undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
       inputs     : {}, //tool properties
       outputs    : {}  //tool properties
@@ -39669,16 +39669,16 @@ class AreaResizeTool extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap["Escape"]:
-      case keymap["Enter"]:
-      case keymap["Space"]:
+      case keymap$4["Escape"]:
+      case keymap$4["Enter"]:
+      case keymap$4["Space"]:
         this.finish();
         break;
     }
   }
 
   on_mousemove(e) {
-    let mpos = new Vector2$5([e.x, e.y]);
+    let mpos = new Vector2$8([e.x, e.y]);
 
     mpos.sub(this.start_mpos);
 
@@ -39698,8 +39698,8 @@ class AreaResizeTool extends ToolBase {
     for (let border of borders) {
       bad = bad || !this.screen.isBorderMovable(border);
 
-      border.oldv1 = new Vector2$5(border.v1);
-      border.oldv2 = new Vector2$5(border.v2);
+      border.oldv1 = new Vector2$8(border.v1);
+      border.oldv2 = new Vector2$8(border.v2);
     }
 
     if (bad) {
@@ -39785,10 +39785,10 @@ class SplitTool extends ToolBase {
     return {
       uiname     : "Split Area",
       toolpath   : "screen.area.split",
-      icon       : Icons.SMALL_PLUS,
+      icon       : Icons$2.SMALL_PLUS,
       description: "split an area in two",
       is_modal   : true,
-      undoflag   : UndoFlags$1.NO_UNDO,
+      undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
       inputs     : {}, //tool properties
       outputs    : {}  //tool properties
@@ -39801,7 +39801,7 @@ class SplitTool extends ToolBase {
       return;
     }
 
-    this.overdraw = UIBase$2.createElement("overdraw-x");
+    this.overdraw = UIBase$g.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
     super.modalStart(ctx);
@@ -39885,11 +39885,11 @@ class SplitTool extends ToolBase {
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap$4.Escape: //esc
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap$4.Space: //space
+      case keymap$4.Enter: //return
         this.finish();
         break;
     }
@@ -39918,10 +39918,10 @@ class RemoveAreaTool extends ToolBase {
     return {
       uiname     : "Remove Area",
       toolpath   : "screen.area.pick_remove",
-      icon       : Icons.SMALL_PLUS,
+      icon       : Icons$2.SMALL_PLUS,
       description: "Collapse a window",
       is_modal   : true,
-      undoflag   : UndoFlags$1.NO_UNDO,
+      undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
       inputs     : {}, //tool properties
       outputs    : {}  //tool properties
@@ -39934,7 +39934,7 @@ class RemoveAreaTool extends ToolBase {
       return;
     }
 
-    this.overdraw = UIBase$2.createElement("overdraw-x");
+    this.overdraw = UIBase$g.createElement("overdraw-x");
     this.overdraw.start(this.screen);
 
     super.modalStart(ctx);
@@ -40004,11 +40004,11 @@ class RemoveAreaTool extends ToolBase {
     console.log("s", e.keyCode);
 
     switch (e.keyCode) {
-      case keymap.Escape: //esc
+      case keymap$4.Escape: //esc
         this.cancel();
         break;
-      case keymap.Space: //space
-      case keymap.Enter: //return
+      case keymap$4.Space: //space
+      case keymap$4.Enter: //return
         this.finish();
         break;
     }
@@ -40029,7 +40029,7 @@ class AreaDragTool extends ToolBase {
     this.boxes.active = undefined;
 
     this.sarea = sarea;
-    this.start_mpos = new Vector2$5(mpos);
+    this.start_mpos = new Vector2$8(mpos);
     this.screen = screen;
   }
 
@@ -40037,10 +40037,10 @@ class AreaDragTool extends ToolBase {
     return {
       uiname     : "Drag Area",
       toolpath   : "screen.area.drag",
-      icon       : Icons.TRANSLATE,
+      icon       : Icons$2.TRANSLATE,
       description: "move or duplicate area",
       is_modal   : true,
-      undoflag   : UndoFlags$1.NO_UNDO,
+      undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
       inputs     : {}, //tool properties
       outputs    : {}  //tool properties
@@ -40453,10 +40453,10 @@ class ToolTipViewer extends ToolBase {
     return {
       uiname     : "Help Tool",
       toolpath   : "screen.help_picker",
-      icon       : Icons.HELP,
+      icon       : Icons$2.HELP,
       description: "view tooltips",
       is_modal   : true,
-      undoflag   : UndoFlags$1.NO_UNDO,
+      undoflag   : UndoFlags.NO_UNDO,
       flag       : 0,
       inputs     : {}, //tool properties
       outputs    : {}  //tool properties
@@ -40481,8 +40481,8 @@ class ToolTipViewer extends ToolBase {
 
   on_keydown(e) {
     switch (e.keyCode) {
-      case keymap.Escape:
-      case keymap.Enter:
+      case keymap$4.Escape:
+      case keymap$4.Enter:
       case Keymap.Space:
         if (this.tooltip) {
           this.tooltip.end();
@@ -40541,7 +40541,7 @@ function snapi(c, snap_limit = SnapLimit) {
   return c;
 }
 
-class ScreenVert extends Vector2 {
+class ScreenVert extends Vector2$d {
   constructor(pos, id, added_id) {
     super(pos);
 
@@ -40578,7 +40578,7 @@ pathux.ScreenVert {
   1 : float;
 }
 `;
-nstructjs.register(ScreenVert);
+nstructjs$1.register(ScreenVert);
 
 class ScreenHalfEdge {
   constructor(border, sarea) {
@@ -40601,7 +40601,7 @@ class ScreenHalfEdge {
 
 }
 
-class ScreenBorder extends UIBase$2 {
+class ScreenBorder extends UIBase$g {
   constructor() {
     super();
 
@@ -40795,7 +40795,7 @@ class ScreenBorder extends UIBase$2 {
     let wid = this.getDefault("border-width");
 
     let v1 = this.v1, v2 = this.v2;
-    let vec = new Vector2(v2).sub(v1);
+    let vec = new Vector2$d(v2).sub(v1);
 
     let x = Math.min(v1[0], v2[0]), y = Math.min(v1[1], v2[1]);
     let w, h;
@@ -40893,7 +40893,7 @@ class ScreenBorder extends UIBase$2 {
     this.setAttribute("class", "screenborder_" + this._id);
     this.inner.setAttribute("class", "screenborder_inner_" + this._id);
 
-    this.style["position"] = UIBase$2.PositionKey;
+    this.style["position"] = UIBase$g.PositionKey;
     this.style["left"] = x + "px";
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";
@@ -40910,12 +40910,12 @@ class ScreenBorder extends UIBase$2 {
   }
 }
 
-UIBase$2.internalRegister(ScreenBorder);
+UIBase$g.internalRegister(ScreenBorder);
 
-let _ScreenArea = undefined;
+let _ScreenArea$1 = undefined;
 
-let UIBase$a = UIBase$2;
-let Vector2$6 = Vector2;
+let UIBase$8 = UIBase$g;
+let Vector2$7 = Vector2$d;
 let ScreenClass = undefined;
 
 
@@ -41122,11 +41122,11 @@ class AreaWrangler {
 }
 _setModalAreaClass(AreaWrangler);
 
-let _ScreenArea$1 = undefined;
+let _ScreenArea = undefined;
 
-let UIBase$b = UIBase$2;
+let UIBase$7 = UIBase$g;
 
-let Vector2$7 = Vector2;
+let Vector2$6 = Vector2$d;
 let Screen$1 = undefined;
 
 const AreaFlags = {
@@ -41160,7 +41160,7 @@ const BorderSides = {
 /**
  * Base class for all editors
  **/
-class Area$1 extends UIBase$2 {
+class Area$1 extends UIBase$g {
   constructor() {
     super();
 
@@ -41194,7 +41194,7 @@ class Area$1 extends UIBase$2 {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$b) {
+      if (child instanceof UIBase$7) {
         child.parentWidget = this;
       }
     };
@@ -41203,7 +41203,7 @@ class Area$1 extends UIBase$2 {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$b) {
+      if (child instanceof UIBase$7) {
         child.parentWidget = this;
       }
     };
@@ -41295,7 +41295,7 @@ class Area$1 extends UIBase$2 {
 
     areaclasses[def.areaname] = cls;
 
-    UIBase$2.internalRegister(cls);
+    UIBase$g.internalRegister(cls);
   }
 
   static makeAreasEnum() {
@@ -41321,7 +41321,7 @@ class Area$1 extends UIBase$2 {
       icons[uiname] = def.icon !== undefined ? def.icon : -1;
     }
 
-    let prop = new EnumProperty(undefined, areas);
+    let prop = new EnumProperty$9(undefined, areas);
     prop.addIcons(icons);
 
     return prop;
@@ -41338,7 +41338,7 @@ class Area$1 extends UIBase$2 {
   }
 
   static newSTRUCT() {
-    return UIBase$b.createElement(this.define().tagname);
+    return UIBase$7.createElement(this.define().tagname);
   }
 
   init() {
@@ -41429,7 +41429,7 @@ class Area$1 extends UIBase$2 {
 
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
-    let ret = UIBase$b.createElement(this.constructor.define().tagname);
+    let ret = UIBase$7.createElement(this.constructor.define().tagname);
     return ret;
   }
 
@@ -41505,7 +41505,7 @@ class Area$1 extends UIBase$2 {
 
   makeAreaSwitcher(container) {
     if (exports.useAreaTabSwitcher) {
-      let ret = UIBase$b.createElement("area-docker-x");
+      let ret = UIBase$7.createElement("area-docker-x");
       container.add(ret);
       return ret;
     }
@@ -41573,7 +41573,7 @@ class Area$1 extends UIBase$2 {
     row.style["padding"] = "0px";
 
     let mdown = false;
-    let mpos = new Vector2$7();
+    let mpos = new Vector2$6();
 
     let mpre = (e, pageX, pageY) => {
       if (haveModal()) {
@@ -41760,7 +41760,7 @@ class Area$1 extends UIBase$2 {
     }
 
     if (add_note_area) {
-      let notef = UIBase$b.createElement("noteframe-x");
+      let notef = UIBase$7.createElement("noteframe-x");
       notef.ctx = this.ctx;
       row._add(notef);
     }
@@ -41772,7 +41772,7 @@ class Area$1 extends UIBase$2 {
 
   setCSS() {
     if (this.size !== undefined) {
-      this.style["position"] = UIBase$b.PositionKey;
+      this.style["position"] = UIBase$7.PositionKey;
       //this.style["left"] = this.pos[0] + "px";
       //this.style["top"] = this.pos[1] + "px";
       this.style["width"] = this.size[0] + "px";
@@ -41852,10 +41852,10 @@ pathux.Area {
 }
 `;
 
-nstructjs.register(Area$1, "pathux.Area");
-UIBase$2.internalRegister(Area$1);
+nstructjs$1.register(Area$1, "pathux.Area");
+UIBase$g.internalRegister(Area$1);
 
-class ScreenArea extends UIBase$2 {
+class ScreenArea extends UIBase$g {
   constructor() {
     super();
 
@@ -41865,8 +41865,8 @@ class ScreenArea extends UIBase$2 {
 
     this._sarea_id = contextWrangler.idgen++;
 
-    this._pos = new Vector2$7();
-    this._size = new Vector2$7([512, 512]);
+    this._pos = new Vector2$6();
+    this._size = new Vector2$6([512, 512]);
 
     if (exports.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -41995,7 +41995,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   static newSTRUCT() {
-    return UIBase$b.createElement("screenarea-x");
+    return UIBase$7.createElement("screenarea-x");
   }
 
   static define() {
@@ -42106,14 +42106,14 @@ class ScreenArea extends UIBase$2 {
       //console.log(editor);
 
       let tagname = areaclasses[areaname].define().tagname;
-      let area = UIBase$b.createElement(tagname);
+      let area = UIBase$7.createElement(tagname);
 
       area.owning_sarea = this;
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$7(obj.pos);
-      area.size = new Vector2$7(obj.size);
+      area.pos = new Vector2$6(obj.pos);
+      area.size = new Vector2$6(obj.size);
       area.ctx = this.ctx;
 
       area.inactive = true;
@@ -42178,7 +42178,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   copy(screen) {
-    let ret = UIBase$b.createElement("screenarea-x");
+    let ret = UIBase$7.createElement("screenarea-x");
 
     ret.screen = screen;
     ret.ctx = this.ctx;
@@ -42240,7 +42240,7 @@ class ScreenArea extends UIBase$2 {
 
   snapToScreenSize() {
     let screen = this.getScreen();
-    let co = new Vector2$7();
+    let co = new Vector2$6();
     let changed = 0;
 
     for (let v of this._verts) {
@@ -42286,8 +42286,8 @@ class ScreenArea extends UIBase$2 {
       return;
     }
 
-    let min = new Vector2$7([1e17, 1e17]);
-    let max = new Vector2$7([-1e17, -1e17]);
+    let min = new Vector2$6([1e17, 1e17]);
+    let max = new Vector2$6([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -42321,10 +42321,10 @@ class ScreenArea extends UIBase$2 {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$7([p[0], p[1]]),
-      new Vector2$7([p[0], p[1] + s[1]]),
-      new Vector2$7([p[0] + s[0], p[1] + s[1]]),
-      new Vector2$7([p[0] + s[0], p[1]])
+      new Vector2$6([p[0], p[1]]),
+      new Vector2$6([p[0], p[1] + s[1]]),
+      new Vector2$6([p[0] + s[0], p[1] + s[1]]),
+      new Vector2$6([p[0] + s[0], p[1]])
     ];
 
     for (let i = 0; i < vs.length; i++) {
@@ -42360,7 +42360,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   setCSS() {
-    this.style["position"] = UIBase$b.PositionKey;
+    this.style["position"] = UIBase$7.PositionKey;
 
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
@@ -42406,7 +42406,7 @@ class ScreenArea extends UIBase$2 {
 
     super.appendChild(child);
 
-    if (child instanceof UIBase$2) {
+    if (child instanceof UIBase$g) {
       child.parentWidget = this;
       child.onadd();
     }
@@ -42422,7 +42422,7 @@ class ScreenArea extends UIBase$2 {
 
     //areaclasses[name]
     if (!(name in this.editormap)) {
-      this.editormap[name] = UIBase$b.createElement(def.tagname);
+      this.editormap[name] = UIBase$7.createElement(def.tagname);
       this.editormap[name].ctx = this.ctx;
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
@@ -42434,8 +42434,8 @@ class ScreenArea extends UIBase$2 {
     //var finish = () => {
     if (this.area !== undefined) {
       //break direct pos/size references for old active area
-      this.area.pos = new Vector2$7(this.area.pos);
-      this.area.size = new Vector2$7(this.area.size);
+      this.area.pos = new Vector2$6(this.area.pos);
+      this.area.size = new Vector2$6(this.area.size);
 
       this.area.owning_sarea = undefined;
       this.area.inactive = true;
@@ -42578,8 +42578,8 @@ class ScreenArea extends UIBase$2 {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$7(this.pos);
-    this.size = new Vector2$7(this.size);
+    this.pos = new Vector2$6(this.pos);
+    this.size = new Vector2$6(this.size);
 
     //find active editor
 
@@ -42629,7 +42629,7 @@ class ScreenArea extends UIBase$2 {
       if (typeof area !== "object") {
         for (let k in areaclasses) {
           area = areaclasses[k].define().tagname;
-          area = UIBase$b.createElement(area);
+          area = UIBase$7.createElement(area);
           let areaname = area.constructor.define().areaname;
 
           this.editors.push(area);
@@ -42690,8 +42690,8 @@ pathux.ScreenArea {
 }
 `;
 
-nstructjs.register(ScreenArea, "pathux.ScreenArea");
-UIBase$2.internalRegister(ScreenArea);
+nstructjs$1.register(ScreenArea, "pathux.ScreenArea");
+UIBase$g.internalRegister(ScreenArea);
 
 _setAreaClass(Area$1);
 
@@ -42795,8 +42795,8 @@ class ThemeEditor extends Container {
           }
 
           cw.onchange = () => {
-            console.log("setting '" + k + "' to " + color2css$2(cw.rgba), key);
-            getpath(path)[k] = color2css$2(cw.rgba);
+            console.log("setting '" + k + "' to " + color2css$1(cw.rgba), key);
+            getpath(path)[k] = color2css$1(cw.rgba);
 
             do_onchange(key, k);
           };
@@ -42859,7 +42859,7 @@ class ThemeEditor extends Container {
         cw.label = "color";
         cw.setRGBA(css2color$1(v.color));
         cw.onchange = () => {
-          v.color = color2css$2(cw.rgba);
+          v.color = color2css$1(cw.rgba);
           do_onchange(key, k);
         };
 
@@ -42981,7 +42981,7 @@ class ThemeEditor extends Container {
   }
 }
 
-UIBase$2.internalRegister(ThemeEditor);
+UIBase$g.internalRegister(ThemeEditor);
 
 const sliderDomAttributes = new Set([
   "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
@@ -43103,7 +43103,7 @@ const SliderDefaults = {
   step          : 0.1,
 };
 
-function NumberSliderBase(cls = UIBase$2, skip = new Set(), defaults = SliderDefaults) {
+function NumberSliderBase(cls = UIBase$g, skip = new Set(), defaults = SliderDefaults) {
   skip = new Set(skip);
 
   return class NumberSliderBase extends cls {
@@ -43174,7 +43174,7 @@ function NumberSliderBase(cls = UIBase$2, skip = new Set(), defaults = SliderDef
       }
 
       if (this.editAsBaseUnit === undefined) {
-        if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+        if (prop.flag & PropFlags$3.EDIT_AS_BASE_UNIT) {
           this.editAsBaseUnit = true;
         } else {
           this.editAsBaseUnit = false;
@@ -43195,8 +43195,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.mdown = false;
     this.ma = undefined;
 
-    this.mpos = new Vector2();
-    this.start_mpos = new Vector2();
+    this.mpos = new Vector2$d();
+    this.start_mpos = new Vector2$d();
 
     this._last_overarrow = false;
 
@@ -43304,7 +43304,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   swapWithTextbox() {
-    let tbox = UIBase$2.createElement("textbox-x");
+    let tbox = UIBase$g.createElement("textbox-x");
 
     tbox.ctx = this.ctx;
     tbox._init();
@@ -43371,12 +43371,12 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap["Left"]:
-        case keymap["Down"]:
+        case keymap$4["Left"]:
+        case keymap$4["Down"]:
           this.setValue(this.value - dir*5*this.step);
           break;
-        case keymap["Up"]:
-        case keymap["Right"]:
+        case keymap$4["Up"]:
+        case keymap$4["Right"]:
           this.setValue(this.value + dir*5*this.step);
           break;
       }
@@ -43786,7 +43786,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     //do not call parent class implementation
     let dpi = this.getDPI();
 
-    let ts = this.getDefault("DefaultText").size*UIBase$2.getDPI();
+    let ts = this.getDefault("DefaultText").size*UIBase$g.getDPI();
 
     let dd = this.isInt ? 5 : this.decimalPlaces + 8;
 
@@ -43935,8 +43935,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     let higharrow = css2color$1(this.getDefault("BoxHighlight"));
     higharrow.interp(arrowcolor, 0.5);
 
-    arrowcolor = color2css$2(arrowcolor);
-    higharrow = color2css$2(higharrow);
+    arrowcolor = color2css$1(arrowcolor);
+    higharrow = color2css$1(higharrow);
 
     let over = this._highlight ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
 
@@ -43981,14 +43981,14 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   _getArrowSize() {
-    return UIBase$2.getDPI()*10;
+    return UIBase$g.getDPI()*10;
   }
 }
 
-UIBase$2.internalRegister(NumSlider);
+UIBase$g.internalRegister(NumSlider);
 
 
-class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
+class NumSliderSimpleBase extends NumberSliderBase(UIBase$g) {
   constructor() {
     super();
 
@@ -44095,7 +44095,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
     }
 
     let x = e.x - rect.left;
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
     let co = this._getButtonPos();
 
     let val = this._invertButtonX(x*dpi);
@@ -44163,9 +44163,9 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
 
       keydown: (e) => {
         switch (e.keyCode) {
-          case keymap["Enter"]:
-          case keymap["Space"]:
-          case keymap["Escape"]:
+          case keymap$4["Enter"]:
+          case keymap$4["Space"]:
+          case keymap$4["Escape"]:
             end();
         }
       }
@@ -44199,8 +44199,8 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
       let dt = this.range[1] > this.range[0] ? 1 : -1;
 
       switch (e.keyCode) {
-        case keymap["Left"]:
-        case keymap["Right"]:
+        case keymap$4["Left"]:
+        case keymap$4["Right"]:
           let fac = this.step;
 
           if (e.shiftKey) {
@@ -44211,7 +44211,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
             fac = Math.max(fac, 1);
           }
 
-          this.value += e.keyCode === keymap["Left"] ? -dt*fac : dt*fac;
+          this.value += e.keyCode === keymap$4["Left"] ? -dt*fac : dt*fac;
 
           break;
       }
@@ -44272,7 +44272,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
   _redraw() {
     let g = this.g, canvas = this.canvas;
     let w = canvas.width, h = canvas.height;
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
 
     let color = this.getDefault("background-color");
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
@@ -44342,8 +44342,8 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
 
     let co = this._getButtonPos();
 
-    let dpi = UIBase$2.getDPI();
-    let dv = new Vector2([co[0]/dpi - x, co[1]/dpi - y]);
+    let dpi = UIBase$g.getDPI();
+    let dv = new Vector2$d([co[0]/dpi - x, co[1]/dpi - y]);
     let dis = dv.vectorLength();
 
     return dis < co[2]/dpi;
@@ -44351,7 +44351,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
 
   _invertButtonX(x) {
     let w = this.canvas.width;
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let boxw = this.canvas.height - 4;
     let w2 = w - boxw;
@@ -44366,7 +44366,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
 
   _getButtonPos() {
     let w = this.canvas.width;
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
     let sh = ~~(this.getDefault("SlideHeight")*dpi + 0.5);
     let x = this._value;
 
@@ -44390,7 +44390,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
     this.canvas.style["min-width"] = this.getDefault("width") + "px";
     this.canvas.style["height"] = this.getDefault("height") + "px";
 
-    this.canvas.height = this.getDefault("height")*UIBase$2.getDPI();
+    this.canvas.height = this.getDefault("height")*UIBase$g.getDPI();
 
     this.style["min-width"] = this.getDefault("width") + "px";
     this._redraw();
@@ -44407,7 +44407,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
       return;
     }
 
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
     let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
     let canvas = this.canvas;
 
@@ -44449,7 +44449,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
   }
 }
 
-UIBase$2.internalRegister(NumSliderSimpleBase);
+UIBase$g.internalRegister(NumSliderSimpleBase);
 
 class SliderWithTextbox extends ColumnFrame {
   constructor() {
@@ -44464,7 +44464,7 @@ class SliderWithTextbox extends ColumnFrame {
 
     this.container = this;
 
-    this.textbox = UIBase$2.createElement("textbox-x");
+    this.textbox = UIBase$g.createElement("textbox-x");
     this.textbox.width = 55;
     this._numslider = undefined;
 
@@ -44873,7 +44873,7 @@ class NumSliderSimple extends SliderWithTextbox {
   constructor() {
     super();
 
-    this.numslider = UIBase$2.createElement("numslider-simple-base-x");
+    this.numslider = UIBase$g.createElement("numslider-simple-base-x");
   }
 
   static define() {
@@ -44888,13 +44888,13 @@ class NumSliderSimple extends SliderWithTextbox {
   }
 }
 
-UIBase$2.internalRegister(NumSliderSimple);
+UIBase$g.internalRegister(NumSliderSimple);
 
 class NumSliderWithTextBox extends SliderWithTextbox {
   constructor() {
     super();
 
-    this.numslider = UIBase$2.createElement("numslider-x");
+    this.numslider = UIBase$g.createElement("numslider-x");
   }
 
   static define() {
@@ -44909,7 +44909,7 @@ class NumSliderWithTextBox extends SliderWithTextbox {
   }
 }
 
-UIBase$2.internalRegister(NumSliderWithTextBox);
+UIBase$g.internalRegister(NumSliderWithTextBox);
 
 //stores xml sources
 
@@ -44942,11 +44942,11 @@ function getIconFlag(elem) {
   }
 
   if (attr === "true" || attr === "yes") {
-    return PackFlags.USE_ICONS;
+    return PackFlags$a.USE_ICONS;
   } else if (attr === "small") {
-    return PackFlags.SMALL_ICON | PackFlags.USE_ICONS;
+    return PackFlags$a.SMALL_ICON | PackFlags$a.USE_ICONS;
   } else if (attr === "large") {
-    return PackFlags.LARGE_ICON | PackFlags.USE_ICONS;
+    return PackFlags$a.LARGE_ICON | PackFlags$a.USE_ICONS;
   } else {
     let isnum = typeof attr === "number";
     let sheet = attr;
@@ -44957,11 +44957,11 @@ function getIconFlag(elem) {
     }
 
     if (!isnum) {
-      return PackFlags.USE_ICONS;
+      return PackFlags$a.USE_ICONS;
     }
 
-    let flag = PackFlags.USE_ICONS | PackFlags.CUSTOM_ICON_SHEET;
-    flag |= ((sheet - 1)<<PackFlags.CUSTOM_ICON_SHEET_START);
+    let flag = PackFlags$a.USE_ICONS | PackFlags$a.CUSTOM_ICON_SHEET;
+    flag |= ((sheet - 1)<<PackFlags$a.CUSTOM_ICON_SHEET_START);
 
     return flag;
   }
@@ -44974,17 +44974,17 @@ function getPackFlag(elem) {
 
   if (elem.hasAttribute("drawChecks")) {
     if (!getbool(elem, "drawChecks")) {
-      packflag |= PackFlags.HIDE_CHECK_MARKS;
+      packflag |= PackFlags$a.HIDE_CHECK_MARKS;
     } else {
-      packflag &= ~PackFlags.HIDE_CHECK_MARKS;
+      packflag &= ~PackFlags$a.HIDE_CHECK_MARKS;
     }
   }
 
   if (getbool(elem, "simpleSlider")) {
-    packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+    packflag |= PackFlags$a.SIMPLE_NUMSLIDERS;
   }
   if (getbool(elem, "rollarSlider")) {
-    packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+    packflag |= PackFlags$a.FORCE_ROLLER_SLIDER;
   }
 
   return packflag;
@@ -45040,7 +45040,7 @@ class Handler {
 
     this.templateVars = {};
 
-    let attrs = list(sliderDomAttributes);
+    let attrs = list$2(sliderDomAttributes);
 
     //note that useIcons, showLabel and sliderMode are PackFlag bits and are inherited through that system
 
@@ -45079,7 +45079,7 @@ class Handler {
     } else if (this[tagname]) {
       this[tagname](elem);
     } else {
-      let elem2 = UIBase$2.createElement(tagname.toLowerCase());
+      let elem2 = UIBase$g.createElement(tagname.toLowerCase());
 
       window.__elem = elem;
       //transfer DOM attributes
@@ -45087,7 +45087,7 @@ class Handler {
         elem2.setAttribute(k, elem.getAttribute(k));
       }
 
-      if (elem2 instanceof UIBase$2) {
+      if (elem2 instanceof UIBase$g) {
         if (!elem2.hasAttribute("datapath") && elem2.hasAttribute("path")) {
           elem2.setAttribute("datapath", elem2.getAttribute("path"));
         }
@@ -45138,7 +45138,7 @@ class Handler {
 
         this.container.shadow.appendChild(elem2);
 
-        if (!(elem2 instanceof UIBase$2)) {
+        if (!(elem2 instanceof UIBase$g)) {
           elem2.pathux_ctx = this.container.ctx;
         } else {
           elem2.ctx = this.container.ctx;
@@ -45208,7 +45208,7 @@ class Handler {
       }
     }
 
-    if (elem2 instanceof UIBase$2) {
+    if (elem2 instanceof UIBase$g) {
       elem2.setCSS.after(() => {
         setStyle();
       });
@@ -45320,7 +45320,7 @@ class Handler {
       }
     }
 
-    if (!(elem2 instanceof UIBase$2)) {
+    if (!(elem2 instanceof UIBase$g)) {
       return;
     }
 
@@ -45353,11 +45353,11 @@ class Handler {
       let textbox = getbool(elem, "sliderTextBox");
 
       if (textbox) {
-        elem2.packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem2.inherit_packflag &= ~PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.packflag &= ~PackFlags$a.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag &= ~PackFlags$a.NO_NUMSLIDER_TEXTBOX;
       } else {
-        elem2.packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
-        elem2.inherit_packflag |= PackFlags.NO_NUMSLIDER_TEXTBOX;
+        elem2.packflag |= PackFlags$a.NO_NUMSLIDER_TEXTBOX;
+        elem2.inherit_packflag |= PackFlags$a.NO_NUMSLIDER_TEXTBOX;
       }
 
       //console.error("textBox", textbox, elem2, elem.getAttribute("sliderTextBox"), elem2.packflag);
@@ -45367,17 +45367,17 @@ class Handler {
       let sliderMode = elem.getAttribute("sliderMode");
 
       if (sliderMode === "slider") {
-        elem2.packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
-        elem2.inherit_packflag &= ~PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.packflag &= ~PackFlags$a.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags$a.FORCE_ROLLER_SLIDER;
 
-        elem2.packflag |= PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.inherit_packflag |= PackFlags.SIMPLE_NUMSLIDERS;
+        elem2.packflag |= PackFlags$a.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags$a.SIMPLE_NUMSLIDERS;
       } else if (sliderMode === "roller") {
-        elem2.packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.packflag &= ~PackFlags$a.SIMPLE_NUMSLIDERS;
+        elem2.packflag |= PackFlags$a.FORCE_ROLLER_SLIDER;
 
-        elem2.inherit_packflag &= ~PackFlags.SIMPLE_NUMSLIDERS;
-        elem2.inherit_packflag |= PackFlags.FORCE_ROLLER_SLIDER;
+        elem2.inherit_packflag &= ~PackFlags$a.SIMPLE_NUMSLIDERS;
+        elem2.inherit_packflag |= PackFlags$a.FORCE_ROLLER_SLIDER;
       }
 
       //console.error("sliderMode", sliderMode, elem2, elem2.packflag & (PackFlags.SIMPLE_NUMSLIDERS | PackFlags.FORCE_ROLLER_SLIDER));
@@ -45387,11 +45387,11 @@ class Handler {
       let state = getbool(elem, "showLabel");
 
       if (state) {
-        elem2.packflag |= PackFlags.FORCE_PROP_LABELS;
-        elem2.inherit_packflag |= PackFlags.FORCE_PROP_LABELS;
+        elem2.packflag |= PackFlags$a.FORCE_PROP_LABELS;
+        elem2.inherit_packflag |= PackFlags$a.FORCE_PROP_LABELS;
       } else {
-        elem2.packflag &= ~PackFlags.FORCE_PROP_LABELS;
-        elem2.inherit_packflag &= ~PackFlags.FORCE_PROP_LABELS;
+        elem2.packflag &= ~PackFlags$a.FORCE_PROP_LABELS;
+        elem2.inherit_packflag &= ~PackFlags$a.FORCE_PROP_LABELS;
       }
     }
 
@@ -45676,9 +45676,9 @@ func = function() {
     let noIcons = false, iconflags;
 
     if (getbool(elem, "useIcons")) {
-      packflag |= PackFlags.USE_ICONS;
+      packflag |= PackFlags$a.USE_ICONS;
     } else if (elem.hasAttribute("useIcons")) {
-      packflag &= ~PackFlags.USE_ICONS;
+      packflag &= ~PackFlags$a.USE_ICONS;
       noIcons = true;
     }
 
@@ -45739,7 +45739,7 @@ func = function() {
 
         if (child.hasAttribute("icon")) {
           icon = child.getAttribute("icon").toUpperCase().trim();
-          icon = Icons[icon];
+          icon = Icons$2[icon];
         }
 
         if (child.hasAttribute("hotkey")) {
@@ -45788,7 +45788,7 @@ func = function() {
 
     let icon = elem.getAttribute("icon");
     if (icon) {
-      icon = UIBase$2.getIconEnum()[icon];
+      icon = UIBase$g.getIconEnum()[icon];
     }
     let ret = this.container.iconbutton(icon, title);
 
@@ -45843,7 +45843,7 @@ func = function() {
 
 function initPage(ctx, xml, parentContainer = undefined, templateVars = {}, templateScope = {}) {
   let tree = parseXML(xml);
-  let container = UIBase$2.createElement("container-x");
+  let container = UIBase$g.createElement("container-x");
 
   container.ctx = ctx;
   if (ctx) {
@@ -45932,7 +45932,7 @@ function makeGenEnum() {
   }
 
   //return enumdef;
-  return new EnumProperty(undefined, enumdef).addUINames(uinames).addIcons(icons);
+  return new EnumProperty$9(undefined, enumdef).addUINames(uinames).addIcons(icons);
 }
 
 class Curve1DWidget extends ColumnFrame {
@@ -46022,7 +46022,7 @@ class Curve1DWidget extends ColumnFrame {
     });
     this.dropbox._init();
 
-    row.iconbutton(Icons.ZOOM_OUT, "Zoom Out", () => {
+    row.iconbutton(Icons$2.ZOOM_OUT, "Zoom Out", () => {
       let curve = this._value;
       if (!curve) return;
       //if (isNaN(curve.uiZoom))
@@ -46035,7 +46035,7 @@ class Curve1DWidget extends ColumnFrame {
 
       this._redraw();
     }).iconsheet = 0;
-    row.iconbutton(Icons.ZOOM_IN, "Zoom In", () => {
+    row.iconbutton(Icons$2.ZOOM_IN, "Zoom In", () => {
       let curve = this._value;
       if (!curve) return;
       //if (isNaN(curve.uiZoom))
@@ -46062,7 +46062,7 @@ class Curve1DWidget extends ColumnFrame {
   }
 
   updateSize() {
-    let dpi = UIBase$2.getDPI();
+    let dpi = UIBase$g.getDPI();
     let w = ~~(this.getDefault("CanvasWidth")*dpi);
     let h = ~~(this.getDefault("CanvasHeight")*dpi);
 
@@ -46193,21 +46193,21 @@ class Curve1DWidget extends ColumnFrame {
     style   : "curvewidget"
   }}
 }
-UIBase$2.internalRegister(Curve1DWidget);
+UIBase$g.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
 
 var _ui$1 = undefined;
 
-let PropFlags$2 = PropFlags;
-let PropSubTypes$3 = PropSubTypes$1;
+let PropFlags$1 = PropFlags$3;
+let PropSubTypes$1 = PropSubTypes$3;
 
-let EnumProperty$7 = EnumProperty;
+let EnumProperty$2 = EnumProperty$9;
 
-let Vector2$8   = Vector2,
-    UIBase$c    = UIBase$2,
-    PackFlags$6 = PackFlags,
-    PropTypes$6 = PropTypes;
+let Vector2$5   = Vector2$d,
+    UIBase$6    = UIBase$g,
+    PackFlags$4 = PackFlags$a,
+    PropTypes$2 = PropTypes$8;
 
 
 //methods to forward to this.contents
@@ -46237,7 +46237,7 @@ class PanelFrame extends ColumnFrame {
     this._panel = this; //compatibility alias
 
     this.contents._panel = this;
-    this.iconcheck = UIBase$c.createElement("iconcheck-x");
+    this.iconcheck = UIBase$6.createElement("iconcheck-x");
     this.iconcheck.noEmboss = true;
 
     Object.defineProperty(this.contents, "closed", {
@@ -46382,10 +46382,10 @@ class PanelFrame extends ColumnFrame {
     iconcheck.overrideDefault("border-color", "rgba(0,0,0,0)");
 
     iconcheck.ctx = this.ctx;
-    iconcheck._icon_pressed = Icons.UI_EXPAND;
-    iconcheck._icon = Icons.UI_COLLAPSE;
+    iconcheck._icon_pressed = Icons$2.UI_EXPAND;
+    iconcheck._icon = Icons$2.UI_COLLAPSE;
     iconcheck.drawCheck = false;
-    iconcheck.iconsheet = IconSheets.SMALL;
+    iconcheck.iconsheet = IconSheets$7.SMALL;
     iconcheck.checked = this._closed;
 
     this.iconcheck.onchange = (e) => {
@@ -46606,12 +46606,12 @@ class PanelFrame extends ColumnFrame {
       //this.contents._remove();
       //this.contents.hide(true);
       if (!this.noUpdateClosedContents) {
-        this.contents.packflag |= PackFlags$6.NO_UPDATE;
+        this.contents.packflag |= PackFlags$4.NO_UPDATE;
       }
     } else {
       //this.contents.hide(false);
       this.contents.style.display = "flex";
-      this.contents.packflag &= ~PackFlags$6.NO_UPDATE;
+      this.contents.packflag &= ~PackFlags$4.NO_UPDATE;
       this.contents.flushUpdate();
     }
 
@@ -46655,23 +46655,23 @@ for (let k of forward_keys) {
   PanelFrame.prototype[k] = makeForward(k);
 }
 
-UIBase$c.internalRegister(PanelFrame);
+UIBase$6.internalRegister(PanelFrame);
 
 "use strict";
 
-let Vector2$9 = Vector2,
-    Vector3$2 = Vector3,
-    Vector4$2 = Vector4,
-    Matrix4$2 = Matrix4;
+let Vector2$4 = Vector2$d,
+    Vector3 = Vector3$2,
+    Vector4 = Vector4$2,
+    Matrix4 = Matrix4$2;
 
-let UIBase$d     = UIBase$2,
-    PackFlags$7  = PackFlags,
-    IconSheets$5 = IconSheets;
+let UIBase$5     = UIBase$g,
+    PackFlags$3  = PackFlags$a,
+    IconSheets$2 = IconSheets$7;
 
 let UPW = 1.25, VPW = 0.75;
 
 //*
-let sample_rets = new cachering$1(() => [0, 0], 64);
+let sample_rets = new cachering(() => [0, 0], 64);
 
 function inv_sample(u, v) {
   let ret = sample_rets.next();
@@ -46858,17 +46858,17 @@ function getFieldImage(fieldsize, width, height, hsva) {
 }
 
 
-let _update_temp = new Vector4$2();
+let _update_temp = new Vector4();
 
 class SimpleBox {
   constructor(pos = [0, 0], size = [1, 1]) {
-    this.pos = new Vector2$9(pos);
-    this.size = new Vector2$9(size);
+    this.pos = new Vector2$4(pos);
+    this.size = new Vector2$4(size);
     this.r = 0;
   }
 }
 
-class HueField extends UIBase$d {
+class HueField extends UIBase$5 {
   constructor() {
     super();
 
@@ -46897,9 +46897,9 @@ class HueField extends UIBase$d {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap["Left"]:
-        case keymap["Right"]:
-          let sign = e.keyCode === keymap["Left"] ? -1 : 1;
+        case keymap$4["Left"]:
+        case keymap$4["Right"]:
+          let sign = e.keyCode === keymap$4["Left"] ? -1 : 1;
 
           this.hsva[0] = Math.min(Math.max(this.hsva[0] + 0.05*sign, 0.0), 1.0);
           this._redraw();
@@ -46939,7 +46939,7 @@ class HueField extends UIBase$d {
           this.popModal();
         },
         on_keydown  : (e) => {
-          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+          if (e.keyCode === keymap$4["Enter"] || e.keyCode === keymap$4["Escape"] || e.keyCode === keymap$4["Space"]) {
             this.popModal();
           }
         }
@@ -46958,7 +46958,7 @@ class HueField extends UIBase$d {
 
   getRGBA() {
     let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return new Vector4$2().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
 
   setRGBA(rgba) {
@@ -47042,9 +47042,9 @@ class HueField extends UIBase$d {
   }
 }
 
-UIBase$d.internalRegister(HueField);
+UIBase$5.internalRegister(HueField);
 
-class SatValField extends UIBase$d {
+class SatValField extends UIBase$5 {
   constructor() {
     super();
 
@@ -47075,9 +47075,9 @@ class SatValField extends UIBase$d {
 
     this.addEventListener("keydown", (e) => {
       switch (e.keyCode) {
-        case keymap["Left"]:
-        case keymap["Right"]: {
-          let sign = e.keyCode === keymap["Left"] ? -1 : 1;
+        case keymap$4["Left"]:
+        case keymap$4["Right"]: {
+          let sign = e.keyCode === keymap$4["Left"] ? -1 : 1;
 
           this.hsva[1] = Math.min(Math.max(this.hsva[1] + 0.05*sign, 0.0), 1.0);
           this._redraw();
@@ -47088,9 +47088,9 @@ class SatValField extends UIBase$d {
           break;
         }
 
-        case keymap["Up"]:
-        case keymap["Down"]: {
-          let sign = e.keyCode === keymap["Down"] ? -1 : 1;
+        case keymap$4["Up"]:
+        case keymap$4["Down"]: {
+          let sign = e.keyCode === keymap$4["Down"] ? -1 : 1;
 
           this.hsva[2] = Math.min(Math.max(this.hsva[2] + 0.05*sign, 0.0), 1.0);
           this._redraw();
@@ -47138,7 +47138,7 @@ class SatValField extends UIBase$d {
           this.popModal();
         },
         on_keydown  : (e) => {
-          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+          if (e.keyCode === keymap$4["Enter"] || e.keyCode === keymap$4["Escape"] || e.keyCode === keymap$4["Space"]) {
             this.popModal();
           }
         }
@@ -47193,7 +47193,7 @@ class SatValField extends UIBase$d {
           this.popModal();
         },
         on_keydown    : (e) => {
-          if (e.keyCode === keymap["Enter"] || e.keyCode === keymap["Escape"] || e.keyCode === keymap["Space"]) {
+          if (e.keyCode === keymap$4["Enter"] || e.keyCode === keymap$4["Escape"] || e.keyCode === keymap$4["Space"]) {
             this.popModal();
           }
         }
@@ -47211,7 +47211,7 @@ class SatValField extends UIBase$d {
 
   getRGBA() {
     let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return new Vector4$2().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
 
   setRGBA(rgba) {
@@ -47335,14 +47335,14 @@ class SatValField extends UIBase$d {
   }
 }
 
-UIBase$d.internalRegister(SatValField);
+UIBase$5.internalRegister(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
     super();
 
-    this.hsva = new Vector4$2([0.05, 0.6, 0.15, 1.0]);
-    this.rgba = new Vector4$2([0, 0, 0, 0]);
+    this.hsva = new Vector4([0.05, 0.6, 0.15, 1.0]);
+    this.rgba = new Vector4([0, 0, 0, 0]);
 
     this._recalcRGBA();
 
@@ -47355,10 +47355,10 @@ class ColorField extends ColumnFrame {
 
     this._last_dpi = undefined;
 
-    let satvalfield = this.satvalfield = UIBase$d.createElement("satvalfield-x");
+    let satvalfield = this.satvalfield = UIBase$5.createElement("satvalfield-x");
     satvalfield.hsva = this.hsva;
 
-    let huefield = this.huefield = UIBase$d.createElement("huefield-x");
+    let huefield = this.huefield = UIBase$5.createElement("huefield-x");
     huefield.hsva = this.hsva;
 
     huefield.onchange = (e) => {
@@ -47446,7 +47446,7 @@ class ColorField extends ColumnFrame {
 
   getRGBA() {
     let rgb = hsv_to_rgb(this.hsva[0], this.hsva[1], this.hsva[2]);
-    return new Vector4$2().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
+    return new Vector4().loadXYZW(rgb[0], rgb[1], rgb[2], this.hsva[3]);
   }
 
   setRGBA(r, g, b, a = 1.0, fire_onchange = true) {
@@ -47516,7 +47516,7 @@ class ColorField extends ColumnFrame {
   }
 }
 
-UIBase$d.internalRegister(ColorField);
+UIBase$5.internalRegister(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -47683,7 +47683,7 @@ class ColorPicker extends ColumnFrame {
   init() {
     super.init();
 
-    this.field = UIBase$d.createElement("colorfield-x");
+    this.field = UIBase$5.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
 
     this.field.packflag |= this.inherit_packflag;
@@ -47786,7 +47786,7 @@ class ColorPicker extends ColumnFrame {
 
     _update_temp.load(val);
 
-    if (prop.type === PropTypes.VEC3) {
+    if (prop.type === PropTypes$8.VEC3) {
       _update_temp[3] = 1.0;
     }
 
@@ -47831,8 +47831,8 @@ class ColorPicker extends ColumnFrame {
       }
 
       let val = this.field.rgba;
-      if (prop !== undefined && prop.type === PropTypes.VEC3) {
-        val = new Vector3$2();
+      if (prop !== undefined && prop.type === PropTypes$8.VEC3) {
+        val = new Vector3();
         val.load(this.field.rgba);
       }
 
@@ -47867,10 +47867,10 @@ class ColorPicker extends ColumnFrame {
   }
 }
 
-UIBase$d.internalRegister(ColorPicker);
+UIBase$5.internalRegister(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$d {
+class ColorPickerButton extends UIBase$5 {
   constructor() {
     super();
 
@@ -47880,7 +47880,7 @@ class ColorPickerButton extends UIBase$d {
 
     this.customLabel = undefined;
 
-    this.rgba = new Vector4$2([1, 1, 1, 1]);
+    this.rgba = new Vector4([1, 1, 1, 1]);
 
     this.labelDom = document.createElement("span");
     this.labelDom.textContent = this._label;
@@ -48010,7 +48010,7 @@ class ColorPickerButton extends UIBase$d {
   setRGBA(val) {
     let a = this.rgba[3];
 
-    let old = new Vector4$2(this.rgba);
+    let old = new Vector4(this.rgba);
 
     this.rgba.load(val);
 
@@ -48191,13 +48191,13 @@ class ColorPickerButton extends UIBase$d {
       let dis;
 
       if (val.length === 3) {
-        dis = Vector3$2.prototype.vectorDistance.call(val, this.rgba);
+        dis = Vector3.prototype.vectorDistance.call(val, this.rgba);
       } else {
         dis = this.rgba.vectorDistance(val);
       }
 
       if (dis > 0.0001) {
-        if (prop.type === PropTypes.VEC3) {
+        if (prop.type === PropTypes$8.VEC3) {
           this.rgba.load(val);
           this.rgba[3] = 1.0;
         } else {
@@ -48248,18 +48248,18 @@ class ColorPickerButton extends UIBase$d {
     this._redraw();
   }
 };
-UIBase$d.internalRegister(ColorPickerButton);
+UIBase$5.internalRegister(ColorPickerButton);
 
 "use strict";
 
-let UIBase$e      = UIBase$2,
-    PackFlags$8   = PackFlags,
-    IconSheets$6  = IconSheets,
-    iconmanager$1 = iconmanager;
+let UIBase$4      = UIBase$g,
+    PackFlags$2   = PackFlags$a,
+    IconSheets$1  = IconSheets$7,
+    iconmanager = iconmanager$1;
 
 let tab_idgen = 1;
-let debug$1 = false;
-let Vector2$a = Vector2;
+let debug = false;
+let Vector2$3 = Vector2$d;
 
 function getpx$1(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -48280,11 +48280,11 @@ class TabItem {
     this.extra = undefined;
     this.extraSize = undefined;
 
-    this.size = new Vector2$a();
-    this.pos = new Vector2$a();
+    this.size = new Vector2$3();
+    this.pos = new Vector2$3();
 
-    this.abssize = new Vector2$a();
-    this.abspos = new Vector2$a();
+    this.abssize = new Vector2$3();
+    this.abspos = new Vector2$3();
   }
 
   getClientRects() {
@@ -48317,7 +48317,7 @@ class ModalTabMove extends EventHandler {
     this.first = true;
 
     this.droptarget = undefined;
-    this.start_mpos = new Vector2$a();
+    this.start_mpos = new Vector2$3();
     this.mpos = undefined;
 
     this.dragtab = undefined;
@@ -48325,7 +48325,7 @@ class ModalTabMove extends EventHandler {
   }
 
   finish() {
-    if (debug$1) if (debug$1) console.log("finish");
+    if (debug) if (debug) console.log("finish");
 
     this.tbar.tool = undefined;
     this.popModal(this.dom);
@@ -48395,7 +48395,7 @@ class ModalTabMove extends EventHandler {
 
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$e.getDPI();
+    let dpi = UIBase$4.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -48429,7 +48429,7 @@ class ModalTabMove extends EventHandler {
       dy = y - this.mpos[1];
     }
 
-    if (debug$1) console.log(x, y, dx, dy);
+    if (debug) console.log(x, y, dx, dy);
 
     let tab = this.tab, tbar = this.tbar;
     let axis = tbar.horiz ? 0 : 1;
@@ -48469,7 +48469,7 @@ class ModalTabMove extends EventHandler {
       this.dragcanvas.height = ~~tab.size[1];
       this.dragcanvas.style["width"] = (tab.size[0]/dpi) + "px";
       this.dragcanvas.style["height"] = (tab.size[1]/dpi) + "px";
-      this.dragcanvas.style["position"] = UIBase$e.PositionKey;
+      this.dragcanvas.style["position"] = UIBase$4.PositionKey;
       this.dragcanvas.style["left"] = e.x + "px";
       this.dragcanvas.style["top"] = e.y + "px";
       this.dragcanvas.style["z-index"] = "500";
@@ -48499,7 +48499,7 @@ class ModalTabMove extends EventHandler {
   }
 
   on_keydown(e) {
-    if (debug$1) console.log(e.keyCode);
+    if (debug) console.log(e.keyCode);
 
     switch (e.keyCode) {
       case 27: //escape
@@ -48512,7 +48512,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$e {
+class TabBar extends UIBase$4 {
   constructor() {
     super();
 
@@ -48593,7 +48593,7 @@ class TabBar extends UIBase$e {
     let do_touch = (e) => {
       let r = this.canvas.getClientRects()[0];
 
-      if (debug$1) console.log(e.touches);
+      if (debug) console.log(e.touches);
 
       mx = e.touches[0].pageX - r.x;
       my = e.touches[0].pageY - r.y;
@@ -48612,7 +48612,7 @@ class TabBar extends UIBase$e {
     };
 
     this.canvas.addEventListener("mousemove", (e) => {
-      if (debug$1) console.log("yay");
+      if (debug) console.log("yay");
 
       let r = this.canvas.getClientRects()[0];
       do_mouse(e);
@@ -48657,7 +48657,7 @@ class TabBar extends UIBase$e {
         return;
       }
 
-      if (debug$1) console.log("mdown");
+      if (debug) console.log("mdown");
 
       if (e.button !== 0) {
         /* ensure browser doesn't spawn its own (incompatible)
@@ -48856,7 +48856,7 @@ class TabBar extends UIBase$e {
       this._last_pos = pos;
 
       this.horiz = pos === "top" || pos === "bottom";
-      if (debug$1) console.log("tab bar position update", this.horiz);
+      if (debug) console.log("tab bar position update", this.horiz);
 
       if (this.horiz) {
         this.style["width"] = "100%";
@@ -48874,7 +48874,7 @@ class TabBar extends UIBase$e {
     let dpi = this.getDPI();
 
     if (dpi !== this._last_dpi) {
-      if (debug$1) console.log("DPI update!");
+      if (debug) console.log("DPI update!");
       this._last_dpi = dpi;
 
       this.updateCanvas(true);
@@ -48921,7 +48921,7 @@ class TabBar extends UIBase$e {
 
     let g = this.g;
 
-    if (debug$1) console.log("tab layout");
+    if (debug) console.log("tab layout");
 
     let dpi = this.getDPI();
 
@@ -48937,7 +48937,7 @@ class TabBar extends UIBase$e {
     let y = 0;
 
     let h = tsize + Math.ceil(tsize*0.5);
-    let iconsize = iconmanager$1.getTileSize(this.iconsheet);
+    let iconsize = iconmanager.getTileSize(this.iconsheet);
     let have_icons = false;
 
     for (let tab of this.tabs) {
@@ -49019,7 +49019,7 @@ class TabBar extends UIBase$e {
         tab.dom.style["z-index"] = z + 1 + ti;
 
         document.body.appendChild(tab.dom);
-        tab.dom.style["position"] = UIBase$e.PositionKey;
+        tab.dom.style["position"] = UIBase$4.PositionKey;
         tab.dom.style["display"] = "flex";
         tab.dom.style["flex-direction"] = this.horiz ? "row" : "column";
 
@@ -49107,7 +49107,7 @@ class TabBar extends UIBase$e {
 
     let activecolor = this.getDefault("TabActive") || "rgba(0,0,0,0)";
 
-    if (debug$1) console.log("tab draw");
+    if (debug) console.log("tab draw");
 
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -49115,7 +49115,7 @@ class TabBar extends UIBase$e {
     let font = this._getFont();
 
     let tsize = font.size;
-    let iconsize = iconmanager$1.getTileSize(this.iconsheet);
+    let iconsize = iconmanager.getTileSize(this.iconsheet);
 
     tsize = (tsize*dpi);
     g.font = font.genCSS(tsize);
@@ -49163,7 +49163,7 @@ class TabBar extends UIBase$e {
       }
 
       if (tab.icon !== undefined) {
-        iconmanager$1.canvasDraw(this, this.canvas, g, tab.icon, x, y, this.iconsheet);
+        iconmanager.canvasDraw(this, this.canvas, g, tab.icon, x, y, this.iconsheet);
         x2 += iconsize + 4;
       }
 
@@ -49359,9 +49359,9 @@ class TabBar extends UIBase$e {
   }
 }
 
-UIBase$e.internalRegister(TabBar);
+UIBase$4.internalRegister(TabBar);
 
-class TabContainer extends UIBase$e {
+class TabContainer extends UIBase$4 {
   constructor() {
     super();
 
@@ -49374,7 +49374,7 @@ class TabContainer extends UIBase$e {
 
     this.tabFontScale = 1.0;
 
-    this.tbar = UIBase$e.createElement("tabbar-x");
+    this.tbar = UIBase$4.createElement("tabbar-x");
     this.tbar.parentWidget = this;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
     this.tbar.constructor.setDefault(this.tbar);
@@ -49616,7 +49616,7 @@ class TabContainer extends UIBase$e {
       id = tab_idgen++;
     }
 
-    let col = UIBase$e.createElement("colframe-x");
+    let col = UIBase$4.createElement("colframe-x");
 
     this.tabs[id] = col;
 
@@ -49774,24 +49774,24 @@ class TabContainer extends UIBase$e {
   }
 }
 
-UIBase$e.internalRegister(TabContainer);
+UIBase$4.internalRegister(TabContainer);
 
 //bind module to global var to get at it in console.
 
-var _ui$2 = undefined;
+var _ui = undefined;
 
-let PropFlags$3 = PropFlags;
-let PropSubTypes$4 = PropSubTypes$1;
+let PropFlags = PropFlags$3;
+let PropSubTypes = PropSubTypes$3;
 
-let EnumProperty$8 = EnumProperty;
+let EnumProperty$1 = EnumProperty$9;
 
-let Vector2$b = Vector2,
-  UIBase$f = UIBase$2,
-  PackFlags$9 = PackFlags,
-  PropTypes$7 = PropTypes;
+let Vector2$2 = Vector2$d,
+  UIBase$3 = UIBase$g,
+  PackFlags$1 = PackFlags$a,
+  PropTypes$1 = PropTypes$8;
 
 
-const list$1 = list;
+const list$1 = list$2;
 
 class TableRow extends Container {
   constructor() {
@@ -49820,7 +49820,7 @@ class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase$f.internalRegister(TableRow);
+UIBase$3.internalRegister(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -49864,7 +49864,7 @@ class TableFrame extends Container {
       td.style["margin"] = tr.style["margin"];
       td.style["padding"] = tr.style["padding"];
 
-      let container = UIBase$f.createElement("rowframe-x");
+      let container = UIBase$3.createElement("rowframe-x");
 
       container.ctx = this2.ctx;
       container.parentWidget = this2;
@@ -50008,18 +50008,18 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$f.internalRegister(TableFrame);
+UIBase$3.internalRegister(TableFrame);
 
 "use strict";
 
-let EnumProperty$9 = EnumProperty,
-    PropTypes$8    = PropTypes;
+let EnumProperty = EnumProperty$9,
+    PropTypes    = PropTypes$8;
 
-let UIBase$g     = UIBase$2,
-    PackFlags$a  = PackFlags,
-    IconSheets$7 = IconSheets;
+let UIBase$2     = UIBase$g,
+    PackFlags  = PackFlags$a,
+    IconSheets = IconSheets$7;
 
-function getpx$2(css) {
+function getpx(css) {
   return parseFloat(css.trim().replace("px", ""))
 }
 
@@ -50097,7 +50097,7 @@ class ListItem extends RowFrame {
   }
 }
 
-UIBase$g.internalRegister(ListItem);
+UIBase$2.internalRegister(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -50121,8 +50121,8 @@ class ListBox extends Container {
 
     this.onkeydown = (e) => {
       switch (e.keyCode) {
-        case keymap["Up"]:
-        case keymap["Down"]:
+        case keymap$4["Up"]:
+        case keymap$4["Down"]:
           if (this.items.length == 0)
             return;
 
@@ -50132,7 +50132,7 @@ class ListBox extends Container {
           }
 
           let i = this.items.indexOf(this.items.active);
-          let dir = e.keyCode == keymap["Up"] ? -1 : 1;
+          let dir = e.keyCode == keymap$4["Up"] ? -1 : 1;
 
           i = Math.max(Math.min(i + dir, this.items.length - 1), 0);
           this.setActive(this.items[i]);
@@ -50172,7 +50172,7 @@ class ListBox extends Container {
   }
 
   addItem(name, id) {
-    let item = UIBase$g.createElement("listitem-x");
+    let item = UIBase$2.createElement("listitem-x");
 
     item._id = id === undefined ? this.items.length : id;
     this.idmap[item._id] = item;
@@ -50241,9 +50241,9 @@ class ListBox extends Container {
   }
 }
 
-UIBase$g.internalRegister(ListBox);
+UIBase$2.internalRegister(ListBox);
 
-class ProgressCircle extends UIBase$2 {
+class ProgressCircle extends UIBase$g {
   constructor() {
     super();
 
@@ -50269,7 +50269,7 @@ class ProgressCircle extends UIBase$2 {
 
     let onkey = (e) => {
       switch (e.keyCode) {
-        case keymap["Escape"]:
+        case keymap$4["Escape"]:
           if (this.oncancel) {
             this.oncancel(this);
           }
@@ -50415,7 +50415,7 @@ class ProgressCircle extends UIBase$2 {
       this.endTimer();
     }
 
-    let size = ~~(this.size*UIBase$2.getDPI());
+    let size = ~~(this.size*UIBase$g.getDPI());
 
     if (size !== this.canvas.width) {
       this.setCSS();
@@ -50425,12 +50425,12 @@ class ProgressCircle extends UIBase$2 {
   setCSS() {
     let c = this.canvas;
 
-    let size = ~~(this.size*UIBase$2.getDPI());
+    let size = ~~(this.size*UIBase$g.getDPI());
 
     if (c.width !== size) {
       c.width = c.height = size;
 
-      size /= UIBase$2.getDPI();
+      size /= UIBase$g.getDPI();
       c.style["width"] = size + "px";
       c.style["height"] = size + "px";
 
@@ -50456,10 +50456,10 @@ class ProgressCircle extends UIBase$2 {
     }
   }
 }
-UIBase$2.register(ProgressCircle);
+UIBase$g.register(ProgressCircle);
 
 const LastKey = Symbol("LastToolPanelId");
-let tool_idgen$1 = 0;
+let tool_idgen = 0;
 
 function getLastToolStruct(ctx) {
   let ret = ctx.state._last_tool;
@@ -50502,7 +50502,7 @@ class LastToolPanel extends ColumnFrame {
     //don't process the root toolop
     let bad = ctx.toolstack.length === 0 || ctx.toolstack.cur >= ctx.toolstack.length;
     bad = bad || ctx.toolstack.cur < 0;
-    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags.IS_UNDO_ROOT;
+    bad = bad || ctx.toolstack[ctx.toolstack.cur].undoflag & UndoFlags$1.IS_UNDO_ROOT;
 
     if (bad) {
       return undefined;
@@ -50557,7 +50557,7 @@ class LastToolPanel extends ColumnFrame {
       return tool;
     };
 
-    if (tool.flag & ToolFlags.PRIVATE) {
+    if (tool.flag & ToolFlags$1.PRIVATE) {
       return;
     }
 
@@ -50591,7 +50591,7 @@ class LastToolPanel extends ColumnFrame {
     for (let k in tool.inputs) {
       let prop = tool.inputs[k];
 
-      if (prop.flag & (PropFlags.PRIVATE|PropFlags.READ_ONLY)) {
+      if (prop.flag & (PropFlags$3.PRIVATE|PropFlags$3.READ_ONLY)) {
         continue;
       }
 
@@ -50617,7 +50617,7 @@ class LastToolPanel extends ColumnFrame {
       let path = "last_tool." + dpath.path;
 
       panel.label(dpath.data.uiname);
-      let ret = panel.prop(path, PackFlags.FORCE_ROLLER_SLIDER);
+      let ret = panel.prop(path, PackFlags$a.FORCE_ROLLER_SLIDER);
 
       if (ret) {
         ret.useDataPathUndo = false;
@@ -50639,7 +50639,7 @@ class LastToolPanel extends ColumnFrame {
     let tool = this.getToolStackHead(ctx);
 
     if (tool && (!(LastKey in tool) || tool[LastKey] !== this._tool_id)) {
-      tool[LastKey] = tool_idgen$1++;
+      tool[LastKey] = tool_idgen++;
       this._tool_id = tool[LastKey];
 
       this.rebuild();
@@ -50650,7 +50650,7 @@ class LastToolPanel extends ColumnFrame {
     tagname : "last-tool-panel-x"
   }}
 }
-UIBase$2.internalRegister(LastToolPanel);
+UIBase$g.internalRegister(LastToolPanel);
 
 class Constraint {
   constructor(name, func, klst, params, k=1.0) {
@@ -50836,16 +50836,16 @@ var solver1 = /*#__PURE__*/Object.freeze({
 
 "use strict";
 
-let idgen = 0;
+let idgen$1 = 0;
 
-class PackNodeVertex extends Vector2 {
+class PackNodeVertex extends Vector2$d {
   constructor(node, co) {
     super(co);
 
     this.node = node;
-    this._id = idgen++;
+    this._id = idgen$1++;
     this.edges = [];
-    this._absPos = new Vector2();
+    this._absPos = new Vector2$d();
   }
 
   get absPos() {
@@ -50860,11 +50860,11 @@ class PackNodeVertex extends Vector2 {
 
 class PackNode {
   constructor() {
-    this.pos = new Vector2();
-    this.vel = new Vector2();
-    this.oldpos = new Vector2();
-    this._id = idgen++;
-    this.size = new Vector2();
+    this.pos = new Vector2$d();
+    this.vel = new Vector2$d();
+    this.oldpos = new Vector2$d();
+    this._id = idgen$1++;
+    this.size = new Vector2$d();
     this.verts = [];
   }
 
@@ -50912,7 +50912,7 @@ function copyGraph(nodes) {
 }
 
 function getCenter(nodes) {
-  let cent = new Vector2();
+  let cent = new Vector2$d();
 
   for (let n of nodes) {
     cent.add(n.pos);
@@ -50938,7 +50938,7 @@ function loadGraph(nodes, copy) {
 
 function graphGetIslands(nodes) {
   let islands = [];
-  let visit1 = new set$1();
+  let visit1 = new set$2();
 
   let rec = (n, island) => {
     island.push(n);
@@ -50987,17 +50987,17 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
   let decayi = 0;
 
 
-  let min = new Vector2().addScalar(1e17);
-  let max = new Vector2().addScalar(-1e17);
+  let min = new Vector2$d().addScalar(1e17);
+  let max = new Vector2$d().addScalar(-1e17);
 
-  let tmp = new Vector2();
+  let tmp = new Vector2$d();
   for (let n of nodes) {
     min.min(n.pos);
     tmp.load(n.pos).add(n.size);
     max.max(tmp);
   }
 
-  let size = new Vector2(max).sub(min);
+  let size = new Vector2$d(max).sub(min);
 
   for (let n of nodes) {
     n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
@@ -51013,8 +51013,8 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
     }
   }
 
-  let visit = new set$1();
-  let verts = new set$1();
+  let visit = new set$2();
+  let verts = new set$2();
   let isect = [];
 
   let disableEdges = false;
@@ -51027,10 +51027,10 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
     return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
   }
 
-  let p1 = new Vector2();
-  let p2 = new Vector2();
-  let s1 = new Vector2();
-  let s2 = new Vector2();
+  let p1 = new Vector2$d();
+  let p2 = new Vector2$d();
+  let s1 = new Vector2$d();
+  let s2 = new Vector2$d();
 
   function loadBoxes(n1, n2, margin1=margin) {
     p1.load(n1.pos);
@@ -51076,7 +51076,7 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
     let solver = new Solver();
 
     isect.length = 0;
-    visit = new set$1();
+    visit = new set$2();
 
     if (fakeVerts.length > 1) {
       for (let i=1; i<fakeVerts.length; i++) {
@@ -51294,7 +51294,7 @@ const ContextFlags = {
   IS_VIEW : 1
 };
 
-class InheritFlag$1 {
+class InheritFlag {
   constructor(data) {
     this.data = data;
   }
@@ -51385,14 +51385,14 @@ class ContextOverlay {
       p = getClassParent(p);
     }
 
-    if (def2.flag instanceof InheritFlag$1) {
+    if (def2.flag instanceof InheritFlag) {
       let flag = def2.flag.data;
       for (let p of parents) {
         let def = p.contextDefine();
 
         if (!def.flag) {
           continue;
-        }else if (def.flag instanceof InheritFlag$1) {
+        }else if (def.flag instanceof InheritFlag) {
           flag |= def.flag.data;
         } else {
           flag |= def.flag;
@@ -51465,7 +51465,7 @@ class LockedContext {
       try {
         v = ctx[k];
       } catch (error) {
-        if (config.DEBUG.contextSystem) {
+        if (config$1.DEBUG.contextSystem) {
           console.warn("failed to look up property in context: ", k);
         }
         continue;
@@ -51525,7 +51525,7 @@ class LockedContext {
 }
 
 let next_key = {};
-let idgen$1 = 1;
+let idgen = 1;
 
 class Context {
   constructor(appstate) {
@@ -51692,7 +51692,7 @@ class Context {
     let inside_map = this._inside_map;
     let stack = this._stack;
 
-    if (config.DEBUG.contextSystem) {
+    if (config$1.DEBUG.contextSystem) {
       console.log(name, inside_map);
     }
 
@@ -51706,7 +51706,7 @@ class Context {
 
       let ikey = overlay[Symbol.ContextID];
 
-      if (config.DEBUG.contextSystem) {
+      if (config$1.DEBUG.contextSystem) {
         console.log(ikey, overlay);
       }
 
@@ -51716,7 +51716,7 @@ class Context {
       }
 
       if (overlay.__allKeys.has(name)) {
-        if (config.DEBUG.contextSystem) {
+        if (config$1.DEBUG.contextSystem) {
           console.log("getting value");
         }
 
@@ -51783,7 +51783,7 @@ class Context {
 
   pushOverlay(overlay) {
     if (!overlay.hasOwnProperty(Symbol.ContextID)) {
-      overlay[Symbol.ContextID] = idgen$1++;
+      overlay[Symbol.ContextID] = idgen++;
     }
 
     let keys = new Set();
@@ -51844,7 +51844,7 @@ class Context {
   }
 
   static inherit(data) {
-    return new InheritFlag$1(data);
+    return new InheritFlag(data);
   }
 
   static register(cls) {
@@ -51917,8 +51917,8 @@ const math = math1;
 const toolprop_abstract = toolprop_abstract1;
 const html5_fileapi = html5_fileapi1;
 const parseutil = parseutil1;
-const config$1 = config1;
-const nstructjs$1 = nstructjs;
+const config = config1;
+const nstructjs = nstructjs$1;
 
 var controller1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -51929,8 +51929,8 @@ var controller1 = /*#__PURE__*/Object.freeze({
   toolprop_abstract: toolprop_abstract,
   html5_fileapi: html5_fileapi,
   parseutil: parseutil,
-  config: config$1,
-  nstructjs: nstructjs$1,
+  config: config,
+  nstructjs: nstructjs,
   setNotifier: setNotifier,
   ContextFlags: ContextFlags,
   OverlayClasses: OverlayClasses,
@@ -51964,8 +51964,8 @@ var controller1 = /*#__PURE__*/Object.freeze({
   DataPathSetOp: DataPathSetOp,
   ToolClasses: ToolClasses,
   setContextClass: setContextClass,
-  ToolFlags: ToolFlags,
-  UndoFlags: UndoFlags,
+  ToolFlags: ToolFlags$1,
+  UndoFlags: UndoFlags$1,
   setDefaultUndoHandlers: setDefaultUndoHandlers,
   ToolPropertyCache: ToolPropertyCache,
   SavedToolDefaults: SavedToolDefaults,
@@ -51975,14 +51975,14 @@ var controller1 = /*#__PURE__*/Object.freeze({
   ToolMacro: ToolMacro,
   ToolStack: ToolStack,
   buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes,
-  PropFlags: PropFlags,
+  PropTypes: PropTypes$8,
+  PropFlags: PropFlags$3,
   isNumber: isNumber,
   NumberConstraintsBase: NumberConstraintsBase,
   IntegerConstraints: IntegerConstraints,
   FloatConstrinats: FloatConstrinats,
   NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$1,
+  PropSubTypes: PropSubTypes$3,
   setPropTypes: setPropTypes,
   customPropertyTypes: customPropertyTypes,
   PropClasses: PropClasses,
@@ -51998,7 +51998,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   BoolProperty: BoolProperty,
   FloatProperty: FloatProperty,
   EnumKeyPair: EnumKeyPair,
-  EnumProperty: EnumProperty,
+  EnumProperty: EnumProperty$9,
   FlagProperty: FlagProperty,
   VecPropertyBase: VecPropertyBase,
   Vec2Property: Vec2Property,
@@ -52025,18 +52025,18 @@ var controller1 = /*#__PURE__*/Object.freeze({
   genHermiteTable: genHermiteTable,
   SplineTemplates: SplineTemplates,
   SplineTemplateIcons: SplineTemplateIcons,
-  mySafeJSONStringify: mySafeJSONStringify$1,
-  mySafeJSONParse: mySafeJSONParse$1,
+  mySafeJSONStringify: mySafeJSONStringify,
+  mySafeJSONParse: mySafeJSONParse,
   Curve1D: Curve1D,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
   F64BaseVector: F64BaseVector,
   F32BaseVector: F32BaseVector,
-  Vector4: Vector4,
-  Vector3: Vector3,
-  Vector2: Vector2,
+  Vector4: Vector4$2,
+  Vector3: Vector3$2,
+  Vector2: Vector2$d,
   Quat: Quat,
-  Matrix4: Matrix4,
+  Matrix4: Matrix4$2,
   quad_bilinear: quad_bilinear,
   ClosestModes: ClosestModes,
   AbstractCurve: AbstractCurve,
@@ -52133,7 +52133,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   graphPack: graphPack,
   Constraint: Constraint,
   Solver: Solver,
-  modalstack: modalstack,
+  modalstack: modalstack$1,
   singleMouseEvent: singleMouseEvent,
   isLeftClick: isLeftClick,
   DoubleClickHandler: DoubleClickHandler,
@@ -52147,7 +52147,7 @@ var controller1 = /*#__PURE__*/Object.freeze({
   popModalLight: popModalLight,
   haveModal: haveModal,
   keymap_latin_1: keymap_latin_1,
-  keymap: keymap,
+  keymap: keymap$4,
   reverse_keymap: reverse_keymap,
   HotKey: HotKey,
   KeyMap: KeyMap
@@ -52161,10 +52161,10 @@ if (window.haveElectron) {
   promise = Promise.resolve().then(function () { return web_api; });
 }
 
-var platform;
+var platform$3;
 
 promise.then((module) => {
-  platform = module.platform;
+  platform$3 = module.platform;
   promise = undefined;
 });
 
@@ -52174,13 +52174,13 @@ function getPlatformAsync() {
   }
 
   return new Promise((accept, reject) => {
-    accept(platform);
+    accept(platform$3);
   })
 }
 
 var platform1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  get platform () { return platform; },
+  get platform () { return platform$3; },
   getPlatformAsync: getPlatformAsync
 });
 
@@ -52665,7 +52665,7 @@ function getNativeIcon(icon, iconsheet = 0, invertColors = false, size = 16) {
   return icon;
 }
 
-let map$1 = {
+let map = {
   CTRL   : "Control",
   ALT    : "Alt",
   SHIFT  : "Shift",
@@ -52674,8 +52674,8 @@ let map$1 = {
 
 function buildElectronHotkey(hk) {
   hk = hk.trim().replace(/[ \t-]+/g, "+");
-  for (let k in map$1) {
-    hk = hk.replace(k, map$1[k]);
+  for (let k in map) {
+    hk = hk.replace(k, map[k]);
   }
 
   return hk;
@@ -52826,7 +52826,7 @@ function initMenuBar(menuEditor, override = false) {
   //win.setMenu(menu);
 }
 
-class platform$1 extends PlatformAPI {
+class platform$2 extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
     const {dialog} = require('electron').remote;
 
@@ -52973,15 +52973,15 @@ var electron_api1 = /*#__PURE__*/Object.freeze({
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
   initMenuBar: initMenuBar,
-  platform: platform$1
+  platform: platform$2
 });
 
 "use strict";
 const SVG_URL = 'http://www.w3.org/2000/svg';
 
-const Vector2$c = Vector2;
+const Vector2$1 = Vector2$d;
 
-class CanvasOverdraw extends UIBase$2 {
+class CanvasOverdraw extends UIBase$g {
   constructor() {
     super();
 
@@ -53070,7 +53070,7 @@ class CanvasOverdraw extends UIBase$2 {
   }
 }
 
-class Overdraw extends UIBase$2 {
+class Overdraw extends UIBase$g {
   constructor() {
     super();
 
@@ -53153,7 +53153,7 @@ class Overdraw extends UIBase$2 {
   }
 
   clear() {
-    for (let child of list(this.svg.childNodes)) {
+    for (let child of list$2(this.svg.childNodes)) {
       child.remove();
     }
 
@@ -53168,7 +53168,7 @@ class Overdraw extends UIBase$2 {
     let boxes = [];
     let elems = [];
 
-    let cent = new Vector2$c();
+    let cent = new Vector2$1();
 
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
@@ -53192,7 +53192,7 @@ class Overdraw extends UIBase$2 {
       if (size === undefined) {
         size = this.getDefault("DefaultText").size;
       } else {
-        size = parsepx$1(size);
+        size = parsepx$4(size);
       }
 
       //console.log(size);
@@ -53203,17 +53203,17 @@ class Overdraw extends UIBase$2 {
         ~~tsize.height
       ];
 
-      let pad = parsepx$1(box.style["padding"]);
+      let pad = parsepx$4(box.style["padding"]);
 
       box.minsize[0] += pad*2;
       box.minsize[1] += pad*2;
 
-      let x = parsepx$1(box.style["left"]);
-      let y = parsepx$1(box.style["top"]);
+      let x = parsepx$4(box.style["left"]);
+      let y = parsepx$4(box.style["top"]);
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$c([x, y]);
+      box.startpos = new Vector2$1([x, y]);
 
       box.setCSS = function() {
         this.style["padding"] = "0px";
@@ -53330,7 +53330,7 @@ class Overdraw extends UIBase$2 {
 
     args.color = args.color ? args.color : "white";
     if (typeof args.color === "object") {
-      args.color = color2css$2(args.color);
+      args.color = color2css$1(args.color);
     }
 
     args["padding"] = args["padding"] === undefined ? "5px" : args["padding"];
@@ -53433,7 +53433,7 @@ class Overdraw extends UIBase$2 {
   };}
 }
 
-UIBase$2.internalRegister(Overdraw);
+UIBase$g.internalRegister(Overdraw);
 
 class TreeItem extends Container {
   constructor() {
@@ -53446,7 +53446,7 @@ class TreeItem extends Container {
 
     this.header = this.row();
 
-    this._icon1 = this.header.iconbutton(Icons.TREE_COLLAPSE);
+    this._icon1 = this.header.iconbutton(Icons$2.TREE_COLLAPSE);
     this._icon1.iconsheet = 0;
     this._icon1.drawButtonBG = false;
 
@@ -53470,7 +53470,7 @@ class TreeItem extends Container {
     if (this._icon2) {
       this._icon2 = id;
     } else {
-      this._icon2 = UIBase$2.createElement("icon-label-x");
+      this._icon2 = UIBase$g.createElement("icon-label-x");
       this._icon2.icon = id;
       this._icon2.iconsheet = 0;
 
@@ -53487,13 +53487,13 @@ class TreeItem extends Container {
   }
 
   open() {
-    this._icon1.icon = Icons.TREE_COLLAPSE;
+    this._icon1.icon = Icons$2.TREE_COLLAPSE;
     this.opened = true;
     this.treeView._open(this);
   }
 
   close() {
-    this._icon1.icon = Icons.TREE_EXPAND;
+    this._icon1.icon = Icons$2.TREE_EXPAND;
     this.opened = false;
     this.treeView._close(this);
   }
@@ -53530,7 +53530,7 @@ class TreeItem extends Container {
     style   : "treeview"
   }}
 }
-UIBase$2.internalRegister(TreeItem);
+UIBase$g.internalRegister(TreeItem);
 
 class TreeView extends Container {
   constructor() {
@@ -53548,7 +53548,7 @@ class TreeView extends Container {
 
     //this.shadow.appendChild(this.overdraw);
 
-    this.overdraw = UIBase$2.createElement("overdraw-x");
+    this.overdraw = UIBase$g.createElement("overdraw-x");
     console.log(this.overdraw.startNode);
     this.overdraw.startNode(this);
 
@@ -53722,7 +53722,7 @@ class TreeView extends Container {
     od.style["padding"] = "0px";
     od.svg.style["margin"] = "0px";
 
-    od.style["position"] = UIBase$2.PositionKey;
+    od.style["position"] = UIBase$g.PositionKey;
 
     od.style["width"] = (r.width-1) + "px";
     od.style["height"] = (r.height-1) + "px";
@@ -53742,7 +53742,7 @@ class TreeView extends Container {
   }
 
   item(name, args={icon : undefined}) {
-    let ret = UIBase$2.createElement("tree-item-x");
+    let ret = UIBase$g.createElement("tree-item-x");
     this.add(ret);
     ret._init();
 
@@ -53786,7 +53786,7 @@ class TreeView extends Container {
     style   : "treeview"
   }}
 }
-UIBase$2.internalRegister(TreeView);
+UIBase$g.internalRegister(TreeView);
 
 function startDrag(box) {
   if (box._modal) {
@@ -53814,8 +53814,8 @@ function startDrag(box) {
       let dx = x - lastx;
       let dy = y - lasty;
 
-      let hx = parsepx$1(box.style["left"]);
-      let hy = parsepx$1(box.style["top"]);
+      let hx = parsepx$4(box.style["left"]);
+      let hy = parsepx$4(box.style["top"]);
 
       hx += dx;
       hy += dy;
@@ -53842,8 +53842,8 @@ function startDrag(box) {
 
     on_keydown(e) {
       switch (e.keyCode) {
-        case keymap["Escape"]:
-        case keymap["Return"]:
+        case keymap$4["Escape"]:
+        case keymap$4["Return"]:
           this.end();
           break;
       }
@@ -53859,8 +53859,8 @@ class DragBox extends Container {
     super();
 
     this._done = false;
-    this.header = UIBase$2.createElement("rowframe-x");
-    this.contents = UIBase$2.createElement("container-x");
+    this.header = UIBase$g.createElement("rowframe-x");
+    this.contents = UIBase$g.createElement("container-x");
 
     this.header.style["border-radius"] = "20px";
 
@@ -53884,7 +53884,7 @@ class DragBox extends Container {
     this.style["min-width"] = "350px";
     header.style["height"] = "35px";
 
-    let icon = header.iconbutton(Icons.DELETE, "Hide", () => {
+    let icon = header.iconbutton(Icons$2.DELETE, "Hide", () => {
       this.end();
     });
     icon.iconsheet = 0; //use small icons
@@ -54008,7 +54008,7 @@ class DragBox extends Container {
     style   : "panel"
   }}
 }
-UIBase$2.internalRegister(DragBox);
+UIBase$g.internalRegister(DragBox);
 
 let ignore = 0;
 
@@ -54163,7 +54163,7 @@ class AreaDocker extends Container {
     let rect = tab.getClientRects()[0];
     let mpos = this.ctx.screen.mpos;
 
-    let menu = UIBase$2.createElement("menu-x");
+    let menu = UIBase$g.createElement("menu-x");
 
     menu.closeOnMouseUp = false;
     menu.ctx = this.ctx;
@@ -54299,7 +54299,7 @@ class AreaDocker extends Container {
       let tab = this.tbar.tab(uiname, area._id);
     }
 
-    let tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false);
+    let tab = this.tbar.icontab(Icons$2.SMALL_PLUS, "add", "Add Editor", false);
 
     //load tab order
     loadUIData(this.tbar, ud);
@@ -54342,7 +54342,7 @@ class AreaDocker extends Container {
     tagname : "area-docker-x"
   }}
 }
-UIBase$2.internalRegister(AreaDocker);
+UIBase$g.internalRegister(AreaDocker);
 
 function makePopupArea(area_class, screen, args={}) {
   let sarea = UIBase.createElement("screenarea-x");
@@ -54376,7 +54376,7 @@ function makePopupArea(area_class, screen, args={}) {
 
   if (addEscapeKeyHandler) {
     sarea.on_keydown = (e) => {
-      if (e.keyCode === keymap.Escape) {
+      if (e.keyCode === keymap$4.Escape) {
         screen.removeArea(sarea);
       }
     };
@@ -54389,9 +54389,9 @@ function makePopupArea(area_class, screen, args={}) {
 
 let _FrameManager = undefined;
 
-let Area$2 = Area$1;
+let Area = Area$1;
 
-function list$2(iter) {
+function list(iter) {
   let ret = [];
 
   for (let item of iter) {
@@ -54405,13 +54405,13 @@ startMenuEventWrangling();
 
 let _events_started = false;
 
-function registerToolStackGetter$1(func) {
-  registerToolStackGetter(func);
+function registerToolStackGetter(func) {
+  registerToolStackGetter$1(func);
 }
 
-let Vector2$d         = Vector2,
-    UIBase$h          = UIBase$2,
-    styleScrollBars$1 = styleScrollBars;
+let Vector2         = Vector2$d,
+    UIBase$1          = UIBase$g,
+    styleScrollBars = styleScrollBars$1;
 
 let update_stack = new Array(8192);
 update_stack.cur = 0;
@@ -54432,7 +54432,7 @@ function purgeUpdateStack() {
  inherit-scale : don't resize to fit whole screen, use cssbox scaling
 
  */
-class Screen$2 extends UIBase$2 {
+class Screen extends UIBase$g {
   constructor() {
     super();
 
@@ -54464,9 +54464,9 @@ class Screen$2 extends UIBase$2 {
 
     this.keymap = new KeyMap();
 
-    this.size = new Vector2$d([window.innerWidth, window.innerHeight]);
-    this.pos = new Vector2$d();
-    this.oldpos = new Vector2$d();
+    this.size = new Vector2([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2();
+    this.oldpos = new Vector2();
 
     this.idgen = 0;
     this.sareas = [];
@@ -54480,7 +54480,7 @@ class Screen$2 extends UIBase$2 {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$d(), new Vector2$d()];
+    this._aabb = [new Vector2(), new Vector2()];
 
     let on_mousemove = (e, x, y) => {
       //let elem = this.pickElement(x, y, 1, 1, ScreenArea.ScreenArea);
@@ -54582,7 +54582,7 @@ class Screen$2 extends UIBase$2 {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$h) {
+      if (n instanceof UIBase$1) {
         n.ctx = val;
       }
 
@@ -54607,7 +54607,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   static fromJSON(obj, schedule_resize = false) {
-    let ret = UIBase$h.createElement(this.define().tagname);
+    let ret = UIBase$1.createElement(this.define().tagname);
     return ret.loadJSON(obj, schedule_resize);
   }
 
@@ -54618,7 +54618,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   static newSTRUCT() {
-    return UIBase$h.createElement(this.define().tagname);
+    return UIBase$1.createElement(this.define().tagname);
   }
 
   init() {
@@ -54670,7 +54670,7 @@ class Screen$2 extends UIBase$2 {
               }
               continue;
             }
-            for (let [key, val] of list$2(rule.styleMap.entries())) {
+            for (let [key, val] of list(rule.styleMap.entries())) {
               if (1 || rule2.styleMap.has(key)) {
                 //rule2.styleMap.delete(key);
                 let sval = "";
@@ -54735,7 +54735,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   newScreenArea() {
-    let ret = UIBase$h.createElement("screenarea-x");
+    let ret = UIBase$1.createElement("screenarea-x");
     ret.ctx = this.ctx;
 
     if (ret.ctx) {
@@ -54746,7 +54746,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   copy() {
-    let ret = UIBase$h.createElement(this.constructor.define().tagname);
+    let ret = UIBase$1.createElement(this.constructor.define().tagname);
     ret.ctx = this.ctx;
     ret._init();
 
@@ -54931,7 +54931,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   draggablePopup(x, y) {
-    let ret = UIBase$h.createElement("drag-box-x");
+    let ret = UIBase$1.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -54945,7 +54945,7 @@ class Screen$2 extends UIBase$2 {
     };
 
     ret.style["z-index"] = 205;
-    ret.style["position"] = UIBase$h.PositionKey;
+    ret.style["position"] = UIBase$1.PositionKey;
     ret.style["left"] =  x + "px";
     ret.style["top"] = y + "px";
 
@@ -54981,7 +54981,7 @@ class Screen$2 extends UIBase$2 {
     x += window.scrollX;
     y += window.scrollY;
 
-    let container = UIBase$h.createElement("container-x");
+    let container = UIBase$1.createElement("container-x");
 
     container.ctx = this.ctx;
     container._init();
@@ -55004,7 +55004,7 @@ class Screen$2 extends UIBase$2 {
     container.style["border-width"] = container.getDefault("border-width") + "px";
     container.style["box-shadow"] = container.getDefault("box-shadow");
 
-    container.style["position"] = UIBase$h.PositionKey;
+    container.style["position"] = UIBase$1.PositionKey;
     container.style["z-index"] = "2205";
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
@@ -55013,7 +55013,7 @@ class Screen$2 extends UIBase$2 {
     container.parentWidget = this;
 
     let mm = new MinMax(2);
-    let p = new Vector2$d();
+    let p = new Vector2();
 
     let _update = container.update;
     container.update.after(() => {
@@ -55163,7 +55163,7 @@ class Screen$2 extends UIBase$2 {
       }
 
       switch (e.keyCode) {
-        case keymap["Escape"]:
+        case keymap$4["Escape"]:
           end();
           break;
       }
@@ -55206,7 +55206,7 @@ class Screen$2 extends UIBase$2 {
       this._aabb[1].load(mm.max);
     }
 
-    return [new Vector2$d(mm.min), new Vector2$d(mm.max)];
+    return [new Vector2(mm.min), new Vector2(mm.max)];
   }
 
   //XXX look at if this is referenced anywhere
@@ -55421,10 +55421,10 @@ class Screen$2 extends UIBase$2 {
     this.sareas = [];
     this.sareas.active = undefined;
 
-    for (let child of list$2(this.childNodes)) {
+    for (let child of list(this.childNodes)) {
       child.remove();
     }
-    for (let child of list$2(this.shadow.childNodes)) {
+    for (let child of list(this.shadow.childNodes)) {
       child.remove();
     }
   }
@@ -55441,7 +55441,7 @@ class Screen$2 extends UIBase$2 {
     super.loadJSON();
 
     for (let sarea of obj.sareas) {
-      let sarea2 = UIBase$h.createElement("screenarea-x");
+      let sarea2 = UIBase$1.createElement("screenarea-x");
 
       sarea2.ctx = this.ctx;
       sarea2.screen = this;
@@ -55596,7 +55596,7 @@ class Screen$2 extends UIBase$2 {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-      bad = bad || !(n instanceof UIBase$h);
+      bad = bad || !(n instanceof UIBase$1);
 
       if (n._id in visit || n.hidden) {
         return;
@@ -55714,7 +55714,7 @@ class Screen$2 extends UIBase$2 {
     let rec = (n) => {
       n.setCSS();
 
-      if (n.packflag & PackFlags.NO_UPDATE) {
+      if (n.packflag & PackFlags$a.NO_UPDATE) {
         return;
       }
 
@@ -55743,7 +55743,7 @@ class Screen$2 extends UIBase$2 {
 
       //console.log("updating scrollbar styling");
 
-      this.mergeGlobalCSS(styleScrollBars$1(s.color, s.color2, s.contrast, s.width, s.border, "*"));
+      this.mergeGlobalCSS(styleScrollBars(s.color, s.color2, s.contrast, s.width, s.border, "*"));
     }
   }
 
@@ -55825,14 +55825,14 @@ class Screen$2 extends UIBase$2 {
           continue;
         }
 
-        if (n instanceof Area$2) {
+        if (n instanceof Area) {
           //console.log("PUSH", n.constructor.name);
           areastack.push(n);
           n.push_ctx_active(ctx, true);
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$h) {
+        if (!n.hidden && n !== this2 && n instanceof UIBase$1) {
           n._ctx = ctx;
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
@@ -55857,7 +55857,7 @@ class Screen$2 extends UIBase$2 {
         }
 
         for (let n2 of n.childNodes) {
-          if (!(n2 instanceof UIBase$h) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+          if (!(n2 instanceof UIBase$1) || !(n2.packflag & PackFlags$a.NO_UPDATE)) {
             push(n2);
           }
         }
@@ -55867,13 +55867,13 @@ class Screen$2 extends UIBase$2 {
         }
 
         for (let n2 of n.shadow.childNodes) {
-          if (!(n2 instanceof UIBase$h) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+          if (!(n2 instanceof UIBase$1) || !(n2.packflag & PackFlags$a.NO_UPDATE)) {
             push(n2);
           }
         }
 
-        if (n instanceof UIBase$h) {
-          if (!(n.packflag & PackFlags.NO_UPDATE)) {
+        if (n instanceof UIBase$1) {
+          if (!(n.packflag & PackFlags$a.NO_UPDATE)) {
             scopestack.push(n);
             push(SCOPE_POP);
           }
@@ -55922,8 +55922,8 @@ class Screen$2 extends UIBase$2 {
     if (border) {
       sarea2 = border.getOtherSarea(sarea);
 
-      let size1 = new Vector2$d(sarea.pos).add(sarea.size);
-      let size2 = new Vector2$d(sarea2.pos).add(sarea2.size);
+      let size1 = new Vector2(sarea.pos).add(sarea.size);
+      let size2 = new Vector2(sarea2.pos).add(sarea2.size);
 
       sarea2.pos.min(sarea.pos);
       sarea2.size.load(size1).max(size2).sub(sarea2.pos);
@@ -56206,7 +56206,7 @@ class Screen$2 extends UIBase$2 {
 
   _get_debug_overlay() {
     if (!this._debug_overlay) {
-      this._debug_overlay = UIBase$h.createElement("overdraw-x");
+      this._debug_overlay = UIBase$1.createElement("overdraw-x");
       let s = this._debug_overlay;
 
       s.startNode(this, this);
@@ -56240,11 +56240,11 @@ class Screen$2 extends UIBase$2 {
         x = Math.min(Math.max(x, 0.0), this.size[0] - s);
         y = Math.min(Math.max(y, 0.0), this.size[1] - s);
 
-        let ret = UIBase$h.createElement("div");
+        let ret = UIBase$1.createElement("div");
         ret.setAttribute("class", "__debug");
 
 
-        ret.style["position"] = UIBase$h.PositionKey;
+        ret.style["position"] = UIBase$1.PositionKey;
         ret.style["left"] = x + "px";
         ret.style["top"] = y + "px";
         ret.style["height"] = s + "px";
@@ -56263,11 +56263,11 @@ class Screen$2 extends UIBase$2 {
         ];
 
         for (let i = 2; i >= 0; i--) {
-          ret = UIBase$h.createElement("div");
+          ret = UIBase$1.createElement("div");
 
           ret.setAttribute("class", "__debug");
 
-          ret.style["position"] = UIBase$h.PositionKey;
+          ret.style["position"] = UIBase$1.PositionKey;
           ret.style["left"] = x + "px";
           ret.style["top"] = y + "px";
           ret.style["height"] = s + "px";
@@ -56298,7 +56298,7 @@ class Screen$2 extends UIBase$2 {
       for (let b of this.screenborders) {
         for (let he of b.halfedges) {
           let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
-          let p = new Vector2$d(b.v1).add(b.v2).mulScalar(0.5);
+          let p = new Vector2(b.v1).add(b.v2).mulScalar(0.5);
           let size = 10*b.halfedges.length;
 
           let wadd = 25 + size*0.5;
@@ -56415,7 +56415,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   walkBorderLine(b) {
-    let visit = new set$1();
+    let visit = new set$2();
     let ret = [b];
     visit.add(b);
 
@@ -56480,7 +56480,7 @@ class Screen$2 extends UIBase$2 {
       return v[axis2] >= min && v[axis2] <= max;
     };
 
-    let vs = new set$1();
+    let vs = new set$2();
 
     for (let b2 of this.walkBorderLine(b)) {
       if (strict && !test(b2.v1) && !test(b2.v2)) {
@@ -56513,9 +56513,9 @@ class Screen$2 extends UIBase$2 {
 
     let axis = b.horiz & 1;
 
-    let vs = new set$1();
+    let vs = new set$2();
 
-    let visit = new set$1();
+    let visit = new set$2();
 
     let axis2 = axis ^ 1;
 
@@ -56528,8 +56528,8 @@ class Screen$2 extends UIBase$2 {
 
     let first = true;
     let found = false;
-    let halfedges = new set$1();
-    let borders = new set$1();
+    let halfedges = new set$2();
+    let borders = new set$2();
 
     for (let b2 of this.walkBorderLine(b)) {
       /*
@@ -56605,7 +56605,7 @@ class Screen$2 extends UIBase$2 {
         v[axis] += df;
       }
     } else {
-      let borders = new set$1();
+      let borders = new set$2();
 
       for (let he of halfedges) {
         borders.add(he.border);
@@ -56720,8 +56720,8 @@ class Screen$2 extends UIBase$2 {
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
-      let vec = new Vector2$d(max).sub(min);
-      let sz = new Vector2$d(this.size);
+      let vec = new Vector2(max).sub(min);
+      let sz = new Vector2(this.size);
 
       sz.div(vec);
 
@@ -56756,8 +56756,8 @@ class Screen$2 extends UIBase$2 {
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
-      let old = new Vector2$d(sarea.size);
-      let oldpos = new Vector2$d(sarea.pos);
+      let old = new Vector2(sarea.size);
+      let oldpos = new Vector2(sarea.pos);
 
       sarea.loadFromVerts();
 
@@ -56916,7 +56916,7 @@ class Screen$2 extends UIBase$2 {
     let hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      let sb = this._edgemap[hash] = UIBase$h.createElement("screenborder-x");
+      let sb = this._edgemap[hash] = UIBase$1.createElement("screenborder-x");
 
       sb.screen = this;
       sb.v1 = v1;
@@ -57174,7 +57174,7 @@ class Screen$2 extends UIBase$2 {
     reader(this);
 
     //handle old files that might have saved as simple arrays
-    this.size = new Vector2$d(this.size);
+    this.size = new Vector2(this.size);
 
     let sareas = this.sareas;
     this.sareas = [];
@@ -57209,10 +57209,10 @@ class Screen$2 extends UIBase$2 {
   test_struct(appstate = _appstate) {
     let data = [];
     //let scripts = nstructjs.write_scripts();
-    nstructjs$1.manager.write_object(data, this);
+    nstructjs.manager.write_object(data, this);
     data = new DataView(new Uint8Array(data).buffer);
 
-    let screen2 = nstructjs$1.manager.read_object(data, this.constructor);
+    let screen2 = nstructjs.manager.read_object(data, this.constructor);
     screen2.ctx = this.ctx;
 
     for (let sarea of screen2.sareas) {
@@ -57260,7 +57260,7 @@ class Screen$2 extends UIBase$2 {
   }
 }
 
-Screen$2.STRUCT = `
+Screen.STRUCT = `
 pathux.Screen { 
   size  : vec2;
   pos   : vec2;
@@ -57270,11 +57270,11 @@ pathux.Screen {
 }
 `;
 
-nstructjs$1.register(Screen$2);
-UIBase$2.internalRegister(Screen$2);
+nstructjs.register(Screen);
+UIBase$g.internalRegister(Screen);
 
-setScreenClass(Screen$2);
-_setScreenClass(Screen$2);
+setScreenClass(Screen);
+_setScreenClass(Screen);
 
 
 let get_screen_cb;
@@ -57387,7 +57387,7 @@ class SideBar extends Container {
 
     this._closed = false;
 
-    this.closeIcon = this.header.iconbutton(Icons.RIGHT_ARROW, "Close/Open sidebar", () => {
+    this.closeIcon = this.header.iconbutton(Icons$2.RIGHT_ARROW, "Close/Open sidebar", () => {
       console.log("click!");
       this.closed = !this._closed;
     });
@@ -57423,9 +57423,9 @@ class SideBar extends Container {
 
 
     if (val) {
-      this.closeIcon.icon = Icons.LEFT_ARROW;
+      this.closeIcon.icon = Icons$2.LEFT_ARROW;
     } else {
-      this.closeIcon.icon = Icons.RIGHT_ARROW;
+      this.closeIcon.icon = Icons$2.RIGHT_ARROW;
     }
 
     this._closed = val;
@@ -57436,7 +57436,7 @@ class SideBar extends Container {
   }
 
   get width() {
-    return parsepx$1("" + this.getAttribute("width"));
+    return parsepx$4("" + this.getAttribute("width"));
   }
 
   set width(val) {
@@ -57445,7 +57445,7 @@ class SideBar extends Container {
   }
 
   get height() {
-    return parsepx$1("" + this.getAttribute("height"));
+    return parsepx$4("" + this.getAttribute("height"));
   }
 
   set height(val) {
@@ -57505,7 +57505,7 @@ class SideBar extends Container {
 
     h = Math.min(h, editor.size[1]-25);
 
-    this.style["position"] = UIBase$2.PositionKey;
+    this.style["position"] = UIBase$g.PositionKey;
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
     this.style["z-index"] = "100";
@@ -57534,13 +57534,13 @@ class SideBar extends Container {
   }
 }
 
-UIBase$2.register(SideBar);
+UIBase$g.register(SideBar);
 
 class Editor extends Area$1 {
   constructor() {
     super();
 
-    this.container = UIBase$2.createElement("container-x");
+    this.container = UIBase$g.createElement("container-x");
     this.container.parentWidget = this;
     this.shadow.appendChild(this.container);
   }
@@ -57585,11 +57585,11 @@ class Editor extends Area$1 {
     }
 
     if (!cls.hasOwnProperty("STRUCT")) {
-      cls.STRUCT = nstructjs$1.inherit(cls, this) + `\n}`;
+      cls.STRUCT = nstructjs.inherit(cls, this) + `\n}`;
     }
 
     super.register(cls);
-    nstructjs$1.register(cls);
+    nstructjs.register(cls);
   }
 
   makeSideBar() {
@@ -57597,7 +57597,7 @@ class Editor extends Area$1 {
       this.sidebar.remove();
     }
 
-    let sidebar = this.sidebar = UIBase$2.createElement("sidebar-base-x");
+    let sidebar = this.sidebar = UIBase$g.createElement("sidebar-base-x");
     sidebar.parentWidget = this;
     sidebar.ctx = this.ctx;
     this.shadow.appendChild(sidebar);
@@ -58513,7 +58513,7 @@ let iconSvg = `data:image/svg+xml;base64,` + text;
 
 "use strict";
 
-const Icons$2 = {
+const Icons = {
   FOLDER        : 0, //file folder
   FILE          : 1,
   TINY_X        : 2, //'x' in bottom left corner
@@ -58558,7 +58558,7 @@ class FileHeader {
     this.version_major = version ? version[0] : 0;
     this.version_minor = version ? version[1] : 0;
     this.version_micro = version ? version[2] : 0;
-    this.schema = nstructjs.write_scripts();
+    this.schema = nstructjs$1.write_scripts();
   }
 }
 
@@ -58572,7 +58572,7 @@ simple.FileHeader {
   schema        : string; 
 }
 `;
-nstructjs.register(FileHeader);
+nstructjs$1.register(FileHeader);
 
 class FileFull extends FileHeader {
   constructor(version, magic, flags) {
@@ -58581,12 +58581,12 @@ class FileFull extends FileHeader {
   }
 }
 
-FileFull.STRUCT = nstructjs.inherit(FileFull, FileHeader) + `
+FileFull.STRUCT = nstructjs$1.inherit(FileFull, FileHeader) + `
   objects : array(abstract(Object));
   screen  : abstract(Object);
 }
 `;
-nstructjs.register(FileFull);
+nstructjs$1.register(FileFull);
 
 
 class FileArgs {
@@ -58609,9 +58609,9 @@ EmptyStruct.STRUCT = `
 EmptyStruct {
 }
 `;
-nstructjs.register(EmptyStruct);
+nstructjs$1.register(EmptyStruct);
 
-function saveFile$1(appstate, args, objects) {
+function saveFile(appstate, args, objects) {
   if (args.useJSON === undefined) {
     args.useJSON = appstate.saveFilesInJSON;
   }
@@ -58644,15 +58644,15 @@ function saveFile$1(appstate, args, objects) {
   }
 
   if (args.useJSON) {
-    return nstructjs.writeJSON(file);
+    return nstructjs$1.writeJSON(file);
   } else {
     let data = [];
-    nstructjs.writeObject(data, file);
+    nstructjs$1.writeObject(data, file);
     return (new Uint8Array(data)).buffer;
   }
 }
 
-function loadFile$1(appstate, args, data) {
+function loadFile(appstate, args, data) {
   let header;
 
   if (args.useJSON === undefined) {
@@ -58674,20 +58674,20 @@ function loadFile$1(appstate, args, data) {
       data = new DataView(data);
     }
 
-    header = nstructjs.readObject(data, FileHeader);
+    header = nstructjs$1.readObject(data, FileHeader);
   } else {
     if (typeof data === "string") {
       data = JSON.parse(data);
     }
 
-    header = nstructjs.readJSON(data, FileHeader);
+    header = nstructjs$1.readJSON(data, FileHeader);
   }
 
   if (header.magic !== args.magic) {
     throw new Error("invalid file");
   }
 
-  let istruct = new nstructjs.STRUCT();
+  let istruct = new nstructjs$1.STRUCT();
   istruct.parse_structs(header.schema);
 
   let ret;
@@ -58711,7 +58711,7 @@ function loadFile$1(appstate, args, data) {
     ret.screen.ctx = appstate.ctx;
 
     if (!(ret.screen instanceof appstate.screenClass)) {
-      let screen = UIBase$2.createElement(appstate.screenClass.define().tagname);
+      let screen = UIBase$g.createElement(appstate.screenClass.define().tagname);
       screen.ctx = appstate.ctx;
 
       for (let sarea of ret.screen.sareas) {
@@ -58838,7 +58838,7 @@ class MenuBarEditor extends Editor {
   }
 }
 
-MenuBarEditor.STRUCT = nstructjs$1.inherit(MenuBarEditor, Editor, "MenuBarEditor") + `
+MenuBarEditor.STRUCT = nstructjs.inherit(MenuBarEditor, Editor, "MenuBarEditor") + `
 }
 `;
 
@@ -58852,7 +58852,7 @@ class SimpleAppNewOp extends ToolOp {
       uiname  : "New",
       toolpath: "app.new",
       inputs  : {},
-      undoflag: UndoFlags.NO_UNDO
+      undoflag: UndoFlags$1.NO_UNDO
     }
   }
 
@@ -58869,7 +58869,7 @@ class SimpleAppSaveOp extends ToolOp {
       inputs  : {
         forceDialog: new BoolProperty()
       },
-      undoflag: UndoFlags.NO_UNDO
+      undoflag: UndoFlags$1.NO_UNDO
     }
   }
 
@@ -58887,7 +58887,7 @@ class SimpleAppSaveOp extends ToolOp {
         return data;
       }
 
-      platform.showSaveDialog("Save As", save, {
+      platform$3.showSaveDialog("Save As", save, {
         multi          : false,
         addToRecentList: true,
         filters        : [{
@@ -58917,7 +58917,7 @@ class SimpleAppOpenOp extends ToolOp {
       inputs  : {
         forceDialog: new BoolProperty()
       },
-      undoflag: UndoFlags.NO_UNDO
+      undoflag: UndoFlags$1.NO_UNDO
     }
   }
 
@@ -58926,7 +58926,7 @@ class SimpleAppOpenOp extends ToolOp {
     let useJSON = _appstate.startArgs.saveFilesInJSON;
     let mime = useJSON ? "text/json" : "application/x-octet-stream";
 
-    platform.showOpenDialog("Open File", {
+    platform$3.showOpenDialog("Open File", {
       multi          : false,
       addToRecentList: true,
       filters        : [{
@@ -58936,7 +58936,7 @@ class SimpleAppOpenOp extends ToolOp {
       }]
     }).then(paths => {
       for (let path of paths) {
-        platform.readFile(path, mime).then(data => {
+        platform$3.readFile(path, mime).then(data => {
           console.log("got data!", data);
 
           _appstate.loadFile(data, {useJSON, doScreen: true, fromFileOp: true})
@@ -58951,7 +58951,7 @@ class SimpleAppOpenOp extends ToolOp {
   }
 }
 
-function register$1() {
+function register() {
   ToolOp.register(SimpleAppSaveOp);
   ToolOp.register(SimpleAppOpenOp);
   ToolOp.register(SimpleAppNewOp);
@@ -58968,7 +58968,7 @@ class DataModel {
     DataModelClasses.push(cls);
 
     if (cls.hasOwnProperty("STRUCT")) {
-      nstructjs.register(cls);
+      nstructjs$1.register(cls);
     }
   }
 }
@@ -59062,7 +59062,7 @@ class StartArgs {
   constructor() {
     this.singlePage = true;
 
-    this.icons = Icons$2;
+    this.icons = Icons;
     this.iconsheet = undefined; //will default to loadDefaultIconSheet();
     this.iconSizes = [16, 24, 32, 48];
     this.iconTileSize = 32;
@@ -59081,7 +59081,7 @@ class StartArgs {
   }
 }
 
-class SimpleScreen extends Screen$2 {
+class SimpleScreen extends Screen {
   constructor() {
     super();
 
@@ -59111,13 +59111,13 @@ class SimpleScreen extends Screen$2 {
   setCSS() {
     super.setCSS();
 
-    this.style["position"] = UIBase$2.PositionKey;
+    this.style["position"] = UIBase$g.PositionKey;
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
   }
 }
 
-UIBase$2.register(SimpleScreen);
+UIBase$g.register(SimpleScreen);
 
 class AppState {
   /** ctxClass is the context class.  It can be either a simple class
@@ -59209,19 +59209,32 @@ class AppState {
     }, args));
 
     return new Promise((accept, reject) => {
-      accept(saveFile$1(this, args, objects));
+      accept(saveFile(this, args, objects));
     });
   }
 
-  /** It is recommended you override this to
-   *  handle setting data state, e.g.
+  /**
+   *  Loads a new file. The default behavior is a
+   *  complete state reset (you can control this
+   *  with args.reset_toolstack, args.reset_context
+   *  and args.doScreen).
+   *
+   *  As the base class cannot know just what to do
+   *  with the loaded data (the objects parameter
+   *  passed to saveFile) it is recommended you
+   *  override this function like so:
    *
    *  loadFile(data, args) {
-   *    return super.loadFile(data, args).then((array_of_objects, fileMeta) => {
-   *      //load array_of_objects into appropriate properties
-   *      this.data = array_of_objects;
+   *    return super.loadFile(data, args).then(fileData) => {
+   *      // load fileData.objects into appropriate properties
+   *      // this is the same objects array originally passed
+   *      // to this.saveFile
+   *      this.data = fileData.objects;
    *    });
    *  }
+   *
+   *  @param {ArrayBuffer|JSON|DataView} data
+   *  @param {FileArgs} args
    *  */
   loadFile(data, args = {}) {
     return new Promise((accept, reject) => {
@@ -59231,7 +59244,7 @@ class AppState {
         ext    : this.fileExt
       }, args));
 
-      let ret = loadFile$1(this, args, data);
+      let ret = loadFile(this, args, data);
 
       if (args.doScreen) {
         try {
@@ -59246,7 +59259,7 @@ class AppState {
         this.screen.completeUpdate();
       }
 
-      accept(ret.objects, ret);
+      accept(ret);
     });
   }
 
@@ -59273,14 +59286,14 @@ class AppState {
     /* ensure screen size is up to date */
     screen.update();
 
-    let sarea = UIBase$2.createElement("screenarea-x");
+    let sarea = UIBase$g.createElement("screenarea-x");
 
     screen.appendChild(sarea);
 
     let h = 55;
-    let min = new Vector2().addScalar(1e17);
-    let max = new Vector2().addScalar(-1e17);
-    let tmp = new Vector2();
+    let min = new Vector2$d().addScalar(1e17);
+    let max = new Vector2$d().addScalar(-1e17);
+    let tmp = new Vector2$d();
 
     for (let sarea2 of screen.sareas) {
       if (sarea2 === sarea) {
@@ -59325,8 +59338,8 @@ class AppState {
       this.screen.remove();
     }
 
-    let screen = this.screen = UIBase$2.createElement(this.screenClass.define().tagname);
-    let sarea = UIBase$2.createElement("screenarea-x");
+    let screen = this.screen = UIBase$g.createElement(this.screenClass.define().tagname);
+    let sarea = UIBase$g.createElement("screenarea-x");
 
     screen.ctx = this.ctx;
     sarea.ctx = this.ctx;
@@ -59386,7 +59399,7 @@ class AppState {
     }
 
     if (args.registerSaveOpenOps) {
-      register$1();
+      register();
     }
 
     if (!args.iconsheet) {
@@ -59435,7 +59448,7 @@ class AppState {
       }
     });
 
-    nstructjs.validateStructs();
+    nstructjs$1.validateStructs();
 
     if (this.saveFilesInJSON && !this._fileExtSet) {
       this._fileExt = "json";
@@ -59493,15 +59506,15 @@ var simple1 = /*#__PURE__*/Object.freeze({
   AppState: AppState,
   SideBar: SideBar,
   Editor: Editor,
-  Icons: Icons$2,
+  Icons: Icons,
   loadDefaultIconSheet: loadDefaultIconSheet,
   iconSvg: iconSvg,
   FileHeader: FileHeader,
   FileFull: FileFull,
   FileArgs: FileArgs,
   EmptyStruct: EmptyStruct,
-  saveFile: saveFile$1,
-  loadFile: loadFile$1,
+  saveFile: saveFile,
+  loadFile: loadFile,
   SimpleContext: SimpleContext,
   MenuBarEditor: MenuBarEditor,
   registerMenuBarEditor: registerMenuBarEditor
@@ -59509,7 +59522,7 @@ var simple1 = /*#__PURE__*/Object.freeze({
 
 const controller = controller1;
 setNotifier(ui_noteframe);
-const platform$2 = platform1;
+const platform$1 = platform1;
 const electron_api$1 = electron_api1;
 const cconst$1 = exports;
 const simple = simple1;
@@ -59545,7 +59558,7 @@ function getWebFilters(filters=[]) {
   return types;
 }
 
-class platform$3 extends PlatformAPI {
+class platform extends PlatformAPI {
   //returns a promise
   static showOpenDialog(title, args = new FileDialogArgs()) {
     let types = getWebFilters(args.filters);
@@ -59650,7 +59663,7 @@ class platform$3 extends PlatformAPI {
     }
 
     return new Promise((accept, reject) => {
-      saveFile(savedata);
+      saveFile$1(savedata);
 
       window.setTimeout(() => {
         accept("undefined");
@@ -59714,8 +59727,8 @@ class platform$3 extends PlatformAPI {
 var web_api = /*#__PURE__*/Object.freeze({
   __proto__: null,
   getWebFilters: getWebFilters,
-  platform: platform$3
+  platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox$1 as TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$1 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, quad_bilinear, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$g as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$d as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$1 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
