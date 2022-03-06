@@ -17670,6 +17670,251 @@ Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty$1) + `
 nstructjs.register(Curve1DProperty);
 ToolProperty$1.internalRegister(Curve1DProperty);
 
+//import * as nstructjs from './struct.js';
+
+let ScreenClass = undefined;
+
+
+function setScreenClass(cls) {
+  ScreenClass = cls;
+}
+
+function getAreaIntName(name) {
+  let hash = 0;
+
+  for (let i = 0; i < name.length; i++) {
+    let c = name.charCodeAt(i);
+
+    if (i%2 === 0) {
+      hash += c<<8;
+      hash *= 13;
+      hash = hash & ((1<<15) - 1);
+    } else {
+      hash += c;
+    }
+  }
+
+  return hash;
+}
+
+//XXX get rid of me
+window.getAreaIntName = getAreaIntName;
+
+//XXX get rid of me
+var AreaTypes = {
+  TEST_CANVAS_EDITOR: 0
+};
+
+function setAreaTypes(def) {
+  for (let k in AreaTypes) {
+    delete AreaTypes[k];
+  }
+
+  for (let k in def) {
+    AreaTypes[k] = def[k];
+  }
+}
+
+let areaclasses = {};
+
+/*hackish! store ref an active wrangler so simple_event's modal
+* system can lock it!*/
+let theWrangler = undefined;
+
+class AreaWrangler {
+  constructor() {
+    this.stacks = new Map();
+    this.lasts = new Map();
+    this.lastArea = undefined;
+    this.stack = [];
+    this.idgen = 0;
+    this.locked = 0;
+    this._last_screen_id = undefined;
+
+    theWrangler = this;
+  }
+
+  /*Yeek this is particularly evil, it creates a context
+  * that can be used by popups with the original context
+  * area stack intact of the elements that spawned them.*/
+  makeSafeContext(ctx) {
+    let wrangler = this.copy();
+    let this2 = this;
+
+    return new Proxy(ctx, {
+      get(target, key, rec) {
+        wrangler.copyTo(contextWrangler);
+        return target[key];
+      }
+    });
+  }
+
+  copyTo(ret) {
+    for (let [key, stack1] of this.stacks) {
+      ret.stack.set(key, list(stack1));
+    }
+
+    for (let [key, val] of this.lasts) {
+      ret.lasts.set(key, val);
+    }
+
+    ret.stack = list(this.stack);
+    ret.lastArea = this.lastArea;
+  }
+
+  copy(b) {
+    let ret = new AreaWrangler();
+    this.copyTo(ret);
+    return ret;
+  }
+
+  _checkWrangler(ctx) {
+    if (ctx === undefined) {
+      return true;
+    }
+
+    if (this._last_screen_id === undefined) {
+      this._last_screen_id = ctx.screen._id;
+      return true;
+    }
+
+    if (ctx.screen._id !== this._last_screen_id) {
+      this.reset();
+
+      this._last_screen_id = ctx.screen._id;
+      console.warn("contextWrangler detected a new screen; new file?");
+      return false;
+    }
+
+    return true;
+  }
+
+  reset() {
+    theWrangler = this;
+    this.stacks = new Map();
+    this.lasts = new Map();
+    this.lastArea = undefined;
+    this.stack = [];
+    this.locked = 0;
+    this._last_screen_id = undefined;
+
+    return this;
+  }
+
+  static findInstance() {
+    return theWrangler;
+  }
+
+  static lock() {
+    return this.findInstance().lock();
+  }
+
+  static unlock() {
+    return this.findInstance().unlock();
+  }
+
+  lock() {
+    this.locked++;
+    return this;
+  }
+
+  unlock() {
+    this.locked = Math.max(this.locked - 1, 0);
+    return this;
+  }
+
+  push(type, area, pushLastRef = true) {
+    theWrangler = this;
+
+    if (haveModal() || this.locked) {
+      pushLastRef = false;
+    }
+
+    if (pushLastRef || !this.lasts.has(type[ClassIdSymbol])) {
+      this.lasts.set(type[ClassIdSymbol], area);
+      this.lastArea = area;
+    }
+
+    let stack = this.stacks.get(type[ClassIdSymbol]);
+    if (stack === undefined) {
+      stack = [];
+      this.stacks.set(type[ClassIdSymbol], stack);
+    }
+
+    let last = this.lasts.get(type[ClassIdSymbol]);
+
+    stack.push(last);
+    stack.push(area);
+
+    this.stack.push(area);
+  }
+
+  updateLastRef(type, area) {
+    theWrangler = this;
+
+    if ((this.locked || haveModal()) && this.lasts.has(type[ClassIdSymbol])) {
+      return;
+    }
+
+    this.lasts.set(type[ClassIdSymbol], area);
+    this.lastArea = area;
+  }
+
+  pop(type, area) {
+    let stack = this.stacks.get(type[ClassIdSymbol]);
+
+    if (stack === undefined) {
+      console.warn("pop_ctx_area called in error");
+      //throw new Error("pop_ctx_area called in error");
+      return;
+    }
+
+    if (stack.length > 0) {
+      stack.pop();
+      let last = stack.pop();
+
+      /* paranoia isConnected check to ensure stale elements don't
+       * pollute the lasts stack */
+      if (!this.locked && last && last.isConnected) {
+        this.lasts.set(type[ClassIdSymbol], last);
+      }
+    } else {
+      console.error("pop_ctx_area called in error");
+    }
+
+    if (this.stack.length > 0) {
+      this.stack.pop();
+    }
+  }
+
+  getLastArea(type) {
+    //if (Math.random() > 0.9995) {
+      //console.warn("getLastArea!", type, this.lasts.get(type[ClassIdSymbol]));
+    //}
+
+    if (type === undefined) {
+      if (this.stack.length > 0) {
+        return this.stack[this.stack.length - 1];
+      } else {
+        return this.lastArea;
+      }
+    } else {
+      if (this.stacks.has(type[ClassIdSymbol])) {
+        let stack = this.stacks.get(type[ClassIdSymbol]);
+
+        if (stack.length > 0) {
+          return stack[stack.length-1];
+        }
+      }
+
+      return this.lasts.get(type[ClassIdSymbol]);
+    }
+  }
+}
+_setModalAreaClass(AreaWrangler);
+
+let contextWrangler = new AreaWrangler();
+
 function css2matrix(s) {
   return new DOMMatrix(s);
 }
@@ -28962,6 +29207,8 @@ class UIBase$2 extends HTMLElement {
   constructor() {
     super();
 
+    this._modalstack = [];
+
     this._tool_tip_abort_delay = undefined;
     this._tooltip_ref = undefined;
 
@@ -30303,12 +30550,35 @@ class UIBase$2 extends HTMLElement {
   pushModal(handlers = this, autoStopPropagation = true) {
     if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
-      //pop modal stack just to be safe
-      popModalLight(this._modaldata);
-      this._modaldata = undefined;
+      this.popModal();
     }
 
-    this._modaldata = pushModalLight(handlers, autoStopPropagation);
+    let _areaWrangler = contextWrangler.copy();
+
+    contextWrangler.copy(this.ctx);
+
+    function bindFunc(func) {
+      return function() {
+        _areaWrangler.copyTo(contextWrangler);
+
+        return func.apply(handlers, arguments);
+      }
+    }
+
+    let handlers2 = {};
+    for (let k in handlers) {
+      let func = handlers[k];
+
+      if (typeof func !== "function") {
+        continue;
+      }
+
+      handlers2[k] = bindFunc(func);
+    }
+    //this._modalstack.push(this.ctx);
+    //this.ctx = this.ctx.toLocked();
+
+    this._modaldata = pushModalLight(handlers2, autoStopPropagation);
     return this._modaldata;
   }
 
@@ -30318,6 +30588,7 @@ class UIBase$2 extends HTMLElement {
       return;
     }
 
+    this.ctx = this._modalstack.pop();
     popModalLight(this._modaldata);
     this._modaldata = undefined;
   }
@@ -31802,10 +32073,10 @@ class Button extends UIBase$3 {
     let press = (e) => {
       e.stopPropagation();
 
-      if (!this._modalstate) {
+      if (!this.modalRunning) {
         let this2 = this;
 
-        this._modalstate = pushModalLight({
+        this.pushModal({
           on_mousedown(e) {
             this.end(e);
           },
@@ -31818,7 +32089,7 @@ class Button extends UIBase$3 {
               return;
             }
 
-            popModalLight(this2._modalstate);
+            this.popModal();
             this2._modalstate = undefined;
 
             depress(e);
@@ -33594,15 +33865,12 @@ class IconButton extends UIBase$5 {
   init() {
     super.init();
 
-    let modalstate = undefined;
-
     let press = (e) => {
       e.stopPropagation();
       e.preventDefault();
 
-      if (modalstate) {
-        popModalLight(modalstate);
-        modalstate = undefined;
+      if (this.modalRunning) {
+        this.popModal();
       }
 
       if (!eventWasTouch(e) && e.button !== 0) {
@@ -33612,7 +33880,7 @@ class IconButton extends UIBase$5 {
       if (1) { //!eventWasTouch(e)) {
         let this2 = this;
 
-        modalstate = pushModalLight({
+        this.pushModal({
           on_mouseup(e) {
             //touch events aren't fireing onclick automatically the way mouse ones are
 
@@ -33633,9 +33901,8 @@ class IconButton extends UIBase$5 {
             this.end();
           },
           end() {
-            if (modalstate) {
-              popModalLight(modalstate);
-              modalstate = undefined;
+            if (this2.modalRunning) {
+              this2.popModal();
               this2._on_depress(e);
               this2.setCSS();
             }
@@ -41120,218 +41387,8 @@ UIBase$2.internalRegister(ScreenBorder);
 let _ScreenArea = undefined;
 
 let UIBase$a = UIBase$2;
+
 let Vector2$6 = Vector2;
-let ScreenClass = undefined;
-
-
-function setScreenClass(cls) {
-  ScreenClass = cls;
-}
-
-function getAreaIntName(name) {
-  let hash = 0;
-
-  for (let i = 0; i < name.length; i++) {
-    let c = name.charCodeAt(i);
-
-    if (i%2 === 0) {
-      hash += c<<8;
-      hash *= 13;
-      hash = hash & ((1<<15) - 1);
-    } else {
-      hash += c;
-    }
-  }
-
-  return hash;
-}
-
-//XXX get rid of me
-window.getAreaIntName = getAreaIntName;
-
-//XXX get rid of me
-var AreaTypes = {
-  TEST_CANVAS_EDITOR: 0
-};
-
-function setAreaTypes(def) {
-  for (let k in AreaTypes) {
-    delete AreaTypes[k];
-  }
-
-  for (let k in def) {
-    AreaTypes[k] = def[k];
-  }
-}
-
-let areaclasses = {};
-
-/*hackish! store ref an active wrangler so simple_event's modal
-* system can lock it!*/
-let theWrangler = undefined;
-
-class AreaWrangler {
-  constructor() {
-    this.stacks = new Map();
-    this.lasts = new Map();
-    this.lastArea = undefined;
-    this.stack = [];
-    this.idgen = 0;
-    this.locked = 0;
-    this._last_screen_id = undefined;
-    theWrangler = this;
-  }
-
-  _checkWrangler(ctx) {
-    if (ctx === undefined) {
-      return true;
-    }
-
-    if (this._last_screen_id === undefined) {
-      this._last_screen_id = ctx.screen._id;
-      return true;
-    }
-
-    if (ctx.screen._id !== this._last_screen_id) {
-      this.reset();
-
-      this._last_screen_id = ctx.screen._id;
-      console.warn("contextWrangler detected a new screen; new file?");
-      return false;
-    }
-
-    return true;
-  }
-
-  reset() {
-    theWrangler = this;
-    this.stacks = new Map();
-    this.lasts = new Map();
-    this.lastArea = undefined;
-    this.stack = [];
-    this.locked = 0;
-    this._last_screen_id = undefined;
-
-    return this;
-  }
-
-  static findInstance() {
-    return theWrangler;
-  }
-
-  static lock() {
-    return this.findInstance().lock();
-  }
-
-  static unlock() {
-    return this.findInstance().unlock();
-  }
-
-  lock() {
-    this.locked++;
-    return this;
-  }
-
-  unlock() {
-    this.locked = Math.max(this.locked - 1, 0);
-    return this;
-  }
-
-  push(type, area, pushLastRef = true) {
-    theWrangler = this;
-
-    if (haveModal() || this.locked) {
-      pushLastRef = false;
-    }
-
-    if (pushLastRef || !this.lasts.has(type[ClassIdSymbol])) {
-      this.lasts.set(type[ClassIdSymbol], area);
-      this.lastArea = area;
-    }
-
-    let stack = this.stacks.get(type[ClassIdSymbol]);
-    if (stack === undefined) {
-      stack = [];
-      this.stacks.set(type[ClassIdSymbol], stack);
-    }
-
-    let last = this.lasts.get(type[ClassIdSymbol]);
-
-    stack.push(last);
-    stack.push(area);
-
-    this.stack.push(area);
-  }
-
-  updateLastRef(type, area) {
-    theWrangler = this;
-
-    if ((this.locked || haveModal()) && this.lasts.has(type[ClassIdSymbol])) {
-      return;
-    }
-
-    this.lasts.set(type[ClassIdSymbol], area);
-    this.lastArea = area;
-  }
-
-  pop(type, area) {
-    let stack = this.stacks.get(type[ClassIdSymbol]);
-
-    if (stack === undefined) {
-      console.warn("pop_ctx_area called in error");
-      //throw new Error("pop_ctx_area called in error");
-      return;
-    }
-
-    if (stack.length > 0) {
-      stack.pop();
-      let last = stack.pop();
-
-      /* paranoia isConnected check to ensure stale elements don't
-       * pollute the lasts stack */
-      if (!this.locked && last && last.isConnected) {
-        this.lasts.set(type[ClassIdSymbol], last);
-      }
-    } else {
-      console.error("pop_ctx_area called in error");
-    }
-
-    if (this.stack.length > 0) {
-      this.stack.pop();
-    }
-  }
-
-  getLastArea(type) {
-    //if (Math.random() > 0.9995) {
-      //console.warn("getLastArea!", type, this.lasts.get(type[ClassIdSymbol]));
-    //}
-
-    if (type === undefined) {
-      if (this.stack.length > 0) {
-        return this.stack[this.stack.length - 1];
-      } else {
-        return this.lastArea;
-      }
-    } else {
-      if (this.stacks.has(type[ClassIdSymbol])) {
-        let stack = this.stacks.get(type[ClassIdSymbol]);
-
-        if (stack.length > 0) {
-          return stack[stack.length - 1];
-        }
-      }
-
-      return this.lasts.get(type[ClassIdSymbol]);
-    }
-  }
-}
-_setModalAreaClass(AreaWrangler);
-
-let _ScreenArea$1 = undefined;
-
-let UIBase$b = UIBase$2;
-
-let Vector2$7 = Vector2;
 let Screen$1 = undefined;
 
 const AreaFlags = {
@@ -41342,8 +41399,6 @@ const AreaFlags = {
   NO_HEADER_CONTEXT_MENU: 16,
   NO_COLLAPSE           : 32,
 };
-
-let contextWrangler = new AreaWrangler();
 
 window._contextWrangler = contextWrangler;
 
@@ -41399,7 +41454,7 @@ class Area$1 extends UIBase$2 {
     let appendChild = this.shadow.appendChild;
     this.shadow.appendChild = (child) => {
       appendChild.call(this.shadow, child);
-      if (child instanceof UIBase$b) {
+      if (child instanceof UIBase$a) {
         child.parentWidget = this;
       }
     };
@@ -41408,7 +41463,7 @@ class Area$1 extends UIBase$2 {
     this.shadow.prepend = (child) => {
       prepend.call(this.shadow, child);
 
-      if (child instanceof UIBase$b) {
+      if (child instanceof UIBase$a) {
         child.parentWidget = this;
       }
     };
@@ -41543,7 +41598,7 @@ class Area$1 extends UIBase$2 {
   }
 
   static newSTRUCT() {
-    return UIBase$b.createElement(this.define().tagname);
+    return UIBase$a.createElement(this.define().tagname);
   }
 
   init() {
@@ -41634,7 +41689,7 @@ class Area$1 extends UIBase$2 {
 
   copy() {
     console.warn("You might want to implement this, Area.prototype.copy based method called");
-    let ret = UIBase$b.createElement(this.constructor.define().tagname);
+    let ret = UIBase$a.createElement(this.constructor.define().tagname);
     return ret;
   }
 
@@ -41710,7 +41765,7 @@ class Area$1 extends UIBase$2 {
 
   makeAreaSwitcher(container) {
     if (exports.useAreaTabSwitcher) {
-      let ret = UIBase$b.createElement("area-docker-x");
+      let ret = UIBase$a.createElement("area-docker-x");
       container.add(ret);
       return ret;
     }
@@ -41787,7 +41842,7 @@ class Area$1 extends UIBase$2 {
     }
 
     if (add_note_area) {
-      let notef = UIBase$b.createElement("noteframe-x");
+      let notef = UIBase$a.createElement("noteframe-x");
       notef.ctx = this.ctx;
       row._add(notef);
     }
@@ -41802,7 +41857,7 @@ class Area$1 extends UIBase$2 {
     let eventdom = this.header;
 
     let mdown = false;
-    let mpos = new Vector2$7();
+    let mpos = new Vector2$6();
 
     let mpre = (e, pageX, pageY) => {
       if (haveModal()) {
@@ -41950,7 +42005,7 @@ class Area$1 extends UIBase$2 {
 
   setCSS() {
     if (this.size !== undefined) {
-      this.style["position"] = UIBase$b.PositionKey;
+      this.style["position"] = UIBase$a.PositionKey;
       //this.style["left"] = this.pos[0] + "px";
       //this.style["top"] = this.pos[1] + "px";
       this.style["width"] = this.size[0] + "px";
@@ -42047,8 +42102,8 @@ class ScreenArea extends UIBase$2 {
 
     this._sarea_id = contextWrangler.idgen++;
 
-    this._pos = new Vector2$7();
-    this._size = new Vector2$7([512, 512]);
+    this._pos = new Vector2$6();
+    this._size = new Vector2$6([512, 512]);
 
     if (exports.DEBUG.screenAreaPosSizeAccesses) {
       let wrapVector = (name, axis) => {
@@ -42194,7 +42249,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   static newSTRUCT() {
-    return UIBase$b.createElement("screenarea-x");
+    return UIBase$a.createElement("screenarea-x");
   }
 
   static define() {
@@ -42305,14 +42360,14 @@ class ScreenArea extends UIBase$2 {
       //console.log(editor);
 
       let tagname = areaclasses[areaname].define().tagname;
-      let area = UIBase$b.createElement(tagname);
+      let area = UIBase$a.createElement(tagname);
 
       area.owning_sarea = this;
       this.editormap[areaname] = area;
       this.editors.push(this.editormap[areaname]);
 
-      area.pos = new Vector2$7(obj.pos);
-      area.size = new Vector2$7(obj.size);
+      area.pos = new Vector2$6(obj.pos);
+      area.size = new Vector2$6(obj.size);
       area.ctx = this.ctx;
 
       area.inactive = true;
@@ -42377,7 +42432,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   copy(screen) {
-    let ret = UIBase$b.createElement("screenarea-x");
+    let ret = UIBase$a.createElement("screenarea-x");
 
     ret.screen = screen;
     ret.ctx = this.ctx;
@@ -42439,7 +42494,7 @@ class ScreenArea extends UIBase$2 {
 
   snapToScreenSize() {
     let screen = this.getScreen();
-    let co = new Vector2$7();
+    let co = new Vector2$6();
     let changed = 0;
 
     for (let v of this._verts) {
@@ -42501,8 +42556,8 @@ class ScreenArea extends UIBase$2 {
       return;
     }
 
-    let min = new Vector2$7([1e17, 1e17]);
-    let max = new Vector2$7([-1e17, -1e17]);
+    let min = new Vector2$6([1e17, 1e17]);
+    let max = new Vector2$6([-1e17, -1e17]);
 
     for (let v of this._verts) {
       min.min(v);
@@ -42536,10 +42591,10 @@ class ScreenArea extends UIBase$2 {
     //s = snapi(new Vector2(s));
 
     let vs = [
-      new Vector2$7([p[0], p[1]]),
-      new Vector2$7([p[0], p[1] + s[1]]),
-      new Vector2$7([p[0] + s[0], p[1] + s[1]]),
-      new Vector2$7([p[0] + s[0], p[1]])
+      new Vector2$6([p[0], p[1]]),
+      new Vector2$6([p[0], p[1] + s[1]]),
+      new Vector2$6([p[0] + s[0], p[1] + s[1]]),
+      new Vector2$6([p[0] + s[0], p[1]])
     ];
 
     let floating = this.floating;
@@ -42577,7 +42632,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   setCSS() {
-    this.style["position"] = UIBase$b.PositionKey;
+    this.style["position"] = UIBase$a.PositionKey;
 
     this.style["left"] = this.pos[0] + "px";
     this.style["top"] = this.pos[1] + "px";
@@ -42639,7 +42694,7 @@ class ScreenArea extends UIBase$2 {
 
     //areaclasses[name]
     if (!(name in this.editormap)) {
-      this.editormap[name] = UIBase$b.createElement(def.tagname);
+      this.editormap[name] = UIBase$a.createElement(def.tagname);
       this.editormap[name].ctx = this.ctx;
       this.editormap[name].parentWidget = this;
       this.editormap[name].owning_sarea = this;
@@ -42651,8 +42706,8 @@ class ScreenArea extends UIBase$2 {
     //var finish = () => {
     if (this.area !== undefined) {
       //break direct pos/size references for old active area
-      this.area.pos = new Vector2$7(this.area.pos);
-      this.area.size = new Vector2$7(this.area.size);
+      this.area.pos = new Vector2$6(this.area.pos);
+      this.area.size = new Vector2$6(this.area.size);
 
       this.area.owning_sarea = undefined;
       this.area.inactive = true;
@@ -42795,8 +42850,8 @@ class ScreenArea extends UIBase$2 {
   loadSTRUCT(reader) {
     reader(this);
 
-    this.pos = new Vector2$7(this.pos);
-    this.size = new Vector2$7(this.size);
+    this.pos = new Vector2$6(this.pos);
+    this.size = new Vector2$6(this.size);
 
     //find active editor
 
@@ -42846,7 +42901,7 @@ class ScreenArea extends UIBase$2 {
       if (typeof area !== "object") {
         for (let k in areaclasses) {
           area = areaclasses[k].define().tagname;
-          area = UIBase$b.createElement(area);
+          area = UIBase$a.createElement(area);
           let areaname = area.constructor.define().areaname;
 
           this.editors.push(area);
@@ -43340,7 +43395,7 @@ function NumberSliderBase(cls = UIBase$2, skip = new Set(), defaults = SliderDef
       }
     }
 
-    loadConstraints(prop=undefined) {
+    loadConstraints(prop = undefined) {
       if (!this.hasAttribute("datapath")) {
         return;
       }
@@ -43514,8 +43569,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.setCSS();
     }
 
-    super.update();
-    this.updateDataPath();
+    super.update(); //calls this.updateDataPath
 
     updateSliderFromDom(this);
   }
@@ -43775,7 +43829,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.loadConstraints();
   }
 
-  setValue(value, fire_onchange = true, setDataPath=true, checkConstraints=true) {
+  setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
     this._value = value;
 
     if (this.hasAttribute("integer")) {
@@ -44336,19 +44390,18 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
     }
 
     this.ma = new MovingAvg(eventWasTouch(e) ? 4 : 2);
+    let handlers;
 
     let end = () => {
-      if (this._modal === undefined) {
+      if (handlers === undefined) {
         return;
       }
 
-      popModalLight(this._modal);
-
-      this._modal = undefined;
-      this.modal = undefined;
+      this.popModal();
+      handlers = undefined;
     };
 
-    this.modal = {
+    handlers = {
       mousemove: (e) => {
         let x = e.x, y = e.y;
 
@@ -44397,10 +44450,11 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
       }
     }
 
-    for (let k in this.modal) {
-      this.modal[k] = makefunc(this.modal[k]);
+    for (let k in handlers) {
+      handlers[k] = makefunc(handlers[k]);
     }
-    this._modal = pushModalLight(this.modal);
+
+    this.pushModal(handlers);
   }
 
   init() {
@@ -44638,9 +44692,8 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$2) {
   }
 
   _ondestroy() {
-    if (this._modal) {
-      popModalLight(this._modal);
-      this._modal = undefined;
+    if (this.modalRunning) {
+      this.popModal();
     }
   }
 
@@ -46421,8 +46474,8 @@ let PropSubTypes$3 = PropSubTypes$1;
 
 let EnumProperty$7 = EnumProperty;
 
-let Vector2$8   = Vector2,
-    UIBase$c    = UIBase$2,
+let Vector2$7   = Vector2,
+    UIBase$b    = UIBase$2,
     PackFlags$6 = PackFlags,
     PropTypes$6 = PropTypes;
 
@@ -46454,7 +46507,7 @@ class PanelFrame extends ColumnFrame {
     this._panel = this; //compatibility alias
 
     this.contents._panel = this;
-    this.iconcheck = UIBase$c.createElement("iconcheck-x");
+    this.iconcheck = UIBase$b.createElement("iconcheck-x");
     this.iconcheck.noEmboss = true;
 
     Object.defineProperty(this.contents, "closed", {
@@ -46872,16 +46925,16 @@ for (let k of forward_keys) {
   PanelFrame.prototype[k] = makeForward(k);
 }
 
-UIBase$c.internalRegister(PanelFrame);
+UIBase$b.internalRegister(PanelFrame);
 
 "use strict";
 
-let Vector2$9 = Vector2,
+let Vector2$8 = Vector2,
     Vector3$2 = Vector3,
     Vector4$2 = Vector4,
     Matrix4$2 = Matrix4;
 
-let UIBase$d     = UIBase$2,
+let UIBase$c     = UIBase$2,
     PackFlags$7  = PackFlags,
     IconSheets$5 = IconSheets;
 
@@ -47079,13 +47132,13 @@ let _update_temp = new Vector4$2();
 
 class SimpleBox {
   constructor(pos = [0, 0], size = [1, 1]) {
-    this.pos = new Vector2$9(pos);
-    this.size = new Vector2$9(size);
+    this.pos = new Vector2$8(pos);
+    this.size = new Vector2$8(size);
     this.r = 0;
   }
 }
 
-class HueField extends UIBase$d {
+class HueField extends UIBase$c {
   constructor() {
     super();
 
@@ -47259,9 +47312,9 @@ class HueField extends UIBase$d {
   }
 }
 
-UIBase$d.internalRegister(HueField);
+UIBase$c.internalRegister(HueField);
 
-class SatValField extends UIBase$d {
+class SatValField extends UIBase$c {
   constructor() {
     super();
 
@@ -47552,7 +47605,7 @@ class SatValField extends UIBase$d {
   }
 }
 
-UIBase$d.internalRegister(SatValField);
+UIBase$c.internalRegister(SatValField);
 
 class ColorField extends ColumnFrame {
   constructor() {
@@ -47572,10 +47625,10 @@ class ColorField extends ColumnFrame {
 
     this._last_dpi = undefined;
 
-    let satvalfield = this.satvalfield = UIBase$d.createElement("satvalfield-x");
+    let satvalfield = this.satvalfield = UIBase$c.createElement("satvalfield-x");
     satvalfield.hsva = this.hsva;
 
-    let huefield = this.huefield = UIBase$d.createElement("huefield-x");
+    let huefield = this.huefield = UIBase$c.createElement("huefield-x");
     huefield.hsva = this.hsva;
 
     huefield.onchange = (e) => {
@@ -47733,7 +47786,7 @@ class ColorField extends ColumnFrame {
   }
 }
 
-UIBase$d.internalRegister(ColorField);
+UIBase$c.internalRegister(ColorField);
 
 class ColorPicker extends ColumnFrame {
   constructor() {
@@ -47900,7 +47953,7 @@ class ColorPicker extends ColumnFrame {
   init() {
     super.init();
 
-    this.field = UIBase$d.createElement("colorfield-x");
+    this.field = UIBase$c.createElement("colorfield-x");
     this.field.setAttribute("class", "colorpicker");
 
     this.field.packflag |= this.inherit_packflag;
@@ -48084,10 +48137,10 @@ class ColorPicker extends ColumnFrame {
   }
 }
 
-UIBase$d.internalRegister(ColorPicker);
+UIBase$c.internalRegister(ColorPicker);
 
 
-class ColorPickerButton extends UIBase$d {
+class ColorPickerButton extends UIBase$c {
   constructor() {
     super();
 
@@ -48198,11 +48251,16 @@ class ColorPickerButton extends UIBase$d {
     }
 
     let colorpicker = this.ctx.screen.popup(this, this);
+    let ctx = contextWrangler.makeSafeContext(this.ctx);
+
+    colorpicker.ctx = ctx;
     colorpicker.useDataPathUndo = this.useDataPathUndo;
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
 
     let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
+
+    widget.ctx = ctx;
     widget._init();
     widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
 
@@ -48465,18 +48523,18 @@ class ColorPickerButton extends UIBase$d {
     this._redraw();
   }
 };
-UIBase$d.internalRegister(ColorPickerButton);
+UIBase$c.internalRegister(ColorPickerButton);
 
 "use strict";
 
-let UIBase$e      = UIBase$2,
+let UIBase$d      = UIBase$2,
     PackFlags$8   = PackFlags,
     IconSheets$6  = IconSheets,
     iconmanager$1 = iconmanager;
 
 let tab_idgen = 1;
 let debug$1 = false;
-let Vector2$a = Vector2;
+let Vector2$9 = Vector2;
 
 function getpx$1(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -48525,11 +48583,11 @@ class TabItem extends HTMLElement {
     this.extra = undefined;
     this.extraSize = undefined;
 
-    this.size = new Vector2$a();
-    this.pos = new Vector2$a();
+    this.size = new Vector2$9();
+    this.pos = new Vector2$9();
 
-    this.abssize = new Vector2$a();
-    this.abspos = new Vector2$a();
+    this.abssize = new Vector2$9();
+    this.abspos = new Vector2$9();
   }
 
   static define() {
@@ -48589,7 +48647,7 @@ class TabItem extends HTMLElement {
   }
 }
 
-UIBase$e.internalRegister(TabItem);
+UIBase$d.internalRegister(TabItem);
 
 class ModalTabMove extends EventHandler {
   constructor(tab, tbar, dom) {
@@ -48601,7 +48659,7 @@ class ModalTabMove extends EventHandler {
     this.first = true;
 
     this.droptarget = undefined;
-    this.start_mpos = new Vector2$a();
+    this.start_mpos = new Vector2$9();
     this.mpos = undefined;
 
     this.dragtab = undefined;
@@ -48698,7 +48756,7 @@ class ModalTabMove extends EventHandler {
 
   _on_move(e, x, y) {
     let r = this.tbar.getClientRects()[0];
-    let dpi = UIBase$e.getDPI();
+    let dpi = UIBase$d.getDPI();
 
     if (r === undefined) {
       //element was removed during/before move
@@ -48772,7 +48830,7 @@ class ModalTabMove extends EventHandler {
       this.dragcanvas.height = ~~tab.size[1];
       this.dragcanvas.style["width"] = (tab.size[0]/dpi) + "px";
       this.dragcanvas.style["height"] = (tab.size[1]/dpi) + "px";
-      this.dragcanvas.style["position"] = UIBase$e.PositionKey;
+      this.dragcanvas.style["position"] = UIBase$d.PositionKey;
       this.dragcanvas.style["left"] = e.x + "px";
       this.dragcanvas.style["top"] = e.y + "px";
       this.dragcanvas.style["z-index"] = "500";
@@ -48821,7 +48879,7 @@ class ModalTabMove extends EventHandler {
   }
 }
 
-class TabBar extends UIBase$e {
+class TabBar extends UIBase$d {
   constructor() {
     super();
 
@@ -49110,10 +49168,14 @@ class TabBar extends UIBase$e {
 
     this.tabs = ntabs;
 
-    if (active !== undefined) {
-      this.setActive(active);
-    } else {
-      this.setActive(this.tabs[0]);
+    try {
+      if (active !== undefined) {
+        this.setActive(active);
+      } else {
+        this.setActive(this.tabs[0]);
+      }
+    } catch (error) {
+      print_stack$1(error);
     }
 
     this.update(true);
@@ -49141,7 +49203,7 @@ class TabBar extends UIBase$e {
   }
 
   addTab(name, id, tooltip = "", movable) {
-    let tab = UIBase$e.createElement("tab-item-x", true);
+    let tab = UIBase$d.createElement("tab-item-x", true);
 
     tab.name = name;
     tab.id = id;
@@ -49329,7 +49391,7 @@ class TabBar extends UIBase$e {
         tab.dom.style["z-index"] = z + 1 + ti;
 
         document.body.appendChild(tab.dom);
-        tab.dom.style["position"] = UIBase$e.PositionKey;
+        tab.dom.style["position"] = UIBase$d.PositionKey;
         tab.dom.style["display"] = "flex";
         tab.dom.style["flex-direction"] = this.horiz ? "row" : "column";
 
@@ -49675,9 +49737,9 @@ class TabBar extends UIBase$e {
   }
 }
 
-UIBase$e.internalRegister(TabBar);
+UIBase$d.internalRegister(TabBar);
 
-class TabContainer extends UIBase$e {
+class TabContainer extends UIBase$d {
   constructor() {
     super();
 
@@ -49690,7 +49752,7 @@ class TabContainer extends UIBase$e {
 
     this.tabFontScale = 1.0;
 
-    this.tbar = UIBase$e.createElement("tabbar-x");
+    this.tbar = UIBase$d.createElement("tabbar-x");
     this.tbar.parentWidget = this;
     this.tbar.setAttribute("class", "_tbar_" + this._id);
     this.tbar.constructor.setDefault(this.tbar);
@@ -49951,7 +50013,7 @@ class TabContainer extends UIBase$e {
       id = tab_idgen++;
     }
 
-    let col = UIBase$e.createElement("colframe-x");
+    let col = UIBase$d.createElement("colframe-x");
 
     this.tabs[id] = col;
 
@@ -50048,7 +50110,7 @@ class TabContainer extends UIBase$e {
       }
     }
 
-    console.error("Unknown tab " + name_or_id);
+    throw new Error("Unknown tab " + name_or_id);
   }
 
   updateBarPos() {
@@ -50131,7 +50193,7 @@ class TabContainer extends UIBase$e {
   }
 }
 
-UIBase$e.internalRegister(TabContainer);
+UIBase$d.internalRegister(TabContainer);
 
 //bind module to global var to get at it in console.
 
@@ -50142,8 +50204,8 @@ let PropSubTypes$4 = PropSubTypes$1;
 
 let EnumProperty$8 = EnumProperty;
 
-let Vector2$b = Vector2,
-  UIBase$f = UIBase$2,
+let Vector2$a = Vector2,
+  UIBase$e = UIBase$2,
   PackFlags$9 = PackFlags,
   PropTypes$7 = PropTypes;
 
@@ -50177,7 +50239,7 @@ class TableRow extends Container {
     child.onadd();
   }
 };
-UIBase$f.internalRegister(TableRow);
+UIBase$e.internalRegister(TableRow);
 
 class TableFrame extends Container {
   constructor() {
@@ -50221,7 +50283,7 @@ class TableFrame extends Container {
       td.style["margin"] = tr.style["margin"];
       td.style["padding"] = tr.style["padding"];
 
-      let container = UIBase$f.createElement("rowframe-x");
+      let container = UIBase$e.createElement("rowframe-x");
 
       container.ctx = this2.ctx;
       container.parentWidget = this2;
@@ -50365,14 +50427,14 @@ class TableFrame extends Container {
     tagname : "tableframe-x"
   };}
 }
-UIBase$f.internalRegister(TableFrame);
+UIBase$e.internalRegister(TableFrame);
 
 "use strict";
 
 let EnumProperty$9 = EnumProperty,
     PropTypes$8    = PropTypes;
 
-let UIBase$g     = UIBase$2,
+let UIBase$f     = UIBase$2,
     PackFlags$a  = PackFlags,
     IconSheets$7 = IconSheets;
 
@@ -50454,7 +50516,7 @@ class ListItem extends RowFrame {
   }
 }
 
-UIBase$g.internalRegister(ListItem);
+UIBase$f.internalRegister(ListItem);
 
 class ListBox extends Container {
   constructor() {
@@ -50529,7 +50591,7 @@ class ListBox extends Container {
   }
 
   addItem(name, id) {
-    let item = UIBase$g.createElement("listitem-x");
+    let item = UIBase$f.createElement("listitem-x");
 
     item._id = id === undefined ? this.items.length : id;
     this.idmap[item._id] = item;
@@ -50598,7 +50660,7 @@ class ListBox extends Container {
   }
 }
 
-UIBase$g.internalRegister(ListBox);
+UIBase$f.internalRegister(ListBox);
 
 class ProgressCircle extends UIBase$2 {
   constructor() {
@@ -53337,7 +53399,7 @@ var electron_api1 = /*#__PURE__*/Object.freeze({
 "use strict";
 const SVG_URL = 'http://www.w3.org/2000/svg';
 
-const Vector2$c = Vector2;
+const Vector2$b = Vector2;
 
 class CanvasOverdraw extends UIBase$2 {
   constructor() {
@@ -53526,7 +53588,7 @@ class Overdraw extends UIBase$2 {
     let boxes = [];
     let elems = [];
 
-    let cent = new Vector2$c();
+    let cent = new Vector2$b();
 
     for (let i=0; i<texts.length; i++) {
       let co = cos[i];
@@ -53571,7 +53633,7 @@ class Overdraw extends UIBase$2 {
 
       box.grads = new Array(4);
       box.params = [x, y, box.minsize[0], box.minsize[1]];
-      box.startpos = new Vector2$c([x, y]);
+      box.startpos = new Vector2$b([x, y]);
 
       box.setCSS = function() {
         this.style["padding"] = "0px";
@@ -54592,7 +54654,14 @@ class AreaDocker extends Container {
 
     if (!active || active._id !== area._id) {
       this.ignoreChange++;
-      this.tbar.setActive(area._id);
+
+      try {
+        this.tbar.setActive(area._id);
+      } catch (error) {
+        print_stack$1(error);
+        this.needsRebuild = true;
+      }
+
       this.ignoreChange--;
     }
 
@@ -54854,8 +54923,8 @@ function registerToolStackGetter$1(func) {
   registerToolStackGetter(func);
 }
 
-let Vector2$d         = Vector2,
-    UIBase$h          = UIBase$2,
+let Vector2$c         = Vector2,
+    UIBase$g          = UIBase$2,
     styleScrollBars$1 = styleScrollBars;
 
 let update_stack = new Array(8192);
@@ -54910,9 +54979,9 @@ class Screen$2 extends UIBase$2 {
 
     this.keymap = new KeyMap();
 
-    this.size = new Vector2$d([window.innerWidth, window.innerHeight]);
-    this.pos = new Vector2$d();
-    this.oldpos = new Vector2$d();
+    this.size = new Vector2$c([window.innerWidth, window.innerHeight]);
+    this.pos = new Vector2$c();
+    this.oldpos = new Vector2$c();
 
     this.idgen = 0;
     this.sareas = [];
@@ -54926,7 +54995,7 @@ class Screen$2 extends UIBase$2 {
     this._idmap = {};
 
     //effective bounds of screen
-    this._aabb = [new Vector2$d(), new Vector2$d()];
+    this._aabb = [new Vector2$c(), new Vector2$c()];
 
     let on_mousemove = (e, x, y) => {
       //let elem = this.pickElement(x, y, 1, 1, ScreenArea.ScreenArea);
@@ -55002,7 +55071,7 @@ class Screen$2 extends UIBase$2 {
 
     //fully recurse tree
     let rec = (n) => {
-      if (n instanceof UIBase$h) {
+      if (n instanceof UIBase$g) {
         n.ctx = val;
       }
 
@@ -55027,7 +55096,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   static fromJSON(obj, schedule_resize = false) {
-    let ret = UIBase$h.createElement(this.define().tagname);
+    let ret = UIBase$g.createElement(this.define().tagname);
     return ret.loadJSON(obj, schedule_resize);
   }
 
@@ -55038,7 +55107,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   static newSTRUCT() {
-    return UIBase$h.createElement(this.define().tagname);
+    return UIBase$g.createElement(this.define().tagname);
   }
 
   setPosSize(x, y, w, h) {
@@ -55181,7 +55250,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   newScreenArea() {
-    let ret = UIBase$h.createElement("screenarea-x");
+    let ret = UIBase$g.createElement("screenarea-x");
     ret.ctx = this.ctx;
 
     if (ret.ctx) {
@@ -55192,7 +55261,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   copy() {
-    let ret = UIBase$h.createElement(this.constructor.define().tagname);
+    let ret = UIBase$g.createElement(this.constructor.define().tagname);
     ret.ctx = this.ctx;
     ret._init();
 
@@ -55377,7 +55446,7 @@ class Screen$2 extends UIBase$2 {
   }
 
   draggablePopup(x, y) {
-    let ret = UIBase$h.createElement("drag-box-x");
+    let ret = UIBase$g.createElement("drag-box-x");
     ret.ctx = this.ctx;
     ret.parentWidget = this;
     ret._init();
@@ -55391,7 +55460,7 @@ class Screen$2 extends UIBase$2 {
     };
 
     ret.style["z-index"] = 205;
-    ret.style["position"] = UIBase$h.PositionKey;
+    ret.style["position"] = UIBase$g.PositionKey;
     ret.style["left"] = x + "px";
     ret.style["top"] = y + "px";
 
@@ -55427,7 +55496,7 @@ class Screen$2 extends UIBase$2 {
     x += window.scrollX;
     y += window.scrollY;
 
-    let container = UIBase$h.createElement("container-x");
+    let container = UIBase$g.createElement("container-x");
 
     container.ctx = this.ctx;
     container._init();
@@ -55450,7 +55519,7 @@ class Screen$2 extends UIBase$2 {
     container.style["border-width"] = container.getDefault("border-width") + "px";
     container.style["box-shadow"] = container.getDefault("box-shadow");
 
-    container.style["position"] = UIBase$h.PositionKey;
+    container.style["position"] = UIBase$g.PositionKey;
     container.style["z-index"] = "2205";
     container.style["left"] = x + "px";
     container.style["top"] = y + "px";
@@ -55459,7 +55528,7 @@ class Screen$2 extends UIBase$2 {
     container.parentWidget = this;
 
     let mm = new MinMax(2);
-    let p = new Vector2$d();
+    let p = new Vector2$c();
 
     let _update = container.update;
     container.update.after(() => {
@@ -55652,7 +55721,7 @@ class Screen$2 extends UIBase$2 {
       this._aabb[1].load(mm.max);
     }
 
-    return [new Vector2$d(mm.min), new Vector2$d(mm.max)];
+    return [new Vector2$c(mm.min), new Vector2$c(mm.max)];
   }
 
   //XXX look at if this is referenced anywhere
@@ -55887,7 +55956,7 @@ class Screen$2 extends UIBase$2 {
     super.loadJSON();
 
     for (let sarea of obj.sareas) {
-      let sarea2 = UIBase$h.createElement("screenarea-x");
+      let sarea2 = UIBase$g.createElement("screenarea-x");
 
       sarea2.ctx = this.ctx;
       sarea2.screen = this;
@@ -56042,7 +56111,7 @@ class Screen$2 extends UIBase$2 {
 
     let rec = (n) => {
       let bad = n.tabIndex < 0 || n.tabIndex === undefined || n.tabIndex === null;
-      bad = bad || !(n instanceof UIBase$h);
+      bad = bad || !(n instanceof UIBase$g);
 
       if (n._id in visit || n.hidden) {
         return;
@@ -56278,8 +56347,10 @@ class Screen$2 extends UIBase$2 {
           push(AREA_CTX_POP);
         }
 
-        if (!n.hidden && n !== this2 && n instanceof UIBase$h) {
-          n._ctx = ctx;
+        if (!n.hidden && n !== this2 && n instanceof UIBase$g) {
+          if (!n._ctx) {
+            n._ctx = ctx;
+          }
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
             n._screenStyleTag.textContent = cssText;
@@ -56303,7 +56374,7 @@ class Screen$2 extends UIBase$2 {
         }
 
         for (let n2 of n.childNodes) {
-          if (!(n2 instanceof UIBase$h) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+          if (!(n2 instanceof UIBase$g) || !(n2.packflag & PackFlags.NO_UPDATE)) {
             push(n2);
           }
         }
@@ -56313,12 +56384,12 @@ class Screen$2 extends UIBase$2 {
         }
 
         for (let n2 of n.shadow.childNodes) {
-          if (!(n2 instanceof UIBase$h) || !(n2.packflag & PackFlags.NO_UPDATE)) {
+          if (!(n2 instanceof UIBase$g) || !(n2.packflag & PackFlags.NO_UPDATE)) {
             push(n2);
           }
         }
 
-        if (n instanceof UIBase$h) {
+        if (n instanceof UIBase$g) {
           if (!(n.packflag & PackFlags.NO_UPDATE)) {
             scopestack.push(n);
             push(SCOPE_POP);
@@ -56370,8 +56441,8 @@ class Screen$2 extends UIBase$2 {
         return;
       }
 
-      let size1 = new Vector2$d(sarea.pos).add(sarea.size);
-      let size2 = new Vector2$d(sarea2.pos).add(sarea2.size);
+      let size1 = new Vector2$c(sarea.pos).add(sarea.size);
+      let size2 = new Vector2$c(sarea2.pos).add(sarea2.size);
 
       sarea2.pos.min(sarea.pos);
       sarea2.size.load(size1).max(size2).sub(sarea2.pos);
@@ -56656,7 +56727,7 @@ class Screen$2 extends UIBase$2 {
 
   _get_debug_overlay() {
     if (!this._debug_overlay) {
-      this._debug_overlay = UIBase$h.createElement("overdraw-x");
+      this._debug_overlay = UIBase$g.createElement("overdraw-x");
       let s = this._debug_overlay;
 
       s.startNode(this, this);
@@ -56690,11 +56761,11 @@ class Screen$2 extends UIBase$2 {
         x = Math.min(Math.max(x, 0.0), this.size[0] - s);
         y = Math.min(Math.max(y, 0.0), this.size[1] - s);
 
-        let ret = UIBase$h.createElement("div");
+        let ret = UIBase$g.createElement("div");
         ret.setAttribute("class", "__debug");
 
 
-        ret.style["position"] = UIBase$h.PositionKey;
+        ret.style["position"] = UIBase$g.PositionKey;
         ret.style["left"] = x + "px";
         ret.style["top"] = y + "px";
         ret.style["height"] = s + "px";
@@ -56713,11 +56784,11 @@ class Screen$2 extends UIBase$2 {
         ];
 
         for (let i = 2; i >= 0; i--) {
-          ret = UIBase$h.createElement("div");
+          ret = UIBase$g.createElement("div");
 
           ret.setAttribute("class", "__debug");
 
-          ret.style["position"] = UIBase$h.PositionKey;
+          ret.style["position"] = UIBase$g.PositionKey;
           ret.style["left"] = x + "px";
           ret.style["top"] = y + "px";
           ret.style["height"] = s + "px";
@@ -56748,7 +56819,7 @@ class Screen$2 extends UIBase$2 {
       for (let b of this.screenborders) {
         for (let he of b.halfedges) {
           let txt = `${he.side}, ${b.sareas.length}, ${b.halfedges.length}`;
-          let p = new Vector2$d(b.v1).add(b.v2).mulScalar(0.5);
+          let p = new Vector2$c(b.v1).add(b.v2).mulScalar(0.5);
           let size = 10*b.halfedges.length;
 
           let wadd = 25 + size*0.5;
@@ -57170,8 +57241,8 @@ class Screen$2 extends UIBase$2 {
 
     if (fitToSize) {
       //fit entire screen to, well, the entire screen (size)
-      let vec = new Vector2$d(max).sub(min);
-      let sz = new Vector2$d(this.size);
+      let vec = new Vector2$c(max).sub(min);
+      let sz = new Vector2$c(this.size);
 
       sz.div(vec);
 
@@ -57206,8 +57277,8 @@ class Screen$2 extends UIBase$2 {
     for (let sarea of this.sareas) {
       if (sarea.hidden) continue;
 
-      let old = new Vector2$d(sarea.size);
-      let oldpos = new Vector2$d(sarea.pos);
+      let old = new Vector2$c(sarea.size);
+      let oldpos = new Vector2$c(sarea.pos);
 
       sarea.loadFromVerts();
 
@@ -57366,7 +57437,7 @@ class Screen$2 extends UIBase$2 {
     let hash = ScreenBorder.hash(v1, v2);
 
     if (!(hash in this._edgemap)) {
-      let sb = this._edgemap[hash] = UIBase$h.createElement("screenborder-x");
+      let sb = this._edgemap[hash] = UIBase$g.createElement("screenborder-x");
 
       sb._hash = hash;
       sb.screen = this;
@@ -57647,13 +57718,13 @@ class Screen$2 extends UIBase$2 {
 
     HTMLElement.prototype.remove.call(area);
 
-    let sarea2 = UIBase$h.createElement("screenarea-x", true);
+    let sarea2 = UIBase$g.createElement("screenarea-x", true);
     sarea2.floating = true;
 
-    sarea2.pos = new Vector2$d(sarea.pos);
+    sarea2.pos = new Vector2$c(sarea.pos);
     sarea2.pos.addScalar(5);
 
-    sarea2.size = new Vector2$d(sarea.size);
+    sarea2.size = new Vector2$c(sarea.size);
 
     sarea2.editors.push(area);
     sarea2.editormap[area.constructor.define().areaname] = area;
@@ -57742,7 +57813,7 @@ class Screen$2 extends UIBase$2 {
     reader(this);
 
     //handle old files that might have saved as simple arrays
-    this.size = new Vector2$d(this.size);
+    this.size = new Vector2$c(this.size);
 
     let sareas = this.sareas;
     this.sareas = [];
