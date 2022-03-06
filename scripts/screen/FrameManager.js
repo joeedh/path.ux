@@ -1487,7 +1487,9 @@ export class Screen extends ui_base.UIBase {
         }
 
         if (!n.hidden && n !== this2 && n instanceof UIBase) {
-          n._ctx = ctx;
+          if (!n._ctx) {
+            n._ctx = ctx;
+          }
 
           if (n._screenStyleUpdateHash !== cssTextHash) {
             n._screenStyleTag.textContent = cssText;

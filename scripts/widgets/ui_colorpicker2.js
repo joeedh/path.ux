@@ -17,6 +17,7 @@ let Vector2 = vectormath.Vector2,
 
 export {rgb_to_hsv, hsv_to_rgb} from "../path-controller/util/colorutils.js";
 import {rgb_to_hsv, hsv_to_rgb, cmyk_to_rgb, rgb_to_cmyk} from "../path-controller/util/colorutils.js";
+import {contextWrangler} from '../screen/area_wrangler.js';
 
 let UIBase     = ui_base.UIBase,
     PackFlags  = ui_base.PackFlags,
@@ -1335,11 +1336,16 @@ export class ColorPickerButton extends UIBase {
     }
 
     let colorpicker = this.ctx.screen.popup(this, this);
+    let ctx = contextWrangler.makeSafeContext(this.ctx);
+
+    colorpicker.ctx = ctx;
     colorpicker.useDataPathUndo = this.useDataPathUndo;
 
     let path = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
 
     let widget = colorpicker.colorPicker(path, undefined, this.getAttribute("mass_set_path"));
+
+    widget.ctx = ctx;
     widget._init();
     widget.setRGBA(this.rgba[0], this.rgba[1], this.rgba[2], this.rgba[3]);
 

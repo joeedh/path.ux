@@ -49,7 +49,20 @@ export class BaseOverlay extends ContextOverlay {
   get canvas() {
     return this.data.canvas;
   }
+
+  get workspace() {
+    return Area.getActiveArea(WorkspaceEditor);
+  }
+
+  workspace_save() {
+    return Area.getActiveArea(WorkspaceEditor);
+  }
+
+  workspace_load(ctx, data) {
+    return data;
+  }
 }
+
 Context.register(BaseOverlay);
 
 export class ViewOverlay extends ContextOverlay {
@@ -64,10 +77,6 @@ export class ViewOverlay extends ContextOverlay {
 
   get editor() {
     return Area.getActiveArea();
-  }
-
-  get workspace() {
-    return Area.getActiveArea(WorkspaceEditor);
   }
 
   get docsbrowser() {

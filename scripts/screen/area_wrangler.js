@@ -1,21 +1,12 @@
-let _ScreenArea = undefined;
-
-import * as util from '../path-controller/util/util.js';
-import * as vectormath from '../path-controller/util/vectormath.js';
-import * as ui_base from '../core/ui_base.js';
-import * as ui from '../core/ui.js';
-import * as ui_noteframe from '../widgets/ui_noteframe.js';
 //import * as nstructjs from './struct.js';
 import {haveModal, _setModalAreaClass} from '../path-controller/util/simple_events.js';
+import * as util from '../path-controller/util/util.js';
 
 import '../path-controller/util/struct.js';
 
-let UIBase = ui_base.UIBase;
-let Vector2 = vectormath.Vector2;
 let ScreenClass = undefined;
 
 import {ClassIdSymbol} from '../core/ui_base.js';
-import {snap, snapi} from './FrameManager_mesh.js';
 
 
 export function setScreenClass(cls) {
@@ -73,7 +64,42 @@ export class AreaWrangler {
     this.idgen = 0;
     this.locked = 0;
     this._last_screen_id = undefined;
+
     theWrangler = this;
+  }
+
+  /*Yeek this is particularly evil, it creates a context
+  * that can be used by popups with the original context
+  * area stack intact of the elements that spawned them.*/
+  makeSafeContext(ctx) {
+    let wrangler = this.copy();
+    let this2 = this;
+
+    return new Proxy(ctx, {
+      get(target, key, rec) {
+        wrangler.copyTo(contextWrangler);
+        return target[key];
+      }
+    });
+  }
+
+  copyTo(ret) {
+    for (let [key, stack1] of this.stacks) {
+      ret.stack.set(key, util.list(stack1));
+    }
+
+    for (let [key, val] of this.lasts) {
+      ret.lasts.set(key, val);
+    }
+
+    ret.stack = util.list(this.stack);
+    ret.lastArea = this.lastArea;
+  }
+
+  copy(b) {
+    let ret = new AreaWrangler();
+    this.copyTo(ret);
+    return ret;
   }
 
   _checkWrangler(ctx) {
@@ -211,7 +237,7 @@ export class AreaWrangler {
         let stack = this.stacks.get(type[ClassIdSymbol]);
 
         if (stack.length > 0) {
-          return stack[stack.length - 1];
+          return stack[stack.length-1];
         }
       }
 
@@ -220,3 +246,5 @@ export class AreaWrangler {
   }
 }
 _setModalAreaClass(AreaWrangler);
+
+export let contextWrangler = new AreaWrangler();

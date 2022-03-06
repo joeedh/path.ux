@@ -9,7 +9,7 @@ import * as util from "../path-controller/util/util.js";
 import {
   PropTypes, isNumber, PropSubTypes, PropFlags, NumberConstraints, IntProperty
 } from "../path-controller/toolsys/toolprop.js";
-import {pushModalLight, popModalLight, eventWasTouch} from "../path-controller/util/simple_events.js";
+import {eventWasTouch} from "../path-controller/util/simple_events.js";
 import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
 import {color2css, css2color} from "../core/ui_theme.js";
 import {ThemeEditor} from "./theme_editor.js";
@@ -154,7 +154,7 @@ export function NumberSliderBase(cls = UIBase, skip = new Set(), defaults = Slid
       }
     }
 
-    loadConstraints(prop=undefined) {
+    loadConstraints(prop = undefined) {
       if (!this.hasAttribute("datapath")) {
         return;
       }
@@ -328,8 +328,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.setCSS();
     }
 
-    super.update();
-    this.updateDataPath();
+    super.update(); //calls this.updateDataPath
 
     updateSliderFromDom(this);
   }
@@ -589,7 +588,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.loadConstraints();
   }
 
-  setValue(value, fire_onchange = true, setDataPath=true, checkConstraints=true) {
+  setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
     this._value = value;
 
     if (this.hasAttribute("integer")) {
@@ -1150,19 +1149,18 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     }
 
     this.ma = new util.MovingAvg(eventWasTouch(e) ? 4 : 2);
+    let handlers;
 
     let end = () => {
-      if (this._modal === undefined) {
+      if (handlers === undefined) {
         return;
       }
 
-      popModalLight(this._modal);
-
-      this._modal = undefined;
-      this.modal = undefined;
+      this.popModal();
+      handlers = undefined;
     };
 
-    this.modal = {
+    handlers = {
       mousemove: (e) => {
         let x = e.x, y = e.y;
 
@@ -1211,10 +1209,11 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       }
     }
 
-    for (let k in this.modal) {
-      this.modal[k] = makefunc(this.modal[k]);
+    for (let k in handlers) {
+      handlers[k] = makefunc(handlers[k]);
     }
-    this._modal = pushModalLight(this.modal);
+
+    this.pushModal(handlers);
   }
 
   init() {
@@ -1452,9 +1451,8 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
   }
 
   _ondestroy() {
-    if (this._modal) {
-      popModalLight(this._modal);
-      this._modal = undefined;
+    if (this.modalRunning) {
+      this.popModal();
     }
   }
 

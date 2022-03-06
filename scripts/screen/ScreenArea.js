@@ -30,9 +30,9 @@ export const AreaFlags = {
 
 
 export * from './area_wrangler.js';
-import {getAreaIntName, setAreaTypes, AreaWrangler, areaclasses} from './area_wrangler.js';
+import {getAreaIntName, setAreaTypes, contextWrangler, AreaWrangler, areaclasses} from './area_wrangler.js';
 
-export let contextWrangler = new AreaWrangler();
+export {contextWrangler};
 
 window._contextWrangler = contextWrangler;
 

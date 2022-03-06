@@ -236,7 +236,14 @@ export class AreaDocker extends Container {
 
     if (!active || active._id !== area._id) {
       this.ignoreChange++;
-      this.tbar.setActive(area._id);
+
+      try {
+        this.tbar.setActive(area._id);
+      } catch (error) {
+        util.print_stack(error);
+        this.needsRebuild = true;
+      }
+
       this.ignoreChange--;
     }
 

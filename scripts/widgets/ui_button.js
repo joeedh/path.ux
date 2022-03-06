@@ -10,7 +10,6 @@ import {DataPathError} from '../path-controller/controller/controller.js';
 import {Vector3, Vector4, Quat, Matrix4} from '../path-controller/util/vectormath.js';
 import cconst from '../config/const.js';
 import {_themeUpdateKey, CSSFont} from "../core/ui_base.js";
-import {pushModalLight, popModalLight, eventWasTouch} from '../path-controller/util/simple_events.js';
 
 let keymap = events.keymap;
 
@@ -118,10 +117,10 @@ export class Button extends UIBase {
     let press = (e) => {
       e.stopPropagation();
 
-      if (!this._modalstate) {
+      if (!this.modalRunning) {
         let this2 = this;
 
-        this._modalstate = pushModalLight({
+        this.pushModal({
           on_mousedown(e) {
             this.end(e);
           },
@@ -134,7 +133,7 @@ export class Button extends UIBase {
               return;
             }
 
-            popModalLight(this2._modalstate);
+            this.popModal();
             this2._modalstate = undefined;
 
             depress(e);

@@ -26,6 +26,10 @@ export class PropsEditor extends Editor {
   }
 
   _save_page_data() {
+    if (!this.container) {
+      return '';
+    }
+    
     let s = saveUIData(this.container, 'page');
     return s;
   }

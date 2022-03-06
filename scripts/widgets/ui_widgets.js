@@ -627,15 +627,12 @@ export class IconButton extends UIBase {
   init() {
     super.init();
 
-    let modalstate = undefined;
-
     let press = (e) => {
       e.stopPropagation();
       e.preventDefault();
 
-      if (modalstate) {
-        popModalLight(modalstate);
-        modalstate = undefined;
+      if (this.modalRunning) {
+        this.popModal();
       }
 
       if (!eventWasTouch(e) && e.button !== 0) {
@@ -645,7 +642,7 @@ export class IconButton extends UIBase {
       if (1) { //!eventWasTouch(e)) {
         let this2 = this;
 
-        modalstate = pushModalLight({
+        this.pushModal({
           on_mouseup(e) {
             //touch events aren't fireing onclick automatically the way mouse ones are
 
@@ -666,9 +663,8 @@ export class IconButton extends UIBase {
             this.end();
           },
           end() {
-            if (modalstate) {
-              popModalLight(modalstate);
-              modalstate = undefined;
+            if (this2.modalRunning) {
+              this2.popModal();
               this2._on_depress(e)
               this2.setCSS();
             }

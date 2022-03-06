@@ -648,10 +648,14 @@ export class TabBar extends UIBase {
 
     this.tabs = ntabs;
 
-    if (active !== undefined) {
-      this.setActive(active);
-    } else {
-      this.setActive(this.tabs[0]);
+    try {
+      if (active !== undefined) {
+        this.setActive(active);
+      } else {
+        this.setActive(this.tabs[0]);
+      }
+    } catch (error) {
+      util.print_stack(error);
     }
 
     this.update(true);
@@ -1586,7 +1590,7 @@ export class TabContainer extends UIBase {
       }
     }
 
-    console.error("Unknown tab " + name_or_id);
+    throw new Error("Unknown tab " + name_or_id);
   }
 
   updateBarPos() {

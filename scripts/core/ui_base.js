@@ -1,3 +1,5 @@
+import {contextWrangler} from '../screen/area_wrangler.js';
+
 let _ui_base = undefined;
 
 //avoid circular module references
@@ -722,6 +724,8 @@ export function flagThemeUpdate() {
 export class UIBase extends HTMLElement {
   constructor() {
     super();
+
+    this._modalstack = [];
 
     this._tool_tip_abort_delay = undefined;
     this._tooltip_ref = undefined;
@@ -2064,12 +2068,35 @@ export class UIBase extends HTMLElement {
   pushModal(handlers = this, autoStopPropagation = true) {
     if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
-      //pop modal stack just to be safe
-      popModalLight(this._modaldata);
-      this._modaldata = undefined;
+      this.popModal();
     }
 
-    this._modaldata = pushModalLight(handlers, autoStopPropagation);
+    let _areaWrangler = contextWrangler.copy();
+
+    contextWrangler.copy(this.ctx);
+
+    function bindFunc(func) {
+      return function() {
+        _areaWrangler.copyTo(contextWrangler);
+
+        return func.apply(handlers, arguments);
+      }
+    }
+
+    let handlers2 = {};
+    for (let k in handlers) {
+      let func = handlers[k];
+
+      if (typeof func !== "function") {
+        continue;
+      }
+
+      handlers2[k] = bindFunc(func);
+    }
+    //this._modalstack.push(this.ctx);
+    //this.ctx = this.ctx.toLocked();
+
+    this._modaldata = pushModalLight(handlers2, autoStopPropagation);
     return this._modaldata;
   }
 
@@ -2079,6 +2106,7 @@ export class UIBase extends HTMLElement {
       return;
     }
 
+    this.ctx = this._modalstack.pop();
     popModalLight(this._modaldata);
     this._modaldata = undefined;
   }
