@@ -17,7 +17,7 @@ import {EnumProperty} from "../path-controller/toolsys/toolprop.js";
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
-import {ScreenBorder, snap, snapi} from './FrameManager_mesh.js';
+import {BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi} from './FrameManager_mesh.js';
 
 export const AreaFlags = {
   HIDDEN                : 1,
@@ -466,6 +466,30 @@ export class Area extends ui_base.UIBase {
     row.style["margin"] = "0px";
     row.style["padding"] = "0px";
 
+    if (!(this.flag & AreaFlags.NO_SWITCHER)) {
+      this.switcher = this.makeAreaSwitcher(row);
+    }
+
+    if (util.isMobile() || cconst.addHelpPickers) {
+      this.helppicker = row.helppicker();
+      this.helppicker.iconsheet = 0;
+    }
+
+    if (add_note_area) {
+      let notef = UIBase.createElement("noteframe-x");
+      notef.ctx = this.ctx;
+      row._add(notef);
+    }
+
+    this.header = row;
+
+    /* don't do normal dragging for tab switchers */
+    if (cconst.useAreaTabSwitcher) {
+      return row;
+    }
+
+    let eventdom = this.header;
+
     let mdown = false;
     let mpos = new Vector2();
 
@@ -474,8 +498,8 @@ export class Area extends ui_base.UIBase {
         return;
       }
 
-      pageX = pageX === undefined ? e.pageX : pageX;
-      pageY = pageY === undefined ? e.pageY : pageY;
+      pageX = pageX === undefined ? e.x : pageX;
+      pageY = pageY === undefined ? e.y : pageY;
 
       let node = this.getScreen().pickElement(pageX, pageY);
 
@@ -496,24 +520,24 @@ export class Area extends ui_base.UIBase {
       return true;
     }
 
-    row.addEventListener("mouseout", (e) => {
-      //console.log("mouse leave");
+    eventdom.addEventListener("pointerout", (e) => {
+      console.log("pointerout", e);
       mdown = false;
     });
-    row.addEventListener("mouseleave", (e) => {
-      //console.log("mouse out");
+    eventdom.addEventListener("pointerleave", (e) => {
       mdown = false;
+      console.log("pointerleave", e);
     });
 
-    row.addEventListener("mousedown", (e) => {
-      console.log("MDOWN", e);
+    eventdom.addEventListener("pointerdown", (e) => {
+      console.log("pointerdown", e, mpre(e));
 
       if (!mpre(e)) return;
 
       mpos[0] = e.pageX;
       mpos[1] = e.pageY;
       mdown = true;
-    }, false);
+    });
 
     let last_time = util.time_ms();
 
@@ -576,7 +600,7 @@ export class Area extends ui_base.UIBase {
     //row.setAttribute("draggable", true);
     //row.draggable = true;
     /*
-    row.addEventListener("dragstart", (e) => {
+    eventdom.addEventListener("dragstart", (e) => {
       return;
       console.log("drag start!", e);
       e.dataTransfer.setData("text/json", "SplitAreaDrag");
@@ -594,72 +618,21 @@ export class Area extends ui_base.UIBase {
       this.getScreen().areaDragTool(this.owning_sarea);
     });
 
-    row.addEventListener("drag", (e) => {
+    eventdom.addEventListener("drag", (e) => {
       console.log("drag!", e);
     });*/
 
-    //*
-    row.addEventListener("mousemove", (e) => {
+    eventdom.addEventListener("pointermove", (e) => {
       return do_mousemove(e, e.pageX, e.pageY);
     }, false);
-    //*/
-    row.addEventListener("mouseup", (e) => {
-      if (!mpre(e)) return;
-
+    eventdom.addEventListener("pointerup", (e) => {
+      console.log("pointerup", e);
       mdown = false;
     }, false);
-
-    row.addEventListener("touchstart", (e) => {
-      console.log("touchstart", e);
-
-      if (!mpre(e, e.touches[0].pageX, e.touches[0].pageY)) return;
-
-      if (e.touches.length == 0)
-        return;
-
-      mpos[0] = e.touches[0].pageX;
-      mpos[1] = e.touches[0].pageY;
-      mdown = true;
-    }, false);
-
-    row.addEventListener("touchmove", (e) => {
-      return do_mousemove(e, e.touches[0].pageX, e.touches[0].pageY);
-    }, false);
-
-    let touchend = (e) => {
-      let node = this.getScreen().pickElement(e.pageX, e.pageY);
-      if (node !== row) {
-        return;
-      }
-      if (e.touches.length == 0)
-        return;
-
+    eventdom.addEventListener("pointercancel", (e) => {
+      console.log("pointercancel", e);
       mdown = false;
-    };
-
-    row.addEventListener("touchcancel", (e) => {
-      touchend(e);
     }, false);
-    row.addEventListener("touchend", (e) => {
-      touchend(e);
-    }, false);
-
-    if (!(this.flag & AreaFlags.NO_SWITCHER)) {
-      this.switcher = this.makeAreaSwitcher(row);
-    }
-
-    if (util.isMobile() || cconst.addHelpPickers) {
-      this.helppicker = row.helppicker();
-      this.helppicker.iconsheet = 0;
-    }
-
-    if (add_note_area) {
-      let notef = UIBase.createElement("noteframe-x");
-      notef.ctx = this.ctx;
-      row._add(notef);
-    }
-
-    this.header = row;
 
     return row;
   }
@@ -753,6 +726,10 @@ export class ScreenArea extends ui_base.UIBase {
   constructor() {
     super();
 
+    this._flag = undefined;
+
+    this.flag = 0; /** holds AreaFlags.FLOATING and AreaFlags.INDEPENDENT */
+
     this._borders = [];
     this._verts = [];
     this.dead = false;
@@ -797,7 +774,7 @@ export class ScreenArea extends ui_base.UIBase {
         screen.sareas.active.area.on_area_blur();
       }
 
-      if (screen.sareas.active !== this) {
+      if (this.area && screen.sareas.active !== this) {
         this.area.on_area_focus();
       }
 
@@ -841,17 +818,34 @@ export class ScreenArea extends ui_base.UIBase {
   }//*/
 
   get floating() {
-    return this.area ? this.area.floating : undefined;
+    return this.flag & AreaFlags.FLOATING;
   }
 
   set floating(val) {
-    if (this.area) {
-      this.area.floating = val;
+    if (val) {
+      this.flag |= AreaFlags.FLOATING;
+    } else {
+      this.flag &= ~AreaFlags.FLOATING;
     }
   }
 
   get flag() {
-    return this.area ? this.area.flag : 0;
+    let flag = this._flag & (AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+
+    if (this.area) {
+      flag |= this.area.flag;
+    }
+
+    return flag;
+  }
+
+  set flag(v) {
+    this._flag &= ~(AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+    this._flag |= v & (AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+
+    if (this.area) {
+      this.area.flag |= v & ~(AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+    }
   }
 
   get borderLock() {
@@ -859,11 +853,11 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   get minSize() {
-    return this.area !== undefined ? this.area.minSize : [5, 5];
+    return this.area !== undefined ? this.area.minSize : this.size;
   }
 
   get maxSize() {
-    return this.area !== undefined ? this.area.maxSize : [undefined, undefined];
+    return this.area !== undefined ? this.area.maxSize : this.size;
   }
 
   get pos() {
@@ -905,12 +899,12 @@ export class ScreenArea extends ui_base.UIBase {
   bringToFront() {
     let screen = this.getScreen();
 
-    this.remove(false);
+    HTMLElement.prototype.remove.call(this);
     screen.sareas.remove(this);
 
     screen.appendChild(this);
 
-    let zindex = 0;
+    let zindex = BORDER_ZINDEX_BASE + 1;
 
     if (screen.style["z-index"]) {
       zindex = parseInt(screen.style["z-index"]) + 1;
@@ -942,7 +936,7 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   draw() {
-    if (this.area.draw) {
+    if (this.area && this.area.draw) {
       this.area.push_ctx_active();
       this.area.draw();
       this.area.pop_ctx_active();
@@ -1158,6 +1152,22 @@ export class ScreenArea extends ui_base.UIBase {
    * Sets screen verts from pos/size
    * */
   loadFromPosSize() {
+    if (this.floating && this._verts.length > 0) {
+      let p = this.pos, s = this.size;
+
+      this._verts[0].loadXY(p[0], p[1]);
+      this._verts[1].loadXY(p[0], p[1] + s[1]);
+      this._verts[2].loadXY(p[0] + s[0], p[1] + s[1]);
+      this._verts[3].loadXY(p[0] + s[0], p[1]);
+
+      for (let border of this._borders) {
+        border.setCSS();
+      }
+
+      this.setCSS();
+      return;
+    }
+
     let screen = this.getScreen();
     if (!screen) return;
 
@@ -1221,9 +1231,11 @@ export class ScreenArea extends ui_base.UIBase {
       new Vector2([p[0] + s[0], p[1]])
     ];
 
+    let floating = this.floating;
+
     for (let i = 0; i < vs.length; i++) {
       vs[i] = snap(vs[i]);
-      vs[i] = screen.getScreenVert(vs[i], i);
+      vs[i] = screen.getScreenVert(vs[i], i, floating);
       this._verts.push(vs[i]);
     }
 

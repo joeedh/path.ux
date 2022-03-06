@@ -214,7 +214,6 @@ export class WorkspaceEditor extends Editor {
   draw() {
     this.push_ctx_active();
 
-    console.log("canvas draw");
     let g = this.g;
 
     let scale = this.getFinalScale();

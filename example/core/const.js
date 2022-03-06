@@ -32,7 +32,7 @@ export class Version {
 
 export default {
   DEBUG              : {
-    screenborders    : false,
+    screenborders    : 0,
     allBordersMovable: false,
     modalEvents      : true,
     /*
@@ -45,6 +45,7 @@ export default {
   useNativeToolTips  : false,
   showPathsInToolTips: true,
   autoSizeUpdate     : true,
+  useAreaTabSwitcher : true,
   VERSION            : new Version(0, 0, 0, 0),
   LOCALSTORAGE_KEY   : "pathux_example_app"
 };

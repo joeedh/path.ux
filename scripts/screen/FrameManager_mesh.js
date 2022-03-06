@@ -7,8 +7,11 @@ import {UIBase} from '../core/ui_base.js';
 import {Vector2} from '../path-controller/util/vectormath.js';
 import {createMenu, Menu} from '../widgets/ui_menu.js';
 import {popModalLight, pushModalLight} from '../path-controller/util/simple_events.js';
+import {AreaFlags} from './ScreenArea.js';
 
 export let SnapLimit = 1;
+
+export const BORDER_ZINDEX_BASE = 25
 
 export function snap(c, snap_limit = SnapLimit) {
   if (Array.isArray(c)) {
@@ -47,9 +50,9 @@ export class ScreenVert extends Vector2 {
     this._id = id;
   }
 
-  static hash(pos, added_id) {
-    let x = snap(pos[0]);
-    let y = snap(pos[1]);
+  static hash(pos, added_id, limit) {
+    let x = snap(pos[0], limit);
+    let y = snap(pos[1], limit);
 
     return "" + x + ":" + y + ": + added_id";
   }
@@ -106,6 +109,8 @@ export class ScreenBorder extends ui_base.UIBase {
     this.v1 = undefined;
     this.v2 = undefined;
     this._id = undefined;
+
+    this._hash = undefined;
 
     this.outer = undefined;
 
@@ -192,6 +197,19 @@ export class ScreenBorder extends ui_base.UIBase {
         return he.sarea;
       }
     }
+  }
+
+  get locked() {
+    for (let sarea of this.sareas) {
+      let mask = 1<<sarea._borders.indexOf(this);
+      let lock = sarea.borderLock & mask;
+
+      if (lock || (sarea.flag & AreaFlags.NO_COLLAPSE)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   get dead() {
@@ -286,7 +304,9 @@ export class ScreenBorder extends ui_base.UIBase {
       this.appendChild(this._style);
     }
 
-    let pad = this.getDefault("mouse-threshold");
+    let dpi = UIBase.getDPI();
+
+    let pad = this.getDefault("mouse-threshold") / dpi;
     let wid = this.getDefault("border-width");
 
     let v1 = this.v1, v2 = this.v2;
@@ -393,7 +413,7 @@ export class ScreenBorder extends ui_base.UIBase {
     this.style["top"] = y + "px";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
-    this.style["z-index"] = "25";
+    this.style["z-index"] = "" + BORDER_ZINDEX_BASE;
   }
 
   valueOf() {

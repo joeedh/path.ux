@@ -1069,6 +1069,10 @@ export class UIBase extends HTMLElement {
     customElements.define(this.prefix(cls.define().tagname), cls);
   }
 
+  static getInternalName(name) {
+    return internalElementNames[name];
+  }
+
   static createElement(name, internal = false) {
     if (!internal && name in externalElementNames) {
       return document.createElement(name);

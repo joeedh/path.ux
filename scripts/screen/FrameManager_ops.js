@@ -25,7 +25,7 @@ let Vector2   = vectormath.Vector2,
     UndoFlags = simple_toolsys.UndoFlags,
     ToolFlags = simple_toolsys.ToolFlags;
 
-import {pushModalLight, popModalLight, keymap} from "../util/simple_events.js";
+import {pushModalLight, popModalLight, keymap, pushPointerModal} from "../util/simple_events.js";
 
 //import {keymap} from './events';
 
@@ -38,9 +38,9 @@ export class ToolBase extends simple_toolsys.ToolOp {
     this._finished = false;
   }
 
-  start() {
+  start(elem, pointerId) {
     //toolstack_getter().execTool(this);
-    this.modalStart(undefined);
+    this.modalStart(undefined, elem, pointerId);
   }
 
   cancel() {
@@ -60,7 +60,7 @@ export class ToolBase extends simple_toolsys.ToolOp {
     this.modaldata = undefined;
   }
 
-  modalStart(ctx) {
+  modalStart(ctx, elem, pointerId) {
     this.ctx = ctx;
 
     if (this.modaldata !== undefined) {
@@ -91,7 +91,17 @@ export class ToolBase extends simple_toolsys.ToolOp {
     }
 
     //window.setTimeout(() => {
-    this.modaldata = pushModalLight(handlers);
+    if (pointerId !== undefined) {
+      handlers.on_pointerdown = handlers.on_mousedown;
+      handlers.on_pointermove = handlers.on_mousemove;
+      handlers.on_pointerup = handlers.on_mouseup;
+      handlers.on_pointercancel = handlers.on_mouseup;
+      handlers.on_pointerend = handlers.on_mouseup;
+
+      this.modaldata = pushPointerModal(handlers, elem, pointerId);
+    } else {
+      this.modaldata = pushModalLight(handlers);
+    }
     //console.log("HANDLERS", this.modaldata.handlers);
 
     //}, 100);
@@ -558,6 +568,8 @@ export class AreaDragTool extends ToolBase {
 
     super(screen);
 
+    this.dropArea = false;
+    this.excludeAreas = new Set();
     this.cursorbox = undefined;
     this.boxes = [];
     this.boxes.active = undefined;
@@ -588,8 +600,6 @@ export class AreaDragTool extends ToolBase {
     this.screen.solveAreaConstraints();
     this.screen.snapScreenVerts();
     this.screen._recalcAABB();
-
-    console.log("tool finish");
   }
 
   getBoxRect(b) {
@@ -637,27 +647,27 @@ export class AreaDragTool extends ToolBase {
     let t = b.t;
 
     screen.splitArea(dst, t, b.horiz);
+
     screen._internalRegenAll();
   }
 
   doSplitDrop(b) {
     //first check if there was no change
-    if (b.horiz == -1 && b.sarea === this.sarea) {
+    if (b.horiz === -1 && b.sarea === this.sarea) {
       return;
     }
-
-    console.log("BBBB", b.horiz, b.sarea === this.sarea, b);
 
     let can_rip = false;
     let sa = this.sarea;
     let screen = this.screen;
 
     //rip conditions
-    can_rip = sa.size[0] == screen.size[0] || sa.size[1] == screen.size[1];
+    can_rip = sa.size[0] === screen.size[0] || sa.size[1] === screen.size[1];
+    can_rip = can_rip || this.sarea.floating;
     can_rip = can_rip && b.sarea !== sa;
-    can_rip = can_rip && (b.horiz == -1 || !screen.areasBorder(sa, b.sarea));
+    can_rip = can_rip && (b.horiz === -1 || !screen.areasBorder(sa, b.sarea));
 
-    let expand = b.horiz == -1 && b.sarea !== sa && screen.areasBorder(b.sarea, sa);
+    let expand = b.horiz === -1 && b.sarea !== sa && screen.areasBorder(b.sarea, sa);
 
     can_rip = can_rip || expand;
 
@@ -668,11 +678,11 @@ export class AreaDragTool extends ToolBase {
       screen.snapScreenVerts();
     }
 
-    if (b.horiz == -1) {
+    if (b.horiz === -1) {
       //replacement
       let src = this.sarea, dst = b.sarea;
 
-      if (can_rip) {
+      if (can_rip && src !== dst) {
         let mm;
 
         //handle case of one area "consuming" another
@@ -682,7 +692,81 @@ export class AreaDragTool extends ToolBase {
         }
 
         console.log("replacing. . .", expand);
-        screen.replaceArea(dst, src);
+
+        if (src.floating) {
+          let old = dst.editors;
+
+          dst.editors = [];
+          dst.editormap = {};
+
+          if (!(dst.area.constructor.define().areaname in src.editormap)) {
+            dst.area.push_ctx_active();
+            dst.area.on_area_inactive();
+            dst.area.remove();
+            dst.area.pop_ctx_active();
+          }
+
+          for (let editor of old) {
+            let def = editor.constructor.define();
+
+            let bad = false;
+            //bad = !(def.areaname in src.editormap);
+
+            for (let editor2 of src.editors) {
+              if (editor.constructor === editor2.constructor) {
+                bad = true;
+                break;
+              }
+            }
+
+            if (!bad) {
+              dst.editors.push(editor);
+              dst.editormap[def.areaname] = editor;
+            }
+          }
+
+          for (let editor of src.editors) {
+            let def = editor.constructor.define();
+
+            dst.editormap[def.areaname] = editor;
+            dst.editors.push(editor);
+
+            if (editor.owning_sarea) {
+              editor.owning_sarea = dst;
+            }
+
+            if (editor.parentWidget) {
+              editor.parentWidget = dst;
+            }
+          }
+
+          if (cconst.useAreaTabSwitcher) {
+            for (let editor of dst.editors) {
+              if (editor.switcher) {
+                editor.switcher.flagUpdate();
+              }
+            }
+          }
+
+          dst.area = src.area;
+          dst.shadow.appendChild(src.area);
+
+          src.area = undefined;
+          src.editors = [];
+          src.editormap = {};
+
+          dst.on_resize(dst.size, dst.size);
+
+          dst.flushSetCSS();
+          dst.flushUpdate();
+
+          screen.removeArea(src);
+          screen.snapScreenVerts();
+
+          return;
+        } else {
+          screen.replaceArea(dst, src);
+        }
 
         if (expand) {
           console.log("\nEXPANDING:", src.size[0], src.size[1]);
@@ -708,6 +792,10 @@ export class AreaDragTool extends ToolBase {
       let t = b.t;
 
       let nsa = screen.splitArea(dst, t, b.horiz);
+
+      if (b.side === 'l' || b.side === 't') {
+        nsa = dst;
+      }
 
       if (can_rip) {
         //console.log("replacing");
@@ -755,7 +843,7 @@ export class AreaDragTool extends ToolBase {
       let onclick = b.onclick = (e) => {
         let type = e.type.toLowerCase();
 
-        if ((e.type == "mousedown" || e.type == "mouseup") && e.button != 0) {
+        if ((e.type === "mousedown" || e.type === "mouseup") && e.button !== 0) {
           return; //another handler will cancel
         }
 
@@ -775,8 +863,6 @@ export class AreaDragTool extends ToolBase {
       b.addEventListener("mouseup", onclick);
 
       b.addEventListener("mouseenter", (e) => {
-        console.log("mouse enter box");
-
         if (this.curbox !== undefined) {
           if (this.curbox.rect) {
             this.curbox.rect.remove()
@@ -792,14 +878,11 @@ export class AreaDragTool extends ToolBase {
         b.rect = this.getBoxRect(b);
         this.curbox = b;
 
-        console.log("setting hcolor");
         b.setColor(hcolor);
         //b.style["background-color"] = hcolor;
       })
 
       b.addEventListener("mouseleave", (e) => {
-        console.log("mouse leave box");
-
         if (b.rect) {
           b.rect.remove();
           b.rect = undefined;
@@ -936,6 +1019,10 @@ export class AreaDragTool extends ToolBase {
     }
   }
 
+  on_pointerup(e) {
+    this.on_mouseup(e);
+  }
+
   on_mouseup(e) {
     console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
 
@@ -954,13 +1041,13 @@ export class AreaDragTool extends ToolBase {
   }
 
   modalStart(ctx) {
-    super.modalStart(ctx);
+    super.modalStart(...arguments);
 
     let screen = this.screen;
 
     this.overdraw.clear();
 
-    if (this.sarea) {
+    if (this.sarea && !this.excludeAreas.has(this.sarea)) {
       let sa = this.sarea;
       let box = this.overdraw.rect(sa.pos, sa.size, "rgba(100, 100, 100, 0.5)");
 
@@ -968,8 +1055,72 @@ export class AreaDragTool extends ToolBase {
     }
 
     for (let sa of screen.sareas) {
+      if (this.excludeAreas.has(sa)) {
+        continue;
+      }
+
       this.makeBoxes(sa);
     }
+  }
+
+  on_keydown(e) {
+    switch (e.keyCode){
+      case keymap["Escape"]:
+      case keymap["Enter"]:
+      case keymap["Space"]:
+        this.finish();
+        break;
+    }
+  }
+}
+
+
+export class AreaMoveAttachTool extends AreaDragTool {
+  constructor(screen, sarea, mpos) {
+    super(screen, sarea, mpos);
+
+    this.excludeAreas = new Set([sarea]);
+
+    this.dropArea = true;
+    this.first = true;
+    this.sarea = sarea;
+    this.mpos = new Vector2(mpos);
+    this.start_mpos2 = new Vector2(mpos);
+    this.start_pos = new Vector2(sarea.pos);
+  }
+
+  on_mousemove(e) {
+    let dx = e.x - this.start_mpos2[0];
+    let dy = e.y - this.start_mpos2[1];
+
+    let sarea = this.sarea;
+
+    if (this.first) {
+      this.start_mpos2 = new Vector2([e.x, e.y]);
+      this.first = false;
+      return;
+    }
+
+
+    sarea.pos[0] = this.start_pos[0] + dx;
+    sarea.pos[1] = this.start_pos[1] + dy;
+
+    sarea.loadFromPosSize();
+
+    this.mpos.loadXY(e.x, e.y);
+    super.on_mousemove(e);
+  }
+
+  on_mouseup(e) {
+    super.on_mouseup(e);
+  }
+
+  on_mousedown(e) {
+    super.on_mousedown(e);
+  }
+
+  on_keydown(e) {
+    super.on_keydown(e);
   }
 }
 

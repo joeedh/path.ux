@@ -26,7 +26,7 @@ export function makePopupArea(area_class, screen, args={}) {
   sarea.style["border-style"] = sarea.getDefault("border-style");
   sarea.style["border-width"] = sarea.getDefault("border-width") + "px";
 
-  sarea.area.flag |= AreaFlags.FLOATING | AreaFlags.INDEPENDENT;
+  sarea.flag |= AreaFlags.FLOATING | AreaFlags.INDEPENDENT;
 
   screen.appendChild(sarea);
   sarea.setCSS();

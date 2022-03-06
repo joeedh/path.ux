@@ -25,7 +25,7 @@ import {keymap} from "../path-controller/util/simple_events.js";
 
 import {AreaDocker} from './AreaDocker.js';
 
-import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
+import {snap, snapi, ScreenBorder, ScreenVert, ScreenHalfEdge, SnapLimit} from "./FrameManager_mesh.js";
 
 export {ScreenBorder, ScreenVert, ScreenHalfEdge} from "./FrameManager_mesh.js";
 import {theme, PackFlags} from '../core/ui_base.js';
@@ -89,6 +89,7 @@ export class Screen extends ui_base.UIBase {
   constructor() {
     super();
 
+    this.snapLimit = 1;
     this.fullScreen = true;
 
     //all widget shadow DOMs reference this style tag,
@@ -186,32 +187,6 @@ export class Screen extends ui_base.UIBase {
     */
   }
 
-  setPosSize(x, y, w, h) {
-    this.pos[0] = x;
-    this.pos[1] = y;
-    this.size[0] = w;
-    this.size[1] = h;
-
-    this.setCSS();
-    this._internalRegenAll();
-  }
-
-  setSize(w, h) {
-    this.size[0] = w;
-    this.size[1] = h;
-
-    this.setCSS();
-    this._internalRegenAll();
-  }
-
-  setPos(x, y) {
-    this.pos[0] = x;
-    this.pos[1] = y;
-
-    this.setCSS();
-    this._internalRegenAll();
-  }
-
   get borders() {
     let this2 = this;
 
@@ -272,6 +247,32 @@ export class Screen extends ui_base.UIBase {
 
   static newSTRUCT() {
     return UIBase.createElement(this.define().tagname);
+  }
+
+  setPosSize(x, y, w, h) {
+    this.pos[0] = x;
+    this.pos[1] = y;
+    this.size[0] = w;
+    this.size[1] = h;
+
+    this.setCSS();
+    this._internalRegenAll();
+  }
+
+  setSize(w, h) {
+    this.size[0] = w;
+    this.size[1] = h;
+
+    this.setCSS();
+    this._internalRegenAll();
+  }
+
+  setPos(x, y) {
+    this.pos[0] = x;
+    this.pos[1] = y;
+
+    this.setCSS();
+    this._internalRegenAll();
   }
 
   init() {
@@ -518,7 +519,7 @@ export class Screen extends ui_base.UIBase {
   popupMenu(menu, x, y) {
     startMenu(menu, x, y);
 
-    for (let i=0; i<3; i++) {
+    for (let i = 0; i < 3; i++) {
       menu.flushSetCSS();
       menu.flushUpdate();
     }
@@ -535,7 +536,7 @@ export class Screen extends ui_base.UIBase {
   popup(owning_node, elem_or_x, y, closeOnMouseOut = true, popupDelay = 5) {
     let ret = this._popup(...arguments);
 
-    for (let i=0; i<2; i++) {
+    for (let i = 0; i < 2; i++) {
       ret.flushUpdate();
       ret.flushSetCSS();
     }
@@ -599,7 +600,7 @@ export class Screen extends ui_base.UIBase {
 
     ret.style["z-index"] = 205;
     ret.style["position"] = UIBase.PositionKey;
-    ret.style["left"] =  x + "px";
+    ret.style["left"] = x + "px";
     ret.style["top"] = y + "px";
 
     document.body.appendChild(ret);
@@ -1550,30 +1551,32 @@ export class Screen extends ui_base.UIBase {
     this.setCSS();
   }
 
+  /** merges sarea into the screen area opposite to sarea*/
   collapseArea(sarea, border) {
     let sarea2;
 
     if (!border) {
       for (let b of sarea._borders) {
         let sarea2 = b.getOtherSarea(sarea);
-        if (!sarea2) {
-          continue;
-        }
 
-        let mask = 1 << sarea2._borders.indexOf(b);
-        let lock = sarea2.borderLock & mask;
-
-        if (!lock && !(sarea2.flag & AreaFlags.NO_COLLAPSE)) {
+        if (sarea2 && !b.locked) {
           border = b;
           break;
         }
       }
+    } else if (border.locked) {
+      console.warn("Cannot remove screen border");
     }
 
     console.warn("SAREA2", border, sarea2, sarea2 !== sarea);
 
     if (border) {
       sarea2 = border.getOtherSarea(sarea);
+
+      if (!sarea2) {
+        console.error("Error merging sarea");
+        return;
+      }
 
       let size1 = new Vector2(sarea.pos).add(sarea.size);
       let size2 = new Vector2(sarea2.pos).add(sarea2.size);
@@ -1659,7 +1662,9 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
-  regenScreenMesh() {
+  regenScreenMesh(snapLimit = SnapLimit) {
+    this.snapLimit = snapLimit;
+
     this.regenBorders();
   }
 
@@ -1731,7 +1736,7 @@ export class Screen extends ui_base.UIBase {
   killScreenVertex(v) {
     this.screenverts.remove(v);
 
-    delete this._edgemap[ScreenVert.hash(v)];
+    delete this._edgemap[ScreenVert.hash(v, undefined, this.snapLimit)];
     delete this._idmap[v._id];
 
     return this;
@@ -2487,10 +2492,10 @@ export class Screen extends ui_base.UIBase {
     }
   }
 
-  getScreenVert(pos, added_id = "") {
-    let key = ScreenVert.hash(pos, added_id);
+  getScreenVert(pos, added_id = "", floating = false) {
+    let key = ScreenVert.hash(pos, added_id, this.snapLimit);
 
-    if (!(key in this._vertmap)) {
+    if (floating || !(key in this._vertmap)) {
       let v = new ScreenVert(pos, this.idgen++, added_id);
 
       this._vertmap[key] = v;
@@ -2571,6 +2576,7 @@ export class Screen extends ui_base.UIBase {
     if (!(hash in this._edgemap)) {
       let sb = this._edgemap[hash] = UIBase.createElement("screenborder-x");
 
+      sb._hash = hash;
       sb.screen = this;
       sb.v1 = v1;
       sb.v2 = v2;
@@ -2629,18 +2635,24 @@ export class Screen extends ui_base.UIBase {
     src.size[0] = dst.size[0];
     src.size[1] = dst.size[1];
 
-    src.loadFromPosSize();
+    src.floating = dst.floating;
+    src._borders = dst._borders;
+    src._verts = dst._verts;
 
     if (this.sareas.indexOf(src) < 0) {
-      this.appendChild(src);
+      this.sareas.push(src);
+      this.shadow.appendChild(src);
     }
 
-    src.setCSS();
+    if (this.sareas.active === dst) {
+      this.sareas.active = src;
+    }
 
     //this.sareas.remove(dst);
     //dst.remove();
 
-    this.removeArea(dst);
+    this.sareas.remove(dst);
+    dst.remove();
 
     this.regenScreenMesh();
     this.snapScreenVerts();
@@ -2744,16 +2756,17 @@ export class Screen extends ui_base.UIBase {
   }
 
   removeAreaTool(border) {
-    console.log("screen split!");
-
     let tool = new FrameManager_ops.RemoveAreaTool(this, border);
     //let tool = new FrameManager_ops.AreaDragTool(this, undefined, this.mpos);
     tool.start();
   }
 
-  splitTool() {
-    console.log("screen split!");
+  moveAttachTool(sarea, mpos = this.mpos, elem, pointerId) {
+    let tool = new FrameManager_ops.AreaMoveAttachTool(this, sarea, mpos);
+    tool.start(elem, pointerId);
+  }
 
+  splitTool() {
     let tool = new FrameManager_ops.SplitTool(this);
     //let tool = new FrameManager_ops.AreaDragTool(this, undefined, this.mpos);
     tool.start();
@@ -2765,8 +2778,6 @@ export class Screen extends ui_base.UIBase {
       return;
     }
 
-    console.log("screen area drag!");
-
     let mpos = this.mpos;
     let tool = new FrameManager_ops.AreaDragTool(this, this.sareas.active, mpos);
 
@@ -2777,6 +2788,118 @@ export class Screen extends ui_base.UIBase {
     for (let sarea of this.sareas) {
       sarea.makeBorders(this);
     }
+  }
+
+  cleanupBorders() {
+    let del = new Set();
+
+    for (let b of this.screenborders) {
+      if (b.halfedges.length === 0) {
+        del.add(b);
+      }
+    }
+
+    for (let b of del) {
+      delete this._edgemap[b._hash];
+      HTMLElement.prototype.remove.call(b);
+    }
+  }
+
+  mergeBlankAreas() {
+    for (let b of this.screenborders) {
+      if (b.locked) {
+        continue;
+      }
+
+      let blank, sarea;
+
+      for (let he of b.halfedges) {
+        if (!he.sarea.area) {
+          blank = he.sarea;
+          sarea = b.getOtherSarea(blank);
+
+          let axis = b.horiz ^ 1;
+
+          if (blank && sarea && blank.size[axis] !== sarea.size[axis]) {
+            blank = sarea = undefined;
+          }
+
+          if (blank && sarea) {
+            break;
+          } else {
+            blank = undefined;
+            sarea = undefined;
+          }
+        }
+      }
+
+      if (blank && sarea && blank !== sarea) {
+        this.collapseArea(blank, b);
+      }
+    }
+
+    this.cleanupBorders();
+  }
+
+  floatArea(area) {
+    let sarea = area.parentWidget;
+
+    /* already floating? */
+    if (sarea.floating) {
+      return sarea;
+    }
+
+    sarea.editors.remove(area);
+    delete sarea.editormap[area.constructor.define().areaname];
+    sarea.area = undefined;
+
+    HTMLElement.prototype.remove.call(area);
+
+    let sarea2 = UIBase.createElement("screenarea-x", true);
+    sarea2.floating = true;
+
+    sarea2.pos = new Vector2(sarea.pos);
+    sarea2.pos.addScalar(5);
+
+    sarea2.size = new Vector2(sarea.size);
+
+    sarea2.editors.push(area);
+    sarea2.editormap[area.constructor.define().areaname] = area;
+
+    sarea2.shadow.appendChild(area);
+    sarea2.area = area;
+
+    area.push_ctx_active();
+    area.pop_ctx_active();
+
+    area.pos = sarea2.pos;
+    area.size = sarea2.size;
+    area.parentWidget = sarea2;
+    area.owning_sarea = sarea2;
+
+    sarea.flushSetCSS();
+    sarea.flushUpdate();
+
+    sarea2.flushSetCSS();
+    sarea2.flushUpdate();
+
+    this.appendChild(sarea2);
+
+    if (sarea.editors.length > 0) {
+      let area2 = sarea.editors[0];
+      sarea.switch_editor(area2.constructor);
+
+      sarea.flushSetCSS();
+      sarea.flushUpdate();
+    }
+
+    sarea2.loadFromPosSize();
+    sarea2.bringToFront();
+
+    this.mergeBlankAreas();
+    this.cleanupBorders();
+
+    return sarea2;
   }
 
   on_keydown(e) {

@@ -393,7 +393,7 @@ export class Canvas {
     let docolor = this.drawflag & DrawFlags.COLOR;
 
     if (idstart === undefined) {
-      console.log("full canvas draw");
+      //console.log("full canvas draw");
       this.asyncFullDraw(g, canvas);
       return;
       g.save();
