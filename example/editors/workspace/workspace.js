@@ -115,17 +115,17 @@ export class WorkspaceEditor extends Editor {
 
     let row2 = table.row();
 
-    row2._useDataPathUndo = true;
+    row2.useDataPathUndo = true;
     row2.prop("workspace.brush.size"); //, PackFlags.SIMPLE_NUMSLIDERS);
     row2.prop("workspace.brush.soft");
 
     row2 = table.row();
-    row2._useDataPathUndo = true;
+    row2.useDataPathUndo = true;
     row2.prop("workspace.brush.spacing")
     row2.prop("workspace.brush.color[3]").setAttribute("name", "Opacity");
 
     row2 = table.row()
-    row2._useDataPathUndo = true;
+    row2.useDataPathUndo = true;
     row2.prop("workspace.brush.color");
 
     this.setCSS();
