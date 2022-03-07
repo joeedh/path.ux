@@ -11283,6 +11283,62 @@ var config1 = /*#__PURE__*/Object.freeze({
 let modalstack$1 = [];
 let singleMouseCBs = {};
 
+function debugDomEvents() {
+  let cbsymbol = Symbol("event-callback");
+  let thsymbol = Symbol("debug-info");
+  
+  let idgen = 0;
+  
+  function init(et) {
+    if (!et[thsymbol]) {
+      et[thsymbol] = idgen++;
+    }
+  }
+  
+  function getkey(et, type, options) {
+    init(et);
+    return "" + et[thsymbol] + ":" + type + ":" + JSON.stringify(options);
+  }
+  
+  let addEventListener = EventTarget.prototype.addEventListener;
+  let removeEventListener = EventTarget.prototype.removeEventListener;
+  
+  EventTarget.prototype.addEventListener = function(type, cb, options) {
+    init(this);
+    
+    if (!cb[cbsymbol]) {
+      cb[cbsymbol] = new Set();
+    }
+    
+    let key = getkey(this, type, options);
+    cb[cbsymbol].add(key);
+    
+    return addEventListener.call(this, type, cb, options);
+  };
+  
+  EventTarget.prototype.removeEventListener = function(type, cb, options) {
+    init(this);
+    
+    if (!cb[cbsymbol]) {
+      console.error("Invalid callback in removeEventListener for", type, this, cb);
+      return;
+    }
+    
+    let key = getkey(this, type, options);
+    
+    if (!cb[cbsymbol].has(key)) {
+      console.error("Callback not in removeEventListener;", type, this, cb);
+      return;
+    }
+    
+    cb[cbsymbol].delete(key);
+    
+    return removeEventListener.call(this, type, cb, options);
+  };
+}
+
+//debugDomEvents();
+
 function singletonMouseEvents() {
   let keys = ["mousedown", "mouseup", "mousemove"];
   for (let k of keys) {
@@ -11828,6 +11884,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
       print_stack$1(error);
 
       console.log("attempting fallback");
+      
       for (let k in ret.pointer) {
         if (k !== "elem" && k !== "pointerId") {
           elem.removeEventListener(k, ret.pointer[k]);
@@ -11954,16 +12011,16 @@ function popModalLight(state) {
   if (state.pointer) {
     let elem = state.pointer.elem;
 
-    for (let k in state.pointer) {
-      if (k !== "elem" && k !== "pointerId") {
-        elem.removeEventListener(k, state.pointer[k]);
-      }
-    }
-
     try {
       elem.releasePointerCapture(state.pointer.pointerId);
     } catch (error) {
       print_stack$1(error);
+    }
+
+    for (let k in state.pointer) {
+      if (k !== "elem" && k !== "pointerId") {
+        elem.removeEventListener(k, state.pointer[k]);
+      }
     }
   }
 }
@@ -12292,9 +12349,19 @@ function isModalHead(owner) {
 
 class EventHandler {
   pushPointerModal(dom, pointerId) {
+    if (this._modalstate) {
+      console.warn("pushPointerModal called twiced!");
+      return;
+    }
+    
     this._modalstate = pushPointerModal(this, dom, pointerId);
   }
   pushModal(dom, _is_root) {
+    if (this._modalstate) {
+      console.warn("pushModal called twiced!");
+      return;
+    }
+    
     this._modalstate = pushModalLight(this);
   }
   
@@ -28606,6 +28673,11 @@ window.__theme = theme;
 
 let registered_has_happened = false;
 let tagPrefix = "";
+const EventCBSymbol = Symbol("wrapped event callback");
+
+function calcElemCBKey(elem, type, options) {
+  return elem._id + ":" + type + ":" + JSON.stringify(options || {});
+}
 
 /**
  * Sets tag prefix for pathux html elements.
@@ -29724,6 +29796,8 @@ class UIBase$f extends HTMLElement {
 
       p = p.parentWidget;
     }
+    
+    return p;
   }
 
   addEventListener(type, cb, options) {
@@ -29764,14 +29838,18 @@ class UIBase$f extends HTMLElement {
       }
     };
 
-    cb._cb = cb2;
+    if (!cb[EventCBSymbol]) {
+      cb[EventCBSymbol] = new Map();
+    }
+    
+    let key = calcElemCBKey(this, type, options);
+    cb[EventCBSymbol].set(key, cb2);
 
     if (exports.DEBUG.paranoidEvents) {
       this.__cbs.push([type, cb2, options]);
     }
 
-
-    return super.addEventListener(type, cb, options);
+    return super.addEventListener(type, cb2, options);
   }
 
   removeEventListener(type, cb, options) {
@@ -29788,10 +29866,17 @@ class UIBase$f extends HTMLElement {
       console.log("removeEventListener", type, this._id, options);
     }
 
-    if (!cb._cb) {
+    let key = calcElemCBKey(this, type, options);
+
+    if (!cb[EventCBSymbol] || !cb[EventCBSymbol].has(key)) {
       return super.removeEventListener(type, cb, options);
     } else {
-      return super.removeEventListener(type, cb._cb, options);
+      let cb2 = cb[EventCBSymbol].get(key);
+      
+      let ret = super.removeEventListener(type, cb2, options);
+      
+      cb[EventCBSymbol].delete(key);
+      return ret;
     }
   }
 
@@ -49953,6 +50038,9 @@ class TabBar extends UIBase$4 {
   setCSS() {
     super.setCSS(false);
 
+    /* create a no stacking context */
+    this.style["contain"] = "layout";
+    
     let r = this.getDefault("TabBarRadius");
     r = r !== undefined ? r : 3;
 
