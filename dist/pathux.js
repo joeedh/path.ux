@@ -11792,7 +11792,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
     function make_pointer(k) {
       let k2 = "on_" + k;
 
-      ret.pointer[k] = function(e) {
+      ret.pointer[k] = function (e) {
         if (obj[k2] !== undefined) {
           obj[k2](e);
         }
@@ -11822,7 +11822,46 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
       }
     }
 
-    elem.setPointerCapture(pointerId);
+    try {
+      elem.setPointerCapture(pointerId);
+    } catch (error) {
+      print_stack$1(error);
+
+      console.log("attempting fallback");
+      for (let k in ret.pointer) {
+        if (k !== "elem" && k !== "pointerId") {
+          elem.removeEventListener(k, ret.pointer[k]);
+        }
+      }
+
+      delete ret.pointer;
+
+      modalstack.push(ret);
+      popModalLight(ret);
+
+      for (let k in obj) {
+        if (k === "pointercancel" || k === "pointerend" || k === "pointerstart") {
+          continue;
+        }
+
+        if (k.startsWith("pointer")) {
+          let k2 = k.replace(/pointer/, "mouse");
+          if (k2 in obj) {
+            console.warn("warning, existing mouse handler", k2);
+            continue;
+          }
+
+          let v = obj[k];
+          obj[k] = undefined;
+
+          obj[k2] = v;
+        }
+      }
+
+      console.log(obj);
+
+      return pushModalLight(obj, autoStopPropagation);
+    }
   }
 
   modalstack.push(ret);
@@ -29123,7 +29162,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -30022,6 +30061,81 @@ class UIBase$2 extends HTMLElement {
     });
   }
 
+  /* Why is the DOM API argument order swapped here?*/
+  replaceChild(newnode, node) {
+    for (let i = 0; i < this.childNodes.length; i++) {
+      if (this.childNodes[i] === node) {
+        super.replaceChild(newnode, node);
+        return true;
+      }
+    }
+
+    for (let i = 0; i < this.shadow.childNodes.length; i++) {
+      if (this.shadow.childNodes[i] === node) {
+        this.shadow.replaceChild(newnode, node);
+        return true;
+      }
+    }
+
+    console.error("Unknown child node", node);
+    return false;
+  }
+
+  swapWith(b) {
+    let p1 = this.parentNode;
+    let p2 = b.parentNode;
+
+    if (this.parentWidget && (p1 === this.parentWidget.shadow) || p1 === null) {
+      p1 = this.parentWidget;
+    }
+
+    if (b.parentWidget && (p2 === b.parentWidget.shadow) || p2 === null) {
+      p2 = b.parentWidget;
+    }
+
+    if (!p1 || !p2) {
+      console.error("Invalid call to UIBase.prototype.swapWith", this, b, p1, p2);
+      return false;
+    }
+
+    let getPos = (n, p) => {
+      let i = Array.prototype.indexOf.call(p.childNodes, n);
+
+      if (i < 0 && p.shadow) {
+        p = p.shadow;
+        i = Array.prototype.indexOf.call(p.childNodes, n);
+      }
+
+      return [i, p];
+    };
+
+    let [i1, n1] = getPos(this, p1);
+    let [i2, n2] = getPos(b, p2);
+
+    console.log("i1, i2, n1, n2", i1, i2, n1, n2);
+
+    let tmp1 = document.createElement("div");
+    let tmp2 = document.createElement("div");
+
+    n1.insertBefore(tmp1, this);
+    n2.insertBefore(tmp2, b);
+
+    //HTMLElement.prototype.remove.call(this);
+    //HTMLElement.prototype.remove.call(b);
+
+    n1.replaceChild(b, tmp1);
+    n2.replaceChild(this, tmp2);
+
+    let ptmp = this.parentWidget;
+    this.parentWidget = b.parentWidget;
+    b.parentWidget = ptmp;
+
+    tmp1.remove();
+    tmp2.remove();
+
+    return true;
+  }
+
   traverse(type_or_set) {
     let this2 = this;
 
@@ -30547,7 +30661,7 @@ class UIBase$2 extends HTMLElement {
 
   }
 
-  pushModal(handlers = this, autoStopPropagation = true) {
+  pushModal(handlers = this, autoStopPropagation = true, pointerId = undefined, pointerElem = this) {
     if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       this.popModal();
@@ -30558,7 +30672,7 @@ class UIBase$2 extends HTMLElement {
     contextWrangler.copy(this.ctx);
 
     function bindFunc(func) {
-      return function() {
+      return function () {
         _areaWrangler.copyTo(contextWrangler);
 
         return func.apply(handlers, arguments);
@@ -30578,7 +30692,12 @@ class UIBase$2 extends HTMLElement {
     //this._modalstack.push(this.ctx);
     //this.ctx = this.ctx.toLocked();
 
-    this._modaldata = pushModalLight(handlers2, autoStopPropagation);
+    if (pointerId !== undefined && pointerElem) {
+      this._modaldata = pushPointerModal(handlers2, autoStopPropagation);
+    } else {
+      this._modaldata = pushModalLight(handlers2, autoStopPropagation);
+    }
+
     return this._modaldata;
   }
 
@@ -30938,8 +31057,8 @@ class UIBase$2 extends HTMLElement {
     func._doOnce(this, trace);
   }
 
-  float(x = 0, y = 0, zindex = undefined) {
-    this.style.position = UIBase$2.PositionKey;
+  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase$2.PositionKey) {
+    this.style.position = positionKey;
 
     this.style.left = x + "px";
     this.style.top = y + "px";
@@ -31980,7 +32099,179 @@ let parsepx$2 = parsepx$1;
 
 exports.DEBUG.buttonEvents = true;
 
-class Button extends UIBase$3 {
+class ButtonEventBase extends UIBase$3 {
+  constructor() {
+    super();
+
+    this._auto_depress = true;
+    this._highlight = false;
+    this._pressed = false;
+  }
+
+  bindEvents() {
+    let press_gen = 0;
+    let depress;
+
+    let press = (e) => {
+      e.stopPropagation();
+
+      if (!this.modalRunning) {
+        let this2 = this;
+
+        this.pushModal({
+          on_pointerdown(e) {
+            this.end(e);
+          },
+
+          on_pointerup(e) {
+            this.end(e);
+          },
+
+          on_pointercancel(e) {
+            console.warn("Pointer cancel in button");
+            this2.popModal();
+          },
+
+          on_keydown(e) {
+            switch (e.keyCode) {
+              case keymap$1["Enter"]:
+              case keymap$1["Escape"]:
+              case keymap$1["Space"]:
+                this.end();
+                break;
+            }
+          },
+
+          end(e) {
+            if (!this2.modalRunning) {
+              return;
+            }
+
+            this2.popModal();
+            depress(e);
+          }
+        }, undefined, e.pointerId);
+      }
+
+      if (exports.DEBUG.buttonEvents) {
+        console.log("button press", this._pressed, this.disabled, e.button);
+      }
+
+      if (this.disabled) return;
+
+      this._pressed = true;
+
+      if (isMobile() && this.onclick && e.button === 0) {
+        this.onclick();
+      }
+
+      if (this._onpress) {
+        this._onpress(this);
+      }
+
+      this._redraw();
+
+      e.preventDefault();
+    };
+
+    depress = (e) => {
+      if (exports.DEBUG.buttonEvents)
+        console.log("button depress", e.button, e.was_touch);
+
+      if (this._auto_depress) {
+        this._pressed = false;
+
+        if (this.disabled) return;
+
+        this._redraw();
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isMobile() || e.type === "mouseup" && e.button) {
+        return;
+      }
+
+      this._redraw();
+
+      if (exports.DEBUG.buttonEvents)
+        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
+
+      if (this.onclick && e.touches !== undefined) {
+        this.onclick(this);
+      }
+
+      this.undoBreakPoint();
+    };
+
+    this.addEventListener("click", () => {
+      this._pressed = false;
+      this._highlight = false;
+      this._redraw();
+    });
+
+    this.addEventListener("pointerdown", press, {captured : true, passive : false});
+    this.addEventListener("pointerup", depress, {captured : true, passive : false});
+    this.addEventListener("pointerover", (e) => {
+      if (this.disabled)
+        return;
+
+      this._highlight = true;
+      this._redraw();
+    });
+
+    this.addEventListener("pointerout", (e) => {
+      if (this.disabled)
+        return;
+
+      this._highlight = false;
+      this._redraw();
+    });
+
+    this.addEventListener("keydown", (e) => {
+      if (this.disabled) return;
+
+      if (exports.DEBUG.buttonEvents)
+        console.log(e.keyCode);
+
+      switch (e.keyCode) {
+        case 27: //escape
+          this.blur();
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+        case 32: //spacebar
+        case 13: //enter
+          this.click();
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+      }
+    });
+
+    this.addEventListener("focusin", () => {
+      if (this.disabled) return;
+
+      this._focus = 1;
+      this._redraw();
+      this.focus();
+    });
+
+    this.addEventListener("blur", () => {
+      if (this.disabled) return;
+
+      this._focus = 0;
+      this._redraw();
+    });
+  }
+
+  _redraw() {
+
+  }
+}
+
+class Button extends ButtonEventBase {
   constructor() {
     super();
 
@@ -31994,7 +32285,6 @@ class Button extends UIBase$3 {
     this._highlight = false;
 
     this._auto_depress = true;
-    this._modalstate = undefined;
 
     this._last_name = undefined;
     this._last_disabled = undefined;
@@ -32066,149 +32356,6 @@ class Button extends UIBase$3 {
     super.click();
   }
 
-  bindEvents() {
-    let press_gen = 0;
-    let depress;
-
-    let press = (e) => {
-      e.stopPropagation();
-
-      if (!this.modalRunning) {
-        let this2 = this;
-
-        this.pushModal({
-          on_mousedown(e) {
-            this.end(e);
-          },
-          on_mouseup(e) {
-            this.end(e);
-          },
-
-          end(e) {
-            if (!this2._modalstate) {
-              return;
-            }
-
-            this.popModal();
-            this2._modalstate = undefined;
-
-            depress(e);
-          }
-        });
-      }
-
-      if (exports.DEBUG.buttonEvents) {
-        console.log("button press", this._pressed, this.disabled, e.button);
-      }
-
-      if (this.disabled) return;
-
-      this._pressed = true;
-
-      if (isMobile() && this.onclick && e.button === 0) {
-        this.onclick();
-      }
-
-      if (this._onpress) {
-        this._onpress(this);
-      }
-
-      this._redraw();
-
-      e.preventDefault();
-    };
-
-    depress = (e) => {
-      if (exports.DEBUG.buttonEvents)
-        console.log("button depress", e.button, e.was_touch);
-
-      if (this._auto_depress) {
-        this._pressed = false;
-
-        if (this.disabled) return;
-
-        this._redraw();
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (isMobile() || e.type === "mouseup" && e.button) {
-        return;
-      }
-
-      this._redraw();
-
-      if (exports.DEBUG.buttonEvents)
-        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
-
-      if (this.onclick && e.touches !== undefined) {
-        this.onclick(this);
-      }
-
-      this.undoBreakPoint();
-    };
-
-    this.addEventListener("click", () => {
-      this._pressed = false;
-      this._highlight = false;
-      this._redraw();
-    });
-
-    this.addEventListener("mousedown", press, {captured : true, passive : false});
-    this.addEventListener("mouseup", depress, {captured : true, passive : false});
-    this.addEventListener("mouseover", (e) => {
-      if (this.disabled)
-        return;
-
-      this._highlight = true;
-      this._redraw();
-    });
-
-    this.addEventListener("mouseout", (e) => {
-      if (this.disabled)
-        return;
-
-      this._highlight = false;
-      this._redraw();
-    });
-
-    this.addEventListener("keydown", (e) => {
-      if (this.disabled) return;
-
-      if (exports.DEBUG.buttonEvents)
-        console.log(e.keyCode);
-
-      switch (e.keyCode) {
-        case 27: //escape
-          this.blur();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-        case 32: //spacebar
-        case 13: //enter
-          this.click();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-      }
-    });
-
-    this.addEventListener("focusin", () => {
-      if (this.disabled) return;
-
-      this._focus = 1;
-      this._redraw();
-      this.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      if (this.disabled) return;
-
-      this._focus = 0;
-      this._redraw();
-    });
-  }
 
   _redraw() {
     this.setCSS();
@@ -32245,7 +32392,7 @@ class Button extends UIBase$3 {
 UIBase$3.register(Button);
 
 //use .setAttribute("linear") to disable nonlinear sliding
-class OldButton extends UIBase$3 {
+class OldButton extends ButtonEventBase {
   constructor() {
     super();
 
@@ -32368,7 +32515,7 @@ class OldButton extends UIBase$3 {
     this.overrideDefault("border-radius", val);
   }
 
-  bindEvents() {
+  old_bindEvents() {
     let press_gen = 0;
 
     let press = (e) => {
@@ -32932,7 +33079,6 @@ class TextBox$1 extends TextBoxBase {
     if (this.onend) {
       this.onend(ok);
     } else {
-      debugger;
       this._updatePathVal(this.dom.value);
     }
 
@@ -33726,6 +33872,28 @@ class IconButton extends UIBase$5 {
 
     this._last_iconsheet = undefined;
 
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap$3["Enter"]:
+        case keymap$3["Space"]:
+          this.click();
+          break;
+      }
+    });
+  }
+
+  click() {
+    if (this._onpress) {
+      let rect = this.getClientRects();
+      let x = rect.x + rect.width*0.5;
+      let y = rect.y + rect.height*0.5;
+
+      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+
+      this._onpress(e);
+    }
+
+    super.click();
   }
 
   get customIcon() {
@@ -33999,6 +34167,11 @@ class IconCheck extends IconButton {
       this.updateDrawCheck();
       this.setCSS();
     }
+  }
+
+  click() {
+    super.click();
+    this.checked ^= true;
   }
 
   get icon() {
@@ -34311,6 +34484,8 @@ function debugmenu() {
 class Menu extends UIBase$6 {
   constructor() {
     super();
+
+    this.parentMenu = undefined;
 
     this._was_clicked = false;
 
@@ -34805,6 +34980,7 @@ class Menu extends UIBase$6 {
 
       li._isMenu = true;
       li._menu = item;
+      item.parentMenu = this;
 
       item.hidden = false;
       item.container = this.container;
@@ -35120,6 +35296,9 @@ class DropBox extends OldButton {
 
   init() {
     super.init();
+
+    this.setAttribute("menu-button", "true");
+
     this.updateWidth();
   }
 
@@ -35467,7 +35646,6 @@ class DropBox extends OldButton {
         }
 
         let r = menu.dom.getBoundingClientRect();
-        console.error("R", r.height, r);
 
         if (!r || r.height < 55) {
           return;
@@ -35651,13 +35829,13 @@ class MenuWrangler {
     this.timer = undefined;
   }
 
+  get closetimer() {
+    return this._closetimer;
+  }
+
   set closetimer(v) {
     debugmenu("set closertime", v);
     this._closetimer = v;
-  }
-
-  get closetimer() {
-    return this._closetimer;
   }
 
   get menu() {
@@ -35903,7 +36081,20 @@ class MenuWrangler {
       return;
     }
 
-    if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
+    let destroy = element.hasAttribute("menu-button") && element.hasAttribute("simple");
+    destroy = destroy && element.menu !== this.menu;
+
+    if (destroy) {
+      /* check that dropbox doesn't contain our parent menu either */
+
+      let menu2 = this.menu;
+      while (menu2 !== element.menu) {
+        menu2 = menu2.parentMenu;
+        destroy = destroy && menu2 !== element.menu;
+      }
+    }
+
+    if (destroy) {
       //destroy entire menu stack
       this.endMenus();
 
@@ -35924,7 +36115,7 @@ class MenuWrangler {
         break;
       }
 
-      if (w instanceof DropBox && w._menu === this.menu) {
+      if (w.hasAttribute("menu-button") && w.menu === this.menu) {
         ok = true;
         break;
       }
@@ -36104,6 +36295,8 @@ function createMenu(ctx, title, templ) {
 }
 
 function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
+  menuWrangler.endMenus();
+
   let screen = menu.ctx.screen;
   let con = menu._popup = screen.popup(undefined, x, y, false, safetyDelay);
   con.noMarginsOrPadding();
@@ -39821,8 +40014,6 @@ class ToolBase extends ToolOp {
   }
 
   popModal() {
-    console.log("popModal called");
-
     this.overdraw.end();
     popModalLight(this.modaldata);
     this.modaldata = undefined;
@@ -41798,7 +41989,18 @@ class Area$1 extends UIBase$2 {
   }
 
   makeHeader(container, add_note_area = true, make_draggable = true) {
-    let row = this.header = container.row();
+    let switcherRow;
+    let row;
+    let helpRow;
+
+    if (!(this.flag & AreaFlags.NO_SWITCHER) && exports.useAreaTabSwitcher) {
+      let col = this.header = container.col();
+
+      switcherRow = helpRow = col.row();
+      row = col.row();
+    } else {
+      row = helpRow = this.header = container.row();
+    }
 
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
       let callmenu = ScreenBorder.bindBorderMenu(this.header, true);
@@ -41814,8 +42016,8 @@ class Area$1 extends UIBase$2 {
       });
     }
 
-    row.remove();
-    container._prepend(row);
+    this.header.remove();
+    container._prepend(this.header);
 
     row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
 
@@ -41833,11 +42035,18 @@ class Area$1 extends UIBase$2 {
     row.style["padding"] = "0px";
 
     if (!(this.flag & AreaFlags.NO_SWITCHER)) {
-      this.switcher = this.makeAreaSwitcher(row);
+      if (this.switcher) {
+        this.switcher.remove();
+      }
+      this.switcher = this.makeAreaSwitcher(exports.useAreaTabSwitcher ? switcherRow : row);
     }
 
     if (isMobile() || exports.addHelpPickers) {
-      this.helppicker = row.helppicker();
+      if (this.helppicker) {
+        this.helppicker.remove();
+      }
+
+      this.helppicker = helpRow.helppicker();
       this.helppicker.iconsheet = 0;
     }
 
@@ -41846,8 +42055,6 @@ class Area$1 extends UIBase$2 {
       notef.ctx = this.ctx;
       row._add(notef);
     }
-
-    this.header = row;
 
     /* don't do normal dragging for tab switchers */
     if (exports.useAreaTabSwitcher) {
@@ -42196,7 +42403,7 @@ class ScreenArea extends UIBase$2 {
   }
 
   get flag() {
-    let flag = this._flag & (AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+    let flag = this._flag & (AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
 
     if (this.area) {
       flag |= this.area.flag;
@@ -42206,11 +42413,11 @@ class ScreenArea extends UIBase$2 {
   }
 
   set flag(v) {
-    this._flag &= ~(AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
-    this._flag |= v & (AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+    this._flag &= ~(AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
+    this._flag |= v & (AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
 
     if (this.area) {
-      this.area.flag |= v & ~(AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+      this.area.flag |= v & ~(AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
     }
   }
 
@@ -42450,6 +42657,7 @@ class ScreenArea extends UIBase$2 {
 
       cpy.parentWidget = ret;
       ret.editors.push(cpy);
+      ret.editormap[cpy.constructor.define().areaname] = cpy;
 
       if (area === this.area) {
         ret.area = cpy;
@@ -48549,7 +48757,7 @@ class TabDragEvent extends PointerEvent {
 
 /* subclass HTMLElement so tabs can be used as the .target
 *  member of events*/
-class TabItem extends HTMLElement {
+class TabItem extends UIBase$d {
   constructor() {
     super();
 
@@ -48588,6 +48796,18 @@ class TabItem extends HTMLElement {
 
     this.abssize = new Vector2$9();
     this.abspos = new Vector2$9();
+
+    this.addEventListener("pointerdown", (e) => {
+      this.parentWidget.on_pointerdown(e);
+    });
+
+    this.addEventListener("pointermove", (e) => {
+      this.parentWidget.on_pointermove(e);
+    });
+
+    this.addEventListener("pointerup", (e) => {
+      this.parentWidget.on_pointerup(e);
+    });
   }
 
   static define() {
@@ -48645,8 +48865,26 @@ class TabItem extends HTMLElement {
       top: p[1], right: p[0] + s[0], bottom: p[1] + s[1]
     }];
   }
-}
 
+  setCSS() {
+    let dpi = UIBase$d.getDPI();
+    let x = this.pos[0]/dpi;
+    let y = this.pos[1]/dpi;
+    let w = this.size[0]/dpi;
+    let h = this.size[1]/dpi;
+
+    this.style["background-color"] = "transparent";
+
+    this.style["margin"] = this.style["padding"] = "0px";
+    this.style["position"] = "absolute";
+    this.style["pointer-events"] = "auto";
+
+    this.style["left"] = x + "px";
+    this.style["top"] = y + "px";
+    this.style["width"] = w + "px";
+    this.style["height"] = h + "px";
+  }
+}
 UIBase$d.internalRegister(TabItem);
 
 class ModalTabMove extends EventHandler {
@@ -48696,28 +48934,21 @@ class ModalTabMove extends EventHandler {
   }
 
   on_pointerleave(e) {
-    console.log("pointerleave!");
   }
   on_pointerenter(e) {
-    console.log("pointerenter!");
   }
   on_pointerenter(e) {
-    console.log("pointerexit!");
   }
   on_pointerstart(e) {
-    console.log("pointerstart!");
   }
   on_pointerend(e) {
-    console.log("pointerend!");
   }
 
   on_pointerdown(e) {
-    console.log("pointerdown!");
     this.finish();
   }
 
   on_pointercancel(e) {
-    console.warn("pointercancel!", e);
     this.finish();
   }
 
@@ -48726,7 +48957,6 @@ class ModalTabMove extends EventHandler {
   }
 
   on_pointermove(e) {
-    console.log("pointermove!");
     return this._on_move(e, e.x, e.y);
   }
 
@@ -48847,9 +49077,9 @@ class ModalTabMove extends EventHandler {
     let next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : undefined;
     let prev = ti > 0 ? tbar.tabs[ti - 1] : undefined;
 
-    if (next !== undefined && tab.pos[axis] > next.pos[axis]) {
+    if (next !== undefined && next.movable && tab.pos[axis] > next.pos[axis]) {
       tbar.swapTabs(tab, next);
-    } else if (prev !== undefined && tab.pos[axis] < prev.pos[axis] + prev.size[axis]*0.5) {
+    } else if (prev !== undefined && prev.movable && tab.pos[axis] < prev.pos[axis] + prev.size[axis]*0.5) {
       tbar.swapTabs(tab, prev);
     }
 
@@ -48922,100 +49152,115 @@ class TabBar extends UIBase$d {
 
     let mx, my;
 
-    let do_element = (e) => {
-      for (let tab of this.tabs) {
-        let ok;
-
-        if (this.horiz) {
-          ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
-        } else {
-          ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
-        }
-
-        if (ok && this.tabs.highlight !== tab) {
-          this.tabs.highlight = tab;
-          this.update(true);
-        }
-      }
-    };
-
-    let do_mouse = (e) => {
-      let r = this.canvas.getClientRects()[0];
-
-      mx = e.x - r.x;
-      my = e.y - r.y;
-
-      let dpi = this.getDPI();
-
-      mx *= dpi;
-      my *= dpi;
-
-      do_element(e);
-
-      const is_mdown = e.type === "mousedown";
-      if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
-        e.preventDefault();
-      }
-    };
-
     this.canvas.addEventListener("pointermove", (e) => {
-      let r = this.canvas.getClientRects()[0];
-      do_mouse(e);
-
-      e.preventDefault();
-      e.stopPropagation();
+      this.on_pointermove(e);
     }, false);
 
 
-    let doclick = (e, handler, is_touch) => {
-      do_mouse(e);
-
-      if (e.defaultPrevented) {
-        return;
-      }
-
-      if (debug$1) console.log("mdown");
-
-      if (e.button !== 0) {
-        return;
-      }
-
-      let ht = this.tabs.highlight;
-
-      let acte = {};
-      for (let k in e) {
-        if (k === "defaultPrevented" || k === "cancelBubble") {
-          continue;
-        }
-
-        acte[k] = e[k];
-      }
-
-      acte.target = ht;
-      acte = new PointerEvent("tabactive", acte);
-
-      let e2 = ht.sendEvent("tabclick", e);
-
-      if (e2.defaultPrevented) {
-        acte.preventDefault();
-      }
-
-      if (ht !== undefined && this.tool === undefined) {
-        this.setActive(ht, acte);
-
-        if (this.movableTabs && !acte.defaultPrevented) {
-          this._startMove(ht, e);
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
     this.canvas.addEventListener("pointerdown", (e) => {
-      doclick(e, do_mouse);
+      this.on_pointerdown(e);
     });
   }
+
+  _doelement(e, mx, my){
+    for (let tab of this.tabs) {
+      let ok;
+
+      if (this.horiz) {
+        ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
+      } else {
+        ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
+      }
+
+      if (ok && this.tabs.highlight !== tab) {
+        this.tabs.highlight = tab;
+        this.update(true);
+      }
+    }
+  }
+
+  _domouse (e) {
+    let r = this.canvas.getClientRects()[0];
+
+    let mx = e.x - r.x;
+    let my = e.y - r.y;
+
+    let dpi = this.getDPI();
+
+    mx *= dpi;
+    my *= dpi;
+
+    this._doelement(e, mx, my);
+
+    const is_mdown = e.type === "mousedown";
+    if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
+      e.preventDefault();
+    }
+  }
+
+  _doclick (e) {
+    this._domouse(e);
+
+    if (e.defaultPrevented) {
+      return;
+    }
+
+    if (debug$1) console.log("mdown");
+
+    if (e.button !== 0) {
+      return;
+    }
+
+    let ht = this.tabs.highlight;
+
+    let acte = {};
+    for (let k in e) {
+      if (k === "defaultPrevented" || k === "cancelBubble") {
+        continue;
+      }
+
+      acte[k] = e[k];
+    }
+
+    acte.target = ht;
+    acte.pointerId = e.pointerId;
+
+    acte = new PointerEvent("tabactive", acte);
+
+    let e2 = ht.sendEvent("tabclick", e);
+
+    if (e2.defaultPrevented) {
+      acte.preventDefault();
+    }
+
+    if (ht !== undefined && this.tool === undefined) {
+      this.setActive(ht, acte);
+
+      if (this.movableTabs && !acte.defaultPrevented) {
+        this._startMove(ht, e);
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  on_pointerdown(e) {
+    this._doclick(e);
+  }
+
+  on_pointermove(e) {
+    let r = this.canvas.getClientRects()[0];
+    this._domouse(e);
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  on_pointerup(e) {
+
+  }
+
 
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
@@ -49043,11 +49288,11 @@ class TabBar extends UIBase$d {
   }
 
   set tool(v) {
-    console.warn("SET TOOL", v, this._id);
+    //console.warn("SET TOOL", v, this._id);
     this._tool = v;
   }
 
-  _startMove(tab=this.tabs.active, event) {
+  _startMove(tab=this.tabs.active, event, pointerId=event ? event.pointerId : undefined, pointerElem=tab) {
     if (this.movableTabs) {
       let e2 = tab.sendEvent("tabdragstart", event);
 
@@ -49062,8 +49307,8 @@ class TabBar extends UIBase$d {
       let edom = this.getScreen();
       let tool = this.tool = new ModalTabMove(tab, this, edom);
 
-      if (event && event instanceof PointerEvent) {
-        tool.pushPointerModal(this.canvas, event.pointerId);
+      if (event && pointerElem && pointerId !== undefined) {
+        tool.pushPointerModal(pointerElem, pointerId);
       } else {
         tool.pushModal(edom, false);
       }
@@ -49204,6 +49449,10 @@ class TabBar extends UIBase$d {
 
   addTab(name, id, tooltip = "", movable) {
     let tab = UIBase$d.createElement("tab-item-x", true);
+
+    this.shadow.appendChild(tab);
+    tab.parentWidget = this;
+
 
     tab.name = name;
     tab.id = id;
@@ -49456,6 +49705,10 @@ class TabBar extends UIBase$d {
     } else {
       this.canvas.style["height"] = x + "px";
       this.canvas.style["width"] = h + "px";
+    }
+
+    for (let tab of this.tabs) {
+      tab.setCSS();
     }
 
     //this.canvas.width = x;
@@ -53443,7 +53696,7 @@ class CanvasOverdraw extends UIBase$2 {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
+    this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -53471,7 +53724,7 @@ class CanvasOverdraw extends UIBase$2 {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
+    this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -53523,12 +53776,12 @@ class Overdraw extends UIBase$2 {
       node.appendChild(this);
     }
 
-    this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
-    this.style["left"] = "0px";
-    this.style["top"] = "0px";
+    this.style["position"] = "relative";
+    //this.style["left"] = "0px";
+    //this.style["top"] = "0px";
+    this.style["margin"] = this.style["padding"] = "0px";
 
     this.style["width"] = "100%"; //screen.size[0] + "px";
     this.style["height"] = "100%"; //screen.size[1] + "px";
@@ -53554,7 +53807,7 @@ class Overdraw extends UIBase$2 {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
+    this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -54432,6 +54685,12 @@ UIBase$2.internalRegister(DragBox);
 
 let ignore = 0;
 
+function dockerdebug() {
+  if (exports.DEBUG.areadocker) {
+    console.warn(...arguments);
+  }
+}
+
 window.testSnapScreenVerts = function (arg) {
   let screen = CTX.screen;
 
@@ -54472,27 +54731,27 @@ class AreaDocker extends Container {
       return;
     }
 
-    this.needsRebuild = false;
-
-    console.log("Rebuild", this.getArea());
-    let uidata = saveUIData(this, "switcherTabs");
-
-    this.clear();
-    let tabs = this.tbar = this.tabs();
-
-    tabs.onchange = this.tab_onchange.bind(this);
-
-    let tab;
-
     let sarea = this.getArea().parentWidget;
     if (!sarea) {
       this.needsRebuild = true;
       return;
     }
 
+    this.needsRebuild = false;
     this.ignoreChange++;
 
-    console.log(sarea.editors);
+    dockerdebug("Rebuild", this.getArea());
+
+    let uidata = sarea.switcherData = saveUIData(this, "switcherTabs");
+
+    this.clear();
+
+    let tabs = this.tbar = this.tabs();
+    tabs.onchange = this.tab_onchange.bind(this);
+
+    let tab;
+
+    dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors);
 
     sarea.switcherData = uidata;
 
@@ -54518,7 +54777,7 @@ class AreaDocker extends Container {
           start_mpos.load(this.mpos);
         }
 
-        console.log("drag start!", start_mpos, e);
+        dockerdebug("tab drag start!", start_mpos, e);
       });
       tab._tab.addEventListener("tabdragmove", (e) => {
         this.mpos.loadXY(e.x, e.y);
@@ -54528,24 +54787,27 @@ class AreaDocker extends Container {
         let x = e.x, y = e.y;
 
         let m = 8;
-        if (x < rect.x-m || x > rect.x+rect.width +m || y < rect.y-m || y >= rect.y+rect.height + m) {
-          console.log("detach!");
+        if (x < rect.x - m || x > rect.x + rect.width + m || y < rect.y - m || y >= rect.y + rect.height + m) {
+          dockerdebug("tab detach!");
           e.preventDefault(); //end dragging
           this.detach(e);
         }
-        //console.log(x-rect.x, y-rect.y);
-
-        //console.log("drag!", e.x, e.y);
       });
       tab._tab.addEventListener("tabdragend", (e) => {
 
         this.mpos.loadXY(e.x, e.y);
-        console.log("drag end!", e);
+        dockerdebug("tab drag end!", e);
       });
     }
 
     tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false).noSwitch();
-    tab.ontabclick = e => this.on_addclick(e);
+    dockerdebug("Add Menu Tab", tab);
+
+    let icon = this.addicon = tab._tab;
+
+    icon.ontabclick = e => this.on_addclick(e);
+    icon.setAttribute("menu-button", "true");
+    icon.setAttribute("simple", "true");
 
     this.loadTabData(uidata);
 
@@ -54563,7 +54825,7 @@ class AreaDocker extends Container {
 
     let mpos = event ? new Vector2([event.x, event.y]) : this.mpos;
 
-    console.log("EVENT", event);
+    dockerdebug("EVENT", event);
 
     if (event && event instanceof PointerEvent) {
       this.ctx.screen.moveAttachTool(sarea, mpos, document.body, event.pointerId);
@@ -54574,14 +54836,18 @@ class AreaDocker extends Container {
 
   loadTabData(uidata) {
     this.ignoreChange++;
-    loadUIData(this.tbar, uidata);
+    loadUIData(this, uidata);
     this.ignoreChange--;
   }
 
   on_addclick(e) {
-    console.log("E", e.target, e);
     let mpos = new Vector2([e.x, e.y]);
-    this.addTabMenu(e.target, mpos);
+
+    if (this.addicon.menu && !this.addicon.menu.closed) {
+      this.addicon.menu.close();
+    } else {
+      this.addTabMenu(e.target, mpos);
+    }
   }
 
   tab_onchange(tab, event) {
@@ -54589,7 +54855,7 @@ class AreaDocker extends Container {
       return;
     }
 
-    console.warn("EVENT", event);
+    dockerdebug("EVENT", event);
 
     if (event && (!(event instanceof PointerEvent) || event.pointerType === "mouse")) {
       //event.preventDefault(); //prevent tab dragging
@@ -54650,6 +54916,16 @@ class AreaDocker extends Container {
 
     if (this.needsRebuild) {
       this.rebuild();
+      return;
+    }
+
+    if (this.addicon) {
+      let tabs = this.tbar.tbar.tabs;
+      let idx = tabs.indexOf(this.addicon);
+      if (idx !== tabs.length - 1) {
+        this.tbar.tbar.swapTabs(this.addicon, tabs[tabs.length - 1]);
+
+      }
     }
 
     if (!active || active._id !== area._id) {
@@ -54671,7 +54947,7 @@ class AreaDocker extends Container {
   }
 
   select(areaId, event) {
-    console.log("Tab Select!", areaId);
+    dockerdebug("Tab Select!", areaId);
 
     this.ignoreChange++;
 
@@ -54689,7 +54965,7 @@ class AreaDocker extends Container {
       }
     }
 
-    if (newarea === area) {
+    if (newarea === area || !newarea.switcher) {
       return;
     }
 
@@ -54723,9 +54999,9 @@ class AreaDocker extends Container {
     }
 
     if (newparent instanceof UIBase$2) {
-      newparent.shadow.appendChild(newarea.switcher);
+      newparent.shadow.prepend(newarea.switcher);
     } else {
-      newparent.appendChild(newarea.switcher);
+      newparent.prepend(newarea.switcher);
     }
 
     area.switcher.parentWidget = parentw;
@@ -54734,17 +55010,19 @@ class AreaDocker extends Container {
     area.switcher.tbar._ensureNoModal();
     newarea.switcher.tbar._ensureNoModal();
 
-    if (newarea.switcher) {
-      newarea.switcher.loadTabData(uidata);
-      newarea.switcher.setCSS();
-      newarea.switcher.update();
+    newarea.switcher.loadTabData(uidata);
+    area.switcher.loadTabData(uidata);
 
-      if (event && (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)) {
-        event.preventDefault();
-        event.stopPropagation();
-        newarea.switcher.tbar._startMove(undefined, event);
-      }
+    newarea.switcher.setCSS();
+    newarea.switcher.update();
+
+    if (event && (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)) {
+      event.preventDefault();
+      event.stopPropagation();
+      newarea.switcher.tbar._startMove(undefined, event);
     }
+
+    //console.log(this._id);
 
     sarea.switcherData = uidata;
     this.ignoreChange--;
@@ -54753,7 +55031,7 @@ class AreaDocker extends Container {
   addTabMenu(tab, mpos) {
     let rect = tab.getClientRects()[0];
 
-    console.log(tab, tab.getClientRects());
+    dockerdebug(tab, tab.getClientRects());
 
     if (!mpos) {
       mpos = this.ctx.screen.mpos;
@@ -54789,14 +55067,16 @@ class AreaDocker extends Container {
     }
 
     if (!rect) {
-      console.log("no rect!");
+      console.warn("no rect!");
       return;
     }
 
-    console.log(mpos[0], mpos[1], rect.x, rect.y);
+    dockerdebug(mpos[0], mpos[1], rect.x, rect.y);
 
     menu.onselect = (val) => {
-      console.log("menu select", val, this.getArea().parentWidget);
+      dockerdebug("menu select", val, this.getArea().parentWidget);
+
+      this.addicon.menu = undefined;
 
       let sarea = this.getArea().parentWidget;
       if (sarea) {
@@ -54809,7 +55089,7 @@ class AreaDocker extends Container {
           let uidata = saveUIData(this.tbar, "switcherTabs");
           sarea.switchEditor(cls);
 
-          console.log("switching", cls);
+          dockerdebug("switching", cls);
           area = sarea.area;
           area._init();
 
@@ -54825,7 +55105,7 @@ class AreaDocker extends Container {
           this.ignoreChange = Math.max(this.ignoreChange - 1, 0);
         }
 
-        console.log("AREA", area.switcher, area);
+        dockerdebug("AREA", area.switcher, area);
 
         if (area.switcher) {
           this.ignoreChange++;
@@ -54838,7 +55118,7 @@ class AreaDocker extends Container {
             area.switcher._init();
             area.switcher.update();
 
-            console.log("loading data", ud);
+            dockerdebug("loading data", ud);
             area.switcher.loadTabData(ud);
 
             area.switcher.rebuild(); //make sure plus tab is at end
@@ -54852,7 +55132,10 @@ class AreaDocker extends Container {
       }
     };
 
-    startMenu(menu, mpos[0] - 35, rect.y + rect.height - 5, false, 0);
+    this.addicon.menu = menu;
+
+    startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
+    return menu;
   }
 }
 
@@ -60369,5 +60652,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform$3
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox$1 as TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$1 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets, Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags, PropSubTypes$1 as PropSubTypes, PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen$2 as Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox$1 as TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$2 as UIBase, UIFlags, UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2, Vector3, Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$2 as color2css, color2web, compatMap, config$1 as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack, mySafeJSONParse$1 as mySafeJSONParse, mySafeJSONStringify$1 as mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs$1 as nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$1 as parsepx, parseutil, pathDebugEvent, pathParser, platform$2 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter$1 as registerToolStackGetter, report$1 as report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
