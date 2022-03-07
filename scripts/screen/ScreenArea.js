@@ -479,9 +479,11 @@ export class Area extends ui_base.UIBase {
 
     if (!(this.flag & AreaFlags.NO_SWITCHER)) {
       if (this.switcher) {
-        this.switcher.remove();
+        //add back same switcher
+        switcherRow.add(this.switcher);
+      } else {
+        this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow : row);
       }
-      this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow : row);
     }
 
     if (util.isMobile() || cconst.addHelpPickers) {

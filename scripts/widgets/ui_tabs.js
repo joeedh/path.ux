@@ -688,7 +688,7 @@ export class TabBar extends UIBase {
     try {
       if (active !== undefined) {
         this.setActive(active);
-      } else {
+      } else if (this.tabs.length > 0) {
         this.setActive(this.tabs[0]);
       }
     } catch (error) {
