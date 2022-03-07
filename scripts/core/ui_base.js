@@ -79,6 +79,11 @@ window.__theme = theme;
 
 let registered_has_happened = false;
 let tagPrefix = "";
+const EventCBSymbol = Symbol("wrapped event callback");
+
+function calcElemCBKey(elem, type, options) {
+  return elem._id + ":" + type + ":" + JSON.stringify(options || {});
+}
 
 /**
  * Sets tag prefix for pathux html elements.
@@ -1199,6 +1204,8 @@ export class UIBase extends HTMLElement {
 
       p = p.parentWidget;
     }
+    
+    return p;
   }
 
   addEventListener(type, cb, options) {
@@ -1239,14 +1246,18 @@ export class UIBase extends HTMLElement {
       }
     };
 
-    cb._cb = cb2;
+    if (!cb[EventCBSymbol]) {
+      cb[EventCBSymbol] = new Map();
+    }
+    
+    let key = calcElemCBKey(this, type, options);
+    cb[EventCBSymbol].set(key, cb2);
 
     if (cconst.DEBUG.paranoidEvents) {
       this.__cbs.push([type, cb2, options]);
     }
 
-
-    return super.addEventListener(type, cb, options);
+    return super.addEventListener(type, cb2, options);
   }
 
   removeEventListener(type, cb, options) {
@@ -1263,10 +1274,17 @@ export class UIBase extends HTMLElement {
       console.log("removeEventListener", type, this._id, options);
     }
 
-    if (!cb._cb) {
+    let key = calcElemCBKey(this, type, options);
+
+    if (!cb[EventCBSymbol] || !cb[EventCBSymbol].has(key)) {
       return super.removeEventListener(type, cb, options);
     } else {
-      return super.removeEventListener(type, cb._cb, options);
+      let cb2 = cb[EventCBSymbol].get(key);
+      
+      let ret = super.removeEventListener(type, cb2, options);
+      
+      cb[EventCBSymbol].delete(key);
+      return ret;
     }
   }
 

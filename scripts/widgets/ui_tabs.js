@@ -1211,6 +1211,9 @@ export class TabBar extends UIBase {
   setCSS() {
     super.setCSS(false);
 
+    /* create a no stacking context */
+    this.style["contain"] = "layout";
+    
     let r = this.getDefault("TabBarRadius");
     r = r !== undefined ? r : 3;
 
