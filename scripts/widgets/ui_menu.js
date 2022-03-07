@@ -1171,7 +1171,7 @@ export class DropBox extends OldButton {
 
     /* need to figure out a better way to pop up a menu
     *  above a given y position */
-    if (0) {// y > screen.size[1]*0.5 && !this.searchMenuMode) {
+    if (cconst.menusCanPopupAbove && y > screen.size[1]*0.5 && !this.searchMenuMode) {
       let con = screen.popup(this, 500, 400, false, 0);
 
       con.style["z-index"] = "-10000";
@@ -1247,6 +1247,8 @@ export class DropBox extends OldButton {
     if (this.getAttribute("simple")) {
       let color;
 
+      this.g.clearRect(0, 0, this.dom.width, this.dom.height);
+      
       if (this._highlight) {
         ui_base.drawRoundBox2(this, {canvas: this.dom, g: this.g, color: this.getDefault("BoxHighlight")});
       }

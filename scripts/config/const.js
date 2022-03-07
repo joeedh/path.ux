@@ -1,7 +1,7 @@
 let _clipdata = {
-  name : "nothing",
-  mime : "nothing",
-  data : undefined
+  name: "nothing",
+  mime: "nothing",
+  data: undefined
 };
 
 let _clipboards = {};
@@ -17,16 +17,17 @@ window.setInterval(() => {
 
   cb.read().then((data) => {
     for (let item of data) {
-      for (let i=0; i<item.types.length; i++) {
+      for (let i = 0; i < item.types.length; i++) {
         let type = item.types[i];
 
         if (!(type in _clipboards)) {
           _clipboards[type] = {
-            name : type,
-            mime : type,
-            data : undefined
+            name: type,
+            mime: type,
+            data: undefined
           };
-        };
+        }
+        ;
 
         item.getType(type).then((blob) => new Response(blob).text()).then((text) => {
           _clipboards[type].data = text;
@@ -38,7 +39,8 @@ window.setInterval(() => {
       //});
     }
     //_clipdata.mime =
-  }).catch(function() {});
+  }).catch(function () {
+  });
 }, 200);
 
 let exports = {
@@ -47,7 +49,7 @@ let exports = {
 
     desiredMimes is either a string, or an array of strings
    */
-  getClipboardData(desiredMimes="text/plain") {
+  getClipboardData(desiredMimes = "text/plain") {
     if (typeof desiredMimes === "string") {
       desiredMimes = [desiredMimes];
     }
@@ -65,9 +67,9 @@ let exports = {
    */
   setClipboardData(name, mime, data) {
     _clipboards[mime] = {
-      name : name,
-      mime : mime,
-      data : data
+      name: name,
+      mime: mime,
+      data: data
     };
 
     let clipboard = navigator.clipboard;
@@ -77,7 +79,7 @@ let exports = {
 
     try {
       clipboard.write([new ClipboardItem({
-        [mime] : new Blob([data], {type : mime})
+        [mime]: new Blob([data], {type: mime})
       })]).catch((error) => {
         //try pushing through text/plain
         if (mime.startsWith("text") && mime !== "text/plain") {
@@ -91,39 +93,40 @@ let exports = {
       console.log("failed to write to system clipboard");
     }
   },
-  colorSchemeType : "light",
-  docManualPath : "../simple_docsys/doc_build/",
-  
+  colorSchemeType: "light",
+  docManualPath  : "../simple_docsys/doc_build/",
+
   //add textboxes to rollar sliders,
   //note that  users can also double click them to
   //enter text as well
-  useNumSliderTextboxes : true,
+  useNumSliderTextboxes: true,
 
-  numSliderArrowLimit : 3, //threshold to check if numslider arrow was clicked
-  simpleNumSliders : false,
+  numSliderArrowLimit: 3, //threshold to check if numslider arrow was clicked
+  simpleNumSliders   : false,
 
-  menu_close_time : 500,
-  doubleClickTime : 500,
+  menusCanPopupAbove: false,
+  menu_close_time   : 500,
+  doubleClickTime   : 500,
 
   //timeout for press-and-hold (touch) version of double clicking
-  doubleClickHoldTime : 750,
-  DEBUG : {
-    paranoidEvents: false,
-    screenborders: false,
-    areaContextPushes: false,
-    allBordersMovable: false,
-    doOnce: false,
-    modalEvents : false,
-    areaConstraintSolver : false,
-    datapaths : false,
+  doubleClickHoldTime: 750,
+  DEBUG              : {
+    paranoidEvents      : false,
+    screenborders       : false,
+    areaContextPushes   : false,
+    allBordersMovable   : false,
+    doOnce              : false,
+    modalEvents         : false,
+    areaConstraintSolver: false,
+    datapaths           : false,
 
-    domEvents : false,
-    domEventAddRemove : false,
+    domEvents        : false,
+    domEventAddRemove: false,
 
-    debugUIUpdatePerf : false, //turns async FrameManager.update_intern loop into sync
+    debugUIUpdatePerf: false, //turns async FrameManager.update_intern loop into sync
 
-    screenAreaPosSizeAccesses : false,
-    buttonEvents : false,
+    screenAreaPosSizeAccesses: false,
+    buttonEvents             : false,
 
     /*
     customWindowSize: {
@@ -133,17 +136,17 @@ let exports = {
   },
 
   //auto load 1d bspline templates, can hurt startup time
-  autoLoadSplineTemplates : true,
+  autoLoadSplineTemplates: true,
 
-  addHelpPickers : true,
+  addHelpPickers: true,
 
-  useAreaTabSwitcher: false,
-  autoSizeUpdate : true,
+  useAreaTabSwitcher : false,
+  autoSizeUpdate     : true,
   showPathsInToolTips: true,
 
-  enableThemeAutoUpdate : true,
+  enableThemeAutoUpdate: true,
 
-  loadConstants : function(args) {
+  loadConstants: function (args) {
     for (let k in args) {
       if (k === "loadConstants")
         continue;

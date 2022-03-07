@@ -589,6 +589,8 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
+    value = Math.min(Math.max(value, this.range[0]), this.range[1]);
+    
     this._value = value;
 
     if (this.hasAttribute("integer")) {

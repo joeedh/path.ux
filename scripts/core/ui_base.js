@@ -1866,6 +1866,10 @@ export class UIBase extends HTMLElement {
 
     this._forEachChildWidget((c) => {
       if (force || !(c.packflag & PackFlags.NO_UPDATE)) {
+        if (!c.ctx) {
+          c.ctx = this.ctx;
+        }
+        
         c.flushUpdate(force);
       }
     });
