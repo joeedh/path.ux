@@ -1617,3 +1617,7 @@ nstructjs.register(ScreenArea, "pathux.ScreenArea");
 ui_base.UIBase.internalRegister(ScreenArea);
 
 ui_base._setAreaClass(Area);
+
+export function setScreenClass(cls) {
+  Screen = cls;
+}

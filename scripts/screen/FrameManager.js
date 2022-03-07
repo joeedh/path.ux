@@ -40,7 +40,7 @@ import '../widgets/ui_colorpicker2.js';
 import '../widgets/ui_noteframe.js';
 import '../widgets/ui_listbox.js';
 import '../widgets/ui_table.js';
-import {AreaFlags} from "./ScreenArea.js";
+import {AreaFlags, setScreenClass} from "./ScreenArea.js";
 import {checkForTextBox} from '../widgets/ui_textbox.js';
 import {startMenu} from '../widgets/ui_menu.js';
 
@@ -3053,7 +3053,6 @@ ui_base.UIBase.internalRegister(Screen);
 
 ScreenArea.setScreenClass(Screen);
 _setScreenClass(Screen);
-
 
 let get_screen_cb;
 let _on_keydown;
