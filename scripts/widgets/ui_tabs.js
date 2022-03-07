@@ -29,7 +29,7 @@ class TabDragEvent extends PointerEvent {
 
 /* subclass HTMLElement so tabs can be used as the .target
 *  member of events*/
-export class TabItem extends HTMLElement {
+export class TabItem extends UIBase {
   constructor() {
     super();
 
@@ -68,6 +68,18 @@ export class TabItem extends HTMLElement {
 
     this.abssize = new Vector2();
     this.abspos = new Vector2();
+
+    this.addEventListener("pointerdown", (e) => {
+      this.parentWidget.on_pointerdown(e);
+    });
+
+    this.addEventListener("pointermove", (e) => {
+      this.parentWidget.on_pointermove(e);
+    });
+
+    this.addEventListener("pointerup", (e) => {
+      this.parentWidget.on_pointerup(e);
+    });
   }
 
   static define() {
@@ -125,8 +137,26 @@ export class TabItem extends HTMLElement {
       top: p[1], right: p[0] + s[0], bottom: p[1] + s[1]
     }];
   }
-}
 
+  setCSS() {
+    let dpi = UIBase.getDPI();
+    let x = this.pos[0]/dpi;
+    let y = this.pos[1]/dpi;
+    let w = this.size[0]/dpi;
+    let h = this.size[1]/dpi;
+
+    this.style["background-color"] = "transparent";
+
+    this.style["margin"] = this.style["padding"] = "0px";
+    this.style["position"] = "absolute";
+    this.style["pointer-events"] = "auto";
+
+    this.style["left"] = x + "px";
+    this.style["top"] = y + "px";
+    this.style["width"] = w + "px";
+    this.style["height"] = h + "px";
+  }
+}
 UIBase.internalRegister(TabItem);
 
 export class ModalTabMove extends events.EventHandler {
@@ -176,28 +206,21 @@ export class ModalTabMove extends events.EventHandler {
   }
 
   on_pointerleave(e) {
-    console.log("pointerleave!");
   }
   on_pointerenter(e) {
-    console.log("pointerenter!");
   }
   on_pointerenter(e) {
-    console.log("pointerexit!");
   }
   on_pointerstart(e) {
-    console.log("pointerstart!");
   }
   on_pointerend(e) {
-    console.log("pointerend!");
   }
 
   on_pointerdown(e) {
-    console.log("pointerdown!");
     this.finish();
   }
 
   on_pointercancel(e) {
-    console.warn("pointercancel!", e);
     this.finish();
   }
 
@@ -206,7 +229,6 @@ export class ModalTabMove extends events.EventHandler {
   }
 
   on_pointermove(e) {
-    console.log("pointermove!");
     return this._on_move(e, e.x, e.y);
   }
 
@@ -327,9 +349,9 @@ export class ModalTabMove extends events.EventHandler {
     let next = ti < tbar.tabs.length - 1 ? tbar.tabs[ti + 1] : undefined;
     let prev = ti > 0 ? tbar.tabs[ti - 1] : undefined;
 
-    if (next !== undefined && tab.pos[axis] > next.pos[axis]) {
+    if (next !== undefined && next.movable && tab.pos[axis] > next.pos[axis]) {
       tbar.swapTabs(tab, next);
-    } else if (prev !== undefined && tab.pos[axis] < prev.pos[axis] + prev.size[axis]*0.5) {
+    } else if (prev !== undefined && prev.movable && tab.pos[axis] < prev.pos[axis] + prev.size[axis]*0.5) {
       tbar.swapTabs(tab, prev);
     }
 
@@ -402,100 +424,115 @@ export class TabBar extends UIBase {
 
     let mx, my;
 
-    let do_element = (e) => {
-      for (let tab of this.tabs) {
-        let ok;
-
-        if (this.horiz) {
-          ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
-        } else {
-          ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
-        }
-
-        if (ok && this.tabs.highlight !== tab) {
-          this.tabs.highlight = tab;
-          this.update(true);
-        }
-      }
-    }
-
-    let do_mouse = (e) => {
-      let r = this.canvas.getClientRects()[0];
-
-      mx = e.x - r.x;
-      my = e.y - r.y;
-
-      let dpi = this.getDPI();
-
-      mx *= dpi;
-      my *= dpi;
-
-      do_element(e);
-
-      const is_mdown = e.type === "mousedown";
-      if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
-        e.preventDefault();
-      }
-    }
-
     this.canvas.addEventListener("pointermove", (e) => {
-      let r = this.canvas.getClientRects()[0];
-      do_mouse(e);
-
-      e.preventDefault();
-      e.stopPropagation();
+      this.on_pointermove(e);
     }, false);
 
 
-    let doclick = (e, handler, is_touch) => {
-      do_mouse(e);
-
-      if (e.defaultPrevented) {
-        return;
-      }
-
-      if (debug) console.log("mdown");
-
-      if (e.button !== 0) {
-        return;
-      }
-
-      let ht = this.tabs.highlight;
-
-      let acte = {};
-      for (let k in e) {
-        if (k === "defaultPrevented" || k === "cancelBubble") {
-          continue;
-        }
-
-        acte[k] = e[k];
-      }
-
-      acte.target = ht;
-      acte = new PointerEvent("tabactive", acte);
-
-      let e2 = ht.sendEvent("tabclick", e);
-
-      if (e2.defaultPrevented) {
-        acte.preventDefault();
-      }
-
-      if (ht !== undefined && this.tool === undefined) {
-        this.setActive(ht, acte);
-
-        if (this.movableTabs && !acte.defaultPrevented) {
-          this._startMove(ht, e);
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-
     this.canvas.addEventListener("pointerdown", (e) => {
-      doclick(e, do_mouse);
+      this.on_pointerdown(e);
     });
   }
+
+  _doelement(e, mx, my){
+    for (let tab of this.tabs) {
+      let ok;
+
+      if (this.horiz) {
+        ok = mx >= tab.pos[0] && mx <= tab.pos[0] + tab.size[0];
+      } else {
+        ok = my >= tab.pos[1] && my <= tab.pos[1] + tab.size[1];
+      }
+
+      if (ok && this.tabs.highlight !== tab) {
+        this.tabs.highlight = tab;
+        this.update(true);
+      }
+    }
+  }
+
+  _domouse (e) {
+    let r = this.canvas.getClientRects()[0];
+
+    let mx = e.x - r.x;
+    let my = e.y - r.y;
+
+    let dpi = this.getDPI();
+
+    mx *= dpi;
+    my *= dpi;
+
+    this._doelement(e, mx, my);
+
+    const is_mdown = e.type === "mousedown";
+    if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
+      e.preventDefault();
+    }
+  }
+
+  _doclick (e) {
+    this._domouse(e);
+
+    if (e.defaultPrevented) {
+      return;
+    }
+
+    if (debug) console.log("mdown");
+
+    if (e.button !== 0) {
+      return;
+    }
+
+    let ht = this.tabs.highlight;
+
+    let acte = {};
+    for (let k in e) {
+      if (k === "defaultPrevented" || k === "cancelBubble") {
+        continue;
+      }
+
+      acte[k] = e[k];
+    }
+
+    acte.target = ht;
+    acte.pointerId = e.pointerId;
+
+    acte = new PointerEvent("tabactive", acte);
+
+    let e2 = ht.sendEvent("tabclick", e);
+
+    if (e2.defaultPrevented) {
+      acte.preventDefault();
+    }
+
+    if (ht !== undefined && this.tool === undefined) {
+      this.setActive(ht, acte);
+
+      if (this.movableTabs && !acte.defaultPrevented) {
+        this._startMove(ht, e);
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  on_pointerdown(e) {
+    this._doclick(e);
+  }
+
+  on_pointermove(e) {
+    let r = this.canvas.getClientRects()[0];
+    this._domouse(e);
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  on_pointerup(e) {
+
+  }
+
 
   static setDefault(e) {
     e.setAttribute("bar_pos", "top");
@@ -523,11 +560,11 @@ export class TabBar extends UIBase {
   }
 
   set tool(v) {
-    console.warn("SET TOOL", v, this._id);
+    //console.warn("SET TOOL", v, this._id);
     this._tool = v;
   }
 
-  _startMove(tab=this.tabs.active, event) {
+  _startMove(tab=this.tabs.active, event, pointerId=event ? event.pointerId : undefined, pointerElem=tab) {
     if (this.movableTabs) {
       let e2 = tab.sendEvent("tabdragstart", event);
 
@@ -542,8 +579,8 @@ export class TabBar extends UIBase {
       let edom = this.getScreen();
       let tool = this.tool = new ModalTabMove(tab, this, edom);
 
-      if (event && event instanceof PointerEvent) {
-        tool.pushPointerModal(this.canvas, event.pointerId);
+      if (event && pointerElem && pointerId !== undefined) {
+        tool.pushPointerModal(pointerElem, pointerId);
       } else {
         tool.pushModal(edom, false);
       }
@@ -684,6 +721,10 @@ export class TabBar extends UIBase {
 
   addTab(name, id, tooltip = "", movable) {
     let tab = UIBase.createElement("tab-item-x", true);
+
+    this.shadow.appendChild(tab);
+    tab.parentWidget = this;
+
 
     tab.name = name;
     tab.id = id;
@@ -936,6 +977,10 @@ export class TabBar extends UIBase {
     } else {
       this.canvas.style["height"] = x + "px";
       this.canvas.style["width"] = h + "px";
+    }
+
+    for (let tab of this.tabs) {
+      tab.setCSS();
     }
 
     //this.canvas.width = x;

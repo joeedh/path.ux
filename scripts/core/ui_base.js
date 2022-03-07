@@ -29,7 +29,7 @@ import * as toolprop from '../path-controller/toolsys/toolprop.js';
 import * as controller from '../path-controller/controller/controller.js';
 import {
   pushModalLight, popModalLight, copyEvent, pathDebugEvent,
-  haveModal, keymap, reverse_keymap
+  haveModal, keymap, reverse_keymap, pushPointerModal
 } from '../path-controller/util/simple_events.js';
 import {getDataPathToolOp} from '../path-controller/controller/controller.js';
 import * as units from './units.js';
@@ -641,7 +641,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector                     = "*") {
+                                border                                                    = "1px groove black", selector = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -1540,6 +1540,81 @@ export class UIBase extends HTMLElement {
     });
   }
 
+  /* Why is the DOM API argument order swapped here?*/
+  replaceChild(newnode, node) {
+    for (let i = 0; i < this.childNodes.length; i++) {
+      if (this.childNodes[i] === node) {
+        super.replaceChild(newnode, node);
+        return true;
+      }
+    }
+
+    for (let i = 0; i < this.shadow.childNodes.length; i++) {
+      if (this.shadow.childNodes[i] === node) {
+        this.shadow.replaceChild(newnode, node);
+        return true;
+      }
+    }
+
+    console.error("Unknown child node", node);
+    return false;
+  }
+
+  swapWith(b) {
+    let p1 = this.parentNode;
+    let p2 = b.parentNode;
+
+    if (this.parentWidget && (p1 === this.parentWidget.shadow) || p1 === null) {
+      p1 = this.parentWidget;
+    }
+
+    if (b.parentWidget && (p2 === b.parentWidget.shadow) || p2 === null) {
+      p2 = b.parentWidget;
+    }
+
+    if (!p1 || !p2) {
+      console.error("Invalid call to UIBase.prototype.swapWith", this, b, p1, p2);
+      return false;
+    }
+
+    let getPos = (n, p) => {
+      let i = Array.prototype.indexOf.call(p.childNodes, n);
+
+      if (i < 0 && p.shadow) {
+        p = p.shadow;
+        i = Array.prototype.indexOf.call(p.childNodes, n);
+      }
+
+      return [i, p];
+    }
+
+    let [i1, n1] = getPos(this, p1);
+    let [i2, n2] = getPos(b, p2);
+
+    console.log("i1, i2, n1, n2", i1, i2, n1, n2);
+
+    let tmp1 = document.createElement("div");
+    let tmp2 = document.createElement("div");
+
+    n1.insertBefore(tmp1, this);
+    n2.insertBefore(tmp2, b);
+
+    //HTMLElement.prototype.remove.call(this);
+    //HTMLElement.prototype.remove.call(b);
+
+    n1.replaceChild(b, tmp1);
+    n2.replaceChild(this, tmp2);
+
+    let ptmp = this.parentWidget;
+    this.parentWidget = b.parentWidget;
+    b.parentWidget = ptmp;
+
+    tmp1.remove();
+    tmp2.remove();
+
+    return true;
+  }
+
   traverse(type_or_set) {
     let this2 = this;
 
@@ -2065,7 +2140,7 @@ export class UIBase extends HTMLElement {
 
   }
 
-  pushModal(handlers = this, autoStopPropagation = true) {
+  pushModal(handlers = this, autoStopPropagation = true, pointerId = undefined, pointerElem = this) {
     if (this._modaldata !== undefined) {
       console.warn("UIBase.prototype.pushModal called when already in modal mode");
       this.popModal();
@@ -2076,7 +2151,7 @@ export class UIBase extends HTMLElement {
     contextWrangler.copy(this.ctx);
 
     function bindFunc(func) {
-      return function() {
+      return function () {
         _areaWrangler.copyTo(contextWrangler);
 
         return func.apply(handlers, arguments);
@@ -2096,7 +2171,12 @@ export class UIBase extends HTMLElement {
     //this._modalstack.push(this.ctx);
     //this.ctx = this.ctx.toLocked();
 
-    this._modaldata = pushModalLight(handlers2, autoStopPropagation);
+    if (pointerId !== undefined && pointerElem) {
+      this._modaldata = pushPointerModal(handlers2, autoStopPropagation);
+    } else {
+      this._modaldata = pushModalLight(handlers2, autoStopPropagation);
+    }
+
     return this._modaldata;
   }
 
@@ -2456,8 +2536,8 @@ export class UIBase extends HTMLElement {
     func._doOnce(this, trace);
   }
 
-  float(x = 0, y = 0, zindex = undefined) {
-    this.style.position = UIBase.PositionKey;
+  float(x = 0, y = 0, zindex = undefined, positionKey = UIBase.PositionKey) {
+    this.style.position = positionKey;
 
     this.style.left = x + "px";
     this.style.top = y + "px";

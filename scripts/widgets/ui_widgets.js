@@ -488,6 +488,28 @@ export class IconButton extends UIBase {
 
     this._last_iconsheet = undefined;
 
+    this.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case keymap["Enter"]:
+        case keymap["Space"]:
+          this.click();
+          break;
+      }
+    });
+  }
+
+  click() {
+    if (this._onpress) {
+      let rect = this.getClientRects();
+      let x = rect.x + rect.width*0.5;
+      let y = rect.y + rect.height*0.5;
+
+      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+
+      this._onpress(e);
+    }
+
+    super.click();
   }
 
   get customIcon() {
@@ -761,6 +783,11 @@ export class IconCheck extends IconButton {
       this.updateDrawCheck();
       this.setCSS();
     }
+  }
+
+  click() {
+    super.click();
+    this.checked ^= true;
   }
 
   get icon() {

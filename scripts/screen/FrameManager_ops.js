@@ -53,8 +53,6 @@ export class ToolBase extends simple_toolsys.ToolOp {
   }
 
   popModal() {
-    console.log("popModal called");
-
     this.overdraw.end();
     popModalLight(this.modaldata);
     this.modaldata = undefined;

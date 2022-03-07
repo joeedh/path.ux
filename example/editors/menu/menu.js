@@ -27,7 +27,6 @@ export class MenuBarEditor extends Editor {
       this.helppicker.iconsheet = 0;
     }
 
-    this.switcher.remove();
     let header = this.header;
     let span = header.row();
 
@@ -97,7 +96,7 @@ export class MenuBarEditor extends Editor {
     areaname : "menu",
     uiname   : "Menu Bar",
     icon     : -1,
-    flag     :  AreaFlags.HIDDEN //hide in editor list
+    flag     :  AreaFlags.HIDDEN|AreaFlags.NO_SWITCHER,
   }}
 };
 Editor.register(MenuBarEditor);

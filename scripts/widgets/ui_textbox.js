@@ -202,7 +202,6 @@ export class TextBox extends TextBoxBase {
     if (this.onend) {
       this.onend(ok);
     } else {
-      debugger;
       this._updatePathVal(this.dom.value);
     }
 

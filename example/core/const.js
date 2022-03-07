@@ -35,6 +35,7 @@ export default {
     screenborders    : 0,
     allBordersMovable: false,
     modalEvents      : true,
+    areadocker       : false,
     /*
     customWindowSize: {
       width: 512, height: 512

@@ -51,7 +51,7 @@ export class CanvasOverdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
+    this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -79,7 +79,7 @@ export class CanvasOverdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
+    this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 
@@ -131,12 +131,12 @@ export class Overdraw extends ui_base.UIBase {
       node.appendChild(this);
     }
 
-    this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
-    this.style["left"] = "0px";
-    this.style["top"] = "0px";
+    this.style["position"] = "relative";
+    //this.style["left"] = "0px";
+    //this.style["top"] = "0px";
+    this.style["margin"] = this.style["padding"] = "0px";
 
     this.style["width"] = "100%" //screen.size[0] + "px";
     this.style["height"] = "100%" //screen.size[1] + "px";
@@ -162,7 +162,7 @@ export class Overdraw extends ui_base.UIBase {
     this.style["display"] = "float";
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "fixed";
+    this.style["position"] = "absolute";
     this.style["left"] = "0px";
     this.style["top"] = "0px";
 

@@ -31,6 +31,8 @@ export class Menu extends UIBase {
   constructor() {
     super();
 
+    this.parentMenu = undefined;
+
     this._was_clicked = false;
 
     this.items = [];
@@ -524,6 +526,7 @@ export class Menu extends UIBase {
 
       li._isMenu = true;
       li._menu = item;
+      item.parentMenu = this;
 
       item.hidden = false;
       item.container = this.container;
@@ -839,6 +842,9 @@ export class DropBox extends OldButton {
 
   init() {
     super.init();
+
+    this.setAttribute("menu-button", "true");
+
     this.updateWidth();
   }
 
@@ -1186,7 +1192,6 @@ export class DropBox extends OldButton {
         }
 
         let r = menu.dom.getBoundingClientRect();
-        console.error("R", r.height, r);
 
         if (!r || r.height < 55) {
           return;
@@ -1370,13 +1375,13 @@ export class MenuWrangler {
     this.timer = undefined;
   }
 
+  get closetimer() {
+    return this._closetimer;
+  }
+
   set closetimer(v) {
     debugmenu("set closertime", v);
     this._closetimer = v;
-  }
-
-  get closetimer() {
-    return this._closetimer;
   }
 
   get menu() {
@@ -1622,7 +1627,20 @@ export class MenuWrangler {
       return;
     }
 
-    if (element instanceof DropBox && element.menu !== this.menu && element.getAttribute("simple")) {
+    let destroy = element.hasAttribute("menu-button") && element.hasAttribute("simple");
+    destroy = destroy && element.menu !== this.menu;
+
+    if (destroy) {
+      /* check that dropbox doesn't contain our parent menu either */
+
+      let menu2 = this.menu;
+      while (menu2 !== element.menu) {
+        menu2 = menu2.parentMenu;
+        destroy = destroy && menu2 !== element.menu;
+      }
+    }
+
+    if (destroy) {
       //destroy entire menu stack
       this.endMenus();
 
@@ -1643,7 +1661,7 @@ export class MenuWrangler {
         break;
       }
 
-      if (w instanceof DropBox && w._menu === this.menu) {
+      if (w.hasAttribute("menu-button") && w.menu === this.menu) {
         ok = true;
         break;
       }
@@ -1823,6 +1841,8 @@ export function createMenu(ctx, title, templ) {
 }
 
 export function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
+  menuWrangler.endMenus();
+
   let screen = menu.ctx.screen;
   let con = menu._popup = screen.popup(undefined, x, y, false, safetyDelay);
   con.noMarginsOrPadding();

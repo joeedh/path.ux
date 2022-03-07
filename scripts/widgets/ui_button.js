@@ -24,7 +24,179 @@ let parsepx = ui_base.parsepx;
 
 cconst.DEBUG.buttonEvents = true;
 
-export class Button extends UIBase {
+export class ButtonEventBase extends UIBase {
+  constructor() {
+    super();
+
+    this._auto_depress = true;
+    this._highlight = false;
+    this._pressed = false;
+  }
+
+  bindEvents() {
+    let press_gen = 0;
+    let depress;
+
+    let press = (e) => {
+      e.stopPropagation();
+
+      if (!this.modalRunning) {
+        let this2 = this;
+
+        this.pushModal({
+          on_pointerdown(e) {
+            this.end(e);
+          },
+
+          on_pointerup(e) {
+            this.end(e);
+          },
+
+          on_pointercancel(e) {
+            console.warn("Pointer cancel in button");
+            this2.popModal();
+          },
+
+          on_keydown(e) {
+            switch (e.keyCode) {
+              case keymap["Enter"]:
+              case keymap["Escape"]:
+              case keymap["Space"]:
+                this.end();
+                break;
+            }
+          },
+
+          end(e) {
+            if (!this2.modalRunning) {
+              return;
+            }
+
+            this2.popModal();
+            depress(e);
+          }
+        }, undefined, e.pointerId);
+      }
+
+      if (cconst.DEBUG.buttonEvents) {
+        console.log("button press", this._pressed, this.disabled, e.button);
+      }
+
+      if (this.disabled) return;
+
+      this._pressed = true;
+
+      if (util.isMobile() && this.onclick && e.button === 0) {
+        this.onclick();
+      }
+
+      if (this._onpress) {
+        this._onpress(this);
+      }
+
+      this._redraw();
+
+      e.preventDefault();
+    };
+
+    depress = (e) => {
+      if (cconst.DEBUG.buttonEvents)
+        console.log("button depress", e.button, e.was_touch);
+
+      if (this._auto_depress) {
+        this._pressed = false;
+
+        if (this.disabled) return;
+
+        this._redraw();
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (util.isMobile() || e.type === "mouseup" && e.button) {
+        return;
+      }
+
+      this._redraw();
+
+      if (cconst.DEBUG.buttonEvents)
+        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
+
+      if (this.onclick && e.touches !== undefined) {
+        this.onclick(this);
+      }
+
+      this.undoBreakPoint();
+    }
+
+    this.addEventListener("click", () => {
+      this._pressed = false;
+      this._highlight = false;
+      this._redraw();
+    });
+
+    this.addEventListener("pointerdown", press, {captured : true, passive : false});
+    this.addEventListener("pointerup", depress, {captured : true, passive : false});
+    this.addEventListener("pointerover", (e) => {
+      if (this.disabled)
+        return;
+
+      this._highlight = true;
+      this._redraw();
+    })
+
+    this.addEventListener("pointerout", (e) => {
+      if (this.disabled)
+        return;
+
+      this._highlight = false;
+      this._redraw();
+    })
+
+    this.addEventListener("keydown", (e) => {
+      if (this.disabled) return;
+
+      if (cconst.DEBUG.buttonEvents)
+        console.log(e.keyCode);
+
+      switch (e.keyCode) {
+        case 27: //escape
+          this.blur();
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+        case 32: //spacebar
+        case 13: //enter
+          this.click();
+          e.preventDefault();
+          e.stopPropagation();
+          break;
+      }
+    });
+
+    this.addEventListener("focusin", () => {
+      if (this.disabled) return;
+
+      this._focus = 1;
+      this._redraw();
+      this.focus();
+    });
+
+    this.addEventListener("blur", () => {
+      if (this.disabled) return;
+
+      this._focus = 0;
+      this._redraw();
+    });
+  }
+
+  _redraw() {
+
+  }
+}
+
+export class Button extends ButtonEventBase {
   constructor() {
     super();
 
@@ -38,7 +210,6 @@ export class Button extends UIBase {
     this._highlight = false;
 
     this._auto_depress = true;
-    this._modalstate = undefined;
 
     this._last_name = undefined;
     this._last_disabled = undefined;
@@ -110,149 +281,6 @@ export class Button extends UIBase {
     super.click();
   }
 
-  bindEvents() {
-    let press_gen = 0;
-    let depress;
-
-    let press = (e) => {
-      e.stopPropagation();
-
-      if (!this.modalRunning) {
-        let this2 = this;
-
-        this.pushModal({
-          on_mousedown(e) {
-            this.end(e);
-          },
-          on_mouseup(e) {
-            this.end(e);
-          },
-
-          end(e) {
-            if (!this2._modalstate) {
-              return;
-            }
-
-            this.popModal();
-            this2._modalstate = undefined;
-
-            depress(e);
-          }
-        });
-      }
-
-      if (cconst.DEBUG.buttonEvents) {
-        console.log("button press", this._pressed, this.disabled, e.button);
-      }
-
-      if (this.disabled) return;
-
-      this._pressed = true;
-
-      if (util.isMobile() && this.onclick && e.button === 0) {
-        this.onclick();
-      }
-
-      if (this._onpress) {
-        this._onpress(this);
-      }
-
-      this._redraw();
-
-      e.preventDefault();
-    };
-
-    depress = (e) => {
-      if (cconst.DEBUG.buttonEvents)
-        console.log("button depress", e.button, e.was_touch);
-
-      if (this._auto_depress) {
-        this._pressed = false;
-
-        if (this.disabled) return;
-
-        this._redraw();
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (util.isMobile() || e.type === "mouseup" && e.button) {
-        return;
-      }
-
-      this._redraw();
-
-      if (cconst.DEBUG.buttonEvents)
-        console.log("button click callback:", this.onclick, this._onpress, this.onpress);
-
-      if (this.onclick && e.touches !== undefined) {
-        this.onclick(this);
-      }
-
-      this.undoBreakPoint();
-    }
-
-    this.addEventListener("click", () => {
-      this._pressed = false;
-      this._highlight = false;
-      this._redraw();
-    });
-
-    this.addEventListener("mousedown", press, {captured : true, passive : false});
-    this.addEventListener("mouseup", depress, {captured : true, passive : false});
-    this.addEventListener("mouseover", (e) => {
-      if (this.disabled)
-        return;
-
-      this._highlight = true;
-      this._redraw();
-    })
-
-    this.addEventListener("mouseout", (e) => {
-      if (this.disabled)
-        return;
-
-      this._highlight = false;
-      this._redraw();
-    })
-
-    this.addEventListener("keydown", (e) => {
-      if (this.disabled) return;
-
-      if (cconst.DEBUG.buttonEvents)
-        console.log(e.keyCode);
-
-      switch (e.keyCode) {
-        case 27: //escape
-          this.blur();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-        case 32: //spacebar
-        case 13: //enter
-          this.click();
-          e.preventDefault();
-          e.stopPropagation();
-          break;
-      }
-    });
-
-    this.addEventListener("focusin", () => {
-      if (this.disabled) return;
-
-      this._focus = 1;
-      this._redraw();
-      this.focus();
-    });
-
-    this.addEventListener("blur", () => {
-      if (this.disabled) return;
-
-      this._focus = 0;
-      this._redraw();
-    });
-  }
 
   _redraw() {
     this.setCSS();
@@ -289,7 +317,7 @@ export class Button extends UIBase {
 UIBase.register(Button);
 
 //use .setAttribute("linear") to disable nonlinear sliding
-export class OldButton extends UIBase {
+export class OldButton extends ButtonEventBase {
   constructor() {
     super();
 
@@ -412,7 +440,7 @@ export class OldButton extends UIBase {
     this.overrideDefault("border-radius", val);
   }
 
-  bindEvents() {
+  old_bindEvents() {
     let press_gen = 0;
 
     let press = (e) => {

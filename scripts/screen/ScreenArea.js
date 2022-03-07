@@ -432,7 +432,18 @@ export class Area extends ui_base.UIBase {
   }
 
   makeHeader(container, add_note_area = true, make_draggable = true) {
-    let row = this.header = container.row();
+    let switcherRow;
+    let row;
+    let helpRow;
+
+    if (!(this.flag & AreaFlags.NO_SWITCHER) && cconst.useAreaTabSwitcher) {
+      let col = this.header = container.col();
+
+      switcherRow = helpRow = col.row();
+      row = col.row();
+    } else {
+      row = helpRow = this.header = container.row();
+    }
 
     if (!(this.flag & AreaFlags.NO_HEADER_CONTEXT_MENU)) {
       let callmenu = ScreenBorder.bindBorderMenu(this.header, true);
@@ -448,8 +459,8 @@ export class Area extends ui_base.UIBase {
       });
     }
 
-    row.remove();
-    container._prepend(row);
+    this.header.remove();
+    container._prepend(this.header);
 
     row.setCSS.after(() => row.background = this.getDefault("AreaHeaderBG"));
 
@@ -467,11 +478,18 @@ export class Area extends ui_base.UIBase {
     row.style["padding"] = "0px";
 
     if (!(this.flag & AreaFlags.NO_SWITCHER)) {
-      this.switcher = this.makeAreaSwitcher(row);
+      if (this.switcher) {
+        this.switcher.remove();
+      }
+      this.switcher = this.makeAreaSwitcher(cconst.useAreaTabSwitcher ? switcherRow : row);
     }
 
     if (util.isMobile() || cconst.addHelpPickers) {
-      this.helppicker = row.helppicker();
+      if (this.helppicker) {
+        this.helppicker.remove();
+      }
+
+      this.helppicker = helpRow.helppicker();
       this.helppicker.iconsheet = 0;
     }
 
@@ -480,8 +498,6 @@ export class Area extends ui_base.UIBase {
       notef.ctx = this.ctx;
       row._add(notef);
     }
-
-    this.header = row;
 
     /* don't do normal dragging for tab switchers */
     if (cconst.useAreaTabSwitcher) {
@@ -830,7 +846,7 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   get flag() {
-    let flag = this._flag & (AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+    let flag = this._flag & (AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
 
     if (this.area) {
       flag |= this.area.flag;
@@ -840,11 +856,11 @@ export class ScreenArea extends ui_base.UIBase {
   }
 
   set flag(v) {
-    this._flag &= ~(AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
-    this._flag |= v & (AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+    this._flag &= ~(AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
+    this._flag |= v & (AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
 
     if (this.area) {
-      this.area.flag |= v & ~(AreaFlags.FLOATING|AreaFlags.INDEPENDENT);
+      this.area.flag |= v & ~(AreaFlags.FLOATING | AreaFlags.INDEPENDENT);
     }
   }
 
@@ -1084,6 +1100,7 @@ export class ScreenArea extends ui_base.UIBase {
 
       cpy.parentWidget = ret;
       ret.editors.push(cpy);
+      ret.editormap[cpy.constructor.define().areaname] = cpy;
 
       if (area === this.area) {
         ret.area = cpy;

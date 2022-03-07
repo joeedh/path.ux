@@ -14,6 +14,12 @@ import {getAreaIntName, setAreaTypes, AreaWrangler, areaclasses} from './area_wr
 
 let ignore = 0;
 
+function dockerdebug() {
+  if (cconst.DEBUG.areadocker) {
+    console.warn(...arguments);
+  }
+}
+
 window.testSnapScreenVerts = function (arg) {
   let screen = CTX.screen;
 
@@ -54,27 +60,27 @@ export class AreaDocker extends Container {
       return;
     }
 
-    this.needsRebuild = false;
-
-    console.log("Rebuild", this.getArea());
-    let uidata = saveUIData(this, "switcherTabs");
-
-    this.clear();
-    let tabs = this.tbar = this.tabs()
-
-    tabs.onchange = this.tab_onchange.bind(this);
-
-    let tab;
-
     let sarea = this.getArea().parentWidget;
     if (!sarea) {
       this.needsRebuild = true;
       return;
     }
 
+    this.needsRebuild = false;
     this.ignoreChange++;
 
-    console.log(sarea.editors)
+    dockerdebug("Rebuild", this.getArea());
+
+    let uidata = sarea.switcherData = saveUIData(this, "switcherTabs");
+
+    this.clear();
+
+    let tabs = this.tbar = this.tabs()
+    tabs.onchange = this.tab_onchange.bind(this);
+
+    let tab;
+
+    dockerdebug(sarea._id, sarea.area ? sarea.area._id : "(no active area)", sarea.editors)
 
     sarea.switcherData = uidata;
 
@@ -100,7 +106,7 @@ export class AreaDocker extends Container {
           start_mpos.load(this.mpos);
         }
 
-        console.log("drag start!", start_mpos, e);
+        dockerdebug("tab drag start!", start_mpos, e);
       });
       tab._tab.addEventListener("tabdragmove", (e) => {
         this.mpos.loadXY(e.x, e.y);
@@ -110,24 +116,27 @@ export class AreaDocker extends Container {
         let x = e.x, y = e.y;
 
         let m = 8;
-        if (x < rect.x-m || x > rect.x+rect.width +m || y < rect.y-m || y >= rect.y+rect.height + m) {
-          console.log("detach!");
+        if (x < rect.x - m || x > rect.x + rect.width + m || y < rect.y - m || y >= rect.y + rect.height + m) {
+          dockerdebug("tab detach!");
           e.preventDefault(); //end dragging
           this.detach(e);
         }
-        //console.log(x-rect.x, y-rect.y);
-
-        //console.log("drag!", e.x, e.y);
       });
       tab._tab.addEventListener("tabdragend", (e) => {
 
         this.mpos.loadXY(e.x, e.y);
-        console.log("drag end!", e);
+        dockerdebug("tab drag end!", e);
       });
     }
 
     tab = this.tbar.icontab(Icons.SMALL_PLUS, "add", "Add Editor", false).noSwitch();
-    tab.ontabclick = e => this.on_addclick(e);
+    dockerdebug("Add Menu Tab", tab);
+
+    let icon = this.addicon = tab._tab;
+
+    icon.ontabclick = e => this.on_addclick(e);
+    icon.setAttribute("menu-button", "true");
+    icon.setAttribute("simple", "true");
 
     this.loadTabData(uidata);
 
@@ -145,7 +154,7 @@ export class AreaDocker extends Container {
 
     let mpos = event ? new Vector2([event.x, event.y]) : this.mpos;
 
-    console.log("EVENT", event);
+    dockerdebug("EVENT", event);
 
     if (event && event instanceof PointerEvent) {
       this.ctx.screen.moveAttachTool(sarea, mpos, document.body, event.pointerId);
@@ -156,14 +165,18 @@ export class AreaDocker extends Container {
 
   loadTabData(uidata) {
     this.ignoreChange++;
-    loadUIData(this.tbar, uidata);
+    loadUIData(this, uidata);
     this.ignoreChange--;
   }
 
   on_addclick(e) {
-    console.log("E", e.target, e);
     let mpos = new Vector2([e.x, e.y]);
-    this.addTabMenu(e.target, mpos);
+
+    if (this.addicon.menu && !this.addicon.menu.closed) {
+      this.addicon.menu.close();
+    } else {
+      this.addTabMenu(e.target, mpos);
+    }
   }
 
   tab_onchange(tab, event) {
@@ -171,7 +184,7 @@ export class AreaDocker extends Container {
       return;
     }
 
-    console.warn("EVENT", event);
+    dockerdebug("EVENT", event);
 
     if (event && (!(event instanceof PointerEvent) || event.pointerType === "mouse")) {
       //event.preventDefault(); //prevent tab dragging
@@ -232,6 +245,16 @@ export class AreaDocker extends Container {
 
     if (this.needsRebuild) {
       this.rebuild();
+      return;
+    }
+
+    if (this.addicon) {
+      let tabs = this.tbar.tbar.tabs;
+      let idx = tabs.indexOf(this.addicon);
+      if (idx !== tabs.length - 1) {
+        this.tbar.tbar.swapTabs(this.addicon, tabs[tabs.length - 1]);
+
+      }
     }
 
     if (!active || active._id !== area._id) {
@@ -253,7 +276,7 @@ export class AreaDocker extends Container {
   }
 
   select(areaId, event) {
-    console.log("Tab Select!", areaId);
+    dockerdebug("Tab Select!", areaId);
 
     this.ignoreChange++;
 
@@ -271,7 +294,7 @@ export class AreaDocker extends Container {
       }
     }
 
-    if (newarea === area) {
+    if (newarea === area || !newarea.switcher) {
       return;
     }
 
@@ -305,9 +328,9 @@ export class AreaDocker extends Container {
     }
 
     if (newparent instanceof UIBase) {
-      newparent.shadow.appendChild(newarea.switcher);
+      newparent.shadow.prepend(newarea.switcher);
     } else {
-      newparent.appendChild(newarea.switcher);
+      newparent.prepend(newarea.switcher);
     }
 
     area.switcher.parentWidget = parentw;
@@ -316,17 +339,19 @@ export class AreaDocker extends Container {
     area.switcher.tbar._ensureNoModal();
     newarea.switcher.tbar._ensureNoModal();
 
-    if (newarea.switcher) {
-      newarea.switcher.loadTabData(uidata);
-      newarea.switcher.setCSS();
-      newarea.switcher.update();
+    newarea.switcher.loadTabData(uidata);
+    area.switcher.loadTabData(uidata);
 
-      if (event && (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)) {
-        event.preventDefault();
-        event.stopPropagation();
-        newarea.switcher.tbar._startMove(undefined, event);
-      }
+    newarea.switcher.setCSS();
+    newarea.switcher.update();
+
+    if (event && (event instanceof PointerEvent || event instanceof MouseEvent || event instanceof TouchEvent)) {
+      event.preventDefault();
+      event.stopPropagation();
+      newarea.switcher.tbar._startMove(undefined, event);
     }
+
+    //console.log(this._id);
 
     sarea.switcherData = uidata;
     this.ignoreChange--;
@@ -335,7 +360,7 @@ export class AreaDocker extends Container {
   addTabMenu(tab, mpos) {
     let rect = tab.getClientRects()[0];
 
-    console.log(tab, tab.getClientRects());
+    dockerdebug(tab, tab.getClientRects());
 
     if (!mpos) {
       mpos = this.ctx.screen.mpos;
@@ -371,14 +396,16 @@ export class AreaDocker extends Container {
     }
 
     if (!rect) {
-      console.log("no rect!");
+      console.warn("no rect!");
       return;
     }
 
-    console.log(mpos[0], mpos[1], rect.x, rect.y);
+    dockerdebug(mpos[0], mpos[1], rect.x, rect.y);
 
     menu.onselect = (val) => {
-      console.log("menu select", val, this.getArea().parentWidget);
+      dockerdebug("menu select", val, this.getArea().parentWidget);
+
+      this.addicon.menu = undefined;
 
       let sarea = this.getArea().parentWidget;
       if (sarea) {
@@ -391,7 +418,7 @@ export class AreaDocker extends Container {
           let uidata = saveUIData(this.tbar, "switcherTabs");
           sarea.switchEditor(cls);
 
-          console.log("switching", cls);
+          dockerdebug("switching", cls);
           area = sarea.area;
           area._init();
 
@@ -407,7 +434,7 @@ export class AreaDocker extends Container {
           this.ignoreChange = Math.max(this.ignoreChange - 1, 0);
         }
 
-        console.log("AREA", area.switcher, area);
+        dockerdebug("AREA", area.switcher, area);
 
         if (area.switcher) {
           this.ignoreChange++;
@@ -420,7 +447,7 @@ export class AreaDocker extends Container {
             area.switcher._init();
             area.switcher.update();
 
-            console.log("loading data", ud);
+            dockerdebug("loading data", ud);
             area.switcher.loadTabData(ud);
 
             area.switcher.rebuild(); //make sure plus tab is at end
@@ -434,7 +461,10 @@ export class AreaDocker extends Container {
       }
     };
 
-    startMenu(menu, mpos[0] - 35, rect.y + rect.height - 5, false, 0);
+    this.addicon.menu = menu;
+
+    startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
+    return menu;
   }
 }
 
