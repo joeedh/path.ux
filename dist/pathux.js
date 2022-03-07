@@ -42032,9 +42032,11 @@ class Area$1 extends UIBase$2 {
 
     if (!(this.flag & AreaFlags.NO_SWITCHER)) {
       if (this.switcher) {
-        this.switcher.remove();
+        //add back same switcher
+        switcherRow.add(this.switcher);
+      } else {
+        this.switcher = this.makeAreaSwitcher(exports.useAreaTabSwitcher ? switcherRow : row);
       }
-      this.switcher = this.makeAreaSwitcher(exports.useAreaTabSwitcher ? switcherRow : row);
     }
 
     if (isMobile() || exports.addHelpPickers) {
@@ -49416,7 +49418,7 @@ class TabBar extends UIBase$d {
     try {
       if (active !== undefined) {
         this.setActive(active);
-      } else {
+      } else if (this.tabs.length > 0) {
         this.setActive(this.tabs[0]);
       }
     } catch (error) {
