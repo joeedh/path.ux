@@ -86,10 +86,6 @@ export class ButtonEventBase extends UIBase {
 
       this._pressed = true;
 
-      if (util.isMobile() && this.onclick && e.button === 0) {
-        this.onclick();
-      }
-
       if (this._onpress) {
         this._onpress(this);
       }
@@ -114,7 +110,7 @@ export class ButtonEventBase extends UIBase {
       e.preventDefault();
       e.stopPropagation();
 
-      if (util.isMobile() || e.type === "mouseup" && e.button) {
+      if (util.isMobile() || e.type === "pointerup" && e.button) {
         return;
       }
 
@@ -123,7 +119,7 @@ export class ButtonEventBase extends UIBase {
       if (cconst.DEBUG.buttonEvents)
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
-      if (this.onclick && e.touches !== undefined) {
+      if (this.onclick && e.pointerType !== "mouse") {
         this.onclick(this);
       }
 
@@ -482,7 +478,7 @@ export class OldButton extends ButtonEventBase {
       e.preventDefault();
       e.stopPropagation();
 
-      if (util.isMobile() || e.type === "mouseup" && e.button) {
+      if (util.isMobile() || e.type === "pointerup" && e.button) {
         return;
       }
 
@@ -492,7 +488,7 @@ export class OldButton extends ButtonEventBase {
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
       }
 
-      if (this.onclick && e.touches !== undefined) {
+      if (this.onclick && e.pointerType !== "mouse") {
         this.onclick(this);
       }
 
