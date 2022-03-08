@@ -453,8 +453,6 @@ export class Area extends ui_base.UIBase {
           return;
         }
 
-        console.log("CLIKWER!");
-
         callmenu(e);
       });
     }
@@ -1292,29 +1290,31 @@ export class ScreenArea extends ui_base.UIBase {
 
     this.style["width"] = this.size[0] + "px";
     this.style["height"] = this.size[1] + "px";
-
+    
+    this.style["overflow"] = "hidden";
+    this.style["contain"] = "layout"; //ensure we have a new positioning stack
 
     if (this.area !== undefined) {
       this.area.setCSS();
-      //this.style["overflow"] = this.area.style["overflow"];
-
-      //this.area.style["width"] = this.size[0] + "px";
-      //this.area.style["height"] = this.size[1] + "px";
     }
-
-    /*
-    if (this.area) {
-      let area = this.area;
-      area.style["position"] = UIBase.PositionKey;
-
-      area.style["width"] = this.size[0] + "px";
-      area.style["height"] = this.size[1] + "px";
-    }
-    //*/
   }
 
   appendChild(child) {
     if (child instanceof Area) {
+      let def = child.constructor.define();
+      let existing = this.editormap[def.areaname];
+
+      if (existing && existing !== child) {
+        console.warn("Warning, replacing an exising editor instance", child, existing);
+
+        if (this.area === existing) {
+          this.area = child;
+        }
+
+        existing.remove();
+        this.editormap[def.areaname] = child;
+      }
+
       child.ctx = this.ctx;
       child.pos = this.pos;
       child.size = this.size;
@@ -1357,7 +1357,7 @@ export class ScreenArea extends ui_base.UIBase {
     }
 
     //var finish = () => {
-    if (this.area !== undefined) {
+    if (this.area) {
       //break direct pos/size references for old active area
       this.area.pos = new Vector2(this.area.pos);
       this.area.size = new Vector2(this.area.size);
@@ -1370,6 +1370,8 @@ export class ScreenArea extends ui_base.UIBase {
       this.area.pop_ctx_active();
 
       this.area.remove();
+    } else {
+      this.area = undefined;
     }
 
     this.area = this.editormap[name];
@@ -1611,7 +1613,7 @@ pathux.ScreenArea {
   type     : string;
   hidden   : bool;
   editors  : array(abstract(pathux.Area));
-  area     : string | obj.area.constructor.define().areaname;
+  area     : string | this.area ? this.area.constructor.define().areaname : "";
 }
 `;
 

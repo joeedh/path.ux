@@ -1,5 +1,5 @@
 import * as simple from '../scripts/simple/simple.js';
-import {Vector4, UIBase} from '../scripts/pathux.js';
+import {Vector4, UIBase, util} from '../scripts/pathux.js';
 import {Editor} from '../scripts/simple/simple.js';
 
 export class Context {
@@ -57,21 +57,67 @@ Canvas {
 `;
 simple.DataModel.register(Canvas);
 
+let LSKEY = "_example_layout";
+
 export class AppState extends simple.AppState {
   constructor() {
     super(Context);
 
+    this.saveFilesInJSON = true;
     this.canvas = new Canvas();
   }
 
-  saveFile(args = {}) {
+  createNewFile() {
+    this.makeScreen();
+    this.toolstack.reset();
+    this.canvas = new Canvas();
+  }
+
+  saveFile(args = {useJSON: true}) {
     return super.saveFile([this.canvas], args);
   }
 
-  loadFile(data, args = {}) {
-    let file = super.loadFile(data, args);
+  loadFile(data, args = {useJSON: true}) {
+    return super.loadFile(data, args).then(file => {
+      this.canvas = file.objects[0];
+    });
+  }
 
-    this.canvas = file.objects[0];
+  save() {
+    this.saveFile().then(json => {
+      localStorage[LSKEY] = JSON.stringify(json);
+      console.log("Saved startup file", json);
+    });
+  }
+
+  load() {
+    if (!(LSKEY in localStorage)) {
+      return;
+    }
+
+    let json;
+
+    try {
+      json = JSON.parse(localStorage[LSKEY]);
+      return this.loadFile(json);
+    } catch (error) {
+      util.print_stack(error);
+      console.warn("Failed to load startup file");
+    }
+
+    return Promise.resolve();
+  }
+
+  start() {
+    super.start({
+      useAreaTabSwitcher: true
+    });
+
+    this.load().then(() => {
+      window.setInterval(() => {
+        this.save();
+      }, 1000);
+    });
   }
 }
 
@@ -136,8 +182,12 @@ export class CanvasEditor extends simple.Editor {
   init() {
     super.init();
 
+    this.addEventListener("mousedown", (e) => this.on_mousedown(e));
     this.addEventListener("mousemove", (e) => this.on_mousemove(e));
+    this.addEventListener("mouseup", (e) => this.on_mouseup(e));
     this.flagRedraw();
+
+    this.mdown = false;
 
     let sidebar = this.makeSideBar();
     sidebar.tab("Info");
@@ -146,7 +196,15 @@ export class CanvasEditor extends simple.Editor {
     this.header.prop("canvasEditor.drawParam");
   }
 
+  on_mousedown(e) {
+    this.mdown = true;
+  }
+
   on_mousemove(e) {
+    if (!this.mdown) {
+      return;
+    }
+
     let canvas = this.ctx.canvas;
     let r = this.canvas.getBoundingClientRect();
 
@@ -160,12 +218,16 @@ export class CanvasEditor extends simple.Editor {
 
     let idata = canvas.image.data;
 
-    let idx = (y * canvas.dimen + x) * 4;
+    let idx = (y*canvas.dimen + x)*4;
 
-    idata[idx] = idata[idx+1] = idata[idx+2] = 0.0;
-    idata[idx+3] = 255;
+    idata[idx] = idata[idx + 1] = idata[idx + 2] = 0.0;
+    idata[idx + 3] = 255;
 
     this.flagRedraw();
+  }
+
+  on_mouseup(e) {
+    this.mdown = false;
   }
 
   setCSS() {
@@ -179,6 +241,21 @@ export class CanvasEditor extends simple.Editor {
 }
 
 simple.Editor.register(CanvasEditor);
+
+export class BoxEditor extends simple.Editor {
+  static define() {
+    return {
+      tagname : "box-editor-x",
+      areaname : "box-editor-x",
+      uiname : "Box Editor"
+    }
+  }
+
+  static defineAPI(api, str) {
+
+  }
+}
+simple.Editor.register(BoxEditor);
 
 export function start() {
   window._appstate = new AppState();
