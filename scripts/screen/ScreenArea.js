@@ -539,16 +539,16 @@ export class Area extends ui_base.UIBase {
     }
 
     eventdom.addEventListener("pointerout", (e) => {
-      console.log("pointerout", e);
+      //console.log("pointerout", e);
       mdown = false;
     });
     eventdom.addEventListener("pointerleave", (e) => {
       mdown = false;
-      console.log("pointerleave", e);
+      //console.log("pointerleave", e);
     });
 
     eventdom.addEventListener("pointerdown", (e) => {
-      console.log("pointerdown", e, mpre(e));
+      //console.log("pointerdown", e, mpre(e));
 
       if (!mpre(e)) return;
 

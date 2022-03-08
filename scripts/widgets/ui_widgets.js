@@ -444,12 +444,15 @@ export class Check extends UIBase {
 
     this.updateDPI();
 
+    let ready = ui_base.getIconManager().isReady(0);
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
 
     let updatekey = this.getDefault("DefaultText").hash();
     updatekey += this._checked + ":" + this._label.textContent;
+    updatekey += ":" + ready;
 
     if (updatekey !== this._updatekey) {
       this._repos_canvas();

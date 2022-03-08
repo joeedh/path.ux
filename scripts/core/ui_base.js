@@ -196,6 +196,55 @@ class _IconManager {
     this.customIcons = new Map();
 
     this.image = image;
+    this.promise = undefined;
+    this._accept = undefined;
+    this._reject = undefined;
+  }
+
+  get ready() {
+    return this.image && this.image.width;
+  }
+
+  onReady() {
+    if (this.ready) {
+      return new Promise((accept, reject) => {
+        accept(this);
+      });
+    }
+
+    if (this.promise) {
+      return this.promise;
+    }
+
+    let onload = this.image.onload;
+    this.image.onload = (e) => {
+      if (onload) {
+        onload.call(this.image, e);
+      }
+
+      if (!this._accept) {
+        return;
+      }
+
+      let accept = this._accept;
+      this._accept = this._reject = this.promise = undefined;
+
+      if (this.image.width) {
+        accept(this);
+      }
+    }
+
+    this.promise = new util.TimeoutPromise((accept, reject) => {
+      this._accept = accept;
+      this._reject = reject;
+    }, 15000, true); /* silently rejects on timeout */
+
+    this.promise.catch(error => {
+      util.print_stack(error);
+      this.promise = this._accept = this._reject = undefined;
+    });
+
+    return this.promise;
   }
 
   canvasDraw(elem, canvas, g, icon, x = 0, y = 0) {
@@ -353,6 +402,10 @@ export class IconManager {
 
       this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
     }
+  }
+
+  isReady(sheet = 0) {
+    return this.iconsheets[sheet].ready;
   }
 
   addCustomIcon(key, image) {
@@ -614,6 +667,7 @@ let first = (iter) => {
 }
 
 import {DataPathError} from '../path-controller/controller/controller.js';
+import {TimeoutPromise} from '../path-controller/util/util.js';
 
 let _mobile_theme_patterns = [
   /.*width.*/,
@@ -1204,7 +1258,7 @@ export class UIBase extends HTMLElement {
 
       p = p.parentWidget;
     }
-    
+
     return p;
   }
 
@@ -1249,7 +1303,7 @@ export class UIBase extends HTMLElement {
     if (!cb[EventCBSymbol]) {
       cb[EventCBSymbol] = new Map();
     }
-    
+
     let key = calcElemCBKey(this, type, options);
     cb[EventCBSymbol].set(key, cb2);
 
@@ -1280,9 +1334,9 @@ export class UIBase extends HTMLElement {
       return super.removeEventListener(type, cb, options);
     } else {
       let cb2 = cb[EventCBSymbol].get(key);
-      
+
       let ret = super.removeEventListener(type, cb2, options);
-      
+
       cb[EventCBSymbol].delete(key);
       return ret;
     }
@@ -1887,7 +1941,7 @@ export class UIBase extends HTMLElement {
         if (!c.ctx) {
           c.ctx = this.ctx;
         }
-        
+
         c.flushUpdate(force);
       }
     });

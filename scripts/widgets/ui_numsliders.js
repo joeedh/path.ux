@@ -1619,7 +1619,7 @@ export class SliderWithTextbox extends ColumnFrame {
   }
 
   get displayUnit() {
-    return this.textbox.displayUnit;
+    return this.numslider.displayUnit;
   }
 
   set displayUnit(val) {

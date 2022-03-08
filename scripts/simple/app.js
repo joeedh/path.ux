@@ -19,6 +19,10 @@ export class DataModel {
   }
 
   static register(cls) {
+    if (!cls.hasOwnProperty("defineAPI")) {
+    //  throw new Error(cls.name + "is missing a defineAPI method");
+    }
+
     DataModelClasses.push(cls);
 
     if (cls.hasOwnProperty("STRUCT")) {
@@ -96,7 +100,9 @@ export function makeAPI(ctxClass) {
   let api = new DataAPI();
 
   for (let cls of DataModelClasses) {
-    cls.defineAPI(api, api.mapStruct(cls, true));
+    if (cls.defineAPI) {
+      cls.defineAPI(api, api.mapStruct(cls, true));
+    }
   }
 
   for (let k in areaclasses) {
