@@ -4,28 +4,28 @@
     "filePath": "scripts/core/ui.js",
     "lines": [
       {
-        "lineNumber": 274,
+        "lineNumber": 364,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 275,
+        "lineNumber": 365,
         "line": "   *\r"
       },
       {
-        "lineNumber": 276,
+        "lineNumber": 366,
         "line": "   * @param mode: flexbox wrap mode, can be wrap, nowrap, or wrap-reverse\r"
       },
       {
-        "lineNumber": 277,
+        "lineNumber": 367,
         "line": "   * @returns {Container}\r"
       },
       {
-        "lineNumber": 278,
+        "lineNumber": 368,
         "line": "   */\r"
       },
       {
-        "lineNumber": 279,
-        "line": "  wrap(mode=\"wrap\") {\r"
+        "lineNumber": 369,
+        "line": "  wrap(mode = \"wrap\") {\r"
       }
     ],
     "codeParams": [
@@ -40,32 +40,32 @@
     "filePath": "scripts/core/units.js",
     "lines": [
       {
-        "lineNumber": 422,
+        "lineNumber": 553,
         "line": "/**\r"
       },
       {
-        "lineNumber": 423,
+        "lineNumber": 554,
         "line": " *\r"
       },
       {
-        "lineNumber": 424,
+        "lineNumber": 555,
         "line": " * @param value Note: is not converted to internal unit\r"
       },
       {
-        "lineNumber": 425,
+        "lineNumber": 556,
         "line": " * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name\r"
       },
       {
-        "lineNumber": 426,
+        "lineNumber": 557,
         "line": " * @returns {*}\r"
       },
       {
-        "lineNumber": 427,
+        "lineNumber": 558,
         "line": " */\r"
       },
       {
-        "lineNumber": 428,
-        "line": "export function buildString(value, baseUnit=Unit.baseUnit, decimalPlaces=3, displayUnit=Unit.baseUnit) {\r"
+        "lineNumber": 559,
+        "line": "export function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, displayUnit = Unit.baseUnit) {\r"
       }
     ],
     "codeParams": [
@@ -84,39 +84,39 @@
     "filePath": "scripts/path-controller/controller/controller.js",
     "lines": [
       {
-        "lineNumber": 653,
+        "lineNumber": 711,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 654,
+        "lineNumber": 712,
         "line": "   * Look up struct definition for a class.\r"
       },
       {
-        "lineNumber": 655,
+        "lineNumber": 713,
         "line": "   *\r"
       },
       {
-        "lineNumber": 656,
+        "lineNumber": 714,
         "line": "   * @param cls: the class\r"
       },
       {
-        "lineNumber": 657,
+        "lineNumber": 715,
         "line": "   * @param auto_create: If true, automatically create definition if not already existing.\r"
       },
       {
-        "lineNumber": 658,
+        "lineNumber": 716,
         "line": "   * @returns {IterableIterator<*>}\r"
       },
       {
-        "lineNumber": 659,
+        "lineNumber": 717,
         "line": "   */\r"
       },
       {
-        "lineNumber": 660,
+        "lineNumber": 718,
         "line": "\r"
       },
       {
-        "lineNumber": 661,
+        "lineNumber": 719,
         "line": "  _addClass(cls, dstruct) {\r"
       }
     ],
@@ -134,39 +134,40 @@
     "filePath": "scripts/path-controller/controller/controller.js",
     "lines": [
       {
-        "lineNumber": 795,
+        "lineNumber": 915,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 796,
+        "lineNumber": 916,
         "line": "   get meta information for a datapath.\r"
       },
       {
-        "lineNumber": 797,
+        "lineNumber": 917,
         "line": "\r"
       },
       {
-        "lineNumber": 798,
+        "lineNumber": 918,
         "line": "   @param ignoreExistence: don't try to get actual data associated with path,\r"
       },
       {
-        "lineNumber": 799,
+        "lineNumber": 919,
         "line": "   just want meta information\r"
       },
       {
-        "lineNumber": 800,
+        "lineNumber": 920,
         "line": "   */\r"
       },
       {
-        "lineNumber": 801,
-        "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false, p=pathParser) {\r"
+        "lineNumber": 921,
+        "line": "  resolvePath_intern(ctx, inpath, ignoreExistence = false, p = pathParser, dstruct = undefined) {\r"
       }
     ],
     "codeParams": [
       "ctx",
       "inpath",
       "ignoreExistence",
-      "p"
+      "p",
+      "dstruct"
     ],
     "docParams": [
       "ignoreExistence:"
@@ -223,36 +224,36 @@
     "filePath": "scripts/path-controller/toolsys/toolsys.js",
     "lines": [
       {
-        "lineNumber": 1339,
+        "lineNumber": 1398,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 1340,
+        "lineNumber": 1399,
         "line": "   * runs .undo,.redo if toolstack head is same as tool\r"
       },
       {
-        "lineNumber": 1341,
+        "lineNumber": 1400,
         "line": "   *\r"
       },
       {
-        "lineNumber": 1342,
+        "lineNumber": 1401,
         "line": "   * otherwise, .execTool(ctx, tool) is called.\r"
       },
       {
-        "lineNumber": 1343,
+        "lineNumber": 1402,
         "line": "   *\r"
       },
       {
-        "lineNumber": 1344,
+        "lineNumber": 1403,
         "line": "   * @param compareInputs : check if toolstack head has identical input values, defaults to false\r"
       },
       {
-        "lineNumber": 1345,
+        "lineNumber": 1404,
         "line": "   * */\r"
       },
       {
-        "lineNumber": 1346,
-        "line": "  execOrRedo(ctx, tool, compareInputs=false) {\r"
+        "lineNumber": 1405,
+        "line": "  execOrRedo(ctx, tool, compareInputs = false) {\r"
       }
     ],
     "codeParams": [
@@ -265,31 +266,131 @@
     ]
   },
   {
+    "name": "STRUCT#read_object",
+    "filePath": "scripts/path-controller/util/nstructjs_es6.js",
+    "lines": [
+      {
+        "lineNumber": 3083,
+        "line": "  /**\r"
+      },
+      {
+        "lineNumber": 3084,
+        "line": "   @param data : DataView or Uint8Array instance\r"
+      },
+      {
+        "lineNumber": 3085,
+        "line": "   @param cls_or_struct_id : Structable class\r"
+      },
+      {
+        "lineNumber": 3086,
+        "line": "   @param uctx : internal parameter\r"
+      },
+      {
+        "lineNumber": 3087,
+        "line": "   */\r"
+      },
+      {
+        "lineNumber": 3088,
+        "line": "  read_object(data, cls_or_struct_id, uctx, objInstance) {\r"
+      }
+    ],
+    "codeParams": [
+      "data",
+      "cls_or_struct_id",
+      "uctx",
+      "objInstance"
+    ],
+    "docParams": [
+      "data",
+      "cls_or_struct_id",
+      "uctx"
+    ]
+  },
+  {
+    "name": "readObject",
+    "filePath": "scripts/path-controller/util/nstructjs_es6.js",
+    "lines": [
+      {
+        "lineNumber": 3639,
+        "line": "/**\r"
+      },
+      {
+        "lineNumber": 3640,
+        "line": " @param data : DataView\r"
+      },
+      {
+        "lineNumber": 3641,
+        "line": " */\r"
+      },
+      {
+        "lineNumber": 3642,
+        "line": "function readObject(data, cls, __uctx = undefined) {\r"
+      }
+    ],
+    "codeParams": [
+      "data",
+      "cls",
+      "__uctx"
+    ],
+    "docParams": [
+      "data"
+    ]
+  },
+  {
+    "name": "writeObject",
+    "filePath": "scripts/path-controller/util/nstructjs_es6.js",
+    "lines": [
+      {
+        "lineNumber": 3646,
+        "line": "/**\r"
+      },
+      {
+        "lineNumber": 3647,
+        "line": " @param data : Array instance to write bytes to\r"
+      },
+      {
+        "lineNumber": 3648,
+        "line": " */\r"
+      },
+      {
+        "lineNumber": 3649,
+        "line": "function writeObject(data, obj) {\r"
+      }
+    ],
+    "codeParams": [
+      "data",
+      "obj"
+    ],
+    "docParams": [
+      "data"
+    ]
+  },
+  {
     "name": "Screen#pickElement",
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 347,
-        "line": "  /** \r"
+        "lineNumber": 454,
+        "line": "  /**\r"
       },
       {
-        "lineNumber": 348,
+        "lineNumber": 455,
         "line": "   * @param x\r"
       },
       {
-        "lineNumber": 349,
+        "lineNumber": 456,
         "line": "   * @param y\r"
       },
       {
-        "lineNumber": 350,
+        "lineNumber": 457,
         "line": "   * @param args arguments : {sx, sy, nodeclass, excluded_classes}\r"
       },
       {
-        "lineNumber": 351,
-        "line": "  */\r"
+        "lineNumber": 458,
+        "line": "   */\r"
       },
       {
-        "lineNumber": 352,
+        "lineNumber": 459,
         "line": "  pickElement(x, y, args, sy, nodeclass, excluded_classes) {\r"
       }
     ],
@@ -312,32 +413,32 @@
     "filePath": "scripts/screen/FrameManager.js",
     "lines": [
       {
-        "lineNumber": 426,
+        "lineNumber": 529,
         "line": "  /**\r"
       },
       {
-        "lineNumber": 427,
+        "lineNumber": 530,
         "line": "   *\r"
       },
       {
-        "lineNumber": 428,
+        "lineNumber": 531,
         "line": "   * @param popupDelay : if non-zero, wait for popup to layout for popupDelay miliseconds,\r"
       },
       {
-        "lineNumber": 429,
+        "lineNumber": 532,
         "line": "   *                     then move the popup so it's fully inside the window (if it's outsize).\r"
       },
       {
-        "lineNumber": 430,
+        "lineNumber": 533,
         "line": "   *\r"
       },
       {
-        "lineNumber": 431,
-        "line": "    * */\r"
+        "lineNumber": 534,
+        "line": "   * */\r"
       },
       {
-        "lineNumber": 432,
-        "line": "  popup(owning_node, elem_or_x, y, closeOnMouseOut=true, popupDelay=250) {\r"
+        "lineNumber": 535,
+        "line": "  popup(owning_node, elem_or_x, y, closeOnMouseOut = true, popupDelay = 5) {\r"
       }
     ],
     "codeParams": [

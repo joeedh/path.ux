@@ -46,7 +46,7 @@ doimport("marked", "fs", "path", "diff", "parse5").then((marked, fs, pathmod, js
  */
 
 import fs from 'fs';
-import marked from 'marked';
+import { marked } from 'marked';
 import parse5 from 'parse5';
 import pathmod from 'path';
 import * as jsdiff from 'diff';
