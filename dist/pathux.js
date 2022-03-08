@@ -7598,6 +7598,119 @@ class DivLogger {
   }
 }
 
+const PendingTimeoutPromises = new Set();
+
+class TimeoutPromise {
+  constructor(callback, timeout=3000, silent=false) {
+    if (!callback) {
+      return;
+    }
+
+    this.silent = silent;
+    this.timeout = timeout;
+
+    let accept2 = this._accept2.bind(this);
+    let reject2 = this._reject2.bind(this);
+
+    this.time = time_ms();
+
+    this.rejected = false;
+
+    this._promise = new Promise((accept, reject) => {
+      this._accept = accept;
+      this._reject = reject;
+
+      callback(accept2, reject2);
+    });
+
+    PendingTimeoutPromises.add(this);
+  }
+
+  _accept2(val) {
+    if (this.bad) {
+      if (!this.silent) {
+        this._reject(new Error("Timeout"));
+      }
+    } else {
+      return this._accept(val);
+    }
+  }
+
+  static wrapPromise(promise, timeout=3000, callback) {
+    let p = new TimeoutPromise();
+
+    p._promise = promise;
+
+    p._accept = callback;
+    p._reject = function(error) {
+      throw error;
+    };
+
+    p.then(val => {
+      p._accept2(val);
+    }).catch(error => {
+      p._reject2(error);
+    });
+
+    return p;
+  }
+
+  _reject2(error) {
+    this._reject(error);
+  }
+
+  then(callback) {
+    let cb = (val) => {
+      let ret = callback(val);
+
+      if (ret instanceof Promise) {
+        ret = TimeoutPromise.wrapPromise(ret, this.timeout, callback);
+      }
+
+      return ret;
+    };
+
+    this._promise.then(cb);
+    return this;
+  }
+
+  catch(callback) {
+    this._promise.catch(callback);
+    return this;
+  }
+
+  finally(callback) {
+    this._promise.catch(callback);
+    return this;
+  }
+
+  get bad() {
+    return time_ms() - this.time > this.timeout;
+  }
+}
+
+window.setInterval(() => {
+  let bad = [];
+
+  for (let promise of PendingTimeoutPromises) {
+    if (promise.bad) {
+      bad.push(promise);
+    }
+  }
+
+  for (let promise of bad) {
+    PendingTimeoutPromises.delete(promise);
+  }
+
+  for (let promise of bad) {
+    try {
+      promise._reject(new Error("Timeout"));
+    } catch (error) {
+      print_stack$1(error);
+    }
+  }
+}, 250);
+
 var util1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   isDenormal: isDenormal,
@@ -7644,7 +7757,9 @@ var util1 = /*#__PURE__*/Object.freeze({
   MinHeapQueue: MinHeapQueue,
   Queue: Queue,
   ArrayPool: ArrayPool,
-  DivLogger: DivLogger
+  DivLogger: DivLogger,
+  PendingTimeoutPromises: PendingTimeoutPromises,
+  TimeoutPromise: TimeoutPromise
 });
 
 const EulerOrders = {
@@ -28790,6 +28905,55 @@ class _IconManager {
     this.customIcons = new Map();
 
     this.image = image;
+    this.promise = undefined;
+    this._accept = undefined;
+    this._reject = undefined;
+  }
+
+  get ready() {
+    return this.image && this.image.width;
+  }
+
+  onReady() {
+    if (this.ready) {
+      return new Promise((accept, reject) => {
+        accept(this);
+      });
+    }
+
+    if (this.promise) {
+      return this.promise;
+    }
+
+    let onload = this.image.onload;
+    this.image.onload = (e) => {
+      if (onload) {
+        onload.call(this.image, e);
+      }
+
+      if (!this._accept) {
+        return;
+      }
+
+      let accept = this._accept;
+      this._accept = this._reject = this.promise = undefined;
+
+      if (this.image.width) {
+        accept(this);
+      }
+    };
+
+    this.promise = new TimeoutPromise((accept, reject) => {
+      this._accept = accept;
+      this._reject = reject;
+    }, 15000, true); /* silently rejects on timeout */
+
+    this.promise.catch(error => {
+      print_stack$1(error);
+      this.promise = this._accept = this._reject = undefined;
+    });
+
+    return this.promise;
   }
 
   canvasDraw(elem, canvas, g, icon, x = 0, y = 0) {
@@ -28947,6 +29111,10 @@ class IconManager {
 
       this.iconsheets.push(new _IconManager(images[i], size, horizontal_tile_count, drawsize));
     }
+  }
+
+  isReady(sheet = 0) {
+    return this.iconsheets[sheet].ready;
   }
 
   addCustomIcon(key, image) {
@@ -29796,7 +29964,7 @@ class UIBase$f extends HTMLElement {
 
       p = p.parentWidget;
     }
-    
+
     return p;
   }
 
@@ -29841,7 +30009,7 @@ class UIBase$f extends HTMLElement {
     if (!cb[EventCBSymbol]) {
       cb[EventCBSymbol] = new Map();
     }
-    
+
     let key = calcElemCBKey(this, type, options);
     cb[EventCBSymbol].set(key, cb2);
 
@@ -29872,9 +30040,9 @@ class UIBase$f extends HTMLElement {
       return super.removeEventListener(type, cb, options);
     } else {
       let cb2 = cb[EventCBSymbol].get(key);
-      
+
       let ret = super.removeEventListener(type, cb2, options);
-      
+
       cb[EventCBSymbol].delete(key);
       return ret;
     }
@@ -30479,7 +30647,7 @@ class UIBase$f extends HTMLElement {
         if (!c.ctx) {
           c.ctx = this.ctx;
         }
-        
+
         c.flushUpdate(force);
       }
     });
@@ -33917,12 +34085,15 @@ class Check extends UIBase$c {
 
     this.updateDPI();
 
+    let ready = getIconManager().isReady(0);
+
     if (this.hasAttribute("datapath")) {
       this.updateDataPath();
     }
 
     let updatekey = this.getDefault("DefaultText").hash();
     updatekey += this._checked + ":" + this._label.textContent;
+    updatekey += ":" + ready;
 
     if (updatekey !== this._updatekey) {
       this._repos_canvas();
@@ -42187,16 +42358,16 @@ class Area$1 extends UIBase$f {
     };
 
     eventdom.addEventListener("pointerout", (e) => {
-      console.log("pointerout", e);
+      //console.log("pointerout", e);
       mdown = false;
     });
     eventdom.addEventListener("pointerleave", (e) => {
       mdown = false;
-      console.log("pointerleave", e);
+      //console.log("pointerleave", e);
     });
 
     eventdom.addEventListener("pointerdown", (e) => {
-      console.log("pointerdown", e, mpre(e));
+      //console.log("pointerdown", e, mpre(e));
 
       if (!mpre(e)) return;
 
@@ -45165,7 +45336,7 @@ class SliderWithTextbox extends ColumnFrame {
   }
 
   get displayUnit() {
-    return this.textbox.displayUnit;
+    return this.numslider.displayUnit;
   }
 
   set displayUnit(val) {
@@ -53051,8 +53222,6 @@ class PlatformAPI {
       base = base.slice(0, base.length-1).trim();
     }
 
-    console.log("BASE", base);
-    
     path = (base + "/" + path).split("/");
     let path2 = [];
 
@@ -59988,6 +60157,10 @@ class DataModel {
   }
 
   static register(cls) {
+    if (!cls.hasOwnProperty("defineAPI")) {
+    //  throw new Error(cls.name + "is missing a defineAPI method");
+    }
+
     DataModelClasses.push(cls);
 
     if (cls.hasOwnProperty("STRUCT")) {
@@ -60063,7 +60236,9 @@ function makeAPI(ctxClass) {
   let api = new DataAPI();
 
   for (let cls of DataModelClasses) {
-    cls.defineAPI(api, api.mapStruct(cls, true));
+    if (cls.defineAPI) {
+      cls.defineAPI(api, api.mapStruct(cls, true));
+    }
   }
 
   for (let k in areaclasses) {
