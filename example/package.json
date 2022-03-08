@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "diff": "^5.0.0",
-    "marked": "^2.0.0",
+    "marked": "^4.0.10",
     "pngjs": "^5.0.0",
     "pngjs-nozlib": "^1.0.0"
   }
