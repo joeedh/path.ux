@@ -697,7 +697,7 @@ export class AreaDragTool extends ToolBase {
           dst.editors = [];
           dst.editormap = {};
 
-          if (!(dst.area.constructor.define().areaname in src.editormap)) {
+          if (dst.area && !(dst.area.constructor.define().areaname in src.editormap)) {
             dst.area.push_ctx_active();
             dst.area.on_area_inactive();
             dst.area.remove();
