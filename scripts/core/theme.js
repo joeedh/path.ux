@@ -122,6 +122,7 @@ export const DefaultTheme = {
     CheckSide: 'left',
     height   : 32,
     width    : 32,
+    "background-color" : "rgb(168,168,168)",
   },
 
   colorfield: {

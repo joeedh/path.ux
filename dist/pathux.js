@@ -24059,6 +24059,18 @@ class ToolOp extends EventHandler {
     return {};
   }
 
+  /** Returns a read-only map of input property values,
+   *  e.g. `let {prop1, prop2} = this.getValues()` */
+  getInputs() {
+    let ret = {};
+
+    for (let k in this.inputs) {
+      ret[k] = this.inputs[k].getValue();
+    }
+
+    return ret;
+  }
+
   static Equals(a, b) {
     if (!a || !b) return false;
     if (a.constructor !== b.constructor) return false;
@@ -25107,6 +25119,7 @@ class ToolStack extends Array {
 
       toolop._on_cancel = (function (toolop) {
         if (!(toolop.undoflag & UndoFlags$1.NO_UNDO)) {
+          this[this.cur].undo(ctx);
           this.pop_i(this.cur);
           this.cur--;
         }
@@ -26427,6 +26440,13 @@ class DataStruct {
     }
   }
 
+  clear() {
+    this.pathmap = {};
+    this.members = [];
+
+    return this;
+  }
+
   copy() {
     let ret = new DataStruct();
 
@@ -26796,7 +26816,8 @@ window._debug__map_structs = _map_structs; //global for debugging purposes only
 let _dummypath = new DataPath();
 
 let DummyIntProperty = new IntProperty();
-const CLS_API_KEY = Symbol("__dp_map_id");
+const CLS_API_KEY = Symbol("dp_map_id");
+const CLS_API_KEY_CUSTOM = Symbol("dp_map_custom");
 
 class DataAPI extends ModelInterface {
   constructor() {
@@ -26879,6 +26900,14 @@ class DataAPI extends ModelInterface {
     this.structs.push(dstruct);
 
     _map_structs[key] = dstruct;
+  }
+
+  /* Associate cls with a DataStruct
+   * via callback, which will be called
+   * with an instance of cls as its argument*/
+  mapStructCustom(cls, callback) {
+    this.mapStruct(cls, true);
+    cls[CLS_API_KEY_CUSTOM] = callback;
   }
 
   mapStruct(cls, auto_create = true, name = cls.name) {
@@ -27187,7 +27216,11 @@ class DataAPI extends ModelInterface {
           dynstructobj = obj2;
 
           if (obj2 !== undefined) {
-            dstruct = this.mapStruct(obj2.constructor, false);
+            if (CLS_API_KEY_CUSTOM in obj2.constructor) {
+              dstruct = obj2.constructor[CLS_API_KEY_CUSTOM](obj2);
+            } else {
+              dstruct = this.mapStruct(obj2.constructor, false);
+            }
           } else {
             dstruct = dpath.data;
           }
@@ -28119,6 +28152,7 @@ const DefaultTheme = {
     CheckSide: 'left',
     height   : 32,
     width    : 32,
+    "background-color" : "rgb(168,168,168)",
   },
 
   colorfield: {
@@ -60160,7 +60194,7 @@ class DataModel {
 
   static register(cls) {
     if (!cls.hasOwnProperty("defineAPI")) {
-    //  throw new Error(cls.name + "is missing a defineAPI method");
+      //  throw new Error(cls.name + "is missing a defineAPI method");
     }
 
     DataModelClasses.push(cls);
@@ -60195,12 +60229,12 @@ function GetContextClass(ctxClass) {
       return this[StateSymbol].screen;
     }
 
-    set state(v) {
-      this[StateSymbol] = v;
-    }
-
     get state() {
       return this[StateSymbol];
+    }
+
+    set state(v) {
+      this[StateSymbol] = v;
     }
 
     get api() {
@@ -60216,19 +60250,19 @@ function GetContextClass(ctxClass) {
       return this;
     }
 
-    message(msg, timeout=2500) {
+    message(msg, timeout = 2500) {
       return message(this.screen, msg, timeout);
     }
 
-    error(msg, timeout=2500) {
+    error(msg, timeout = 2500) {
       return error(this.screen, msg, timeout);
     }
 
-    warning(msg, timeout=2500) {
+    warning(msg, timeout = 2500) {
       return warning(this.screen, msg, timeout);
     }
 
-    progressBar(msg, percent, color, timeout=1000) {
+    progressBar(msg, percent, color, timeout = 1000) {
       return progbarNote(this.screen, msg, percent, color, timeout);
     }
   }
@@ -60295,16 +60329,16 @@ class SimpleScreen extends Screen {
     ]);
   }
 
+  static define() {
+    return {
+      tagname: "simple-screen-x"
+    }
+  }
+
   init() {
     if (this.ctx.state.startArgs.registerSaveOpenOps) {
       this.keymap.add(new HotKey("S", ["CTRL"], "app.save()"));
       this.keymap.add(new HotKey("O", ["CTRL"], "app.open()"));
-    }
-  }
-
-  static define() {
-    return {
-      tagname: "simple-screen-x"
     }
   }
 
@@ -60392,6 +60426,16 @@ class AppState {
     this.makeScreen();
   }
 
+  saveFileSync(objects, args = {}) {
+    args = new FileArgs(Object.assign({
+      magic  : this.fileMagic,
+      version: this.fileVersion,
+      ext    : this.fileExt
+    }, args));
+
+    return saveFile(this, args, objects);
+  }
+
   /** Serialize the application state. Takes
    *  a list of objects to save (with nstructjs);
    *  Subclasses should override this, like so:
@@ -60409,8 +60453,33 @@ class AppState {
     }, args));
 
     return new Promise((accept, reject) => {
-      accept(saveFile(this, args, objects));
+      accept(this.saveFileSync(objects, args));
     });
+  }
+
+  loadFileSync(data, args = {}) {
+    args = new FileArgs(Object.assign({
+      magic  : this.fileMagic,
+      version: this.fileVersion,
+      ext    : this.fileExt
+    }, args));
+
+    let ret = loadFile(this, args, data);
+
+    if (args.doScreen) {
+      try {
+        this.ensureMenuBar();
+      } catch (error) {
+        console.error(error.stack);
+        console.error(error.message);
+        console.error("Failed to add menu bar");
+      }
+
+      this.screen.completeSetCSS();
+      this.screen.completeUpdate();
+    }
+
+    return ret;
   }
 
   /**
@@ -60438,28 +60507,7 @@ class AppState {
    *  */
   loadFile(data, args = {}) {
     return new Promise((accept, reject) => {
-      args = new FileArgs(Object.assign({
-        magic  : this.fileMagic,
-        version: this.fileVersion,
-        ext    : this.fileExt
-      }, args));
-
-      let ret = loadFile(this, args, data);
-
-      if (args.doScreen) {
-        try {
-          this.ensureMenuBar();
-        } catch (error) {
-          console.error(error.stack);
-          console.error(error.message);
-          console.error("Failed to add menu bar");
-        }
-
-        this.screen.completeSetCSS();
-        this.screen.completeUpdate();
-      }
-
-      accept(ret);
+      accept(this.loadFileSync(data, args));
     });
   }
 

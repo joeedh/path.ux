@@ -20,7 +20,7 @@ export class DataModel {
 
   static register(cls) {
     if (!cls.hasOwnProperty("defineAPI")) {
-    //  throw new Error(cls.name + "is missing a defineAPI method");
+      //  throw new Error(cls.name + "is missing a defineAPI method");
     }
 
     DataModelClasses.push(cls);
@@ -57,12 +57,12 @@ function GetContextClass(ctxClass) {
       return this[StateSymbol].screen;
     }
 
-    set state(v) {
-      this[StateSymbol] = v;
-    }
-
     get state() {
       return this[StateSymbol];
+    }
+
+    set state(v) {
+      this[StateSymbol] = v;
     }
 
     get api() {
@@ -78,19 +78,19 @@ function GetContextClass(ctxClass) {
       return this;
     }
 
-    message(msg, timeout=2500) {
+    message(msg, timeout = 2500) {
       return ui_noteframe.message(this.screen, msg, timeout);
     }
 
-    error(msg, timeout=2500) {
+    error(msg, timeout = 2500) {
       return ui_noteframe.error(this.screen, msg, timeout);
     }
 
-    warning(msg, timeout=2500) {
+    warning(msg, timeout = 2500) {
       return ui_noteframe.warning(this.screen, msg, timeout);
     }
 
-    progressBar(msg, percent, color, timeout=1000) {
+    progressBar(msg, percent, color, timeout = 1000) {
       return ui_noteframe.progbarNote(this.screen, msg, percent, color, timeout);
     }
   }
@@ -165,16 +165,16 @@ export class SimpleScreen extends Screen {
     ])
   }
 
+  static define() {
+    return {
+      tagname: "simple-screen-x"
+    }
+  }
+
   init() {
     if (this.ctx.state.startArgs.registerSaveOpenOps) {
       this.keymap.add(new HotKey("S", ["CTRL"], "app.save()"));
       this.keymap.add(new HotKey("O", ["CTRL"], "app.open()"));
-    }
-  }
-
-  static define() {
-    return {
-      tagname: "simple-screen-x"
     }
   }
 
@@ -262,6 +262,16 @@ export class AppState {
     this.makeScreen();
   }
 
+  saveFileSync(objects, args = {}) {
+    args = new FileArgs(Object.assign({
+      magic  : this.fileMagic,
+      version: this.fileVersion,
+      ext    : this.fileExt
+    }, args));
+
+    return saveFile(this, args, objects);
+  }
+
   /** Serialize the application state. Takes
    *  a list of objects to save (with nstructjs);
    *  Subclasses should override this, like so:
@@ -279,8 +289,33 @@ export class AppState {
     }, args));
 
     return new Promise((accept, reject) => {
-      accept(saveFile(this, args, objects));
+      accept(this.saveFileSync(objects, args));
     });
+  }
+
+  loadFileSync(data, args = {}) {
+    args = new FileArgs(Object.assign({
+      magic  : this.fileMagic,
+      version: this.fileVersion,
+      ext    : this.fileExt
+    }, args));
+
+    let ret = loadFile(this, args, data);
+
+    if (args.doScreen) {
+      try {
+        this.ensureMenuBar();
+      } catch (error) {
+        console.error(error.stack);
+        console.error(error.message);
+        console.error("Failed to add menu bar");
+      }
+
+      this.screen.completeSetCSS();
+      this.screen.completeUpdate();
+    }
+
+    return ret;
   }
 
   /**
@@ -308,28 +343,7 @@ export class AppState {
    *  */
   loadFile(data, args = {}) {
     return new Promise((accept, reject) => {
-      args = new FileArgs(Object.assign({
-        magic  : this.fileMagic,
-        version: this.fileVersion,
-        ext    : this.fileExt
-      }, args));
-
-      let ret = loadFile(this, args, data);
-
-      if (args.doScreen) {
-        try {
-          this.ensureMenuBar();
-        } catch (error) {
-          console.error(error.stack);
-          console.error(error.message);
-          console.error("Failed to add menu bar");
-        }
-
-        this.screen.completeSetCSS();
-        this.screen.completeUpdate();
-      }
-
-      accept(ret);
+      accept(this.loadFileSync(data, args));
     });
   }
 
