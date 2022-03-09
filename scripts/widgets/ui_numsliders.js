@@ -13,6 +13,7 @@ import {eventWasTouch} from "../path-controller/util/simple_events.js";
 import {KeyMap, keymap} from "../path-controller/util/simple_events.js";
 import {color2css, css2color} from "../core/ui_theme.js";
 import {ThemeEditor} from "./theme_editor.js";
+import {Unit} from '../core/units.js';
 
 export const sliderDomAttributes = new Set([
   "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
@@ -271,9 +272,10 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
   static define() {
     return {
-      tagname    : "numslider-x",
-      style      : "numslider",
-      parentStyle: "button"
+      tagname          : "numslider-x",
+      style            : "numslider",
+      parentStyle      : "button",
+      havePickClipboard: true,
     };
   }
 
@@ -333,8 +335,35 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     updateSliderFromDom(this);
   }
 
+  clipboardCopy() {
+    console.log("Copy", ""+this.value);
+    cconst.setClipboardData("value", "text/plain", "" + this.value);
+  }
+
+  clipboardPaste() {
+    let data = cconst.getClipboardData("text/plain");
+    console.log("Paste", data);
+
+    if (typeof data == "object") {
+      data = data.data;
+    }
+
+    let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+    let val = units.parseValue(data, this.baseUnit, displayUnit);
+
+    if (typeof val === "number" && !isNaN(val)) {
+      this.setValue(val);
+    }
+  }
+
   swapWithTextbox() {
     let tbox = UIBase.createElement("textbox-x");
+
+    if (this.modalRunning) {
+      this.popModal();
+    }
+
+    this.mdown = false;
 
     tbox.ctx = this.ctx;
     tbox._init();
@@ -590,7 +619,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
   setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
     value = Math.min(Math.max(value, this.range[0]), this.range[1]);
-    
+
     this._value = value;
 
     if (this.hasAttribute("integer")) {

@@ -946,6 +946,10 @@ export class UIBase extends HTMLElement {
     this.addEventListener("touchend", (e) => {
       do_touch(e, "mouseup", 0);
     }, {passive: false});
+
+    if (this.constructor.define().havePickClipboard) {
+      this._clipboardHotkeyInit();
+    }
   }
 
   /*
@@ -1841,7 +1845,9 @@ export class UIBase extends HTMLElement {
       this._clipboard_keyend();
     }
 
-    this.tabIndex = 0; //enable self key events when element has focus
+    this.doOnce(() => {
+      this.tabIndex = 0; //enable self key events when element has focus
+    });
 
     this.addEventListener("keydown", (e) => {
       return this._clipboard_keydown(e, true);
@@ -1868,10 +1874,6 @@ export class UIBase extends HTMLElement {
 
     if (!this.hasAttribute("id") && this._id) {
       this.setAttribute("id", this._id);
-    }
-
-    if (this.constructor.define().havePickClipboard) {
-      this._clipboardHotkeyInit();
     }
   }
 
