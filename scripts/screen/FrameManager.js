@@ -1211,7 +1211,7 @@ export class Screen extends ui_base.UIBase {
           continue;
         }
 
-        if (keymap.handle(this.ctx, e)) {
+        if (keymap.handle(area.ctx, e)) {
           handled = true;
           break;
         }
@@ -1231,7 +1231,7 @@ export class Screen extends ui_base.UIBase {
         sarea.area.push_ctx_active();
 
         for (let keymap of sarea.area.getKeyMaps()) {
-          if (keymap.handle(this.ctx, e)) {
+          if (keymap.handle(sarea.area.ctx, e)) {
             handled = true;
             break;
           }
@@ -1428,7 +1428,9 @@ export class Screen extends ui_base.UIBase {
 
     //ensure each area has proper ctx set
     for (let sarea of this.sareas) {
-      sarea.ctx = this.ctx;
+      if (!sarea.ctx) {
+        sarea.ctx = this.ctx;
+      }
     }
 
     return (function* () {
