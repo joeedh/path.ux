@@ -44,8 +44,6 @@ import * as ui_noteframe from '../widgets/ui_noteframe.js';
  *
  * */
 function GetContextClass(ctxClass) {
-  let StateSymbol = Symbol("AppState ref");
-
   let ok = 0;
   let cls = ctxClass;
   while (cls) {
@@ -68,47 +66,23 @@ function GetContextClass(ctxClass) {
     OverlayDerived = ctxClass;
   } else {
     OverlayDerived = makeDerivedOverlay(ctxClass);
-    Context.register(OverlayDerived);
   }
 
-  return class ContextDerived extends Context {
+  class Overlay extends OverlayDerived {
     constructor(state) {
       super(state);
-
-      this.pushOverlay(new OverlayDerived(state))
-    }
-  }
-
-  return class ContextDerived extends ctxClass {
-    constructor(state) {
-      super(...arguments);
-
-      this[StateSymbol] = state;
     }
 
     get screen() {
-      return this[StateSymbol].screen;
-    }
-
-    get state() {
-      return this[StateSymbol];
-    }
-
-    set state(v) {
-      this[StateSymbol] = v;
+      return this.state.screen;
     }
 
     get api() {
-      return this[StateSymbol].api;
+      return this.state.api;
     }
 
     get toolstack() {
-      return this[StateSymbol].toolstack;
-    }
-
-    toLocked() {
-      //for now, don't support context locking
-      return this;
+      return this.state.toolstack;
     }
 
     message(msg, timeout = 2500) {
@@ -125,6 +99,20 @@ function GetContextClass(ctxClass) {
 
     progressBar(msg, percent, color, timeout = 1000) {
       return ui_noteframe.progbarNote(this.screen, msg, percent, color, timeout);
+    }
+  }
+
+  Context.register(Overlay);
+
+  return class ContextDerived extends Context {
+    constructor(state) {
+      super(state);
+
+      this.pushOverlay(new Overlay(state))
+    }
+
+    static defineAPI(api, st) {
+      return Overlay.defineAPI(api, st);
     }
   }
 }
