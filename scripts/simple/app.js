@@ -1,8 +1,8 @@
 import nstructjs from '../path-controller/util/struct.js';
+import {Context, ContextOverlay, makeDerivedOverlay} from '../path-controller/controller/context.js';
 
 export const DataModelClasses = [];
 import {ToolStack} from '../path-controller/toolsys/toolsys.js';
-import {Context} from '../path-controller/controller/context.js';
 import {DataAPI} from '../path-controller/controller/controller.js';
 import {Screen} from '../screen/FrameManager.js';
 import {areaclasses} from '../screen/area_wrangler.js';
@@ -45,6 +45,39 @@ import * as ui_noteframe from '../widgets/ui_noteframe.js';
  * */
 function GetContextClass(ctxClass) {
   let StateSymbol = Symbol("AppState ref");
+
+  let ok = 0;
+  let cls = ctxClass;
+  while (cls) {
+    if (cls === Context) {
+      ok = 1;
+    } else if (cls === ContextOverlay) {
+      ok = 2;
+    }
+
+    cls = cls.__proto__;
+  }
+
+  if (ok === 1) {
+    return ctxClass;
+  }
+
+  let OverlayDerived;
+
+  if (ok === 2) {
+    OverlayDerived = ctxClass;
+  } else {
+    OverlayDerived = makeDerivedOverlay(ctxClass);
+    Context.register(OverlayDerived);
+  }
+
+  return class ContextDerived extends Context {
+    constructor(state) {
+      super(state);
+
+      this.pushOverlay(new OverlayDerived(state))
+    }
+  }
 
   return class ContextDerived extends ctxClass {
     constructor(state) {
