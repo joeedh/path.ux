@@ -461,11 +461,6 @@ export class TextBox extends TextBoxBase {
   }
 
   _change(text) {
-    //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
-    //console.log("onchange", this._focus);
-
-    console.log("change", text);
-
     if (this.realtime) {
       this._updatePathVal(text);
     }

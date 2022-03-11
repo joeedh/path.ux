@@ -137,7 +137,7 @@ export class SideBar extends Container {
 
     h = Math.min(h, editor.size[1]-25);
 
-    this.style["position"] = UIBase.PositionKey;
+    this.style["position"] = "absolute";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
     this.style["z-index"] = "100";
@@ -146,7 +146,7 @@ export class SideBar extends Container {
     this.style["background-color"] = this.getDefault("AreaHeaderBG");
 
     this.tabbar.style["height"] = (h - 45) + "px";
-    this.style["left"] = (editor.pos[0] + editor.size[0] - w) + "px";
+    this.style["left"] = (editor.size[0] - w) + "px";
   }
 
   update() {
