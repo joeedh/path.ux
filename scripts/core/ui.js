@@ -757,7 +757,7 @@ export class Container extends ui_base.UIBase {
           this._menu.remove();
         }
 
-        this._menu = createMenu(this.ctx, title, templ);
+        this._menu = createMenu(this.ctx, title, list);
         return this._menu;
       }
     } else if (list) {
@@ -1260,7 +1260,7 @@ export class Container extends ui_base.UIBase {
         return check;
       }
 
-      if (!(packflag & PackFlags.USE_ICONS)) {
+      if (!(packflag & PackFlags.USE_ICONS) && !(prop.flag & (PropFlags.USE_ICONS | PropFlags.FORCE_ENUM_CHECKBOXES))) {
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
           let strip = this.strip();
           strip.label(prop.uiname);
@@ -1271,8 +1271,14 @@ export class Container extends ui_base.UIBase {
         }
 
       } else {
+        if (prop.flag & PropFlags.USE_ICONS) {
+          packflag |= PackFlags.USE_ICONS;
+        } else if (prop.flag & PropFlags.FORCE_ENUM_CHECKBOXES) {
+          packflag &= ~PackFlags.USE_ICONS;
+        }
+
         if (packflag & PackFlags.FORCE_PROP_LABELS) {
-          let strip = thdis.strip();
+          let strip = this.strip();
           strip.label(prop.uiname);
 
           return strip.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
