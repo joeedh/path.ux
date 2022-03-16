@@ -14,10 +14,10 @@ import {_themeUpdateKey, CSSFont} from "../core/ui_base.js";
 let keymap = events.keymap;
 
 let EnumProperty = toolprop.EnumProperty,
-    PropTypes = toolprop.PropTypes;
+    PropTypes    = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase,
-    PackFlags = ui_base.PackFlags,
+let UIBase     = ui_base.UIBase,
+    PackFlags  = ui_base.PackFlags,
     IconSheets = ui_base.IconSheets;
 
 let parsepx = ui_base.parsepx;
@@ -132,8 +132,8 @@ export class ButtonEventBase extends UIBase {
       this._redraw();
     });
 
-    this.addEventListener("pointerdown", press, {captured : true, passive : false});
-    this.addEventListener("pointerup", depress, {captured : true, passive : false});
+    this.addEventListener("pointerdown", press, {captured: true, passive: false});
+    this.addEventListener("pointerup", depress, {captured: true, passive: false});
     this.addEventListener("pointerover", (e) => {
       if (this.disabled)
         return;
@@ -204,11 +204,46 @@ export class Button extends ButtonEventBase {
 
     this._pressed = false;
     this._highlight = false;
+    this._pressedTime = 0;
+    this._pressedTimeout = 100;
 
     this._auto_depress = true;
 
     this._last_name = undefined;
     this._last_disabled = undefined;
+  }
+
+  get name() {
+    return "" + this.getAttribute("name");
+  }
+
+  set name(val) {
+    this.setAttribute("name", val);
+  }
+
+  get _pressed() {
+    return this.__pressed;
+  }
+
+  set _pressed(v) {
+    let changed = !v !== !this._pressed;
+
+    if (v) {
+      this._pressedTime = util.time_ms();
+    } else if (changed) {
+      window.setTimeout(() => {
+        this.setCSS();
+      }, this._pressedTimeout + 1);
+    }
+
+    this.__pressed = v;
+  }
+
+  static define() {
+    return {
+      tagname: "button-x",
+      style  : "button"
+    };
   }
 
   init() {
@@ -220,24 +255,33 @@ export class Button extends ButtonEventBase {
     this.setCSS();
   }
 
-  get name() {
-    return "" + this.getAttribute("name");
+  on_enabled() {
+    this.setCSS();
   }
 
-  set name(val) {
-    this.setAttribute("name", val);
+  on_disabled() {
+    this.setCSS();
   }
 
   setCSS() {
     super.setCSS();
 
+    if (this.hasDefault("pressedTimeout")) {
+      this._pressedTimeout = this.getDefault("pressedTimeout");
+    }
+
     let subkey = undefined;
+
+    let pressed = this._pressed;
+    if (!pressed && util.time_ms() - this._pressedTime < this._pressedTimeout) {
+      pressed = true;
+    }
 
     if (this.disabled) {
       subkey = "disabled";
-    } else if (this._pressed && this._highlight) {
+    } else if (pressed && this._highlight) {
       subkey = "highlight-pressed";
-    } else if (this._pressed) {
+    } else if (pressed) {
       subkey = "pressed";
     } else if (this._highlight) {
       subkey = "highlight";
@@ -269,14 +313,16 @@ export class Button extends ButtonEventBase {
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+      let e = {x         : x, y: y, stopPropagation: () => {
+        }, preventDefault: () => {
+        }
+      };
 
       this._onpress(e);
     }
 
     super.click();
   }
-
 
   _redraw() {
     this.setCSS();
@@ -302,14 +348,8 @@ export class Button extends ButtonEventBase {
       this._last_name = this.name;
     }
   }
-
-  static define() {
-    return {
-      tagname: "button-x",
-      style  : "button"
-    };
-  }
 }
+
 UIBase.register(Button);
 
 //use .setAttribute("linear") to disable nonlinear sliding
@@ -384,13 +424,31 @@ export class OldButton extends ButtonEventBase {
     this.shadow.appendChild(this.dom);
   }
 
+  get r() {
+    return this.getDefault("border-radius");
+  }
+
+  set r(val) {
+    this.overrideDefault("border-radius", val);
+  }
+
+  static define() {
+    return {
+      tagname: "old-button-x",
+      style  : "button"
+    };
+  }
+
   click() {
     if (this._onpress) {
       let rect = this.getClientRects();
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+      let e = {x         : x, y: y, stopPropagation: () => {
+        }, preventDefault: () => {
+        }
+      };
 
       this._onpress(e);
     }
@@ -426,14 +484,6 @@ export class OldButton extends ButtonEventBase {
       this.updateName();
       this.updateWidth();
     }
-  }
-
-  get r() {
-    return this.getDefault("border-radius");
-  }
-
-  set r(val) {
-    this.overrideDefault("border-radius", val);
   }
 
   old_bindEvents() {
@@ -495,8 +545,8 @@ export class OldButton extends ButtonEventBase {
       this.undoBreakPoint();
     }
 
-    this.addEventListener("mousedown", press, {captured : true, passive : false});
-    this.addEventListener("mouseup", depress, {captured : true, passive : false});
+    this.addEventListener("mousedown", press, {captured: true, passive: false});
+    this.addEventListener("mouseup", depress, {captured: true, passive: false});
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)
         return;
@@ -534,7 +584,7 @@ export class OldButton extends ButtonEventBase {
 
   updateDefaultSize() {
     let height = ~~(this.getDefault("height")) + this.getDefault("padding");
-    let size = this.getDefault("DefaultText").size * 1.33;
+    let size = this.getDefault("DefaultText").size*1.33;
 
     if (height === undefined || size === undefined || isNaN(height) || isNaN(size)) {
       return;
@@ -603,9 +653,9 @@ export class OldButton extends ButtonEventBase {
     let pad = this.getDefault("padding");
     let ts = this.getDefault("DefaultText").size;
 
-    let tw = ui_base.measureText(this, this._genLabel(),{
-      size : ts,
-      font : this.getDefault("DefaultText")
+    let tw = ui_base.measureText(this, this._genLabel(), {
+      size: ts,
+      font: this.getDefault("DefaultText")
     }).width + 2.0*pad + this._leftPad + this._rightPad;
 
     if (this._namePad !== undefined) {
@@ -616,7 +666,7 @@ export class OldButton extends ButtonEventBase {
 
     w = Math.max(w, tw);
     w = ~~w;
-    this.dom.style["width"] = w+"px";
+    this.dom.style["width"] = w + "px";
     this.updateBorders();
   }
 
@@ -652,7 +702,7 @@ export class OldButton extends ButtonEventBase {
     }
   }
 
-  updateWidth(w_add=0) {
+  updateWidth(w_add = 0) {
   }
 
   _repos_canvas() {
@@ -712,7 +762,7 @@ export class OldButton extends ButtonEventBase {
     }
   }
 
-  _redraw(draw_text=true) {
+  _redraw(draw_text = true) {
     //console.log("button draw");
 
     let dpi = this.getDPI();
@@ -722,7 +772,7 @@ export class OldButton extends ButtonEventBase {
     if (this._pressed && this._highlight) {
       this.dom._background = this.getSubDefault(subkey, "highlight-pressed", "BoxHighlight");
     } else if (this._pressed) {
-      this.dom._background = this.getSubDefault(subkey, "pressed","BoxDepressed");
+      this.dom._background = this.getSubDefault(subkey, "pressed", "BoxDepressed");
     } else if (this._highlight) {
       this.dom._background = this.getSubDefault(subkey, "highlight", "BoxHighlight");
     } else {
@@ -753,7 +803,7 @@ export class OldButton extends ButtonEventBase {
 
       this.g.lineWidth = this.getDefault("focus-border-width", undefined, 1.0)*dpi;
 
-      ui_base.drawRoundBox(this, this.dom, this.g, w-p*2, h-p*2, this.r, "stroke", this.getDefault("BoxHighlight"));
+      ui_base.drawRoundBox(this, this.dom, this.g, w - p*2, h - p*2, this.r, "stroke", this.getDefault("BoxHighlight"));
 
       this.g.lineWidth = lw;
       this.g.translate(-p, -p);
@@ -775,8 +825,8 @@ export class OldButton extends ButtonEventBase {
 
     let font = this.getSubDefault(subkey, "DefaultText");
 
-    let pad = this.getDefault("padding") * dpi;
-    let ts = font.size * dpi;
+    let pad = this.getDefault("padding")*dpi;
+    let ts = font.size*dpi;
 
     let text = this._genLabel();
 
@@ -787,23 +837,17 @@ export class OldButton extends ButtonEventBase {
     let tw = ui_base.measureText(this, text, undefined, undefined, ts, font).width;
 
     let cx = pad*0.5 + this._leftPad*dpi;
-    let cy = ts + (h-ts)/3.0;
+    let cy = ts + (h - ts)/3.0;
 
     let g = this.g;
 
     ui_base.drawText(this, ~~cx, ~~cy, text, {
-      canvas : this.dom,
-      g : this.g,
-      size : ts / dpi,
-      font : font
+      canvas: this.dom,
+      g     : this.g,
+      size  : ts/dpi,
+      font  : font
     });
   }
-
-  static define() {
-    return {
-      tagname: "old-button-x",
-      style  : "button"
-    };
-  }
 }
+
 UIBase.internalRegister(OldButton);
