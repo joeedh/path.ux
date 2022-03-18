@@ -2149,12 +2149,13 @@ export class UIBase extends HTMLElement {
 
         let v = style[k];
 
-        if (typeof v === "object") {
+        if (typeof v === "object" && v instanceof CSSFont) {
+          this.style[k] = style[k].genCSS();
+        } else if (typeof v === "object") {
           continue;
         } else {
           this.style[k] = style[k];
         }
-
         this.default_overrides[k] = style[k];
       }
 

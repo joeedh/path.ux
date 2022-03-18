@@ -230,10 +230,10 @@ export class Button extends ButtonEventBase {
 
     if (v) {
       this._pressedTime = util.time_ms();
-    } else if (changed) {
+    } else if (changed && util.time_ms() - this._pressedTime < this._pressedTimeout) {
       window.setTimeout(() => {
         this.setCSS();
-      }, this._pressedTimeout + 1);
+      }, this._pressedTimeout - (util.time_ms() - this._pressedTime) + 1);
     }
 
     this.__pressed = v;
