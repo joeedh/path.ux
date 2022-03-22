@@ -155,11 +155,6 @@ export class Curve1DWidget extends ColumnFrame {
   }
 
   _redraw() {
-    if (this.hidden || !this.isConnected) {
-      console.log("canvas was hidden");
-      return;
-    }
-
     //forcibly clear canvas, works better then clearRect
     this.canvas.width = this.canvas.width;
     this.canvas.height = this.canvas.height;
