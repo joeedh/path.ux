@@ -1273,6 +1273,10 @@ export class ColorPickerButton extends UIBase {
   }
 
   set noLabel(v) {
+    if (this.labelDom) {
+      this.labelDom.hidden = true; //will be deleted later
+    }
+
     this.setAttribute("no-label", v ? "true" : "false");
   }
 
