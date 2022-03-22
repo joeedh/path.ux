@@ -2488,14 +2488,22 @@ export class UIBase extends HTMLElement {
   }
 
   loadNumConstraints(prop = undefined, dom = this, onModifiedCallback = undefined) {
-    if (!this.hasAttribute("datapath")) {
-      return;
-    }
-
     let modified = false;
 
     if (!prop) {
-      prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+      let path;
+
+      if (dom.hasAttribute("datapath")) {
+        path = dom.getAttribute("datapath");
+      }
+
+      if (path === undefined && this.hasAttribute("datapath")) {
+        path = this.getAttribute("datapath");
+      }
+
+      if (typeof path === "string") {
+        prop = this.getPathMeta(this.ctx, path);
+      }
     }
 
     let loadAttr = (propkey, domkey = key, thiskey = key) => {
@@ -2503,7 +2511,7 @@ export class UIBase extends HTMLElement {
 
       if (dom.hasAttribute(domkey)) {
         this[thiskey] = parseFloat(dom.getAttribute(domkey));
-      } else {
+      } else if (prop) {
         this[thiskey] = prop[propkey];
       }
 
@@ -2525,7 +2533,7 @@ export class UIBase extends HTMLElement {
     let oldmin = this.range[0];
     let oldmax = this.range[1];
 
-    let range = prop.range;
+    let range = prop ? prop.range : undefined;
     if (range && !dom.hasAttribute("min")) {
       this.range[0] = range[0];
     } else if (dom.hasAttribute("min")) {
@@ -2551,7 +2559,7 @@ export class UIBase extends HTMLElement {
       //handles anonymouse <numslider-x integer> case
       this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
     } else {
-      this.isInt = prop instanceof IntProperty;
+      this.isInt = prop && prop instanceof IntProperty;
     }
 
     if (!this.isInt !== !oldint) {
@@ -2561,7 +2569,7 @@ export class UIBase extends HTMLElement {
     let oldedit = this.editAsBaseUnit;
 
     if (this.editAsBaseUnit === undefined) {
-      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+      if (prop && (prop.flag & PropFlags.EDIT_AS_BASE_UNIT)) {
         this.editAsBaseUnit = true;
       } else {
         this.editAsBaseUnit = false;

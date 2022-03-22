@@ -21,7 +21,7 @@ export const sliderDomAttributes = new Set([
   "slideSpeed"
 ]);
 
-function updateSliderFromDom(dom, slider=dom) {
+function updateSliderFromDom(dom, slider = dom) {
   slider.loadNumConstraints(undefined, dom);
 }
 
@@ -1021,9 +1021,9 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       },
       pointerenter: (e) => {
       },
-      blur      : (e) => {
+      blur        : (e) => {
       },
-      focus     : (e) => {
+      focus       : (e) => {
       },
 
       pointerup: (e) => {
@@ -1724,10 +1724,12 @@ export class SliderWithTextbox extends ColumnFrame {
 
     if (this.hasAttribute("datapath")) {
       this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
+      this.textbox.setAttribute("datapath", this.getAttribute("datapath"));
     }
 
     if (this.hasAttribute("mass_set_path")) {
       this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"))
+      this.textbox.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
     }
   }
 
