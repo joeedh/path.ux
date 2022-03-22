@@ -627,8 +627,9 @@ export class TabBar extends UIBase {
     for (let t of this.tabs) {
       if (t.dom) {
         t.dom.remove();
-        t.dom = undefined;
       }
+
+      t.remove();
     }
 
     this.tabs = [];

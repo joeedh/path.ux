@@ -668,6 +668,7 @@ let first = (iter) => {
 
 import {DataPathError} from '../path-controller/controller/controller.js';
 import {TimeoutPromise} from '../path-controller/util/util.js';
+import {IntProperty, NumberConstraints, PropFlags} from '../path-controller/toolsys/toolprop.js';
 
 let _mobile_theme_patterns = [
   /.*width.*/,
@@ -779,6 +780,51 @@ export var _themeUpdateKey = calcThemeKey();
 export function flagThemeUpdate() {
   _themeUpdateKey = calcThemeKey();
 }
+
+let setTimeoutQueue = new Set();
+let haveTimeout = false;
+
+function timeout_cb() {
+  if (setTimeoutQueue.size === 0) {
+    haveTimeout = false;
+    return;
+  }
+
+  for (let item of setTimeoutQueue) {
+    let {cb, timeout, time} = item;
+    if (util.time_ms() - time < timeout) {
+      continue;
+    }
+
+    setTimeoutQueue.delete(item);
+
+    try {
+      cb();
+    } catch (error) {
+      console.error(error.stack);
+    }
+  }
+
+  window.setTimeout(timeout_cb, 0);
+}
+
+export function internalSetTimeout(cb, timeout) {
+  if (timeout > 100) { //call directly
+    window.setTimeout(cb, timeout);
+    return;
+  }
+
+  setTimeoutQueue.add({
+    cb, timeout, time: util.time_ms()
+  });
+
+  if (!haveTimeout) {
+    haveTimeout = true;
+    window.setTimeout(timeout_cb, 0);
+  }
+}
+
+window.setTimeoutQueue = setTimeoutQueue;
 
 export class UIBase extends HTMLElement {
   constructor() {
@@ -2265,7 +2311,7 @@ export class UIBase extends HTMLElement {
       return;
     }
 
-    this.ctx = this._modalstack.pop();
+    //this.ctx = this._modalstack.pop();
     popModalLight(this._modaldata);
     this._modaldata = undefined;
   }
@@ -2332,7 +2378,7 @@ export class UIBase extends HTMLElement {
       tick++;
     };
 
-    setTimeout(cb, 5);
+    window.setTimeout(cb, 5);
     this._flashtimer = timer = window.setInterval(cb, 20);
 
     let div = document.createElement("div");
@@ -2438,6 +2484,100 @@ export class UIBase extends HTMLElement {
 
     if (!head || head.hadError === true) {
       throw new Error("toolpath error");
+    }
+  }
+
+  loadNumConstraints(prop = undefined, dom = this, onModifiedCallback = undefined) {
+    if (!this.hasAttribute("datapath")) {
+      return;
+    }
+
+    let modified = false;
+
+    if (!prop) {
+      prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
+    }
+
+    let loadAttr = (propkey, domkey = key, thiskey = key) => {
+      let old = this[thiskey];
+
+      if (dom.hasAttribute(domkey)) {
+        this[thiskey] = parseFloat(dom.getAttribute(domkey));
+      } else {
+        this[thiskey] = prop[propkey];
+      }
+
+      if (this[thiskey] !== old) {
+        modified = true;
+      }
+    }
+
+    for (let key of NumberConstraints) {
+      let thiskey = key, domkey = key;
+
+      if (key === "range") { //handled later
+        continue;
+      }
+
+      loadAttr(key, domkey, thiskey);
+    }
+
+    let oldmin = this.range[0];
+    let oldmax = this.range[1];
+
+    let range = prop.range;
+    if (range && !dom.hasAttribute("min")) {
+      this.range[0] = range[0];
+    } else if (dom.hasAttribute("min")) {
+      this.range[0] = parseFloat(dom.getAttribute("min"));
+    }
+
+    if (range && !dom.hasAttribute("max")) {
+      this.range[1] = range[1];
+    } else if (dom.hasAttribute("max")) {
+      this.range[1] = parseFloat(dom.getAttribute("max"));
+    }
+
+    if (this.range[0] !== oldmin || this.range[1] !== oldmax) {
+      modified = true;
+    }
+
+    let oldint = this.isInt;
+
+    if (dom.getAttribute("integer")) {
+      let val = dom.getAttribute("integer");
+      val = ("" + val).toLowerCase();
+
+      //handles anonymouse <numslider-x integer> case
+      this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
+    } else {
+      this.isInt = prop instanceof IntProperty;
+    }
+
+    if (!this.isInt !== !oldint) {
+      modified = true;
+    }
+
+    let oldedit = this.editAsBaseUnit;
+
+    if (this.editAsBaseUnit === undefined) {
+      if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
+        this.editAsBaseUnit = true;
+      } else {
+        this.editAsBaseUnit = false;
+      }
+    }
+
+    if (!this.editAsBaseUnit !== !oldedit) {
+      modified = true;
+    }
+
+    if (modified) {
+      this.setCSS();
+
+      if (onModifiedCallback) {
+        onModifiedCallback.call(this);
+      }
     }
   }
 
@@ -2599,7 +2739,7 @@ export class UIBase extends HTMLElement {
               console.warn("doOnce call is waiting for context...", thisvar._id, func);
             }
 
-            window.setTimeout(f, 0);
+            internalSetTimeout(f, 0);
             return;
           }
 
@@ -2607,7 +2747,7 @@ export class UIBase extends HTMLElement {
           func.call(thisvar);
         };
 
-        window.setTimeout(f, timeout);
+        internalSetTimeout(f, timeout);
       }
     }
 

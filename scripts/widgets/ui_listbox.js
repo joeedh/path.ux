@@ -94,6 +94,12 @@ class ListItem extends RowFrame {
       this.background = this.getDefault("background-color");
     }
   }
+
+  setCSS() {
+    super.setCSS();
+
+    this.setBackground();
+  }
 }
 
 UIBase.internalRegister(ListItem);

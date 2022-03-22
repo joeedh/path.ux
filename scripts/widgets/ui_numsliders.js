@@ -21,107 +21,8 @@ export const sliderDomAttributes = new Set([
   "slideSpeed"
 ]);
 
-function updateSliderFromDom(dom, slider = dom) {
-  let redraw = false;
-
-  function getbool(attr, prop = attr) {
-    if (!dom.hasAttribute(attr)) {
-      return;
-    }
-
-    let v = dom.getAttribute(attr);
-    let ret = v === null || v.toLowerCase() === "true" || v.toLowerCase === "yes";
-
-    let old = slider[prop];
-    if (old !== undefined && old !== ret) {
-      redraw = true;
-    }
-
-    slider[prop] = ret;
-    return ret;
-  }
-
-  function getfloat(attr, prop = attr) {
-    if (!dom.hasAttribute(attr)) {
-      return;
-    }
-
-    let v = dom.getAttribute(attr);
-    let ret = parseFloat(v);
-
-    let old = slider[prop];
-    if (old !== undefined && Math.abs(old - v) < 0.00001) {
-      redraw = true;
-    }
-
-    slider[prop] = ret;
-    return ret;
-  }
-
-  function getint(attr, prop = attr) {
-    if (!dom.hasAttribute(attr)) {
-      return;
-    }
-
-    let v = ("" + dom.getAttribute(attr)).toLowerCase();
-    let ret;
-
-    if (v === "true") {
-      ret = true;
-    } else if (v === "false") {
-      ret = false;
-    } else {
-      ret = parseInt(v);
-    }
-
-    if (isNaN(ret)) {
-      console.error("bad value " + v);
-      return 0.0;
-    }
-
-    let old = slider[prop];
-    if (old !== undefined && Math.abs(old - v) < 0.00001) {
-      redraw = true;
-    }
-
-    slider[prop] = ret;
-    return ret;
-  }
-
-  if (dom.hasAttribute("min")) {
-    slider.range = slider.range || [-1e17, 1e17];
-
-    let r = slider.range[0];
-    slider.range[0] = parseFloat(dom.getAttribute("min"));
-    redraw = Math.abs(slider.range[0] - r) > 0.0001;
-  }
-
-  if (dom.hasAttribute("max")) {
-    slider.range = slider.range || [-1e17, 1e17];
-
-    let r = slider.range[1];
-    slider.range[1] = parseFloat(dom.getAttribute("max"));
-    redraw = redraw || Math.abs(slider.range[1] - r) > 0.0001;
-  }
-
-  if (dom.hasAttribute("displayUnit")) {
-    let old = slider.displayUnit;
-    slider.displayUnit = dom.getAttribute("displayUnit").trim();
-
-    redraw = redraw || old !== slider.displayUnit;
-  }
-
-  getint("integer", "isInt");
-
-  getint("radix");
-  getint("decimalPlaces");
-
-  getbool("labelOnTop");
-  getbool("stepIsRelative");
-  getfloat("expRate");
-  getfloat("step");
-
-  return redraw;
+function updateSliderFromDom(dom, slider=dom) {
+  slider.loadNumConstraints(undefined, dom);
 }
 
 export const SliderDefaults = {
@@ -155,63 +56,8 @@ export function NumberSliderBase(cls = UIBase, skip = new Set(), defaults = Slid
       }
     }
 
-    loadConstraints(prop = undefined) {
-      if (!this.hasAttribute("datapath")) {
-        return;
-      }
-
-      if (!prop) {
-        prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-      }
-
-      let loadAttr = (propkey, domkey = key, thiskey = key) => {
-        if (this.hasAttribute(domkey)) {
-          this[thiskey] = parseFloat(this.getAttribute(domkey));
-        } else {
-          this[thiskey] = prop[propkey];
-        }
-      }
-
-      for (let key of NumberConstraints) {
-        let thiskey = key, domkey = key;
-
-        if (key === "range") { //handled later
-          continue;
-        }
-
-        loadAttr(key, domkey, thiskey);
-      }
-
-      let range = prop.range;
-      if (range && !this.hasAttribute("min")) {
-        this.range[0] = range[0];
-      } else if (this.hasAttribute("min")) {
-        this.range[0] = parseFloat(this.getAttribute("min"));
-      }
-
-      if (range && !this.hasAttribute("max")) {
-        this.range[1] = range[1];
-      } else if (this.hasAttribute("max")) {
-        this.range[1] = parseFloat(this.getAttribute("max"));
-      }
-
-      if (this.getAttribute("integer")) {
-        let val = this.getAttribute("integer");
-        val = ("" + val).toLowerCase();
-
-        //handles anonymouse <numslider-x integer> case
-        this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
-      } else {
-        this.isInt = prop instanceof IntProperty;
-      }
-
-      if (this.editAsBaseUnit === undefined) {
-        if (prop.flag & PropFlags.EDIT_AS_BASE_UNIT) {
-          this.editAsBaseUnit = true;
-        } else {
-          this.editAsBaseUnit = false;
-        }
-      }
+    loadNumConstraints(prop, dom) {
+      return super.loadNumConstraints(prop, dom, this._redraw);
     }
   }
 }
@@ -317,7 +163,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     if (updateConstraints) {
-      this.loadConstraints(prop);
+      this.loadNumConstraints(prop);
     }
 
     super.updateDataPath();
@@ -336,7 +182,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   clipboardCopy() {
-    console.log("Copy", ""+this.value);
+    console.log("Copy", "" + this.value);
     cconst.setClipboardData("value", "text/plain", "" + this.value);
   }
 
@@ -491,7 +337,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       }
     }
 
-    this.addEventListener("mousemove", (e) => {
+    this.addEventListener("pointermove", (e) => {
       this.setMpos(e);
 
       if (this.mdown && !this._modaldata && this.mpos.vectorDistance(this.start_mpos) > 13) {
@@ -517,14 +363,14 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.swapWithTextbox();
     });
 
-    this.addEventListener("mousedown", (e) => {
+    this.addEventListener("pointerdown", (e) => {
       this.setMpos(e);
 
       if (this.disabled) return;
       onmousedown(e);
     }, {capture: true});
 
-    this.addEventListener("mouseup", (e) => {
+    this.addEventListener("pointerup", (e) => {
       this.mdown = false;
     })
     /*
@@ -541,11 +387,11 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }, {passive : false});
     //*/
 
-    //this.addEventListener("mouseup", (e) => {
+    //this.addEventListener("pointerup", (e) => {
     //  return onmouseup(e);
     //});
 
-    this.addEventListener("mouseover", (e) => {
+    this.addEventListener("pointerover", (e) => {
       this.setMpos(e);
       if (this.disabled) return;
 
@@ -561,7 +407,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.mdown = false;
     });
 
-    this.addEventListener("mouseout", (e) => {
+    this.addEventListener("pointerout", (e) => {
       this.setMpos(e);
       if (this.disabled) return;
 
@@ -613,8 +459,8 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   doRange() {
-    console.warn("Deprecated: NumSlider.prototype.doRange, use loadConstraints instead!");
-    this.loadConstraints();
+    console.warn("Deprecated: NumSlider.prototype.doRange, use loadNumConstraints instead!");
+    this.loadNumConstraints();
   }
 
   setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
@@ -631,7 +477,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     if (checkConstraints) {
-      this.loadConstraints();
+      this.loadNumConstraints();
     }
 
     if (setDataPath && this.ctx && this.hasAttribute("datapath")) {
@@ -706,7 +552,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
         e.stopPropagation();
       },
 
-      on_mousemove: (e) => {
+      on_pointermove: (e) => {
         if (this.disabled) return;
 
         e.preventDefault();
@@ -761,7 +607,7 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
         fire();
       },
 
-      on_mouseup: (e) => {
+      on_pointerup: (e) => {
         this.setMpos(e);
 
         this.undoBreakPoint();
@@ -771,21 +617,21 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
         e.stopPropagation();
       },
 
-      on_mouseout: (e) => {
+      on_pointerout: (e) => {
         last_background = this.getDefault("background-color");
 
         e.preventDefault();
         e.stopPropagation();
       },
 
-      on_mouseover: (e) => {
+      on_pointerover: (e) => {
         last_background = this.getDefault("BoxHighlight");
 
         e.preventDefault();
         e.stopPropagation();
       },
 
-      on_mousedown: (e) => {
+      on_pointerdown: (e) => {
         this.popModal();
       },
     };
@@ -805,42 +651,6 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
       this.popModal();
     }
-
-    /*
-    cancel = (restore_value) => {
-      if (restore_value) {
-        this.value = startvalue;
-        this.updateWidth();
-        fire();
-      }
-
-      this.dom._background = last_background; //ui_base.getDefault("background-color");
-      this._redraw();
-
-      console.trace("end");
-
-      window.removeEventListener("keydown", keydown, true);
-      window.removeEventListener("mousemove", mousemove, {captured : true, passive : false});
-
-      window.removeEventListener("touchend", touchend, true);
-      window.removeEventListener("touchmove", touchmove, {captured : true, passive : false});
-      window.removeEventListener("touchcancel", touchcancel, true);
-      window.removeEventListener("mouseup", mouseup, true);
-
-      this.removeEventListener("mouseover", mouseover, true);
-      this.removeEventListener("mouseout", mouseout, true);
-    }
-
-    window.addEventListener("keydown", keydown, true);
-    window.addEventListener("mousemove", mousemove, true);
-    window.addEventListener("touchend", touchend, true);
-    window.addEventListener("touchmove", touchmove, {captured : true, passive : false});
-    window.addEventListener("touchcancel", touchcancel, true);
-    window.addEventListener("mouseup", mouseup, true);
-
-    this.addEventListener("mouseover", mouseover, true);
-    this.addEventListener("mouseout", mouseout, true);
-    //*/
   }
 
   setCSS() {
@@ -1144,7 +954,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
         return;
       }
 
-      this.loadConstraints(prop);
+      this.loadNumConstraints(prop);
       this.setValue(val, true, false);
     }
   }
@@ -1192,7 +1002,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
     };
 
     handlers = {
-      mousemove: (e) => {
+      pointermove: (e) => {
         let x = e.x, y = e.y;
 
         x = this.ma.add(x);
@@ -1203,20 +1013,20 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
         this._setFromMouse(e);
       },
 
-      mouseover : (e) => {
+      pointerover : (e) => {
       },
-      mouseout  : (e) => {
+      pointerout  : (e) => {
       },
-      mouseleave: (e) => {
+      pointerleave: (e) => {
       },
-      mouseenter: (e) => {
+      pointerenter: (e) => {
       },
       blur      : (e) => {
       },
       focus     : (e) => {
       },
 
-      mouseup: (e) => {
+      pointerup: (e) => {
         this.undoBreakPoint();
         end();
       },
@@ -1286,7 +1096,7 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       this.focus();
     });
 
-    this.addEventListener("mousedown", (e) => {
+    this.addEventListener("pointerdown", (e) => {
       if (this.disabled) {
         return;
       }
@@ -1297,23 +1107,23 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
       this._startModal(e);
     });
 
-    this.addEventListener("mousein", (e) => {
+    this.addEventListener("pointerin", (e) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("mouseout", (e) => {
+    this.addEventListener("pointerout", (e) => {
       this.highlight = false;
       this._redraw();
     });
-    this.addEventListener("mouseover", (e) => {
+    this.addEventListener("pointerover", (e) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("mousemove", (e) => {
+    this.addEventListener("pointermove", (e) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("mouseleave", (e) => {
+    this.addEventListener("pointerleave", (e) => {
       this.highlight = false;
       this._redraw();
     });
@@ -1898,8 +1708,8 @@ export class SliderWithTextbox extends ColumnFrame {
     this.updateDataPath();
     let redraw = false;
 
-    updateSliderFromDom(this.numslider, this);
-    updateSliderFromDom(this.textbox, this);
+    updateSliderFromDom(this, this.numslider);
+    updateSliderFromDom(this, this.textbox);
 
     if (redraw) {
       this.setCSS();
