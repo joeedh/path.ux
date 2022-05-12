@@ -2123,7 +2123,7 @@ export class UIBase extends HTMLElement {
     let lastelem = elem;
     let i = 0;
 
-    while (elem.shadow) {
+    while (elem && elem.shadow) {
       if (i++ > 1000) {
         console.error("Infinite loop error");
         break;

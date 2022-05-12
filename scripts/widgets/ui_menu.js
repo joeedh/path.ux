@@ -940,6 +940,9 @@ export class DropBox extends OldButton {
       this.pushReportContext(this._reportCtxName);
       prop = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath")).prop;
       val = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+
+      prop = prop ? prop.prop : undefined;
+
       this.popReportContext();
     } catch (error) {
       util.print_stack(error);
@@ -1080,8 +1083,10 @@ export class DropBox extends OldButton {
       //check if datapath system will be calling .prop.setValue instead of us
       let callProp = true;
       if (this.hasAttribute("datapath")) {
-        let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-        callProp = !prop || prop !== this.prop;
+        let rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+        let prop = rdef.dpath.data;
+
+        callProp = !rdef || !rdef.dpath || !(rdef.dpath.data instanceof ToolProperty);
       }
 
       this._value = this._convertVal(id);
