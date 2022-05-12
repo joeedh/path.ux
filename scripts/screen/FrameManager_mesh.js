@@ -7,7 +7,15 @@ import {UIBase} from '../core/ui_base.js';
 import {Vector2} from '../path-controller/util/vectormath.js';
 import {createMenu, Menu} from '../widgets/ui_menu.js';
 import {popModalLight, pushModalLight} from '../path-controller/util/simple_events.js';
-import {AreaFlags} from './ScreenArea.js';
+
+export const AreaFlags = {
+  HIDDEN                : 1,
+  FLOATING              : 2,
+  INDEPENDENT           : 4, //area is indpendent of the screen mesh
+  NO_SWITCHER           : 8,
+  NO_HEADER_CONTEXT_MENU: 16,
+  NO_COLLAPSE           : 32,
+};
 
 export let SnapLimit = 1;
 
@@ -151,7 +159,7 @@ export class ScreenBorder extends ui_base.UIBase {
     }, {capture: true});
   }
 
-  static bindBorderMenu(elem, usePickElement=false) {
+  static bindBorderMenu(elem, usePickElement = false) {
     let on_dblclick = (e) => {
       if (usePickElement && elem.pickElement(e.x, e.y) !== elem) {
         return;
@@ -172,7 +180,7 @@ export class ScreenBorder extends ui_base.UIBase {
       menu.ignoreFirstClick = 2;
       //}
 
-      elem.ctx.screen.popupMenu(menu, e.x-15, e.y-15);
+      elem.ctx.screen.popupMenu(menu, e.x - 15, e.y - 15);
 
       e.preventDefault();
       e.stopPropagation();
@@ -183,6 +191,7 @@ export class ScreenBorder extends ui_base.UIBase {
 
     return on_dblclick;
   }
+
   getOtherSarea(sarea) {
     console.log(this.halfedges, this.halfedges.length);
 
@@ -306,7 +315,7 @@ export class ScreenBorder extends ui_base.UIBase {
 
     let dpi = UIBase.getDPI();
 
-    let pad = this.getDefault("mouse-threshold") / dpi;
+    let pad = this.getDefault("mouse-threshold")/dpi;
     let wid = this.getDefault("border-width");
 
     let v1 = this.v1, v2 = this.v2;

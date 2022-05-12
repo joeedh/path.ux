@@ -6,7 +6,7 @@ import '../path-controller/util/struct.js';
 
 let ScreenClass = undefined;
 
-import {ClassIdSymbol} from '../core/ui_base.js';
+import {ClassIdSymbol} from '../core/ui_consts.js';
 
 
 export function setScreenClass(cls) {
@@ -39,7 +39,7 @@ export var AreaTypes = {
   TEST_CANVAS_EDITOR: 0
 };
 
-export function setAreaTypes(def) {
+  export function setAreaTypes(def) {
   for (let k in AreaTypes) {
     delete AreaTypes[k];
   }

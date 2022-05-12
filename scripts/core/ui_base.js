@@ -19,14 +19,12 @@ if (window.document && document.body) {
 }
  */
 
-import * as cssutils from '../path-controller/util/cssutils.js';
 import {Animator} from "./anim.js";
 import './units.js';
 import * as util from '../path-controller/util/util.js';
 import * as vectormath from '../path-controller/util/vectormath.js';
 import * as math from '../path-controller/util/math.js';
 import * as toolprop from '../path-controller/toolsys/toolprop.js';
-import * as controller from '../path-controller/controller/controller.js';
 import {
   pushModalLight, popModalLight, copyEvent, pathDebugEvent,
   haveModal, keymap, reverse_keymap, pushPointerModal
@@ -111,7 +109,9 @@ if (prefix) {
   setTagPrefix(prefix);
 }
 
-export const ClassIdSymbol = Symbol("pathux-class-id");
+import {ClassIdSymbol} from './ui_consts.js';
+export {ClassIdSymbol};
+
 let class_idgen = 1;
 
 export function setTheme(theme2) {
@@ -790,7 +790,7 @@ function timeout_cb() {
     return;
   }
 
-  for (let item of setTimeoutQueue) {
+  for (let item of new Set(setTimeoutQueue)) {
     let {cb, timeout, time} = item;
     if (util.time_ms() - time < timeout) {
       continue;

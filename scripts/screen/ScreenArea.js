@@ -17,17 +17,9 @@ import {EnumProperty} from "../path-controller/toolsys/toolprop.js";
 let Vector2 = vectormath.Vector2;
 let Screen = undefined;
 
-import {BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi} from './FrameManager_mesh.js';
+import {AreaFlags, BORDER_ZINDEX_BASE, ScreenBorder, snap, snapi} from './FrameManager_mesh.js';
 
-export const AreaFlags = {
-  HIDDEN                : 1,
-  FLOATING              : 2,
-  INDEPENDENT           : 4, //area is indpendent of the screen mesh
-  NO_SWITCHER           : 8,
-  NO_HEADER_CONTEXT_MENU: 16,
-  NO_COLLAPSE           : 32,
-};
-
+export {AreaFlags};
 
 export * from './area_wrangler.js';
 import {getAreaIntName, setAreaTypes, contextWrangler, AreaWrangler, areaclasses} from './area_wrangler.js';
@@ -1290,7 +1282,7 @@ export class ScreenArea extends ui_base.UIBase {
 
     this.style["width"] = this.size[0] + "px";
     this.style["height"] = this.size[1] + "px";
-    
+
     this.style["overflow"] = "hidden";
     this.style["contain"] = "layout"; //ensure we have a new positioning stack
 

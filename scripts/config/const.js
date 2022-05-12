@@ -155,6 +155,7 @@ let exports = {
       this[k] = args[k];
     }
 
+    console.error("CC", ctrlconfig);
     ctrlconfig.setConfig(this);
   }
 };

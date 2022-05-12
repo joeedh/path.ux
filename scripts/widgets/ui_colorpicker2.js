@@ -440,6 +440,7 @@ export class SatValField extends UIBase {
           if (this.onchange) {
             this.onchange(this.hsva);
           }
+
           break;
         }
 
