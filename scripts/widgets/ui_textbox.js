@@ -278,8 +278,6 @@ export class TextBox extends TextBoxBase {
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === undefined || val === null) {
-      console.error("invalid datapath " + this.getAttribute("datapath"), val);
-
       this.internalDisabled = true;
       return;
     } else {

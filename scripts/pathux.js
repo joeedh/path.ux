@@ -28,19 +28,25 @@ export * from './path-controller/util/graphpack.js';
 export * from './path-controller/util/html5_fileapi.js';
 export * from './path-controller/controller.js';
 
-import * as controller1 from './path-controller/controller.js';
-export const controller = controller1;
+import * as controller from './path-controller/controller.js';
+
+export {controller};
 
 import * as ui_noteframe from './widgets/ui_noteframe.js';
-controller1.setNotifier(ui_noteframe);
 
-import * as platform1 from './platforms/platform.js';
-export const platform = platform1;
+controller.setNotifier(ui_noteframe);
 
-import * as electron_api1 from './platforms/electron/electron_api.js';
-export const electron_api = electron_api1;
+export {
+  PlatformAPI, getMime, isMimeText, mimeMap, textMimes, FileDialogArgs, FilePath
+} from './platforms/platform_base.js';
 
-export * from './platforms/platform.js';
+import * as platform from './platforms/platform.js';
+
+export {platform};
+
+import * as electron_api from './platforms/electron/electron_api.js';
+
+export {electron_api};
 
 export * from './widgets/theme_editor.js';
 export * from './widgets/ui_treeview.js';
@@ -49,8 +55,10 @@ export * from './screen/FrameManager.js';
 export * from './screen/ScreenArea.js';
 export * from './util/ScreenOverdraw.js';
 
-import cconst1 from './config/const.js';
-export const cconst = cconst1;
+import cconst from './config/const.js';
 
-import * as simple1 from './simple/simple.js';
-export const simple = simple1;
+export {cconst};
+
+import * as simple from './simple/simple.js';
+
+export {simple};

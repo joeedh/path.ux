@@ -15,7 +15,11 @@ promise.then((module) => {
 
 export function getPlatformAsync() {
   if (promise) {
-    return promise;
+    return new Promise((accept, reject) => {
+      promise.then(mod => {
+        accept(mod.platform);
+      });
+    });
   }
 
   return new Promise((accept, reject) => {

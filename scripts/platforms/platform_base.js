@@ -10,7 +10,24 @@ export const mimeMap = {
   ".bmp" : "image/bitmap",
   ".tga" : "image/targa",
   ".svg" : "image/svg+xml",
-  ".xml" : "text/xml"
+  ".xml" : "text/xml",
+  ".webp": "image/webp",
+  "svg"  : "image/svg+xml",
+  "txt"  : "text/plain",
+  "html" : "text/html",
+  "css"  : "text/css",
+  "ts"   : "application/typescript",
+  "py"   : "application/python",
+  "c"    : "application/c",
+  "cpp"  : "application/cpp",
+  "cc"   : "application/cpp",
+  "h"    : "application/c",
+  "hh"   : "application/cpp",
+  "hpp"  : "application/cpp",
+  "sh"   : "application/bash",
+  "mjs"  : "application/javascript",
+  "cjs"  : "application/javascript",
+  "gif"  : "image/gif"
 };
 
 export var textMimes = new Set([
@@ -58,7 +75,7 @@ export class PlatformAPI {
     //returns a promise
   }
 
-  static resolveURL(path, base=location.href) {
+  static resolveURL(path, base = location.href) {
     base = base.trim();
 
     if (path.startsWith("./")) {
@@ -70,14 +87,14 @@ export class PlatformAPI {
     }
 
     while (base.endsWith("/")) {
-      base = base.slice(0, base.length-1).trim();
+      base = base.slice(0, base.length - 1).trim();
     }
 
     let exts = ["html", "txt", "js", "php", "cgi"]
     for (let ext of exts) {
       ext = "." + ext;
       if (base.endsWith(ext)) {
-        let i = base.length-1;
+        let i = base.length - 1;
         while (i > 0 && base[i] !== "/") {
           i--;
         }
@@ -87,13 +104,13 @@ export class PlatformAPI {
     }
 
     while (base.endsWith("/")) {
-      base = base.slice(0, base.length-1).trim();
+      base = base.slice(0, base.length - 1).trim();
     }
 
     path = (base + "/" + path).split("/")
     let path2 = [];
 
-    for (let i=0; i<path.length; i++) {
+    for (let i = 0; i < path.length; i++) {
       if (path[i] === "..") {
         path2.pop();
       } else {
@@ -105,12 +122,12 @@ export class PlatformAPI {
   }
 
   //returns a promise that resolves to a FilePath that can be used for re-saving.
-  static showOpenDialog(title, args=new FileDialogArgs()) {
+  static showOpenDialog(title, args = new FileDialogArgs()) {
     throw new Error("implement me");
   }
 
   //returns a promise
-  static showSaveDialog(title, savedata_cb, args=new FileDialogArgs()) {
+  static showSaveDialog(title, savedata_cb, args = new FileDialogArgs()) {
     throw new Error("implement me");
   }
 
@@ -139,7 +156,7 @@ export class FileDialogArgs {
 
 /*a file path, some platforms may not return real payhs*/
 export class FilePath {
-  constructor(data, filename="unnamed") {
+  constructor(data, filename = "unnamed") {
     this.data = data;
     this.filename = filename;
   }

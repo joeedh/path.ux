@@ -41,6 +41,11 @@ function getFilename(path) {
   while (i >= 0 && filename[i] !== "/") {
     i--;
   }
+
+  if (filename[i] === "/") {
+    i++;
+  }
+
   if (i > 0) {
     filename = filename.slice(i, filename.length).trim();
   }
@@ -51,30 +56,7 @@ function getFilename(path) {
 let _menu_init = false;
 let _init = false;
 
-let mimemap = {
-  "js"  : "application/javascript",
-  "json": "text/json",
-  "png" : "image/png",
-  "svg" : "image/svg+xml",
-  "jpg" : "image/jpeg",
-  "txt" : "text/plain",
-  "html": "text/html",
-  "css" : "text/css",
-  "ts"  : "application/typescript",
-  "py"  : "application/python",
-  "c"   : "application/c",
-  "cpp" : "application/cpp",
-  "cc"  : "application/cpp",
-  "h"   : "application/c",
-  "hh"  : "application/cpp",
-  "hpp" : "application/cpp",
-  "xml" : "text/xml",
-  "sh"  : "application/bash",
-  "mjs" : "application/javascript",
-  "cjs" : "application/javascript",
-  "gif" : "image/gif"
-};
-
+import {mimeMap} from '../platform_base.js';
 
 let electron_menu_idgen = 1;
 let ipcRenderer;
@@ -547,8 +529,8 @@ export class platform extends PlatformAPI {
         filter = {extensions: filter};
 
         ext = ext.replace(/\./g, "").trim().toLowerCase();
-        if (ext in mimemap) {
-          filter.mime = mimemap[ext];
+        if (ext in mimeMap) {
+          filter.mime = mimeMap[ext];
         }
 
         filter.name = ext;
