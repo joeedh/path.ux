@@ -1633,7 +1633,7 @@ export class MenuWrangler {
       this.closereq = undefined;
       return;
     }
-
+    
     let destroy = element.hasAttribute("menu-button") && element.hasAttribute("simple");
     destroy = destroy && element.menu !== this.menu;
 
@@ -1643,7 +1643,7 @@ export class MenuWrangler {
       let menu2 = this.menu;
       while (menu2 !== element.menu) {
         menu2 = menu2.parentMenu;
-        destroy = destroy && menu2 !== element.menu;
+        destroy = destroy && (menu2 === undefined || menu2 !== element.menu);
       }
     }
 
@@ -1719,7 +1719,7 @@ export class MenuWrangler {
   }
 }
 
-export let menuWrangler = new MenuWrangler();
+export let menuWrangler = window._menuWrangler = new MenuWrangler();
 let wrangerStarted = false;
 
 export function startMenuEventWrangling(screen) {
@@ -1744,6 +1744,8 @@ export function startMenuEventWrangling(screen) {
   menuWrangler.screen = screen;
   menuWrangler.startTimer();
 }
+
+window._startMenuEventWrangling = startMenuEventWrangling;
 
 export function setWranglerScreen(screen) {
   startMenuEventWrangling(screen);
