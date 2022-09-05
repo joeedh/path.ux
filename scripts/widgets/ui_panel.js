@@ -193,6 +193,10 @@ export class PanelFrame extends ColumnFrame {
 
     iconcheck.noMarginsOrPadding();
 
+    iconcheck.overrideDefault("highlight", {
+      "background-color" : iconcheck.getSubDefault("highlight", "background-color")
+    });
+
     iconcheck.overrideDefault("background-color", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("border-color", "rgba(0,0,0,0)");
@@ -222,7 +226,6 @@ export class PanelFrame extends ColumnFrame {
 
     let label = this.__label = row.label(this.getAttribute("label"));
 
-    this.__label.overrideClass("panel");
     this.__label.font = "TitleText";
 
     label._updateFont();

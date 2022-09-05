@@ -564,9 +564,9 @@ export class IconButton extends UIBase {
     this.noMarginsOrPadding();
 
     if (this._pressed && this._draw_pressed) {
-      def = k => pstyle && k in pstyle ? pstyle[k] : this.getDefault(k);
+      def = k => this.getSubDefault("depressed", k);
     } else if (this._highlight) {
-      def = k => hstyle && k in hstyle ? hstyle[k] : this.getDefault(k);
+      def = k => this.getSubDefault("highlight", k);
     } else {
       def = k => this.getDefault(k);
     }

@@ -1,6 +1,6 @@
 import {Area} from '../screen/ScreenArea.js';
 import * as nstructjs from '../path-controller/util/struct.js';
-import {UIBase, theme, flagThemeUpdate} from '../core/ui_base.js';
+import {UIBase, theme, flagThemeUpdate, saveUIData, loadUIData} from '../core/ui_base.js';
 import {Container} from '../core/ui.js';
 import {validateCSSColor, color2css, css2color, CSSFont} from '../core/ui_theme.js';
 
@@ -24,16 +24,71 @@ export class ThemeEditor extends Container {
     this.build();
   }
 
-  doFolder(catkey, obj, container = this) {
+  doFolder(catkey, obj, container = this, panel = undefined, path=undefined) {
     let key = catkey.key;
 
-    let panel = container.panel(key, undefined, undefined, catkey.help);
-    panel.style["margin-left"] = "15px";
+    if (!path) {
+      path = [key];
+    }
+
+    if (!panel) {
+      panel = container.panel(key, undefined, undefined, catkey.help);
+      panel.style["margin-left"] = "15px";
+    }
+
+    let row2 = panel.row();
+    let textbox = row2.textbox(undefined, "");
+
+    let callback = (id) => {
+      console.log("ID", id, obj, catkey);
+      console.log(textbox, textbox.text, textbox.value);
+
+      let propkey = (textbox.text || "").trim();
+
+      if (!propkey) {
+        console.error("Cannot have empty theme property name");
+        return;
+      }
+
+      if (id === "FLOAT") {
+        obj[propkey] = 0.0;
+      } else if (id === "SUBFOLDER") {
+        obj[propkey] = {test : 0};
+      } else if (id === "COLOR") {
+        obj[propkey] = "grey";
+      } else if (id === "FONT") {
+        obj[propkey] = new CSSFont();
+      } else if (id === "STRING") {
+        obj[propkey] = "";
+      }
+
+      let uidata = saveUIData(panel, "theme-panel");
+
+      panel.clear();
+      this.doFolder(catkey, obj, container, panel, path);
+
+      loadUIData(panel, uidata);
+      panel.flushUpdate();
+      panel.flushSetCSS();
+
+      //doFolder(catkey, obj, container = this, panel=undefined) {
+      //this.build();
+      if (this.onchange) {
+        this.onchange(key, propkey, obj);
+      }
+    }
+
+    let menu = row2.menu("+", [
+      {name: "Float", callback: () => callback("FLOAT")},
+      {name: "Color", callback: () => callback("COLOR")},
+      {name: "Subfolder", callback: () => callback("SUBFOLDER")},
+      {name: "Font", callback: () => callback("FONT")},
+      {name: "String", callback: () => callback("STRING")},
+    ]);
 
     let row = panel.row();
     let col1 = row.col();
     let col2 = row.col();
-
 
     let do_onchange = (key, k, obj) => {
       flagThemeUpdate();
@@ -168,34 +223,43 @@ export class ThemeEditor extends Container {
 
         panel2.closed = true;
       } else if (typeof v === "object") {
-        let old = {
-          panel, row, col1, col2
-        };
+        /*
+          let old = {
+            panel, row, col1, col2
+          };
 
-        let path2 = path.slice(0, path.length);
-        path2.push(k);
+          let path2 = path.slice(0, path.length);
+          path2.push(k);
 
-        panel = panel.panel(k);
-        row = panel.row();
-        col1 = row.col();
-        col2 = row.col();
-        for (let k2 in v) {
-          let v2 = v[k2];
+          panel = panel.panel(k);
+          row = panel.row();
+          col1 = row.col();
+          col2 = row.col();
+          for (let k2 in v) {
+            let v2 = v[k2];
 
-          dokey(k2, v2, path2);
-        }
+            dokey(k2, v2, path2);
+          }
 
-        panel = old.panel;
-        row = old.row;
-        col1 = old.col1;
-        col2 = old.col2;
+          panel = old.panel;
+          row = old.row;
+          col1 = old.col1;
+          col2 = old.col2;
+        */
+
+        let catkey2 = Object.assign({}, catkey);
+        catkey2.key = k;
+
+        let path2 = path.concat(k);
+
+        this.doFolder(catkey2, v, panel, undefined, path2);
       }
     };
 
     for (let k in obj) {
       let v = obj[k];
 
-      dokey(k, v, [key]);
+      dokey(k, v, path);
     }
 
     if (!ok) {
@@ -207,6 +271,10 @@ export class ThemeEditor extends Container {
   }
 
   build() {
+    let uidata = saveUIData(this, "theme");
+
+    this.clear();
+
     let categories = {};
 
     for (let k of Object.keys(theme)) {
@@ -270,6 +338,20 @@ export class ThemeEditor extends Container {
       if (list.length > 1) {
         panel.closed = true;
       }
+    }
+
+    loadUIData(this, uidata);
+
+    for (let i = 0; i < 2; i++) {
+      this.flushSetCSS();
+      this.flushUpdate();
+    }
+
+    if (this.ctx && this.ctx.screen) {
+      /* Fix panel spacing bug. */
+      window.setTimeout(() => {
+        this.ctx.screen.completeSetCSS();
+      }, 100);
     }
   }
 }

@@ -781,6 +781,8 @@ export function flagThemeUpdate() {
   _themeUpdateKey = calcThemeKey();
 }
 
+window._flagThemeUpdate = flagThemeUpdate;
+
 let setTimeoutQueue = new Set();
 let haveTimeout = false;
 
@@ -3110,6 +3112,11 @@ export class UIBase extends HTMLElement {
   /** get a sub style from a theme style class.
    *  note that if key is falsy then it just forwards to this.getDefault directly*/
   getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined) {
+    /* Check if client code manually overrode a theme key for this instance. */
+    if (subkey && subkey in this.my_default_overrides) {
+      //return this.getDefault(subkey, undefined, defaultval);
+    }
+
     if (!key) {
       return this.getDefault(subkey, undefined, defaultval);
     }

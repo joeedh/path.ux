@@ -107,11 +107,13 @@ export class ButtonEventBase extends UIBase {
         this._redraw();
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      if (util.isMobile() || e.type === "pointerup" && e.button) {
-        return;
+        if (util.isMobile() || e.type === "pointerup" && e.button) {
+          return;
+        }
       }
 
       this._redraw();
@@ -119,7 +121,7 @@ export class ButtonEventBase extends UIBase {
       if (cconst.DEBUG.buttonEvents)
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
-      if (this.onclick && e.pointerType !== "mouse") {
+      if (this.onclick && e && e.pointerType !== "mouse") {
         this.onclick(this);
       }
 

@@ -402,7 +402,7 @@ export class TabBar extends UIBase {
     canvas.style["width"] = "145px";
     canvas.style["height"] = "45px";
 
-    this.r = 8;
+    this.r = this.getDefault("TabBarRadius", undefined, 8);
 
     this.canvas = canvas;
     this.g = canvas.getContext("2d");
@@ -1214,12 +1214,12 @@ export class TabBar extends UIBase {
 
     /* create a no stacking context */
     this.style["contain"] = "layout";
-    
-    let r = this.getDefault("TabBarRadius");
-    r = r !== undefined ? r : 3;
+
+    this.r = this.getDefault("TabBarRadius", undefined, 8);
+
+    let r = this.r !== undefined ? this.r : 3;
 
     this.style["touch-action"] = "none";
-
 
     this.canvas.style["background-color"] = this.getDefault("TabInactive");
     this.canvas.style["border-radius"] = r + "px";
