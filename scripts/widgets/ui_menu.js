@@ -8,6 +8,7 @@ import {OldButton} from "./ui_button.js";
 import {DomEventTypes} from '../path-controller/util/events.js';
 
 import {HotKey, keymap} from '../path-controller/util/simple_events.js';
+import { parseToolPath } from '../pathux.js';
 
 let EnumProperty = toolprop.EnumProperty,
     PropTypes    = toolprop.PropTypes;
@@ -933,6 +934,14 @@ export class DropBox extends OldButton {
       return;
     }
 
+    const dolog = Math.random() > 0.5;
+
+    function log() {
+      if (dolog) {
+        console.log(...arguments);
+      }
+    }
+
     let wasError = false;
     let prop, val;
 
@@ -941,12 +950,16 @@ export class DropBox extends OldButton {
       prop = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath")).prop;
       val = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
 
-      prop = prop ? prop.prop : undefined;
+      prop = prop && prop.prop ? prop.prop : prop;
 
       this.popReportContext();
     } catch (error) {
       util.print_stack(error);
       wasError = true;
+    }
+
+    if (wasError) {
+      log("ERROR");
     }
 
     if (wasError) {
@@ -961,6 +974,8 @@ export class DropBox extends OldButton {
       this._redraw();
     }
 
+    log(prop);
+
     if (!prop) {
       return;
     }
@@ -972,12 +987,14 @@ export class DropBox extends OldButton {
     prop = this.prop;
 
     let name = this.getAttribute("name");
-
+    
     if (prop.type & (PropTypes.ENUM | PropTypes.FLAG)) {
       name = prop.ui_value_names[prop.keys[val]];
     } else {
       name = "" + val;
     }
+
+    log("NAME", name);
 
     if (name !== this.getAttribute("name")) {
       this.setAttribute("name", name);
