@@ -232,10 +232,39 @@ if (typeof visualViewport === "undefined") {
 }
 
 if (Array.prototype.set === undefined) {
-  Array.prototype.set = function set(array, src, dst, count) {
+  /**
+   * A version of TypedArray.prototype.set for Array
+   * Unliked typed array version the array will be
+   * resized if the source array range extends past
+   * the array length.
+   *
+   * array.set(array) array.set(array, src_offset) array.set(array, src_offset, count)
+   * array.set(array, src_offset, dest_offset, count
+   * @param array
+   */
+  Array.prototype.set = function set(array) {
     if (arguments.length === 0) {
       //WASM somehow manages to call this
       return;
+    }
+
+    let src, dst, count;
+
+    if (arguments.length === 0) {
+      src = 0;
+      dst = 0;
+      count = array.length;
+    } else if (arguments.length === 1) {
+      count = array.length;
+      src = arguments[1];
+      dst = 0;
+    } else if (arguments.length === 2) {
+      src = arguments[1];
+      count = arguments[2];
+    } else if (arguments.length === 3) {
+      src = arguments[1];
+      dst = arguments[2];
+      count = arguments[3];
     }
 
     src = src === undefined ? 0 : src;
@@ -246,8 +275,11 @@ if (Array.prototype.set === undefined) {
       throw new RangeError("Count must be >= zero");
     }
 
-    let len = Math.min(this.length - dst, array.length - src);
-    len = Math.min(len, count);
+    let len = Math.min(src + count, array.length) - src;
+
+    if (dst + len > this.length) {
+      this.length = dst + len;
+    }
 
     for (let i = 0; i < len; i++) {
       this[dst + i] = array[src + i];
@@ -428,19 +460,190 @@ Array.prototype[Symbol.keystr] = function () {
   return key;
 };
 
-"use strict";
-/*
-The lexical scanner in this module was inspired by PyPLY
+let colormap$1 = {
+  "black"   : 30,
+  "red"     : 31,
+  "green"   : 32,
+  "yellow"  : 33,
+  "blue"    : 34,
+  "magenta" : 35,
+  "cyan"    : 36,
+  "white"   : 37,
+  "reset"   : 0,
+  "grey"    : 2,
+  "orange"  : 202,
+  "pink"    : 198,
+  "brown"   : 314,
+  "lightred": 91,
+  "peach"   : 210
+};
 
-http://www.dabeaz.com/ply/ply.html
-*/
+let termColorMap$1 = {};
+for (let k in colormap$1) {
+  termColorMap$1[k] = colormap$1[k];
+  termColorMap$1[colormap$1[k]] = k;
+}
+
+function termColor$1(s, c) {
+  if (typeof s === "symbol") {
+    s = s.toString();
+  } else {
+    s = "" + s;
+  }
+
+  if (c in colormap$1)
+    c = colormap$1[c];
+
+  if (c > 107) {
+    let s2 = '\u001b[38;5;' + c + "m";
+    return s2 + s + '\u001b[0m'
+  }
+
+  return '\u001b[' + c + 'm' + s + '\u001b[0m'
+};
+
+function termPrint$1() {
+  //let console = window.console;
+
+  let s = '';
+  for (let i = 0; i < arguments.length; i++) {
+    if (i > 0) {
+      s += ' ';
+    }
+    s += arguments[i];
+  }
+
+  let re1a = /\u001b\[[1-9][0-9]?m/;
+  let re1b = /\u001b\[[1-9][0-9];[0-9][0-9]?;[0-9]+m/;
+  let re2 = /\u001b\[0m/;
+
+  let endtag = '\u001b[0m';
+
+  function tok(s, type) {
+    return {
+      type : type,
+      value: s
+    }
+  }
+
+  let tokdef = [
+    [re1a, "start"],
+    [re1b, "start"],
+    [re2, "end"]
+  ];
+
+  let s2 = s;
+
+  let i = 0;
+  let tokens = [];
+
+  while (s2.length > 0) {
+    let ok = false;
+
+    let mintk = undefined, mini = undefined;
+    let minslice = undefined, mintype = undefined;
+
+    for (let tk of tokdef) {
+      let i = s2.search(tk[0]);
+
+      if (i >= 0 && (mini === undefined || i < mini)) {
+        minslice = s2.slice(i, s2.length).match(tk[0])[0];
+        mini = i;
+        mintype = tk[1];
+        mintk = tk;
+        ok = true;
+      }
+    }
+
+    if (!ok) {
+      break;
+    }
+
+    if (mini > 0) {
+      let chunk = s2.slice(0, mini);
+      tokens.push(tok(chunk, "chunk"));
+    }
+
+    s2 = s2.slice(mini+minslice.length, s2.length);
+    let t = tok(minslice, mintype);
+
+    tokens.push(t);
+  }
+
+  if (s2.length > 0) {
+    tokens.push(tok(s2, "chunk"));
+  }
+
+  let stack = [];
+  let cur;
+
+  let out = '';
+
+  for (let t of tokens) {
+    if (t.type === "chunk") {
+      out += t.value;
+    } else if (t.type === "start") {
+      stack.push(cur);
+      cur = t.value;
+
+      out += t.value;
+    } else if (t.type === "end") {
+      cur = stack.pop();
+      if (cur) {
+        out += cur;
+      } else {
+        out += endtag;
+      }
+    }
+  }
+
+  return out;
+}
+
+"use strict";
+
+function print_lines(ld, lineno, col, printColors, token) {
+  let buf = '';
+  let lines = ld.split("\n");
+  let istart = Math.max(lineno - 5, 0);
+  let iend  = Math.min(lineno + 3, lines.length);
+
+  let color = printColors ? (c) => c : termColor$1;
+
+  for (let i=istart; i<iend; i++) {
+    let l = "" + (i + 1);
+    while (l.length < 3) {
+      l = " " + l;
+    }
+
+    l += `: ${lines[i]}\n`;
+
+    if (i === lineno && token && token.value.length === 1) {
+      l = l.slice(0, col+5) + color(l[col+5], "yellow") + l.slice(col+6, l.length);
+    }
+    buf += l;
+    if (i === lineno) {
+      let colstr = '     ';
+      for (let i=0; i<col; i++) {
+        colstr += ' ';
+      }
+      colstr += color("^", "red");
+
+      buf += colstr + "\n";
+    }
+  }
+
+  buf = "------------------\n" + buf + "\n==================\n";
+  return buf;
+}
 
 class token$1 {
-  constructor(type, val, lexpos, lineno, lexer, parser) {
+  constructor(type, val, lexpos, lineno, lexer, parser, col) {
     this.type = type;
     this.value = val;
     this.lexpos = lexpos;
     this.lineno = lineno;
+    this.col = col;
     this.lexer = lexer;
     this.parser = parser;
   }
@@ -490,8 +693,12 @@ class lexer$2 {
     this.tokens = new Array();
     this.lexpos = 0;
     this.lexdata = "";
+    this.colmap = undefined;
     this.lineno = 0;
+    this.printTokens = false;
+    this.linestart = 0;
     this.errfunc = errfunc;
+    this.linemap = undefined;
     this.tokints = {};
     for (let i = 0; i < tokdef.length; i++) {
       this.tokints[tokdef[i].name] = i;
@@ -499,6 +706,10 @@ class lexer$2 {
     this.statestack = [["__main__", 0]];
     this.states = {"__main__": [tokdef, errfunc]};
     this.statedata = 0;
+
+    this.logger = function() {
+      console.log(...arguments);
+    };
   }
 
   add_state(name, tokdef, errfunc) {
@@ -530,6 +741,23 @@ class lexer$2 {
   }
 
   input(str) {
+    let linemap = this.linemap = new Array(str.length);
+    let lineno = 0;
+    let col = 0;
+    let colmap = this.colmap = new Array(str.length);
+
+    for (let i=0; i<str.length; i++, col++) {
+      let c = str[i];
+
+      linemap[i] = lineno;
+      colmap[i] = col;
+
+      if (c === "\n") {
+        lineno++;
+        col = 0;
+      }
+    }
+
     while (this.statestack.length > 1) {
       this.pop_state();
     }
@@ -544,10 +772,16 @@ class lexer$2 {
     if (this.errfunc !== undefined && !this.errfunc(this))
       return;
 
-    console.log("Syntax error near line " + this.lineno);
+    let safepos = Math.min(this.lexpos, this.lexdata.length-1);
+    let line = this.linemap[safepos];
+    let col = this.colmap[safepos];
+
+    let s = print_lines(this.lexdata, line, col, true);
+
+    this.logger("  " + s);
+    this.logger("Syntax error near line " + (this.lineno + 1));
 
     let next = Math.min(this.lexpos + 8, this.lexdata.length);
-    console.log("  " + this.lexdata.slice(this.lexpos, next));
 
     throw new PUTIL_ParseError("Parse error");
   }
@@ -577,6 +811,11 @@ class lexer$2 {
     if (!ignore_peek && this.peeked_tokens.length > 0) {
       let tok = this.peeked_tokens[0];
       this.peeked_tokens.shift();
+
+      if (!ignore_peek && this.printTokens) {
+        this.logger(""+tok);
+      }
+
       return tok;
     }
 
@@ -614,7 +853,13 @@ class lexer$2 {
     }
 
     let def = theres[0];
-    let tok = new token$1(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined);
+    let col = this.colmap[Math.min(this.lexpos, this.lexdata.length-1)];
+
+    if (this.lexpos < this.lexdata.length) {
+      this.lineno = this.linemap[this.lexpos];
+    }
+
+    let tok = new token$1(def.name, theres[1][0], this.lexpos, this.lineno, this, undefined, col);
     this.lexpos += tok.value.length;
 
     if (def.func) {
@@ -624,6 +869,9 @@ class lexer$2 {
       }
     }
 
+    if (!ignore_peek && this.printTokens) {
+      this.logger(""+tok);
+    }
     return tok;
   }
 }
@@ -633,6 +881,10 @@ class parser$1 {
     this.lexer = lexer;
     this.errfunc = errfunc;
     this.start = undefined;
+
+    this.logger = function() {
+      console.log(...arguments);
+    };
   }
 
   parse(data, err_on_unconsumed) {
@@ -662,25 +914,18 @@ class parser$1 {
     if (token === undefined)
       estr = "Parse error at end of input: " + msg;
     else
-      estr = "Parse error at line " + (token.lineno + 1) + ": " + msg;
+      estr = `Parse error at line ${token.lineno + 1}:${token.col+1}: ${msg}`;
 
-    let buf = "1| ";
+    let buf = "";
     let ld = this.lexer.lexdata;
-    let l = 1;
-    for (var i = 0; i < ld.length; i++) {
-      let c = ld[i];
-      if (c === '\n') {
-        l++;
-        buf += "\n" + l + "| ";
-      }
-      else {
-        buf += c;
-      }
-    }
-    console.log("------------------");
-    console.log(buf);
-    console.log("==================");
-    console.log(estr);
+    let lineno = token ? token.lineno : this.lexer.linemap[this.lexer.linemap.length-1];
+    let col = token ? token.col : 0;
+
+    ld = ld.replace(/\r/g, '');
+
+    this.logger(print_lines(ld, lineno, col, true, token));
+    this.logger(estr);
+
     if (this.errfunc && !this.errfunc(token)) {
       return;
     }
@@ -744,8 +989,8 @@ class parser$1 {
 }
 
 function test_parser$1() {
-  let basic_types = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
-  let reserved_tokens = new set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
+  let basic_types = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
+  let reserved_tokens = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
 
   function tk(name, re, func) {
     return new tokdef$1(name, re, func);
@@ -776,17 +1021,27 @@ function test_parser$1() {
     t.lexer.lineno += 1;
   }), tk("SPACE", / |\t/, function (t) {
   })];
-  let __iter_rt = __get_iter(reserved_tokens);
-  let rt;
-  while (1) {
-    let __ival_rt = __iter_rt.next();
-    if (__ival_rt.done) {
-      break;
-    }
-    rt = __ival_rt.value;
+
+  for (let rt of reserved_tokens) {
     tokens.push(tk(rt.toUpperCase()));
   }
-  let a = "\n  Loop {\n    eid : int;\n    flag : int;\n    index : int;\n    type : int;\n\n    co : vec3;\n    no : vec3;\n    loop : int | eid(loop);\n    edges : array(e, int) | e.eid;\n\n    loops : array(Loop);\n  }\n  ";
+
+  let a = `
+  Loop {
+    eid : int;
+    flag : int;
+    index : int;
+    type : int;
+
+    co : vec3;
+    no : vec3;
+    loop : int | eid(loop);
+    edges : array(e, int) | e.eid;
+
+    loops :, array(Loop);
+  }
+  `;
+
 
   function errfunc(lexer) {
     return true;
@@ -799,8 +1054,8 @@ function test_parser$1() {
   while (token = lex.next()) {
     console.log(token.toString());
   }
-  let parser = new parser(lex);
-  parser.input(a);
+  let parse = new parser$1(lex);
+  parse.input(a);
 
   function p_Array(p) {
     p.expect("ARRAY");
@@ -874,9 +1129,11 @@ function test_parser$1() {
     return st;
   }
 
-  let ret = p_Struct(parser);
+  let ret = p_Struct(parse);
   console.log(JSON.stringify(ret));
 }
+
+//test_parser();
 
 var struct_parseutil = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -901,57 +1158,57 @@ class NStruct {
 //the version I originally wrote (which had a few application-specific types)
 //and this one do not become totally incompatible.
 const StructEnum = {
-  T_INT          : 0,
-  T_FLOAT        : 1,
-  T_DOUBLE       : 2,
-  T_STRING       : 7,
-  T_STATIC_STRING: 8, //fixed-length string
-  T_STRUCT       : 9,
-  T_TSTRUCT      : 10,
-  T_ARRAY        : 11,
-  T_ITER         : 12,
-  T_SHORT        : 13,
-  T_BYTE         : 14,
-  T_BOOL         : 15,
-  T_ITERKEYS     : 16,
-  T_UINT         : 17,
-  T_USHORT       : 18,
-  T_STATIC_ARRAY : 19,
-  T_SIGNED_BYTE  : 20
+  INT          : 0,
+  FLOAT        : 1,
+  DOUBLE       : 2,
+  STRING       : 7,
+  STATIC_STRING: 8, //fixed-length string
+  STRUCT       : 9,
+  TSTRUCT      : 10,
+  ARRAY        : 11,
+  ITER         : 12,
+  SHORT        : 13,
+  BYTE         : 14,
+  BOOL         : 15,
+  ITERKEYS     : 16,
+  UINT         : 17,
+  USHORT       : 18,
+  STATIC_ARRAY : 19,
+  SIGNED_BYTE  : 20
 };
 
 const ValueTypes = new Set([
-  StructEnum.T_INT,
-  StructEnum.T_FLOAT,
-  StructEnum.T_DOUBLE,
-  StructEnum.T_STRING,
-  StructEnum.T_STATIC_STRING,
-  StructEnum.T_SHORT,
-  StructEnum.T_BYTE,
-  StructEnum.T_BOOL,
-  StructEnum.T_UINT,
-  StructEnum.T_USHORT,
-  StructEnum.T_SIGNED_BYTE
+  StructEnum.INT,
+  StructEnum.FLOAT,
+  StructEnum.DOUBLE,
+  StructEnum.STRING,
+  StructEnum.STATIC_STRING,
+  StructEnum.SHORT,
+  StructEnum.BYTE,
+  StructEnum.BOOL,
+  StructEnum.UINT,
+  StructEnum.USHORT,
+  StructEnum.SIGNED_BYTE
 
 ]);
 
 let StructTypes = {
-  "int"          : StructEnum.T_INT,
-  "uint"         : StructEnum.T_UINT,
-  "ushort"       : StructEnum.T_USHORT,
-  "float"        : StructEnum.T_FLOAT,
-  "double"       : StructEnum.T_DOUBLE,
-  "string"       : StructEnum.T_STRING,
-  "static_string": StructEnum.T_STATIC_STRING,
-  "struct"       : StructEnum.T_STRUCT,
-  "abstract"     : StructEnum.T_TSTRUCT,
-  "array"        : StructEnum.T_ARRAY,
-  "iter"         : StructEnum.T_ITER,
-  "short"        : StructEnum.T_SHORT,
-  "byte"         : StructEnum.T_BYTE,
-  "bool"         : StructEnum.T_BOOL,
-  "iterkeys"     : StructEnum.T_ITERKEYS,
-  "sbyte"        : StructEnum.T_SIGNED_BYTE
+  "int"          : StructEnum.INT,
+  "uint"         : StructEnum.UINT,
+  "ushort"       : StructEnum.USHORT,
+  "float"        : StructEnum.FLOAT,
+  "double"       : StructEnum.DOUBLE,
+  "string"       : StructEnum.STRING,
+  "static_string": StructEnum.STATIC_STRING,
+  "struct"       : StructEnum.STRUCT,
+  "abstract"     : StructEnum.TSTRUCT,
+  "array"        : StructEnum.ARRAY,
+  "iter"         : StructEnum.ITER,
+  "short"        : StructEnum.SHORT,
+  "byte"         : StructEnum.BYTE,
+  "bool"         : StructEnum.BOOL,
+  "iterkeys"     : StructEnum.ITERKEYS,
+  "sbyte"        : StructEnum.SIGNED_BYTE
 };
 
 let StructTypeMap = {};
@@ -965,6 +1222,61 @@ function gen_tabstr(t) {
   for (let i = 0; i < t; i++) {
     s += "  ";
   }
+  return s;
+}
+
+function stripComments(buf) {
+  let s = '';
+
+  const MAIN = 0, COMMENT = 1, STR = 2;
+
+  let p, n;
+  let strs = new Set(["'", '"', "`"]);
+  let mode = MAIN;
+  let strlit;
+  let escape = false;
+
+  for (let i = 0; i < buf.length; i++) {
+    let p = i > 0 ? buf[i - 1] : undefined;
+    let c = buf[i];
+    let n = i < buf.length - 1 ? buf[i + 1] : undefined;
+
+    switch (mode) {
+      case MAIN:
+        if (c === "/" && n === "/") {
+          mode = COMMENT;
+          continue;
+        }
+
+        if (strs.has(c)) {
+          strlit = c;
+          mode = STR;
+        }
+
+        s += c;
+
+        break;
+      case COMMENT:
+        if (n === "\n") {
+          mode = MAIN;
+        }
+        break;
+      case STR:
+        if (c === strlit && !escape) {
+          mode = MAIN;
+        }
+
+        s += c;
+        break;
+    }
+
+    if (c === "\\") {
+      escape ^= true;
+    } else {
+      escape = false;
+    }
+  }
+
   return s;
 }
 
@@ -994,6 +1306,14 @@ function StructParser() {
     tk("OPEN", /\{/),
     tk("EQUALS", /=/),
     tk("CLOSE", /}/),
+    tk("STRLIT", /\"[^"]*\"/, t => {
+      t.value = t.value.slice(1, t.value.length - 1);
+      return t;
+    }),
+    tk("STRLIT", /\'[^']*\'/, t => {
+      t.value = t.value.slice(1, t.value.length - 1);
+      return t;
+    }),
     tk("COLON", /:/),
     tk("SOPEN", /\[/),
     tk("SCLOSE", /\]/),
@@ -1035,7 +1355,14 @@ function StructParser() {
     return true;
   }
 
-  let lex = new lexer$2(tokens, errfunc);
+  class Lexer extends lexer$2 {
+    input(str) {
+      str = stripComments(str);
+      return super.input(str);
+    }
+  }
+
+  let lex = new Lexer(tokens, errfunc);
   let parser$1$1 = new parser$1(lex);
 
   function p_Static_String(p) {
@@ -1043,7 +1370,7 @@ function StructParser() {
     p.expect("SOPEN");
     let num = p.expect("NUM");
     p.expect("SCLOSE");
-    return {type: StructEnum.T_STATIC_STRING, data: {maxlength: num}}
+    return {type: StructEnum.STATIC_STRING, data: {maxlength: num}}
   }
 
   function p_DataRef(p) {
@@ -1051,7 +1378,7 @@ function StructParser() {
     p.expect("LPARAM");
     let tname = p.expect("ID");
     p.expect("RPARAM");
-    return {type: StructEnum.T_DATAREF, data: tname}
+    return {type: StructEnum.DATAREF, data: tname}
   }
 
   function p_Array(p) {
@@ -1066,7 +1393,7 @@ function StructParser() {
     }
 
     p.expect("RPARAM");
-    return {type: StructEnum.T_ARRAY, data: {type: arraytype, iname: itername}}
+    return {type: StructEnum.ARRAY, data: {type: arraytype, iname: itername}}
   }
 
   function p_Iter(p) {
@@ -1082,7 +1409,7 @@ function StructParser() {
     }
 
     p.expect("RPARAM");
-    return {type: StructEnum.T_ITER, data: {type: arraytype, iname: itername}}
+    return {type: StructEnum.ITER, data: {type: arraytype, iname: itername}}
   }
 
   function p_StaticArray(p) {
@@ -1106,7 +1433,7 @@ function StructParser() {
     }
 
     p.expect("SCLOSE");
-    return {type: StructEnum.T_STATIC_ARRAY, data: {type: arraytype, size: size, iname: itername}}
+    return {type: StructEnum.STATIC_ARRAY, data: {type: arraytype, size: size, iname: itername}}
   }
 
   function p_IterKeys(p) {
@@ -1122,15 +1449,27 @@ function StructParser() {
     }
 
     p.expect("RPARAM");
-    return {type: StructEnum.T_ITERKEYS, data: {type: arraytype, iname: itername}}
+    return {type: StructEnum.ITERKEYS, data: {type: arraytype, iname: itername}}
   }
 
   function p_Abstract(p) {
     p.expect("ABSTRACT");
     p.expect("LPARAM");
     let type = p.expect("ID");
+
+    let jsonKeyword = "_structName";
+
+    if (p.optional("COMMA")) {
+      jsonKeyword = p.expect("STRLIT");
+    }
+
     p.expect("RPARAM");
-    return {type: StructEnum.T_TSTRUCT, data: type}
+
+    return {
+      type: StructEnum.TSTRUCT,
+      data: type,
+      jsonKeyword
+    }
   }
 
   function p_Type(p) {
@@ -1138,7 +1477,7 @@ function StructParser() {
 
     if (tok.type === "ID") {
       p.next();
-      return {type: StructEnum.T_STRUCT, data: tok.value}
+      return {type: StructEnum.STRUCT, data: tok.value}
     } else if (basic_types.has(tok.type.toLowerCase())) {
       p.next();
       return {type: StructTypes[tok.type.toLowerCase()]}
@@ -1244,6 +1583,7 @@ var struct_parser = /*#__PURE__*/Object.freeze({
   ValueTypes: ValueTypes,
   StructTypes: StructTypes,
   StructTypeMap: StructTypeMap,
+  stripComments: stripComments,
   struct_parse: struct_parse
 });
 
@@ -1257,7 +1597,7 @@ var struct_typesystem = /*#__PURE__*/Object.freeze({
 
 var STRUCT_ENDIAN = true; //little endian
 
-function setEndian(mode) {
+function setBinaryEndian(mode) {
   STRUCT_ENDIAN = !!mode;
 }
 
@@ -1560,7 +1900,7 @@ function unpack_static_string(data, uctx, length) {
 var struct_binpack = /*#__PURE__*/Object.freeze({
   __proto__: null,
   get STRUCT_ENDIAN () { return STRUCT_ENDIAN; },
-  setEndian: setEndian,
+  setBinaryEndian: setBinaryEndian,
   temp_dataview: temp_dataview,
   uint8_view: uint8_view,
   unpack_context: unpack_context,
@@ -1639,7 +1979,7 @@ function gen_tabstr$1(tot) {
   return ret;
 }
 
-function setWarningMode(t) {
+function setWarningMode2(t) {
   if (typeof t !== "number" || isNaN(t)) {
     throw new Error("Expected a single number (>= 0) argument to setWarningMode");
   }
@@ -1647,7 +1987,7 @@ function setWarningMode(t) {
   warninglvl = t;
 }
 
-function setDebugMode(t) {
+function setDebugMode2(t) {
   debug$1 = t;
 
   if (debug$1) {
@@ -1682,22 +2022,27 @@ function setDebugMode(t) {
   }
 }
 
-setDebugMode(debug$1);
+setDebugMode2(debug$1);
 
 const StructFieldTypes = [];
 const StructFieldTypeMap = {};
 
 function packNull(manager, data, field, type) {
   StructFieldTypeMap[type.type].packNull(manager, data, field, type);
-};
+}
 
 function toJSON(manager, val, obj, field, type) {
   return StructFieldTypeMap[type.type].toJSON(manager, val, obj, field, type);
-};
+}
 
 function fromJSON(manager, val, obj, field, type, instance) {
   return StructFieldTypeMap[type.type].fromJSON(manager, val, obj, field, type, instance);
-};
+}
+
+function validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+  return StructFieldTypeMap[type.type].validateJSON(manager, val, obj, field, type, instance, _abstractKey);
+}
+
 
 function unpack_field(manager, data, type, uctx) {
   let name;
@@ -1771,6 +2116,10 @@ class StructFieldType {
     return val;
   }
 
+  static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+    return true;
+  }
+
   /**
    return false to override default
    helper js for packing
@@ -1785,7 +2134,7 @@ class StructFieldType {
    Example:
    <pre>
    static define() {return {
-    type : StructEnum.T_INT,
+    type : StructEnum.INT,
     name : "int"
   }}
    </pre>
@@ -1831,9 +2180,17 @@ class StructIntField extends StructFieldType {
     return unpack_int(data, uctx);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (typeof val !== "number" || val !== Math.floor(val)) {
+      return "" + val + " is not an integer";
+    }
+
+    return true;
+  }
+
   static define() {
     return {
-      type: StructEnum.T_INT,
+      type: StructEnum.INT,
       name: "int"
     }
   }
@@ -1850,9 +2207,17 @@ class StructFloatField extends StructFieldType {
     return unpack_float(data, uctx);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+    if (typeof val !== "number") {
+      return "Not a float: " + val;
+    }
+
+    return true;
+  }
+
   static define() {
     return {
-      type: StructEnum.T_FLOAT,
+      type: StructEnum.FLOAT,
       name: "float"
     }
   }
@@ -1869,9 +2234,17 @@ class StructDoubleField extends StructFieldType {
     return unpack_double(data, uctx);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (typeof val !== "number") {
+      return "Not a double: " + val;
+    }
+
+    return true;
+  }
+
   static define() {
     return {
-      type: StructEnum.T_DOUBLE,
+      type: StructEnum.DOUBLE,
       name: "double"
     }
   }
@@ -1886,6 +2259,14 @@ class StructStringField extends StructFieldType {
     pack_string(data, val);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (typeof val !== "string") {
+      return "Not a string: " + val;
+    }
+
+    return true;
+  }
+
   static packNull(manager, data, field, type) {
     this.pack(manager, data, "", 0, field, type);
   }
@@ -1896,7 +2277,7 @@ class StructStringField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_STRING,
+      type: StructEnum.STRING,
       name: "string"
     }
   }
@@ -1909,6 +2290,19 @@ class StructStaticStringField extends StructFieldType {
     val = !val ? "" : val;
 
     pack_static_string(data, val, type.data.maxlength);
+  }
+
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (typeof val !== "string") {
+      return "Not a string: " + val;
+    }
+
+
+    if (val.length > type.data.maxlength) {
+      return "String is too big; limit is " + type.data.maxlength + "; string:" + val;
+    }
+
+    return true;
   }
 
   static format(type) {
@@ -1925,7 +2319,7 @@ class StructStaticStringField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_STATIC_STRING,
+      type: StructEnum.STATIC_STRING,
       name: "static_string"
     }
   }
@@ -1940,6 +2334,16 @@ class StructStructField extends StructFieldType {
     packer_debug("struct", stt.name);
 
     manager.write_struct(data, val, stt);
+  }
+
+  static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+    let stt = manager.get_struct(type.data);
+
+    if (!val) {
+      return "Expected " + stt.name + " object";
+    }
+
+    return manager.validateJSONIntern(val, stt, _abstractKey);
   }
 
   static format(type) {
@@ -1985,7 +2389,7 @@ class StructStructField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_STRUCT,
+      type: StructEnum.STRUCT,
       name: "struct"
     }
   }
@@ -1997,6 +2401,8 @@ class StructTStructField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
     let cls = manager.get_struct_cls(type.data);
     let stt = manager.get_struct(type.data);
+
+    const keywords = manager.constructor.keywords;
 
     //make sure inheritance is correct
     if (val.constructor.structName !== type.data && (val instanceof cls)) {
@@ -2017,17 +2423,51 @@ class StructTStructField extends StructFieldType {
     manager.write_struct(data, val, stt);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+    let key = type.jsonKeyword;
+
+    if (typeof val !== "object") {
+      return typeof val + " is not an object";
+    }
+
+    let stt = manager.get_struct(val[key]);
+    let cls = manager.get_struct_cls(stt.name);
+    let parentcls = manager.get_struct_cls(type.data);
+
+    let ok = false;
+
+    do {
+      if (cls === parentcls) {
+        ok = true;
+        break;
+      }
+
+      cls = cls.prototype.__proto__.constructor;
+    } while (cls && cls !== Object);
+
+    if (!ok) {
+      return stt.name + " is not a child class off " + type.data;
+    }
+
+    return manager.validateJSONIntern(val, stt, type.jsonKeyword);
+  }
+
+
   static fromJSON(manager, val, obj, field, type, instance) {
-    let stt = manager.get_struct(val._structName);
+    let key = type.jsonKeyword;
+
+    let stt = manager.get_struct(val[key]);
 
     return manager.readJSON(val, stt, instance);
   }
 
   static toJSON(manager, val, obj, field, type) {
+    const keywords = manager.constructor.keywords;
+
     let stt = manager.get_struct(val.constructor.structName);
     let ret = manager.writeJSON(val, stt);
 
-    ret._structName = "" + stt.name;
+    ret[type.jsonKeyword] = "" + stt.name;
 
     return ret;
   }
@@ -2036,7 +2476,7 @@ class StructTStructField extends StructFieldType {
     let stt = manager.get_struct(type.data);
 
     pack_int(data, stt.id);
-    packNull(manager, data, field, {type: StructEnum.T_STRUCT, data: type.data});
+    packNull(manager, data, field, {type: StructEnum.STRUCT, data: type.data});
   }
 
   static format(type) {
@@ -2088,7 +2528,7 @@ class StructTStructField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_TSTRUCT,
+      type: StructEnum.TSTRUCT,
       name: "tstruct"
     }
   }
@@ -2147,6 +2587,22 @@ class StructArrayField extends StructFieldType {
 
   static useHelperJS(field) {
     return !field.type.data.iname;
+  }
+
+  static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
+    if (!val) {
+      return "not an array: " + val;
+    }
+
+    for (let i = 0; i < val.length; i++) {
+      let ret = validateJSON(manager, val[i], val, field, type.data.type, undefined, _abstractKey);
+
+      if (typeof ret === "string" || !ret) {
+        return ret;
+      }
+    }
+
+    return true;
   }
 
   static fromJSON(manager, val, obj, field, type, instance) {
@@ -2216,7 +2672,7 @@ class StructArrayField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_ARRAY,
+      type: StructEnum.ARRAY,
       name: "array"
     }
   }
@@ -2275,6 +2731,10 @@ class StructIterField extends StructFieldType {
     data[starti++] = uint8_view[1];
     data[starti++] = uint8_view[2];
     data[starti++] = uint8_view[3];
+  }
+
+  static validateJSON(manager, val, obj, field, type, instance) {
+    return StructArrayField.validateJSON(...arguments);
   }
 
   static fromJSON() {
@@ -2347,7 +2807,7 @@ class StructIterField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_ITER,
+      type: StructEnum.ITER,
       name: "iter"
     }
   }
@@ -2366,7 +2826,7 @@ class StructShortField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_SHORT,
+      type: StructEnum.SHORT,
       name: "short"
     }
   }
@@ -2385,7 +2845,7 @@ class StructByteField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_BYTE,
+      type: StructEnum.BYTE,
       name: "byte"
     }
   }
@@ -2404,7 +2864,7 @@ class StructSignedByteField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_SIGNED_BYTE,
+      type: StructEnum.SIGNED_BYTE,
       name: "sbyte"
     }
   }
@@ -2421,9 +2881,29 @@ class StructBoolField extends StructFieldType {
     return !!unpack_byte(data, uctx);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (val === 0 || val === 1 || val === true || val === false || val === "true" || val === "false") {
+      return true;
+    }
+
+    return "" + val + " is not a bool";
+  }
+
+  static fromJSON(manager, val, obj, field, type, instance) {
+    if (val === "false") {
+      val = false;
+    }
+
+    return !!val;
+  }
+
+  static toJSON(manager, val, obj, field, type) {
+    return !!val;
+  }
+
   static define() {
     return {
-      type: StructEnum.T_BOOL,
+      type: StructEnum.BOOL,
       name: "bool"
     }
   }
@@ -2476,6 +2956,10 @@ class StructIterKeysField extends StructFieldType {
 
       i++;
     }
+  }
+
+  static validateJSON(manager, val, obj, field, type, instance) {
+    return StructArrayField.validateJSON(...arguments);
   }
 
   static fromJSON() {
@@ -2549,7 +3033,7 @@ class StructIterKeysField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_ITERKEYS,
+      type: StructEnum.ITERKEYS,
       name: "iterkeys"
     }
   }
@@ -2566,9 +3050,17 @@ class StructUintField extends StructFieldType {
     return unpack_uint(data, uctx);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (typeof val !== "number" || val !== Math.floor(val)) {
+      return "" + val + " is not an integer";
+    }
+
+    return true;
+  }
+
   static define() {
     return {
-      type: StructEnum.T_UINT,
+      type: StructEnum.UINT,
       name: "uint"
     }
   }
@@ -2586,9 +3078,17 @@ class StructUshortField extends StructFieldType {
     return unpack_ushort(data, uctx);
   }
 
+  static validateJSON(manager, val, obj, field, type, instance) {
+    if (typeof val !== "number" || val !== Math.floor(val)) {
+      return "" + val + " is not an integer";
+    }
+
+    return true;
+  }
+
   static define() {
     return {
-      type: StructEnum.T_USHORT,
+      type: StructEnum.USHORT,
       name: "ushort"
     }
   }
@@ -2630,6 +3130,10 @@ class StructStaticArrayField extends StructFieldType {
 
   static useHelperJS(field) {
     return !field.type.data.iname;
+  }
+
+  static validateJSON() {
+    return StructArrayField.validateJSON(...arguments);
   }
 
   static fromJSON() {
@@ -2686,7 +3190,7 @@ class StructStaticArrayField extends StructFieldType {
 
   static define() {
     return {
-      type: StructEnum.T_STATIC_ARRAY,
+      type: StructEnum.STATIC_ARRAY,
       name: "static_array"
     }
   }
@@ -2694,10 +3198,264 @@ class StructStaticArrayField extends StructFieldType {
 
 StructFieldType.register(StructStaticArrayField);
 
+var _sintern2 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  _get_pack_debug: _get_pack_debug,
+  setWarningMode2: setWarningMode2,
+  setDebugMode2: setDebugMode2,
+  StructFieldTypes: StructFieldTypes,
+  StructFieldTypeMap: StructFieldTypeMap,
+  packNull: packNull,
+  toJSON: toJSON,
+  fromJSON: fromJSON,
+  validateJSON: validateJSON,
+  do_pack: do_pack,
+  StructFieldType: StructFieldType
+});
+
 var structEval = eval;
 
 function setStructEval(val) {
   structEval = val;
+}
+
+var _struct_eval = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get structEval () { return structEval; },
+  setStructEval: setStructEval
+});
+
+const TokSymbol = Symbol("token-info");
+
+function buildJSONParser() {
+  let tk = (name, re, func, example) => new tokdef$1(name, re, func, example);
+
+  let parse;
+
+  let nint = "[+-]?[0-9]+";
+  let nhex = "[+-]?0x[0-9a-fA-F]+";
+  let nfloat1 = "[+-]?[0-9]+\\.[0-9]*";
+  let nfloat2 = "[+-]?[0-9]*\\.[0-9]+";
+  let nfloat3 = "[+-]?[0-9]+\\.[0-9]+";
+  let nfloatexp = "[+-]?[0-9]+\\.[0-9]+[eE][+-]?[0-9]+";
+
+  let nfloat = `(${nfloat1})|(${nfloat2})|(${nfloatexp})`;
+  let num = `(${nint})|(${nfloat})|(${nhex})`;
+  let numre = new RegExp(num);
+
+  let numreTest = new RegExp(`(${num})$`);
+
+  //nfloat3 has to be its own regexp, the parser
+  //always chooses the token handler that parses the most input,
+  //and we don't want the partial 0. and .0 handles to split
+  //e.g. 3.5 into 3 and 0.5
+  nfloat3 = new RegExp(nfloat3);
+  nfloatexp = new RegExp(nfloatexp);
+
+  let tests = ["1.234234", ".23432", "-234.", "1e-17", "-0x23423ff", "+23423", "-4.263256414560601e-14"];
+  for (let test of tests) {
+    if (!numreTest.test(test)) {
+      console.error("Error! Number regexp failed:", test);
+    }
+  }
+
+  let tokens = [
+    tk("BOOL", /true|false/),
+    tk("WS", /[ \r\t\n]/, t => undefined), //drop token
+    tk("STRLIT", /["']/, t => {
+      let lex = t.lexer;
+      let char = t.value;
+      let i = lex.lexpos;
+      let lexdata = lex.lexdata;
+
+      let escape = 0;
+      t.value = "";
+      let prev;
+
+      while (i < lexdata.length) {
+        let c = lexdata[i];
+
+        t.value += c;
+
+        if (c === "\\") {
+          escape ^= true;
+        } else if (!escape && c === char) {
+          break;
+        } else {
+          escape = false;
+        }
+
+        i++;
+      }
+
+      lex.lexpos = i + 1;
+
+      if (t.value.length > 0) {
+        t.value = t.value.slice(0, t.value.length - 1);
+      }
+
+      return t;
+    }),
+    tk("LSBRACKET", /\[/),
+    tk("RSBRACKET", /]/),
+    tk("LBRACE", /{/),
+    tk("RBRACE", /}/),
+    tk("NULL", /null/),
+    tk("COMMA", /,/),
+    tk("COLON", /:/),
+    tk("NUM", numre, t => (t.value = parseFloat(t.value), t)),
+    tk("NUM", nfloat3, t => (t.value = parseFloat(t.value), t)),
+    tk("NUM", nfloatexp, t => (t.value = parseFloat(t.value), t)),
+  ];
+
+  function tokinfo(t) {
+    return {
+      lexpos: t.lexpos,
+      lineno: t.lineno,
+      col   : t.col,
+      fields: {},
+    };
+  }
+
+  function p_Array(p) {
+    p.expect("LSBRACKET");
+    let t = p.peeknext();
+    let first = true;
+
+    let ret = [];
+
+    ret[TokSymbol] = tokinfo(t);
+
+    while (t && t.type !== "RSBRACKET") {
+      if (!first) {
+        p.expect("COMMA");
+      }
+
+      ret[TokSymbol].fields[ret.length] = tokinfo(t);
+      ret.push(p_Start(p));
+
+      first = false;
+      t = p.peeknext();
+    }
+    p.expect("RSBRACKET");
+
+    return ret;
+  }
+
+  function p_Object(p) {
+    p.expect("LBRACE");
+
+    let obj = {};
+
+    let first = true;
+    let t = p.peeknext();
+
+    obj[TokSymbol] = tokinfo(t);
+    while (t && t.type !== "RBRACE") {
+      if (!first) {
+        p.expect("COMMA");
+      }
+
+      let key = p.expect("STRLIT");
+      p.expect("COLON");
+
+      let val = p_Start(p, true);
+
+      obj[key] = val;
+      first = false;
+
+      t = p.peeknext();
+      obj[TokSymbol].fields[key] = tokinfo(t);
+    }
+
+    p.expect("RBRACE");
+
+    return obj;
+  }
+
+  function p_Start(p, throwError = true) {
+    let t = p.peeknext();
+    if (t.type === "LSBRACKET") {
+      return p_Array(p);
+    } else if (t.type === "LBRACE") {
+      return p_Object(p);
+    } else if (t.type === "STRLIT" || t.type === "NUM" || t.type === "NULL" || t.type === "BOOL") {
+      return p.next().value;
+    } else {
+      p.error(t, "Unknown token");
+    }
+  }
+
+  function p_Error(token, msg) {
+    throw new PUTIL_ParseError("Parse Error");
+  }
+
+  let lex = new lexer$2(tokens);
+  lex.linestart = 0;
+  parse = new parser$1(lex, p_Error);
+  parse.start = p_Start;
+  //lex.printTokens = true;
+
+  return parse;
+}
+
+var jsonParser = buildJSONParser();
+
+/*
+buildJSONParser().parse(`
+{
+                "alteredX": -110.95731659202336,
+                "alteredY": -359.9154922611667,
+                "alteredZ": -4.263256414560601e-14
+}
+`.trim()) //*/
+
+function printContext(buf, tokinfo, printColors=true) {
+  let lines = buf.split("\n");
+
+  if (!tokinfo) {
+    return '';
+  }
+
+  let lineno = tokinfo.lineno;
+  let col = tokinfo.col;
+
+  let istart = Math.max(lineno-50, 0);
+  let iend = Math.min(lineno+2, lines.length-1);
+
+  let s = '';
+
+  if (printColors) {
+    s += termColor$1("  /* pretty-printed json */\n", "blue");
+  } else {
+    s += "/* pretty-printed json */\n";
+  }
+
+  for (let i=istart; i<iend; i++) {
+    let l = lines[i];
+
+    let idx = "" + i;
+    while (idx.length < 3) {
+      idx = " " + idx;
+    }
+
+    if (i === lineno && printColors) {
+      s += termColor$1(`${idx}: ${l}\n`, "yellow");
+    } else {
+      s += `${idx}: ${l}\n`;
+    }
+
+    if (i === lineno) {
+      let l2 = '';
+      for (let j=0; j<col+5; j++) {
+        l2 += " ";
+      }
+
+      s += l2 + "^\n";
+    }
+  }
+
+  return s;
 }
 
 var nGlobal;
@@ -2730,10 +3488,16 @@ function updateDEBUG() {
 
 "use strict";
 
+//needed to avoid a rollup bug in configurable mode
+var sintern2 = _sintern2;
+var struct_eval = _struct_eval;
+
 let warninglvl$1 = 2;
 
 var truncateDollarSign = true;
 var manager$1;
+
+class JSONError extends Error {};
 
 function setTruncateDollarSign(v) {
   truncateDollarSign = !!v;
@@ -2784,8 +3548,8 @@ function update_debug_data() {
 
 update_debug_data();
 
-function setWarningMode$1(t) {
-  setWarningMode(t);
+function setWarningMode(t) {
+  sintern2.setWarningMode2(t);
 
   if (typeof t !== "number" || isNaN(t)) {
     throw new Error("Expected a single number (>= 0) argument to setWarningMode");
@@ -2794,23 +3558,21 @@ function setWarningMode$1(t) {
   warninglvl$1 = t;
 }
 
-function setDebugMode$1(t) {
-  setDebugMode(t);
+function setDebugMode(t) {
+  sintern2.setDebugMode2(t);
   update_debug_data();
 }
 
 let _ws_env$1 = [[undefined, undefined]];
 
-function do_pack$1(data, val, obj, thestruct, field, type) {
-  StructFieldTypeMap[field.type.type].pack(manager$1, data, val, obj, field, type);
-}
-
-function define_empty_class(name) {
+function define_empty_class(scls, name) {
   let cls = function () {
   };
 
   cls.prototype = Object.create(Object.prototype);
   cls.constructor = cls.prototype.constructor = cls;
+
+  let keywords = scls.keywords;
 
   cls.STRUCT = name + " {\n  }\n";
   cls.structName = name;
@@ -2826,6 +3588,10 @@ function define_empty_class(name) {
   return cls;
 }
 
+let haveCodeGen;
+
+//$KEYWORD_CONFIG_START
+
 class STRUCT {
   constructor() {
     this.idgen = 0;
@@ -2838,24 +3604,15 @@ class STRUCT {
     this.compiled_code = {};
     this.null_natives = {};
 
-    function define_null_native(name, cls) {
-      let obj = define_empty_class(name);
+    this.define_null_native("Object", Object);
 
-      let stt = struct_parse.parse(obj.STRUCT);
-
-      stt.id = this.idgen++;
-
-      this.structs[name] = stt;
-      this.struct_cls[name] = cls;
-      this.struct_ids[stt.id] = stt;
-
-      this.null_natives[name] = 1;
-    }
-
-    define_null_native.call(this, "Object", Object);
+    this.jsonUseColors = true;
+    this.jsonBuf = '';
   }
 
   static inherit(child, parent, structName = child.name) {
+    const keywords = this.keywords;
+
     if (!parent.STRUCT) {
       return structName + "{\n";
     }
@@ -2891,10 +3648,6 @@ class STRUCT {
       parent.prototype.loadSTRUCT.call(obj, reader2);
     }
   }
-
-  //defined_classes is an array of class constructors
-  //with STRUCT scripts, *OR* another STRUCT instance
-  //
 
   /** deprecated.  used with old fromSTRUCT interface. */
   static chain_fromSTRUCT(cls, reader) {
@@ -2933,6 +3686,10 @@ class STRUCT {
     return obj2;
   }
 
+  //defined_classes is an array of class constructors
+  //with STRUCT scripts, *OR* another STRUCT instance
+  //
+
   static formatStruct(stt, internal_only, no_helper_js) {
     return this.fmt_struct(stt, internal_only, no_helper_js);
   }
@@ -2955,17 +3712,17 @@ class STRUCT {
     function fmt_type(type) {
       return StructFieldTypeMap[type.type].format(type);
 
-      if (type.type === StructEnum.T_ARRAY || type.type === StructEnum.T_ITER || type.type === StructEnum.T_ITERKEYS) {
+      if (type.type === StructEnum.ARRAY || type.type === StructEnum.ITER || type.type === StructEnum.ITERKEYS) {
         if (type.data.iname !== "" && type.data.iname !== undefined) {
           return "array(" + type.data.iname + ", " + fmt_type(type.data.type) + ")";
         } else {
           return "array(" + fmt_type(type.data.type) + ")";
         }
-      } else if (type.type === StructEnum.T_STATIC_STRING) {
+      } else if (type.type === StructEnum.STATIC_STRING) {
         return "static_string[" + type.data.maxlength + "]";
-      } else if (type.type === StructEnum.T_STRUCT) {
+      } else if (type.type === StructEnum.STRUCT) {
         return type.data;
-      } else if (type.type === StructEnum.T_TSTRUCT) {
+      } else if (type.type === StructEnum.TSTRUCT) {
         return "abstract(" + type.data + ")";
       } else {
         return StructTypeMap[type.type];
@@ -2986,17 +3743,47 @@ class STRUCT {
     return s;
   }
 
+  static setClassKeyword(keyword, nameKeyword = undefined) {
+    if (!nameKeyword) {
+      nameKeyword = keyword.toLowerCase() + "Name";
+    }
+
+    this.keywords = {
+      script: keyword,
+      name  : nameKeyword,
+      load  : "load" + keyword,
+      new   : "new" + keyword,
+      after : "after" + keyword,
+      from  : "from" + keyword
+    };
+  }
+
+  define_null_native(name, cls) {
+    const keywords = this.constructor.keywords;
+    let obj = define_empty_class(this.constructor, name);
+
+    let stt = struct_parse.parse(obj.STRUCT);
+
+    stt.id = this.idgen++;
+
+    this.structs[name] = stt;
+    this.struct_cls[name] = cls;
+    this.struct_ids[stt.id] = stt;
+
+    this.null_natives[name] = 1;
+  }
+
   validateStructs(onerror) {
     function getType(type) {
       switch (type.type) {
-        case StructEnum.T_ITERKEYS:
-        case StructEnum.T_ITER:
-        case StructEnum.T_STATIC_ARRAY:
-        case StructEnum.T_ARRAY:
+        case StructEnum.ITERKEYS:
+        case StructEnum.ITER:
+        case StructEnum.STATIC_ARRAY:
+        case StructEnum.ARRAY:
           return getType(type.data.type);
-        case StructEnum.T_TSTRUCT:
+        case StructEnum.TSTRUCT:
           return type;
-        case StructEnum.T_STRUCT:
+        case StructEnum.STRUCT:
         default:
           return type;
       }
@@ -3053,7 +3840,7 @@ class STRUCT {
 
         let type = getType(field.type);
 
-        if (type.type !== StructEnum.T_STRUCT && type.type !== StructEnum.T_TSTRUCT) {
+        if (type.type !== StructEnum.STRUCT && type.type !== StructEnum.TSTRUCT) {
           continue;
         }
 
@@ -3078,6 +3865,8 @@ class STRUCT {
 
   //defaults to structjs.manager
   parse_structs(buf, defined_classes) {
+    const keywords = this.constructor.keywords;
+
     if (defined_classes === undefined) {
       defined_classes = manager$1;
     }
@@ -3126,7 +3915,7 @@ class STRUCT {
           if (warninglvl$1 > 0)
             console.log("WARNING: struct " + stt.name + " is missing from class list.");
 
-        let dummy = define_empty_class(stt.name);
+        let dummy = define_empty_class(this.constructor, stt.name);
 
         dummy.STRUCT = STRUCT.fmt_struct(stt);
         dummy.structName = stt.name;
@@ -3165,16 +3954,16 @@ class STRUCT {
 
     let recArray = (t) => {
       switch (t.type) {
-        case StructEnum.T_ARRAY:
+        case StructEnum.ARRAY:
           return recArray(t.data.type);
-        case StructEnum.T_ITERKEYS:
+        case StructEnum.ITERKEYS:
           return recArray(t.data.type);
-        case StructEnum.T_STATIC_ARRAY:
+        case StructEnum.STATIC_ARRAY:
           return recArray(t.data.type);
-        case StructEnum.T_ITER:
+        case StructEnum.ITER:
           return recArray(t.data.type);
-        case StructEnum.T_STRUCT:
-        case StructEnum.T_TSTRUCT: {
+        case StructEnum.STRUCT:
+        case StructEnum.TSTRUCT: {
           let st = srcSTRUCT.structs[t.data];
           let cls = srcSTRUCT.struct_cls[st.name];
 
@@ -3189,18 +3978,18 @@ class STRUCT {
       }
 
       for (let f of st.fields) {
-        if (f.type.type === StructEnum.T_STRUCT || f.type.type === StructEnum.T_TSTRUCT) {
+        if (f.type.type === StructEnum.STRUCT || f.type.type === StructEnum.TSTRUCT) {
           let st2 = srcSTRUCT.structs[f.type.data];
           let cls2 = srcSTRUCT.struct_cls[st2.name];
 
           recStruct(st2, cls2);
-        } else if (f.type.type === StructEnum.T_ARRAY) {
+        } else if (f.type.type === StructEnum.ARRAY) {
           recArray(f.type);
-        } else if (f.type.type === StructEnum.T_ITER) {
+        } else if (f.type.type === StructEnum.ITER) {
           recArray(f.type);
-        } else if (f.type.type === StructEnum.T_ITERKEYS) {
+        } else if (f.type.type === StructEnum.ITERKEYS) {
           recArray(f.type);
-        } else if (f.type.type === StructEnum.T_STATIC_ARRAY) {
+        } else if (f.type.type === StructEnum.STATIC_ARRAY) {
           recArray(f.type);
         }
       }
@@ -3215,6 +4004,8 @@ class STRUCT {
   }
 
   unregister(cls) {
+    const keywords = this.constructor.keywords;
+
     if (!cls || !cls.structName || !(cls.structName in this.struct_cls)) {
       console.warn("Class not registered with nstructjs", cls);
       return;
@@ -3234,6 +4025,7 @@ class STRUCT {
       return;
     }
 
+    const keywords = this.constructor.keywords;
     if (cls.STRUCT) {
       let bad = false;
 
@@ -3248,17 +4040,17 @@ class STRUCT {
       }
 
       if (bad) {
-        console.warn("Generating STRUCT script for derived class " + unmangle(cls.name));
+        console.warn("Generating " + keywords.script + " script for derived class " + unmangle(cls.name));
         if (!structName) {
           structName = unmangle(cls.name);
         }
 
-        cls.STRUCT = STRUCT.inherit(cls, p) + `\n}`;
+        cls.STRUCT = STRUCT.inherit(cls, p) + "\n}";
       }
     }
 
     if (!cls.STRUCT) {
-      throw new Error("class " + unmangle(cls.name) + " has no STRUCT script");
+      throw new Error("class " + unmangle(cls.name) + " has no " + keywords.script + " script");
     }
 
     let stt = struct_parse.parse(cls.STRUCT);
@@ -3301,6 +4093,8 @@ class STRUCT {
   }
 
   isRegistered(cls) {
+    const keywords = this.constructor.keywords;
+
     if (!cls.hasOwnProperty("structName")) {
       return false;
     }
@@ -3348,7 +4142,7 @@ class STRUCT {
     if (!(fullcode in this.compiled_code)) {
       let code2 = "func = function(obj, env) { " + envcode + "return " + code + "}";
       try {
-        func = structEval(code2);
+        func = struct_eval.structEval(code2);
       } catch (err) {
         console.warn(err.stack);
 
@@ -3399,10 +4193,10 @@ class STRUCT {
           console.log("\n\n\n", f.get, "Helper JS Ret", val, "\n\n\n");
         }
 
-        do_pack$1(data, val, obj, thestruct, f, t1);
+        sintern2.do_pack(this, data, val, obj, f, t1);
       } else {
         let val = f.name === "this" ? obj : obj[f.name];
-        do_pack$1(data, val, obj, thestruct, f, t1);
+        sintern2.do_pack(this, data, val, obj, f, t1);
       }
     }
   }
@@ -3412,6 +4206,8 @@ class STRUCT {
    @param obj  : structable object
    */
   write_object(data, obj) {
+    const keywords = this.constructor.keywords;
+
     let cls = obj.constructor.structName;
     let stt = this.get_struct(cls);
 
@@ -3450,6 +4246,8 @@ class STRUCT {
   }
 
   writeJSON(obj, stt = undefined) {
+    const keywords = this.constructor.keywords;
+
     let cls = obj.constructor;
     stt = stt || this.get_struct(cls.structName);
 
@@ -3459,7 +4257,7 @@ class STRUCT {
       return cls.useHelperJS(field);
     }
 
-    let toJSON$1 = toJSON;
+    let toJSON = sintern2.toJSON;
 
     let fields = stt.fields;
     let thestruct = this;
@@ -3483,18 +4281,18 @@ class STRUCT {
           console.log("\n\n\n", f.get, "Helper JS Ret", val, "\n\n\n");
         }
 
-        json2 = toJSON$1(this, val, obj, f, t1);
+        json2 = toJSON(this, val, obj, f, t1);
       } else {
         val = f.name === "this" ? obj : obj[f.name];
-        json2 = toJSON$1(this, val, obj, f, t1);
+        json2 = toJSON(this, val, obj, f, t1);
       }
 
       if (f.name !== 'this') {
         json[f.name] = json2;
       } else { //f.name was 'this'?
         let isArray = Array.isArray(json2);
-        isArray = isArray || f.type.type === StructTypes.T_ARRAY;
-        isArray = isArray || f.type.type === StructTypes.T_STATIC_ARRAY;
+        isArray = isArray || f.type.type === StructTypes.ARRAY;
+        isArray = isArray || f.type.type === StructTypes.STATIC_ARRAY;
 
         if (isArray) {
           json.length = json2.length;
@@ -3517,6 +4315,7 @@ class STRUCT {
    @param uctx : internal parameter
    */
   read_object(data, cls_or_struct_id, uctx, objInstance) {
+    const keywords = this.constructor.keywords;
     let cls, stt;
 
     if (data instanceof Array) {
@@ -3592,7 +4391,7 @@ class STRUCT {
       obj.loadSTRUCT(load);
 
       if (!was_run) {
-        console.warn(""+cls.structName + ".prototype.loadSTRUCT() did not execute its loader callback!");
+        console.warn("" + cls.structName + ".prototype.loadSTRUCT() did not execute its loader callback!");
         load(obj);
       }
 
@@ -3616,7 +4415,145 @@ class STRUCT {
     }
   }
 
+  validateJSON(json, cls_or_struct_id, useInternalParser=true, useColors=true, consoleLogger=function(){console.log(...arguments);}, _abstractKey="_structName") {
+    if (cls_or_struct_id === undefined) {
+      throw new Error(this.constructor.name + ".prototype.validateJSON: Expected at least two arguments");
+    }
+
+    try {
+      json = JSON.stringify(json, undefined, 2);
+
+      this.jsonBuf = json;
+      this.jsonUseColors = useColors;
+      this.jsonLogger = consoleLogger;
+
+      //add token annotations
+      jsonParser.logger = this.jsonLogger;
+
+      if (useInternalParser) {
+        json = jsonParser.parse(json);
+      } else {
+        json = JSON.parse(json);
+      }
+
+      this.validateJSONIntern(json, cls_or_struct_id, _abstractKey);
+
+    } catch (error) {
+      if (!(error instanceof JSONError)) {
+        console.error(error.stack);
+      }
+
+      this.jsonLogger(error.message);
+      return false;
+    }
+
+    return true;
+  }
+
+  validateJSONIntern(json, cls_or_struct_id, _abstractKey="_structName") {
+    const keywords = this.constructor.keywords;
+
+    let cls, stt;
+
+    if (typeof cls_or_struct_id === "number") {
+      cls = this.struct_cls[this.struct_ids[cls_or_struct_id].name];
+    } else if (cls_or_struct_id instanceof NStruct) {
+      cls = this.get_struct_cls(cls_or_struct_id.name);
+    } else {
+      cls = cls_or_struct_id;
+    }
+
+    if (cls === undefined) {
+      throw new Error("bad cls_or_struct_id " + cls_or_struct_id);
+    }
+
+    stt = this.structs[cls.structName];
+
+    let fields = stt.fields;
+    let flen = fields.length;
+
+    let keys = new Set();
+    keys.add(_abstractKey);
+
+    let keyTestJson = json;
+
+    for (let i = 0; i < flen; i++) {
+      let f = fields[i];
+
+      let val;
+
+      let tokinfo;
+
+      if (f.name === 'this') {
+        val = json;
+        keyTestJson = {
+          "this" : json
+        };
+
+        keys.add("this");
+        tokinfo = json[TokSymbol];
+      } else {
+        val = json[f.name];
+        keys.add(f.name);
+
+        tokinfo = json[TokSymbol] ? json[TokSymbol].fields[f.name] : undefined;
+        if (!tokinfo) {
+          let f2 = fields[Math.max(i-1, 0)];
+          tokinfo = TokSymbol[TokSymbol] ? json[TokSymbol].fields[f2.name] : undefined;
+        }
+
+        if (!tokinfo) {
+          tokinfo = json[TokSymbol];
+        }
+      }
+
+      if (val === undefined) {
+        //console.warn("nstructjs.readJSON: Missing field " + f.name + " in struct " + stt.name);
+        //continue;
+      }
+
+      let instance = f.name === 'this' ? val : json;
+
+      let ret = sintern2.validateJSON(this, val, json, f, f.type, instance, _abstractKey);
+
+      if (!ret || typeof ret === "string") {
+        let msg = typeof ret === "string" ? ": " + ret : "";
+
+        if (tokinfo) {
+          this.jsonLogger(printContext(this.jsonBuf, tokinfo, this.jsonUseColors));
+        }
+
+        //console.error(cls.STRUCT);
+
+        if (val === undefined) {
+          throw new JSONError("Missing json field " + f.name + msg);
+        } else {
+          throw new JSONError("Invalid json field " + f.name + msg);
+        }
+
+        return false;
+      }
+    }
+
+    for (let k in keyTestJson) {
+      if (typeof json[k] === "symbol") {
+        //ignore symbols
+        continue;
+      }
+
+      if (!keys.has(k)) {
+        this.jsonLogger(cls.STRUCT);
+        throw new JSONError("Unknown json field " + k);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   readJSON(json, cls_or_struct_id, objInstance = undefined) {
+    const keywords = this.constructor.keywords;
+
     let cls, stt;
 
     if (typeof cls_or_struct_id === "number") {
@@ -3637,7 +4574,7 @@ class STRUCT {
     let thestruct = this;
     let this2 = this;
     let was_run = false;
-    let fromJSON$1 = fromJSON;
+    let fromJSON = sintern2.fromJSON;
 
     function makeLoader(stt) {
       return function load(obj) {
@@ -3668,7 +4605,7 @@ class STRUCT {
 
           let instance = f.name === 'this' ? obj : objInstance;
 
-          let ret = fromJSON$1(this2, val, obj, f, f.type, instance);
+          let ret = fromJSON(this2, val, obj, f, f.type, instance);
 
           if (f.name !== 'this') {
             obj[f.name] = ret;
@@ -3709,6 +4646,59 @@ class STRUCT {
     }
   }
 };
+//$KEYWORD_CONFIG_END
+
+if (haveCodeGen) {
+  var StructClass;
+
+  eval(code);
+
+  STRUCT = StructClass;
+}
+
+STRUCT.setClassKeyword("STRUCT");
+
+function deriveStructManager(keywords = {
+  script: "STRUCT",
+  name  : undefined, //script.toLowerCase + "Name"
+  load  : undefined, //"load" + script
+  new   : undefined, //"new" + script
+  from  : undefined, //"from" + script
+}) {
+
+  if (!keywords.name) {
+    keywords.name = keywords.script.toLowerCase() + "Name";
+  }
+
+  if (!keywords.load) {
+    keywords.load = "load" + keywords.script;
+  }
+
+  if (!keywords.new) {
+    keywords.new = "new" + keywords.script;
+  }
+
+  if (!keywords.from) {
+    keywords.from = "from" + keywords.script;
+  }
+
+  if (!haveCodeGen) {
+    class NewSTRUCT extends STRUCT {
+
+    }
+
+    NewSTRUCT.keywords = keywords;
+    return NewSTRUCT;
+  } else {
+    var StructClass;
+
+    let code2 = code;
+    code2 = code2.replace(/\[keywords.script\]/g, keywords.script);
+
+    eval(code2);
+    return StructClass;
+  }
+}
 
 //main struct script manager
 manager$1 = new STRUCT();
@@ -3722,8 +4712,12 @@ manager$1 = new STRUCT();
 function write_scripts(nManager = manager$1, include_code = false) {
   let buf = "";
 
+  /* prevent code generation bugs in configurable mode */
+  let nl = String.fromCharCode(10);
+  let tab = String.fromCharCode(9);
+
   nManager.forEach(function (stt) {
-    buf += STRUCT.fmt_struct(stt, false, !include_code) + "\n";
+    buf += STRUCT.fmt_struct(stt, false, !include_code) + nl;
   });
 
   let buf2 = buf;
@@ -3731,10 +4725,10 @@ function write_scripts(nManager = manager$1, include_code = false) {
 
   for (let i = 0; i < buf2.length; i++) {
     let c = buf2[i];
-    if (c === "\n") {
-      buf += "\n";
+    if (c === nl) {
+      buf += nl;
       let i2 = i;
-      while (i < buf2.length && (buf2[i] === " " || buf2[i] === "\t" || buf2[i] === "\n")) {
+      while (i < buf2.length && (buf2[i] === " " || buf2[i] === tab || buf2[i] === nl)) {
         i++;
       }
       if (i !== i2)
@@ -4033,12 +5027,29 @@ function validateStructs(onerror) {
 /**
  true means little endian, false means big endian
  */
-function setEndian$1(mode) {
+function setEndian(mode) {
   let ret = STRUCT_ENDIAN;
 
-  setEndian(mode);
+  setBinaryEndian(mode);
 
   return ret;
+}
+
+function consoleLogger() {
+  console.log(...arguments);
+}
+
+/** Validate json
+ *
+ * @param json
+ * @param cls
+ * @param useInternalParser If true (the default) an internal parser will be used that generates nicer error messages
+ * @param printColors
+ * @param logger
+ * @returns {*}
+ */
+function validateJSON$1(json, cls, useInternalParser, printColors=true, logger=consoleLogger) {
+  return manager$1.validateJSON(json, cls, useInternalParser, printColors, logger);
 }
 
 function getEndian() {
@@ -4089,11 +5100,14 @@ function readJSON(json, class_or_struct_id) {
   return manager$1.readJSON(json, class_or_struct_id);
 }
 
-var nstructjs$1 = /*#__PURE__*/Object.freeze({
+var nstructjs = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  STRUCT: STRUCT,
+  JSONError: JSONError,
+  get STRUCT () { return STRUCT; },
   _truncateDollarSign: _truncateDollarSign,
   binpack: struct_binpack,
+  consoleLogger: consoleLogger,
+  deriveStructManager: deriveStructManager,
   filehelper: struct_filehelper,
   getEndian: getEndian,
   inherit: inherit$1,
@@ -4105,14 +5119,15 @@ var nstructjs$1 = /*#__PURE__*/Object.freeze({
   readObject: readObject,
   register: register$1,
   setAllowOverriding: setAllowOverriding,
-  setDebugMode: setDebugMode$1,
-  setEndian: setEndian$1,
+  setDebugMode: setDebugMode,
+  setEndian: setEndian,
   setTruncateDollarSign: setTruncateDollarSign,
-  setWarningMode: setWarningMode$1,
+  setWarningMode: setWarningMode,
   truncateDollarSign: truncateDollarSign$1,
   typesystem: struct_typesystem,
   unpack_context: unpack_context,
   unregister: unregister,
+  validateJSON: validateJSON$1,
   validateStructs: validateStructs,
   writeJSON: writeJSON,
   writeObject: writeObject,
@@ -5123,6 +6138,542 @@ define(function () {
         throw new Error('unknown environment');
     }
 })());
+
+// Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+// This work is free. You can redistribute it and/or modify it
+// under the terms of the WTFPL, Version 2
+// For more information see LICENSE.txt or http://www.wtfpl.net/
+//
+// For more information, the home page:
+// http://pieroxy.net/blog/pages/lz-string/testing.html
+//
+// LZ-based compression algorithm, version 1.4.4
+
+// private property
+let f = String.fromCharCode;
+let keyStrBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+let keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+let baseReverseDic = {};
+
+function getBaseValue(alphabet, character) {
+  if (!baseReverseDic[alphabet]) {
+    baseReverseDic[alphabet] = {};
+    for (let i = 0; i < alphabet.length; i++) {
+      baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+    }
+  }
+  return baseReverseDic[alphabet][character];
+}
+
+function getInput(input) {
+  if (input === null) {
+    return '';
+  } else if (input === '') {
+    return null;
+  }
+
+  if (typeof input === "string") {
+    return input;
+  }
+
+  if (input instanceof ArrayBuffer) {
+    input = new Uint8Array(input);
+  }
+
+  let s = '';
+  for (let i = 0; i < input.length; i++) {
+    s += String.fromCharCode(input[i]);
+  }
+
+  return s;
+}
+
+var lzstring = {
+  compressToBase64: function (input) {
+    input = getInput(input);
+
+    if (!input) return "";
+
+    let res = this._compress(input, 6, function (a) {
+      return keyStrBase64.charAt(a);
+    });
+    switch (res.length%4) { // To produce valid Base64
+      default: // When could this happen ?
+      case 0 :
+        return res;
+      case 1 :
+        return res + "===";
+      case 2 :
+        return res + "==";
+      case 3 :
+        return res + "=";
+    }
+  },
+
+  decompressFromBase64: function (input) {
+    if (input === null) return "";
+    if (input === "") return null;
+
+    input = getInput(input);
+    return this._decompress(input.length, 32, function (index) {
+      return getBaseValue(keyStrBase64, input.charAt(index));
+    });
+  },
+
+  compressToUTF16: function (input) {
+    if (input === null) return "";
+
+    input = getInput(input);
+    return this._compress(input, 15, function (a) {
+      return f(a + 32);
+    }) + " ";
+  },
+
+  decompressFromUTF16: function (compressed) {
+    if (compressed === null) return "";
+    if (compressed === "") return null;
+
+    compressed = getInput(compressed);
+    return this._decompress(compressed.length, 16384, function (index) {
+      return compressed.charCodeAt(index) - 32;
+    });
+  },
+
+  //compress into uint8array (UCS-2 big endian format)
+  compressToUint8Array: function (uncompressed) {
+    uncompressed = getInput(uncompressed);
+
+    let compressed = this.compress(uncompressed);
+    let buf = new Uint8Array(compressed.length*2); // 2 bytes per character
+
+    for (let i = 0, TotalLen = compressed.length; i < TotalLen; i++) {
+      let current_value = compressed.charCodeAt(i);
+      buf[i*2] = current_value>>>8;
+      buf[i*2 + 1] = current_value%256;
+    }
+    return buf;
+  },
+
+  //decompress from uint8array (UCS-2 big endian format)
+  decompressFromUint8Array: function (compressed) {
+    if (compressed === null || compressed === undefined) {
+      return this.decompress(compressed);
+    } else {
+      compressed = getInput(compressed);
+
+      let buf = new Array(compressed.length/2); // 2 bytes per character
+      for (let i = 0, TotalLen = buf.length; i < TotalLen; i++) {
+        buf[i] = compressed[i*2]*256 + compressed[i*2 + 1];
+      }
+
+      let result = [];
+      buf.forEach(function (c) {
+        result.push(f(c));
+      });
+      return this.decompress(result.join(''));
+
+    }
+
+  },
+
+
+  //compress into a string that is already URI encoded
+  compressToEncodedURIComponent: function (input) {
+    if (input === null) return "";
+    return this._compress(input, 6, function (a) {
+      return keyStrUriSafe.charAt(a);
+    });
+  },
+
+  //decompress from an output of compressToEncodedURIComponent
+  decompressFromEncodedURIComponent: function (input) {
+    if (input === null) return "";
+    if (input === "") return null;
+    input = input.replace(/ /g, "+");
+    return this._decompress(input.length, 32, function (index) {
+      return getBaseValue(keyStrUriSafe, input.charAt(index));
+    });
+  },
+
+  compress : function (uncompressed) {
+    return this._compress(uncompressed, 16, function (a) {
+      return f(a);
+    });
+  },
+
+  _compress: function (uncompressed, bitsPerChar, getCharFromInt) {
+    uncompressed = getInput(uncompressed);
+
+    if (uncompressed === null) return "";
+    let i, value, context_dictionary = {}, context_dictionaryToCreate = {}, context_c = "", context_wc = "",
+        context_w                                                                                      = "", context_enlargeIn = 2, // Compensate for the first entry which should not count
+        context_dictSize                                                                               = 3, context_numBits = 2, context_data                                        = [], context_data_val = 0,
+        context_data_position                                                                          = 0, ii;
+
+    for (ii = 0; ii < uncompressed.length; ii += 1) {
+      context_c = uncompressed.charAt(ii);
+      if (!Object.prototype.hasOwnProperty.call(context_dictionary, context_c)) {
+        context_dictionary[context_c] = context_dictSize++;
+        context_dictionaryToCreate[context_c] = true;
+      }
+
+      context_wc = context_w + context_c;
+      if (Object.prototype.hasOwnProperty.call(context_dictionary, context_wc)) {
+        context_w = context_wc;
+      } else {
+        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+          if (context_w.charCodeAt(0) < 256) {
+            for (i = 0; i < context_numBits; i++) {
+              context_data_val = (context_data_val<<1);
+              if (context_data_position === bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+            }
+            value = context_w.charCodeAt(0);
+            for (i = 0; i < 8; i++) {
+              context_data_val = (context_data_val<<1) | (value & 1);
+              if (context_data_position === bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+              value = value>>1;
+            }
+          } else {
+            value = 1;
+            for (i = 0; i < context_numBits; i++) {
+              context_data_val = (context_data_val<<1) | value;
+              if (context_data_position == bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+              value = 0;
+            }
+            value = context_w.charCodeAt(0);
+            for (i = 0; i < 16; i++) {
+              context_data_val = (context_data_val<<1) | (value & 1);
+              if (context_data_position === bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else {
+                context_data_position++;
+              }
+              value = value>>1;
+            }
+          }
+          context_enlargeIn--;
+          if (context_enlargeIn === 0) {
+            context_enlargeIn = Math.pow(2, context_numBits);
+            context_numBits++;
+          }
+          delete context_dictionaryToCreate[context_w];
+        } else {
+          value = context_dictionary[context_w];
+          for (i = 0; i < context_numBits; i++) {
+            context_data_val = (context_data_val<<1) | (value & 1);
+            if (context_data_position === bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value>>1;
+          }
+
+
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn === 0) {
+          context_enlargeIn = Math.pow(2, context_numBits);
+          context_numBits++;
+        }
+        // Add wc to the dictionary.
+        context_dictionary[context_wc] = context_dictSize++;
+        context_w = String(context_c);
+      }
+    }
+
+    // Output the code for w.
+    if (context_w !== "") {
+      if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+        if (context_w.charCodeAt(0) < 256) {
+          for (i = 0; i < context_numBits; i++) {
+            context_data_val = (context_data_val<<1);
+            if (context_data_position === bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+          }
+          value = context_w.charCodeAt(0);
+          for (i = 0; i < 8; i++) {
+            context_data_val = (context_data_val<<1) | (value & 1);
+            if (context_data_position === bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value>>1;
+          }
+        } else {
+          value = 1;
+          for (i = 0; i < context_numBits; i++) {
+            context_data_val = (context_data_val<<1) | value;
+            if (context_data_position === bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = 0;
+          }
+          value = context_w.charCodeAt(0);
+          for (i = 0; i < 16; i++) {
+            context_data_val = (context_data_val<<1) | (value & 1);
+            if (context_data_position === bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value>>1;
+          }
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn === 0) {
+          context_enlargeIn = Math.pow(2, context_numBits);
+          context_numBits++;
+        }
+        delete context_dictionaryToCreate[context_w];
+      } else {
+        value = context_dictionary[context_w];
+        for (i = 0; i < context_numBits; i++) {
+          context_data_val = (context_data_val<<1) | (value & 1);
+          if (context_data_position === bitsPerChar - 1) {
+            context_data_position = 0;
+            context_data.push(getCharFromInt(context_data_val));
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+          value = value>>1;
+        }
+
+
+      }
+      context_enlargeIn--;
+      if (context_enlargeIn === 0) {
+        context_enlargeIn = Math.pow(2, context_numBits);
+        context_numBits++;
+      }
+    }
+
+    // Mark the end of the stream
+    value = 2;
+    for (i = 0; i < context_numBits; i++) {
+      context_data_val = (context_data_val<<1) | (value & 1);
+      if (context_data_position === bitsPerChar - 1) {
+        context_data_position = 0;
+        context_data.push(getCharFromInt(context_data_val));
+        context_data_val = 0;
+      } else {
+        context_data_position++;
+      }
+      value = value>>1;
+    }
+
+    // Flush the last char
+    while (true) {
+      context_data_val = (context_data_val<<1);
+      if (context_data_position === bitsPerChar - 1) {
+        context_data.push(getCharFromInt(context_data_val));
+        break;
+      } else context_data_position++;
+    }
+    return context_data.join('');
+  },
+
+  decompress: function (compressed) {
+    if (compressed === null) return "";
+    if (compressed === "") return null;
+
+    compressed = getInput(compressed);
+
+    return this._decompress(compressed.length, 32768, function (index) {
+      return compressed.charCodeAt(index);
+    });
+  },
+
+  _decompress: function (length, resetValue, getNextValue) {
+    let dictionary = [], next, enlargeIn = 4, dictSize = 4, numBits = 3, entry = "", result = [], i, w,
+        bits, resb,
+        maxpower, power, c, data                                                            = {val: getNextValue(0), position: resetValue, index: 1};
+
+    for (i = 0; i < 3; i += 1) {
+      dictionary[i] = i;
+    }
+
+    bits = 0;
+    maxpower = Math.pow(2, 2);
+    power = 1;
+    while (power !== maxpower) {
+      resb = data.val & data.position;
+      data.position >>= 1;
+      if (data.position === 0) {
+        data.position = resetValue;
+        data.val = getNextValue(data.index++);
+      }
+      bits |= (resb > 0 ? 1 : 0)*power;
+      power <<= 1;
+    }
+
+    switch (next = bits) {
+      case 0:
+        bits = 0;
+        maxpower = Math.pow(2, 8);
+        power = 1;
+        while (power !== maxpower) {
+          resb = data.val & data.position;
+          data.position >>= 1;
+          if (data.position === 0) {
+            data.position = resetValue;
+            data.val = getNextValue(data.index++);
+          }
+          bits |= (resb > 0 ? 1 : 0)*power;
+          power <<= 1;
+        }
+        c = f(bits);
+        break;
+      case 1:
+        bits = 0;
+        maxpower = Math.pow(2, 16);
+        power = 1;
+        while (power !== maxpower) {
+          resb = data.val & data.position;
+          data.position >>= 1;
+          if (data.position === 0) {
+            data.position = resetValue;
+            data.val = getNextValue(data.index++);
+          }
+          bits |= (resb > 0 ? 1 : 0)*power;
+          power <<= 1;
+        }
+        c = f(bits);
+        break;
+      case 2:
+        return "";
+    }
+    dictionary[3] = c;
+    w = c;
+    result.push(c);
+    while (true) {
+      if (data.index > length) {
+        return "";
+      }
+
+      bits = 0;
+      maxpower = Math.pow(2, numBits);
+      power = 1;
+      while (power !== maxpower) {
+        resb = data.val & data.position;
+        data.position >>= 1;
+        if (data.position === 0) {
+          data.position = resetValue;
+          data.val = getNextValue(data.index++);
+        }
+        bits |= (resb > 0 ? 1 : 0)*power;
+        power <<= 1;
+      }
+
+      switch (c = bits) {
+        case 0:
+          bits = 0;
+          maxpower = Math.pow(2, 8);
+          power = 1;
+          while (power !== maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position === 0) {
+              data.position = resetValue;
+              data.val = getNextValue(data.index++);
+            }
+            bits |= (resb > 0 ? 1 : 0)*power;
+            power <<= 1;
+          }
+
+          dictionary[dictSize++] = f(bits);
+          c = dictSize - 1;
+          enlargeIn--;
+          break;
+        case 1:
+          bits = 0;
+          maxpower = Math.pow(2, 16);
+          power = 1;
+          while (power !== maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position === 0) {
+              data.position = resetValue;
+              data.val = getNextValue(data.index++);
+            }
+            bits |= (resb > 0 ? 1 : 0)*power;
+            power <<= 1;
+          }
+          dictionary[dictSize++] = f(bits);
+          c = dictSize - 1;
+          enlargeIn--;
+          break;
+        case 2:
+          return result.join('');
+      }
+
+      if (enlargeIn === 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+
+      if (dictionary[c]) {
+        entry = dictionary[c];
+      } else {
+        if (c === dictSize) {
+          entry = w + w.charAt(0);
+        } else {
+          return null;
+        }
+      }
+      result.push(entry);
+
+      // Add w+entry[0] to the dictionary.
+      dictionary[dictSize++] = w + entry.charAt(0);
+      enlargeIn--;
+
+      w = entry;
+
+      if (enlargeIn === 0) {
+        enlargeIn = Math.pow(2, numBits);
+        numBits++;
+      }
+
+    }
+  }
+};
 
 let f64tmp = new Float64Array(1);
 let u16tmp = new Uint16Array(f64tmp.buffer);
@@ -6323,7 +7874,7 @@ IDGen {
   cur : int;
 }
 `;
-nstructjs$1.register(IDGen);
+nstructjs.register(IDGen);
 
 
 function get_callstack(err) {
@@ -6687,6 +8238,14 @@ class HashDigest {
   add(v) {
     if (typeof v === "string") {
       v = strhash(v);
+    }
+
+    if (typeof v === "object" && Array.isArray(v)) {
+      for (let i=0; i<v.length; i++) {
+        this.add(v[i]);
+      }
+
+      return this;
     }
 
     if (v >= -5 && v <= 5) {
@@ -7711,7 +9270,23 @@ window.setInterval(() => {
   }
 }, 250);
 
-var util1 = /*#__PURE__*/Object.freeze({
+function compress(data) {
+  return lzstring.compressToUint8Array(data);
+}
+
+function decompress(data) {
+  if (data instanceof DataView) {
+    data = data.buffer;
+  }
+
+  if (data instanceof ArrayBuffer) {
+    data = new Uint8Array(data);
+  }
+
+  return lzstring.decompressFromUint8Array(data);
+}
+
+var util = /*#__PURE__*/Object.freeze({
   __proto__: null,
   isDenormal: isDenormal,
   termColorMap: termColorMap,
@@ -7759,7 +9334,9 @@ var util1 = /*#__PURE__*/Object.freeze({
   ArrayPool: ArrayPool,
   DivLogger: DivLogger,
   PendingTimeoutPromises: PendingTimeoutPromises,
-  TimeoutPromise: TimeoutPromise
+  TimeoutPromise: TimeoutPromise,
+  compress: compress,
+  decompress: decompress
 });
 
 const EulerOrders = {
@@ -8394,7 +9971,7 @@ vec4 {
   3 : float;
 }
 `;
-nstructjs$1.manager.add_class(Vector4$2);
+nstructjs.manager.add_class(Vector4$2);
 
 
 var _v3nd_n1_normalizedDot, _v3nd_n2_normalizedDot;
@@ -8586,7 +10163,7 @@ vec3 {
   2 : float;
 }
 `;
-nstructjs$1.manager.add_class(Vector3$2);
+nstructjs.manager.add_class(Vector3$2);
 
 class Vector2$c extends BaseVector {
   constructor(data) {
@@ -8726,7 +10303,7 @@ vec2 {
   1 : float;
 }
 `;
-nstructjs$1.manager.add_class(Vector2$c);
+nstructjs.manager.add_class(Vector2$c);
 
 let _quat_vs3_temps = cachering.fromConstructor(Vector3$2, 64);
 
@@ -8979,10 +10556,10 @@ class Quat extends Vector4$2 {
   }
 };
 
-Quat.STRUCT = nstructjs$1.inherit(Quat, Vector4$2, 'quat') + `
+Quat.STRUCT = nstructjs.inherit(Quat, Vector4$2, 'quat') + `
 }
 `;
-nstructjs$1.register(Quat);
+nstructjs.register(Quat);
 
 _v3nd4_n1_normalizedDot4 = new Vector3$2();
 _v3nd4_n2_normalizedDot4 = new Vector3$2();
@@ -10435,7 +12012,7 @@ mat4 {
   isPersp  : int          | this.isPersp;
 }
 `;
-nstructjs$1.register(Matrix4$2);
+nstructjs.register(Matrix4$2);
 
 preMultTemp = new Matrix4$2();
 
@@ -10466,7 +12043,7 @@ lookat_cache_ms = cachering.fromConstructor(Matrix4$2, 64);
 euler_rotate_mats = cachering.fromConstructor(Matrix4$2, 64);
 temp_mats = cachering.fromConstructor(Matrix4$2, 64);
 
-var vectormath1 = /*#__PURE__*/Object.freeze({
+var vectormath = /*#__PURE__*/Object.freeze({
   __proto__: null,
   EulerOrders: EulerOrders,
   BaseVector: BaseVector,
@@ -10520,6 +12097,8 @@ const PropFlags$3 = {
   EDIT_AS_BASE_UNIT     : 1<<13, //user textbox input should be interpreted in display unit
   NO_UNDO               : 1<<14,
   USE_CUSTOM_PROP_GETTER: 1<<15, //hrm, not sure I need this
+  FORCE_ENUM_CHECKBOXES : 1<<16,
+  NO_DEFAULT            : 1<<17,
 };
 
 class ToolPropertyIF {
@@ -10770,7 +12349,7 @@ class Curve1DPropertyIF extends ToolPropertyIF {
   }
 }
 
-var toolprop_abstract1 = /*#__PURE__*/Object.freeze({
+var toolprop_abstract = /*#__PURE__*/Object.freeze({
   __proto__: null,
   PropTypes: PropTypes$8,
   PropSubTypes: PropSubTypes$4,
@@ -11369,7 +12948,7 @@ function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, display
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
 
-let config$1 = {
+let config = {
   doubleClickTime : 500,
 
   //auto load 1d bspline templates, can hurt startup time
@@ -11384,15 +12963,15 @@ let config$1 = {
 
 function setConfig(obj) {
   for (let k in obj) {
-    config$1[k] = obj[k];
+    config[k] = obj[k];
   }
 }
 
-var config1 = /*#__PURE__*/Object.freeze({
+var ctrlconfig = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  config: config$1,
+  config: config,
   setConfig: setConfig,
-  'default': config$1
+  'default': config
 });
 
 let modalstack$1 = [];
@@ -11633,7 +13212,7 @@ class DoubleClickHandler {
       this.last = this.down;
       this.down = time_ms();
 
-      if (this.down - this.last < config$1.doubleClickTime) {
+      if (this.down - this.last < config.doubleClickTime) {
         this.mdown = false;
         this.ondblclick(this.dblEvent);
 
@@ -11657,7 +13236,7 @@ class DoubleClickHandler {
       this.mdown = false;
     }
 
-    if (this.mdown && time_ms() - this.down > config$1.doubleClickHoldTime) {
+    if (this.mdown && time_ms() - this.down > config.doubleClickHoldTime) {
       this.mdown = false;
       this.ondblclick(this.dblEvent);
     }
@@ -11835,7 +13414,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
   function make_default_touchhandler(type, state) {
     return function (e) {
       //console.warn("touch event!", type, touchmap[type], e.touches.length);
-      if (config$1.DEBUG.domEvents) {
+      if (config.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -11886,7 +13465,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
 
   function make_handler(type, key) {
     return function (e) {
-      if (config$1.DEBUG.domEvents) {
+      if (config.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
 
@@ -12039,7 +13618,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
   modalstack$1.push(ret);
   ContextAreaClass.lock();
 
-  if (config$1.DEBUG.modalEvents) {
+  if (config.DEBUG.modalEvents) {
     console.warn("pushModalLight", ret.pointer ? "(pointer events)" : "");
   }
 
@@ -12119,7 +13698,7 @@ function popModalLight(state) {
   modalstack$1.remove(state);
   ContextAreaClass.unlock();
 
-  if (config$1.DEBUG.modalEvents) {
+  if (config.DEBUG.modalEvents) {
     console.warn("popModalLight", modalstack$1, state.pointer ? "(pointer events)" : "");
   }
 
@@ -12716,7 +14295,7 @@ CurveTypeData {
   type : string;
 }
 `;
-nstructjs$1.register(CurveTypeData);
+nstructjs.register(CurveTypeData);
 
 
 function evalHermiteTable(table, t) {
@@ -12984,7 +14563,7 @@ Curve1DPoint {
   rco     : vec2;
 }
 `;
-nstructjs$1.register(Curve1DPoint);
+nstructjs.register(Curve1DPoint);
 
 let _udigest$3 = new HashDigest();
 
@@ -14161,7 +15740,7 @@ class BSplineCurve extends CurveTypeData {
   }
 }
 
-BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
+BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
   points        : array(Curve1DPoint);
   deg           : int;
   eidgen        : IDGen;
@@ -14169,7 +15748,7 @@ BSplineCurve.STRUCT = nstructjs$1.inherit(BSplineCurve, CurveTypeData) + `
   range         : array(vec2);
 }
 `;
-nstructjs$1.register(BSplineCurve);
+nstructjs.register(BSplineCurve);
 CurveTypeData.register(BSplineCurve);
 
 
@@ -14247,7 +15826,7 @@ function initSplineTemplates() {
   }
 
   splineTemplatesLoaded = true;
-  
+
   for (let k in SplineTemplates) {
     let curve = new BSplineCurve();
     curve.loadTemplate(SplineTemplates[k]);
@@ -14260,7 +15839,7 @@ function initSplineTemplates() {
 
 //delay to ensure config is fully loaded
 window.setTimeout(() => {
-  if (config$1.autoLoadSplineTemplates) {
+  if (config.autoLoadSplineTemplates) {
     initSplineTemplates();
   }
 }, 0);
@@ -14499,11 +16078,11 @@ class EquationCurve extends CurveTypeData {
   }
 }
 
-EquationCurve.STRUCT = nstructjs$1.inherit(EquationCurve, CurveTypeData) + `
+EquationCurve.STRUCT = nstructjs.inherit(EquationCurve, CurveTypeData) + `
   equation : string;
 }
 `;
-nstructjs$1.register(EquationCurve);
+nstructjs.register(EquationCurve);
 CurveTypeData.register(EquationCurve);
 
 
@@ -14678,13 +16257,13 @@ class GuassianCurve extends CurveTypeData {
   }
 }
 
-GuassianCurve.STRUCT = nstructjs$1.inherit(GuassianCurve, CurveTypeData) + `
+GuassianCurve.STRUCT = nstructjs.inherit(GuassianCurve, CurveTypeData) + `
   height    : float;
   offset    : float;
   deviation : float;
 }
 `;
-nstructjs$1.register(GuassianCurve);
+nstructjs.register(GuassianCurve);
 CurveTypeData.register(GuassianCurve);
 
 /*
@@ -15169,7 +16748,7 @@ ParamKey {
   val : float;
 }
 `;
-nstructjs$1.register(ParamKey);
+nstructjs.register(ParamKey);
 let BOOL_FLAG = 1e17;
 
 let _udigest$1 = new HashDigest();
@@ -15347,11 +16926,11 @@ class SimpleCurveBase extends CurveTypeData {
   }
 }
 
-SimpleCurveBase.STRUCT = nstructjs$1.inherit(SimpleCurveBase, CurveTypeData) + `
+SimpleCurveBase.STRUCT = nstructjs.inherit(SimpleCurveBase, CurveTypeData) + `
   params : array(ParamKey) | obj._saveParams();
 }
 `;
-nstructjs$1.register(SimpleCurveBase);
+nstructjs.register(SimpleCurveBase);
 
 class BounceCurve extends SimpleCurveBase {
   static define() {
@@ -15396,9 +16975,9 @@ class BounceCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(BounceCurve);
-BounceCurve.STRUCT = nstructjs$1.inherit(BounceCurve, SimpleCurveBase) + `
+BounceCurve.STRUCT = nstructjs.inherit(BounceCurve, SimpleCurveBase) + `
 }`;
-nstructjs$1.register(BounceCurve);
+nstructjs.register(BounceCurve);
 
 
 class ElasticCurve extends SimpleCurveBase {
@@ -15439,9 +17018,9 @@ class ElasticCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(ElasticCurve);
-ElasticCurve.STRUCT = nstructjs$1.inherit(ElasticCurve, SimpleCurveBase) + `
+ElasticCurve.STRUCT = nstructjs.inherit(ElasticCurve, SimpleCurveBase) + `
 }`;
-nstructjs$1.register(ElasticCurve);
+nstructjs.register(ElasticCurve);
 
 
 class EaseCurve extends SimpleCurveBase {
@@ -15472,9 +17051,9 @@ class EaseCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(EaseCurve);
-EaseCurve.STRUCT = nstructjs$1.inherit(EaseCurve, SimpleCurveBase) + `
+EaseCurve.STRUCT = nstructjs.inherit(EaseCurve, SimpleCurveBase) + `
 }`;
-nstructjs$1.register(EaseCurve);
+nstructjs.register(EaseCurve);
 
 
 class RandCurve extends SimpleCurveBase {
@@ -15538,9 +17117,9 @@ class RandCurve extends SimpleCurveBase {
 }
 
 CurveTypeData.register(RandCurve);
-RandCurve.STRUCT = nstructjs$1.inherit(RandCurve, SimpleCurveBase) + `
+RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
 }`;
-nstructjs$1.register(RandCurve);
+nstructjs.register(RandCurve);
 
 "use strict";
 
@@ -15902,7 +17481,7 @@ Curve1D {
   uiZoom      : float;
 }
 `;
-nstructjs$1.register(Curve1D);
+nstructjs.register(Curve1D);
 
 const NumberConstraintsBase = new Set([
   'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
@@ -16353,11 +17932,24 @@ class ToolProperty$1 extends ToolPropertyIF {
 
   loadSTRUCT(reader) {
     reader(this);
+
+    if (this.uiRange[0] === -1e17 && this.uiRange[1] === 1e17) {
+      this.uiRange = undefined;
+    }
+
+    if (this.baseUnit === "undefined") {
+      this.baseUnit = undefined;
+    }
+
+    if (this.displayUnit === "undefined") {
+      this.displayUnit = undefined;
+    }
   }
 }
 
 ToolProperty$1.STRUCT = `
 ToolProperty { 
+  apiname        : string | ""+this.apiname;
   type           : int;
   flag           : int;
   subtype        : int;
@@ -16366,16 +17958,17 @@ ToolProperty {
   baseUnit       : string | ""+this.baseUnit;
   displayUnit    : string | ""+this.displayUnit;
   range          : array(float) | this.range ? this.range : [-1e17, 1e17];
-  uiRange        : array(float) | this.range ? this.range : [-1e17, 1e17];
+  uiRange        : array(float) | this.uiRange ? this.uiRange : [-1e17, 1e17];
   description    : string;
   stepIsRelative : bool;
   step           : float;
   expRate        : float;
   radix          : float;
   decimalPlaces  : int;
+  uiname         : string | this.uiname || this.apiname || "";
 }
 `;
-nstructjs$1.register(ToolProperty$1);
+nstructjs.register(ToolProperty$1);
 
 window.ToolProperty = ToolProperty$1;
 
@@ -16432,10 +18025,10 @@ class FloatArrayProperty extends ToolProperty$1 {
   }
 }
 
-FloatArrayProperty.STRUCT = nstructjs$1.inherit(FloatArrayProperty, ToolProperty$1) + `
+FloatArrayProperty.STRUCT = nstructjs.inherit(FloatArrayProperty, ToolProperty$1) + `
   value : array(float);
 }`;
-nstructjs$1.register(FloatArrayProperty);
+nstructjs.register(FloatArrayProperty);
 
 class StringProperty extends ToolProperty$1 {
   constructor(value, apiname, uiname, description, flag, icon) {
@@ -16480,11 +18073,11 @@ class StringProperty extends ToolProperty$1 {
   }
 }
 
-StringProperty.STRUCT = nstructjs$1.inherit(StringProperty, ToolProperty$1) + `
+StringProperty.STRUCT = nstructjs.inherit(StringProperty, ToolProperty$1) + `
   data : string;
 }
 `;
-nstructjs$1.register(StringProperty);
+nstructjs.register(StringProperty);
 ToolProperty$1.internalRegister(StringProperty);
 /*
 export function isNumber(f) {
@@ -16532,7 +18125,7 @@ class NumProperty extends ToolProperty$1 {
     super.loadSTRUCT(reader);
   }
 };
-NumProperty.STRUCT = nstructjs$1.inherit(NumProperty, ToolProperty$1) + `
+NumProperty.STRUCT = nstructjs.inherit(NumProperty, ToolProperty$1) + `
   range : array(float);
   data  : float;
 }
@@ -16665,7 +18258,7 @@ class _NumberPropertyBase extends ToolProperty$1 {
     return this;
   }
 };
-_NumberPropertyBase.STRUCT = nstructjs$1.inherit(_NumberPropertyBase, ToolProperty$1) + `
+_NumberPropertyBase.STRUCT = nstructjs.inherit(_NumberPropertyBase, ToolProperty$1) + `
   range      : array(float);
   expRate    : float;
   data       : float;
@@ -16673,7 +18266,7 @@ _NumberPropertyBase.STRUCT = nstructjs$1.inherit(_NumberPropertyBase, ToolProper
   slideSpeed : float;
 }
 `;
-nstructjs$1.register(_NumberPropertyBase);
+nstructjs.register(_NumberPropertyBase);
 
 class IntProperty extends _NumberPropertyBase {
   constructor(value, apiname,
@@ -16719,10 +18312,10 @@ class IntProperty extends _NumberPropertyBase {
   }
 }
 
-IntProperty.STRUCT = nstructjs$1.inherit(IntProperty, _NumberPropertyBase) + `
+IntProperty.STRUCT = nstructjs.inherit(IntProperty, _NumberPropertyBase) + `
   data : int;
 }`;
-nstructjs$1.register(IntProperty);
+nstructjs.register(IntProperty);
 
 ToolProperty$1.internalRegister(IntProperty);
 
@@ -16734,10 +18327,10 @@ class ReportProperty extends StringProperty {
   }
 }
 
-ReportProperty.STRUCT = nstructjs$1.inherit(ReportProperty, StringProperty) + `
+ReportProperty.STRUCT = nstructjs.inherit(ReportProperty, StringProperty) + `
 }
 `;
-nstructjs$1.register(ReportProperty);
+nstructjs.register(ReportProperty);
 ToolProperty$1.internalRegister(ReportProperty);
 
 class BoolProperty extends ToolProperty$1 {
@@ -16784,11 +18377,11 @@ class BoolProperty extends ToolProperty$1 {
 }
 
 ToolProperty$1.internalRegister(BoolProperty);
-BoolProperty.STRUCT = nstructjs$1.inherit(BoolProperty, ToolProperty$1) + `
+BoolProperty.STRUCT = nstructjs.inherit(BoolProperty, ToolProperty$1) + `
   data : bool;
 }
 `;
-nstructjs$1.register(BoolProperty);
+nstructjs.register(BoolProperty);
 
 
 class FloatProperty extends _NumberPropertyBase {
@@ -16847,12 +18440,12 @@ class FloatProperty extends _NumberPropertyBase {
 }
 
 ToolProperty$1.internalRegister(FloatProperty);
-FloatProperty.STRUCT = nstructjs$1.inherit(FloatProperty, _NumberPropertyBase) + `
+FloatProperty.STRUCT = nstructjs.inherit(FloatProperty, _NumberPropertyBase) + `
   decimalPlaces : int;
   data          : float;
 }
 `;
-nstructjs$1.register(FloatProperty);
+nstructjs.register(FloatProperty);
 
 class EnumKeyPair {
   constructor(key, val) {
@@ -16883,7 +18476,7 @@ EnumKeyPair {
   val_is_int : bool; 
 }
 `;
-nstructjs$1.register(EnumKeyPair);
+nstructjs.register(EnumKeyPair);
 
 class EnumProperty$9 extends ToolProperty$1 {
   constructor(string_or_int, valid_values, apiname,
@@ -17148,7 +18741,7 @@ class EnumProperty$9 extends ToolProperty$1 {
 }
 
 ToolProperty$1.internalRegister(EnumProperty$9);
-EnumProperty$9.STRUCT = nstructjs$1.inherit(EnumProperty$9, ToolProperty$1) + `
+EnumProperty$9.STRUCT = nstructjs.inherit(EnumProperty$9, ToolProperty$1) + `
   data            : string             | ""+this.data;
   data_is_int     : bool               | this._is_data_int();
   _keys           : array(EnumKeyPair) | this._saveMap(this.keys) ;
@@ -17159,7 +18752,7 @@ EnumProperty$9.STRUCT = nstructjs$1.inherit(EnumProperty$9, ToolProperty$1) + `
   _descriptions   : array(EnumKeyPair) | this._saveMap(this.descriptions) ;  
 }
 `;
-nstructjs$1.register(EnumProperty$9);
+nstructjs.register(EnumProperty$9);
 
 class FlagProperty extends EnumProperty$9 {
   constructor(string, valid_values, apiname,
@@ -17181,10 +18774,10 @@ class FlagProperty extends EnumProperty$9 {
 }
 
 ToolProperty$1.internalRegister(FlagProperty);
-FlagProperty.STRUCT = nstructjs$1.inherit(FlagProperty, EnumProperty$9) + `
+FlagProperty.STRUCT = nstructjs.inherit(FlagProperty, EnumProperty$9) + `
 }
 `;
-nstructjs$1.register(FlagProperty);
+nstructjs.register(FlagProperty);
 
 
 class VecPropertyBase extends FloatProperty {
@@ -17213,8 +18806,8 @@ class VecPropertyBase extends FloatProperty {
   }
 }
 
-VecPropertyBase.STRUCT = nstructjs$1.inherit(VecPropertyBase, FloatProperty) + `
-  hasUniformSlider : bool;
+VecPropertyBase.STRUCT = nstructjs.inherit(VecPropertyBase, FloatProperty) + `
+  hasUniformSlider : bool | this.hasUniformSlider || false;
 }
 `;
 
@@ -17248,11 +18841,11 @@ class Vec2Property extends FloatProperty {
   }
 }
 
-Vec2Property.STRUCT = nstructjs$1.inherit(Vec2Property, VecPropertyBase) + `
+Vec2Property.STRUCT = nstructjs.inherit(Vec2Property, VecPropertyBase) + `
   data : vec2;
 }
 `;
-nstructjs$1.register(Vec2Property);
+nstructjs.register(Vec2Property);
 
 ToolProperty$1.internalRegister(Vec2Property);
 
@@ -17290,11 +18883,11 @@ class Vec3Property extends VecPropertyBase {
   }
 }
 
-Vec3Property.STRUCT = nstructjs$1.inherit(Vec3Property, VecPropertyBase) + `
+Vec3Property.STRUCT = nstructjs.inherit(Vec3Property, VecPropertyBase) + `
   data : vec3;
 }
 `;
-nstructjs$1.register(Vec3Property);
+nstructjs.register(Vec3Property);
 ToolProperty$1.internalRegister(Vec3Property);
 
 class Vec4Property extends FloatProperty {
@@ -17339,11 +18932,11 @@ class Vec4Property extends FloatProperty {
   }
 }
 
-Vec4Property.STRUCT = nstructjs$1.inherit(Vec4Property, VecPropertyBase) + `
+Vec4Property.STRUCT = nstructjs.inherit(Vec4Property, VecPropertyBase) + `
   data : vec4;
 }
 `;
-nstructjs$1.register(Vec4Property);
+nstructjs.register(Vec4Property);
 ToolProperty$1.internalRegister(Vec4Property);
 
 class QuatProperty extends ToolProperty$1 {
@@ -17375,11 +18968,11 @@ class QuatProperty extends ToolProperty$1 {
   }
 }
 
-QuatProperty.STRUCT = nstructjs$1.inherit(QuatProperty, VecPropertyBase) + `
+QuatProperty.STRUCT = nstructjs.inherit(QuatProperty, VecPropertyBase) + `
   data : vec4;
 }
 `;
-nstructjs$1.register(QuatProperty);
+nstructjs.register(QuatProperty);
 
 ToolProperty$1.internalRegister(QuatProperty);
 
@@ -17434,11 +19027,11 @@ class Mat4Property extends ToolProperty$1 {
   }
 }
 
-Mat4Property.STRUCT = nstructjs$1.inherit(Mat4Property, FloatProperty) + `
+Mat4Property.STRUCT = nstructjs.inherit(Mat4Property, FloatProperty) + `
   data           : mat4;
 }
 `;
-nstructjs$1.register(Mat4Property);
+nstructjs.register(Mat4Property);
 ToolProperty$1.internalRegister(Mat4Property);
 
 /**
@@ -17603,11 +19196,11 @@ class ListProperty extends ToolProperty$1 {
   }
 }
 
-ListProperty.STRUCT = nstructjs$1.inherit(ListProperty, ToolProperty$1) + `
+ListProperty.STRUCT = nstructjs.inherit(ListProperty, ToolProperty$1) + `
   prop  : abstract(ToolProperty);
   value : array(abstract(ToolProperty));
 }`;
-nstructjs$1.register(ListProperty);
+nstructjs.register(ListProperty);
 
 ToolProperty$1.internalRegister(ListProperty);
 
@@ -17830,11 +19423,11 @@ class StringSetProperty extends ToolProperty$1 {
   }
 }
 
-StringSetProperty.STRUCT = nstructjs$1.inherit(StringSetProperty, ToolProperty$1) + `
+StringSetProperty.STRUCT = nstructjs.inherit(StringSetProperty, ToolProperty$1) + `
   value  : iter(string);
   values : iterkeys(string);  
 }`;
-nstructjs$1.register(StringSetProperty);
+nstructjs.register(StringSetProperty);
 
 ToolProperty$1.internalRegister(StringSetProperty);
 
@@ -17884,13 +19477,15 @@ class Curve1DProperty extends ToolProperty$1 {
   }
 }
 
-Curve1DProperty.STRUCT = nstructjs$1.inherit(Curve1DProperty, ToolProperty$1) + `
+Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty$1) + `
   data : Curve1D;
 }
 `;
 
-nstructjs$1.register(Curve1DProperty);
+nstructjs.register(Curve1DProperty);
 ToolProperty$1.internalRegister(Curve1DProperty);
+
+const ClassIdSymbol = Symbol("pathux-class-id");
 
 //import * as nstructjs from './struct.js';
 
@@ -17927,7 +19522,7 @@ var AreaTypes = {
   TEST_CANVAS_EDITOR: 0
 };
 
-function setAreaTypes(def) {
+  function setAreaTypes(def) {
   for (let k in AreaTypes) {
     delete AreaTypes[k];
   }
@@ -18136,18 +19731,6 @@ class AreaWrangler {
 _setModalAreaClass(AreaWrangler);
 
 let contextWrangler = new AreaWrangler();
-
-function css2matrix(s) {
-  return new DOMMatrix(s);
-}
-
-function matrix2css(m) {
-  if (m.$matrix) {
-    m = m.$matrix;
-  }
-
-  return `matrix(${m.m11},${m.m12},${m.m21},${m.m22},${m.m41},${m.m42})`
-}
 
 "use strict";
 
@@ -20054,30 +21637,7 @@ function line_line_isect(v1, v2, v3, v4, test_segment) {
   }
 }
 
-function line_line_cross(v1, v2, v3, v4) {
-  var l1 = _llc_l3, l2 = _llc_l4;
-  //l1[0].load(v1), l1[1].load(v2), l2[0].load(v3), l2[1].load(v4);
-
-  {
-    var a = l1[0], b = l1[1], c = l2[0], d = l2[1];
-
-    a[0] = v1[0];
-    a[1] = v1[1];
-    a[2] = v1[2];
-
-    b[0] = v2[0];
-    b[1] = v2[1];
-    b[2] = v2[2];
-
-    c[0] = v3[0];
-    c[1] = v3[1];
-    c[2] = v3[2];
-
-    d[0] = v4[0];
-    d[1] = v4[1];
-    d[2] = v4[2];
-  }
-
+function line_line_cross(a, b, c, d) {
   /*
   var limit=feps*1000;
   if (Math.abs(l1[0].vectorDistance(l2[0])+l1[1].vectorDistance(l2[0])-l1[0].vectorDistance(l1[1]))<limit) {
@@ -20094,15 +21654,11 @@ function line_line_cross(v1, v2, v3, v4) {
   }
   //*/
 
-  var a = l1[0];
-  var b = l1[1];
-  var c = l2[0];
-  var d = l2[1];
-  var w1 = winding(a, b, c);
-  var w2 = winding(c, a, d);
-  var w3 = winding(a, b, d);
-  var w4 = winding(c, b, d);
-  return (w1 == w2) && (w3 == w4) && (w1 != w3);
+  let w1 = winding(a, b, c);
+  let w2 = winding(c, a, d);
+  let w3 = winding(a, b, d);
+  let w4 = winding(c, b, d);
+  return (w1 === w2) && (w3 === w4) && (w1 !== w3);
 };
 
 var _asi_v1 = new Vector3$2();
@@ -21697,7 +23253,7 @@ function tri_angles(v1, v2, v3) {
   return ret;
 }
 
-var math1 = /*#__PURE__*/Object.freeze({
+var math = /*#__PURE__*/Object.freeze({
   __proto__: null,
   quad_bilinear: quad_bilinear,
   ClosestModes: ClosestModes,
@@ -21932,6 +23488,7 @@ let exports = {
   showPathsInToolTips: true,
 
   enableThemeAutoUpdate: true,
+  useNativeToolTips: false,
 
   loadConstants: function (args) {
     for (let k in args) {
@@ -21941,6 +23498,7 @@ let exports = {
       this[k] = args[k];
     }
 
+    console.error("CC", ctrlconfig);
     setConfig(this);
   }
 };
@@ -22295,7 +23853,7 @@ CSSFont {
   weight   : string | ""+obj.weight;
 }
 `;
-nstructjs$1.register(CSSFont);
+nstructjs.register(CSSFont);
 
 function exportTheme(theme1=theme, addVarDecl=true) {
   let sortkeys = (obj) => {
@@ -22782,13 +24340,15 @@ class lexer$1 {
     this.lineno = 0;
     this.errfunc = errfunc;
     this.tokints = {};
+    this.print_tokens = false;
+    this.print_debug = false;
 
-    for (var i=0; i<tokdef.length; i++) {
+    for (let i = 0; i < tokdef.length; i++) {
       this.tokints[tokdef[i].name] = i;
     }
 
     this.statestack = [["__main__", 0]];
-    this.states = {"__main__" : [tokdef, errfunc]};
+    this.states = {"__main__": [tokdef, errfunc]};
     this.statedata = 0; //public variable
   }
 
@@ -22810,7 +24370,9 @@ class lexer$1 {
 //errfunc is optional, defines state-specific error function
   add_state(name, tokdef, errfunc) {
     if (errfunc === undefined) {
-      errfunc = function(lexer) { return true; };
+      errfunc = function (lexer) {
+        return true;
+      };
     }
 
     this.states[name] = [tokdef, errfunc];
@@ -22833,8 +24395,8 @@ class lexer$1 {
   }
 
   pop_state() {
-    var item = this.statestack[this.statestack.length-1];
-    var state = this.states[item[0]];
+    let item = this.statestack[this.statestack.length - 1];
+    let state = this.states[item[0]];
 
     this.tokdef = state[0];
     this.errfunc = state[1];
@@ -22860,14 +24422,14 @@ class lexer$1 {
       return;
 
     console.log("Syntax error near line " + this.lineno);
-    var next = Math.min(this.lexpos+8, this.lexdata.length);
+    let next = Math.min(this.lexpos + 8, this.lexdata.length);
     console.log("  " + this.lexdata.slice(this.lexpos, next));
 
     throw new PUTLParseError$1("Parse error");
   }
 
   peek() {
-    var tok = this.next(true);
+    let tok = this.next(true);
 
     if (tok === undefined)
       return undefined;
@@ -22879,7 +24441,7 @@ class lexer$1 {
 
   peek_i(i) {
     while (this.peeked_tokens.length <= i) {
-      var t = this.peek();
+      let t = this.peek();
       if (t === undefined)
         return undefined;
     }
@@ -22888,13 +24450,22 @@ class lexer$1 {
   }
 
   at_end() {
-    return this.lexpos >= this.lexdata.length && this.peeked_tokens.length == 0;
+    return this.lexpos >= this.lexdata.length && this.peeked_tokens.length === 0;
   }
 
   next(ignore_peek) {
     if (ignore_peek !== true && this.peeked_tokens.length > 0) {
-      var tok = this.peeked_tokens[0];
+      let tok = this.peeked_tokens[0];
+
+      if (this.print_debug) {
+        console.log("PEEK_SHIFTING", "" + tok);
+      }
+
       this.peeked_tokens.shift();
+
+      if (this.print_tokens) {
+        console.log(tok.toString());
+      }
 
       return tok;
     }
@@ -22902,30 +24473,30 @@ class lexer$1 {
     if (this.lexpos >= this.lexdata.length)
       return undefined;
 
-    var ts = this.tokdef;
-    var tlen = ts.length;
+    let ts = this.tokdef;
+    let tlen = ts.length;
 
-    var lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
+    let lexdata = this.lexdata.slice(this.lexpos, this.lexdata.length);
 
-    var results = [];
+    let results = [];
 
-    for (var i=0; i<tlen; i++) {
-      var t = ts[i];
+    for (let i = 0; i < tlen; i++) {
+      let t = ts[i];
 
       if (t.re === undefined)
         continue;
 
-      var res = t.re.exec(lexdata);
+      let res = t.re.exec(lexdata);
 
       if (res !== null && res !== undefined && res.index === 0) {
         results.push([t, res]);
       }
     }
 
-    var max_res = 0;
-    var theres = undefined;
-    for (var i=0; i<results.length; i++) {
-      var res = results[i];
+    let max_res = 0;
+    let theres = undefined;
+    for (let i = 0; i < results.length; i++) {
+      let res = results[i];
 
       if (res[1][0].length > max_res) {
         theres = res;
@@ -22938,20 +24509,77 @@ class lexer$1 {
       return;
     }
 
-    var def = theres[0];
+    let def = theres[0];
 
-    var lexlen = max_res;
-    var tok = new token(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, undefined);
+    let lexlen = max_res;
+    let tok = new token(def.name, theres[1][0], this.lexpos, lexlen, this.lineno, this, undefined);
     this.lexpos += max_res;
 
     if (def.func) {
       tok = def.func(tok);
+
       if (tok === undefined) {
-        return this.next();
+        return this.next(ignore_peek);
       }
     }
 
+    if (this.print_tokens) {
+      console.log(tok.toString());
+    }
+
+    if (!ignore_peek && this.print_debug) {
+      console.log("CONSUME", tok.toString(), "\n" + getTraceBack());
+    }
+
     return tok;
+  }
+}
+
+function getTraceBack(limit, start) {
+  try {
+    throw new Error();
+  } catch (error) {
+    let stack = error.stack.split("\n");
+    stack = stack.slice(1, stack.length);
+
+    if (start === undefined) {
+      start = 0;
+    }
+
+    for (let i = 0; i < stack.length; i++) {
+      let l = stack[i];
+
+      let j = l.length - 1;
+      while (j > 0 && l[j] !== "/") {
+        j--;
+      }
+
+      let k = j;
+      while (k >= 0 && l[k] !== "(") {
+        k--;
+      }
+
+      let func = l.slice(0, k).trim();
+      let file = l.slice(j + 1, l.length - 1);
+
+      l = `  ${func} (${file})`;
+
+      if (l.search(/parseutil\.js/) >= 0) {
+        start = Math.max(start, i);
+      }
+      stack[i] = l;
+    }
+
+    if (limit !== undefined) {
+      stack.length = Math.min(stack.length, limit);
+    }
+
+    if (start !== undefined) {
+      stack = stack.slice(start, stack.length);
+    }
+
+    stack = stack.join("\n");
+    return stack;
   }
 }
 
@@ -22978,7 +24606,7 @@ class parser {
     if (data !== undefined)
       this.lexer.input(data);
 
-    var ret = this.start(this);
+    let ret = this.start(this);
 
     if (err_on_unconsumed && !this.lexer.at_end() && this.lexer.next() !== undefined) {
       //console.log(this.lexer.lexdata.slice(this.lexer.lexpos-1, this.lexer.lexdata.length));
@@ -22993,20 +24621,22 @@ class parser {
   }
 
   error(tok, msg) {
-    if (msg == undefined)
+    if (msg === undefined)
       msg = "";
 
-    if (tok == undefined)
-      var estr = "Parse error at end of input: " + msg;
-    else
-      estr = "Parse error at line " + (tok.lineno+1) + ": " + msg;
+    let estr;
 
-    var buf = "1| ";
-    var ld = this.lexer.lexdata;
-    var l = 1;
-    for (var i=0; i<ld.length; i++) {
-      var c = ld[i];
-      if (c == '\n') {
+    if (tok === undefined)
+      estr = "Parse error at end of input: " + msg;
+    else
+      estr = "Parse error at line " + (tok.lineno + 1) + ": " + msg;
+
+    let buf = "1| ";
+    let ld = this.lexer.lexdata;
+    let l = 1;
+    for (let i = 0; i < ld.length; i++) {
+      let c = ld[i];
+      if (c === '\n') {
         l++;
         buf += "\n" + l + "| ";
       } else {
@@ -23027,15 +24657,15 @@ class parser {
   }
 
   peek() {
-    var tok = this.lexer.peek();
-    if (tok != undefined)
+    let tok = this.lexer.peek();
+    if (tok !== undefined)
       tok.parser = this;
 
     return tok;
   }
 
   peek_i(i) {
-    var tok = this.lexer.peek_i(i);
+    let tok = this.lexer.peek_i(i);
     if (tok !== undefined)
       tok.parser = this;
 
@@ -23047,7 +24677,8 @@ class parser {
   }
 
   next() {
-    var tok = this.lexer.next();
+    let tok = this.lexer.next();
+
     if (tok !== undefined)
       tok.parser = this;
 
@@ -23055,7 +24686,7 @@ class parser {
   }
 
   optional(type) {
-    var tok = this.peek_i(0);
+    let tok = this.peek_i(0);
 
     if (tok && tok.type === type) {
       this.next();
@@ -23071,12 +24702,12 @@ class parser {
   }
 
   expect(type, msg) {
-    var tok = this.next();
+    let tok = this.next();
 
-    if (msg == undefined)
+    if (msg === undefined)
       msg = type;
 
-    if (tok == undefined || tok.type != type) {
+    if (tok === undefined || tok.type != type) {
       this.error(tok, "Expected " + msg + ", not " + tok.type);
     }
 
@@ -23085,7 +24716,7 @@ class parser {
 }
 
 function test_parser() {
-  var basic_types = new set([
+  let basic_types = new set([
     "int",
     "float",
     "double",
@@ -23095,7 +24726,7 @@ function test_parser() {
     "mat4",
     "string"]);
 
-  var reserved_tokens = new set([
+  let reserved_tokens = new set([
     "int",
     "float",
     "double",
@@ -23110,8 +24741,9 @@ function test_parser() {
   function tk(name, re, func) {
     return new tokdef(name, re, func);
   }
-  var tokens = [
-    tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function(t) {
+
+  let tokens = [
+    tk("ID", /[a-zA-Z]+[a-zA-Z0-9_]*/, function (t) {
       if (reserved_tokens.has(t.value)) {
         t.type = t.value.toUpperCase();
       }
@@ -23121,12 +24753,12 @@ function test_parser() {
     tk("OPEN", /\{/),
     tk("CLOSE", /}/),
     tk("COLON", /:/),
-    tk("JSCRIPT", /\|/, function(t) {
-      var js = "";
-      var lexer = t.lexer;
+    tk("JSCRIPT", /\|/, function (t) {
+      let js = "";
+      let lexer = t.lexer;
       while (lexer.lexpos < lexer.lexdata.length) {
-        var c = lexer.lexdata[lexer.lexpos];
-        if (c == "\n")
+        let c = lexer.lexdata[lexer.lexpos];
+        if (c === "\n")
           break;
 
         js += c;
@@ -23134,7 +24766,7 @@ function test_parser() {
       }
 
       if (js.endsWith(";")) {
-        js = js.slice(0, js.length-1);
+        js = js.slice(0, js.length - 1);
         lexer.lexpos--;
       }
 
@@ -23147,19 +24779,19 @@ function test_parser() {
     tk("COMMA", /,/),
     tk("NUM", /[0-9]/),
     tk("SEMI", /;/),
-    tk("NEWLINE", /\n/, function(t) {
+    tk("NEWLINE", /\n/, function (t) {
       t.lexer.lineno += 1;
     }),
-    tk("SPACE", / |\t/, function(t) {
+    tk("SPACE", / |\t/, function (t) {
       //throw out non-newline whitespace tokens
     })
   ];
 
-  for (var rt in reserved_tokens) {
+  for (let rt in reserved_tokens) {
     tokens.push(tk(rt.toUpperCase()));
   }
 
-  /*var a =
+  /*let a =
   Loop {
     eid : int;
     flag : int;
@@ -23180,25 +24812,25 @@ function test_parser() {
     return true; //throw error
   }
 
-  var lex = new lexer$1(tokens, errfunc);
+  let lex = new lexer$1(tokens, errfunc);
   console.log("Testing lexical scanner...");
 
   lex.input(a);
 
-  var tok;
+  let tok;
   while (tok = lex.next()) {
     console.log(tok.toString());
   }
 
-  var parser = new parser(lex);
+  let parser = new parser(lex);
   parser.input(a);
 
   function p_Array(p) {
     p.expect("ARRAY");
     p.expect("LPARAM");
 
-    var arraytype = p_Type(p);
-    var itername = "";
+    let arraytype = p_Type(p);
+    let itername = "";
 
     if (p.optional("COMMA")) {
       itername = arraytype;
@@ -23208,27 +24840,27 @@ function test_parser() {
 
     p.expect("RPARAM");
 
-    return {type : "array", data : {type : arraytype, iname : itername}};
+    return {type: "array", data: {type: arraytype, iname: itername}};
   }
 
   function p_Type(p) {
-    var tok = p.peek();
+    let tok = p.peek();
 
-    if (tok.type == "ID") {
+    if (tok.type === "ID") {
       p.next();
-      return {type : "struct", data : "\"" + tok.value + "\""};
+      return {type: "struct", data: "\"" + tok.value + "\""};
     } else if (basic_types.has(tok.type.toLowerCase())) {
       p.next();
-      return {type : tok.type.toLowerCase()};
-    } else if (tok.type == "ARRAY") {
+      return {type: tok.type.toLowerCase()};
+    } else if (tok.type === "ARRAY") {
       return p_Array(p);
     } else {
-      p.error(tok, "invalid type " + tok.type); //(tok.value == "" ? tok.type : tok.value));
+      p.error(tok, "invalid type " + tok.type); //(tok.value === "" ? tok.type : tok.value));
     }
   }
 
   function p_Field(p) {
-    var field = {};
+    let field = {};
 
     console.log("-----", p.peek().type);
 
@@ -23239,14 +24871,14 @@ function test_parser() {
     field.set = undefined;
     field.get = undefined;
 
-    var tok = p.peek();
-    if (tok.type == "JSCRIPT") {
-      field.get =  tok.value;
+    let tok = p.peek();
+    if (tok.type === "JSCRIPT") {
+      field.get = tok.value;
       p.next();
     }
 
     tok = p.peek();
-    if (tok.type == "JSCRIPT") {
+    if (tok.type === "JSCRIPT") {
       field.set = tok.value;
       p.next();
     }
@@ -23257,7 +24889,7 @@ function test_parser() {
   }
 
   function p_Struct(p) {
-    var st = {};
+    let st = {};
     st.name = p.expect("ID", "struct name");
     st.fields = [];
 
@@ -23276,17 +24908,18 @@ function test_parser() {
     return st;
   }
 
-  var ret = p_Struct(parser);
+  let ret = p_Struct(parser);
 
   console.log(JSON.stringify(ret));
 }
 
-var parseutil1 = /*#__PURE__*/Object.freeze({
+var parseutil = /*#__PURE__*/Object.freeze({
   __proto__: null,
   token: token,
   tokdef: tokdef,
   PUTLParseError: PUTLParseError$1,
   lexer: lexer$1,
+  getTraceBack: getTraceBack,
   parser: parser
 });
 
@@ -23853,6 +25486,10 @@ class ToolPropertyCache {
   }
 
   has(cls, key, prop) {
+    if (prop.flag & PropFlags$3.NO_DEFAULT) {
+      return false;
+    }
+
     let obj = this._getAccessor(cls);
 
     key = this.constructor.getPropKey(cls, key, prop);
@@ -24138,7 +25775,7 @@ class ToolOp extends EventHandler {
   }
 
   static _regWithNstructjs(cls, structName = cls.name) {
-    if (nstructjs$1.isRegistered(cls)) {
+    if (nstructjs.isRegistered(cls)) {
       return;
     }
 
@@ -24149,10 +25786,10 @@ class ToolOp extends EventHandler {
         this._regWithNstructjs(parent);
       }
 
-      cls.STRUCT = nstructjs$1.inherit(cls, parent) + '}\n';
+      cls.STRUCT = nstructjs.inherit(cls, parent) + '}\n';
     }
 
-    nstructjs$1.register(cls);
+    nstructjs.register(cls);
   }
 
   static isRegistered(cls) {
@@ -24489,7 +26126,9 @@ class ToolOp extends EventHandler {
       if (this._accept) {
         this._accept(this.modal_ctx, true);
       }
+
       this._on_cancel(this);
+      this._on_cancel = undefined;
     }
 
     this.resetTempGeom();
@@ -24555,7 +26194,7 @@ toolsys.ToolOp {
   outputs : array(toolsys.PropKey) | this._save_outputs();
 }
 `;
-nstructjs$1.register(ToolOp);
+nstructjs.register(ToolOp);
 
 class PropKey {
   constructor(key, val) {
@@ -24570,7 +26209,7 @@ toolsys.PropKey {
   val : abstract(ToolProperty);
 }
 `;
-nstructjs$1.register(PropKey);
+nstructjs.register(PropKey);
 
 class MacroLink {
   constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
@@ -24595,7 +26234,7 @@ toolsys.MacroLink {
   destProps      : string; 
 }
 `;
-nstructjs$1.register(MacroLink);
+nstructjs.register(MacroLink);
 
 const MacroClasses = {};
 window._MacroClasses = MacroClasses;
@@ -24955,12 +26594,12 @@ class ToolMacro extends ToolOp {
   }
 }
 
-ToolMacro.STRUCT = nstructjs$1.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
+ToolMacro.STRUCT = nstructjs.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
   tools        : array(abstract(toolsys.ToolOp));
   connectLinks : array(toolsys.MacroLink);
 }
 `;
-nstructjs$1.register(ToolMacro);
+nstructjs.register(ToolMacro);
 
 class ToolStack extends Array {
   constructor(ctx) {
@@ -25221,7 +26860,7 @@ class ToolStack extends Array {
 
   save() {
     let data = [];
-    nstructjs$1.writeObject(data, this);
+    nstructjs.writeObject(data, this);
     return data;
   }
 
@@ -25308,7 +26947,7 @@ class ToolStack extends Array {
     for (let tool of this) {
       let cls = tool.constructor;
 
-      if (!nstructjs$1.isRegistered(cls)) {
+      if (!nstructjs.isRegistered(cls)) {
         cls._regWithNstructjs(cls);
       }
     }
@@ -25323,16 +26962,16 @@ toolsys.ToolStack {
   _stack : array(abstract(toolsys.ToolOp)) | this._save();
 }
 `;
-nstructjs$1.register(ToolStack);
+nstructjs.register(ToolStack);
 
 window._testToolStackIO = function () {
   let data = [];
   let cls = _appstate.toolstack.constructor;
 
-  nstructjs$1.writeObject(data, _appstate.toolstack);
+  nstructjs.writeObject(data, _appstate.toolstack);
   data = new DataView(new Uint8Array(data).buffer);
 
-  let toolstack = nstructjs$1.readObject(data, cls);
+  let toolstack = nstructjs.readObject(data, cls);
 
   _appstate.toolstack.rewind();
 
@@ -25369,7 +27008,7 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = unde
   //register tools with nstructjs
   for (let cls of ToolClasses) {
     try {
-      if (!nstructjs$1.isRegistered(cls)) {
+      if (!nstructjs.isRegistered(cls)) {
         ToolOp._regWithNstructjs(cls);
       }
     } catch (error) {
@@ -26562,7 +28201,6 @@ class DataStruct {
         }
 
         list[key] = val;
-        window.redraw_viewport();
       },
       function getKey(api, list, obj) {
         return list.indexOf(obj);
@@ -26624,7 +28262,6 @@ class DataStruct {
         }
 
         list[key] = val;
-        window.redraw_viewport();
       },
       function getKey(api, list, obj) {
         return list.indexOf(obj);
@@ -28854,7 +30491,6 @@ if (prefix) {
   setTagPrefix(prefix);
 }
 
-const ClassIdSymbol = Symbol("pathux-class-id");
 let class_idgen = 1;
 
 function setTheme(theme2) {
@@ -29520,6 +31156,53 @@ function flagThemeUpdate() {
   _themeUpdateKey = calcThemeKey();
 }
 
+window._flagThemeUpdate = flagThemeUpdate;
+
+let setTimeoutQueue = new Set();
+let haveTimeout = false;
+
+function timeout_cb() {
+  if (setTimeoutQueue.size === 0) {
+    haveTimeout = false;
+    return;
+  }
+
+  for (let item of new Set(setTimeoutQueue)) {
+    let {cb, timeout, time} = item;
+    if (time_ms() - time < timeout) {
+      continue;
+    }
+
+    setTimeoutQueue.delete(item);
+
+    try {
+      cb();
+    } catch (error) {
+      console.error(error.stack);
+    }
+  }
+
+  window.setTimeout(timeout_cb, 0);
+}
+
+function internalSetTimeout(cb, timeout) {
+  if (timeout > 100) { //call directly
+    window.setTimeout(cb, timeout);
+    return;
+  }
+
+  setTimeoutQueue.add({
+    cb, timeout, time: time_ms()
+  });
+
+  if (!haveTimeout) {
+    haveTimeout = true;
+    window.setTimeout(timeout_cb, 0);
+  }
+}
+
+window.setTimeoutQueue = setTimeoutQueue;
+
 class UIBase$f extends HTMLElement {
   constructor() {
     super();
@@ -29686,6 +31369,10 @@ class UIBase$f extends HTMLElement {
     this.addEventListener("touchend", (e) => {
       do_touch(e, "mouseup", 0);
     }, {passive: false});
+
+    if (this.constructor.define().havePickClipboard) {
+      this._clipboardHotkeyInit();
+    }
   }
 
   /*
@@ -30581,7 +32268,9 @@ class UIBase$f extends HTMLElement {
       this._clipboard_keyend();
     };
 
-    this.tabIndex = 0; //enable self key events when element has focus
+    this.doOnce(() => {
+      this.tabIndex = 0; //enable self key events when element has focus
+    });
 
     this.addEventListener("keydown", (e) => {
       return this._clipboard_keydown(e, true);
@@ -30608,10 +32297,6 @@ class UIBase$f extends HTMLElement {
 
     if (!this.hasAttribute("id") && this._id) {
       this.setAttribute("id", this._id);
-    }
-
-    if (this.constructor.define().havePickClipboard) {
-      this._clipboardHotkeyInit();
     }
   }
 
@@ -30815,7 +32500,7 @@ class UIBase$f extends HTMLElement {
     let lastelem = elem;
     let i = 0;
 
-    while (elem.shadow) {
+    while (elem && elem.shadow) {
       if (i++ > 1000) {
         console.error("Infinite loop error");
         break;
@@ -30889,10 +32574,11 @@ class UIBase$f extends HTMLElement {
 
         if (typeof v === "object" && v instanceof CSSFont) {
           this.style[k] = style[k].genCSS();
+        } else if (typeof v === "object") {
+          continue;
         } else {
           this.style[k] = style[k];
         }
-
         this.default_overrides[k] = style[k];
       }
 
@@ -31002,7 +32688,7 @@ class UIBase$f extends HTMLElement {
       return;
     }
 
-    this.ctx = this._modalstack.pop();
+    //this.ctx = this._modalstack.pop();
     popModalLight(this._modaldata);
     this._modaldata = undefined;
   }
@@ -31069,7 +32755,7 @@ class UIBase$f extends HTMLElement {
       tick++;
     };
 
-    setTimeout(cb, 5);
+    window.setTimeout(cb, 5);
     this._flashtimer = timer = window.setInterval(cb, 20);
 
     let div = document.createElement("div");
@@ -31175,6 +32861,108 @@ class UIBase$f extends HTMLElement {
 
     if (!head || head.hadError === true) {
       throw new Error("toolpath error");
+    }
+  }
+
+  loadNumConstraints(prop = undefined, dom = this, onModifiedCallback = undefined) {
+    let modified = false;
+
+    if (!prop) {
+      let path;
+
+      if (dom.hasAttribute("datapath")) {
+        path = dom.getAttribute("datapath");
+      }
+
+      if (path === undefined && this.hasAttribute("datapath")) {
+        path = this.getAttribute("datapath");
+      }
+
+      if (typeof path === "string") {
+        prop = this.getPathMeta(this.ctx, path);
+      }
+    }
+
+    let loadAttr = (propkey, domkey = key, thiskey = key) => {
+      let old = this[thiskey];
+
+      if (dom.hasAttribute(domkey)) {
+        this[thiskey] = parseFloat(dom.getAttribute(domkey));
+      } else if (prop) {
+        this[thiskey] = prop[propkey];
+      }
+
+      if (this[thiskey] !== old) {
+        modified = true;
+      }
+    };
+
+    for (let key of NumberConstraints) {
+      let thiskey = key, domkey = key;
+
+      if (key === "range") { //handled later
+        continue;
+      }
+
+      loadAttr(key, domkey, thiskey);
+    }
+
+    let oldmin = this.range[0];
+    let oldmax = this.range[1];
+
+    let range = prop ? prop.range : undefined;
+    if (range && !dom.hasAttribute("min")) {
+      this.range[0] = range[0];
+    } else if (dom.hasAttribute("min")) {
+      this.range[0] = parseFloat(dom.getAttribute("min"));
+    }
+
+    if (range && !dom.hasAttribute("max")) {
+      this.range[1] = range[1];
+    } else if (dom.hasAttribute("max")) {
+      this.range[1] = parseFloat(dom.getAttribute("max"));
+    }
+
+    if (this.range[0] !== oldmin || this.range[1] !== oldmax) {
+      modified = true;
+    }
+
+    let oldint = this.isInt;
+
+    if (dom.getAttribute("integer")) {
+      let val = dom.getAttribute("integer");
+      val = ("" + val).toLowerCase();
+
+      //handles anonymouse <numslider-x integer> case
+      this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
+    } else {
+      this.isInt = prop && prop instanceof IntProperty;
+    }
+
+    if (!this.isInt !== !oldint) {
+      modified = true;
+    }
+
+    let oldedit = this.editAsBaseUnit;
+
+    if (this.editAsBaseUnit === undefined) {
+      if (prop && (prop.flag & PropFlags$3.EDIT_AS_BASE_UNIT)) {
+        this.editAsBaseUnit = true;
+      } else {
+        this.editAsBaseUnit = false;
+      }
+    }
+
+    if (!this.editAsBaseUnit !== !oldedit) {
+      modified = true;
+    }
+
+    if (modified) {
+      this.setCSS();
+
+      if (onModifiedCallback) {
+        onModifiedCallback.call(this);
+      }
     }
   }
 
@@ -31336,7 +33124,7 @@ class UIBase$f extends HTMLElement {
               console.warn("doOnce call is waiting for context...", thisvar._id, func);
             }
 
-            window.setTimeout(f, 0);
+            internalSetTimeout(f, 0);
             return;
           }
 
@@ -31344,7 +33132,7 @@ class UIBase$f extends HTMLElement {
           func.call(thisvar);
         };
 
-        window.setTimeout(f, timeout);
+        internalSetTimeout(f, timeout);
       };
     }
 
@@ -31699,6 +33487,11 @@ class UIBase$f extends HTMLElement {
   /** get a sub style from a theme style class.
    *  note that if key is falsy then it just forwards to this.getDefault directly*/
   getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined) {
+    /* Check if client code manually overrode a theme key for this instance. */
+    if (subkey && subkey in this.my_default_overrides) {
+      //return this.getDefault(subkey, undefined, defaultval);
+    }
+
     if (!key) {
       return this.getDefault(subkey, undefined, defaultval);
     }
@@ -32384,10 +34177,10 @@ _setUIBase(UIBase$f);
 let keymap$3 = keymap$4;
 
 let EnumProperty$7 = EnumProperty$9,
-    PropTypes$7 = PropTypes$8;
+    PropTypes$7    = PropTypes$8;
 
-let UIBase$e = UIBase$f,
-    PackFlags$9 = PackFlags$a,
+let UIBase$e     = UIBase$f,
+    PackFlags$9  = PackFlags$a,
     IconSheets$6 = IconSheets$7;
 
 let parsepx$3 = parsepx$4;
@@ -32477,11 +34270,13 @@ class ButtonEventBase extends UIBase$e {
         this._redraw();
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      if (isMobile() || e.type === "pointerup" && e.button) {
-        return;
+        if (isMobile() || e.type === "pointerup" && e.button) {
+          return;
+        }
       }
 
       this._redraw();
@@ -32489,7 +34284,7 @@ class ButtonEventBase extends UIBase$e {
       if (exports.DEBUG.buttonEvents)
         console.log("button click callback:", this.onclick, this._onpress, this.onpress);
 
-      if (this.onclick && e.pointerType !== "mouse") {
+      if (this.onclick && e && e.pointerType !== "mouse") {
         this.onclick(this);
       }
 
@@ -32502,8 +34297,8 @@ class ButtonEventBase extends UIBase$e {
       this._redraw();
     });
 
-    this.addEventListener("pointerdown", press, {captured : true, passive : false});
-    this.addEventListener("pointerup", depress, {captured : true, passive : false});
+    this.addEventListener("pointerdown", press, {captured: true, passive: false});
+    this.addEventListener("pointerup", depress, {captured: true, passive: false});
     this.addEventListener("pointerover", (e) => {
       if (this.disabled)
         return;
@@ -32574,11 +34369,46 @@ class Button extends ButtonEventBase {
 
     this._pressed = false;
     this._highlight = false;
+    this._pressedTime = 0;
+    this._pressedTimeout = 100;
 
     this._auto_depress = true;
 
     this._last_name = undefined;
     this._last_disabled = undefined;
+  }
+
+  get name() {
+    return "" + this.getAttribute("name");
+  }
+
+  set name(val) {
+    this.setAttribute("name", val);
+  }
+
+  get _pressed() {
+    return this.__pressed;
+  }
+
+  set _pressed(v) {
+    let changed = !v !== !this._pressed;
+
+    if (v) {
+      this._pressedTime = time_ms();
+    } else if (changed && time_ms() - this._pressedTime < this._pressedTimeout) {
+      window.setTimeout(() => {
+        this.setCSS();
+      }, this._pressedTimeout - (time_ms() - this._pressedTime) + 1);
+    }
+
+    this.__pressed = v;
+  }
+
+  static define() {
+    return {
+      tagname: "button-x",
+      style  : "button"
+    };
   }
 
   init() {
@@ -32590,24 +34420,33 @@ class Button extends ButtonEventBase {
     this.setCSS();
   }
 
-  get name() {
-    return "" + this.getAttribute("name");
+  on_enabled() {
+    this.setCSS();
   }
 
-  set name(val) {
-    this.setAttribute("name", val);
+  on_disabled() {
+    this.setCSS();
   }
 
   setCSS() {
     super.setCSS();
 
+    if (this.hasDefault("pressedTimeout")) {
+      this._pressedTimeout = this.getDefault("pressedTimeout");
+    }
+
     let subkey = undefined;
+
+    let pressed = this._pressed;
+    if (!pressed && time_ms() - this._pressedTime < this._pressedTimeout) {
+      pressed = true;
+    }
 
     if (this.disabled) {
       subkey = "disabled";
-    } else if (this._pressed && this._highlight) {
+    } else if (pressed && this._highlight) {
       subkey = "highlight-pressed";
-    } else if (this._pressed) {
+    } else if (pressed) {
       subkey = "pressed";
     } else if (this._highlight) {
       subkey = "highlight";
@@ -32639,14 +34478,16 @@ class Button extends ButtonEventBase {
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+      let e = {x         : x, y: y, stopPropagation: () => {
+        }, preventDefault: () => {
+        }
+      };
 
       this._onpress(e);
     }
 
     super.click();
   }
-
 
   _redraw() {
     this.setCSS();
@@ -32672,14 +34513,8 @@ class Button extends ButtonEventBase {
       this._last_name = this.name;
     }
   }
-
-  static define() {
-    return {
-      tagname: "button-x",
-      style  : "button"
-    };
-  }
 }
+
 UIBase$e.register(Button);
 
 //use .setAttribute("linear") to disable nonlinear sliding
@@ -32754,13 +34589,31 @@ class OldButton extends ButtonEventBase {
     this.shadow.appendChild(this.dom);
   }
 
+  get r() {
+    return this.getDefault("border-radius");
+  }
+
+  set r(val) {
+    this.overrideDefault("border-radius", val);
+  }
+
+  static define() {
+    return {
+      tagname: "old-button-x",
+      style  : "button"
+    };
+  }
+
   click() {
     if (this._onpress) {
       let rect = this.getClientRects();
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x : x, y : y, stopPropagation : () => {}, preventDefault : () => {}};
+      let e = {x         : x, y: y, stopPropagation: () => {
+        }, preventDefault: () => {
+        }
+      };
 
       this._onpress(e);
     }
@@ -32796,14 +34649,6 @@ class OldButton extends ButtonEventBase {
       this.updateName();
       this.updateWidth();
     }
-  }
-
-  get r() {
-    return this.getDefault("border-radius");
-  }
-
-  set r(val) {
-    this.overrideDefault("border-radius", val);
   }
 
   old_bindEvents() {
@@ -32865,8 +34710,8 @@ class OldButton extends ButtonEventBase {
       this.undoBreakPoint();
     };
 
-    this.addEventListener("mousedown", press, {captured : true, passive : false});
-    this.addEventListener("mouseup", depress, {captured : true, passive : false});
+    this.addEventListener("mousedown", press, {captured: true, passive: false});
+    this.addEventListener("mouseup", depress, {captured: true, passive: false});
     this.addEventListener("mouseover", (e) => {
       if (this.disabled)
         return;
@@ -32904,7 +34749,7 @@ class OldButton extends ButtonEventBase {
 
   updateDefaultSize() {
     let height = ~~(this.getDefault("height")) + this.getDefault("padding");
-    let size = this.getDefault("DefaultText").size * 1.33;
+    let size = this.getDefault("DefaultText").size*1.33;
 
     if (height === undefined || size === undefined || isNaN(height) || isNaN(size)) {
       return;
@@ -32973,9 +34818,9 @@ class OldButton extends ButtonEventBase {
     let pad = this.getDefault("padding");
     let ts = this.getDefault("DefaultText").size;
 
-    let tw = measureText(this, this._genLabel(),{
-      size : ts,
-      font : this.getDefault("DefaultText")
+    let tw = measureText(this, this._genLabel(), {
+      size: ts,
+      font: this.getDefault("DefaultText")
     }).width + 2.0*pad + this._leftPad + this._rightPad;
 
     if (this._namePad !== undefined) {
@@ -32986,7 +34831,7 @@ class OldButton extends ButtonEventBase {
 
     w = Math.max(w, tw);
     w = ~~w;
-    this.dom.style["width"] = w+"px";
+    this.dom.style["width"] = w + "px";
     this.updateBorders();
   }
 
@@ -33022,7 +34867,7 @@ class OldButton extends ButtonEventBase {
     }
   }
 
-  updateWidth(w_add=0) {
+  updateWidth(w_add = 0) {
   }
 
   _repos_canvas() {
@@ -33082,7 +34927,7 @@ class OldButton extends ButtonEventBase {
     }
   }
 
-  _redraw(draw_text=true) {
+  _redraw(draw_text = true) {
     //console.log("button draw");
 
     let dpi = this.getDPI();
@@ -33092,7 +34937,7 @@ class OldButton extends ButtonEventBase {
     if (this._pressed && this._highlight) {
       this.dom._background = this.getSubDefault(subkey, "highlight-pressed", "BoxHighlight");
     } else if (this._pressed) {
-      this.dom._background = this.getSubDefault(subkey, "pressed","BoxDepressed");
+      this.dom._background = this.getSubDefault(subkey, "pressed", "BoxDepressed");
     } else if (this._highlight) {
       this.dom._background = this.getSubDefault(subkey, "highlight", "BoxHighlight");
     } else {
@@ -33123,7 +34968,7 @@ class OldButton extends ButtonEventBase {
 
       this.g.lineWidth = this.getDefault("focus-border-width", undefined, 1.0)*dpi;
 
-      drawRoundBox(this, this.dom, this.g, w-p*2, h-p*2, this.r, "stroke", this.getDefault("BoxHighlight"));
+      drawRoundBox(this, this.dom, this.g, w - p*2, h - p*2, this.r, "stroke", this.getDefault("BoxHighlight"));
 
       this.g.lineWidth = lw;
       this.g.translate(-p, -p);
@@ -33145,8 +34990,8 @@ class OldButton extends ButtonEventBase {
 
     let font = this.getSubDefault(subkey, "DefaultText");
 
-    let pad = this.getDefault("padding") * dpi;
-    let ts = font.size * dpi;
+    let pad = this.getDefault("padding")*dpi;
+    let ts = font.size*dpi;
 
     let text = this._genLabel();
 
@@ -33157,25 +35002,19 @@ class OldButton extends ButtonEventBase {
     let tw = measureText(this, text, undefined, undefined, ts, font).width;
 
     let cx = pad*0.5 + this._leftPad*dpi;
-    let cy = ts + (h-ts)/3.0;
+    let cy = ts + (h - ts)/3.0;
 
     let g = this.g;
 
     drawText(this, ~~cx, ~~cy, text, {
-      canvas : this.dom,
-      g : this.g,
-      size : ts / dpi,
-      font : font
+      canvas: this.dom,
+      g     : this.g,
+      size  : ts/dpi,
+      font  : font
     });
   }
-
-  static define() {
-    return {
-      tagname: "old-button-x",
-      style  : "button"
-    };
-  }
 }
+
 UIBase$e.internalRegister(OldButton);
 
 "use strict";
@@ -33446,8 +35285,6 @@ class TextBox extends TextBoxBase {
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val === undefined || val === null) {
-      console.error("invalid datapath " + this.getAttribute("datapath"), val);
-
       this.internalDisabled = true;
       return;
     } else {
@@ -33629,11 +35466,6 @@ class TextBox extends TextBoxBase {
   }
 
   _change(text) {
-    //console.log("onchange", this.ctx, this, this.dom.__proto__, this.hasFocus);
-    //console.log("onchange", this._focus);
-
-    console.log("change", text);
-
     if (this.realtime) {
       this._updatePathVal(text);
     }
@@ -34239,9 +36071,9 @@ class IconButton extends UIBase$c {
     this.noMarginsOrPadding();
 
     if (this._pressed && this._draw_pressed) {
-      def = k => pstyle && k in pstyle ? pstyle[k] : this.getDefault(k);
+      def = k => this.getSubDefault("depressed", k);
     } else if (this._highlight) {
-      def = k => hstyle && k in hstyle ? hstyle[k] : this.getDefault(k);
+      def = k => this.getSubDefault("highlight", k);
     } else {
       def = k => this.getDefault(k);
     }
@@ -34749,7 +36581,7 @@ window._testSaveFile = function() {
   saveFile$1(buf, "unnamed.w3d", [".w3d"]);
 };
 
-var html5_fileapi1 = /*#__PURE__*/Object.freeze({
+var html5_fileapi = /*#__PURE__*/Object.freeze({
   __proto__: null,
   saveFile: saveFile$1,
   loadFile: loadFile$1
@@ -35688,6 +37520,9 @@ class DropBox extends OldButton {
       this.pushReportContext(this._reportCtxName);
       prop = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath")).prop;
       val = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+
+      prop = prop && prop.prop ? prop.prop : prop;
+
       this.popReportContext();
     } catch (error) {
       print_stack$1(error);
@@ -35717,7 +37552,7 @@ class DropBox extends OldButton {
     prop = this.prop;
 
     let name = this.getAttribute("name");
-
+    
     if (prop.type & (PropTypes$4.ENUM | PropTypes$4.FLAG)) {
       name = prop.ui_value_names[prop.keys[val]];
     } else {
@@ -35828,8 +37663,10 @@ class DropBox extends OldButton {
       //check if datapath system will be calling .prop.setValue instead of us
       let callProp = true;
       if (this.hasAttribute("datapath")) {
-        let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-        callProp = !prop || prop !== this.prop;
+        let rdef = this.ctx.api.resolvePath(this.ctx, this.getAttribute("datapath"));
+        let prop = rdef.dpath.data;
+
+        callProp = !rdef || !rdef.dpath || !(rdef.dpath.data instanceof ToolProperty);
       }
 
       this._value = this._convertVal(id);
@@ -36376,7 +38213,7 @@ class MenuWrangler {
       this.closereq = undefined;
       return;
     }
-
+    
     let destroy = element.hasAttribute("menu-button") && element.hasAttribute("simple");
     destroy = destroy && element.menu !== this.menu;
 
@@ -36386,7 +38223,7 @@ class MenuWrangler {
       let menu2 = this.menu;
       while (menu2 !== element.menu) {
         menu2 = menu2.parentMenu;
-        destroy = destroy && menu2 !== element.menu;
+        destroy = destroy && (menu2 === undefined || menu2 !== element.menu);
       }
     }
 
@@ -36462,7 +38299,7 @@ class MenuWrangler {
   }
 }
 
-let menuWrangler = new MenuWrangler();
+let menuWrangler = window._menuWrangler = new MenuWrangler();
 let wrangerStarted = false;
 
 function startMenuEventWrangling(screen) {
@@ -36487,6 +38324,8 @@ function startMenuEventWrangling(screen) {
   menuWrangler.screen = screen;
   menuWrangler.startTimer();
 }
+
+window._startMenuEventWrangling = startMenuEventWrangling;
 
 function setWranglerScreen(screen) {
   startMenuEventWrangling(screen);
@@ -37353,7 +39192,7 @@ class Container extends UIBase$f {
           this._menu.remove();
         }
 
-        this._menu = createMenu(this.ctx, title, templ);
+        this._menu = createMenu(this.ctx, title, list);
         return this._menu;
       };
     } else if (list) {
@@ -37856,7 +39695,7 @@ class Container extends UIBase$f {
         return check;
       }
 
-      if (!(packflag & PackFlags$5.USE_ICONS)) {
+      if (!(packflag & PackFlags$5.USE_ICONS) && !(prop.flag & (PropFlags$2.USE_ICONS | PropFlags$2.FORCE_ENUM_CHECKBOXES))) {
         if (packflag & PackFlags$5.FORCE_PROP_LABELS) {
           let strip = this.strip();
           strip.label(prop.uiname);
@@ -37867,8 +39706,14 @@ class Container extends UIBase$f {
         }
 
       } else {
+        if (prop.flag & PropFlags$2.USE_ICONS) {
+          packflag |= PackFlags$5.USE_ICONS;
+        } else if (prop.flag & PropFlags$2.FORCE_ENUM_CHECKBOXES) {
+          packflag &= ~PackFlags$5.USE_ICONS;
+        }
+
         if (packflag & PackFlags$5.FORCE_PROP_LABELS) {
-          let strip = thdis.strip();
+          let strip = this.strip();
           strip.label(prop.uiname);
 
           return strip.checkenum(inpath, undefined, packflag).setUndo(useDataPathUndo);
@@ -41453,6 +43298,15 @@ class ToolTipViewer extends ToolBase {
   }
 }
 
+const AreaFlags = {
+  HIDDEN                : 1,
+  FLOATING              : 2,
+  INDEPENDENT           : 4, //area is indpendent of the screen mesh
+  NO_SWITCHER           : 8,
+  NO_HEADER_CONTEXT_MENU: 16,
+  NO_COLLAPSE           : 32,
+};
+
 let SnapLimit = 1;
 
 const BORDER_ZINDEX_BASE = 25;
@@ -41520,7 +43374,7 @@ pathux.ScreenVert {
   1 : float;
 }
 `;
-nstructjs$1.register(ScreenVert);
+nstructjs.register(ScreenVert);
 
 class ScreenHalfEdge {
   constructor(border, sarea) {
@@ -41595,7 +43449,7 @@ class ScreenBorder extends UIBase$f {
     }, {capture: true});
   }
 
-  static bindBorderMenu(elem, usePickElement=false) {
+  static bindBorderMenu(elem, usePickElement = false) {
     let on_dblclick = (e) => {
       if (usePickElement && elem.pickElement(e.x, e.y) !== elem) {
         return;
@@ -41616,7 +43470,7 @@ class ScreenBorder extends UIBase$f {
       menu.ignoreFirstClick = 2;
       //}
 
-      elem.ctx.screen.popupMenu(menu, e.x-15, e.y-15);
+      elem.ctx.screen.popupMenu(menu, e.x - 15, e.y - 15);
 
       e.preventDefault();
       e.stopPropagation();
@@ -41627,6 +43481,7 @@ class ScreenBorder extends UIBase$f {
 
     return on_dblclick;
   }
+
   getOtherSarea(sarea) {
     console.log(this.halfedges, this.halfedges.length);
 
@@ -41750,7 +43605,7 @@ class ScreenBorder extends UIBase$f {
 
     let dpi = UIBase$f.getDPI();
 
-    let pad = this.getDefault("mouse-threshold") / dpi;
+    let pad = this.getDefault("mouse-threshold")/dpi;
     let wid = this.getDefault("border-width");
 
     let v1 = this.v1, v2 = this.v2;
@@ -41877,15 +43732,6 @@ let UIBase$7 = UIBase$f;
 
 let Vector2$6 = Vector2$c;
 let Screen$1 = undefined;
-
-const AreaFlags = {
-  HIDDEN                : 1,
-  FLOATING              : 2,
-  INDEPENDENT           : 4, //area is indpendent of the screen mesh
-  NO_SWITCHER           : 8,
-  NO_HEADER_CONTEXT_MENU: 16,
-  NO_COLLAPSE           : 32,
-};
 
 window._contextWrangler = contextWrangler;
 
@@ -42588,7 +44434,7 @@ pathux.Area {
 }
 `;
 
-nstructjs$1.register(Area$1, "pathux.Area");
+nstructjs.register(Area$1, "pathux.Area");
 UIBase$f.internalRegister(Area$1);
 
 class ScreenArea extends UIBase$f {
@@ -43143,7 +44989,7 @@ class ScreenArea extends UIBase$f {
 
     this.style["width"] = this.size[0] + "px";
     this.style["height"] = this.size[1] + "px";
-    
+
     this.style["overflow"] = "hidden";
     this.style["contain"] = "layout"; //ensure we have a new positioning stack
 
@@ -43470,7 +45316,7 @@ pathux.ScreenArea {
 }
 `;
 
-nstructjs$1.register(ScreenArea, "pathux.ScreenArea");
+nstructjs.register(ScreenArea, "pathux.ScreenArea");
 UIBase$f.internalRegister(ScreenArea);
 
 _setAreaClass(Area$1);
@@ -43515,16 +45361,71 @@ class ThemeEditor extends Container {
     this.build();
   }
 
-  doFolder(catkey, obj, container = this) {
+  doFolder(catkey, obj, container = this, panel = undefined, path=undefined) {
     let key = catkey.key;
 
-    let panel = container.panel(key, undefined, undefined, catkey.help);
-    panel.style["margin-left"] = "15px";
+    if (!path) {
+      path = [key];
+    }
+
+    if (!panel) {
+      panel = container.panel(key, undefined, undefined, catkey.help);
+      panel.style["margin-left"] = "15px";
+    }
+
+    let row2 = panel.row();
+    let textbox = row2.textbox(undefined, "");
+
+    let callback = (id) => {
+      console.log("ID", id, obj, catkey);
+      console.log(textbox, textbox.text, textbox.value);
+
+      let propkey = (textbox.text || "").trim();
+
+      if (!propkey) {
+        console.error("Cannot have empty theme property name");
+        return;
+      }
+
+      if (id === "FLOAT") {
+        obj[propkey] = 0.0;
+      } else if (id === "SUBFOLDER") {
+        obj[propkey] = {test : 0};
+      } else if (id === "COLOR") {
+        obj[propkey] = "grey";
+      } else if (id === "FONT") {
+        obj[propkey] = new CSSFont();
+      } else if (id === "STRING") {
+        obj[propkey] = "";
+      }
+
+      let uidata = saveUIData(panel, "theme-panel");
+
+      panel.clear();
+      this.doFolder(catkey, obj, container, panel, path);
+
+      loadUIData(panel, uidata);
+      panel.flushUpdate();
+      panel.flushSetCSS();
+
+      //doFolder(catkey, obj, container = this, panel=undefined) {
+      //this.build();
+      if (this.onchange) {
+        this.onchange(key, propkey, obj);
+      }
+    };
+
+    let menu = row2.menu("+", [
+      {name: "Float", callback: () => callback("FLOAT")},
+      {name: "Color", callback: () => callback("COLOR")},
+      {name: "Subfolder", callback: () => callback("SUBFOLDER")},
+      {name: "Font", callback: () => callback("FONT")},
+      {name: "String", callback: () => callback("STRING")},
+    ]);
 
     let row = panel.row();
     let col1 = row.col();
     let col2 = row.col();
-
 
     let do_onchange = (key, k, obj) => {
       flagThemeUpdate();
@@ -43659,34 +45560,43 @@ class ThemeEditor extends Container {
 
         panel2.closed = true;
       } else if (typeof v === "object") {
-        let old = {
-          panel, row, col1, col2
-        };
+        /*
+          let old = {
+            panel, row, col1, col2
+          };
 
-        let path2 = path.slice(0, path.length);
-        path2.push(k);
+          let path2 = path.slice(0, path.length);
+          path2.push(k);
 
-        panel = panel.panel(k);
-        row = panel.row();
-        col1 = row.col();
-        col2 = row.col();
-        for (let k2 in v) {
-          let v2 = v[k2];
+          panel = panel.panel(k);
+          row = panel.row();
+          col1 = row.col();
+          col2 = row.col();
+          for (let k2 in v) {
+            let v2 = v[k2];
 
-          dokey(k2, v2, path2);
-        }
+            dokey(k2, v2, path2);
+          }
 
-        panel = old.panel;
-        row = old.row;
-        col1 = old.col1;
-        col2 = old.col2;
+          panel = old.panel;
+          row = old.row;
+          col1 = old.col1;
+          col2 = old.col2;
+        */
+
+        let catkey2 = Object.assign({}, catkey);
+        catkey2.key = k;
+
+        let path2 = path.concat(k);
+
+        this.doFolder(catkey2, v, panel, undefined, path2);
       }
     };
 
     for (let k in obj) {
       let v = obj[k];
 
-      dokey(k, v, [key]);
+      dokey(k, v, path);
     }
 
     if (!ok) {
@@ -43698,6 +45608,10 @@ class ThemeEditor extends Container {
   }
 
   build() {
+    let uidata = saveUIData(this, "theme");
+
+    this.clear();
+
     let categories = {};
 
     for (let k of Object.keys(theme)) {
@@ -43762,6 +45676,20 @@ class ThemeEditor extends Container {
         panel.closed = true;
       }
     }
+
+    loadUIData(this, uidata);
+
+    for (let i = 0; i < 2; i++) {
+      this.flushSetCSS();
+      this.flushUpdate();
+    }
+
+    if (this.ctx && this.ctx.screen) {
+      /* Fix panel spacing bug. */
+      window.setTimeout(() => {
+        this.ctx.screen.completeSetCSS();
+      }, 100);
+    }
   }
 }
 
@@ -43774,106 +45702,7 @@ const sliderDomAttributes = new Set([
 ]);
 
 function updateSliderFromDom(dom, slider = dom) {
-  let redraw = false;
-
-  function getbool(attr, prop = attr) {
-    if (!dom.hasAttribute(attr)) {
-      return;
-    }
-
-    let v = dom.getAttribute(attr);
-    let ret = v === null || v.toLowerCase() === "true" || v.toLowerCase === "yes";
-
-    let old = slider[prop];
-    if (old !== undefined && old !== ret) {
-      redraw = true;
-    }
-
-    slider[prop] = ret;
-    return ret;
-  }
-
-  function getfloat(attr, prop = attr) {
-    if (!dom.hasAttribute(attr)) {
-      return;
-    }
-
-    let v = dom.getAttribute(attr);
-    let ret = parseFloat(v);
-
-    let old = slider[prop];
-    if (old !== undefined && Math.abs(old - v) < 0.00001) {
-      redraw = true;
-    }
-
-    slider[prop] = ret;
-    return ret;
-  }
-
-  function getint(attr, prop = attr) {
-    if (!dom.hasAttribute(attr)) {
-      return;
-    }
-
-    let v = ("" + dom.getAttribute(attr)).toLowerCase();
-    let ret;
-
-    if (v === "true") {
-      ret = true;
-    } else if (v === "false") {
-      ret = false;
-    } else {
-      ret = parseInt(v);
-    }
-
-    if (isNaN(ret)) {
-      console.error("bad value " + v);
-      return 0.0;
-    }
-
-    let old = slider[prop];
-    if (old !== undefined && Math.abs(old - v) < 0.00001) {
-      redraw = true;
-    }
-
-    slider[prop] = ret;
-    return ret;
-  }
-
-  if (dom.hasAttribute("min")) {
-    slider.range = slider.range || [-1e17, 1e17];
-
-    let r = slider.range[0];
-    slider.range[0] = parseFloat(dom.getAttribute("min"));
-    redraw = Math.abs(slider.range[0] - r) > 0.0001;
-  }
-
-  if (dom.hasAttribute("max")) {
-    slider.range = slider.range || [-1e17, 1e17];
-
-    let r = slider.range[1];
-    slider.range[1] = parseFloat(dom.getAttribute("max"));
-    redraw = redraw || Math.abs(slider.range[1] - r) > 0.0001;
-  }
-
-  if (dom.hasAttribute("displayUnit")) {
-    let old = slider.displayUnit;
-    slider.displayUnit = dom.getAttribute("displayUnit").trim();
-
-    redraw = redraw || old !== slider.displayUnit;
-  }
-
-  getint("integer", "isInt");
-
-  getint("radix");
-  getint("decimalPlaces");
-
-  getbool("labelOnTop");
-  getbool("stepIsRelative");
-  getfloat("expRate");
-  getfloat("step");
-
-  return redraw;
+  slider.loadNumConstraints(undefined, dom);
 }
 
 const SliderDefaults = {
@@ -43907,63 +45736,8 @@ function NumberSliderBase(cls = UIBase$f, skip = new Set(), defaults = SliderDef
       }
     }
 
-    loadConstraints(prop = undefined) {
-      if (!this.hasAttribute("datapath")) {
-        return;
-      }
-
-      if (!prop) {
-        prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
-      }
-
-      let loadAttr = (propkey, domkey = key, thiskey = key) => {
-        if (this.hasAttribute(domkey)) {
-          this[thiskey] = parseFloat(this.getAttribute(domkey));
-        } else {
-          this[thiskey] = prop[propkey];
-        }
-      };
-
-      for (let key of NumberConstraints) {
-        let thiskey = key, domkey = key;
-
-        if (key === "range") { //handled later
-          continue;
-        }
-
-        loadAttr(key, domkey, thiskey);
-      }
-
-      let range = prop.range;
-      if (range && !this.hasAttribute("min")) {
-        this.range[0] = range[0];
-      } else if (this.hasAttribute("min")) {
-        this.range[0] = parseFloat(this.getAttribute("min"));
-      }
-
-      if (range && !this.hasAttribute("max")) {
-        this.range[1] = range[1];
-      } else if (this.hasAttribute("max")) {
-        this.range[1] = parseFloat(this.getAttribute("max"));
-      }
-
-      if (this.getAttribute("integer")) {
-        let val = this.getAttribute("integer");
-        val = ("" + val).toLowerCase();
-
-        //handles anonymouse <numslider-x integer> case
-        this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
-      } else {
-        this.isInt = prop instanceof IntProperty;
-      }
-
-      if (this.editAsBaseUnit === undefined) {
-        if (prop.flag & PropFlags$3.EDIT_AS_BASE_UNIT) {
-          this.editAsBaseUnit = true;
-        } else {
-          this.editAsBaseUnit = false;
-        }
-      }
+    loadNumConstraints(prop, dom) {
+      return super.loadNumConstraints(prop, dom, this._redraw);
     }
   }
 }
@@ -44024,9 +45798,10 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
   static define() {
     return {
-      tagname    : "numslider-x",
-      style      : "numslider",
-      parentStyle: "button"
+      tagname          : "numslider-x",
+      style            : "numslider",
+      parentStyle      : "button",
+      havePickClipboard: true,
     };
   }
 
@@ -44068,7 +45843,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     if (updateConstraints) {
-      this.loadConstraints(prop);
+      this.loadNumConstraints(prop);
     }
 
     super.updateDataPath();
@@ -44086,8 +45861,35 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     updateSliderFromDom(this);
   }
 
+  clipboardCopy() {
+    console.log("Copy", "" + this.value);
+    exports.setClipboardData("value", "text/plain", "" + this.value);
+  }
+
+  clipboardPaste() {
+    let data = exports.getClipboardData("text/plain");
+    console.log("Paste", data);
+
+    if (typeof data == "object") {
+      data = data.data;
+    }
+
+    let displayUnit = this.editAsBaseUnit ? undefined : this.displayUnit;
+    let val = parseValue(data, this.baseUnit, displayUnit);
+
+    if (typeof val === "number" && !isNaN(val)) {
+      this.setValue(val);
+    }
+  }
+
   swapWithTextbox() {
     let tbox = UIBase$f.createElement("textbox-x");
+
+    if (this.modalRunning) {
+      this.popModal();
+    }
+
+    this.mdown = false;
 
     tbox.ctx = this.ctx;
     tbox._init();
@@ -44215,7 +46017,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       }
     };
 
-    this.addEventListener("mousemove", (e) => {
+    this.addEventListener("pointermove", (e) => {
       this.setMpos(e);
 
       if (this.mdown && !this._modaldata && this.mpos.vectorDistance(this.start_mpos) > 13) {
@@ -44241,14 +46043,14 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.swapWithTextbox();
     });
 
-    this.addEventListener("mousedown", (e) => {
+    this.addEventListener("pointerdown", (e) => {
       this.setMpos(e);
 
       if (this.disabled) return;
       onmousedown(e);
     }, {capture: true});
 
-    this.addEventListener("mouseup", (e) => {
+    this.addEventListener("pointerup", (e) => {
       this.mdown = false;
     });
     /*
@@ -44265,11 +46067,11 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }, {passive : false});
     //*/
 
-    //this.addEventListener("mouseup", (e) => {
+    //this.addEventListener("pointerup", (e) => {
     //  return onmouseup(e);
     //});
 
-    this.addEventListener("mouseover", (e) => {
+    this.addEventListener("pointerover", (e) => {
       this.setMpos(e);
       if (this.disabled) return;
 
@@ -44285,7 +46087,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.mdown = false;
     });
 
-    this.addEventListener("mouseout", (e) => {
+    this.addEventListener("pointerout", (e) => {
       this.setMpos(e);
       if (this.disabled) return;
 
@@ -44337,13 +46139,13 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
   doRange() {
-    console.warn("Deprecated: NumSlider.prototype.doRange, use loadConstraints instead!");
-    this.loadConstraints();
+    console.warn("Deprecated: NumSlider.prototype.doRange, use loadNumConstraints instead!");
+    this.loadNumConstraints();
   }
 
   setValue(value, fire_onchange = true, setDataPath = true, checkConstraints = true) {
     value = Math.min(Math.max(value, this.range[0]), this.range[1]);
-    
+
     this._value = value;
 
     if (this.hasAttribute("integer")) {
@@ -44355,7 +46157,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     if (checkConstraints) {
-      this.loadConstraints();
+      this.loadNumConstraints();
     }
 
     if (setDataPath && this.ctx && this.hasAttribute("datapath")) {
@@ -44430,7 +46232,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
         e.stopPropagation();
       },
 
-      on_mousemove: (e) => {
+      on_pointermove: (e) => {
         if (this.disabled) return;
 
         e.preventDefault();
@@ -44485,7 +46287,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
         fire();
       },
 
-      on_mouseup: (e) => {
+      on_pointerup: (e) => {
         this.setMpos(e);
 
         this.undoBreakPoint();
@@ -44495,21 +46297,21 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
         e.stopPropagation();
       },
 
-      on_mouseout: (e) => {
+      on_pointerout: (e) => {
         last_background = this.getDefault("background-color");
 
         e.preventDefault();
         e.stopPropagation();
       },
 
-      on_mouseover: (e) => {
+      on_pointerover: (e) => {
         last_background = this.getDefault("BoxHighlight");
 
         e.preventDefault();
         e.stopPropagation();
       },
 
-      on_mousedown: (e) => {
+      on_pointerdown: (e) => {
         this.popModal();
       },
     };
@@ -44529,42 +46331,6 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
       this.popModal();
     };
-
-    /*
-    cancel = (restore_value) => {
-      if (restore_value) {
-        this.value = startvalue;
-        this.updateWidth();
-        fire();
-      }
-
-      this.dom._background = last_background; //ui_base.getDefault("background-color");
-      this._redraw();
-
-      console.trace("end");
-
-      window.removeEventListener("keydown", keydown, true);
-      window.removeEventListener("mousemove", mousemove, {captured : true, passive : false});
-
-      window.removeEventListener("touchend", touchend, true);
-      window.removeEventListener("touchmove", touchmove, {captured : true, passive : false});
-      window.removeEventListener("touchcancel", touchcancel, true);
-      window.removeEventListener("mouseup", mouseup, true);
-
-      this.removeEventListener("mouseover", mouseover, true);
-      this.removeEventListener("mouseout", mouseout, true);
-    }
-
-    window.addEventListener("keydown", keydown, true);
-    window.addEventListener("mousemove", mousemove, true);
-    window.addEventListener("touchend", touchend, true);
-    window.addEventListener("touchmove", touchmove, {captured : true, passive : false});
-    window.addEventListener("touchcancel", touchcancel, true);
-    window.addEventListener("mouseup", mouseup, true);
-
-    this.addEventListener("mouseover", mouseover, true);
-    this.addEventListener("mouseout", mouseout, true);
-    //*/
   }
 
   setCSS() {
@@ -44868,7 +46634,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
         return;
       }
 
-      this.loadConstraints(prop);
+      this.loadNumConstraints(prop);
       this.setValue(val, true, false);
     }
   }
@@ -44916,7 +46682,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     };
 
     handlers = {
-      mousemove: (e) => {
+      pointermove: (e) => {
         let x = e.x, y = e.y;
 
         x = this.ma.add(x);
@@ -44927,20 +46693,20 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
         this._setFromMouse(e);
       },
 
-      mouseover : (e) => {
+      pointerover : (e) => {
       },
-      mouseout  : (e) => {
+      pointerout  : (e) => {
       },
-      mouseleave: (e) => {
+      pointerleave: (e) => {
       },
-      mouseenter: (e) => {
+      pointerenter: (e) => {
       },
-      blur      : (e) => {
+      blur        : (e) => {
       },
-      focus     : (e) => {
+      focus       : (e) => {
       },
 
-      mouseup: (e) => {
+      pointerup: (e) => {
         this.undoBreakPoint();
         end();
       },
@@ -45010,7 +46776,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
       this.focus();
     });
 
-    this.addEventListener("mousedown", (e) => {
+    this.addEventListener("pointerdown", (e) => {
       if (this.disabled) {
         return;
       }
@@ -45021,23 +46787,23 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
       this._startModal(e);
     });
 
-    this.addEventListener("mousein", (e) => {
+    this.addEventListener("pointerin", (e) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("mouseout", (e) => {
+    this.addEventListener("pointerout", (e) => {
       this.highlight = false;
       this._redraw();
     });
-    this.addEventListener("mouseover", (e) => {
+    this.addEventListener("pointerover", (e) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("mousemove", (e) => {
+    this.addEventListener("pointermove", (e) => {
       this.setHighlight(e);
       this._redraw();
     });
-    this.addEventListener("mouseleave", (e) => {
+    this.addEventListener("pointerleave", (e) => {
       this.highlight = false;
       this._redraw();
     });
@@ -45622,8 +47388,8 @@ class SliderWithTextbox extends ColumnFrame {
     this.updateDataPath();
     let redraw = false;
 
-    updateSliderFromDom(this.numslider, this);
-    updateSliderFromDom(this.textbox, this);
+    updateSliderFromDom(this, this.numslider);
+    updateSliderFromDom(this, this.textbox);
 
     if (redraw) {
       this.setCSS();
@@ -45638,10 +47404,12 @@ class SliderWithTextbox extends ColumnFrame {
 
     if (this.hasAttribute("datapath")) {
       this.numslider.setAttribute("datapath", this.getAttribute("datapath"));
+      this.textbox.setAttribute("datapath", this.getAttribute("datapath"));
     }
 
     if (this.hasAttribute("mass_set_path")) {
       this.numslider.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
+      this.textbox.setAttribute("mass_set_path", this.getAttribute("mass_set_path"));
     }
   }
 
@@ -47161,6 +48929,10 @@ class PanelFrame extends ColumnFrame {
 
     iconcheck.noMarginsOrPadding();
 
+    iconcheck.overrideDefault("highlight", {
+      "background-color" : iconcheck.getSubDefault("highlight", "background-color")
+    });
+
     iconcheck.overrideDefault("background-color", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("BoxDepressed", "rgba(0,0,0,0)");
     iconcheck.overrideDefault("border-color", "rgba(0,0,0,0)");
@@ -47190,7 +48962,6 @@ class PanelFrame extends ColumnFrame {
 
     let label = this.__label = row.label(this.getAttribute("label"));
 
-    this.__label.overrideClass("panel");
     this.__label.font = "TitleText";
 
     label._updateFont();
@@ -47869,6 +49640,7 @@ class SatValField extends UIBase$5 {
           if (this.onchange) {
             this.onchange(this.hsva);
           }
+
           break;
         }
 
@@ -48702,6 +50474,10 @@ class ColorPickerButton extends UIBase$5 {
   }
 
   set noLabel(v) {
+    if (this.labelDom) {
+      this.labelDom.hidden = true; //will be deleted later
+    }
+
     this.setAttribute("no-label", v ? "true" : "false");
   }
 
@@ -49436,7 +51212,7 @@ class TabBar extends UIBase$4 {
     canvas.style["width"] = "145px";
     canvas.style["height"] = "45px";
 
-    this.r = 8;
+    this.r = this.getDefault("TabBarRadius", undefined, 8);
 
     this.canvas = canvas;
     this.g = canvas.getContext("2d");
@@ -49661,8 +51437,9 @@ class TabBar extends UIBase$4 {
     for (let t of this.tabs) {
       if (t.dom) {
         t.dom.remove();
-        t.dom = undefined;
       }
+
+      t.remove();
     }
 
     this.tabs = [];
@@ -50247,12 +52024,12 @@ class TabBar extends UIBase$4 {
 
     /* create a no stacking context */
     this.style["contain"] = "layout";
-    
-    let r = this.getDefault("TabBarRadius");
-    r = r !== undefined ? r : 3;
+
+    this.r = this.getDefault("TabBarRadius", undefined, 8);
+
+    let r = this.r !== undefined ? this.r : 3;
 
     this.style["touch-action"] = "none";
-
 
     this.canvas.style["background-color"] = this.getDefault("TabInactive");
     this.canvas.style["border-radius"] = r + "px";
@@ -51076,6 +52853,12 @@ class ListItem extends RowFrame {
       this.background = this.getDefault("background-color");
     }
   }
+
+  setCSS() {
+    super.setCSS();
+
+    this.setBackground();
+  }
 }
 
 UIBase$2.internalRegister(ListItem);
@@ -51692,6 +53475,9 @@ class Solver {
     this.gk = 0.99;
     this.simple = false;
     this.randCons = false;
+
+    /** stop when average constraint error falls below this */
+    this.threshold = 0.01;
   }
 
   add(con) {
@@ -51800,7 +53586,7 @@ class Solver {
       if (printError) {
         console.warn("average error:", (err/this.constraints.length).toFixed(4));
       }
-      if (err < 0.01 / this.constraints.length) {
+      if (err < this.threshold / this.constraints.length) {
         break;
       }
     }
@@ -51809,7 +53595,7 @@ class Solver {
   }
 }
 
-var solver1 = /*#__PURE__*/Object.freeze({
+var solver = /*#__PURE__*/Object.freeze({
   __proto__: null,
   Constraint: Constraint,
   Solver: Solver
@@ -52295,99 +54081,109 @@ const _ret_tmp = [undefined];
 
 const OverlayClasses = [];
 
-class ContextOverlay {
-  constructor(appstate) {
-    this.ctx = undefined; //owning context
-    this._state = appstate;
-  }
+function makeDerivedOverlay(parent) {
+  return class ContextOverlay extends parent {
+    constructor(appstate) {
+      super(appstate);
 
-  get state() {
-    return this._state;
-  }
-
-  /*
-  Ugly hack, ui_lasttool.js saves
-  a DataStruct wrapping the most recently executed ToolOp
-  in this.state._last_tool.
-  */
-  get last_tool() {
-    return this.state._last_tool;
-  }
-
-
-  onRemove(have_new_file=false) {
-  }
-
-  copy() {
-    return new this.constructor(this._state);
-  }
-
-  validate() {
-    throw new Error("Implement me!");
-  }
-
-
-  //base classes override this
-  static contextDefine() {
-    throw new Error("implement me!");
-    return {
-      name   :   "",
-      flag   :   0
-    }
-  }
-
-  //don't override this
-  static resolveDef() {
-    if (this.hasOwnProperty(Symbol.CachedDef)) {
-      return this[Symbol.CachedDef];
+      this.ctx = undefined; //owning context
+      this._state = appstate;
     }
 
-    let def2 = Symbol.CachedDef = {};
-
-    let def = this.contextDefine();
-
-    if (def === undefined) {
-      def = {};
+    get state() {
+      return this._state;
     }
 
-    for (let k in def) {
-      def2[k] = def[k];
+    set state(state) {
+      this._state = state;
     }
 
-    if (!("flag") in def) {
-      def2.flag = Context.inherit(0);
+    /*
+    Ugly hack, ui_lasttool.js saves
+    a DataStruct wrapping the most recently executed ToolOp
+    in this.state._last_tool.
+    */
+    get last_tool() {
+      return this.state._last_tool;
     }
 
-    let parents = [];
-    let p = getClassParent(this);
 
-    while (p && p !== ContextOverlay) {
-      parents.push(p);
-      p = getClassParent(p);
+    onRemove(have_new_file = false) {
     }
 
-    if (def2.flag instanceof InheritFlag) {
-      let flag = def2.flag.data;
-      for (let p of parents) {
-        let def = p.contextDefine();
+    copy() {
+      return new this.constructor(this._state);
+    }
 
-        if (!def.flag) {
-          continue;
-        }else if (def.flag instanceof InheritFlag) {
-          flag |= def.flag.data;
-        } else {
-          flag |= def.flag;
-          //don't go past non-inheritable parents
-          break;
-        }
+    validate() {
+      throw new Error("Implement me!");
+    }
+
+
+    //base classes override this
+    static contextDefine() {
+      throw new Error("implement me!");
+      return {
+        name: "",
+        flag: 0
+      }
+    }
+
+    //don't override this
+    static resolveDef() {
+      if (this.hasOwnProperty(Symbol.CachedDef)) {
+        return this[Symbol.CachedDef];
       }
 
-      def2.flag = flag;
-    }
+      let def2 = Symbol.CachedDef = {};
 
-    return def2;
-  }
+      let def = this.contextDefine();
+
+      if (def === undefined) {
+        def = {};
+      }
+
+      for (let k in def) {
+        def2[k] = def[k];
+      }
+
+      if (!("flag") in def) {
+        def2.flag = Context.inherit(0);
+      }
+
+      let parents = [];
+      let p = getClassParent(this);
+
+      while (p && p !== ContextOverlay) {
+        parents.push(p);
+        p = getClassParent(p);
+      }
+
+      if (def2.flag instanceof InheritFlag) {
+        let flag = def2.flag.data;
+        for (let p of parents) {
+          let def = p.contextDefine();
+
+          if (!def.flag) {
+            continue;
+          } else if (def.flag instanceof InheritFlag) {
+            flag |= def.flag.data;
+          } else {
+            flag |= def.flag;
+            //don't go past non-inheritable parents
+            break;
+          }
+        }
+
+        def2.flag = flag;
+      }
+
+      return def2;
+    }
+  };
 }
+
+const ContextOverlay = makeDerivedOverlay(Object);
 
 const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
                                      "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
@@ -52395,12 +54191,14 @@ const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
                                      "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
 
 class LockedContext {
-  constructor(ctx) {
+  constructor(ctx, noWarnings) {
     this.props = {};
 
     this.state = ctx.state;
     this.api = ctx.api;
     this.toolstack = ctx.toolstack;
+
+    this.noWarnings = noWarnings;
 
     this.load(ctx);
   }
@@ -52446,7 +54244,7 @@ class LockedContext {
       try {
         v = ctx[k];
       } catch (error) {
-        if (config$1.DEBUG.contextSystem) {
+        if (config.DEBUG.contextSystem) {
           console.warn("failed to look up property in context: ", k);
         }
         continue;
@@ -52673,7 +54471,7 @@ class Context {
     let inside_map = this._inside_map;
     let stack = this._stack;
 
-    if (config$1.DEBUG.contextSystem) {
+    if (config.DEBUG.contextSystem) {
       console.log(name, inside_map);
     }
 
@@ -52687,7 +54485,7 @@ class Context {
 
       let ikey = overlay[Symbol.ContextID];
 
-      if (config$1.DEBUG.contextSystem) {
+      if (config.DEBUG.contextSystem) {
         console.log(ikey, overlay);
       }
 
@@ -52697,7 +54495,7 @@ class Context {
       }
 
       if (overlay.__allKeys.has(name)) {
-        if (config$1.DEBUG.contextSystem) {
+        if (config.DEBUG.contextSystem) {
           console.log("getting value");
         }
 
@@ -52891,17 +54689,7 @@ if (!test()) {
   throw new Error("Context test failed");
 }
 
-const solver = solver1;
-const util = util1;
-const vectormath = vectormath1;
-const math = math1;
-const toolprop_abstract = toolprop_abstract1;
-const html5_fileapi = html5_fileapi1;
-const parseutil = parseutil1;
-const config = config1;
-const nstructjs = nstructjs$1;
-
-var controller1 = /*#__PURE__*/Object.freeze({
+var controller = /*#__PURE__*/Object.freeze({
   __proto__: null,
   solver: solver,
   util: util,
@@ -52910,11 +54698,14 @@ var controller1 = /*#__PURE__*/Object.freeze({
   toolprop_abstract: toolprop_abstract,
   html5_fileapi: html5_fileapi,
   parseutil: parseutil,
-  config: config,
+  config: ctrlconfig,
   nstructjs: nstructjs,
+  lzstring: lzstring,
+  binomial: binomial,
   setNotifier: setNotifier,
   ContextFlags: ContextFlags,
   OverlayClasses: OverlayClasses,
+  makeDerivedOverlay: makeDerivedOverlay,
   ContextOverlay: ContextOverlay,
   excludedKeys: excludedKeys,
   LockedContext: LockedContext,
@@ -53135,37 +54926,6 @@ var controller1 = /*#__PURE__*/Object.freeze({
   KeyMap: KeyMap
 });
 
-let promise;
-
-if (window.haveElectron) {
-  promise = Promise.resolve().then(function () { return electron_api1; });
-} else {
-  promise = Promise.resolve().then(function () { return web_api; });
-}
-
-var platform$3;
-
-promise.then((module) => {
-  platform$3 = module.platform;
-  promise = undefined;
-});
-
-function getPlatformAsync() {
-  if (promise) {
-    return promise;
-  }
-
-  return new Promise((accept, reject) => {
-    accept(platform$3);
-  })
-}
-
-var platform1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  get platform () { return platform$3; },
-  getPlatformAsync: getPlatformAsync
-});
-
 const mimeMap = {
   ".js"  : "application/javascript",
   ".json": "text/json",
@@ -53178,7 +54938,24 @@ const mimeMap = {
   ".bmp" : "image/bitmap",
   ".tga" : "image/targa",
   ".svg" : "image/svg+xml",
-  ".xml" : "text/xml"
+  ".xml" : "text/xml",
+  ".webp": "image/webp",
+  "svg"  : "image/svg+xml",
+  "txt"  : "text/plain",
+  "html" : "text/html",
+  "css"  : "text/css",
+  "ts"   : "application/typescript",
+  "py"   : "application/python",
+  "c"    : "application/c",
+  "cpp"  : "application/cpp",
+  "cc"   : "application/cpp",
+  "h"    : "application/c",
+  "hh"   : "application/cpp",
+  "hpp"  : "application/cpp",
+  "sh"   : "application/bash",
+  "mjs"  : "application/javascript",
+  "cjs"  : "application/javascript",
+  "gif"  : "image/gif"
 };
 
 var textMimes = new Set([
@@ -53226,7 +55003,7 @@ class PlatformAPI {
     //returns a promise
   }
 
-  static resolveURL(path, base=location.href) {
+  static resolveURL(path, base = location.href) {
     base = base.trim();
 
     if (path.startsWith("./")) {
@@ -53238,14 +55015,14 @@ class PlatformAPI {
     }
 
     while (base.endsWith("/")) {
-      base = base.slice(0, base.length-1).trim();
+      base = base.slice(0, base.length - 1).trim();
     }
 
     let exts = ["html", "txt", "js", "php", "cgi"];
     for (let ext of exts) {
       ext = "." + ext;
       if (base.endsWith(ext)) {
-        let i = base.length-1;
+        let i = base.length - 1;
         while (i > 0 && base[i] !== "/") {
           i--;
         }
@@ -53255,13 +55032,13 @@ class PlatformAPI {
     }
 
     while (base.endsWith("/")) {
-      base = base.slice(0, base.length-1).trim();
+      base = base.slice(0, base.length - 1).trim();
     }
 
     path = (base + "/" + path).split("/");
     let path2 = [];
 
-    for (let i=0; i<path.length; i++) {
+    for (let i = 0; i < path.length; i++) {
       if (path[i] === "..") {
         path2.pop();
       } else {
@@ -53273,12 +55050,12 @@ class PlatformAPI {
   }
 
   //returns a promise that resolves to a FilePath that can be used for re-saving.
-  static showOpenDialog(title, args=new FileDialogArgs()) {
+  static showOpenDialog(title, args = new FileDialogArgs()) {
     throw new Error("implement me");
   }
 
   //returns a promise
-  static showSaveDialog(title, savedata_cb, args=new FileDialogArgs()) {
+  static showSaveDialog(title, savedata_cb, args = new FileDialogArgs()) {
     throw new Error("implement me");
   }
 
@@ -53307,11 +55084,46 @@ class FileDialogArgs {
 
 /*a file path, some platforms may not return real payhs*/
 class FilePath {
-  constructor(data, filename="unnamed") {
+  constructor(data, filename = "unnamed") {
     this.data = data;
     this.filename = filename;
   }
 }
+
+let promise;
+
+if (window.haveElectron) {
+  promise = Promise.resolve().then(function () { return electron_api$1; });
+} else {
+  promise = Promise.resolve().then(function () { return web_api; });
+}
+
+var platform$2;
+
+promise.then((module) => {
+  platform$2 = module.platform;
+  promise = undefined;
+});
+
+function getPlatformAsync() {
+  if (promise) {
+    return new Promise((accept, reject) => {
+      promise.then(mod => {
+        accept(mod.platform);
+      });
+    });
+  }
+
+  return new Promise((accept, reject) => {
+    accept(platform$2);
+  })
+}
+
+var platform$3 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  get platform () { return platform$2; },
+  getPlatformAsync: getPlatformAsync
+});
 
 "use strict";
 
@@ -53349,6 +55161,11 @@ function getFilename(path) {
   while (i >= 0 && filename[i] !== "/") {
     i--;
   }
+
+  if (filename[i] === "/") {
+    i++;
+  }
+
   if (i > 0) {
     filename = filename.slice(i, filename.length).trim();
   }
@@ -53358,31 +55175,6 @@ function getFilename(path) {
 
 let _menu_init = false;
 let _init = false;
-
-let mimemap = {
-  "js"  : "application/javascript",
-  "json": "text/json",
-  "png" : "image/png",
-  "svg" : "image/svg+xml",
-  "jpg" : "image/jpeg",
-  "txt" : "text/plain",
-  "html": "text/html",
-  "css" : "text/css",
-  "ts"  : "application/typescript",
-  "py"  : "application/python",
-  "c"   : "application/c",
-  "cpp" : "application/cpp",
-  "cc"  : "application/cpp",
-  "h"   : "application/c",
-  "hh"  : "application/cpp",
-  "hpp" : "application/cpp",
-  "xml" : "text/xml",
-  "sh"  : "application/bash",
-  "mjs" : "application/javascript",
-  "cjs" : "application/javascript",
-  "gif" : "image/gif"
-};
-
 
 let electron_menu_idgen = 1;
 let ipcRenderer;
@@ -53806,7 +55598,7 @@ function initMenuBar(menuEditor, override = false) {
   //win.setMenu(menu);
 }
 
-class platform$2 extends PlatformAPI {
+class platform$1 extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
     const {dialog} = require('electron').remote;
 
@@ -53853,8 +55645,8 @@ class platform$2 extends PlatformAPI {
         filter = {extensions: filter};
 
         ext = ext.replace(/\./g, "").trim().toLowerCase();
-        if (ext in mimemap) {
-          filter.mime = mimemap[ext];
+        if (ext in mimeMap) {
+          filter.mime = mimeMap[ext];
         }
 
         filter.name = ext;
@@ -53942,7 +55734,7 @@ class platform$2 extends PlatformAPI {
   }
 }
 
-var electron_api1 = /*#__PURE__*/Object.freeze({
+var electron_api$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   ElectronMenu: ElectronMenu,
   wrapRemoteCallback: wrapRemoteCallback,
@@ -53953,7 +55745,7 @@ var electron_api1 = /*#__PURE__*/Object.freeze({
   buildElectronHotkey: buildElectronHotkey,
   buildElectronMenu: buildElectronMenu,
   initMenuBar: initMenuBar,
-  platform: platform$2
+  platform: platform$1
 });
 
 "use strict";
@@ -56662,7 +58454,7 @@ class Screen extends UIBase$f {
           continue;
         }
 
-        if (keymap.handle(this.ctx, e)) {
+        if (keymap.handle(area.ctx, e)) {
           handled = true;
           break;
         }
@@ -56682,7 +58474,7 @@ class Screen extends UIBase$f {
         sarea.area.push_ctx_active();
 
         for (let keymap of sarea.area.getKeyMaps()) {
-          if (keymap.handle(this.ctx, e)) {
+          if (keymap.handle(sarea.area.ctx, e)) {
             handled = true;
             break;
           }
@@ -56879,7 +58671,9 @@ class Screen extends UIBase$f {
 
     //ensure each area has proper ctx set
     for (let sarea of this.sareas) {
-      sarea.ctx = this.ctx;
+      if (!sarea.ctx) {
+        sarea.ctx = this.ctx;
+      }
     }
 
     return (function* () {
@@ -58733,7 +60527,7 @@ class SideBar extends Container {
 
     h = Math.min(h, editor.size[1]-25);
 
-    this.style["position"] = UIBase$f.PositionKey;
+    this.style["position"] = "absolute";
     this.style["width"] = w + "px";
     this.style["height"] = h + "px";
     this.style["z-index"] = "100";
@@ -58742,7 +60536,7 @@ class SideBar extends Container {
     this.style["background-color"] = this.getDefault("AreaHeaderBG");
 
     this.tabbar.style["height"] = (h - 45) + "px";
-    this.style["left"] = (editor.pos[0] + editor.size[0] - w) + "px";
+    this.style["left"] = (editor.size[0] - w) + "px";
   }
 
   update() {
@@ -59786,7 +61580,7 @@ class FileHeader {
     this.version_major = version ? version[0] : 0;
     this.version_minor = version ? version[1] : 0;
     this.version_micro = version ? version[2] : 0;
-    this.schema = nstructjs$1.write_scripts();
+    this.schema = nstructjs.write_scripts();
   }
 }
 
@@ -59800,7 +61594,7 @@ simple.FileHeader {
   schema        : string; 
 }
 `;
-nstructjs$1.register(FileHeader);
+nstructjs.register(FileHeader);
 
 class FileFull extends FileHeader {
   constructor(version, magic, flags) {
@@ -59809,12 +61603,12 @@ class FileFull extends FileHeader {
   }
 }
 
-FileFull.STRUCT = nstructjs$1.inherit(FileFull, FileHeader) + `
+FileFull.STRUCT = nstructjs.inherit(FileFull, FileHeader) + `
   objects : array(abstract(Object));
   screen  : abstract(Object);
 }
 `;
-nstructjs$1.register(FileFull);
+nstructjs.register(FileFull);
 
 
 class FileArgs {
@@ -59837,7 +61631,7 @@ EmptyStruct.STRUCT = `
 EmptyStruct {
 }
 `;
-nstructjs$1.register(EmptyStruct);
+nstructjs.register(EmptyStruct);
 
 function saveFile(appstate, args, objects) {
   if (args.useJSON === undefined) {
@@ -59872,10 +61666,10 @@ function saveFile(appstate, args, objects) {
   }
 
   if (args.useJSON) {
-    return nstructjs$1.writeJSON(file);
+    return nstructjs.writeJSON(file);
   } else {
     let data = [];
-    nstructjs$1.writeObject(data, file);
+    nstructjs.writeObject(data, file);
     return (new Uint8Array(data)).buffer;
   }
 }
@@ -59902,20 +61696,20 @@ function loadFile(appstate, args, data) {
       data = new DataView(data);
     }
 
-    header = nstructjs$1.readObject(data, FileHeader);
+    header = nstructjs.readObject(data, FileHeader);
   } else {
     if (typeof data === "string") {
       data = JSON.parse(data);
     }
 
-    header = nstructjs$1.readJSON(data, FileHeader);
+    header = nstructjs.readJSON(data, FileHeader);
   }
 
   if (header.magic !== args.magic) {
     throw new Error("invalid file");
   }
 
-  let istruct = new nstructjs$1.STRUCT();
+  let istruct = new nstructjs.STRUCT();
   istruct.parse_structs(header.schema);
 
   let ret;
@@ -60115,7 +61909,7 @@ class SimpleAppSaveOp extends ToolOp {
         return data;
       }
 
-      platform$3.showSaveDialog("Save As", save, {
+      platform$2.showSaveDialog("Save As", save, {
         multi          : false,
         addToRecentList: true,
         filters        : [{
@@ -60154,7 +61948,7 @@ class SimpleAppOpenOp extends ToolOp {
     let useJSON = _appstate.startArgs.saveFilesInJSON;
     let mime = useJSON ? "text/json" : "application/x-octet-stream";
 
-    platform$3.showOpenDialog("Open File", {
+    platform$2.showOpenDialog("Open File", {
       multi          : false,
       addToRecentList: true,
       filters        : [{
@@ -60164,7 +61958,7 @@ class SimpleAppOpenOp extends ToolOp {
       }]
     }).then(paths => {
       for (let path of paths) {
-        platform$3.readFile(path, mime).then(data => {
+        platform$2.readFile(path, mime).then(data => {
           console.log("got data!", data);
 
           _appstate.loadFile(data, {useJSON, doScreen: true, fromFileOp: true})
@@ -60200,7 +61994,7 @@ class DataModel {
     DataModelClasses.push(cls);
 
     if (cls.hasOwnProperty("STRUCT")) {
-      nstructjs$1.register(cls);
+      nstructjs.register(cls);
     }
   }
 }
@@ -60216,38 +62010,45 @@ class EmptyContextClass extends Context {
  *
  * */
 function GetContextClass(ctxClass) {
-  let StateSymbol = Symbol("AppState ref");
+  let ok = 0;
+  let cls = ctxClass;
+  while (cls) {
+    if (cls === Context) {
+      ok = 1;
+    } else if (cls === ContextOverlay) {
+      ok = 2;
+    }
 
-  return class ContextDerived extends ctxClass {
+    cls = cls.__proto__;
+  }
+
+  if (ok === 1) {
+    return ctxClass;
+  }
+
+  let OverlayDerived;
+
+  if (ok === 2) {
+    OverlayDerived = ctxClass;
+  } else {
+    OverlayDerived = makeDerivedOverlay(ctxClass);
+  }
+
+  class Overlay extends OverlayDerived {
     constructor(state) {
-      super(...arguments);
-
-      this[StateSymbol] = state;
+      super(state);
     }
 
     get screen() {
-      return this[StateSymbol].screen;
-    }
-
-    get state() {
-      return this[StateSymbol];
-    }
-
-    set state(v) {
-      this[StateSymbol] = v;
+      return this.state.screen;
     }
 
     get api() {
-      return this[StateSymbol].api;
+      return this.state.api;
     }
 
     get toolstack() {
-      return this[StateSymbol].toolstack;
-    }
-
-    toLocked() {
-      //for now, don't support context locking
-      return this;
+      return this.state.toolstack;
     }
 
     message(msg, timeout = 2500) {
@@ -60264,6 +62065,20 @@ function GetContextClass(ctxClass) {
 
     progressBar(msg, percent, color, timeout = 1000) {
       return progbarNote(this.screen, msg, percent, color, timeout);
+    }
+  }
+
+  Context.register(Overlay);
+
+  return class ContextDerived extends Context {
+    constructor(state) {
+      super(state);
+
+      this.pushOverlay(new Overlay(state));
+    }
+
+    static defineAPI(api, st) {
+      return Overlay.defineAPI(api, st);
     }
   }
 }
@@ -60696,7 +62511,7 @@ class AppState {
       }
     });
 
-    nstructjs$1.validateStructs();
+    nstructjs.validateStructs();
 
     if (this.saveFilesInJSON && !this._fileExtSet) {
       this._fileExt = "json";
@@ -60743,7 +62558,7 @@ class SimpleContext {
   }
 }
 
-var simple1 = /*#__PURE__*/Object.freeze({
+var simple = /*#__PURE__*/Object.freeze({
   __proto__: null,
   Menu: Menu,
   DataModelClasses: DataModelClasses,
@@ -60768,12 +62583,7 @@ var simple1 = /*#__PURE__*/Object.freeze({
   registerMenuBarEditor: registerMenuBarEditor
 });
 
-const controller = controller1;
 setNotifier(ui_noteframe);
-const platform$1 = platform1;
-const electron_api$1 = electron_api1;
-const cconst$1 = exports;
-const simple = simple1;
 
 function getWebFilters(filters=[]) {
   let types = [];
@@ -60978,5 +62788,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, cconst$1 as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getNoteFrames, getPlatformAsync, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, inv_sample, invertTheme, isLeftClick, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, makeCircleMesh, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$1 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map

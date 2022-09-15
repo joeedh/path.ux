@@ -934,14 +934,6 @@ export class DropBox extends OldButton {
       return;
     }
 
-    const dolog = Math.random() > 0.5;
-
-    function log() {
-      if (dolog) {
-        console.log(...arguments);
-      }
-    }
-
     let wasError = false;
     let prop, val;
 
@@ -959,10 +951,6 @@ export class DropBox extends OldButton {
     }
 
     if (wasError) {
-      log("ERROR");
-    }
-
-    if (wasError) {
       this.disabled = true;
       this.setCSS();
       this._redraw();
@@ -973,8 +961,6 @@ export class DropBox extends OldButton {
       this.setCSS();
       this._redraw();
     }
-
-    log(prop);
 
     if (!prop) {
       return;
@@ -993,8 +979,6 @@ export class DropBox extends OldButton {
     } else {
       name = "" + val;
     }
-
-    log("NAME", name);
 
     if (name !== this.getAttribute("name")) {
       this.setAttribute("name", name);
