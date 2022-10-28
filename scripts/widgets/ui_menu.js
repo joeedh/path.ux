@@ -8,7 +8,7 @@ import {OldButton} from "./ui_button.js";
 import {DomEventTypes} from '../path-controller/util/events.js';
 
 import {HotKey, keymap} from '../path-controller/util/simple_events.js';
-import { parseToolPath } from '../pathux.js';
+import { parseToolPath } from '../path-controller/controller.js'
 
 let EnumProperty = toolprop.EnumProperty,
     PropTypes    = toolprop.PropTypes;
