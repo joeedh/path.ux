@@ -145,7 +145,7 @@ let exports = {
   showPathsInToolTips: true,
 
   enableThemeAutoUpdate: true,
-  useNativeToolTips: false,
+  useNativeToolTips: true,
 
   loadConstants: function (args) {
     for (let k in args) {
