@@ -478,6 +478,16 @@ let colormap$1 = {
   "peach"   : 210
 };
 
+function tab(n, chr = ' ') {
+  let t = '';
+
+  for (let i = 0; i < n; i++) {
+    t += chr;
+  }
+
+  return t;
+}
+
 let termColorMap$1 = {};
 for (let k in colormap$1) {
   termColorMap$1[k] = colormap$1[k];
@@ -600,17 +610,36 @@ function termPrint$1() {
   return out;
 }
 
+function list$3(iter) {
+  let ret = [];
+
+  for (let item of iter) {
+    ret.push(item);
+  }
+
+  return ret;
+}
+
+var util$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  tab: tab,
+  termColorMap: termColorMap$1,
+  termColor: termColor$1,
+  termPrint: termPrint$1,
+  list: list$3
+});
+
 "use strict";
 
 function print_lines(ld, lineno, col, printColors, token) {
   let buf = '';
   let lines = ld.split("\n");
   let istart = Math.max(lineno - 5, 0);
-  let iend  = Math.min(lineno + 3, lines.length);
+  let iend = Math.min(lineno + 3, lines.length);
 
   let color = printColors ? (c) => c : termColor$1;
 
-  for (let i=istart; i<iend; i++) {
+  for (let i = istart; i < iend; i++) {
     let l = "" + (i + 1);
     while (l.length < 3) {
       l = " " + l;
@@ -619,12 +648,12 @@ function print_lines(ld, lineno, col, printColors, token) {
     l += `: ${lines[i]}\n`;
 
     if (i === lineno && token && token.value.length === 1) {
-      l = l.slice(0, col+5) + color(l[col+5], "yellow") + l.slice(col+6, l.length);
+      l = l.slice(0, col + 5) + color(l[col + 5], "yellow") + l.slice(col + 6, l.length);
     }
     buf += l;
     if (i === lineno) {
       let colstr = '     ';
-      for (let i=0; i<col; i++) {
+      for (let i = 0; i < col; i++) {
         colstr += ' ';
       }
       colstr += color("^", "red");
@@ -662,18 +691,18 @@ class tokdef$1 {
     this.re = regexpr;
     this.func = func;
     this.example = example;
-    
+
     if (example === undefined && regexpr) {
       let s = "" + regexpr;
       if (s.startsWith("/") && s.endsWith("/")) {
-        s = s.slice(1, s.length-1);
+        s = s.slice(1, s.length - 1);
       }
-      
+
       if (s.startsWith("\\")) {
         s = s.slice(1, s.length);
       }
       s = s.trim();
-      
+
       if (s.length === 1) {
         this.example = s;
       }
@@ -707,7 +736,7 @@ class lexer$2 {
     this.states = {"__main__": [tokdef, errfunc]};
     this.statedata = 0;
 
-    this.logger = function() {
+    this.logger = function () {
       console.log(...arguments);
     };
   }
@@ -746,7 +775,7 @@ class lexer$2 {
     let col = 0;
     let colmap = this.colmap = new Array(str.length);
 
-    for (let i=0; i<str.length; i++, col++) {
+    for (let i = 0; i < str.length; i++, col++) {
       let c = str[i];
 
       linemap[i] = lineno;
@@ -772,7 +801,7 @@ class lexer$2 {
     if (this.errfunc !== undefined && !this.errfunc(this))
       return;
 
-    let safepos = Math.min(this.lexpos, this.lexdata.length-1);
+    let safepos = Math.min(this.lexpos, this.lexdata.length - 1);
     let line = this.linemap[safepos];
     let col = this.colmap[safepos];
 
@@ -813,7 +842,7 @@ class lexer$2 {
       this.peeked_tokens.shift();
 
       if (!ignore_peek && this.printTokens) {
-        this.logger(""+tok);
+        this.logger("" + tok);
       }
 
       return tok;
@@ -853,7 +882,7 @@ class lexer$2 {
     }
 
     let def = theres[0];
-    let col = this.colmap[Math.min(this.lexpos, this.lexdata.length-1)];
+    let col = this.colmap[Math.min(this.lexpos, this.lexdata.length - 1)];
 
     if (this.lexpos < this.lexdata.length) {
       this.lineno = this.linemap[this.lexpos];
@@ -870,7 +899,7 @@ class lexer$2 {
     }
 
     if (!ignore_peek && this.printTokens) {
-      this.logger(""+tok);
+      this.logger("" + tok);
     }
     return tok;
   }
@@ -882,7 +911,7 @@ class parser$1 {
     this.errfunc = errfunc;
     this.start = undefined;
 
-    this.logger = function() {
+    this.logger = function () {
       console.log(...arguments);
     };
   }
@@ -914,11 +943,11 @@ class parser$1 {
     if (token === undefined)
       estr = "Parse error at end of input: " + msg;
     else
-      estr = `Parse error at line ${token.lineno + 1}:${token.col+1}: ${msg}`;
+      estr = `Parse error at line ${token.lineno + 1}:${token.col + 1}: ${msg}`;
 
     let buf = "";
     let ld = this.lexer.lexdata;
-    let lineno = token ? token.lineno : this.lexer.linemap[this.lexer.linemap.length-1];
+    let lineno = token ? token.lineno : this.lexer.linemap[this.lexer.linemap.length - 1];
     let col = token ? token.col : 0;
 
     ld = ld.replace(/\r/g, '');
@@ -948,13 +977,14 @@ class parser$1 {
 
   next() {
     let tok = this.lexer.next();
+
     if (tok !== undefined)
       tok.parser = this;
     return tok;
   }
 
   optional(type) {
-    let tok = this.peek();
+    let tok = this.peeknext();
     if (tok === undefined)
       return false;
     if (tok.type === type) {
@@ -970,17 +1000,17 @@ class parser$1 {
 
   expect(type, msg) {
     let tok = this.next();
-    
+
     if (msg === undefined) {
       msg = type;
-      
+
       for (let tk of this.lexer.tokdef) {
         if (tk.name === type && tk.example) {
           msg = tk.example;
         }
       }
     }
-    
+
     if (tok === undefined || tok.type !== type) {
       this.error(tok, "Expected " + msg);
     }
@@ -990,7 +1020,8 @@ class parser$1 {
 
 function test_parser$1() {
   let basic_types = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string"]);
-  let reserved_tokens = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string", "array"]);
+  let reserved_tokens = new Set(["int", "float", "double", "vec2", "vec3", "vec4", "mat4", "string", "static_string",
+                                 "array"]);
 
   function tk(name, re, func) {
     return new tokdef$1(name, re, func);
@@ -1017,10 +1048,11 @@ function test_parser$1() {
     }
     t.value = js;
     return t;
-  }), tk("LPARAM", /\(/), tk("RPARAM", /\)/), tk("COMMA", /,/), tk("NUM", /[0-9]/), tk("SEMI", /;/), tk("NEWLINE", /\n/, function (t) {
-    t.lexer.lineno += 1;
-  }), tk("SPACE", / |\t/, function (t) {
-  })];
+  }), tk("LPARAM", /\(/), tk("RPARAM", /\)/), tk("COMMA", /,/), tk("NUM", /[0-9]/), tk("SEMI", /;/),
+                tk("NEWLINE", /\n/, function (t) {
+                  t.lexer.lineno += 1;
+                }), tk("SPACE", / |\t/, function (t) {
+    })];
 
   for (let rt of reserved_tokens) {
     tokens.push(tk(rt.toUpperCase()));
@@ -1075,15 +1107,12 @@ function test_parser$1() {
     if (tok.type === "ID") {
       p.next();
       return {type: "struct", data: "\"" + tok.value + "\""}
-    }
-    else if (basic_types.has(tok.type.toLowerCase())) {
+    } else if (basic_types.has(tok.type.toLowerCase())) {
       p.next();
       return {type: tok.type.toLowerCase()}
-    }
-    else if (tok.type === "ARRAY") {
+    } else if (tok.type === "ARRAY") {
       return p_Array(p);
-    }
-    else {
+    } else {
       p.error(tok, "invalid type " + tok.type);
     }
   }
@@ -1118,11 +1147,9 @@ function test_parser$1() {
     while (1) {
       if (p.at_end()) {
         p.error(undefined);
-      }
-      else if (p.optional("CLOSE")) {
+      } else if (p.optional("CLOSE")) {
         break;
-      }
-      else {
+      } else {
         st.fields.push(p_Field(p));
       }
     }
@@ -1176,6 +1203,10 @@ const StructEnum = {
   STATIC_ARRAY : 19,
   SIGNED_BYTE  : 20
 };
+
+const ArrayTypes = new Set([
+  StructEnum.STATIC_ARRAY, StructEnum.ARRAY, StructEnum.ITERKEYS, StructEnum.ITER
+]);
 
 const ValueTypes = new Set([
   StructEnum.INT,
@@ -1320,12 +1351,23 @@ function StructParser() {
     tk("JSCRIPT", /\|/, function (t) {
       let js = "";
       let lexer = t.lexer;
+      let p;
+
       while (lexer.lexpos < lexer.lexdata.length) {
         let c = lexer.lexdata[lexer.lexpos];
         if (c === "\n")
           break;
+
+        if (c === "/" && p === "/") {
+          js = js.slice(0, js.length - 1);
+          lexer.lexpos--;
+
+          break;
+        }
+
         js += c;
         lexer.lexpos++;
+        p = c;
       }
 
       while (js.trim().endsWith(";")) {
@@ -1335,6 +1377,7 @@ function StructParser() {
       t.value = js.trim();
       return t;
     }),
+    tk("COMMENT", /\/\/.*[\n\r]/),
     tk("LPARAM", /\(/),
     tk("RPARAM", /\)/),
     tk("COMMA", /,/),
@@ -1357,7 +1400,7 @@ function StructParser() {
 
   class Lexer extends lexer$2 {
     input(str) {
-      str = stripComments(str);
+      //str = stripComments(str);
       return super.input(str);
     }
   }
@@ -1473,7 +1516,7 @@ function StructParser() {
   }
 
   function p_Type(p) {
-    let tok = p.peek();
+    let tok = p.peeknext();
 
     if (tok.type === "ID") {
       p.next();
@@ -1523,21 +1566,33 @@ function StructParser() {
 
     let check = 0;
 
-    let tok = p.peek();
-    if (tok.type === "JSCRIPT") {
+    let tok = p.peeknext();
+
+    if (tok && tok.type === "JSCRIPT") {
       field.get = tok.value;
       check = 1;
+
       p.next();
+      tok = p.peeknext();
     }
 
-    tok = p.peek();
-    if (tok.type === "JSCRIPT") {
+    if (tok && tok.type === "JSCRIPT") {
       check = 1;
       field.set = tok.value;
+
       p.next();
     }
 
     p.expect("SEMI");
+
+    tok = p.peeknext();
+
+    if (tok && tok.type === "COMMENT") {
+      field.comment = tok.value;
+      p.next();
+    } else {
+      field.comment = "";
+    }
 
     return field;
   }
@@ -1547,7 +1602,7 @@ function StructParser() {
 
     let st = new NStruct(name);
 
-    let tok = p.peek();
+    let tok = p.peeknext();
     let id = -1;
 
     if (tok.type === "ID" && tok.value === "id") {
@@ -1580,6 +1635,7 @@ var struct_parser = /*#__PURE__*/Object.freeze({
   __proto__: null,
   NStruct: NStruct,
   StructEnum: StructEnum,
+  ArrayTypes: ArrayTypes,
   ValueTypes: ValueTypes,
   StructTypes: StructTypes,
   StructTypeMap: StructTypeMap,
@@ -2039,6 +2095,10 @@ function fromJSON(manager, val, obj, field, type, instance) {
   return StructFieldTypeMap[type.type].fromJSON(manager, val, obj, field, type, instance);
 }
 
+function formatJSON(manager, val, obj, field, type, instance, tlvl = 0) {
+  return StructFieldTypeMap[type.type].formatJSON(manager, val, obj, field, type, instance, tlvl);
+}
+
 function validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
   return StructFieldTypeMap[type.type].validateJSON(manager, val, obj, field, type, instance, _abstractKey);
 }
@@ -2114,6 +2174,10 @@ class StructFieldType {
 
   static fromJSON(manager, val, obj, field, type, instance) {
     return val;
+  }
+
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    return JSON.stringify(val);
   }
 
   static validateJSON(manager, val, obj, field, type, instance, _abstractKey) {
@@ -2356,6 +2420,12 @@ class StructStructField extends StructFieldType {
     return manager.readJSON(val, stt, instance);
   }
 
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    let stt = manager.get_struct(type.data);
+
+    return manager.formatJSON_intern(val, stt, field, tlvl);
+  }
+
   static toJSON(manager, val, obj, field, type) {
     let stt = manager.get_struct(type.data);
     return manager.writeJSON(val, stt);
@@ -2461,6 +2531,14 @@ class StructTStructField extends StructFieldType {
     return manager.readJSON(val, stt, instance);
   }
 
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    let key = type.jsonKeyword;
+
+    let stt = manager.get_struct(val[key]);
+
+    return manager.formatJSON_intern(val, stt, field, tlvl);
+  }
+
   static toJSON(manager, val, obj, field, type) {
     const keywords = manager.constructor.keywords;
 
@@ -2535,6 +2613,36 @@ class StructTStructField extends StructFieldType {
 }
 
 StructFieldType.register(StructTStructField);
+
+/** out is just a [string], an array of dimen 1 whose sole entry is the output string. */
+function formatArrayJson(manager, val, obj, field, type, type2, instance, tlvl, array = val) {
+  if (array === undefined || array === null || typeof array !== "object" || !array[Symbol.iterator]) {
+    console.log(obj);
+    console.log(array);
+    throw new Error(`Expected an array for ${field.name}`);
+  }
+
+  if (ValueTypes.has(type2.type)) {
+    return JSON.stringify(array);
+  }
+
+  let s = '[';
+  if (manager.formatCtx.addComments && field.comment.trim()) {
+    s += " " + field.comment.trim();
+  }
+
+  s += "\n";
+
+  for (let i = 0; i < array.length; i++) {
+    let item = array[i];
+
+    s += tab(tlvl + 1) + formatJSON(manager, item, val, field, type2, instance, tlvl + 1) + ",\n";
+  }
+
+  s += tab(tlvl) + "]";
+
+  return s;
+}
 
 class StructArrayField extends StructFieldType {
   static pack(manager, data, val, obj, field, type) {
@@ -2623,6 +2731,12 @@ class StructArrayField extends StructFieldType {
     }
 
     return ret;
+  }
+
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    //export function formatArrayJson(manager, val, obj, field, type, type2, instance, tlvl, array=val) {
+
+    return formatArrayJson(manager, val, obj, field, type, type.data.type, instance, tlvl);
   }
 
   static toJSON(manager, val, obj, field, type) {
@@ -2731,6 +2845,10 @@ class StructIterField extends StructFieldType {
     data[starti++] = uint8_view[1];
     data[starti++] = uint8_view[2];
     data[starti++] = uint8_view[3];
+  }
+
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    return formatArrayJson(manager, val, obj, field, type, type.data.type, instance, tlvl, list$3(val));
   }
 
   static validateJSON(manager, val, obj, field, type, instance) {
@@ -2966,6 +3084,10 @@ class StructIterKeysField extends StructFieldType {
     return StructArrayField.fromJSON(...arguments);
   }
 
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    return formatArrayJson(manager, val, obj, field, type, type.data.type, instance, tlvl, list$3(val));
+  }
+
   static toJSON(manager, val, obj, field, type) {
     val = val || [];
     let json = [];
@@ -3140,6 +3262,10 @@ class StructStaticArrayField extends StructFieldType {
     return StructArrayField.fromJSON(...arguments);
   }
 
+  static formatJSON(manager, val, obj, field, type, instance, tlvl) {
+    return formatArrayJson(manager, val, obj, field, type, type.data.type, instance, tlvl, list$3(val));
+  }
+
   static packNull(manager, data, field, type) {
     let size = type.data.size;
     for (let i = 0; i < size; i++) {
@@ -3208,9 +3334,11 @@ var _sintern2 = /*#__PURE__*/Object.freeze({
   packNull: packNull,
   toJSON: toJSON,
   fromJSON: fromJSON,
+  formatJSON: formatJSON,
   validateJSON: validateJSON,
   do_pack: do_pack,
-  StructFieldType: StructFieldType
+  StructFieldType: StructFieldType,
+  formatArrayJson: formatArrayJson
 });
 
 var structEval = eval;
@@ -3499,6 +3627,34 @@ var manager$1;
 
 class JSONError extends Error {};
 
+function printCodeLines(code) {
+  let lines = code.split(String.fromCharCode(10));
+  let buf = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = "" + (i + 1) + ":";
+
+    while (line.length < 3) {
+      line += " ";
+    }
+
+    line += " " + lines[i];
+    buf += line + String.fromCharCode(10);
+  }
+
+  return buf;
+}
+
+function printEvalError(code) {
+  console.log("== CODE ==");
+  console.log(printCodeLines(code));
+
+  /* Node suppresses the real error line number in error.stack for some reason.
+   * Get it by retriggering the error for real.
+   */
+  eval(code);
+}
+
 function setTruncateDollarSign(v) {
   truncateDollarSign = !!v;
 }
@@ -3608,6 +3764,7 @@ class STRUCT {
 
     this.jsonUseColors = true;
     this.jsonBuf = '';
+    this.formatCtx = {};
   }
 
   static inherit(child, parent, structName = child.name) {
@@ -3619,7 +3776,7 @@ class STRUCT {
 
     let stt = struct_parse.parse(parent.STRUCT);
     let code = structName + "{\n";
-    code += STRUCT.fmt_struct(stt, true);
+    code += STRUCT.fmt_struct(stt, true, false, true);
     return code;
   }
 
@@ -3694,7 +3851,7 @@ class STRUCT {
     return this.fmt_struct(stt, internal_only, no_helper_js);
   }
 
-  static fmt_struct(stt, internal_only, no_helper_js) {
+  static fmt_struct(stt, internal_only, no_helper_js, addComments) {
     if (internal_only === undefined)
       internal_only = false;
     if (no_helper_js === undefined)
@@ -3736,7 +3893,13 @@ class STRUCT {
       if (!no_helper_js && f.get !== undefined) {
         s += " | " + f.get.trim();
       }
-      s += ";\n";
+      s += ";";
+
+      if (addComments && f.comment.trim()) {
+        s += f.comment.trim();
+      }
+
+      s += "\n";
     }
     if (!internal_only)
       s += "}";
@@ -4415,7 +4578,9 @@ class STRUCT {
     }
   }
 
-  validateJSON(json, cls_or_struct_id, useInternalParser=true, useColors=true, consoleLogger=function(){console.log(...arguments);}, _abstractKey="_structName") {
+  validateJSON(json, cls_or_struct_id, useInternalParser = true, useColors = true, consoleLogger = function () {
+    console.log(...arguments);
+  }, _abstractKey                                        = "_structName") {
     if (cls_or_struct_id === undefined) {
       throw new Error(this.constructor.name + ".prototype.validateJSON: Expected at least two arguments");
     }
@@ -4450,7 +4615,7 @@ class STRUCT {
     return true;
   }
 
-  validateJSONIntern(json, cls_or_struct_id, _abstractKey="_structName") {
+  validateJSONIntern(json, cls_or_struct_id, _abstractKey = "_structName") {
     const keywords = this.constructor.keywords;
 
     let cls, stt;
@@ -4468,6 +4633,10 @@ class STRUCT {
     }
 
     stt = this.structs[cls.structName];
+
+    if (stt === undefined) {
+      throw new Error("unknown class " + cls);
+    }
 
     let fields = stt.fields;
     let flen = fields.length;
@@ -4487,7 +4656,7 @@ class STRUCT {
       if (f.name === 'this') {
         val = json;
         keyTestJson = {
-          "this" : json
+          "this": json
         };
 
         keys.add("this");
@@ -4498,7 +4667,7 @@ class STRUCT {
 
         tokinfo = json[TokSymbol] ? json[TokSymbol].fields[f.name] : undefined;
         if (!tokinfo) {
-          let f2 = fields[Math.max(i-1, 0)];
+          let f2 = fields[Math.max(i - 1, 0)];
           tokinfo = TokSymbol[TokSymbol] ? json[TokSymbol].fields[f2.name] : undefined;
         }
 
@@ -4645,13 +4814,83 @@ class STRUCT {
       return obj;
     }
   }
+
+  formatJSON_intern(json, stt, field, tlvl = 0) {
+    const keywords = this.constructor.keywords;
+    const addComments = this.formatCtx.addComments;
+
+    let s = '{';
+
+    if (addComments && field && field.comment.trim()) {
+      s += " " + field.comment.trim();
+    }
+
+    s += "\n";
+
+    for (let f of stt.fields) {
+      let value = json[f.name];
+
+      s += tab(tlvl + 1) + f.name + ": ";
+
+      s += sintern2.formatJSON(this, value, json, f, f.type, undefined, tlvl + 1);
+      s += ",";
+
+      let basetype = f.type.type;
+
+      if (ArrayTypes.has(basetype)) {
+        basetype = f.type.data.type.type;
+      }
+
+      const addComment = ValueTypes.has(basetype) && addComments && f.comment.trim();
+
+      if (addComment) {
+        s += " " + f.comment.trim();
+      }
+
+      s += "\n";
+    }
+
+    s += tab(tlvl) + "}";
+    return s;
+  }
+
+  formatJSON(json, cls, addComments = true, validate = true) {
+    const keywords = this.constructor.keywords;
+
+    let s = '';
+
+    if (validate) {
+      this.validateJSON(json, cls);
+    }
+
+    let stt = this.structs[cls.structName];
+
+    this.formatCtx = {
+      addComments,
+      validate
+    };
+
+    return this.formatJSON_intern(json, stt);
+  }
 };
 //$KEYWORD_CONFIG_END
 
 if (haveCodeGen) {
   var StructClass;
 
-  eval(code);
+  try {
+    eval(code);
+  } catch (error) {
+    printEvalError(code);
+  }
+
+  StructClass.keywords = {
+    name  : "structName",
+    script: "STRUCT",
+    load  : "loadSTRUCT",
+    from  : "fromSTRUCT",
+    new   : "newSTRUCT",
+  };
 
   STRUCT = StructClass;
 }
@@ -4691,11 +4930,26 @@ function deriveStructManager(keywords = {
     return NewSTRUCT;
   } else {
     var StructClass;
+    var _json_parser = jsonParser;
+    var _util = util$1;
 
     let code2 = code;
-    code2 = code2.replace(/\[keywords.script\]/g, keywords.script);
+    code2 = code2.replace(/\[keywords.script\]/g, "." + keywords.script);
+    code2 = code2.replace(/\[keywords.name\]/g, "." + keywords.name);
+    code2 = code2.replace(/\bjsonParser\b/g, "_json_parser");
+    code2 = code2.replace(/\butil\b/g, "_util");
 
-    eval(code2);
+    //console.log("\n\n");
+    //console.log(printCodeLines(code2));
+    //console.log("\n\n");
+
+    try {
+      eval(code2);
+    } catch (error) {
+      printEvalError(code2);
+    }
+
+    StructClass.keywords = keywords;
     return StructClass;
   }
 }
@@ -5048,7 +5302,7 @@ function consoleLogger() {
  * @param logger
  * @returns {*}
  */
-function validateJSON$1(json, cls, useInternalParser, printColors=true, logger=consoleLogger) {
+function validateJSON$1(json, cls, useInternalParser, printColors = true, logger = consoleLogger) {
   return manager$1.validateJSON(json, cls, useInternalParser, printColors, logger);
 }
 
@@ -5096,6 +5350,10 @@ function writeJSON(obj) {
   return manager$1.writeJSON(obj);
 }
 
+function formatJSON$1(json, cls, addComments = true, validate = true) {
+  return manager$1.formatJSON(json, cls, addComments, validate);
+}
+
 function readJSON(json, class_or_struct_id) {
   return manager$1.readJSON(json, class_or_struct_id);
 }
@@ -5109,6 +5367,7 @@ var nstructjs = /*#__PURE__*/Object.freeze({
   consoleLogger: consoleLogger,
   deriveStructManager: deriveStructManager,
   filehelper: struct_filehelper,
+  formatJSON: formatJSON$1,
   getEndian: getEndian,
   inherit: inherit$1,
   isRegistered: isRegistered,
@@ -8006,6 +8265,9 @@ function seed(n) {
 
 let smallstr_hashes = {};
 
+
+const MAXINT = Math.pow(2, 31) - 1;
+
 function strhash(str) {
   if (str.length <= 64) {
     let hash = smallstr_hashes[str];
@@ -8022,7 +8284,7 @@ function strhash(str) {
 
     hash = hash < 0 ? -hash : hash;
 
-    hash ^= (ch*524287 + 4323543) & ((1<<19) - 1);
+    hash ^= (ch*1103515245 + 12345) & MAXINT;
   }
 
   if (str.length <= 64) {
@@ -20417,7 +20679,7 @@ function dist_to_tri_v3_old(co, v1, v2, v3, no = undefined) {
     let dy2 = c[1] - b[1];
 
     let len = dx2*dx2 + dy2*dy2;
-    len = len > 0.000001 ? 1.0 / len : 0.0;
+    len = len > 0.000001 ? 1.0/len : 0.0;
 
     dx2 *= len;
     dy2 *= len;
@@ -21599,10 +21861,8 @@ function corner_normal(vec1, vec2, width) {
 }
 
 //test_segment is optional, true
-function line_line_isect(v1, v2, v3, v4, test_segment) {
-  test_segment = test_segment === undefined ? true : test_segment;
-
-  if (!line_line_cross(v1, v2, v3, v4)) {
+function line_line_isect(v1, v2, v3, v4, test_segment = true) {
+  if (test_segment && !line_line_cross(v1, v2, v3, v4)) {
     return undefined;
   }
 
@@ -23488,7 +23748,7 @@ let exports = {
   showPathsInToolTips: true,
 
   enableThemeAutoUpdate: true,
-  useNativeToolTips: false,
+  useNativeToolTips: true,
 
   loadConstants: function (args) {
     for (let k in args) {
@@ -25696,7 +25956,7 @@ class ToolOp extends EventHandler {
     return {};
   }
 
-  /** Returns a read-only map of input property values,
+  /** Returns a map of input property values,
    *  e.g. `let {prop1, prop2} = this.getValues()` */
   getInputs() {
     let ret = {};
@@ -28704,19 +28964,7 @@ class DataAPI extends ModelInterface {
     parserStack.cur--;
 
     if (ret !== undefined && ret.prop && ret.dpath && (ret.dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER)) {
-      let prop = ret.prop;
-
-      prop.ctx = ctx;
-      prop.datapath = inpath;
-      prop.dataref = ret.obj;
-
-      let newprop = getTempProp(prop.type);
-      prop.copyTo(newprop);
-
-      ret.dpath.propGetter.call(prop, newprop);
-      ret.prop = newprop;
-
-      prop.ctx = prop.datapath = prop.dataref = undefined;
+      ret.prop = this.getPropOverride(ctx, inpath, ret.dpath, ret.obj);
     }
 
     if (ret !== undefined && ret.prop && ret.dpath && ret.dpath.ui_name_get) {
@@ -28732,6 +28980,20 @@ class DataAPI extends ModelInterface {
     }
 
     return ret;
+  }
+
+  getPropOverride(ctx, path, dpath, obj, prop = dpath.data) {
+    prop.ctx = ctx;
+    prop.datapath = path;
+    prop.dataref = obj;
+
+    let newprop = getTempProp(prop.type);
+    prop.copyTo(newprop);
+
+    dpath.propGetter.call(prop, newprop);
+    prop.ctx = prop.datapath = prop.dataref = undefined;
+
+    return newprop;
   }
 
   /**
@@ -28874,6 +29136,10 @@ class DataAPI extends ModelInterface {
         }
       } else {
         prop = dpath.data;
+      }
+
+      if (prop && (dpath.flag & DataFlags.USE_CUSTOM_PROP_GETTER)) {
+        prop = this.getPropOverride(ctx, inpath, dpath, obj);
       }
 
       if (dpath.path.search(/\./) >= 0) {
@@ -36585,6 +36851,1516 @@ var html5_fileapi = /*#__PURE__*/Object.freeze({
   __proto__: null,
   saveFile: saveFile$1,
   loadFile: loadFile$1
+});
+
+/**
+ see doc_src/context.md
+ */
+
+let notifier = undefined;
+
+function setNotifier(cls) {
+  notifier = cls;
+}
+
+const ContextFlags = {
+  IS_VIEW : 1
+};
+
+class InheritFlag {
+  constructor(data) {
+    this.data = data;
+  }
+}
+
+let __idgen = 1;
+
+if (Symbol.ContextID === undefined) {
+  Symbol.ContextID = Symbol("ContextID");
+}
+
+if (Symbol.CachedDef === undefined) {
+  Symbol.CachedDef = Symbol("CachedDef");
+}
+
+const _ret_tmp = [undefined];
+
+const OverlayClasses = [];
+
+function makeDerivedOverlay(parent) {
+  return class ContextOverlay extends parent {
+    constructor(appstate) {
+      super(appstate);
+
+      this.ctx = undefined; //owning context
+      this._state = appstate;
+    }
+
+    get state() {
+      return this._state;
+    }
+
+    set state(state) {
+      this._state = state;
+    }
+
+    /*
+    Ugly hack, ui_lasttool.js saves
+    a DataStruct wrapping the most recently executed ToolOp
+    in this.state._last_tool.
+    */
+    get last_tool() {
+      return this.state._last_tool;
+    }
+
+
+    onRemove(have_new_file = false) {
+    }
+
+    copy() {
+      return new this.constructor(this._state);
+    }
+
+    validate() {
+      throw new Error("Implement me!");
+    }
+
+
+    //base classes override this
+    static contextDefine() {
+      throw new Error("implement me!");
+      return {
+        name: "",
+        flag: 0
+      }
+    }
+
+    //don't override this
+    static resolveDef() {
+      if (this.hasOwnProperty(Symbol.CachedDef)) {
+        return this[Symbol.CachedDef];
+      }
+
+      let def2 = Symbol.CachedDef = {};
+
+      let def = this.contextDefine();
+
+      if (def === undefined) {
+        def = {};
+      }
+
+      for (let k in def) {
+        def2[k] = def[k];
+      }
+
+      if (!("flag") in def) {
+        def2.flag = Context.inherit(0);
+      }
+
+      let parents = [];
+      let p = getClassParent(this);
+
+      while (p && p !== ContextOverlay) {
+        parents.push(p);
+        p = getClassParent(p);
+      }
+
+      if (def2.flag instanceof InheritFlag) {
+        let flag = def2.flag.data;
+        for (let p of parents) {
+          let def = p.contextDefine();
+
+          if (!def.flag) {
+            continue;
+          } else if (def.flag instanceof InheritFlag) {
+            flag |= def.flag.data;
+          } else {
+            flag |= def.flag;
+            //don't go past non-inheritable parents
+            break;
+          }
+        }
+
+        def2.flag = flag;
+      }
+
+      return def2;
+    }
+  };
+}
+
+const ContextOverlay = makeDerivedOverlay(Object);
+
+const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
+                                     "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
+                                     "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
+                                     "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
+
+class LockedContext {
+  constructor(ctx, noWarnings) {
+    this.props = {};
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+
+    this.noWarnings = noWarnings;
+
+    this.load(ctx);
+  }
+
+  toLocked() {
+    //just return itself
+    return this;
+  }
+
+  error() {
+    return this.ctx.error(...arguments);
+  }
+  warning() {
+    return this.ctx.warning(...arguments);
+  }
+  message() {
+    return this.ctx.message(...arguments);
+  }
+  progbar() {
+    return this.ctx.progbar(...arguments);
+  }
+
+  load(ctx) {
+    //let keys = util.getAllKeys(ctx);
+    let keys = ctx._props;
+
+    function wrapget(name) {
+      return function(ctx2, data) {
+        return ctx.loadProperty(ctx2, name, data);
+      }
+    }
+
+    for (let k of keys) {
+      let v;
+      if (k === "state" || k === "toolstack" || k === "api") {
+        continue;
+      }
+
+      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
+        continue;
+      }
+
+      try {
+        v = ctx[k];
+      } catch (error) {
+        if (config.DEBUG.contextSystem) {
+          console.warn("failed to look up property in context: ", k);
+        }
+        continue;
+      }
+
+      let data, getter;
+      let overlay = ctx.getOwningOverlay(k);
+
+      if (overlay === undefined) {
+        //property must no longer be used?
+        continue;
+      }
+
+      try {
+        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
+          data = overlay[k + "_save"]();
+          getter = overlay[k + "_load"];
+        } else {
+          data = ctx.saveProperty(k);
+          getter = wrapget(k);
+        }
+      } catch (error) {
+        //util.print_stack(error);
+        console.warn("Failed to save context property", k);
+        continue;
+      }
+
+      this.props[k] = {
+        data : data,
+        get  : getter
+      };
+    }
+
+    let defineProp = (name) => {
+      Object.defineProperty(this, name, {
+        get : function() {
+          let def = this.props[name];
+          return def.get(this.ctx, def.data)
+        }
+      });
+    };
+
+    for (let k in this.props) {
+      defineProp(k);
+    }
+
+    this.ctx = ctx;
+  }
+
+  setContext(ctx) {
+    this.ctx = ctx;
+
+    this.state = ctx.state;
+    this.api = ctx.api;
+    this.toolstack = ctx.toolstack;
+  }
+}
+
+let next_key = {};
+let idgen$1 = 1;
+
+class Context {
+  constructor(appstate) {
+    this.state = appstate;
+
+    this._props = new Set();
+    this._stack = [];
+    this._inside_map = {};
+  }
+
+  /** chrome's debug console corrupts this._inside_map,
+   this method fixes it*/
+  _fix() {
+    this._inside_map = {};
+  }
+
+  fix() {
+    this._fix();
+  }
+
+  error(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return notifier.error(state.screen, message, timeout);
+    }
+  }
+
+  warning(message, timeout=1500) {
+    let state = this.state;
+
+    console.warn(message);
+
+    if (state && state.screen) {
+      return notifier.warning(state.screen, message, timeout);
+    }
+  }
+
+  message(msg, timeout=1500) {
+    let state = this.state;
+
+    console.warn(msg);
+
+    if (state && state.screen) {
+      return notifier.message(state.screen, msg, timeout);
+    }
+  }
+
+  progbar(msg, perc=0.0, timeout=1500, id=msg) {
+    let state = this.state;
+
+    if (state && state.screen) {
+      //progbarNote(screen, msg, percent, color, timeout) {
+      return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
+    }
+  }
+
+  validateOverlays() {
+    let stack = this._stack;
+    let stack2 = [];
+
+    for (let i=0; i<stack.length; i++) {
+      if (stack[i].validate()) {
+        stack2.push(stack[i]);
+      }
+    }
+
+    this._stack = stack2;
+  }
+
+  hasOverlay(cls) {
+    return this.getOverlay(cls) !== undefined;
+  }
+
+  getOverlay(cls) {
+    for (let overlay of this._stack) {
+      if (overlay.constructor === cls) {
+        return overlay;
+      }
+    }
+  }
+
+  clear(have_new_file=false) {
+    for (let overlay of this._stack) {
+      overlay.onRemove(have_new_file);
+    }
+
+    this._stack = [];
+  }
+
+  //this is implemented by child classes
+  //it should load the same default overlays as in constructor
+  reset(have_new_file=false) {
+    this.clear(have_new_file);
+  }
+
+  //returns a new context with overriden properties
+  //unlike pushOverlay, overrides can be a simple object
+  override(overrides) {
+    if (overrides.copy === undefined) {
+      overrides.copy = function() {
+        return Object.assign({}, this);
+      };
+    }
+
+    let ctx = this.copy();
+    ctx.pushOverlay(overrides);
+    return ctx;
+  }
+
+  copy() {
+    let ret = new this.constructor(this.state);
+
+    for (let item of this._stack) {
+      ret.pushOverlay(item.copy());
+    }
+
+    return ret;
+  }
+
+  /**
+   Used by overlay property getters.  If returned,
+   the next overlay in the struct will have its getter used.
+
+   Example:
+
+   class overlay {
+      get scene() {
+        if (some_reason) {
+          return Context.super();
+        }
+
+        return something_else;
+      }
+    }
+   */
+  static super() {
+    return next_key;
+  }
+
+  /**
+   *
+   * saves a property into some kind of non-object-reference form
+   *
+   * */
+  saveProperty(key) {
+    //console.warn("Missing saveProperty implementation in Context; passing through values...", key)
+    return this[key];
+  }
+
+  /**
+   *
+   * lookup property based on saved data
+   *
+   * */
+  loadProperty(ctx, key, data) {
+    //console.warn("Missing loadProperty implementation in Context; passing through values...", key)
+    return data;
+  }
+
+  getOwningOverlay(name, _val_out) {
+    let inside_map = this._inside_map;
+    let stack = this._stack;
+
+    if (config.DEBUG.contextSystem) {
+      console.log(name, inside_map);
+    }
+
+    for (let i=stack.length-1; i >= 0; i--) {
+      let overlay = stack[i];
+      let ret = next_key;
+
+      if (overlay[Symbol.ContextID] === undefined) {
+        throw new Error("context corruption");
+      }
+
+      let ikey = overlay[Symbol.ContextID];
+
+      if (config.DEBUG.contextSystem) {
+        console.log(ikey, overlay);
+      }
+
+      //prevent infinite recursion
+      if (inside_map[ikey]) {
+        continue;
+      }
+
+      if (overlay.__allKeys.has(name)) {
+        if (config.DEBUG.contextSystem) {
+          console.log("getting value");
+        }
+
+        //Chrome's console messes this up
+
+        inside_map[ikey] = 1;
+
+        try {
+          ret = overlay[name];
+        } catch (error) {
+
+          inside_map[ikey] = 0;
+          throw error;
+        }
+
+        inside_map[ikey] = 0;
+      }
+
+      if (ret !== next_key) {
+        if (_val_out !== undefined) {
+          _val_out[0] = ret;
+        }
+        return overlay;
+      }
+    }
+
+    if (_val_out !== undefined) {
+      _val_out[0] = undefined;
+    }
+
+    return undefined;
+  }
+
+  ensureProperty(name) {
+    if (this.hasOwnProperty(name)) {
+      return;
+    }
+
+    this._props.add(name);
+
+    Object.defineProperty(this, name, {
+      get : function() {
+        let ret = _ret_tmp;
+        _ret_tmp[0] = undefined;
+
+        this.getOwningOverlay(name, ret);
+        return ret[0];
+      }, set : function() {
+        throw new Error("Cannot set ctx properties")
+      }
+    });
+  }
+
+  /**
+   * Returns a new context that doesn't
+   * contain any direct object references
+   * except for .state .datalib and .api, but
+   * instead uses those three to look up references
+   * on property access.
+   * */
+  toLocked() {
+    return new LockedContext(this);
+  }
+
+  pushOverlay(overlay) {
+    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
+      overlay[Symbol.ContextID] = idgen$1++;
+    }
+
+    let keys = new Set();
+    for (let key of getAllKeys(overlay)) {
+      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
+        keys.add(key);
+      }
+    }
+
+    overlay.ctx = this;
+
+    if (overlay.__allKeys === undefined) {
+      overlay.__allKeys = keys;
+    }
+
+    for (let k of keys) {
+      let bad = typeof k === "symbol" || excludedKeys.has(k);
+      bad = bad || (typeof k === "string" && k[0] === "_");
+      bad = bad || (typeof k === "string" && k.endsWith("_save"));
+      bad = bad || (typeof k === "string" && k.endsWith("_load"));
+
+      if (bad) {
+        continue;
+      }
+
+      this.ensureProperty(k);
+    }
+
+    if (this._stack.indexOf(overlay) >= 0) {
+      console.warn("Overlay already added once");
+      if (this._stack[this._stack.length-1] === overlay) {
+        console.warn("  Definitely an error, overlay is already at top of stack");
+        return;
+      }
+    }
+
+    this._stack.push(overlay);
+  }
+
+  popOverlay(overlay) {
+    if (overlay !== this._stack[this._stack.length-1]) {
+      console.warn("Context.popOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.pop();
+  }
+
+  removeOverlay(overlay) {
+    if (this._stack.indexOf(overlay) < 0) {
+      console.warn("Context.removeOverlay called in error", overlay);
+      return;
+    }
+
+    overlay.onRemove();
+    this._stack.remove(overlay);
+  }
+
+  static inherit(data) {
+    return new InheritFlag(data);
+  }
+
+  static register(cls) {
+    if (cls[Symbol.ContextID]) {
+      console.warn("Tried to register same class twice:", cls);
+      return;
+    }
+
+    cls[Symbol.ContextID] = __idgen++;
+    OverlayClasses.push(cls);
+  }
+}
+
+function test() {
+  function testInheritance() {
+    class Test0 extends ContextOverlay {
+      static contextDefine() {
+        return {
+          flag: 1
+        }
+      }
+    }
+
+    class Test1 extends Test0 {
+      static contextDefine() {
+        return {
+          flag: 2
+        }
+      }
+    }
+
+    class Test2 extends Test1 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(4)
+        }
+      }
+    }
+
+    class Test3 extends Test2 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(8)
+        }
+      }
+    }
+
+    class Test4 extends Test3 {
+      static contextDefine() {
+        return {
+          flag: Context.inherit(16)
+        }
+      }
+    }
+
+    return Test4.resolveDef().flag === 30;
+  }
+
+  return testInheritance();
+}
+
+if (!test()) {
+  throw new Error("Context test failed");
+}
+
+class Constraint {
+  constructor(name, func, klst, params, k=1.0) {
+    this.glst = [];
+    this.klst = klst;
+    this.k = k;
+    this.params = params;
+    this.name = name;
+
+    for (let ks of klst) {
+      this.glst.push(new Float64Array(ks.length));
+    }
+
+    this.df = 0.0005;
+    this.threshold = 0.0001;
+    this.func = func;
+
+    this.funcDv = null;
+  }
+
+  evaluate(no_dvs=false) {
+    let r1 = this.func(this.params);
+
+    if (this.funcDv) {
+      this.funcDv(this.params, this.glst);
+      return r1;
+    }
+
+    if (Math.abs(r1) < this.threshold)
+      return 0.0;
+
+    let df = this.df;
+
+    if (no_dvs)
+      return r1;
+
+    for (let i=0; i<this.klst.length; i++) {
+      let gs = this.glst[i];
+      let ks = this.klst[i];
+
+      for (let j=0; j<ks.length; j++) {
+        let orig = ks[j];
+        ks[j] += df;
+        let r2 = this.func(this.params);
+        ks[j] = orig;
+
+        gs[j] = (r2 - r1) / df;
+      }
+    }
+
+    return r1;
+  }
+}
+
+class Solver {
+  constructor() {
+    this.constraints = [];
+    this.gk = 0.99;
+    this.simple = false;
+    this.randCons = false;
+
+    /** stop when average constraint error falls below this */
+    this.threshold = 0.01;
+  }
+
+  add(con) {
+    this.constraints.push(con);
+  }
+
+  solveStep(gk=this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci=0; ci<cons.length; ci++ ){
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0)  {
+        continue;
+      }
+
+      r1 /= totgs;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          ks[j] += -r1*gs[j]*con.k*gk;
+        }
+      }
+    }
+
+    return err;
+  }
+
+  solveStepSimple(gk=this.gk) {
+    let err = 0.0;
+
+    let cons = this.constraints;
+    for (let ci=0; ci<cons.length; ci++ ){
+      let ri = ci;
+      if (this.randCons) {
+        ri = ~~(Math.random()*this.constraints.length*0.99999);
+      }
+
+      let con = cons[ri];
+
+      let r1 = con.evaluate();
+
+      if (r1 === 0.0)
+        continue;
+
+      err += Math.abs(r1);
+      let totgs = 0.0;
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          totgs += gs[j]*gs[j];
+        }
+      }
+
+      if (totgs === 0.0)  {
+        continue;
+      }
+
+      totgs = 0.0001 / Math.sqrt(totgs);
+
+      for (let i=0; i<con.klst.length; i++) {
+        let ks = con.klst[i], gs = con.glst[i];
+        for (let j=0; j<ks.length; j++) {
+          ks[j] += -totgs*gs[j]*con.k*gk;
+        }
+      }
+    }
+
+    return err;
+  }
+
+  solve(steps, gk=this.gk, printError=false) {
+    let err = 0.0;
+
+    for (let i=0; i<steps; i++) {
+      if (this.simple) {
+        err = this.solveStepSimple(gk);
+      } else {
+        err = this.solveStep(gk);
+      }
+
+
+      if (printError) {
+        console.warn("average error:", (err/this.constraints.length).toFixed(4));
+      }
+      if (err < this.threshold / this.constraints.length) {
+        break;
+      }
+    }
+
+    return err;
+  }
+}
+
+var solver = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  Constraint: Constraint,
+  Solver: Solver
+});
+
+"use strict";
+
+let idgen = 0;
+
+class PackNodeVertex extends Vector2$c {
+  constructor(node, co) {
+    super(co);
+
+    this.node = node;
+    this._id = idgen++;
+    this.edges = [];
+    this._absPos = new Vector2$c();
+  }
+
+  get absPos() {
+    this._absPos.load(this).add(this.node.pos);
+    return this._absPos;
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+class PackNode {
+  constructor() {
+    this.pos = new Vector2$c();
+    this.vel = new Vector2$c();
+    this.oldpos = new Vector2$c();
+    this._id = idgen++;
+    this.size = new Vector2$c();
+    this.verts = [];
+  }
+
+  [Symbol.keystr]() {
+    return this._id;
+  }
+}
+
+function copyGraph(nodes) {
+  let ret = [];
+  let idmap = {};
+
+  for (let n of nodes) {
+    let n2 = new PackNode();
+    n2._id = n._id;
+    n2.pos.load(n.pos);
+    n2.vel.load(n.vel);
+    n2.size.load(n.size);
+
+    n2.verts = [];
+    idmap[n2._id] = n2;
+
+    for (let v of n.verts) {
+      let v2 = new PackNodeVertex(n2, v);
+      v2._id = v._id;
+      idmap[v2._id] = v2;
+
+      n2.verts.push(v2);
+    }
+
+    ret.push(n2);
+  }
+
+  for (let n of nodes) {
+    for (let v of n.verts) {
+      let v2 = idmap[v._id];
+
+      for (let v3 of v.edges) {
+        v2.edges.push(idmap[v3._id]);
+      }
+    }
+  }
+
+  return ret;
+}
+
+function getCenter(nodes) {
+  let cent = new Vector2$c();
+
+  for (let n of nodes) {
+    cent.add(n.pos);
+  }
+
+  if (nodes.length === 0)
+    return cent;
+
+  cent.mulScalar(1.0 / nodes.length);
+
+  return cent;
+}
+
+function loadGraph(nodes, copy) {
+  let idmap = {};
+
+  for (let i=0; i<nodes.length; i++) {
+    nodes[i].pos.load(copy[i].pos);
+    nodes[i].oldpos.load(copy[i].oldpos);
+    nodes[i].vel.load(copy[i].vel);
+  }
+}
+
+function graphGetIslands(nodes) {
+  let islands = [];
+  let visit1 = new set$2();
+
+  let rec = (n, island) => {
+    island.push(n);
+    visit1.add(n);
+
+    for (let v of n.verts) {
+      for (let e of v.edges) {
+        let n2 = e.node;
+        if (n2 !== n && !visit1.has(n2)) {
+          rec(n2, island);
+        }
+      }
+    }
+  };
+
+  for (let n of nodes) {
+    if (visit1.has(n)) {
+      continue;
+    }
+
+    let island = [];
+    islands.push(island);
+    rec(n, island);
+  }
+
+  return islands;
+}
+
+function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
+  let margin = margin_or_args;
+  let speed = 1.0;
+
+  if (typeof margin === "object") {
+    let args = margin;
+
+    margin = args.margin ?? 15;
+    steps = args.steps ?? 10;
+    updateCb = args.updateCb;
+    speed = args.speed ?? 1.0;
+  }
+
+  let orignodes = nodes;
+  nodes = copyGraph(nodes);
+
+  let decay = 1.0;
+  let decayi = 0;
+
+
+  let min = new Vector2$c().addScalar(1e17);
+  let max = new Vector2$c().addScalar(-1e17);
+
+  let tmp = new Vector2$c();
+  for (let n of nodes) {
+    min.min(n.pos);
+    tmp.load(n.pos).add(n.size);
+    max.max(tmp);
+  }
+
+  let size = new Vector2$c(max).sub(min);
+
+  for (let n of nodes) {
+    n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
+    n.pos[1] += (Math.random()-0.5)*5.0/size[1]*speed;
+  }
+
+  let nodemap = {};
+  for (let n of nodes) {
+    n.vel.zero();
+    nodemap[n._id] = n;
+    for (let v of n.verts) {
+      nodemap[v._id] = v;
+    }
+  }
+
+  let visit = new set$2();
+  let verts = new set$2();
+  let isect = [];
+
+  let disableEdges = false;
+
+  function edge_c(params) {
+    let [v1, v2, restlen] = params;
+
+    if (disableEdges) return 0;
+
+    return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
+  }
+
+  let p1 = new Vector2$c();
+  let p2 = new Vector2$c();
+  let s1 = new Vector2$c();
+  let s2 = new Vector2$c();
+
+  function loadBoxes(n1, n2, margin1=margin) {
+    p1.load(n1.pos);
+    p2.load(n2.pos);
+    s1.load(n1.size);
+    s2.load(n2.size);
+
+    p1.subScalar(margin1);
+    p2.subScalar(margin1);
+    s1.addScalar(margin1*2.0);
+    s2.addScalar(margin1*2.0);
+  }
+
+  let disableArea = false;
+
+  function area_c(params) {
+    let [n1, n2] = params;
+
+    if (disableArea)
+      return 0.0;
+
+    loadBoxes(n1, n2);
+
+    let a1 = n1.size[0]*n1.size[1];
+    let a2 = n2.size[0]*n2.size[1];
+
+    return aabb_overlap_area(p1, s1, p2, s2);
+    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
+  }
+
+  let lasterr, besterr, best;
+  let err;
+
+  let islands = graphGetIslands(nodes);
+  let fakeVerts = [];
+  for (let island of islands) {
+    let n = island[0];
+    let fv = new PackNodeVertex(n);
+    fakeVerts.push(fv);
+  }
+
+  let solveStep1 = (gk=1.0) => {
+    let solver = new Solver();
+
+    isect.length = 0;
+    visit = new set$2();
+
+    if (fakeVerts.length > 1) {
+      for (let i=1; i<fakeVerts.length; i++) {
+        let v1 = fakeVerts[0];
+        let v2 = fakeVerts[i];
+
+        let rlen = 1.0;
+
+        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2, rlen]);
+        con.k = 0.25;
+        solver.add(con);
+      }
+    }
+
+    for (let n1 of nodes) {
+      for (let v of n1.verts) {
+        verts.add(v);
+        for (let v2 of v.edges) {
+          //hueristic to avoid adding same constraint twice
+          if (v2._id < v._id) continue;
+
+          let rlen = n1.size.vectorLength()*0.0;
+
+          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2, rlen]);
+          con.k = 1.0;
+          solver.add(con);
+        }
+      }
+
+      for (let n2 of nodes) {
+        if (n1 === n2) continue;
+        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
+        if (visit.has(key)) continue;
+
+        loadBoxes(n1, n2);
+        let area = aabb_overlap_area(p1, s1, p2, s2);
+
+        if (area > 0.01) {
+          let size = decay*(n1.size.vectorLength() + n2.size.vectorLength())*speed;
+          //*
+          n1.pos[0] += (Math.random() - 0.5)*size;
+          n1.pos[1] += (Math.random() - 0.5)*size;
+          n2.pos[0] += (Math.random() - 0.5)*size;
+          n2.pos[1] += (Math.random() - 0.5)*size;
+          //*/
+
+          isect.push([n1, n2]);
+          visit.add(key);
+        }
+      }
+
+      for (let [n1, n2] of isect) {
+        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
+        solver.add(con);
+        con.k = 1.0;
+      }
+    }
+
+    return solver;
+  };
+
+  let i = 1;
+  let solveStep = (gk=0.5) => {
+    let solver = solveStep1();
+
+    if (i % 40 === 0.0) {
+      let c1 = getCenter(nodes);
+
+      let rfac = 1000.0;
+
+      if (best) loadGraph(nodes, best);
+
+      for (let n of nodes) {
+        n.pos[0] += (Math.random() - 0.5) * rfac * speed;
+        n.pos[1] += (Math.random() - 0.5) * rfac * speed;
+        n.vel.zero();
+      }
+
+      let c2 = getCenter(nodes);
+      c1.sub(c2);
+
+      for (let n of nodes) {
+        n.pos.add(c1);
+      }
+    }
+
+    let err = 1e17;
+
+    for (let n of nodes) {
+      n.oldpos.load(n.pos);
+      n.pos.addFac(n.vel, 0.5);
+    }
+
+    disableEdges = false;
+    disableArea = true;
+    solver.solve(1, gk);
+
+    //solve so boxes don't overlap
+    disableEdges = true;
+    disableArea = false;
+
+    for (let j=0; j<10; j++) {
+      solver = solveStep1();
+      err = solver.solve(10, gk*speed);
+    }
+
+    for (let n of nodes) {
+      n.vel.load(n.pos).sub(n.oldpos);
+    }
+
+    //get error from edge constraints
+
+    disableEdges = false;
+    disableArea = true;
+
+    err = 0.0;
+    for (let con of solver.constraints) {
+      err += con.evaluate(true);
+    }
+
+    disableEdges = false;
+    disableArea = false;
+
+    /*
+    loadGraph(orignodes, nodes);
+    if (updateCb) {
+      updateCb();
+    }//*/
+
+    lasterr = err;
+
+    let add = Math.random()*besterr*Math.exp(-i*0.1);
+
+    if (besterr === undefined || err < besterr+add) {
+      best = copyGraph(nodes);
+      besterr = err;
+    }
+
+    i++;
+
+    return err;
+  };
+
+
+  for (let j=0; j<steps; j++) {
+    solveStep();
+
+    decayi++;
+    decay = Math.exp(-decayi*0.1);
+  }
+
+  min.zero().addScalar(1e17);
+  max.zero().addScalar(-1e17);
+
+  for (let node of (best ? best : nodes)) {
+    min.min(node.pos);
+    p2.load(node.pos).add(node.size);
+    max.max(p2);
+  }
+
+  for (let node of (best ? best : nodes)) {
+    node.pos.sub(min);
+  }
+
+  loadGraph(orignodes, best ? best : nodes);
+
+  if (updateCb) {
+    if (nodes._timer !== undefined) {
+      window.clearInterval(nodes._timer);
+    }
+
+    nodes._timer = window.setInterval(() => {
+      let time = time_ms();
+
+      while (time_ms() - time < 50) {
+        let err = solveStep();
+      }
+
+      if (cconst.DEBUG.boxPacker) {
+        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
+      }
+
+      if (best) loadGraph(orignodes, best);
+
+      if (updateCb() === false) {
+        clearInterval(nodes._timer);
+        return;
+      }
+    }, 100);
+
+    let timer = nodes._timer;
+
+    return {
+      stop : () => {
+        if (best) loadGraph(nodes, best);
+
+        window.clearInterval(timer);
+        nodes._timer = undefined;
+      }
+    }
+  }
+}
+
+var controller = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  solver: solver,
+  util: util,
+  vectormath: vectormath,
+  math: math,
+  toolprop_abstract: toolprop_abstract,
+  html5_fileapi: html5_fileapi,
+  parseutil: parseutil,
+  config: ctrlconfig,
+  nstructjs: nstructjs,
+  lzstring: lzstring,
+  binomial: binomial,
+  setNotifier: setNotifier,
+  ContextFlags: ContextFlags,
+  OverlayClasses: OverlayClasses,
+  makeDerivedOverlay: makeDerivedOverlay,
+  ContextOverlay: ContextOverlay,
+  excludedKeys: excludedKeys,
+  LockedContext: LockedContext,
+  Context: Context,
+  test: test,
+  DataPathError: DataPathError,
+  DataFlags: DataFlags,
+  DataTypes: DataTypes,
+  getTempProp: getTempProp,
+  getVecClass: getVecClass,
+  isVecProperty: isVecProperty,
+  DataPath: DataPath,
+  StructFlags: StructFlags,
+  ListIface: ListIface,
+  ToolOpIface: ToolOpIface,
+  setImplementationClass: setImplementationClass,
+  registerTool: registerTool,
+  pathParser: pathParser,
+  pushReportName: pushReportName,
+  popReportName: popReportName,
+  DataList: DataList,
+  DataStruct: DataStruct,
+  DataAPI: DataAPI,
+  initSimpleController: initSimpleController,
+  getDataPathToolOp: getDataPathToolOp,
+  setDataPathToolOp: setDataPathToolOp,
+  ModelInterface: ModelInterface,
+  DataPathSetOp: DataPathSetOp,
+  ToolClasses: ToolClasses,
+  setContextClass: setContextClass,
+  ToolFlags: ToolFlags$1,
+  UndoFlags: UndoFlags$1,
+  setDefaultUndoHandlers: setDefaultUndoHandlers,
+  ToolPropertyCache: ToolPropertyCache,
+  SavedToolDefaults: SavedToolDefaults,
+  ToolOp: ToolOp,
+  MacroLink: MacroLink,
+  MacroClasses: MacroClasses,
+  ToolMacro: ToolMacro,
+  ToolStack: ToolStack,
+  buildToolSysAPI: buildToolSysAPI,
+  PropTypes: PropTypes$8,
+  PropFlags: PropFlags$3,
+  isNumber: isNumber,
+  NumberConstraintsBase: NumberConstraintsBase,
+  IntegerConstraints: IntegerConstraints,
+  FloatConstrinats: FloatConstrinats,
+  NumberConstraints: NumberConstraints,
+  PropSubTypes: PropSubTypes$3,
+  setPropTypes: setPropTypes,
+  customPropertyTypes: customPropertyTypes,
+  PropClasses: PropClasses,
+  get defaultRadix () { return defaultRadix; },
+  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
+  ToolProperty: ToolProperty$1,
+  FloatArrayProperty: FloatArrayProperty,
+  StringProperty: StringProperty,
+  NumProperty: NumProperty,
+  _NumberPropertyBase: _NumberPropertyBase,
+  IntProperty: IntProperty,
+  ReportProperty: ReportProperty,
+  BoolProperty: BoolProperty,
+  FloatProperty: FloatProperty,
+  EnumKeyPair: EnumKeyPair,
+  EnumProperty: EnumProperty$9,
+  FlagProperty: FlagProperty,
+  VecPropertyBase: VecPropertyBase,
+  Vec2Property: Vec2Property,
+  Vec3Property: Vec3Property,
+  Vec4Property: Vec4Property,
+  QuatProperty: QuatProperty,
+  Mat4Property: Mat4Property,
+  ListProperty: ListProperty,
+  StringSetProperty: StringSetProperty,
+  Curve1DProperty: Curve1DProperty,
+  ToolPaths: ToolPaths,
+  buildParser: buildParser,
+  Parser: Parser,
+  parseToolPath: parseToolPath,
+  testToolParser: testToolParser,
+  initToolPaths: initToolPaths,
+  CurveConstructors: CurveConstructors,
+  CURVE_VERSION: CURVE_VERSION,
+  CurveFlags: CurveFlags,
+  TangentModes: TangentModes,
+  getCurve: getCurve,
+  CurveTypeData: CurveTypeData,
+  evalHermiteTable: evalHermiteTable,
+  genHermiteTable: genHermiteTable,
+  SplineTemplates: SplineTemplates,
+  SplineTemplateIcons: SplineTemplateIcons,
+  mySafeJSONStringify: mySafeJSONStringify,
+  mySafeJSONParse: mySafeJSONParse,
+  Curve1D: Curve1D,
+  EulerOrders: EulerOrders,
+  BaseVector: BaseVector,
+  F64BaseVector: F64BaseVector,
+  F32BaseVector: F32BaseVector,
+  Vector4: Vector4$2,
+  Vector3: Vector3$2,
+  Vector2: Vector2$c,
+  Quat: Quat,
+  Matrix4: Matrix4$2,
+  quad_bilinear: quad_bilinear,
+  ClosestModes: ClosestModes,
+  AbstractCurve: AbstractCurve,
+  ClosestCurveRets: ClosestCurveRets,
+  closestPoint: closestPoint,
+  normal_poly: normal_poly,
+  dihedral_v3_sqr: dihedral_v3_sqr,
+  tet_volume: tet_volume,
+  calc_projection_axes: calc_projection_axes,
+  aabb_isect_line_3d: aabb_isect_line_3d,
+  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
+  barycentric_v2: barycentric_v2,
+  closest_point_on_quad: closest_point_on_quad,
+  closest_point_on_tri: closest_point_on_tri,
+  dist_to_tri_v3_old: dist_to_tri_v3_old,
+  dist_to_tri_v3: dist_to_tri_v3,
+  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
+  tri_area: tri_area,
+  aabb_overlap_area: aabb_overlap_area,
+  aabb_isect_2d: aabb_isect_2d,
+  aabb_isect_3d: aabb_isect_3d,
+  aabb_intersect_2d: aabb_intersect_2d,
+  aabb_intersect_3d: aabb_intersect_3d,
+  aabb_union: aabb_union,
+  aabb_union_2d: aabb_union_2d,
+  feps: feps,
+  COLINEAR: COLINEAR,
+  LINECROSS: LINECROSS,
+  COLINEAR_ISECT: COLINEAR_ISECT,
+  SQRT2: SQRT2,
+  FEPS_DATA: FEPS_DATA,
+  FEPS: FEPS,
+  get FLOAT_MIN () { return FLOAT_MIN; },
+  get FLOAT_MAX () { return FLOAT_MAX; },
+  Matrix4UI: Matrix4UI,
+  get_rect_points: get_rect_points,
+  get_rect_lines: get_rect_lines,
+  simple_tri_aabb_isect: simple_tri_aabb_isect,
+  MinMax: MinMax,
+  winding_axis: winding_axis,
+  winding: winding,
+  inrect_2d: inrect_2d,
+  aabb_isect_line_2d: aabb_isect_line_2d,
+  expand_rect2d: expand_rect2d,
+  expand_line: expand_line,
+  colinear: colinear,
+  corner_normal: corner_normal,
+  line_line_isect: line_line_isect,
+  line_line_cross: line_line_cross,
+  point_in_aabb_2d: point_in_aabb_2d,
+  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
+  point_in_aabb: point_in_aabb,
+  aabb_sphere_isect: aabb_sphere_isect,
+  aabb_sphere_dist: aabb_sphere_dist,
+  point_in_tri: point_in_tri,
+  convex_quad: convex_quad,
+  isNum: isNum,
+  normal_tri: normal_tri,
+  normal_quad: normal_quad,
+  normal_quad_old: normal_quad_old,
+  line_isect: line_isect,
+  dist_to_line_2d: dist_to_line_2d,
+  dist_to_line_sqr: dist_to_line_sqr,
+  dist_to_line: dist_to_line,
+  clip_line_w: clip_line_w,
+  closest_point_on_line: closest_point_on_line,
+  circ_from_line_tan: circ_from_line_tan,
+  circ_from_line_tan_2d: circ_from_line_tan_2d,
+  get_tri_circ: get_tri_circ,
+  gen_circle: gen_circle,
+  rot2d: rot2d,
+  makeCircleMesh: makeCircleMesh,
+  minmax_verts: minmax_verts,
+  unproject: unproject,
+  project: project,
+  get_boundary_winding: get_boundary_winding,
+  PlaneOps: PlaneOps,
+  isect_ray_plane: isect_ray_plane,
+  _old_isect_ray_plane: _old_isect_ray_plane,
+  mesh_find_tangent: mesh_find_tangent,
+  Mat4Stack: Mat4Stack,
+  trilinear_v3: trilinear_v3,
+  point_in_hex: point_in_hex,
+  trilinear_co: trilinear_co,
+  trilinear_co2: trilinear_co2,
+  tri_angles: tri_angles,
+  rgb_to_hsv: rgb_to_hsv,
+  hsv_to_rgb: hsv_to_rgb,
+  cmyk_to_rgb: cmyk_to_rgb,
+  rgb_to_cmyk: rgb_to_cmyk,
+  PackNodeVertex: PackNodeVertex,
+  PackNode: PackNode,
+  graphGetIslands: graphGetIslands,
+  graphPack: graphPack,
+  Constraint: Constraint,
+  Solver: Solver,
+  modalstack: modalstack$1,
+  singleMouseEvent: singleMouseEvent,
+  isLeftClick: isLeftClick,
+  DoubleClickHandler: DoubleClickHandler,
+  isMouseDown: isMouseDown,
+  pathDebugEvent: pathDebugEvent,
+  eventWasTouch: eventWasTouch,
+  copyEvent: copyEvent,
+  _setScreenClass: _setScreenClass,
+  _setModalAreaClass: _setModalAreaClass,
+  pushPointerModal: pushPointerModal,
+  pushModalLight: pushModalLight,
+  popModalLight: popModalLight,
+  haveModal: haveModal,
+  keymap_latin_1: keymap_latin_1,
+  keymap: keymap$4,
+  reverse_keymap: reverse_keymap,
+  HotKey: HotKey,
+  KeyMap: KeyMap
 });
 
 "use strict";
@@ -53415,1516 +55191,6 @@ class LastToolPanel extends ColumnFrame {
   }}
 }
 UIBase$f.internalRegister(LastToolPanel);
-
-class Constraint {
-  constructor(name, func, klst, params, k=1.0) {
-    this.glst = [];
-    this.klst = klst;
-    this.k = k;
-    this.params = params;
-    this.name = name;
-
-    for (let ks of klst) {
-      this.glst.push(new Float64Array(ks.length));
-    }
-
-    this.df = 0.0005;
-    this.threshold = 0.0001;
-    this.func = func;
-
-    this.funcDv = null;
-  }
-
-  evaluate(no_dvs=false) {
-    let r1 = this.func(this.params);
-
-    if (this.funcDv) {
-      this.funcDv(this.params, this.glst);
-      return r1;
-    }
-
-    if (Math.abs(r1) < this.threshold)
-      return 0.0;
-
-    let df = this.df;
-
-    if (no_dvs)
-      return r1;
-
-    for (let i=0; i<this.klst.length; i++) {
-      let gs = this.glst[i];
-      let ks = this.klst[i];
-
-      for (let j=0; j<ks.length; j++) {
-        let orig = ks[j];
-        ks[j] += df;
-        let r2 = this.func(this.params);
-        ks[j] = orig;
-
-        gs[j] = (r2 - r1) / df;
-      }
-    }
-
-    return r1;
-  }
-}
-
-class Solver {
-  constructor() {
-    this.constraints = [];
-    this.gk = 0.99;
-    this.simple = false;
-    this.randCons = false;
-
-    /** stop when average constraint error falls below this */
-    this.threshold = 0.01;
-  }
-
-  add(con) {
-    this.constraints.push(con);
-  }
-
-  solveStep(gk=this.gk) {
-    let err = 0.0;
-
-    let cons = this.constraints;
-    for (let ci=0; ci<cons.length; ci++ ){
-      let ri = ci;
-      if (this.randCons) {
-        ri = ~~(Math.random()*this.constraints.length*0.99999);
-      }
-
-      let con = cons[ri];
-
-      let r1 = con.evaluate();
-
-      if (r1 === 0.0)
-        continue;
-
-      err += Math.abs(r1);
-      let totgs = 0.0;
-
-      for (let i=0; i<con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
-          totgs += gs[j]*gs[j];
-        }
-      }
-
-      if (totgs === 0.0)  {
-        continue;
-      }
-
-      r1 /= totgs;
-
-      for (let i=0; i<con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
-          ks[j] += -r1*gs[j]*con.k*gk;
-        }
-      }
-    }
-
-    return err;
-  }
-
-  solveStepSimple(gk=this.gk) {
-    let err = 0.0;
-
-    let cons = this.constraints;
-    for (let ci=0; ci<cons.length; ci++ ){
-      let ri = ci;
-      if (this.randCons) {
-        ri = ~~(Math.random()*this.constraints.length*0.99999);
-      }
-
-      let con = cons[ri];
-
-      let r1 = con.evaluate();
-
-      if (r1 === 0.0)
-        continue;
-
-      err += Math.abs(r1);
-      let totgs = 0.0;
-
-      for (let i=0; i<con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
-          totgs += gs[j]*gs[j];
-        }
-      }
-
-      if (totgs === 0.0)  {
-        continue;
-      }
-
-      totgs = 0.0001 / Math.sqrt(totgs);
-
-      for (let i=0; i<con.klst.length; i++) {
-        let ks = con.klst[i], gs = con.glst[i];
-        for (let j=0; j<ks.length; j++) {
-          ks[j] += -totgs*gs[j]*con.k*gk;
-        }
-      }
-    }
-
-    return err;
-  }
-
-  solve(steps, gk=this.gk, printError=false) {
-    let err = 0.0;
-
-    for (let i=0; i<steps; i++) {
-      if (this.simple) {
-        err = this.solveStepSimple(gk);
-      } else {
-        err = this.solveStep(gk);
-      }
-
-
-      if (printError) {
-        console.warn("average error:", (err/this.constraints.length).toFixed(4));
-      }
-      if (err < this.threshold / this.constraints.length) {
-        break;
-      }
-    }
-
-    return err;
-  }
-}
-
-var solver = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Constraint: Constraint,
-  Solver: Solver
-});
-
-"use strict";
-
-let idgen$1 = 0;
-
-class PackNodeVertex extends Vector2$c {
-  constructor(node, co) {
-    super(co);
-
-    this.node = node;
-    this._id = idgen$1++;
-    this.edges = [];
-    this._absPos = new Vector2$c();
-  }
-
-  get absPos() {
-    this._absPos.load(this).add(this.node.pos);
-    return this._absPos;
-  }
-
-  [Symbol.keystr]() {
-    return this._id;
-  }
-}
-
-class PackNode {
-  constructor() {
-    this.pos = new Vector2$c();
-    this.vel = new Vector2$c();
-    this.oldpos = new Vector2$c();
-    this._id = idgen$1++;
-    this.size = new Vector2$c();
-    this.verts = [];
-  }
-
-  [Symbol.keystr]() {
-    return this._id;
-  }
-}
-
-function copyGraph(nodes) {
-  let ret = [];
-  let idmap = {};
-
-  for (let n of nodes) {
-    let n2 = new PackNode();
-    n2._id = n._id;
-    n2.pos.load(n.pos);
-    n2.vel.load(n.vel);
-    n2.size.load(n.size);
-
-    n2.verts = [];
-    idmap[n2._id] = n2;
-
-    for (let v of n.verts) {
-      let v2 = new PackNodeVertex(n2, v);
-      v2._id = v._id;
-      idmap[v2._id] = v2;
-
-      n2.verts.push(v2);
-    }
-
-    ret.push(n2);
-  }
-
-  for (let n of nodes) {
-    for (let v of n.verts) {
-      let v2 = idmap[v._id];
-
-      for (let v3 of v.edges) {
-        v2.edges.push(idmap[v3._id]);
-      }
-    }
-  }
-
-  return ret;
-}
-
-function getCenter(nodes) {
-  let cent = new Vector2$c();
-
-  for (let n of nodes) {
-    cent.add(n.pos);
-  }
-
-  if (nodes.length === 0)
-    return cent;
-
-  cent.mulScalar(1.0 / nodes.length);
-
-  return cent;
-}
-
-function loadGraph(nodes, copy) {
-  let idmap = {};
-
-  for (let i=0; i<nodes.length; i++) {
-    nodes[i].pos.load(copy[i].pos);
-    nodes[i].oldpos.load(copy[i].oldpos);
-    nodes[i].vel.load(copy[i].vel);
-  }
-}
-
-function graphGetIslands(nodes) {
-  let islands = [];
-  let visit1 = new set$2();
-
-  let rec = (n, island) => {
-    island.push(n);
-    visit1.add(n);
-
-    for (let v of n.verts) {
-      for (let e of v.edges) {
-        let n2 = e.node;
-        if (n2 !== n && !visit1.has(n2)) {
-          rec(n2, island);
-        }
-      }
-    }
-  };
-
-  for (let n of nodes) {
-    if (visit1.has(n)) {
-      continue;
-    }
-
-    let island = [];
-    islands.push(island);
-    rec(n, island);
-  }
-
-  return islands;
-}
-
-function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
-  let margin = margin_or_args;
-  let speed = 1.0;
-
-  if (typeof margin === "object") {
-    let args = margin;
-
-    margin = args.margin ?? 15;
-    steps = args.steps ?? 10;
-    updateCb = args.updateCb;
-    speed = args.speed ?? 1.0;
-  }
-
-  let orignodes = nodes;
-  nodes = copyGraph(nodes);
-
-  let decay = 1.0;
-  let decayi = 0;
-
-
-  let min = new Vector2$c().addScalar(1e17);
-  let max = new Vector2$c().addScalar(-1e17);
-
-  let tmp = new Vector2$c();
-  for (let n of nodes) {
-    min.min(n.pos);
-    tmp.load(n.pos).add(n.size);
-    max.max(tmp);
-  }
-
-  let size = new Vector2$c(max).sub(min);
-
-  for (let n of nodes) {
-    n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
-    n.pos[1] += (Math.random()-0.5)*5.0/size[1]*speed;
-  }
-
-  let nodemap = {};
-  for (let n of nodes) {
-    n.vel.zero();
-    nodemap[n._id] = n;
-    for (let v of n.verts) {
-      nodemap[v._id] = v;
-    }
-  }
-
-  let visit = new set$2();
-  let verts = new set$2();
-  let isect = [];
-
-  let disableEdges = false;
-
-  function edge_c(params) {
-    let [v1, v2, restlen] = params;
-
-    if (disableEdges) return 0;
-
-    return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
-  }
-
-  let p1 = new Vector2$c();
-  let p2 = new Vector2$c();
-  let s1 = new Vector2$c();
-  let s2 = new Vector2$c();
-
-  function loadBoxes(n1, n2, margin1=margin) {
-    p1.load(n1.pos);
-    p2.load(n2.pos);
-    s1.load(n1.size);
-    s2.load(n2.size);
-
-    p1.subScalar(margin1);
-    p2.subScalar(margin1);
-    s1.addScalar(margin1*2.0);
-    s2.addScalar(margin1*2.0);
-  }
-
-  let disableArea = false;
-
-  function area_c(params) {
-    let [n1, n2] = params;
-
-    if (disableArea)
-      return 0.0;
-
-    loadBoxes(n1, n2);
-
-    let a1 = n1.size[0]*n1.size[1];
-    let a2 = n2.size[0]*n2.size[1];
-
-    return aabb_overlap_area(p1, s1, p2, s2);
-    return (aabb_overlap_area(p1, s1, p2, s2) / (a1+a2));
-  }
-
-  let lasterr, besterr, best;
-  let err;
-
-  let islands = graphGetIslands(nodes);
-  let fakeVerts = [];
-  for (let island of islands) {
-    let n = island[0];
-    let fv = new PackNodeVertex(n);
-    fakeVerts.push(fv);
-  }
-
-  let solveStep1 = (gk=1.0) => {
-    let solver = new Solver();
-
-    isect.length = 0;
-    visit = new set$2();
-
-    if (fakeVerts.length > 1) {
-      for (let i=1; i<fakeVerts.length; i++) {
-        let v1 = fakeVerts[0];
-        let v2 = fakeVerts[i];
-
-        let rlen = 1.0;
-
-        let con = new Constraint("edge_c", edge_c, [v1.node.pos, v2.node.pos], [v1, v2, rlen]);
-        con.k = 0.25;
-        solver.add(con);
-      }
-    }
-
-    for (let n1 of nodes) {
-      for (let v of n1.verts) {
-        verts.add(v);
-        for (let v2 of v.edges) {
-          //hueristic to avoid adding same constraint twice
-          if (v2._id < v._id) continue;
-
-          let rlen = n1.size.vectorLength()*0.0;
-
-          let con = new Constraint("edge_c", edge_c, [v.node.pos, v2.node.pos], [v, v2, rlen]);
-          con.k = 1.0;
-          solver.add(con);
-        }
-      }
-
-      for (let n2 of nodes) {
-        if (n1 === n2) continue;
-        let key = Math.min(n1._id, n2._id) + ":" + Math.max(n1._id, n2._id);
-        if (visit.has(key)) continue;
-
-        loadBoxes(n1, n2);
-        let area = aabb_overlap_area(p1, s1, p2, s2);
-
-        if (area > 0.01) {
-          let size = decay*(n1.size.vectorLength() + n2.size.vectorLength())*speed;
-          //*
-          n1.pos[0] += (Math.random() - 0.5)*size;
-          n1.pos[1] += (Math.random() - 0.5)*size;
-          n2.pos[0] += (Math.random() - 0.5)*size;
-          n2.pos[1] += (Math.random() - 0.5)*size;
-          //*/
-
-          isect.push([n1, n2]);
-          visit.add(key);
-        }
-      }
-
-      for (let [n1, n2] of isect) {
-        let con = new Constraint("area_c", area_c, [n1.pos, n2.pos], [n1, n2]);
-        solver.add(con);
-        con.k = 1.0;
-      }
-    }
-
-    return solver;
-  };
-
-  let i = 1;
-  let solveStep = (gk=0.5) => {
-    let solver = solveStep1();
-
-    if (i % 40 === 0.0) {
-      let c1 = getCenter(nodes);
-
-      let rfac = 1000.0;
-
-      if (best) loadGraph(nodes, best);
-
-      for (let n of nodes) {
-        n.pos[0] += (Math.random() - 0.5) * rfac * speed;
-        n.pos[1] += (Math.random() - 0.5) * rfac * speed;
-        n.vel.zero();
-      }
-
-      let c2 = getCenter(nodes);
-      c1.sub(c2);
-
-      for (let n of nodes) {
-        n.pos.add(c1);
-      }
-    }
-
-    let err = 1e17;
-
-    for (let n of nodes) {
-      n.oldpos.load(n.pos);
-      n.pos.addFac(n.vel, 0.5);
-    }
-
-    disableEdges = false;
-    disableArea = true;
-    solver.solve(1, gk);
-
-    //solve so boxes don't overlap
-    disableEdges = true;
-    disableArea = false;
-
-    for (let j=0; j<10; j++) {
-      solver = solveStep1();
-      err = solver.solve(10, gk*speed);
-    }
-
-    for (let n of nodes) {
-      n.vel.load(n.pos).sub(n.oldpos);
-    }
-
-    //get error from edge constraints
-
-    disableEdges = false;
-    disableArea = true;
-
-    err = 0.0;
-    for (let con of solver.constraints) {
-      err += con.evaluate(true);
-    }
-
-    disableEdges = false;
-    disableArea = false;
-
-    /*
-    loadGraph(orignodes, nodes);
-    if (updateCb) {
-      updateCb();
-    }//*/
-
-    lasterr = err;
-
-    let add = Math.random()*besterr*Math.exp(-i*0.1);
-
-    if (besterr === undefined || err < besterr+add) {
-      best = copyGraph(nodes);
-      besterr = err;
-    }
-
-    i++;
-
-    return err;
-  };
-
-
-  for (let j=0; j<steps; j++) {
-    solveStep();
-
-    decayi++;
-    decay = Math.exp(-decayi*0.1);
-  }
-
-  min.zero().addScalar(1e17);
-  max.zero().addScalar(-1e17);
-
-  for (let node of (best ? best : nodes)) {
-    min.min(node.pos);
-    p2.load(node.pos).add(node.size);
-    max.max(p2);
-  }
-
-  for (let node of (best ? best : nodes)) {
-    node.pos.sub(min);
-  }
-
-  loadGraph(orignodes, best ? best : nodes);
-
-  if (updateCb) {
-    if (nodes._timer !== undefined) {
-      window.clearInterval(nodes._timer);
-    }
-
-    nodes._timer = window.setInterval(() => {
-      let time = time_ms();
-
-      while (time_ms() - time < 50) {
-        let err = solveStep();
-      }
-
-      if (cconst.DEBUG.boxPacker) {
-        console.log("err", (besterr / nodes.length).toFixed(2), (lasterr / nodes.length).toFixed(2), "isects", isect.length);
-      }
-
-      if (best) loadGraph(orignodes, best);
-
-      if (updateCb() === false) {
-        clearInterval(nodes._timer);
-        return;
-      }
-    }, 100);
-
-    let timer = nodes._timer;
-
-    return {
-      stop : () => {
-        if (best) loadGraph(nodes, best);
-
-        window.clearInterval(timer);
-        nodes._timer = undefined;
-      }
-    }
-  }
-}
-
-/**
- see doc_src/context.md
- */
-
-let notifier = undefined;
-
-function setNotifier(cls) {
-  notifier = cls;
-}
-
-const ContextFlags = {
-  IS_VIEW : 1
-};
-
-class InheritFlag {
-  constructor(data) {
-    this.data = data;
-  }
-}
-
-let __idgen = 1;
-
-if (Symbol.ContextID === undefined) {
-  Symbol.ContextID = Symbol("ContextID");
-}
-
-if (Symbol.CachedDef === undefined) {
-  Symbol.CachedDef = Symbol("CachedDef");
-}
-
-const _ret_tmp = [undefined];
-
-const OverlayClasses = [];
-
-function makeDerivedOverlay(parent) {
-  return class ContextOverlay extends parent {
-    constructor(appstate) {
-      super(appstate);
-
-      this.ctx = undefined; //owning context
-      this._state = appstate;
-    }
-
-    get state() {
-      return this._state;
-    }
-
-    set state(state) {
-      this._state = state;
-    }
-
-    /*
-    Ugly hack, ui_lasttool.js saves
-    a DataStruct wrapping the most recently executed ToolOp
-    in this.state._last_tool.
-    */
-    get last_tool() {
-      return this.state._last_tool;
-    }
-
-
-    onRemove(have_new_file = false) {
-    }
-
-    copy() {
-      return new this.constructor(this._state);
-    }
-
-    validate() {
-      throw new Error("Implement me!");
-    }
-
-
-    //base classes override this
-    static contextDefine() {
-      throw new Error("implement me!");
-      return {
-        name: "",
-        flag: 0
-      }
-    }
-
-    //don't override this
-    static resolveDef() {
-      if (this.hasOwnProperty(Symbol.CachedDef)) {
-        return this[Symbol.CachedDef];
-      }
-
-      let def2 = Symbol.CachedDef = {};
-
-      let def = this.contextDefine();
-
-      if (def === undefined) {
-        def = {};
-      }
-
-      for (let k in def) {
-        def2[k] = def[k];
-      }
-
-      if (!("flag") in def) {
-        def2.flag = Context.inherit(0);
-      }
-
-      let parents = [];
-      let p = getClassParent(this);
-
-      while (p && p !== ContextOverlay) {
-        parents.push(p);
-        p = getClassParent(p);
-      }
-
-      if (def2.flag instanceof InheritFlag) {
-        let flag = def2.flag.data;
-        for (let p of parents) {
-          let def = p.contextDefine();
-
-          if (!def.flag) {
-            continue;
-          } else if (def.flag instanceof InheritFlag) {
-            flag |= def.flag.data;
-          } else {
-            flag |= def.flag;
-            //don't go past non-inheritable parents
-            break;
-          }
-        }
-
-        def2.flag = flag;
-      }
-
-      return def2;
-    }
-  };
-}
-
-const ContextOverlay = makeDerivedOverlay(Object);
-
-const excludedKeys = new Set(["onRemove", "reset", "toString", "_fix",
-                                     "valueOf", "copy", "next", "save", "load", "clear", "hasOwnProperty",
-                                     "toLocaleString", "constructor", "propertyIsEnumerable", "isPrototypeOf",
-                                     "state", "saveProperty", "loadProperty", "getOwningOverlay", "_props"]);
-
-class LockedContext {
-  constructor(ctx, noWarnings) {
-    this.props = {};
-
-    this.state = ctx.state;
-    this.api = ctx.api;
-    this.toolstack = ctx.toolstack;
-
-    this.noWarnings = noWarnings;
-
-    this.load(ctx);
-  }
-
-  toLocked() {
-    //just return itself
-    return this;
-  }
-
-  error() {
-    return this.ctx.error(...arguments);
-  }
-  warning() {
-    return this.ctx.warning(...arguments);
-  }
-  message() {
-    return this.ctx.message(...arguments);
-  }
-  progbar() {
-    return this.ctx.progbar(...arguments);
-  }
-
-  load(ctx) {
-    //let keys = util.getAllKeys(ctx);
-    let keys = ctx._props;
-
-    function wrapget(name) {
-      return function(ctx2, data) {
-        return ctx.loadProperty(ctx2, name, data);
-      }
-    }
-
-    for (let k of keys) {
-      let v;
-      if (k === "state" || k === "toolstack" || k === "api") {
-        continue;
-      }
-
-      if (typeof k === "string" && (k.endsWith("_save") || k.endsWith("_load"))) {
-        continue;
-      }
-
-      try {
-        v = ctx[k];
-      } catch (error) {
-        if (config.DEBUG.contextSystem) {
-          console.warn("failed to look up property in context: ", k);
-        }
-        continue;
-      }
-
-      let data, getter;
-      let overlay = ctx.getOwningOverlay(k);
-
-      if (overlay === undefined) {
-        //property must no longer be used?
-        continue;
-      }
-
-      try {
-        if (typeof k === "string" && (overlay[k + "_save"] && overlay[k + "_load"])) {
-          data = overlay[k + "_save"]();
-          getter = overlay[k + "_load"];
-        } else {
-          data = ctx.saveProperty(k);
-          getter = wrapget(k);
-        }
-      } catch (error) {
-        //util.print_stack(error);
-        console.warn("Failed to save context property", k);
-        continue;
-      }
-
-      this.props[k] = {
-        data : data,
-        get  : getter
-      };
-    }
-
-    let defineProp = (name) => {
-      Object.defineProperty(this, name, {
-        get : function() {
-          let def = this.props[name];
-          return def.get(this.ctx, def.data)
-        }
-      });
-    };
-
-    for (let k in this.props) {
-      defineProp(k);
-    }
-
-    this.ctx = ctx;
-  }
-
-  setContext(ctx) {
-    this.ctx = ctx;
-
-    this.state = ctx.state;
-    this.api = ctx.api;
-    this.toolstack = ctx.toolstack;
-  }
-}
-
-let next_key = {};
-let idgen = 1;
-
-class Context {
-  constructor(appstate) {
-    this.state = appstate;
-
-    this._props = new Set();
-    this._stack = [];
-    this._inside_map = {};
-  }
-
-  /** chrome's debug console corrupts this._inside_map,
-   this method fixes it*/
-  _fix() {
-    this._inside_map = {};
-  }
-
-  fix() {
-    this._fix();
-  }
-
-  error(message, timeout=1500) {
-    let state = this.state;
-
-    console.warn(message);
-
-    if (state && state.screen) {
-      return notifier.error(state.screen, message, timeout);
-    }
-  }
-
-  warning(message, timeout=1500) {
-    let state = this.state;
-
-    console.warn(message);
-
-    if (state && state.screen) {
-      return notifier.warning(state.screen, message, timeout);
-    }
-  }
-
-  message(msg, timeout=1500) {
-    let state = this.state;
-
-    console.warn(msg);
-
-    if (state && state.screen) {
-      return notifier.message(state.screen, msg, timeout);
-    }
-  }
-
-  progbar(msg, perc=0.0, timeout=1500, id=msg) {
-    let state = this.state;
-
-    if (state && state.screen) {
-      //progbarNote(screen, msg, percent, color, timeout) {
-      return notifier.progbarNote(state.screen, msg, perc, "green", timeout, id);
-    }
-  }
-
-  validateOverlays() {
-    let stack = this._stack;
-    let stack2 = [];
-
-    for (let i=0; i<stack.length; i++) {
-      if (stack[i].validate()) {
-        stack2.push(stack[i]);
-      }
-    }
-
-    this._stack = stack2;
-  }
-
-  hasOverlay(cls) {
-    return this.getOverlay(cls) !== undefined;
-  }
-
-  getOverlay(cls) {
-    for (let overlay of this._stack) {
-      if (overlay.constructor === cls) {
-        return overlay;
-      }
-    }
-  }
-
-  clear(have_new_file=false) {
-    for (let overlay of this._stack) {
-      overlay.onRemove(have_new_file);
-    }
-
-    this._stack = [];
-  }
-
-  //this is implemented by child classes
-  //it should load the same default overlays as in constructor
-  reset(have_new_file=false) {
-    this.clear(have_new_file);
-  }
-
-  //returns a new context with overriden properties
-  //unlike pushOverlay, overrides can be a simple object
-  override(overrides) {
-    if (overrides.copy === undefined) {
-      overrides.copy = function() {
-        return Object.assign({}, this);
-      };
-    }
-
-    let ctx = this.copy();
-    ctx.pushOverlay(overrides);
-    return ctx;
-  }
-
-  copy() {
-    let ret = new this.constructor(this.state);
-
-    for (let item of this._stack) {
-      ret.pushOverlay(item.copy());
-    }
-
-    return ret;
-  }
-
-  /**
-   Used by overlay property getters.  If returned,
-   the next overlay in the struct will have its getter used.
-
-   Example:
-
-   class overlay {
-      get scene() {
-        if (some_reason) {
-          return Context.super();
-        }
-
-        return something_else;
-      }
-    }
-   */
-  static super() {
-    return next_key;
-  }
-
-  /**
-   *
-   * saves a property into some kind of non-object-reference form
-   *
-   * */
-  saveProperty(key) {
-    //console.warn("Missing saveProperty implementation in Context; passing through values...", key)
-    return this[key];
-  }
-
-  /**
-   *
-   * lookup property based on saved data
-   *
-   * */
-  loadProperty(ctx, key, data) {
-    //console.warn("Missing loadProperty implementation in Context; passing through values...", key)
-    return data;
-  }
-
-  getOwningOverlay(name, _val_out) {
-    let inside_map = this._inside_map;
-    let stack = this._stack;
-
-    if (config.DEBUG.contextSystem) {
-      console.log(name, inside_map);
-    }
-
-    for (let i=stack.length-1; i >= 0; i--) {
-      let overlay = stack[i];
-      let ret = next_key;
-
-      if (overlay[Symbol.ContextID] === undefined) {
-        throw new Error("context corruption");
-      }
-
-      let ikey = overlay[Symbol.ContextID];
-
-      if (config.DEBUG.contextSystem) {
-        console.log(ikey, overlay);
-      }
-
-      //prevent infinite recursion
-      if (inside_map[ikey]) {
-        continue;
-      }
-
-      if (overlay.__allKeys.has(name)) {
-        if (config.DEBUG.contextSystem) {
-          console.log("getting value");
-        }
-
-        //Chrome's console messes this up
-
-        inside_map[ikey] = 1;
-
-        try {
-          ret = overlay[name];
-        } catch (error) {
-
-          inside_map[ikey] = 0;
-          throw error;
-        }
-
-        inside_map[ikey] = 0;
-      }
-
-      if (ret !== next_key) {
-        if (_val_out !== undefined) {
-          _val_out[0] = ret;
-        }
-        return overlay;
-      }
-    }
-
-    if (_val_out !== undefined) {
-      _val_out[0] = undefined;
-    }
-
-    return undefined;
-  }
-
-  ensureProperty(name) {
-    if (this.hasOwnProperty(name)) {
-      return;
-    }
-
-    this._props.add(name);
-
-    Object.defineProperty(this, name, {
-      get : function() {
-        let ret = _ret_tmp;
-        _ret_tmp[0] = undefined;
-
-        this.getOwningOverlay(name, ret);
-        return ret[0];
-      }, set : function() {
-        throw new Error("Cannot set ctx properties")
-      }
-    });
-  }
-
-  /**
-   * Returns a new context that doesn't
-   * contain any direct object references
-   * except for .state .datalib and .api, but
-   * instead uses those three to look up references
-   * on property access.
-   * */
-  toLocked() {
-    return new LockedContext(this);
-  }
-
-  pushOverlay(overlay) {
-    if (!overlay.hasOwnProperty(Symbol.ContextID)) {
-      overlay[Symbol.ContextID] = idgen++;
-    }
-
-    let keys = new Set();
-    for (let key of getAllKeys(overlay)) {
-      if (!excludedKeys.has(key) && !(typeof key === "string" && key[0] === "_")) {
-        keys.add(key);
-      }
-    }
-
-    overlay.ctx = this;
-
-    if (overlay.__allKeys === undefined) {
-      overlay.__allKeys = keys;
-    }
-
-    for (let k of keys) {
-      let bad = typeof k === "symbol" || excludedKeys.has(k);
-      bad = bad || (typeof k === "string" && k[0] === "_");
-      bad = bad || (typeof k === "string" && k.endsWith("_save"));
-      bad = bad || (typeof k === "string" && k.endsWith("_load"));
-
-      if (bad) {
-        continue;
-      }
-
-      this.ensureProperty(k);
-    }
-
-    if (this._stack.indexOf(overlay) >= 0) {
-      console.warn("Overlay already added once");
-      if (this._stack[this._stack.length-1] === overlay) {
-        console.warn("  Definitely an error, overlay is already at top of stack");
-        return;
-      }
-    }
-
-    this._stack.push(overlay);
-  }
-
-  popOverlay(overlay) {
-    if (overlay !== this._stack[this._stack.length-1]) {
-      console.warn("Context.popOverlay called in error", overlay);
-      return;
-    }
-
-    overlay.onRemove();
-    this._stack.pop();
-  }
-
-  removeOverlay(overlay) {
-    if (this._stack.indexOf(overlay) < 0) {
-      console.warn("Context.removeOverlay called in error", overlay);
-      return;
-    }
-
-    overlay.onRemove();
-    this._stack.remove(overlay);
-  }
-
-  static inherit(data) {
-    return new InheritFlag(data);
-  }
-
-  static register(cls) {
-    if (cls[Symbol.ContextID]) {
-      console.warn("Tried to register same class twice:", cls);
-      return;
-    }
-
-    cls[Symbol.ContextID] = __idgen++;
-    OverlayClasses.push(cls);
-  }
-}
-
-function test() {
-  function testInheritance() {
-    class Test0 extends ContextOverlay {
-      static contextDefine() {
-        return {
-          flag: 1
-        }
-      }
-    }
-
-    class Test1 extends Test0 {
-      static contextDefine() {
-        return {
-          flag: 2
-        }
-      }
-    }
-
-    class Test2 extends Test1 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(4)
-        }
-      }
-    }
-
-    class Test3 extends Test2 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(8)
-        }
-      }
-    }
-
-    class Test4 extends Test3 {
-      static contextDefine() {
-        return {
-          flag: Context.inherit(16)
-        }
-      }
-    }
-
-    return Test4.resolveDef().flag === 30;
-  }
-
-  return testInheritance();
-}
-
-if (!test()) {
-  throw new Error("Context test failed");
-}
-
-var controller = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  solver: solver,
-  util: util,
-  vectormath: vectormath,
-  math: math,
-  toolprop_abstract: toolprop_abstract,
-  html5_fileapi: html5_fileapi,
-  parseutil: parseutil,
-  config: ctrlconfig,
-  nstructjs: nstructjs,
-  lzstring: lzstring,
-  binomial: binomial,
-  setNotifier: setNotifier,
-  ContextFlags: ContextFlags,
-  OverlayClasses: OverlayClasses,
-  makeDerivedOverlay: makeDerivedOverlay,
-  ContextOverlay: ContextOverlay,
-  excludedKeys: excludedKeys,
-  LockedContext: LockedContext,
-  Context: Context,
-  test: test,
-  DataPathError: DataPathError,
-  DataFlags: DataFlags,
-  DataTypes: DataTypes,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  isVecProperty: isVecProperty,
-  DataPath: DataPath,
-  StructFlags: StructFlags,
-  ListIface: ListIface,
-  ToolOpIface: ToolOpIface,
-  setImplementationClass: setImplementationClass,
-  registerTool: registerTool,
-  pathParser: pathParser,
-  pushReportName: pushReportName,
-  popReportName: popReportName,
-  DataList: DataList,
-  DataStruct: DataStruct,
-  DataAPI: DataAPI,
-  initSimpleController: initSimpleController,
-  getDataPathToolOp: getDataPathToolOp,
-  setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
-  DataPathSetOp: DataPathSetOp,
-  ToolClasses: ToolClasses,
-  setContextClass: setContextClass,
-  ToolFlags: ToolFlags$1,
-  UndoFlags: UndoFlags$1,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  ToolPropertyCache: ToolPropertyCache,
-  SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp,
-  MacroLink: MacroLink,
-  MacroClasses: MacroClasses,
-  ToolMacro: ToolMacro,
-  ToolStack: ToolStack,
-  buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes$8,
-  PropFlags: PropFlags$3,
-  isNumber: isNumber,
-  NumberConstraintsBase: NumberConstraintsBase,
-  IntegerConstraints: IntegerConstraints,
-  FloatConstrinats: FloatConstrinats,
-  NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$3,
-  setPropTypes: setPropTypes,
-  customPropertyTypes: customPropertyTypes,
-  PropClasses: PropClasses,
-  get defaultRadix () { return defaultRadix; },
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  ToolProperty: ToolProperty$1,
-  FloatArrayProperty: FloatArrayProperty,
-  StringProperty: StringProperty,
-  NumProperty: NumProperty,
-  _NumberPropertyBase: _NumberPropertyBase,
-  IntProperty: IntProperty,
-  ReportProperty: ReportProperty,
-  BoolProperty: BoolProperty,
-  FloatProperty: FloatProperty,
-  EnumKeyPair: EnumKeyPair,
-  EnumProperty: EnumProperty$9,
-  FlagProperty: FlagProperty,
-  VecPropertyBase: VecPropertyBase,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  QuatProperty: QuatProperty,
-  Mat4Property: Mat4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  Curve1DProperty: Curve1DProperty,
-  ToolPaths: ToolPaths,
-  buildParser: buildParser,
-  Parser: Parser,
-  parseToolPath: parseToolPath,
-  testToolParser: testToolParser,
-  initToolPaths: initToolPaths,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  getCurve: getCurve,
-  CurveTypeData: CurveTypeData,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
-  SplineTemplates: SplineTemplates,
-  SplineTemplateIcons: SplineTemplateIcons,
-  mySafeJSONStringify: mySafeJSONStringify,
-  mySafeJSONParse: mySafeJSONParse,
-  Curve1D: Curve1D,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  Vector4: Vector4$2,
-  Vector3: Vector3$2,
-  Vector2: Vector2$c,
-  Quat: Quat,
-  Matrix4: Matrix4$2,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  get FLOAT_MIN () { return FLOAT_MIN; },
-  get FLOAT_MAX () { return FLOAT_MAX; },
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  mesh_find_tangent: mesh_find_tangent,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  rgb_to_hsv: rgb_to_hsv,
-  hsv_to_rgb: hsv_to_rgb,
-  cmyk_to_rgb: cmyk_to_rgb,
-  rgb_to_cmyk: rgb_to_cmyk,
-  PackNodeVertex: PackNodeVertex,
-  PackNode: PackNode,
-  graphGetIslands: graphGetIslands,
-  graphPack: graphPack,
-  Constraint: Constraint,
-  Solver: Solver,
-  modalstack: modalstack$1,
-  singleMouseEvent: singleMouseEvent,
-  isLeftClick: isLeftClick,
-  DoubleClickHandler: DoubleClickHandler,
-  isMouseDown: isMouseDown,
-  pathDebugEvent: pathDebugEvent,
-  eventWasTouch: eventWasTouch,
-  copyEvent: copyEvent,
-  _setScreenClass: _setScreenClass,
-  _setModalAreaClass: _setModalAreaClass,
-  pushPointerModal: pushPointerModal,
-  pushModalLight: pushModalLight,
-  popModalLight: popModalLight,
-  haveModal: haveModal,
-  keymap_latin_1: keymap_latin_1,
-  keymap: keymap$4,
-  reverse_keymap: reverse_keymap,
-  HotKey: HotKey,
-  KeyMap: KeyMap
-});
 
 const mimeMap = {
   ".js"  : "application/javascript",

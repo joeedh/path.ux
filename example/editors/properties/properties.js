@@ -1,10 +1,12 @@
-import {UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
-        PackNode, PackNodeVertex, Vector2, graphPack, exportTheme} from '../../pathux.js';
+import {
+  UIBase, PackFlags, Icons, nstructjs, KeyMap, HotKey, util,
+  PackNode, PackNodeVertex, Vector2, graphPack, exportTheme
+} from '../../pathux.js';
 
 import {Editor} from "../editor_base.js";
 import {loadPage} from '../../../scripts/xmlpage/xmlpage.js';
 import {loadUIData, saveUIData} from '../../../scripts/core/ui_base.js';
-import {platform} from '../../../scripts/platforms/platform.js';
+import {getPlatformAsync} from '../../../scripts/platforms/platform.js';
 
 let graphNodes;
 let solveTimer;
@@ -20,16 +22,14 @@ export class PropsEditor extends Editor {
   }
 
   getKeyMaps() {
-    return [
-
-    ]
+    return []
   }
 
   _save_page_data() {
     if (!this.container) {
       return '';
     }
-    
+
     let s = saveUIData(this.container, 'page');
     return s;
   }
@@ -41,10 +41,11 @@ export class PropsEditor extends Editor {
       return;
     }
 
+    getPlatformAsync().then((platform) => {
+      let url = platform.resolveURL("./page.xml")
 
-    let url = platform.resolveURL("./page.xml")
-
-    loadPage(this.ctx, url).then(container => {
+      return loadPage(this.ctx, url);
+    }).then(container => {
       this.container.add(container);
       this.container.flushUpdate();
 
@@ -76,7 +77,7 @@ export class PropsEditor extends Editor {
 
         console.log(theme);
 
-        let blob = new Blob([theme], {mime : "application/javascript"});
+        let blob = new Blob([theme], {mime: "application/javascript"});
         let url = URL.createObjectURL(blob);
 
         console.log("url", url);
@@ -117,7 +118,7 @@ export class PropsEditor extends Editor {
 
       console.log(theme);
 
-      let blob = new Blob([theme], {mime : "application/javascript"});
+      let blob = new Blob([theme], {mime: "application/javascript"});
       let url = URL.createObjectURL(blob);
 
       console.log("url", url);
@@ -170,11 +171,11 @@ export class PropsEditor extends Editor {
 
     tview.item("One");
     tview.item("Two");
-    let t = tview.item("Three", {icon : Icons.FILE});
+    let t = tview.item("Three", {icon: Icons.FILE});
     //t.button("Yay", () => {});
     //t.label("Label");
 
-    t = t.item("Four", {icon : Icons.FILE});
+    t = t.item("Four", {icon: Icons.FILE});
     t.item("4.5");
 
     let row = UIBase.createElement("rowframe-x");
@@ -187,9 +188,9 @@ export class PropsEditor extends Editor {
 
     //t.button("Yay2", () => {});
     t = t.item("Five");
-    tview.item("Six", {icon : Icons.UNDO});
-    tview.item("Six", {icon : Icons.REDO});
-    tview.item("Six", {icon : Icons.UNDO});
+    tview.item("Six", {icon: Icons.UNDO});
+    tview.item("Six", {icon: Icons.REDO});
+    tview.item("Six", {icon: Icons.UNDO});
 
     if (this.ctx) {
       this.flushUpdate();
@@ -214,20 +215,20 @@ export class PropsEditor extends Editor {
     size /= count;
     size = Math.sqrt(size)*0.75;
 
-    for (let i=0; i<count; i++) {
+    for (let i = 0; i < count; i++) {
       let n = new PackNode();
       n.pos[0] = 0;
       n.pos[1] = 0;
 
-      n.size[0] = (rand.random()*0.5+0.5)*size;
-      n.size[1] = (rand.random()*0.5+0.5)*size;
+      n.size[0] = (rand.random()*0.5 + 0.5)*size;
+      n.size[1] = (rand.random()*0.5 + 0.5)*size;
 
-      for (let i=0; i<2; i++) {
+      for (let i = 0; i < 2; i++) {
         let scount = rand.random()*8;
         let x = i ? n.size[0] : 0;
         let y = 0, socksize = Math.min(20, n.size[1]/scount);
 
-        for (let j=0; j<scount; j++) {
+        for (let j = 0; j < scount; j++) {
           let v = new PackNodeVertex(n, [x, y]);
           v.side = i;
           n.verts.push(v);
@@ -241,6 +242,7 @@ export class PropsEditor extends Editor {
     }
 
     let ri;
+
     function randitem(array) {
       ri = ~~(Math.random()*array.length*0.99999);
       return array[ri];
@@ -250,12 +252,12 @@ export class PropsEditor extends Editor {
 
     let linkcount = count*2.5*(rand.random()*0.5 + 0.5);
 
-    for (let i=0; i<linkcount; i++) {
+    for (let i = 0; i < linkcount; i++) {
       //let n1 = randitem(nodes), n2 = randitem(nodes);
-      let ri = i % nodes.length;
-      ri = ~~(rand.random() * nodes.length * 0.99999);
+      let ri = i%nodes.length;
+      ri = ~~(rand.random()*nodes.length*0.99999);
 
-      let ri2 = (ri + 1) % nodes.length;
+      let ri2 = (ri + 1)%nodes.length;
       if (rand.random() > 0.8) {
         ri2 = ~~(rand.random()*nodes.length*0.99999);
       }
@@ -314,7 +316,7 @@ export class PropsEditor extends Editor {
 
     if (!graphNodes) {
       this.buildGraphPackNodes(canvas.width*canvas.height);
-      graphPack(graphNodes.nodes, {steps : 2, margin});
+      graphPack(graphNodes.nodes, {steps: 2, margin});
     }
 
     let {nodes} = graphNodes;
@@ -332,7 +334,7 @@ export class PropsEditor extends Editor {
       g.translate(canvas.width*0.5, canvas.height*0.5);
       g.scale(scale, scale);
       g.translate(-canvas.width*0.5, -canvas.height*0.5);
-      g.lineWidth = 2.0 / scale;
+      g.lineWidth = 2.0/scale;
 
       g.beginPath();
       g.strokeStyle = "black";
@@ -354,7 +356,7 @@ export class PropsEditor extends Editor {
             let dx2 = -s2*d, dy2 = 0.0;
 
             g.moveTo(p1[0], p1[1]);
-            g.bezierCurveTo(p1[0]+dx1, p1[1]+dy1, p2[0]+dx2, p2[1]+dy2, p2[0], p2[1]);
+            g.bezierCurveTo(p1[0] + dx1, p1[1] + dy1, p2[0] + dx2, p2[1] + dy2, p2[0], p2[1]);
             //g.lineTo(p2[0], p2[1]);
           }
         }
@@ -395,12 +397,12 @@ export class PropsEditor extends Editor {
 
     strip.button("Reset", () => {
       nodes = this.buildGraphPackNodes(canvas.width*canvas.height).nodes;
-      graphPack(graphNodes.nodes, {steps : 22, margin});
+      graphPack(graphNodes.nodes, {steps: 22, margin});
       draw();
     });
 
     strip.button("Pack", () => {
-      graphPack(graphNodes.nodes, {steps : 22, margin});
+      graphPack(graphNodes.nodes, {steps: 22, margin});
 
       draw();
     });
@@ -461,12 +463,14 @@ col.prop(path, undefined, massSetPath);</pre>
 
   }
 
-  static define() {return {
-    tagname  : "props-editor-x",
-    areaname : "props",
-    uiname   : "Properties",
-    icon     : -1
-  }}
+  static define() {
+    return {
+      tagname : "props-editor-x",
+      areaname: "props",
+      uiname  : "Properties",
+      icon    : -1
+    }
+  }
 };
 Editor.register(PropsEditor);
 PropsEditor.STRUCT = nstructjs.STRUCT.inherit(PropsEditor, Editor) + `
