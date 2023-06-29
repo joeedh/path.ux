@@ -31342,7 +31342,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 function styleScrollBars$1(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -31725,6 +31725,8 @@ class UIBase$f extends HTMLElement {
       }
 
       this._description_final = s;
+    } else {
+      this._description_final = this._description;
     }
 
     if (exports.useNativeToolTips) {
@@ -36680,7 +36682,7 @@ class IconCheck extends IconButton {
           icon2 = rdef.prop.iconmap2[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
 
-          if (title === undefined && rdef.subkey.length > 0) {
+          if (!title && rdef.subkey.length > 0) {
             title = rdef.subkey;
             title = title[0].toUpperCase() + title.slice(1, title.length).toLowerCase();
           }
@@ -36697,7 +36699,7 @@ class IconCheck extends IconButton {
 
         if (icon !== undefined && icon !== this.icon)
           this.icon = icon;
-        if (title !== undefined)
+        if (title)
           this.description = title;
       }
     }
@@ -41111,6 +41113,7 @@ class Container extends UIBase$f {
 
       ret.iconsheet = iconSheetFromPackFlag(packflag);
       ret.packflag |= packflag;
+      ret.description = tooltip;
     } else {
       label = label === undefined ? def.uiname : label;
 
