@@ -110,6 +110,7 @@ if (prefix) {
 }
 
 import {ClassIdSymbol} from './ui_consts.js';
+
 export {ClassIdSymbol};
 
 let class_idgen = 1;
@@ -701,7 +702,7 @@ window._testSetScrollbars = function (color = "grey", contrast = 0.5, width = 15
 };
 
 export function styleScrollBars(color = "grey", color2 = undefined, contrast = 0.5, width = 15,
-                                border                                                    = "1px groove black", selector = "*") {
+                                border                                                    = "1px groove black", selector                     = "*") {
 
   if (!color2) {
     let c = css2color(color);
@@ -1084,6 +1085,8 @@ export class UIBase extends HTMLElement {
       }
 
       this._description_final = s;
+    } else {
+      this._description_final = this._description;
     }
 
     if (cconst.useNativeToolTips) {

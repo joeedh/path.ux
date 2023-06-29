@@ -907,7 +907,7 @@ export class IconCheck extends IconButton {
           icon2 = rdef.prop.iconmap2[rdef.subkey];
           title = rdef.prop.descriptions[rdef.subkey];
 
-          if (title === undefined && rdef.subkey.length > 0) {
+          if (!title && rdef.subkey.length > 0) {
             title = rdef.subkey;
             title = title[0].toUpperCase() + title.slice(1, title.length).toLowerCase();
           }
@@ -924,7 +924,7 @@ export class IconCheck extends IconButton {
 
         if (icon !== undefined && icon !== this.icon)
           this.icon = icon;
-        if (title !== undefined)
+        if (title)
           this.description = title;
       }
     }

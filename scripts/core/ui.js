@@ -900,6 +900,7 @@ export class Container extends ui_base.UIBase {
 
       ret.iconsheet = iconSheetFromPackFlag(packflag);
       ret.packflag |= packflag;
+      ret.description = tooltip;
     } else {
       label = label === undefined ? def.uiname : label;
 
