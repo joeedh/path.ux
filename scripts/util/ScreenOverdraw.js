@@ -121,7 +121,7 @@ export class Overdraw extends ui_base.UIBase {
     this.zindex_base = 1000;
   }
 
-  startNode(node, screen) {
+  startNode(node, screen, cssPosition="relative") {
     if (screen) {
       this.screen = screen;
       this.ctx = screen.ctx;
@@ -133,7 +133,8 @@ export class Overdraw extends ui_base.UIBase {
 
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "relative";
+    this.style["position"] = cssPosition;
+
     //this.style["left"] = "0px";
     //this.style["top"] = "0px";
     this.style["margin"] = this.style["padding"] = "0px";
