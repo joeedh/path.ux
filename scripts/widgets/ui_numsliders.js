@@ -1300,7 +1300,8 @@ export class NumSliderSimpleBase extends NumberSliderBase(UIBase) {
   update() {
     super.update();
 
-    let key = this.getDefault("width") + this.getDefault("height") + this.getDefault("SlideHeight");
+    let key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
+
     if (key !== this._last_slider_key) {
       this._last_slider_key = key;
 

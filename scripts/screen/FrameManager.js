@@ -1830,10 +1830,8 @@ export class Screen extends ui_base.UIBase {
 
   //XXX rename to regenScreenMesh
   regenBorders() {
-
     for (let b of this.screenborders) {
       b.remove();
-      HTMLElement.prototype.remove.call(b);
     }
 
     this._idmap = {};

@@ -7,6 +7,7 @@ export const DefaultTheme = {
     BoxDepressed        : 'rgba(130,130,130, 1)',
     BoxHighlight        : 'rgba(151,208,239, 1)',
     "flex-grow"         : "unset",
+    mobileSizeMultiplier: 1.0,
     DefaultText         : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
@@ -119,10 +120,10 @@ export const DefaultTheme = {
   },
 
   checkbox: {
-    CheckSide: 'left',
-    height   : 32,
-    width    : 32,
-    "background-color" : "rgb(168,168,168)",
+    CheckSide         : 'left',
+    height            : 32,
+    width             : 32,
+    "background-color": "rgb(168,168,168)",
   },
 
   colorfield: {
@@ -402,14 +403,17 @@ export const DefaultTheme = {
   },
 
   tabs: {
-    "movable-tabs"    : "true",
-    TabActive         : 'rgba(212,212,212, 1)',
-    TabBarRadius      : 6,
-    TabHighlight      : 'rgba(50, 50, 50, 0.2)',
-    TabInactive       : 'rgba(183,183,183, 1)',
-    TabStrokeStyle1   : 'rgba(0,0,0, 1)',
-    TabStrokeStyle2   : 'rgba(0,0,0, 1)',
-    TabText           : new CSSFont({
+    "focus-on-tab-click": "false",
+    "movable-tabs"      : "true",
+    TabPadding_mobile   : 20, //padding perpindicular to the label text
+    TabPadding          : 0,
+    TabActive           : 'rgba(212,212,212, 1)',
+    TabBarRadius        : 6,
+    TabHighlight        : 'rgba(50, 50, 50, 0.2)',
+    TabInactive         : 'rgba(183,183,183, 1)',
+    TabStrokeStyle1     : 'rgba(0,0,0, 1)',
+    TabStrokeStyle2     : 'rgba(0,0,0, 1)',
+    TabText             : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
       variant: 'bold',
@@ -417,7 +421,7 @@ export const DefaultTheme = {
       size   : 15,
       color  : 'rgba(0,0,0, 1)'
     }),
-    'background-color': 'rgba(222,222,222, 1)',
+    'background-color'  : 'rgba(222,222,222, 1)',
   },
 
   textbox: {

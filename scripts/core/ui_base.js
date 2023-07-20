@@ -947,7 +947,8 @@ export class UIBase extends HTMLElement {
     this.shadow.appendChild(style);
     this._init_done = false;
 
-    //make default touch handlers that send mouse events
+    /* Deprecated touch -> mouse event conversion,
+       use pointer events instead. */
     let do_touch = (e, type, button) => {
       if (haveModal()) {
         return;
@@ -3077,9 +3078,14 @@ export class UIBase extends HTMLElement {
     this.class_default_overrides[style][key] = val;
   }
 
-  _doMobileDefault(key, val) {
+  _doMobileDefault(key, val, obj) {
     if (!util.isMobile())
       return val;
+
+    const mobilekey = key + "_mobile";
+    if (obj && mobilekey in obj) {
+      return obj[mobilekey];
+    }
 
     key = key.toLowerCase();
     let ok = false;
@@ -3091,7 +3097,7 @@ export class UIBase extends HTMLElement {
       }
     }
 
-    if (ok) {
+    if (ok && theme.base.mobileSizeMultiplier) {
       val *= theme.base.mobileSizeMultiplier;
     }
 
@@ -3157,14 +3163,14 @@ export class UIBase extends HTMLElement {
   getDefault_intern(key, checkForMobile = true, defaultval = undefined) {
     if (this.my_default_overrides[key] !== undefined) {
       let v = this.my_default_overrides[key];
-      return checkForMobile ? this._doMobileDefault(key, v) : v;
+      return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
     }
 
     let p = this;
     while (p) {
       if (p.default_overrides[key] !== undefined) {
         let v = p.default_overrides[key];
-        checkForMobile ? this._doMobileDefault(key, v) : v;
+        checkForMobile ? this._doMobileDefault(key, v, p.default_overrides) : v;
       }
 
       p = p.parentWidget;
@@ -3230,12 +3236,15 @@ export class UIBase extends HTMLElement {
       return undefined;
     }
 
-    let val = undefined;
+    let themeobj;
+    let val;
     let p = this;
+
     while (p) {
       let def = p.class_default_overrides[style];
 
       if (def && (key in def)) {
+        themeobj = def;
         val = def[key];
         break;
       }
@@ -3257,21 +3266,25 @@ export class UIBase extends HTMLElement {
       }
 
       if (val === undefined && style in th && key in th[style]) {
+        themeobj = th[style];
         val = th[style][key];
       } else if (defaultval !== undefined) {
+        themeobj = undefined;
         val = defaultval;
       } else if (val === undefined) {
         let def = this.constructor.define();
 
         if (def.parentStyle && key in th[def.parentStyle]) {
           val = th[def.parentStyle][key];
+          themeobj = th[def.parentStyle];
         } else {
           val = th.base[key];
+          themeobj = th.base;
         }
       }
     }
 
-    return checkForMobile ? this._doMobileDefault(key, val) : val;
+    return checkForMobile ? this._doMobileDefault(key, val, themeobj) : val;
   }
 
   overrideTheme(theme) {
@@ -3600,24 +3613,6 @@ export function measureText(elem, text, canvas                    = undefined,
   }
 
   let ret = g.measureText(text);
-
-  if (ret && util.isMobile()) {
-    let ret2 = {};
-    let dpi = UIBase.getDPI();
-
-    for (let k in ret) {
-      let v = ret[k];
-
-      if (typeof v === "number") {
-        v *= dpi;
-        //v *= window.devicePixelRatio;
-      }
-
-      ret2[k] = v;
-    }
-
-    ret = ret2;
-  }
 
   if (size !== undefined) {
     //clear custom font for next time

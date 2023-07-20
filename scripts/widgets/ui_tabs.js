@@ -6,6 +6,7 @@ import * as ui_base from '../core/ui_base.js';
 import * as events from '../path-controller/util/events.js';
 import * as ui from '../core/ui.js';
 import {loadUIData, saveUIData} from '../core/ui_base.js';
+import {keymap} from '../path-controller/util/events.js';
 
 let UIBase      = ui_base.UIBase,
     PackFlags   = ui_base.PackFlags,
@@ -69,6 +70,7 @@ export class TabItem extends UIBase {
     this.abssize = new Vector2();
     this.abspos = new Vector2();
 
+
     this.addEventListener("pointerdown", (e) => {
       this.parentWidget.on_pointerdown(e);
     });
@@ -80,6 +82,21 @@ export class TabItem extends UIBase {
     this.addEventListener("pointerup", (e) => {
       this.parentWidget.on_pointerup(e);
     });
+
+    this.addEventListener("keydown", (e) => {
+      console.log(e.keyCode, this._id);
+
+      switch (e.keyCode) {
+        case keymap.Enter:
+        case keymap.Space:
+          this.parentWidget.setActive(this, e);
+          break;
+      }
+    });
+  }
+
+  init() {
+    this.tabIndex = 1;
   }
 
   static define() {
@@ -145,6 +162,12 @@ export class TabItem extends UIBase {
     let w = this.size[0]/dpi;
     let h = this.size[1]/dpi;
 
+    if (this == this.parentWidget.tabs.active) {
+      this.style["focus-border-width"] = "0px";
+    } else {
+      this.style["focus-border-width"] = "2px";
+    }
+
     this.style["background-color"] = "transparent";
 
     this.style["margin"] = this.style["padding"] = "0px";
@@ -157,6 +180,7 @@ export class TabItem extends UIBase {
     this.style["height"] = h + "px";
   }
 }
+
 UIBase.internalRegister(TabItem);
 
 export class ModalTabMove extends events.EventHandler {
@@ -207,12 +231,16 @@ export class ModalTabMove extends events.EventHandler {
 
   on_pointerleave(e) {
   }
+
   on_pointerenter(e) {
   }
+
   on_pointerenter(e) {
   }
+
   on_pointerstart(e) {
   }
+
   on_pointerend(e) {
   }
 
@@ -371,10 +399,10 @@ export class ModalTabMove extends events.EventHandler {
     if (debug) console.log(e.keyCode);
 
     switch (e.keyCode) {
-      case 27: //escape
-      case 32: //space
-      case 13: //enter
-      case 9: //tab
+      case keymap.Escape: //escape
+      case keymap.Space: //space
+      case keymap.Enter: //enter
+      case keymap.Tab: //tab
         this.finish();
         break;
     }
@@ -434,7 +462,7 @@ export class TabBar extends UIBase {
     });
   }
 
-  _doelement(e, mx, my){
+  _doelement(e, mx, my) {
     for (let tab of this.tabs) {
       let ok;
 
@@ -451,7 +479,7 @@ export class TabBar extends UIBase {
     }
   }
 
-  _domouse (e) {
+  _domouse(e) {
     let r = this.canvas.getClientRects()[0];
 
     let mx = e.x - r.x;
@@ -464,13 +492,13 @@ export class TabBar extends UIBase {
 
     this._doelement(e, mx, my);
 
-    const is_mdown = e.type === "mousedown";
+    const is_mdown = e.type === "mousedown" || e.type == "pointerdown";
     if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
       e.preventDefault();
     }
   }
 
-  _doclick (e) {
+  _doclick(e) {
     this._domouse(e);
 
     if (e.defaultPrevented) {
@@ -564,7 +592,7 @@ export class TabBar extends UIBase {
     this._tool = v;
   }
 
-  _startMove(tab=this.tabs.active, event, pointerId=event ? event.pointerId : undefined, pointerElem=tab) {
+  _startMove(tab = this.tabs.active, event, pointerId = event ? event.pointerId : undefined, pointerElem = tab) {
     if (this.movableTabs) {
       let e2 = tab.sendEvent("tabdragstart", event);
 
@@ -827,10 +855,12 @@ export class TabBar extends UIBase {
     let axis = this.horiz ? 0 : 1;
 
     let pad = 4*dpi + Math.ceil(tsize*0.25);
-    let x = pad;
-    let y = 0;
+    let hpad = this.getDefault("TabPadding", undefined, 0.0);
 
-    let h = tsize + Math.ceil(tsize*0.5);
+    let x = pad;
+    let y = 0.0;
+
+    let h = tsize + Math.ceil(tsize*0.5) + hpad;
     let iconsize = iconmanager.getTileSize(this.iconsheet);
     let have_icons = false;
 
@@ -846,7 +876,7 @@ export class TabBar extends UIBase {
     let r2 = this.canvas.getClientRects()[0];
 
     let rx = 0, ry = 0;
-    if (r1 && r2) {
+    if (r2) {
       rx = r2.x;//r2.x - r1.x;
       ry = r2.y; //r2.y - r1.y;
     }
@@ -909,8 +939,9 @@ export class TabBar extends UIBase {
         tab.dom = document.createElement("div");
         tab.dom.style["margin"] = tab.dom.style["padding"] = "0px";
 
-        let z = this.calcZ();
-        tab.dom.style["z-index"] = z + 1 + ti;
+        //XXX breaks mobile
+        //let z = this.calcZ();
+        //tab.dom.style["z-index"] = z - 1 - ti;
 
         document.body.appendChild(tab.dom);
         tab.dom.style["position"] = UIBase.PositionKey;
@@ -997,6 +1028,10 @@ export class TabBar extends UIBase {
     this.tabs.active = tab;
 
     if (update) {
+      if (!util.isMobile() && this.getDefault("focus-on-tab-click")) {
+        tab.focus({preventScroll: true, focusVisible: false});
+      }
+
       if (this.onchange)
         this.onchange(tab, event);
 
@@ -1028,6 +1063,17 @@ export class TabBar extends UIBase {
     let r = this.r*dpi;
     this._layout();
     let tab;
+
+    const draw_text = (name, x2, y2) => {
+      let hpad = this.getDefault("TabPadding", undefined, 0.0);
+      if (this.horiz) {
+        y2 += hpad*0.5;
+      } else {
+        y2 -= hpad*0.5;
+      }
+
+      g.fillText(tab.name, x2, y2);
+    };
 
     let ti = -1;
     for (tab of this.tabs) {
@@ -1069,7 +1115,7 @@ export class TabBar extends UIBase {
         x2 += iconsize + 4;
       }
 
-      g.fillText(tab.name, x2, y2);
+      draw_text(tab.name, x2, y2);
 
       if (!this.horiz) {
         g.restore();
@@ -1184,15 +1230,10 @@ export class TabBar extends UIBase {
 
         g.fillStyle = this.getDefault("TabText").color;
 
-        //y2 += tsize*0.3;
-        g.fillText(tab.name, x2, y2);
+        draw_text(tab.name, x2, y2);
 
         if (!this.horiz) {
           g.restore();
-        }
-
-        if (!this.horiz) {
-          //g.restore();
         }
       }
     }
@@ -1332,8 +1373,6 @@ export class TabContainer extends UIBase {
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
 
-      //XXX why is this necassary?
-      //this._tab.style["margin-left"] = "40px";
       this.shadow.appendChild(div);
 
       if (this.onchange) {
@@ -1395,7 +1434,7 @@ export class TabContainer extends UIBase {
     };
   }
 
-  _startMove(tab=this.tbar.tabs.active, event) {
+  _startMove(tab = this.tbar.tabs.active, event) {
     return this.tbar._startMove(tab, event);
   }
 
@@ -1496,7 +1535,6 @@ export class TabContainer extends UIBase {
     let flexDir = !horiz ? "row" : "column";
     let bgcolor = this.__background; //this.getDefault("background-color");
 
-    //display = "inline" //XXX
     let style = document.createElement("style");
     style.textContent = `
       ._tab_${this._id} {

@@ -7175,11 +7175,6 @@ function isMobile() {
   return mret;
 }
 
-//window._isMobile = isMobile;
-
-//let SmartConsoleTag = Symbol("SmartConsoleTag");
-//let tagid = 0;
-
 class SmartConsoleContext {
   constructor(name, console) {
     this.name = name;
@@ -7230,15 +7225,11 @@ class SmartConsoleContext {
       } else if (typeof n === "undefined" || n === null) {
         dohash(0);
       } else if (typeof n === "object") {
-        if (n === undefined) {
-          //n[SmartConsoleTag] = tagid++;
-        }
-
         if (visit.has(n)) {
           return;
         }
 
-        visit.add(n); //[SmartConsoleTag]);
+        visit.add(n);
 
         let keys = getAllKeys(n);
 
@@ -29940,6 +29931,7 @@ const DefaultTheme = {
     BoxDepressed        : 'rgba(130,130,130, 1)',
     BoxHighlight        : 'rgba(151,208,239, 1)',
     "flex-grow"         : "unset",
+    mobileSizeMultiplier: 1.0,
     DefaultText         : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
@@ -30052,10 +30044,10 @@ const DefaultTheme = {
   },
 
   checkbox: {
-    CheckSide: 'left',
-    height   : 32,
-    width    : 32,
-    "background-color" : "rgb(168,168,168)",
+    CheckSide         : 'left',
+    height            : 32,
+    width             : 32,
+    "background-color": "rgb(168,168,168)",
   },
 
   colorfield: {
@@ -30335,14 +30327,17 @@ const DefaultTheme = {
   },
 
   tabs: {
-    "movable-tabs"    : "true",
-    TabActive         : 'rgba(212,212,212, 1)',
-    TabBarRadius      : 6,
-    TabHighlight      : 'rgba(50, 50, 50, 0.2)',
-    TabInactive       : 'rgba(183,183,183, 1)',
-    TabStrokeStyle1   : 'rgba(0,0,0, 1)',
-    TabStrokeStyle2   : 'rgba(0,0,0, 1)',
-    TabText           : new CSSFont({
+    "focus-on-tab-click": "false",
+    "movable-tabs"      : "true",
+    TabPadding_mobile   : 20, //padding perpindicular to the label text
+    TabPadding          : 0,
+    TabActive           : 'rgba(212,212,212, 1)',
+    TabBarRadius        : 6,
+    TabHighlight        : 'rgba(50, 50, 50, 0.2)',
+    TabInactive         : 'rgba(183,183,183, 1)',
+    TabStrokeStyle1     : 'rgba(0,0,0, 1)',
+    TabStrokeStyle2     : 'rgba(0,0,0, 1)',
+    TabText             : new CSSFont({
       font   : 'sans-serif',
       weight : 'normal',
       variant: 'bold',
@@ -30350,7 +30345,7 @@ const DefaultTheme = {
       size   : 15,
       color  : 'rgba(0,0,0, 1)'
     }),
-    'background-color': 'rgba(222,222,222, 1)',
+    'background-color'  : 'rgba(222,222,222, 1)',
   },
 
   textbox: {
@@ -31587,7 +31582,8 @@ class UIBase$f extends HTMLElement {
     this.shadow.appendChild(style);
     this._init_done = false;
 
-    //make default touch handlers that send mouse events
+    /* Deprecated touch -> mouse event conversion,
+       use pointer events instead. */
     let do_touch = (e, type, button) => {
       if (haveModal()) {
         return;
@@ -33717,9 +33713,14 @@ class UIBase$f extends HTMLElement {
     this.class_default_overrides[style][key] = val;
   }
 
-  _doMobileDefault(key, val) {
+  _doMobileDefault(key, val, obj) {
     if (!isMobile())
       return val;
+
+    const mobilekey = key + "_mobile";
+    if (obj && mobilekey in obj) {
+      return obj[mobilekey];
+    }
 
     key = key.toLowerCase();
     let ok = false;
@@ -33731,7 +33732,7 @@ class UIBase$f extends HTMLElement {
       }
     }
 
-    if (ok) {
+    if (ok && theme.base.mobileSizeMultiplier) {
       val *= theme.base.mobileSizeMultiplier;
     }
 
@@ -33797,14 +33798,14 @@ class UIBase$f extends HTMLElement {
   getDefault_intern(key, checkForMobile = true, defaultval = undefined) {
     if (this.my_default_overrides[key] !== undefined) {
       let v = this.my_default_overrides[key];
-      return checkForMobile ? this._doMobileDefault(key, v) : v;
+      return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
     }
 
     let p = this;
     while (p) {
       if (p.default_overrides[key] !== undefined) {
         let v = p.default_overrides[key];
-        checkForMobile ? this._doMobileDefault(key, v) : v;
+        checkForMobile ? this._doMobileDefault(key, v, p.default_overrides) : v;
       }
 
       p = p.parentWidget;
@@ -33870,12 +33871,15 @@ class UIBase$f extends HTMLElement {
       return undefined;
     }
 
-    let val = undefined;
+    let themeobj;
+    let val;
     let p = this;
+
     while (p) {
       let def = p.class_default_overrides[style];
 
       if (def && (key in def)) {
+        themeobj = def;
         val = def[key];
         break;
       }
@@ -33897,21 +33901,25 @@ class UIBase$f extends HTMLElement {
       }
 
       if (val === undefined && style in th && key in th[style]) {
+        themeobj = th[style];
         val = th[style][key];
       } else if (defaultval !== undefined) {
+        themeobj = undefined;
         val = defaultval;
       } else if (val === undefined) {
         let def = this.constructor.define();
 
         if (def.parentStyle && key in th[def.parentStyle]) {
           val = th[def.parentStyle][key];
+          themeobj = th[def.parentStyle];
         } else {
           val = th.base[key];
+          themeobj = th.base;
         }
       }
     }
 
-    return checkForMobile ? this._doMobileDefault(key, val) : val;
+    return checkForMobile ? this._doMobileDefault(key, val, themeobj) : val;
   }
 
   overrideTheme(theme) {
@@ -34240,24 +34248,6 @@ function measureText(elem, text, canvas                    = undefined,
   }
 
   let ret = g.measureText(text);
-
-  if (ret && isMobile()) {
-    let ret2 = {};
-    let dpi = UIBase$f.getDPI();
-
-    for (let k in ret) {
-      let v = ret[k];
-
-      if (typeof v === "number") {
-        v *= dpi;
-        //v *= window.devicePixelRatio;
-      }
-
-      ret2[k] = v;
-    }
-
-    ret = ret2;
-  }
 
   if (size !== undefined) {
     //clear custom font for next time
@@ -43971,11 +43961,10 @@ class ToolBase extends ToolOp {
 
     //window.setTimeout(() => {
     if (pointerId !== undefined) {
-      handlers.on_pointerdown = handlers.on_mousedown;
-      handlers.on_pointermove = handlers.on_mousemove;
-      handlers.on_pointerup = handlers.on_mouseup;
-      handlers.on_pointercancel = handlers.on_mouseup;
-      handlers.on_pointerend = handlers.on_mouseup;
+      handlers.on_pointerdown = handlers.on_pointerdown ?? handlers.on_mousedown;
+      handlers.on_pointermove = handlers.on_pointermove ?? handlers.on_mousemove;
+      handlers.on_pointerup = handlers.on_pointerup ?? handlers.on_mouseup;
+      handlers.on_pointercancel = handlers.on_pointercancel ?? handlers.on_pointerup ?? handlers.on_mouseup;
 
       this.modaldata = pushPointerModal(handlers, elem, pointerId);
     } else {
@@ -43990,10 +43979,10 @@ class ToolBase extends ToolOp {
     //}, {passive : false});
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
   }
 
@@ -44078,12 +44067,13 @@ class AreaResizeTool extends ToolBase {
     return ret;
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
   }
 
   finish() {
     super.finish();
+
     this.screen.snapScreenVerts();
     this.screen.regenBorders();
     this.screen.snapScreenVerts();
@@ -44100,7 +44090,7 @@ class AreaResizeTool extends ToolBase {
     }
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let mpos = new Vector2$7([e.x, e.y]);
 
     mpos.sub(this.start_mpos);
@@ -44255,7 +44245,7 @@ class SplitTool extends ToolBase {
     screen._internalRegenAll();
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let x = e.x, y = e.y;
 
     let screen = this.screen;
@@ -44292,10 +44282,10 @@ class SplitTool extends ToolBase {
     //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -44390,7 +44380,7 @@ class RemoveAreaTool extends ToolBase {
     }
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let x = e.x, y = e.y;
 
     let screen = this.screen;
@@ -44411,10 +44401,10 @@ class RemoveAreaTool extends ToolBase {
     //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -44717,12 +44707,12 @@ class AreaDragTool extends ToolBase {
       b.setAttribute("class", cls);
       b.setAttribute("is_box", true);
 
-      b.addEventListener("mousemove", this.on_mousemove.bind(this));
+      b.addEventListener("pointermove", this.on_pointermove.bind(this));
 
       let onclick = b.onclick = (e) => {
         let type = e.type.toLowerCase();
 
-        if ((e.type === "mousedown" || e.type === "mouseup") && e.button !== 0) {
+        if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
           return; //another handler will cancel
         }
 
@@ -44738,10 +44728,10 @@ class AreaDragTool extends ToolBase {
       };
 
       b.addEventListener("click", onclick);
-      b.addEventListener("mousedown", onclick);
-      b.addEventListener("mouseup", onclick);
+      b.addEventListener("pointerdown", onclick);
+      b.addEventListener("pointerup", onclick);
 
-      b.addEventListener("mouseenter", (e) => {
+      b.addEventListener("pointerenter", (e) => {
         if (this.curbox !== undefined) {
           if (this.curbox.rect) {
             this.curbox.rect.remove();
@@ -44761,7 +44751,7 @@ class AreaDragTool extends ToolBase {
         //b.style["background-color"] = hcolor;
       });
 
-      b.addEventListener("mouseleave", (e) => {
+      b.addEventListener("pointerleave", (e) => {
         if (b.rect) {
           b.rect.remove();
           b.rect = undefined;
@@ -44822,38 +44812,38 @@ class AreaDragTool extends ToolBase {
   }
 
   on_drag(e) {
-    this.on_mousemove(e);
+    this.on_pointermove(e);
   }
 
   on_dragend(e) {
-    this.on_mouseup(e);
+    this.on_pointerup(e);
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let wid = 55;
     let color = "rgb(200, 200, 200, 0.7)";
 
-    //console.trace("mouse move!", e.x, e.y, this.sarea);
+    //console.trace("pointer move!", e.x, e.y, this.sarea);
 
     /*
      manually feed events to boxes so as to work right
      with touch events; note that pushModalLight routes
-     touch to mouse events (if no touch handlers are present).
+     touch to pointer events (if no touch handlers are present).
      */
     let n = this.getActiveBox(e.x, e.y);
 
     if (n !== undefined) {
       n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
     }
-    //console.log("mouse move", n);
+    //console.log("pointer move", n);
 
     if (this.boxes.active !== undefined && this.boxes.active !== n) {
       this.boxes.active.setColor(this.color);
-      this.boxes.active.dispatchEvent(new MouseEvent("mouseleave", e));
+      this.boxes.active.dispatchEvent(new PointerEvent("pointerleave", e));
     }
 
     if (n !== undefined) {
-      n.dispatchEvent(new MouseEvent("mouseenter", e));
+      n.dispatchEvent(new PointerEvent("pointerenter", e));
     }
 
     this.boxes.active = n;
@@ -44865,7 +44855,7 @@ class AreaDragTool extends ToolBase {
         console.log(rect.x, rect.y);
         if (x >= rect.x && x >= rect.y && x < rect.x+rect.width && y < rect.y+rect.height) {
           console.log("found rect");
-          n.dispatchEvent("mouseenter", new MouseEvent("mouseenter", e));
+          n.dispatchEvent("pointerenter", new PointerEvent("pointerenter", e));
         }
       }
       if (n === undefined || n.childNodes === undefined) {
@@ -44899,10 +44889,6 @@ class AreaDragTool extends ToolBase {
   }
 
   on_pointerup(e) {
-    this.on_mouseup(e);
-  }
-
-  on_mouseup(e) {
     console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
 
     if (e.button) {
@@ -44943,7 +44929,7 @@ class AreaDragTool extends ToolBase {
   }
 
   on_keydown(e) {
-    switch (e.keyCode){
+    switch (e.keyCode) {
       case keymap$4["Escape"]:
       case keymap$4["Enter"]:
       case keymap$4["Space"]:
@@ -44968,7 +44954,7 @@ class AreaMoveAttachTool extends AreaDragTool {
     this.start_pos = new Vector2$7(sarea.pos);
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let dx = e.x - this.start_mpos2[0];
     let dy = e.y - this.start_mpos2[1];
 
@@ -44987,15 +44973,15 @@ class AreaMoveAttachTool extends AreaDragTool {
     sarea.loadFromPosSize();
 
     this.mpos.loadXY(e.x, e.y);
-    super.on_mousemove(e);
+    super.on_pointermove(e);
   }
 
-  on_mouseup(e) {
-    super.on_mouseup(e);
+  on_pointerup(e) {
+    super.on_pointerup(e);
   }
 
-  on_mousedown(e) {
-    super.on_mousedown(e);
+  on_pointerdown(e) {
+    super.on_pointerdown(e);
   }
 
   on_keydown(e) {
@@ -45027,15 +45013,15 @@ class ToolTipViewer extends ToolBase {
     }
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     this.pick(e);
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
     this.pick(e);
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
   }
 
@@ -45205,7 +45191,7 @@ class ScreenBorder extends UIBase$f {
 
     let call_menu = ScreenBorder.bindBorderMenu(this);
 
-    this.addEventListener("mousedown", (e) => {
+    this.addEventListener("pointerdown", (e) => {
       let ok = this.movable;
 
       if (e.button === 2) {
@@ -45218,7 +45204,6 @@ class ScreenBorder extends UIBase$f {
         return;
       }
 
-      console.log("area resize start!");
       let tool = new AreaResizeTool(this.screen, this, [e.x, e.y]);
 
       tool.start();
@@ -48759,7 +48744,8 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
   update() {
     super.update();
 
-    let key = this.getDefault("width") + this.getDefault("height") + this.getDefault("SlideHeight");
+    let key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
+
     if (key !== this._last_slider_key) {
       this._last_slider_key = key;
 
@@ -52658,6 +52644,7 @@ class TabItem extends UIBase$4 {
     this.abssize = new Vector2$3();
     this.abspos = new Vector2$3();
 
+
     this.addEventListener("pointerdown", (e) => {
       this.parentWidget.on_pointerdown(e);
     });
@@ -52669,6 +52656,21 @@ class TabItem extends UIBase$4 {
     this.addEventListener("pointerup", (e) => {
       this.parentWidget.on_pointerup(e);
     });
+
+    this.addEventListener("keydown", (e) => {
+      console.log(e.keyCode, this._id);
+
+      switch (e.keyCode) {
+        case keymap$4.Enter:
+        case keymap$4.Space:
+          this.parentWidget.setActive(this, e);
+          break;
+      }
+    });
+  }
+
+  init() {
+    this.tabIndex = 1;
   }
 
   static define() {
@@ -52734,6 +52736,12 @@ class TabItem extends UIBase$4 {
     let w = this.size[0]/dpi;
     let h = this.size[1]/dpi;
 
+    if (this == this.parentWidget.tabs.active) {
+      this.style["focus-border-width"] = "0px";
+    } else {
+      this.style["focus-border-width"] = "2px";
+    }
+
     this.style["background-color"] = "transparent";
 
     this.style["margin"] = this.style["padding"] = "0px";
@@ -52746,6 +52754,7 @@ class TabItem extends UIBase$4 {
     this.style["height"] = h + "px";
   }
 }
+
 UIBase$4.internalRegister(TabItem);
 
 class ModalTabMove extends EventHandler {
@@ -52796,12 +52805,16 @@ class ModalTabMove extends EventHandler {
 
   on_pointerleave(e) {
   }
+
   on_pointerenter(e) {
   }
+
   on_pointerenter(e) {
   }
+
   on_pointerstart(e) {
   }
+
   on_pointerend(e) {
   }
 
@@ -52960,10 +52973,10 @@ class ModalTabMove extends EventHandler {
     if (debug) console.log(e.keyCode);
 
     switch (e.keyCode) {
-      case 27: //escape
-      case 32: //space
-      case 13: //enter
-      case 9: //tab
+      case keymap$4.Escape: //escape
+      case keymap$4.Space: //space
+      case keymap$4.Enter: //enter
+      case keymap$4.Tab: //tab
         this.finish();
         break;
     }
@@ -53023,7 +53036,7 @@ class TabBar extends UIBase$4 {
     });
   }
 
-  _doelement(e, mx, my){
+  _doelement(e, mx, my) {
     for (let tab of this.tabs) {
       let ok;
 
@@ -53040,7 +53053,7 @@ class TabBar extends UIBase$4 {
     }
   }
 
-  _domouse (e) {
+  _domouse(e) {
     let r = this.canvas.getClientRects()[0];
 
     let mx = e.x - r.x;
@@ -53053,13 +53066,13 @@ class TabBar extends UIBase$4 {
 
     this._doelement(e, mx, my);
 
-    const is_mdown = e.type === "mousedown";
+    const is_mdown = e.type === "mousedown" || e.type == "pointerdown";
     if (is_mdown && this.onselect && this._fireOnSelect().defaultPrevented) {
       e.preventDefault();
     }
   }
 
-  _doclick (e) {
+  _doclick(e) {
     this._domouse(e);
 
     if (e.defaultPrevented) {
@@ -53153,7 +53166,7 @@ class TabBar extends UIBase$4 {
     this._tool = v;
   }
 
-  _startMove(tab=this.tabs.active, event, pointerId=event ? event.pointerId : undefined, pointerElem=tab) {
+  _startMove(tab = this.tabs.active, event, pointerId = event ? event.pointerId : undefined, pointerElem = tab) {
     if (this.movableTabs) {
       let e2 = tab.sendEvent("tabdragstart", event);
 
@@ -53416,10 +53429,12 @@ class TabBar extends UIBase$4 {
     let axis = this.horiz ? 0 : 1;
 
     let pad = 4*dpi + Math.ceil(tsize*0.25);
-    let x = pad;
-    let y = 0;
+    let hpad = this.getDefault("TabPadding", undefined, 0.0);
 
-    let h = tsize + Math.ceil(tsize*0.5);
+    let x = pad;
+    let y = 0.0;
+
+    let h = tsize + Math.ceil(tsize*0.5) + hpad;
     let iconsize = iconmanager.getTileSize(this.iconsheet);
     let have_icons = false;
 
@@ -53435,7 +53450,7 @@ class TabBar extends UIBase$4 {
     let r2 = this.canvas.getClientRects()[0];
 
     let rx = 0, ry = 0;
-    if (r1 && r2) {
+    if (r2) {
       rx = r2.x;//r2.x - r1.x;
       ry = r2.y; //r2.y - r1.y;
     }
@@ -53498,8 +53513,9 @@ class TabBar extends UIBase$4 {
         tab.dom = document.createElement("div");
         tab.dom.style["margin"] = tab.dom.style["padding"] = "0px";
 
-        let z = this.calcZ();
-        tab.dom.style["z-index"] = z + 1 + ti;
+        //XXX breaks mobile
+        //let z = this.calcZ();
+        //tab.dom.style["z-index"] = z - 1 - ti;
 
         document.body.appendChild(tab.dom);
         tab.dom.style["position"] = UIBase$4.PositionKey;
@@ -53586,6 +53602,10 @@ class TabBar extends UIBase$4 {
     this.tabs.active = tab;
 
     if (update) {
+      if (!isMobile() && this.getDefault("focus-on-tab-click")) {
+        tab.focus({preventScroll: true, focusVisible: false});
+      }
+
       if (this.onchange)
         this.onchange(tab, event);
 
@@ -53617,6 +53637,17 @@ class TabBar extends UIBase$4 {
     let r = this.r*dpi;
     this._layout();
     let tab;
+
+    const draw_text = (name, x2, y2) => {
+      let hpad = this.getDefault("TabPadding", undefined, 0.0);
+      if (this.horiz) {
+        y2 += hpad*0.5;
+      } else {
+        y2 -= hpad*0.5;
+      }
+
+      g.fillText(tab.name, x2, y2);
+    };
 
     let ti = -1;
     for (tab of this.tabs) {
@@ -53658,7 +53689,7 @@ class TabBar extends UIBase$4 {
         x2 += iconsize + 4;
       }
 
-      g.fillText(tab.name, x2, y2);
+      draw_text(tab.name, x2, y2);
 
       if (!this.horiz) {
         g.restore();
@@ -53773,15 +53804,10 @@ class TabBar extends UIBase$4 {
 
         g.fillStyle = this.getDefault("TabText").color;
 
-        //y2 += tsize*0.3;
-        g.fillText(tab.name, x2, y2);
+        draw_text(tab.name, x2, y2);
 
         if (!this.horiz) {
           g.restore();
-        }
-
-        if (!this.horiz) {
-          //g.restore();
         }
       }
     }
@@ -53921,8 +53947,6 @@ class TabContainer extends UIBase$4 {
       div.setAttribute("class", `_tab_${this._id}`);
       div.appendChild(this._tab);
 
-      //XXX why is this necassary?
-      //this._tab.style["margin-left"] = "40px";
       this.shadow.appendChild(div);
 
       if (this.onchange) {
@@ -53984,7 +54008,7 @@ class TabContainer extends UIBase$4 {
     };
   }
 
-  _startMove(tab=this.tbar.tabs.active, event) {
+  _startMove(tab = this.tbar.tabs.active, event) {
     return this.tbar._startMove(tab, event);
   }
 
@@ -54085,7 +54109,6 @@ class TabContainer extends UIBase$4 {
     let flexDir = !horiz ? "row" : "column";
     let bgcolor = this.__background; //this.getDefault("background-color");
 
-    //display = "inline" //XXX
     let style = document.createElement("style");
     style.textContent = `
       ._tab_${this._id} {
@@ -59342,10 +59365,8 @@ class Screen extends UIBase$f {
 
   //XXX rename to regenScreenMesh
   regenBorders() {
-
     for (let b of this.screenborders) {
       b.remove();
-      HTMLElement.prototype.remove.call(b);
     }
 
     this._idmap = {};

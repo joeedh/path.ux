@@ -136,7 +136,7 @@ export class ScreenBorder extends ui_base.UIBase {
 
     let call_menu = ScreenBorder.bindBorderMenu(this);
 
-    this.addEventListener("mousedown", (e) => {
+    this.addEventListener("pointerdown", (e) => {
       let ok = this.movable;
 
       if (e.button === 2) {
@@ -149,7 +149,6 @@ export class ScreenBorder extends ui_base.UIBase {
         return;
       }
 
-      console.log("area resize start!");
       let tool = new FrameManager_ops.AreaResizeTool(this.screen, this, [e.x, e.y]);
 
       tool.start();

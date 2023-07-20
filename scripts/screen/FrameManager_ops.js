@@ -90,11 +90,10 @@ export class ToolBase extends simple_toolsys.ToolOp {
 
     //window.setTimeout(() => {
     if (pointerId !== undefined) {
-      handlers.on_pointerdown = handlers.on_mousedown;
-      handlers.on_pointermove = handlers.on_mousemove;
-      handlers.on_pointerup = handlers.on_mouseup;
-      handlers.on_pointercancel = handlers.on_mouseup;
-      handlers.on_pointerend = handlers.on_mouseup;
+      handlers.on_pointerdown = handlers.on_pointerdown ?? handlers.on_mousedown;
+      handlers.on_pointermove = handlers.on_pointermove ?? handlers.on_mousemove;
+      handlers.on_pointerup = handlers.on_pointerup ?? handlers.on_mouseup;
+      handlers.on_pointercancel = handlers.on_pointercancel ?? handlers.on_pointerup ?? handlers.on_mouseup;
 
       this.modaldata = pushPointerModal(handlers, elem, pointerId);
     } else {
@@ -109,10 +108,10 @@ export class ToolBase extends simple_toolsys.ToolOp {
     //}, {passive : false});
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
   }
 
@@ -197,12 +196,13 @@ export class AreaResizeTool extends ToolBase {
     return ret;
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
   }
 
   finish() {
     super.finish();
+
     this.screen.snapScreenVerts();
     this.screen.regenBorders();
     this.screen.snapScreenVerts();
@@ -219,7 +219,7 @@ export class AreaResizeTool extends ToolBase {
     }
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let mpos = new Vector2([e.x, e.y]);
 
     mpos.sub(this.start_mpos);
@@ -374,7 +374,7 @@ export class SplitTool extends ToolBase {
     screen._internalRegenAll();
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let x = e.x, y = e.y;
 
     let screen = this.screen;
@@ -411,10 +411,10 @@ export class SplitTool extends ToolBase {
     //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -509,7 +509,7 @@ export class RemoveAreaTool extends ToolBase {
     }
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let x = e.x, y = e.y;
 
     let screen = this.screen;
@@ -530,10 +530,10 @@ export class RemoveAreaTool extends ToolBase {
     //this.overdraw.line([e.x, e.y-200], [e.x, e.y+200], "grey");
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
 
     if (e.button) {
@@ -836,12 +836,12 @@ export class AreaDragTool extends ToolBase {
       b.setAttribute("class", cls);
       b.setAttribute("is_box", true);
 
-      b.addEventListener("mousemove", this.on_mousemove.bind(this));
+      b.addEventListener("pointermove", this.on_pointermove.bind(this));
 
       let onclick = b.onclick = (e) => {
         let type = e.type.toLowerCase();
 
-        if ((e.type === "mousedown" || e.type === "mouseup") && e.button !== 0) {
+        if ((e.type === "pointerdown" || e.type === "pointerup") && e.button !== 0) {
           return; //another handler will cancel
         }
 
@@ -857,10 +857,10 @@ export class AreaDragTool extends ToolBase {
       }
 
       b.addEventListener("click", onclick);
-      b.addEventListener("mousedown", onclick);
-      b.addEventListener("mouseup", onclick);
+      b.addEventListener("pointerdown", onclick);
+      b.addEventListener("pointerup", onclick);
 
-      b.addEventListener("mouseenter", (e) => {
+      b.addEventListener("pointerenter", (e) => {
         if (this.curbox !== undefined) {
           if (this.curbox.rect) {
             this.curbox.rect.remove()
@@ -880,7 +880,7 @@ export class AreaDragTool extends ToolBase {
         //b.style["background-color"] = hcolor;
       })
 
-      b.addEventListener("mouseleave", (e) => {
+      b.addEventListener("pointerleave", (e) => {
         if (b.rect) {
           b.rect.remove();
           b.rect = undefined;
@@ -941,38 +941,38 @@ export class AreaDragTool extends ToolBase {
   }
 
   on_drag(e) {
-    this.on_mousemove(e);
+    this.on_pointermove(e);
   }
 
   on_dragend(e) {
-    this.on_mouseup(e);
+    this.on_pointerup(e);
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let wid = 55;
     let color = "rgb(200, 200, 200, 0.7)";
 
-    //console.trace("mouse move!", e.x, e.y, this.sarea);
+    //console.trace("pointer move!", e.x, e.y, this.sarea);
 
     /*
      manually feed events to boxes so as to work right
      with touch events; note that pushModalLight routes
-     touch to mouse events (if no touch handlers are present).
+     touch to pointer events (if no touch handlers are present).
      */
     let n = this.getActiveBox(e.x, e.y);
 
     if (n !== undefined) {
       n.setColor(this.hcolor); //"rgba(250, 250, 250, 0.75)");
     }
-    //console.log("mouse move", n);
+    //console.log("pointer move", n);
 
     if (this.boxes.active !== undefined && this.boxes.active !== n) {
       this.boxes.active.setColor(this.color);
-      this.boxes.active.dispatchEvent(new MouseEvent("mouseleave", e));
+      this.boxes.active.dispatchEvent(new PointerEvent("pointerleave", e));
     }
 
     if (n !== undefined) {
-      n.dispatchEvent(new MouseEvent("mouseenter", e));
+      n.dispatchEvent(new PointerEvent("pointerenter", e));
     }
 
     this.boxes.active = n;
@@ -984,7 +984,7 @@ export class AreaDragTool extends ToolBase {
         console.log(rect.x, rect.y);
         if (x >= rect.x && x >= rect.y && x < rect.x+rect.width && y < rect.y+rect.height) {
           console.log("found rect");
-          n.dispatchEvent("mouseenter", new MouseEvent("mouseenter", e));
+          n.dispatchEvent("pointerenter", new PointerEvent("pointerenter", e));
         }
       }
       if (n === undefined || n.childNodes === undefined) {
@@ -1018,10 +1018,6 @@ export class AreaDragTool extends ToolBase {
   }
 
   on_pointerup(e) {
-    this.on_mouseup(e);
-  }
-
-  on_mouseup(e) {
     console.log("e.button", e.button, e, e.x, e.y, this.getActiveBox(e.x, e.y));
 
     if (e.button) {
@@ -1062,7 +1058,7 @@ export class AreaDragTool extends ToolBase {
   }
 
   on_keydown(e) {
-    switch (e.keyCode){
+    switch (e.keyCode) {
       case keymap["Escape"]:
       case keymap["Enter"]:
       case keymap["Space"]:
@@ -1087,7 +1083,7 @@ export class AreaMoveAttachTool extends AreaDragTool {
     this.start_pos = new Vector2(sarea.pos);
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     let dx = e.x - this.start_mpos2[0];
     let dy = e.y - this.start_mpos2[1];
 
@@ -1106,15 +1102,15 @@ export class AreaMoveAttachTool extends AreaDragTool {
     sarea.loadFromPosSize();
 
     this.mpos.loadXY(e.x, e.y);
-    super.on_mousemove(e);
+    super.on_pointermove(e);
   }
 
-  on_mouseup(e) {
-    super.on_mouseup(e);
+  on_pointerup(e) {
+    super.on_pointerup(e);
   }
 
-  on_mousedown(e) {
-    super.on_mousedown(e);
+  on_pointerdown(e) {
+    super.on_pointerdown(e);
   }
 
   on_keydown(e) {
@@ -1146,15 +1142,15 @@ export class ToolTipViewer extends ToolBase {
     }
   }
 
-  on_mousemove(e) {
+  on_pointermove(e) {
     this.pick(e);
   }
 
-  on_mousedown(e) {
+  on_pointerdown(e) {
     this.pick(e);
   }
 
-  on_mouseup(e) {
+  on_pointerup(e) {
     this.finish();
   }
 
