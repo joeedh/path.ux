@@ -740,6 +740,7 @@ export class Container extends ui_base.UIBase {
    "some_tool_path.tool()|CustomLabel",
    ui_widgets.Menu.SEP,
    "some_tool_path.another_tool()",
+   "some_tool_path.another_tool()|CustomLabel::Custom Hotkey String",
    ["Name", () => {console.log("do something")}]
    ])
 
