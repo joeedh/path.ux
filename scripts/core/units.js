@@ -541,19 +541,64 @@ export class PixelUnit extends Unit {
 
 Unit.register(PixelUnit);
 
-export function convert(value, unita, unitb) {
-  if (typeof unita === "string")
-    unita = Unit.getUnit(unita);
+export class PercentUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "percent",
+      uiname : "Percent",
+      type   : "distance",
+      icon   : -1,
+      pattern: /[0-9]+(\.[0-9]+)?[ \t]*%/
+    }
+  }
 
-  if (typeof unitb === "string")
-    unitb = Unit.getUnit(unitb);
+  static toInternal(value) {
+    return value/100.0;
+  }
 
-  return unitb.fromInternal(unita.toInternal(value));
+  static fromInternal(value) {
+    return value*100.0;
+  }
+
+  static parse(string) {
+    return parseFloat(string.replace(/%/g, ""));
+  }
+
+  static buildString(value, decimals = 2) {
+    return (value).toFixed(decimals) + "%";
+  }
 }
+
+Unit.register(PercentUnit);
+
+
+export function convert(value, unita, unitb) {
+  /* Note: getUnit throws on invalid units *except* for
+   *       'none' where it returns undefined.
+   */
+
+  if (typeof unita === "string") {
+    unita = Unit.getUnit(unita);
+  }
+
+  if (typeof unitb === "string") {
+    unitb = Unit.getUnit(unitb);
+  }
+
+  if (unita && unitb) {
+    return unitb.fromInternal(unita.toInternal(value));
+  } else if (unitb) {
+    return unitb.fromInternal(value); /* unita was 'none' */
+  } else {
+    return value;
+  }
+}
+
+window.unitConvert = convert;
 
 /**
  *
- * @param value Note: is not converted to internal unit
+ * @param value Value (note: is not converted to internal unit)
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
@@ -566,7 +611,7 @@ export function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, 
   }
 
 
-  if (baseUnit !== "none" && displayUnit !== baseUnit && displayUnit !== "none") {
+  if (displayUnit !== baseUnit) {
     value = convert(value, baseUnit, displayUnit);
   }
 
