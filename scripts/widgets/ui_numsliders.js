@@ -1629,7 +1629,7 @@ export class SliderWithTextbox extends ColumnFrame {
       return;
     }
 
-    if (this._lock_textbox > 0)
+    if (this._lock_textbox > 0 || this.textbox.editing)
       return;
 
     this.textbox.text = this.formatNumber(this._value);

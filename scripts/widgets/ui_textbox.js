@@ -46,6 +46,8 @@ export class TextBox extends TextBoxBase {
   constructor() {
     super();
 
+    this._editing = false;
+
     this._width = this.getDefault("width") + "px";
     this._textBoxEvents = true;
 
@@ -142,6 +144,8 @@ export class TextBox extends TextBoxBase {
       this._endModal(true);
     }
 
+    this._editing = true;
+
     let ignore = 0;
 
     let finish = (ok) => {
@@ -191,8 +195,14 @@ export class TextBox extends TextBoxBase {
     //don't focus on flash
   }
 
+  get editing() {
+    return this._editing;
+  }
+
   _endModal(ok) {
     console.log("textbox end modal");
+
+    this._editing = false;
 
     this._modal = false;
     this.popModal();
