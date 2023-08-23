@@ -477,11 +477,11 @@ export function parseValue(string, baseUnit = undefined, displayUnit = undefined
 
   let f = parseValueIntern(string, displayUnit || baseUnit);
 
-  if (baseUnit) {
-    if (displayUnit) {
-      f = displayUnit.toInternal(f);
-    }
+  if (displayUnit) {
+    f = displayUnit.toInternal(f);
+  }
 
+  if (baseUnit) {
     f = baseUnit.fromInternal(f);
   }
 
@@ -589,6 +589,8 @@ export function convert(value, unita, unitb) {
     return unitb.fromInternal(unita.toInternal(value));
   } else if (unitb) {
     return unitb.fromInternal(value); /* unita was 'none' */
+  } else if (unita) {
+    return unita.toInternal(value);
   } else {
     return value;
   }
