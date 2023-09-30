@@ -355,6 +355,7 @@ export class Area extends ui_base.UIBase {
   * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
   * */
   push_ctx_active(dontSetLastRef = false) {
+    contextWrangler.updateLastRef(this.constructor, this);
     contextWrangler.push(this.constructor, this, !dontSetLastRef);
   }
 
