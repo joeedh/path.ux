@@ -95,6 +95,7 @@ let exports = {
   },
   colorSchemeType: "light",
   docManualPath  : "../simple_docsys/doc_build/",
+  docEditorPath: "../simple_docsys.js",
 
   //add textboxes to rollar sliders,
   //note that  users can also double click them to

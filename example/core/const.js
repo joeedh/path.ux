@@ -31,7 +31,7 @@ export class Version {
 }
 
 export default {
-  DEBUG              : {
+  DEBUG: {
     screenborders    : 0,
     allBordersMovable: false,
     modalEvents      : true,
@@ -48,5 +48,6 @@ export default {
   autoSizeUpdate     : true,
   useAreaTabSwitcher : true,
   VERSION            : new Version(0, 0, 0, 0),
-  LOCALSTORAGE_KEY   : "pathux_example_app"
+  LOCALSTORAGE_KEY   : "pathux_example_app",
+  DocEditorPath      : "../simple_docsys.js",
 };

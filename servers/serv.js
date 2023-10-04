@@ -125,32 +125,67 @@ const serv = http.createServer({
     path = path.split("?");
 
     let method = path[0];
-    let json;
 
+    console.log(method, "PATH", path);
     console.log(termColor("API", "blue"), path);
 
-    try {
-      json = JSON.parse(unescape(path[1]));
-    } catch (error) {
-      sendError(404, escape(path[1]));
-      return;
-    }
+    function apiFinish(args) {
+      console.log(args);
 
-    if (!Array.isArray(json)) {
-      json = [json];
-    }
-
-    console.log(json);
-    rpc.handle(method, json).then((result) => {
+      rpc.handle(method, args).then((result) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', "application/json");
         res.setHeader('Content-Length', result.length);
         res._addHeaders();
         res.end(result);
-    }).catch((error) => {
-      console.log(error);
-      res.sendError(501, ""+error);
-    })
+      }).catch((error) => {
+        console.log(error);
+        res.sendError(501, ""+error);
+      })
+    }
+
+    if (req.method === "POST") {
+      req.setEncoding('utf8');
+      let data = '';
+
+      req.on('data', (chunk) => {
+        console.log("CHUNK", chunk);
+        data += chunk;
+      });
+      req.on('end', () => {
+        console.log("DATA", data);
+        let args;
+        try {
+          args = JSON.parse(data);
+        } catch (error) {
+          console.log(error.message);
+          res.sendError(404, "JSON parse error: " + data);
+          return;
+        }
+
+        apiFinish(args);
+      });
+
+      return;
+    }
+
+    let args;
+    if (path.length > 1) {
+      try {
+        args = JSON.parse(unescape(path[1]));
+      } catch (error) {
+        res.sendError(404, "JSON parse error: " + escape(path[1]));
+        return;
+      }
+    } else {
+      args = [];
+    }
+
+    if (!Array.isArray(args)) {
+      args = [args];
+    }
+
+    apiFinish(args);
 
     return;
   }

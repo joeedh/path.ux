@@ -459,6 +459,7 @@ export default function(fs, marked, parse5, pathmod, jsdiff) {
     updateDoc(relpath, data) {
       let found = 0;
 
+      console.trace("SAVING", arguments);
       if (!data || typeof data !== "string") {
         throw new Error("document data was corrupted");
       }
@@ -961,6 +962,8 @@ ${doc.html}
       }
       return base + "/" + p;
     }
+
+    console.log("PATH:", path, pathmod.resolve(path));
 
     let buf = fs.readFileSync(path, "utf8");
     var config = undefined;

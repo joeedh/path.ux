@@ -1,22 +1,38 @@
 let win;
 
-const { app, BrowserWindow } = require('electron')
+const {app, BrowserWindow, nativeTheme} = require('electron')
 const {ipcMain, Menu, MenuItem} = require('electron')
+
+ipcMain.handle("nativeTheme.setThemeSource", async (event, val) => {
+  nativeTheme.themeSource = val;
+});
+
+ipcMain.handle("nativeTheme", async (event) => {
+  let obj = {};
+
+  for (let k in nativeTheme) {
+    let v = nativeTheme[k];
+
+    if (typeof v !== "object" && typeof v !== "function") {
+      obj[k] = v;
+    }
+  }
+
+  if (win) {
+    win.webContents.send('nativeTheme', obj);
+  }
+});
 
 function makeInvoker(event, callbackKey, getargs = (args) => {
   args
 }) {
   return function () {
     let args = getargs(arguments);
-    console.log("ARGS", args);
-
     win.webContents.send('invoke-menu-callback', callbackKey, args);
   }
 }
 
 function loadMenu(event, menudef) {
-  console.log("MENU", menudef);
-
   let menu = new Menu();
 
   for (let item of menudef) {
@@ -88,7 +104,7 @@ ipcMain.handle('show-save-dialog', async (event, args, then, catchf) => {
 
   dialog.showSaveDialog(args).then(makeInvoker(event, then, (args) => {
     let e = {
-      filePath: args[0].filePath,
+      filePath : args[0].filePath,
       cancelled: args[0].cancelled,
       canceled : args[0].canceled
     };
@@ -97,17 +113,19 @@ ipcMain.handle('show-save-dialog', async (event, args, then, catchf) => {
   })).catch(makeInvoker(event, catchf));
 });
 
-function createWindow () {
+function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width         : 1024,
+    height        : 768,
     webPreferences: {
       nodeIntegration: true,
-      sandbox : false,
-      enableRemoteModule : true,
-      experimentalFeatures: true,
-      allowRunningInsecureContent : true
+      /* Needed for nodeIntegration. */
+      contextIsolation           : false,
+      sandbox                    : false,
+      enableRemoteModule         : true,
+      experimentalFeatures       : true,
+      allowRunningInsecureContent: true
     }
   })
 

@@ -1590,13 +1590,49 @@
       "relpath": "/index.html",
       "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"\\\\ No newline at end of file\",\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
       "isDiff": true
+    },
+    {
+      "mtime": 1696104838391.242,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1696455246790.2312,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action&nbsp;</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1696455257185.7905,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action 1</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1696455257804.239,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action 1</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1696455260806.307,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action 2</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
+    },
+    {
+      "mtime": 1696455412211.0645,
+      "relpath": "/index.html",
+      "data": "{\"oldFileName\":\"/index.html\",\"newFileName\":\"/index.html\",\"hunks\":[{\"oldStart\":1,\"oldLines\":0,\"newStart\":1,\"newLines\":1,\"lines\":[\"+<h1>In<strong>tr</strong>oduction</h1><p class=\\\"notebox\\\">Bleh</p><p><img src=\\\"./assets/index_image_0mceu_27577582111590896308129.png\\\" data-mce-src=\\\"index.html/assets/index_image_0mceu_27577582111590896308129.png\\\" width=\\\"313\\\" height=\\\"218\\\"></p><p><img src=\\\"./assets/index_image_4mceclip0.png\\\" data-mce-src=\\\"example/assets/index_image_4mceclip0.png\\\" width=\\\"198\\\" height=\\\"130\\\" style=\\\"float: right;\\\" data-mce-style=\\\"float: right;\\\"></p><p><br></p><p>Undo an action 2</p>\",\"\\\\ No newline at end of file\"]}]}",
+      "isDiff": true
     }
   ],
-  "relpath": "",
+  "relpath": "/index.html",
   "headVersion": {
-    "mtime": 0,
-    "relpath": "",
-    "data": "",
+    "mtime": 1696455412211.0645,
+    "relpath": "/index.html",
+    "data": "<h1>In<strong>tr</strong>oduction</h1><p class=\"notebox\">Bleh</p><p><img src=\"./assets/index_image_0mceu_27577582111590896308129.png\" data-mce-src=\"index.html/assets/index_image_0mceu_27577582111590896308129.png\" width=\"313\" height=\"218\"></p><p><img src=\"./assets/index_image_4mceclip0.png\" data-mce-src=\"example/assets/index_image_4mceclip0.png\" width=\"198\" height=\"130\" style=\"float: right;\" data-mce-style=\"float: right;\"></p><p><br></p><p>Undo an action 2</p>",
     "isDiff": false
   }
 }

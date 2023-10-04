@@ -2,7 +2,10 @@ import {Editor} from "../editor_base.js";
 import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4, cconst} from '../../pathux.js';
 //import '../../lib/tinymce/js/tinymce/tinymce.js';
 import {DocsBrowser} from '../../../scripts/docbrowser/docbrowser.js';
-import {platform} from '../../../scripts/platforms/platform.js';
+import {getPlatformAsync} from '../../../scripts/platforms/platform.js';
+
+let platform;
+getPlatformAsync().then(p => platform = p);
 
 let countstr = function(buf, s) {
   let count = 0;
@@ -97,10 +100,12 @@ export class DocsBrowserEditor extends Editor {
   constructor() {
     super();
 
-    let base = platform.resolveURL("../");
-
     this._browser = UIBase.createElement("docs-browser-x");
-    this._browser.pathuxBaseURL = base;
+
+    getPlatformAsync().then(platform => {
+      let base = platform.resolveURL("../");
+      this._browser.pathuxBaseURL = base;
+    });
 
     this.savedDocument = new SavedDocument();
   }

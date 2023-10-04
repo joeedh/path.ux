@@ -13,11 +13,11 @@ export function handle(method, args) {
   method = method.trim();
 
   return new Promise((accept, reject) => {
-    if (!exports.rpcMethods[method]) {
+    if (!rpcMethods[method]) {
       reject("Unknown method " + method);
     }
 
-    method = exports.rpcMethods[method];
+    method = rpcMethods[method];
 
     try {
       let ret = method.apply(undefined, args);

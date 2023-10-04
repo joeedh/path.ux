@@ -1,11 +1,11 @@
 /**
-documentation browser, with editing support
-note that you must set window.TINYMCE_PATH
-*/
+ documentation browser, with editing support
+ note that you must set window.TINYMCE_PATH
+ */
 
 //import {pushModalLight, popModalLight, Icons, UIBase, nstructjs, util, Vector2, Matrix4} from '../../pathux.js';
 import {pushModalLight, popModalLight} from "../path-controller/util/simple_events.js";
-import * as cconst from '../config/const.js';
+import cconst from '../config/const.js';
 import nstructjs from "../path-controller/util/struct.js";
 import {UIBase, Icons} from "../core/ui_base.js";
 import {platform} from '../platforms/platform.js';
@@ -18,7 +18,7 @@ import('../lib/tinymce/tinymce.js').then(mod => {
 import * as util from '../util/util.js';
 import {Vector2, Matrix4} from '../util/vectormath.js';
 
-let countstr = function(buf, s) {
+let countstr = function (buf, s) {
   let count = 0;
 
   while (buf.length > 0) {
@@ -27,7 +27,7 @@ let countstr = function(buf, s) {
       break;
     }
 
-    buf = buf.slice(i+1, buf.length);
+    buf = buf.slice(i + 1, buf.length);
     count++;
   }
 
@@ -36,17 +36,17 @@ let countstr = function(buf, s) {
 
 function basename(path) {
   while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length-1);
+    path = path.slice(0, path.length - 1);
   }
 
   path = path.replace(/\/+/g, "/");
   path = path.split("/");
-  return path[path.length-1];
+  return path[path.length - 1];
 }
 
 function dirname(path) {
   while (path.length > 0 && path.trim().endsWith("/")) {
-    path = path.slice(0, path.length-1);
+    path = path.slice(0, path.length - 1);
   }
 
   path = path.split("/");
@@ -69,7 +69,7 @@ function relative(a1, b1) {
   let a = a1, b = b1;
 
   let i = 1;
-  while (i <= a.length && b.startsWith(a.slice(0, i+1))) {
+  while (i <= a.length && b.startsWith(a.slice(0, i + 1))) {
     i++;
   }
   i--
@@ -85,7 +85,7 @@ function relative(a1, b1) {
   }
 
   if (s.endsWith("/") && b.startsWith("/")) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
 
   return s + b;
@@ -97,12 +97,15 @@ export class DocsAPI {
   updateDoc(relpath, data) {
     //returns a promise
   }
+
   uploadImage(blobInfo, success, onError) {
 
   }
+
   newDoc(relpath, data) {
     //returns a promise
   }
+
   hasDoc(relpath, data) {
     //returns a promise
   }
@@ -112,11 +115,25 @@ export class DocsAPI {
   }
 }
 
+function getDocPaths() {
+  let ret = {
+    docpath       : `${cconst.docEditorPath}/docsys_base.js`,
+    doc_config    : `${cconst.docEditorPath}/docs.config.js`,
+    docpath_prefix: `${cconst.docEditorPath}/doc_build`,
+  }
 
-window.PATHUX_DOCPATH = "../../simple_docsys/docsys_base.js";
-window.PATHUX_DOC_CONFIG = "../simple_docsys/docs.config.js";
-window.PATHUX_DOCPATH_PREFIX = "../simple_docsys/doc_build";
+  if (window.PATHUX_DOCPATH) {
+    ret.docpath = window.PATHUX_DOCPATH;
+  }
+  if (window.PATHUX_DOC_CONFIG) {
+    ret.doc_config = window.PATHUX_DOC_CONFIG;
+  }
+  if (window.PATHUX_DOCPATH_PREFIX) {
+    ret.docpath_prefix = window.PATHUX_DOCPATH_PREFIX;
+  }
 
+  return ret;
+}
 
 export class ElectronAPI extends DocsAPI {
   constructor() {
@@ -133,7 +150,10 @@ export class ElectronAPI extends DocsAPI {
 
     this.first = false;
 
-    import(PATHUX_DOCPATH).then(docsys => {
+    let {docpath, doc_config, docpath_prefix} = getDocPaths();
+    console.log(docpath);
+
+    import(docpath).then(docsys => {
       let fs = require('fs');
       let marked = require('marked');
       let parse5 = require('parse5');
@@ -142,7 +162,7 @@ export class ElectronAPI extends DocsAPI {
 
       docsys = docsys.default(fs, marked, parse5, pathmod, jsdiff);
 
-      this.config = docsys.readConfig(PATHUX_DOC_CONFIG);
+      this.config = docsys.readConfig(doc_config);
       this.ready = true;
     });
 
@@ -178,7 +198,7 @@ export class ElectronAPI extends DocsAPI {
         success(path);
       });
     }).catch((error) => {
-      onError(""+error);
+      onError("" + error);
     });
   }
 
@@ -243,7 +263,7 @@ export class ServerAPI extends DocsAPI {
         let uint8 = new Uint8Array(data);
         let data2 = [];
 
-        for (let i=0; i<uint8.length; i++) {
+        for (let i = 0; i < uint8.length; i++) {
           data2.push(uint8[i]);
         }
 
@@ -254,14 +274,14 @@ export class ServerAPI extends DocsAPI {
         });
       });
     }).catch((error) => {
-      onError(""+error);
+      onError("" + error);
     });
   }
 
   callAPI() {
     let key = arguments[0];
     let args = [];
-    for (let i=1; i<arguments.length; i++) {
+    for (let i = 1; i < arguments.length; i++) {
       args.push(arguments[i]);
     }
     console.log(args, arguments.length);
@@ -272,7 +292,7 @@ export class ServerAPI extends DocsAPI {
     return new Promise((accept, reject) => {
       fetch(path, {
         headers: {
-          "Content-Type" : "application/json"
+          "Content-Type": "application/json"
         },
         method : "POST",
         cache  : "no-cache",
@@ -329,11 +349,11 @@ export class DocHistory extends Array {
     this.cur = 0;
   }
 
-  push(url, title=url) {
+  push(url, title = url) {
     console.warn("history push", url);
 
-    this.length = this.cur+1;
-    this[this.length-1] = new DocHistoryItem(url, title);
+    this.length = this.cur + 1;
+    this[this.length - 1] = new DocHistoryItem(url, title);
     this.cur++;
 
     return this;
@@ -341,7 +361,7 @@ export class DocHistory extends Array {
 
   go(dir) {
     dir = Math.sign(dir);
-    this.cur = Math.min(Math.max(this.cur + dir, 0), this.length-1);
+    this.cur = Math.min(Math.max(this.cur + dir, 0), this.length - 1);
 
     return this[this.cur];
   }
@@ -374,6 +394,14 @@ export class DocsBrowser extends UIBase {
   constructor() {
     super();
 
+    this._sourceData = undefined;
+
+    /* If non-null, callback to save document. Otherwise
+     * default server implementation will be used.
+     **/
+    this.saveCallback = null;
+
+    this.handlesDocURL = true;
     this.pathuxBaseURL = location.href;
 
     this.editMode = false;
@@ -381,13 +409,13 @@ export class DocsBrowser extends UIBase {
     this.history = new DocHistory();
 
     //"../simple_docsys/doc_build/";
-    this._prefix = cconst.docManualPath || PATHUX_DOCPATH_PREFIX;
+    this._prefix = cconst.docManualPath || getDocPaths().docpath_prefix;
 
     this.saveReq = 0;
     this.saveReqStart = util.time_ms();
     this._last_save = util.time_ms();
 
-    this.header = document.createElement("rowframe-x");
+    this.header = UIBase.createElement("rowframe-x");
     this.shadow.appendChild(this.header);
 
     this.doOnce(this.makeHeader);
@@ -457,7 +485,7 @@ export class DocsBrowser extends UIBase {
   }
 
   makeHeader_intern() {
-    console.log("making header");
+    console.log("making header", this.header);
 
     this.header.clear();
 
@@ -465,7 +493,7 @@ export class DocsBrowser extends UIBase {
     check.value = this.editMode;
 
     check.onchange = () => {
-      console.log("check click!", check.checked);
+      console.warn("set edit mode:", check.checked);
 
       this.setEditMode(check.checked);
     }
@@ -506,7 +534,7 @@ export class DocsBrowser extends UIBase {
     })
 
     let indexOf = (list, item) => {
-      for (let i=0; i<list.length; i++) {
+      for (let i = 0; i < list.length; i++) {
         if (list[i] === item) {
           return i;
         }
@@ -539,7 +567,7 @@ export class DocsBrowser extends UIBase {
 
       console.log(p, i);
       let add = parent.childNodes.length > 0 ? parent.childNodes[i] : undefined;
-      for (let i=0; i<p.childNodes.length; i++) {
+      for (let i = 0; i < p.childNodes.length; i++) {
         if (!add) {
           parent.appendChild(p.childNodes[i]);
         } else {
@@ -565,12 +593,12 @@ export class DocsBrowser extends UIBase {
       this.execCommand("formatBlock", false, "pre");
     }).iconsheet = 0;
     this.header.listenum(undefined, "Style", {
-      Paragraph     : "P",
-      "Heading 1"   : "H1",
-      "Heading 2"   : "H2",
-      "Heading 3"   : "H3",
-      "Heading 4"   : "H4",
-      "Heading 5"   : "H5",
+      Paragraph  : "P",
+      "Heading 1": "H1",
+      "Heading 2": "H2",
+      "Heading 3": "H3",
+      "Heading 4": "H4",
+      "Heading 5": "H5",
     }).onselect = (e) => {
       this.execCommand("formatBlock", false, e.toLowerCase());
     }
@@ -588,6 +616,16 @@ export class DocsBrowser extends UIBase {
   }
 
   loadSource(data) {
+    if (data.trim().length === 0) {
+      return;
+    }
+
+    if (!(data.trim().toLowerCase().startsWith("<!doctype html>"))) {
+      data = "<!doctype html>\n" + data;
+    }
+
+    this._sourceData = data;
+
     this.saveReq = 0;
 
     let cb = () => {
@@ -598,13 +636,16 @@ export class DocsBrowser extends UIBase {
       }
     };
 
+    console.log("DATA", data);
     this.root.setAttribute("srcDoc", data);
     this.root.onload = cb;
+
     this._doDocInit = true;
     this.contentDiv = undefined;
   }
 
   load(url) {
+    this._sourceData = undefined;
     this.history.push(url, url);
 
     this.saveReq = 0;
@@ -651,6 +692,23 @@ export class DocsBrowser extends UIBase {
     }
     visit(this.root.contentDocument.body);
 
+    if (!this.contentDiv) {
+      let body = this.root.contentDocument.body;
+
+      this.contentDiv = this.root.contentDocument.createElement("div");
+      this.contentDiv.setAttribute("class", "contents");
+
+      this.contentDiv.style["margin"] = "0px";
+      this.contentDiv.style["padding"] = "0px";
+
+      for (let node of Array.from(body.childNodes)) {
+        body.removeChild(node);
+        this.contentDiv.appendChild(node);
+      }
+
+      body.appendChild(this.contentDiv);
+    }
+
     if (this.contentDiv) {
       if (this.editMode) {
         this.disableLinks();
@@ -663,15 +721,17 @@ export class DocsBrowser extends UIBase {
 
       //*
       window.tinyMCEPreInit = {
-        suffix : "",
-        baseURL : this.currentPath,
-        documentBaseURL : location.href
+        suffix         : "",
+        baseURL        : this.currentPath,
+        documentBaseURL: location.href
       };
-       //*/
+      //*/
 
       let loc = globals.document.location;
-      if (loc.href === "about:srcdoc") {
-        loc.href = document.location.href;// this.currentPath;
+      if (loc.href === "about:srcdoc" && this.currentPath && this._sourceData === undefined) {
+        if (this.currentPath) {
+          loc.href = this.currentPath;
+        }
       }
 
 
@@ -683,12 +743,17 @@ export class DocsBrowser extends UIBase {
       let tinymce = this.tinymce = globals.tinymce = window.tinymce = _tinymce(globals);
 
       let fixletter = () => {
+        if (!tinymce.baseURI.host) {
+          return;
+        }
+
         //fix drive letter on windows
         if (window.haveElectron) {
           if (process.platform === "win32") {
-            console.warn("Fixing drive letter", tinymce.baseURI);
-
-            tinymce.baseURI.host += ":";
+            if (tinymce.baseURI.host.trim().length > 0) {
+              console.warn("Fixing drive letter", tinymce.baseURI);
+              tinymce.baseURI.host += ":";
+            }
             tinymce.baseURL = tinymce.baseURI.source = tinymce.baseURI.toAbsolute();
           }
         }
@@ -710,20 +775,24 @@ export class DocsBrowser extends UIBase {
 
       fixletter();
 
+      if (this.root.contentDocument.compatMode !== "CSS1Compat") {
+        throw new Error("Source document is missing <!doctype html>");
+      }
+
       tinymce.init({
-        selector: "div.contents",
-        base_url: base_url,
-        paste_data_images : true,
+        selector             : "div.contents",
+        base_url             : base_url,
+        paste_data_images    : true,
         allow_html_data_urls : true,
-        plugins: [ 'quickbars', 'paste' ],
-        toolbar: true,
-        menubar: true,
-        inline: true,
-        images_upload_handler : (blobInfo, success, onError) => {
+        plugins              : ['quickbars', 'paste'],
+        toolbar              : true,
+        menubar              : true,
+        inline               : true,
+        images_upload_handler: (blobInfo, success, onError) => {
           console.log("uploading image!", blobInfo);
           this.serverapi.uploadImage(this.getDocPath(), blobInfo, success, onError);
         },
-        setup : function(editor) {
+        setup                : function (editor) {
           console.log("tinymce editor setup!", editor);
         }
       }).then((arg) => {
@@ -804,6 +873,7 @@ export class DocsBrowser extends UIBase {
 
     visit(this.root.contentDocument.body);
   }
+
   patchImageTags() {
     console.log("patching image tags");
 
@@ -841,7 +911,7 @@ export class DocsBrowser extends UIBase {
     let grab = (i, vs) => {
       console.log("Transform Modal start");
 
-      let horiz = i % 2 != 0 ? 1 : 0;
+      let horiz = i%2 != 0 ? 1 : 0;
 
       let update = () => {
         let x = vs[0][0], y = vs[0][1];
@@ -938,7 +1008,7 @@ export class DocsBrowser extends UIBase {
       pointerleave(e) {
         console.log("mouse leave!")
       },
-      pointerdown(e, x=e.x, y=e.y, button=e.button) {
+      pointerdown(e, x = e.x, y = e.y, button = e.button) {
         //this.contentDiv.contentEditable = false;
         mpos[0] = x;
         mpos[1] = y;
@@ -948,7 +1018,7 @@ export class DocsBrowser extends UIBase {
 
         img.setPointerCapture(e.pointerId);
       },
-      pointermove(e, x=e.x, y=e.y, button=e.button) {
+      pointermove(e, x = e.x, y = e.y, button = e.button) {
         if (first) {
           mpos[0] = x;
           mpos[1] = y;
@@ -979,8 +1049,8 @@ export class DocsBrowser extends UIBase {
           width += dy;
           height += dy;
 
-          img.style["width"] = width  + "px";
-          img.style["height"] = height+  "px";
+          img.style["width"] = width + "px";
+          img.style["height"] = height + "px";
 
           console.log("ix", ix);
         }
@@ -995,19 +1065,19 @@ export class DocsBrowser extends UIBase {
 
         let verts = [
           new Vector2([r.x, r.y]),
-          new Vector2([r.x, r.y+r.height]),
-          new Vector2([r.x+r.width, r.y+r.height]),
-          new Vector2([r.x+r.width, r.y]),
+          new Vector2([r.x, r.y + r.height]),
+          new Vector2([r.x + r.width, r.y + r.height]),
+          new Vector2([r.x + r.width, r.y]),
         ]
 
         let ret = undefined;
         let mindis = 1e17;
 
-        for (let i=0; i<4; i++) {
-          let i1 = i, i2 = (i + 1) % 4;
+        for (let i = 0; i < 4; i++) {
+          let i1 = i, i2 = (i + 1)%4;
           let v1 = verts[i1], v2 = verts[i2];
 
-          let horiz = i % 2 !== 0.0 ? 1 : 0;
+          let horiz = i%2 !== 0.0 ? 1 : 0;
           let dv = mpos[horiz] - v1[horiz];
 
           if (Math.abs(dv) < 15 && Math.abs(dv) < mindis) {
@@ -1031,7 +1101,7 @@ export class DocsBrowser extends UIBase {
         }
       },
 
-      pointerup(e, x=e.x, y=e.y, button=e.button) {
+      pointerup(e, x = e.x, y = e.y, button = e.button) {
         mpos[0] = x;
         mpos[1] = y;
         mdown = false;
@@ -1048,7 +1118,7 @@ export class DocsBrowser extends UIBase {
     }
 
     window.setInterval(() => {
-      if (1||!mdown) {
+      if (1 || !mdown) {
         let val = img.getAttribute("draggable");
         img.setAttribute("draggable", "false");
         img.setAttribute("draggable", val);
@@ -1073,7 +1143,7 @@ export class DocsBrowser extends UIBase {
 
     let getlist = () => {
       if (liststack.length > 0)
-        return liststack[liststack.length-1];
+        return liststack[liststack.length - 1];
     }
 
     let handlers = {
@@ -1243,7 +1313,7 @@ export class DocsBrowser extends UIBase {
       path = path.slice(1, path.length);
     }
 
-    console.log("PATH", path, this._prefix);
+    console.error("PATH", path, this._prefix);
 
     if (!path) return;
 
@@ -1287,6 +1357,11 @@ export class DocsBrowser extends UIBase {
 
     this.report("Saving...", "yellow", 400);
 
+    if (this.saveCallback) {
+      this.saveCallback(this.root.contentDocument);
+      return;
+    }
+
     let path = this.getDocPath();
 
     console.log("saving " + path);
@@ -1309,7 +1384,7 @@ export class DocsBrowser extends UIBase {
   }
 
   updateCurrentPath() {
-    if (!this.contentDiv) {
+    if (!this.contentDiv || !this.handlesDocURL) {
       return;
     }
 
@@ -1326,12 +1401,12 @@ export class DocsBrowser extends UIBase {
 
 
   //send notifications to user
-  report(message, color=undefined, timeout=undefined) {
+  report(message, color = undefined, timeout = undefined) {
     if (this.ctx.report) {
-      console.warn("%c"+message, "color : " + color + ";");
+      console.warn("%c" + message, "color : " + color + ";");
       this.ctx.report(message, color, timeout);
     } else {
-      console.warn("%c"+message, "color : " + color + ";");
+      console.warn("%c" + message, "color : " + color + ";");
     }
   }
 
@@ -1366,7 +1441,7 @@ export class DocsBrowser extends UIBase {
   }
 
   static newSTRUCT() {
-    return document.createElement("docs-browser-x");
+    return UIBase.createElement("docs-browser-x");
   }
 
   loadSTRUCT(reader) {
@@ -1377,10 +1452,12 @@ export class DocsBrowser extends UIBase {
     this.root.setAttribute("src", this.currentPath);
   }
 
-  static define() {return {
-    tagname : "docs-browser-x",
-    style   : "docsbrowser"
-  }}
+  static define() {
+    return {
+      tagname: "docs-browser-x",
+      style  : "docsbrowser"
+    }
+  }
 }
 
 DocsBrowser.STRUCT = `

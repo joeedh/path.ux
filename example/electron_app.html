@@ -1,21 +1,22 @@
 <!doctype html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <style>
-        body {
-            overflow : hidden;
-        }
-    </style>
-    <script type="module">
-      window.haveElectron = true;
-      
-      import * as app from './core/app.js'
-      window.init = function() {
-        console.log("init");
-        app.start();
-      }
-    </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    body {
+      overflow: hidden;
+    }
+  </style>
+  <script type="module">
+    window.haveElectron = true;
+
+    window.init = async function () {
+      const app = await import('./core/app.js');
+
+      console.log("init");
+      app.start();
+    }
+  </script>
 </head>
 <body onload='init()'>
 <img id="iconsheet16" style="display:none" src="./assets/iconsheet16.png"></img>

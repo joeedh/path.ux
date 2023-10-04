@@ -1,5 +1,22 @@
 "use strict";
 
+let _nativeTheme;
+
+function getNativeTheme() {
+  if (_nativeTheme) {
+    return _nativeTheme;
+  }
+
+  let remote = getElectron().remote;
+  if (!remote) { /* Newer electron version with no remote, client must provide it */
+    ipcRenderer.invoke("nativeTheme");
+  } else {
+    _nativeTheme = remote.nativeTheme;
+  }
+
+  return _nativeTheme;
+}
+
 function getElectronVersion() {
   let key = navigator.userAgent;
   let i = key.search("Electron");
@@ -75,9 +92,9 @@ export class ElectronMenu extends Array {
   insert(i, item) {
     this.length++;
 
-    let j = this.length-1;
+    let j = this.length - 1;
     while (j > i) {
-      this[j] = this[j-1];
+      this[j] = this[j - 1];
       j--;
     }
     this[i] = item;
@@ -132,6 +149,20 @@ function initElectronIpc() {
   ipcRenderer.on('invoke-menu-callback', (event, key, args) => {
     //console.error("Electron menu callback", key, args);
     callbacks[key].apply(undefined, args);
+  });
+
+  ipcRenderer.on("nativeTheme", (event, module) => {
+    _nativeTheme = Object.assign({}, module);
+    _nativeTheme._themeSource = _nativeTheme.themeSource;
+
+    Object.defineProperty(_nativeTheme, "themeSource", {
+      get() {
+        return this._themeSource;
+      },
+      set(v) {
+        ipcRenderer.invoke("nativeTheme.setThemeSource", v);
+      }
+    });
   });
 }
 
@@ -227,12 +258,14 @@ function patchDropBox() {
 }
 
 let on_tick = () => {
-  let nativeTheme = getElectron().remote.nativeTheme;
+  let nativeTheme = getNativeTheme();
 
-  let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
+  if (nativeTheme) {
+    let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
-  if (mode !== cconst.colorSchemeType) {
-    nativeTheme.themeSource = cconst.colorSchemeType;
+    if (mode !== cconst.colorSchemeType) {
+      nativeTheme.themeSource = cconst.colorSchemeType;
+    }
   }
 }
 
@@ -406,8 +439,6 @@ export function initMenuBar(menuEditor, override = false) {
 
   _menu_init = true;
 
-  let electron = getElectron().remote;
-
   //let win = electron.getCurrentWindow();
 
   let menu = new ElectronMenu();
@@ -484,8 +515,6 @@ import {PlatformAPI, isMimeText} from '../platform_base.js';
 
 export class platform extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
-    const {dialog} = require('electron').remote
-
     console.log(args.filters);
 
     let eargs = {
@@ -546,8 +575,6 @@ export class platform extends PlatformAPI {
   }
 
   static showSaveDialog(title, filedata_cb, args = new FileDialogArgs()) {
-    const {dialog} = require('electron').remote
-
     console.log(args.filters);
 
     let eargs = {

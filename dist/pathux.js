@@ -12622,6 +12622,32 @@ var toolprop_abstract = /*#__PURE__*/Object.freeze({
   Curve1DPropertyIF: Curve1DPropertyIF
 });
 
+/**
+ * Unit system.
+ *
+ * Provides an API to convert units,
+ * e.g. `convert(0.5, "foot", "meter")`
+ *
+ * Path.ux widgets typically have `baseUnit`
+ * and `displayUnit` properties. `baseUnit`
+ * is the unit of the real stored value,
+ * while `displayUnit` is what he user sees
+ * and edits.
+ *
+ * Units:
+ * # none           No unit
+ * # meter          Meter       (distance)
+ * # inch           Inch        (distance)
+ * # foot           Foot        (distance)
+ * # square_foot    Square Feet (area)
+ * # mile           Mile        (distance)
+ * # degree         Degrees     (angle)
+ * # radian         Radians     (angle)
+ * # pixel          Pixel       (distance)
+ * # percent        Percent
+ *
+ */
+
 /*
 all units convert to meters
 */
@@ -13098,11 +13124,11 @@ function parseValue(string, baseUnit = undefined, displayUnit = undefined) {
 
   let f = parseValueIntern(string, displayUnit || baseUnit);
 
-  if (baseUnit) {
-    if (displayUnit) {
-      f = displayUnit.toInternal(f);
-    }
+  if (displayUnit) {
+    f = displayUnit.toInternal(f);
+  }
 
+  if (baseUnit) {
     f = baseUnit.fromInternal(f);
   }
 
@@ -13162,19 +13188,66 @@ class PixelUnit extends Unit {
 
 Unit.register(PixelUnit);
 
-function convert(value, unita, unitb) {
-  if (typeof unita === "string")
-    unita = Unit.getUnit(unita);
+class PercentUnit extends Unit {
+  static unitDefine() {
+    return {
+      name   : "percent",
+      uiname : "Percent",
+      type   : "distance",
+      icon   : -1,
+      pattern: /[0-9]+(\.[0-9]+)?[ \t]*%/
+    }
+  }
 
-  if (typeof unitb === "string")
-    unitb = Unit.getUnit(unitb);
+  static toInternal(value) {
+    return value/100.0;
+  }
 
-  return unitb.fromInternal(unita.toInternal(value));
+  static fromInternal(value) {
+    return value*100.0;
+  }
+
+  static parse(string) {
+    return parseFloat(string.replace(/%/g, ""));
+  }
+
+  static buildString(value, decimals = 2) {
+    return (value).toFixed(decimals) + "%";
+  }
 }
+
+Unit.register(PercentUnit);
+
+
+function convert(value, unita, unitb) {
+  /* Note: getUnit throws on invalid units *except* for
+   *       'none' where it returns undefined.
+   */
+
+  if (typeof unita === "string") {
+    unita = Unit.getUnit(unita);
+  }
+
+  if (typeof unitb === "string") {
+    unitb = Unit.getUnit(unitb);
+  }
+
+  if (unita && unitb) {
+    return unitb.fromInternal(unita.toInternal(value));
+  } else if (unitb) {
+    return unitb.fromInternal(value); /* unita was 'none' */
+  } else if (unita) {
+    return unita.toInternal(value);
+  } else {
+    return value;
+  }
+}
+
+window.unitConvert = convert;
 
 /**
  *
- * @param value Note: is not converted to internal unit
+ * @param value Value (note: is not converted to internal unit)
  * @param unit: Unit to use, should be a string referencing unit type, see unitDefine().name
  * @returns {*}
  */
@@ -13187,7 +13260,7 @@ function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, display
   }
 
 
-  if (baseUnit !== "none" && displayUnit !== baseUnit && displayUnit !== "none") {
+  if (displayUnit !== baseUnit) {
     value = convert(value, baseUnit, displayUnit);
   }
 
@@ -18157,6 +18230,11 @@ class ToolProperty$1 extends ToolPropertyIF {
     return this;
   }
 
+  setUnit(unit) {
+    this.baseUnit = this.displayUnit = unit;
+    return this;
+  }
+
   setFlag(f, combine = false) {
     this.flag = combine ? this.flag | f : f;
     return this;
@@ -19008,9 +19086,9 @@ EnumProperty$9.STRUCT = nstructjs.inherit(EnumProperty$9, ToolProperty$1) + `
 nstructjs.register(EnumProperty$9);
 
 class FlagProperty extends EnumProperty$9 {
-  constructor(string, valid_values, apiname,
+  constructor(string_or_int, valid_values, apiname,
               uiname, description, flag, icon) {
-    super(string, valid_values, apiname,
+    super(string_or_int, valid_values, apiname,
       uiname, description, flag, icon);
 
     this.type = PropTypes$8.FLAG;
@@ -21333,7 +21411,7 @@ function aabb_union_2d(pos1, size1, pos2, size2) {
 //XXX refactor to use es6 classes,
 //    or at last the class system in typesystem.js
 function init_prototype(cls, proto) {
-  for (var k in proto) {
+  for (let k in proto) {
     cls.prototype[k] = proto[k];
   }
 
@@ -21343,14 +21421,14 @@ function init_prototype(cls, proto) {
 function inherit(cls, parent, proto) {
   cls.prototype = Object.create(parent.prototype);
 
-  for (var k in proto) {
+  for (let k in proto) {
     cls.prototype[k] = proto[k];
   }
 
   return cls.prototype;
 }
 
-var set$1 = set$2;
+let set$1 = set$2;
 
 //everything below here was compiled from es6 code  
 //variables starting with $ are function static local vars,
@@ -21358,7 +21436,7 @@ var set$1 = set$2;
 //
 //except for $_mh and $_swapt.  they were used with a C macro
 //preprocessor.
-var $_mh, $_swapt;
+let $_mh, $_swapt;
 
 //XXX destroy me
 const feps = 2.22e-16;
@@ -21367,8 +21445,8 @@ const COLINEAR = 1;
 const LINECROSS = 2;
 const COLINEAR_ISECT = 3;
 
-var _cross_vec1 = new Vector3$2();
-var _cross_vec2 = new Vector3$2();
+let _cross_vec1 = new Vector3$2();
+let _cross_vec2 = new Vector3$2();
 
 const SQRT2 = Math.sqrt(2.0);
 const FEPS_DATA = {
@@ -21386,86 +21464,28 @@ const FLOAT_MAX = 1e+22;
 const Matrix4UI = Matrix4$2;
 
 /*
-var Matrix4UI=exports.Matrix4UI = function(loc, rot, size) {
-  if (rot==undefined) {
-      rot = undefined;
-  }
-  
-  if (size==undefined) {
-      size = undefined;
-  }
-  
-  Object.defineProperty(this, "loc", {get: function() {
-    var t=new Vector3();
-    this.decompose(t);
-    return t;
-  }, set: function(loc) {
-    var l=new Vector3(), r=new Vector3(), s=new Vector3();
-    this.decompose(l, r, s);
-    this.calc(loc, r, s);
-  }});
-  
-  Object.defineProperty(this, "size", {get: function() {
-    var t=new Vector3();
-    this.decompose(undefined, undefined, t);
-    return t;
-  }, set: function(size) {
-    var l=new Vector3(), r=new Vector3(), s=new Vector3();
-    this.decompose(l, r, s);
-    this.calc(l, r, size);
-  }});
-  
-  Object.defineProperty(this, "rot", {get: function() {
-    var t=new Vector3();
-    this.decompose(undefined, t);
-    return t;
-  }, set: function(rot) {
-    var l=new Vector3(), r=new Vector3(), s=new Vector3();
-    this.decompose(l, r, s);
-    this.calc(l, rot, s);
-  }});
-  
-  if (loc instanceof Matrix4) {
-      this.load(loc);
-      return ;
-  }
-  
-  if (rot==undefined)
-    rot = [0, 0, 0];
-  if (size==undefined)
-    size = [1.0, 1.0, 1.0];
-  this.makeIdentity();
-  this.calc(loc, rot, size);
-};
-
-Matrix4UI.prototype = inherit(Matrix4UI, Matrix4, {
-  calc : function(loc, rot, size) {
-    this.rotate(rot[0], rot[1], rot[2]);
-    this.scale(size[0], size[1], size[2]);
-    this.translate(loc[0], loc[1], loc[2]);
-  }
-
-});
-*/
+This must be truly ancient code, possibly from
+allshape days.
 
 if (FLOAT_MIN != FLOAT_MIN || FLOAT_MAX != FLOAT_MAX) {
   FLOAT_MIN = 1e-05;
   FLOAT_MAX = 1000000.0;
   console.log("Floating-point 16-bit system detected!");
 }
+*/
 
-var _static_grp_points4 = new Array(4);
-var _static_grp_points8 = new Array(8);
+let _static_grp_points4 = new Array(4);
+let _static_grp_points8 = new Array(8);
 
 function get_rect_points(p, size) {
-  var cs;
-  if (p.length == 2) {
+  let cs;
+  if (p.length === 2) {
     cs = _static_grp_points4;
     cs[0] = p;
     cs[1] = [p[0] + size[0], p[1]];
     cs[2] = [p[0] + size[0], p[1] + size[1]];
     cs[3] = [p[0], p[1] + size[1]];
-  } else if (p.length == 3) {
+  } else if (p.length === 3) {
     cs = _static_grp_points8;
     cs[0] = p;
     cs[1] = [p[0] + size[0], p[1], p[2]];
@@ -21482,12 +21502,12 @@ function get_rect_points(p, size) {
 };
 
 function get_rect_lines(p, size) {
-  var ps = get_rect_points(p, size);
-  if (p.length == 2) {
+  let ps = get_rect_points(p, size);
+  if (p.length === 2) {
     return [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
-  } else if (p.length == 3) {
-    var l1 = [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
-    var l2 = [[ps[4], ps[5]], [ps[5], ps[6]], [ps[6], ps[7]], [ps[7], ps[4]]];
+  } else if (p.length === 3) {
+    let l1 = [[ps[0], ps[1]], [ps[1], ps[2]], [ps[2], ps[3]], [ps[3], ps[0]]];
+    let l2 = [[ps[4], ps[5]], [ps[5], ps[6]], [ps[6], ps[7]], [ps[7], ps[4]]];
     l1.concat(l2);
     l1.push([ps[0], ps[4]]);
     l1.push([ps[1], ps[5]]);
@@ -21499,15 +21519,15 @@ function get_rect_lines(p, size) {
   }
 };
 
-var $vs_simple_tri_aabb_isect = [0, 0, 0];
+let $vs_simple_tri_aabb_isect = [0, 0, 0];
 
 function simple_tri_aabb_isect(v1, v2, v3, min, max) {
   $vs_simple_tri_aabb_isect[0] = v1;
   $vs_simple_tri_aabb_isect[1] = v2;
   $vs_simple_tri_aabb_isect[2] = v3;
-  for (var i = 0; i < 3; i++) {
-    var isect = true;
-    for (var j = 0; j < 3; j++) {
+  for (let i = 0; i < 3; i++) {
+    let isect = true;
+    for (let j = 0; j < 3; j++) {
       if ($vs_simple_tri_aabb_isect[j][i] < min[i] || $vs_simple_tri_aabb_isect[j][i] >= max[i])
         isect = false;
     }
@@ -21519,11 +21539,11 @@ function simple_tri_aabb_isect(v1, v2, v3, min, max) {
 
 class MinMax {
   constructor(totaxis) {
-    if (totaxis == undefined) {
+    if (totaxis === undefined) {
       totaxis = 1;
     }
     this.totaxis = totaxis;
-    if (totaxis != 1) {
+    if (totaxis !== 1) {
       let cls;
 
       switch (totaxis) {
@@ -21556,13 +21576,13 @@ class MinMax {
   }
 
   static fromSTRUCT(reader) {
-    var ret = new MinMax();
+    let ret = new MinMax();
     reader(ret);
     return ret;
   }
 
   load(mm) {
-    if (this.totaxis == 1) {
+    if (this.totaxis === 1) {
       this.min = mm.min;
       this.max = mm.max;
       this._min = mm.min;
@@ -21576,13 +21596,13 @@ class MinMax {
   }
 
   reset() {
-    var totaxis = this.totaxis;
-    if (totaxis == 1) {
+    let totaxis = this.totaxis;
+    if (totaxis === 1) {
       this.min = this.max = 0;
       this._min = FLOAT_MAX;
       this._max = FLOAT_MIN;
     } else {
-      for (var i = 0; i < totaxis; i++) {
+      for (let i = 0; i < totaxis; i++) {
         this._min[i] = FLOAT_MAX;
         this._max[i] = FLOAT_MIN;
         this.min[i] = 0;
@@ -21592,9 +21612,9 @@ class MinMax {
   }
 
   minmax_rect(p, size) {
-    var totaxis = this.totaxis;
-    var cs = this._static_mr_cs;
-    if (totaxis == 2) {
+    let totaxis = this.totaxis;
+    let cs = this._static_mr_cs;
+    if (totaxis === 2) {
       cs[0] = p;
       cs[1] = [p[0] + size[0], p[1]];
       cs[2] = [p[0] + size[0], p[1] + size[1]];
@@ -21611,23 +21631,23 @@ class MinMax {
     } else {
       throw "Minmax.minmax_rect has no implementation for " + totaxis + "-dimensional data";
     }
-    for (var i = 0; i < cs.length; i++) {
+    for (let i = 0; i < cs.length; i++) {
       this.minmax(cs[i]);
     }
   }
 
   minmax(p) {
-    var totaxis = this.totaxis;
+    let totaxis = this.totaxis;
 
-    if (totaxis == 1) {
+    if (totaxis === 1) {
       this._min = this.min = Math.min(this._min, p);
       this._max = this.max = Math.max(this._max, p);
-    } else if (totaxis == 2) {
+    } else if (totaxis === 2) {
       this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
       this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
       this._max[0] = this.max[0] = Math.max(this._max[0], p[0]);
       this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
-    } else if (totaxis == 3) {
+    } else if (totaxis === 3) {
       this._min[0] = this.min[0] = Math.min(this._min[0], p[0]);
       this._min[1] = this.min[1] = Math.min(this._min[1], p[1]);
       this._min[2] = this.min[2] = Math.min(this._min[2], p[2]);
@@ -21635,7 +21655,7 @@ class MinMax {
       this._max[1] = this.max[1] = Math.max(this._max[1], p[1]);
       this._max[2] = this.max[2] = Math.max(this._max[2], p[2]);
     } else {
-      for (var i = 0; i < totaxis; i++) {
+      for (let i = 0; i < totaxis; i++) {
         this._min[i] = this.min[i] = Math.min(this._min[i], p[i]);
         this._max[i] = this.max[i] = Math.max(this._max[i], p[i]);
       }
@@ -21674,7 +21694,7 @@ function winding(a, b, c, zero_z, tol = 0.0) {
   t2.load(c).sub(b);
   return t[0]*
   
-  for (var i=0; i<a.length; i++) {
+  for (let i=0; i<a.length; i++) {
       _cross_vec1[i] = b[i]-a[i];
       _cross_vec2[i] = c[i]-a[i];
   }
@@ -21688,7 +21708,7 @@ function winding(a, b, c, zero_z, tol = 0.0) {
 }
 
 function inrect_2d(p, pos, size) {
-  if (p == undefined || pos == undefined || size == undefined) {
+  if (p === undefined || pos === undefined || size === undefined) {
     console.trace();
     console.log("Bad paramters to inrect_2d()");
     console.log("p: ", p, ", pos: ", pos, ", size: ", size);
@@ -21696,17 +21716,17 @@ function inrect_2d(p, pos, size) {
   }
   return p[0] >= pos[0] && p[0] <= pos[0] + size[0] && p[1] >= pos[1] && p[1] <= pos[1] + size[1];
 };
-var $smin_aabb_isect_line_2d = new Vector2$c();
-var $ssize_aabb_isect_line_2d = new Vector2$c();
-var $sv1_aabb_isect_line_2d = new Vector2$c();
-var $ps_aabb_isect_line_2d = [new Vector2$c(), new Vector2$c(), new Vector2$c()];
-var $l1_aabb_isect_line_2d = [0, 0];
-var $smax_aabb_isect_line_2d = new Vector2$c();
-var $sv2_aabb_isect_line_2d = new Vector2$c();
-var $l2_aabb_isect_line_2d = [0, 0];
+let $smin_aabb_isect_line_2d = new Vector2$c();
+let $ssize_aabb_isect_line_2d = new Vector2$c();
+let $sv1_aabb_isect_line_2d = new Vector2$c();
+let $ps_aabb_isect_line_2d = [new Vector2$c(), new Vector2$c(), new Vector2$c()];
+let $l1_aabb_isect_line_2d = [0, 0];
+let $smax_aabb_isect_line_2d = new Vector2$c();
+let $sv2_aabb_isect_line_2d = new Vector2$c();
+let $l2_aabb_isect_line_2d = [0, 0];
 
 function aabb_isect_line_2d(v1, v2, min, max) {
-  for (var i = 0; i < 2; i++) {
+  for (let i = 0; i < 2; i++) {
     $smin_aabb_isect_line_2d[i] = Math.min(min[i], v1[i]);
     $smax_aabb_isect_line_2d[i] = Math.max(max[i], v2[i]);
   }
@@ -21714,7 +21734,7 @@ function aabb_isect_line_2d(v1, v2, min, max) {
   $ssize_aabb_isect_line_2d.load(max).sub(min);
   if (!aabb_isect_2d($smin_aabb_isect_line_2d, $smax_aabb_isect_line_2d, min, $ssize_aabb_isect_line_2d))
     return false;
-  for (var i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++) {
     if (inrect_2d(v1, min, $ssize_aabb_isect_line_2d))
       return true;
     if (inrect_2d(v2, min, $ssize_aabb_isect_line_2d))
@@ -21728,8 +21748,8 @@ function aabb_isect_line_2d(v1, v2, min, max) {
   $ps_aabb_isect_line_2d[3][1] = min[1];
   $l1_aabb_isect_line_2d[0] = v1;
   $l1_aabb_isect_line_2d[1] = v2;
-  for (var i = 0; i < 4; i++) {
-    var a = $ps_aabb_isect_line_2d[i], b = $ps_aabb_isect_line_2d[(i + 1)%4];
+  for (let i = 0; i < 4; i++) {
+    let a = $ps_aabb_isect_line_2d[i], b = $ps_aabb_isect_line_2d[(i + 1)%4];
     $l2_aabb_isect_line_2d[0] = a;
     $l2_aabb_isect_line_2d[1] = b;
     if (line_line_cross($l1_aabb_isect_line_2d, $l2_aabb_isect_line_2d))
@@ -21747,14 +21767,14 @@ function expand_rect2d(pos, size, margin) {
 };
 
 function expand_line(l, margin) {
-  var c = new Vector3$2();
+  let c = new Vector3$2();
   c.add(l[0]);
   c.add(l[1]);
   c.mulScalar(0.5);
   l[0].sub(c);
   l[1].sub(c);
-  var l1 = l[0].vectorLength();
-  var l2 = l[1].vectorLength();
+  let l1 = l[0].vectorLength();
+  let l2 = l[1].vectorLength();
   l[0].normalize();
   l[1].normalize();
   l[0].mulScalar(margin + l1);
@@ -21766,7 +21786,7 @@ function expand_line(l, margin) {
 
 //stupidly ancient function, todo: rewrite
 function colinear(a, b, c, limit = 2.2e-16) {
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     _cross_vec1[i] = b[i] - a[i];
     _cross_vec2[i] = c[i] - a[i];
   }
@@ -21780,22 +21800,22 @@ function colinear(a, b, c, limit = 2.2e-16) {
   return _cross_vec1.dot(_cross_vec1) < limit;
 };
 
-var _llc_l1 = [new Vector3$2(), new Vector3$2()];
-var _llc_l2 = [new Vector3$2(), new Vector3$2()];
-var _llc_l3 = [new Vector3$2(), new Vector3$2()];
-var _llc_l4 = [new Vector3$2(), new Vector3$2()];
+let _llc_l1 = [new Vector3$2(), new Vector3$2()];
+let _llc_l2 = [new Vector3$2(), new Vector3$2()];
+let _llc_l3 = [new Vector3$2(), new Vector3$2()];
+let _llc_l4 = [new Vector3$2(), new Vector3$2()];
 
-var lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
+let lli_v1 = new Vector3$2(), lli_v2 = new Vector3$2(), lli_v3 = new Vector3$2(), lli_v4 = new Vector3$2();
 
-var _zero_cn = new Vector3$2();
-var _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
-var _rets_cn = cachering.fromConstructor(Vector3$2, 64);
+let _zero_cn = new Vector3$2();
+let _tmps_cn = cachering.fromConstructor(Vector3$2, 64);
+let _rets_cn = cachering.fromConstructor(Vector3$2, 64);
 
 //vec1, vec2 should both be normalized
 function corner_normal(vec1, vec2, width) {
-  var ret = _rets_cn.next().zero();
+  let ret = _rets_cn.next().zero();
 
-  var vec = _tmps_cn.next().zero();
+  let vec = _tmps_cn.next().zero();
   vec.load(vec1).add(vec2).normalize();
 
   /*
@@ -21822,13 +21842,13 @@ function corner_normal(vec1, vec2, width) {
   vec1 = _tmps_cn.next().load(vec1).mulScalar(width);
   vec2 = _tmps_cn.next().load(vec2).mulScalar(width);
 
-  var p1 = _tmps_cn.next().load(vec1);
-  var p2 = _tmps_cn.next().load(vec2);
+  let p1 = _tmps_cn.next().load(vec1);
+  let p2 = _tmps_cn.next().load(vec2);
 
   vec1.addFac(vec1, 0.01);
   vec2.addFac(vec2, 0.01);
 
-  var sc = 1.0;
+  let sc = 1.0;
 
   p1[0] += vec1[1]*sc;
   p1[1] += -vec1[0]*sc;
@@ -21836,9 +21856,9 @@ function corner_normal(vec1, vec2, width) {
   p2[0] += -vec2[1]*sc;
   p2[1] += vec2[0]*sc;
 
-  var p = line_line_isect(vec1, p1, vec2, p2, false);
+  let p = line_line_isect(vec1, p1, vec2, p2, false);
 
-  if (p == undefined || p === COLINEAR_ISECT || p.dot(p) < 0.000001) {
+  if (p === undefined || p === COLINEAR_ISECT || p.dot(p) < 0.000001) {
     ret.load(vec1).add(vec2).normalize().mulScalar(width);
   } else {
     ret.load(p);
@@ -21875,14 +21895,14 @@ function line_line_isect(v1, v2, v3, v4, test_segment = true) {
   
   */
 
-  var xa1 = v1[0], xa2 = v2[0], ya1 = v1[1], ya2 = v2[1];
-  var xb1 = v3[0], xb2 = v4[0], yb1 = v3[1], yb2 = v4[1];
+  let xa1 = v1[0], xa2 = v2[0], ya1 = v1[1], ya2 = v2[1];
+  let xb1 = v3[0], xb2 = v4[0], yb1 = v3[1], yb2 = v4[1];
 
-  var div = ((xa1 - xa2)*(yb1 - yb2) - (xb1 - xb2)*(ya1 - ya2));
+  let div = ((xa1 - xa2)*(yb1 - yb2) - (xb1 - xb2)*(ya1 - ya2));
   if (div < 0.00000001) { //parallel but intersecting lines.
     return COLINEAR_ISECT;
   } else { //intersection exists
-    var t1 = (-((ya1 - yb2)*xb1 - (yb1 - yb2)*xa1 - (ya1 - yb1)*xb2))/div;
+    let t1 = (-((ya1 - yb2)*xb1 - (yb1 - yb2)*xa1 - (ya1 - yb1)*xb2))/div;
 
     return lli_v1.load(v1).interp(v2, t1);
   }
@@ -21890,7 +21910,7 @@ function line_line_isect(v1, v2, v3, v4, test_segment = true) {
 
 function line_line_cross(a, b, c, d) {
   /*
-  var limit=feps*1000;
+  let limit=feps*1000;
   if (Math.abs(l1[0].vectorDistance(l2[0])+l1[1].vectorDistance(l2[0])-l1[0].vectorDistance(l1[1]))<limit) {
       return true;
   }
@@ -21912,27 +21932,27 @@ function line_line_cross(a, b, c, d) {
   return (w1 === w2) && (w3 === w4) && (w1 !== w3);
 };
 
-var _asi_v1 = new Vector3$2();
-var _asi_v2 = new Vector3$2();
-var _asi_v3 = new Vector3$2();
-var _asi_v4 = new Vector3$2();
-var _asi_v5 = new Vector3$2();
-var _asi_v6 = new Vector3$2();
+let _asi_v1 = new Vector3$2();
+let _asi_v2 = new Vector3$2();
+let _asi_v3 = new Vector3$2();
+let _asi_v4 = new Vector3$2();
+let _asi_v5 = new Vector3$2();
+let _asi_v6 = new Vector3$2();
 
 function point_in_aabb_2d(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
 }
 
-var _asi2d_v1 = new Vector2$c();
-var _asi2d_v2 = new Vector2$c();
-var _asi2d_v3 = new Vector2$c();
-var _asi2d_v4 = new Vector2$c();
-var _asi2d_v5 = new Vector2$c();
-var _asi2d_v6 = new Vector2$c();
+let _asi2d_v1 = new Vector2$c();
+let _asi2d_v2 = new Vector2$c();
+let _asi2d_v3 = new Vector2$c();
+let _asi2d_v4 = new Vector2$c();
+let _asi2d_v5 = new Vector2$c();
+let _asi2d_v6 = new Vector2$c();
 
 function aabb_sphere_isect_2d(p, r, min, max) {
-  var v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
-  var v4 = _asi2d_v5;
+  let v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
+  let v4 = _asi2d_v5;
 
   p = _asi2d_v6.load(p);
   v1.load(p);
@@ -21947,7 +21967,7 @@ function aabb_sphere_isect_2d(p, r, min, max) {
   v2.add(mvec);
   v3.load(p);
 
-  var ret = point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)
+  let ret = point_in_aabb_2d(v1, min, max) || point_in_aabb_2d(v2, min, max)
     || point_in_aabb_2d(v3, min, max);
 
   if (ret)
@@ -22155,19 +22175,19 @@ function aabb_sphere_dist(p, min, max) {
 };
 
 function point_in_tri(p, v1, v2, v3) {
-  var w1 = winding(p, v1, v2);
-  var w2 = winding(p, v2, v3);
-  var w3 = winding(p, v3, v1);
-  return w1 == w2 && w2 == w3;
+  let w1 = winding(p, v1, v2);
+  let w2 = winding(p, v2, v3);
+  let w3 = winding(p, v3, v1);
+  return w1 === w2 && w2 === w3;
 };
 
 function convex_quad(v1, v2, v3, v4) {
   return line_line_cross([v1, v3], [v2, v4]);
 };
 
-var $e1_normal_tri = new Vector3$2();
-var $e3_normal_tri = new Vector3$2();
-var $e2_normal_tri = new Vector3$2();
+let $e1_normal_tri = new Vector3$2();
+let $e3_normal_tri = new Vector3$2();
+let $e2_normal_tri = new Vector3$2();
 
 function isNum(f) {
   let ok = typeof f === "number";
@@ -22225,7 +22245,7 @@ function normal_tri(v1, v2, v3) {
   return n;
 };
 
-var $n2_normal_quad = new Vector3$2();
+let $n2_normal_quad = new Vector3$2();
 
 let _q1 = new Vector3$2(), _q2 = new Vector3$2(), _q3 = new Vector3$2();
 
@@ -22238,7 +22258,7 @@ function normal_quad(v1, v2, v3, v4) {
 }
 
 function normal_quad_old(v1, v2, v3, v4) {
-  var n = normal_tri(v1, v2, v3);
+  let n = normal_tri(v1, v2, v3);
   $n2_normal_quad[0] = n[0];
   $n2_normal_quad[1] = n[1];
   $n2_normal_quad[2] = n[2];
@@ -22246,7 +22266,7 @@ function normal_quad_old(v1, v2, v3, v4) {
   $n2_normal_quad[0] = $n2_normal_quad[0] + n[0];
   $n2_normal_quad[1] = $n2_normal_quad[1] + n[1];
   $n2_normal_quad[2] = $n2_normal_quad[2] + n[2];
-  var _len = Math.sqrt(($n2_normal_quad[0]*$n2_normal_quad[0] + $n2_normal_quad[1]*$n2_normal_quad[1] + $n2_normal_quad[2]*$n2_normal_quad[2]));
+  let _len = Math.sqrt(($n2_normal_quad[0]*$n2_normal_quad[0] + $n2_normal_quad[1]*$n2_normal_quad[1] + $n2_normal_quad[2]*$n2_normal_quad[2]));
   if (_len > 1e-05)
     _len = 1.0/_len;
   $n2_normal_quad[0] *= _len;
@@ -22255,32 +22275,32 @@ function normal_quad_old(v1, v2, v3, v4) {
   return $n2_normal_quad;
 };
 
-var _li_vi = new Vector3$2();
+let _li_vi = new Vector3$2();
 
 //calc_t is optional, false
 function line_isect(v1, v2, v3, v4, calc_t) {
-  if (calc_t == undefined) {
+  if (calc_t === undefined) {
     calc_t = false;
   }
-  var div = (v2[0] - v1[0])*(v4[1] - v3[1]) - (v2[1] - v1[1])*(v4[0] - v3[0]);
-  if (div == 0.0)
+  let div = (v2[0] - v1[0])*(v4[1] - v3[1]) - (v2[1] - v1[1])*(v4[0] - v3[0]);
+  if (div === 0.0)
     return [new Vector3$2(), COLINEAR, 0.0];
-  var vi = _li_vi;
+  let vi = _li_vi;
   vi[0] = 0;
   vi[1] = 0;
   vi[2] = 0;
   vi[0] = ((v3[0] - v4[0])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[0] - v2[0])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   vi[1] = ((v3[1] - v4[1])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[1] - v2[1])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
-  if (calc_t || v1.length == 3) {
-    var n1 = new Vector2$c(v2).sub(v1);
-    var n2 = new Vector2$c(vi).sub(v1);
-    var t = n2.vectorLength()/n1.vectorLength();
+  if (calc_t || v1.length === 3) {
+    let n1 = new Vector2$c(v2).sub(v1);
+    let n2 = new Vector2$c(vi).sub(v1);
+    let t = n2.vectorLength()/n1.vectorLength();
     n1.normalize();
     n2.normalize();
     if (n1.dot(n2) < 0.0) {
       t = -t;
     }
-    if (v1.length == 3) {
+    if (v1.length === 3) {
       vi[2] = v1[2] + (v2[2] - v1[2])*t;
     }
     return [vi, LINECROSS, t];
@@ -22288,27 +22308,27 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   return [vi, LINECROSS];
 };
 
-var dt2l_v1 = new Vector2$c();
-var dt2l_v2 = new Vector2$c();
-var dt2l_v3 = new Vector2$c();
-var dt2l_v4 = new Vector2$c();
-var dt2l_v5 = new Vector2$c();
+let dt2l_v1 = new Vector2$c();
+let dt2l_v2 = new Vector2$c();
+let dt2l_v3 = new Vector2$c();
+let dt2l_v4 = new Vector2$c();
+let dt2l_v5 = new Vector2$c();
 
 function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = undefined) {
-  if (clip == undefined) {
+  if (clip === undefined) {
     clip = true;
   }
 
   v1 = dt2l_v4.load(v1);
   v2 = dt2l_v5.load(v2);
 
-  var n = dt2l_v1;
-  var vec = dt2l_v3;
+  let n = dt2l_v1;
+  let vec = dt2l_v3;
 
   n.load(v2).sub(v1).normalize();
   vec.load(p).sub(v1);
 
-  var t = vec.dot(n);
+  let t = vec.dot(n);
   if (clip) {
     t = Math.min(Math.max(t, 0.0), v1.vectorDistance(v2));
   }
@@ -22327,11 +22347,11 @@ function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = un
   return n.vectorDistance(p);
 }
 
-var dt3l_v1 = new Vector3$2();
-var dt3l_v2 = new Vector3$2();
-var dt3l_v3 = new Vector3$2();
-var dt3l_v4 = new Vector3$2();
-var dt3l_v5 = new Vector3$2();
+let dt3l_v1 = new Vector3$2();
+let dt3l_v2 = new Vector3$2();
+let dt3l_v3 = new Vector3$2();
+let dt3l_v4 = new Vector3$2();
+let dt3l_v5 = new Vector3$2();
 
 function dist_to_line_sqr(p, v1, v2, clip = true) {
   let px = p[0] - v1[0];
@@ -22372,21 +22392,21 @@ function dist_to_line(p, v1, v2, clip = true) {
 }
 
 //p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
-var _cplw_vs4 = cachering.fromConstructor(Vector4$2, 64);
-var _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
-var _cplw_vs2 = cachering.fromConstructor(Vector2$c, 64);
+let _cplw_vs4 = cachering.fromConstructor(Vector4$2, 64);
+let _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
+let _cplw_vs2 = cachering.fromConstructor(Vector2$c, 64);
 
 function wclip(x1, x2, w1, w2, near) {
-  var r1 = near*w1 - x1;
-  var r2 = (w1 - w2)*near - (x1 - x2);
+  let r1 = near*w1 - x1;
+  let r2 = (w1 - w2)*near - (x1 - x2);
 
-  if (r2 == 0.0) return 0.0;
+  if (r2 === 0.0) return 0.0;
 
   return r1/r2;
 }
 
 function clip(a, b, znear) {
-  if (a - b == 0.0) return 0.0;
+  if (a - b === 0.0) return 0.0;
 
   return (a - znear)/(a - b);
 }
@@ -22397,8 +22417,8 @@ function clip(a, b, znear) {
   in front of the near clipping plane otherwise, returns 0
  */
 function clip_line_w(_v1, _v2, znear, zfar) {
-  var v1 = _cplw_vs4.next().load(_v1);
-  var v2 = _cplw_vs4.next().load(_v2);
+  let v1 = _cplw_vs4.next().load(_v1);
+  let v2 = _cplw_vs4.next().load(_v2);
 
   //are we fully behind the view plane?
   if ((v1[2] < 1.0 && v2[2] < 1.0))
@@ -22406,10 +22426,10 @@ function clip_line_w(_v1, _v2, znear, zfar) {
 
   function doclip1(v1, v2, axis) {
     if (v1[axis]/v1[3] < -1) {
-      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], -1);
+      let t = wclip(v1[axis], v2[axis], v1[3], v2[3], -1);
       v1.interp(v2, t);
     } else if (v1[axis]/v1[3] > 1) {
-      var t = wclip(v1[axis], v2[axis], v1[3], v2[3], 1);
+      let t = wclip(v1[axis], v2[axis], v1[3], v2[3], 1);
       v1.interp(v2, t);
     }
   }
@@ -22421,10 +22441,10 @@ function clip_line_w(_v1, _v2, znear, zfar) {
 
   function dozclip(v1, v2) {
     if (v1[2] < 1) {
-      var t = clip(v1[2], v2[2], 1);
+      let t = clip(v1[2], v2[2], 1);
       v1.interp(v2, t);
     } else if (v2[2] < 1) {
-      var t = clip(v2[2], v1[2], 1);
+      let t = clip(v2[2], v1[2], 1);
       v2.interp(v1, t);
     }
   }
@@ -22433,25 +22453,25 @@ function clip_line_w(_v1, _v2, znear, zfar) {
   doclip(v1, v2, 0);
   doclip(v1, v2, 1);
 
-  for (var i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++) {
     _v1[i] = v1[i];
     _v2[i] = v2[i];
   }
 
-  return !(v1[0]/v1[3] == v2[0]/v2[3] || v1[1]/v2[3] == v2[1]/v2[3]);
+  return !(v1[0]/v1[3] === v2[0]/v2[3] || v1[1]/v2[3] === v2[1]/v2[3]);
 };
 
 //clip is optional, true.  clip point to lie within line segment v1->v2
-var _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
-var _closest_point_rets = new cachering(function () {
+let _closest_point_on_line_cache = cachering.fromConstructor(Vector3$2, 64);
+let _closest_point_rets = new cachering(function () {
   return [0, 0];
 }, 64);
 
-var _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
+let _closest_tmps = [new Vector3$2(), new Vector3$2(), new Vector3$2()];
 
 function closest_point_on_line(p, v1, v2, clip = true) {
-  var l1 = _closest_tmps[0], l2 = _closest_tmps[1];
-  var len;
+  let l1 = _closest_tmps[0], l2 = _closest_tmps[1];
+  let len;
 
 
   l1.load(v2).sub(v1);
@@ -22463,22 +22483,22 @@ function closest_point_on_line(p, v1, v2, clip = true) {
   l1.normalize();
   l2.load(p).sub(v1);
 
-  var t = l2.dot(l1);
+  let t = l2.dot(l1);
   if (clip) {
     //t = t*(t<0.0) + t*(t>1.0) + (t>1.0);
     t = t < 0.0 ? 0.0 : t;
     t = t > len ? len : t;
   }
 
-  var p = _closest_point_on_line_cache.next();
-  p.load(l1).mulScalar(t).add(v1);
-  var ret = _closest_point_rets.next();
+  let co = _closest_point_on_line_cache.next();
+  co.load(l1).mulScalar(t).add(v1);
+  let ret = _closest_point_rets.next();
 
-  ret[0] = p;
+  ret[0] = co;
   ret[1] = t;
 
   return ret;
-};
+}
 
 /*given input line (a,d) and tangent t,
   returns a circle that goes through both
@@ -22487,8 +22507,8 @@ function closest_point_on_line(p, v1, v2, clip = true) {
   
   note that t need not be normalized, this function
   does that itself*/
-var _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
-var _circ_from_line_tan_ret = new cachering(function () {
+let _circ_from_line_tan_vs = cachering.fromConstructor(Vector3$2, 32);
+let _circ_from_line_tan_ret = new cachering(function () {
   return [new Vector3$2(), 0];
 }, 64);
 
@@ -22525,8 +22545,8 @@ function circ_from_line_tan(a, b, t) {
 
   note that t need not be normalized, this function
   does that itself*/
-var _circ_from_line_tan2d_vs = cachering.fromConstructor(Vector3$2, 32);
-var _circ_from_line_tan2d_ret = new cachering(function () {
+let _circ_from_line_tan2d_vs = cachering.fromConstructor(Vector3$2, 32);
+let _circ_from_line_tan2d_ret = new cachering(function () {
   return [new Vector2$c(), 0];
 }, 64);
 
@@ -22611,35 +22631,35 @@ function circ_from_line_tan_2d(a, b, t) {
   return ret;
 }
 
-var _gtc_e1 = new Vector3$2();
-var _gtc_e2 = new Vector3$2();
-var _gtc_e3 = new Vector3$2();
-var _gtc_p1 = new Vector3$2();
-var _gtc_p2 = new Vector3$2();
-var _gtc_v1 = new Vector3$2();
-var _gtc_v2 = new Vector3$2();
-var _gtc_p12 = new Vector3$2();
-var _gtc_p22 = new Vector3$2();
-var _get_tri_circ_ret = new cachering(function () {
+let _gtc_e1 = new Vector3$2();
+let _gtc_e2 = new Vector3$2();
+let _gtc_e3 = new Vector3$2();
+let _gtc_p1 = new Vector3$2();
+let _gtc_p2 = new Vector3$2();
+let _gtc_v1 = new Vector3$2();
+let _gtc_v2 = new Vector3$2();
+let _gtc_p12 = new Vector3$2();
+let _gtc_p22 = new Vector3$2();
+let _get_tri_circ_ret = new cachering(function () {
   return [0, 0]
 });
 
 function get_tri_circ(a, b, c) {
-  var v1 = _gtc_v1;
-  var v2 = _gtc_v2;
-  var e1 = _gtc_e1;
-  var e2 = _gtc_e2;
-  var e3 = _gtc_e3;
-  var p1 = _gtc_p1;
-  var p2 = _gtc_p2;
+  let v1 = _gtc_v1;
+  let v2 = _gtc_v2;
+  let e1 = _gtc_e1;
+  let e2 = _gtc_e2;
+  let e3 = _gtc_e3;
+  let p1 = _gtc_p1;
+  let p2 = _gtc_p2;
 
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     e1[i] = b[i] - a[i];
     e2[i] = c[i] - b[i];
     e3[i] = a[i] - c[i];
   }
 
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     p1[i] = (a[i] + b[i])*0.5;
     p2[i] = (c[i] + b[i])*0.5;
   }
@@ -22657,28 +22677,28 @@ function get_tri_circ(a, b, c) {
   v1.normalize();
   v2.normalize();
 
-  var cent;
-  var type;
-  for (var i = 0; i < 3; i++) {
+  let cent;
+  let type;
+  for (let i = 0; i < 3; i++) {
     _gtc_p12[i] = p1[i] + v1[i];
     _gtc_p22[i] = p2[i] + v2[i];
   }
 
-  var ret = line_isect(p1, _gtc_p12, p2, _gtc_p22);
-  cent = ret[0];
-  type = ret[1];
+  let isect = line_isect(p1, _gtc_p12, p2, _gtc_p22);
+  cent = isect[0];
+  type = isect[1];
 
   e1.load(a);
   e2.load(b);
   e3.load(c);
 
-  var r = e1.sub(cent).vectorLength();
+  let r = e1.sub(cent).vectorLength();
   if (r < feps)
     r = e2.sub(cent).vectorLength();
   if (r < feps)
     r = e3.sub(cent).vectorLength();
 
-  var ret = _get_tri_circ_ret.next();
+  let ret = _get_tri_circ_ret.next();
   ret[0] = cent;
   ret[1] = r;
 
@@ -22686,34 +22706,34 @@ function get_tri_circ(a, b, c) {
 };
 
 function gen_circle(m, origin, r, stfeps) {
-  var pi = Math.PI;
-  var f = -pi/2;
-  var df = (pi*2)/stfeps;
-  var verts = new Array();
-  for (var i = 0; i < stfeps; i++) {
-    var x = origin[0] + r*Math.sin(f);
-    var y = origin[1] + r*Math.cos(f);
-    var v = m.make_vert(new Vector3$2([x, y, origin[2]]));
+  let pi = Math.PI;
+  let f = -pi/2;
+  let df = (pi*2)/stfeps;
+  let verts = new Array();
+  for (let i = 0; i < stfeps; i++) {
+    let x = origin[0] + r*Math.sin(f);
+    let y = origin[1] + r*Math.cos(f);
+    let v = m.make_vert(new Vector3$2([x, y, origin[2]]));
     verts.push(v);
     f += df;
   }
-  for (var i = 0; i < verts.length; i++) {
-    var v1 = verts[i];
-    var v2 = verts[(i + 1)%verts.length];
+  for (let i = 0; i < verts.length; i++) {
+    let v1 = verts[i];
+    let v2 = verts[(i + 1)%verts.length];
     m.make_edge(v1, v2);
   }
   return verts;
 };
 
-var cos = Math.cos;
-var sin = Math.sin;
+let cos = Math.cos;
+let sin = Math.sin;
 
 //axis is optional, 0
 function rot2d(v1, A, axis) {
-  var x = v1[0];
-  var y = v1[1];
+  let x = v1[0];
+  let y = v1[1];
 
-  if (axis == 1) {
+  if (axis === 1) {
     v1[0] = x*cos(A) + y*sin(A);
     v1[2] = y*cos(A) - x*sin(A);
   } else {
@@ -22723,25 +22743,25 @@ function rot2d(v1, A, axis) {
 }
 
 function makeCircleMesh(gl, radius, stfeps) {
-  var mesh = new Mesh();
-  var verts1 = gen_circle(mesh, new Vector3$2(), radius, stfeps);
-  var verts2 = gen_circle(mesh, new Vector3$2(), radius/1.75, stfeps);
+  let mesh = new Mesh();
+  let verts1 = gen_circle(mesh, new Vector3$2(), radius, stfeps);
+  let verts2 = gen_circle(mesh, new Vector3$2(), radius/1.75, stfeps);
   mesh.make_face_complex([verts1, verts2]);
   return mesh;
 };
 
 function minmax_verts(verts) {
-  var min = new Vector3$2([1000000000000.0, 1000000000000.0, 1000000000000.0]);
-  var max = new Vector3$2([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
-  var __iter_v = __get_iter(verts);
-  var v;
+  let min = new Vector3$2([1000000000000.0, 1000000000000.0, 1000000000000.0]);
+  let max = new Vector3$2([-1000000000000.0, -1000000000000.0, -1000000000000.0]);
+  let __iter_v = __get_iter(verts);
+  let v;
   while (1) {
-    var __ival_v = __iter_v.next();
+    let __ival_v = __iter_v.next();
     if (__ival_v.done) {
       break;
     }
     v = __ival_v.value;
-    for (var i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) {
       min[i] = Math.min(min[i], v.co[i]);
       max[i] = Math.max(max[i], v.co[i]);
     }
@@ -22750,38 +22770,38 @@ function minmax_verts(verts) {
 };
 
 function unproject(vec, ipers, iview) {
-  var newvec = new Vector3$2(vec);
+  let newvec = new Vector3$2(vec);
   newvec.multVecMatrix(ipers);
   newvec.multVecMatrix(iview);
   return newvec;
 };
 
 function project(vec, pers, view) {
-  var newvec = new Vector3$2(vec);
+  let newvec = new Vector3$2(vec);
   newvec.multVecMatrix(pers);
   newvec.multVecMatrix(view);
   return newvec;
 };
 
-var _sh_minv = new Vector3$2();
-var _sh_maxv = new Vector3$2();
-var _sh_start = [];
-var _sh_end = [];
+let _sh_minv = new Vector3$2();
+let _sh_maxv = new Vector3$2();
+let _sh_start = [];
+let _sh_end = [];
 
-var static_cent_gbw = new Vector3$2();
+let static_cent_gbw = new Vector3$2();
 
 function get_boundary_winding(points) {
-  var cent = static_cent_gbw.zero();
-  if (points.length == 0)
+  let cent = static_cent_gbw.zero();
+  if (points.length === 0)
     return false;
-  for (var i = 0; i < points.length; i++) {
+  for (let i = 0; i < points.length; i++) {
     cent.add(points[i]);
   }
   cent.divideScalar(points.length);
-  var w = 0, totw = 0;
-  for (var i = 0; i < points.length; i++) {
-    var v1 = points[i];
-    var v2 = points[(i + 1)%points.length];
+  let w = 0, totw = 0;
+  for (let i = 0; i < points.length; i++) {
+    let v1 = points[i];
+    let v2 = points[(i + 1)%points.length];
     if (!colinear(v1, v2, cent)) {
       w += winding(v1, v2, cent);
       totw += 1;
@@ -22789,19 +22809,19 @@ function get_boundary_winding(points) {
   }
   if (totw > 0)
     w /= totw;
-  return Math.round(w) == 1;
+  return Math.round(w) === 1;
 };
 
 class PlaneOps {
   constructor(normal) {
-    var no = normal;
+    let no = normal;
     this.axis = [0, 0, 0];
     this.reset_axis(normal);
   }
 
   reset_axis(no) {
-    var ax, ay, az;
-    var nx = Math.abs(no[0]), ny = Math.abs(no[1]), nz = Math.abs(no[2]);
+    let ax, ay, az;
+    let nx = Math.abs(no[0]), ny = Math.abs(no[1]), nz = Math.abs(no[2]);
     if (nz > nx && nz > ny) {
       ax = 0;
       ay = 1;
@@ -22819,7 +22839,7 @@ class PlaneOps {
   }
 
   convex_quad(v1, v2, v3, v4) {
-    var ax = this.axis;
+    let ax = this.axis;
     v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
     v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
     v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
@@ -22828,23 +22848,23 @@ class PlaneOps {
   }
 
   line_isect(v1, v2, v3, v4) {
-    var ax = this.axis;
-    var orig1 = v1, orig2 = v2;
+    let ax = this.axis;
+    let orig1 = v1, orig2 = v2;
     v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], v1[ax[2]]]);
     v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], v2[ax[2]]]);
     v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], v3[ax[2]]]);
     v4 = new Vector3$2([v4[ax[0]], v4[ax[1]], v4[ax[2]]]);
-    var ret = line_isect(v1, v2, v3, v4, true);
-    var vi = ret[0];
-    if (ret[1] == LINECROSS) {
+    let ret = line_isect(v1, v2, v3, v4, true);
+    let vi = ret[0];
+    if (ret[1] === LINECROSS) {
       ret[0].load(orig2).sub(orig1).mulScalar(ret[2]).add(orig1);
     }
     return ret;
   }
 
   line_line_cross(l1, l2) {
-    var ax = this.axis;
-    var v1 = l1[0], v2 = l1[1], v3 = l2[0], v4 = l2[1];
+    let ax = this.axis;
+    let v1 = l1[0], v2 = l1[1], v3 = l2[0], v4 = l2[1];
     v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
     v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
     v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
@@ -22853,8 +22873,8 @@ class PlaneOps {
   }
 
   winding(v1, v2, v3) {
-    var ax = this.axis;
-    if (v1 == undefined)
+    let ax = this.axis;
+    if (v1 === undefined)
       console.trace();
     v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
     v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
@@ -22863,7 +22883,7 @@ class PlaneOps {
   }
 
   colinear(v1, v2, v3) {
-    var ax = this.axis;
+    let ax = this.axis;
     v1 = new Vector3$2([v1[ax[0]], v1[ax[1]], 0.0]);
     v2 = new Vector3$2([v2[ax[0]], v2[ax[1]], 0.0]);
     v3 = new Vector3$2([v3[ax[0]], v3[ax[1]], 0.0]);
@@ -22871,18 +22891,18 @@ class PlaneOps {
   }
 
   get_boundary_winding(points) {
-    var ax = this.axis;
-    var cent = new Vector3$2();
-    if (points.length == 0)
+    let ax = this.axis;
+    let cent = new Vector3$2();
+    if (points.length === 0)
       return false;
-    for (var i = 0; i < points.length; i++) {
+    for (let i = 0; i < points.length; i++) {
       cent.add(points[i]);
     }
     cent.divideScalar(points.length);
-    var w = 0, totw = 0;
-    for (var i = 0; i < points.length; i++) {
-      var v1 = points[i];
-      var v2 = points[(i + 1)%points.length];
+    let w = 0, totw = 0;
+    for (let i = 0; i < points.length; i++) {
+      let v1 = points[i];
+      let v2 = points[(i + 1)%points.length];
       if (!this.colinear(v1, v2, cent)) {
         w += this.winding(v1, v2, cent);
         totw += 1;
@@ -22890,7 +22910,7 @@ class PlaneOps {
     }
     if (totw > 0)
       w /= totw;
-    return Math.round(w) == 1;
+    return Math.round(w) === 1;
   }
 }
 
@@ -22908,7 +22928,7 @@ part(ff, 1, 2);
 off fort;
 
 * */
-var _isrp_ret = new Vector3$2();
+let _isrp_ret = new Vector3$2();
 let isect_ray_plane_rets = cachering.fromConstructor(Vector3$2, 256);
 
 function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
@@ -22927,81 +22947,15 @@ function isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
 }
 
 function _old_isect_ray_plane(planeorigin, planenormal, rayorigin, raynormal) {
-  var p = planeorigin, n = planenormal;
-  var r = rayorigin, v = raynormal;
+  let p = planeorigin, n = planenormal;
+  let r = rayorigin, v = raynormal;
 
-  var d = p.vectorLength();
-  var t = -(r.dot(n) - p.dot(n))/v.dot(n);
+  let d = p.vectorLength();
+  let t = -(r.dot(n) - p.dot(n))/v.dot(n);
   _isrp_ret.load(v);
   _isrp_ret.mulScalar(t);
   _isrp_ret.add(r);
   return _isrp_ret;
-};
-
-function mesh_find_tangent(mesh, viewvec, offvec, projmat, verts) {
-  if (verts == undefined)
-    verts = mesh.verts.selected;
-  var vset = new set$1();
-  var eset = new set$1();
-  var __iter_v = __get_iter(verts);
-  var v;
-  while (1) {
-    var __ival_v = __iter_v.next();
-    if (__ival_v.done) {
-      break;
-    }
-    v = __ival_v.value;
-    vset.add(v);
-  }
-  var __iter_v = __get_iter(vset);
-  var v;
-  while (1) {
-    var __ival_v = __iter_v.next();
-    if (__ival_v.done) {
-      break;
-    }
-    v = __ival_v.value;
-    var __iter_e = __get_iter(v.edges);
-    var e;
-    while (1) {
-      var __ival_e = __iter_e.next();
-      if (__ival_e.done) {
-        break;
-      }
-      e = __ival_e.value;
-      if (vset.has(e.other_vert(v))) {
-        eset.add(e);
-      }
-    }
-  }
-  if (eset.length == 0) {
-    return new Vector3$2(offvec);
-  }
-  var tanav = new Vector3$2();
-  var evec = new Vector3$2();
-  var tan = new Vector3$2();
-  var co2 = new Vector3$2();
-  var __iter_e = __get_iter(eset);
-  var e;
-  while (1) {
-    var __ival_e = __iter_e.next();
-    if (__ival_e.done) {
-      break;
-    }
-    e = __ival_e.value;
-    evec.load(e.v1.co).multVecMatrix(projmat);
-    co2.load(e.v2.co).multVecMatrix(projmat);
-    evec.sub(co2);
-    evec.normalize();
-    tan[0] = evec[1];
-    tan[1] = -evec[0];
-    tan[2] = 0.0;
-    if (tan.dot(offvec) < 0.0)
-      tan.mulScalar(-1.0);
-    tanav.add(tan);
-  }
-  tanav.normalize();
-  return tanav;
 };
 
 class Mat4Stack {
@@ -23020,41 +22974,41 @@ class Mat4Stack {
   reset(mat) {
     this.matrix.load(mat);
     this.stack = [];
-    if (this.update_func != undefined)
+    if (this.update_func !== undefined)
       this.update_func();
   }
 
   load(mat) {
     this.matrix.load(mat);
-    if (this.update_func != undefined)
+    if (this.update_func !== undefined)
       this.update_func();
   }
 
   multiply(mat) {
     this.matrix.multiply(mat);
-    if (this.update_func != undefined)
+    if (this.update_func !== undefined)
       this.update_func();
   }
 
   identity() {
     this.matrix.loadIdentity();
-    if (this.update_func != undefined)
+    if (this.update_func !== undefined)
       this.update_func();
   }
 
   push(mat2) {
     this.stack.push(new Matrix4$2(this.matrix));
-    if (mat2 != undefined) {
+    if (mat2 !== undefined) {
       this.matrix.load(mat2);
-      if (this.update_func != undefined)
+      if (this.update_func !== undefined)
         this.update_func();
     }
   }
 
   pop() {
-    var mat = this.stack.pop(this.stack.length - 1);
+    let mat = this.stack.pop(this.stack.length - 1);
     this.matrix.load(mat);
-    if (this.update_func != undefined)
+    if (this.update_func !== undefined)
       this.update_func();
     return mat;
   }
@@ -23538,8 +23492,8 @@ var math = /*#__PURE__*/Object.freeze({
   SQRT2: SQRT2,
   FEPS_DATA: FEPS_DATA,
   FEPS: FEPS,
-  get FLOAT_MIN () { return FLOAT_MIN; },
-  get FLOAT_MAX () { return FLOAT_MAX; },
+  FLOAT_MIN: FLOAT_MIN,
+  FLOAT_MAX: FLOAT_MAX,
   Matrix4UI: Matrix4UI,
   get_rect_points: get_rect_points,
   get_rect_lines: get_rect_lines,
@@ -23585,7 +23539,6 @@ var math = /*#__PURE__*/Object.freeze({
   PlaneOps: PlaneOps,
   isect_ray_plane: isect_ray_plane,
   _old_isect_ray_plane: _old_isect_ray_plane,
-  mesh_find_tangent: mesh_find_tangent,
   Mat4Stack: Mat4Stack,
   trilinear_v3: trilinear_v3,
   point_in_hex: point_in_hex,
@@ -29610,22 +29563,42 @@ class DataAPI extends ModelInterface {
     };
   }
 
-  _stripToolUIName(path, uiNameOut = undefined) {
-    if (path.search(/\|/) >= 0) {
-      if (uiNameOut) {
-        uiNameOut[0] = path.slice(path.search(/\|/) + 1, path.length).trim();
+  _parsePathOverrides(path) {
+    let parts = ['', undefined, undefined];
+
+    const TOOLPATH = 0, NAME = 1, HOTKEY = 2;
+    let part = TOOLPATH;
+
+    for (let i = 0; i < path.length; i++) {
+      let c = path[i];
+      let n = i < path.length - 1 ? path[i + 1] : "";
+
+      if (c === "|") {
+        part = NAME;
+        parts[NAME] = "";
+        continue;
+      } else if (c === ":" && n === ":") {
+        part = HOTKEY;
+        parts[HOTKEY] = "";
+        i++;
+        continue;
       }
-      path = path.slice(0, path.search(/\|/)).trim();
+
+      parts[part] += c;
     }
 
-    return path.trim();
+    return {
+      path  : parts[TOOLPATH].trim(),
+      uiname: parts[NAME] ? parts[NAME].trim() : undefined,
+      hotkey: parts[HOTKEY] ? parts[HOTKEY].trim() : undefined,
+    };
   }
 
-  getToolDef(path) {
-    let uiname = [undefined];
-
-    path = this._stripToolUIName(path, uiname);
-    uiname = uiname[0];
+  /** Get tooldef for path, applying any modifications, e.g.:
+   *  "app.some_tool()|Label::CustomHotkeyString"
+   * */
+  getToolDef(toolpath) {
+    let {path, uiname, hotkey} = this._parsePathOverrides(toolpath);
 
     let cls = this.parseToolPath(path);
     if (cls === undefined) {
@@ -29636,15 +29609,22 @@ class DataAPI extends ModelInterface {
     if (uiname) {
       def.uiname = uiname;
     }
+    if (hotkey) {
+      def.hotkey = hotkey;
+    }
 
     return def;
   }
 
-  getToolPathHotkey(ctx, path) {
-    path = this._stripToolUIName(path);
+  getToolPathHotkey(ctx, toolpath) {
+    let {path, uiname, hotkey} = this._parsePathOverrides(toolpath);
+
+    if (hotkey) {
+      return hotkey;
+    }
 
     try {
-      return this.getToolPathHotkey_intern(ctx, path);
+      return this.#getToolPathHotkey_intern(ctx, path);
     } catch (error) {
       print_stack$1(error);
       console$1.context("api").log("failed to fetch tool path: " + path);
@@ -29653,7 +29633,7 @@ class DataAPI extends ModelInterface {
     }
   }
 
-  getToolPathHotkey_intern(ctx, path) {
+  #getToolPathHotkey_intern(ctx, path) {
     let screen = ctx.screen;
     let this2 = this;
 
@@ -29662,16 +29642,24 @@ class DataAPI extends ModelInterface {
         return undefined;
       }
 
-      for (let hk of keymap) {
-        if (typeof hk.action !== "string") {
-          continue;
+      let ret;
+
+      function search(cb) {
+        if (ret) {
+          return;
         }
 
-        let tool = this2._stripToolUIName(hk.action);
-        if (tool === path) {
-          return hk.buildString();
+        for (let hk of keymap) {
+          if (typeof hk.action === "string" && cb(hk.action)) {
+            ret = hk.buildString();
+          }
         }
       }
+
+      search((tool) => tool.trim() === path.trim());
+      search((tool) => this2._parsePathOverrides(tool).path === path.trim());
+
+      return ret;
     }
 
     if (screen.sareas.length === 0) {
@@ -35311,6 +35299,8 @@ class TextBox extends TextBoxBase {
   constructor() {
     super();
 
+    this._editing = false;
+
     this._width = this.getDefault("width") + "px";
     this._textBoxEvents = true;
 
@@ -35407,6 +35397,8 @@ class TextBox extends TextBoxBase {
       this._endModal(true);
     }
 
+    this._editing = true;
+
     let ignore = 0;
 
     let finish = (ok) => {
@@ -35456,8 +35448,14 @@ class TextBox extends TextBoxBase {
     //don't focus on flash
   }
 
+  get editing() {
+    return this._editing;
+  }
+
   _endModal(ok) {
     console.log("textbox end modal");
+
+    this._editing = false;
 
     this._modal = false;
     this.popModal();
@@ -38270,8 +38268,8 @@ var controller = /*#__PURE__*/Object.freeze({
   SQRT2: SQRT2,
   FEPS_DATA: FEPS_DATA,
   FEPS: FEPS,
-  get FLOAT_MIN () { return FLOAT_MIN; },
-  get FLOAT_MAX () { return FLOAT_MAX; },
+  FLOAT_MIN: FLOAT_MIN,
+  FLOAT_MAX: FLOAT_MAX,
   Matrix4UI: Matrix4UI,
   get_rect_points: get_rect_points,
   get_rect_lines: get_rect_lines,
@@ -38317,7 +38315,6 @@ var controller = /*#__PURE__*/Object.freeze({
   PlaneOps: PlaneOps,
   isect_ray_plane: isect_ray_plane,
   _old_isect_ray_plane: _old_isect_ray_plane,
-  mesh_find_tangent: mesh_find_tangent,
   Mat4Stack: Mat4Stack,
   trilinear_v3: trilinear_v3,
   point_in_hex: point_in_hex,
@@ -40943,6 +40940,7 @@ class Container extends UIBase$f {
    "some_tool_path.tool()|CustomLabel",
    ui_widgets.Menu.SEP,
    "some_tool_path.another_tool()",
+   "some_tool_path.another_tool()|CustomLabel::Custom Hotkey String",
    ["Name", () => {console.log("do something")}]
    ])
 
@@ -45826,6 +45824,7 @@ class Area$1 extends UIBase$f {
   * Make sure to wrap event callbacks in push_ctx_active and pop_ctx_active.
   * */
   push_ctx_active(dontSetLastRef = false) {
+    contextWrangler.updateLastRef(this.constructor, this);
     contextWrangler.push(this.constructor, this, !dontSetLastRef);
   }
 
@@ -49073,7 +49072,7 @@ class SliderWithTextbox extends ColumnFrame {
       return;
     }
 
-    if (this._lock_textbox > 0)
+    if (this._lock_textbox > 0 || this.textbox.editing)
       return;
 
     this.textbox.text = this.formatNumber(this._value);
@@ -55419,6 +55418,23 @@ var platform$3 = /*#__PURE__*/Object.freeze({
 
 "use strict";
 
+let _nativeTheme;
+
+function getNativeTheme() {
+  if (_nativeTheme) {
+    return _nativeTheme;
+  }
+
+  let remote = getElectron().remote;
+  if (!remote) { /* Newer electron version with no remote, client must provide it */
+    ipcRenderer.invoke("nativeTheme");
+  } else {
+    _nativeTheme = remote.nativeTheme;
+  }
+
+  return _nativeTheme;
+}
+
 function getElectronVersion() {
   let key = navigator.userAgent;
   let i = key.search("Electron");
@@ -55485,9 +55501,9 @@ class ElectronMenu extends Array {
   insert(i, item) {
     this.length++;
 
-    let j = this.length-1;
+    let j = this.length - 1;
     while (j > i) {
-      this[j] = this[j-1];
+      this[j] = this[j - 1];
       j--;
     }
     this[i] = item;
@@ -55542,6 +55558,20 @@ function initElectronIpc() {
   ipcRenderer.on('invoke-menu-callback', (event, key, args) => {
     //console.error("Electron menu callback", key, args);
     callbacks[key].apply(undefined, args);
+  });
+
+  ipcRenderer.on("nativeTheme", (event, module) => {
+    _nativeTheme = Object.assign({}, module);
+    _nativeTheme._themeSource = _nativeTheme.themeSource;
+
+    Object.defineProperty(_nativeTheme, "themeSource", {
+      get() {
+        return this._themeSource;
+      },
+      set(v) {
+        ipcRenderer.invoke("nativeTheme.setThemeSource", v);
+      }
+    });
   });
 }
 
@@ -55637,12 +55667,14 @@ function patchDropBox() {
 }
 
 let on_tick = () => {
-  let nativeTheme = getElectron().remote.nativeTheme;
+  let nativeTheme = getNativeTheme();
 
-  let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
+  if (nativeTheme) {
+    let mode = nativeTheme.shouldUseDarkColors ? "dark" : "light";
 
-  if (mode !== exports.colorSchemeType) {
-    nativeTheme.themeSource = exports.colorSchemeType;
+    if (mode !== exports.colorSchemeType) {
+      nativeTheme.themeSource = exports.colorSchemeType;
+    }
   }
 };
 
@@ -55816,8 +55848,6 @@ function initMenuBar(menuEditor, override = false) {
 
   _menu_init = true;
 
-  let electron = getElectron().remote;
-
   //let win = electron.getCurrentWindow();
 
   let menu = new ElectronMenu();
@@ -55892,8 +55922,6 @@ function initMenuBar(menuEditor, override = false) {
 
 class platform$1 extends PlatformAPI {
   static showOpenDialog(title, args = new FileDialogArgs()) {
-    const {dialog} = require('electron').remote;
-
     console.log(args.filters);
 
     let eargs = {
@@ -55954,8 +55982,6 @@ class platform$1 extends PlatformAPI {
   }
 
   static showSaveDialog(title, filedata_cb, args = new FileDialogArgs()) {
-    const {dialog} = require('electron').remote;
-
     console.log(args.filters);
 
     let eargs = {
@@ -60967,7 +60993,8 @@ class Editor extends Area$1 {
   }
 }
 
-let text = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+let text = `
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -63078,5 +63105,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, mesh_find_tangent, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
