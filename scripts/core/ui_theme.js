@@ -405,7 +405,7 @@ ${indent}})`;
   for (let k of sortkeys(theme1)) {
     let k2 = k;
 
-    if (k.search("-") >= 0 || k.search(" ") >= 0) {
+    if (k.search(/[- \t.]/) >= 0) {
       k2 = "'" + k + "'";
     }
     s += "  " + k2 + ": ";
