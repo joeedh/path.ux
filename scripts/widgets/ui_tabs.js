@@ -84,8 +84,6 @@ export class TabItem extends UIBase {
     });
 
     this.addEventListener("keydown", (e) => {
-      console.log(e.keyCode, this._id);
-
       switch (e.keyCode) {
         case keymap.Enter:
         case keymap.Space:

@@ -3061,7 +3061,7 @@ let start_cbs = [];
 let stop_cbs = [];
 let keyboardDom = window;
 
-let key_event_opts = undefined;
+let key_event_opts;
 
 export function startEvents(getScreenFunc) {
   get_screen_cb = getScreenFunc;
@@ -3073,6 +3073,13 @@ export function startEvents(getScreenFunc) {
   _events_started = true;
 
   _on_keydown = (e) => {
+    /* Prevent browser from unfocuing the page with the alt key.
+     * Happens during touch/pen event handing in Chrome (Oct2023).
+     */
+    if (e.keyCode === keymap["Alt"]) {
+      e.preventDefault();
+    }
+
     let screen = get_screen_cb();
 
     return screen.on_keydown(e);
