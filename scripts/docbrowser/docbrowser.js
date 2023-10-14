@@ -715,6 +715,7 @@ export class DocsBrowser extends UIBase {
       }
 
       let globals = this.root.contentWindow;
+
       console.log("tinymce globals:", globals.document, globals);
 
       window.tinymce = undefined;
