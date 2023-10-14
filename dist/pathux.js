@@ -455,30 +455,8 @@ Array.prototype[Symbol.keystr] = function () {
   let key = "";
   for (let item of this) {
     key += item[Symbol.keystr]() + ":";
-<<<<<<<
-<<<<<<<
-  }
-=======
   }
 
-  return key;
-};
-
-let colormap$1 = {
-  "black"   : 30,
-  "red"     : 31,
->>>>>>>
-
-=======
-  }
-
-  return key;
-};
-
-let colormap$1 = {
-  "black"   : 30,
-  "red"     : 31,
->>>>>>>
   return key;
 };
 
@@ -5364,52 +5342,6 @@ function readObject(data, cls, __uctx = undefined) {
 /**
  @param data : Array instance to write bytes to
  */
-<<<<<<<
-=======
-
-function readJSON(json, class_or_struct_id) {
-  return manager$1.readJSON(json, class_or_struct_id);
-}
-
-var nstructjs = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  JSONError: JSONError,
-  get STRUCT () { return STRUCT; },
-  _truncateDollarSign: _truncateDollarSign,
-  binpack: struct_binpack,
-  consoleLogger: consoleLogger,
-  deriveStructManager: deriveStructManager,
-  filehelper: struct_filehelper,
-  formatJSON: formatJSON$1,
-  getEndian: getEndian,
-  inherit: inherit$1,
-  isRegistered: isRegistered,
-  get manager () { return manager$1; },
-  parser: struct_parser,
-  parseutil: struct_parseutil,
-  readJSON: readJSON,
-  readObject: readObject,
-  register: register$1,
-  setAllowOverriding: setAllowOverriding,
-  setDebugMode: setDebugMode,
-  setEndian: setEndian,
-  setTruncateDollarSign: setTruncateDollarSign,
-  setWarningMode: setWarningMode,
-  truncateDollarSign: truncateDollarSign$1,
-  typesystem: struct_typesystem,
-  unpack_context: unpack_context,
-  unregister: unregister,
-  validateJSON: validateJSON$1,
-  validateStructs: validateStructs,
-  writeJSON: writeJSON,
-  writeObject: writeObject,
-  write_scripts: write_scripts
-});
-
-// THIS FILE IS GENERATED - DO NOT EDIT!
-/*!mobile-detect v1.4.4 2019-09-21*/
-/*global module:false, define:false*/
->>>>>>>
 function writeObject(data, obj) {
   return manager$1.writeObject(data, obj);
 }
@@ -5421,52 +5353,6 @@ function writeJSON(obj) {
 function formatJSON$1(json, cls, addComments = true, validate = true) {
   return manager$1.formatJSON(json, cls, addComments, validate);
 }
-<<<<<<<
-=======
-
-function readJSON(json, class_or_struct_id) {
-  return manager$1.readJSON(json, class_or_struct_id);
-}
-
-var nstructjs = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  JSONError: JSONError,
-  get STRUCT () { return STRUCT; },
-  _truncateDollarSign: _truncateDollarSign,
-  binpack: struct_binpack,
-  consoleLogger: consoleLogger,
-  deriveStructManager: deriveStructManager,
-  filehelper: struct_filehelper,
-  formatJSON: formatJSON$1,
-  getEndian: getEndian,
-  inherit: inherit$1,
-  isRegistered: isRegistered,
-  get manager () { return manager$1; },
-  parser: struct_parser,
-  parseutil: struct_parseutil,
-  readJSON: readJSON,
-  readObject: readObject,
-  register: register$1,
-  setAllowOverriding: setAllowOverriding,
-  setDebugMode: setDebugMode,
-  setEndian: setEndian,
-  setTruncateDollarSign: setTruncateDollarSign,
-  setWarningMode: setWarningMode,
-  truncateDollarSign: truncateDollarSign$1,
-  typesystem: struct_typesystem,
-  unpack_context: unpack_context,
-  unregister: unregister,
-  validateJSON: validateJSON$1,
-  validateStructs: validateStructs,
-  writeJSON: writeJSON,
-  writeObject: writeObject,
-  write_scripts: write_scripts
-});
-
-// THIS FILE IS GENERATED - DO NOT EDIT!
-/*!mobile-detect v1.4.4 2019-09-21*/
-/*global module:false, define:false*/
->>>>>>>
 
 function readJSON(json, class_or_struct_id) {
   return manager$1.readJSON(json, class_or_struct_id);
@@ -6450,19 +6336,8 @@ define(function () {
          */
         match: function (pattern) {
             if (!(pattern instanceof RegExp)) {
-<<<<<<<
                 pattern = new RegExp(pattern, 'i');
             }
-=======
-        // please file a bug if you get this error!
-        throw new Error('unknown environment');
-    }
-})());
-
-// Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
-// This work is free. You can redistribute it and/or modify it
-// under the terms of the WTFPL, Version 2
->>>>>>>
             return pattern.test(this.ua);
         },
 
@@ -6518,19 +6393,8 @@ define(function () {
     } else if (typeof window !== 'undefined') {
         return function (factory) { window.MobileDetect = factory(); };
     } else {
-<<<<<<<
         // please file a bug if you get this error!
         throw new Error('unknown environment');
-=======
-        // please file a bug if you get this error!
-        throw new Error('unknown environment');
-    }
-})());
-
-// Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
-// This work is free. You can redistribute it and/or modify it
-// under the terms of the WTFPL, Version 2
->>>>>>>
     }
 })());
 
@@ -6997,19 +6861,8 @@ var lzstring = {
         power <<= 1;
       }
 
-<<<<<<<
       switch (c = bits) {
         case 0:
-=======
-
-    }
-  }
-};
-
-let f64tmp = new Float64Array(1);
-let u16tmp = new Uint16Array(f64tmp.buffer);
-
->>>>>>>
           bits = 0;
           maxpower = Math.pow(2, 8);
           power = 1;
@@ -7076,19 +6929,8 @@ let u16tmp = new Uint16Array(f64tmp.buffer);
         enlargeIn = Math.pow(2, numBits);
         numBits++;
       }
-<<<<<<<
 
     }
-=======
-
-    }
-  }
-};
-
-let f64tmp = new Float64Array(1);
-let u16tmp = new Uint16Array(f64tmp.buffer);
-
->>>>>>>
   }
 };
 
@@ -7540,7 +7382,7 @@ const console$1 = new SmartConsole();
 
 globalThis.tm = 0.0;
 
-var EmptySlot = {};
+let EmptySlot = {};
 
 function getClassParent(cls) {
   let p = cls.prototype;
@@ -7645,12 +7487,12 @@ function btoa$1(buf) {
     buf = new Uint8Array(buf);
   }
 
-  if (typeof buf == "string" || buf instanceof String) {
+  if (typeof buf === "string" || buf instanceof String) {
     return window.btoa(buf);
   }
 
-  var ret = "";
-  for (var i = 0; i < buf.length; i++) {
+  let ret = "";
+  for (let i = 0; i < buf.length; i++) {
     ret += String.fromCharCode(buf[i]);
   }
 
@@ -7696,16 +7538,16 @@ function time_ms() {
 }
 
 function color2css$2(c) {
-  var ret = c.length == 3 ? "rgb(" : "rgba(";
+  let ret = c.length === 3 ? "rgb(" : "rgba(";
 
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     if (i > 0)
       ret += ",";
 
     ret += ~~(c[i]*255);
   }
 
-  if (c.length == 4)
+  if (c.length === 4)
     ret += "," + c[3];
   ret += ")";
 
@@ -7715,13 +7557,13 @@ function color2css$2(c) {
 function merge(obja, objb) {
   return Object.assign({}, obja, objb);
   /*
-  var ret = {};
+  let ret = {};
 
-  for (var k in obja) {
+  for (let k in obja) {
     ret[k] = obja[k];
   }
 
-  for (var k in objb) {
+  for (let k in objb) {
     ret[k] = objb[k];
   }
 
@@ -7819,13 +7661,13 @@ class cachering extends Array {
       window._cacherings.push(this);
     }
 
-    for (var i = 0; i < size; i++) {
+    for (let i = 0; i < size; i++) {
       this.push(func());
     }
   }
 
   static fromConstructor(cls, size, isprivate = false) {
-    var func = function () {
+    let func = function () {
       return new cls();
     };
 
@@ -7856,7 +7698,7 @@ class SetIter {
   }
 
   next() {
-    var ret = this.ret;
+    let ret = this.ret;
 
     while (this.i < this.set.items.length && this.set.items[this.i] === EmptySlot) {
       this.i++;
@@ -7892,13 +7734,13 @@ class set$2 {
 
     this.length = 0;
 
-    if (typeof input == "string") {
+    if (typeof input === "string") {
       input = new String(input);
     }
 
     if (input !== undefined) {
       if (Symbol.iterator in input) {
-        for (var item of input) {
+        for (let item of input) {
           this.add(item);
         }
       } else if ("forEach" in input) {
@@ -7906,7 +7748,7 @@ class set$2 {
           this.add(item);
         }, this);
       } else if (input instanceof Array) {
-        for (var i = 0; i < input.length; i++) {
+        for (let i = 0; i < input.length; i++) {
           this.add(input[i]);
         }
       }
@@ -7998,17 +7840,17 @@ class set$2 {
   }
 
   add(item) {
-    var key = item[Symbol.keystr]();
+    let key = item[Symbol.keystr]();
 
     if (key in this.keys) return;
 
     if (this.freelist.length > 0) {
-      var i = this.freelist.pop();
+      let i = this.freelist.pop();
 
       this.keys[key] = i;
       this.items[i] = item;
     } else {
-      var i = this.items.length;
+      let i = this.items.length;
 
       this.keys[key] = i;
       this.items.push(item);
@@ -8022,7 +7864,7 @@ class set$2 {
   }
 
   remove(item, ignore_existence) {
-    var key = item[Symbol.keystr]();
+    let key = item[Symbol.keystr]();
 
     if (!(key in this.keys)) {
       if (!ignore_existence) {
@@ -8031,7 +7873,7 @@ class set$2 {
       return;
     }
 
-    var i = this.keys[key];
+    let i = this.keys[key];
     this.freelist.push(i);
     this.items[i] = EmptySlot;
 
@@ -8045,8 +7887,8 @@ class set$2 {
   }
 
   forEach(func, thisvar) {
-    for (var i = 0; i < this.items.length; i++) {
-      var item = this.items[i];
+    for (let i = 0; i < this.items.length; i++) {
+      let item = this.items[i];
 
       if (item === EmptySlot)
         continue;
@@ -8064,7 +7906,7 @@ class HashIter {
   }
 
   next() {
-    var items = this.hash._items;
+    let items = this.hash._items;
 
     if (this.i >= items.length) {
       this.ret.done = true;
@@ -8081,7 +7923,7 @@ class HashIter {
   }
 }
 
-var _hash_null = {};
+let _hash_null = {};
 
 class hashtable {
   constructor() {
@@ -8095,9 +7937,9 @@ class hashtable {
   }
 
   set(key, val) {
-    var key2 = key[Symbol.keystr]();
+    let key2 = key[Symbol.keystr]();
 
-    var i;
+    let i;
     if (!(key2 in this._keys)) {
       i = this._items.length;
 
@@ -8120,14 +7962,14 @@ class hashtable {
   }
 
   remove(key) {
-    var key2 = key[Symbol.keystr]();
+    let key2 = key[Symbol.keystr]();
 
     if (!(key2 in this._keys)) {
       console$1.warn("Warning, key not in hashtable:", key, key2);
       return;
     }
 
-    var i = this._keys[key2];
+    let i = this._keys[key2];
 
     this._items[i] = _hash_null;
     this._items[i + 1] = _hash_null;
@@ -8137,13 +7979,13 @@ class hashtable {
   }
 
   has(key) {
-    var key2 = key[Symbol.keystr]();
+    let key2 = key[Symbol.keystr]();
 
     return key2 in this._keys;
   }
 
   get(key) {
-    var key2 = key[Symbol.keystr]();
+    let key2 = key[Symbol.keystr]();
 
     if (!(key2 in this._keys)) {
       console$1.warn("Warning, item not in hash", key, key2);
@@ -8158,10 +8000,10 @@ class hashtable {
   }
 
   keys() {
-    var ret = [];
+    let ret = [];
 
-    for (var i = 0; i < this._items.length; i += 2) {
-      var key = this._items[i];
+    for (let i = 0; i < this._items.length; i += 2) {
+      let key = this._items[i];
 
       if (key !== _hash_null) {
         ret.push(key);
@@ -8172,10 +8014,10 @@ class hashtable {
   }
 
   values() {
-    var ret = [];
+    let ret = [];
 
-    for (var i = 0; i < this._items.length; i += 2) {
-      var item = this._items[i + 1];
+    for (let i = 0; i < this._items.length; i += 2) {
+      let item = this._items[i + 1];
 
       if (item !== _hash_null) {
         ret.push(item);
@@ -8186,11 +8028,11 @@ class hashtable {
   }
 
   forEach(cb, thisvar) {
-    if (thisvar == undefined)
+    if (thisvar === undefined)
       thisvar = self;
 
-    for (var k in this._keys) {
-      var i = this._keys[k];
+    for (let k in this._keys) {
+      let i = this._keys[k];
 
       cb.call(thisvar, k, this._items[i]);
     }
@@ -8302,15 +8144,15 @@ globalThis.get_callstack = get_callstack;
 globalThis.print_stack = print_stack$1;
 
 function fetch_file(path) {
-  var url = location.origin + "/" + path;
+  let url = location.origin + "/" + path;
 
-  var req = new XMLHttpRequest(
+  let req = new XMLHttpRequest(
   );
 
   return new Promise(function (accept, reject) {
     req.open("GET", url);
     req.onreadystatechange = function (e) {
-      if (req.status == 200 && req.readyState == 4) {
+      if (req.status === 200 && req.readyState === 4) {
         accept(req.response);
       } else if (req.status >= 400) {
         reject(req.status, req.statusText);
@@ -8359,7 +8201,7 @@ class MersenneRandom {
 
     this.mt[0] = seed;  // Initialize the initial state to the seed
 
-    for (var i = 1; i < 624; i++) {
+    for (let i = 1; i < 624; i++) {
       this.mt[i] = _int32(
         1812433253*(this.mt[i - 1] ^ this.mt[i - 1]>>30) + i);
     }
@@ -8369,7 +8211,7 @@ class MersenneRandom {
     if (this.index >= 624)
       this.twist();
 
-    var y = this.mt[this.index];
+    let y = this.mt[this.index];
 
     // Right shift by 11 bits
     y = y ^ y>>11;
@@ -8386,14 +8228,14 @@ class MersenneRandom {
   }
 
   twist() {
-    for (var i = 0; i < 624; i++) {
+    for (let i = 0; i < 624; i++) {
       // Get the most significant bit and add it to the less significant
       // bits of the next number
-      var y = _int32((this.mt[i] & 0x80000000) +
+      let y = _int32((this.mt[i] & 0x80000000) +
         (this.mt[(i + 1)%624] & 0x7fffffff));
       this.mt[i] = this.mt[(i + 397)%624] ^ y>>1;
 
-      if (y%2 != 0)
+      if (y%2 !== 0)
         this.mt[i] = this.mt[i] ^ 0x9908b0df;
     }
 
@@ -8401,7 +8243,7 @@ class MersenneRandom {
   }
 }
 
-var _mt = new MersenneRandom(0);
+let _mt = new MersenneRandom(0);
 
 function random() {
   return _mt.extract_number()/(1<<30);
@@ -8426,10 +8268,10 @@ function strhash(str) {
     }
   }
 
-  var hash = 0;
+  let hash = 0;
 
-  for (var i = 0; i < str.length; i++) {
-    var ch = str.charCodeAt(i);
+  for (let i = 0; i < str.length; i++) {
+    let ch = str.charCodeAt(i);
 
     hash = hash < 0 ? -hash : hash;
 
@@ -8443,14 +8285,14 @@ function strhash(str) {
   return hash;
 }
 
-var hashsizes = [
+let hashsizes = [
   /*2, 5, 11, 19, 37, 67, 127, */223, 383, 653, 1117, 1901, 3251,
                                  5527, 9397, 15991, 27191, 46229, 78593, 133631, 227177, 38619,
                                  656587, 1116209, 1897561, 3225883, 5484019, 9322861, 15848867,
                                  26943089, 45803279, 77865577, 132371489, 225031553
 ];
 
-var FTAKEN = 0, FKEY = 1, FVAL = 2, FTOT = 3;
+let FTAKEN = 0, FKEY = 1, FVAL = 2, FTOT = 3;
 
 class FastHash extends Array {
   constructor() {
@@ -8465,16 +8307,16 @@ class FastHash extends Array {
   }
 
   resize(size) {
-    var table = this.slice(0, this.length);
+    let table = this.slice(0, this.length);
 
     this.length = size*FTOT;
     this.size = size;
     this.fill(0, 0, this.length);
 
-    for (var i = 0; i < table.length; i += FTOT) {
+    for (let i = 0; i < table.length; i += FTOT) {
       if (!table[i + FTAKEN]) continue;
 
-      var key = table[i + FKEY], val = table[i + FVAL];
+      let key = table[i + FKEY], val = table[i + FVAL];
       this.set(key, val);
     }
 
@@ -8482,16 +8324,16 @@ class FastHash extends Array {
   }
 
   get(key) {
-    var hash = typeof key == "string" ? strhash(key) : key;
-    hash = typeof hash == "object" ? hash.valueOf() : hash;
+    let hash = typeof key === "string" ? strhash(key) : key;
+    hash = typeof hash === "object" ? hash.valueOf() : hash;
 
-    var probe = 0;
+    let probe = 0;
 
-    var h = (hash + probe)%this.size;
+    let h = (hash + probe)%this.size;
 
-    var _i = 0;
+    let _i = 0;
     while (_i++ < 50000 && this[h*FTOT + FTAKEN]) {
-      if (this[h*FTOT + FKEY] == key) {
+      if (this[h*FTOT + FKEY] === key) {
         return this[h*FTOT + FVAL];
       }
 
@@ -8503,16 +8345,16 @@ class FastHash extends Array {
   }
 
   has(key) {
-    var hash = typeof key == "string" ? strhash(key) : key;
-    hash = typeof hash == "object" ? hash.valueOf() : hash;
+    let hash = typeof key === "string" ? strhash(key) : key;
+    hash = typeof hash === "object" ? hash.valueOf() : hash;
 
-    var probe = 0;
+    let probe = 0;
 
-    var h = (hash + probe)%this.size;
+    let h = (hash + probe)%this.size;
 
-    var _i = 0;
+    let _i = 0;
     while (_i++ < 50000 && this[h*FTOT + FTAKEN]) {
-      if (this[h*FTOT + FKEY] == key) {
+      if (this[h*FTOT + FKEY] === key) {
         return true;
       }
 
@@ -8524,20 +8366,20 @@ class FastHash extends Array {
   }
 
   set(key, val) {
-    var hash = typeof key == "string" ? strhash(key) : key;
-    hash = typeof hash == "object" ? hash.valueOf() : hash;
+    let hash = typeof key === "string" ? strhash(key) : key;
+    hash = typeof hash === "object" ? hash.valueOf() : hash;
 
     if (this.used > this.size/3) {
       this.resize(hashsizes[this.cursize++]);
     }
 
-    var probe = 0;
+    let probe = 0;
 
-    var h = (hash + probe)%this.size;
+    let h = (hash + probe)%this.size;
 
-    var _i = 0;
+    let _i = 0;
     while (_i++ < 50000 && this[h*FTOT + FTAKEN]) {
-      if (this[h*FTOT + FKEY] == key) {
+      if (this[h*FTOT + FKEY] === key) {
         this[h*FTOT + FVAL] = val;
         return;
       }
@@ -8555,7 +8397,7 @@ class FastHash extends Array {
 }
 
 function test_fasthash() {
-  var h = new FastHash();
+  let h = new FastHash();
   console$1.log("bleh hash:", strhash("bleh"));
 
   h.set("bleh", 1);
@@ -8582,10 +8424,10 @@ class ImageReader {
       let files = this.files;
       console$1.log("got file", e, files);
 
-      if (files.length == 0) return;
+      if (files.length === 0) return;
 
-      var reader = new FileReader();
-      var this2 = this;
+      let reader = new FileReader();
+      let this2 = this;
 
       reader.onload = (e) => {
         let data = e.target.result;
@@ -9613,70 +9455,6 @@ class TimeoutPromise {
 
     p._accept = callback;
     p._reject = function(error) {
-<<<<<<<
-=======
-  }
-
-  return lzstring.decompressFromUint8Array(data);
-}
-
-var util = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  isDenormal: isDenormal,
-  termColorMap: termColorMap,
-  termColor: termColor,
-  termPrint: termPrint,
-  MovingAvg: MovingAvg,
-  timers: timers,
-  pollTimer: pollTimer,
-  isMobile: isMobile,
-  SmartConsoleContext: SmartConsoleContext,
-  SmartConsole: SmartConsole,
-  console: console$1,
-  getClassParent: getClassParent,
-  list: list$2,
-  count: count,
-  getAllKeys: getAllKeys,
-  btoa: btoa$1,
-  formatNumberUI: formatNumberUI,
-  atob: atob$1,
-  time_ms: time_ms,
-  color2css: color2css$2,
-  merge: merge,
-  cachering: cachering,
-  SetIter: SetIter,
-  set: set$2,
-  HashIter: HashIter,
-  hashtable: hashtable,
-  IDGen: IDGen,
-  print_stack: print_stack$1,
-  fetch_file: fetch_file,
-  MersenneRandom: MersenneRandom,
-  random: random,
-  seed: seed,
-  strhash: strhash,
-  FastHash: FastHash,
-  test_fasthash: test_fasthash,
-  ImageReader: ImageReader,
-  HashDigest: HashDigest,
-  hashjoin: hashjoin,
-  MapIter: MapIter,
-  map: map$1,
-  IDMap: IDMap,
-  MinHeapQueue: MinHeapQueue,
-  Queue: Queue,
-  ArrayPool: ArrayPool,
-  DivLogger: DivLogger,
-  PendingTimeoutPromises: PendingTimeoutPromises,
-  TimeoutPromise: TimeoutPromise,
-  compress: compress,
-  decompress: decompress
-});
-
-const EulerOrders = {
-  XYZ: 0,
-  XZY: 1,
->>>>>>>
       throw error;
     };
 
@@ -9756,70 +9534,6 @@ function decompress(data) {
 
   if (data instanceof ArrayBuffer) {
     data = new Uint8Array(data);
-<<<<<<<
-=======
-  }
-
-  return lzstring.decompressFromUint8Array(data);
-}
-
-var util = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  isDenormal: isDenormal,
-  termColorMap: termColorMap,
-  termColor: termColor,
-  termPrint: termPrint,
-  MovingAvg: MovingAvg,
-  timers: timers,
-  pollTimer: pollTimer,
-  isMobile: isMobile,
-  SmartConsoleContext: SmartConsoleContext,
-  SmartConsole: SmartConsole,
-  console: console$1,
-  getClassParent: getClassParent,
-  list: list$2,
-  count: count,
-  getAllKeys: getAllKeys,
-  btoa: btoa$1,
-  formatNumberUI: formatNumberUI,
-  atob: atob$1,
-  time_ms: time_ms,
-  color2css: color2css$2,
-  merge: merge,
-  cachering: cachering,
-  SetIter: SetIter,
-  set: set$2,
-  HashIter: HashIter,
-  hashtable: hashtable,
-  IDGen: IDGen,
-  print_stack: print_stack$1,
-  fetch_file: fetch_file,
-  MersenneRandom: MersenneRandom,
-  random: random,
-  seed: seed,
-  strhash: strhash,
-  FastHash: FastHash,
-  test_fasthash: test_fasthash,
-  ImageReader: ImageReader,
-  HashDigest: HashDigest,
-  hashjoin: hashjoin,
-  MapIter: MapIter,
-  map: map$1,
-  IDMap: IDMap,
-  MinHeapQueue: MinHeapQueue,
-  Queue: Queue,
-  ArrayPool: ArrayPool,
-  DivLogger: DivLogger,
-  PendingTimeoutPromises: PendingTimeoutPromises,
-  TimeoutPromise: TimeoutPromise,
-  compress: compress,
-  decompress: decompress
-});
-
-const EulerOrders = {
-  XYZ: 0,
-  XZY: 1,
->>>>>>>
   }
 
   return lzstring.decompressFromUint8Array(data);
@@ -9902,7 +9616,7 @@ window.makeCompiledVectormathCode = function (mode = "es") {
     }
   }
 
-  let classes = [Vector2$c, Vector3$2, Vector4$2, a];
+  let classes = [Vector2$b, Vector3$2, Vector4$2, a];
   let lens = {
     Vector2: 2,
     Vector3: 3,
@@ -10327,7 +10041,7 @@ function getBaseVector(parent) {
 
     init_swizzle(size) {
       var ret = {};
-      var cls = size === 4 ? Vector4$2 : (size === 3 ? Vector3$2 : Vector2$c);
+      var cls = size === 4 ? Vector4$2 : (size === 3 ? Vector3$2 : Vector2$b);
 
       for (var k in cls.prototype) {
         var v = cls.prototype[k];
@@ -10704,7 +10418,7 @@ vec3 {
 `;
 nstructjs.manager.add_class(Vector3$2);
 
-class Vector2$c extends BaseVector {
+class Vector2$b extends BaseVector {
   constructor(data) {
     super(2);
 
@@ -10836,13 +10550,13 @@ class Vector2$c extends BaseVector {
     }
   }
 };
-Vector2$c.STRUCT = `
+Vector2$b.STRUCT = `
 vec2 {
   0 : float;
   1 : float;
 }
 `;
-nstructjs.manager.add_class(Vector2$c);
+nstructjs.manager.add_class(Vector2$b);
 
 let _quat_vs3_temps = cachering.fromConstructor(Vector3$2, 64);
 
@@ -11107,7 +10821,7 @@ _v3nd_n2_normalizedDot = new Vector3$2();
 
 BaseVector.inherit(Vector4$2, 4);
 F64BaseVector.inherit(Vector3$2, 3);
-BaseVector.inherit(Vector2$c, 2);
+BaseVector.inherit(Vector2$b, 2);
 
 lookat_cache_vs3 = cachering.fromConstructor(Vector3$2, 64);
 lookat_cache_vs4 = cachering.fromConstructor(Vector4$2, 64);
@@ -12434,30 +12148,6 @@ class Matrix4$2 {
         if (Math.abs(m21) < 0.9999999) {
 
           r[0] = Math.atan2(-m23, m22);
-<<<<<<<
-=======
-
-lookat_cache_ms = cachering.fromConstructor(Matrix4$2, 64);
-euler_rotate_mats = cachering.fromConstructor(Matrix4$2, 64);
-temp_mats = cachering.fromConstructor(Matrix4$2, 64);
-
-var vectormath = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  Vector4: Vector4$2,
-  Vector3: Vector3$2,
-  Vector2: Vector2$c,
-  Quat: Quat,
-  Matrix4: Matrix4$2
-});
-
-"use strict";
-
-let PropTypes$8 = {
->>>>>>>
           r[1] = Math.atan2(-m31, m11);
 
         } else {
@@ -12601,8 +12291,6 @@ window.testmat = (x = 0, y = 0, z = Math.PI*0.5) => {
   console.log(mat.toString());
   return r;
 };
-<<<<<<<
-=======
 
 lookat_cache_ms = cachering.fromConstructor(Matrix4$2, 64);
 euler_rotate_mats = cachering.fromConstructor(Matrix4$2, 64);
@@ -12616,29 +12304,7 @@ var vectormath = /*#__PURE__*/Object.freeze({
   F32BaseVector: F32BaseVector,
   Vector4: Vector4$2,
   Vector3: Vector3$2,
-  Vector2: Vector2$c,
-  Quat: Quat,
-  Matrix4: Matrix4$2
-});
-
-"use strict";
-
-let PropTypes$8 = {
->>>>>>>
-
-lookat_cache_ms = cachering.fromConstructor(Matrix4$2, 64);
-euler_rotate_mats = cachering.fromConstructor(Matrix4$2, 64);
-temp_mats = cachering.fromConstructor(Matrix4$2, 64);
-
-var vectormath = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  Vector4: Vector4$2,
-  Vector3: Vector3$2,
-  Vector2: Vector2$c,
+  Vector2: Vector2$b,
   Quat: Quat,
   Matrix4: Matrix4$2
 });
@@ -12764,37 +12430,6 @@ class IntPropertyIF extends ToolPropertyIF {
     throw new Error("implement me");
   }
 }
-<<<<<<<
-=======
-  copyTo(b) {
-    b.setValue(this.data);
-  }
-}
-
-var toolprop_abstract = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  PropTypes: PropTypes$8,
-  PropSubTypes: PropSubTypes$4,
-  PropFlags: PropFlags$3,
-  ToolPropertyIF: ToolPropertyIF,
-  StringPropertyIF: StringPropertyIF,
-  NumPropertyIF: NumPropertyIF,
-  IntPropertyIF: IntPropertyIF,
-  FloatPropertyIF: FloatPropertyIF,
-  EnumPropertyIF: EnumPropertyIF,
-  FlagPropertyIF: FlagPropertyIF,
-  Vec2PropertyIF: Vec2PropertyIF,
-  Vec3PropertyIF: Vec3PropertyIF,
-  Vec4PropertyIF: Vec4PropertyIF,
-  ListPropertyIF: ListPropertyIF,
-  StringSetPropertyIF: StringSetPropertyIF,
-  Curve1DPropertyIF: Curve1DPropertyIF
-});
-
-/**
- * Unit system.
- *
->>>>>>>
 
 class FloatPropertyIF extends ToolPropertyIF {
   constructor() {
@@ -12962,37 +12597,6 @@ class Curve1DPropertyIF extends ToolPropertyIF {
     this.data.load(json);
   }
 
-<<<<<<<
-=======
-  copyTo(b) {
-    b.setValue(this.data);
-  }
-}
-
-var toolprop_abstract = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  PropTypes: PropTypes$8,
-  PropSubTypes: PropSubTypes$4,
-  PropFlags: PropFlags$3,
-  ToolPropertyIF: ToolPropertyIF,
-  StringPropertyIF: StringPropertyIF,
-  NumPropertyIF: NumPropertyIF,
-  IntPropertyIF: IntPropertyIF,
-  FloatPropertyIF: FloatPropertyIF,
-  EnumPropertyIF: EnumPropertyIF,
-  FlagPropertyIF: FlagPropertyIF,
-  Vec2PropertyIF: Vec2PropertyIF,
-  Vec3PropertyIF: Vec3PropertyIF,
-  Vec4PropertyIF: Vec4PropertyIF,
-  ListPropertyIF: ListPropertyIF,
-  StringSetPropertyIF: StringSetPropertyIF,
-  Curve1DPropertyIF: Curve1DPropertyIF
-});
-
-/**
- * Unit system.
- *
->>>>>>>
   copyTo(b) {
     b.setValue(this.data);
   }
@@ -13467,19 +13071,8 @@ function isnumber(s) {
 
 function parseValueIntern(string, baseUnit = undefined) {
   string = string.trim();
-<<<<<<<
   if (string[0] === ".") {
     string = "0" + string;
-=======
-}
-
-window._parseValueTest = parseValue;
-window._buildStringTest = buildString;
-
-let config = {
-  doubleClickTime : 500,
-
->>>>>>>
   }
 
   if (typeof baseUnit === "string") {
@@ -13497,24 +13090,6 @@ let config = {
   if (isnumber(string)) {
     //assume base unit
     let f = parseFloat(string);
-<<<<<<<
-=======
-  for (let k in obj) {
-    config[k] = obj[k];
-  }
-}
-
-var ctrlconfig = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  config: config,
-  setConfig: setConfig,
-  'default': config
-});
-
-let modalstack$1 = [];
-let singleMouseCBs = {};
-
->>>>>>>
 
     return f;
   }
@@ -13694,19 +13269,8 @@ function buildString(value, baseUnit = Unit.baseUnit, decimalPlaces = 3, display
   } else {
     return myToFixed$2(value, decimalPlaces);
   }
-<<<<<<<
 }
 
-=======
-}
-
-window._parseValueTest = parseValue;
-window._buildStringTest = buildString;
-
-let config = {
-  doubleClickTime : 500,
-
->>>>>>>
 window._parseValueTest = parseValue;
 window._buildStringTest = buildString;
 
@@ -13724,24 +13288,6 @@ let config = {
 };
 
 function setConfig(obj) {
-<<<<<<<
-=======
-  for (let k in obj) {
-    config[k] = obj[k];
-  }
-}
-
-var ctrlconfig = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  config: config,
-  setConfig: setConfig,
-  'default': config
-});
-
-let modalstack$1 = [];
-let singleMouseCBs = {};
-
->>>>>>>
   for (let k in obj) {
     config[k] = obj[k];
   }
@@ -13760,58 +13306,56 @@ let singleMouseCBs = {};
 function debugDomEvents() {
   let cbsymbol = Symbol("event-callback");
   let thsymbol = Symbol("debug-info");
-  
+
   let idgen = 0;
-  
+
   function init(et) {
     if (!et[thsymbol]) {
       et[thsymbol] = idgen++;
     }
   }
-  
+
   function getkey(et, type, options) {
     init(et);
     return "" + et[thsymbol] + ":" + type + ":" + JSON.stringify(options);
   }
-  
+
   let addEventListener = EventTarget.prototype.addEventListener;
   let removeEventListener = EventTarget.prototype.removeEventListener;
-  
-  EventTarget.prototype.addEventListener = function(type, cb, options) {
+
+  EventTarget.prototype.addEventListener = function (type, cb, options) {
     init(this);
-    
+
     if (!cb[cbsymbol]) {
       cb[cbsymbol] = new Set();
     }
-    
+
     let key = getkey(this, type, options);
     cb[cbsymbol].add(key);
-    
+
     return addEventListener.call(this, type, cb, options);
   };
-  
-  EventTarget.prototype.removeEventListener = function(type, cb, options) {
+
+  EventTarget.prototype.removeEventListener = function (type, cb, options) {
     init(this);
-    
+
     if (!cb[cbsymbol]) {
       console.error("Invalid callback in removeEventListener for", type, this, cb);
       return;
     }
-    
+
     let key = getkey(this, type, options);
-    
+
     if (!cb[cbsymbol].has(key)) {
       console.error("Callback not in removeEventListener;", type, this, cb);
       return;
     }
-    
+
     cb[cbsymbol].delete(key);
-    
+
     return removeEventListener.call(this, type, cb, options);
   };
 }
-
-//debugDomEvents();
 
 function singletonMouseEvents() {
   let keys = ["mousedown", "mouseup", "mousemove"];
@@ -13827,7 +13371,7 @@ function singletonMouseEvents() {
     }, type);
   };
 
-  let _mpos = new Vector2$c();
+  let _mpos = new Vector2$b();
 
   function doSingleCbs(e, type) {
     let list = singleMouseCBs[type];
@@ -13894,7 +13438,7 @@ function singletonMouseEvents() {
       singleMouseCBs[type].add(cb);
     }
   };
-};
+}
 
 singletonMouseEvents = singletonMouseEvents();
 
@@ -13922,7 +13466,7 @@ class DoubleClickHandler {
     this.last = 0;
     this.dblEvent = undefined;
 
-    this.start_mpos = new Vector2$c();
+    this.start_mpos = new Vector2$b();
 
     this._on_mouseup = this._on_mouseup.bind(this);
     this._on_mousemove = this._on_mousemove.bind(this);
@@ -13934,7 +13478,7 @@ class DoubleClickHandler {
   }
 
   _on_mousemove(e) {
-    let mpos = new Vector2$c();
+    let mpos = new Vector2$b();
     mpos[0] = e.x;
     mpos[1] = e.y;
 
@@ -14145,7 +13689,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
 
   if (pointerId === undefined) {
     keys = new Set([
-      "keydown", "keyup", "keypress", "mousedown", "mouseup", "touchstart", "touchend",
+      "keydown", "keyup", "mousedown", "mouseup", "touchstart", "touchend",
       "touchcancel", "mousewheel", "mousemove", "mouseover", "mouseout", "mouseenter",
       "mouseleave", "dragstart", "drag", "dragend", "dragexit", "dragleave", "dragover",
       "dragenter", "drop", "pointerdown", "pointermove", "pointerup", "pointercancel",
@@ -14193,7 +13737,6 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
 
   function make_default_touchhandler(type, state) {
     return function (e) {
-      //console.warn("touch event!", type, touchmap[type], e.touches.length);
       if (config.DEBUG.domEvents) {
         pathDebugEvent(e);
       }
@@ -14209,18 +13752,17 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
         e2.touches = e.touches;
 
         if (e.touches.length > 0) {
-          let dpi = window.devicePixelRatio; //UIBase.getDPI();
           let t = e.touches[0];
 
           mpos[0] = t.pageX;
           mpos[1] = t.pageY;
 
-          e2.pageX = e2.x = t.pageX;// * dpi;
-          e2.pageY = e2.y = t.pageY;// * dpi;
-          e2.clientX = t.clientX;// * dpi;
-          e2.clientY = t.clientY;// * dpi;
-          e2.x = t.clientX;// * dpi;
-          e2.y = t.clientY;// * dpi;
+          e2.pageX = e2.x = t.pageX;
+          e2.pageY = e2.y = t.pageY;
+          e2.clientX = t.clientX;
+          e2.clientY = t.clientY;
+          e2.x = t.clientX;
+          e2.y = t.clientY;
 
           ret.last_mpos[0] = e2.x;
           ret.last_mpos[1] = e2.y;
@@ -14257,6 +13799,9 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
       if (key.startsWith("mouse")) {
         mpos[0] = e.pageX;
         mpos[1] = e.pageY;
+      } else if (key.startsWith("pointer")) {
+        mpos[0] = e.x;
+        mpos[1] = e.y;
       }
 
       handleAreaContext();
@@ -14358,7 +13903,7 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
       print_stack$1(error);
 
       console.log("attempting fallback");
-      
+
       for (let k in ret.pointer) {
         if (k !== "elem" && k !== "pointerId") {
           elem.removeEventListener(k, ret.pointer[k]);
@@ -14405,7 +13950,16 @@ function pushModalLight(obj, autoStopPropagation = true, elem, pointerId) {
   return ret;
 }
 
+/* Trace all calls to EventTarget.prototype.[add/rem]EventListener */
 if (0) {
+  window._print_evt_debug = false;
+
+  function evtprint() {
+    if (window.window._print_evt_debug) {
+      console.warn(...arguments);
+    }
+  }
+
   let addevent = EventTarget.prototype.addEventListener;
   let remevent = EventTarget.prototype.removeEventListener;
 
@@ -14413,7 +13967,7 @@ if (0) {
 
   EventTarget.prototype.addEventListener = function (name, func, args) {
     //if (name.startsWith("key")) {
-    console.warn("listener added", name, func, args);
+    evtprint("listener added", name, func.name, args);
     //}
 
     let func2 = function (e) {
@@ -14421,12 +13975,12 @@ if (0) {
         get(target, p, receiver) {
           if (p === "preventDefault") {
             return function () {
-              console.warn("preventDefault", name, arguments);
+              evtprint("preventDefault", name, arguments);
               return e.preventDefault(...arguments);
             }
           } else if (p === "stopPropagation") {
             return function () {
-              console.warn("stopPropagation", name, arguments);
+              evtprint("stopPropagation", name, arguments);
               return e.preventDefault(...arguments);
             }
           }
@@ -14445,24 +13999,13 @@ if (0) {
 
   EventTarget.prototype.removeEventListener = function (name, func, args) {
     //if (name.startsWith("key")) {
-    console.warn("listener removed", name, func, args);
+    evtprint("listener removed", name, func.name, args);
     //}
 
     func = func[funckey];
 
-<<<<<<<
     return remevent.call(this, name, func, args);
   };
-=======
-  push(hk) {
-    super.push(hk);
-  }
-}
-
-"use strict";
-
-class EventDispatcher {
->>>>>>>
 }
 
 function popModalLight(state) {
@@ -14648,19 +14191,8 @@ class KeyMap extends Array {
     if (e.ctrlKey) {
       mods.add("ctrl");
     }
-<<<<<<<
     if (e.commandKey) {
       mods.add("command");
-=======
-  h.pushModal(dom, false);
-  
-  return h;
-}
-
-const CurveConstructors = [];
-const CURVE_VERSION = 1.0;
-
->>>>>>>
     }
 
     for (let hk of this) {
@@ -14699,19 +14231,8 @@ const CURVE_VERSION = 1.0;
     this.push(hk);
   }
 
-<<<<<<<
   push(hk) {
     super.push(hk);
-=======
-  push(hk) {
-    super.push(hk);
-  }
-}
-
-"use strict";
-
-class EventDispatcher {
->>>>>>>
   }
 }
 
@@ -14855,6 +14376,9 @@ function isModalHead(owner) {
 }
 
 class EventHandler {
+  constructor() {
+    this._modalstate = undefined;
+  }
   pushPointerModal(dom, pointerId) {
     if (this._modalstate) {
       console.warn("pushPointerModal called twiced!");
@@ -14897,41 +14421,19 @@ function pushModal(dom, handlers) {
     return h.popModal(dom);
   };
   
-<<<<<<<
-  h.pushModal(dom, false);
-  
-=======
   h.pushModal(dom, false);
   
   return h;
 }
 
 const CurveConstructors = [];
-const CURVE_VERSION = 1.0;
-
->>>>>>>
-  return h;
-}
-
-const CurveConstructors = [];
-const CURVE_VERSION = 1.0;
+const CURVE_VERSION = 1.1;
 
 const CurveFlags = {
   SELECT: 1
 };
-<<<<<<<
 
 
-=======
-  }
-
-  return table;
-}
-
-"use strict";
-//import {EventDispatcher} from "../util/events.js";
-
->>>>>>>
 const TangentModes = {
   SMOOTH: 1,
   BREAK : 2
@@ -14958,6 +14460,7 @@ let _udigest$4 = new HashDigest();
 class CurveTypeData {
   constructor() {
     this.type = this.constructor.define().typeName;
+    this.parent = undefined;
   }
 
   get hasGUI() {
@@ -15133,12 +14636,15 @@ CurveTypeData {
 nstructjs.register(CurveTypeData);
 
 
-function evalHermiteTable(table, t) {
+const unitRange = [0, 1];
+
+function evalHermiteTable(table, t, range = unitRange) {
+  t = (t - range[0])/(range[1] - range[0]);
+
   let s = t*(table.length/4);
-
   let i = Math.floor(s);
-  s -= i;
 
+  s -= i;
   i *= 4;
 
   let a = table[i] + (table[i + 1] - table[i])*s;
@@ -15148,14 +14654,16 @@ function evalHermiteTable(table, t) {
   //return table[i] + (table[i + 3] - table[i])*s;
 }
 
-function genHermiteTable(evaluate, steps) {
+function genHermiteTable(evaluate, steps, range = [0, 1]) {
   //console.log("building spline approx");
 
   let table = new Array(steps);
 
-  let eps = 0.00001;
-  let dt = (1.0 - eps*4.001)/(steps - 1);
-  let t = eps*4;
+  let [min, max] = range;
+
+  let eps = 0.0001;
+  let dt = ((max - min) - eps*4.001)/(steps - 1);
+  let t = min + eps*4;
   let lastdv1, lastf3;
 
   for (let j = 0; j < steps; j++, t += dt) {
@@ -15179,10 +14687,6 @@ function genHermiteTable(evaluate, steps) {
 
     lastdv1 = dv1;
     lastf3 = f3;
-<<<<<<<
-  }
-
-=======
   }
 
   return table;
@@ -15191,14 +14695,7 @@ function genHermiteTable(evaluate, steps) {
 "use strict";
 //import {EventDispatcher} from "../util/events.js";
 
->>>>>>>
-  return table;
-}
-
-"use strict";
-//import {EventDispatcher} from "../util/events.js";
-
-let Vector2$b = Vector2$c;
+let Vector2$a = Vector2$b;
 
 const SplineTemplates = {
   CONSTANT      : 0,
@@ -15224,10 +14721,10 @@ const templates = {
     [0, 0], [0.9999, 0.0001], [1, 1]
   ],
   [SplineTemplates.SQRT]          : [
-    [0, 0], [0.05, 0.25], [0.33, 0.65], [1, 1]
+    [0, 0], [0.05, 0.25], [0.15, 0.45], [0.33, 0.65], [1, 1]
   ],
   [SplineTemplates.SMOOTH]        : [
-    "DEG", 2, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
+    "DEG", 3, [0, 0], [1.0/3.0, 0], [2.0/3.0, 1.0], [1, 1]
   ],
   [SplineTemplates.SMOOTHER]      : [
     "DEG", 6, [0, 0], [1.0/2.25, 0], [2.0/3.0, 1.0], [1, 1]
@@ -15235,17 +14732,6 @@ const templates = {
   [SplineTemplates.SHARPER]       : [
     [0, 0], [0.3, 0.03], [0.7, 0.065], [0.9, 0.16], [1, 1]
   ],
-<<<<<<<
-=======
-    this.length = 0;
-    this.interpolating = false;
-
-    this.range = [new Vector2$b([0, 1]), new Vector2$b([0, 1])];
-
-    this._ps = [];
-    this.hermite = [];
-    this.fastmode = false;
->>>>>>>
   [SplineTemplates.SPHERE]        : [
     [0, 0], [0.01953, 0.23438], [0.08203, 0.43359], [0.18359, 0.625], [0.35938, 0.81641], [0.625, 0.97656], [1, 1]
   ],
@@ -15290,40 +14776,18 @@ function mySafeJSONParse$1(buf) {
 
   });
 };
-<<<<<<<
 
 window.mySafeJSONStringify = mySafeJSONStringify$1;
 
-=======
-    d.add(this.deg);
-    d.add(this.interpolating);
-
-    for (let p of this.points) {
-      let x = ~~(p[0]*1024);
-      let y = ~~(p[1]*1024);
->>>>>>>
 
 let bin_cache = {};
 window._bin_cache = bin_cache;
 
-let eval2_rets = cachering.fromConstructor(Vector2$b, 32);
+let eval2_rets = cachering.fromConstructor(Vector2$a, 32);
 
 /*
   I hate these stupid curve widgets.  This horrible one here works by
   root-finding the x axis on a two dimensional b-spline (which works
-<<<<<<<
-=======
-      d.add(p.tangent); //is an enum
-    }
-
-    d.add(this.range[0][0]);
-    d.add(this.range[0][1]);
-    d.add(this.range[1][0]);
-    d.add(this.range[1][1]);
-
-    return d.get();
-  }
->>>>>>>
   surprisingly well).
 */
 
@@ -15363,15 +14827,15 @@ function binomial(n, i) {
 
 window.bin = binomial;
 
-class Curve1DPoint extends Vector2$b {
+class Curve1DPoint extends Vector2$a {
   constructor(co) {
     super(co);
 
-    this.rco = new Vector2$b(co);
-    this.sco = new Vector2$b(co);
+    this.rco = new Vector2$a(co);
+    this.sco = new Vector2$a(co);
 
     //for transform
-    this.startco = new Vector2$b();
+    this.startco = new Vector2$a();
     this.eid = -1;
     this.flag = 0;
 
@@ -15502,16 +14966,6 @@ class BSplineCache {
     let curve = this.map.get(key);
     this.map.delete(key);
     this.curves.remove(curve);
-<<<<<<<
-=======
-      deg          : this.deg,
-      interpolating: this.interpolating,
-      eidgen       : this.eidgen.toJSON(),
-      range        : this.range
-    });
-
-    return ret;
->>>>>>>
   }
 
   update(curve) {
@@ -15531,6 +14985,7 @@ class BSplineCurve extends CurveTypeData {
   constructor() {
     super();
 
+    this._degOffset = 0;
     this.cache_w = 0;
     this._last_cache_key = 0;
 
@@ -15538,17 +14993,6 @@ class BSplineCurve extends CurveTypeData {
 
     this.fastmode = false;
     this.points = [];
-<<<<<<<
-=======
-    this.length = 0;
-    this.interpolating = false;
-
-    this.range = [new Vector2$b([0, 1]), new Vector2$b([0, 1])];
-
-    this._ps = [];
-    this.hermite = [];
-    this.fastmode = false;
->>>>>>>
     this.length = 0;
     this.interpolating = false;
 
@@ -15564,7 +15008,7 @@ class BSplineCurve extends CurveTypeData {
     this.add(0, 0);
     this.add(1, 1);
 
-    this.mpos = new Vector2$b();
+    this.mpos = new Vector2$a();
 
     this.on_mousedown = this.on_mousedown.bind(this);
     this.on_mousemove = this.on_mousemove.bind(this);
@@ -15593,20 +15037,8 @@ class BSplineCurve extends CurveTypeData {
 
     super.calcHashKey(d);
 
-<<<<<<<
     d.add(this.deg);
     d.add(this.interpolating);
-
-=======
-    d.add(this.deg);
-    d.add(this.interpolating);
-
-    for (let p of this.points) {
-      let x = ~~(p[0]*1024);
-      let y = ~~(p[1]*1024);
->>>>>>>
-    let xrange = this.parent.xRange;
-    let yrange = this.parent.yRange;
 
     for (let p of this.points) {
       let x = ~~(p[0]*1024);
@@ -15614,26 +15046,8 @@ class BSplineCurve extends CurveTypeData {
 
       d.add(x);
       d.add(y);
-<<<<<<<
-=======
       d.add(p.tangent); //is an enum
     }
-
-    d.add(this.range[0][0]);
-    d.add(this.range[0][1]);
-    d.add(this.range[1][0]);
-    d.add(this.range[1][1]);
-
-    return d.get();
-  }
->>>>>>>
-      d.add(p.tangent); //is an enum
-    }
-
-    d.add(xrange[0]);
-    d.add(xrange[1]);
-    d.add(yrange[0]);
-    d.add(yrange[1]);
 
     return d.get();
   }
@@ -15750,38 +15164,20 @@ class BSplineCurve extends CurveTypeData {
     }
     let a = points[0][0], b = points[points.length - 1][0];
 
+    let degExtra = this.deg;
+    this._degOffset = -this.deg;
+
     for (let i = 0; i < points.length - 1; i++) {
       this._ps.push(points[i]);
     }
 
-    if (points.length < 3) {
-      return;
+    if (degExtra) {
+      let last = points.length - 1;
+      for (let i = 0; i < degExtra; i++) {
+        let p = points[last].copy();
+        this._ps.push(p);
+      }
     }
-
-    let l1 = points[points.length - 1];
-    let l2 = points[points.length - 2];
-
-    let p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00004;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])/3.0;
-    //this._ps.push(p);
-
-    p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00003;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])/3.0;
-    //this._ps.push(p);
-
-    p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00001;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])/3.0;
-    this._ps.push(p);
-
-    p = l1.copy();
-    p.rco[0] = l1.rco[0] - 0.00001;
-    p.rco[1] = l2.rco[1] + (l1.rco[1] - l2.rco[1])*2.0/3.0;
-    this._ps.push(p);
-
-    this._ps.push(l1);
 
     if (!this.interpolating) {
       for (let i = 0; i < this._ps.length; i++) {
@@ -15805,19 +15201,9 @@ class BSplineCurve extends CurveTypeData {
 
     ret = Object.assign(ret, {
       points       : this.points.map(p => p.toJSON()),
-<<<<<<<
-=======
       deg          : this.deg,
       interpolating: this.interpolating,
-      eidgen       : this.eidgen.toJSON(),
-      range        : this.range
-    });
-
-    return ret;
->>>>>>>
-      deg          : this.deg,
-      interpolating: this.interpolating,
-      eidgen       : this.eidgen.toJSON(),
+      eidgen       : this.eidgen.toJSON()
     });
 
     return ret;
@@ -15834,7 +15220,8 @@ class BSplineCurve extends CurveTypeData {
     this._ps = [];
 
     if (obj.range) {
-      this.range = [new Vector2$b(obj.range[0]), new Vector2$b(obj.range[1])];
+      /* Will be version patched later. */
+      this.range = [new Vector2$a(obj.range[0]), new Vector2$a(obj.range[1])];
     }
 
     this.hightlight = undefined;
@@ -15873,9 +15260,9 @@ class BSplineCurve extends CurveTypeData {
     s -= j;
 
     j *= 4;
-    return table[j] + (table[j + 3] - table[j])*s;
 
-    return bez4$1(table[j], table[j + 1], table[j + 2], table[j + 3], s);
+    //return table[j] + (table[j + 3] - table[j])*s; //linear
+    return bez4$1(table[j], table[j + 1], table[j + 2], table[j + 3], s); //cubic
   }
 
   reset(empty = false) {
@@ -15976,7 +15363,7 @@ class BSplineCurve extends CurveTypeData {
     };
 
     let err = 0.0;
-    let g = new Vector2$b();
+    let g = new Vector2$a();
 
     for (let step = 0; step < 25; step++) {
       err = 0.0;
@@ -16050,13 +15437,29 @@ class BSplineCurve extends CurveTypeData {
       let lastdv1 = 0.0, lastf3 = 0.0;
 
       for (let j = 0; j < steps; j++, t += dt) {
-        //let f1 = this._basis(t - eps*2, i);
-        let f2 = this._basis(t - eps, i);
-        let f3 = this._basis(t, i);
-        let f4 = this._basis(t + eps, i);
-        //let f5 = this._basis(t + eps*2, i);
 
-        let dv1 = (f4 - f2)/(eps*2);
+        let f3 = this._basis(t, i);
+        let dv1;
+
+        if (0) {
+          //let f1 = this._basis(t - eps*2, i);
+          let f2 = this._basis(t - eps, i);
+          let f4 = this._basis(t + eps, i);
+          //let f5 = this._basis(t + eps*2, i);
+
+          dv1 = (f4 - f2)/(eps*2);
+        } else {
+          dv1 = this._dbasis(t, i);
+        }
+
+        if (isNaN(dv1)) {
+          console.log("NaN!");
+          debugger;
+          dv1 = this._dbasis(t, i);
+        }
+        //dv1 = 0.0;
+
+        //dv1 = 0.0;
         dv1 /= steps;
 
         if (j > 0) {
@@ -16072,6 +15475,74 @@ class BSplineCurve extends CurveTypeData {
         lastf3 = f3;
       }
     }
+  }
+
+  _dbasis(t, i) {
+    let len = this._ps.length;
+    let ps = this._ps;
+
+    function safe_inv(n) {
+      return n === 0 ? 0 : 1.0/n;
+    }
+
+    /*
+    on factor;
+
+    operator bas;
+
+    a := (s - ki) / (knn - ki);
+    b := (knn1 - s) / (knn1 - kn);
+
+    f := a*bas(s, j, n-1) + b*bas(s, j+1, n-1);
+    df(f, s);
+    */
+
+    function bas(s, i, n) {
+      let kn = Math.min(Math.max(i + 1, 0), len - 1);
+      let knn = Math.min(Math.max(i + n, 0), len - 1);
+      let knn1 = Math.min(Math.max(i + n + 1, 0), len - 1);
+      let ki = Math.min(Math.max(i, 0), len - 1);
+
+      if (n === 0) {
+        return s >= ps[ki].rco[0] && s < ps[kn].rco[0] ? 1 : 0;
+      } else {
+
+        let a = (s - ps[ki].rco[0])*safe_inv(ps[knn].rco[0] - ps[ki].rco[0] + 0.0001);
+        let b = (ps[knn1].rco[0] - s)*safe_inv(ps[knn1].rco[0] - ps[kn].rco[0] + 0.0001);
+
+        return a*bas(s, i, n - 1) + b*bas(s, i + 1, n - 1);
+      }
+    }
+
+    function dbas(s, j, n) {
+      let kn = Math.min(Math.max(j + 1, 0), len - 1);
+      let knn = Math.min(Math.max(j + n, 0), len - 1);
+      let knn1 = Math.min(Math.max(j + n + 1, 0), len - 1);
+      let ki = Math.min(Math.max(j, 0), len - 1);
+
+      kn = ps[kn].rco[0];
+      knn = ps[knn].rco[0];
+      knn1 = ps[knn1].rco[0];
+      ki = ps[ki].rco[0];
+
+      if (n === 0) {
+        return 0;
+        //return s >= ki && s < kn ? 1 : 0;
+      } else {
+        let div = ((ki - knn)*(kn - knn1));
+
+        if (div === 0.0) {
+          //debugger;
+          return 0.0;
+        }
+
+        return (((ki - s)*dbas(s, j, n - 1) - bas(s, j, n - 1))*(kn - knn1) - ((knn1 -
+          s)*dbas(s, j + 1, n - 1) - bas(s, j + 1, n - 1))*(ki - knn))/div;
+      }
+    }
+
+    let deg = this.deg;
+    return dbas(t, i + this._degOffset, deg);
   }
 
   _basis(t, i) {
@@ -16103,7 +15574,7 @@ class BSplineCurve extends CurveTypeData {
     let p = this._ps[i].rco, nk, pk;
     let deg = this.deg;
 
-    let b = bas(t, i - deg, deg);
+    let b = bas(t, i + this._degOffset, deg);
 
     return b;
   }
@@ -16143,17 +15614,63 @@ class BSplineCurve extends CurveTypeData {
     return table[i] + (table[i + 3] - table[i])*s;
   }
 
+  /* Root find t on the x axis of the curve.  This
+   * is more intuitive for the user.
+   */
   _evaluate(t) {
     let start_t = t;
 
-    if (this.points.length > 1) {
-      let a = this.points[0], b = this.points[this.points.length - 1];
-
-      //if (t < a[0]) return a[1];
-      //if (t >= b[0]) return b[1];
+    if (this.points.length === 0) {
+      return 0;
     }
 
-    for (let i = 0; i < 35; i++) {
+    let xmin = this.points[0].rco[0];
+    let xmax = this.points[this.points.length - 1].rco[0];
+
+    let steps = this.fastmode ? 16 : 32;
+    let s = xmin, ds = (xmax - xmin)/(steps - 1);
+
+    let miny;
+    let mins;
+    let mindx;
+
+    for (let i = 0; i < steps; i++, s += ds) {
+      let p = this._evaluate2(s);
+
+      let dx = Math.abs(p[0] - start_t);
+      if (mindx === undefined || dx < mindx) {
+        mindx = dx;
+        miny = p[1];
+        mins = s;
+      }
+    }
+
+    let start = mins - ds, end = mins + ds;
+    s = mins;
+
+    for (let i = 0; i < 16; i++) {
+      let p = this._evaluate2(s);
+
+      if (p[0] > start_t) {
+        end = s;
+      } else {
+        start = s;
+      }
+
+      s = (start + end)*0.5;
+      miny = p[1];
+    }
+
+    if (miny === undefined) {
+      miny = 0;
+    }
+    return miny;
+
+    /* newton-raphson
+    //t = mins;
+    t = s;
+
+    for (let i = 0; i < 2; i++) {
       let df = 0.0001;
       let ret1 = this._evaluate2(t < 0.5 ? t : t - df);
       let ret2 = this._evaluate2(t < 0.5 ? t + df : t);
@@ -16182,6 +15699,7 @@ class BSplineCurve extends CurveTypeData {
     }
 
     return this._evaluate2(t)[1];
+    */
   }
 
   _evaluate2(t) {
@@ -16189,9 +15707,10 @@ class BSplineCurve extends CurveTypeData {
 
     t *= 0.9999999;
 
-    let totbasis = 0;
     let sumx = 0;
     let sumy = 0;
+
+    let totbasis = 0;
 
     for (let i = 0; i < this._ps.length; i++) {
       let p = this._ps[i].rco;
@@ -16286,7 +15805,7 @@ class BSplineCurve extends CurveTypeData {
 
   makeGUI(container, canvas, drawTransform) {
     this.uidata = {
-      start_mpos : new Vector2$b(),
+      start_mpos : new Vector2$a(),
       transpoints: [],
 
       dom         : container,
@@ -16371,42 +15890,12 @@ class BSplineCurve extends CurveTypeData {
       fullUpdate();
     };
 
-    let panel = container.panel("Range");
-
-    let xmin = panel.slider(undefined, "X Min", this.range[0][0], -10, 10, 0.1, false, undefined, (val) => {
-      this.range[0][0] = val.value;
-    });
-
-    let xmax = panel.slider(undefined, "X Max", this.range[0][1], -10, 10, 0.1, false, undefined, (val) => {
-      this.range[0][1] = val.value;
-    });
-
-    let ymin = panel.slider(undefined, "Y Min", this.range[1][0], -10, 10, 0.1, false, undefined, (val) => {
-      this.range[1][0] = val.value;
-    });
-
-    let ymax = panel.slider(undefined, "Y Max", this.range[1][1], -10, 10, 0.1, false, undefined, (val) => {
-      this.range[1][1] = val.value;
-    });
-
-    xmin.displayUnit = xmin.baseUnit = "none";
-    ymin.displayUnit = ymin.baseUnit = "none";
-    xmax.displayUnit = xmax.baseUnit = "none";
-    ymax.displayUnit = ymax.baseUnit = "none";
-
-    panel.closed = true;
-
     container.update.after(() => {
       let key = this.calcHashKey();
       if (key !== this._last_update_key) {
         this._last_update_key = key;
 
         slider.setValue(this.deg);
-        xmin.setValue(this.range[0][0]);
-        xmax.setValue(this.range[0][1]);
-
-        ymin.setValue(this.range[1][0]);
-        ymax.setValue(this.range[1][1]);
       }
     });
 
@@ -16468,19 +15957,8 @@ class BSplineCurve extends CurveTypeData {
       this.start_transform();
 
       this.updateKnots();
-<<<<<<<
       this.update();
       this.redraw();
-=======
-  if (config.autoLoadSplineTemplates) {
-    initSplineTemplates();
-  }
-}, 0);
-
-let _udigest$2 = new HashDigest();
-
-function feq(a, b) {
->>>>>>>
       return;
     } else { //if (!e.isTouch) {
       let p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
@@ -16520,14 +15998,17 @@ function feq(a, b) {
   }
 
   do_transform(x, y) {
-    let off = new Vector2$b([x, y]).sub(this.uidata.start_mpos);
+    let off = new Vector2$a([x, y]).sub(this.uidata.start_mpos);
+
+    let xRange = this.parent.xRange;
+    let yRange = this.parent.yRange;
 
     for (let i = 0; i < this.uidata.transpoints.length; i++) {
       let p = this.uidata.transpoints[i];
       p.load(p.startco).add(off);
 
-      p[0] = Math.min(Math.max(p[0], this.range[0][0]), this.range[0][1]);
-      p[1] = Math.min(Math.max(p[1], this.range[1][0]), this.range[1][1]);
+      p[0] = Math.min(Math.max(p[0], xRange[0]), xRange[1]);
+      p[1] = Math.min(Math.max(p[1], yRange[0]), yRange[1]);
     }
 
     this.updateKnots();
@@ -16616,14 +16097,18 @@ function feq(a, b) {
     this.uidata.draw_trans = draw_trans;
 
     let sz = draw_trans[0], pan = draw_trans[1];
-    g.lineWidth *= 3.0;
+    g.lineWidth *= 1.5;
+    let strokeStyle = g.strokeStyle;
 
-    for (let ssi = 0; ssi < 2; ssi++) {
+    for (let ssi = 0; ssi < 1; ssi++) {
       break; //uncomment to draw basis functions
+
+      let steps = 512;
       for (let si = 0; si < this.points.length; si++) {
         g.beginPath();
 
         let f = 0;
+        let df = 1.0/(steps - 1);
         for (let i = 0; i < steps; i++, f += df) {
           let totbasis = 0;
 
@@ -16636,13 +16121,13 @@ function feq(a, b) {
           if (ssi)
             val /= (totbasis === 0 ? 1 : totbasis);
 
-          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5, w, w);
+          (i === 0 ? g.moveTo : g.lineTo).call(g, f, ssi ? val : val*0.5);
         }
 
         let color, alpha = this.points[si] === this.points.highlight ? 1.0 : 0.7;
 
         if (ssi) {
-          color = "rgba(105, 25, 5," + alpha + ")";
+          color = "rgba(205, 125, 5," + alpha + ")";
         } else {
           color = "rgba(25, 145, 45," + alpha + ")";
         }
@@ -16651,6 +16136,7 @@ function feq(a, b) {
       }
     }
 
+    g.strokeStyle = strokeStyle;
     g.lineWidth /= 3.0;
 
     let w = 0.03;
@@ -16688,7 +16174,6 @@ BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
   deg           : int;
   eidgen        : IDGen;
   interpolating : bool;
-  range         : array(vec2);
 }
 `;
 nstructjs.register(BSplineCurve);
@@ -16782,19 +16267,8 @@ function initSplineTemplates() {
 
 //delay to ensure config is fully loaded
 window.setTimeout(() => {
-<<<<<<<
   if (config.autoLoadSplineTemplates) {
     initSplineTemplates();
-=======
-  if (config.autoLoadSplineTemplates) {
-    initSplineTemplates();
-  }
-}, 0);
-
-let _udigest$2 = new HashDigest();
-
-function feq(a, b) {
->>>>>>>
   }
 }, 0);
 
@@ -16810,7 +16284,8 @@ class EquationCurve extends CurveTypeData {
 
     this.equation = "x";
     this._last_equation = "";
-    this.hermite = undefined;
+    this._last_xrange = new Vector2$b();
+    this._func = undefined;
   }
 
   get hasGUI() {
@@ -16831,6 +16306,8 @@ class EquationCurve extends CurveTypeData {
     super.calcHashKey(d);
 
     d.add(this.equation);
+    d.add(this.parent.xRange[0]);
+    d.add(this.parent.xRange[1]);
 
     return d.get();
   }
@@ -16866,7 +16343,7 @@ class EquationCurve extends CurveTypeData {
 
     let row = container.row();
 
-    let text = this.uidata.textbox = row.textbox(undefined, ""+this.equation);
+    let text = this.uidata.textbox = row.textbox(undefined, "" + this.equation);
     text.onchange = (val) => {
       console.log(val);
       this.equation = val;
@@ -16893,52 +16370,65 @@ class EquationCurve extends CurveTypeData {
   }
 
   evaluate(s) {
-    if (!this.hermite || this._last_equation !== this.equation) {
+    let update = this.hermite || this._last_equation !== this.equation;
+    update = update || this._last_xrange.vectorDistance(this.parent.xRange) > 0.0;
+    update = update || !this._func;
+
+    if (update) {
+      this._last_xrange.load(this.parent.xRange);
       this._last_equation = this.equation;
 
       this.updateTextBox();
+      this.#makeFunc();
 
       this._evaluate(0.0);
 
       if (this._haserror) {
-<<<<<<<
         console.warn("ERROR!");
         return 0.0;
-=======
-}
-`;
-nstructjs.register(GuassianCurve);
-CurveTypeData.register(GuassianCurve);
-
-/*
-* Ease
-* Visit http://createjs.com/ for documentation, updates and examples.
->>>>>>>
       }
-
-      let steps = 32;
-      this.hermite = genHermiteTable((s) => this._evaluate(s), steps);
     }
 
-    return evalHermiteTable(this.hermite, s);
+    return this._func(s);
+  }
+
+  #makeFunc() {
+    this._func = undefined;
+
+    var sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI,
+        e                                                = Math.E, E                                    = Math.E, tan                      = Math.tan, abs = Math.abs,
+        floor                                            = Math.floor, ceil = Math.ceil, acos = Math.acos,
+        asin                                             = Math.asin, atan = Math.atan, cosh         = Math.cos,
+        sinh                                             = Math.sinh, log                            = Math.log, pow = Math.pow,
+        exp                                              = Math.exp, sqrt = Math.sqrt, cbrt           = Math.cbrt,
+        min                                              = Math.min, max = Math.max;
+
+    var func;
+    let code = `
+    func = function(x) {
+      return ${this.equation};
+    }
+    `;
+    try {
+      eval(code);
+
+      this._haserror = false;
+    } catch (error) {
+      this._haserror = true;
+      console.warn("Compile error!", error.message);
+    }
+
+    this._func = func;
   }
 
   _evaluate(s) {
-    let sin = Math.sin, cos = Math.cos, pi = Math.PI, PI = Math.PI,
-        e                                                = Math.E, E                                    = Math.E, tan                      = Math.tan, abs      = Math.abs,
-        floor                                            = Math.floor, ceil                         = Math.ceil, acos = Math.acos,
-        asin                                             = Math.asin, atan                           = Math.atan, cosh = Math.cos,
-        sinh                                             = Math.sinh, log                            = Math.log, pow = Math.pow,
-        exp                                              = Math.exp, sqrt                             = Math.sqrt, cbrt = Math.cbrt,
-        min                                              = Math.min, max = Math.max;
-
     try {
-      let x = s;
-      let ret = eval(this.equation);
-
+      let f = this._func(s);
       this._haserror = false;
 
-      return ret;
+      if (isNaN(f)) {
+        return 0.0;
+      }
     } catch (error) {
       this._haserror = true;
       console.warn("ERROR!");
@@ -17226,19 +16716,8 @@ GuassianCurve.STRUCT = nstructjs.inherit(GuassianCurve, CurveTypeData) + `
   height    : float;
   offset    : float;
   deviation : float;
-<<<<<<<
 }
 `;
-=======
-}
-`;
-nstructjs.register(GuassianCurve);
-CurveTypeData.register(GuassianCurve);
-
-/*
-* Ease
-* Visit http://createjs.com/ for documentation, updates and examples.
->>>>>>>
 nstructjs.register(GuassianCurve);
 CurveTypeData.register(GuassianCurve);
 
@@ -17367,19 +16846,8 @@ Ease.getPowOut = function(pow) {
  * @param {Number} pow The exponent to use (ex. 3 would return a cubic ease).
  * @static
  * @return {Function}
-<<<<<<<
  **/
 Ease.getPowInOut = function(pow) {
-=======
- * @static
- * @return {Number}
- **/
-Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
-
-function bez3(a, b, c, t) {
-  var r1 = a + (b - a)*t;
-  var r2 = b + (c - b)*t;
->>>>>>>
   return function(t) {
     if ((t*=2)<1) return 0.5*Math.pow(t,pow);
     return 1-0.5*Math.abs(Math.pow(2-t,pow));
@@ -17703,19 +17171,8 @@ Ease.getElasticInOut = function(amplitude,period) {
 /**
  * @method elasticInOut
  * @param {Number} t
-<<<<<<<
  * @static
  * @return {Number}
-=======
- * @static
- * @return {Number}
- **/
-Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
-
-function bez3(a, b, c, t) {
-  var r1 = a + (b - a)*t;
-  var r2 = b + (c - b)*t;
->>>>>>>
  **/
 Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
 
@@ -17778,19 +17235,8 @@ class SimpleCurveBase extends CurveTypeData {
       digest.add(k);
       digest.add(this.params[k]);
     }
-<<<<<<<
 
     return d.get();
-=======
-CurveTypeData.register(RandCurve);
-RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
-}`;
-nstructjs.register(RandCurve);
-
-"use strict";
-
-var Vector2$a = Vector2$c;
->>>>>>>
   }
 
   equals(b) {
@@ -18125,25 +17571,12 @@ class RandCurve extends SimpleCurveBase {
   }
 }
 
-<<<<<<<
-CurveTypeData.register(RandCurve);
-RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
-=======
 CurveTypeData.register(RandCurve);
 RandCurve.STRUCT = nstructjs.inherit(RandCurve, SimpleCurveBase) + `
 }`;
 nstructjs.register(RandCurve);
 
 "use strict";
-
-var Vector2$a = Vector2$c;
->>>>>>>
-}`;
-nstructjs.register(RandCurve);
-
-"use strict";
-
-var Vector2$a = Vector2$c;
 
 function mySafeJSONStringify(obj) {
   return JSON.stringify(obj.toJSON(), function (key) {
@@ -18151,19 +17584,8 @@ function mySafeJSONStringify(obj) {
 
     if (typeof v === "number") {
       if (v !== Math.floor(v)) {
-<<<<<<<
         v = parseFloat(v.toFixed(5));
       } else {
-=======
-  uiZoom      : float;
-}
-`;
-nstructjs.register(Curve1D);
-
-const NumberConstraintsBase = new Set([
-  'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
-  'slideSpeed'
->>>>>>>
         v = v;
       }
     }
@@ -18187,6 +17609,9 @@ class Curve1D extends EventDispatcher {
     super();
 
     this.uiZoom = 1.0;
+    this.xRange = new Vector2$b().loadXY(0.0, 1.0);
+    this.yRange = new Vector2$b().loadXY(0.0, 1.0);
+    this.clipToRange = false;
 
     this.generators = [];
     this.VERSION = CURVE_VERSION;
@@ -18243,6 +17668,10 @@ class Curve1D extends EventDispatcher {
     if (b === undefined) {
       return;
     }
+    /*
+    if (b === undefined) {
+      return;
+    }
 
     let buf1 = mySafeJSONStringify(b);
     let buf2 = mySafeJSONStringify(this);
@@ -18252,6 +17681,32 @@ class Curve1D extends EventDispatcher {
     }
 
     this.loadJSON(JSON.parse(buf1));
+    this._on_change();
+    this.redraw();
+
+    return this;*/
+
+    let json = nstructjs.writeJSON(b, Curve1D);
+    let cpy = nstructjs.readJSON(json, Curve1D);
+
+    this.generators = cpy.generators;
+    for (let gen of cpy.generators) {
+      gen.parent = this;
+    }
+
+    for (let k in json) {
+      if (k.startsWith("_")) {
+        continue;
+      }
+
+      let v = cpy[k];
+      if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") {
+        this[k] = v;
+      } else if (v instanceof Vector2$b || v instanceof Vector3$2 || v instanceof Vector4$2 || v instanceof Matrix4$2) {
+        this[k].load(v);
+      }
+    }
+
     this._on_change();
     this.redraw();
 
@@ -18297,7 +17752,10 @@ class Curve1D extends EventDispatcher {
       generators      : [],
       uiZoom          : this.uiZoom,
       VERSION         : this.VERSION,
-      active_generator: this.generatorType
+      active_generator: this.generatorType,
+      xRange          : this.xRange,
+      yRange          : this.yRange,
+      clipToRange     : this.clipToRange,
     };
 
     for (let gen of this.generators) {
@@ -18321,6 +17779,7 @@ class Curve1D extends EventDispatcher {
       if (cls.define().typeName === type) {
         let gen = new cls();
         gen.type = type;
+        gen.parent = this;
         this.generators.push(gen);
         return gen;
       }
@@ -18356,6 +17815,13 @@ class Curve1D extends EventDispatcher {
     this.VERSION = obj.VERSION;
 
     this.uiZoom = parseFloat(obj.uiZoom) || this.uiZoom;
+    if (obj.xRange) {
+      this.xRange = new Vector2$b(obj.xRange);
+    }
+    if (obj.yRange) {
+      this.yRange = new Vector2$b(obj.yRange);
+    }
+    this.clipToRange = Boolean(obj.clipToRange);
 
     //this.generators = [];
     for (let gen of obj.generators) {
@@ -18382,11 +17848,24 @@ class Curve1D extends EventDispatcher {
       //this.generators.push(gen2);
     }
 
+    if (this.VERSION < 1.1) {
+      this.#patchRange();
+    }
+
     return this;
   }
 
   evaluate(s) {
-    return this.generators.active.evaluate(s);
+    if (this.clipToRange) {
+      s = Math.min(Math.max(s, this.xRange[0]), this.xRange[1]);
+    }
+
+    let f = this.generators.active.evaluate(s);
+    if (this.clipToRange) {
+      f = Math.min(Math.max(f, this.yRange[0]), this.yRange[1]);
+    }
+
+    return f;
   }
 
   integrate(s, quadSteps) {
@@ -18436,15 +17915,15 @@ class Curve1D extends EventDispatcher {
     //g.fillStyle = "rgb(50, 50, 50)";
     //g.fill();
 
-    let f = 0, steps = 64;
-    let df = 1/(steps - 1);
+    let f = this.xRange[0], steps = 64;
+    let df = (this.xRange[1] - this.xRange[0])/(steps - 1);
     w = 6.0/sz;
 
     let curve = this.generators.active;
 
     g.beginPath();
     for (let i = 0; i < steps; i++, f += df) {
-      let val = curve.evaluate(f);
+      let val = this.evaluate(f);
 
       (i === 0 ? g.moveTo : g.lineTo).call(g, f, val, w, w);
     }
@@ -18454,7 +17933,7 @@ class Curve1D extends EventDispatcher {
 
     if (this.overlay_curvefunc !== undefined) {
       g.beginPath();
-      f = 0.0;
+      f = this.xRange[0];
 
       for (let i = 0; i < steps; i++, f += df) {
         let val = this.overlay_curvefunc(f);
@@ -18475,8 +17954,6 @@ class Curve1D extends EventDispatcher {
   loadSTRUCT(reader) {
     this.generators = [];
     reader(this);
-
-    //console.log("VERSION", this.VERSION);
 
     if (this.VERSION <= 0.75) {
       this.generators = [];
@@ -18500,28 +17977,36 @@ class Curve1D extends EventDispatcher {
       }
     }
 
+    for (let gen of this.generators) {
+      gen.parent = this;
+    }
+
+    if (this.VERSION < 1.1) {
+      this.#patchRange();
+    }
+
     delete this._active;
+    this.VERSION = CURVE_VERSION;
+  }
+
+  #patchRange() {
+    let range = this.getGenerator("BSplineCurve").range;
+    this.xRange.load(range[0]);
+    this.yRange.load(range[1]);
   }
 }
 
+/* Remember to update toJSON() loadJSON api. */
 Curve1D.STRUCT = `
 Curve1D {
   generators  : array(abstract(CurveTypeData));
   _active     : string | obj.generators.active.type;
   VERSION     : float;
-<<<<<<<
   uiZoom      : float;
+  xRange      : vec2;
+  yRange      : vec2;
+  clipToRange : bool;
 }
-=======
-  uiZoom      : float;
-}
-`;
-nstructjs.register(Curve1D);
-
-const NumberConstraintsBase = new Set([
-  'range', 'expRate', 'step', 'uiRange', 'baseUnit', 'displayUnit', 'stepIsRelative',
-  'slideSpeed'
->>>>>>>
 `;
 nstructjs.register(Curve1D);
 
@@ -19864,7 +19349,7 @@ class Vec2Property extends FloatProperty {
     super(undefined, apiname, uiname, description);
 
     this.type = PropTypes$8.VEC2;
-    this.data = new Vector2$c(data);
+    this.data = new Vector2$b(data);
   }
 
   setValue(v) {
@@ -20169,19 +19654,6 @@ class ListProperty extends ToolProperty$1 {
     super.copyTo(b);
 
     b.prop = this.prop.copy();
-<<<<<<<
-=======
-`;
-
-nstructjs.register(Curve1DProperty);
-ToolProperty$1.internalRegister(Curve1DProperty);
-
-const ClassIdSymbol = Symbol("pathux-class-id");
-
-//import * as nstructjs from './struct.js';
-
-let ScreenClass = undefined;
->>>>>>>
 
     for (let prop of this.value) {
       b.value.push(prop.copy());
@@ -20429,19 +19901,8 @@ class StringSetProperty extends ToolProperty$1 {
 
   addDescriptions(map) {
     for (let k in map) {
-<<<<<<<
       this.descriptions[k] = map[k];
     }
-=======
-}
-_setModalAreaClass(AreaWrangler);
-
-let contextWrangler = new AreaWrangler();
-
-"use strict";
-
-let dtvtmps = cachering.fromConstructor(Vector3$2, 32);
->>>>>>>
 
     return this;
   }
@@ -20551,19 +20012,6 @@ class Curve1DProperty extends ToolProperty$1 {
 Curve1DProperty.STRUCT = nstructjs.inherit(Curve1DProperty, ToolProperty$1) + `
   data : Curve1D;
 }
-<<<<<<<
-=======
-`;
-
-nstructjs.register(Curve1DProperty);
-ToolProperty$1.internalRegister(Curve1DProperty);
-
-const ClassIdSymbol = Symbol("pathux-class-id");
-
-//import * as nstructjs from './struct.js';
-
-let ScreenClass = undefined;
->>>>>>>
 `;
 
 nstructjs.register(Curve1DProperty);
@@ -20811,10 +20259,6 @@ class AreaWrangler {
       return this.lasts.get(type[ClassIdSymbol]);
     }
   }
-<<<<<<<
-}
-_setModalAreaClass(AreaWrangler);
-=======
 }
 _setModalAreaClass(AreaWrangler);
 
@@ -20823,16 +20267,9 @@ let contextWrangler = new AreaWrangler();
 "use strict";
 
 let dtvtmps = cachering.fromConstructor(Vector3$2, 32);
->>>>>>>
-
-let contextWrangler = new AreaWrangler();
-
-"use strict";
-
-let dtvtmps = cachering.fromConstructor(Vector3$2, 32);
 
 
-let quad_co_rets2 = cachering.fromConstructor(Vector2$c, 512);
+let quad_co_rets2 = cachering.fromConstructor(Vector2$b, 512);
 
 function quad_bilinear(v1, v2, v3, v4, u, v) {
   return -((v1 - v2)*u - v1 - (u*v1 - u*v2 + u*v3 - u*v4 - v1 + v4)*v);
@@ -21057,7 +20494,7 @@ off fort;
 
 */
 
-let barycentric_v2_rets = cachering.fromConstructor(Vector2$c, 2048);
+let barycentric_v2_rets = cachering.fromConstructor(Vector2$b, 2048);
 let calc_proj_refs = new cachering(() => [0, 0], 64);
 
 /*
@@ -21284,7 +20721,7 @@ function _linedis2(co, v1, v2) {
 let closest_p_tri_rets = new cachering(() => {
   return {
     co  : new Vector3$2(),
-    uv  : new Vector2$c(),
+    uv  : new Vector2$b(),
     dist: 0
   }
 }, 512);
@@ -21958,11 +21395,11 @@ function aabb_isect_3d(pos1, size1, pos2, size2) {
 }
 
 
-let aabb_intersect_vs = cachering.fromConstructor(Vector2$c, 32);
+let aabb_intersect_vs = cachering.fromConstructor(Vector2$b, 32);
 let aabb_intersect_rets = new cachering(() => {
   return {
-    pos : new Vector2$c(),
-    size: new Vector2$c()
+    pos : new Vector2$b(),
+    size: new Vector2$b()
   }
 }, 512);
 
@@ -22026,15 +21463,15 @@ window.test_aabb_intersect_2d = function () {
   g.clearRect(0, 0, canvas.width, canvas.height);
 
   let sz = 800;
-  let a1 = new Vector2$c([Math.random()*sz, Math.random()*sz]).floor();
-  let a2 = new Vector2$c([Math.random()*sz, Math.random()*sz]).floor();
-  let b1 = new Vector2$c([Math.random()*sz, Math.random()*sz]).floor();
-  let b2 = new Vector2$c([Math.random()*sz, Math.random()*sz]).floor();
+  let a1 = new Vector2$b([Math.random()*sz, Math.random()*sz]).floor();
+  let a2 = new Vector2$b([Math.random()*sz, Math.random()*sz]).floor();
+  let b1 = new Vector2$b([Math.random()*sz, Math.random()*sz]).floor();
+  let b2 = new Vector2$b([Math.random()*sz, Math.random()*sz]).floor();
 
-  let p1 = new Vector2$c();
-  let s1 = new Vector2$c();
-  let p2 = new Vector2$c();
-  let s2 = new Vector2$c();
+  let p1 = new Vector2$b();
+  let s1 = new Vector2$b();
+  let p2 = new Vector2$b();
+  let s2 = new Vector2$b();
 
   p1.load(a1).min(a2);
   s1.load(a1).max(a2);
@@ -22312,7 +21749,7 @@ class MinMax {
 
       switch (totaxis) {
         case 2:
-          cls = Vector2$c;
+          cls = Vector2$b;
           break;
         case 3:
           cls = Vector3$2;
@@ -22480,13 +21917,13 @@ function inrect_2d(p, pos, size) {
   }
   return p[0] >= pos[0] && p[0] <= pos[0] + size[0] && p[1] >= pos[1] && p[1] <= pos[1] + size[1];
 };
-let $smin_aabb_isect_line_2d = new Vector2$c();
-let $ssize_aabb_isect_line_2d = new Vector2$c();
-let $sv1_aabb_isect_line_2d = new Vector2$c();
-let $ps_aabb_isect_line_2d = [new Vector2$c(), new Vector2$c(), new Vector2$c()];
+let $smin_aabb_isect_line_2d = new Vector2$b();
+let $ssize_aabb_isect_line_2d = new Vector2$b();
+let $sv1_aabb_isect_line_2d = new Vector2$b();
+let $ps_aabb_isect_line_2d = [new Vector2$b(), new Vector2$b(), new Vector2$b()];
 let $l1_aabb_isect_line_2d = [0, 0];
-let $smax_aabb_isect_line_2d = new Vector2$c();
-let $sv2_aabb_isect_line_2d = new Vector2$c();
+let $smax_aabb_isect_line_2d = new Vector2$b();
+let $sv2_aabb_isect_line_2d = new Vector2$b();
 let $l2_aabb_isect_line_2d = [0, 0];
 
 function aabb_isect_line_2d(v1, v2, min, max) {
@@ -22707,12 +22144,12 @@ function point_in_aabb_2d(p, min, max) {
   return p[0] >= min[0] && p[0] <= max[0] && p[1] >= min[1] && p[1] <= max[1];
 }
 
-let _asi2d_v1 = new Vector2$c();
-let _asi2d_v2 = new Vector2$c();
-let _asi2d_v3 = new Vector2$c();
-let _asi2d_v4 = new Vector2$c();
-let _asi2d_v5 = new Vector2$c();
-let _asi2d_v6 = new Vector2$c();
+let _asi2d_v1 = new Vector2$b();
+let _asi2d_v2 = new Vector2$b();
+let _asi2d_v3 = new Vector2$b();
+let _asi2d_v4 = new Vector2$b();
+let _asi2d_v5 = new Vector2$b();
+let _asi2d_v6 = new Vector2$b();
 
 function aabb_sphere_isect_2d(p, r, min, max) {
   let v1 = _asi2d_v1, v2 = _asi2d_v2, v3 = _asi2d_v3, mvec = _asi2d_v4;
@@ -23056,8 +22493,8 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   vi[0] = ((v3[0] - v4[0])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[0] - v2[0])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   vi[1] = ((v3[1] - v4[1])*(v1[0]*v2[1] - v1[1]*v2[0]) - (v1[1] - v2[1])*(v3[0]*v4[1] - v3[1]*v4[0]))/div;
   if (calc_t || v1.length === 3) {
-    let n1 = new Vector2$c(v2).sub(v1);
-    let n2 = new Vector2$c(vi).sub(v1);
+    let n1 = new Vector2$b(v2).sub(v1);
+    let n2 = new Vector2$b(vi).sub(v1);
     let t = n2.vectorLength()/n1.vectorLength();
     n1.normalize();
     n2.normalize();
@@ -23072,11 +22509,11 @@ function line_isect(v1, v2, v3, v4, calc_t) {
   return [vi, LINECROSS];
 };
 
-let dt2l_v1 = new Vector2$c();
-let dt2l_v2 = new Vector2$c();
-let dt2l_v3 = new Vector2$c();
-let dt2l_v4 = new Vector2$c();
-let dt2l_v5 = new Vector2$c();
+let dt2l_v1 = new Vector2$b();
+let dt2l_v2 = new Vector2$b();
+let dt2l_v3 = new Vector2$b();
+let dt2l_v4 = new Vector2$b();
+let dt2l_v5 = new Vector2$b();
 
 function dist_to_line_2d(p, v1, v2, clip, closest_co_out = undefined, t_out = undefined) {
   if (clip === undefined) {
@@ -23158,7 +22595,7 @@ function dist_to_line(p, v1, v2, clip = true) {
 //p cam be 2d, 3d, or 4d point, v1/v2 however must be full homogenous coordinates
 let _cplw_vs4 = cachering.fromConstructor(Vector4$2, 64);
 let _cplw_vs3 = cachering.fromConstructor(Vector3$2, 64);
-let _cplw_vs2 = cachering.fromConstructor(Vector2$c, 64);
+let _cplw_vs2 = cachering.fromConstructor(Vector2$b, 64);
 
 function wclip(x1, x2, w1, w2, near) {
   let r1 = near*w1 - x1;
@@ -23311,7 +22748,7 @@ function circ_from_line_tan(a, b, t) {
   does that itself*/
 let _circ_from_line_tan2d_vs = cachering.fromConstructor(Vector3$2, 32);
 let _circ_from_line_tan2d_ret = new cachering(function () {
-  return [new Vector2$c(), 0];
+  return [new Vector2$b(), 0];
 }, 64);
 
 function circ_from_line_tan_2d(a, b, t) {
@@ -23835,106 +23272,6 @@ function trilinear_v3(uvw, boxverts) {
   let [u, v, w] = uvw;
 
   const a1x = boxverts[0][0], a1y = boxverts[0][1], a1z = boxverts[0][2];
-<<<<<<<
-=======
-  ret[2] = th3;
-
-  return ret;
-}
-
-var math = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles
-});
-
-let _clipdata = {
-  name: "nothing",
-  mime: "nothing",
->>>>>>>
 
   const b1x = boxverts[1][0] - a1x, b1y = boxverts[1][1] - a1y, b1z = boxverts[1][2] - a1z;
   const c1x = boxverts[2][0] - a1x, c1y = boxverts[2][1] - a1y, c1z = boxverts[2][2] - a1z;
@@ -24191,19 +23528,8 @@ function trilinear_co(p, boxverts) {
     w[2] = w2 + dw;
 
     lreport("mindis:", (mindis**0.5).toFixed(3), u2, v2, w2);
-<<<<<<<
   }
 
-=======
-if (cfg) {
-  console.error("CONFIG CONFIG", cfg.innerText);
-  exports.loadConstants(JSON.parse(cfg.innerText));
-}
-
-/*
-THEME REFACTOR:
-
->>>>>>>
   uvw.loadXYZ(u[1], v[1], w[1]);
 
   //console.log("uvw", uvw);
@@ -24328,106 +23654,6 @@ function tri_angles(v1, v2, v3) {
 
   ret[0] = th1;
   ret[1] = th2;
-<<<<<<<
-=======
-  ret[2] = th3;
-
-  return ret;
-}
-
-var math = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles
-});
-
-let _clipdata = {
-  name: "nothing",
-  mime: "nothing",
->>>>>>>
   ret[2] = th3;
 
   return ret;
@@ -24617,6 +23843,7 @@ let exports = {
   },
   colorSchemeType: "light",
   docManualPath  : "../simple_docsys/doc_build/",
+  docEditorPath: "../simple_docsys.js",
 
   //add textboxes to rollar sliders,
   //note that  users can also double click them to
@@ -24653,19 +23880,8 @@ let exports = {
     /*
     customWindowSize: {
       width: 2048, height: 2048
-<<<<<<<
     },
     //*/
-=======
-
-  return s;
-}
-window._exportTheme = exportTheme;
-
-class Task {
-  constructor(taskcb) {
-    this.task = taskcb;
->>>>>>>
   },
 
   //auto load 1d bspline templates, can hurt startup time
@@ -24695,19 +23911,8 @@ class Task {
 window.DEBUG = exports.DEBUG;
 
 let cfg = document.getElementById("pathux-config");
-<<<<<<<
 if (cfg) {
   console.error("CONFIG CONFIG", cfg.innerText);
-=======
-if (cfg) {
-  console.error("CONFIG CONFIG", cfg.innerText);
-  exports.loadConstants(JSON.parse(cfg.innerText));
-}
-
-/*
-THEME REFACTOR:
-
->>>>>>>
   exports.loadConstants(JSON.parse(cfg.innerText));
 }
 
@@ -24989,19 +24194,8 @@ class CSSFont {
     digest.add(this.font);
     digest.add(this.style);
     digest.add(this.weight);
-<<<<<<<
     digest.add(this.variant);
     digest.add(this.color);
-=======
-      }
-    }
-  }
-}
-
-class token {
-  constructor(type, val, lexpos, lexlen, lineno, lexer, parser) {
-    this.type = type;
->>>>>>>
 
     return digest.get();
   }
@@ -25125,7 +24319,7 @@ ${indent}})`;
   for (let k of sortkeys(theme1)) {
     let k2 = k;
 
-    if (k.search("-") >= 0 || k.search(" ") >= 0) {
+    if (k.search(/[- \t.]/) >= 0) {
       k2 = "'" + k + "'";
     }
     s += "  " + k2 + ": ";
@@ -25168,19 +24362,8 @@ ${indent}})`;
     }
   }
   s += "};\n";
-<<<<<<<
 
   return s;
-=======
-
-  return s;
-}
-window._exportTheme = exportTheme;
-
-class Task {
-  constructor(taskcb) {
-    this.task = taskcb;
->>>>>>>
 }
 window._exportTheme = exportTheme;
 
@@ -25504,19 +24687,8 @@ class Animator {
         if (!done) {
           break;
         }
-<<<<<<<
       }
     }
-=======
-      }
-    }
-  }
-}
-
-class token {
-  constructor(type, val, lexpos, lexlen, lineno, lexer, parser) {
-    this.type = type;
->>>>>>>
   }
 }
 
@@ -25627,27 +24799,6 @@ class lexer$1 {
     this.tokdef = state[0];
     this.errfunc = state[1];
   }
-<<<<<<<
-=======
-  let ret = p_Struct(parser);
-
-  console.log(JSON.stringify(ret));
-}
-
-var parseutil = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  token: token,
-  tokdef: tokdef,
-  PUTLParseError: PUTLParseError$1,
-  lexer: lexer$1,
-  getTraceBack: getTraceBack,
-  parser: parser
-});
-
-const DataFlags = {
-  READ_ONLY             : 1,
-  USE_CUSTOM_GETSET     : 2,
->>>>>>>
 
   pop_state() {
     let item = this.statestack[this.statestack.length - 1];
@@ -26076,19 +25227,8 @@ function test_parser() {
   while (tok = lex.next()) {
     console.log(tok.toString());
   }
-<<<<<<<
 
   let parser = new parser(lex);
-=======
-  }
-
-  return DataAPIClass.registerTool(cls);
-}
-
-"use strict";
-
-let ToolClasses = [];
->>>>>>>
   parser.input(a);
 
   function p_Array(p) {
@@ -26174,27 +25314,6 @@ let ToolClasses = [];
     return st;
   }
 
-<<<<<<<
-=======
-  let ret = p_Struct(parser);
-
-  console.log(JSON.stringify(ret));
-}
-
-var parseutil = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  token: token,
-  tokdef: tokdef,
-  PUTLParseError: PUTLParseError$1,
-  lexer: lexer$1,
-  getTraceBack: getTraceBack,
-  parser: parser
-});
-
-const DataFlags = {
-  READ_ONLY             : 1,
-  USE_CUSTOM_GETSET     : 2,
->>>>>>>
   let ret = p_Struct(parser);
 
   console.log(JSON.stringify(ret));
@@ -26242,7 +25361,7 @@ class DataPathError extends Error {
 function getVecClass(proptype) {
   switch (proptype) {
     case PropTypes$8.VEC2:
-      return Vector2$c;
+      return Vector2$b;
     case PropTypes$8.VEC3:
       return Vector3$2;
     case PropTypes$8.VEC4:
@@ -26623,19 +25742,8 @@ function setImplementationClass(cls) {
 function registerTool(cls) {
   if (DataAPIClass === undefined) {
     throw new Error("data api not initialized properly; call setImplementationClass");
-<<<<<<<
   }
 
-=======
-  }
-
-  return DataAPIClass.registerTool(cls);
-}
-
-"use strict";
-
-let ToolClasses = [];
->>>>>>>
   return DataAPIClass.registerTool(cls);
 }
 
@@ -26859,6 +25967,7 @@ class ToolOp extends EventHandler {
   constructor() {
     super();
 
+    this._pointerId = undefined;
     this._overdraw = undefined;
     this.__memsize = undefined;
 
@@ -27395,7 +26504,12 @@ class ToolOp extends EventHandler {
       this._reject = reject;
 
       modalstack.push(this);
-      super.pushModal(ctx.screen);
+
+      if (this._pointerId !== undefined) {
+        super.pushPointerModal(ctx.screen, this._pointerId);
+      } else {
+        super.pushModal(ctx.screen);
+      }
     });
 
     return this._promise;
@@ -27764,19 +26878,8 @@ class ToolMacro extends ToolOp {
       if (c.source === i) {
         let tool2 = this.tools[c.dest];
 
-<<<<<<<
         tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
       }
-=======
-      console.error("Failed to register a tool with nstructjs");
-    }
-  }
-}
-
-let ToolPaths = {};
-
-var initToolPaths_run = false;
->>>>>>>
     }
 
     for (var c of this.connects) {
@@ -27919,19 +27022,8 @@ class ToolStack extends Array {
 
     this.cur = -1;
     this.ctx = ctx;
-<<<<<<<
 
     this.modalRunning = 0;
-=======
-
-    ToolPaths[path] = cls;
-  }
-}
-
-class ModelInterface {
-  constructor() {
-    this.prefix = "";
->>>>>>>
 
     this._undo_branch = undefined; //used to save undo branch in case of tool cancel
   }
@@ -28261,19 +27353,8 @@ class ModelInterface {
     delete this._stack;
   }
 
-<<<<<<<
   //note that this makes sure tool classes are registered with nstructjs
   //during save
-=======
-
-    return ret.value;
-  }
-}
-
-class DataPathSetOp extends ToolOp {
-  constructor() {
-    super();
->>>>>>>
   _save() {
     for (let tool of this) {
       let cls = tool.constructor;
@@ -28344,19 +27425,8 @@ function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = unde
       }
     } catch (error) {
       console.log(error.stack);
-<<<<<<<
       console.error("Failed to register a tool with nstructjs");
     }
-=======
-      console.error("Failed to register a tool with nstructjs");
-    }
-  }
-}
-
-let ToolPaths = {};
-
-var initToolPaths_run = false;
->>>>>>>
   }
 }
 
@@ -28499,19 +27569,8 @@ function initToolPaths() {
 
     let def = cls.tooldef();
     let path = def.toolpath;
-<<<<<<<
 
     ToolPaths[path] = cls;
-=======
-
-    ToolPaths[path] = cls;
-  }
-}
-
-class ModelInterface {
-  constructor() {
-    this.prefix = "";
->>>>>>>
   }
 }
 
@@ -28533,7 +27592,7 @@ class ModelInterface {
     return ListIface;
   }
 
-  createTool(path, inputs={}, constructor_argument=undefined) {
+  createTool(path, inputs = {}, constructor_argument = undefined) {
     throw new Error("implement me");
   }
 
@@ -28549,11 +27608,11 @@ class ModelInterface {
    *
    * @param compareInputs : check if toolstack head has identical input values, defaults to false
    * */
-  execOrRedo(ctx, toolop, compareInputs=false) {
+  execOrRedo(ctx, toolop, compareInputs = false) {
     return ctx.toolstack.execOrRedo(ctx, toolop, compareInputs);
   }
 
-  execTool(ctx, path, inputs={}, constructor_argument=undefined) {
+  execTool(ctx, path, inputs = {}, constructor_argument = undefined, event = undefined) {
     return new Promise((accept, reject) => {
       let tool = path;
 
@@ -28572,7 +27631,7 @@ class ModelInterface {
 
       //execute
       try {
-        ctx.toolstack.execTool(ctx, tool);
+        ctx.toolstack.execTool(ctx, tool, event);
       } catch (error) { //for some reason chrome is suppressing errors
         print_stack$1(error);
         throw error;
@@ -28606,19 +27665,8 @@ class ModelInterface {
   /** takes a mass_set_path and returns an array of individual paths */
   resolveMassSetPaths(ctx, mass_set_path) {
     throw new Error("implement me");
-<<<<<<<
   }
 
-=======
-  }
-}
-
-ToolOp.register(DataPathSetOp);
-
-/**
-
- This is the main datapath controller module, inspired by Blender's RNA system.
->>>>>>>
   /**
    * @example
    *
@@ -28637,7 +27685,7 @@ ToolOp.register(DataPathSetOp);
   }
 
   setValue(ctx, path, val, rootStruct) {
-    let res = this.resolvePath(ctx, path, undefined,  rootStruct);
+    let res = this.resolvePath(ctx, path, undefined, rootStruct);
     let prop = res.prop;
 
     if (prop !== undefined && (prop.flag & PropFlags$3.READ_ONLY)) {
@@ -28723,7 +27771,7 @@ ToolOp.register(DataPathSetOp);
         res.obj[res.subkey] = val;
       }
     } else if (res.key === "" && isVecProperty(res.prop)) {
-      for (let i=0; i<res.obj.length; i++) {
+      for (let i = 0; i < res.obj.length; i++) {
         res.obj[i] = val[i];
       }
     } else if (!(prop !== undefined && prop instanceof ListIface)) {
@@ -28757,14 +27805,15 @@ ToolOp.register(DataPathSetOp);
     if (rdef.subkey !== undefined) {
       let subkey = rdef.subkey;
 
-      if (type & (PropTypes$8.VEC2|PropTypes$8.VEC3|PropTypes$8.VEC4)) {
+      if (type & (PropTypes$8.VEC2 | PropTypes$8.VEC3 | PropTypes$8.VEC4)) {
         if (prop.descriptions && subkey in prop.descriptions) {
           return prop.descriptions[subkey];
         }
-      } else if (type & (PropTypes$8.ENUM|PropTypes$8.FLAG)) {
+      } else if (type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
         if (!(subkey in prop.values) && subkey in prop.keys) {
           subkey = prop.keys[subkey];
-        };
+        }
+        ;
 
         if (prop.descriptions && subkey in prop.descriptions) {
           return prop.descriptions[subkey];
@@ -28794,12 +27843,12 @@ ToolOp.register(DataPathSetOp);
   }
 
   getPropName(ctx, path) {
-    let i = path.length-1;
+    let i = path.length - 1;
     while (i >= 0 && path[i] !== ".") {
       i--;
     }
 
-    path = path.slice(i+1, path.length).trim();
+    path = path.slice(i + 1, path.length).trim();
 
     if (path.endsWith("]")) {
       i = path.length - 1;
@@ -28815,7 +27864,7 @@ ToolOp.register(DataPathSetOp);
     return path;
   }
 
-  getValue(ctx, path, rootStruct=undefined) {
+  getValue(ctx, path, rootStruct = undefined) {
     if (typeof ctx == "string") {
       throw new Error("You forgot to pass context to getValue");
     }
@@ -28830,7 +27879,7 @@ ToolOp.register(DataPathSetOp);
 
     //resolvePath handles the case of vector properties with custom callbacks for us
     //(and possibly all the other cases too, need to check)
-    exec = exec && !(ret.prop !== undefined && (ret.prop.type & (PropTypes$8.VEC2|PropTypes$8.VEC3|PropTypes$8.VEC4|PropTypes$8.QUAT)));
+    exec = exec && !(ret.prop !== undefined && (ret.prop.type & (PropTypes$8.VEC2 | PropTypes$8.VEC3 | PropTypes$8.VEC4 | PropTypes$8.QUAT)));
 
     if (exec) {
       ret.prop.dataref = ret.obj;
@@ -28839,7 +27888,7 @@ ToolOp.register(DataPathSetOp);
 
       let val = ret.prop.getValue();
 
-      if (typeof val === "string" && (ret.prop.type & (PropTypes$8.FLAG|PropTypes$8.ENUM))) {
+      if (typeof val === "string" && (ret.prop.type & (PropTypes$8.FLAG | PropTypes$8.ENUM))) {
         val = ret.prop.values[val];
       }
 
@@ -28852,19 +27901,8 @@ ToolOp.register(DataPathSetOp);
       return val;
 
     }
-<<<<<<<
 
     return ret.value;
-=======
-
-    return ret.value;
-  }
-}
-
-class DataPathSetOp extends ToolOp {
-  constructor() {
-    super();
->>>>>>>
   }
 }
 
@@ -29197,19 +28235,8 @@ class DataPathSetOp extends ToolOp {
         destType    : new EnumProperty$9(PropTypes$8.INT, PropTypes$8),
       }
     }
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-ToolOp.register(DataPathSetOp);
-
-/**
-
- This is the main datapath controller module, inspired by Blender's RNA system.
->>>>>>>
 
 ToolOp.register(DataPathSetOp);
 
@@ -30360,19 +29387,8 @@ class DataAPI extends ModelInterface {
         obj = !!(lastobj[key] == val);
       } else if (t.type === "AND" && prop !== undefined && (prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG))) {
         p.expect("AND");
-<<<<<<<
 
         let t2 = p.peeknext();
-=======
-  dpt = cls;
-}
-
-setImplementationClass(DataAPI);
-
-let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
-
-function rgb_to_hsv(r, g, b) {
->>>>>>>
         let type = t2 && t2.type === "ID" ? "ID" : "NUM";
 
         let val = p.expect(type);
@@ -30509,19 +29525,8 @@ function rgb_to_hsv(r, g, b) {
     path = path.replace(/\=\=/g, "=");
 
     path = "." + this.prefix + path;
-<<<<<<<
 
     let p = [""];
-=======
-  ret[3] = K;
-
-  return ret;
-}
-
-const DefaultTheme = {
-  base: {
-    AreaHeaderBG        : 'rgba(200, 200, 200, 0.95)',
->>>>>>>
     for (let i = 0; i < path.length; i++) {
       let s = path[i];
 
@@ -30973,32 +29978,10 @@ function setDataPathToolOp(cls) {
     ToolOp.register(cls);
   }
 
-<<<<<<<
-  dpt = cls;
-}
-=======
   dpt = cls;
 }
 
 setImplementationClass(DataAPI);
-
-let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
-
-function rgb_to_hsv(r, g, b) {
->>>>>>>
-<<<<<<<
-
-setImplementationClass(DataAPI);
-=======
-    width  : 100,
-  },
-
-};
-
-"use strict";
-
-/*
->>>>>>>
 
 let rgb_to_hsv_rets = new cachering(() => [0, 0, 0], 64);
 
@@ -31062,19 +30045,8 @@ function hsv_to_rgb(h, s, v) {
     ret[2] = b;
 
     return ret;
-<<<<<<<
   }
 
-=======
-};
-/* used for icon checkboxes with overlayed check marks */
-Icons$2.ENUM_CHECKED = Icons$2.CHECKED;
-Icons$2.ENUM_UNCHECKED = Icons$2.UNCHECKED;
-
-let exclude = new Set([
-  "toString", "constructor", "prototype", "__proto__", "toLocaleString",
-  "hasOwnProperty", "shadow"
->>>>>>>
   if (h >= 0.0 && h < 60.0) {
     color = RgbF_Create(c + m, x + m, m);
   } else if (h >= 60.0 && h < 120.0) {
@@ -31144,19 +30116,8 @@ function rgb_to_cmyk(r, g, b) {
   ret[0] = C;
   ret[1] = M;
   ret[2] = Y;
-<<<<<<<
   ret[3] = K;
 
-=======
-  ret[3] = K;
-
-  return ret;
-}
-
-const DefaultTheme = {
-  base: {
-    AreaHeaderBG        : 'rgba(200, 200, 200, 0.95)',
->>>>>>>
   return ret;
 }
 
@@ -31304,19 +30265,8 @@ const DefaultTheme = {
     CanvasBG    : 'rgb(44,44,44)',
     CanvasHeight: 256,
     CanvasWidth : 256,
-<<<<<<<
   },
 
-=======
-    }
-    this.chain.push([cb, node, once]);
-  }
-}
-
-let _ui_base = undefined;
-
-//avoid circular module references
->>>>>>>
   dropbox: {
     dropTextBG: 'rgba(233,233,233, 1)',
     height    : 25,
@@ -31632,19 +30582,8 @@ let _ui_base = undefined;
   vecPopupButton: {
     height : 18,
     padding: 3,
-<<<<<<<
     width  : 100,
   },
-=======
-    width  : 100,
-  },
-
-};
-
-"use strict";
-
-/*
->>>>>>>
 
 };
 
@@ -31708,19 +30647,8 @@ let Icons$2 = {
   TREE_COLLAPSE: a$1++,
   ZOOM_OUT     : a$1++,
   ZOOM_IN      : a$1++
-<<<<<<<
 };
 /* used for icon checkboxes with overlayed check marks */
-=======
-};
-/* used for icon checkboxes with overlayed check marks */
-Icons$2.ENUM_CHECKED = Icons$2.CHECKED;
-Icons$2.ENUM_UNCHECKED = Icons$2.UNCHECKED;
-
-let exclude = new Set([
-  "toString", "constructor", "prototype", "__proto__", "toLocaleString",
-  "hasOwnProperty", "shadow"
->>>>>>>
 Icons$2.ENUM_CHECKED = Icons$2.CHECKED;
 Icons$2.ENUM_UNCHECKED = Icons$2.UNCHECKED;
 
@@ -31950,19 +30878,8 @@ class AfterAspect {
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
       return;
-<<<<<<<
     }
     this.chain.push([cb, node, once]);
-=======
-    }
-    this.chain.push([cb, node, once]);
-  }
-}
-
-let _ui_base = undefined;
-
-//avoid circular module references
->>>>>>>
   }
 }
 
@@ -32532,7 +31449,7 @@ function makeIconDiv(icon, sheet = 0) {
   return icontest;
 }
 
-let Vector2$9 = Vector2$c;
+let Vector2$9 = Vector2$b;
 let Matrix4$1 = Matrix4$2;
 
 let dpistack = [];
@@ -35059,19 +33976,8 @@ class UIBase$f extends HTMLElement {
   }
 
   getDefault(key, checkForMobile = true, defaultval = undefined) {
-<<<<<<<
     let ret = this.getDefault_intern(key, checkForMobile, defaultval);
 
-=======
-
-//avoid explicit circular references
-_setUIBase(UIBase$f);
-//ui_save.setUIBase(UIBase);
-
-"use strict";
-
-let keymap$3 = keymap$4;
->>>>>>>
     //convert pixel units straight to numbers
     if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
       let s = ret.trim().toLowerCase();
@@ -35716,19 +34622,8 @@ function loadUIData(node, buf) {
 UIBase$f.PositionKey = "fixed";
 
 window._loadUIData = loadUIData;
-<<<<<<<
 
 //avoid explicit circular references
-=======
-
-//avoid explicit circular references
-_setUIBase(UIBase$f);
-//ui_save.setUIBase(UIBase);
-
-"use strict";
-
-let keymap$3 = keymap$4;
->>>>>>>
 _setUIBase(UIBase$f);
 //ui_save.setUIBase(UIBase);
 
@@ -35915,19 +34810,8 @@ class ButtonEventBase extends UIBase$e {
   _redraw() {
 
   }
-<<<<<<<
 }
 
-=======
-  }
-}
-
-UIBase$e.internalRegister(OldButton);
-
-"use strict";
-
-function myToFixed$1(s, n) {
->>>>>>>
 class Button extends ButtonEventBase {
   constructor() {
     super();
@@ -36442,19 +35326,8 @@ class OldButton extends ButtonEventBase {
   }
 
   _repos_canvas() {
-<<<<<<<
     let dpi = this.getDPI();
 
-=======
-  return false;
-}
-
-_setTextboxClass(TextBox);
-
-"use strict";
-
-function myToFixed(s, n) {
->>>>>>>
     let w = parsepx$3(this.dom.style["width"]);
     let h = parsepx$3(this.dom.style["height"]);
 
@@ -36594,19 +35467,8 @@ function myToFixed(s, n) {
       size  : ts/dpi,
       font  : font
     });
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$e.internalRegister(OldButton);
-
-"use strict";
-
-function myToFixed$1(s, n) {
->>>>>>>
 
 UIBase$e.internalRegister(OldButton);
 
@@ -37121,19 +35983,8 @@ function checkForTextBox(screen, x, y) {
     p = p.parentWidget ? p.parentWidget : p.parentNode;
   }
 
-<<<<<<<
   return false;
 }
-=======
-  return false;
-}
-
-_setTextboxClass(TextBox);
-
-"use strict";
-
-function myToFixed(s, n) {
->>>>>>>
 
 _setTextboxClass(TextBox);
 
@@ -37460,19 +36311,8 @@ class Check extends UIBase$c {
     this._label.style["font"] = this.getDefault("DefaultText").genCSS();
     this._label.style["color"] = this.getDefault("DefaultText").color;
 
-<<<<<<<
     this._label.style['font'] = 'normal 14px poppins'; // TODO - Jordan - add to settings
 
-=======
-  }
-}
-
-UIBase$c.internalRegister(Check1);
-
-function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
-  let blob = new Blob([data], {type : mime});
-  let url = URL.createObjectURL(blob);
->>>>>>>
     super.setCSS();
 
     //force clear background
@@ -37522,23 +36362,6 @@ function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet
     let canvas = this.canvas, g = this.g;
     let dpi = UIBase$c.getDPI();
     let tilesize = iconmanager$1.getTileSize(0);
-<<<<<<<
-=======
-  let buf = _appstate.createFile();
-  //console.log(buf);
-  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
-};
-
-var html5_fileapi = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  saveFile: saveFile$1,
-  loadFile: loadFile$1
-});
-
-/**
- see doc_src/context.md
- */
->>>>>>>
     let pad = this.getDefault("padding");
 
     let csize = tilesize + pad*2;
@@ -38167,10 +36990,6 @@ class Check1 extends Button {
     drawText(this, box, cy + ts/2, text, {
       canvas: this.dom, g: this.g
     });
-<<<<<<<
-  }
-}
-=======
   }
 }
 
@@ -38179,27 +36998,9 @@ UIBase$c.internalRegister(Check1);
 function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
   let blob = new Blob([data], {type : mime});
   let url = URL.createObjectURL(blob);
->>>>>>>
 
-UIBase$c.internalRegister(Check1);
-
-function saveFile$1(data, filename="unnamed", exts=[], mime="application/x-octet-stream") {
-  let blob = new Blob([data], {type : mime});
-  let url = URL.createObjectURL(blob);
-
-<<<<<<<
   let a = document.createElement("a");
   a.setAttribute("href", url);
-=======
-
-if (!test()) {
-  throw new Error("Context test failed");
-}
-
-class Constraint {
-  constructor(name, func, klst, params, k=1.0) {
-    this.glst = [];
->>>>>>>
   a.setAttribute("download", filename);
 
   a.click();
@@ -38240,23 +37041,6 @@ window._testLoadFile = function(exts=["*.*"]) {
 };
 
 window._testSaveFile = function() {
-<<<<<<<
-=======
-  let buf = _appstate.createFile();
-  //console.log(buf);
-  saveFile$1(buf, "unnamed.w3d", [".w3d"]);
-};
-
-var html5_fileapi = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  saveFile: saveFile$1,
-  loadFile: loadFile$1
-});
-
-/**
- see doc_src/context.md
- */
->>>>>>>
   let buf = _appstate.createFile();
   //console.log(buf);
   saveFile$1(buf, "unnamed.w3d", [".w3d"]);
@@ -38377,23 +37161,6 @@ function makeDerivedOverlay(parent) {
 
       while (p && p !== ContextOverlay) {
         parents.push(p);
-<<<<<<<
-=======
-
-    return err;
-  }
-}
-
-var solver = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Constraint: Constraint,
-  Solver: Solver
-});
-
-"use strict";
-
-let idgen = 0;
->>>>>>>
         p = getClassParent(p);
       }
 
@@ -38846,253 +37613,6 @@ class Context {
       return;
     }
 
-<<<<<<<
-=======
-      }
-    }
-  }
-}
-
-var controller = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  solver: solver,
-  util: util,
-  vectormath: vectormath,
-  math: math,
-  toolprop_abstract: toolprop_abstract,
-  html5_fileapi: html5_fileapi,
-  parseutil: parseutil,
-  config: ctrlconfig,
-  nstructjs: nstructjs,
-  lzstring: lzstring,
-  binomial: binomial,
-  setNotifier: setNotifier,
-  ContextFlags: ContextFlags,
-  OverlayClasses: OverlayClasses,
-  makeDerivedOverlay: makeDerivedOverlay,
-  ContextOverlay: ContextOverlay,
-  excludedKeys: excludedKeys,
-  LockedContext: LockedContext,
-  Context: Context,
-  test: test,
-  DataPathError: DataPathError,
-  DataFlags: DataFlags,
-  DataTypes: DataTypes,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  isVecProperty: isVecProperty,
-  DataPath: DataPath,
-  StructFlags: StructFlags,
-  ListIface: ListIface,
-  ToolOpIface: ToolOpIface,
-  setImplementationClass: setImplementationClass,
-  registerTool: registerTool,
-  pathParser: pathParser,
-  pushReportName: pushReportName,
-  popReportName: popReportName,
-  DataList: DataList,
-  DataStruct: DataStruct,
-  DataAPI: DataAPI,
-  initSimpleController: initSimpleController,
-  getDataPathToolOp: getDataPathToolOp,
-  setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
-  DataPathSetOp: DataPathSetOp,
-  ToolClasses: ToolClasses,
-  setContextClass: setContextClass,
-  ToolFlags: ToolFlags$1,
-  UndoFlags: UndoFlags$1,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  ToolPropertyCache: ToolPropertyCache,
-  SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp,
-  MacroLink: MacroLink,
-  MacroClasses: MacroClasses,
-  ToolMacro: ToolMacro,
-  ToolStack: ToolStack,
-  buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes$8,
-  PropFlags: PropFlags$3,
-  isNumber: isNumber,
-  NumberConstraintsBase: NumberConstraintsBase,
-  IntegerConstraints: IntegerConstraints,
-  FloatConstrinats: FloatConstrinats,
-  NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$3,
-  setPropTypes: setPropTypes,
-  customPropertyTypes: customPropertyTypes,
-  PropClasses: PropClasses,
-  get defaultRadix () { return defaultRadix; },
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  ToolProperty: ToolProperty$1,
-  FloatArrayProperty: FloatArrayProperty,
-  StringProperty: StringProperty,
-  NumProperty: NumProperty,
-  _NumberPropertyBase: _NumberPropertyBase,
-  IntProperty: IntProperty,
-  ReportProperty: ReportProperty,
-  BoolProperty: BoolProperty,
-  FloatProperty: FloatProperty,
-  EnumKeyPair: EnumKeyPair,
-  EnumProperty: EnumProperty$9,
-  FlagProperty: FlagProperty,
-  VecPropertyBase: VecPropertyBase,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  QuatProperty: QuatProperty,
-  Mat4Property: Mat4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  Curve1DProperty: Curve1DProperty,
-  ToolPaths: ToolPaths,
-  buildParser: buildParser,
-  Parser: Parser,
-  parseToolPath: parseToolPath,
-  testToolParser: testToolParser,
-  initToolPaths: initToolPaths,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  getCurve: getCurve,
-  CurveTypeData: CurveTypeData,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
-  SplineTemplates: SplineTemplates,
-  SplineTemplateIcons: SplineTemplateIcons,
-  mySafeJSONStringify: mySafeJSONStringify,
-  mySafeJSONParse: mySafeJSONParse,
-  Curve1D: Curve1D,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  Vector4: Vector4$2,
-  Vector3: Vector3$2,
-  Vector2: Vector2$c,
-  Quat: Quat,
-  Matrix4: Matrix4$2,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  rgb_to_hsv: rgb_to_hsv,
-  hsv_to_rgb: hsv_to_rgb,
-  cmyk_to_rgb: cmyk_to_rgb,
-  rgb_to_cmyk: rgb_to_cmyk,
-  PackNodeVertex: PackNodeVertex,
-  PackNode: PackNode,
-  graphGetIslands: graphGetIslands,
-  graphPack: graphPack,
-  Constraint: Constraint,
-  Solver: Solver,
-  modalstack: modalstack$1,
-  singleMouseEvent: singleMouseEvent,
-  isLeftClick: isLeftClick,
-  DoubleClickHandler: DoubleClickHandler,
-  isMouseDown: isMouseDown,
-  pathDebugEvent: pathDebugEvent,
-  eventWasTouch: eventWasTouch,
-  copyEvent: copyEvent,
-  _setScreenClass: _setScreenClass,
-  _setModalAreaClass: _setModalAreaClass,
-  pushPointerModal: pushPointerModal,
-  pushModalLight: pushModalLight,
-  popModalLight: popModalLight,
-  haveModal: haveModal,
-  keymap_latin_1: keymap_latin_1,
-  keymap: keymap$4,
-  reverse_keymap: reverse_keymap,
-  HotKey: HotKey,
-  KeyMap: KeyMap
-});
-
-"use strict";
-
-let EnumProperty$4 = EnumProperty$9,
->>>>>>>
     overlay.onRemove();
     this._stack.pop();
   }
@@ -39169,19 +37689,8 @@ function test() {
 
   return testInheritance();
 }
-<<<<<<<
 
 if (!test()) {
-=======
-
-if (!test()) {
-  throw new Error("Context test failed");
-}
-
-class Constraint {
-  constructor(name, func, klst, params, k=1.0) {
-    this.glst = [];
->>>>>>>
   throw new Error("Context test failed");
 }
 
@@ -39359,23 +37868,6 @@ class Solver {
         break;
       }
     }
-<<<<<<<
-=======
-
-    return err;
-  }
-}
-
-var solver = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Constraint: Constraint,
-  Solver: Solver
-});
-
-"use strict";
-
-let idgen = 0;
->>>>>>>
 
     return err;
   }
@@ -39391,14 +37883,14 @@ var solver = /*#__PURE__*/Object.freeze({
 
 let idgen = 0;
 
-class PackNodeVertex extends Vector2$c {
+class PackNodeVertex extends Vector2$b {
   constructor(node, co) {
     super(co);
 
     this.node = node;
     this._id = idgen++;
     this.edges = [];
-    this._absPos = new Vector2$c();
+    this._absPos = new Vector2$b();
   }
 
   get absPos() {
@@ -39413,11 +37905,11 @@ class PackNodeVertex extends Vector2$c {
 
 class PackNode {
   constructor() {
-    this.pos = new Vector2$c();
-    this.vel = new Vector2$c();
-    this.oldpos = new Vector2$c();
+    this.pos = new Vector2$b();
+    this.vel = new Vector2$b();
+    this.oldpos = new Vector2$b();
     this._id = idgen++;
-    this.size = new Vector2$c();
+    this.size = new Vector2$b();
     this.verts = [];
   }
 
@@ -39465,7 +37957,7 @@ function copyGraph(nodes) {
 }
 
 function getCenter(nodes) {
-  let cent = new Vector2$c();
+  let cent = new Vector2$b();
 
   for (let n of nodes) {
     cent.add(n.pos);
@@ -39540,17 +38032,17 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
   let decayi = 0;
 
 
-  let min = new Vector2$c().addScalar(1e17);
-  let max = new Vector2$c().addScalar(-1e17);
+  let min = new Vector2$b().addScalar(1e17);
+  let max = new Vector2$b().addScalar(-1e17);
 
-  let tmp = new Vector2$c();
+  let tmp = new Vector2$b();
   for (let n of nodes) {
     min.min(n.pos);
     tmp.load(n.pos).add(n.size);
     max.max(tmp);
   }
 
-  let size = new Vector2$c(max).sub(min);
+  let size = new Vector2$b(max).sub(min);
 
   for (let n of nodes) {
     n.pos[0] += (Math.random()-0.5)*5.0/size[0]*speed;
@@ -39580,10 +38072,10 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
     return Math.abs(v1.absPos.vectorDistance(v2.absPos) - restlen);
   }
 
-  let p1 = new Vector2$c();
-  let p2 = new Vector2$c();
-  let s1 = new Vector2$c();
-  let s2 = new Vector2$c();
+  let p1 = new Vector2$b();
+  let p2 = new Vector2$b();
+  let s1 = new Vector2$b();
+  let s2 = new Vector2$b();
 
   function loadBoxes(n1, n2, margin1=margin) {
     p1.load(n1.pos);
@@ -39828,8 +38320,6 @@ function graphPack(nodes, margin_or_args=15, steps=10, updateCb=undefined) {
 
         window.clearInterval(timer);
         nodes._timer = undefined;
-<<<<<<<
-=======
       }
     }
   }
@@ -39952,252 +38442,7 @@ var controller = /*#__PURE__*/Object.freeze({
   F32BaseVector: F32BaseVector,
   Vector4: Vector4$2,
   Vector3: Vector3$2,
-  Vector2: Vector2$c,
-  Quat: Quat,
-  Matrix4: Matrix4$2,
-  quad_bilinear: quad_bilinear,
-  ClosestModes: ClosestModes,
-  AbstractCurve: AbstractCurve,
-  ClosestCurveRets: ClosestCurveRets,
-  closestPoint: closestPoint,
-  normal_poly: normal_poly,
-  dihedral_v3_sqr: dihedral_v3_sqr,
-  tet_volume: tet_volume,
-  calc_projection_axes: calc_projection_axes,
-  aabb_isect_line_3d: aabb_isect_line_3d,
-  aabb_isect_cylinder_3d: aabb_isect_cylinder_3d,
-  barycentric_v2: barycentric_v2,
-  closest_point_on_quad: closest_point_on_quad,
-  closest_point_on_tri: closest_point_on_tri,
-  dist_to_tri_v3_old: dist_to_tri_v3_old,
-  dist_to_tri_v3: dist_to_tri_v3,
-  dist_to_tri_v3_sqr: dist_to_tri_v3_sqr,
-  tri_area: tri_area,
-  aabb_overlap_area: aabb_overlap_area,
-  aabb_isect_2d: aabb_isect_2d,
-  aabb_isect_3d: aabb_isect_3d,
-  aabb_intersect_2d: aabb_intersect_2d,
-  aabb_intersect_3d: aabb_intersect_3d,
-  aabb_union: aabb_union,
-  aabb_union_2d: aabb_union_2d,
-  feps: feps,
-  COLINEAR: COLINEAR,
-  LINECROSS: LINECROSS,
-  COLINEAR_ISECT: COLINEAR_ISECT,
-  SQRT2: SQRT2,
-  FEPS_DATA: FEPS_DATA,
-  FEPS: FEPS,
-  FLOAT_MIN: FLOAT_MIN,
-  FLOAT_MAX: FLOAT_MAX,
-  Matrix4UI: Matrix4UI,
-  get_rect_points: get_rect_points,
-  get_rect_lines: get_rect_lines,
-  simple_tri_aabb_isect: simple_tri_aabb_isect,
-  MinMax: MinMax,
-  winding_axis: winding_axis,
-  winding: winding,
-  inrect_2d: inrect_2d,
-  aabb_isect_line_2d: aabb_isect_line_2d,
-  expand_rect2d: expand_rect2d,
-  expand_line: expand_line,
-  colinear: colinear,
-  corner_normal: corner_normal,
-  line_line_isect: line_line_isect,
-  line_line_cross: line_line_cross,
-  point_in_aabb_2d: point_in_aabb_2d,
-  aabb_sphere_isect_2d: aabb_sphere_isect_2d,
-  point_in_aabb: point_in_aabb,
-  aabb_sphere_isect: aabb_sphere_isect,
-  aabb_sphere_dist: aabb_sphere_dist,
-  point_in_tri: point_in_tri,
-  convex_quad: convex_quad,
-  isNum: isNum,
-  normal_tri: normal_tri,
-  normal_quad: normal_quad,
-  normal_quad_old: normal_quad_old,
-  line_isect: line_isect,
-  dist_to_line_2d: dist_to_line_2d,
-  dist_to_line_sqr: dist_to_line_sqr,
-  dist_to_line: dist_to_line,
-  clip_line_w: clip_line_w,
-  closest_point_on_line: closest_point_on_line,
-  circ_from_line_tan: circ_from_line_tan,
-  circ_from_line_tan_2d: circ_from_line_tan_2d,
-  get_tri_circ: get_tri_circ,
-  gen_circle: gen_circle,
-  rot2d: rot2d,
-  makeCircleMesh: makeCircleMesh,
-  minmax_verts: minmax_verts,
-  unproject: unproject,
-  project: project,
-  get_boundary_winding: get_boundary_winding,
-  PlaneOps: PlaneOps,
-  isect_ray_plane: isect_ray_plane,
-  _old_isect_ray_plane: _old_isect_ray_plane,
-  Mat4Stack: Mat4Stack,
-  trilinear_v3: trilinear_v3,
-  point_in_hex: point_in_hex,
-  trilinear_co: trilinear_co,
-  trilinear_co2: trilinear_co2,
-  tri_angles: tri_angles,
-  rgb_to_hsv: rgb_to_hsv,
-  hsv_to_rgb: hsv_to_rgb,
-  cmyk_to_rgb: cmyk_to_rgb,
-  rgb_to_cmyk: rgb_to_cmyk,
-  PackNodeVertex: PackNodeVertex,
-  PackNode: PackNode,
-  graphGetIslands: graphGetIslands,
-  graphPack: graphPack,
-  Constraint: Constraint,
-  Solver: Solver,
-  modalstack: modalstack$1,
-  singleMouseEvent: singleMouseEvent,
-  isLeftClick: isLeftClick,
-  DoubleClickHandler: DoubleClickHandler,
-  isMouseDown: isMouseDown,
-  pathDebugEvent: pathDebugEvent,
-  eventWasTouch: eventWasTouch,
-  copyEvent: copyEvent,
-  _setScreenClass: _setScreenClass,
-  _setModalAreaClass: _setModalAreaClass,
-  pushPointerModal: pushPointerModal,
-  pushModalLight: pushModalLight,
-  popModalLight: popModalLight,
-  haveModal: haveModal,
-  keymap_latin_1: keymap_latin_1,
-  keymap: keymap$4,
-  reverse_keymap: reverse_keymap,
-  HotKey: HotKey,
-  KeyMap: KeyMap
-});
-
-"use strict";
-
-let EnumProperty$4 = EnumProperty$9,
->>>>>>>
-      }
-    }
-  }
-}
-
-var controller = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  solver: solver,
-  util: util,
-  vectormath: vectormath,
-  math: math,
-  toolprop_abstract: toolprop_abstract,
-  html5_fileapi: html5_fileapi,
-  parseutil: parseutil,
-  config: ctrlconfig,
-  nstructjs: nstructjs,
-  lzstring: lzstring,
-  binomial: binomial,
-  setNotifier: setNotifier,
-  ContextFlags: ContextFlags,
-  OverlayClasses: OverlayClasses,
-  makeDerivedOverlay: makeDerivedOverlay,
-  ContextOverlay: ContextOverlay,
-  excludedKeys: excludedKeys,
-  LockedContext: LockedContext,
-  Context: Context,
-  test: test,
-  DataPathError: DataPathError,
-  DataFlags: DataFlags,
-  DataTypes: DataTypes,
-  getTempProp: getTempProp,
-  getVecClass: getVecClass,
-  isVecProperty: isVecProperty,
-  DataPath: DataPath,
-  StructFlags: StructFlags,
-  ListIface: ListIface,
-  ToolOpIface: ToolOpIface,
-  setImplementationClass: setImplementationClass,
-  registerTool: registerTool,
-  pathParser: pathParser,
-  pushReportName: pushReportName,
-  popReportName: popReportName,
-  DataList: DataList,
-  DataStruct: DataStruct,
-  DataAPI: DataAPI,
-  initSimpleController: initSimpleController,
-  getDataPathToolOp: getDataPathToolOp,
-  setDataPathToolOp: setDataPathToolOp,
-  ModelInterface: ModelInterface,
-  DataPathSetOp: DataPathSetOp,
-  ToolClasses: ToolClasses,
-  setContextClass: setContextClass,
-  ToolFlags: ToolFlags$1,
-  UndoFlags: UndoFlags$1,
-  setDefaultUndoHandlers: setDefaultUndoHandlers,
-  ToolPropertyCache: ToolPropertyCache,
-  SavedToolDefaults: SavedToolDefaults,
-  ToolOp: ToolOp,
-  MacroLink: MacroLink,
-  MacroClasses: MacroClasses,
-  ToolMacro: ToolMacro,
-  ToolStack: ToolStack,
-  buildToolSysAPI: buildToolSysAPI,
-  PropTypes: PropTypes$8,
-  PropFlags: PropFlags$3,
-  isNumber: isNumber,
-  NumberConstraintsBase: NumberConstraintsBase,
-  IntegerConstraints: IntegerConstraints,
-  FloatConstrinats: FloatConstrinats,
-  NumberConstraints: NumberConstraints,
-  PropSubTypes: PropSubTypes$3,
-  setPropTypes: setPropTypes,
-  customPropertyTypes: customPropertyTypes,
-  PropClasses: PropClasses,
-  get defaultRadix () { return defaultRadix; },
-  get defaultDecimalPlaces () { return defaultDecimalPlaces; },
-  ToolProperty: ToolProperty$1,
-  FloatArrayProperty: FloatArrayProperty,
-  StringProperty: StringProperty,
-  NumProperty: NumProperty,
-  _NumberPropertyBase: _NumberPropertyBase,
-  IntProperty: IntProperty,
-  ReportProperty: ReportProperty,
-  BoolProperty: BoolProperty,
-  FloatProperty: FloatProperty,
-  EnumKeyPair: EnumKeyPair,
-  EnumProperty: EnumProperty$9,
-  FlagProperty: FlagProperty,
-  VecPropertyBase: VecPropertyBase,
-  Vec2Property: Vec2Property,
-  Vec3Property: Vec3Property,
-  Vec4Property: Vec4Property,
-  QuatProperty: QuatProperty,
-  Mat4Property: Mat4Property,
-  ListProperty: ListProperty,
-  StringSetProperty: StringSetProperty,
-  Curve1DProperty: Curve1DProperty,
-  ToolPaths: ToolPaths,
-  buildParser: buildParser,
-  Parser: Parser,
-  parseToolPath: parseToolPath,
-  testToolParser: testToolParser,
-  initToolPaths: initToolPaths,
-  CurveConstructors: CurveConstructors,
-  CURVE_VERSION: CURVE_VERSION,
-  CurveFlags: CurveFlags,
-  TangentModes: TangentModes,
-  getCurve: getCurve,
-  CurveTypeData: CurveTypeData,
-  evalHermiteTable: evalHermiteTable,
-  genHermiteTable: genHermiteTable,
-  SplineTemplates: SplineTemplates,
-  SplineTemplateIcons: SplineTemplateIcons,
-  mySafeJSONStringify: mySafeJSONStringify,
-  mySafeJSONParse: mySafeJSONParse,
-  Curve1D: Curve1D,
-  EulerOrders: EulerOrders,
-  BaseVector: BaseVector,
-  F64BaseVector: F64BaseVector,
-  F32BaseVector: F32BaseVector,
-  Vector4: Vector4$2,
-  Vector3: Vector3$2,
-  Vector2: Vector2$c,
+  Vector2: Vector2$b,
   Quat: Quat,
   Matrix4: Matrix4$2,
   quad_bilinear: quad_bilinear,
@@ -41192,19 +39437,8 @@ class DropBox extends OldButton {
     if (s.length === 0) {
       s = "(error)";
     }
-<<<<<<<
 
     this.altKey = s[0].toUpperCase().charCodeAt(0);
-=======
-
-  menu._popup.flushUpdate();
-  menu._popup.flushSetCSS();
-}
-
-//bind module to global var to get at it in console.
-//
-//note that require has an api for handling circular 
->>>>>>>
 
     for (let i = 0; i < s.length; i++) {
       if (s[i] === "&" && i < s.length - 1 && s[i + 1] !== "&") {
@@ -42185,19 +40419,8 @@ function startMenu(menu, x, y, searchMenuMode = false, safetyDelay = 55) {
 
   menu.flushUpdate();
   menu.flushSetCSS();
-<<<<<<<
 
   menu._popup.flushUpdate();
-=======
-
-  menu._popup.flushUpdate();
-  menu._popup.flushSetCSS();
-}
-
-//bind module to global var to get at it in console.
-//
-//note that require has an api for handling circular 
->>>>>>>
   menu._popup.flushSetCSS();
 }
 
@@ -42213,7 +40436,7 @@ let PropSubTypes$2 = PropSubTypes$3;
 
 let EnumProperty$3 = EnumProperty$9;
 
-let Vector2$8   = Vector2$c,
+let Vector2$8   = Vector2$b,
     UIBase$a    = UIBase$f,
     PackFlags$5 = PackFlags$a,
     PropTypes$3 = PropTypes$8;
@@ -43539,19 +41762,8 @@ class Container extends UIBase$f {
         let con = this;
 
         if (packflag & PackFlags$5.FORCE_PROP_LABELS) {
-<<<<<<<
           con = this.strip();
           con.label(prop.uiname);
-=======
-  }
-}
-
-UIBase$a.internalRegister(TwoColumnFrame);
-
-let UIBase$9 = UIBase$f;
-
-class Note extends UIBase$f {
->>>>>>>
         }
 
         if (packflag & PackFlags$5.PUT_FLAG_CHECKS_IN_COLUMNS) {
@@ -43905,31 +42117,6 @@ class Note extends UIBase$f {
         frame.label(name).font = "TitleText";
 
         let checks = {};
-<<<<<<<
-=======
-      console.log("bad notification frame");
-    }
-  }
-}
-
-var ui_noteframe = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Note: Note,
-  ProgBarNote: ProgBarNote,
-  NoteFrame: NoteFrame,
-  getNoteFrames: getNoteFrames,
-  get noteframes () { return noteframes; },
-  sendNote: sendNote,
-  error: error,
-  warning: warning,
-  message: message,
-  progbarNote: progbarNote
-});
-
-let UIBase$8 = UIBase$f, Icons$1 = Icons$2;
-
-class RichEditor extends TextBoxBase {
->>>>>>>
 
         let ignorecb = false;
 
@@ -44305,19 +42492,8 @@ class RichEditor extends TextBoxBase {
     let ret = UIBase$a.createElement("colorpicker-x");
 
     if (themeOverride) {
-<<<<<<<
       ret.overrideClass(themeOverride);
     }
-=======
-    style   : "html_viewer"
-  }}
-}
-UIBase$8.internalRegister(RichViewer);
-
-"use strict";
-
-let keymap = keymap$4;
->>>>>>>
 
     packflag |= PackFlags$5.SIMPLE_NUMSLIDERS;
 
@@ -44579,19 +42755,8 @@ class TwoColumnFrame extends Container {
     if (this.style["flex-direction"] !== style) {
       this.style["flex-direction"] = style;
     }
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$a.internalRegister(TwoColumnFrame);
-
-let UIBase$9 = UIBase$f;
-
-class Note extends UIBase$f {
->>>>>>>
 
 UIBase$a.internalRegister(TwoColumnFrame);
 
@@ -44912,19 +43077,8 @@ function sendNote(screen, msg, color, timeout = 3000, showExclMark=true) {
 
   for (let frame of noteframes) {
     try {
-<<<<<<<
       frame.addNote(msg, color, timeout, undefined, showExclMark);
     } catch (error) {
-=======
-};
-UIBase$f.internalRegister(ToolTip);
-
-window._ToolTip = ToolTip;
-
-"use strict";
-
-/*
->>>>>>>
       print_stack(error);
       console.log(error.stack, error.message);
       console.log("bad notification frame");
@@ -44956,31 +43110,6 @@ function progbarNote(screen, msg, percent, color, timeout) {
     } catch (error) {
       print_stack(error);
       console.log(error.stack, error.message);
-<<<<<<<
-=======
-      console.log("bad notification frame");
-    }
-  }
-}
-
-var ui_noteframe = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Note: Note,
-  ProgBarNote: ProgBarNote,
-  NoteFrame: NoteFrame,
-  getNoteFrames: getNoteFrames,
-  get noteframes () { return noteframes; },
-  sendNote: sendNote,
-  error: error,
-  warning: warning,
-  message: message,
-  progbarNote: progbarNote
-});
-
-let UIBase$8 = UIBase$f, Icons$1 = Icons$2;
-
-class RichEditor extends TextBoxBase {
->>>>>>>
       console.log("bad notification frame");
     }
   }
@@ -45356,19 +43485,8 @@ class RichViewer extends UIBase$8 {
 
   static define() {return {
     tagname : "html-viewer-x",
-<<<<<<<
     style   : "html_viewer"
   }}
-=======
-    style   : "html_viewer"
-  }}
-}
-UIBase$8.internalRegister(RichViewer);
-
-"use strict";
-
-let keymap = keymap$4;
->>>>>>>
 }
 UIBase$8.internalRegister(RichViewer);
 
@@ -45432,7 +43550,7 @@ class VectorPopupButton extends Button {
     if (this.value.length !== value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2$c();
+          this.value = new Vector2$b();
           break;
         case 3:
           this.value = new Vector3$2();
@@ -45688,7 +43806,7 @@ class VectorPanel extends ColumnFrame {
     if (value.length !== this.value.length) {
       switch (value.length) {
         case 2:
-          this.value = new Vector2$c(value);
+          this.value = new Vector2$b(value);
           break;
         case 3:
           this.value = new Vector3$2(value);
@@ -45794,7 +43912,7 @@ class VectorPanel extends ColumnFrame {
     if (this.value.length !== length) {
       switch (length) {
         case 2:
-          val = new Vector2$c(val);
+          val = new Vector2$b(val);
           break;
         case 3:
           val = new Vector3$2(val);
@@ -45963,19 +44081,8 @@ class ToolTip extends UIBase$f {
     tagname : "tool-tip-x",
     style   : "tooltip"
   }}
-<<<<<<<
 };
 UIBase$f.internalRegister(ToolTip);
-=======
-};
-UIBase$f.internalRegister(ToolTip);
-
-window._ToolTip = ToolTip;
-
-"use strict";
-
-/*
->>>>>>>
 
 window._ToolTip = ToolTip;
 
@@ -45993,7 +44100,7 @@ function registerToolStackGetter$1(func) {
   toolstack_getter = func;
 }
 
-let Vector2$7   = Vector2$c,
+let Vector2$7   = Vector2$b,
     Vector3$1   = Vector3$2,
     UndoFlags = UndoFlags$1,
     ToolFlags = ToolFlags$1;
@@ -46107,19 +44214,8 @@ class AreaResizeTool extends ToolBase {
 
     super(screen);
 
-<<<<<<<
     this.start_mpos = new Vector2$7(mpos);
 
-=======
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}
-
-const AreaFlags = {
-  HIDDEN                : 1,
-  FLOATING              : 2,
->>>>>>>
     this.sarea = border.sareas[0];
     if (!this.sarea || border.dead) {
       console.log(border.dead, border);
@@ -46545,19 +44641,8 @@ class RemoveAreaTool extends ToolBase {
 class AreaDragTool extends ToolBase {
   constructor(screen, sarea, mpos) {
     if (screen === undefined) screen = _appstate.screen; //XXX hackish!
-<<<<<<<
 
     super(screen);
-=======
-  }
-}
-
-UIBase$f.internalRegister(ScreenBorder);
-
-let _ScreenArea = undefined;
-
-let UIBase$7 = UIBase$f;
->>>>>>>
 
     this.dropArea = false;
     this.excludeAreas = new Set();
@@ -47180,19 +45265,8 @@ class ToolTipViewer extends ToolBase {
 
       this.tooltip = ToolTip.show(tip, this.screen, x, y);
     }
-<<<<<<<
     e.preventDefault();
     e.stopPropagation();
-=======
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}
-
-const AreaFlags = {
-  HIDDEN                : 1,
-  FLOATING              : 2,
->>>>>>>
   }
 }
 
@@ -47235,7 +45309,7 @@ function snapi(c, snap_limit = SnapLimit) {
   return c;
 }
 
-class ScreenVert extends Vector2$c {
+class ScreenVert extends Vector2$b {
   constructor(pos, id, added_id) {
     super(pos);
 
@@ -47506,7 +45580,7 @@ class ScreenBorder extends UIBase$f {
     let wid = this.getDefault("border-width");
 
     let v1 = this.v1, v2 = this.v2;
-    let vec = new Vector2$c(v2).sub(v1);
+    let vec = new Vector2$b(v2).sub(v1);
 
     let x = Math.min(v1[0], v2[0]), y = Math.min(v1[1], v2[1]);
     let w, h;
@@ -47618,10 +45692,6 @@ class ScreenBorder extends UIBase$f {
 
   [Symbol.keystr]() {
     return ScreenBorder.hash(this.v1, this.v2);
-<<<<<<<
-  }
-}
-=======
   }
 }
 
@@ -47630,15 +45700,8 @@ UIBase$f.internalRegister(ScreenBorder);
 let _ScreenArea = undefined;
 
 let UIBase$7 = UIBase$f;
->>>>>>>
 
-UIBase$f.internalRegister(ScreenBorder);
-
-let _ScreenArea = undefined;
-
-let UIBase$7 = UIBase$f;
-
-let Vector2$6 = Vector2$c;
+let Vector2$6 = Vector2$b;
 let Screen$1 = undefined;
 
 window._contextWrangler = contextWrangler;
@@ -48156,33 +46219,6 @@ class Area$1 extends UIBase$f {
     eventdom.addEventListener("pointerdown", (e) => {
       //console.log("pointerdown", e, mpre(e));
 
-<<<<<<<
-=======
-
-function setScreenClass(cls) {
-  Screen$1 = cls;
-}
-
-var ScreenArea$1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  AreaFlags: AreaFlags,
-  contextWrangler: contextWrangler,
-  BorderMask: BorderMask,
-  BorderSides: BorderSides,
-  Area: Area$1,
-  ScreenArea: ScreenArea,
-  setScreenClass: setScreenClass,
-  getAreaIntName: getAreaIntName,
-  AreaTypes: AreaTypes,
-  setAreaTypes: setAreaTypes,
-  areaclasses: areaclasses,
-  AreaWrangler: AreaWrangler
-});
-
-class ThemeEditor extends Container {
-  constructor() {
-    super();
->>>>>>>
       if (!mpre(e)) return;
 
       mpos[0] = e.pageX;
@@ -48553,19 +46589,8 @@ class ScreenArea extends UIBase$f {
     HTMLElement.prototype.remove.call(this);
     screen.sareas.remove(this);
 
-<<<<<<<
     screen.appendChild(this);
 
-=======
-  }
-}
-
-UIBase$f.internalRegister(ThemeEditor);
-
-const sliderDomAttributes = new Set([
-  "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
-  "radix", "step", "expRate", "stepIsRelative", "decimalPlaces",
->>>>>>>
     let zindex = BORDER_ZINDEX_BASE + 1;
 
     if (screen.style["z-index"]) {
@@ -49267,33 +47292,6 @@ nstructjs.register(ScreenArea, "pathux.ScreenArea");
 UIBase$f.internalRegister(ScreenArea);
 
 _setAreaClass(Area$1);
-<<<<<<<
-=======
-
-function setScreenClass(cls) {
-  Screen$1 = cls;
-}
-
-var ScreenArea$1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  AreaFlags: AreaFlags,
-  contextWrangler: contextWrangler,
-  BorderMask: BorderMask,
-  BorderSides: BorderSides,
-  Area: Area$1,
-  ScreenArea: ScreenArea,
-  setScreenClass: setScreenClass,
-  getAreaIntName: getAreaIntName,
-  AreaTypes: AreaTypes,
-  setAreaTypes: setAreaTypes,
-  areaclasses: areaclasses,
-  AreaWrangler: AreaWrangler
-});
-
-class ThemeEditor extends Container {
-  constructor() {
-    super();
->>>>>>>
 
 function setScreenClass(cls) {
   Screen$1 = cls;
@@ -49664,19 +47662,8 @@ class ThemeEditor extends Container {
         this.ctx.screen.completeSetCSS();
       }, 100);
     }
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$f.internalRegister(ThemeEditor);
-
-const sliderDomAttributes = new Set([
-  "min", "max", "integer", "displayUnit", "baseUnit", "labelOnTop",
-  "radix", "step", "expRate", "stepIsRelative", "decimalPlaces",
->>>>>>>
 
 UIBase$f.internalRegister(ThemeEditor);
 
@@ -49738,8 +47725,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.mdown = false;
     this.ma = undefined;
 
-    this.mpos = new Vector2$c();
-    this.start_mpos = new Vector2$c();
+    this.mpos = new Vector2$b();
+    this.start_mpos = new Vector2$b();
 
     this._last_overarrow = false;
 
@@ -50333,19 +48320,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       font: this.getDefault("DefaultText")
     }).width/dpi;
 
-<<<<<<<
     tw = Math.max(tw + this._getArrowSize()*0, this.getDefault("width"));
 
-=======
-  }
-}
-
-UIBase$f.internalRegister(NumSliderWithTextBox);
-
-//stores xml sources
-
-let pagecache = new Map();
->>>>>>>
     tw += ts;
     tw = ~~tw;
 
@@ -50890,7 +48866,7 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     let co = this._getButtonPos();
 
     let dpi = UIBase$f.getDPI();
-    let dv = new Vector2$c([co[0]/dpi - x, co[1]/dpi - y]);
+    let dv = new Vector2$b([co[0]/dpi - x, co[1]/dpi - y]);
     let dis = dv.vectorLength();
 
     return dis < co[2]/dpi;
@@ -51348,19 +49324,8 @@ class SliderWithTextbox extends ColumnFrame {
     }
 
     if (name !== this._name) {
-<<<<<<<
       this._name = name;
       this.l.text = name;
-=======
-      });
-    });
-  }
-}
-
-function makeGenEnum() {
-  let enumdef = {};
-  let uinames = {};
->>>>>>>
     }
   }
 
@@ -51379,19 +49344,8 @@ function makeGenEnum() {
     let prop = this.getPathMeta(this.ctx, this.getAttribute("datapath"));
 
     if (!prop) {
-<<<<<<<
       return;
     }
-=======
-
-  //return enumdef;
-  return new EnumProperty$9(undefined, enumdef).addUINames(uinames).addIcons(icons);
-}
-
-class Curve1DWidget extends ColumnFrame {
-  constructor() {
-    super();
->>>>>>>
 
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
     if (val !== this._last_value) {
@@ -51477,19 +49431,8 @@ class NumSliderWithTextBox extends SliderWithTextbox {
 
   _redraw() {
     this.numslider._redraw();
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$f.internalRegister(NumSliderWithTextBox);
-
-//stores xml sources
-
-let pagecache = new Map();
->>>>>>>
 
 UIBase$f.internalRegister(NumSliderWithTextBox);
 
@@ -51650,19 +49593,8 @@ class Handler {
 
       window.tree = elem;
       return;
-<<<<<<<
     } else if (elem.constructor === Text || elem.constructor === Comment) {
       return;
-=======
-    style   : "curvewidget"
-  }}
-}
-UIBase$f.internalRegister(Curve1DWidget);
-
-//bind module to global var to get at it in console.
-
-var _ui$1 = undefined;
->>>>>>>
     }
 
     let tagname = "" + elem.tagName;
@@ -52126,19 +50058,8 @@ var _ui$1 = undefined;
    handle a code element, which are wrapped in functions
    */
   code(elem) {
-<<<<<<<
     window._codelem = elem;
 
-=======
-  PanelFrame.prototype[k] = makeForward(k);
-}
-
-UIBase$6.internalRegister(PanelFrame);
-
-"use strict";
-
-let Vector2$4 = Vector2$c,
->>>>>>>
     let buf = '';
 
     for (let elem2 of elem.childNodes) {
@@ -52514,19 +50435,8 @@ function loadPage(ctx, url, parentContainer_or_args = undefined, loadSourceOnly 
         } else {
           accept(initPage(ctx, data, parentContainer, templateVars, templateScope));
         }
-<<<<<<<
       });
     });
-=======
-      });
-    });
-  }
-}
-
-function makeGenEnum() {
-  let enumdef = {};
-  let uinames = {};
->>>>>>>
   }
 }
 
@@ -52545,19 +50455,8 @@ function makeGenEnum() {
     uinames[def.name] = uiname;
     icons[def.name] = def.icon !== undefined ? def.icon : -1;
   }
-<<<<<<<
 
   //return enumdef;
-=======
-
-  //return enumdef;
-  return new EnumProperty$9(undefined, enumdef).addUINames(uinames).addIcons(icons);
-}
-
-class Curve1DWidget extends ColumnFrame {
-  constructor() {
-    super();
->>>>>>>
   return new EnumProperty$9(undefined, enumdef).addUINames(uinames).addIcons(icons);
 }
 
@@ -52677,6 +50576,67 @@ class Curve1DWidget extends ColumnFrame {
     }).iconsheet = 0;
 
     this.container = this.col();
+
+    let panel = this.panel("Range");
+
+    let clipCheck = panel.check(undefined, "Clip To Range");
+    clipCheck.onchange = (val) => {
+      this._value.clipToRange = val;
+      this._on_change();
+      this._redraw();
+    };
+    clipCheck.checked = this._value.clipToRange;
+
+    let xmin = panel.slider(undefined, "X Min", this._value.xRange[0], -10, 10, 0.1, false, undefined, (val) => {
+      this._value.xRange[0] = val.value;
+      this._on_change();
+      this._redraw();
+    });
+
+    let xmax = panel.slider(undefined, "X Max", this._value.xRange[1], -10, 10, 0.1, false, undefined, (val) => {
+      this._value.xRange[1] = val.value;
+      this._on_change();
+      this._redraw();
+    });
+
+    let ymin = panel.slider(undefined, "Y Min", this._value.yRange[0], -10, 10, 0.1, false, undefined, (val) => {
+      this._value.yRange[0] = val.value;
+      this._on_change();
+      this._redraw();
+    });
+
+    let ymax = panel.slider(undefined, "Y Max", this._value.yRange[1], -10, 10, 0.1, false, undefined, (val) => {
+      this._value.yRange[1] = val.value;
+      this._on_change();
+      this._redraw();
+    });
+
+    let last_update_key = "";
+    this.container.update.after(() => {
+      const xRange = this._value.xRange;
+      const yRange = this._value.yRange;
+      let key = "" + xRange[0] + ":" + xRange[1]
+        + ":" + yRange[0] + ":" + yRange[1] + ":" + this._value.clipToRange;
+
+      clipCheck.checked = this._value.clipToRange;
+
+      if (key !== last_update_key) {
+        last_update_key = key;
+
+        xmin.setValue(xRange[0]);
+        xmax.setValue(xRange[1]);
+
+        ymin.setValue(yRange[0]);
+        ymax.setValue(yRange[1]);
+      }
+    });
+
+    xmin.displayUnit = xmin.baseUnit = "none";
+    ymin.displayUnit = ymin.baseUnit = "none";
+    xmax.displayUnit = xmax.baseUnit = "none";
+    ymax.displayUnit = ymax.baseUnit = "none";
+
+    panel.closed = false;
   }
 
   setCSS() {
@@ -52729,9 +50689,8 @@ class Curve1DWidget extends ColumnFrame {
 
     g.lineWidth /= scale;
 
-
     this.drawTransform[0] = scale*zoom;
-    this.drawTransform[1][0] =  0.0;
+    this.drawTransform[1][0] = 0.0;
     this.drawTransform[1][1] = -1.0;
 
     this.drawTransform[1][0] -= 0.5 - 0.5/zoom;
@@ -52753,7 +50712,6 @@ class Curve1DWidget extends ColumnFrame {
     if (ctx === undefined || this.container === undefined) {
       return;
     }
-
 
     this._gen_type = this.value.generatorType;
     let col = this.container;
@@ -52800,12 +50758,13 @@ class Curve1DWidget extends ColumnFrame {
 
   updateGenUI() {
     let bad = this._lastGen !== this.value.generators.active;
-    
+
     if (bad) {
       this.rebuild();
       this._redraw();
     }
   }
+
   update() {
     super.update();
 
@@ -52814,22 +50773,14 @@ class Curve1DWidget extends ColumnFrame {
     this.updateGenUI();
   }
 
-  static define() {return {
-    tagname : "curve-widget-x",
-<<<<<<<
-    style   : "curvewidget"
-  }}
-=======
-    style   : "curvewidget"
-  }}
+  static define() {
+    return {
+      tagname: "curve-widget-x",
+      style  : "curvewidget"
+    }
+  }
 }
-UIBase$f.internalRegister(Curve1DWidget);
 
-//bind module to global var to get at it in console.
-
-var _ui$1 = undefined;
->>>>>>>
-}
 UIBase$f.internalRegister(Curve1DWidget);
 
 //bind module to global var to get at it in console.
@@ -52841,7 +50792,7 @@ let PropSubTypes$1 = PropSubTypes$3;
 
 let EnumProperty$2 = EnumProperty$9;
 
-let Vector2$5   = Vector2$c,
+let Vector2$5   = Vector2$b,
     UIBase$6    = UIBase$f,
     PackFlags$4 = PackFlags$a,
     PropTypes$2 = PropTypes$8;
@@ -53292,10 +51243,6 @@ let makeForward = (k) => {
 };
 
 for (let k of forward_keys) {
-<<<<<<<
-  PanelFrame.prototype[k] = makeForward(k);
-}
-=======
   PanelFrame.prototype[k] = makeForward(k);
 }
 
@@ -53303,14 +51250,7 @@ UIBase$6.internalRegister(PanelFrame);
 
 "use strict";
 
-let Vector2$4 = Vector2$c,
->>>>>>>
-
-UIBase$6.internalRegister(PanelFrame);
-
-"use strict";
-
-let Vector2$4 = Vector2$c,
+let Vector2$4 = Vector2$b,
     Vector3 = Vector3$2,
     Vector4 = Vector4$2,
     Matrix4 = Matrix4$2;
@@ -53740,19 +51680,8 @@ class SatValField extends UIBase$5 {
           break;
         }
 
-<<<<<<<
         case keymap$4["Up"]:
         case keymap$4["Down"]: {
-=======
-    this._redraw();
-  }
-};
-UIBase$5.internalRegister(ColorPickerButton);
-
-"use strict";
-
-let UIBase$4      = UIBase$f,
->>>>>>>
           let sign = e.keyCode === keymap$4["Down"] ? -1 : 1;
 
           this.hsva[2] = Math.min(Math.max(this.hsva[2] + 0.05*sign, 0.0), 1.0);
@@ -54917,19 +52846,8 @@ class ColorPickerButton extends UIBase$5 {
   }
 
   redraw() {
-<<<<<<<
     this._redraw();
   }
-=======
-    this._redraw();
-  }
-};
-UIBase$5.internalRegister(ColorPickerButton);
-
-"use strict";
-
-let UIBase$4      = UIBase$f,
->>>>>>>
 };
 UIBase$5.internalRegister(ColorPickerButton);
 
@@ -54942,7 +52860,7 @@ let UIBase$4      = UIBase$f,
 
 let tab_idgen = 1;
 let debug = false;
-let Vector2$3 = Vector2$c;
+let Vector2$3 = Vector2$b;
 
 function getpx$1(css) {
   return parseFloat(css.trim().replace("px", ""))
@@ -55011,8 +52929,6 @@ class TabItem extends UIBase$4 {
     });
 
     this.addEventListener("keydown", (e) => {
-      console.log(e.keyCode, this._id);
-
       switch (e.keyCode) {
         case keymap$4.Enter:
         case keymap$4.Space:
@@ -55507,19 +53423,8 @@ class TabBar extends UIBase$4 {
     if (this.tool) {
       this.tool.finish();
       this.tool = undefined;
-<<<<<<<
     }
   }
-=======
-  }
-}
-
-UIBase$4.internalRegister(TabContainer);
-
-//bind module to global var to get at it in console.
-
-var _ui = undefined;
->>>>>>>
 
   get tool() {
     return this._tool;
@@ -55752,19 +53657,8 @@ var _ui = undefined;
     let width = ~~(rwidth*dpi);
     let height = ~~(rheight*dpi);
 
-<<<<<<<
     let update = force_update;
     update = update || canvas.width !== width || canvas.height !== height;
-=======
-    tagname : "tableframe-x"
-  };}
-}
-UIBase$3.internalRegister(TableFrame);
-
-"use strict";
-
-let EnumProperty = EnumProperty$9,
->>>>>>>
 
     if (update) {
       canvas.width = width;
@@ -56002,19 +53896,8 @@ let EnumProperty = EnumProperty$9,
 
     let tsize = font.size;
     let iconsize = iconmanager.getTileSize(this.iconsheet);
-<<<<<<<
 
     tsize = (tsize*dpi);
-=======
-  }
-}
-
-UIBase$2.internalRegister(ListBox);
-
-class ProgressCircle extends UIBase$f {
-  constructor() {
-    super();
->>>>>>>
     g.font = font.genCSS(tsize);
 
     g.lineWidth = 2;
@@ -56228,19 +54111,8 @@ class ProgressCircle extends UIBase$f {
   }
 
   updateStyle() {
-<<<<<<<
     let key = "" + this.getDefault("background-color");
     key += this.getDefault("TabActive");
-=======
-    }
-  }
-}
-UIBase$f.register(ProgressCircle);
-
-const LastKey = Symbol("LastToolPanelId");
-let tool_idgen = 0;
-
->>>>>>>
     key += this.getDefault("TabInactive");
     key += this.getDefault("TabBarRadius");
     key += this.getDefault("TabStrokeStyle1");
@@ -56433,19 +54305,8 @@ class TabContainer extends UIBase$4 {
     }
 
     return json;
-<<<<<<<
   }
 
-=======
-    tagname : "last-tool-panel-x"
-  }}
-}
-UIBase$f.internalRegister(LastToolPanel);
-
-const mimeMap = {
-  ".js"  : "application/javascript",
-  ".json": "text/json",
->>>>>>>
   loadData(json) {
     if (!json.tabs) {
       return;
@@ -56608,19 +54469,8 @@ const mimeMap = {
 
     defineTabEvent("tabclick");
     defineTabEvent("tabdragmove");
-<<<<<<<
     defineTabEvent("tabdragstart");
     defineTabEvent("tabdragend");
-=======
-    this.data = data;
-    this.filename = filename;
-  }
-}
-
-let promise;
-
-if (window.haveElectron) {
->>>>>>>
 
     return col;
   }
@@ -56648,23 +54498,6 @@ if (window.haveElectron) {
 
     let tab2 = this.tbar.tabs[i];
 
-<<<<<<<
-=======
-  return new Promise((accept, reject) => {
-    accept(platform$2);
-  })
-}
-
-var platform$3 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  get platform () { return platform$2; },
-  getPlatformAsync: getPlatformAsync
-});
-
-"use strict";
-
-let _nativeTheme;
->>>>>>>
     if (tab !== tab2) {
       this.tbar.swapTabs(tab, tab2);
     }
@@ -56767,19 +54600,8 @@ let _nativeTheme;
     } else if (this.hideScrollBars) {
       this.style["overflow"] = this.style["overflow-y"] = "unset";
     }
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$4.internalRegister(TabContainer);
-
-//bind module to global var to get at it in console.
-
-var _ui = undefined;
->>>>>>>
 
 UIBase$4.internalRegister(TabContainer);
 
@@ -56792,7 +54614,7 @@ let PropSubTypes = PropSubTypes$3;
 
 let EnumProperty$1 = EnumProperty$9;
 
-let Vector2$2 = Vector2$c,
+let Vector2$2 = Vector2$b,
   UIBase$3 = UIBase$f,
   PackFlags$1 = PackFlags$a,
   PropTypes$1 = PropTypes$8;
@@ -57012,19 +54834,8 @@ class TableFrame extends Container {
   }
 
   static define() {return {
-<<<<<<<
     tagname : "tableframe-x"
   };}
-=======
-    tagname : "tableframe-x"
-  };}
-}
-UIBase$3.internalRegister(TableFrame);
-
-"use strict";
-
-let EnumProperty = EnumProperty$9,
->>>>>>>
 }
 UIBase$3.internalRegister(TableFrame);
 
@@ -57262,19 +55073,8 @@ class ListBox extends Container {
 
   clear() {
 
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$2.internalRegister(ListBox);
-
-class ProgressCircle extends UIBase$f {
-  constructor() {
-    super();
->>>>>>>
 
 UIBase$2.internalRegister(ListBox);
 
@@ -57307,31 +55107,6 @@ class ProgressCircle extends UIBase$f {
         case keymap$4["Escape"]:
           if (this.oncancel) {
             this.oncancel(this);
-<<<<<<<
-=======
-      accept(handle);
-    });
-  }
-}
-
-var electron_api$1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  ElectronMenu: ElectronMenu,
-  wrapRemoteCallback: wrapRemoteCallback,
-  ElectronMenuItem: ElectronMenuItem,
-  checkInit: checkInit,
-  iconcache: iconcache,
-  getNativeIcon: getNativeIcon,
-  buildElectronHotkey: buildElectronHotkey,
-  buildElectronMenu: buildElectronMenu,
-  initMenuBar: initMenuBar,
-  platform: platform$1
-});
-
-"use strict";
-const SVG_URL = 'http://www.w3.org/2000/svg';
-
->>>>>>>
           }
           break;
       }
@@ -57513,19 +55288,8 @@ const SVG_URL = 'http://www.w3.org/2000/svg';
   static define() {
     return {
       tagname : "progress-circle-x"
-<<<<<<<
     }
   }
-=======
-    }
-  }
-}
-UIBase$f.register(ProgressCircle);
-
-const LastKey = Symbol("LastToolPanelId");
-let tool_idgen = 0;
-
->>>>>>>
 }
 UIBase$f.register(ProgressCircle);
 
@@ -57718,19 +55482,8 @@ class LastToolPanel extends ColumnFrame {
   }
 
   static define() {return {
-<<<<<<<
     tagname : "last-tool-panel-x"
   }}
-=======
-    tagname : "last-tool-panel-x"
-  }}
-}
-UIBase$f.internalRegister(LastToolPanel);
-
-const mimeMap = {
-  ".js"  : "application/javascript",
-  ".json": "text/json",
->>>>>>>
 }
 UIBase$f.internalRegister(LastToolPanel);
 
@@ -57805,19 +55558,8 @@ function getMime(path) {
   return "application/x-octet-stream";
 }
 
-<<<<<<<
 class PlatformAPI {
   static writeFile(data, handle, mime) {
-=======
-  };}
-}
-
-UIBase$f.internalRegister(Overdraw);
-
-class TreeItem extends Container {
-  constructor() {
-    super();
->>>>>>>
     throw new Error("implement me");
     //returns a promise
   }
@@ -57904,19 +55646,8 @@ class FileDialogArgs {
 /*a file path, some platforms may not return real payhs*/
 class FilePath {
   constructor(data, filename = "unnamed") {
-<<<<<<<
     this.data = data;
     this.filename = filename;
-=======
-    this.data = data;
-    this.filename = filename;
-  }
-}
-
-let promise;
-
-if (window.haveElectron) {
->>>>>>>
   }
 }
 
@@ -57944,23 +55675,6 @@ function getPlatformAsync() {
     });
   }
 
-<<<<<<<
-=======
-  return new Promise((accept, reject) => {
-    accept(platform$2);
-  })
-}
-
-var platform$3 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  get platform () { return platform$2; },
-  getPlatformAsync: getPlatformAsync
-});
-
-"use strict";
-
-let _nativeTheme;
->>>>>>>
   return new Promise((accept, reject) => {
     accept(platform$2);
   })
@@ -58169,19 +55883,8 @@ function patchDropBox() {
     //console.log("menu dropbox click", this._menu);
 
     if (this._menu === undefined) {
-<<<<<<<
       return;
     }
-=======
-    style   : "treeview"
-  }}
-}
-UIBase$f.internalRegister(TreeView);
-
-function startDrag(box) {
-  if (box._modal) {
-    popModalLight(box._modal);
->>>>>>>
 
     this._menu._dropbox = this;
     this.dom._background = this.getDefault("BoxDepressed");
@@ -58402,19 +56105,8 @@ function buildElectronMenu(menu) {
   return emenu;
 }
 
-<<<<<<<
 function initMenuBar(menuEditor, override = false) {
   checkInit();
-=======
-    style   : "panel"
-  }}
-}
-UIBase$f.internalRegister(DragBox);
-
-let ignore = 0;
-
-function dockerdebug() {
->>>>>>>
 
   if (!window.haveElectron) {
     return;
@@ -58625,8 +56317,6 @@ class platform$1 extends PlatformAPI {
       let fs = require('fs');
 
       fs.writeFileSync(handle.data, data);
-<<<<<<<
-=======
       accept(handle);
     });
   }
@@ -58649,30 +56339,7 @@ var electron_api$1 = /*#__PURE__*/Object.freeze({
 "use strict";
 const SVG_URL = 'http://www.w3.org/2000/svg';
 
->>>>>>>
-      accept(handle);
-    });
-  }
-}
-
-var electron_api$1 = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  ElectronMenu: ElectronMenu,
-  wrapRemoteCallback: wrapRemoteCallback,
-  ElectronMenuItem: ElectronMenuItem,
-  checkInit: checkInit,
-  iconcache: iconcache,
-  getNativeIcon: getNativeIcon,
-  buildElectronHotkey: buildElectronHotkey,
-  buildElectronMenu: buildElectronMenu,
-  initMenuBar: initMenuBar,
-  platform: platform$1
-});
-
-"use strict";
-const SVG_URL = 'http://www.w3.org/2000/svg';
-
-const Vector2$1 = Vector2$c;
+const Vector2$1 = Vector2$b;
 
 class CanvasOverdraw extends UIBase$f {
   constructor() {
@@ -58786,7 +56453,7 @@ class Overdraw extends UIBase$f {
     this.zindex_base = 1000;
   }
 
-  startNode(node, screen) {
+  startNode(node, screen, cssPosition="relative") {
     if (screen) {
       this.screen = screen;
       this.ctx = screen.ctx;
@@ -58798,7 +56465,8 @@ class Overdraw extends UIBase$f {
 
     this.style["z-index"] = this.zindex_base;
 
-    this.style["position"] = "relative";
+    this.style["position"] = cssPosition;
+
     //this.style["left"] = "0px";
     //this.style["top"] = "0px";
     this.style["margin"] = this.style["padding"] = "0px";
@@ -58871,19 +56539,8 @@ class Overdraw extends UIBase$f {
       if (colors !== undefined) {
         color = colors[i];
       }
-<<<<<<<
 
       cent.add(co);
-=======
-  }
-}
-
-UIBase$f.internalRegister(AreaDocker);
-
-function makePopupArea(area_class, screen, args={}) {
-  let sarea = UIBase.createElement("screenarea-x");
-
->>>>>>>
       let box = this.text(texts[i], co[0], co[1], {color : color});
 
       boxes.push(box);
@@ -58925,19 +56582,8 @@ function makePopupArea(area_class, screen, args={}) {
         this.style["left"] = ~~this.params[0] + "px";
         this.style["top"] = ~~this.params[1] + "px";
         this.style["width"] = ~~this.params[2] + "px";
-<<<<<<<
         this.style["height"] = ~~this.params[3] + "px";
       };
-=======
-  sarea.bringToFront();
-
-  return sarea;
-}
-
-let _FrameManager = undefined;
-
-let Area = Area$1;
->>>>>>>
 
       box.setCSS();
       //console.log(box.params);
@@ -59145,19 +56791,8 @@ let Area = Area$1;
   static define() {return {
     tagname : "overdraw-x",
     style   : "overdraw"
-<<<<<<<
   };}
 }
-=======
-  };}
-}
-
-UIBase$f.internalRegister(Overdraw);
-
-class TreeItem extends Container {
-  constructor() {
-    super();
->>>>>>>
 
 UIBase$f.internalRegister(Overdraw);
 
@@ -59509,19 +57144,8 @@ class TreeView extends Container {
 
   static define() {return {
     tagname : "tree-view-x",
-<<<<<<<
     style   : "treeview"
   }}
-=======
-    style   : "treeview"
-  }}
-}
-UIBase$f.internalRegister(TreeView);
-
-function startDrag(box) {
-  if (box._modal) {
-    popModalLight(box._modal);
->>>>>>>
 }
 UIBase$f.internalRegister(TreeView);
 
@@ -59742,19 +57366,8 @@ class DragBox extends Container {
 
   static define() {return {
     tagname : "drag-box-x",
-<<<<<<<
     style   : "panel"
   }}
-=======
-    style   : "panel"
-  }}
-}
-UIBase$f.internalRegister(DragBox);
-
-let ignore = 0;
-
-function dockerdebug() {
->>>>>>>
 }
 UIBase$f.internalRegister(DragBox);
 
@@ -59789,7 +57402,7 @@ class AreaDocker extends Container {
     super();
 
     this._last_update_key = undefined;
-    this.mpos = new Vector2$c();
+    this.mpos = new Vector2$b();
     this.needsRebuild = true;
     this.ignoreChange = 0;
   }
@@ -59841,8 +57454,8 @@ class AreaDocker extends Container {
 
       let tab = tabs.tab(name, editor._id);
 
-      let start_mpos = new Vector2$c();
-      let mpos = new Vector2$c();
+      let start_mpos = new Vector2$b();
+      let mpos = new Vector2$b();
 
       tab._tab.addEventListener("tabdragstart", (e) => {
         if (e.x !== 0 && e.y !== 0) {
@@ -59898,7 +57511,7 @@ class AreaDocker extends Container {
     sarea.size.min([300, 300]);
     sarea.loadFromPosSize();
 
-    let mpos = event ? new Vector2$c([event.x, event.y]) : this.mpos;
+    let mpos = event ? new Vector2$b([event.x, event.y]) : this.mpos;
 
     dockerdebug("EVENT", event);
 
@@ -59916,7 +57529,7 @@ class AreaDocker extends Container {
   }
 
   on_addclick(e) {
-    let mpos = new Vector2$c([e.x, e.y]);
+    let mpos = new Vector2$b([e.x, e.y]);
 
     if (this.addicon.menu && !this.addicon.menu.closed) {
       this.addicon.menu.close();
@@ -60211,19 +57824,8 @@ class AreaDocker extends Container {
 
     startMenu(menu, mpos[0] - 35, rect.y + rect.height, false, 0);
     return menu;
-<<<<<<<
   }
 }
-=======
-  }
-}
-
-UIBase$f.internalRegister(AreaDocker);
-
-function makePopupArea(area_class, screen, args={}) {
-  let sarea = UIBase.createElement("screenarea-x");
-
->>>>>>>
 
 UIBase$f.internalRegister(AreaDocker);
 
@@ -60265,19 +57867,8 @@ function makePopupArea(area_class, screen, args={}) {
     };
   }
 
-<<<<<<<
   sarea.bringToFront();
 
-=======
-  sarea.bringToFront();
-
-  return sarea;
-}
-
-let _FrameManager = undefined;
-
-let Area = Area$1;
->>>>>>>
   return sarea;
 }
 
@@ -60303,7 +57894,7 @@ function registerToolStackGetter(func) {
   registerToolStackGetter$1(func);
 }
 
-let Vector2         = Vector2$c,
+let Vector2         = Vector2$b,
     UIBase$1          = UIBase$f,
     styleScrollBars = styleScrollBars$1;
 
@@ -62047,19 +59638,8 @@ class Screen extends UIBase$f {
       }
     }
 
-<<<<<<<
     for (let d of del) {
       d[0].halfedges.remove(d[1]);
-=======
-document.addEventListener("pointermove", (e) => {
-  e.preventDefault();
-}, {capture : true});
-*/
-
-let sidebar_hash = new HashDigest();
-
-class SideBar extends Container {
->>>>>>>
     }
 
     delete this._edgemap[ScreenBorder.hash(b.v1, b.v2)];
@@ -62339,19 +59919,8 @@ class SideBar extends Container {
 
         if (b2.horiz === b.horiz && !visit.has(b2)) {
           visit.add(b2);
-<<<<<<<
           ret.push(b2);
           rec(b2, b2.otherVertex(v));
-=======
-  setCSS() {
-    super.setCSS();
-  }
-}
-
-let text = `
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
->>>>>>>
         }
       }
     };
@@ -63207,19 +60776,8 @@ let text = `
       sarea._ctx = this.ctx;
       sarea.afterSTRUCT();
     }
-<<<<<<<
   }
 
-=======
-`.trim();
-
-text = btoa(text);
-let iconSvg = `data:image/svg+xml;base64,` + text;
-
-"use strict";
-
-const Icons = {
->>>>>>>
   loadSTRUCT(reader) {
     this.clear();
 
@@ -63258,19 +60816,8 @@ const Icons = {
     return this;
   }
 
-<<<<<<<
   test_struct(appstate = _appstate) {
     let data = [];
-=======
-  iconSheet.src = iconSvg;
-
-  return iconSheet;
-}
-
-class FileHeader {
-  constructor(version, magic, flags) {
-    this.magic = magic;
->>>>>>>
     //let scripts = nstructjs.write_scripts();
     nstructjs.manager.write_object(data, this);
     data = new DataView(new Uint8Array(data).buffer);
@@ -63346,7 +60893,7 @@ let start_cbs = [];
 let stop_cbs = [];
 let keyboardDom = window;
 
-let key_event_opts = undefined;
+let key_event_opts;
 
 function startEvents(getScreenFunc) {
   get_screen_cb = getScreenFunc;
@@ -63358,6 +60905,13 @@ function startEvents(getScreenFunc) {
   _events_started = true;
 
   _on_keydown = (e) => {
+    /* Prevent browser from unfocuing the page with the alt key.
+     * Happens during touch/pen event handing in Chrome (Oct2023).
+     */
+    if (e.keyCode === keymap$4["Alt"]) {
+      e.preventDefault();
+    }
+
     let screen = get_screen_cb();
 
     return screen.on_keydown(e);
@@ -63431,19 +60985,8 @@ document.addEventListener("pointerdown", (e) => {
 document.addEventListener("pointerstart", (e) => {
   e.preventDefault();
 }, {capture : true});
-<<<<<<<
 document.addEventListener("pointermove", (e) => {
   e.preventDefault();
-=======
-document.addEventListener("pointermove", (e) => {
-  e.preventDefault();
-}, {capture : true});
-*/
-
-let sidebar_hash = new HashDigest();
-
-class SideBar extends Container {
->>>>>>>
 }, {capture : true});
 */
 
@@ -63451,19 +60994,8 @@ let sidebar_hash = new HashDigest();
 
 class SideBar extends Container {
   constructor() {
-<<<<<<<
     super();
 
-=======
-  }
-
-  return ret;
-}
-
-/** see ./editor.js:Editor.registerAppMenu */
-
-class MenuBarEditor extends Editor {
->>>>>>>
     this.header = this.row();
     this.header.style["height"] = "45px";
 
@@ -63575,19 +61107,8 @@ class MenuBarEditor extends Editor {
 
     let editor = this.parentWidget;
 
-<<<<<<<
     //happens when editors are inactive
     if (!editor.pos || !editor.size) {
-=======
-
-function registerMenuBarEditor() {
-  Editor.register(MenuBarEditor);
-}
-
-class SimpleAppNewOp extends ToolOp {
-  static tooldef() {
-    return {
->>>>>>>
       return;
     }
 
@@ -63697,19 +61218,8 @@ class Editor extends Area$1 {
     sidebar.ctx = this.ctx;
     this.shadow.appendChild(sidebar);
 
-<<<<<<<
     if (this.ctx) {
       sidebar._init();
-=======
-  ToolOp.register(SimpleAppSaveOp);
-  ToolOp.register(SimpleAppOpenOp);
-  ToolOp.register(SimpleAppNewOp);
-}
-
-const DataModelClasses = [];
-
-class DataModel {
->>>>>>>
 
       this.sidebar.flushSetCSS();
       this.sidebar.flushUpdate();
@@ -63756,19 +61266,8 @@ class DataModel {
   }
 
   /** */
-<<<<<<<
   setCSS() {
     super.setCSS();
-=======
-  setCSS() {
-    super.setCSS();
-  }
-}
-
-let text = `
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
->>>>>>>
   }
 }
 
@@ -64252,19 +61751,8 @@ let text = `
        originy="0" />
   </sodipodi:namedview>
   <metadata
-<<<<<<<
      id="metadata16104">
     <rdf:RDF>
-=======
-      this._fileExt = this._fileExt.slice(1, this._fileExt.length).trim();
-    }
-  }
-}
-
-class SimpleContext {
-  constructor() {
-
->>>>>>>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
@@ -64298,44 +61786,6 @@ class SimpleContext {
            height="72.5"
            x="346.24997"
            y="-21.999973"
-<<<<<<<
-=======
-
-    }
-  }
-}
-
-var simple = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Menu: Menu,
-  DataModelClasses: DataModelClasses,
-  DataModel: DataModel,
-  makeAPI: makeAPI,
-  StartArgs: StartArgs,
-  SimpleScreen: SimpleScreen,
-  AppState: AppState,
-  SideBar: SideBar,
-  Editor: Editor,
-  Icons: Icons,
-  loadDefaultIconSheet: loadDefaultIconSheet,
-  iconSvg: iconSvg,
-  FileHeader: FileHeader,
-  FileFull: FileFull,
-  FileArgs: FileArgs,
-  EmptyStruct: EmptyStruct,
-  saveFile: saveFile,
-  loadFile: loadFile,
-  SimpleContext: SimpleContext,
-  MenuBarEditor: MenuBarEditor,
-  registerMenuBarEditor: registerMenuBarEditor
-});
-
-setNotifier(ui_noteframe);
-
-function getWebFilters(filters=[]) {
-  let types = [];
-
->>>>>>>
            style="font-family:sans-serif" /></flowRegion><flowPara
          id="flowPara5570"
          style="font-weight:bold;font-size:40px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'Sans Bold'">?</flowPara></flowRoot>
@@ -64560,22 +62010,6 @@ function getWebFilters(filters=[]) {
        x="179.14906"
        y="751.84772"
        id="text3255-0"
-<<<<<<<
-=======
-      accept(data);
-    });
-  }
-}
-
-var web_api = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  getWebFilters: getWebFilters,
-  platform: platform
-});
-
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
-//# sourceMappingURL=pathux.js.map
->>>>>>>
        transform="matrix(1.2141217,-0.1513943,0.23126622,0.79480305,0,0)"><tspan
          sodipodi:role="line"
          id="tspan3257-0"
@@ -64689,19 +62123,8 @@ export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, Base
        id="path1044-4-9" />
   </g>
 </svg>
-<<<<<<<
 `.trim();
 
-=======
-`.trim();
-
-text = btoa(text);
-let iconSvg = `data:image/svg+xml;base64,` + text;
-
-"use strict";
-
-const Icons = {
->>>>>>>
 text = btoa(text);
 let iconSvg = `data:image/svg+xml;base64,` + text;
 
@@ -64740,19 +62163,8 @@ const Icons = {
 
 function loadDefaultIconSheet() {
   let iconSheet = document.createElement("img");
-<<<<<<<
   iconSheet.src = iconSvg;
 
-=======
-  iconSheet.src = iconSvg;
-
-  return iconSheet;
-}
-
-class FileHeader {
-  constructor(version, magic, flags) {
-    this.magic = magic;
->>>>>>>
   return iconSheet;
 }
 
@@ -64933,19 +62345,8 @@ function loadFile(appstate, args, data) {
 
     document.body.appendChild(appstate.screen);
     appstate.screen.listen();
-<<<<<<<
   }
 
-=======
-  }
-
-  return ret;
-}
-
-/** see ./editor.js:Editor.registerAppMenu */
-
-class MenuBarEditor extends Editor {
->>>>>>>
   return ret;
 }
 
@@ -65057,19 +62458,8 @@ class MenuBarEditor extends Editor {
 MenuBarEditor.STRUCT = nstructjs.inherit(MenuBarEditor, Editor, "MenuBarEditor") + `
 }
 `;
-<<<<<<<
 
 function registerMenuBarEditor() {
-=======
-
-function registerMenuBarEditor() {
-  Editor.register(MenuBarEditor);
-}
-
-class SimpleAppNewOp extends ToolOp {
-  static tooldef() {
-    return {
->>>>>>>
   Editor.register(MenuBarEditor);
 }
 
@@ -65179,19 +62569,8 @@ class SimpleAppOpenOp extends ToolOp {
 }
 
 function register() {
-<<<<<<<
   ToolOp.register(SimpleAppSaveOp);
   ToolOp.register(SimpleAppOpenOp);
-=======
-  ToolOp.register(SimpleAppSaveOp);
-  ToolOp.register(SimpleAppOpenOp);
-  ToolOp.register(SimpleAppNewOp);
-}
-
-const DataModelClasses = [];
-
-class DataModel {
->>>>>>>
   ToolOp.register(SimpleAppNewOp);
 }
 
@@ -65570,9 +62949,9 @@ class AppState {
     screen.appendChild(sarea);
 
     let h = 55;
-    let min = new Vector2$c().addScalar(1e17);
-    let max = new Vector2$c().addScalar(-1e17);
-    let tmp = new Vector2$c();
+    let min = new Vector2$b().addScalar(1e17);
+    let max = new Vector2$b().addScalar(-1e17);
+    let tmp = new Vector2$b();
 
     for (let sarea2 of screen.sareas) {
       if (sarea2 === sarea) {
@@ -65734,19 +63113,8 @@ class AppState {
     }
 
     if (this._fileExt.startsWith(".")) {
-<<<<<<<
       this._fileExt = this._fileExt.slice(1, this._fileExt.length).trim();
     }
-=======
-      this._fileExt = this._fileExt.slice(1, this._fileExt.length).trim();
-    }
-  }
-}
-
-class SimpleContext {
-  constructor() {
-
->>>>>>>
   }
 }
 
@@ -65780,44 +63148,6 @@ class SimpleContext {
       if (k.search("_save") >= 0 || k.search("_load") >= 0) {
         continue;
       }
-<<<<<<<
-=======
-
-    }
-  }
-}
-
-var simple = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  Menu: Menu,
-  DataModelClasses: DataModelClasses,
-  DataModel: DataModel,
-  makeAPI: makeAPI,
-  StartArgs: StartArgs,
-  SimpleScreen: SimpleScreen,
-  AppState: AppState,
-  SideBar: SideBar,
-  Editor: Editor,
-  Icons: Icons,
-  loadDefaultIconSheet: loadDefaultIconSheet,
-  iconSvg: iconSvg,
-  FileHeader: FileHeader,
-  FileFull: FileFull,
-  FileArgs: FileArgs,
-  EmptyStruct: EmptyStruct,
-  saveFile: saveFile,
-  loadFile: loadFile,
-  SimpleContext: SimpleContext,
-  MenuBarEditor: MenuBarEditor,
-  registerMenuBarEditor: registerMenuBarEditor
-});
-
-setNotifier(ui_noteframe);
-
-function getWebFilters(filters=[]) {
-  let types = [];
-
->>>>>>>
 
     }
   }
@@ -66042,8 +63372,6 @@ class platform extends PlatformAPI {
         data = s;
       }
 
-<<<<<<<
-=======
       accept(data);
     });
   }
@@ -66055,19 +63383,5 @@ var web_api = /*#__PURE__*/Object.freeze({
   platform: platform
 });
 
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
-//# sourceMappingURL=pathux.js.map
->>>>>>>
-      accept(data);
-    });
-  }
-}
-
-var web_api = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  getWebFilters: getWebFilters,
-  platform: platform
-});
-
-export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$c as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
+export { AbstractCurve, Area$1 as Area, AreaFlags, AreaTypes, AreaWrangler, BaseVector, BoolProperty, BorderMask, BorderSides, Button, ButtonEventBase, COLINEAR, COLINEAR_ISECT, CSSFont, CURVE_VERSION, CanvasOverdraw, Check, Check1, ClassIdSymbol, ClosestCurveRets, ClosestModes, ColorField, ColorPicker, ColorPickerButton, ColorSchemeTypes, ColumnFrame, Constraint, Container, Context, ContextFlags, ContextOverlay, Curve1D, Curve1DProperty, Curve1DWidget, CurveConstructors, CurveFlags, CurveTypeData, CustomIcon, DataAPI, DataFlags, DataList, DataPath, DataPathError, DataPathSetOp, DataStruct, DataTypes, DegreeUnit, DoubleClickHandler, DropBox, ElementClasses, EnumKeyPair, EnumProperty$9 as EnumProperty, ErrorColors, EulerOrders, F32BaseVector, F64BaseVector, FEPS, FEPS_DATA, FLOAT_MAX, FLOAT_MIN, FileDialogArgs, FilePath, FlagProperty, FloatArrayProperty, FloatConstrinats, FloatProperty, FootUnit, HotKey, HueField, IconButton, IconCheck, IconLabel, IconManager, IconSheets$7 as IconSheets, Icons$2 as Icons, InchUnit, IntProperty, IntegerConstraints, IsMobile, KeyMap, LINECROSS, Label, LastToolPanel, ListIface, ListProperty, LockedContext, MacroClasses, MacroLink, Mat4Property, Mat4Stack, Matrix4$2 as Matrix4, Matrix4UI, Menu, MenuWrangler, MeterUnit, MileUnit, MinMax, ModalTabMove, ModelInterface, Note, NoteFrame, NumProperty, NumSlider, NumSliderSimple, NumSliderSimpleBase, NumSliderWithTextBox, NumberConstraints, NumberConstraintsBase, NumberSliderBase, OldButton, Overdraw, OverlayClasses, PackFlags$a as PackFlags, PackNode, PackNodeVertex, PanelFrame, Parser, PercentUnit, PixelUnit, PlaneOps, PlatformAPI, ProgBarNote, ProgressCircle, PropClasses, PropFlags$3 as PropFlags, PropSubTypes$3 as PropSubTypes, PropTypes$8 as PropTypes, Quat, QuatProperty, RadianUnit, ReportProperty, RichEditor, RichViewer, RowFrame, SQRT2, SVG_URL, SatValField, SavedToolDefaults, Screen, ScreenArea, ScreenBorder, ScreenHalfEdge, ScreenVert, SimpleBox, SliderDefaults, SliderWithTextbox, Solver, SplineTemplateIcons, SplineTemplates, SquareFootUnit, StringProperty, StringSetProperty, StructFlags, TabBar, TabContainer, TabItem, TableFrame, TableRow, TangentModes, TextBox, TextBoxBase, ThemeEditor, ToolClasses, ToolFlags$1 as ToolFlags, ToolMacro, ToolOp, ToolOpIface, ToolPaths, ToolProperty$1 as ToolProperty, ToolPropertyCache, ToolStack, ToolTip, TreeItem, TreeView, TwoColumnFrame, UIBase$f as UIBase, UIFlags, UndoFlags$1 as UndoFlags, Unit, Units, ValueButtonBase, Vec2Property, Vec3Property, Vec4Property, VecPropertyBase, Vector2$b as Vector2, Vector3$2 as Vector3, Vector4$2 as Vector4, VectorPanel, VectorPopupButton, _NumberPropertyBase, _ensureFont, _getFont, _getFont_new, _old_isect_ray_plane, _onEventsStart, _onEventsStop, _setAreaClass, _setModalAreaClass, _setScreenClass, _setTextboxClass, _themeUpdateKey, aabb_intersect_2d, aabb_intersect_3d, aabb_isect_2d, aabb_isect_3d, aabb_isect_cylinder_3d, aabb_isect_line_2d, aabb_isect_line_3d, aabb_overlap_area, aabb_sphere_dist, aabb_sphere_isect, aabb_sphere_isect_2d, aabb_union, aabb_union_2d, areaclasses, barycentric_v2, binomial, buildParser, buildString, buildToolSysAPI, calcThemeKey, calc_projection_axes, exports as cconst, checkForTextBox, circ_from_line_tan, circ_from_line_tan_2d, clip_line_w, closestPoint, closest_point_on_line, closest_point_on_quad, closest_point_on_tri, cmyk_to_rgb, colinear, color2css$1 as color2css, color2web, compatMap, ctrlconfig as config, contextWrangler, controller, convert, convex_quad, copyEvent, corner_normal, createMenu, css2color$1 as css2color, customHandlers, customPropertyTypes, defaultDecimalPlaces, defaultRadix, dihedral_v3_sqr, dist_to_line, dist_to_line_2d, dist_to_line_sqr, dist_to_tri_v3, dist_to_tri_v3_old, dist_to_tri_v3_sqr, domEventAttrs, domTransferAttrs, dpistack, drawRoundBox, drawRoundBox2, drawText, electron_api$1 as electron_api, error, evalHermiteTable, eventWasTouch, excludedKeys, expand_line, expand_rect2d, exportTheme, feps, flagThemeUpdate, genHermiteTable, gen_circle, getAreaIntName, getCurve, getDataPathToolOp, getDefault, getFieldImage, getFont, getHueField, getIconManager, getLastToolStruct, getMime, getNoteFrames, getTagPrefix, getTempProp, getVecClass, getWranglerScreen, get_boundary_winding, get_rect_lines, get_rect_points, get_tri_circ, graphGetIslands, graphPack, haveModal, hsv_to_rgb, html5_fileapi, iconSheetFromPackFlag, iconmanager$1 as iconmanager, initPage, initSimpleController, initToolPaths, inrect_2d, internalSetTimeout, inv_sample, invertTheme, isLeftClick, isMimeText, isMouseDown, isNum, isNumber, isVecProperty, isect_ray_plane, keymap$4 as keymap, keymap_latin_1, line_isect, line_line_cross, line_line_isect, loadFile$1 as loadFile, loadPage, loadUIData, lzstring, makeCircleMesh, makeDerivedOverlay, makeIconDiv, marginPaddingCSSKeys, math, measureText, measureTextBlock, menuWrangler, message, mimeMap, minmax_verts, modalstack$1 as modalstack, mySafeJSONParse, mySafeJSONStringify, normal_poly, normal_quad, normal_quad_old, normal_tri, noteframes, nstructjs, parseToolPath, parseValue, parseValueIntern, parseXML, parsepx$4 as parsepx, parseutil, pathDebugEvent, pathParser, platform$3 as platform, point_in_aabb, point_in_aabb_2d, point_in_hex, point_in_tri, popModalLight, popReportName, progbarNote, project, purgeUpdateStack, pushModalLight, pushPointerModal, pushReportName, quad_bilinear, registerTool, registerToolStackGetter, report, reverse_keymap, rgb_to_cmyk, rgb_to_hsv, rot2d, sample, saveFile$1 as saveFile, saveUIData, sendNote, setAreaTypes, setBaseUnit, setColorSchemeType, setContextClass, setDataPathToolOp, setDefaultUndoHandlers, setIconManager, setIconMap, setImplementationClass, setKeyboardDom, setKeyboardOpts, setMetric, setNotifier, setPropTypes, setScreenClass, setTagPrefix, setTheme, setWranglerScreen, simple, simple_tri_aabb_isect, singleMouseEvent, sliderDomAttributes, solver, startEvents, startMenu, startMenuEventWrangling, stopEvents, styleScrollBars$1 as styleScrollBars, tab_idgen, test, testToolParser, tet_volume, textMimes, theme, toolprop_abstract, tri_angles, tri_area, trilinear_co, trilinear_co2, trilinear_v3, unproject, util, validateCSSColor$1 as validateCSSColor, validateWebColor, vectormath, warning, web2color, winding, winding_axis };
 //# sourceMappingURL=pathux.js.map
