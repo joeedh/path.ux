@@ -213,9 +213,10 @@ export class AfterAspect {
 
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
-      return;
+      return this.owner;
     }
     this.chain = [[cb, node, once]].concat(this.chain);
+    return this.owner;
   }
 
   after(cb, node, once) {
@@ -223,8 +224,9 @@ export class AfterAspect {
 
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
-      return;
+      return this.owner;
     }
     this.chain.push([cb, node, once]);
+    return this.owner;
   }
 }
