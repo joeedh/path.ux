@@ -23850,7 +23850,7 @@ let exports = {
   //enter text as well
   useNumSliderTextboxes: true,
 
-  numSliderArrowLimit: 3, //threshold to check if numslider arrow was clicked
+  numSliderArrowLimit: 15, //threshold to check if numslider arrow was clicked
   simpleNumSliders   : false,
 
   menusCanPopupAbove: false,
@@ -24058,6 +24058,7 @@ function css2color$1(color) {
     return ret;
   }
 
+  const hasAlpha = color.startsWith("rgba(");
   color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",");
 
   for (let i=0; i<color.length; i++) {
@@ -24067,8 +24068,12 @@ function css2color$1(color) {
     }
   }
 
-  if (color.length === 3) {
-    color.push(1.0);
+  if (ret.length === 3) {
+    ret.push(1.0);
+  }
+
+  if (!hasAlpha) {
+    ret[3] = 1.0;
   }
 
   return ret;
@@ -30424,12 +30429,57 @@ const DefaultTheme = {
     ProgressBar       : "rgb(250,132,58)",
   },
 
-  numslider: {
+  numslider:  {
+    'arrow-color'     : '50%',
     'background-color': 'rgba(219,219,219, 1)',
-    'border-color'    : 'black',
+    'border-color'    : 'rgba(255,255,255, 1)',
     'border-radius'   : 1,
-    height            : 18,
-    width             : 90,
+    height            : 22,
+    highlight         : {
+      DefaultText : new CSSFont({
+        font    : 'poppins',
+        weight  : 'bold',
+        variant : 'normal',
+        style   : 'normal',
+        size    : 12,
+        color   : 'rgb(0,0,0)'
+      }),
+      'background-color' : 'rgba(151,208,239, 1)',
+      'border-color' : 'rgba(255,255,255, 1)',
+      'border-style' : 'solid',
+      'border-width' : 1,
+    },
+    pressed           : {
+      DefaultText : new CSSFont({
+        font    : 'poppins',
+        weight  : 'bold',
+        variant : 'normal',
+        style   : 'normal',
+        size    : 12,
+        color   : 'rgba(0,0,0, 1)'
+      }),
+      'arrow-color' : 'rgb(28,28,28)',
+      'background-color' : 'rgba(178,178,178, 1)',
+      'border-color' : 'rgba(255,255,255, 1)',
+      'border-style' : 'solid',
+      'border-width' : 1,
+    },
+    width             : 135,
+    /*
+    'highlight-pressed'            : {
+      DefaultText       : new CSSFont({
+        font   : 'poppins',
+        weight : 'bold',
+        variant: 'normal',
+        style  : 'normal',
+        size   : 12,
+        color  : 'rgb(245,245,245)'
+      }),
+      'background-color': 'rgb(126,126,126)',
+      'border-color'    : '#DADCE0',
+      'border-style'    : 'solid',
+      'border-width'    : 1,
+    },*/
   },
 
   numslider_simple: {
@@ -30867,9 +30917,10 @@ class AfterAspect {
 
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
-      return;
+      return this.owner;
     }
     this.chain = [[cb, node, once]].concat(this.chain);
+    return this.owner;
   }
 
   after(cb, node, once) {
@@ -30877,9 +30928,10 @@ class AfterAspect {
 
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
-      return;
+      return this.owner;
     }
     this.chain.push([cb, node, once]);
+    return this.owner;
   }
 }
 
@@ -33950,33 +34002,86 @@ class UIBase$f extends HTMLElement {
     return this.hasClassDefault(key);
   }
 
+  hasSubDefault(key, subkey) {
+    return this._hasSubDefault(...arguments, theme)
+      || this._themeOverride && this._hasSubDefault(...arguments, this._themeOverride);
+  }
+
+  _hasSubDefault(key, subkey) {
+    let style = this.getStyleClass();
+
+    let obj = this.getDefault(key);
+
+    if (!obj || typeof obj !== "object") {
+      return false;
+    }
+
+    return subkey in obj;
+  }
+
+  hasClassSubDefault(key, subkey, inherit = true) {
+    return this._hasClassSubDefault(key, subkey, inherit, undefined, theme) ||
+      this._themeOverride && this._hasClassSubDefault(key, subkey, inherit, undefined, this._themeOverride);
+  }
+
+  _hasClassSubDefault(key, subkey, inherit = true, style = this.getStyleClass(), themeDef) {
+    let th = themeDef;
+    th = th[style];
+
+    if (inherit) {
+      if (this._hasClassSubDefault(key, subkey, false, themeDef)) {
+        return true;
+      }
+
+      let ret = false;
+      let def = this.constructor.define();
+
+      if (def.parentStyle) {
+        ret |= this._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
+      }
+      ret |= this._hasClassSubDefault(key, subkey, false, "base", themeDef);
+      return ret;
+    }
+
+    if (!th) {
+      return false;
+    }
+
+    let obj = th[key];
+    if (!obj || typeof obj !== "object") {
+      return false;
+    }
+
+    return subkey in obj;
+  }
+
   /** get a sub style from a theme style class.
    *  note that if key is falsy then it just forwards to this.getDefault directly*/
-  getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined) {
+  getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined, inherit = true) {
     /* Check if client code manually overrode a theme key for this instance. */
     if (subkey && subkey in this.my_default_overrides) {
       //return this.getDefault(subkey, undefined, defaultval);
     }
 
     if (!key) {
-      return this.getDefault(subkey, undefined, defaultval);
+      return this.getDefault(subkey, undefined, defaultval, inherit);
     }
 
-    let style = this.getDefault(key);
+    let style = this.getDefault(key, undefined, undefined, inherit);
 
     if (!style || typeof style !== "object" || !(subkey in style)) {
       if (defaultval !== undefined) {
         return defaultval;
-      } else if (backupkey !== undefined) {
-        return this.getDefault(backupkey);
+      } else if (backupkey) {
+        return this.getDefault(backupkey, undefined, undefined, inherit);
       }
     } else {
       return style[subkey];
     }
   }
 
-  getDefault(key, checkForMobile = true, defaultval = undefined) {
-    let ret = this.getDefault_intern(key, checkForMobile, defaultval);
+  getDefault(key, checkForMobile = true, defaultval = undefined, inherit = true) {
+    let ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit);
 
     //convert pixel units straight to numbers
     if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
@@ -33992,7 +34097,7 @@ class UIBase$f extends HTMLElement {
     return ret;
   }
 
-  getDefault_intern(key, checkForMobile = true, defaultval = undefined) {
+  getDefault_intern(key, checkForMobile = true, defaultval = undefined, inherit = true) {
     if (this.my_default_overrides[key] !== undefined) {
       let v = this.my_default_overrides[key];
       return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
@@ -34008,7 +34113,7 @@ class UIBase$f extends HTMLElement {
       p = p.parentWidget;
     }
 
-    return this.getClassDefault(key, checkForMobile, defaultval);
+    return this.getClassDefault(key, checkForMobile, defaultval, inherit);
   }
 
   getStyleClass() {
@@ -34061,7 +34166,7 @@ class UIBase$f extends HTMLElement {
     return key in theme.base;
   }
 
-  getClassDefault(key, checkForMobile = true, defaultval = undefined) {
+  getClassDefault(key, checkForMobile = true, defaultval = undefined, inherit = true) {
     let style = this.getStyleClass();
 
     if (style === "none") {
@@ -34103,7 +34208,7 @@ class UIBase$f extends HTMLElement {
       } else if (defaultval !== undefined) {
         themeobj = undefined;
         val = defaultval;
-      } else if (val === undefined) {
+      } else if (val === undefined && inherit) {
         let def = this.constructor.define();
 
         if (def.parentStyle && key in th[def.parentStyle]) {
@@ -35566,6 +35671,16 @@ class TextBox extends TextBoxBase {
 
   }
 
+  get startSelected() {
+    let b = (""+this.getAttribute("start-selected")).toLowerCase();
+
+    return b === "yes" || b === "true" || b === "on" || b === "1";
+  }
+
+  set startSelected(v) {
+    this.setAttribute("start-selected", v ? "true" : "false");
+  }
+
   /** realtime dom attribute getter, defaults to true in absence of attribute*/
   get realtime() {
     let ret = this.getAttribute("realtime");
@@ -35600,6 +35715,10 @@ class TextBox extends TextBoxBase {
   }
 
   _startModal() {
+    if (this.startSelected) {
+      this.select();
+    }
+
     console.warn("textbox modal");
 
     if (this._modal) {
@@ -47740,8 +47859,6 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.range = [-1e17, 1e17];
     this.isInt = false;
     this.editAsBaseUnit = undefined;
-
-    this._redraw();
   }
 
   get value() {
@@ -47862,6 +47979,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     }
 
     this.mdown = false;
+    this._pressed = false;
 
     tbox.ctx = this.ctx;
     tbox._init();
@@ -47944,6 +48062,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
       if (this.disabled) {
         this.mdown = false;
+        this._pressed = false;
         e.stopPropagation();
 
         return;
@@ -47954,6 +48073,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       }
 
       this.mdown = true;
+      this._pressed = true;
+      this._redraw();
 
       if (e.shiftKey) {
         e.preventDefault();
@@ -48001,6 +48122,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.setMpos(e);
 
       this.mdown = false;
+      this._pressed = false;
 
       if (this.disabled || this.overArrow(e.x, e.y)) {
         e.preventDefault();
@@ -48024,6 +48146,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
     this.addEventListener("pointerup", (e) => {
       this.mdown = false;
+      this._pressed = false;
+      this._redraw();
     });
     /*
     this.addEventListener("touchstart", (e) => {
@@ -48162,6 +48286,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
   dragStart(e) {
     this.mdown = false;
+    this._pressed = true;
 
     if (this.disabled) return;
 
@@ -48292,6 +48417,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     this.pushModal(handlers);
 
     cancel = (restore_value) => {
+      this._pressed = false;
+
       if (restore_value) {
         this.value = startvalue;
         this.updateWidth();
@@ -48305,14 +48432,32 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     };
   }
 
-  setCSS() {
-    //do not call parent class implementation
+  get _pressed() {
+    return this.__pressed;
+  }
+
+  set _pressed(v) {
+    /* Try to improve usability on pen/touch displays
+     * by forcing pressed state to last at least 100ms.
+     */
+    if (!v) {
+      window.setTimeout(() => {
+        let redraw = this.__pressed;
+
+        this.__pressed = false;
+        if (redraw) {
+          this._redraw();
+        }
+      }, 100);
+    } else {
+      this.__pressed = v;
+    }
+  }
+
+  setCSS(unused_setBG, fromRedraw) {
+    /* Do not call parent class implementation. */
     let dpi = this.getDPI();
-
     let ts = this.getDefault("DefaultText").size*UIBase$f.getDPI();
-
-    let dd = this.isInt ? 5 : this.decimalPlaces + 8;
-
     let label = this._genLabel();
 
     let tw = measureText(this, label, {
@@ -48325,7 +48470,6 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     tw += ts;
     tw = ~~tw;
 
-    //tw = Math.max(tw, w);
     if (this.vertical) {
       this.style["width"] = this.dom.style["width"] = this.getDefault("height") + "px";
 
@@ -48338,8 +48482,10 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.dom.style["width"] = tw + "px";
     }
 
-    this._repos_canvas();
-    this._redraw();
+    if (!fromRedraw) {
+      this._repos_canvas();
+      this._redraw();
+    }
   }
 
   updateName(force) {
@@ -48385,32 +48531,61 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
     return text;
   }
 
-  _redraw() {
+  _redraw(fromCSS) {
+    if (!fromCSS) {
+      this.setCSS(undefined, true);
+    }
+
     let g = this.g;
     let canvas = this.dom;
 
     let dpi = this.getDPI();
     let disabled = this.disabled;
 
-    let r = this.getDefault("border-radius");
+    /* Fallback on BoxHighlight for backwards compatibility with
+     * old themes. */
+
+    let over = !this._modaldata && this.overArrow(this.mpos[0], this.mpos[1]);
+
+    let subkey = undefined;
+    let pressed = this._pressed && !over;
+
+    if (this._highlight && pressed) {
+      subkey = "highlight-pressed";
+    } else if (this._highlight) {
+      subkey = "highlight";
+    } else if (pressed) {
+      subkey = "pressed";
+    }
+
+    let getDefault = (key, backupval = undefined, subkey2 = subkey) => {
+      /* Have highlight-pressed fall back to pressed. */
+      if (subkey2 === "highlight-pressed" && !this.hasClassSubDefault(subkey2, key, false)) {
+        return this.getSubDefault("pressed", key, undefined, backupval);
+      }
+
+      if (!subkey2) {
+        return this.getDefault(key, undefined, backupval);
+      } else {
+        return this.getSubDefault(subkey2, key, undefined, backupval);
+      }
+    };
+
+    let r = getDefault("border-radius");
     if (this.isInt) {
       r *= 0.25;
     }
 
-    let boxbg = this.getDefault(this._highlight ? "BoxHighlight" : "background-color");
+    let boxbg = getDefault("background-color");
 
     drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, "fill", disabled ? this.getDefault("DisabledBG") : boxbg);
+      r, "fill", disabled ? getDefault("DisabledBG") : boxbg);
     drawRoundBox(this, this.dom, this.g, undefined, undefined,
-      r, "stroke", disabled ? this.getDefault("DisabledBG") : this.getDefault("border-color"));
+      r, "stroke", disabled ? getDefault("DisabledBG") : getDefault("border-color"));
 
-    r *= dpi;
-    let pad = this.getDefault("padding");
-    let ts = this.getDefault("DefaultText").size;
-
+    let ts = getDefault("DefaultText").size;
     let text = this._genLabel();
 
-    let tw = measureText(this, text, this.dom, this.g).width;
     let cx = ts + this._getArrowSize();
     let cy = this.dom.height/2;
 
@@ -48426,42 +48601,81 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       drawText(this, cx, -ts*0.5, text, {
         canvas: this.dom,
         g     : this.g,
-        size  : ts
+        size  : ts,
+        font  : getDefault("DefaultText"),
       });
       g.restore();
     } else {
       drawText(this, cx, cy + ts/2, text, {
         canvas: this.dom,
         g     : this.g,
-        size  : ts
+        size  : ts,
+        font  : getDefault("DefaultText"),
       });
     }
 
-    //}
+    let parseArrowColor = (arrowcolor) => {
+      arrowcolor = arrowcolor.trim();
+      if (arrowcolor.endsWith("%")) {
+        arrowcolor = arrowcolor.slice(0, arrowcolor.length - 1).trim();
 
-    let arrowcolor = this.getDefault("arrow-color") || "33%";
-    arrowcolor = arrowcolor.trim();
+        let perc = parseFloat(arrowcolor)/100.0;
+        let c = css2color$1(this.getDefault("background-color"));
 
-    if (arrowcolor.endsWith("%")) {
-      arrowcolor = arrowcolor.slice(0, arrowcolor.length - 1).trim();
-      let perc = parseFloat(arrowcolor)/100.0;
-      let c = css2color$1(this.getDefault("arrow-color"));
+        let f = (c[0] + c[1] + c[2])*perc;
 
-      let f = 1.0 - (c[0] + c[1] + c[2])*perc;
+        f = ~~(f*255);
+        arrowcolor = `rgba(${f},${f},${f},0.95)`;
 
-      f = ~~(f*255);
-      arrowcolor = `rgba(${f},${f},${f},0.95)`;
+      }
+      return arrowcolor;
+    };
 
+    let arrowcolor_base;
+    let arrowcolor;
+
+    arrowcolor_base = this.getDefault("arrow-color");
+    arrowcolor_base = parseArrowColor(arrowcolor_base);
+
+    if (this._pressed && this._highlight) {
+      arrowcolor = this.getSubDefault("highlight-pressed", "arrow-color", null, undefined, false);
+
+      if (!arrowcolor) {
+        arrowcolor = this.getSubDefault("pressed", "arrow-color");
+      }
+
+      if (!arrowcolor) {
+        arrowcolor = "33%";
+      }
+    } else if (this._pressed) {
+      arrowcolor = this.getSubDefault("pressed", "arrow-color", "arrow-color", "33%");
+    } else if (this._highlight) {
+      if (!this.hasClassSubDefault("highlight", "arrow-color", false)) {
+        if (this.hasClassSubDefault("highlight", "background-color", false)) {
+          arrowcolor = this.getSubDefault("highlight", "background-color");
+        } else {
+          arrowcolor = this.getDefault("BoxHighlight");
+        }
+
+        arrowcolor = css2color$1(arrowcolor);
+        let base = this.getSubDefault("pressed", "arrow-color", undefined, "33%");
+        base = css2color$1(base);
+
+        arrowcolor.interp(base, 0.25);
+        arrowcolor = color2css$1(arrowcolor);
+      } else {
+        arrowcolor = this.getSubDefault("highlight", "arrow-color");
+      }
+    } else {
+      arrowcolor = getDefault("arrow-color", "33%");
     }
 
-    arrowcolor = css2color$1(arrowcolor);
-    let higharrow = css2color$1(this.getDefault("BoxHighlight"));
-    higharrow.interp(arrowcolor, 0.5);
+    if (this._pressed) {
+//      arrowcolor = this.getSubDefault("pressed", "arrow-color");
+    }
 
-    arrowcolor = color2css$1(arrowcolor);
-    higharrow = color2css$1(higharrow);
+    arrowcolor = parseArrowColor(arrowcolor);
 
-    let over = this._highlight ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
 
     let d = 7, w = canvas.width, h = canvas.height;
     let sz = this._getArrowSize();
@@ -48472,7 +48686,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       g.lineTo(w*0.5 + sz*0.5, d + sz);
       g.lineTo(w*0.5 - sz*0.5, d + sz);
 
-      g.fillStyle = over < 0 ? higharrow : arrowcolor;
+      g.fillStyle = over < 0 ? arrowcolor : arrowcolor_base;
       g.fill();
 
       g.beginPath();
@@ -48480,7 +48694,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       g.lineTo(w*0.5 + sz*0.5, h - sz - d);
       g.lineTo(w*0.5 - sz*0.5, h - sz - d);
 
-      g.fillStyle = over > 0 ? higharrow : arrowcolor;
+      g.fillStyle = over > 0 ? arrowcolor : arrowcolor_base;
       g.fill();
     } else {
       g.beginPath();
@@ -48488,7 +48702,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       g.lineTo(d + sz, h*0.5 + sz*0.5);
       g.lineTo(d + sz, h*0.5 - sz*0.5);
 
-      g.fillStyle = over < 0 ? higharrow : arrowcolor;
+      g.fillStyle = over < 0 ? arrowcolor : arrowcolor_base;
       g.fill();
 
       g.beginPath();
@@ -48496,7 +48710,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       g.lineTo(w - sz - d, h*0.5 + sz*0.5);
       g.lineTo(w - sz - d, h*0.5 - sz*0.5);
 
-      g.fillStyle = over > 0 ? higharrow : arrowcolor;
+      g.fillStyle = over > 0 ? arrowcolor : arrowcolor_base;
       g.fill();
     }
 
@@ -48952,6 +49166,12 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
   update() {
     super.update();
 
+    /*
+    if (this.checkThemeUpdate()) {
+      this._redraw();
+    }
+    */
+
     let key = "" + this.getDefault("width") + ":" + this.getDefault("height") + ":" + this.getDefault("SlideHeight");
 
     if (key !== this._last_slider_key) {
@@ -48993,6 +49213,7 @@ class SliderWithTextbox extends ColumnFrame {
 
     this.textbox.overrideDefault("width", this.getDefault("TextBoxWidth"));
     this.textbox.setAttribute("class", "numslider_simple_textbox");
+    this.textbox.startSelected = true;
 
     this._last_value = undefined;
   }
