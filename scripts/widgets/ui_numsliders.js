@@ -781,6 +781,8 @@ export class NumSlider extends NumberSliderBase(ValueButtonBase) {
       text = val;
       if (this._name) {
         text = this._name + ": " + text;
+      } else if (this.hasAttribute("name")) {
+        text = "" + this.getAttribute("name") + ": " + text;
       }
     }
 
@@ -1476,11 +1478,19 @@ export class SliderWithTextbox extends ColumnFrame {
 
   get addLabel() {
     if (this.hasAttribute("add-label")) {
-      let val = ("" + this.getAttribute("labelOnTop")).toLowerCase();
+      let val = ("" + this.getAttribute("add-label")).toLowerCase();
       return val === "true" || val === "yes";
     }
 
     return this.getDefault("addLabel");
+  }
+
+  set addLabel(v) {
+    this.setAttribute("add-label", v ? "true" : "false");
+
+    if (this.addLabel && !this.l) {
+      this.doOnce(this.rebuild);
+    }
   }
 
   /**
@@ -1669,7 +1679,7 @@ export class SliderWithTextbox extends ColumnFrame {
     }
 
     if (this.hasAttribute("name")) {
-      this._name = this.hasAttribute("name");
+      this._name = this.getAttribute("name");
     } else {
       this._name = "slider";
     }
@@ -1916,6 +1926,19 @@ export class NumSliderWithTextBox extends SliderWithTextbox {
     return {
       tagname: "numslider-textbox-x",
       style  : "numslider_textbox"
+    }
+  }
+
+  update() {
+    super.update();
+
+    if (this.hasAttribute("name")) {
+      let name = this.getAttribute("name");
+
+      if (name !== this.numslider.name) {
+        this.numslider.setAttribute("name", name);
+        this.numslider._redraw();
+      }
     }
   }
 

@@ -11,6 +11,7 @@
       <prop path="angle2"/>
       <prop path="angle3"/>
       </strip>
+      <prop path="vector_test"/>
       <column>
       <pathlabel path="vector_test[0]"/>
       <pathlabel path="vector_test[1]"/>

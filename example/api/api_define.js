@@ -114,7 +114,7 @@ export function defineAPI() {
   dstruct.float("angle1", "angle1", "angle1").baseUnit("radian").displayUnit("degree").range(-Math.PI, Math.PI);
   dstruct.float("angle2", "angle2", "angle2").baseUnit("degree").displayUnit("radian").range(-180, 180);
 
-  dstruct.vec3("vector_test", "vector_test", "vector_test").baseUnit("degree").displayUnit("radian").range(-180, 180);
+  dstruct.vec4("vector_test", "vector_test", "vector_test").decimalPlaces(1).baseUnit("radian").displayUnit("degree").range(-180, 180);
 
   //set up some api fields require by path.ux
   cstruct.dynamicStruct("last_tool", "last_tool", "Last Tool");

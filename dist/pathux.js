@@ -43749,6 +43749,7 @@ class VectorPanel extends ColumnFrame {
     makeParam("baseUnit");
     makeParam("displayUnit");
     makeParam("step");
+    makeParam("slideSpeed");
     makeParam("expRate");
     makeParam("stepIsRelative");
 
@@ -43811,11 +43812,16 @@ class VectorPanel extends ColumnFrame {
         packflag   : this.packflag
       });
 
+      slider.addLabel = false;
+      slider.labelOnTop = false;
+
       //let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
 
       slider.baseUnit = this.baseUnit;
+      slider.slideSpeed = this.slideSpeed;
+      slider.decimalPlaces = this.decimalPlaces;
       slider.displayUnit = this.displayUnit;
       slider.isInt = this.isInt;
       slider.range = this.__range;
@@ -43853,6 +43859,8 @@ class VectorPanel extends ColumnFrame {
 
       uslider.range = this.range;
       uslider.baseUnit = this.baseUnit;
+      uslider.slideSpeed = this.slideSpeed;
+      uslider.decimalPlaces = this.decimalPlaces;
       uslider.displayUnit = this.displayUnit;
       uslider.expRate = this.expRate;
       uslider.step = this.step;
@@ -43994,7 +44002,9 @@ class VectorPanel extends ColumnFrame {
     };
 
 
+    loadNumParam("decimalPlaces");
     loadNumParam("baseUnit");
+    loadNumParam("slideSpeed");
     loadNumParam("displayUnit");
     loadNumParam("decimalPlaces");
     loadNumParam("isInt");
@@ -48560,6 +48570,8 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       text = val;
       if (this._name) {
         text = this._name + ": " + text;
+      } else if (this.hasAttribute("name")) {
+        text = "" + this.getAttribute("name") + ": " + text;
       }
     }
 
@@ -49255,11 +49267,19 @@ class SliderWithTextbox extends ColumnFrame {
 
   get addLabel() {
     if (this.hasAttribute("add-label")) {
-      let val = ("" + this.getAttribute("labelOnTop")).toLowerCase();
+      let val = ("" + this.getAttribute("add-label")).toLowerCase();
       return val === "true" || val === "yes";
     }
 
     return this.getDefault("addLabel");
+  }
+
+  set addLabel(v) {
+    this.setAttribute("add-label", v ? "true" : "false");
+
+    if (this.addLabel && !this.l) {
+      this.doOnce(this.rebuild);
+    }
   }
 
   /**
@@ -49448,7 +49468,7 @@ class SliderWithTextbox extends ColumnFrame {
     }
 
     if (this.hasAttribute("name")) {
-      this._name = this.hasAttribute("name");
+      this._name = this.getAttribute("name");
     } else {
       this._name = "slider";
     }
@@ -49695,6 +49715,19 @@ class NumSliderWithTextBox extends SliderWithTextbox {
     return {
       tagname: "numslider-textbox-x",
       style  : "numslider_textbox"
+    }
+  }
+
+  update() {
+    super.update();
+
+    if (this.hasAttribute("name")) {
+      let name = this.getAttribute("name");
+
+      if (name !== this.numslider.name) {
+        this.numslider.setAttribute("name", name);
+        this.numslider._redraw();
+      }
     }
   }
 

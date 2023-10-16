@@ -145,6 +145,7 @@ export class VectorPanel extends ColumnFrame {
     makeParam("baseUnit");
     makeParam("displayUnit");
     makeParam("step");
+    makeParam("slideSpeed");
     makeParam("expRate");
     makeParam("stepIsRelative");
 
@@ -207,11 +208,16 @@ export class VectorPanel extends ColumnFrame {
         packflag   : this.packflag
       });
 
+      slider.addLabel = false;
+      slider.labelOnTop = false;
+
       //let slider = frame.slider(undefined, this.axes[i], this.value[i], this.range[0], this.range[1], 0.001, this.isInt);
       slider.axis = i;
       let this2 = this;
 
       slider.baseUnit = this.baseUnit;
+      slider.slideSpeed = this.slideSpeed;
+      slider.decimalPlaces = this.decimalPlaces;
       slider.displayUnit = this.displayUnit;
       slider.isInt = this.isInt;
       slider.range = this.__range;
@@ -249,6 +255,8 @@ export class VectorPanel extends ColumnFrame {
 
       uslider.range = this.range;
       uslider.baseUnit = this.baseUnit;
+      uslider.slideSpeed = this.slideSpeed;
+      uslider.decimalPlaces = this.decimalPlaces;
       uslider.displayUnit = this.displayUnit;
       uslider.expRate = this.expRate;
       uslider.step = this.step;
@@ -390,7 +398,9 @@ export class VectorPanel extends ColumnFrame {
     }
 
 
+    loadNumParam("decimalPlaces");
     loadNumParam("baseUnit");
+    loadNumParam("slideSpeed");
     loadNumParam("displayUnit");
     loadNumParam("decimalPlaces");
     loadNumParam("isInt");
