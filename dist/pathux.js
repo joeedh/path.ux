@@ -30611,6 +30611,10 @@ const DefaultTheme = {
       size   : 14,
       color  : 'rgba(3,3,3, 1)'
     }),
+    'border-color'    : "rgba(0,0,0,0)",
+    'border-width'    : 1,
+    "border-radius"   : 4,
+    "border-style"    : "solid",
     'background-color': 'rgba(245,245,245, 1)',
   },
 
@@ -35594,10 +35598,10 @@ function myToFixed$1(s, n) {
   s = s.toFixed(n);
 
   while (s.endsWith('0')) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
   if (s.endsWith("\.")) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
 
   return s;
@@ -35606,18 +35610,20 @@ function myToFixed$1(s, n) {
 let keymap$2 = keymap$4;
 
 let EnumProperty$6 = EnumProperty$9,
-    PropTypes$6 = PropTypes$8;
+    PropTypes$6    = PropTypes$8;
 
-let UIBase$d = UIBase$f,
-    PackFlags$8 = PackFlags$a,
+let UIBase$d     = UIBase$f,
+    PackFlags$8  = PackFlags$a,
     IconSheets$5 = IconSheets$7;
 
 let parsepx$2 = parsepx$4;
 
 class TextBoxBase extends UIBase$d {
-  static define() {return {
-    modalKeyEvents : true
-  }}
+  static define() {
+    return {
+      modalKeyEvents: true
+    }
+  }
 }
 
 class TextBox extends TextBoxBase {
@@ -35629,7 +35635,7 @@ class TextBox extends TextBoxBase {
     this._width = this.getDefault("width") + "px";
     this._textBoxEvents = true;
 
-    let margin = Math.ceil(3 * this.getDPI());
+    let margin = Math.ceil(3*this.getDPI());
 
     this._had_error = false;
 
@@ -35683,7 +35689,7 @@ class TextBox extends TextBoxBase {
   }
 
   get startSelected() {
-    let b = (""+this.getAttribute("start-selected")).toLowerCase();
+    let b = ("" + this.getAttribute("start-selected")).toLowerCase();
 
     return b === "yes" || b === "true" || b === "on" || b === "1";
   }
@@ -35768,15 +35774,15 @@ class TextBox extends TextBoxBase {
 
     this._modal = true;
     this.pushModal({
-      on_mousemove : (e) => {
+      on_mousemove: (e) => {
         e.stopPropagation();
       },
 
       on_keydown : keydown,
-      on_keypress : keydown,
-      on_keyup : keydown,
+      on_keypress: keydown,
+      on_keyup   : keydown,
 
-      on_mousedown : (e) => {
+      on_mousedown: (e) => {
         e.stopPropagation();
         console.log("mouse down", e, e.x, e.y);
       }
@@ -35853,10 +35859,22 @@ class TextBox extends TextBoxBase {
       this.dom.style["background-color"] = this.getDefault("background-color");
     }
 
+    this.style["border-radius"] = this.getDefault("border-radius") + "px";
+    this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+
+    let bwid = this.getDefault("border-width");
+    let bcolor = this.getDefault("border-color");
+    let bstyle = this.getDefault("border-style");
+    let border = `${bwid}px ${bstyle} ${bcolor}`;
+
+    this.style["border"] = border;
+    this.style["border-color"] = bcolor;
+
     if (this._focus) {
       this.dom.style["border"] = `2px dashed ${this.getDefault('focus-border-color')}`;
     } else {
-      this.dom.style["border"] = "none";
+      this.dom.style["border"] = border;
+      this.dom.style["border-color"] = bcolor;
     }
 
     if (this.style["font"]) {
@@ -35896,8 +35914,8 @@ class TextBox extends TextBoxBase {
       return;
     }
 
-    let is_num = prop.type & (PropTypes$6.FLOAT|PropTypes$6.INT);
-    if (typeof val === "number" && (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4|PropTypes$6.QUAT))) {
+    let is_num = prop.type & (PropTypes$6.FLOAT | PropTypes$6.INT);
+    if (typeof val === "number" && (prop.type & (PropTypes$6.VEC2 | PropTypes$6.VEC3 | PropTypes$6.VEC4 | PropTypes$6.QUAT))) {
       is_num = true;
     }
 
@@ -35968,11 +35986,13 @@ class TextBox extends TextBoxBase {
     return this.dom.blur();
   }
 
-  static define() {return {
-    tagname : "textbox-x",
-    style   : "textbox",
-    modalKeyEvents : true
-  };}
+  static define() {
+    return {
+      tagname       : "textbox-x",
+      style         : "textbox",
+      modalKeyEvents: true
+    };
+  }
 
   get text() {
     return this.dom.value;
@@ -35983,10 +36003,10 @@ class TextBox extends TextBoxBase {
   }
 
   _prop_update(prop, text) {
-    let is_num = prop.type & (PropTypes$6.FLOAT|PropTypes$6.INT);
+    let is_num = prop.type & (PropTypes$6.FLOAT | PropTypes$6.INT);
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
-    if (typeof val === "number" && (prop.type & (PropTypes$6.VEC2|PropTypes$6.VEC3|PropTypes$6.VEC4|PropTypes$6.QUAT))) {
+    if (typeof val === "number" && (prop.type & (PropTypes$6.VEC2 | PropTypes$6.VEC3 | PropTypes$6.VEC4 | PropTypes$6.QUAT))) {
       is_num = true;
     }
 
@@ -36092,7 +36112,7 @@ function checkForTextBox(screen, x, y) {
 
     if (p instanceof UIBase$d) {
       //check immediate children of p
-      for (let i=0; i<2; i++) {
+      for (let i = 0; i < 2; i++) {
         let nodes = i ? p.childNodes : p.shadow.childNodes;
 
         for (let child of nodes) {

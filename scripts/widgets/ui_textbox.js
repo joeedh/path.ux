@@ -13,10 +13,10 @@ function myToFixed(s, n) {
   s = s.toFixed(n);
 
   while (s.endsWith('0')) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
   if (s.endsWith("\.")) {
-    s = s.slice(0, s.length-1);
+    s = s.slice(0, s.length - 1);
   }
 
   return s;
@@ -25,10 +25,10 @@ function myToFixed(s, n) {
 let keymap = events.keymap;
 
 let EnumProperty = toolprop.EnumProperty,
-    PropTypes = toolprop.PropTypes;
+    PropTypes    = toolprop.PropTypes;
 
-let UIBase = ui_base.UIBase,
-    PackFlags = ui_base.PackFlags,
+let UIBase     = ui_base.UIBase,
+    PackFlags  = ui_base.PackFlags,
     IconSheets = ui_base.IconSheets;
 
 let parsepx = ui_base.parsepx;
@@ -37,9 +37,11 @@ import {Button} from './ui_button.js';
 import {_setTextboxClass} from '../core/ui_base.js';
 
 export class TextBoxBase extends UIBase {
-  static define() {return {
-    modalKeyEvents : true
-  }}
+  static define() {
+    return {
+      modalKeyEvents: true
+    }
+  }
 }
 
 export class TextBox extends TextBoxBase {
@@ -51,7 +53,7 @@ export class TextBox extends TextBoxBase {
     this._width = this.getDefault("width") + "px";
     this._textBoxEvents = true;
 
-    let margin = Math.ceil(3 * this.getDPI());
+    let margin = Math.ceil(3*this.getDPI());
 
     this._had_error = false;
 
@@ -105,7 +107,7 @@ export class TextBox extends TextBoxBase {
   }
 
   get startSelected() {
-    let b = (""+this.getAttribute("start-selected")).toLowerCase();
+    let b = ("" + this.getAttribute("start-selected")).toLowerCase();
 
     return b === "yes" || b === "true" || b === "on" || b === "1";
   }
@@ -190,15 +192,15 @@ export class TextBox extends TextBoxBase {
 
     this._modal = true;
     this.pushModal({
-      on_mousemove : (e) => {
+      on_mousemove: (e) => {
         e.stopPropagation();
       },
 
       on_keydown : keydown,
-      on_keypress : keydown,
-      on_keyup : keydown,
+      on_keypress: keydown,
+      on_keyup   : keydown,
 
-      on_mousedown : (e) => {
+      on_mousedown: (e) => {
         e.stopPropagation();
         console.log("mouse down", e, e.x, e.y);
       }
@@ -275,10 +277,22 @@ export class TextBox extends TextBoxBase {
       this.dom.style["background-color"] = this.getDefault("background-color");
     }
 
+    this.style["border-radius"] = this.getDefault("border-radius") + "px";
+    this.dom.style["border-radius"] = this.getDefault("border-radius") + "px";
+
+    let bwid = this.getDefault("border-width");
+    let bcolor = this.getDefault("border-color");
+    let bstyle = this.getDefault("border-style");
+    let border = `${bwid}px ${bstyle} ${bcolor}`
+
+    this.style["border"] = border;
+    this.style["border-color"] = bcolor;
+
     if (this._focus) {
       this.dom.style["border"] = `2px dashed ${this.getDefault('focus-border-color')}`;
     } else {
-      this.dom.style["border"] = "none";
+      this.dom.style["border"] = border;
+      this.dom.style["border-color"] = bcolor;
     }
 
     if (this.style["font"]) {
@@ -318,8 +332,8 @@ export class TextBox extends TextBoxBase {
       return;
     }
 
-    let is_num = prop.type & (PropTypes.FLOAT|PropTypes.INT);
-    if (typeof val === "number" && (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT))) {
+    let is_num = prop.type & (PropTypes.FLOAT | PropTypes.INT);
+    if (typeof val === "number" && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT))) {
       is_num = true;
     }
 
@@ -390,11 +404,13 @@ export class TextBox extends TextBoxBase {
     return this.dom.blur();
   }
 
-  static define() {return {
-    tagname : "textbox-x",
-    style   : "textbox",
-    modalKeyEvents : true
-  };}
+  static define() {
+    return {
+      tagname       : "textbox-x",
+      style         : "textbox",
+      modalKeyEvents: true
+    };
+  }
 
   get text() {
     return this.dom.value;
@@ -405,10 +421,10 @@ export class TextBox extends TextBoxBase {
   }
 
   _prop_update(prop, text) {
-    let is_num = prop.type & (PropTypes.FLOAT|PropTypes.INT);
+    let is_num = prop.type & (PropTypes.FLOAT | PropTypes.INT);
     let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
 
-    if (typeof val === "number" && (prop.type & (PropTypes.VEC2|PropTypes.VEC3|PropTypes.VEC4|PropTypes.QUAT))) {
+    if (typeof val === "number" && (prop.type & (PropTypes.VEC2 | PropTypes.VEC3 | PropTypes.VEC4 | PropTypes.QUAT))) {
       is_num = true;
     }
 
@@ -514,7 +530,7 @@ export function checkForTextBox(screen, x, y) {
 
     if (p instanceof UIBase) {
       //check immediate children of p
-      for (let i=0; i<2; i++) {
+      for (let i = 0; i < 2; i++) {
         let nodes = i ? p.childNodes : p.shadow.childNodes;
 
         for (let child of nodes) {

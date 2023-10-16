@@ -480,6 +480,10 @@ export const DefaultTheme = {
       size   : 14,
       color  : 'rgba(3,3,3, 1)'
     }),
+    'border-color'    : "rgba(0,0,0,0)",
+    'border-width'    : 1,
+    "border-radius"   : 4,
+    "border-style"    : "solid",
     'background-color': 'rgba(245,245,245, 1)',
   },
 
