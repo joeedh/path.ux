@@ -144,6 +144,7 @@ export function css2color(color) {
     return ret;
   }
 
+  const hasAlpha = color.startsWith("rgba(");
   color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",")
 
   for (let i=0; i<color.length; i++) {
@@ -153,8 +154,12 @@ export function css2color(color) {
     }
   }
 
-  if (color.length === 3) {
-    color.push(1.0);
+  if (ret.length === 3) {
+    ret.push(1.0);
+  }
+
+  if (!hasAlpha) {
+    ret[3] = 1.0;
   }
 
   return ret;

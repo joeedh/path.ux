@@ -3118,33 +3118,86 @@ export class UIBase extends HTMLElement {
     return this.hasClassDefault(key);
   }
 
+  hasSubDefault(key, subkey) {
+    return this._hasSubDefault(...arguments, theme)
+      || this._themeOverride && this._hasSubDefault(...arguments, this._themeOverride);
+  }
+
+  _hasSubDefault(key, subkey) {
+    let style = this.getStyleClass();
+
+    let obj = this.getDefault(key);
+
+    if (!obj || typeof obj !== "object") {
+      return false;
+    }
+
+    return subkey in obj;
+  }
+
+  hasClassSubDefault(key, subkey, inherit = true) {
+    return this._hasClassSubDefault(key, subkey, inherit, undefined, theme) ||
+      this._themeOverride && this._hasClassSubDefault(key, subkey, inherit, undefined, this._themeOverride);
+  }
+
+  _hasClassSubDefault(key, subkey, inherit = true, style = this.getStyleClass(), themeDef) {
+    let th = themeDef;
+    th = th[style];
+
+    if (inherit) {
+      if (this._hasClassSubDefault(key, subkey, false, themeDef)) {
+        return true;
+      }
+
+      let ret = false;
+      let def = this.constructor.define();
+
+      if (def.parentStyle) {
+        ret |= this._hasClassSubDefault(key, subkey, false, def.parentStyle, themeDef);
+      }
+      ret |= this._hasClassSubDefault(key, subkey, false, "base", themeDef);
+      return ret;
+    }
+
+    if (!th) {
+      return false;
+    }
+
+    let obj = th[key];
+    if (!obj || typeof obj !== "object") {
+      return false;
+    }
+
+    return subkey in obj;
+  }
+
   /** get a sub style from a theme style class.
    *  note that if key is falsy then it just forwards to this.getDefault directly*/
-  getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined) {
+  getSubDefault(key, subkey, backupkey = subkey, defaultval = undefined, inherit = true) {
     /* Check if client code manually overrode a theme key for this instance. */
     if (subkey && subkey in this.my_default_overrides) {
       //return this.getDefault(subkey, undefined, defaultval);
     }
 
     if (!key) {
-      return this.getDefault(subkey, undefined, defaultval);
+      return this.getDefault(subkey, undefined, defaultval, inherit);
     }
 
-    let style = this.getDefault(key);
+    let style = this.getDefault(key, undefined, undefined, inherit);
 
     if (!style || typeof style !== "object" || !(subkey in style)) {
       if (defaultval !== undefined) {
         return defaultval;
-      } else if (backupkey !== undefined) {
-        return this.getDefault(backupkey);
+      } else if (backupkey) {
+        return this.getDefault(backupkey, undefined, undefined, inherit);
       }
     } else {
       return style[subkey];
     }
   }
 
-  getDefault(key, checkForMobile = true, defaultval = undefined) {
-    let ret = this.getDefault_intern(key, checkForMobile, defaultval);
+  getDefault(key, checkForMobile = true, defaultval = undefined, inherit = true) {
+    let ret = this.getDefault_intern(key, checkForMobile, defaultval, inherit);
 
     //convert pixel units straight to numbers
     if (typeof ret === "string" && ret.trim().toLowerCase().endsWith("px")) {
@@ -3160,7 +3213,7 @@ export class UIBase extends HTMLElement {
     return ret;
   }
 
-  getDefault_intern(key, checkForMobile = true, defaultval = undefined) {
+  getDefault_intern(key, checkForMobile = true, defaultval = undefined, inherit = true) {
     if (this.my_default_overrides[key] !== undefined) {
       let v = this.my_default_overrides[key];
       return checkForMobile ? this._doMobileDefault(key, v, this.my_default_overrides) : v;
@@ -3176,7 +3229,7 @@ export class UIBase extends HTMLElement {
       p = p.parentWidget;
     }
 
-    return this.getClassDefault(key, checkForMobile, defaultval);
+    return this.getClassDefault(key, checkForMobile, defaultval, inherit);
   }
 
   getStyleClass() {
@@ -3229,7 +3282,7 @@ export class UIBase extends HTMLElement {
     return key in theme.base;
   }
 
-  getClassDefault(key, checkForMobile = true, defaultval = undefined) {
+  getClassDefault(key, checkForMobile = true, defaultval = undefined, inherit = true) {
     let style = this.getStyleClass();
 
     if (style === "none") {
@@ -3271,7 +3324,7 @@ export class UIBase extends HTMLElement {
       } else if (defaultval !== undefined) {
         themeobj = undefined;
         val = defaultval;
-      } else if (val === undefined) {
+      } else if (val === undefined && inherit) {
         let def = this.constructor.define();
 
         if (def.parentStyle && key in th[def.parentStyle]) {

@@ -104,6 +104,16 @@ export class TextBox extends TextBoxBase {
 
   }
 
+  get startSelected() {
+    let b = (""+this.getAttribute("start-selected")).toLowerCase();
+
+    return b === "yes" || b === "true" || b === "on" || b === "1";
+  }
+
+  set startSelected(v) {
+    this.setAttribute("start-selected", v ? "true" : "false");
+  }
+
   /** realtime dom attribute getter, defaults to true in absence of attribute*/
   get realtime() {
     let ret = this.getAttribute("realtime");
@@ -138,6 +148,10 @@ export class TextBox extends TextBoxBase {
   }
 
   _startModal() {
+    if (this.startSelected) {
+      this.select();
+    }
+
     console.warn("textbox modal");
 
     if (this._modal) {
