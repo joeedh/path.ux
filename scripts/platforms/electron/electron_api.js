@@ -182,6 +182,10 @@ export class ElectronMenuItem {
 function patchDropBox() {
   initElectronIpc();
 
+  if (cconst.noElectronMenus) {
+    return;
+  }
+
   //haveElectron = false;
   //return;
   DropBox.prototype._onpress = function _onpress(e) {
