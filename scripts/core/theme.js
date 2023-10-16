@@ -338,7 +338,7 @@ export const DefaultTheme = {
       'border-style' : 'solid',
       'border-width' : 1,
     },
-    width             : 135,
+    width             : 115,
     /*
     'highlight-pressed'            : {
       DefaultText       : new CSSFont({

@@ -351,7 +351,7 @@ export const theme = {
     'background-color': 'rgba(219,219,219, 1)',
     height            : 18,
     labelOnTop        : true,
-    width             : 135,
+    width             : 115,
   },
 
   numslider_textbox: {

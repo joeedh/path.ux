@@ -315,7 +315,8 @@ export class Button extends ButtonEventBase {
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x         : x, y: y, stopPropagation: () => {
+      let e = {
+        x                : x, y: y, stopPropagation: () => {
         }, preventDefault: () => {
         }
       };
@@ -447,7 +448,8 @@ export class OldButton extends ButtonEventBase {
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x         : x, y: y, stopPropagation: () => {
+      let e = {
+        x                : x, y: y, stopPropagation: () => {
         }, preventDefault: () => {
         }
       };
@@ -462,15 +464,15 @@ export class OldButton extends ButtonEventBase {
     let dpi = this.getDPI();
 
     //set default dimensions
-    let width = ~~(this.getDefault("width"));
-    let height = ~~(this.getDefault("height"));
+    let width = ~~(this.getDefault("width")*dpi);
+    let height = ~~(this.getDefault("height")*dpi);
 
-    this.dom.style["width"] = width + "px";
-    this.dom.style["height"] = height + "px";
+    this.dom.width = width;
+    this.dom.height = height;
+
+    this.dom.style["width"] = (width/dpi) + "px";
+    this.dom.style["height"] = (height/dpi) + "px";
     this.dom.style["padding"] = this.dom.style["margin"] = "0px";
-
-    this.dom.width = Math.ceil(width*dpi); //parsepx(this.dom.style["width"])*dpi;
-    this.dom.height = Math.ceil(parsepx(this.dom.style["height"])*dpi);
 
     this._name = undefined;
     this.updateName();
@@ -585,6 +587,7 @@ export class OldButton extends ButtonEventBase {
   }
 
   updateDefaultSize() {
+    const dpi = UIBase.getDPI();
     let height = ~~(this.getDefault("height")) + this.getDefault("padding");
     let size = this.getDefault("DefaultText").size*1.33;
 
@@ -592,12 +595,13 @@ export class OldButton extends ButtonEventBase {
       return;
     }
 
-    height = ~~Math.max(height, size);
-    height = height + "px";
+    height = ~~(Math.max(height, size)*dpi);
+    let cssHeight = (height/dpi) + "px";
 
-    if (height !== this.style["height"]) {
-      this.style["height"] = height;
-      this.dom.style["height"] = height;
+    if (cssHeight !== this.style["height"]) {
+      this.style["height"] = cssHeight;
+      this.dom.style["height"] = cssHeight;
+      this.dom.height = height;
 
       this._repos_canvas();
       this._redraw();
