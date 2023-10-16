@@ -23847,7 +23847,7 @@ let exports = {
   },
   colorSchemeType: "light",
   docManualPath  : "../simple_docsys/doc_build/",
-  docEditorPath: "../simple_docsys.js",
+  docEditorPath  : "../simple_docsys.js",
 
   //add textboxes to rollar sliders,
   //note that  users can also double click them to
@@ -23898,7 +23898,8 @@ let exports = {
   showPathsInToolTips: true,
 
   enableThemeAutoUpdate: true,
-  useNativeToolTips: true,
+  useNativeToolTips    : true,
+  noElectronMenus      : false,
 
   loadConstants: function (args) {
     for (let k in args) {
