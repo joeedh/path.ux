@@ -1474,6 +1474,15 @@ export class SliderWithTextbox extends ColumnFrame {
     this._last_value = undefined;
   }
 
+  get addLabel() {
+    if (this.hasAttribute("add-label")) {
+      let val = ("" + this.getAttribute("labelOnTop")).toLowerCase();
+      return val === "true" || val === "yes";
+    }
+
+    return this.getDefault("addLabel");
+  }
+
   /**
    * whether to put label on top or to the left of sliders
    *
@@ -1666,11 +1675,13 @@ export class SliderWithTextbox extends ColumnFrame {
     }
 
 
-    this.l = this.container.label(this._name);
-    this.l.overrideClass("numslider_textbox");
-    this.l.font = "TitleText";
-    this.l.style["display"] = "float";
-    this.l.style["position"] = "relative";
+    if (this.addLabel) {
+      this.l = this.container.label(this._name);
+      this.l.overrideClass("numslider_textbox");
+      this.l.font = "TitleText";
+      this.l.style["display"] = "float";
+      this.l.style["position"] = "relative";
+    }
 
     let strip = this.container.row();
     //strip.style['justify-content'] = 'space-between';
@@ -1802,7 +1813,9 @@ export class SliderWithTextbox extends ColumnFrame {
 
     if (name !== this._name) {
       this._name = name;
-      this.l.text = name;
+      if (this.l) {
+        this.l.text = name;
+      }
     }
   }
 

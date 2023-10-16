@@ -303,40 +303,40 @@ export const DefaultTheme = {
     ProgressBar       : "rgb(250,132,58)",
   },
 
-  numslider:  {
+  numslider: {
     'arrow-color'     : '50%',
     'background-color': 'rgba(219,219,219, 1)',
     'border-color'    : 'rgba(255,255,255, 1)',
     'border-radius'   : 1,
     height            : 22,
     highlight         : {
-      DefaultText : new CSSFont({
-        font    : 'poppins',
-        weight  : 'bold',
-        variant : 'normal',
-        style   : 'normal',
-        size    : 12,
-        color   : 'rgb(0,0,0)'
+      DefaultText       : new CSSFont({
+        font   : 'poppins',
+        weight : 'bold',
+        variant: 'normal',
+        style  : 'normal',
+        size   : 12,
+        color  : 'rgb(0,0,0)'
       }),
-      'background-color' : 'rgba(151,208,239, 1)',
-      'border-color' : 'rgba(255,255,255, 1)',
-      'border-style' : 'solid',
-      'border-width' : 1,
+      'background-color': 'rgba(151,208,239, 1)',
+      'border-color'    : 'rgba(255,255,255, 1)',
+      'border-style'    : 'solid',
+      'border-width'    : 1,
     },
     pressed           : {
-      DefaultText : new CSSFont({
-        font    : 'poppins',
-        weight  : 'bold',
-        variant : 'normal',
-        style   : 'normal',
-        size    : 12,
-        color   : 'rgba(0,0,0, 1)'
+      DefaultText       : new CSSFont({
+        font   : 'poppins',
+        weight : 'bold',
+        variant: 'normal',
+        style  : 'normal',
+        size   : 12,
+        color  : 'rgba(0,0,0, 1)'
       }),
-      'arrow-color' : 'rgb(28,28,28)',
-      'background-color' : 'rgba(178,178,178, 1)',
-      'border-color' : 'rgba(255,255,255, 1)',
-      'border-style' : 'solid',
-      'border-width' : 1,
+      'arrow-color'     : 'rgb(28,28,28)',
+      'background-color': 'rgba(178,178,178, 1)',
+      'border-color'    : 'rgba(255,255,255, 1)',
+      'border-style'    : 'solid',
+      'border-width'    : 1,
     },
     width             : 115,
     /*
@@ -362,6 +362,7 @@ export const DefaultTheme = {
     'background-color': 'rgba(219,219,219, 1)',
     height            : 18,
     labelOnTop        : true,
+    addLabel          : true,
     width             : 135,
   },
 
@@ -371,6 +372,7 @@ export const DefaultTheme = {
     'background-color': 'rgba(219,219,219, 1)',
     height            : 25,
     labelOnTop        : true,
+    addLabel          : false,
     width             : 120,
   },
 
