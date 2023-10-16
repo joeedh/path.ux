@@ -43715,7 +43715,7 @@ class VectorPanel extends ColumnFrame {
     this.sliders = [];
     this.hasUniformSlider = false;
 
-    this.packflag |= PackFlags$a.FORCE_ROLLER_SLIDER|PackFlags$a.NO_NUMSLIDER_TEXTBOX;
+    this.packflag |= PackFlags$a.FORCE_ROLLER_SLIDER;
 
     let makeParam = (key) => {
       Object.defineProperty(this, key, {
