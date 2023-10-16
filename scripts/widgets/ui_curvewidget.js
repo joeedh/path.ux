@@ -18,25 +18,41 @@ export class Curve1DWidget extends ColumnFrame {
     this._value = new Curve1D();
     this._value.on("draw", this._on_draw);
 
+    let in_onchange = false;
+
     this._value._on_change = (msg) => {
-      if (this.onchange) {
-        this.onchange(this._value);
+      if (in_onchange) {
+        return;
       }
 
-      if (this.hasAttribute("datapath")) {
-        let path = this.getAttribute("datapath");
-        if (this._value !== undefined) {
-          let val = this.getPathValue(this.ctx, path);
+      /* Prevent infinite recursion. */
+      in_onchange = true;
 
-          if (val) {
-            val.load(this._value);
-            this.setPathValue(this.ctx, path, val);
-          } else {
-            val = this._value.copy();
-            this.setPathValue(this.ctx, path, val);
+      try {
+        if (this.onchange) {
+          this.onchange(this._value);
+        }
+
+        if (this.hasAttribute("datapath")) {
+          let path = this.getAttribute("datapath");
+          if (this._value !== undefined) {
+            let val = this.getPathValue(this.ctx, path);
+
+            if (val) {
+              val.load(this._value);
+              this.setPathValue(this.ctx, path, val);
+            } else {
+              val = this._value.copy();
+              this.setPathValue(this.ctx, path, val);
+            }
           }
         }
+      } catch (error) {
+        console.error(error.stack);
+        console.error(error.message);
       }
+
+      in_onchange = false;
     };
 
     this._gen_type = undefined;
