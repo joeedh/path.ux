@@ -113,7 +113,7 @@ export class VectorPanel extends ColumnFrame {
     this.sliders = [];
     this.hasUniformSlider = false;
 
-    this.packflag |= PackFlags.FORCE_ROLLER_SLIDER|PackFlags.NO_NUMSLIDER_TEXTBOX;
+    this.packflag |= PackFlags.FORCE_ROLLER_SLIDER;
 
     let makeParam = (key) => {
       Object.defineProperty(this, key, {
