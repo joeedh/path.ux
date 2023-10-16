@@ -17991,8 +17991,10 @@ class Curve1D extends EventDispatcher {
 
   #patchRange() {
     let range = this.getGenerator("BSplineCurve").range;
-    this.xRange.load(range[0]);
-    this.yRange.load(range[1]);
+    if (range) {
+      this.xRange.load(range[0]);
+      this.yRange.load(range[1]);
+    }
   }
 }
 
@@ -21330,7 +21332,9 @@ function tri_area(v1, v2, v3) {
   let l3 = v3.vectorDistance(v1);
 
   let s = (l1 + l2 + l3)/2.0;
-  return Math.sqrt(s*(s - l1)*(s - l2)*(s - l3))
+  s = s*(s - l1)*(s - l2)*(s - l3);
+  s = Math.max(s, 0); /* Numerical error can dip into negative numbers. */
+  return Math.sqrt(s);
 }
 
 function aabb_overlap_area(pos1, size1, pos2, size2) {
@@ -21880,7 +21884,7 @@ function winding_axis(a, b, c, up_axis) {
   return f >= 0.0;
 }
 
-function winding(a, b, c, zero_z, tol = 0.0) {
+function winding(a, b, c, zero_z = false, tol = 0.0) {
   let t1 = _cross_vec1;
   let t2 = _cross_vec2;
 
@@ -30464,7 +30468,7 @@ const DefaultTheme = {
       'border-style' : 'solid',
       'border-width' : 1,
     },
-    width             : 135,
+    width             : 115,
     /*
     'highlight-pressed'            : {
       DefaultText       : new CSSFont({
@@ -35038,7 +35042,8 @@ class Button extends ButtonEventBase {
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x         : x, y: y, stopPropagation: () => {
+      let e = {
+        x                : x, y: y, stopPropagation: () => {
         }, preventDefault: () => {
         }
       };
@@ -35170,7 +35175,8 @@ class OldButton extends ButtonEventBase {
       let x = rect.x + rect.width*0.5;
       let y = rect.y + rect.height*0.5;
 
-      let e = {x         : x, y: y, stopPropagation: () => {
+      let e = {
+        x                : x, y: y, stopPropagation: () => {
         }, preventDefault: () => {
         }
       };
@@ -35185,15 +35191,15 @@ class OldButton extends ButtonEventBase {
     let dpi = this.getDPI();
 
     //set default dimensions
-    let width = ~~(this.getDefault("width"));
-    let height = ~~(this.getDefault("height"));
+    let width = ~~(this.getDefault("width")*dpi);
+    let height = ~~(this.getDefault("height")*dpi);
 
-    this.dom.style["width"] = width + "px";
-    this.dom.style["height"] = height + "px";
+    this.dom.width = width;
+    this.dom.height = height;
+
+    this.dom.style["width"] = (width/dpi) + "px";
+    this.dom.style["height"] = (height/dpi) + "px";
     this.dom.style["padding"] = this.dom.style["margin"] = "0px";
-
-    this.dom.width = Math.ceil(width*dpi); //parsepx(this.dom.style["width"])*dpi;
-    this.dom.height = Math.ceil(parsepx$3(this.dom.style["height"])*dpi);
 
     this._name = undefined;
     this.updateName();
@@ -35308,6 +35314,7 @@ class OldButton extends ButtonEventBase {
   }
 
   updateDefaultSize() {
+    const dpi = UIBase$e.getDPI();
     let height = ~~(this.getDefault("height")) + this.getDefault("padding");
     let size = this.getDefault("DefaultText").size*1.33;
 
@@ -35315,12 +35322,13 @@ class OldButton extends ButtonEventBase {
       return;
     }
 
-    height = ~~Math.max(height, size);
-    height = height + "px";
+    height = ~~(Math.max(height, size)*dpi);
+    let cssHeight = (height/dpi) + "px";
 
-    if (height !== this.style["height"]) {
-      this.style["height"] = height;
-      this.dom.style["height"] = height;
+    if (cssHeight !== this.style["height"]) {
+      this.style["height"] = cssHeight;
+      this.dom.style["height"] = cssHeight;
+      this.dom.height = height;
 
       this._repos_canvas();
       this._redraw();
@@ -47895,6 +47903,16 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
   }
 
 
+  updateWidth(force = false) {
+    let dpi = UIBase$f.getDPI();
+    let wid = ~~(this.getDefault("width")*dpi);
+
+    if (force || wid !== this._last_width) {
+      this._last_width = wid;
+      this.setCSS();
+    }
+  }
+
   updateDataPath() {
     if (!this.hasAttribute("datapath")) {
       return;
@@ -47945,6 +47963,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       this.setCSS();
     }
 
+    this.updateWidth();
     super.update(); //calls this.updateDataPath
 
     updateSliderFromDom(this);
@@ -48456,6 +48475,7 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
 
   setCSS(unused_setBG, fromRedraw) {
     /* Do not call parent class implementation. */
+
     let dpi = this.getDPI();
     let ts = this.getDefault("DefaultText").size*UIBase$f.getDPI();
     let label = this._genLabel();
@@ -48465,27 +48485,42 @@ class NumSlider extends NumberSliderBase(ValueButtonBase) {
       font: this.getDefault("DefaultText")
     }).width/dpi;
 
-    tw = Math.max(tw + this._getArrowSize()*0, this.getDefault("width"));
+    /* Enforce a minimum size based on final text. */
+    tw = Math.max(tw + this._getArrowSize()*1, this.getDefault("width"));
 
     tw += ts;
     tw = ~~tw;
 
+    let w, h;
+
     if (this.vertical) {
-      this.style["width"] = this.dom.style["width"] = this.getDefault("height") + "px";
-
-      this.style["height"] = tw + "px";
-      this.dom.style["height"] = tw + "px";
+      w = this.getDefault("height");
+      h = tw;
     } else {
-      this.style["height"] = this.dom.style["height"] = this.getDefault("height") + "px";
-
-      this.style["width"] = tw + "px";
-      this.dom.style["width"] = tw + "px";
+      h = this.getDefault("height");
+      w = tw;
     }
+
+    w = ~~(w*dpi);
+    h = ~~(h*dpi);
+
+    this.style["width"] = this.dom.style["width"] = (w/dpi) + "px";
+    this.style["height"] = this.dom.style["height"] = (h/dpi) + "px";
+    this.dom.width = w;
+    this.dom.height = h;
 
     if (!fromRedraw) {
       this._repos_canvas();
       this._redraw();
     }
+  }
+
+  _repos_canvas() {
+    //super._repos_canvas();
+  }
+
+  updateDefaultSize() {
+    /* Do nothing, don't invoke parent class method. */
   }
 
   updateName(force) {
@@ -48736,8 +48771,6 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     this.canvas = document.createElement("canvas");
     this.g = this.canvas.getContext("2d");
 
-    this.canvas.style["width"] = this.getDefault("width") + "px";
-    this.canvas.style["height"] = this.getDefault("height") + "px";
     this.canvas.style["pointer-events"] = "none";
 
     this.highlight = false;
@@ -49120,16 +49153,18 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
   }
 
   setCSS() {
-    //UIBase.setCSS does annoying thing with background-color
+    //UIBase.setCSS does annoying things with background-color
     //super.setCSS();
 
-    this.canvas.style["width"] = "min-contents";
-    this.canvas.style["min-width"] = this.getDefault("width") + "px";
-    this.canvas.style["height"] = this.getDefault("height") + "px";
+    const dpi = UIBase$f.getDPI();
+    this.style["min-width"] = this.getDefault("width") + "px";
+    this.style["width"] = this.getDefault("width") + "px";
+
+    this.canvas.style["width"] = "" + (this.canvas.width/dpi) + "px";
+    this.canvas.style["height"] = "" + (this.canvas.height/dpi) + "px`";
 
     this.canvas.height = this.getDefault("height")*UIBase$f.getDPI();
 
-    this.style["min-width"] = this.getDefault("width") + "px";
     this._redraw();
   }
 
@@ -49145,8 +49180,8 @@ class NumSliderSimpleBase extends NumberSliderBase(UIBase$f) {
     }
 
     let dpi = UIBase$f.getDPI();
-    let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
     let canvas = this.canvas;
+    let w = ~~(rect.width*dpi), h = ~~(rect.height*dpi);
 
     if (w !== canvas.width || h !== canvas.height) {
       this.canvas.width = w;
