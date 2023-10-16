@@ -30433,40 +30433,40 @@ const DefaultTheme = {
     ProgressBar       : "rgb(250,132,58)",
   },
 
-  numslider:  {
+  numslider: {
     'arrow-color'     : '50%',
     'background-color': 'rgba(219,219,219, 1)',
     'border-color'    : 'rgba(255,255,255, 1)',
     'border-radius'   : 1,
     height            : 22,
     highlight         : {
-      DefaultText : new CSSFont({
-        font    : 'poppins',
-        weight  : 'bold',
-        variant : 'normal',
-        style   : 'normal',
-        size    : 12,
-        color   : 'rgb(0,0,0)'
+      DefaultText       : new CSSFont({
+        font   : 'poppins',
+        weight : 'bold',
+        variant: 'normal',
+        style  : 'normal',
+        size   : 12,
+        color  : 'rgb(0,0,0)'
       }),
-      'background-color' : 'rgba(151,208,239, 1)',
-      'border-color' : 'rgba(255,255,255, 1)',
-      'border-style' : 'solid',
-      'border-width' : 1,
+      'background-color': 'rgba(151,208,239, 1)',
+      'border-color'    : 'rgba(255,255,255, 1)',
+      'border-style'    : 'solid',
+      'border-width'    : 1,
     },
     pressed           : {
-      DefaultText : new CSSFont({
-        font    : 'poppins',
-        weight  : 'bold',
-        variant : 'normal',
-        style   : 'normal',
-        size    : 12,
-        color   : 'rgba(0,0,0, 1)'
+      DefaultText       : new CSSFont({
+        font   : 'poppins',
+        weight : 'bold',
+        variant: 'normal',
+        style  : 'normal',
+        size   : 12,
+        color  : 'rgba(0,0,0, 1)'
       }),
-      'arrow-color' : 'rgb(28,28,28)',
-      'background-color' : 'rgba(178,178,178, 1)',
-      'border-color' : 'rgba(255,255,255, 1)',
-      'border-style' : 'solid',
-      'border-width' : 1,
+      'arrow-color'     : 'rgb(28,28,28)',
+      'background-color': 'rgba(178,178,178, 1)',
+      'border-color'    : 'rgba(255,255,255, 1)',
+      'border-style'    : 'solid',
+      'border-width'    : 1,
     },
     width             : 115,
     /*
@@ -30492,6 +30492,7 @@ const DefaultTheme = {
     'background-color': 'rgba(219,219,219, 1)',
     height            : 18,
     labelOnTop        : true,
+    addLabel          : true,
     width             : 135,
   },
 
@@ -30501,6 +30502,7 @@ const DefaultTheme = {
     'background-color': 'rgba(219,219,219, 1)',
     height            : 25,
     labelOnTop        : true,
+    addLabel          : false,
     width             : 120,
   },
 
@@ -43799,8 +43801,6 @@ class VectorPanel extends ColumnFrame {
     this.sliders = [];
 
     for (let i=0; i<this.value.length; i++) {
-      //inpath, name, defaultval, min, max, step, is_int, do_redraw, callback, packflag = 0) {
-
       let slider = frame.slider(undefined, {
         name       : this.axes[i],
         defaultval : this.value[i],
@@ -49253,6 +49253,15 @@ class SliderWithTextbox extends ColumnFrame {
     this._last_value = undefined;
   }
 
+  get addLabel() {
+    if (this.hasAttribute("add-label")) {
+      let val = ("" + this.getAttribute("labelOnTop")).toLowerCase();
+      return val === "true" || val === "yes";
+    }
+
+    return this.getDefault("addLabel");
+  }
+
   /**
    * whether to put label on top or to the left of sliders
    *
@@ -49445,11 +49454,13 @@ class SliderWithTextbox extends ColumnFrame {
     }
 
 
-    this.l = this.container.label(this._name);
-    this.l.overrideClass("numslider_textbox");
-    this.l.font = "TitleText";
-    this.l.style["display"] = "float";
-    this.l.style["position"] = "relative";
+    if (this.addLabel) {
+      this.l = this.container.label(this._name);
+      this.l.overrideClass("numslider_textbox");
+      this.l.font = "TitleText";
+      this.l.style["display"] = "float";
+      this.l.style["position"] = "relative";
+    }
 
     let strip = this.container.row();
     //strip.style['justify-content'] = 'space-between';
@@ -49581,7 +49592,9 @@ class SliderWithTextbox extends ColumnFrame {
 
     if (name !== this._name) {
       this._name = name;
-      this.l.text = name;
+      if (this.l) {
+        this.l.text = name;
+      }
     }
   }
 
