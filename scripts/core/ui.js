@@ -1632,7 +1632,7 @@ export class Container extends ui_base.UIBase {
         }
 
         for (let key in prop.values) {
-          let check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
+          let check = frame.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
           checks[key] = check;
 
           if (mass_set_path) {
@@ -1645,7 +1645,6 @@ export class Container extends ui_base.UIBase {
             check.description = "" + prop.ui_value_names[key];
           }
           check.onchange = makecb(key);
-          //console.log("PATH", path);
         }
       }
     }
