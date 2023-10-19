@@ -12340,7 +12340,7 @@ const PropFlags$3 = {
   SELECT                : 1,
   PRIVATE               : 2,
   LABEL                 : 4,
-  USE_ICONS             : 64,
+  USE_ICONS             : 64, /* Implies FORCE_ENUM_CHECKBOXES (for enum/flag properties). */
   USE_CUSTOM_GETSET     : 128, //used by controller.js interface
   SAVE_LAST_VALUE       : 256,
   READ_ONLY             : 512,
@@ -12350,7 +12350,7 @@ const PropFlags$3 = {
   EDIT_AS_BASE_UNIT     : 1<<13, //user textbox input should be interpreted in display unit
   NO_UNDO               : 1<<14,
   USE_CUSTOM_PROP_GETTER: 1<<15, //hrm, not sure I need this
-  FORCE_ENUM_CHECKBOXES : 1<<16,
+  FORCE_ENUM_CHECKBOXES : 1<<16,/* Use a strip of checkboxes, also applies to flag properties. */
   NO_DEFAULT            : 1<<17,
 };
 
@@ -25551,6 +25551,16 @@ class DataPath {
     return this;
   }
 
+  checkStrip(state = true) {
+    if (state) {
+      this.data.flag |= PropFlags$3.FORCE_ENUM_CHECKBOXES;
+    } else {
+      this.data.flag &= ~PropFlags$3.FORCE_ENUM_CHECKBOXES;
+    }
+
+    return this;
+  }
+
   noUnits() {
     this.baseUnit("none");
     this.displayUnit("none");
@@ -27985,12 +27995,17 @@ class DataPathSetOp extends ToolOp {
         let i = datapath.length - 1;
 
         //chope off enum selector
-        while (i >= 0 && datapath[i] !== '[') {
+        while (i >= 0 && datapath[i] !== '[' && datapath[i] !== '=') {
           i--;
         }
 
         if (i >= 0) {
-          datapath = datapath.slice(0, i);
+          if (!value && prop.type === PropTypes$8.ENUM) {
+            /* This is a no-op. */
+            return undefined;
+          }
+
+          datapath = datapath.slice(0, i).trim();
         }
 
         tool.inputs.prop = new IntProperty();
@@ -33379,6 +33394,12 @@ class UIBase$f extends HTMLElement {
       this._lastPathUndoGen = this.pathUndoGen;
 
       let toolop = getDataPathToolOp().create(ctx, path, val, this._id, mass_set_path);
+
+      /* getDataPathToolOp.create can return false in case of no-op paths. */
+      if (!toolop) {
+        return;
+      }
+
       ctx.toolstack.execTool(this.ctx, toolop);
       head = toolstack.head;
     }
@@ -42191,7 +42212,7 @@ class Container extends UIBase$f {
         }
 
         for (let key in prop.values) {
-          let check = frame.check(inpath + " = " + prop.values[key], prop.ui_value_names[key]);
+          let check = frame.check(`${inpath}[${key}]`, prop.ui_value_names[key]);
           checks[key] = check;
 
           if (mass_set_path) {
@@ -42204,7 +42225,6 @@ class Container extends UIBase$f {
             check.description = "" + prop.ui_value_names[key];
           }
           check.onchange = makecb(key);
-          //console.log("PATH", path);
         }
       }
     }
