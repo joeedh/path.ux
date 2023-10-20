@@ -15855,7 +15855,13 @@ class BSplineCurve extends CurveTypeData {
 
     let Icons = row.constructor.getIconEnum();
 
-    row.iconbutton(Icons.TINY_X, "Delete Point", () => {
+    let icon = Icons.LARGE_X !== undefined ? Icons.LARGE_X : Icons.TINY_X;
+    if (Icons.LARGE_X === undefined) {
+      console.log(Icons);
+      console.error("Curve widget expects Icons.LARGE_X icon for delete button.");
+    }
+
+    row.iconbutton(icon, "Delete Point", () => {
       for (let i = 0; i < this.points.length; i++) {
         let p = this.points[i];
 
@@ -15872,11 +15878,24 @@ class BSplineCurve extends CurveTypeData {
       this.reset();
     });
 
+    let slider = row.simpleslider(undefined, {
+      name      : "Degree",
+      defaultval: this.deg,
+      min       : 1,
+      max       : 7,
+      isInt     : true,
+      callback  : (slider) => {
+        this.deg = Math.floor(slider.value);
+        fullUpdate();
+      }
+    });
+    /*
     let slider = row.simpleslider(undefined, "Degree", this.deg, 1, 6, 1, true, true, (slider) => {
       this.deg = Math.floor(slider.value);
+      console.log(slider.value);
 
       fullUpdate();
-    });
+    });*/
 
     slider.baseUnit = "none";
     slider.displayUnit = "none";
@@ -30722,7 +30741,8 @@ let Icons$2 = {
   TREE_EXPAND  : a$1++,
   TREE_COLLAPSE: a$1++,
   ZOOM_OUT     : a$1++,
-  ZOOM_IN      : a$1++
+  ZOOM_IN      : a$1++,
+  LARGE_X      : a$1++, /* Used for curve widget delete button. */
 };
 /* used for icon checkboxes with overlayed check marks */
 Icons$2.ENUM_CHECKED = Icons$2.CHECKED;
@@ -31185,7 +31205,10 @@ class _IconManager {
     try {
       g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
     } catch (error) {
-      console.log("failed to draw an icon");
+      console.log(this.image);
+      console.error(error.stack);
+      console.error(error.message);
+      console.error("failed to draw an icon");
     }
   }
 
@@ -33480,8 +33503,8 @@ class UIBase$f extends HTMLElement {
 
       //handles anonymouse <numslider-x integer> case
       this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
-    } else {
-      this.isInt = prop && prop instanceof IntProperty;
+    } else if (prop && prop instanceof IntProperty) {
+      this.isInt = true;
     }
 
     if (!this.isInt !== !oldint) {
