@@ -271,7 +271,10 @@ class _IconManager {
     try {
       g.drawImage(this.image, tx*ts, ty*ts, ts, ts, x, y, ds*dpi, ds*dpi);
     } catch (error) {
-      console.log("failed to draw an icon");
+      console.log(this.image);
+      console.error(error.stack);
+      console.error(error.message);
+      console.error("failed to draw an icon");
     }
   }
 
@@ -2570,8 +2573,8 @@ export class UIBase extends HTMLElement {
 
       //handles anonymouse <numslider-x integer> case
       this.isInt = val === "null" || val === "true" || val === "yes" || val === "1";
-    } else {
-      this.isInt = prop && prop instanceof IntProperty;
+    } else if (prop && prop instanceof IntProperty) {
+      this.isInt = true;
     }
 
     if (!this.isInt !== !oldint) {

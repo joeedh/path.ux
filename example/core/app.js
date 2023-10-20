@@ -26,15 +26,17 @@ import {MenuBarEditor} from "../editors/menu/menu.js";
 import {PropsEditor} from "../editors/properties/properties.js";
 import {LogEditor} from "../editors/log/log_editor.js";
 import {contextWrangler} from '../../scripts/screen/ScreenArea.js';
+import {Icons} from '../editors/icon_enum.js';
 
 
 let iconmanager = new IconManager([
-  document.getElementById("iconsheet16"),
-  document.getElementById("iconsheet32"),
-  document.getElementById("iconsheet48")
+  document.getElementById("iconsheet"),
+  document.getElementById("iconsheet"),
+  document.getElementById("iconsheet")
 ], [16, 32, 48], 16);
 
 setIconManager(iconmanager);
+setIconMap(Icons);
 
 /*
 let dopExecPost = DataPathSetOp.prototype.execPost;

@@ -20,7 +20,8 @@ let mimemap = {
   ".html" : "text/html",
   ".png" : "image/png",
   ".jpg" : "image/jpeg",
-  ".css" : "text/css"
+  ".css" : "text/css",
+  ".svg" : "image/svg+xml",
 };
 
 let textmap = new Set([
