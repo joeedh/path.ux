@@ -33,7 +33,7 @@ let iconmanager = new IconManager([
   document.getElementById("iconsheet"),
   document.getElementById("iconsheet"),
   document.getElementById("iconsheet")
-], [16, 32, 48], 16);
+], [[32, 16], [32, 32], [32, 48]], 16);
 
 setIconManager(iconmanager);
 setIconMap(Icons);

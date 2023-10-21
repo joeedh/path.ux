@@ -1,5 +1,5 @@
 import {Curve1DProperty} from "../path-controller/toolsys/toolprop.js";
-import {UIBase, Icons} from '../core/ui_base.js';
+import {UIBase, Icons, saveUIData, loadUIData} from '../core/ui_base.js';
 import {ColumnFrame, RowFrame} from "../core/ui.js";
 import * as util from '../path-controller/util/util.js';
 import {Vector2, Vector3} from "../path-controller/util/vectormath.js";
@@ -16,7 +16,7 @@ export class Curve1DWidget extends ColumnFrame {
     this.drawTransform = [1.0, [0, 0]];
 
     this._value = new Curve1D();
-    this._value.on("draw", this._on_draw);
+    this.checkCurve1dEvents();
 
     let in_onchange = false;
 
@@ -66,6 +66,63 @@ export class Curve1DWidget extends ColumnFrame {
 
     window.cw = this;
     this.shadow.appendChild(this.canvas);
+  }
+
+  /**
+   * Checks if a curve1d instance exists at dom attribute "datapath"
+   * and if it does adds curve1d event handlers to it.
+   *
+   * Note: it's impossible to know for sure that a widget is truly dead,
+   * e.g. it could be hidden in a panel or something.  Curve1d's event
+   * handling system takes a callback that checks if a callback should
+   * be removed, which we provide by testing this.isConnected.
+   *
+   * Since this is not robust we have to check regularly if we need to add
+   * Curve1D event handlers, which is why this function exists.
+   */
+  checkCurve1dEvents() {
+    if (!this._value.subscribed("draw", this)) {
+      this._value.on("draw", this._on_draw, this, () => !this.isConnected);
+    }
+
+    if (this.ctx && this.hasAttribute("datapath")) {
+      let curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+
+      if (!curve1d) {
+        console.log("unknown curve1d at datapath:", this.getAttribute("datapath"));
+        return;
+      }
+
+      if (!curve1d.subscribed(undefined, this)) {
+        curve1d.on("select", (bspline1) => {
+          let bspline2 = this._value.getGenerator("BSplineCurve");
+
+          for (let i = 0; i < bspline1.points.length; i++) {
+            bspline2.points[i].flag = bspline1.points[i].flag;
+          }
+
+          bspline2.redraw();
+        });
+
+        curve1d.on("transform", (bspline1) => {
+          let bspline2 = this._value.getGenerator("BSplineCurve");
+
+          for (let i = 0; i < bspline1.points.length; i++) {
+            bspline2.points[i].co.load(bspline1.points[i].co);
+          }
+
+          bspline2.update();
+          bspline2.updateKnots();
+          bspline2.redraw();
+        });
+
+        curve1d.on("update", () => {
+          console.log("datapath curve1d update!");
+          this._value.load(curve1d);
+          this.rebuild();
+        }, this, () => !this.isConnected);
+      }
+    }
   }
 
   get value() {
@@ -275,6 +332,10 @@ export class Curve1DWidget extends ColumnFrame {
       return;
     }
 
+    this.checkCurve1dEvents();
+
+    let uidata = saveUIData(this.container, "curve1d");
+
     this._gen_type = this.value.generatorType;
     let col = this.container;
 
@@ -289,11 +350,26 @@ export class Curve1DWidget extends ColumnFrame {
 
     col.clear();
 
+    let onSourceUpdate = () => {
+      if (!this.hasAttribute("datapath")) {
+        return;
+      }
+
+      let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+      this._value.load(val);
+      this.rebuild();
+    };
+
+    let dpath = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
     let gen = this.value.generators.active;
-    gen.makeGUI(col, this.canvas);
+    gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+
+    loadUIData(this.container, uidata);
+    for (let i = 0; i < 4; i++) {
+      col.flushUpdate();
+    }
 
     this._lastGen = gen;
-
     this._redraw();
   }
 
@@ -330,6 +406,7 @@ export class Curve1DWidget extends ColumnFrame {
   update() {
     super.update();
 
+    this.checkCurve1dEvents();
     this.updateDataPath();
     this.updateSize();
     this.updateGenUI();
