@@ -14430,7 +14430,8 @@ const CurveConstructors = [];
 const CURVE_VERSION = 1.1;
 
 const CurveFlags = {
-  SELECT: 1
+  SELECT   : 1,
+  TRANSFORM: 2,
 };
 
 
@@ -14692,6 +14693,2117 @@ function genHermiteTable(evaluate, steps, range = [0, 1]) {
   return table;
 }
 
+const DataFlags = {
+  READ_ONLY             : 1,
+  USE_CUSTOM_GETSET     : 2,
+  USE_FULL_UNDO         : 4, //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
+  USE_CUSTOM_PROP_GETTER: 8,
+};
+
+
+const DataTypes = {
+  STRUCT        : 0,
+  DYNAMIC_STRUCT: 1,
+  PROP          : 2,
+  ARRAY         : 3
+};
+
+let propCacheRings = {};
+
+function getTempProp(type) {
+  if (!(type in propCacheRings)) {
+    propCacheRings[type] = cachering.fromConstructor(ToolProperty.getClass(type), 32);
+  }
+
+  return propCacheRings[type].next();
+}
+
+class DataPathError extends Error {
+};
+
+
+function getVecClass(proptype) {
+  switch (proptype) {
+    case PropTypes$8.VEC2:
+      return Vector2$b;
+    case PropTypes$8.VEC3:
+      return Vector3$2;
+    case PropTypes$8.VEC4:
+      return Vector4$2;
+    case PropTypes$8.QUAT:
+      return Quat;
+    default:
+      throw new Error("bad prop type " + proptype);
+  }
+}
+
+function isVecProperty(prop) {
+  if (!prop || typeof prop !== "object" || prop === null)
+    return false;
+
+  let ok = false;
+
+  ok = ok || prop instanceof Vec2PropertyIF;
+  ok = ok || prop instanceof Vec3PropertyIF;
+  ok = ok || prop instanceof Vec4PropertyIF;
+  ok = ok || prop instanceof Vec2Property;
+  ok = ok || prop instanceof Vec3Property;
+  ok = ok || prop instanceof Vec4Property;
+
+  ok = ok || prop.type === PropTypes$8.VEC2;
+  ok = ok || prop.type === PropTypes$8.VEC3;
+  ok = ok || prop.type === PropTypes$8.VEC4;
+  ok = ok || prop.type === PropTypes$8.QUAT;
+
+  return ok;
+}
+
+class DataPath {
+  constructor(path, apiname, prop, type = DataTypes.PROP) {
+    this.type = type;
+    this.data = prop;
+    this.apiname = apiname;
+    this.path = path;
+    this.flag = 0;
+    this.struct = undefined;
+  }
+
+  copy() {
+    let ret = new DataPath();
+
+    ret.flag = this.flag;
+    ret.type = this.type;
+    ret.data = this.data;
+    ret.apiname = this.apiname;
+    ret.path = this.path;
+    ret.struct = this.struct;
+
+    return ret;
+  }
+
+  /** this property should not be treated as something
+   *  that should be kept track off in the undo stack*/
+  noUndo() {
+    this.data.flag |= PropFlags$3.NO_UNDO;
+    return this;
+  }
+
+  setProp(prop) {
+    this.data = prop;
+  }
+
+  readOnly() {
+    this.flag |= DataFlags.READ_ONLY;
+
+    if (this.type === DataTypes.PROP) {
+      this.data.flag |= PropFlags$3.READ_ONLY;
+    }
+
+    return this;
+  }
+
+  read_only() {
+    console.warn("DataPath.read_only is deprecated; use readOnly");
+    return this.readOnly();
+  }
+
+  /** used to override tool property settings,
+   *  e.g. ranges, units, etc; returns a
+   *  base class instance of ToolProperty.
+   *
+   *  The this context points to the original ToolProperty and contains
+   *  a few useful references:
+   *
+   *  this.dataref - an object instance of this struct type
+   *  this.ctx - a context
+   *
+   *  callback takes one argument, a new (freshly copied of original)
+   *  tool property to modify
+   *
+   * */
+  customPropCallback(callback) {
+    this.flag |= DataFlags.USE_CUSTOM_PROP_GETTER;
+    this.data.flag |= PropFlags$3.USE_CUSTOM_PROP_GETTER;
+    this.propGetter = callback;
+
+    return this;
+  }
+
+  /**
+   *
+   * For the callbacks 'this' points to an internal ToolProperty;
+   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
+   * and the datapath is 'this.datapath'
+   **/
+  customGetSet(get, set) {
+    this.flag |= DataFlags.USE_CUSTOM_GETSET;
+
+    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
+      this.data.flag |= PropFlags$3.USE_CUSTOM_GETSET;
+      this.data._getValue = this.data.getValue;
+      this.data._setValue = this.data.setValue;
+
+      if (get)
+        this.data.getValue = get;
+
+      if (set)
+        this.data.setValue = set;
+    } else {
+      this.getSet = {
+        get, set
+      };
+
+      this.getSet.dataref = undefined;
+      this.getSet.datapath = undefined;
+      this.getSet.ctx = undefined;
+    }
+
+    return this;
+  }
+
+  customSet(set) {
+    this.customGetSet(undefined, set);
+    return this;
+  }
+
+  customGet(get) {
+    this.customGetSet(get, undefined);
+    return this;
+  }
+
+  /**db will be executed with underlying data object
+   that contains this path in 'this.dataref'
+
+   main event is 'change'
+   */
+  on(type, cb) {
+    if (this.type == DataTypes.PROP) {
+      this.data.on(type, cb);
+    } else {
+      throw new Error("invalid call to DataPath.on");
+    }
+
+    return this;
+  }
+
+  off(type, cb) {
+    if (this.type === DataTypes.PROP) {
+      this.data.off(type, cb);
+    }
+  }
+
+  simpleSlider() {
+    this.data.flag |= PropFlags$3.SIMPLE_SLIDER;
+    this.data.flag &= ~PropFlags$3.FORCE_ROLLER_SLIDER;
+    return this;
+  }
+
+  rollerSlider() {
+    this.data.flag &= ~PropFlags$3.SIMPLE_SLIDER;
+    this.data.flag |= PropFlags$3.FORCE_ROLLER_SLIDER;
+
+    return this;
+  }
+
+  checkStrip(state = true) {
+    if (state) {
+      this.data.flag |= PropFlags$3.FORCE_ENUM_CHECKBOXES;
+    } else {
+      this.data.flag &= ~PropFlags$3.FORCE_ENUM_CHECKBOXES;
+    }
+
+    return this;
+  }
+
+  noUnits() {
+    this.baseUnit("none");
+    this.displayUnit("none");
+    return this;
+  }
+
+  baseUnit(unit) {
+    this.data.setBaseUnit(unit);
+    return this;
+  }
+
+  displayUnit(unit) {
+    this.data.setDisplayUnit(unit);
+    return this;
+  }
+
+  unit(unit) {
+    return this.baseUnit(unit).displayUnit(unit);
+  }
+
+  editAsBaseUnit() {
+    this.data.flag |= PropFlags$3.EDIT_AS_BASE_UNIT;
+    return this;
+  }
+
+  range(min, max) {
+    this.data.setRange(min, max);
+    return this;
+  }
+
+  uiRange(min, max) {
+    this.data.setUIRange(min, max);
+    return this;
+  }
+
+  decimalPlaces(n) {
+    this.data.setDecimalPlaces(n);
+    return this;
+  }
+
+  /**
+   * like other callbacks (until I refactor it),
+   * func will be called with a mysterious object that stores
+   * the following properties:
+   *
+   * this.dataref  : owning object reference
+   * this.datactx  : ctx
+   * this.datapath : datapath
+   * */
+  uiNameGetter(func) {
+    this.ui_name_get = func;
+    return this;
+  }
+
+  expRate(exp) {
+    this.data.setExpRate(exp);
+    return this;
+  }
+
+  slideSpeed(speed) {
+    this.data.setSlideSpeed(speed);
+    return this;
+  }
+
+  /**adds a slider for moving vector component sliders simultaneously*/
+  uniformSlider(state = true) {
+    this.data.uniformSlider(state);
+
+    return this;
+  }
+
+  radix(r) {
+    this.data.setRadix(r);
+    return this;
+  }
+
+  relativeStep(s) {
+    this.data.setRelativeStep(s);
+    return this;
+  }
+
+  step(s) {
+    this.data.setStep(s);
+    return this;
+  }
+
+  /**
+   *
+   * Tell DataPathSetOp to save/load entire app state for undo/redo
+   *
+   * */
+  fullSaveUndo() {
+    this.flag |= DataFlags.USE_FULL_UNDO;
+    this.data.flag |= PropFlags$3.USE_BASE_UNDO;
+
+    return this;
+  }
+
+  icon(i) {
+    this.data.setIcon(i);
+    return this;
+  }
+
+  icon2(i) {
+    this.data.setIcon2(i);
+    return this;
+  }
+
+  icons(icons) { //for enum/flag properties
+    this.data.addIcons(icons);
+    return this;
+  }
+
+  /** secondary icons (e.g. disabled states) */
+  icons2(icons) {
+    this.data.addIcons2(icons);
+    return this;
+  }
+
+  descriptions(description_map) { //for enum/flag properties
+    this.data.addDescriptions(description_map);
+    return this;
+  }
+
+  uiNames(uinames) {
+    this.data.addUINames(uinames);
+    return this;
+  }
+
+  description(d) {
+    this.data.description = d;
+    return this;
+  }
+}
+
+const StructFlags = {
+  NO_UNDO: 1 //struct and its child structs can't participate in undo
+             //via the DataPathToolOp
+};
+
+class ListIface {
+  getStruct(api, list, key) {
+
+  }
+
+  get(api, list, key) {
+
+  }
+
+  getKey(api, list, obj) {
+
+  }
+
+  getActive(api, list) {
+
+  }
+
+  setActive(api, list, val) {
+
+  }
+
+  set(api, list, key, val) {
+    list[key] = val;
+  }
+
+  getIter() {
+
+  }
+
+  filter(api, list, filter) {
+
+  }
+}
+
+class ToolOpIface {
+  constructor() {
+  }
+
+  static tooldef() {
+    return {
+      uiname     : "!untitled tool",
+      icon       : -1,
+      toolpath   : "logical_module.tool", //logical_module need not match up to real module name
+      description: undefined,
+      is_modal   : false,
+      inputs     : {}, //tool properties
+      outputs    : {}  //tool properties
+    }
+  }
+};
+
+
+let DataAPIClass = undefined;
+
+function setImplementationClass(cls) {
+  DataAPIClass = cls;
+}
+
+function registerTool(cls) {
+  if (DataAPIClass === undefined) {
+    throw new Error("data api not initialized properly; call setImplementationClass");
+  }
+
+  return DataAPIClass.registerTool(cls);
+}
+
+"use strict";
+
+let ToolClasses = [];
+window._ToolClasses = ToolClasses;
+
+function setContextClass(cls) {
+  console.warn("setContextClass is deprecated");
+}
+
+const ToolFlags$1 = {
+  PRIVATE: 1
+
+};
+
+
+const UndoFlags$1 = {
+  NO_UNDO      : 2,
+  IS_UNDO_ROOT : 4,
+  UNDO_BARRIER : 8,
+  HAS_UNDO_DATA: 16
+};
+
+class InheritFlag$1 {
+  constructor(slots = {}) {
+    this.slots = slots;
+  }
+}
+
+let modalstack = [];
+
+let defaultUndoHandlers = {
+  undoPre(ctx) {
+    throw new Error("implement me");
+  },
+  undo(ctx) {
+    throw new Error("implement me");
+  }
+};
+
+function setDefaultUndoHandlers(undoPre, undo) {
+  if (!undoPre || !undo) {
+    throw new Error("invalid parameters to setDefaultUndoHandlers");
+  }
+
+  defaultUndoHandlers.undoPre = undoPre;
+  defaultUndoHandlers.undo = undo;
+}
+
+class ToolPropertyCache {
+  constructor() {
+    this.map = new Map();
+    this.pathmap = new Map();
+    this.accessors = {};
+
+    this.userSetMap = new Set();
+
+    this.api = undefined;
+    this.dstruct = undefined;
+  }
+
+  static getPropKey(cls, key, prop) {
+    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
+  }
+
+  _buildAccessors(cls, key, prop, dstruct, api) {
+    let tdef = cls._getFinalToolDef();
+
+    this.api = api;
+    this.dstruct = dstruct;
+
+    if (!tdef.toolpath) {
+      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
+      return;
+    }
+
+    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
+    let obj = this.accessors;
+
+    let st = dstruct;
+    let partial = "";
+
+    for (let i = 0; i < path.length; i++) {
+      let k = path[i];
+      let pathk = k;
+
+      if (i === 0) {
+        pathk = "accessors." + k;
+      }
+
+      if (i > 0) {
+        partial += ".";
+      }
+      partial += k;
+
+      if (!(k in obj)) {
+        obj[k] = {};
+      }
+
+      let st2 = api.mapStruct(obj[k], true, k);
+      if (!(k in st.pathmap)) {
+        st.struct(pathk, k, k, st2);
+      }
+      st = st2;
+
+      this.pathmap.set(partial, obj[k]);
+
+      obj = obj[k];
+    }
+
+    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
+    let prop2 = prop.copy();
+
+    let dpath = new DataPath(name, name, prop2);
+    let uiname = prop.uiname;
+
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = prop.apiname;
+    }
+    if (!uiname || uiname.trim().length === 0) {
+      uiname = key;
+    }
+
+    uiname = ToolProperty.makeUIName(uiname);
+
+    prop2.uiname = uiname;
+    prop2.description = prop2.description || prop2.uiname;
+
+    st.add(dpath);
+
+    obj[name] = prop2.getValue();
+  }
+
+  _getAccessor(cls) {
+    let toolpath = cls.tooldef().toolpath.trim();
+    return this.pathmap.get(toolpath);
+  }
+
+  useDefault(cls, key, prop) {
+    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
+    key = key.trim();
+
+    return key;
+  }
+
+  has(cls, key, prop) {
+    if (prop.flag & PropFlags$3.NO_DEFAULT) {
+      return false;
+    }
+
+    let obj = this._getAccessor(cls);
+
+    key = this.constructor.getPropKey(cls, key, prop);
+    return obj && key in obj;
+  }
+
+  get(cls, key, prop) {
+    if (cls === ToolMacro) {
+      return;
+    }
+
+    let obj = this._getAccessor(cls);
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    if (obj) {
+      return obj[key];
+    }
+
+    return undefined;
+  }
+
+  set(cls, key, prop) {
+    if (cls === ToolMacro) {
+      return;
+    }
+
+    let toolpath = cls.tooldef().toolpath.trim();
+    let obj = this._getAccessor(cls);
+
+    if (!obj) {
+      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
+      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
+
+      obj = this.pathmap.get(toolpath);
+    }
+
+    if (!obj) {
+      console.error("Malformed toolpath in toolop definition: " + toolpath);
+      return;
+    }
+
+    key = this.constructor.getPropKey(cls, key, prop);
+
+    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
+    obj[key] = prop.copy().getValue();
+
+    let path = toolpath + "." + key;
+    this.userSetMap.add(path);
+
+    return this;
+  }
+}
+
+const SavedToolDefaults = new ToolPropertyCache();
+
+class ToolOp extends EventHandler {
+  /**
+   Main ToolOp constructor.  It reads the inputs/outputs properteis from
+   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
+   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
+   chain to fetch parent class properties.
+
+
+   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
+   has been called) SavedToolDefaults will have a copy of all the default
+   property values of all registered ToolOps.
+   **/
+
+  constructor() {
+    super();
+
+    this._pointerId = undefined;
+    this._overdraw = undefined;
+    this.__memsize = undefined;
+
+    var def = this.constructor.tooldef();
+
+    if (def.undoflag !== undefined) {
+      this.undoflag = def.undoflag;
+    }
+
+    if (def.flag !== undefined) {
+      this.flag = def.flag;
+    }
+
+    this._accept = this._reject = undefined;
+    this._promise = undefined;
+
+    for (var k in def) {
+      this[k] = def[k];
+    }
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag$1)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this.constructor;
+      let lastp = undefined;
+
+      while (p !== undefined && p !== Object && p !== ToolOp && p !== lastp) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag$1);
+
+            if (slots2 instanceof InheritFlag$1) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+        }
+
+        lastp = p;
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    this.inputs = {};
+    this.outputs = {};
+
+    if (dinputs) {
+      for (let k in dinputs) {
+        let prop = dinputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        if (!this.hasDefault(prop, k)) {
+          this.inputs[k] = prop;
+          continue;
+        }
+
+        try {
+          prop.setValue(this.getDefault(prop, k));
+        } catch (error) {
+          console.log(error.stack);
+          console.log(error.message);
+        }
+
+        prop.wasSet = false;
+        this.inputs[k] = prop;
+      }
+    }
+
+    if (doutputs) {
+      for (let k in doutputs) {
+        let prop = doutputs[k].copy();
+        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
+
+        this.outputs[k] = prop;
+      }
+    }
+
+    this.drawlines = [];
+  }
+
+  /**
+   ToolOp definition.
+
+   An example:
+   <pre>
+   static tooldef() {
+    return {
+      uiname   : "Tool Name",
+      toolpath : "logical_module.tool", //logical_module need not match up to a real module
+      icon     : -1, //tool's icon, or -1 if there is none
+      description : "tooltip",
+      is_modal : false, //tool is interactive and takes control of events
+      hotkey   : undefined,
+      undoflag : 0, //see UndoFlags
+      flag     : 0,
+      inputs   : ToolOp.inherit({
+        f32val : new Float32Property(1.0),
+        path   : new StringProperty("./path");
+      }),
+      outputs  : {}
+      }
+    }
+   </pre>
+   */
+  static tooldef() {
+    if (this === ToolOp) {
+      throw new Error("Tools must implemented static tooldef() methods!");
+    }
+
+    return {};
+  }
+
+  /** Returns a map of input property values,
+   *  e.g. `let {prop1, prop2} = this.getValues()` */
+  getInputs() {
+    let ret = {};
+
+    for (let k in this.inputs) {
+      ret[k] = this.inputs[k].getValue();
+    }
+
+    return ret;
+  }
+
+  static Equals(a, b) {
+    if (!a || !b) return false;
+    if (a.constructor !== b.constructor) return false;
+
+    let bad = false;
+
+    for (let k in a.inputs) {
+      bad = bad || !(k in b.inputs);
+      bad = bad || a.inputs[k].constructor !== b.inputs[k];
+      bad = bad || !a.inputs[k].equals(b.inputs[k]);
+
+      if (bad) {
+        break;
+      }
+    }
+
+    return !bad;
+  }
+
+  static inherit(slots = {}) {
+    return new InheritFlag$1(slots);
+  }
+
+  /**
+
+   Creates a new instance of this toolop from args and a context.
+   This is often use to fill properties with default arguments
+   stored somewhere in the context.
+
+   */
+  static invoke(ctx, args) {
+    let tool = new this();
+
+    for (let k in args) {
+      if (!(k in tool.inputs)) {
+        console.warn("Unknown tool argument " + k);
+        continue;
+      }
+
+      let prop = tool.inputs[k];
+      let val = args[k];
+
+      if ((typeof val === "string") && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
+        if (val in prop.values) {
+          val = prop.values[val];
+        } else {
+          console.warn("Possible invalid enum/flag:", val);
+          continue;
+        }
+      }
+
+      tool.inputs[k].setValue(val);
+    }
+
+    return tool;
+  }
+
+  static register(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
+      return;
+    }
+
+    ToolClasses.push(cls);
+  }
+
+  static _regWithNstructjs(cls, structName = cls.name) {
+    if (nstructjs.isRegistered(cls)) {
+      return;
+    }
+
+    let parent = cls.prototype.__proto__.constructor;
+
+    if (!cls.hasOwnProperty("STRUCT")) {
+      if (parent !== ToolOp && parent !== ToolMacro && parent !== Object) {
+        this._regWithNstructjs(parent);
+      }
+
+      cls.STRUCT = nstructjs.inherit(cls, parent) + '}\n';
+    }
+
+    nstructjs.register(cls);
+  }
+
+  static isRegistered(cls) {
+    return ToolClasses.indexOf(cls) >= 0;
+  }
+
+  static unregister(cls) {
+    if (ToolClasses.indexOf(cls) >= 0) {
+      ToolClasses.remove(cls);
+    }
+  }
+
+  static _getFinalToolDef() {
+    let def = this.tooldef();
+
+    let getSlots = (slots, key) => {
+      if (slots === undefined)
+        return {};
+
+      if (!(slots instanceof InheritFlag$1)) {
+        return slots;
+      }
+
+      slots = {};
+      let p = this;
+
+      while (p !== undefined && p !== Object && p !== ToolOp) {
+        if (p.tooldef) {
+          let def = p.tooldef();
+
+          if (def[key] !== undefined) {
+            let slots2 = def[key];
+            let stop = !(slots2 instanceof InheritFlag$1);
+
+            if (slots2 instanceof InheritFlag$1) {
+              slots2 = slots2.slots;
+            }
+
+            for (let k in slots2) {
+              if (!(k in slots)) {
+                slots[k] = slots2[k];
+              }
+            }
+
+            if (stop) {
+              break;
+            }
+          }
+
+        }
+        p = p.prototype.__proto__.constructor;
+      }
+
+      return slots;
+    };
+
+    let dinputs = getSlots(def.inputs, "inputs");
+    let doutputs = getSlots(def.outputs, "outputs");
+
+    def.inputs = dinputs;
+    def.outputs = doutputs;
+
+    return def;
+  }
+
+  static onTick() {
+    for (let toolop of modalstack) {
+      toolop.on_tick();
+    }
+  }
+
+  static searchBoxOk(ctx) {
+    let flag = this.tooldef().flag;
+    let ret = !(flag && (flag & ToolFlags$1.PRIVATE));
+    ret = ret && this.canRun(ctx);
+
+    return ret;
+  }
+
+  //toolop is an optional instance of this class, may be undefined
+  static canRun(ctx, toolop = undefined) {
+    return true;
+  }
+
+  /** Called when the undo system needs to destroy
+   *  this toolop to save memory*/
+  onUndoDestroy() {
+
+  }
+
+  /** Used by undo system to limit memory */
+  calcMemSize(ctx) {
+    if (this.__memsize !== undefined) {
+      return this.__memsize;
+    }
+
+    let tot = 0;
+
+    for (let step = 0; step < 2; step++) {
+      let props = step ? this.outputs : this.inputs;
+
+      for (let k in props) {
+        let prop = props[k];
+
+        let size = prop.calcMemSize();
+
+        if (isNaN(size) || !isFinite(size)) {
+          console.warn("Got NaN when calculating mem size for property", prop);
+          continue;
+        }
+
+        tot += size;
+      }
+    }
+
+    let size = this.calcUndoMem(ctx);
+
+    if (isNaN(size) || !isFinite(size)) {
+      console.warn("Got NaN in calcMemSize", this);
+    } else {
+      tot += size;
+    }
+
+    this.__memsize = tot;
+
+    return tot;
+  }
+
+  loadDefaults(force = true) {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (!force && prop.wasSet) {
+        continue;
+      }
+
+      if (this.hasDefault(prop, k)) {
+        prop.setValue(this.getDefault(prop, k));
+        prop.wasSet = false;
+      }
+    }
+
+    return this;
+  }
+
+  hasDefault(toolprop, key = toolprop.apiname) {
+    return SavedToolDefaults.has(this.constructor, key, toolprop);
+  }
+
+  getDefault(toolprop, key = toolprop.apiname) {
+    let cls = this.constructor;
+
+    if (SavedToolDefaults.has(cls, key, toolprop)) {
+      return SavedToolDefaults.get(cls, key, toolprop);
+    } else {
+      return toolprop.getValue();
+    }
+  }
+
+  saveDefaultInputs() {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
+        SavedToolDefaults.set(this.constructor, k, prop);
+      }
+    }
+
+    return this;
+  }
+
+  genToolString() {
+    let def = this.constructor.tooldef();
+    let path = def.toolpath + "(";
+
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      path += k + "=";
+      if (prop.type === PropTypes$8.STRING)
+        path += "'";
+
+      if (prop.type === PropTypes$8.FLOAT) {
+        path += prop.getValue().toFixed(3);
+      } else {
+        path += prop.getValue();
+      }
+
+      if (prop.type === PropTypes$8.STRING)
+        path += "'";
+      path += " ";
+    }
+    path += ")";
+    return path;
+  }
+
+  on_tick() {
+
+  }
+
+  /**default on_keydown implementation for modal tools,
+   no need to call super() to execute this if you don't want to*/
+  on_keydown(e) {
+    switch (e.keyCode) {
+      case keymap$4["Enter"]:
+      case keymap$4["Space"]:
+        this.modalEnd(false);
+        break;
+      case keymap$4["Escape"]:
+        this.modalEnd(true);
+        break;
+    }
+  }
+
+  //called after undoPre
+  calcUndoMem(ctx) {
+    console.warn("ToolOp.prototype.calcUndoMem: implement me!");
+    return 0;
+  }
+
+  undoPre(ctx) {
+    throw new Error("implement me!");
+  }
+
+  undo(ctx) {
+    throw new Error("implement me!");
+    //_appstate.loadUndoFile(this._undo);
+  }
+
+  redo(ctx) {
+    this._was_redo = true; //also set by toolstack.redo
+
+    this.undoPre(ctx);
+    this.execPre(ctx);
+    this.exec(ctx);
+    this.execPost(ctx);
+  }
+
+  //for compatibility with fairmotion
+  exec_pre(ctx) {
+    this.execPre(ctx);
+  }
+
+  execPre(ctx) {
+  }
+
+  exec(ctx) {
+  }
+
+  execPost(ctx) {
+
+  }
+
+  /**for use in modal mode only*/
+  resetTempGeom() {
+    var ctx = this.modal_ctx;
+
+    for (var dl of this.drawlines) {
+      dl.remove();
+    }
+
+    this.drawlines.length = 0;
+  }
+
+  error(msg) {
+    console.warn(msg);
+  }
+
+  getOverdraw() {
+    if (this._overdraw === undefined) {
+      this._overdraw = document.createElement("overdraw-x");
+      this._overdraw.start(this.modal_ctx.screen);
+    }
+
+    return this._overdraw;
+  }
+
+  /**for use in modal mode only*/
+  makeTempLine(v1, v2, style) {
+    let line = this.getOverdraw().line(v1, v2, style);
+    this.drawlines.push(line);
+    return line;
+  }
+
+  pushModal(node) {
+    throw new Error("cannot call this; use modalStart")
+  }
+
+  popModal() {
+    throw new Error("cannot call this; use modalEnd");
+  }
+
+  /**returns promise to be executed on modalEnd*/
+  modalStart(ctx) {
+    if (this.modalRunning) {
+      console.warn("Warning, tool is already in modal mode consuming events");
+      return this._promise;
+    }
+
+    this.modal_ctx = ctx;
+    this.modalRunning = true;
+
+    this._promise = new Promise((accept, reject) => {
+      this._accept = accept;
+      this._reject = reject;
+
+      modalstack.push(this);
+
+      if (this._pointerId !== undefined) {
+        super.pushPointerModal(ctx.screen, this._pointerId);
+      } else {
+        super.pushModal(ctx.screen);
+      }
+    });
+
+    return this._promise;
+  }
+
+  /*eek, I've not been using this.
+    guess it's a non-enforced contract, I've been naming
+    cancel methods 'cancel' all this time.
+
+    XXX fix
+  */
+  toolCancel() {
+  }
+
+  modalEnd(was_cancelled) {
+    if (this._modalstate) {
+      modalstack.pop();
+    }
+
+    if (this._overdraw !== undefined) {
+      this._overdraw.end();
+      this._overdraw = undefined;
+    }
+
+    if (was_cancelled && this._on_cancel !== undefined) {
+      if (this._accept) {
+        this._accept(this.modal_ctx, true);
+      }
+
+      this._on_cancel(this);
+      this._on_cancel = undefined;
+    }
+
+    this.resetTempGeom();
+
+    var ctx = this.modal_ctx;
+
+    this.modal_ctx = undefined;
+    this.modalRunning = false;
+    this.is_modal = false;
+
+    super.popModal();
+
+    this._promise = undefined;
+
+    if (this._accept) {
+      this._accept(ctx, false);//Context, was_cancelled
+      this._accept = this._reject = undefined;
+    }
+
+    this.saveDefaultInputs();
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    let outs = this.outputs;
+    let ins = this.inputs;
+
+    this.inputs = {};
+    this.outputs = {};
+
+    for (let pair of ins) {
+      this.inputs[pair.key] = pair.val;
+    }
+
+    for (let pair of outs) {
+      this.outputs[pair.key] = pair.val;
+    }
+  }
+
+  _save_inputs() {
+    let ret = [];
+    for (let k in this.inputs) {
+      ret.push(new PropKey(k, this.inputs[k]));
+    }
+
+    return ret;
+  }
+
+  _save_outputs() {
+    let ret = [];
+    for (let k in this.outputs) {
+      ret.push(new PropKey(k, this.outputs[k]));
+    }
+
+    return ret;
+  }
+}
+
+ToolOp.STRUCT = `
+toolsys.ToolOp {
+  inputs  : array(toolsys.PropKey) | this._save_inputs();
+  outputs : array(toolsys.PropKey) | this._save_outputs();
+}
+`;
+nstructjs.register(ToolOp);
+
+class PropKey {
+  constructor(key, val) {
+    this.key = key;
+    this.val = val;
+  }
+}
+
+PropKey.STRUCT = `
+toolsys.PropKey {
+  key : string;
+  val : abstract(ToolProperty);
+}
+`;
+nstructjs.register(PropKey);
+
+class MacroLink {
+  constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
+    this.source = sourcetool_idx;
+    this.dest = desttool_idx;
+
+    this.sourceProps = srcprops;
+    this.destProps = dstprops;
+
+    this.sourcePropKey = srckey;
+    this.destPropKey = dstkey;
+  }
+}
+
+MacroLink.STRUCT = `
+toolsys.MacroLink {
+  source         : int;
+  dest           : int;
+  sourcePropKey  : string;
+  destPropKey    : string;
+  sourceProps    : string;
+  destProps      : string; 
+}
+`;
+nstructjs.register(MacroLink);
+
+const MacroClasses = {};
+window._MacroClasses = MacroClasses;
+
+let macroidgen = 0;
+
+
+class ToolMacro extends ToolOp {
+  constructor() {
+    super();
+
+    this.tools = [];
+    this.curtool = 0;
+    this.has_modal = false;
+    this.connects = [];
+    this.connectLinks = [];
+
+    this._macro_class = undefined;
+  }
+
+  static tooldef() {
+    return {
+      uiname: "Tool Macro"
+    }
+  }
+
+  //toolop is an optional instance of this class, may be undefined
+  static canRun(ctx, toolop = undefined) {
+    return true;
+  }
+
+  _getTypeClass() {
+    if (this._macro_class && this._macro_class.ready) {
+      return this._macro_class;
+    }
+
+    if (!this._macro_class) {
+      this._macro_class = class MacroTypeClass extends ToolOp {
+        static tooldef() {
+          return this.__tooldef;
+        }
+      };
+
+      this._macro_class.__tooldef = {
+        toolpath: this.constructor.tooldef().toolpath || ''
+      };
+      this._macro_class.ready = false;
+    }
+
+    if (!this.tools || this.tools.length === 0) {
+      /* We've been invoked by ToolOp constructor,
+      *  for now just return an empty class  */
+      return this._macro_class;
+    }
+
+    let key = "";
+    for (let tool of this.tools) {
+      key = tool.constructor.name + ":";
+    }
+
+    /* Handle child classes of ToolMacro */
+    if (this.constructor !== ToolMacro) {
+      key += ":" + this.constructor.tooldef().toolpath;
+    }
+
+    for (let k in this.inputs) {
+      key += k + ":";
+    }
+
+    if (key in MacroClasses) {
+      this._macro_class = MacroClasses[key];
+      return this._macro_class;
+    }
+
+    let name = "Macro(";
+    let i = 0;
+    let is_modal;
+
+    for (let tool of this.tools) {
+      let def = tool.constructor.tooldef();
+
+      if (i > 0) {
+        name += ", ";
+      } else {
+        is_modal = def.is_modal;
+      }
+
+      if (def.uiname) {
+        name += def.uiname;
+      } else if (def.toolpath) {
+        name += def.toolpath;
+      } else {
+        name += tool.constructor.name;
+      }
+
+      i++;
+    }
+
+    let inputs = {};
+
+    for (let k in this.inputs) {
+      inputs[k] = this.inputs[k].copy().clearEventCallbacks();
+      inputs[k].wasSet = false;
+    }
+
+    let tdef = {
+      uiname  : name,
+      toolpath: key,
+      inputs,
+      outputs : {},
+      is_modal
+    };
+
+    let cls = this._macro_class;
+    cls.__tooldef = tdef;
+    cls._macroTypeId = macroidgen++;
+    cls.ready = true;
+
+    /*
+    let cls = {
+      name : key,
+      tooldef() {
+        return tdef
+      },
+      _getFinalToolDef() {
+        return this.tooldef();
+      }
+    };//*/
+
+    MacroClasses[key] = cls;
+
+    return cls;
+  }
+
+  saveDefaultInputs() {
+    for (let k in this.inputs) {
+      let prop = this.inputs[k];
+
+      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
+        SavedToolDefaults.set(this._getTypeClass(), k, prop);
+      }
+    }
+
+    return this;
+  }
+
+  hasDefault(toolprop, key = toolprop.apiname) {
+    return SavedToolDefaults.has(this._getTypeClass(), key, toolprop);
+  }
+
+  getDefault(toolprop, key = toolprop.apiname) {
+    let cls = this._getTypeClass();
+
+    if (SavedToolDefaults.has(cls, key, toolprop)) {
+      return SavedToolDefaults.get(cls, key, toolprop);
+    } else {
+      return toolprop.getValue();
+    }
+  }
+
+  connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
+    if (typeof dsttool === "function") {
+      return this.connectCB(...arguments);
+    }
+
+    let i1 = this.tools.indexOf(srctool);
+    let i2 = this.tools.indexOf(dsttool);
+
+    if (i1 < 0 || i2 < 0) {
+      throw new Error("tool not in macro");
+    }
+
+    //remove linked properties from this.inputs
+    if (srcprops === "inputs") {
+      let tool = this.tools[i1];
+
+      let prop = tool.inputs[srcoutput];
+      if (prop === this.inputs[srcoutput]) {
+        delete this.inputs[srcoutput];
+      }
+    }
+
+    if (dstprops === "inputs") {
+      let tool = this.tools[i2];
+      let prop = tool.inputs[dstinput];
+
+      if (this.inputs[dstinput] === prop) {
+        delete this.inputs[dstinput];
+      }
+    }
+
+    this.connectLinks.push(new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops));
+    return this;
+  }
+
+  connectCB(srctool, dsttool, callback, thisvar) {
+    this.connects.push({
+      srctool : srctool,
+      dsttool : dsttool,
+      callback: callback,
+      thisvar : thisvar
+    });
+
+    return this;
+  }
+
+  add(tool) {
+    if (tool.is_modal) {
+      this.is_modal = true;
+    }
+
+    for (let k in tool.inputs) {
+      let prop = tool.inputs[k];
+
+      if (!(prop.flag & PropFlags$3.PRIVATE)) {
+        this.inputs[k] = prop;
+      }
+    }
+
+    this.tools.push(tool);
+
+    return this;
+  }
+
+  _do_connections(tool) {
+    let i = this.tools.indexOf(tool);
+
+    for (let c of this.connectLinks) {
+      if (c.source === i) {
+        let tool2 = this.tools[c.dest];
+
+        tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
+      }
+    }
+
+    for (var c of this.connects) {
+      if (c.srctool === tool) {
+        c.callback.call(c.thisvar, c.srctool, c.dsttool);
+      }
+    }
+  }
+
+  /*
+  canRun(ctx) {
+    if (this.tools.length == 0)
+      return false;
+
+    //poll first tool only in list
+    return this.tools[0].constructor.canRun(ctx);
+  }//*/
+
+  modalStart(ctx) {
+    //macros obviously can't call loadDefaults in the constructor
+    //like normal tool ops can.
+    this.loadDefaults(false);
+
+    this._promise = new Promise((function (accept, reject) {
+      this._accept = accept;
+      this._reject = reject;
+    }).bind(this));
+
+    this.curtool = 0;
+
+    let i;
+
+    for (i = 0; i < this.tools.length; i++) {
+      if (this.tools[i].is_modal)
+        break;
+
+      this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
+      this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
+      this._do_connections(this.tools[i]);
+    }
+
+    var on_modal_end = (function on_modal_end() {
+      this._do_connections(this.tools[this.curtool]);
+      this.curtool++;
+
+      while (this.curtool < this.tools.length &&
+      !this.tools[this.curtool].is_modal) {
+        this.tools[this.curtool].undoPre(ctx);
+        this.tools[this.curtool].execPre(ctx);
+        this.tools[this.curtool].exec(ctx);
+        this.tools[this.curtool].execPost(ctx);
+        this._do_connections(this.tools[this.curtool]);
+
+        this.curtool++;
+      }
+
+      if (this.curtool < this.tools.length) {
+        this.tools[this.curtool].undoPre(ctx);
+        this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+      } else {
+        this._accept(this, false);
+      }
+    }).bind(this);
+
+    if (i < this.tools.length) {
+      this.curtool = i;
+      this.tools[this.curtool].undoPre(ctx);
+      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
+    }
+
+    return this._promise;
+  }
+
+  loadDefaults(force = true) {
+    return super.loadDefaults(force);
+  }
+
+  exec(ctx) {
+    //macros obviously can't call loadDefaults in the constructor
+    //like normal tool ops can.
+    //note that this will detect if the user changes property values
+
+    this.loadDefaults(false);
+
+    for (var i = 0; i < this.tools.length; i++) {
+      this.tools[i].undoPre(ctx);
+      this.tools[i].execPre(ctx);
+      this.tools[i].exec(ctx);
+      this.tools[i].execPost(ctx);
+      this._do_connections(this.tools[i]);
+    }
+  }
+
+  calcUndoMem(ctx) {
+    let tot = 0;
+
+    for (let tool of this.tools) {
+      tot += tool.calcUndoMem(ctx);
+    }
+
+    return tot;
+  }
+
+  calcMemSize(ctx) {
+    let tot = 0;
+
+    for (let tool of this.tools) {
+      tot += tool.calcMemSize(ctx);
+    }
+
+    return tot;
+  }
+
+  undoPre() {
+    return; //undoPre is handled in exec() or modalStart()
+  }
+
+  undo(ctx) {
+    for (var i = this.tools.length - 1; i >= 0; i--) {
+      this.tools[i].undo(ctx);
+    }
+  }
+}
+
+ToolMacro.STRUCT = nstructjs.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
+  tools        : array(abstract(toolsys.ToolOp));
+  connectLinks : array(toolsys.MacroLink);
+}
+`;
+nstructjs.register(ToolMacro);
+
+class ToolStack extends Array {
+  constructor(ctx) {
+    super();
+
+    this.memLimit = 512*1024*1024;
+    this.enforceMemLimit = false;
+
+    this.cur = -1;
+    this.ctx = ctx;
+
+    this.modalRunning = 0;
+
+    this._undo_branch = undefined; //used to save undo branch in case of tool cancel
+  }
+
+  get head() {
+    return this[this.cur];
+  }
+
+  limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
+    if (maxmem === undefined) {
+      throw new Error("maxmem cannot be undefined");
+    }
+
+    let size = this.calcMemSize();
+
+    let start = 0;
+
+    while (start < this.cur - 2 && size > maxmem) {
+      size -= this[start].calcMemSize(ctx);
+      start++;
+    }
+
+    if (start === 0) {
+      return size;
+    }
+
+    for (let i = 0; i < start; i++) {
+      this[i].onUndoDestroy();
+    }
+
+    this.cur -= start;
+
+    for (let i = 0; i < this.length - start; i++) {
+      this[i] = this[i + start];
+    }
+    this.length -= start;
+
+    return this.calcMemSize(ctx);
+  }
+
+  calcMemSize(ctx = this.ctx) {
+    let tot = 0;
+
+    for (let tool of this) {
+      try {
+        tot += tool.calcMemSize();
+      } catch (error) {
+        print_stack$1(error);
+        console.error("Failed to execute a calcMemSize method");
+      }
+    }
+
+    return tot;
+  }
+
+  setRestrictedToolContext(ctx) {
+    this.toolctx = ctx;
+  }
+
+  reset(ctx) {
+    if (ctx !== undefined) {
+      this.ctx = ctx;
+    }
+
+    this.modalRunning = 0;
+    this.cur = -1;
+    this.length = 0;
+  }
+
+  /**
+   * runs .undo,.redo if toolstack head is same as tool
+   *
+   * otherwise, .execTool(ctx, tool) is called.
+   *
+   * @param compareInputs : check if toolstack head has identical input values, defaults to false
+   * */
+  execOrRedo(ctx, tool, compareInputs = false) {
+    let head = this.head;
+
+    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
+
+    tool.__memsize = undefined; //reset cache memsize
+
+    if (ok) {
+      //console.warn("Same tool detected");
+
+      this.undo();
+
+      //can inputs differ? in that case, execute new tool
+      if (!compareInputs) {
+        this.execTool(ctx, tool);
+      } else {
+        this.rerun();
+      }
+
+      return false;
+    } else {
+      this.execTool(ctx, tool);
+      return true;
+    }
+  }
+
+  execTool(ctx, toolop) {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit, ctx);
+    }
+
+    if (!toolop.constructor.canRun(ctx, toolop)) {
+      console.log("toolop.constructor.canRun returned false");
+      return;
+    }
+
+    let tctx = ctx.toLocked();
+
+    let undoflag = toolop.constructor.tooldef().undoflag;
+    if (toolop.undoflag !== undefined) {
+      undoflag = toolop.undoflag;
+    }
+    undoflag = undoflag === undefined ? 0 : undoflag;
+
+    //if (!(undoflag & UndoFlags.IS_UNDO_ROOT) && !(undoflag & UndoFlags.NO_UNDO)) {
+    //tctx = new SavedContext(ctx, ctx.datalib);
+    //}
+
+    toolop.execCtx = tctx;
+
+    if (!(undoflag & UndoFlags$1.NO_UNDO)) {
+      this.cur++;
+
+      //save branch for if tool cancel
+      this._undo_branch = this.slice(this.cur + 1, this.length);
+
+      //truncate
+      this.length = this.cur + 1;
+
+      this[this.cur] = toolop;
+      toolop.undoPre(tctx);
+    }
+
+    if (toolop.is_modal) {
+      ctx = toolop.modal_ctx = ctx;
+
+      this.modal_running = true;
+
+      toolop._on_cancel = (function (toolop) {
+        if (!(toolop.undoflag & UndoFlags$1.NO_UNDO)) {
+          this[this.cur].undo(ctx);
+          this.pop_i(this.cur);
+          this.cur--;
+        }
+      }).bind(this);
+
+      //will handle calling .exec itself
+      toolop.modalStart(ctx);
+    } else {
+      toolop.execPre(tctx);
+      toolop.exec(tctx);
+      toolop.execPost(tctx);
+      toolop.saveDefaultInputs();
+    }
+  }
+
+  toolCancel(ctx, tool) {
+    if (tool._was_redo) { //also set by toolstack.redo
+      //ignore tool cancel requests on redo
+      return;
+    }
+
+    if (tool !== this[this.cur]) {
+      console.warn("toolCancel called in error", this, tool);
+      return;
+    }
+
+    this.undo();
+    this.length = this.cur + 1;
+
+    if (this._undo_branch !== undefined) {
+      for (let item of this._undo_branch) {
+        this.push(item);
+      }
+    }
+  }
+
+  undo() {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit);
+    }
+
+    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags$1.IS_UNDO_ROOT)) {
+      let tool = this[this.cur];
+
+      tool.undo(tool.execCtx);
+
+      this.cur--;
+    }
+  }
+
+  //reruns a tool if it's at the head of the stack
+  rerun(tool) {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit);
+    }
+
+    if (tool === this[this.cur]) {
+      tool._was_redo = false;
+
+      if (!tool.execCtx) {
+        tool.execCtx = this.ctx;
+      }
+
+      tool.undo(tool.execCtx);
+
+      tool._was_redo = true; //also set by toolstack.redo
+
+      tool.undoPre(tool.execCtx);
+      tool.execPre(tool.execCtx);
+      tool.exec(tool.execCtx);
+      tool.execPost(tool.execCtx);
+    } else {
+      console.warn("Tool wasn't at head of stack", tool);
+    }
+  }
+
+  redo() {
+    if (this.enforceMemLimit) {
+      this.limitMemory(this.memLimit);
+    }
+
+    if (this.cur >= -1 && this.cur + 1 < this.length) {
+      //console.log("redo!", this.cur, this.length);
+
+      this.cur++;
+      let tool = this[this.cur];
+
+
+      if (!tool.execCtx) {
+        tool.execCtx = this.ctx;
+      }
+
+      tool._was_redo = true;
+      tool.redo(tool.execCtx);
+
+      tool.saveDefaultInputs();
+    }
+  }
+
+  save() {
+    let data = [];
+    nstructjs.writeObject(data, this);
+    return data;
+  }
+
+  rewind() {
+    while (this.cur >= 0) {
+      let last = this.cur;
+      this.undo();
+
+      //prevent infinite loops
+      if (last === this.cur) {
+        break;
+      }
+    }
+
+    return this;
+  }
+
+  /**cb is a function(ctx), if it returns the value false then playback stops
+   promise will still be fulfilled.
+
+   onstep is a callback, if it returns a promise that promise will be
+   waited on, otherwise execution is queue with window.setTimeout().
+   */
+  replay(cb, onStep) {
+    let cur = this.cur;
+
+    this.rewind();
+
+    let last = this.cur;
+
+    let start = time_ms();
+
+    return new Promise((accept, reject) => {
+      let next = () => {
+        last = this.cur;
+
+        if (cb && cb(ctx) === false) {
+          accept();
+          return;
+        }
+
+        if (this.cur < this.length) {
+          this.cur++;
+          this.rerun();
+        }
+
+        if (last === this.cur) {
+          console.warn("time:", (time_ms() - start)/1000.0);
+          accept(this);
+        } else {
+          if (onStep) {
+            let ret = onStep();
+
+            if (ret && ret instanceof Promise) {
+              ret.then(() => {
+                next();
+              });
+            } else {
+              window.setTimeout(() => {
+                next();
+              });
+            }
+          }
+        }
+      };
+
+      next();
+    });
+  }
+
+  loadSTRUCT(reader) {
+    reader(this);
+
+    for (let item of this._stack) {
+      this.push(item);
+    }
+
+    delete this._stack;
+  }
+
+  //note that this makes sure tool classes are registered with nstructjs
+  //during save
+  _save() {
+    for (let tool of this) {
+      let cls = tool.constructor;
+
+      if (!nstructjs.isRegistered(cls)) {
+        cls._regWithNstructjs(cls);
+      }
+    }
+
+    return this;
+  }
+}
+
+ToolStack.STRUCT = `
+toolsys.ToolStack {
+  cur    : int;
+  _stack : array(abstract(toolsys.ToolOp)) | this._save();
+}
+`;
+nstructjs.register(ToolStack);
+
+window._testToolStackIO = function () {
+  let data = [];
+  let cls = _appstate.toolstack.constructor;
+
+  nstructjs.writeObject(data, _appstate.toolstack);
+  data = new DataView(new Uint8Array(data).buffer);
+
+  let toolstack = nstructjs.readObject(data, cls);
+
+  _appstate.toolstack.rewind();
+
+  toolstack.cur = -1;
+  toolstack.ctx = _appstate.toolstack.ctx;
+  _appstate.toolstack = toolstack;
+
+  return toolstack;
+};
+
+function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = undefined) {
+  let datastruct = api.mapStruct(ToolPropertyCache, true);
+
+  for (let cls of ToolClasses) {
+    let def = cls._getFinalToolDef();
+
+    for (let k in def.inputs) {
+      let prop = def.inputs[k];
+
+      if (!(prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY))) {
+        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
+      }
+    }
+  }
+
+  if (rootCtxStruct) {
+    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
+  }
+
+  if (!registerWithNStructjs) {
+    return;
+  }
+
+  //register tools with nstructjs
+  for (let cls of ToolClasses) {
+    try {
+      if (!nstructjs.isRegistered(cls)) {
+        ToolOp._regWithNstructjs(cls);
+      }
+    } catch (error) {
+      console.log(error.stack);
+      console.error("Failed to register a tool with nstructjs");
+    }
+  }
+}
+
 "use strict";
 //import {EventDispatcher} from "../util/events.js";
 
@@ -14827,10 +16939,369 @@ function binomial(n, i) {
 
 window.bin = binomial;
 
-class Curve1DPoint extends Vector2$a {
-  constructor(co) {
-    super(co);
+class Curve1dBSplineOpBase extends ToolOp {
+  static tooldef() {
+    return {
+      inputs : {
+        dataPath: new StringProperty()
+      },
+      outputs: {},
+    }
+  }
 
+  _undo = undefined;
+
+  undoPre(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      this._undo = curve1d.copy();
+    } else {
+      this._undo = undefined;
+    }
+  }
+
+  undo(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d.load(this._undo);
+      curve1d._fireEvent("update", curve1d);
+    }
+  }
+
+  getCurve1d(ctx) {
+    let {dataPath} = this.getInputs();
+
+    let curve1d;
+    try {
+      curve1d = ctx.api.getValue(ctx, dataPath);
+    } catch (error) {
+      console.error(error.stack);
+      console.error(error.message);
+      console.error("Failed to lookup curve1d property at path ", dataPath);
+      return;
+    }
+
+    return curve1d;
+  }
+
+  execPost(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d._fireEvent("update", curve1d);
+    }
+  }
+}
+
+class Curve1dBSplineResetOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.reset_bspline",
+      inputs  : ToolOp.inherit({}),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d.generators.active.reset();
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineResetOp);
+
+class Curve1dBSplineLoadTemplOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_load_template",
+      inputs  : ToolOp.inherit({
+        template: new EnumProperty$9(SplineTemplates.SMOOTH, SplineTemplates)
+      }),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    let {template} = this.getInputs();
+
+    if (curve1d) {
+      curve1d.generators.active.loadTemplate(template);
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineLoadTemplOp);
+
+class Curve1dBSplineDeleteOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_delete_point",
+      inputs  : ToolOp.inherit({}),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      curve1d.generators.active.deletePoint();
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineDeleteOp);
+
+class Curve1dBSplineSelectOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_select_point",
+      inputs  : ToolOp.inherit({
+        point : new IntProperty(-1),
+        state : new BoolProperty(true),
+        unique: new BoolProperty(true),
+      }),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let bspline = curve1d.generators.active;
+      let {point, state, unique} = this.getInputs();
+
+      for (let p of bspline.points) {
+        if (p.eid === point) {
+          if (state) {
+            p.flag |= CurveFlags.SELECT;
+          } else {
+            p.flag &= ~CurveFlags.SELECT;
+          }
+        } else if (unique) {
+          p.flag &= ~CurveFlags.SELECT;
+        }
+      }
+
+      curve1d._fireEvent("select", bspline);
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineSelectOp);
+
+class Curve1dBSplineAddOp extends Curve1dBSplineOpBase {
+  static tooldef() {
+    return {
+      toolpath: "curve1d.bspline_add_point",
+      inputs  : ToolOp.inherit({
+        x: new FloatProperty(),
+        y: new FloatProperty()
+      }),
+      outputs : {},
+    }
+  }
+
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let {x, y} = this.getInputs();
+      curve1d.generators.active.addFromMouse(x, y);
+    }
+  }
+}
+
+ToolOp.register(Curve1dBSplineAddOp);
+
+class BSplineTransformOp extends ToolOp {
+  constructor() {
+    super();
+
+    this.first = true;
+    this.start_mpos = new Vector2$a();
+  }
+
+  static tooldef() {
+    return {
+      toolpath: "curve1d.transform_bspline",
+      inputs  : {
+        dataPath: new StringProperty(),
+        off     : new Vec2Property(),
+        dpi     : new FloatProperty(1.0),
+      },
+      is_modal: true,
+      outputs : {},
+    }
+  }
+
+  _undo = undefined;
+
+  storePoints(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let bspline = curve1d.generators.active;
+      return Array.from(bspline.points).map(p => p.copy());
+    }
+
+    return [];
+  }
+
+  loadPoints(ctx, ps) {
+    let curve1d = this.getCurve1d(ctx);
+
+    if (curve1d) {
+      let bspline = curve1d.generators.active;
+
+      for (let p1 of bspline.points) {
+        for (let p2 of ps) {
+          if (p2.eid === p1.eid) {
+            p1.co.load(p2.co);
+            p1.rco.load(p2.rco);
+            p1.sco.load(p2.sco);
+          }
+        }
+      }
+
+      bspline.parent._fireEvent("transform", bspline);
+
+      bspline.recalc = RecalcFlags.ALL;
+      bspline.updateKnots();
+      bspline.update();
+      bspline.redraw();
+    }
+  }
+
+  undoPre(ctx) {
+    this._undo = this.storePoints(ctx);
+  }
+
+  undo(ctx) {
+    this.loadPoints(ctx, this._undo);
+  }
+
+  getCurve1d(ctx) {
+    let {dataPath} = this.getInputs();
+
+    let curve1d;
+    try {
+      curve1d = ctx.api.getValue(ctx, dataPath);
+    } catch (error) {
+      console.error(error.stack);
+      console.error(error.message);
+      console.error("Failed to lookup curve1d property at path ", dataPath);
+      return;
+    }
+
+    return curve1d;
+  }
+
+  finish(cancel = false) {
+    let ctx = this.modal_ctx;
+    this.modalEnd(cancel);
+
+    let curve1d = this.getCurve1d(ctx);
+    if (curve1d) {
+      curve1d.generators.active.fastmode = false;
+    }
+
+    if (cancel) {
+      this.undo(ctx);
+    }
+  }
+
+  on_pointerup(e) {
+    this.finish();
+  }
+
+  modalStart(ctx) {
+    super.modalStart(ctx);
+
+    let curve1d = this.getCurve1d(ctx);
+    if (!curve1d) {
+      console.log("Failed to get curve1d!");
+      return;
+    }
+
+    let bspline = curve1d.generators.active;
+    for (let p of bspline.points) {
+      p.startco.load(p.co);
+    }
+  }
+
+  on_pointermove(e) {
+    let mpos = new Vector2$a().loadXY(e.x, e.y);
+    if (this.first) {
+      this.start_mpos.load(mpos);
+      this.first = false;
+      return;
+    }
+
+    let curve1d = this.getCurve1d(this.modal_ctx);
+    if (curve1d) {
+      curve1d.generators.active.fastmode = true;
+    }
+
+    const {dpi} = this.getInputs();
+    let off = new Vector2$a(mpos).sub(this.start_mpos).mulScalar(dpi);
+    off[1] = -off[1];
+
+    this.inputs.off.setValue(off);
+
+    const bspline = curve1d.generators.active;
+    for (let p of bspline.points) {
+      p.co.load(p.startco);
+    }
+
+    this.exec(this.modal_ctx);
+  }
+
+  on_pointerdown(e) {
+    this.finish();
+  }
+
+  exec(ctx) {
+    let curve1d = this.getCurve1d(ctx);
+    if (!curve1d) {
+      return;
+    }
+
+    let bspline = curve1d.generators.active;
+    let {off} = this.getInputs();
+
+    const xRange = curve1d.xRange, yRange = curve1d.yRange;
+
+    for (let p of bspline.points) {
+      if (p.flag & CurveFlags.SELECT) {
+        p.co.add(off);
+        p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
+        p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
+      }
+    }
+
+    bspline.parent._fireEvent("transform", bspline);
+
+    bspline.recalc = RecalcFlags.ALL;
+    bspline.updateKnots();
+    bspline.update();
+    bspline.redraw();
+  }
+}
+
+ToolOp.register(BSplineTransformOp);
+
+class Curve1DPoint {
+  constructor(co) {
+    this.co = new Vector2$a(co);
     this.rco = new Vector2$a(co);
     this.sco = new Vector2$a(co);
 
@@ -14844,6 +17315,34 @@ class Curve1DPoint extends Vector2$a {
     Object.seal(this);
   }
 
+  get 0() {
+    throw new Error("Curve1DPoint get 0");
+  }
+  get 1() {
+    throw new Error("Curve1DPoint get 1");
+  }
+
+  /* Needed for file compatibility. */
+  set 0(v) {
+    this.co[0] = v;
+  }
+  set 1(v) {
+    this.co[1] = v;
+  }
+
+  load(b) {
+    this.eid = b.eid;
+    this.flag = b.flag;
+    this.tangent = b.tangent;
+
+    this.co.load(b.co);
+    this.rco.load(b.rco);
+    this.sco.load(b.sco);
+    this.startco.load(b.startco);
+
+    return this;
+  }
+
   set deg(v) {
     console.warn("old file data detected");
   }
@@ -14851,6 +17350,14 @@ class Curve1DPoint extends Vector2$a {
   static fromJSON(obj) {
     let ret = new Curve1DPoint(obj);
 
+    if ("0" in obj) {
+      ret.co[0] = obj[0];
+      ret.co[1] = obj[1];
+    } else {
+      ret.co.load(obj.co);
+    }
+
+    ret.startco.load(obj.startco);
     ret.eid = obj.eid;
     ret.flag = obj.flag;
     ret.tangent = obj.tangent;
@@ -14861,7 +17368,7 @@ class Curve1DPoint extends Vector2$a {
   }
 
   copy() {
-    let ret = new Curve1DPoint(this);
+    let ret = new Curve1DPoint(this.co);
 
     ret.tangent = this.tangent;
     ret.flag = this.flag;
@@ -14876,34 +17383,34 @@ class Curve1DPoint extends Vector2$a {
 
   toJSON() {
     return {
-      0: this[0],
-      1: this[1],
-
+      co     : this.co,
       eid    : this.eid,
       flag   : this.flag,
       tangent: this.tangent,
 
-      rco: this.rco
+      rco    : this.rco,
+      startco: this.startco,
     };
   }
 
   loadSTRUCT(reader) {
     reader(this);
 
-    this.sco.load(this);
-    this.rco.load(this);
+    this.sco.load(this.co);
+    this.rco.load(this.co);
 
     splineCache.update(this);
   }
 };
 Curve1DPoint.STRUCT = `
 Curve1DPoint {
-  0       : float;
-  1       : float;
+  co      : vec2;
+  rco     : vec2;
+  sco     : vec2;
+  startco : vec2;
   eid     : int;
   flag    : int;
   tangent : int;
-  rco     : vec2;
 }
 `;
 nstructjs.register(Curve1DPoint);
@@ -14981,9 +17488,13 @@ class BSplineCache {
 let splineCache = new BSplineCache();
 window._splineCache = splineCache;
 
+let _idgen$1 = 1;
+
 class BSplineCurve extends CurveTypeData {
   constructor() {
     super();
+
+    this._bid = _idgen$1++;
 
     this._degOffset = 0;
     this.cache_w = 0;
@@ -15039,10 +17550,11 @@ class BSplineCurve extends CurveTypeData {
 
     d.add(this.deg);
     d.add(this.interpolating);
+    d.add(this.points.length);
 
     for (let p of this.points) {
-      let x = ~~(p[0]*1024);
-      let y = ~~(p[1]*1024);
+      let x = ~~(p.co[0]*1024);
+      let y = ~~(p.co[1]*1024);
 
       d.add(x);
       d.add(y);
@@ -15090,9 +17602,7 @@ class BSplineCurve extends CurveTypeData {
       let p1 = this.points[i];
       let p2 = b.points[i];
 
-      let dist = p1.vectorDistance(p2);
-
-      if (p1.vectorDistance(p2) > 0.00001) {
+      if (p1.co.vectorDistance(p2.co) > 0.00001) {
         return false;
       }
 
@@ -15117,11 +17627,9 @@ class BSplineCurve extends CurveTypeData {
 
     p.eid = this.eidgen.next();
 
-    p[0] = x;
-    p[1] = y;
-
-    p.sco.load(p);
-    p.rco.load(p);
+    p.co.loadXY(x, y);
+    p.sco.load(p.co);
+    p.rco.load(p.co);
 
     this.points.push(p);
     if (!no_update) {
@@ -15140,12 +17648,12 @@ class BSplineCurve extends CurveTypeData {
   _sortPoints() {
     if (!this.interpolating) {
       for (let i = 0; i < this.points.length; i++) {
-        this.points[i].rco.load(this.points[i]);
+        this.points[i].rco.load(this.points[i].co);
       }
     }
 
     this.points.sort(function (a, b) {
-      return a[0] - b[0];
+      return a.co[0] - b.co[0];
     });
 
     return this;
@@ -15162,7 +17670,7 @@ class BSplineCurve extends CurveTypeData {
     if (points.length < 2) {
       return;
     }
-    let a = points[0][0], b = points[points.length - 1][0];
+    let a = points[0].co[0], b = points[points.length - 1].co[0];
 
     let degExtra = this.deg;
     this._degOffset = -this.deg;
@@ -15181,13 +17689,13 @@ class BSplineCurve extends CurveTypeData {
 
     if (!this.interpolating) {
       for (let i = 0; i < this._ps.length; i++) {
-        this._ps[i].rco.load(this._ps[i]);
+        this._ps[i].rco.load(this._ps[i].co);
       }
     }
 
     for (let i = 0; i < points.length; i++) {
       let p = points[i];
-      let x = p[0], y = p[1];//this.evaluate(x);
+      let x = p.co[0], y = p.co[1];//this.evaluate(x);
 
       p.sco[0] = x;
       p.sco[1] = y;
@@ -15278,6 +17786,7 @@ class BSplineCurve extends CurveTypeData {
     this.recalc = 1;
     this.updateKnots();
     this.update();
+    this.redraw();
 
     return this;
   }
@@ -15334,7 +17843,7 @@ class BSplineCurve extends CurveTypeData {
     //this.recalc |= RecalcFlags.FULL_BASIS;
 
     for (let p of this._ps) {
-      p.rco.load(p);
+      p.rco.load(p.co);
     }
 
     let points = this.points.concat(this.points);
@@ -15343,8 +17852,8 @@ class BSplineCurve extends CurveTypeData {
     this._evaluate2(0.5);
 
     let error1 = (p) => {
-      //return p.vectorDistance(this._evaluate2(p[0]));
-      return this._evaluate(p[0]) - p[1];
+      //return p.vectorDistance(this._evaluate2(p.co[0]));
+      return this._evaluate(p.co[0]) - p.co[1];
     };
 
     let error = (p) => {
@@ -15532,7 +18041,6 @@ class BSplineCurve extends CurveTypeData {
         let div = ((ki - knn)*(kn - knn1));
 
         if (div === 0.0) {
-          //debugger;
           return 0.0;
         }
 
@@ -15580,6 +18088,10 @@ class BSplineCurve extends CurveTypeData {
   }
 
   evaluate(t) {
+    if (this.points.length === 0) {
+      return 0.0;
+    }
+
     let a = this.points[0].rco, b = this.points[this.points.length - 1].rco;
 
     if (t < a[0]) return a[1];
@@ -15785,6 +18297,10 @@ class BSplineCurve extends CurveTypeData {
     this.updateKnots();
     this.update();
     this.redraw();
+
+    if (this.parent) {
+      this.parent._fireEvent("update", this.parent);
+    }
   }
 
   on_touchmove(e) {
@@ -15803,17 +18319,44 @@ class BSplineCurve extends CurveTypeData {
     this.on_touchend(e);
   }
 
-  makeGUI(container, canvas, drawTransform) {
+  deletePoint() {
+    for (let i = 0; i < this.points.length; i++) {
+      let p = this.points[i];
+
+      if (p.flag & CurveFlags.SELECT) {
+        this.points.remove(p);
+        i--;
+      }
+    }
+
+    this.updateKnots();
+    this.update();
+    this.regen_basis();
+    this.recalc = RecalcFlags.ALL;
+    this.redraw();
+  }
+
+  makeGUI(container, canvas, drawTransform, datapath, onSourceUpdate) {
+    console.warn(this._bid, "makeGUI", this.uidata, this.uidata ? this.uidata.start_mpos : undefined);
+
+    let start_mpos;
+    if (this.uidata) {
+      start_mpos = this.uidata.start_mpos;
+    }
+
     this.uidata = {
-      start_mpos : new Vector2$a(),
+      start_mpos : new Vector2$a(start_mpos),
       transpoints: [],
 
       dom         : container,
       canvas      : canvas,
       g           : canvas.g,
       transforming: false,
-      draw_trans  : drawTransform
+      draw_trans  : drawTransform,
+      datapath
     };
+
+    console.warn("Building gui");
 
     canvas.addEventListener("touchstart", this.on_touchstart);
     canvas.addEventListener("touchmove", this.on_touchmove);
@@ -15832,7 +18375,15 @@ class BSplineCurve extends CurveTypeData {
       uiname = uiname.replace(/_/g, " ");
 
       let icon = strip.iconbutton(-1, uiname, () => {
-        this.loadTemplate(SplineTemplates[k]);
+        if (datapath) {
+          row.ctx.api.execTool(row.ctx, "curve1d.bspline_load_template", {
+            dataPath: datapath,
+            template: SplineTemplates[k]
+          });
+          onSourceUpdate();
+        } else {
+          this.loadTemplate(SplineTemplates[k]);
+        }
       });
 
       icon.iconsheet = 0;
@@ -15862,20 +18413,27 @@ class BSplineCurve extends CurveTypeData {
     }
 
     row.iconbutton(icon, "Delete Point", () => {
-      for (let i = 0; i < this.points.length; i++) {
-        let p = this.points[i];
-
-        if (p.flag & CurveFlags.SELECT) {
-          this.points.remove(p);
-          i--;
-        }
+      if (datapath) {
+        row.ctx.api.execTool(row.ctx, "curve1d.bspline_delete_point", {
+          dataPath: datapath
+        });
+      } else {
+        this.deletePoint();
       }
 
+      onSourceUpdate();
       fullUpdate();
     });
 
     row.button("Reset", () => {
-      this.reset();
+      if (datapath) {
+        row.ctx.api.execTool(row.ctx, "curve1d.reset_bspline", {
+          dataPath: datapath
+        });
+        onSourceUpdate();
+      } else {
+        this.reset();
+      }
     });
 
     let slider = row.simpleslider(undefined, {
@@ -15940,15 +18498,21 @@ class BSplineCurve extends CurveTypeData {
     return this;
   }
 
-  start_transform() {
-    this.uidata.transpoints = [];
+  start_transform(useSelected = true) {
+    let dpi = 1.0/this.uidata.draw_trans[0];
 
+    /* Manually set p.startco to avoid trashing it
+     * if we're proxying another Curve1D.*/
     for (let p of this.points) {
-      if (p.flag & CurveFlags.SELECT) {
-        this.uidata.transpoints.push(p);
-        p.startco.load(p);
-      }
+      p.startco.load(p.co);
     }
+
+    let transform_op = new BSplineTransformOp();
+    transform_op.inputs.dataPath.setValue(this.uidata.datapath);
+    transform_op.inputs.dpi.setValue(dpi);
+
+    this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, transform_op);
+
   }
 
   on_mousedown(e) {
@@ -15970,29 +18534,101 @@ class BSplineCurve extends CurveTypeData {
         this.points.highlight.flag ^= CurveFlags.SELECT;
       }
 
+      if (this.uidata.datapath) {
+        let state = e.shiftKey ? !(this.points.highlight.flag & CurveFlags.SELECT) : true;
 
-      this.uidata.transforming = true;
-
+        this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_select_point", {
+          dataPath: this.uidata.datapath,
+          state,
+          unique  : !e.shiftKey,
+          point   : this.points.highlight.eid,
+        });
+      }
       this.start_transform();
 
       this.updateKnots();
       this.update();
       this.redraw();
-      return;
-    } else { //if (!e.isTouch) {
-      let p = this.add(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
-      this.points.highlight = p;
+    } else {
+      let uidata = this.uidata;
+
+      if (this.uidata.datapath) {
+        /*
+         * Note: this may not update this particular curve instance,
+         * that instance however should update this one via the "update"
+         * event.
+         **/
+        let start_mpos = this.uidata.start_mpos;
+        this.uidata.dom.ctx.api.execTool(this.uidata.dom.ctx, "curve1d.bspline_add_point", {
+          dataPath: this.uidata.datapath,
+          x       : start_mpos[0],
+          y       : start_mpos[1],
+        });
+      } else {
+        this.addFromMouse(this.uidata.start_mpos[0], this.uidata.start_mpos[1]);
+        this.parent._fire("update", this.parent);
+      }
 
       this.updateKnots();
       this.update();
       this.redraw();
 
-      this.points.highlight.flag |= CurveFlags.SELECT;
+      /* Event system may have regenerated this.uidata (from killGUI,
+       * called from the update event handler),
+       * restore the one we started with.
+       */
 
-      this.uidata.transforming = true;
-      this.uidata.transpoints = [this.points.highlight];
-      this.uidata.transpoints[0].startco.load(this.uidata.transpoints[0]);
+      this.uidata = uidata;
+      this.start_transform();
     }
+  }
+
+  load(b) {
+    if (this === b) {
+      return;
+    }
+
+    this.recalc = RecalcFlags.ALL;
+
+    this.length = b.points.length;
+    this.points.length = 0;
+    this.eidgen = b.eidgen.copy();
+    this.deg = b.deg;
+    this.interpolating = b.interpolating;
+
+    for (let p of b.points) {
+      let p2 = new Curve1DPoint();
+      p2.load(p);
+
+      if (p === b.points.highlight) {
+        this.points.highlight = p2;
+      }
+
+      this.points.push(p2);
+    }
+
+    this.updateKnots();
+    this.update();
+    this.redraw();
+
+    return this;
+  }
+
+  addFromMouse(x, y) {
+    let p = this.add(x, y);
+    p.startco.load(p.co);
+    this.points.highlight = p;
+
+    for (let p2 of this.points) {
+      p2.flag &= ~CurveFlags.SELECT;
+    }
+    p.flag |= CurveFlags.SELECT;
+
+    this.updateKnots();
+    this.update();
+    this.redraw();
+
+    this.points.highlight.flag |= CurveFlags.SELECT;
   }
 
   do_highlight(x, y) {
@@ -16024,10 +18660,10 @@ class BSplineCurve extends CurveTypeData {
 
     for (let i = 0; i < this.uidata.transpoints.length; i++) {
       let p = this.uidata.transpoints[i];
-      p.load(p.startco).add(off);
+      p.co.load(p.startco).add(off);
 
-      p[0] = Math.min(Math.max(p[0], xRange[0]), xRange[1]);
-      p[1] = Math.min(Math.max(p[1], yRange[0]), yRange[1]);
+      p.co[0] = Math.min(Math.max(p.co[0], xRange[0]), xRange[1]);
+      p.co[1] = Math.min(Math.max(p.co[1], yRange[0]), yRange[1]);
     }
 
     this.updateKnots();
@@ -16183,16 +18819,27 @@ class BSplineCurve extends CurveTypeData {
     reader(this);
     super.loadSTRUCT(reader);
 
+    if (this.highlightPoint >= 0) {
+      for (let p of this.points) {
+        if (p.eid === this.highlightPoint) {
+          this.points.highlight = p;
+        }
+      }
+
+      delete this.highlightPoint;
+    }
+
     this.updateKnots();
     this.recalc = RecalcFlags.ALL;
   }
 }
 
 BSplineCurve.STRUCT = nstructjs.inherit(BSplineCurve, CurveTypeData) + `
-  points        : array(Curve1DPoint);
-  deg           : int;
-  eidgen        : IDGen;
-  interpolating : bool;
+  points         : array(Curve1DPoint);
+  highlightPoint : int | this.points.highlight ? this.points.highlight.eid : -1;
+  deg            : int;
+  eidgen         : IDGen;
+  interpolating  : bool;
 }
 `;
 nstructjs.register(BSplineCurve);
@@ -17623,9 +20270,9 @@ window.mySafeJSONStringify = mySafeJSONStringify;
 
 let _udigest = new HashDigest();
 
-class Curve1D extends EventDispatcher {
+class Curve1D {
   constructor() {
-    super();
+    this._eventCBs = [];
 
     this.uiZoom = 1.0;
     this.xRange = new Vector2$b().loadXY(0.0, 1.0);
@@ -17662,6 +20309,63 @@ class Curve1D extends EventDispatcher {
     }
   }
 
+  /** cb_is_dead is a callback that returns true if it
+   *  should be removed from the callback list. */
+  on(type, cb, owner, cb_is_dead) {
+    if (cb_is_dead === undefined) {
+      cb_is_dead = () => false;
+    }
+
+    this._eventCBs.push({type, cb, owner, dead: cb_is_dead, once: false});
+  }
+
+  off(type, cb) {
+    this._eventCBs = this._eventCBs.filter(cb => cb.cb !== cb);
+  }
+
+  once(type, cb, owner, cb_is_dead) {
+    this.on(type, cb, owner, cb_is_dead);
+    this._eventCBs[this._eventCBs.length - 1].once = true;
+  }
+
+  subscribed(type, owner) {
+    for (let cb of this._eventCBs) {
+      if ((!type || cb.type === type) && cb.owner === owner) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _pruneEventCallbacks() {
+    this._eventCBs = this._eventCBs.filter(cb => !cb.dead());
+  }
+
+  _fireEvent(evt, data) {
+    this._pruneEventCallbacks();
+
+    for (let i = 0; i < this._eventCBs.length; i++) {
+      let cb = this._eventCBs[i];
+
+      if (cb.type !== evt) {
+        continue;
+      }
+
+      try {
+        cb.cb(data);
+      } catch (error) {
+        console.error(error.stack);
+        console.error(error.message);
+      }
+
+      if (cb.once) {
+        this._eventCBs.remove(cb);
+        i--;
+      }
+    }
+  }
+
   calcHashKey(digest = _udigest.reset()) {
     let d = digest;
 
@@ -17684,7 +20388,7 @@ class Curve1D extends EventDispatcher {
   }
 
   load(b) {
-    if (b === undefined) {
+    if (b === undefined || b === this) {
       return;
     }
     /*
@@ -17708,12 +20412,39 @@ class Curve1D extends EventDispatcher {
     let json = nstructjs.writeJSON(b, Curve1D);
     let cpy = nstructjs.readJSON(json, Curve1D);
 
+    let activeCls = this.generators.active.constructor;
+    let oldGens = this.generators;
+
     this.generators = cpy.generators;
+    this.generators.active = undefined;
+
     for (let gen of cpy.generators) {
+      /* See if generator provides a .load() method. */
+      for (let gen2 of oldGens) {
+        if (gen2.constructor === gen.constructor && gen2.load !== undefined) {
+          cpy.generators[cpy.generators.indexOf(gen)] = gen2;
+
+          if (gen2.constructor === activeCls) {
+            this.generators.active = gen2;
+          }
+
+          gen2.parent = this;
+          gen2.load(gen);
+          gen = gen2;
+          break;
+        }
+      }
+
+      if (gen.constructor === activeCls) {
+        this.generators.active = gen;
+      }
       gen.parent = this;
     }
 
     for (let k in json) {
+      if (k === "generators") {
+        continue;
+      }
       if (k.startsWith("_")) {
         continue;
       }
@@ -17733,9 +20464,8 @@ class Curve1D extends EventDispatcher {
   }
 
   copy() {
-    let ret = new Curve1D();
-    ret.loadJSON(JSON.parse(mySafeJSONStringify(this)));
-    return ret;
+    let json = nstructjs.writeJSON(this, Curve1D);
+    return nstructjs.readJSON(json, Curve1D);
   }
 
   _on_change() {
@@ -25357,2117 +28087,6 @@ var parseutil = /*#__PURE__*/Object.freeze({
   getTraceBack: getTraceBack,
   parser: parser
 });
-
-const DataFlags = {
-  READ_ONLY             : 1,
-  USE_CUSTOM_GETSET     : 2,
-  USE_FULL_UNDO         : 4, //DataPathSetOp in controller_ops.js saves/loads entire file for undo/redo
-  USE_CUSTOM_PROP_GETTER: 8,
-};
-
-
-const DataTypes = {
-  STRUCT        : 0,
-  DYNAMIC_STRUCT: 1,
-  PROP          : 2,
-  ARRAY         : 3
-};
-
-let propCacheRings = {};
-
-function getTempProp(type) {
-  if (!(type in propCacheRings)) {
-    propCacheRings[type] = cachering.fromConstructor(ToolProperty.getClass(type), 32);
-  }
-
-  return propCacheRings[type].next();
-}
-
-class DataPathError extends Error {
-};
-
-
-function getVecClass(proptype) {
-  switch (proptype) {
-    case PropTypes$8.VEC2:
-      return Vector2$b;
-    case PropTypes$8.VEC3:
-      return Vector3$2;
-    case PropTypes$8.VEC4:
-      return Vector4$2;
-    case PropTypes$8.QUAT:
-      return Quat;
-    default:
-      throw new Error("bad prop type " + proptype);
-  }
-}
-
-function isVecProperty(prop) {
-  if (!prop || typeof prop !== "object" || prop === null)
-    return false;
-
-  let ok = false;
-
-  ok = ok || prop instanceof Vec2PropertyIF;
-  ok = ok || prop instanceof Vec3PropertyIF;
-  ok = ok || prop instanceof Vec4PropertyIF;
-  ok = ok || prop instanceof Vec2Property;
-  ok = ok || prop instanceof Vec3Property;
-  ok = ok || prop instanceof Vec4Property;
-
-  ok = ok || prop.type === PropTypes$8.VEC2;
-  ok = ok || prop.type === PropTypes$8.VEC3;
-  ok = ok || prop.type === PropTypes$8.VEC4;
-  ok = ok || prop.type === PropTypes$8.QUAT;
-
-  return ok;
-}
-
-class DataPath {
-  constructor(path, apiname, prop, type = DataTypes.PROP) {
-    this.type = type;
-    this.data = prop;
-    this.apiname = apiname;
-    this.path = path;
-    this.flag = 0;
-    this.struct = undefined;
-  }
-
-  copy() {
-    let ret = new DataPath();
-
-    ret.flag = this.flag;
-    ret.type = this.type;
-    ret.data = this.data;
-    ret.apiname = this.apiname;
-    ret.path = this.path;
-    ret.struct = this.struct;
-
-    return ret;
-  }
-
-  /** this property should not be treated as something
-   *  that should be kept track off in the undo stack*/
-  noUndo() {
-    this.data.flag |= PropFlags$3.NO_UNDO;
-    return this;
-  }
-
-  setProp(prop) {
-    this.data = prop;
-  }
-
-  readOnly() {
-    this.flag |= DataFlags.READ_ONLY;
-
-    if (this.type === DataTypes.PROP) {
-      this.data.flag |= PropFlags$3.READ_ONLY;
-    }
-
-    return this;
-  }
-
-  read_only() {
-    console.warn("DataPath.read_only is deprecated; use readOnly");
-    return this.readOnly();
-  }
-
-  /** used to override tool property settings,
-   *  e.g. ranges, units, etc; returns a
-   *  base class instance of ToolProperty.
-   *
-   *  The this context points to the original ToolProperty and contains
-   *  a few useful references:
-   *
-   *  this.dataref - an object instance of this struct type
-   *  this.ctx - a context
-   *
-   *  callback takes one argument, a new (freshly copied of original)
-   *  tool property to modify
-   *
-   * */
-  customPropCallback(callback) {
-    this.flag |= DataFlags.USE_CUSTOM_PROP_GETTER;
-    this.data.flag |= PropFlags$3.USE_CUSTOM_PROP_GETTER;
-    this.propGetter = callback;
-
-    return this;
-  }
-
-  /**
-   *
-   * For the callbacks 'this' points to an internal ToolProperty;
-   * Referencing object lives in 'this.dataref'; calling context in 'this.ctx';
-   * and the datapath is 'this.datapath'
-   **/
-  customGetSet(get, set) {
-    this.flag |= DataFlags.USE_CUSTOM_GETSET;
-
-    if (this.type !== DataTypes.DYNAMIC_STRUCT && this.type !== DataTypes.STRUCT) {
-      this.data.flag |= PropFlags$3.USE_CUSTOM_GETSET;
-      this.data._getValue = this.data.getValue;
-      this.data._setValue = this.data.setValue;
-
-      if (get)
-        this.data.getValue = get;
-
-      if (set)
-        this.data.setValue = set;
-    } else {
-      this.getSet = {
-        get, set
-      };
-
-      this.getSet.dataref = undefined;
-      this.getSet.datapath = undefined;
-      this.getSet.ctx = undefined;
-    }
-
-    return this;
-  }
-
-  customSet(set) {
-    this.customGetSet(undefined, set);
-    return this;
-  }
-
-  customGet(get) {
-    this.customGetSet(get, undefined);
-    return this;
-  }
-
-  /**db will be executed with underlying data object
-   that contains this path in 'this.dataref'
-
-   main event is 'change'
-   */
-  on(type, cb) {
-    if (this.type == DataTypes.PROP) {
-      this.data.on(type, cb);
-    } else {
-      throw new Error("invalid call to DataPath.on");
-    }
-
-    return this;
-  }
-
-  off(type, cb) {
-    if (this.type === DataTypes.PROP) {
-      this.data.off(type, cb);
-    }
-  }
-
-  simpleSlider() {
-    this.data.flag |= PropFlags$3.SIMPLE_SLIDER;
-    this.data.flag &= ~PropFlags$3.FORCE_ROLLER_SLIDER;
-    return this;
-  }
-
-  rollerSlider() {
-    this.data.flag &= ~PropFlags$3.SIMPLE_SLIDER;
-    this.data.flag |= PropFlags$3.FORCE_ROLLER_SLIDER;
-
-    return this;
-  }
-
-  checkStrip(state = true) {
-    if (state) {
-      this.data.flag |= PropFlags$3.FORCE_ENUM_CHECKBOXES;
-    } else {
-      this.data.flag &= ~PropFlags$3.FORCE_ENUM_CHECKBOXES;
-    }
-
-    return this;
-  }
-
-  noUnits() {
-    this.baseUnit("none");
-    this.displayUnit("none");
-    return this;
-  }
-
-  baseUnit(unit) {
-    this.data.setBaseUnit(unit);
-    return this;
-  }
-
-  displayUnit(unit) {
-    this.data.setDisplayUnit(unit);
-    return this;
-  }
-
-  unit(unit) {
-    return this.baseUnit(unit).displayUnit(unit);
-  }
-
-  editAsBaseUnit() {
-    this.data.flag |= PropFlags$3.EDIT_AS_BASE_UNIT;
-    return this;
-  }
-
-  range(min, max) {
-    this.data.setRange(min, max);
-    return this;
-  }
-
-  uiRange(min, max) {
-    this.data.setUIRange(min, max);
-    return this;
-  }
-
-  decimalPlaces(n) {
-    this.data.setDecimalPlaces(n);
-    return this;
-  }
-
-  /**
-   * like other callbacks (until I refactor it),
-   * func will be called with a mysterious object that stores
-   * the following properties:
-   *
-   * this.dataref  : owning object reference
-   * this.datactx  : ctx
-   * this.datapath : datapath
-   * */
-  uiNameGetter(func) {
-    this.ui_name_get = func;
-    return this;
-  }
-
-  expRate(exp) {
-    this.data.setExpRate(exp);
-    return this;
-  }
-
-  slideSpeed(speed) {
-    this.data.setSlideSpeed(speed);
-    return this;
-  }
-
-  /**adds a slider for moving vector component sliders simultaneously*/
-  uniformSlider(state = true) {
-    this.data.uniformSlider(state);
-
-    return this;
-  }
-
-  radix(r) {
-    this.data.setRadix(r);
-    return this;
-  }
-
-  relativeStep(s) {
-    this.data.setRelativeStep(s);
-    return this;
-  }
-
-  step(s) {
-    this.data.setStep(s);
-    return this;
-  }
-
-  /**
-   *
-   * Tell DataPathSetOp to save/load entire app state for undo/redo
-   *
-   * */
-  fullSaveUndo() {
-    this.flag |= DataFlags.USE_FULL_UNDO;
-    this.data.flag |= PropFlags$3.USE_BASE_UNDO;
-
-    return this;
-  }
-
-  icon(i) {
-    this.data.setIcon(i);
-    return this;
-  }
-
-  icon2(i) {
-    this.data.setIcon2(i);
-    return this;
-  }
-
-  icons(icons) { //for enum/flag properties
-    this.data.addIcons(icons);
-    return this;
-  }
-
-  /** secondary icons (e.g. disabled states) */
-  icons2(icons) {
-    this.data.addIcons2(icons);
-    return this;
-  }
-
-  descriptions(description_map) { //for enum/flag properties
-    this.data.addDescriptions(description_map);
-    return this;
-  }
-
-  uiNames(uinames) {
-    this.data.addUINames(uinames);
-    return this;
-  }
-
-  description(d) {
-    this.data.description = d;
-    return this;
-  }
-}
-
-const StructFlags = {
-  NO_UNDO: 1 //struct and its child structs can't participate in undo
-             //via the DataPathToolOp
-};
-
-class ListIface {
-  getStruct(api, list, key) {
-
-  }
-
-  get(api, list, key) {
-
-  }
-
-  getKey(api, list, obj) {
-
-  }
-
-  getActive(api, list) {
-
-  }
-
-  setActive(api, list, val) {
-
-  }
-
-  set(api, list, key, val) {
-    list[key] = val;
-  }
-
-  getIter() {
-
-  }
-
-  filter(api, list, filter) {
-
-  }
-}
-
-class ToolOpIface {
-  constructor() {
-  }
-
-  static tooldef() {
-    return {
-      uiname     : "!untitled tool",
-      icon       : -1,
-      toolpath   : "logical_module.tool", //logical_module need not match up to real module name
-      description: undefined,
-      is_modal   : false,
-      inputs     : {}, //tool properties
-      outputs    : {}  //tool properties
-    }
-  }
-};
-
-
-let DataAPIClass = undefined;
-
-function setImplementationClass(cls) {
-  DataAPIClass = cls;
-}
-
-function registerTool(cls) {
-  if (DataAPIClass === undefined) {
-    throw new Error("data api not initialized properly; call setImplementationClass");
-  }
-
-  return DataAPIClass.registerTool(cls);
-}
-
-"use strict";
-
-let ToolClasses = [];
-window._ToolClasses = ToolClasses;
-
-function setContextClass(cls) {
-  console.warn("setContextClass is deprecated");
-}
-
-const ToolFlags$1 = {
-  PRIVATE: 1
-
-};
-
-
-const UndoFlags$1 = {
-  NO_UNDO      : 2,
-  IS_UNDO_ROOT : 4,
-  UNDO_BARRIER : 8,
-  HAS_UNDO_DATA: 16
-};
-
-class InheritFlag$1 {
-  constructor(slots = {}) {
-    this.slots = slots;
-  }
-}
-
-let modalstack = [];
-
-let defaultUndoHandlers = {
-  undoPre(ctx) {
-    throw new Error("implement me");
-  },
-  undo(ctx) {
-    throw new Error("implement me");
-  }
-};
-
-function setDefaultUndoHandlers(undoPre, undo) {
-  if (!undoPre || !undo) {
-    throw new Error("invalid parameters to setDefaultUndoHandlers");
-  }
-
-  defaultUndoHandlers.undoPre = undoPre;
-  defaultUndoHandlers.undo = undo;
-}
-
-class ToolPropertyCache {
-  constructor() {
-    this.map = new Map();
-    this.pathmap = new Map();
-    this.accessors = {};
-
-    this.userSetMap = new Set();
-
-    this.api = undefined;
-    this.dstruct = undefined;
-  }
-
-  static getPropKey(cls, key, prop) {
-    return prop.apiname && prop.apiname.length > 0 ? prop.apiname : key;
-  }
-
-  _buildAccessors(cls, key, prop, dstruct, api) {
-    let tdef = cls._getFinalToolDef();
-
-    this.api = api;
-    this.dstruct = dstruct;
-
-    if (!tdef.toolpath) {
-      console.warn("Bad tool property", cls, "it's tooldef was missing a toolpath field");
-      return;
-    }
-
-    let path = tdef.toolpath.trim().split(".").filter(f => f.trim().length > 0);
-    let obj = this.accessors;
-
-    let st = dstruct;
-    let partial = "";
-
-    for (let i = 0; i < path.length; i++) {
-      let k = path[i];
-      let pathk = k;
-
-      if (i === 0) {
-        pathk = "accessors." + k;
-      }
-
-      if (i > 0) {
-        partial += ".";
-      }
-      partial += k;
-
-      if (!(k in obj)) {
-        obj[k] = {};
-      }
-
-      let st2 = api.mapStruct(obj[k], true, k);
-      if (!(k in st.pathmap)) {
-        st.struct(pathk, k, k, st2);
-      }
-      st = st2;
-
-      this.pathmap.set(partial, obj[k]);
-
-      obj = obj[k];
-    }
-
-    let name = prop.apiname !== undefined && prop.apiname.length > 0 ? prop.apiname : key;
-    let prop2 = prop.copy();
-
-    let dpath = new DataPath(name, name, prop2);
-    let uiname = prop.uiname;
-
-    if (!uiname || uiname.trim().length === 0) {
-      uiname = prop.apiname;
-    }
-    if (!uiname || uiname.trim().length === 0) {
-      uiname = key;
-    }
-
-    uiname = ToolProperty.makeUIName(uiname);
-
-    prop2.uiname = uiname;
-    prop2.description = prop2.description || prop2.uiname;
-
-    st.add(dpath);
-
-    obj[name] = prop2.getValue();
-  }
-
-  _getAccessor(cls) {
-    let toolpath = cls.tooldef().toolpath.trim();
-    return this.pathmap.get(toolpath);
-  }
-
-  useDefault(cls, key, prop) {
-    key = this.userSetMap.has(cls.tooldef().trim() + "." + this.constructor.getPropKey(key));
-    key = key.trim();
-
-    return key;
-  }
-
-  has(cls, key, prop) {
-    if (prop.flag & PropFlags$3.NO_DEFAULT) {
-      return false;
-    }
-
-    let obj = this._getAccessor(cls);
-
-    key = this.constructor.getPropKey(cls, key, prop);
-    return obj && key in obj;
-  }
-
-  get(cls, key, prop) {
-    if (cls === ToolMacro) {
-      return;
-    }
-
-    let obj = this._getAccessor(cls);
-    key = this.constructor.getPropKey(cls, key, prop);
-
-    if (obj) {
-      return obj[key];
-    }
-
-    return undefined;
-  }
-
-  set(cls, key, prop) {
-    if (cls === ToolMacro) {
-      return;
-    }
-
-    let toolpath = cls.tooldef().toolpath.trim();
-    let obj = this._getAccessor(cls);
-
-    if (!obj) {
-      console.warn("Warning, toolop " + cls.name + " was not in the default map; unregistered?");
-      this._buildAccessors(cls, key, prop, this.dstruct, this.api);
-
-      obj = this.pathmap.get(toolpath);
-    }
-
-    if (!obj) {
-      console.error("Malformed toolpath in toolop definition: " + toolpath);
-      return;
-    }
-
-    key = this.constructor.getPropKey(cls, key, prop);
-
-    //copy prop first in case we're a non-primitive-value type, e.g. vector properties
-    obj[key] = prop.copy().getValue();
-
-    let path = toolpath + "." + key;
-    this.userSetMap.add(path);
-
-    return this;
-  }
-}
-
-const SavedToolDefaults = new ToolPropertyCache();
-
-class ToolOp extends EventHandler {
-  /**
-   Main ToolOp constructor.  It reads the inputs/outputs properteis from
-   this.constructor.tooldef() and copies them to build this.inputs and this.outputs.
-   If inputs or outputs are wrapped in ToolOp.inherit(), it will walk up the class
-   chain to fetch parent class properties.
-
-
-   Default input values are loaded from SavedToolDefaults.  If initialized (buildToolSysAPI
-   has been called) SavedToolDefaults will have a copy of all the default
-   property values of all registered ToolOps.
-   **/
-
-  constructor() {
-    super();
-
-    this._pointerId = undefined;
-    this._overdraw = undefined;
-    this.__memsize = undefined;
-
-    var def = this.constructor.tooldef();
-
-    if (def.undoflag !== undefined) {
-      this.undoflag = def.undoflag;
-    }
-
-    if (def.flag !== undefined) {
-      this.flag = def.flag;
-    }
-
-    this._accept = this._reject = undefined;
-    this._promise = undefined;
-
-    for (var k in def) {
-      this[k] = def[k];
-    }
-
-    let getSlots = (slots, key) => {
-      if (slots === undefined)
-        return {};
-
-      if (!(slots instanceof InheritFlag$1)) {
-        return slots;
-      }
-
-      slots = {};
-      let p = this.constructor;
-      let lastp = undefined;
-
-      while (p !== undefined && p !== Object && p !== ToolOp && p !== lastp) {
-        if (p.tooldef) {
-          let def = p.tooldef();
-
-          if (def[key] !== undefined) {
-            let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag$1);
-
-            if (slots2 instanceof InheritFlag$1) {
-              slots2 = slots2.slots;
-            }
-
-            for (let k in slots2) {
-              if (!(k in slots)) {
-                slots[k] = slots2[k];
-              }
-            }
-
-            if (stop) {
-              break;
-            }
-          }
-        }
-
-        lastp = p;
-        p = p.prototype.__proto__.constructor;
-      }
-
-      return slots;
-    };
-
-    let dinputs = getSlots(def.inputs, "inputs");
-    let doutputs = getSlots(def.outputs, "outputs");
-
-    this.inputs = {};
-    this.outputs = {};
-
-    if (dinputs) {
-      for (let k in dinputs) {
-        let prop = dinputs[k].copy();
-        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
-
-        if (!this.hasDefault(prop, k)) {
-          this.inputs[k] = prop;
-          continue;
-        }
-
-        try {
-          prop.setValue(this.getDefault(prop, k));
-        } catch (error) {
-          console.log(error.stack);
-          console.log(error.message);
-        }
-
-        prop.wasSet = false;
-        this.inputs[k] = prop;
-      }
-    }
-
-    if (doutputs) {
-      for (let k in doutputs) {
-        let prop = doutputs[k].copy();
-        prop.apiname = prop.apiname && prop.apiname.length > 0 ? prop.apiname : k;
-
-        this.outputs[k] = prop;
-      }
-    }
-
-    this.drawlines = [];
-  }
-
-  /**
-   ToolOp definition.
-
-   An example:
-   <pre>
-   static tooldef() {
-    return {
-      uiname   : "Tool Name",
-      toolpath : "logical_module.tool", //logical_module need not match up to a real module
-      icon     : -1, //tool's icon, or -1 if there is none
-      description : "tooltip",
-      is_modal : false, //tool is interactive and takes control of events
-      hotkey   : undefined,
-      undoflag : 0, //see UndoFlags
-      flag     : 0,
-      inputs   : ToolOp.inherit({
-        f32val : new Float32Property(1.0),
-        path   : new StringProperty("./path");
-      }),
-      outputs  : {}
-      }
-    }
-   </pre>
-   */
-  static tooldef() {
-    if (this === ToolOp) {
-      throw new Error("Tools must implemented static tooldef() methods!");
-    }
-
-    return {};
-  }
-
-  /** Returns a map of input property values,
-   *  e.g. `let {prop1, prop2} = this.getValues()` */
-  getInputs() {
-    let ret = {};
-
-    for (let k in this.inputs) {
-      ret[k] = this.inputs[k].getValue();
-    }
-
-    return ret;
-  }
-
-  static Equals(a, b) {
-    if (!a || !b) return false;
-    if (a.constructor !== b.constructor) return false;
-
-    let bad = false;
-
-    for (let k in a.inputs) {
-      bad = bad || !(k in b.inputs);
-      bad = bad || a.inputs[k].constructor !== b.inputs[k];
-      bad = bad || !a.inputs[k].equals(b.inputs[k]);
-
-      if (bad) {
-        break;
-      }
-    }
-
-    return !bad;
-  }
-
-  static inherit(slots = {}) {
-    return new InheritFlag$1(slots);
-  }
-
-  /**
-
-   Creates a new instance of this toolop from args and a context.
-   This is often use to fill properties with default arguments
-   stored somewhere in the context.
-
-   */
-  static invoke(ctx, args) {
-    let tool = new this();
-
-    for (let k in args) {
-      if (!(k in tool.inputs)) {
-        console.warn("Unknown tool argument " + k);
-        continue;
-      }
-
-      let prop = tool.inputs[k];
-      let val = args[k];
-
-      if ((typeof val === "string") && prop.type & (PropTypes$8.ENUM | PropTypes$8.FLAG)) {
-        if (val in prop.values) {
-          val = prop.values[val];
-        } else {
-          console.warn("Possible invalid enum/flag:", val);
-          continue;
-        }
-      }
-
-      tool.inputs[k].setValue(val);
-    }
-
-    return tool;
-  }
-
-  static register(cls) {
-    if (ToolClasses.indexOf(cls) >= 0) {
-      console.warn("Tried to register same ToolOp class twice:", cls.name, cls);
-      return;
-    }
-
-    ToolClasses.push(cls);
-  }
-
-  static _regWithNstructjs(cls, structName = cls.name) {
-    if (nstructjs.isRegistered(cls)) {
-      return;
-    }
-
-    let parent = cls.prototype.__proto__.constructor;
-
-    if (!cls.hasOwnProperty("STRUCT")) {
-      if (parent !== ToolOp && parent !== ToolMacro && parent !== Object) {
-        this._regWithNstructjs(parent);
-      }
-
-      cls.STRUCT = nstructjs.inherit(cls, parent) + '}\n';
-    }
-
-    nstructjs.register(cls);
-  }
-
-  static isRegistered(cls) {
-    return ToolClasses.indexOf(cls) >= 0;
-  }
-
-  static unregister(cls) {
-    if (ToolClasses.indexOf(cls) >= 0) {
-      ToolClasses.remove(cls);
-    }
-  }
-
-  static _getFinalToolDef() {
-    let def = this.tooldef();
-
-    let getSlots = (slots, key) => {
-      if (slots === undefined)
-        return {};
-
-      if (!(slots instanceof InheritFlag$1)) {
-        return slots;
-      }
-
-      slots = {};
-      let p = this;
-
-      while (p !== undefined && p !== Object && p !== ToolOp) {
-        if (p.tooldef) {
-          let def = p.tooldef();
-
-          if (def[key] !== undefined) {
-            let slots2 = def[key];
-            let stop = !(slots2 instanceof InheritFlag$1);
-
-            if (slots2 instanceof InheritFlag$1) {
-              slots2 = slots2.slots;
-            }
-
-            for (let k in slots2) {
-              if (!(k in slots)) {
-                slots[k] = slots2[k];
-              }
-            }
-
-            if (stop) {
-              break;
-            }
-          }
-
-        }
-        p = p.prototype.__proto__.constructor;
-      }
-
-      return slots;
-    };
-
-    let dinputs = getSlots(def.inputs, "inputs");
-    let doutputs = getSlots(def.outputs, "outputs");
-
-    def.inputs = dinputs;
-    def.outputs = doutputs;
-
-    return def;
-  }
-
-  static onTick() {
-    for (let toolop of modalstack) {
-      toolop.on_tick();
-    }
-  }
-
-  static searchBoxOk(ctx) {
-    let flag = this.tooldef().flag;
-    let ret = !(flag && (flag & ToolFlags$1.PRIVATE));
-    ret = ret && this.canRun(ctx);
-
-    return ret;
-  }
-
-  //toolop is an optional instance of this class, may be undefined
-  static canRun(ctx, toolop = undefined) {
-    return true;
-  }
-
-  /** Called when the undo system needs to destroy
-   *  this toolop to save memory*/
-  onUndoDestroy() {
-
-  }
-
-  /** Used by undo system to limit memory */
-  calcMemSize(ctx) {
-    if (this.__memsize !== undefined) {
-      return this.__memsize;
-    }
-
-    let tot = 0;
-
-    for (let step = 0; step < 2; step++) {
-      let props = step ? this.outputs : this.inputs;
-
-      for (let k in props) {
-        let prop = props[k];
-
-        let size = prop.calcMemSize();
-
-        if (isNaN(size) || !isFinite(size)) {
-          console.warn("Got NaN when calculating mem size for property", prop);
-          continue;
-        }
-
-        tot += size;
-      }
-    }
-
-    let size = this.calcUndoMem(ctx);
-
-    if (isNaN(size) || !isFinite(size)) {
-      console.warn("Got NaN in calcMemSize", this);
-    } else {
-      tot += size;
-    }
-
-    this.__memsize = tot;
-
-    return tot;
-  }
-
-  loadDefaults(force = true) {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (!force && prop.wasSet) {
-        continue;
-      }
-
-      if (this.hasDefault(prop, k)) {
-        prop.setValue(this.getDefault(prop, k));
-        prop.wasSet = false;
-      }
-    }
-
-    return this;
-  }
-
-  hasDefault(toolprop, key = toolprop.apiname) {
-    return SavedToolDefaults.has(this.constructor, key, toolprop);
-  }
-
-  getDefault(toolprop, key = toolprop.apiname) {
-    let cls = this.constructor;
-
-    if (SavedToolDefaults.has(cls, key, toolprop)) {
-      return SavedToolDefaults.get(cls, key, toolprop);
-    } else {
-      return toolprop.getValue();
-    }
-  }
-
-  saveDefaultInputs() {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
-        SavedToolDefaults.set(this.constructor, k, prop);
-      }
-    }
-
-    return this;
-  }
-
-  genToolString() {
-    let def = this.constructor.tooldef();
-    let path = def.toolpath + "(";
-
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      path += k + "=";
-      if (prop.type === PropTypes$8.STRING)
-        path += "'";
-
-      if (prop.type === PropTypes$8.FLOAT) {
-        path += prop.getValue().toFixed(3);
-      } else {
-        path += prop.getValue();
-      }
-
-      if (prop.type === PropTypes$8.STRING)
-        path += "'";
-      path += " ";
-    }
-    path += ")";
-    return path;
-  }
-
-  on_tick() {
-
-  }
-
-  /**default on_keydown implementation for modal tools,
-   no need to call super() to execute this if you don't want to*/
-  on_keydown(e) {
-    switch (e.keyCode) {
-      case keymap$4["Enter"]:
-      case keymap$4["Space"]:
-        this.modalEnd(false);
-        break;
-      case keymap$4["Escape"]:
-        this.modalEnd(true);
-        break;
-    }
-  }
-
-  //called after undoPre
-  calcUndoMem(ctx) {
-    console.warn("ToolOp.prototype.calcUndoMem: implement me!");
-    return 0;
-  }
-
-  undoPre(ctx) {
-    throw new Error("implement me!");
-  }
-
-  undo(ctx) {
-    throw new Error("implement me!");
-    //_appstate.loadUndoFile(this._undo);
-  }
-
-  redo(ctx) {
-    this._was_redo = true; //also set by toolstack.redo
-
-    this.undoPre(ctx);
-    this.execPre(ctx);
-    this.exec(ctx);
-    this.execPost(ctx);
-  }
-
-  //for compatibility with fairmotion
-  exec_pre(ctx) {
-    this.execPre(ctx);
-  }
-
-  execPre(ctx) {
-  }
-
-  exec(ctx) {
-  }
-
-  execPost(ctx) {
-
-  }
-
-  /**for use in modal mode only*/
-  resetTempGeom() {
-    var ctx = this.modal_ctx;
-
-    for (var dl of this.drawlines) {
-      dl.remove();
-    }
-
-    this.drawlines.length = 0;
-  }
-
-  error(msg) {
-    console.warn(msg);
-  }
-
-  getOverdraw() {
-    if (this._overdraw === undefined) {
-      this._overdraw = document.createElement("overdraw-x");
-      this._overdraw.start(this.modal_ctx.screen);
-    }
-
-    return this._overdraw;
-  }
-
-  /**for use in modal mode only*/
-  makeTempLine(v1, v2, style) {
-    let line = this.getOverdraw().line(v1, v2, style);
-    this.drawlines.push(line);
-    return line;
-  }
-
-  pushModal(node) {
-    throw new Error("cannot call this; use modalStart")
-  }
-
-  popModal() {
-    throw new Error("cannot call this; use modalEnd");
-  }
-
-  /**returns promise to be executed on modalEnd*/
-  modalStart(ctx) {
-    if (this.modalRunning) {
-      console.warn("Warning, tool is already in modal mode consuming events");
-      return this._promise;
-    }
-
-    this.modal_ctx = ctx;
-    this.modalRunning = true;
-
-    this._promise = new Promise((accept, reject) => {
-      this._accept = accept;
-      this._reject = reject;
-
-      modalstack.push(this);
-
-      if (this._pointerId !== undefined) {
-        super.pushPointerModal(ctx.screen, this._pointerId);
-      } else {
-        super.pushModal(ctx.screen);
-      }
-    });
-
-    return this._promise;
-  }
-
-  /*eek, I've not been using this.
-    guess it's a non-enforced contract, I've been naming
-    cancel methods 'cancel' all this time.
-
-    XXX fix
-  */
-  toolCancel() {
-  }
-
-  modalEnd(was_cancelled) {
-    if (this._modalstate) {
-      modalstack.pop();
-    }
-
-    if (this._overdraw !== undefined) {
-      this._overdraw.end();
-      this._overdraw = undefined;
-    }
-
-    if (was_cancelled && this._on_cancel !== undefined) {
-      if (this._accept) {
-        this._accept(this.modal_ctx, true);
-      }
-
-      this._on_cancel(this);
-      this._on_cancel = undefined;
-    }
-
-    this.resetTempGeom();
-
-    var ctx = this.modal_ctx;
-
-    this.modal_ctx = undefined;
-    this.modalRunning = false;
-    this.is_modal = false;
-
-    super.popModal();
-
-    this._promise = undefined;
-
-    if (this._accept) {
-      this._accept(ctx, false);//Context, was_cancelled
-      this._accept = this._reject = undefined;
-    }
-
-    this.saveDefaultInputs();
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    let outs = this.outputs;
-    let ins = this.inputs;
-
-    this.inputs = {};
-    this.outputs = {};
-
-    for (let pair of ins) {
-      this.inputs[pair.key] = pair.val;
-    }
-
-    for (let pair of outs) {
-      this.outputs[pair.key] = pair.val;
-    }
-  }
-
-  _save_inputs() {
-    let ret = [];
-    for (let k in this.inputs) {
-      ret.push(new PropKey(k, this.inputs[k]));
-    }
-
-    return ret;
-  }
-
-  _save_outputs() {
-    let ret = [];
-    for (let k in this.outputs) {
-      ret.push(new PropKey(k, this.outputs[k]));
-    }
-
-    return ret;
-  }
-}
-
-ToolOp.STRUCT = `
-toolsys.ToolOp {
-  inputs  : array(toolsys.PropKey) | this._save_inputs();
-  outputs : array(toolsys.PropKey) | this._save_outputs();
-}
-`;
-nstructjs.register(ToolOp);
-
-class PropKey {
-  constructor(key, val) {
-    this.key = key;
-    this.val = val;
-  }
-}
-
-PropKey.STRUCT = `
-toolsys.PropKey {
-  key : string;
-  val : abstract(ToolProperty);
-}
-`;
-nstructjs.register(PropKey);
-
-class MacroLink {
-  constructor(sourcetool_idx, srckey, srcprops = "outputs", desttool_idx, dstkey, dstprops = "inputs") {
-    this.source = sourcetool_idx;
-    this.dest = desttool_idx;
-
-    this.sourceProps = srcprops;
-    this.destProps = dstprops;
-
-    this.sourcePropKey = srckey;
-    this.destPropKey = dstkey;
-  }
-}
-
-MacroLink.STRUCT = `
-toolsys.MacroLink {
-  source         : int;
-  dest           : int;
-  sourcePropKey  : string;
-  destPropKey    : string;
-  sourceProps    : string;
-  destProps      : string; 
-}
-`;
-nstructjs.register(MacroLink);
-
-const MacroClasses = {};
-window._MacroClasses = MacroClasses;
-
-let macroidgen = 0;
-
-
-class ToolMacro extends ToolOp {
-  constructor() {
-    super();
-
-    this.tools = [];
-    this.curtool = 0;
-    this.has_modal = false;
-    this.connects = [];
-    this.connectLinks = [];
-
-    this._macro_class = undefined;
-  }
-
-  static tooldef() {
-    return {
-      uiname: "Tool Macro"
-    }
-  }
-
-  //toolop is an optional instance of this class, may be undefined
-  static canRun(ctx, toolop = undefined) {
-    return true;
-  }
-
-  _getTypeClass() {
-    if (this._macro_class && this._macro_class.ready) {
-      return this._macro_class;
-    }
-
-    if (!this._macro_class) {
-      this._macro_class = class MacroTypeClass extends ToolOp {
-        static tooldef() {
-          return this.__tooldef;
-        }
-      };
-
-      this._macro_class.__tooldef = {
-        toolpath: this.constructor.tooldef().toolpath || ''
-      };
-      this._macro_class.ready = false;
-    }
-
-    if (!this.tools || this.tools.length === 0) {
-      /* We've been invoked by ToolOp constructor,
-      *  for now just return an empty class  */
-      return this._macro_class;
-    }
-
-    let key = "";
-    for (let tool of this.tools) {
-      key = tool.constructor.name + ":";
-    }
-
-    /* Handle child classes of ToolMacro */
-    if (this.constructor !== ToolMacro) {
-      key += ":" + this.constructor.tooldef().toolpath;
-    }
-
-    for (let k in this.inputs) {
-      key += k + ":";
-    }
-
-    if (key in MacroClasses) {
-      this._macro_class = MacroClasses[key];
-      return this._macro_class;
-    }
-
-    let name = "Macro(";
-    let i = 0;
-    let is_modal;
-
-    for (let tool of this.tools) {
-      let def = tool.constructor.tooldef();
-
-      if (i > 0) {
-        name += ", ";
-      } else {
-        is_modal = def.is_modal;
-      }
-
-      if (def.uiname) {
-        name += def.uiname;
-      } else if (def.toolpath) {
-        name += def.toolpath;
-      } else {
-        name += tool.constructor.name;
-      }
-
-      i++;
-    }
-
-    let inputs = {};
-
-    for (let k in this.inputs) {
-      inputs[k] = this.inputs[k].copy().clearEventCallbacks();
-      inputs[k].wasSet = false;
-    }
-
-    let tdef = {
-      uiname  : name,
-      toolpath: key,
-      inputs,
-      outputs : {},
-      is_modal
-    };
-
-    let cls = this._macro_class;
-    cls.__tooldef = tdef;
-    cls._macroTypeId = macroidgen++;
-    cls.ready = true;
-
-    /*
-    let cls = {
-      name : key,
-      tooldef() {
-        return tdef
-      },
-      _getFinalToolDef() {
-        return this.tooldef();
-      }
-    };//*/
-
-    MacroClasses[key] = cls;
-
-    return cls;
-  }
-
-  saveDefaultInputs() {
-    for (let k in this.inputs) {
-      let prop = this.inputs[k];
-
-      if (prop.flag & PropFlags$3.SAVE_LAST_VALUE) {
-        SavedToolDefaults.set(this._getTypeClass(), k, prop);
-      }
-    }
-
-    return this;
-  }
-
-  hasDefault(toolprop, key = toolprop.apiname) {
-    return SavedToolDefaults.has(this._getTypeClass(), key, toolprop);
-  }
-
-  getDefault(toolprop, key = toolprop.apiname) {
-    let cls = this._getTypeClass();
-
-    if (SavedToolDefaults.has(cls, key, toolprop)) {
-      return SavedToolDefaults.get(cls, key, toolprop);
-    } else {
-      return toolprop.getValue();
-    }
-  }
-
-  connect(srctool, srcoutput, dsttool, dstinput, srcprops = "outputs", dstprops = "inputs") {
-    if (typeof dsttool === "function") {
-      return this.connectCB(...arguments);
-    }
-
-    let i1 = this.tools.indexOf(srctool);
-    let i2 = this.tools.indexOf(dsttool);
-
-    if (i1 < 0 || i2 < 0) {
-      throw new Error("tool not in macro");
-    }
-
-    //remove linked properties from this.inputs
-    if (srcprops === "inputs") {
-      let tool = this.tools[i1];
-
-      let prop = tool.inputs[srcoutput];
-      if (prop === this.inputs[srcoutput]) {
-        delete this.inputs[srcoutput];
-      }
-    }
-
-    if (dstprops === "inputs") {
-      let tool = this.tools[i2];
-      let prop = tool.inputs[dstinput];
-
-      if (this.inputs[dstinput] === prop) {
-        delete this.inputs[dstinput];
-      }
-    }
-
-    this.connectLinks.push(new MacroLink(i1, srcoutput, srcprops, i2, dstinput, dstprops));
-    return this;
-  }
-
-  connectCB(srctool, dsttool, callback, thisvar) {
-    this.connects.push({
-      srctool : srctool,
-      dsttool : dsttool,
-      callback: callback,
-      thisvar : thisvar
-    });
-
-    return this;
-  }
-
-  add(tool) {
-    if (tool.is_modal) {
-      this.is_modal = true;
-    }
-
-    for (let k in tool.inputs) {
-      let prop = tool.inputs[k];
-
-      if (!(prop.flag & PropFlags$3.PRIVATE)) {
-        this.inputs[k] = prop;
-      }
-    }
-
-    this.tools.push(tool);
-
-    return this;
-  }
-
-  _do_connections(tool) {
-    let i = this.tools.indexOf(tool);
-
-    for (let c of this.connectLinks) {
-      if (c.source === i) {
-        let tool2 = this.tools[c.dest];
-
-        tool2[c.destProps][c.destPropKey].setValue(tool[c.sourceProps][c.sourcePropKey].getValue());
-      }
-    }
-
-    for (var c of this.connects) {
-      if (c.srctool === tool) {
-        c.callback.call(c.thisvar, c.srctool, c.dsttool);
-      }
-    }
-  }
-
-  /*
-  canRun(ctx) {
-    if (this.tools.length == 0)
-      return false;
-
-    //poll first tool only in list
-    return this.tools[0].constructor.canRun(ctx);
-  }//*/
-
-  modalStart(ctx) {
-    //macros obviously can't call loadDefaults in the constructor
-    //like normal tool ops can.
-    this.loadDefaults(false);
-
-    this._promise = new Promise((function (accept, reject) {
-      this._accept = accept;
-      this._reject = reject;
-    }).bind(this));
-
-    this.curtool = 0;
-
-    let i;
-
-    for (i = 0; i < this.tools.length; i++) {
-      if (this.tools[i].is_modal)
-        break;
-
-      this.tools[i].undoPre(ctx);
-      this.tools[i].execPre(ctx);
-      this.tools[i].exec(ctx);
-      this.tools[i].execPost(ctx);
-      this._do_connections(this.tools[i]);
-    }
-
-    var on_modal_end = (function on_modal_end() {
-      this._do_connections(this.tools[this.curtool]);
-      this.curtool++;
-
-      while (this.curtool < this.tools.length &&
-      !this.tools[this.curtool].is_modal) {
-        this.tools[this.curtool].undoPre(ctx);
-        this.tools[this.curtool].execPre(ctx);
-        this.tools[this.curtool].exec(ctx);
-        this.tools[this.curtool].execPost(ctx);
-        this._do_connections(this.tools[this.curtool]);
-
-        this.curtool++;
-      }
-
-      if (this.curtool < this.tools.length) {
-        this.tools[this.curtool].undoPre(ctx);
-        this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-      } else {
-        this._accept(this, false);
-      }
-    }).bind(this);
-
-    if (i < this.tools.length) {
-      this.curtool = i;
-      this.tools[this.curtool].undoPre(ctx);
-      this.tools[this.curtool].modalStart(ctx).then(on_modal_end);
-    }
-
-    return this._promise;
-  }
-
-  loadDefaults(force = true) {
-    return super.loadDefaults(force);
-  }
-
-  exec(ctx) {
-    //macros obviously can't call loadDefaults in the constructor
-    //like normal tool ops can.
-    //note that this will detect if the user changes property values
-
-    this.loadDefaults(false);
-
-    for (var i = 0; i < this.tools.length; i++) {
-      this.tools[i].undoPre(ctx);
-      this.tools[i].execPre(ctx);
-      this.tools[i].exec(ctx);
-      this.tools[i].execPost(ctx);
-      this._do_connections(this.tools[i]);
-    }
-  }
-
-  calcUndoMem(ctx) {
-    let tot = 0;
-
-    for (let tool of this.tools) {
-      tot += tool.calcUndoMem(ctx);
-    }
-
-    return tot;
-  }
-
-  calcMemSize(ctx) {
-    let tot = 0;
-
-    for (let tool of this.tools) {
-      tot += tool.calcMemSize(ctx);
-    }
-
-    return tot;
-  }
-
-  undoPre() {
-    return; //undoPre is handled in exec() or modalStart()
-  }
-
-  undo(ctx) {
-    for (var i = this.tools.length - 1; i >= 0; i--) {
-      this.tools[i].undo(ctx);
-    }
-  }
-}
-
-ToolMacro.STRUCT = nstructjs.inherit(ToolMacro, ToolOp, "toolsys.ToolMacro") + `
-  tools        : array(abstract(toolsys.ToolOp));
-  connectLinks : array(toolsys.MacroLink);
-}
-`;
-nstructjs.register(ToolMacro);
-
-class ToolStack extends Array {
-  constructor(ctx) {
-    super();
-
-    this.memLimit = 512*1024*1024;
-    this.enforceMemLimit = false;
-
-    this.cur = -1;
-    this.ctx = ctx;
-
-    this.modalRunning = 0;
-
-    this._undo_branch = undefined; //used to save undo branch in case of tool cancel
-  }
-
-  get head() {
-    return this[this.cur];
-  }
-
-  limitMemory(maxmem = this.memLimit, ctx = this.ctx) {
-    if (maxmem === undefined) {
-      throw new Error("maxmem cannot be undefined");
-    }
-
-    let size = this.calcMemSize();
-
-    let start = 0;
-
-    while (start < this.cur - 2 && size > maxmem) {
-      size -= this[start].calcMemSize(ctx);
-      start++;
-    }
-
-    if (start === 0) {
-      return size;
-    }
-
-    for (let i = 0; i < start; i++) {
-      this[i].onUndoDestroy();
-    }
-
-    this.cur -= start;
-
-    for (let i = 0; i < this.length - start; i++) {
-      this[i] = this[i + start];
-    }
-    this.length -= start;
-
-    return this.calcMemSize(ctx);
-  }
-
-  calcMemSize(ctx = this.ctx) {
-    let tot = 0;
-
-    for (let tool of this) {
-      try {
-        tot += tool.calcMemSize();
-      } catch (error) {
-        print_stack$1(error);
-        console.error("Failed to execute a calcMemSize method");
-      }
-    }
-
-    return tot;
-  }
-
-  setRestrictedToolContext(ctx) {
-    this.toolctx = ctx;
-  }
-
-  reset(ctx) {
-    if (ctx !== undefined) {
-      this.ctx = ctx;
-    }
-
-    this.modalRunning = 0;
-    this.cur = -1;
-    this.length = 0;
-  }
-
-  /**
-   * runs .undo,.redo if toolstack head is same as tool
-   *
-   * otherwise, .execTool(ctx, tool) is called.
-   *
-   * @param compareInputs : check if toolstack head has identical input values, defaults to false
-   * */
-  execOrRedo(ctx, tool, compareInputs = false) {
-    let head = this.head;
-
-    let ok = compareInputs ? ToolOp.Equals(head, tool) : head && head.constructor === tool.constructor;
-
-    tool.__memsize = undefined; //reset cache memsize
-
-    if (ok) {
-      //console.warn("Same tool detected");
-
-      this.undo();
-
-      //can inputs differ? in that case, execute new tool
-      if (!compareInputs) {
-        this.execTool(ctx, tool);
-      } else {
-        this.rerun();
-      }
-
-      return false;
-    } else {
-      this.execTool(ctx, tool);
-      return true;
-    }
-  }
-
-  execTool(ctx, toolop) {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit, ctx);
-    }
-
-    if (!toolop.constructor.canRun(ctx, toolop)) {
-      console.log("toolop.constructor.canRun returned false");
-      return;
-    }
-
-    let tctx = ctx.toLocked();
-
-    let undoflag = toolop.constructor.tooldef().undoflag;
-    if (toolop.undoflag !== undefined) {
-      undoflag = toolop.undoflag;
-    }
-    undoflag = undoflag === undefined ? 0 : undoflag;
-
-    //if (!(undoflag & UndoFlags.IS_UNDO_ROOT) && !(undoflag & UndoFlags.NO_UNDO)) {
-    //tctx = new SavedContext(ctx, ctx.datalib);
-    //}
-
-    toolop.execCtx = tctx;
-
-    if (!(undoflag & UndoFlags$1.NO_UNDO)) {
-      this.cur++;
-
-      //save branch for if tool cancel
-      this._undo_branch = this.slice(this.cur + 1, this.length);
-
-      //truncate
-      this.length = this.cur + 1;
-
-      this[this.cur] = toolop;
-      toolop.undoPre(tctx);
-    }
-
-    if (toolop.is_modal) {
-      ctx = toolop.modal_ctx = ctx;
-
-      this.modal_running = true;
-
-      toolop._on_cancel = (function (toolop) {
-        if (!(toolop.undoflag & UndoFlags$1.NO_UNDO)) {
-          this[this.cur].undo(ctx);
-          this.pop_i(this.cur);
-          this.cur--;
-        }
-      }).bind(this);
-
-      //will handle calling .exec itself
-      toolop.modalStart(ctx);
-    } else {
-      toolop.execPre(tctx);
-      toolop.exec(tctx);
-      toolop.execPost(tctx);
-      toolop.saveDefaultInputs();
-    }
-  }
-
-  toolCancel(ctx, tool) {
-    if (tool._was_redo) { //also set by toolstack.redo
-      //ignore tool cancel requests on redo
-      return;
-    }
-
-    if (tool !== this[this.cur]) {
-      console.warn("toolCancel called in error", this, tool);
-      return;
-    }
-
-    this.undo();
-    this.length = this.cur + 1;
-
-    if (this._undo_branch !== undefined) {
-      for (let item of this._undo_branch) {
-        this.push(item);
-      }
-    }
-  }
-
-  undo() {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit);
-    }
-
-    if (this.cur >= 0 && !(this[this.cur].undoflag & UndoFlags$1.IS_UNDO_ROOT)) {
-      let tool = this[this.cur];
-
-      tool.undo(tool.execCtx);
-
-      this.cur--;
-    }
-  }
-
-  //reruns a tool if it's at the head of the stack
-  rerun(tool) {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit);
-    }
-
-    if (tool === this[this.cur]) {
-      tool._was_redo = false;
-
-      if (!tool.execCtx) {
-        tool.execCtx = this.ctx;
-      }
-
-      tool.undo(tool.execCtx);
-
-      tool._was_redo = true; //also set by toolstack.redo
-
-      tool.undoPre(tool.execCtx);
-      tool.execPre(tool.execCtx);
-      tool.exec(tool.execCtx);
-      tool.execPost(tool.execCtx);
-    } else {
-      console.warn("Tool wasn't at head of stack", tool);
-    }
-  }
-
-  redo() {
-    if (this.enforceMemLimit) {
-      this.limitMemory(this.memLimit);
-    }
-
-    if (this.cur >= -1 && this.cur + 1 < this.length) {
-      //console.log("redo!", this.cur, this.length);
-
-      this.cur++;
-      let tool = this[this.cur];
-
-
-      if (!tool.execCtx) {
-        tool.execCtx = this.ctx;
-      }
-
-      tool._was_redo = true;
-      tool.redo(tool.execCtx);
-
-      tool.saveDefaultInputs();
-    }
-  }
-
-  save() {
-    let data = [];
-    nstructjs.writeObject(data, this);
-    return data;
-  }
-
-  rewind() {
-    while (this.cur >= 0) {
-      let last = this.cur;
-      this.undo();
-
-      //prevent infinite loops
-      if (last === this.cur) {
-        break;
-      }
-    }
-
-    return this;
-  }
-
-  /**cb is a function(ctx), if it returns the value false then playback stops
-   promise will still be fulfilled.
-
-   onstep is a callback, if it returns a promise that promise will be
-   waited on, otherwise execution is queue with window.setTimeout().
-   */
-  replay(cb, onStep) {
-    let cur = this.cur;
-
-    this.rewind();
-
-    let last = this.cur;
-
-    let start = time_ms();
-
-    return new Promise((accept, reject) => {
-      let next = () => {
-        last = this.cur;
-
-        if (cb && cb(ctx) === false) {
-          accept();
-          return;
-        }
-
-        if (this.cur < this.length) {
-          this.cur++;
-          this.rerun();
-        }
-
-        if (last === this.cur) {
-          console.warn("time:", (time_ms() - start)/1000.0);
-          accept(this);
-        } else {
-          if (onStep) {
-            let ret = onStep();
-
-            if (ret && ret instanceof Promise) {
-              ret.then(() => {
-                next();
-              });
-            } else {
-              window.setTimeout(() => {
-                next();
-              });
-            }
-          }
-        }
-      };
-
-      next();
-    });
-  }
-
-  loadSTRUCT(reader) {
-    reader(this);
-
-    for (let item of this._stack) {
-      this.push(item);
-    }
-
-    delete this._stack;
-  }
-
-  //note that this makes sure tool classes are registered with nstructjs
-  //during save
-  _save() {
-    for (let tool of this) {
-      let cls = tool.constructor;
-
-      if (!nstructjs.isRegistered(cls)) {
-        cls._regWithNstructjs(cls);
-      }
-    }
-
-    return this;
-  }
-}
-
-ToolStack.STRUCT = `
-toolsys.ToolStack {
-  cur    : int;
-  _stack : array(abstract(toolsys.ToolOp)) | this._save();
-}
-`;
-nstructjs.register(ToolStack);
-
-window._testToolStackIO = function () {
-  let data = [];
-  let cls = _appstate.toolstack.constructor;
-
-  nstructjs.writeObject(data, _appstate.toolstack);
-  data = new DataView(new Uint8Array(data).buffer);
-
-  let toolstack = nstructjs.readObject(data, cls);
-
-  _appstate.toolstack.rewind();
-
-  toolstack.cur = -1;
-  toolstack.ctx = _appstate.toolstack.ctx;
-  _appstate.toolstack = toolstack;
-
-  return toolstack;
-};
-
-function buildToolSysAPI(api, registerWithNStructjs = true, rootCtxStruct = undefined) {
-  let datastruct = api.mapStruct(ToolPropertyCache, true);
-
-  for (let cls of ToolClasses) {
-    let def = cls._getFinalToolDef();
-
-    for (let k in def.inputs) {
-      let prop = def.inputs[k];
-
-      if (!(prop.flag & (PropFlags$3.PRIVATE | PropFlags$3.READ_ONLY))) {
-        SavedToolDefaults._buildAccessors(cls, k, prop, datastruct, api);
-      }
-    }
-  }
-
-  if (rootCtxStruct) {
-    rootCtxStruct.struct("toolDefaults", "toolDefaults", "Tool Defaults", api.mapStruct(ToolPropertyCache));
-  }
-
-  if (!registerWithNStructjs) {
-    return;
-  }
-
-  //register tools with nstructjs
-  for (let cls of ToolClasses) {
-    try {
-      if (!nstructjs.isRegistered(cls)) {
-        ToolOp._regWithNstructjs(cls);
-      }
-    } catch (error) {
-      console.log(error.stack);
-      console.error("Failed to register a tool with nstructjs");
-    }
-  }
-}
 
 let ToolPaths = {};
 
@@ -50836,7 +51455,7 @@ class Curve1DWidget extends ColumnFrame {
     this.drawTransform = [1.0, [0, 0]];
 
     this._value = new Curve1D();
-    this._value.on("draw", this._on_draw);
+    this.checkCurve1dEvents();
 
     let in_onchange = false;
 
@@ -50886,6 +51505,63 @@ class Curve1DWidget extends ColumnFrame {
 
     window.cw = this;
     this.shadow.appendChild(this.canvas);
+  }
+
+  /**
+   * Checks if a curve1d instance exists at dom attribute "datapath"
+   * and if it does adds curve1d event handlers to it.
+   *
+   * Note: it's impossible to know for sure that a widget is truly dead,
+   * e.g. it could be hidden in a panel or something.  Curve1d's event
+   * handling system takes a callback that checks if a callback should
+   * be removed, which we provide by testing this.isConnected.
+   *
+   * Since this is not robust we have to check regularly if we need to add
+   * Curve1D event handlers, which is why this function exists.
+   */
+  checkCurve1dEvents() {
+    if (!this._value.subscribed("draw", this)) {
+      this._value.on("draw", this._on_draw, this, () => !this.isConnected);
+    }
+
+    if (this.ctx && this.hasAttribute("datapath")) {
+      let curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+
+      if (!curve1d) {
+        console.log("unknown curve1d at datapath:", this.getAttribute("datapath"));
+        return;
+      }
+
+      if (!curve1d.subscribed(undefined, this)) {
+        curve1d.on("select", (bspline1) => {
+          let bspline2 = this._value.getGenerator("BSplineCurve");
+
+          for (let i = 0; i < bspline1.points.length; i++) {
+            bspline2.points[i].flag = bspline1.points[i].flag;
+          }
+
+          bspline2.redraw();
+        });
+
+        curve1d.on("transform", (bspline1) => {
+          let bspline2 = this._value.getGenerator("BSplineCurve");
+
+          for (let i = 0; i < bspline1.points.length; i++) {
+            bspline2.points[i].co.load(bspline1.points[i].co);
+          }
+
+          bspline2.update();
+          bspline2.updateKnots();
+          bspline2.redraw();
+        });
+
+        curve1d.on("update", () => {
+          console.log("datapath curve1d update!");
+          this._value.load(curve1d);
+          this.rebuild();
+        }, this, () => !this.isConnected);
+      }
+    }
   }
 
   get value() {
@@ -51095,6 +51771,10 @@ class Curve1DWidget extends ColumnFrame {
       return;
     }
 
+    this.checkCurve1dEvents();
+
+    let uidata = saveUIData(this.container, "curve1d");
+
     this._gen_type = this.value.generatorType;
     let col = this.container;
 
@@ -51109,11 +51789,26 @@ class Curve1DWidget extends ColumnFrame {
 
     col.clear();
 
+    let onSourceUpdate = () => {
+      if (!this.hasAttribute("datapath")) {
+        return;
+      }
+
+      let val = this.getPathValue(this.ctx, this.getAttribute("datapath"));
+      this._value.load(val);
+      this.rebuild();
+    };
+
+    let dpath = this.hasAttribute("datapath") ? this.getAttribute("datapath") : undefined;
     let gen = this.value.generators.active;
-    gen.makeGUI(col, this.canvas);
+    gen.makeGUI(col, this.canvas, this.drawTransform, dpath, onSourceUpdate);
+
+    loadUIData(this.container, uidata);
+    for (let i = 0; i < 4; i++) {
+      col.flushUpdate();
+    }
 
     this._lastGen = gen;
-
     this._redraw();
   }
 
@@ -51150,6 +51845,7 @@ class Curve1DWidget extends ColumnFrame {
   update() {
     super.update();
 
+    this.checkCurve1dEvents();
     this.updateDataPath();
     this.updateSize();
     this.updateGenUI();
