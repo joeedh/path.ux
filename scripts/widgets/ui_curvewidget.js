@@ -48,8 +48,10 @@ export class Curve1DWidget extends ColumnFrame {
           }
         }
       } catch (error) {
-        console.error(error.stack);
-        console.error(error.message);
+        if (window.DEBUG && window.DEBUG.datapath) {
+          console.error(error.stack);
+          console.error(error.message);
+        }
       }
 
       in_onchange = false;
@@ -86,11 +88,24 @@ export class Curve1DWidget extends ColumnFrame {
     }
 
     if (this.ctx && this.hasAttribute("datapath")) {
-      let curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+      let curve1d;
+
+      try {
+        curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+      } catch (error) {
+        if (window.DEBUG && window.DEBUG.datapath) {
+          console.error(error.stack);
+          console.error(error.message);
+        }
+      }
 
       if (!curve1d) {
-        console.log("unknown curve1d at datapath:", this.getAttribute("datapath"));
+        this.disabled = true;
         return;
+      }
+
+      if (this.disabled) {
+        this.disabled = false;
       }
 
       if (!curve1d.subscribed(undefined, this)) {
