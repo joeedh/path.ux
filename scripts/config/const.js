@@ -33,21 +33,16 @@ window.setInterval(() => {
           _clipboards[type].data = text;
         });
       }
-
-      //item.getType("text/css").then((blob) => blob.text()).then((text) => {
-      //  console.log("text", text);
-      //});
     }
-    //_clipdata.mime =
   }).catch(function () {
   });
 }, 200);
 
 let exports = {
-  /*client code can override this using .loadConstants, here is a simple implementation
-    that just handles color data
-
-    desiredMimes is either a string, or an array of strings
+  /** Client code can override this using `.loadConstants`, this is
+   *  a simple implementation that just handles color data.
+   *
+   * `desiredMimes` is either a string, or an array of strings
    */
   getClipboardData(desiredMimes = "text/plain") {
     if (typeof desiredMimes === "string") {
@@ -62,8 +57,10 @@ let exports = {
       }
     }
   },
-  /*client code can override this, here is a simple implementation
-    that just handles color data
+
+
+  /** Client code can override this. This is a simple implementation
+   *  that just handles color data
    */
   setClipboardData(name, mime, data) {
     _clipboards[mime] = {
@@ -97,19 +94,20 @@ let exports = {
   docManualPath  : "../simple_docsys/doc_build/",
   docEditorPath  : "../simple_docsys.js",
 
-  //add textboxes to rollar sliders,
-  //note that  users can also double click them to
-  //enter text as well
+  /* Add textboxes to rollar sliders,
+     note that  users can also double click them to
+     enter text as well
+   */
   useNumSliderTextboxes: true,
 
-  numSliderArrowLimit: 15, //threshold to check if numslider arrow was clicked
+  numSliderArrowLimit: 15, /* Threshold to check if numslider arrow was clicked. */
   simpleNumSliders   : false,
 
   menusCanPopupAbove: false,
   menu_close_time   : 500,
   doubleClickTime   : 500,
 
-  //timeout for press-and-hold (touch) version of double clicking
+  /* Timeout for press-and-hold (touch) version of double clicking. */
   doubleClickHoldTime: 750,
   DEBUG              : {
     paranoidEvents      : false,
@@ -124,7 +122,7 @@ let exports = {
     domEvents        : false,
     domEventAddRemove: false,
 
-    debugUIUpdatePerf: false, //turns async FrameManager.update_intern loop into sync
+    debugUIUpdatePerf: false, /* Turns async FrameManager.update_intern loop into sync. */
 
     screenAreaPosSizeAccesses: false,
     buttonEvents             : false,
@@ -136,7 +134,7 @@ let exports = {
     //*/
   },
 
-  //auto load 1d bspline templates, can hurt startup time
+  /* Auto load 1d bspline templates, can hurt startup time. */
   autoLoadSplineTemplates: true,
 
   addHelpPickers: true,
@@ -157,7 +155,6 @@ let exports = {
       this[k] = args[k];
     }
 
-    console.error("CC", ctrlconfig);
     ctrlconfig.setConfig(this);
   }
 };
@@ -167,6 +164,5 @@ window.DEBUG = exports.DEBUG;
 
 let cfg = document.getElementById("pathux-config");
 if (cfg) {
-  console.error("CONFIG CONFIG", cfg.innerText);
   exports.loadConstants(JSON.parse(cfg.innerText));
 }
