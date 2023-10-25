@@ -2243,7 +2243,7 @@ class StructIntField extends StructFieldType {
   static unpack(manager, data, type, uctx) {
     return unpack_int(data, uctx);
   }
-
+3
   static validateJSON(manager, val, obj, field, type, instance) {
     if (typeof val !== "number" || val !== Math.floor(val)) {
       return "" + val + " is not an integer";
@@ -3056,8 +3056,9 @@ class StructIterKeysField extends StructFieldType {
     let i = 0;
     for (let val2 in val) {
       if (i >= len) {
-        if (warninglvl > 0)
-          console.warn("Warning: object keys magically replaced on us", val, i);
+        if (warninglvl > 0) {
+          console.warn("Warning: object keys magically replaced during iteration", val, i);
+        }
         return;
       }
 
@@ -3783,8 +3784,9 @@ class STRUCT {
   /** invoke loadSTRUCT methods on parent objects.  note that
    reader() is only called once.  it is called however.*/
   static Super(obj, reader) {
-    if (warninglvl$1 > 0)
+    if (warninglvl$1 > 0) {
       console.warn("deprecated");
+    }
 
     reader(obj);
 
@@ -3808,8 +3810,9 @@ class STRUCT {
 
   /** deprecated.  used with old fromSTRUCT interface. */
   static chain_fromSTRUCT(cls, reader) {
-    if (warninglvl$1 > 0)
+    if (warninglvl$1 > 0) {
       console.warn("Using deprecated (and evil) chain_fromSTRUCT method, eek!");
+    }
 
     let proto = cls.prototype;
     let parent = cls.prototype.prototype.constructor;
@@ -3826,8 +3829,9 @@ class STRUCT {
       try {
         obj2[k] = obj[k];
       } catch (error) {
-        if (warninglvl$1 > 0)
+        if (warninglvl$1 > 0) {
           console.warn("  failed to set property", k);
+        }
       }
       //let k=keys[i];
       //if (k=="__proto__")
@@ -4203,7 +4207,10 @@ class STRUCT {
       }
 
       if (bad) {
-        console.warn("Generating " + keywords.script + " script for derived class " + unmangle(cls.name));
+        if (warninglvl$1 > 0) {
+          console.warn("Generating " + keywords.script + " script for derived class " + unmangle(cls.name));
+        }
+
         if (!structName) {
           structName = unmangle(cls.name);
         }
@@ -4238,7 +4245,9 @@ class STRUCT {
     }
 
     if (cls.structName in this.structs) {
-      console.warn("Struct " + unmangle(cls.structName) + " is already registered", cls);
+      if (warninglvl$1 > 0) {
+        console.warn("Struct " + unmangle(cls.structName) + " is already registered", cls);
+      }
 
       if (!this.allowOverriding) {
         throw new Error("Struct " + unmangle(cls.structName) + " is already registered");
@@ -4560,8 +4569,10 @@ class STRUCT {
 
       return obj;
     } else if (cls.fromSTRUCT !== undefined) {
-      if (warninglvl$1 > 1)
+      if (warninglvl$1 > 1) {
         console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
+      }
+
       return cls.fromSTRUCT(load);
     } else { //default case, make new instance and then call load() on it
       let obj = objInstance;
@@ -4695,9 +4706,9 @@ class STRUCT {
         //console.error(cls.STRUCT);
 
         if (val === undefined) {
-          throw new JSONError("Missing json field " + f.name + msg);
+          throw new JSONError(stt.name + ": Missing json field " + f.name + msg);
         } else {
-          throw new JSONError("Invalid json field " + f.name + msg);
+          throw new JSONError(stt.name + ": Invalid json field " + f.name + msg);
         }
 
         return false;
@@ -4712,7 +4723,7 @@ class STRUCT {
 
       if (!keys.has(k)) {
         this.jsonLogger(cls.STRUCT);
-        throw new JSONError("Unknown json field " + k);
+        throw new JSONError(stt.name + ": Unknown json field " + k);
         return false;
       }
     }
@@ -4797,8 +4808,9 @@ class STRUCT {
       obj.loadSTRUCT(load);
       return obj;
     } else if (cls.fromSTRUCT !== undefined) {
-      if (warninglvl$1 > 1)
+      if (warninglvl$1 > 1) {
         console.warn("Warning: class " + unmangle(cls.name) + " is using deprecated fromSTRUCT interface; use newSTRUCT/loadSTRUCT instead");
+      }
       return cls.fromSTRUCT(load);
     } else { //default case, make new instance and then call load() on it
       let obj = objInstance;
@@ -51489,8 +51501,10 @@ class Curve1DWidget extends ColumnFrame {
           }
         }
       } catch (error) {
-        console.error(error.stack);
-        console.error(error.message);
+        if (window.DEBUG && window.DEBUG.datapath) {
+          console.error(error.stack);
+          console.error(error.message);
+        }
       }
 
       in_onchange = false;
@@ -51527,11 +51541,24 @@ class Curve1DWidget extends ColumnFrame {
     }
 
     if (this.ctx && this.hasAttribute("datapath")) {
-      let curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+      let curve1d;
+
+      try {
+        curve1d = this.ctx.api.getValue(this.ctx, this.getAttribute("datapath"));
+      } catch (error) {
+        if (window.DEBUG && window.DEBUG.datapath) {
+          console.error(error.stack);
+          console.error(error.message);
+        }
+      }
 
       if (!curve1d) {
-        console.log("unknown curve1d at datapath:", this.getAttribute("datapath"));
+        this.disabled = true;
         return;
+      }
+
+      if (this.disabled) {
+        this.disabled = false;
       }
 
       if (!curve1d.subscribed(undefined, this)) {
