@@ -2243,7 +2243,7 @@ class StructIntField extends StructFieldType {
   static unpack(manager, data, type, uctx) {
     return unpack_int(data, uctx);
   }
-3
+
   static validateJSON(manager, val, obj, field, type, instance) {
     if (typeof val !== "number" || val !== Math.floor(val)) {
       return "" + val + " is not an integer";
