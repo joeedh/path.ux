@@ -11,28 +11,28 @@ import nstructjs from "../path-controller/util/struct.js";
 import cconst from '../config/const.js';
 
 export let compatMap = {
-  BoxMargin : "padding",
-  BoxBG : "background",
-  BoxRadius : "border-radius",
-  background : "background-color",
-  defaultWidth : "width",
-  defaultHeight : "height",
-  DefaultWidth : "width",
-  DefaultHeight : "height",
-  BoxBorder : "border-color",
-  BoxLineWidth : "border-width",
-  BoxSubBG : "background-color",
-  BoxSub2BG : "background-color",
-  DefaultPanelBG : "background-color",
-  InnerPanelBG : "background-color",
-  Background : "background-color",
+  BoxMargin       : "padding",
+  BoxBG           : "background",
+  BoxRadius       : "border-radius",
+  background      : "background-color",
+  defaultWidth    : "width",
+  defaultHeight   : "height",
+  DefaultWidth    : "width",
+  DefaultHeight   : "height",
+  BoxBorder       : "border-color",
+  BoxLineWidth    : "border-width",
+  BoxSubBG        : "background-color",
+  BoxSub2BG       : "background-color",
+  DefaultPanelBG  : "background-color",
+  InnerPanelBG    : "background-color",
+  Background      : "background-color",
   numslider_width : "width",
-  numslider_height : "height",
+  numslider_height: "height",
 };
 
 export let ColorSchemeTypes = {
-  LIGHT : "light",
-  DARK  : "dark"
+  LIGHT: "light",
+  DARK : "dark"
 };
 
 export function parsepx(css) {
@@ -53,24 +53,25 @@ export function color2css(c, alpha_override) {
     return `rgba(${r},${g},${b}, ${a})`;
   }
 }
+
 window.color2css = color2css;
 
 let css2color_rets = util.cachering.fromConstructor(Vector4, 64);
 let basic_colors = {
-  'white' : [1,1,1],
-  'grey' : [0.5, 0.5, 0.5],
-  'gray' : [0.5, 0.5, 0.5],
+  'white' : [1, 1, 1],
+  'grey'  : [0.5, 0.5, 0.5],
+  'gray'  : [0.5, 0.5, 0.5],
   'black' : [0, 0, 0],
-  'red' : [1, 0, 0],
-  'yellow' : [1, 1, 0],
+  'red'   : [1, 0, 0],
+  'yellow': [1, 1, 0],
   'green' : [0, 1, 0],
-  'teal' : [0, 1, 1],
-  'cyan' : [0, 1, 1],
-  'blue' : [0, 0, 1],
-  'orange' : [1, 0.5, 0.25],
+  'teal'  : [0, 1, 1],
+  'cyan'  : [0, 1, 1],
+  'blue'  : [0, 0, 1],
+  'orange': [1, 0.5, 0.25],
   'brown' : [0.5, 0.4, 0.3],
-  'purple' : [1, 0, 1],
-  'pink' : [1, 0.5, 0.5]
+  'purple': [1, 0, 1],
+  'pink'  : [1, 0.5, 0.5]
 };
 
 export function color2web(color) {
@@ -109,10 +110,10 @@ window.color2web = color2web;
 
 export function css2color(color) {
   if (!color) {
-    return new Vector4([0,0,0,1]);
+    return new Vector4([0, 0, 0, 1]);
   }
 
-  color = (""+color).trim();
+  color = ("" + color).trim();
 
   let ret = css2color_rets.next();
 
@@ -120,15 +121,15 @@ export function css2color(color) {
     color = color.slice(1, color.length);
     let parts = [];
 
-    for (let i=0; i<color.length>>1; i++) {
-      let part = "0x" + color.slice(i*2, i*2+2);
+    for (let i = 0; i < color.length>>1; i++) {
+      let part = "0x" + color.slice(i*2, i*2 + 2);
       parts.push(parseInt(part));
     }
 
     ret.zero();
     let i;
-    for (i=0; i<Math.min(parts.length, ret.length); i++) {
-      ret[i] = parts[i] / 255.0;
+    for (i = 0; i < Math.min(parts.length, ret.length); i++) {
+      ret[i] = parts[i]/255.0;
     }
 
     if (i < 4) {
@@ -147,7 +148,7 @@ export function css2color(color) {
   const hasAlpha = color.startsWith("rgba(");
   color = color.replace("rgba", "").replace("rgb", "").replace(/[\(\)]/g, "").trim().split(",")
 
-  for (let i=0; i<color.length; i++) {
+  for (let i = 0; i < color.length; i++) {
     ret[i] = parseFloat(color[i]);
     if (i < 3) {
       ret[i] /= 255;
@@ -174,6 +175,7 @@ export function web2color(str) {
 
   return css2color(str);
 }
+
 window.web2color = web2color;
 
 let validate_pat = /\#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
@@ -210,7 +212,8 @@ window.validateCSSColor = validateCSSColor;
 export let theme = {};
 
 export function invertTheme() {
-  cconst.colorSchemeType = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK : ColorSchemeTypes.LIGHT;
+  cconst.colorSchemeType = cconst.colorSchemeType === ColorSchemeTypes.LIGHT ? ColorSchemeTypes.DARK
+                                                                             : ColorSchemeTypes.LIGHT;
 
   function inverted(color) {
     if (Array.isArray(color)) {
@@ -266,12 +269,13 @@ export function setColorSchemeType(mode) {
   }
 
 }
+
 window.validateWebColor = validateWebColor;
 
 let _digest = new util.HashDigest();
 
 export class CSSFont {
-  constructor(args={}) {
+  constructor(args = {}) {
     this._size = args.size ? args.size : 12;
     this.font = args.font;
     this.style = args.style !== undefined ? args.style : "normal";
@@ -280,7 +284,7 @@ export class CSSFont {
     this.color = args.color;
   }
 
-  calcHashUpdate(digest=_digest.reset()) {
+  calcHashUpdate(digest = _digest.reset()) {
     digest.add(this._size || 0);
     digest.add(this.font);
     digest.add(this.style);
@@ -297,9 +301,10 @@ export class CSSFont {
 
   get size() {
     if (util.isMobile()) {
-      let mul = theme.base.mobileTextSizeMultiplier / visualViewport.scale;
+      let mul = theme.base.mobileTextSizeMultiplier/visualViewport.scale;
       if (mul) {
-        return this._size * mul;;
+        return this._size*mul;
+        ;
       }
     }
 
@@ -321,7 +326,7 @@ export class CSSFont {
     return ret;
   }
 
-  genCSS(size=this.size) {
+  genCSS(size = this.size) {
     return `${this.style} ${this.variant} ${this.weight} ${size}px ${this.font}`;
   }
 
@@ -340,6 +345,7 @@ export class CSSFont {
     return this.genCSS() + ":" + this.size + ":" + color;
   }
 }
+
 CSSFont.STRUCT = `
 CSSFont {
   size     : float | obj._size;
@@ -352,7 +358,7 @@ CSSFont {
 `;
 nstructjs.register(CSSFont);
 
-export function exportTheme(theme1=theme, addVarDecl=true) {
+export function exportTheme(theme1 = theme, addVarDecl = true) {
   let sortkeys = (obj) => {
     let keys = [];
     for (let k in obj) {
@@ -365,7 +371,7 @@ export function exportTheme(theme1=theme, addVarDecl=true) {
 
   let s = addVarDecl ? "var theme = {\n" : "{\n";
 
-  function writekey(v, indent="") {
+  function writekey(v, indent = "") {
     if (typeof v === "string") {
       if (v.search("\n") >= 0) {
         v = "`" + v + "`";
@@ -401,7 +407,7 @@ ${indent}})`;
         return s;
       }
     } else {
-      return ""+v;
+      return "" + v;
     }
 
     return "error";
@@ -441,7 +447,7 @@ ${indent}})`;
 
         let pad = "";
 
-        for (let i=0; i<maxwid-k2.length; i++) {
+        for (let i = 0; i < maxwid - k2.length; i++) {
           pad += " ";
         }
 
@@ -456,5 +462,29 @@ ${indent}})`;
 
   return s;
 }
+
 window._exportTheme = exportTheme;
+
+export function copyTheme(theme) {
+  if (theme instanceof CSSFont) {
+    return theme.copy();
+  }
+
+  let ret = {};
+  for (let k in theme) {
+    let v = theme[k];
+
+    if (typeof v === "function") {
+      continue;
+    }
+
+    if (typeof v === "object") {
+      ret[k] = copyTheme(v);
+    } else {
+      ret[k] = v;
+    }
+  }
+
+  return ret;
+}
 

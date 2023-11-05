@@ -478,6 +478,8 @@ export class AppState {
   }
 
   start(args = new StartArgs()) {
+    nstructjs.validateStructs();
+
     let args2 = new StartArgs();
 
     let methodsCheck = [
