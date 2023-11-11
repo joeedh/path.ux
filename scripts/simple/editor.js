@@ -221,7 +221,7 @@ export class Editor extends Area {
       nstructjs.register(cls);
     } else {
       /* inlineRegister handles inheritance. */
-      cls.STRUCT = nstructjs.inlineRegister(cls
+      cls.STRUCT = nstructjs.inlineRegister(cls, cls.STRUCT);
     }
 
     super.register(cls);
