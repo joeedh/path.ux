@@ -218,10 +218,13 @@ export class Editor extends Area {
 
     if (!cls.hasOwnProperty("STRUCT")) {
       cls.STRUCT = nstructjs.inherit(cls, this) + `\n}`;
+      nstructjs.register(cls);
+    } else {
+      /* inlineRegister handles inheritance. */
+      cls.STRUCT = nstructjs.inlineRegister(cls
     }
 
     super.register(cls);
-    nstructjs.register(cls);
   }
 
   makeSideBar() {
