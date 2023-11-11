@@ -211,6 +211,10 @@ export class Editor extends Area {
     this.makeMenuBar = makeMenuBar;
   }
 
+  /** Registers class with Area system
+   *  and nstructjs.  Uses nstructjs.inlineRegister
+   *  to handle inheritance.
+   **/
   static register(cls) {
     if (!cls.hasOwnProperty("define")) {
       throw new Error("missing define() method");
