@@ -944,7 +944,7 @@ export class Container extends ui_base.UIBase {
     return ret;
   }
 
-  pathlabel(inpath, label = "", packflag = 0) {
+  pathlabel(inpath, label = undefined, packflag = 0) {
     let path;
 
     packflag |= this.inherit_packflag & ~PackFlags.NO_UPDATE;
@@ -955,11 +955,21 @@ export class Container extends ui_base.UIBase {
 
     let ret = UIBase.createElement("label-x");
 
+    if (label === undefined && inpath) {
+      let rdef = this.ctx.api.resolvePath(this.ctx, path);
+      if (rdef) {
+        label = rdef.prop.uiname ?? rdef.dpath.apiname;
+      } else {
+        label = "(error)";
+      }
+    }
+
     ret.text = label;
     ret.packflag = packflag;
     ret.setAttribute("datapath", path);
 
     this._add(ret);
+    ret.setCSS();
 
     return ret;
   }
